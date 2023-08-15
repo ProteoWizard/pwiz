@@ -26,6 +26,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json.Linq;
+using pwiz.PanoramaClient;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -1037,7 +1039,7 @@ namespace pwiz.SkylineTestData
             doc = doc.ChangeSettings(doc.Settings.ChangeTransitionPrediction(
                 p => p.ChangeCollisionEnergy(ceRegression)));
             doc = (SrmDocument) doc.RemoveChild(doc.Children[1]);
-            new CommandLine().SaveDocument(doc, triggerPath, Console.Out);
+            new CommandLine().SaveDocument(doc, triggerPath, new StringWriter());
 
             output = RunCommand("--in=" + triggerPath,
                                 "--exp-translist-instrument=" + ExportInstrumentType.AGILENT,
@@ -1191,7 +1193,7 @@ namespace pwiz.SkylineTestData
             string schedulePath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi_scheduled.sky");
             var doc = ResultsUtil.DeserializeDocument(docPath);
             doc = (SrmDocument)doc.RemoveChild(doc.Children[1]);
-            new CommandLine().SaveDocument(doc, schedulePath, Console.Out);
+            new CommandLine().SaveDocument(doc, schedulePath, new StringWriter());
             docPath = schedulePath;
 
             output = RunCommand("--in=" + docPath,
@@ -3276,7 +3278,7 @@ namespace pwiz.SkylineTestData
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
-                        string.Format(Resources.ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__,
+                        string.Format(PanoramaClient.Properties.Resources.ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__,
                             serverUri.AbsoluteUri)));
             TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
@@ -3289,7 +3291,7 @@ namespace pwiz.SkylineTestData
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
-                        string.Format(Resources.UserState_getErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__,
+                        string.Format(PanoramaClient.Properties.Resources.UserState_GetErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__,
                             serverUri.AbsoluteUri)));
             TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
@@ -3302,8 +3304,8 @@ namespace pwiz.SkylineTestData
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
-                        Resources
-                            .EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server));
+                        PanoramaClient.Properties.Resources
+                            .UserState_GetErrorMessage_The_username_and_password_could_not_be_authenticated_with_the_panorama_server_));
             TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
@@ -3328,7 +3330,7 @@ namespace pwiz.SkylineTestData
                 buffer.ToString()
                     .Contains(
                         string.Format(
-                            Resources.PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_,
+                            PanoramaClient.Properties.Resources.PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_,
                             folder, client.ServerUri)));
             TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
@@ -3342,7 +3344,7 @@ namespace pwiz.SkylineTestData
                 buffer.ToString()
                     .Contains(
                         string.Format(
-                            Resources.PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_,
+                            PanoramaClient.Properties.Resources.PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_,
                             "user", folder)));
             TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
@@ -3354,7 +3356,7 @@ namespace pwiz.SkylineTestData
             helper.ValidateFolder(client, server, folder);
             Assert.IsTrue(
                 buffer.ToString()
-                    .Contains(string.Format(Resources.PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder,
+                    .Contains(string.Format(PanoramaClient.Properties.Resources.PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder,
                         folder)));
             TestOutputHasErrorLine(buffer.ToString());
         }
@@ -3500,6 +3502,18 @@ namespace pwiz.SkylineTestData
             {
                 return FolderOperationStatus.OK;
             }
+
+            public JToken GetInfoForFolders(PanoramaServer server, string folder)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
+                PanoramaServer server, IProgressMonitor pm, IProgressStatus progressStatus)
+            {
+                throw new NotImplementedException();
+            }
+
         }
 
         private class TestPanoramaClientThrowsException : TestPanoramaClient

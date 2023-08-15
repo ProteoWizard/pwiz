@@ -141,7 +141,10 @@ namespace pwiz.SkylineTestFunctional
             BuildLibraryError("non_int_charge.pep.XML", null);
             BuildLibraryError("zero_charge.pep.XML", null);
             BuildLibraryError("truncated.pep.XML", null);
-            BuildLibraryError("missing_mzxml.pep.XML", null, "could not find matches for the following");
+            BuildLibraryError("missing_mzxml.pep.XML", null, null, "could not find matches for the following");
+            BuildLibraryError("..\\mascot\\F027319.dat", null, 1e-12, "No matches passed score filter");
+            BuildLibraryError(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.BiblioSpec, "mismatched-scan-numbers.pepXML"), null, null, "WARNING: Could not find native id");
+            BuildLibraryError(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.BiblioSpec, "mismatched-nativeid-format.mzid"), null, null, "WARNING: Mismatch between spectrum");
 
             // Test trying to build using an existing library (e.g. msp/sptxt)
             EnsurePeptideSettings();
@@ -621,7 +624,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(expectedSpectra, librarySettings.Libraries[0].Keys.Count());
         }
 
-        private void BuildLibraryError(string inputFile, string libraryPath, params string[] messageParts)
+        private void BuildLibraryError(string inputFile, string libraryPath, double? threshold = null, params string[] messageParts)
         {
             string redundantBuildPath = TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT_REDUNDANT);
             FileEx.SafeDelete(redundantBuildPath);
@@ -630,7 +633,7 @@ namespace pwiz.SkylineTestFunctional
 
             ReportLibraryBuildFailures = false;
             BuildLibrary(TestFilesDir.GetTestPath("library_errors"), new[] {inputFile}, libraryPath, false, false,
-                false, false, null, false);
+                false, false, null, false, threshold);
 
             var messageDlg = WaitForOpenForm<MessageDlg>();
             Assert.IsNotNull(messageDlg, "No message box shown");
@@ -684,7 +687,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void BuildLibrary(string inputDir, IEnumerable<string> inputFiles, string libraryPath,
             bool keepRedundant, bool includeAmbiguous, bool filterPeptides, bool append, IrtStandard irtStandard,
-            bool thresholdAll)
+            bool thresholdAll, double? threshold = null)
         {
             EnsurePeptideSettings();
 
@@ -732,7 +735,7 @@ namespace pwiz.SkylineTestFunctional
             }
             else
             {
-                RunUI(() => buildLibraryDlg.Grid.SetScoreThreshold(scoreType => scoreType.DefaultValue));
+                RunUI(() => buildLibraryDlg.Grid.SetScoreThreshold(scoreType => threshold ?? scoreType.DefaultValue));
                 OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
             }
 

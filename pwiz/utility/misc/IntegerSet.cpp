@@ -86,14 +86,17 @@ PWIZ_API_DECL istream& operator>>(istream& is, IntegerSet::Interval& interval)
     char dash = 0;
     a = 0; b = 0;
 
+    if (!bal::all(buffer, bal::is_any_of("0123456789-")))
+        throw runtime_error("invalid syntax \"" + buffer + "\" for IntegerSet interval; should be [Start,End], Start-End, Start- or just Start, where Start and End are integers");
+
     istringstream iss2(buffer);
     iss2 >> a;
     if (iss2) interval.begin = interval.end = a;
     iss2 >> dash;
-    if (dash=='-') interval.end = numeric_limits<int>::max();
+    if (dash == '-') interval.end = numeric_limits<int>::max();
     iss2 >> b;
     if (iss2) interval.end = b;
-    
+
     return is;
 }
 

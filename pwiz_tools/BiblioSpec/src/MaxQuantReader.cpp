@@ -728,6 +728,7 @@ void MaxQuantReader::storeLine(MaxQuantLine& entry)
     {
         Verbosity::comment(V_DETAIL, "Not saving PSM %d with PEP %f (line %d)",
                            entry.scanNumber, entry.pep, lineNum_);
+        ++filteredOutPsmCount_;
         return;
     }
     else if (entry.masses.empty() || entry.intensities.empty())

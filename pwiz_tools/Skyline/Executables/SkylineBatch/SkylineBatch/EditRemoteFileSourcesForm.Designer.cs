@@ -90,6 +90,8 @@
             this.Controls.Add(this.btnEdit);
             this.Controls.Add(this.btnAdd);
             this.Controls.Add(this.listSources);
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "EditRemoteFileSourcesForm";
             this.ShowInTaskbar = false;
             this.ResumeLayout(false);

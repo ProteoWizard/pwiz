@@ -24,7 +24,6 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using Grpc.Core;
-using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
@@ -119,6 +118,8 @@ namespace pwiz.Skyline.ToolsUI
                 Enumerable.Range(PrositConstants.MIN_NCE, PrositConstants.MAX_NCE - PrositConstants.MIN_NCE + 1).Select(c => (object) c)
                     .ToArray());
             ceCombo.SelectedItem = Settings.Default.PrositNCE;
+            tbxSettingsFilePath.Text = System.Configuration.ConfigurationManager
+                .OpenExeConfiguration(System.Configuration.ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
         }
 
         private class PrositPingRequest : PrositHelpers.PrositRequest
