@@ -115,9 +115,9 @@ namespace pwiz.MSGraph
             out CurveItem closestCurve, out PointF closestPoint)
         {
             // Determine boundaries of point search in graph coordinates.
-            double xLo, xHi, y;
-            ReverseTransform(new PointF(pt.X - maxDistance, 0), out xLo, out y);
-            ReverseTransform(new PointF(pt.X + maxDistance, 0), out xHi, out y);
+            double xLo, xHi;
+            ReverseTransform(new PointF(pt.X - maxDistance, 0), out xLo, out _);
+            ReverseTransform(new PointF(pt.X + maxDistance, 0), out xHi, out _);
 
             closestCurve = null;
             closestPoint = new PointF();

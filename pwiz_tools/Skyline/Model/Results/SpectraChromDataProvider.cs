@@ -849,8 +849,7 @@ namespace pwiz.Skyline.Model.Results
                 if (_runningAsync)
                 {
                     // Just in case the Read thread is waiting to add a spectrum to a full pending list
-                    SpectrumInfo info;
-                    _pendingInfoList.TryTake(out info);
+                    _pendingInfoList.TryTake(out _);
                 }
                 return dataFile;
             }

@@ -297,8 +297,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 helper.ShowTextBoxError(tbxName, GroupComparisonStrings.EditGroupComparisonDlg_btnOK_Click_There_is_already_a_group_comparison_named__0__, name);
                 return;
             }
-            double confidenceLevel;
-            if (!helper.ValidateDecimalTextBox(tbxConfidenceLevel, 0, 100, out confidenceLevel))
+
+            if (!helper.ValidateDecimalTextBox(tbxConfidenceLevel, 0, 100, out _))
             {
                 return;
             }

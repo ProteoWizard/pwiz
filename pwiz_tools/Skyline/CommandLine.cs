@@ -1930,10 +1930,9 @@ namespace pwiz.Skyline
                 if (!checkAllReplicates)
                 {
                     // check if the document already has a replicate with this name
-                    int indexChrom;
                     ChromatogramSet chromatogram;
                     if (!_doc.Settings.MeasuredResults.TryGetChromatogramSet(replicateName,
-                        out chromatogram, out indexChrom))
+                        out chromatogram, out _))
                     {
                         listNewNamedPaths.Add(namedPaths);
                         continue;
@@ -2003,8 +2002,7 @@ namespace pwiz.Skyline
                         // If we are appending to an existing replicate in the document
                         // make sure this file is not already in the replicate.
                         ChromatogramSet chromatogram;
-                        int index;
-                        _doc.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out chromatogram, out index);
+                        _doc.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out chromatogram, out _);
 
                         string replicateFileString = replicateFile.ToString();
                         if (chromatogram.MSDataFilePaths.Any(filePath => StringComparer.OrdinalIgnoreCase.Equals(filePath.ToString(), replicateFileString)))
@@ -2352,9 +2350,8 @@ namespace pwiz.Skyline
                 List<PeptideGroupDocNode> peptideGroupsNew;
                 try
                 {
-                    IdentityPath firstAdded, nextAdd;
                     doc = ImportPeptideSearch.ImportFasta(doc, commandArgs.FastaPath, import.IrtStandard, progressMonitor, null,
-                        out firstAdded, out nextAdd, out peptideGroupsNew);
+                        out _, out _, out peptideGroupsNew);
                 }
                 catch (Exception x)
                 {
@@ -2384,7 +2381,6 @@ namespace pwiz.Skyline
 
                 using (var reader = new StreamReader(filePath))
                 {
-                    IdentityPath firstAddedForFile, nextAdd;
                     _doc = _doc.ImportDocumentXml(reader,
                                                 filePath,
                                                 commandArgs.DocImportResultsMerge.Value,
@@ -2393,8 +2389,8 @@ namespace pwiz.Skyline
                                                 Settings.Default.StaticModList,
                                                 Settings.Default.HeavyModList,
                                                 null,   // Always add to the end
-                                                out firstAddedForFile,
-                                                out nextAdd,
+                                                out _,
+                                                out _,
                                                 false);
                 }
             }
@@ -2670,10 +2666,8 @@ namespace pwiz.Skyline
             using (var readerFasta = new StreamReader(PathEx.SafePath(path)))
             {
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
-                IdentityPath selectPath;
                 long lines = Helpers.CountLinesInFile(path);
-                int emptiesIgnored;
-                ModifyDocument(d => d.ImportFasta(readerFasta, progressMonitor, lines, false, null, out selectPath, out emptiesIgnored));
+                ModifyDocument(d => d.ImportFasta(readerFasta, progressMonitor, lines, false, null, out _, out _));
             }
             
             // Remove all empty proteins unless otherwise specified
@@ -2686,11 +2680,9 @@ namespace pwiz.Skyline
         {
             _out.WriteLine(Resources.CommandLine_ImportTransitionList_Importing_transiton_list__0____, Path.GetFileName(commandArgs.TransitionListPath));
 
-            IdentityPath selectPath;
             List<MeasuredRetentionTime> irtPeptides;
             List<SpectrumMzInfo> librarySpectra;
             List<TransitionImportErrorInfo> errorList;
-            List<PeptideGroupDocNode> peptideGroups;
             var retentionTimeRegression = _doc.Settings.PeptideSettings.Prediction.RetentionTime;
             RCalcIrt calcIrt = retentionTimeRegression != null ? (retentionTimeRegression.Calculator as RCalcIrt) : null;
 
@@ -2698,7 +2690,7 @@ namespace pwiz.Skyline
             var inputs = new MassListInputs(commandArgs.TransitionListPath);
             var importer = _doc.PreImportMassList(inputs, progressMonitor, false, SrmDocument.DOCUMENT_TYPE.none, false, Document.DocumentType);
             var docNew = _doc.ImportMassList(inputs, importer, progressMonitor, null,
-                out selectPath, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
+                out _, out irtPeptides, out librarySpectra, out errorList, out _);
 
             // If nothing was imported (e.g. operation was canceled or zero error-free transitions) and also no errors, just return
             if (ReferenceEquals(docNew, _doc) && !errorList.Any())
@@ -2768,7 +2760,7 @@ namespace pwiz.Skyline
                         try
                         {
                             List<SpectrumMzInfo> irtLibrarySpectra;
-                            docNew = docNew.ImportMassList(irtInputs, null, out selectPath, out irtPeptides, out irtLibrarySpectra, out errorList);
+                            docNew = docNew.ImportMassList(irtInputs, null, out _, out irtPeptides, out irtLibrarySpectra, out errorList);
                             if (errorList.Any())
                             {
                                 throw new InvalidDataException(errorList[0].ErrorMessage);

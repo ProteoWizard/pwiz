@@ -1534,8 +1534,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods mods, Adduct charge)
         {
-            bool allowVariableMods;
-            return Accept(settings, peptide, mods, new[] { charge }, PeptideFilterType.library, out allowVariableMods);
+            return Accept(settings, peptide, mods, new[] { charge }, PeptideFilterType.library, out _);
         }
 
         private enum PeptideFilterType

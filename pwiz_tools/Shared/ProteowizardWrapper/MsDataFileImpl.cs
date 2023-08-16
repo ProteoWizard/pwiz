@@ -1036,7 +1036,7 @@ namespace pwiz.ProteowizardWrapper
 
         private BinaryDataDouble TryGetIonMobilityData(Spectrum s, CVID cvid, ref CVID? cvidIonMobility)
         {
-            using var data = s.getArrayByCVID(cvid)?.data;
+            var data = s.getArrayByCVID(cvid)?.data;
             if (data != null)
                 cvidIonMobility = cvid;
 
@@ -1217,8 +1217,7 @@ namespace pwiz.ProteowizardWrapper
                 
                 for (var i = 0; i < len; i++)
                 {
-                    int index;
-                    var id = GetChromatogramId(i, out index);
+                    var id = GetChromatogramId(i, out _);
 
                     if (IsSingleIonCurrentId(id))
                         return true;

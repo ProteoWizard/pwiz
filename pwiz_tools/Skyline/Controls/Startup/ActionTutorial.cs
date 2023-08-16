@@ -79,30 +79,24 @@ namespace pwiz.Skyline.Controls.Startup
             skylineWindow.ResetDefaultSettings();
             try
             {
-                using (var longWaitDlg = new LongWaitDlg
+                using (var longWaitDlg = new LongWaitDlg())
                 {
-                    Text = Resources.ActionTutorial_LongWaitDlgAction_Downloading_Tutorial_Zip_File,
-                    Message =
-                        String.Format(
-                            Resources
-                                .ActionTutorial_LongWaitDlgAction_Downloading_to___0__1_Tutorial_will_open_in_browser_when_download_is_complete_,
-                            getTempPath(), Environment.NewLine),
-                    ProgressValue = 0
-                })
-                {
+                    longWaitDlg.Text = Resources.ActionTutorial_LongWaitDlgAction_Downloading_Tutorial_Zip_File;
+                    longWaitDlg.Message = String.Format(
+                        Resources
+                            .ActionTutorial_LongWaitDlgAction_Downloading_to___0__1_Tutorial_will_open_in_browser_when_download_is_complete_,
+                        getTempPath(), Environment.NewLine);
+                    longWaitDlg.ProgressValue = 0;
                     longWaitDlg.PerformWork(skylineWindow, 1000, DownloadTutorials);
                     if (longWaitDlg.IsCanceled)
                     {
                         return;
                     }
                 }
-                using (var longWaitDlg = new LongWaitDlg
+                using (var longWaitDlg = new LongWaitDlg())
                 {
-                    Text =
-                        Resources.ActionTutorial_LongWaitDlgAction_Extracting_Tutorial_Zip_File_in_the_same_directory_,
-                    ProgressValue = 0
-                })
-                {
+                    longWaitDlg.Text = Resources.ActionTutorial_LongWaitDlgAction_Extracting_Tutorial_Zip_File_in_the_same_directory_;
+                    longWaitDlg.ProgressValue = 0;
                     longWaitDlg.PerformWork(skylineWindow, 1000, ExtractTutorial);
                 }
             }
