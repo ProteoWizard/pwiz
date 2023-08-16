@@ -885,40 +885,24 @@ namespace pwiz.Skyline
             OpenFromPanorama();
         }
 
-        /// <summary>
-        /// Method used for testing <see cref="PanoramaFilePicker"/>
-        /// </summary>
-        public void ShowPanoramaFilePicker(string server, string user, string pass, JToken folderJson, JToken fileJson = null, JToken sizeJson = null)
-        {
-            using var dlg = new PanoramaFilePicker();
-            dlg.InitializeTestDialog(new Uri(server), user, pass, folderJson, fileJson, sizeJson);
-            dlg.ShowDialog(this);
-        }
-
         public void OpenFromPanorama(string downloadFilePath = null)
         {
             var servers = Settings.Default.ServerList;
             if (servers.Count == 0)
             {
-                DialogResult buttonPress = MultiButtonMsgDlg.Show(
-                    this,
-                    TextUtil.LineSeparate(
-                        Resources.SkylineWindow_OpenFromPanorama_No_Panorama_servers_were_found_,
-                        Resources.SkylineWindow_OpenFromPanorama_Press__Add__to_add_a_new_server_),
-                    Resources.SkylineWindow_OpenFromPanorama_Add);
-                if (buttonPress == DialogResult.Cancel)
+                if (MultiButtonMsgDlg.Show(this,
+                        TextUtil.LineSeparate(
+                            Resources.SkylineWindow_OpenFromPanorama_No_Panorama_servers_were_found_,
+                            Resources.SkylineWindow_OpenFromPanorama_Press__Add__to_add_a_new_server_),
+                        Resources.SkylineWindow_OpenFromPanorama_Add) == DialogResult.Cancel)
                     return;
 
-                if (buttonPress == DialogResult.OK)
-                {
-                    var serverPanoramaWeb = new Server(PanoramaUtil.PANORAMA_WEB, string.Empty, string.Empty);
-                    var newServer = servers.EditItem(this, serverPanoramaWeb, null, null);
-                    if (newServer == null)
-                        return;
+                var serverPanoramaWeb = new Server(PanoramaUtil.PANORAMA_WEB, string.Empty, string.Empty);
+                var newServer = servers.EditItem(this, serverPanoramaWeb, null, null);
+                if (newServer == null)
+                    return;
 
-                    servers.Add(newServer);
-                }
-
+                servers.Add(newServer);
             }
 
             var panoramaServers = servers.Cast<PanoramaServer>().ToList();
@@ -932,14 +916,6 @@ namespace pwiz.Skyline
             try
             {
                 using var dlg = new PanoramaFilePicker(panoramaServers, state);
-                using (var longWaitDlg = new LongWaitDlg())
-                {
-                    longWaitDlg.Text = Resources.SkylineWindow_OpenFromPanorama_Loading_remote_server_folders;
-                    longWaitDlg.PerformWork(this, 0,
-                        () => dlg.InitializeDialog());
-                    if (longWaitDlg.IsCanceled)
-                        return;
-                }
                 if (dlg.ShowDialog(this) != DialogResult.Cancel)
                 {
                     Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;
@@ -1000,7 +976,6 @@ namespace pwiz.Skyline
             {
                 MessageDlg.ShowException(this, e);
             }
-            Settings.Default.Save();
         }
 
         public bool DownloadPanoramaFile(string downloadPath, string fileName, string fileUrl, PanoramaServer curServer, long size, IPanoramaClient panoramaClient = null)
@@ -1928,7 +1903,6 @@ namespace pwiz.Skyline
                         {
                             throw new InvalidDataException(Resources.MassListImporter_Import_Empty_transition_list);
                         }
-
                         longWaitDlg.PerformWork(this, 1000,
                             () => docNew = smallMoleculeTransitionListReader.CreateTargets(doc, null, out _));
                             // CONSIDER: cancelable / progress monitor ?  This is normally pretty quick.

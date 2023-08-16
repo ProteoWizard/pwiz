@@ -90,7 +90,7 @@ namespace pwiz.PanoramaClient
             else
             {
                 ActiveServer = ServerList.FirstOrDefault();
-                tree.TopNode.Expand();
+                tree.TopNode?.Expand();
             }
 
             if (string.IsNullOrEmpty(InitialPath) || GetType() == typeof(WebDavBrowser))
@@ -565,7 +565,7 @@ public class WebDavBrowser : PanoramaFolderBrowser
             try
             {
                 query = new Uri(string.Concat(folderInfo.Server.URI, PanoramaUtil.WEBDAV, folderInfo.FolderPath, "?method=json"));
-                var webClient = new WebClientWithCredentials(query, folderInfo.Server.Username, folderInfo.Server.Password);
+                using var webClient = new WebClientWithCredentials(query, folderInfo.Server.Username, folderInfo.Server.Password);
                 JToken json = webClient.Get(query);
                 if ((int)json[@"fileCount"] != 0)
                 {

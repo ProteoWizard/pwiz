@@ -139,8 +139,7 @@ namespace SkylineBatch
 
         public void OpenFromPanorama(string server, string user, string pass, JToken folderJson)
         {
-            using var dlg = new PanoramaDirectoryPicker();
-            dlg.InitializeTestDialog(new Uri(server), user, pass, folderJson);
+            using var dlg = new PanoramaDirectoryPicker(new Uri(server), user, pass, folderJson);
             if (dlg.ShowDialog() != DialogResult.Cancel)
             {
 
