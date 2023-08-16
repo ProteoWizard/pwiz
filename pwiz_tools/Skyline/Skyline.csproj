@@ -3680,6 +3680,7 @@
     <None Include="Resources\Cluster.ico" />
     <None Include="Resources\Close.bmp" />
     <Content Include="Resources\hardklor_logo.png" />
+    <None Include="Resources\PanoramaDownload.bmp" />
     <Content Include="SkylineDocPointer.ico" />
     <EmbeddedResource Include="Resources\prosit_logo_dark_blue.png" />
     <Content Include="SkylineProcessRunner.exe">
@@ -4540,7 +4541,7 @@
     <Compile Include="Util\Log.cs" />
     <Compile Include="Util\MemoryInfo.cs" />
     <Compile Include="Util\NameValueParameters.cs" />
-    <Compile Include="Util\PanoramaUtil.cs" />
+    <Compile Include="Util\PanoramaPublishUtil.cs" />
     <Compile Include="Util\PooledSqliteConnection.cs" />
     <Compile Include="Util\SystemMetrics.cs" />
     <Compile Include="Util\TextRendererHelper.cs" />
@@ -5607,13 +5608,17 @@
       <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
       <Name>Common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Shared\Common\CommonUtil.csproj">
+    <ProjectReference Include="..\Shared\CommonUtil\CommonUtil.csproj">
       <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
       <Name>CommonUtil</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shared\MSGraph\MSGraph.csproj">
       <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
       <Name>MSGraph</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Shared\PanoramaClient\PanoramaClient.csproj">
+      <Project>{bf849cf8-25d7-4619-b001-9ed8e3771c44}</Project>
+      <Name>PanoramaClient</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shared\ProteomeDb\ProteomeDb.csproj">
       <Project>{09FC3CB3-FCCD-4906-A370-160B28725936}</Project>
@@ -5626,6 +5631,10 @@
     <ProjectReference Include="..\Shared\zedgraph\ZedGraph.csproj">
       <Project>{b99650ee-af46-47b4-a4a9-212ade7809b7}</Project>
       <Name>ZedGraph</Name>
+    </ProjectReference>
+    <ProjectReference Include="BullseyeSharp\BullseyeSharp.csproj">
+      <Project>{4f4c2045-4c86-46f2-a297-c05fc4a48a15}</Project>
+      <Name>BullseyeSharp</Name>
     </ProjectReference>
     <ProjectReference Include="SkylineTool\SkylineTool.csproj">
       <Project>{3FD4E167-8F9C-4116-8122-67C7AD143490}</Project>
@@ -5792,6 +5801,16 @@
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="PanoramaClient.pdb">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="ProteomeDb.pdb">
       <Visible>False</Visible>

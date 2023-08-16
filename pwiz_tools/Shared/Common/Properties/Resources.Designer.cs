@@ -1145,15 +1145,6 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Run command:.
-        /// </summary>
-        internal static string ProcessRunner_Run_Run_command_ {
-            get {
-                return ResourceManager.GetString("ProcessRunner_Run_Run_command_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Empty name.
         /// </summary>
         internal static string PropertyPath_Parse_Empty_name {
@@ -1317,15 +1308,6 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed reading {0} bytes. Source may be corrupted..
-        /// </summary>
-        internal static string StreamEx_ReadOrThrow_Failed_reading__0__bytes__Source_may_be_corrupted_ {
-            get {
-                return ResourceManager.GetString("StreamEx_ReadOrThrow_Failed_reading__0__bytes__Source_may_be_corrupted_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap SublistColumn {
@@ -1342,24 +1324,6 @@ namespace pwiz.Common.Properties {
             get {
                 object obj = ResourceManager.GetObject("TextColumn", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to m/z.
-        /// </summary>
-        internal static string Units_mz {
-            get {
-                return ResourceManager.GetString("Units_mz", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to ppm.
-        /// </summary>
-        internal static string Units_ppm {
-            get {
-                return ResourceManager.GetString("Units_ppm", resourceCulture);
             }
         }
         

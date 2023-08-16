@@ -47,4 +47,4 @@ lib pwiz_analysis_diaumpire
 # We pass in single input file, to which bjam prepends the full path from current
 # Jamfile directory.  The test program can then locate its data files.
 
-exe DiaUmpire : DiaUmpireTest.cpp pwiz_analysis_diaumpire ;
+#exe DiaUmpire : DiaUmpireTest.cpp pwiz_analysis_diaumpire ;

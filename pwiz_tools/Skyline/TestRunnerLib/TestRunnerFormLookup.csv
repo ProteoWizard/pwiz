@@ -136,6 +136,7 @@ ImportTransitionListErrorDlg,TestExistingExperimentsTutorial
 ListDesigner,TestListDesigner
 ListGridForm,TestListDesigner
 LiveResultsGrid,TestAnnotations
+LKContainerBrowser,TestPanoramaClient
 LocateFileDlg,TestInstallTools
 LongWaitDlg,TestLongWait
 ManageLayoutsForm,TestPivotEditor
@@ -152,6 +153,8 @@ MultiButtonMsgDlg,TestShareSettings
 NameLayoutForm,TestPivotEditor
 NoModeUIDlg,UIModeSettingsTest
 OpenDataSourceDialog,TestRetentionTimeAlignment
+PanoramaFilePicker, TestPanorama
+PanoramaDirectoryPicker, TestPanorama
 PasteDlg.FastaTab,ProteinMetadataFunctionalTests
 PasteDlg.PeptideListTab,TestMethodEditTutorial
 PasteDlg.ProteinListTab,TestMethodEditTutorial
@@ -208,6 +211,7 @@ StartPageSettingsUI,TestStartPageImport
 StatementCompletionForm,TestBackgroundProteome
 SynchronizedIntegrationDlg,TestSynchronizedIntegration
 BackgroundEventThreadsTestForm,TestBackgroundEventThreads
+TestPanoramaFolderBrowser, TestPanoramaClient
 ToolOptionsUI,TestAccessServer
 ToolOptionsUI.PanoramaTab,TestAccessServer
 ToolOptionsUI.RemoteTab,TestAccessServer
@@ -233,5 +237,6 @@ ViewEditor.FilterView,TestLiveReportsFilter
 ViewLibraryDlg,TestFullScanId
 VolcanoPlotPropertiesDlg,TestGroupComparisonVolcanoPlot
 VolcanoPlotFormattingDlg,TestVolcanoPlotFormatting
+WebDavBrowser,TestPanoramaClient
 DetectionToolbarProperties, TestDetectionsPlot
 ImportTransitionListColumnSelectDlg,TestExistingExperimentsTutorial
