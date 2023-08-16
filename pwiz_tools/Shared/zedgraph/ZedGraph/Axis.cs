@@ -839,7 +839,7 @@ namespace ZedGraph
 			this.MinSpace = 0;
 			// Calculate the space required for the current graph assuming scalefactor = 1.0
 			// and apply the bufferFraction
-            float space = this.CalcSpace( g, pane, 1.0F, out _ ) * bufferFraction;
+			float space = this.CalcSpace( g, pane, 1.0F, out _ ) * bufferFraction;
 			// isGrowOnly indicates the minSpace can grow but not shrink
 			if ( isGrowOnly )
 				space = Math.Max( oldSpace, space );

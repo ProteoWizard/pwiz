@@ -1645,7 +1645,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             float end = tranPeakInfo.EndRetentionTime;
             float start = tranPeakInfo.StartRetentionTime;
-            chromatogramInfo.AsArrays(out _, out _);
 
             var peakTimeIntensities = chromatogramInfo.TimeIntensities.InterpolateTime(start).InterpolateTime(end)
                 .Truncate(start, end);

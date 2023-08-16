@@ -2602,78 +2602,74 @@ namespace pwiz.SkylineTestUtil
         {
             var list = new List<DbRefSpectra>();
             var hasAnnotations = SqliteOperations.TableExists(connection, @"RefSpectraPeakAnnotations");
-            using (var select = new SQLiteCommand(connection))
+            using var select = new SQLiteCommand(connection);
+            select.CommandText = "SELECT * FROM RefSpectra";
+            using (var reader = select.ExecuteReader())
             {
-                select.CommandText = "SELECT * FROM RefSpectra";
-                using (var reader = select.ExecuteReader())
+                var iAdduct = reader.GetOrdinal("precursorAdduct");
+                var iIonMobility = reader.GetOrdinal("ionMobility");
+                var iIonMobilityHighEnergyOffset = reader.GetOrdinal("ionMobilityHighEnergyOffset");
+                var iCCS = reader.GetOrdinal("collisionalCrossSectionSqA");
+                var noMoleculeDetails = reader.GetOrdinal("moleculeName") < 0; // Also a cue for presence of chemicalFormula, inchiKey, and otherKeys
+                while (reader.Read())
                 {
-                    var iAdduct = reader.GetOrdinal("precursorAdduct");
-                    var iIonMobility = reader.GetOrdinal("ionMobility");
-                    var iIonMobilityHighEnergyOffset = reader.GetOrdinal("ionMobilityHighEnergyOffset");
-                    var iCCS = reader.GetOrdinal("collisionalCrossSectionSqA");
-                    var noMoleculeDetails = reader.GetOrdinal("moleculeName") < 0; // Also a cue for presence of chemicalFormula, inchiKey, and otherKeys
-                    while (reader.Read())
+                    var refSpectrum = new DbRefSpectra
                     {
-                        var refSpectrum = new DbRefSpectra
-                        {
-                            PeptideSeq = reader["peptideSeq"].ToString(),
-                            PeptideModSeq = reader["peptideModSeq"].ToString(),
-                            PrecursorCharge = int.Parse(reader["precursorCharge"].ToString()),
-                            PrecursorAdduct = iAdduct < 0 ? string.Empty : reader[iAdduct].ToString(),
-                            PrecursorMZ = double.Parse(reader["precursorMZ"].ToString()),
-                            RetentionTime = double.Parse(reader["retentionTime"].ToString()),
-                            IonMobility = ParseNullable(reader, iIonMobility),
-                            IonMobilityHighEnergyOffset = ParseNullable(reader, iIonMobilityHighEnergyOffset),
-                            CollisionalCrossSectionSqA = ParseNullable(reader, iCCS),
-                            MoleculeName = noMoleculeDetails ? string.Empty : reader["moleculeName"].ToString(),
-                            ChemicalFormula = noMoleculeDetails ? string.Empty : reader["chemicalFormula"].ToString(),
-                            InChiKey = noMoleculeDetails ? string.Empty : reader["inchiKey"].ToString(),
-                            OtherKeys = noMoleculeDetails ? string.Empty : reader["otherKeys"].ToString(),
-                            NumPeaks = ushort.Parse(reader["numPeaks"].ToString())
-                        };
-                        if (hasAnnotations)
-                        {
-                            var id = int.Parse(reader["id"].ToString());
-                            var annotations = GetRefSpectraPeakAnnotations(connection, refSpectrum, id);
-                            refSpectrum.PeakAnnotations = annotations;
-                        }
-                        list.Add(refSpectrum);
+                        PeptideSeq = reader["peptideSeq"].ToString(),
+                        PeptideModSeq = reader["peptideModSeq"].ToString(),
+                        PrecursorCharge = int.Parse(reader["precursorCharge"].ToString()),
+                        PrecursorAdduct = iAdduct < 0 ? string.Empty : reader[iAdduct].ToString(),
+                        PrecursorMZ = double.Parse(reader["precursorMZ"].ToString()),
+                        RetentionTime = double.Parse(reader["retentionTime"].ToString()),
+                        IonMobility = ParseNullable(reader, iIonMobility),
+                        IonMobilityHighEnergyOffset = ParseNullable(reader, iIonMobilityHighEnergyOffset),
+                        CollisionalCrossSectionSqA = ParseNullable(reader, iCCS),
+                        MoleculeName = noMoleculeDetails ? string.Empty : reader["moleculeName"].ToString(),
+                        ChemicalFormula = noMoleculeDetails ? string.Empty : reader["chemicalFormula"].ToString(),
+                        InChiKey = noMoleculeDetails ? string.Empty : reader["inchiKey"].ToString(),
+                        OtherKeys = noMoleculeDetails ? string.Empty : reader["otherKeys"].ToString(),
+                        NumPeaks = ushort.Parse(reader["numPeaks"].ToString())
+                    };
+                    if (hasAnnotations)
+                    {
+                        var id = int.Parse(reader["id"].ToString());
+                        var annotations = GetRefSpectraPeakAnnotations(connection, refSpectrum, id);
+                        refSpectrum.PeakAnnotations = annotations;
                     }
-
-                    return list;
+                    list.Add(refSpectrum);
                 }
+
+                return list;
             }
         }
 
         private static IList<DbRefSpectraPeakAnnotations> GetRefSpectraPeakAnnotations(SQLiteConnection connection, DbRefSpectra refSpectrum, int refSpectraId)
         {
             var list = new List<DbRefSpectraPeakAnnotations>();
-            using (var select = new SQLiteCommand(connection))
+            using var select = new SQLiteCommand(connection);
+            select.CommandText = "SELECT * FROM RefSpectraPeakAnnotations WHERE RefSpectraId = " + refSpectraId;
+            using (var reader = select.ExecuteReader())
             {
-                select.CommandText = "SELECT * FROM RefSpectraPeakAnnotations WHERE RefSpectraId = " + refSpectraId;
-                using (var reader = select.ExecuteReader())
+                while (reader.Read())
                 {
-                    while (reader.Read())
+                    list.Add(new DbRefSpectraPeakAnnotations
                     {
-                        list.Add(new DbRefSpectraPeakAnnotations
-                        {
 
-                            RefSpectra = refSpectrum,
-                            Id = int.Parse(reader["id"].ToString()),
-                            PeakIndex = int.Parse(reader["peakIndex"].ToString()),
-                            Charge = int.Parse(reader["charge"].ToString()),
-                            Adduct = reader["adduct"].ToString(),
-                            mzTheoretical = double.Parse(reader["mzTheoretical"].ToString()),
-                            mzObserved = double.Parse(reader["mzObserved"].ToString()),
-                            Name = reader["name"].ToString(),
-                            Formula = reader["formula"].ToString(),
-                            InchiKey = reader["inchiKey"].ToString(),
-                            OtherKeys = reader["otherKeys"].ToString(),
-                            Comment = reader["comment"].ToString(),
-                        });
-                    }
-                    return list;
+                        RefSpectra = refSpectrum,
+                        Id = int.Parse(reader["id"].ToString()),
+                        PeakIndex = int.Parse(reader["peakIndex"].ToString()),
+                        Charge = int.Parse(reader["charge"].ToString()),
+                        Adduct = reader["adduct"].ToString(),
+                        mzTheoretical = double.Parse(reader["mzTheoretical"].ToString()),
+                        mzObserved = double.Parse(reader["mzObserved"].ToString()),
+                        Name = reader["name"].ToString(),
+                        Formula = reader["formula"].ToString(),
+                        InchiKey = reader["inchiKey"].ToString(),
+                        OtherKeys = reader["otherKeys"].ToString(),
+                        Comment = reader["comment"].ToString(),
+                    });
                 }
+                return list;
             }
         }
 

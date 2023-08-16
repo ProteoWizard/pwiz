@@ -1045,11 +1045,7 @@ namespace pwiz.Skyline.Util
                 if (hc.Substring(i).Length >= 6)
                 {
                     hc6 = hc.Substring(i, 6);
-                    sc6 = 0.0;
-                    if (HlxScore6.TryGetValue(hc6, out var value))
-                    {
-                        sc6 = value;
-                    }
+                    HlxScore6.TryGetValue(hc6, out sc6);
                 }
                 if (sc6 > 0)
                 {
@@ -1062,11 +1058,7 @@ namespace pwiz.Skyline.Util
                 if (hc.Substring(i).Length >= 5)
                 {
                     hc5 = hc.Substring(i, 5);
-                    sc5 = 0.0;
-                    if (HlxScore5.TryGetValue(hc5, out var value))
-                    {
-                        sc5 = value;
-                    }
+                    HlxScore5.TryGetValue(hc5, out sc5);
                 }
                 if (sc5 > 0)
                 {
@@ -1079,11 +1071,7 @@ namespace pwiz.Skyline.Util
                 if (hc.Substring(i).Length >= 4)
                 {
                     hc4 = hc.Substring(i, 4);
-                    sc4 = 0.0;
-                    if (HlxScore4.TryGetValue(hc4, out var value))
-                    {
-                        sc4 = value;
-                    }
+                    HlxScore4.TryGetValue(hc4, out sc4);
                 }
                 if (sc4 > 0)
                 {

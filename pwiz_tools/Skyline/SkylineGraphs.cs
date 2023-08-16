@@ -3298,7 +3298,7 @@ namespace pwiz.Skyline
                     regression = dlg.Regression;
                     listRegression.Add(regression);
 
-                    ModifyDocument(string.Format(Resources.SkylineWindow_CreateRegression_Set_regression__0__, regression?.Name),
+                    ModifyDocument(string.Format(Resources.SkylineWindow_CreateRegression_Set_regression__0__, regression!.Name),
                                    doc =>
                                    doc.ChangeSettings(
                                        doc.Settings.ChangePeptidePrediction(p => p.ChangeRetentionTime(regression))), AuditLogEntry.SettingsLogFunction);
