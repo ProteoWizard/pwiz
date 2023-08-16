@@ -124,17 +124,16 @@ namespace TestPerf
             {
                 KeepPrecursors = false,
                 ChromatogramClickPoint = new PointF(23.02F, 150.0F),
-                LibraryPeptideCount = 18125,
-                IrtSlope = 3.005,
-                IrtIntercept = -67.215,
+                LibraryPeptideCount = 20791,
+                IrtSlope = 3.017,
+                IrtIntercept = -67.652,
 
-                TargetCounts = new[] { 14, 213, 277, 1661 },
                 FinalTargetCounts = new[] { 11, 215, 279, 1673 },
-                ScoringModelCoefficients = "0.0967|-0.2729|5.0779|0.0591|-0.5293|0.8507|0.1077|-0.0567",
+                ScoringModelCoefficients = "-0.1511|-0.5825|5.5995|-0.5757|-0.4500|0.7592|0.4174|-0.0851",
                 MassErrorStats = new[]
                 {
-                    new[] {3.4, 3.7},
-                    new[] {3.2, 3.3},
+                    new[] {3.3, 3.7},
+                    new[] {3.2, 3.4},
                     new[] {3.5, 4.1},
                 },
             };
@@ -156,7 +155,7 @@ namespace TestPerf
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
                 ChromatogramClickPoint = new PointF(23.02F, 150.0F),
-                LibraryPeptideCount = 28370,
+                LibraryPeptideCount = 35112,
                 IrtSlope = 3.006,
                 IrtIntercept = -67.212,
 
@@ -213,18 +212,17 @@ namespace TestPerf
                 KeepPrecursors = false,
                 IrtFilterText = "standard",
                 ChromatogramClickPoint = new PointF(18.13f, 5.51e5f),
-                LibraryPeptideCount = 9698,
-                IrtSlope = 2.606,
-                IrtIntercept = -45.948,
+                LibraryPeptideCount = 10270,
+                IrtSlope = 2.605,
+                IrtIntercept = -45.890,
 
-                TargetCounts = new[] { 14, 173, 203, 1217 },
-                FinalTargetCounts = new[] { 11, 175, 205, 1229 },
-                ScoringModelCoefficients = "0.2010|-0.8474|1.6058|1.7597|-0.0760|0.7606|0.2393|-0.0863",
+                FinalTargetCounts = new[] { 11, 177, 209, 1253 },
+                ScoringModelCoefficients = "0.2358|-0.6932|3.1396|0.6093|-0.0724|0.7662|0.2178|-0.0990",
                 MassErrorStats = new[]
                 {
-                    new[] {1.9, 3.8},
-                    new[] {1.4, 3.7},
-                    new[] {2.3, 3.9},
+                    new[] {1.9, 3.9},
+                    new[] {1.5, 3.8},
+                    new[] {2.4, 3.9},
                 },
             };
 
@@ -247,7 +245,7 @@ namespace TestPerf
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
                 ChromatogramClickPoint = new PointF(18.13f, 5.51e5f),
-                LibraryPeptideCount = 14541,
+                LibraryPeptideCount = 16406,
                 IrtSlope = 2.599,
                 IrtIntercept = -45.630,
 

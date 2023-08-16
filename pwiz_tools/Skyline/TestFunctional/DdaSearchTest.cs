@@ -106,7 +106,7 @@ namespace pwiz.SkylineTestFunctional
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
                 AdditionalSettings = new List<KeyValuePair<string, string>>(),
-                ExpectedResultsFinal = new ExpectedResults(138, 337, 400, 1200)
+                ExpectedResultsFinal = new ExpectedResults(138, 337, 398, 1194)
             };
 
             RunFunctionalTest();

@@ -475,8 +475,9 @@ namespace pwiz.SkylineTestFunctional
 
                     var peptideList = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, "Peptides", string.Empty, peptideNodes.ToArray());
                     var peptideList2 = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, "DuplicatePeptideNodes", string.Empty, peptideNodes.ToArray());
+                    var peptideList3 = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, "EmptyPeptideList", string.Empty, Array.Empty<PeptideDocNode>());
                     SkylineWindow.ModifyDocument("Set peptides",
-                        doc => (SkylineWindow.Document.ChangeChildren(new DocNode[] { peptideList, peptideList2 }) as SrmDocument)
+                        doc => (SkylineWindow.Document.ChangeChildren(new DocNode[] { peptideList, peptideList2, peptideList3 }) as SrmDocument)
                             ?.ChangeSettings(srmSettings));
                 });
 

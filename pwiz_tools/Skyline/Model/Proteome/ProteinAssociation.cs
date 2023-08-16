@@ -175,7 +175,7 @@ namespace pwiz.Skyline.Model.Proteome
             
             Assume.IsTrue(localResults.ProteinsMapped + localResults.ProteinsUnmapped > 0);
 
-            var distinctPeptideDocNodes = _peptideToPath.SelectMany(kvp => kvp.Value).Distinct().ToList();
+            var distinctPeptideDocNodes = _peptideToPath.SelectMany(kvp => kvp.Value);
             int distinctTargetPeptideCount = distinctPeptideDocNodes.Where(p => !p.IsDecoy).Select(p => p.Peptide.Target).Distinct().Count();
             _peptideToProteins = peptideToProteins;
             _results = localResults;
@@ -818,11 +818,11 @@ namespace pwiz.Skyline.Model.Proteome
             {
                 var peptideDocNodes = nodePepGroup.Children.Where(node => node is PeptideDocNode).Cast<PeptideDocNode>().ToList();
 
-                // drop all empty nodes
+                // Drop empty peptide lists
                 if (peptideDocNodes.Count == 0)
                     continue;
 
-                // drop old Unmapped Peptides group
+                // Drop old Unmapped Peptides group
                 if (nodePepGroup.Name == Resources.ProteinAssociation_CreateDocTree_Unmapped_Peptides)
                     continue;
 
@@ -851,8 +851,11 @@ namespace pwiz.Skyline.Model.Proteome
                     // If it was mapped, remove it from the peptide list
                     var mappedPeptides = peptidesByMappedStatus[true];
                     var mappedPeptideIndexes = mappedPeptides.Select(node => node.Peptide.GlobalIndex);
-                    var newPeptideList = nodePepGroup.RemoveAll(mappedPeptideIndexes.ToList()) as PeptideGroupDocNode;
-                    appendPeptideLists.Add(newPeptideList);
+                    var newPeptideList = (PeptideGroupDocNode) nodePepGroup.RemoveAll(mappedPeptideIndexes.ToList());
+
+                    // Only keep the list if it still has peptides
+                    if (newPeptideList.Children.Count != 0) 
+                        appendPeptideLists.Add(newPeptideList);
                     continue;
                 }
 
