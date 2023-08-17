@@ -132,7 +132,7 @@
     <value>0</value>
   </data>
   <data name="lblPrecursorCharges.Text" xml:space="preserve">
-    <value>プリカーサーの電荷 (&amp;P)：</value>
+    <value>プリカーサーの電荷(&amp;P)：</value>
   </data>
   <data name="&gt;&gt;lblPrecursorCharges.Name" xml:space="preserve">
     <value>lblPrecursorCharges</value>
@@ -322,7 +322,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblIonCount.Location" type="System.Drawing.Point, System.Drawing">
-    <value>141, 224</value>
+    <value>161, 224</value>
   </data>
   <data name="lblIonCount.Size" type="System.Drawing.Size, System.Drawing">
     <value>31, 13</value>
@@ -352,7 +352,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblIonCountUnits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>226, 243</value>
+    <value>245, 243</value>
   </data>
   <data name="lblIonCountUnits.Size" type="System.Drawing.Size, System.Drawing">
     <value>65, 13</value>
@@ -376,7 +376,7 @@
     <value>9</value>
   </data>
   <data name="txtIonCount.Location" type="System.Drawing.Point, System.Drawing">
-    <value>144, 240</value>
+    <value>164, 240</value>
   </data>
   <data name="txtIonCount.Size" type="System.Drawing.Size, System.Drawing">
     <value>76, 20</value>
@@ -433,7 +433,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblMinIonCountUnits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>226, 269</value>
+    <value>245, 269</value>
   </data>
   <data name="lblMinIonCountUnits.Size" type="System.Drawing.Size, System.Drawing">
     <value>84, 13</value>
@@ -457,7 +457,7 @@
     <value>3</value>
   </data>
   <data name="txtMinIonCount.Location" type="System.Drawing.Point, System.Drawing">
-    <value>144, 266</value>
+    <value>163, 266</value>
   </data>
   <data name="txtMinIonCount.Size" type="System.Drawing.Size, System.Drawing">
     <value>76, 20</value>
@@ -802,7 +802,7 @@
     <value>19</value>
   </data>
   <data name="label7.Text" xml:space="preserve">
-    <value>Ion match toleran&amp;ce unit:</value>
+    <value>イオン許容誤差単位(&amp;C)：</value>
   </data>
   <data name="&gt;&gt;label7.Name" xml:space="preserve">
     <value>label7</value>

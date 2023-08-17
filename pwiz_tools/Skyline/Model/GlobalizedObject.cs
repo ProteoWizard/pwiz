@@ -247,7 +247,7 @@ namespace pwiz.Skyline.Model
                 }
             }
         }
-#endregion
+        #endregion
     }
 
     /// <summary>

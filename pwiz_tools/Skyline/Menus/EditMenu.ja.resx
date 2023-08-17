@@ -498,6 +498,12 @@
   <data name="manageUniquePeptidesMenuItem.Text" xml:space="preserve">
     <value>ユニークペプチド(&amp;Q)...</value>
   </data>
+  <data name="editSpectrumFilterMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>207, 22</value>
+  </data>
+  <data name="editSpectrumFilterMenuItem.Text" xml:space="preserve">
+    <value>スペクトラムフィルタの編集...</value>
+  </data>
   <data name="toolStripSeparator30.Size" type="System.Drawing.Size, System.Drawing">
     <value>204, 6</value>
   </data>
@@ -796,6 +802,12 @@
     <value>manageUniquePeptidesMenuItem</value>
   </data>
   <data name="&gt;&gt;manageUniquePeptidesMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;editSpectrumFilterMenuItem.Name" xml:space="preserve">
+    <value>editSpectrumFilterMenuItem</value>
+  </data>
+  <data name="&gt;&gt;editSpectrumFilterMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator30.Name" xml:space="preserve">
