@@ -26,8 +26,10 @@
 #include "pwiz/data/msdata/Diff.hpp"
 #include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
 #include "SpectrumList_LockmassRefiner.hpp"
+#include "SpectrumList_PeakPicker.hpp"
 #include "boost/foreach_field.hpp"
 #include "boost/core/null_deleter.hpp"
+#include "pwiz/data/msdata/Version.hpp"
 
 using namespace pwiz::util;
 using namespace pwiz::cv;
@@ -35,25 +37,143 @@ using namespace pwiz::msdata;
 using namespace pwiz::analysis;
 
 ostream* os_ = 0;
+bool generateMzML = false;
 
 
-void test(const string& filepath, double lockmassMz, double lockmassTolerance)
+void mangleSourceFileLocations(const string& sourceName, vector<SourceFilePtr>& sourceFiles, const string& newSourceName = "")
 {
+    // mangling the absolute paths is necessary for the test to work from any path
+    BOOST_FOREACH(SourceFilePtr & sourceFilePtr, sourceFiles)
+    {
+        // if the sourceName or newSourceName is in the location, preserve it (erase everything preceding it)
+        if (!isHTTP(sourceFilePtr->location))
+        {
+            size_t sourceNameInLocation = newSourceName.empty() ? sourceFilePtr->location.find(sourceName) : min(sourceFilePtr->location.find(sourceName), sourceFilePtr->location.find(newSourceName));
+            if (sourceNameInLocation != string::npos)
+            {
+                sourceFilePtr->location.erase(0, sourceNameInLocation);
+                sourceFilePtr->location = "file:///" + newSourceName.empty() ? sourceName : newSourceName;
+            }
+            else
+                sourceFilePtr->location = "file:///";
+        }
+
+        if (!newSourceName.empty())
+        {
+            if (!bal::contains(sourceFilePtr->id, newSourceName))
+                bal::replace_all(sourceFilePtr->id, sourceName, newSourceName);
+            if (!bal::contains(sourceFilePtr->name, newSourceName))
+                bal::replace_all(sourceFilePtr->name, sourceName, newSourceName);
+        }
+    }
+}
+
+
+void manglePwizSoftware(MSData& msd)
+{
+    // a pwiz version change isn't worth regenerating the test data
+    vector<size_t> oldPwizSoftwarePtrs;
+    SoftwarePtr pwizSoftware;
+    for (size_t i = 0; i < msd.softwarePtrs.size(); ++i)
+        if (msd.softwarePtrs[i]->hasCVParam(MS_pwiz))
+        {
+            if (msd.softwarePtrs[i]->version != pwiz::msdata::Version::str())
+                oldPwizSoftwarePtrs.push_back(i);
+            else
+                pwizSoftware = msd.softwarePtrs[i];
+        }
+
+    pwizSoftware->id = "current pwiz";
+
+    msd.dataProcessingPtrs = msd.allDataProcessingPtrs();
+    msd.dataProcessingPtrs.resize(1);
+
+    SpectrumListBase* sl = dynamic_cast<SpectrumListBase*>(msd.run.spectrumListPtr.get());
+    if (sl && !msd.dataProcessingPtrs.empty()) sl->setDataProcessingPtr(msd.dataProcessingPtrs[0]);
+
+    for (DataProcessingPtr& dp : msd.dataProcessingPtrs)
+        for (ProcessingMethod& pm : dp->processingMethods)
+            pm.softwarePtr = pwizSoftware;
+
+    for (vector<size_t>::reverse_iterator itr = oldPwizSoftwarePtrs.rbegin();
+        itr != oldPwizSoftwarePtrs.rend();
+        ++itr)
+        msd.softwarePtrs.erase(msd.softwarePtrs.begin() + (*itr));
+}
+
+enum class PeakPicking
+{
+    None,
+    Vendor,
+    CWT
+};
+
+void test(const string& filepath, double lockmassMz, double lockmassTolerance, PeakPicking peakPickingMode)
+{
+    if (os_) *os_ << filepath << " " << lockmassMz << " " << lockmassTolerance << " " << static_cast<int>(peakPickingMode) << endl;
+
     ExtendedReaderList readerList;
     MSDataFile msd(filepath, &readerList);
 
-    bfs::path targetResultFilename = bfs::path(__FILE__).parent_path() / "SpectrumList_LockmassRefinerTest.data" / (msd.run.id + ".mzML");
+    string suffix;
+    switch (peakPickingMode)
+    {
+        case PeakPicking::Vendor: suffix = "-centroid"; break;
+        case PeakPicking::CWT: suffix = "-centroid-cwt"; break;
+        default: break;
+    }
+
+    bfs::path targetResultFilename = bfs::path(__FILE__).parent_path() / "SpectrumList_LockmassRefinerTest.data" / (msd.run.id + suffix + ".mzML");
+
+    if (!bfs::exists(targetResultFilename) && generateMzML)
+    {
+        if (os_) *os_ << "Writing new reference file: " << targetResultFilename.string() << endl;
+        MSDataFile::WriteConfig writeConfig;
+        writeConfig.indexed = false;
+        writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_intensity_array] = BinaryDataEncoder::Precision_32;
+        writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
+        MSDataFile::write(msd, targetResultFilename.string(), writeConfig);
+    }
+
     if (!bfs::exists(targetResultFilename))
         throw runtime_error("test result file does not exist: " + targetResultFilename.string());
     MSDataFile targetResult(targetResultFilename.string());
 
-    SpectrumList_LockmassRefiner lmr(msd.run.spectrumListPtr, lockmassMz, lockmassMz, lockmassTolerance);
-    SpectrumListPtr sl(&lmr, boost::null_deleter());
-    msd.run.spectrumListPtr = sl;
+    SpectrumListPtr slpp;
+    SpectrumListPtr lmr;
+    switch (peakPickingMode)
+    {
+        case PeakPicking::Vendor:
+            slpp.reset(new SpectrumList_PeakPicker(msd.run.spectrumListPtr, nullptr, true, IntegerSet::positive));
+            lmr.reset(new SpectrumList_LockmassRefiner(slpp, lockmassMz, lockmassMz, lockmassTolerance));
+            msd.run.spectrumListPtr = lmr;
+            break;
+        case PeakPicking::CWT:
+            lmr.reset(new SpectrumList_LockmassRefiner(msd.run.spectrumListPtr, lockmassMz, lockmassMz, lockmassTolerance));
+            slpp.reset(new SpectrumList_PeakPicker(lmr, boost::make_shared<CwtPeakDetector>(1, 0, 0.1), false, IntegerSet::positive));
+            msd.run.spectrumListPtr = slpp;
+            break;
+        case PeakPicking::None:
+            lmr.reset(new SpectrumList_LockmassRefiner(msd.run.spectrumListPtr, lockmassMz, lockmassMz, lockmassTolerance));
+            msd.run.spectrumListPtr = lmr;
+            break;
+    }
+
+    // remove metadata ptrs appended on read
+    vector<SourceFilePtr>& sfs = targetResult.fileDescription.sourceFilePtrs;
+    if (!sfs.empty()) sfs.erase(sfs.end() - 1);
+
+    string sourceName = bfs::path(filepath).filename().string();
+    mangleSourceFileLocations(sourceName, sfs);
+    mangleSourceFileLocations(sourceName, msd.fileDescription.sourceFilePtrs);
+    manglePwizSoftware(msd);
+    manglePwizSoftware(targetResult);
 
     DiffConfig config;
     config.ignoreExtraBinaryDataArrays = true;
-    config.ignoreMetadata = true;
+    config.ignoreDataProcessing = true;
+    if (lockmassMz == 0)
+        config.ignoreMetadata = true;
 
     Diff<MSData, DiffConfig> diff(msd, targetResult, config);
 
@@ -63,7 +183,19 @@ void test(const string& filepath, double lockmassMz, double lockmassTolerance)
     }
     else
     {
-        if (os_ && diff) *os_ << diff;
+        if (diff)
+        {
+            if (os_) *os_ << diff;
+            if (generateMzML)
+            {
+                if (os_) *os_ << "Writing new reference file: " << targetResultFilename.string() << endl;
+                MSDataFile::WriteConfig writeConfig;
+                writeConfig.indexed = false;
+                writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_intensity_array] = BinaryDataEncoder::Precision_32;
+                writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
+                MSDataFile::write(msd, targetResultFilename.string(), writeConfig);
+            }
+        }
         unit_assert(!diff);
     }
 }
@@ -74,6 +206,7 @@ void parseArgs(const vector<string>& args, vector<string>& rawpaths)
     for (size_t i = 1; i < args.size(); ++i)
     {
         if (args[i] == "-v") os_ = &cout;
+        else if (args[i] == "--generate-mzML") generateMzML = true;
         else if (bal::starts_with(args[i], "--")) continue;
         else rawpaths.push_back(args[i]);
     }
@@ -96,8 +229,12 @@ int main(int argc, char* argv[])
             if (bal::ends_with(filepath, "ATEHLSTLSEK_profile.raw"))
             {
                 ++tests;
-                test(filepath, 684.3469, 0.1);
-                test(filepath, 0, 0.1);
+                test(filepath, 684.3469, 0.1, PeakPicking::None);
+                test(filepath, 0, 0.1, PeakPicking::None);
+                test(filepath, 684.3469, 0.1, PeakPicking::Vendor);
+                test(filepath, 0, 0.1, PeakPicking::Vendor);
+                test(filepath, 684.3469, 0.1, PeakPicking::CWT);
+                test(filepath, 0, 0.1, PeakPicking::CWT);
             }
         }
 

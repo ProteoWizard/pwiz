@@ -437,7 +437,10 @@ namespace TestRunner
             //Process.GetCurrentProcess().Kill();
 
             if (commandLineArgs.ArgAsBool("wait"))
-                Console.ReadKey();
+            {
+                Console.Out.WriteLine("Press <enter> to continue");
+                Console.ReadLine();
+            }
 
             // delete per-process tools directory
             if (Path.GetFileName(ToolDescriptionHelpers.GetToolsDirectory()) != "Tools")
@@ -792,7 +795,8 @@ namespace TestRunner
             int testsFailed = 0;
             int testsResultsReturned = 0;
             int workerCount = (int) commandLineArgs.ArgAsLong("workercount");
-            int workerTimeout = Convert.ToInt32(commandLineArgs.ArgAsStringOrDefault("workertimeout", "60"));
+            var dockerTimeoutSecondsOverride = Environment.GetEnvironmentVariable("SKYLINE_TESTRUNNER_DOCKER_TIMEOUT_SEC");
+            int workerTimeout = Convert.ToInt32(commandLineArgs.ArgAsStringOrDefault("workertimeout", dockerTimeoutSecondsOverride ?? "60"));
             int loop = (int) commandLineArgs.ArgAsLong("loop");
             var languages = GetLanguages(commandLineArgs);
 

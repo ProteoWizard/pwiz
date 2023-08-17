@@ -39,6 +39,7 @@ namespace pwiz.Skyline.ToolsUI
             this.lblRemoteAccounts = new System.Windows.Forms.Label();
             this.btnEditRemoteAccountList = new System.Windows.Forms.Button();
             this.tabProsit = new System.Windows.Forms.TabPage();
+            this.tbxPrositServer = new System.Windows.Forms.TextBox();
             this.ceLabel = new System.Windows.Forms.Label();
             this.ceCombo = new System.Windows.Forms.ComboBox();
             this.prositServerStatusLabel = new System.Windows.Forms.Label();
@@ -53,6 +54,8 @@ namespace pwiz.Skyline.ToolsUI
             this.labelDisplayLanguage = new System.Windows.Forms.Label();
             this.listBoxLanguages = new System.Windows.Forms.ListBox();
             this.tabMisc = new System.Windows.Forms.TabPage();
+            this.tbxSettingsFilePath = new System.Windows.Forms.TextBox();
+            this.lblSettingsPath = new System.Windows.Forms.Label();
             this.btnResetSettings = new System.Windows.Forms.Button();
             this.comboCompactFormatOption = new System.Windows.Forms.ComboBox();
             this.lblCompactDocumentFormat = new System.Windows.Forms.Label();
@@ -63,7 +66,6 @@ namespace pwiz.Skyline.ToolsUI
             this.powerOfTenCheckBox = new System.Windows.Forms.CheckBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
-            this.tbxPrositServer = new System.Windows.Forms.TextBox();
             this.tabControl.SuspendLayout();
             this.tabPanorama.SuspendLayout();
             this.tabRemote.SuspendLayout();
@@ -159,6 +161,12 @@ namespace pwiz.Skyline.ToolsUI
             this.tabProsit.Name = "tabProsit";
             this.tabProsit.UseVisualStyleBackColor = true;
             // 
+            // tbxPrositServer
+            // 
+            resources.ApplyResources(this.tbxPrositServer, "tbxPrositServer");
+            this.tbxPrositServer.Name = "tbxPrositServer";
+            this.tbxPrositServer.ReadOnly = true;
+            // 
             // ceLabel
             // 
             resources.ApplyResources(this.ceLabel, "ceLabel");
@@ -243,6 +251,8 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // tabMisc
             // 
+            this.tabMisc.Controls.Add(this.tbxSettingsFilePath);
+            this.tabMisc.Controls.Add(this.lblSettingsPath);
             this.tabMisc.Controls.Add(this.btnResetSettings);
             this.tabMisc.Controls.Add(this.comboCompactFormatOption);
             this.tabMisc.Controls.Add(this.lblCompactDocumentFormat);
@@ -250,6 +260,17 @@ namespace pwiz.Skyline.ToolsUI
             resources.ApplyResources(this.tabMisc, "tabMisc");
             this.tabMisc.Name = "tabMisc";
             this.tabMisc.UseVisualStyleBackColor = true;
+            // 
+            // tbxSettingsFilePath
+            // 
+            resources.ApplyResources(this.tbxSettingsFilePath, "tbxSettingsFilePath");
+            this.tbxSettingsFilePath.Name = "tbxSettingsFilePath";
+            this.tbxSettingsFilePath.ReadOnly = true;
+            // 
+            // lblSettingsPath
+            // 
+            resources.ApplyResources(this.lblSettingsPath, "lblSettingsPath");
+            this.lblSettingsPath.Name = "lblSettingsPath";
             // 
             // btnResetSettings
             // 
@@ -317,12 +338,6 @@ namespace pwiz.Skyline.ToolsUI
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOK.Name = "btnOK";
             this.btnOK.UseVisualStyleBackColor = true;
-            // 
-            // tbxPrositServer
-            // 
-            resources.ApplyResources(this.tbxPrositServer, "tbxPrositServer");
-            this.tbxPrositServer.Name = "tbxPrositServer";
-            this.tbxPrositServer.ReadOnly = true;
             // 
             // ToolOptionsUI
             // 
@@ -392,5 +407,7 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.Label ceLabel;
         private System.Windows.Forms.ComboBox ceCombo;
         private System.Windows.Forms.TextBox tbxPrositServer;
+        private System.Windows.Forms.TextBox tbxSettingsFilePath;
+        private System.Windows.Forms.Label lblSettingsPath;
     }
 }
