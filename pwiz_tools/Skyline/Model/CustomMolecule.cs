@@ -107,8 +107,8 @@ namespace pwiz.Skyline.Model
             var keys = FormatAccessionNumbers(keysTSV, inChiKey);
             if (!string.IsNullOrEmpty(inChiKey))
             {
-                if (keys.ContainsKey(TagInChiKey))
-                    Assume.AreEqual(inChiKey, keys[TagInChiKey]);
+                if (keys.TryGetValue(TagInChiKey, out var key))
+                    Assume.AreEqual(inChiKey, key);
                 else
                     keys.Add(TagInChiKey, inChiKey);
             }

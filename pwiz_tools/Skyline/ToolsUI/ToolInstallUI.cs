@@ -43,13 +43,11 @@ namespace pwiz.Skyline.ToolsUI
      
         public static void InstallZipFromFile(Control parent, InstallProgram install)
         {
-            using (var dlg = new OpenFileDialog
+            using (var dlg = new OpenFileDialog())
             {
-                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(
-                    Resources.ConfigureToolsDlg_AddFromFile_Zip_Files, ToolDescription.EXT_INSTALL)),
-                Multiselect = false
-            })
-            {
+                dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(
+                    Resources.ConfigureToolsDlg_AddFromFile_Zip_Files, ToolDescription.EXT_INSTALL));
+                dlg.Multiselect = false;
                 if (dlg.ShowDialog(parent) == DialogResult.OK)
                     InstallZipTool(parent, dlg.FileName, install);
             }
@@ -60,8 +58,9 @@ namespace pwiz.Skyline.ToolsUI
             try
             {
                 IList<ToolStoreItem> toolStoreItems = null;
-                using (var dlg = new LongWaitDlg { Message = Resources.ConfigureToolsDlg_AddFromWeb_Contacting_the_server })
+                using (var dlg = new LongWaitDlg())
                 {
+                    dlg.Message = Resources.ConfigureToolsDlg_AddFromWeb_Contacting_the_server;
                     dlg.PerformWork(parent, 1000, () =>
                     {
                         toolStoreItems = ToolStoreUtil.ToolStoreClient.GetToolStoreItems();

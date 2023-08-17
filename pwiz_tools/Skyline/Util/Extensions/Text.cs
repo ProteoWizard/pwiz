@@ -338,9 +338,8 @@ namespace pwiz.Skyline.Util.Extensions
                 string fieldConverted = field
                     .Replace(CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator,
                              CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
-                double fieldValue;
                 // Convert if the field is numeric or contains modifications
-                if (double.TryParse(fieldConverted, out fieldValue) || new Regex(@"\[[+-]\d+\.\d\]").IsMatch(field))
+                if (double.TryParse(fieldConverted, out _) || new Regex(@"\[[+-]\d+\.\d\]").IsMatch(field))
                     fields[i] = fieldConverted;
             }
             return string.Join(separator.ToString(), fields);

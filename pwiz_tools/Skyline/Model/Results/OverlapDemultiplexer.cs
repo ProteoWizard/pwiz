@@ -82,8 +82,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 long widthRegion = isoBoundaries[i + 1] - isoBoundaries[i];
                 long centerRegion = (isoBoundaries[i + 1] + isoBoundaries[i]) / 2;
-                int windowIndex;
-                if (widthRegion >= minDeconvHash && TryGetWindowFromMz(IsoWindowHasher.UnHash(centerRegion), out windowIndex))
+                if (widthRegion >= minDeconvHash && TryGetWindowFromMz(IsoWindowHasher.UnHash(centerRegion), out _))
                 {
                     _deconvRegions.Add(new DeconvolutionRegion(isoBoundaries[i], isoBoundaries[i + 1], _deconvRegions.Count));
                 }

@@ -361,9 +361,7 @@ namespace ZedGraph
 		/// 8 for August.</param>
 		public void GetDate( out int year, out int month, out int day )
 		{
-			int hour, minute, second;
-			
-			XLDateToCalendarDate( _xlDate, out year, out month, out day, out hour, out minute, out second );
+			XLDateToCalendarDate( _xlDate, out year, out month, out day, out _, out _, out int _ );
 		}
 		
 		/// <summary>
@@ -1109,9 +1107,9 @@ namespace ZedGraph
 		/// floating point format</returns>
 		public static double XLDateToDayOfYear( double xlDate )
 		{
-			int year, month, day, hour, minute, second;
-			XLDateToCalendarDate( xlDate, out year, out month, out day,
-									out hour, out minute, out second );
+			int year;
+			XLDateToCalendarDate( xlDate, out year, out _, out _,
+									out _, out _, out int _ );
 			return XLDateToJulianDay( xlDate ) - CalendarDateToJulianDay( year, 1, 1, 0, 0, 0 ) + 1.0;
 		}
 		

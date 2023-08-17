@@ -577,8 +577,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 RegressionLine = regression,
             };
 
-            using (var graph = new GraphRegression(new[] { data }) { Width = 800, Height = 600 })
+            using (var graph = new GraphRegression(new[] { data }))
             {
+                graph.Width = 800;
+                graph.Height = 600;
                 graph.ShowDialog(this);
             }
         }
@@ -725,8 +727,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 if (!_picker.HasScoredPeptides)
                 {
-                    using (var longWaitDlg = new LongWaitDlg {Text = Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculating_scores})
+                    using (var longWaitDlg = new LongWaitDlg())
                     {
+                        longWaitDlg.Text = Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculating_scores;
                         longWaitDlg.PerformWork(_parent, 1000, pm => _picker.ScorePeptides(doc, pm));
                         if (longWaitDlg.IsCanceled)
                             return null;

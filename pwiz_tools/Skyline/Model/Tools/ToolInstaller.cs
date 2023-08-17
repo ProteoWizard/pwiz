@@ -188,8 +188,7 @@ namespace pwiz.Skyline.Model.Tools
             {
                 string version = _properties.GetProperty(PropertiesConstants.VERSION);
                 //Check to see if the provided version is valid, if not return string.Empty
-                Version ver;
-                return System.Version.TryParse(version, out ver) ? version : string.Empty;
+                return System.Version.TryParse(version, out _) ? version : string.Empty;
             }
         }
         public string Identifier
@@ -843,10 +842,10 @@ namespace pwiz.Skyline.Model.Tools
             // Check we have the relevant report
             if (!string.IsNullOrWhiteSpace(reportTitle))
             {
-                if (reportRenameMapping.ContainsKey(reportTitle))
+                if (reportRenameMapping.TryGetValue(reportTitle, out var value))
                 {
                     //Apply report renaming if install in parallel was selectedd
-                    reportTitle = reportRenameMapping[reportTitle];
+                    reportTitle = value;
                 }
                 // Check if they are still missing the report they want
                 if (!ReportSharing.GetExistingReports().ContainsKey(PersistedViews.ExternalToolsGroup.Id.ViewName(reportTitle)))
