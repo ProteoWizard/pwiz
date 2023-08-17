@@ -53,7 +53,7 @@ namespace TestPerf
                 NarrowWindowDiaFiles = new[]
                 {
                     "23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML",
-                    "23aug2017_hela_serum_timecourse_4mz_narrow_2.mzML",
+                    //"23aug2017_hela_serum_timecourse_4mz_narrow_2.mzML",
                     //"23aug2017_hela_serum_timecourse_4mz_narrow_3.mzML",
                     //"23aug2017_hela_serum_timecourse_4mz_narrow_4.mzML",
                     //"23aug2017_hela_serum_timecourse_4mz_narrow_5.mzML",
@@ -69,7 +69,7 @@ namespace TestPerf
                     //"23aug2017_hela_serum_timecourse_wide_1f.mzML",
                 },
 
-                FinalTargetCounts = new[] { 558, 13186, 13186, 97801 },
+                FinalTargetCounts = new[] { 557, 5733, 5733, 40777 },
                 MassErrorStats = new[]
                 {
                     new[] {0.0, 2.2},
@@ -109,12 +109,12 @@ namespace TestPerf
                     "23aug2017_hela_serum_timecourse_wide_1e.mzML",
                     "23aug2017_hela_serum_timecourse_wide_1f.mzML",
                 },
-                FinalTargetCounts = new[] { 558, 13187, 13187, 97809 },
+                FinalTargetCounts = new[] { 558, 13631, 13631, 98734 },
                 MassErrorStats = new[]
                 {
+                    new[] {0.1, 2.3},
                     new[] {0.1, 2.2},
-                    new[] {0.1, 2.2},
-                    new[] {0.0, 2.2},
+                    new[] {0.1, 2.3},
                 },
                 ChromatogramClickPoint = new PointF(19.1f, 24f)
             };
@@ -135,7 +135,7 @@ namespace TestPerf
                 return;
 
             //TestFilesZip = @"https://skyline.ms/tutorials/EncyclopeDiaSearchTutorial.zip";
-            TestFilesZip = @"https://skyline.ms/tutorials/EncyclopeDiaSearchTutorial.zip";
+            TestFilesZip = @"https://skyline.ms/tutorials/EncyclopeDiaSearchTutorialDemux.zip";
             TestFilesPersistent = new[] { "23aug2017_hela_serum_timecourse", "z3_nce33-prosit" };
 
             RunFunctionalTest();
