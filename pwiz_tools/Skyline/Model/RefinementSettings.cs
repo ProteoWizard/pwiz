@@ -17,14 +17,12 @@
  * limitations under the License.
  */
 using System;
-using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using Microsoft.Win32.SafeHandles;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
@@ -926,8 +924,7 @@ namespace pwiz.Skyline.Model
             SrmDocument document, PeptideDocNode nodePep,
             Dictionary<LibKey, LibKey> smallMoleculeConversionPrecursorMap = null)
         {
-            Adduct adduct;
-            return ConvertToSmallMolecule(mode, document, nodePep, out adduct, 0, null, smallMoleculeConversionPrecursorMap);
+            return ConvertToSmallMolecule(mode, document, nodePep, out var adduct, 0, null, smallMoleculeConversionPrecursorMap);
         }
 
         public static CustomMolecule ConvertToSmallMolecule(ConvertToSmallMoleculesMode mode, 
