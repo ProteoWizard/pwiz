@@ -182,11 +182,11 @@ namespace pwiz.Skyline.FileUI
                         MessageDlg.Show(this, Resources.CreateIrtCalculatorDlg_OkDialog_Transition_list_field_must_contain_a_path_to_a_valid_file_);
                         return;
                     }
-
+                    IdentityPath selectPath;
                     List<MeasuredRetentionTime> irtPeptides;
                     List<TransitionImportErrorInfo> errorList;
                     var inputs = new MassListInputs(textImportText.Text);
-                    docNew = docNew.ImportMassList(inputs, null, out _, out irtPeptides, out _librarySpectra, out errorList);
+                    docNew = docNew.ImportMassList(inputs, null, out selectPath, out irtPeptides, out _librarySpectra, out errorList);
                     if (errorList.Any())
                     {
                         // Allow the user to assign column types
