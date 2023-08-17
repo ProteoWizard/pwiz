@@ -406,6 +406,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             var textObj = new TextObj(text, point.X, point.Y, CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
             {
+
                 IsClippedToChartRect = true,
                 FontSpec = CreateFontSpec(color, size),
                 ZOrder = ZOrder.A_InFront
@@ -456,7 +457,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 lineItem = new LineItem(null, points, Color.Black, symbolType)
                 {
                     Line = { IsVisible = false },
-                    Symbol = { Border = { IsVisible = false }, Fill = new Fill(color), Size = size, IsAntiAlias = true}
+                    Symbol = { Border = { IsVisible = false }, Fill = new Fill(color), Size = size, IsAntiAlias = true }
                 };
             }
             else
@@ -1037,5 +1038,13 @@ namespace pwiz.Skyline.Controls.GroupComparison
         }
 
         #endregion
+
+        private void adjustLabels(object sender, EventArgs e)
+        {
+            zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints.Select(l => l.Label).ToList(),
+                _labeledPoints.Select(l => l.Point).ToList(), 1);
+            zedGraphControl.Invalidate();
+
+        }
     }
 }

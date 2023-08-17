@@ -21,6 +21,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Collections;
+using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
 using System.Diagnostics;
@@ -28,6 +29,10 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 using System.ComponentModel;
+using System.Diagnostics.Eventing.Reader;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Windows.Forms.VisualStyles;
 
 namespace ZedGraph
 {
@@ -1510,6 +1515,259 @@ namespace ZedGraph
 	#endregion
 
 	#region General Utility Methods
+
+   //      public void AdjustObjectSpacing(List<TextObj> objects, int i)
+   //      {
+   //
+			// // need to add either limit to movment out of range our strong pushing force away from edge
+			// // need to have stronger pushing force against other text objects
+   //
+			//
+   //          double adjustPushForce = .01 * testFactor;
+   //          double staticPushForce = .01 * testFactor;
+   //          double pullForce = .005 * testFactor;
+   //          double forceRange = .5;
+   //
+   //          foreach (TextObj t in objects)
+   //          {
+   //              List<double> errorVector = new List<double>{0,0};
+   //              var originalPos = new List<double>{t.Location.X, t.Location.Y};
+   //              double magnitude;
+   //              List<double> vector;
+			// 	foreach (var g in GraphObjList)
+   //              {
+   //                  if (t.Location == g.Location)
+   //                  {
+   //                      continue;
+   //                  }
+   //
+   //                  vector = calculateNormalVector(t.Location, g.Location.X, g.Location.Y, out magnitude);
+   //                  if (magnitude > forceRange)
+   //                  {
+			// 			continue;
+   //                  }
+   //                  var forceVector = vector.Select(v => v * adjustPushForce).ToList();
+   //                  errorVector[0] += forceVector[0];
+   //                  errorVector[1] += forceVector[1];
+   //              }
+   //
+   //              foreach (CurveItem c in CurveList)
+   //              {
+   //                  IPointList points = c.Points;
+   //                  for (var j = 0; j < points.Count; j++)
+   //                  {
+   //                      var curPoint = points[j];
+   //
+   //                      vector = calculateNormalVector(t.Location, curPoint.X, curPoint.Y, out magnitude);
+   //
+   //                      if (magnitude > forceRange)
+   //                      {
+   //                          continue;
+   //                      }
+   //                      var forceVector = vector.Select(v => v * staticPushForce).ToList();
+   //                      errorVector[0] += forceVector[0];
+   //                      errorVector[1] += forceVector[1];
+   //                  }
+   //              }
+   //              t.Location.X += errorVector[0];
+   //              t.Location.Y += errorVector[1];
+   //              vector = calculateNormalVector(t.Location, originalPos[0], originalPos[1], out magnitude);
+   //              var pullVector = vector.Select(v => -v * pullForce).ToList();
+   //              t.Location.X += pullVector[0];
+   //              t.Location.Y += pullVector[1];
+   //
+   //          }
+   //          testFactor++;
+   //      }
+
+   public void AdjustLabelSpacings(List<TextObj> objects, List<PointPair> points, int maxIter = 5)
+        {
+            using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
+            {
+                GraphObjList.RemoveAll(obj => obj is BoxObj || obj is LineObj);
+                for (var i = 0; i < objects.Count; i++)
+                {
+                    AdjustObject(objects[i], g, maxIter);
+					DrawConnector(objects[i], points[i], g);
+                }
+            }
+        }
+		// probably should probably create your own rectangle that acconts for up = +y axis
+		const bool drawDebug = true;
+        public void AdjustObject(TextObj obj, Graphics g, int maxIter)
+        {
+            RectangleF unionRect = RectangleF.Empty;
+            RectangleF rect = RectangleF.Empty;
+			while (maxIter-- > 0)
+            {
+
+                rect = GetRect(obj, g);
+                InflateRectangle(ref rect, rect.Height / 4);
+                var intersections = FindAllIntersections(rect, obj, g);
+                if (intersections.Count == 0) return;
+
+                float left = intersections.Min(r => r.Left);
+                float top = intersections.Max(r => r.Top);
+                float right = intersections.Max(r => r.Right);
+                float bottom = intersections.Min(r => r.Top - r.Height); // up = +y
+                unionRect = new RectangleF(left, top, right - left, top - bottom);
+                var deltas = new List<SizeF>();
+                // foreach (RectangleF intersection in intersections)
+                // {
+                deltas.Add(new SizeF(unionRect.Right - rect.Left, 0));
+                deltas.Add(new SizeF(unionRect.Left - rect.Right, 0));
+                deltas.Add(new SizeF(0, unionRect.Top - (rect.Top - rect.Height))); // up = +y
+                deltas.Add(new SizeF(0, (unionRect.Top - unionRect.Height) - rect.Top)); //up = +y
+
+
+                float widthBias = Math.Abs(rect.Width / rect.Height);
+                var delta = deltas.OrderBy(d => Math.Abs(d.Width) + widthBias*Math.Abs(d.Height)).FirstOrDefault();
+				if(delta.Width + delta.Height == 0) return;
+                obj.Location.X += delta.Width;
+                obj.Location.Y += delta.Height;
+                rect.Location += delta;
+
+
+            }
+
+            if (drawDebug)
+			{
+                var box = new BoxObj(rect.Left, rect.Top, rect.Width, rect.Height, Color.Black,
+                    Color.FromArgb(128, 255, 255, 255));
+                var unionBox = new BoxObj(unionRect.Left, unionRect.Top, unionRect.Width, unionRect.Height, Color.Blue,
+                    Color.Transparent);
+                this.GraphObjList.Add(unionBox);
+                this.GraphObjList.Add(box);
+            }
+        }
+
+        public void DrawConnector(TextObj obj, PointPair point, Graphics g)
+        {
+            var rect = GetRect(obj, g);
+            var connectorPoints = new List<PointPair>();
+            var bottom = rect.Top - rect.Height;
+            var middleX = rect.Left + rect.Width / 2;
+			var middleY = rect.Top - rect.Height / 2;
+            connectorPoints.Add(new PointPair(rect.Left, rect.Top));
+			connectorPoints.Add(new PointPair(rect.Right,rect.Top));
+            connectorPoints.Add(new PointPair(rect.Left, bottom));
+            connectorPoints.Add(new PointPair(rect.Right, bottom));
+            connectorPoints.Add(new PointPair(middleX, rect.Top));
+            connectorPoints.Add(new PointPair(middleX, bottom));
+            connectorPoints.Add(new PointPair(rect.Left, middleY));
+            connectorPoints.Add(new PointPair(rect.Right, middleY));
+            var endPoint = connectorPoints.OrderBy(p => Math.Pow(point.X - p.X, 2) + Math.Pow(point.Y - p.Y, 2)).First();
+            var line = new LineObj(Color.Red, point.X, point.Y, endPoint.X, endPoint.Y);
+			GraphObjList.Add(line);
+        }
+        public void InflateRectangle(ref RectangleF rect, float size)
+        {
+            var size2 = size * 2;
+            rect.Location += new SizeF(-size, size);
+            rect.Width += size2;
+			rect.Height += size2;
+        }
+
+		public List<RectangleF> FindAllIntersections(RectangleF rect, TextObj obj, Graphics g)
+        {
+            var scaleFactor = CalcScaleFactor();
+            List<RectangleF> intersections = new List<RectangleF>();
+            RectangleF boundingBox = RectangleF.Empty;
+            foreach (var o in GraphObjList)
+            {
+                if (o == obj)
+                {
+                    continue;
+                }
+
+                if (o is TextObj)
+                {
+                    boundingBox = GetRect(o as TextObj, g);
+                }
+
+                if (rect.IntersectsWith(boundingBox))
+                {
+                    intersections.Add(boundingBox);
+                }
+            }
+
+            // loop through all line items, and check if bounding box of symbols overlaps that of the label
+            foreach (var curve in CurveList)
+            {
+                if (curve is LineItem)
+                {
+                    var line = curve as LineItem;
+                    for (var i = 0; i < line.Points.Count; i++)
+                    {
+
+                        if (!curve.GetCoords(this, i, out var cords))
+                        {
+                            continue;
+                        }
+
+                        var sides = Array.ConvertAll(cords.Split(','), float.Parse);
+                        var topLeft = new PointF(sides[0], sides[1]);
+                        var bottomRight = new PointF(sides[2], sides[3]);
+                        double x0;
+                        double y0;
+                        ReverseTransform(topLeft, out x0, out y0);
+
+                        double x1;
+                        double y1;
+                        ReverseTransform(bottomRight, out x1, out y1);
+
+                        float width = (float)(x1 - x0);
+                        float height = (float)(y0-y1);
+                        boundingBox = new RectangleF((float)x0, (float)y0, width, height);
+                        var box = new BoxObj(boundingBox.Left, boundingBox.Top, boundingBox.Width, boundingBox.Height,
+                            Color.Black, Color.Cyan);
+
+
+                        var right1 = (double)boundingBox.X < (double)rect.X + (double)rect.Width;
+                        var right2 = (double)rect.X < (double)boundingBox.X + (double)boundingBox.Width;
+                        var bottom1 = (double)boundingBox.Y > (double)rect.Y - (double)rect.Height;
+                        var bottom2 = (double)rect.Y > (double)boundingBox.Y - (double)boundingBox.Height;
+                        // if (y0 > 5)
+                        // {
+                        //     this.GraphObjList.Add(box);
+                        // }
+						// if ((double)boundingBox.X < (double)rect.X + (double)rect.Width 
+						//     && (double)rect.X < (double)boundingBox.X + (double)boundingBox.Width 
+						//     && (double)boundingBox.Y < (double)rect.Y + (double)rect.Height 
+						//     && (double)rect.Y < (double)boundingBox.Y + (double)boundingBox.Height)
+						if (right1 && right2 && bottom1 && bottom2)
+                        {
+							intersections.Add(boundingBox);
+                        }
+
+                    }
+                }
+            }
+			return intersections;
+        }
+
+
+
+        public RectangleF GetRect(TextObj obj, Graphics g)
+        {
+            PointF pix = obj.Location.Transform(this);
+            var points = obj.FontSpec.GetBox(g, obj.Text, pix.X, pix.Y, obj.Location.AlignH,
+                obj.Location.AlignV, CalcScaleFactor(), new SizeF());
+            double x0;
+            double y0;
+            ReverseTransform(points[0], out x0, out y0);
+
+            double x1;
+            double y1;
+            ReverseTransform(points[2], out x1, out y1);
+
+            float width = (float)(x1 - x0);
+            float height = (float)(y0 - y1);
+            var rect = new RectangleF((float)x0, (float)y0, width, height);
+
+            return rect;
+        }
+
 		/// <summary>
 		/// Transform a data point from the specified coordinate type
 		/// (<see cref="CoordType"/>) to screen coordinates (pixels).
