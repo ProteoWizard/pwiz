@@ -1262,6 +1262,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(100, pred.FilterWindowWidthCalculator.ResolvingPower);
             CheckIonMobilitySettingsBackwardCompatibility(predictor3.Replace("20", "-1"),Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_);
             CheckIonMobilitySettingsBackwardCompatibility(predictor3.Replace("500", "-1"), Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_);
+            // ReSharper disable once PossibleLossOfFraction
             Assert.AreEqual(widthAtDt0 + (widthAtDtMax-widthAtDt0)*driftTime/driftTimeMax, pred.FilterWindowWidthCalculator.WidthAt(driftTime, driftTimeMax));
 
             // Test ability to roundtrip to older doc formats

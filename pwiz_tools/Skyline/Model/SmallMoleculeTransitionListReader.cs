@@ -183,8 +183,7 @@ namespace pwiz.Skyline.Model
                         continue; // This won't succeed, but keep gathering errors
                     }
                     IdentityPath first;
-                    IdentityPath next;
-                    document = document.AddPeptideGroups(new[] {node}, false, to, out first, out next);
+                    document = document.AddPeptideGroups(new[] {node}, false, to, out first, out _);
                     if (string.IsNullOrEmpty(defaultPepGroupName))
                     {
                         defaultPepGroupName = node.Name;

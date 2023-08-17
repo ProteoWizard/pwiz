@@ -171,14 +171,12 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         private void btnBrowseFile_Click(object sender, EventArgs e)
         {
-            using (var dlg = new OpenFileDialog
+            using (var dlg = new OpenFileDialog())
             {
-                InitialDirectory = Settings.Default.LibraryDirectory,
-                CheckPathExists = true,
-                DefaultExt = BiblioSpecLiteSpec.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(BiblioSpecLiteSpec.FILTER_BLIB)
-            })
-            {
+                dlg.InitialDirectory = Settings.Default.LibraryDirectory;
+                dlg.CheckPathExists = true;
+                dlg.DefaultExt = BiblioSpecLiteSpec.EXT;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(BiblioSpecLiteSpec.FILTER_BLIB);
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                     return;
 

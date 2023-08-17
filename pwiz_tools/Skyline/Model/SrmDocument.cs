@@ -1397,18 +1397,16 @@ namespace pwiz.Skyline.Model
         public SrmDocument ImportFasta(TextReader reader, bool peptideList,
                 IdentityPath to, out IdentityPath firstAdded)
         {
-            int emptiesIgnored;
-            return ImportFasta(reader, null, -1, peptideList, to, out firstAdded, out emptiesIgnored);
+            return ImportFasta(reader, null, -1, peptideList, to, out firstAdded, out _);
         }
 
         public SrmDocument ImportFasta(TextReader reader, IProgressMonitor progressMonitor, long lines, bool peptideList,
                 IdentityPath to, out IdentityPath firstAdded, out int emptyPeptideGroups)
         {
             FastaImporter importer = new FastaImporter(this, peptideList);
-            IdentityPath nextAdd;
             IEnumerable<PeptideGroupDocNode> imported = importer.Import(reader, progressMonitor, lines);
             emptyPeptideGroups = importer.EmptyPeptideGroupCount;
-            return AddPeptideGroups(imported, peptideList, to, out firstAdded, out nextAdd);
+            return AddPeptideGroups(imported, peptideList, to, out firstAdded, out _);
         }
 
         public SrmDocument ImportFasta(TextReader reader, IProgressMonitor progressMonitor, long lines, 
@@ -1434,11 +1432,7 @@ namespace pwiz.Skyline.Model
             List<string> columnPositions = null,
             bool hasHeaders = true)
         {
-            List<MeasuredRetentionTime> irtPeptides;
-            List<SpectrumMzInfo> librarySpectra;
-            List<TransitionImportErrorInfo> errorList;
-            List<PeptideGroupDocNode> peptideGroups;
-            return ImportMassList(inputs, importer, null, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList, out peptideGroups, tolerateErrors, columnPositions, DOCUMENT_TYPE.none, hasHeaders);
+            return ImportMassList(inputs, importer, null, to, out firstAdded, out _, out _, out _, out _, tolerateErrors, columnPositions, DOCUMENT_TYPE.none, hasHeaders);
         }
 
         public SrmDocument ImportMassList(MassListInputs inputs,
@@ -1450,8 +1444,7 @@ namespace pwiz.Skyline.Model
                                           bool tolerateErrors = false,
                                           List<string> columnPositions = null)
         {
-            List<PeptideGroupDocNode> peptideGroups;
-            return ImportMassList(inputs, null, null, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList, out peptideGroups, tolerateErrors, columnPositions);
+            return ImportMassList(inputs, null, null, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList, out _, tolerateErrors, columnPositions);
         }
 
         public SrmDocument ImportMassList(MassListInputs inputs,
@@ -1516,7 +1509,6 @@ namespace pwiz.Skyline.Model
                         importer = PreImportMassList(inputs, progressMonitor, false);
                     if (importer != null)
                     {
-                        IdentityPath nextAdd;
                         if (dictNameSeq == null)
                         {
                             dictNameSeq = new Dictionary<string, FastaSequence>();
@@ -1530,7 +1522,7 @@ namespace pwiz.Skyline.Model
                             return this;
                         }
                         peptideGroups = (List<PeptideGroupDocNode>) imported;
-                        docNew = AddPeptideGroups(peptideGroups, false, to, out firstAdded, out nextAdd);
+                        docNew = AddPeptideGroups(peptideGroups, false, to, out firstAdded, out _);
                         var pepModsNew = importer.GetModifications(docNew);
                         if (!ReferenceEquals(pepModsNew, Settings.PeptideSettings.Modifications))
                         {
@@ -1813,10 +1805,9 @@ namespace pwiz.Skyline.Model
                     throw new IdentityNotFoundException(groupPath.Child);
                 var lookupSequence = nodePep.SourceUnmodifiedTarget;
                 var lookupMods = nodePep.SourceExplicitMods;
-                IsotopeLabelType labelType;
                 double[] retentionTimes;
                 Settings.TryGetRetentionTimes(lookupSequence, nodeGroup.TransitionGroup.PrecursorAdduct, lookupMods,
-                                              filePath, out labelType, out retentionTimes);
+                                              filePath, out _, out retentionTimes);
                 if(ContainsTime(retentionTimes, startTime.Value, endTime.Value))
                 {
                     identified = PeakIdentification.TRUE;
@@ -2244,11 +2235,9 @@ namespace pwiz.Skyline.Model
         public void SerializeToFile(string tempName, string displayName, SkylineVersion skylineVersion, IProgressMonitor progressMonitor)
         {
             string hash;
-            using (var writer = new XmlTextWriter(HashingStream.CreateWriteStream(tempName), Encoding.UTF8)
+            using (var writer = new XmlTextWriter(HashingStream.CreateWriteStream(tempName), Encoding.UTF8))
             {
-                Formatting = Formatting.Indented
-            })
-            {
+                writer.Formatting = Formatting.Indented;
                 hash = Serialize(writer, displayName, skylineVersion, progressMonitor);
             }
 
@@ -2645,15 +2634,17 @@ namespace pwiz.Skyline.Model
 
             string textExpected;
             using (var stringWriterExpected = new StringWriter())
-            using (var xmlWriterExpected = new XmlTextWriter(stringWriterExpected){ Formatting = Formatting.Indented })
+            using (var xmlWriterExpected = new XmlTextWriter(stringWriterExpected))
             {
+                xmlWriterExpected.Formatting = Formatting.Indented;
                 expected.Serialize(xmlWriterExpected, null, SkylineVersion.CURRENT, null);
                 textExpected = stringWriterExpected.ToString();
             }
             string textActual;
             using (var stringWriterActual = new StringWriter())
-            using (var xmlWriterActual = new XmlTextWriter(stringWriterActual) { Formatting = Formatting.Indented })
+            using (var xmlWriterActual = new XmlTextWriter(stringWriterActual))
             {
+                xmlWriterActual.Formatting = Formatting.Indented;
                 actual.Serialize(xmlWriterActual, null, SkylineVersion.CURRENT, null);
                 textActual = stringWriterActual.ToString();
             }

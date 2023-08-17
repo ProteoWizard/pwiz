@@ -1762,8 +1762,7 @@ namespace pwiz.SkylineTestData
             doc = ResultsUtil.DeserializeDocument(outPath2);
             Assert.AreEqual(2, doc.Settings.MeasuredResults.Chromatograms.Count, msg);
             ChromatogramSet chromatSet;
-            int idx;
-            doc.Settings.MeasuredResults.TryGetChromatogramSet("160109_Mix1_calcurve_070", out chromatSet, out idx);
+            doc.Settings.MeasuredResults.TryGetChromatogramSet("160109_Mix1_calcurve_070", out chromatSet, out _);
             Assert.IsNotNull(chromatSet, msg);
             Assert.IsTrue(chromatSet.MSDataFilePaths.Contains(rawPath2));
 
@@ -1803,15 +1802,14 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(initialFileCount + 7, totalImportedFiles);
             // In the "REP01" replicate we should have 1 file
             ChromatogramSet chromatogramSet;
-            int index;
-            doc.Settings.MeasuredResults.TryGetChromatogramSet("REP01", out chromatogramSet, out index);
+            doc.Settings.MeasuredResults.TryGetChromatogramSet("REP01", out chromatogramSet, out _);
             Assert.IsNotNull(chromatogramSet);
             Assert.IsTrue(chromatogramSet.MSDataFilePaths.Count() == 1);
             Assert.IsTrue(chromatogramSet.MSDataFilePaths.Contains(
                 new MsDataFilePath(TestFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" +
                                                             extRaw))));
             // REP012 should have the file REP01\CE_Vantage_15mTorr_0001_REP1_02.raw|mzML
-            doc.Settings.MeasuredResults.TryGetChromatogramSet("REP012", out chromatogramSet, out index);
+            doc.Settings.MeasuredResults.TryGetChromatogramSet("REP012", out chromatogramSet, out _);
             Assert.IsNotNull(chromatogramSet);
             Assert.IsTrue(chromatogramSet.MSDataFilePaths.Count() == 1);
             Assert.IsTrue(chromatogramSet.MSDataFilePaths.Contains(

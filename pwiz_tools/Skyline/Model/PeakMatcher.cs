@@ -538,8 +538,8 @@ namespace pwiz.Skyline.Model
                 var abundancesOther = new List<double>();
                 foreach (var fragment in _abundances.Keys.Union(other._abundances.Keys))
                 {
-                    abundancesThis.Add(_abundances.ContainsKey(fragment) ? _abundances[fragment] : 0);
-                    abundancesOther.Add(other._abundances.ContainsKey(fragment) ? other._abundances[fragment] : 0);
+                    abundancesThis.Add(_abundances.TryGetValue(fragment, out var abundance) ? abundance : 0);
+                    abundancesOther.Add(other._abundances.TryGetValue(fragment, out var otherAbundance) ? otherAbundance : 0);
                 }
                 var statisticsThis = new Statistics(abundancesThis);
                 var statisticsOther = new Statistics(abundancesOther);

@@ -259,7 +259,6 @@ namespace SkylineBatch
                     using (PanoramaFilePicker dlg = new PanoramaFilePicker(panoramaServers, state, showWebdav, selectedPath))
                     {
                         dlg.OkButtonText = "Select";
-                        dlg.InitializeDialog();
                         if (dlg.ShowDialog() != DialogResult.Cancel)
                         {
                             Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;

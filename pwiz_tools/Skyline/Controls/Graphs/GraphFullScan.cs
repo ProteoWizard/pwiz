@@ -1444,8 +1444,7 @@ namespace pwiz.Skyline.Controls.Graphs
             using (Graphics g = CreateGraphics())
             {
                 object nearestObject;
-                int index;
-                if (GraphPane.FindNearestObject(mousePoint, g, out nearestObject, out index))
+                if (GraphPane.FindNearestObject(mousePoint, g, out nearestObject, out _))
                 {
                     var textObj = nearestObject as TextObj;
                     if (textObj != null)

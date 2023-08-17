@@ -58,14 +58,7 @@ namespace pwiz.Skyline.Util
             }
             set
             {
-                if (!_dict.ContainsKey(a))
-                {
-                    _dict.Add(a, value);
-                }
-                else
-                {
-                    _dict[a] = value;
-                }
+                _dict[a] = value;
             }            
         }
 
@@ -228,9 +221,9 @@ namespace pwiz.Skyline.Util
                     {
                         return null;
                     }
-                    double test;
+
                     if (double.TryParse(input.Substring(posNext, limit - posNext),
-                        NumberStyles.Float | NumberStyles.AllowThousands, NumberFormatInfo.InvariantInfo, out test))
+                            NumberStyles.Float | NumberStyles.AllowThousands, NumberFormatInfo.InvariantInfo, out _))
                     {
                         return limit;  // Started with a mass label
                     }

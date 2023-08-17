@@ -730,8 +730,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                 else if (prot.GetProteinMetadata().GetSearchType() == UNIPROTKB_TAG)
                 {
                     // Check for homegrown numbering schemes
-                    long dummy;
-                    if (Int64.TryParse(search, out dummy))
+                    if (Int64.TryParse(search, out _))
                     {
                         prot.SetWebSearchCompleted();  // All numbers, not a Uniprot ID
                     }
