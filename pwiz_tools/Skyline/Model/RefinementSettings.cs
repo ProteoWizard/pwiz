@@ -924,7 +924,7 @@ namespace pwiz.Skyline.Model
             SrmDocument document, PeptideDocNode nodePep,
             Dictionary<LibKey, LibKey> smallMoleculeConversionPrecursorMap = null)
         {
-            return ConvertToSmallMolecule(mode, document, nodePep, out var adduct, 0, null, smallMoleculeConversionPrecursorMap);
+            return ConvertToSmallMolecule(mode, document, nodePep, out _, 0, null, smallMoleculeConversionPrecursorMap);
         }
 
         public static CustomMolecule ConvertToSmallMolecule(ConvertToSmallMoleculesMode mode, 

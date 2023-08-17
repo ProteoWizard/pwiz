@@ -73,10 +73,9 @@ namespace pwiz.Skyline.Model
             if(!MoveNextSingleSequence())
                 return false;
             // Skip sequences that can be created from the current settings.
-            TransitionGroupDocNode nodeGroup;
             // Check first if the sequence has any modifications, because creating doc nodes is expensive
             while (!HasMods(_sequences.Current) ||
-                   CreateDocNodeFromSettings(new Target(_sequences.Current), null, DIFF_GROUPS, out nodeGroup) != null)
+                   CreateDocNodeFromSettings(new Target(_sequences.Current), null, DIFF_GROUPS, out _) != null)
             {
                 if (!MoveNextSingleSequence())
                     return false;
@@ -437,9 +436,8 @@ namespace pwiz.Skyline.Model
               : new Peptide(null, seqUnmod, null, null,
                             Settings.PeptideSettings.Enzyme.CountCleavagePoints(seqUnmod));
             // First, try to create the peptide using the current settings.
-            TransitionGroupDocNode nodeGroup;
             PeptideDocNode nodePep = 
-                CreateDocNodeFromSettings(new Target(seq), peptide, SrmSettingsDiff.ALL, out nodeGroup);
+                CreateDocNodeFromSettings(new Target(seq), peptide, SrmSettingsDiff.ALL, out _);
             if (nodePep != null)
                 return nodePep;
             // Create the peptideDocNode.

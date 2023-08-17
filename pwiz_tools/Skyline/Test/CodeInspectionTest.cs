@@ -572,8 +572,8 @@ namespace pwiz.SkylineTest
                     var lines = content.Split('\n');
 
                     var lineNum = 0;
-                    var requiredPatternsObservedInThisFile = requiredPatternsByFileMask.ContainsKey(fileMask)
-                        ? requiredPatternsByFileMask[fileMask].Where(kvp =>
+                    var requiredPatternsObservedInThisFile = requiredPatternsByFileMask.TryGetValue(fileMask, out var value)
+                        ? value.Where(kvp =>
                         {
                             // Do we need to worry about this pattern for this file?
                             var patternDetails = kvp.Value;
@@ -583,9 +583,8 @@ namespace pwiz.SkylineTest
                         }).ToDictionary(k => k.Key, k => false)
                         : null;
                     var forbiddenPatternsForThisFile =
-                        forbiddenPatternsByFileMask
-                            .ContainsKey(fileMask) // Are there any forbidden patterns for this filemask?
-                            ? forbiddenPatternsByFileMask[fileMask].Where(kvp =>
+                        forbiddenPatternsByFileMask.TryGetValue(fileMask, out var patterns) // Are there any forbidden patterns for this filemask?
+                            ? patterns.Where(kvp =>
                             {
                                 // Do we need to worry about this pattern for this file?
                                 var patternDetails = kvp.Value;

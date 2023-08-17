@@ -1382,8 +1382,9 @@ namespace pwiz.Skyline.Properties
 
         public override Enzyme EditItem(Control owner, Enzyme item, IEnumerable<Enzyme> existing, object tag)
         {
-            using (EditEnzymeDlg editEnzyme = new EditEnzymeDlg(existing ?? this) { Enzyme = item })
+            using (EditEnzymeDlg editEnzyme = new EditEnzymeDlg(existing ?? this))
             {
+                editEnzyme.Enzyme = item;
                 if (editEnzyme.ShowDialog(owner) == DialogResult.OK)
                     return editEnzyme.Enzyme;
 
@@ -1420,8 +1421,9 @@ namespace pwiz.Skyline.Properties
         public override PeptideExcludeRegex EditItem(Control owner, PeptideExcludeRegex item,
             IEnumerable<PeptideExcludeRegex> existing, object tag)
         {
-            using (EditExclusionDlg editExclusion = new EditExclusionDlg(existing ?? this) { Exclusion = item })
+            using (EditExclusionDlg editExclusion = new EditExclusionDlg(existing ?? this))
             {
+                editExclusion.Exclusion = item;
                 if (editExclusion.ShowDialog(owner) == DialogResult.OK)
                     return editExclusion.Exclusion;
 
@@ -1452,8 +1454,9 @@ namespace pwiz.Skyline.Properties
 
         public override Server EditItem(Control owner, Server item, IEnumerable<Server> existing, object tag)
         {
-            using (EditServerDlg editServer = new EditServerDlg(existing ?? this) {Server = item})
+            using (EditServerDlg editServer = new EditServerDlg(existing ?? this))
             {
+                editServer.Server = item;
                 bool instructionsRequired = false;
                 if (tag != null)
                      instructionsRequired = (bool) tag;
@@ -1468,8 +1471,9 @@ namespace pwiz.Skyline.Properties
 
         public Server EditCredentials(Control owner, Server item, IEnumerable<Server> existing, string username, string password)
         {
-            using (var editServerDlg = new EditServerDlg(existing ?? this) { Server = item })
+            using (var editServerDlg = new EditServerDlg(existing ?? this))
             {
+                editServerDlg.Server = item;
                 editServerDlg.Username = username;
                 editServerDlg.Password = password;
                 editServerDlg.textServerURL.Enabled = false;
@@ -1493,8 +1497,9 @@ namespace pwiz.Skyline.Properties
         public override LibrarySpec EditItem(Control owner, LibrarySpec item,
             IEnumerable<LibrarySpec> existing, object tag)
         {
-            using (EditLibraryDlg editLibrary = new EditLibraryDlg(existing ?? this) { LibrarySpec = item })
+            using (EditLibraryDlg editLibrary = new EditLibraryDlg(existing ?? this))
             {
+                editLibrary.LibrarySpec = item;
                 if (editLibrary.ShowDialog(owner) == DialogResult.OK)
                     return editLibrary.LibrarySpec;
 
@@ -1557,8 +1562,9 @@ namespace pwiz.Skyline.Properties
         public override BackgroundProteomeSpec EditItem(Control owner, BackgroundProteomeSpec item,
             IEnumerable<BackgroundProteomeSpec> existing, object tag)
         {
-            using (var editBackgroundProteomeDlg = new BuildBackgroundProteomeDlg(existing ?? this) { BackgroundProteomeSpec = item })
+            using (var editBackgroundProteomeDlg = new BuildBackgroundProteomeDlg(existing ?? this))
             {
+                editBackgroundProteomeDlg.BackgroundProteomeSpec = item;
                 if (editBackgroundProteomeDlg.ShowDialog(owner) == DialogResult.OK)
                 {
                     return editBackgroundProteomeDlg.BackgroundProteomeSpec;
@@ -1654,11 +1660,9 @@ namespace pwiz.Skyline.Properties
         public override StaticMod EditItem(Control owner, StaticMod item,
             IEnumerable<StaticMod> existing, object tag)
         {
-            using (EditStaticModDlg editMod = new EditStaticModDlg(item, existing ?? this, true)
-                                           {
-                                               Text = Resources.HeavyModList_EditItem_Edit_Isotope_Modification
-                                           })
+            using (EditStaticModDlg editMod = new EditStaticModDlg(item, existing ?? this, true))
             {
+                editMod.Text = Resources.HeavyModList_EditItem_Edit_Isotope_Modification;
                 if (editMod.ShowDialog(owner) == DialogResult.OK)
                     return editMod.Modification;
 
@@ -1914,8 +1918,9 @@ namespace pwiz.Skyline.Properties
         public override CollisionEnergyRegression EditItem(Control owner, CollisionEnergyRegression item,
             IEnumerable<CollisionEnergyRegression> existing, object tag)
         {
-            using (EditCEDlg editCE = new EditCEDlg(existing ?? this) { Regression = item })
+            using (EditCEDlg editCE = new EditCEDlg(existing ?? this))
             {
+                editCE.Regression = item;
                 if (editCE.ShowDialog(owner) == DialogResult.OK)
                     return editCE.Regression;
 
@@ -2030,8 +2035,9 @@ namespace pwiz.Skyline.Properties
         public override DeclusteringPotentialRegression EditItem(Control owner, DeclusteringPotentialRegression item,
             IEnumerable<DeclusteringPotentialRegression> existing, object tag)
         {
-            using (EditDPDlg editDP = new EditDPDlg(existing ?? this) { Regression = item })
+            using (EditDPDlg editDP = new EditDPDlg(existing ?? this))
             {
+                editDP.Regression = item;
                 if (editDP.ShowDialog(owner) == DialogResult.OK)
                     return editDP.Regression;
 
@@ -2472,8 +2478,9 @@ namespace pwiz.Skyline.Properties
         public override RetentionTimeRegression EditItem(Control owner, RetentionTimeRegression item,
             IEnumerable<RetentionTimeRegression> existing, object tag)
         {
-            using (EditRTDlg editRT = new EditRTDlg(existing ?? this) { Regression = item })
+            using (EditRTDlg editRT = new EditRTDlg(existing ?? this))
             {
+                editRT.Regression = item;
                 if (editRT.ShowDialog(owner) == DialogResult.OK)
                     return editRT.Regression;
             }
@@ -2545,8 +2552,9 @@ namespace pwiz.Skyline.Properties
         public override MeasuredIon EditItem(Control owner, MeasuredIon item,
             IEnumerable<MeasuredIon> existing, object tag)
         {
-            using (EditMeasuredIonDlg editIon = new EditMeasuredIonDlg(existing ?? this) { MeasuredIon = item })
+            using (EditMeasuredIonDlg editIon = new EditMeasuredIonDlg(existing ?? this))
             {
+                editIon.MeasuredIon = item;
                 if (editIon.ShowDialog(owner) == DialogResult.OK)
                     return editIon.MeasuredIon;
             }
@@ -2593,8 +2601,9 @@ namespace pwiz.Skyline.Properties
         public override IsotopeEnrichments EditItem(Control owner, IsotopeEnrichments item,
             IEnumerable<IsotopeEnrichments> existing, object tag)
         {
-            using (EditIsotopeEnrichmentDlg editEnrichment = new EditIsotopeEnrichmentDlg(existing ?? this) { Enrichments = item })
+            using (EditIsotopeEnrichmentDlg editEnrichment = new EditIsotopeEnrichmentDlg(existing ?? this))
             {
+                editEnrichment.Enrichments = item;
                 if (editEnrichment.ShowDialog(owner) == DialogResult.OK)
                     return editEnrichment.Enrichments;
             }
@@ -2908,8 +2917,9 @@ namespace pwiz.Skyline.Properties
         public override IsolationScheme EditItem(Control owner, IsolationScheme item,
             IEnumerable<IsolationScheme> existing, object tag)
         {
-            using (var editIsolationScheme = new EditIsolationSchemeDlg(existing ?? this) { IsolationScheme = item })
+            using (var editIsolationScheme = new EditIsolationSchemeDlg(existing ?? this))
             {
+                editIsolationScheme.IsolationScheme = item;
                 if (editIsolationScheme.ShowDialog(owner) == DialogResult.OK)
                     return editIsolationScheme.IsolationScheme;
             }

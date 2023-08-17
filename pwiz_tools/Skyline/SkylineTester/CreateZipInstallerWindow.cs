@@ -49,12 +49,10 @@ namespace SkylineTester
 
         private void buttonBrowse_Click(object sender, EventArgs e)
         {
-            using (var dlg = new FolderBrowserDialog
+            using (var dlg = new FolderBrowserDialog())
             {
-                Description = "Select a folder to contain the zip file.",
-                ShowNewFolderButton = true
-            })
-            {
+                dlg.Description = "Select a folder to contain the zip file.";
+                dlg.ShowNewFolderButton = true;
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                     textBoxZipDirectory.Text = dlg.SelectedPath;
             }
