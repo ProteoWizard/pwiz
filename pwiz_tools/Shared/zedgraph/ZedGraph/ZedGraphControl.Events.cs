@@ -1468,7 +1468,7 @@ namespace ZedGraph
 				//Point mousePt = new Point( e.X, e.Y );
 
 				int iPt;
-                object nearestObj;
+				object nearestObj;
 
 				using ( Graphics g = this.CreateGraphics() )
 				{

@@ -361,7 +361,7 @@ namespace ZedGraph
 		/// 8 for August.</param>
 		public void GetDate( out int year, out int month, out int day )
 		{
-            XLDateToCalendarDate( _xlDate, out year, out month, out day, out _, out _, out int _ );
+			XLDateToCalendarDate( _xlDate, out year, out month, out day, out _, out _, out int _ );
 		}
 		
 		/// <summary>

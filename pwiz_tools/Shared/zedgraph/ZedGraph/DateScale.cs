@@ -343,7 +343,7 @@ namespace ZedGraph
 
 			int year1, year2, month1, month2;
 
-            XDate.XLDateToCalendarDate( _min, out year1, out month1, out _,
+			XDate.XLDateToCalendarDate( _min, out year1, out month1, out _,
 										out _, out _, out _, out _ );
 			XDate.XLDateToCalendarDate( _max, out year2, out month2, out _,
 										out _, out _, out _, out _ );

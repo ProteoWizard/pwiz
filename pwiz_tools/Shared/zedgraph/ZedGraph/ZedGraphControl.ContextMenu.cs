@@ -67,7 +67,7 @@ namespace ZedGraph
 			// Determine object state
 			Point mousePt = this.PointToClient( Control.MousePosition );
 			int iPt;
-            object nearestObj;
+			object nearestObj;
 
 			using ( Graphics g = this.CreateGraphics() )
 			{

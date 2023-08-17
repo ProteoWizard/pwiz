@@ -2172,7 +2172,7 @@ namespace ZedGraph
 								{
 									if ( curve is LineItem && _lineType == LineType.Stack )
 									{
-                                        valueHandler.GetValues( curve, iPt, out xVal, out _, out yVal );
+										valueHandler.GetValues( curve, iPt, out xVal, out _, out yVal );
 									}
 
 									distX = ( xVal - xAct ) * xPixPerUnit;
@@ -2266,7 +2266,7 @@ namespace ZedGraph
 
 				if ( link.IsActive )
 				{
-                    if ( FindNearestPoint( mousePt, curve, out _, out index ) )
+					if ( FindNearestPoint( mousePt, curve, out _, out index ) )
 					{
 						source = curve;
 						return true;
