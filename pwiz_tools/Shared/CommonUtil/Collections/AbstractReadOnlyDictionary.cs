@@ -83,8 +83,7 @@ namespace pwiz.Common.Collections
 
         public bool ContainsKey(TKey key)
         {
-            TValue value;
-            return TryGetValue(key, out value);
+            return TryGetValue(key, out _);
         }
 
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)

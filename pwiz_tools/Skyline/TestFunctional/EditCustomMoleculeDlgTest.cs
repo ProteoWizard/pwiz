@@ -73,13 +73,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
                 SkylineWindow.ModifyDocument("", doc =>
                 {
-                    IdentityPath first;
-                    IdentityPath next;
                     return doc.AddPeptideGroups(new[]
                     {
                         new PeptideGroupDocNode(new PeptideGroup(), doc.Annotations, "Molecule Group", "",
                             new PeptideDocNode[0])
-                    }, true, IdentityPath.ROOT, out first, out next);
+                    }, true, IdentityPath.ROOT, out _, out _);
                 }));
             var docNext = WaitForDocumentChange(origDoc);
             TestAddingSmallMoleculeAsMasses();
@@ -99,13 +97,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
                 SkylineWindow.ModifyDocument("", doc =>
                 {
-                    IdentityPath first;
-                    IdentityPath next;
                     return doc.AddPeptideGroups(new[]
                     {
                         new PeptideGroupDocNode(new PeptideGroup(), doc.Annotations, "Molecule Group", "",
                             new PeptideDocNode[0])
-                    }, true, IdentityPath.ROOT, out first, out next);
+                    }, true, IdentityPath.ROOT, out _, out _);
                 }));
             var docNext = WaitForDocumentChange(origDoc);
             TestAddingSmallMolecule();

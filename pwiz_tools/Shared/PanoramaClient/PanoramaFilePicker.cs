@@ -20,7 +20,6 @@ namespace pwiz.PanoramaClient
         private static JToken _sizeInfoJson;
         private readonly Dictionary<long, long> _sizeDictionary = new Dictionary<long, long>(); // Stores the Id of a mass spec run and its size in a dictionary
         private readonly Dictionary<long, string> _nameDictionary = new Dictionary<long, string>(); // Stores the Id of a mass spec run and its name in a dictionary
-        private readonly List<PanoramaServer> _servers;
         private string _treeState;
         private bool _restoring;
         private readonly bool _showWebDav;
@@ -45,13 +44,46 @@ namespace pwiz.PanoramaClient
         {
             InitializeComponent();
 
-            _servers = servers;
             _treeState = stateString;
-            _restoring = true;
             _showWebDav = showWebDav;
+            _restoring = true;
             versionOptions.Text = RECENT_VER;
+            _restoring = false;
             SelectedPath = selectedPath;
             noFiles.Visible = false;
+
+            if (_showWebDav)
+            {
+                FolderBrowser = new WebDavBrowser(servers.FirstOrDefault(), _treeState, SelectedPath);
+            }
+            else
+            {
+                FolderBrowser = new LKContainerBrowser(servers, _treeState, false, SelectedPath);
+            }
+
+            InitializeDialog();
+        }
+
+        private void InitializeDialog()
+        {
+            FolderBrowser.Dock = DockStyle.Fill;
+            FolderBrowser.AddFiles += AddFiles;
+            FolderBrowser.NodeClick += FilePicker_MouseClick;
+            browserSplitContainer.Panel1.Controls.Add(FolderBrowser);
+            urlLink.Text = FolderBrowser.GetSelectedUri();
+            // CONSIDER: Is this really necessary when UpdateButtonState will be called on Load
+            if (string.IsNullOrEmpty(_treeState))
+            {
+                up.Enabled = false;
+                back.Enabled = false;
+                forward.Enabled = false;
+            }
+            else
+            {
+                up.Enabled = FolderBrowser.UpEnabled;
+                back.Enabled = FolderBrowser.BackEnabled;
+                forward.Enabled = FolderBrowser.ForwardEnabled;
+            }
         }
 
         /// <summary>
@@ -64,35 +96,8 @@ namespace pwiz.PanoramaClient
             {
                 open.Text = OkButtonText;
             }
-            FolderBrowser.AddFiles += AddFiles;
-            FolderBrowser.Dock = DockStyle.Fill;
-            browserSplitContainer.Panel1.Controls.Add(FolderBrowser);
-            FolderBrowser.NodeClick += FilePicker_MouseClick;
-            urlLink.Text = FolderBrowser.GetSelectedUri();
             IsLoaded = true;
             UpdateButtonState();
-        }
-
-        /// <summary>
-        /// Loads PanoramaFolderBrowser and sets the state of navigation arrows
-        /// </summary>
-        public void InitializeDialog()
-        {
-            if (_showWebDav)
-            {
-                FolderBrowser = new WebDavBrowser(_servers.FirstOrDefault(), _treeState, SelectedPath);
-            }
-            else
-            {
-                FolderBrowser = new LKContainerBrowser(_servers, _treeState, false, SelectedPath);
-            }
-
-            if (string.IsNullOrEmpty(_treeState))
-            {
-                up.Enabled = false;
-                back.Enabled = false;
-                forward.Enabled = false;
-            }
         }
 
         /// <summary>
@@ -650,39 +655,21 @@ namespace pwiz.PanoramaClient
         }
 
         #region Test Support
-        public PanoramaFilePicker()
+        public PanoramaFilePicker(Uri serverUri, string user, string pass,
+            JToken folderJson, JToken fileJson, JToken sizeJson)
         {
             InitializeComponent();
 
             _restoring = true;
             versionOptions.Text = RECENT_VER;
             _restoring = false;
-        }
 
-        public void InitializeTestDialog(Uri serverUri, string user, string pass, JToken folderJson, JToken fileJson,
-            JToken sizeJson)
-        {
             TestFileJson = fileJson;
             TestSizeJson = sizeJson;
             var server = new PanoramaServer(serverUri, user, pass);
-            FolderBrowser = new TestPanoramaFolderBrowser(server, folderJson)
-            {
-                Dock = DockStyle.Fill
-            };
-            browserSplitContainer.Panel1.Controls.Add(FolderBrowser);
-            FolderBrowser.NodeClick += FilePicker_MouseClick;
-            if (string.IsNullOrEmpty(_treeState))
-            {
-                up.Enabled = false;
-                back.Enabled = false;
-                forward.Enabled = false;
-            }
-            else
-            {
-                up.Enabled = FolderBrowser.UpEnabled;
-                back.Enabled = FolderBrowser.BackEnabled;
-                forward.Enabled = FolderBrowser.ForwardEnabled;
-            }
+            FolderBrowser = new TestPanoramaFolderBrowser(server, folderJson);
+
+            InitializeDialog();
         }
 
         public bool UpEnabled => up.Enabled;

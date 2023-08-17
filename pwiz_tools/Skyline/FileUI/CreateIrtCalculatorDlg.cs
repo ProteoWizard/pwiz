@@ -182,11 +182,11 @@ namespace pwiz.Skyline.FileUI
                         MessageDlg.Show(this, Resources.CreateIrtCalculatorDlg_OkDialog_Transition_list_field_must_contain_a_path_to_a_valid_file_);
                         return;
                     }
-                    IdentityPath selectPath;
+
                     List<MeasuredRetentionTime> irtPeptides;
                     List<TransitionImportErrorInfo> errorList;
                     var inputs = new MassListInputs(textImportText.Text);
-                    docNew = docNew.ImportMassList(inputs, null, out selectPath, out irtPeptides, out _librarySpectra, out errorList);
+                    docNew = docNew.ImportMassList(inputs, null, out _, out irtPeptides, out _librarySpectra, out errorList);
                     if (errorList.Any())
                     {
                         throw new InvalidDataException(errorList[0].ErrorMessage);
@@ -240,14 +240,12 @@ namespace pwiz.Skyline.FileUI
 
         public void BrowseDb()
         {
-            using (OpenFileDialog dlg = new OpenFileDialog
+            using (OpenFileDialog dlg = new OpenFileDialog())
             {
-                Title = Resources.EditIrtCalcDlg_btnBrowseDb_Click_Open_iRT_Database,
-                InitialDirectory = Path.GetDirectoryName(DocumentFilePath),
-                DefaultExt = IrtDb.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB)
-            })
-            {
+                dlg.Title = Resources.EditIrtCalcDlg_btnBrowseDb_Click_Open_iRT_Database;
+                dlg.InitialDirectory = Path.GetDirectoryName(DocumentFilePath);
+                dlg.DefaultExt = IrtDb.EXT;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB);
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
@@ -269,15 +267,13 @@ namespace pwiz.Skyline.FileUI
 
         public void CreateDb(TextBox textBox)
         {
-            using (var dlg = new SaveFileDialog
+            using (var dlg = new SaveFileDialog())
             {
-                Title = Resources.EditIrtCalcDlg_btnCreateDb_Click_Create_iRT_Database,
-                InitialDirectory = Path.GetDirectoryName(DocumentFilePath),
-                OverwritePrompt = true,
-                DefaultExt = IrtDb.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB)
-            })
-            {
+                dlg.Title = Resources.EditIrtCalcDlg_btnCreateDb_Click_Create_iRT_Database;
+                dlg.InitialDirectory = Path.GetDirectoryName(DocumentFilePath);
+                dlg.OverwritePrompt = true;
+                dlg.DefaultExt = IrtDb.EXT;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB);
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
@@ -296,15 +292,13 @@ namespace pwiz.Skyline.FileUI
 
         public void ImportTextFile()
         {
-            using (OpenFileDialog dlg = new OpenFileDialog
+            using (OpenFileDialog dlg = new OpenFileDialog())
             {
-                Title = Resources.CreateIrtCalculatorDlg_ImportTextFile_Import_Transition_List__iRT_standards_,
-                InitialDirectory = Path.GetDirectoryName(DocumentFilePath),
-                DefaultExt = TextUtil.EXT_CSV,
-                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(
-                    Resources.SkylineWindow_importMassListMenuItem_Click_Transition_List, TextUtil.EXT_CSV, TextUtil.EXT_TSV))
-            })
-            {
+                dlg.Title = Resources.CreateIrtCalculatorDlg_ImportTextFile_Import_Transition_List__iRT_standards_;
+                dlg.InitialDirectory = Path.GetDirectoryName(DocumentFilePath);
+                dlg.DefaultExt = TextUtil.EXT_CSV;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(
+                    Resources.SkylineWindow_importMassListMenuItem_Click_Transition_List, TextUtil.EXT_CSV, TextUtil.EXT_TSV));
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);

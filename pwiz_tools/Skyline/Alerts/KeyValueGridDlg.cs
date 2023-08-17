@@ -146,14 +146,12 @@ namespace pwiz.Skyline.Alerts
             var activeScreen = parent == null ? Screen.PrimaryScreen : Screen.FromHandle(parent.Handle); 
             int defaultHeight = Math.Min(3 * activeScreen.Bounds.Height / 4, layout.GetRowHeights().Sum() + 50);
 
-            using (var dlg = new MultiButtonMsgDlg(layout, Resources.OK)
+            using (var dlg = new MultiButtonMsgDlg(layout, Resources.OK))
             {
-                Text = title,
-                ClientSize = new Size(400, defaultHeight),
-                StartPosition = FormStartPosition.CenterParent,
-                ShowInTaskbar = false
-            })
-            {
+                dlg.Text = title;
+                dlg.ClientSize = new Size(400, defaultHeight);
+                dlg.StartPosition = FormStartPosition.CenterParent;
+                dlg.ShowInTaskbar = false;
                 dlg.MinimumSize = dlg.Size;
                 layout.Size = dlg.ClientSize;
                 layout.Height -= 35;

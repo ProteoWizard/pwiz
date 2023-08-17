@@ -231,10 +231,8 @@ namespace pwiz.Skyline.Alerts
             if (string.IsNullOrEmpty(initialDir))
                 initialDir = null;
 
-            using var openDataSource = new OpenDataSourceDialog(Settings.Default.RemoteAccountList, missingFiles)
-            {
-                InitialDirectory = new MsDataFilePath(initialDir)
-            };
+            using var openDataSource = new OpenDataSourceDialog(Settings.Default.RemoteAccountList, missingFiles);
+            openDataSource.InitialDirectory = new MsDataFilePath(initialDir);
 
             if (openDataSource.ShowDialog(this) == DialogResult.OK)
             {
@@ -283,12 +281,10 @@ namespace pwiz.Skyline.Alerts
                 initialDir = null;
 
             // Ask the user for the directory to search
-            using var searchFolderDialog = new FolderBrowserDialog
-            {
-                ShowNewFolderButton = false,
-                SelectedPath = initialDir,
-                Description = Resources.ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_containing_the_missing_files_
-            };
+            using var searchFolderDialog = new FolderBrowserDialog();
+            searchFolderDialog.ShowNewFolderButton = false;
+            searchFolderDialog.SelectedPath = initialDir;
+            searchFolderDialog.Description = Resources.ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_containing_the_missing_files_;
 
             if (searchFolderDialog.ShowDialog() == DialogResult.OK)
             {
@@ -303,11 +299,9 @@ namespace pwiz.Skyline.Alerts
         public void SearchDirectoryForMissingFiles(string folderPath)
         {
             var matchedFiles = new List<string>();
-            using (var longWaitDlg = new LongWaitDlg
-                   {
-                       Text = Resources.ImportResultsControl_FindResultsFiles_Searching_for_Results_Files
-                   })
+            using (var longWaitDlg = new LongWaitDlg())
             {
+                longWaitDlg.Text = Resources.ImportResultsControl_FindResultsFiles_Searching_for_Results_Files;
                 try
                 {
                     var missingNames = new HashSet<string>(listboxMissingFiles.Items.OfType<string>());

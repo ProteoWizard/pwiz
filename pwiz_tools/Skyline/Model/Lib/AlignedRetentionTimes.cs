@@ -162,8 +162,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override IEnumerable<Target> GetStandardPeptides(IEnumerable<Target> peptides)
         {
-            int minCount;
-            return ChooseRegressionPeptides(peptides, out minCount);
+            return ChooseRegressionPeptides(peptides, out _);
         }
     }
 }

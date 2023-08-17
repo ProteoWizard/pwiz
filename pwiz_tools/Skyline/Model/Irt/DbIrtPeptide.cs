@@ -128,8 +128,7 @@ namespace pwiz.Skyline.Model.Irt
             var uniqueIrtPeptidesDict = new Dictionary<Target, DbIrtPeptide>();
             foreach (var irtPeptide in irtPeptides)
             {
-                DbIrtPeptide duplicateIrtPeptide;
-                if (irtPeptide.Standard || !uniqueIrtPeptidesDict.TryGetValue(irtPeptide.ModifiedTarget, out duplicateIrtPeptide))
+                if (irtPeptide.Standard || !uniqueIrtPeptidesDict.TryGetValue(irtPeptide.ModifiedTarget, out _))
                 {
                     uniqueIrtPeptidesDict[irtPeptide.ModifiedTarget] = irtPeptide;
                 }

@@ -26,7 +26,6 @@ using pwiz.CLI.cv;
 using pwiz.CLI.data;
 using pwiz.CLI.msdata;
 using pwiz.CLI.analysis;
-using pwiz.CLI.util;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.Spectra;
@@ -988,14 +987,14 @@ namespace pwiz.ProteowizardWrapper
 
         private double[] GetIonMobilityArray(Spectrum s)
         {
-            BinaryDataDouble data = null;
+            double[] data = null;
             // Remember where the ion mobility value came from and continue getting it from the
             // same place throughout the file. Trying to get an ion mobility value from a CVID
             // where there is none can be slow.
             if (_cvidIonMobility.HasValue)
             {
                 if (_cvidIonMobility.Value != CVID.CVID_Unknown)
-                    data = s.getArrayByCVID(_cvidIonMobility.Value)?.data;
+                    data = s.getArrayByCVID(_cvidIonMobility.Value)?.data?.Storage();
             }
             else
             {
@@ -1031,16 +1030,16 @@ namespace pwiz.ProteowizardWrapper
                     _cvidIonMobility = CVID.CVID_Unknown;
             }
 
-            return data?.Storage();
+            return data;
         }
 
-        private BinaryDataDouble TryGetIonMobilityData(Spectrum s, CVID cvid, ref CVID? cvidIonMobility)
+        private double[] TryGetIonMobilityData(Spectrum s, CVID cvid, ref CVID? cvidIonMobility)
         {
             using var data = s.getArrayByCVID(cvid)?.data;
             if (data != null)
                 cvidIonMobility = cvid;
 
-            return data;
+            return data?.Storage();
         }
 
         private MsDataSpectrum GetSpectrum(Spectrum spectrum, int spectrumIndex)
@@ -1217,8 +1216,7 @@ namespace pwiz.ProteowizardWrapper
                 
                 for (var i = 0; i < len; i++)
                 {
-                    int index;
-                    var id = GetChromatogramId(i, out index);
+                    var id = GetChromatogramId(i, out _);
 
                     if (IsSingleIonCurrentId(id))
                         return true;

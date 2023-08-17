@@ -277,8 +277,9 @@ namespace pwiz.Skyline.FileUI
             var peptides = new List<string>(count);
             var stripped = new Dictionary<string, string>(); // Map peptide -> stripped peptide
 
-            using (var longWaitDlg = new LongWaitDlg() { Message = checkBoxAssociateProteins.Text })
+            using (var longWaitDlg = new LongWaitDlg())
             {
+                longWaitDlg.Message = checkBoxAssociateProteins.Text;
                 longWaitDlg.PerformWork(this, 1000, progressMonitor =>
                 {
                     // If there are headers, add one describing the protein name column we will add - if we haven't already
@@ -1304,8 +1305,8 @@ namespace pwiz.Skyline.FileUI
                     errorList?.Clear(); // Looking for a new set of errors
                     var readerType = GetRadioType();
 
-                    using var longWaitDlg = new LongWaitDlg
-                        {Text = Resources.ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___};
+                    using var longWaitDlg = new LongWaitDlg();
+                    longWaitDlg.Text = Resources.ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___;
                     longWaitDlg.PerformWork(this, 1000, progressMonitor =>
                     {
 

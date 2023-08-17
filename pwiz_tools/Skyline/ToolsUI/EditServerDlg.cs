@@ -104,8 +104,9 @@ namespace pwiz.Skyline.ToolsUI
 
             var panoramaClient = PanoramaClient ?? new WebPanoramaClient(uriServer);
 
-            using (var waitDlg = new LongWaitDlg { Text = Resources.EditServerDlg_OkDialog_Verifying_server_information })
+            using (var waitDlg = new LongWaitDlg())
             {
+                waitDlg.Text = Resources.EditServerDlg_OkDialog_Verifying_server_information;
                 try
                 {
                     waitDlg.PerformWork(this, 1000, () => PanoramaUtil.VerifyServerInformation( panoramaClient, Username, Password));
