@@ -95,7 +95,7 @@ namespace pwiz.SkylineTestFunctional
                 14.64);
             CheckDocumentGridAndColumns(smallMoleculeSky,
                 Resources.ReportSpecList_GetDefaults_Molecule_Transition_Results,
-                113, 12, SrmDocument.DOCUMENT_TYPE.small_molecules,
+                113, 14, SrmDocument.DOCUMENT_TYPE.small_molecules,
                 null, null, null, null, null,
                 14.64);
         }
@@ -149,6 +149,7 @@ namespace pwiz.SkylineTestFunctional
             var colProductIonFormula = documentGrid.FindColumn(PropertyPath.Parse("ProductIonFormula"));
             var colProductNeutralFormula = documentGrid.FindColumn(PropertyPath.Parse("ProductNeutralFormula"));
             var colProductAdduct = documentGrid.FindColumn(PropertyPath.Parse("ProductAdduct"));
+            var colProductCharge = documentGrid.FindColumn(PropertyPath.Parse("ProductCharge"));
             var colFragmentIon = documentGrid.FindColumn(PropertyPath.Parse("FragmentIonType"));
             var colMoleculeFormula = documentGrid.FindColumn(PropertyPath.Parse("Precursor.Peptide.MoleculeFormula"));
             var colPrecursorNeutralFormula = documentGrid.FindColumn(PropertyPath.Parse("Precursor.NeutralFormula"));
@@ -157,15 +158,16 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.IsNull(colProductIonFormula);
                 Assert.IsNull(colProductNeutralFormula);
-                Assert.IsNull(colProductAdduct);
             }
             else RunUI(() =>
             {
                 var formula = documentGrid.DataGridView.Rows[0].Cells[colProductIonFormula.Index].Value.ToString();
+                var adduct = documentGrid.DataGridView.Rows[0].Cells[colProductAdduct.Index].Value.ToString();
+                var z = documentGrid.DataGridView.Rows[0].Cells[colProductCharge.Index].Value;
+                Assert.AreEqual(z, Adduct.FromString(adduct, Adduct.ADDUCT_TYPE.non_proteomic, null).AdductCharge);
                 if (expectedProductIonFormula.Contains("["))
                 {
                     var formulaNeutral = documentGrid.DataGridView.Rows[0].Cells[colProductNeutralFormula.Index].Value.ToString();
-                    var adduct = documentGrid.DataGridView.Rows[0].Cells[colProductAdduct.Index].Value.ToString();
                     Assert.AreEqual(expectedProductIonFormula, formulaNeutral+adduct);
                 }
                 else

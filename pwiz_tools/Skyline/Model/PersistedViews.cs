@@ -527,10 +527,12 @@ namespace pwiz.Skyline.Model
     <column name='Precursor.Peptide.Protein.Name' />
     <column name='Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.Name' />
     <column name='Precursor.Mz' />
+    <column name='Precursor.Adduct' />
     <column name='Precursor.Charge' />
-    <column name='ProductMz' />
-    <column name='ProductCharge' />
     <column name='FragmentIon' />
+    <column name='ProductMz' />
+    <column name='ProductAdduct' />
+    <column name='ProductCharge' />
     <column name='Results!*.Value.RetentionTime' />
     <column name='Results!*.Value.Area' />
     <column name='Results!*.Value.Background' />
