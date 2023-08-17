@@ -788,10 +788,9 @@ namespace pwiz.SkylineTestUtil
             var docExport = exporter.Document;
             var docImport = new SrmDocument(docExport.Settings);
             string transitionList = exporter.MemoryOutput.Values.ToArray()[0].ToString();
-            IdentityPath pathAdded;
             var inputs = new MassListInputs(DuplicateAndReverseLines(transitionList, exporter.HasHeaders),
                 CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV);
-            docImport = docImport.ImportMassList(inputs, null, IdentityPath.ROOT, out pathAdded);
+            docImport = docImport.ImportMassList(inputs, null, IdentityPath.ROOT, out _);
 
             IsDocumentState(docImport, 1,
                                      docExport.MoleculeGroupCount,

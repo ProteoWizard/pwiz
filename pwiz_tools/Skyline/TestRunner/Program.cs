@@ -129,8 +129,8 @@ namespace TestRunner
 
         private static int GetLeakCheckIterations(TestInfo test)
         {
-            return LeakCheckIterationsOverrideByTestName.ContainsKey(test.TestMethod.Name)
-                ? LeakCheckIterationsOverrideByTestName[test.TestMethod.Name].Iterations
+            return LeakCheckIterationsOverrideByTestName.TryGetValue(test.TestMethod.Name, out var value)
+                ? value.Iterations
                 : LeakCheckIterations;
         }
 

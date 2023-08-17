@@ -592,13 +592,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void ModifyDocument(string message, Action<SrmSettingsChangeMonitor> modifyAction)
         {
-            using (var longWaitDlg = new LongWaitDlg(Program.MainWindow)
+            using (var longWaitDlg = new LongWaitDlg(Program.MainWindow))
             {
-                Text = Text, // Same as dialog box
-                Message = message,
-                ProgressValue = 0
-            })
-            {
+                longWaitDlg.Text = Text; // Same as dialog box
+                longWaitDlg.Message = message;
+                longWaitDlg.ProgressValue = 0;
                 try
                 {
                     longWaitDlg.PerformWork(this, 800, progressMonitor =>

@@ -167,18 +167,22 @@ namespace pwiz.SkylineTestFunctional
         private static IList<DbIrtPeptide> GetIrtLibrary(SQLiteConnection connection)
         {
             var list = new List<DbIrtPeptide>();
-            using (var select = new SQLiteCommand(connection) { CommandText = "SELECT * FROM IrtLibrary" })
-            using (var reader = select.ExecuteReader())
+            using (var select = new SQLiteCommand(connection))
             {
-                while (reader.Read())
+                select.CommandText = "SELECT * FROM IrtLibrary";
+                using (var reader = select.ExecuteReader())
                 {
-                    list.Add(new DbIrtPeptide(
-                        new Target(reader["PeptideModSeq"].ToString()),
-                        double.Parse(reader["Irt"].ToString()),
-                        bool.Parse(reader["Standard"].ToString()),
-                        int.Parse(reader["TimeSource"].ToString())));
+                    while (reader.Read())
+                    {
+                        list.Add(new DbIrtPeptide(
+                            new Target(reader["PeptideModSeq"].ToString()),
+                            double.Parse(reader["Irt"].ToString()),
+                            bool.Parse(reader["Standard"].ToString()),
+                            int.Parse(reader["TimeSource"].ToString())));
+                    }
                 }
             }
+
             return list;
         }
 

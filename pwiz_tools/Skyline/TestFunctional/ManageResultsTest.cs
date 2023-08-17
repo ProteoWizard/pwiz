@@ -75,9 +75,8 @@ namespace pwiz.SkylineTestFunctional
                 dictGraphPositions.Add(ptLeftTop, graphChrom);
 
                 int index;
-                ChromatogramSet chromSet;
                 Assert.IsTrue(docLoading.Settings.MeasuredResults.TryGetChromatogramSet(
-                    graphChrom.NameSet, out chromSet, out index));
+                    graphChrom.NameSet, out _, out index));
                 dictChromPositions.Add(ptLeftTop, index);
             }
             WaitForConditionUI(() => SkylineWindow.DocumentUI.Settings.MeasuredResults.IsLoaded);
@@ -174,9 +173,8 @@ namespace pwiz.SkylineTestFunctional
             foreach (var graphChrom in listGraphChroms)
             {
                 int index;
-                ChromatogramSet chromSet;
                 Assert.IsTrue(docRename.Settings.MeasuredResults.TryGetChromatogramSet(
-                    graphChrom.NameSet, out chromSet, out index));
+                    graphChrom.NameSet, out _, out index));
 
                 Point ptLeftTop = GetTopLeft(graphChrom.Parent);
                 // Pane order started out in reversed document order

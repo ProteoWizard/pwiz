@@ -816,12 +816,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     if (IsFeatureDetectionWorkflow)
                     {
                         // Load detected features after search
-                        using (var longWaitDlg = new LongWaitDlg
+                        using (var longWaitDlg = new LongWaitDlg())
                         {
-                            Text = Resources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection,
-                            Message = Resources.ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document,
-                        })
-                        {
+                            longWaitDlg.Text = Resources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection;
+                            longWaitDlg.Message = Resources.ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document;
                             longWaitDlg.PerformWork(this, 1000, AddDetectedFeaturesToDocument);
                         }
                     }

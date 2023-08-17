@@ -98,11 +98,9 @@ namespace pwiz.Skyline.EditUI
                     return;
             }
 
-            using (var longWaitDlg = new LongWaitDlg
-                {
-                    Text = Resources.ReintegrateDlg_OkDialog_Reintegrating,
-                })
+            using (var longWaitDlg = new LongWaitDlg())
             {
+                longWaitDlg.Text = Resources.ReintegrateDlg_OkDialog_Reintegrating;
                 try
                 {
                     var scoringModel = _driverPeakScoringModel.SelectedItem;

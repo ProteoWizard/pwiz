@@ -262,14 +262,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (PerformDDASearch)
             {
                 MsDataFileUri[] dataSources;
-                using (var dlg = new OpenDataSourceDialog(Settings.Default.RemoteAccountList)
-                       {
-                           Text = _isFeatureDetectionWorkflow ? 
-                               Resources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Select_Files_to_Search :
-                               Resources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search,
-                           InitialDirectory = new MsDataFilePath(Path.GetDirectoryName(DocumentContainer.DocumentFilePath)),
-                       })
+                using (var dlg = new OpenDataSourceDialog(Settings.Default.RemoteAccountList))
                 {
+                    dlg.Text = _isFeatureDetectionWorkflow ? 
+                        Resources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Select_Files_to_Search :
+                        Resources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search;
+                    dlg.InitialDirectory = new MsDataFilePath(Path.GetDirectoryName(DocumentContainer.DocumentFilePath));
+                    dlg.Text = Resources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search;
+                    dlg.InitialDirectory = new MsDataFilePath(Path.GetDirectoryName(DocumentContainer.DocumentFilePath));
                     // Use saved source type, if there is one.
                     //string sourceType = Settings.Default.SrmResultsSourceType;
                     //if (!string.IsNullOrEmpty(sourceType))
@@ -357,16 +357,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             bool retry = false;
             do
             {
-                using (var longWaitDlg = new LongWaitDlg
-                       {
-                           Text = isFeatureDetection ?
-                               Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library :
-                               Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library,
-                           Message = isFeatureDetection ?
-                               Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library :
-                               Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_,
-                       })
+                using (var longWaitDlg = new LongWaitDlg())
                 {
+                    longWaitDlg.Text = isFeatureDetection ?
+                        Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library :
+                        Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library;
+                    longWaitDlg.Message = isFeatureDetection ?
+                        Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library :
+                        Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_;
+                    longWaitDlg.Text = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library;
+                    longWaitDlg.Message = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_;
                     // Disable the wizard, because the LongWaitDlg does not
                     try
                     {
@@ -549,8 +549,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (docLibSpec == null)
                 return false;
 
-            using (var longWait = new LongWaitDlg {Text = Resources.BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library})
+            using (var longWait = new LongWaitDlg())
             {
+                longWait.Text = Resources.BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library;
                 try
                 {
                     var status = longWait.PerformWork(WizardForm, 800, monitor => ImportPeptideSearch.LoadPeptideSearchLibrary(LibraryManager, docLibSpec, monitor));

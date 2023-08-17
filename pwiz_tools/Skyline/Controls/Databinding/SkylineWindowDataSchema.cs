@@ -60,11 +60,9 @@ namespace pwiz.Skyline.Controls.Databinding
         protected override SrmDocument EndDeferSettingsChanges(SrmDocument document, SrmDocument originalDocument)
         {
             string message = Resources.DataGridViewPasteHandler_EndDeferSettingsChangesOnDocument_Updating_settings;
-            using (var longWaitDlg = new LongWaitDlg
-                   {
-                       Message = message
-                   })
+            using (var longWaitDlg = new LongWaitDlg())
             {
+                longWaitDlg.Message = message;
                 SrmDocument newDocument = document;
                 longWaitDlg.PerformWork(SkylineWindow, 1000, progressMonitor =>
                 {
