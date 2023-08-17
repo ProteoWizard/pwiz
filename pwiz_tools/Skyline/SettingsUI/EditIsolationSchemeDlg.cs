@@ -1026,11 +1026,9 @@ namespace pwiz.Skyline.SettingsUI
             try
             {
                 IsolationScheme isolationScheme = null;
-                using (var dlg = new LongWaitDlg
+                using (var dlg = new LongWaitDlg())
                 {
-                    Message = Resources.EditIsolationSchemeDlg_ImportRangesFromFiles_Reading_isolation_scheme___
-                })
-                {
+                    dlg.Message = Resources.EditIsolationSchemeDlg_ImportRangesFromFiles_Reading_isolation_scheme___;
                     var reader = new IsolationSchemeReader(dataSources);
                     dlg.PerformWork(this, 500, progressMonitor => isolationScheme = reader.Import(@"temp", progressMonitor));
                 }

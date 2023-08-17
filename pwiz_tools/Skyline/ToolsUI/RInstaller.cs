@@ -131,14 +131,17 @@ namespace pwiz.Skyline.ToolsUI
         {
             try
             {
-                using (var dlg = new LongWaitDlg {Message = Resources.RInstaller_InstallR_Downloading_R, ProgressValue = 0})
+                using (var dlg = new LongWaitDlg())
                 {
+                    dlg.Message = Resources.RInstaller_InstallR_Downloading_R;
+                    dlg.ProgressValue = 0;
                     // Short wait, because this can't possible happen fast enough to avoid
                     // showing progress, except in testing
                     dlg.PerformWork(this, 50, DownloadR);
                 }
-                using (var dlg = new LongWaitDlg(null, false) {Message = Resources.RInstaller_GetR_Installing_R})
+                using (var dlg = new LongWaitDlg(null, false))
                 {
+                    dlg.Message = Resources.RInstaller_GetR_Installing_R;
                     dlg.PerformWork(this, 50, InstallR);
                 }
                 MessageDlg.Show(this, Resources.RInstaller_GetR_R_installation_complete_);
@@ -202,8 +205,9 @@ namespace pwiz.Skyline.ToolsUI
         {
             try
             {
-                using (var dlg = new LongWaitDlg(null, false) {Message = Resources.RInstaller_GetPAckages_Installing_Packages})
+                using (var dlg = new LongWaitDlg(null, false))
                 {
+                    dlg.Message = Resources.RInstaller_GetPAckages_Installing_Packages;
                     dlg.PerformWork(this, 1000, InstallPackages);
                 }
             }

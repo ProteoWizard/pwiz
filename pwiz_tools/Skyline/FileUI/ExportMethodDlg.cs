@@ -1093,15 +1093,13 @@ namespace pwiz.Skyline.FileUI
                         break;
                 }
 
-                using (var dlg = new SaveFileDialog
-                    {
-                        Title = title,
-                        InitialDirectory = Settings.Default.ExportDirectory,
-                        OverwritePrompt = true,
-                        DefaultExt = ext,
-                        Filter = TextUtil.FileDialogFilterAll(filter, ext)
-                    })
+                using (var dlg = new SaveFileDialog())
                 {
+                    dlg.Title = title;
+                    dlg.InitialDirectory = Settings.Default.ExportDirectory;
+                    dlg.OverwritePrompt = true;
+                    dlg.DefaultExt = ext;
+                    dlg.Filter = TextUtil.FileDialogFilterAll(filter, ext);
                     if (dlg.ShowDialog(this) == DialogResult.Cancel)
                     {
                         return;
@@ -1977,11 +1975,9 @@ namespace pwiz.Skyline.FileUI
             if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) ||
                 Equals(InstrumentType, ExportInstrumentType.BRUKER_TOF))
             {
-                using (var chooseDirDialog = new FolderBrowserDialog
-                    {
-                        Description = Resources.ExportMethodDlg_btnBrowseTemplate_Click_Method_Template,
-                    })
+                using (var chooseDirDialog = new FolderBrowserDialog())
                 {
+                    chooseDirDialog.Description = Resources.ExportMethodDlg_btnBrowseTemplate_Click_Method_Template;
                     if (!string.IsNullOrEmpty(templateName))
                     {
                         chooseDirDialog.SelectedPath = templateName;
@@ -2009,13 +2005,10 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
-            using (var openFileDialog = new OpenFileDialog
-                {
-                    Title = Resources.ExportMethodDlg_btnBrowseTemplate_Click_Method_Template,
-                    // Extension based on currently selected type
-                    CheckPathExists = true
-                })
+            using (var openFileDialog = new OpenFileDialog())
             {
+                openFileDialog.Title = Resources.ExportMethodDlg_btnBrowseTemplate_Click_Method_Template; // Extension based on currently selected type
+                openFileDialog.CheckPathExists = true;
                 if (!string.IsNullOrEmpty(templateName))
                 {
                     try
@@ -2303,11 +2296,9 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
-            using (var longWait = new LongWaitDlg
-                    {
-                        Text = Resources.ExportDlgProperties_PerformLongExport_Exporting_Methods
-                    })
+            using (var longWait = new LongWaitDlg())
             {
+                longWait.Text = Resources.ExportDlgProperties_PerformLongExport_Exporting_Methods;
                 try
                 {
                     var status = longWait.PerformWork(_dialog, 800, performExport);

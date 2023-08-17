@@ -110,8 +110,9 @@ namespace pwiz.SkylineTestFunctional
                 RemoveCalculatedAnnotationValues = false
             };
             using (var stream = File.Open(saveAsFileName, FileMode.Open))
-            using (var reader = new XmlTextReader(stream) {WhitespaceHandling = WhitespaceHandling.Significant})
+            using (var reader = new XmlTextReader(stream))
             {
+                reader.WhitespaceHandling = WhitespaceHandling.Significant;
                 while (reader.NodeType != XmlNodeType.Element)
                 {
                     reader.Read();
