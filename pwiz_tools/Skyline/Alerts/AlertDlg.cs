@@ -117,7 +117,9 @@ namespace pwiz.Skyline.Alerts
                 }
                 else
                 {
-                    DetailMessage = value.ToString();
+                    DetailMessage = Install.ProgramNameAndVersion + // Show the Skyline version 
+                                    Environment.NewLine + Environment.NewLine + 
+                                    value.ToString();
                 }
             }
         }
