@@ -760,13 +760,13 @@ namespace ZedGraph
 									label = (string)pt.Tag;
 								else
 								{
-									double xVal, yVal, lowVal;
+									double xVal, yVal;
 									ValueHandler valueHandler = new ValueHandler( pane, false );
 									if ( ( curve is BarItem || curve is ErrorBarItem || curve is HiLowBarItem )
 											&& pane.BarSettings.Base != BarBase.X )
-										valueHandler.GetValues( curve, iPt, out yVal, out lowVal, out xVal );
+										valueHandler.GetValues( curve, iPt, out yVal, out _, out xVal );
 									else
-										valueHandler.GetValues( curve, iPt, out xVal, out lowVal, out yVal );
+										valueHandler.GetValues( curve, iPt, out xVal, out _, out yVal );
 
 									string xStr = MakeValueLabel( curve.GetXAxis( pane ), xVal, iPt,
 										curve.IsOverrideOrdinal );
@@ -821,8 +821,8 @@ namespace ZedGraph
 				}
 				else
 				{
-					double x, x2, y, y2;
-					pane.ReverseTransform( mousePt, out x, out x2, out y, out y2 );
+					double x, y, y2;
+					pane.ReverseTransform( mousePt, out x, out _, out y, out y2 );
 					string xStr = MakeValueLabel( pane.XAxis, x, -1, true );
 					string yStr = MakeValueLabel( pane.YAxis, y, -1, true );
 					string y2Str = MakeValueLabel( pane.Y2Axis, y2, -1, true );
@@ -1413,12 +1413,12 @@ namespace ZedGraph
 
 				#region New Code to Select on Rubber Band
 
-				double x1, x2, xx1, xx2;
+				double x1, x2;
 				double[] y1, y2, yy1, yy2;
 				PointF startPoint = ( (Control)sender ).PointToClient( new Point( Convert.ToInt32( this._dragPane.Rect.X ), Convert.ToInt32( this._dragPane.Rect.Y ) ) );
 
-				_dragPane.ReverseTransform( _dragStartPt, out x1, out xx1, out y1, out yy1 );
-				_dragPane.ReverseTransform( mousePtF, out x2, out xx2, out y2, out yy2 );
+				_dragPane.ReverseTransform( _dragStartPt, out x1, out _, out y1, out yy1 );
+				_dragPane.ReverseTransform( mousePtF, out x2, out _, out y2, out yy2 );
 
 				CurveList objects = new CurveList();
 
@@ -1468,12 +1468,11 @@ namespace ZedGraph
 				//Point mousePt = new Point( e.X, e.Y );
 
 				int iPt;
-				GraphPane pane;
 				object nearestObj;
 
 				using ( Graphics g = this.CreateGraphics() )
 				{
-					if ( this.MasterPane.FindNearestPaneObject( mousePt, g, out pane,
+					if ( this.MasterPane.FindNearestPaneObject( mousePt, g, out _,
 								out nearestObj, out iPt ) )
 					{
 						if ( nearestObj is CurveItem && iPt >= 0 )

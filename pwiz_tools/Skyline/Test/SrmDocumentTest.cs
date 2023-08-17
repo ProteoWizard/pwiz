@@ -399,9 +399,8 @@ namespace pwiz.SkylineTest
                     AssertEx.NoDiff(targetList, actualList);
 
                 // Import the exported list
-                IdentityPath pathAdded;
                 var inputs = new MassListInputs(actualList, CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV);
-                docImport = docImport.ImportMassList(inputs, null, IdentityPath.ROOT, out pathAdded);
+                docImport = docImport.ImportMassList(inputs, null, IdentityPath.ROOT, out _);
             }
 
             if (minTransition < 2)
@@ -453,12 +452,11 @@ namespace pwiz.SkylineTest
                 string actualList = exportedActual[key].ToString();
 
                 // Import the exported list
-                IdentityPath pathAdded;
                 try
                 {
                     var inputs = new MassListInputs(actualList, CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV);
                     var importer = docImport.PreImportMassList(inputs, null, false);
-                    docImport = docImport.ImportMassList(inputs, importer, IdentityPath.ROOT, out pathAdded);
+                    docImport = docImport.ImportMassList(inputs, importer, IdentityPath.ROOT, out _);
                 }
                 catch
                 {
@@ -471,7 +469,7 @@ namespace pwiz.SkylineTest
                             RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator, string.Empty);
                     }
                     var inputs = new MassListInputs(actualList, CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV);
-                    docImport = docImport.ImportMassList(inputs, null, IdentityPath.ROOT, out pathAdded);
+                    docImport = docImport.ImportMassList(inputs, null, IdentityPath.ROOT, out _);
                 }
             }
             return exportedActual.Count;

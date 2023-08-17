@@ -496,9 +496,7 @@ namespace SkylineTester
 
         private bool GraphOnMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
-            CurveItem nearestCurve;
-            int index;
-            if (sender.GraphPane.FindNearestPoint(new PointF(e.X, e.Y), out nearestCurve, out index))
+            if (sender.GraphPane.FindNearestPoint(new PointF(e.X, e.Y), out _, out _))
                 sender.Cursor = Cursors.Hand;
             return false;
         }

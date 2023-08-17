@@ -74,8 +74,7 @@ namespace pwiz.SkylineTestFunctional
         private void DoSubTest(TestFilesDir testFilesDir, string skyFile, double[] expectedRTs, string[] filenames, double? expectedRatio,
             Adduct[] expectedAdducts)
         {
-            string docPath;
-            var doc = InitExplicitRTDocument(testFilesDir, skyFile, out docPath);
+            var doc = InitExplicitRTDocument(testFilesDir, skyFile);
             
             // These test files are some of our oldest small molecule docs, let's see if we can roundtrip them
             AssertEx.Serializable(doc, 3, AssertEx.DocumentCloned);
@@ -145,9 +144,9 @@ namespace pwiz.SkylineTestFunctional
 
         }
 
-        private SrmDocument InitExplicitRTDocument(TestFilesDir testFilesDir, string fileName, out string docPath)
+        private SrmDocument InitExplicitRTDocument(TestFilesDir testFilesDir, string fileName)
         {
-            docPath = testFilesDir.GetTestPath(fileName);
+            var docPath = testFilesDir.GetTestPath(fileName);
 
             var documentFile = TestFilesDir.GetTestPath(docPath);
             WaitForCondition(() => File.Exists(documentFile));

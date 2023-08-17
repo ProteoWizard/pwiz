@@ -370,8 +370,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             var libraries = new List<Library>();
             var librarySpecs = new List<LibrarySpec>();
-            using (var longWait = new LongWaitDlg { Text = Resources.ViewLibraryDlg_LoadLibrary_Loading_Library })
+            using (var longWait = new LongWaitDlg())
             {
+                longWait.Text = Resources.ViewLibraryDlg_LoadLibrary_Loading_Library;
                 string libraryName = string.Empty;
 
                 try

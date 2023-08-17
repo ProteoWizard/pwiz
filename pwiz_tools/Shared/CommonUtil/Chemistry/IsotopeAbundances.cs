@@ -193,8 +193,8 @@ namespace pwiz.Common.Chemistry
             foreach (var entry in defaults)
             {
                 var isotopes = new Dictionary<double, double>();
-                var list = traditional_Skyline_CHONPS.ContainsKey(entry.Key)
-                    ? traditional_Skyline_CHONPS[entry.Key]
+                var list = traditional_Skyline_CHONPS.TryGetValue(entry.Key, out var value)
+                    ? value
                     : entry.Value;
                 for (int i = 0; i < list.Length; i += 2)
                 {

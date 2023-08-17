@@ -177,9 +177,9 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public override void SetFragmentIons(string ions)
         {
-            if (Settings.ChemicalData.Instruments.ContainsKey(ions))
+            if (Settings.ChemicalData.Instruments.TryGetValue(ions, out var instrument))
             {
-                Settings.ChemicalData.CurrentInstrumentSetting = Settings.ChemicalData.Instruments[ions];
+                Settings.ChemicalData.CurrentInstrumentSetting = instrument;
             }
         }
 

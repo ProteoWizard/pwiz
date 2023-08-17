@@ -49,11 +49,9 @@ namespace pwiz.Skyline.Alerts
         public String SkylineFileLocation { get; set; }
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            using (var choseDirectoryDialog = new FolderBrowserDialog
+            using (var choseDirectoryDialog = new FolderBrowserDialog())
             {
-                SelectedPath = ExtractionPath
-            })
-            {
+                choseDirectoryDialog.SelectedPath = ExtractionPath;
                 if (choseDirectoryDialog.ShowDialog() == DialogResult.OK)
                 {
                     ExtractionPath = choseDirectoryDialog.SelectedPath;

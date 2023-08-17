@@ -142,14 +142,16 @@ namespace pwiz.Skyline.ToolsUI
         {
             try
             {
-                using (var waitDlg = new LongWaitDlg{ProgressValue = 0})
+                using (var waitDlg = new LongWaitDlg())
                 {
+                    waitDlg.ProgressValue = 0;
                     // Short wait, because this can't possible happen fast enough to avoid
                     // showing progress, except in testing
                     waitDlg.PerformWork(this, 50, DownloadPython);
                 }
-                using (var waitDlg = new LongWaitDlg(null, false) {Message = Resources.PythonInstaller_GetPython_Installing_Python})
+                using (var waitDlg = new LongWaitDlg(null, false))
                 {
+                    waitDlg.Message = Resources.PythonInstaller_GetPython_Installing_Python;
                     waitDlg.PerformWork(this, 50, InstallPython);
                 }
                 MessageDlg.Show(this, Resources.PythonInstaller_GetPython_Python_installation_completed_);
@@ -208,8 +210,9 @@ namespace pwiz.Skyline.ToolsUI
             try
             {
                 // download packages
-                using (var waitDlg = new LongWaitDlg{ProgressValue = 0})
+                using (var waitDlg = new LongWaitDlg())
                 {
+                    waitDlg.ProgressValue = 0;
                     waitDlg.PerformWork(this, 500, longWaitBroker => packagePaths = DownloadPackages(longWaitBroker, downloadablePackages));
                 }
 
@@ -227,8 +230,9 @@ namespace pwiz.Skyline.ToolsUI
                 // first install executable packages, if any
                 if (exePaths.Count != 0)
                 {
-                    using (var waitDlg = new LongWaitDlg(null, false) { Message = Resources.PythonInstaller_GetPackages_Installing_Packages })
+                    using (var waitDlg = new LongWaitDlg(null, false))
                     {
+                        waitDlg.Message = Resources.PythonInstaller_GetPackages_Installing_Packages;
                         waitDlg.PerformWork(this, 500, () => InstallExecutablePackages(exePaths));
                     }   
                 }
@@ -258,8 +262,9 @@ namespace pwiz.Skyline.ToolsUI
                         }
                     }
 
-                    using (var waitDlg = new LongWaitDlg(null, false) { Message = Resources.PythonInstaller_GetPackages_Installing_Packages })
+                    using (var waitDlg = new LongWaitDlg(null, false))
                     {
+                        waitDlg.Message = Resources.PythonInstaller_GetPackages_Installing_Packages;
                         waitDlg.PerformWork(this, 500, () => InstallSourcePackages(sourcePaths, pipPath));
                     }   
                 }
@@ -395,14 +400,16 @@ namespace pwiz.Skyline.ToolsUI
         {   
             try
             {
-                using (var dlg = new LongWaitDlg{ProgressValue = 0})
+                using (var dlg = new LongWaitDlg())
                 {
+                    dlg.ProgressValue = 0;
                     // Short wait, because this can't possible happen fast enough to avoid
                     // showing progress, except in testing
                     dlg.PerformWork(this, 50, DownloadPip);
                 }
-                using (var dlg = new LongWaitDlg(null, false) {Message = Resources.PythonInstaller_GetPip_Installing_Pip})
+                using (var dlg = new LongWaitDlg(null, false))
                 {
+                    dlg.Message = Resources.PythonInstaller_GetPip_Installing_Pip;
                     dlg.PerformWork(this, 50, InstallPip);
                 }
             }

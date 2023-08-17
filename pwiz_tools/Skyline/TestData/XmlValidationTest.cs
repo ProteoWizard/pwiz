@@ -291,8 +291,9 @@ namespace pwiz.SkylineTestData
 
         private static void WriteDocument(SrmDocument doc, string docPath)
         {
-            using (var writer = new XmlTextWriter(docPath, Encoding.UTF8) { Formatting = Formatting.Indented })
+            using (var writer = new XmlTextWriter(docPath, Encoding.UTF8))
             {
+                writer.Formatting = Formatting.Indented;
                 XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
                 ser.Serialize(writer, doc);
 

@@ -123,8 +123,9 @@ namespace pwiz.Skyline.ToolsUI
             ICollection<ToolUpdateInfo> successfulDownloads = null;
             ICollection<string> failedDownloads = null;
 
-            using (var dlg = new LongWaitDlg {Message = Resources.ToolUpdatesDlg_GetToolsToUpdate_Downloading_Updates})
+            using (var dlg = new LongWaitDlg())
             {
+                dlg.Message = Resources.ToolUpdatesDlg_GetToolsToUpdate_Downloading_Updates;
                 dlg.PerformWork(this, 1000,
                                 longWaitBroker =>
                                 DownloadTools(longWaitBroker, toolsToDownload, out successfulDownloads,

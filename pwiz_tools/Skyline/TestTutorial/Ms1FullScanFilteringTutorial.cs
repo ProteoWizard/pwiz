@@ -830,9 +830,7 @@ namespace pwiz.SkylineTestTutorial
                 {
                     var graph = GetGraphChromatogram(i);
                     var approxRT = ((i == 1) ? rt1 : rt0);
-                    TransitionGroupDocNode nodeGroupGraph;
-                    TransitionDocNode nodeTranGraph;
-                    var scaledRT = graph.FindAnnotatedPeakRetentionTime(approxRT, out nodeGroupGraph, out nodeTranGraph);
+                    var scaledRT = graph.FindAnnotatedPeakRetentionTime(approxRT, out _, out _);
                     graph.FirePickedPeak(nodeGroup, nodeTran, scaledRT);
                 }
             });

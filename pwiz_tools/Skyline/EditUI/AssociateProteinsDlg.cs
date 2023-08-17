@@ -399,14 +399,12 @@ namespace pwiz.Skyline.EditUI
         // prompts user to select a fasta file to use for matching proteins
         public void ImportFasta()
         {
-            using (OpenFileDialog dlg = new OpenFileDialog
+            using (OpenFileDialog dlg = new OpenFileDialog())
             {
-                Title = Resources.SkylineWindow_ImportFastaFile_Import_FASTA,
-                InitialDirectory = Settings.Default.FastaDirectory,
-                CheckPathExists = true,
-                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(Resources.OpenFileDialog_FASTA_files, DataSourceUtil.EXT_FASTA))
-            })
-            {
+                dlg.Title = Resources.SkylineWindow_ImportFastaFile_Import_FASTA;
+                dlg.InitialDirectory = Settings.Default.FastaDirectory;
+                dlg.CheckPathExists = true;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(Resources.OpenFileDialog_FASTA_files, DataSourceUtil.EXT_FASTA));
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.FastaDirectory = Path.GetDirectoryName(dlg.FileName);
@@ -695,8 +693,7 @@ namespace pwiz.Skyline.EditUI
 
         public void NewTargetsFinalSync(out int proteins, out int peptides, out int precursors, out int transitions)
         {
-            int emptyProteins;
-            NewTargetsFinalSync(out proteins, out peptides, out precursors, out transitions, out emptyProteins);
+            NewTargetsFinalSync(out proteins, out peptides, out precursors, out transitions, out _);
         }
 
         public void NewTargetsFinalSync(out int proteins, out int peptides, out int precursors, out int transitions, out int unmappedOrRemoved)

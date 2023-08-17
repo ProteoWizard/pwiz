@@ -196,8 +196,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             // Show anyone watching that work is being performed
             RunUI(() => {
-                using (var longWait = new LongWaitDlg(SkylineWindow) { Message = "Running command-line import" })
+                using (var longWait = new LongWaitDlg(SkylineWindow))
                 {
+                    longWait.Message = "Running command-line import";
                     longWait.PerformWork(SkylineWindow, 500, () =>
                         RunCommand("--in=" + skyFile,
                             "--import-file=" + TestFilesDir.GetTestPath(BSA_50fmol_TIMS_InfusionESI_10precd),

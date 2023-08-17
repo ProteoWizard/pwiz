@@ -233,8 +233,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 foreach (var form in FormUtil.OpenForms.OfType<GraphSummary>())
                 {
-                    TGraphPane graphPane;
-                    if (form.TryGetGraphPane(out graphPane))
+                    if (form.TryGetGraphPane(out TGraphPane _))
                     {
                         result = form;
                         break;

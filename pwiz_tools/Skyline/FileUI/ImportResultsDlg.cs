@@ -332,11 +332,9 @@ namespace pwiz.Skyline.FileUI
 
         public static MsDataFileUri[] GetDataSourcePaths(Control parent, string documentSavedPath)
         {
-            using (var dlgOpen = new OpenDataSourceDialog(Settings.Default.RemoteAccountList)
-                {
-                    Text = Resources.ImportResultsDlg_GetDataSourcePathsFile_Import_Results_Files
-                })
+            using (var dlgOpen = new OpenDataSourceDialog(Settings.Default.RemoteAccountList))
             {
+                dlgOpen.Text = Resources.ImportResultsDlg_GetDataSourcePathsFile_Import_Results_Files;
                 // The dialog expects null to mean no directory was supplied, so don't assign
                 // an empty string.
                 string initialDir = Path.GetDirectoryName(documentSavedPath) ?? Settings.Default.SrmResultsDirectory;
@@ -422,13 +420,11 @@ namespace pwiz.Skyline.FileUI
 
         private MsDataFilePath[] GetWiffSubPaths(string filePath)
         {
-            using (var longWaitDlg = new LongWaitDlg
-                {
-                    Text = Resources.ImportResultsDlg_GetWiffSubPaths_Sample_Names,
-                    Message = string.Format(Resources.ImportResultsDlg_GetWiffSubPaths_Reading_sample_names_from__0__, 
-                                            Path.GetFileName(filePath))
-                })
+            using (var longWaitDlg = new LongWaitDlg())
             {
+                longWaitDlg.Text = Resources.ImportResultsDlg_GetWiffSubPaths_Sample_Names;
+                longWaitDlg.Message = string.Format(Resources.ImportResultsDlg_GetWiffSubPaths_Reading_sample_names_from__0__, 
+                    Path.GetFileName(filePath));
                 string[] dataIds = null;
                 try
                 {
@@ -460,13 +456,11 @@ namespace pwiz.Skyline.FileUI
         public KeyValuePair<string, MsDataFileUri[]>[] GetDataSourcePathsDir()
         {
             string initialDir = Path.GetDirectoryName(_documentSavedPath);
-            using (FolderBrowserDialog dlg = new FolderBrowserDialog
-                {
-                    Description = Resources.ImportResultsDlg_GetDataSourcePathsDir_Results_Directory,
-                    ShowNewFolderButton = false,
-                    SelectedPath = initialDir
-                })
+            using (FolderBrowserDialog dlg = new FolderBrowserDialog())
             {
+                dlg.Description = Resources.ImportResultsDlg_GetDataSourcePathsDir_Results_Directory;
+                dlg.ShowNewFolderButton = false;
+                dlg.SelectedPath = initialDir;
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                     return null;
 

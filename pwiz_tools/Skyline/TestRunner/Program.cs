@@ -129,8 +129,8 @@ namespace TestRunner
 
         private static int GetLeakCheckIterations(TestInfo test)
         {
-            return LeakCheckIterationsOverrideByTestName.ContainsKey(test.TestMethod.Name)
-                ? LeakCheckIterationsOverrideByTestName[test.TestMethod.Name].Iterations
+            return LeakCheckIterationsOverrideByTestName.TryGetValue(test.TestMethod.Name, out var value)
+                ? value.Iterations
                 : LeakCheckIterations;
         }
 
@@ -437,7 +437,10 @@ namespace TestRunner
             //Process.GetCurrentProcess().Kill();
 
             if (commandLineArgs.ArgAsBool("wait"))
-                Console.ReadKey();
+            {
+                Console.Out.WriteLine("Press <enter> to continue");
+                Console.ReadLine();
+            }
 
             // delete per-process tools directory
             if (Path.GetFileName(ToolDescriptionHelpers.GetToolsDirectory()) != "Tools")

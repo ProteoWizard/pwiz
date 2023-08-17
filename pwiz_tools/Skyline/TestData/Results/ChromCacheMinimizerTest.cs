@@ -228,8 +228,9 @@ namespace pwiz.SkylineTestData.Results
                     fsScans.FileStream, fsPeaks.FileStream, fsScores.FileStream);
                 fs.Commit();
             }
-            using (var writer = new XmlTextWriter(skyFilePath, Encoding.UTF8) {Formatting = Formatting.Indented})
+            using (var writer = new XmlTextWriter(skyFilePath, Encoding.UTF8))
             {
+                writer.Formatting = Formatting.Indented;
                 var ser = new XmlSerializer(typeof (SrmDocument));
                 ser.Serialize(writer, document);
 

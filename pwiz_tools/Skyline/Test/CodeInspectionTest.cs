@@ -207,9 +207,12 @@ namespace pwiz.SkylineTest
                 }
             }
 
+            var panoramaHint = typeof(PanoramaClient.PanoramaFolderBrowser); // Bit of a hack to get the test to look in that namespace
+
             // Collect forms that should be exercised in tutorials
             var foundForms = FindForms(new[]
                 {
+                    panoramaHint, // Bit of a hack to get the test to look in that namespace
                     typeof(Form),
                     typeof(FormEx),
                     typeof(DockableFormEx),
@@ -229,6 +232,7 @@ namespace pwiz.SkylineTest
             // Forms that we don't expect to see in any test
             var FormNamesNotExpectedInTutorialTests = new[]
             {
+                panoramaHint.Name, // Bit of a hack to get the test to look in that namespace
                 "DetectionsGraphController", // An intermediate type, actually exercised in DetectionsPlotTest
                 "MassErrorGraphController", // An intermediate type, actually exercised in MassErrorGraphsTest 
                 "PeptideSettingsUI.TabWithPage", // An intermediate type
@@ -255,7 +259,7 @@ namespace pwiz.SkylineTest
                     !FormNamesNotExpectedInTutorialTests.Contains(name) && // Known exclusion?
                     !foundForms.Any(f => name.EndsWith("." + f))) // Or perhaps lookup list declares parent.child
                 {
-                    missing.Add(string.Format("Form \"{0}\" referenced in TestRunnerLib\\TestRunnerFormLookup.csv is unknown or has unanticipated parent form type", name));
+                    missing.Add(string.Format("Form \"{0}\" referenced in TestRunnerLib\\TestRunnerFormLookup.csv is unknown or has unanticipated parent form type (maybe using Form instead of FormEx or CommonFormEx?)", name));
                 }
             }
 
@@ -446,8 +450,10 @@ namespace pwiz.SkylineTest
                         assembly = formType.Assembly;
                     }
                     foreach (var form in assembly.GetTypes()
-                        .Where(t => (t.IsClass && !t.IsAbstract && t.IsSubclassOf(formType)) || // Form type match
-                                    formType.IsAssignableFrom(t))) // Interface type match
+                                 .Where(t => (t.IsClass && !t.IsAbstract && 
+                                              (t.IsSubclassOf(formType) || // Form type match
+                                               t.IsSubclassOf(typeof(FormEx)) || t.IsSubclassOf(typeof(CommonFormEx)))) // Or acceptably subclassed Form
+                                             || formType.IsAssignableFrom(t))) // Interface type match
                     {
                         var formName = form.Name;
                         // Watch out for form types which are just derived from other form types (e.g FormEx -> ModeUIInvariantFormEx)
@@ -566,8 +572,8 @@ namespace pwiz.SkylineTest
                     var lines = content.Split('\n');
 
                     var lineNum = 0;
-                    var requiredPatternsObservedInThisFile = requiredPatternsByFileMask.ContainsKey(fileMask)
-                        ? requiredPatternsByFileMask[fileMask].Where(kvp =>
+                    var requiredPatternsObservedInThisFile = requiredPatternsByFileMask.TryGetValue(fileMask, out var value)
+                        ? value.Where(kvp =>
                         {
                             // Do we need to worry about this pattern for this file?
                             var patternDetails = kvp.Value;
@@ -577,9 +583,8 @@ namespace pwiz.SkylineTest
                         }).ToDictionary(k => k.Key, k => false)
                         : null;
                     var forbiddenPatternsForThisFile =
-                        forbiddenPatternsByFileMask
-                            .ContainsKey(fileMask) // Are there any forbidden patterns for this filemask?
-                            ? forbiddenPatternsByFileMask[fileMask].Where(kvp =>
+                        forbiddenPatternsByFileMask.TryGetValue(fileMask, out var patterns) // Are there any forbidden patterns for this filemask?
+                            ? patterns.Where(kvp =>
                             {
                                 // Do we need to worry about this pattern for this file?
                                 var patternDetails = kvp.Value;
