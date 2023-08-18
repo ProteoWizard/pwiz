@@ -10,12 +10,12 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace pwiz.SkylineTestUtil
 {
-    public abstract class DocumentationGeneratorTest : AbstractFunctionalTestEx
+    public abstract class ScreenshotGeneratingTest : AbstractFunctionalTestEx
     {
         private HashSet<string> _savedImages = new HashSet<string>();
 
         protected StringWriter _resourceStringWriter;
-        protected DocumentationGeneratorTest()
+        protected ScreenshotGeneratingTest()
         {
             DocumentationStringBuilder = new StringBuilder();
             _resourceStringWriter = new StringWriter();
@@ -51,13 +51,14 @@ namespace pwiz.SkylineTestUtil
             Assert.IsTrue(_savedImages.Add(filename), "{0} has already been saved", filename);
             var imagesFolder = GetImagesFolder();
             Assert.IsTrue(Directory.Exists(imagesFolder), "Folder {0} does not exist", imagesFolder);
+            string fullPath = Path.Combine(imagesFolder, filename);
             try
             {
-                image.Save(Path.Combine(imagesFolder, filename), imageFormat);
+                image.Save(fullPath, imageFormat);
             }
             catch (Exception e)
             {
-                throw new IOException("Error saving to " + filename, e);
+                throw new IOException("Error saving to " + fullPath, e);
             }
         }
 

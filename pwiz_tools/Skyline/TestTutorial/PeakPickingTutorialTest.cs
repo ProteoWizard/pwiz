@@ -45,7 +45,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestTutorial
 {
     [TestClass]
-    public class PeakPickingTutorialTest : DocumentationGeneratorTest
+    public class PeakPickingTutorialTest : ScreenshotGeneratingTest
     {
         private readonly string[] _importFiles =
             {
@@ -202,14 +202,13 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => Assert.AreEqual(0.5992, editDlg.PeakCalculatorsGrid.Items[3].PercentContribution ?? 0, 0.005));
 
             RunUI(() => editDlg.SelectedGraphTab = 2);
-            // TODO(nicksh): Save an emf instead of a png
             RunUISaveScreenshot(editDlg.ZedGraphPValues, "EditPeakScoringModelFormPValueGraph");
 
             RunUI(() => editDlg.SelectedGraphTab = 3);
             RunUISaveScreenshot(editDlg.ZedGraphQValues, "EditPeakScoringModelFormQValueGraph");
 
             RunUI(() => editDlg.SelectedGraphTab = 1);
-            RunUI(() => editDlg.PeakCalculatorsGrid.SelectRow(3));
+            RunUI(() => editDlg.PeakCalculatorsGrid.SelectRow(2));
             RunUISaveScreenshot(editDlg, "EditPeakScoringModelFormFeatureScore");
 
             RunUI(() =>
@@ -245,10 +244,10 @@ namespace pwiz.SkylineTestTutorial
                 var image = TakeScreenShot(SkylineWindow);
                 
                 // Crop the image so that it starts at the top of the Find Results window
-                int offset = findResultsForm.PointToScreen(new Point(0, 0)).Y - SkylineWindow.Location.Y;
+                int yOffset = findResultsForm.PointToScreen(new Point(0, 0)).Y - SkylineWindow.Location.Y;
                 var cropRect = new Rectangle(0,
-                    offset, image.Width,
-                    image.Height - offset);
+                    yOffset, image.Width,
+                    image.Height - yOffset);
                 var croppedImage = image.Clone(cropRect, image.PixelFormat);
                 
                 SaveImage(croppedImage, ImageFormat.Png, "FindResultsViewClippedFromMainWindow.png");
@@ -259,7 +258,6 @@ namespace pwiz.SkylineTestTutorial
             var missingPeptides = new List<string> { "LGGNEQVTR", "IPVDSIYSPVLK", "YFNDGDIVEGTIVK", 
                                                      "DFDSLGTLR", "GGYAGMLVGSVGETVAQLAR", "GGYAGMLVGSVGETVAQLAR"};
             var isDecoys = new List<bool> {false, false, false, false, false, true};
-
             RunUI(() =>
             {
                 findResultsForm = FormUtil.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
