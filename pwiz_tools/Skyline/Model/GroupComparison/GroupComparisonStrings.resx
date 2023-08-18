@@ -359,13 +359,16 @@
     <comment>Example: TIC Normalized Peak Area</comment>
   </data>
   <data name="NormalizationMethod_EQUALIZE_MEDIANS_Median_Normalized__0_" xml:space="preserve">
-	  <value>Median Normalized {0}</value>
-      <comment>Example: Median Normalized Peak Area</comment>
+    <value>Median Normalized {0}</value>
+    <comment>Example: Median Normalized Peak Area</comment>
   </data>
   <data name="EditGroupComparisonDlg_GetNormalizeOptionText_Batch_Calibration_Curve" xml:space="preserve">
     <value>Batch Calibration Curve</value>
   </data>
   <data name="EditGroupComparisonDlg_GroupComparisonDef_Group_comparisons_at_the_protein_level_using_calibrated_values_is_not_yet_supported_in_Skyline_" xml:space="preserve">
     <value>Group comparisons at the protein level using calibrated values is not yet supported in Skyline.</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Avoid_Label_Overlap" xml:space="preserve">
+    <value>Avoid Label Overlap</value>
   </data>
 </root>

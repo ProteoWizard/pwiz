@@ -121,9 +121,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
             get { return GroupComparisonDef.PerProtein; }
         }
 
-        public static FontSpec CreateFontSpec(Color color, float size)
+        public static FontSpec CreateFontSpec(Color textColor, Color backgroundColor, float size)
         {
-            return new FontSpec(@"Arial", size, color, false, false, false, Color.Empty, null, FillType.None)
+            return new FontSpec(@"Arial", size, textColor, false, false, false, backgroundColor, null, FillType.Solid)
             {
                 Border = { IsVisible = false }
             };
@@ -145,10 +145,21 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 _minPValueLine[1].X = pane.XAxis.Scale.Max;
             }
 
+            zedGraphControl.GraphPane.GraphObjList.RemoveAll(g => g is LineObj);
             foreach (var labeledPoint in _labeledPoints)
+            {
                 if (labeledPoint.Label != null)
+                {
+                    labeledPoint.Label.Location.X = labeledPoint.Point.X;
                     labeledPoint.Label.Location.Y = labeledPoint.Point.Y + labeledPoint.Label.FontSpec.Size / 2.0f /
-                                                    pane.Rect.Height * (pane.YAxis.Scale.Max - pane.YAxis.Scale.Min);
+                        pane.Rect.Height * (pane.YAxis.Scale.Max - pane.YAxis.Scale.Min);
+                }
+            }
+            if (Settings.Default.GroupComparisonAvoidLabelOverlap)
+            {
+                zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints.Select(l => l.Label).ToList(),
+                    _labeledPoints.Select(l => l.Point).ToList());
+            }
         }
 
         public class LabeledPoint
@@ -162,7 +173,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             public PointPair Point { get; private set; }
             public TextObj Label { get; private set; }
-
             public bool IsSelected { get; private set; }
         }
 
@@ -338,7 +348,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 var foldChange = row.FoldChangeResult.Log2FoldChange;
                 var pvalue = -Math.Log10(Math.Max(MIN_PVALUE, row.FoldChangeResult.AdjustedPValue));
-
                 var point = new PointPair(foldChange, pvalue) { Tag = row };
                 if (Settings.Default.GroupComparisonShowSelection && count < MAX_SELECTED && IsSelected(row))
                 {
@@ -391,7 +400,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
             zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = true;       
             zedGraphControl.GraphPane.AxisChange();
             zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = false;
-
+            if (Settings.Default.GroupComparisonAvoidLabelOverlap)
+            {
+                zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints.Select(l => l.Label).ToList(),
+                    _labeledPoints.Select(l => l.Point).ToList());
+            }
             zedGraphControl.Invalidate();
         }
         // ReSharper restore PossibleMultipleEnumeration
@@ -408,8 +421,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
 
                 IsClippedToChartRect = true,
-                FontSpec = CreateFontSpec(color, size),
+                FontSpec = CreateFontSpec(color, Color.FromArgb(200, 255,255,255), size),
                 ZOrder = ZOrder.A_InFront
+                
             };
 
             return textObj;
@@ -495,7 +509,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             return new LineItem(text, new[] { fromX, toX }, new[] { fromY, toY }, color, SymbolType.None, 1.0f)
             {
-                Line = { Style = DashStyle.Dash }
+                Line = { Style = DashStyle.Dash },
+                
             };
         }
 
@@ -721,14 +736,23 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Formatting___, null, OnFormattingClick));
                 menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Selection, null, OnSelectionClick)
                     { Checked = Settings.Default.GroupComparisonShowSelection });
+                menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Avoid_Label_Overlap, null, OnLabelOverlapClick)
+                    { Checked = Settings.Default.GroupComparisonAvoidLabelOverlap });
                 if (AnyCutoffSettingsValid)
                 {
                     menuStrip.Items.Insert(index++, new ToolStripSeparator());
                     menuStrip.Items.Insert(index, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Remove_Below_Cutoffs, null, OnRemoveBelowCutoffsClick));
-                }  
+                }
+
+
             }
         }
 
+        private void OnLabelOverlapClick(object o, EventArgs eventArgs)
+        {
+            Settings.Default.GroupComparisonAvoidLabelOverlap = !Settings.Default.GroupComparisonAvoidLabelOverlap;
+            UpdateGraph();
+        }
         private void OnFormattingClick(object o, EventArgs eventArgs)
         {
             ShowFormattingDialog();
@@ -1041,9 +1065,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private void adjustLabels(object sender, EventArgs e)
         {
-            zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints.Select(l => l.Label).ToList(),
-                _labeledPoints.Select(l => l.Point).ToList(), 1);
-            zedGraphControl.Invalidate();
+            // zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints.Select(l => l.Label).ToList(),
+            //     _labeledPoints.Select(l => l.Point).ToList(), 1);
+            // zedGraphControl.Invalidate();
 
         }
     }

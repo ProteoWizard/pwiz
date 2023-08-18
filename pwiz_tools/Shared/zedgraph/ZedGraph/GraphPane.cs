@@ -1591,9 +1591,10 @@ namespace ZedGraph
 					DrawConnector(objects[i], points[i], g);
                 }
             }
+
         }
 		// probably should probably create your own rectangle that acconts for up = +y axis
-		const bool drawDebug = true;
+		const bool drawDebug = false;
         public void AdjustObject(TextObj obj, Graphics g, int maxIter)
         {
             RectangleF unionRect = RectangleF.Empty;
