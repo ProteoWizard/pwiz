@@ -206,7 +206,7 @@ decoys, or to use one of the many ways of customizing the model
 This will show the distribution of p values according to the Gaussian
 model to which the decoys were fit:
 
-<img src="media/EditPeakScoringModelFormPValueGraph.emf" style="width:5.11458in;height:4.60417in" />
+<img src="media/EditPeakScoringModelFormPValueGraph.png" style="width:5.11458in;height:4.60417in" />
 
 This graph is another way to assess whether decoys are Gaussian: if they
 are, the p values of the decoys should be uniformly distributed over the
@@ -221,7 +221,7 @@ chosen peak. You can also see the q values themselves:
 
 This will show a graph of the q values assigned to all the targets:
 
-<img src="media/EditPeakScoringModelFormQValueGraph.emf" style="width:5.11458in;height:4.60417in" />
+<img src="media/EditPeakScoringModelFormQValueGraph.png" style="width:5.11458in;height:4.60417in" />
 
 For a given FDR cut-off, any q value below the FDR value will be
 declared a true peak, and any q value above the FDR value will be
@@ -510,7 +510,7 @@ report. In this tutorial you will use both of these options:
 
 The **Reintegrate** dialog box should look like this:
 
-<img src="media/image17.png" style="width:3.41667in;height:2.90625in" />
+<img src="media/ReintegrateFormNew.png" style="width:3.41667in;height:2.90625in" />
 
 - Click the **OK** button.
 
@@ -526,7 +526,7 @@ the reintegration should complete.
 Note that after reintegration, the chosen peak for this
 peptide/replicate is now at the correct position of 18.0 minutes.
 
-<img src="media/image18.emf" style="width:3.89583in;height:4.33333in" />
+<img src="media/ChromatogramGraphCorrectedPeakAt18.png" style="width:3.89583in;height:4.33333in" />
 
 Now try reintegrating in a slightly different way by doing the
 following:
@@ -551,13 +551,13 @@ meets this criterion, Skyline will not choose any peak. In the
 **Targets** view, a peptide with no chosen peak will have a red dot left
 of its sequence:
 
-<img src="media/image19.png" style="width:3.29097in;height:0.8375in" />
+<img src="media/TargetsViewWithSomeNullPeaks.png" style="width:3.29097in;height:0.8375in" />
 
 This is now the case for the peptide LPDGNGIEL**<u>C</u>R** in the
 replicate 006_StC-DosR_B2. You will also see that the chromatogram graph
 now lacks the right-pointing arrowheads, indicating the chosen peak:
 
-<img src="media/image20.emf" style="width:3.89583in;height:4.33333in" />
+<img src="media/ChromatogramGraphWithNoPickedPeak.png" style="width:3.89583in;height:4.33333in" />
 
 This can be different for each replicate, however, and if you use the
 **Replicates** dropdown list at the top of the **Targets** view to
@@ -568,7 +568,7 @@ interference on the y10 ion in the analyte precursor, which you can see
 better, if you select it (622.3086++) in the **Targets** view and zoom
 in a little:
 
-<img src="media/image21.png" style="width:6.5in;height:4.78403in" />
+<img src="media/MainWindowWithInterferenceOnTransition.png" style="width:6.5in;height:4.78403in" />
 
 Any peak picking algorithm might do better with this peak, if the y10
 ion were removed.
@@ -590,7 +590,7 @@ in the report form. You will start with the first method:
 
 The **Export mProphet Features** form should look like this:
 
-<img src="media/image22.png" style="width:3.91667in;height:4.47917in" />
+<img src="media/ExportMProphetFeaturesForm.png" style="width:3.91667in;height:4.47917in" />
 
 - Click the **OK** button.
 
@@ -627,13 +627,13 @@ columns available in a Skyline report.
 
 The form should look like this:
 
-<img src="media/image23.png" style="width:3.09375in;height:3.58333in" />
+<img src="media/ManageReportsForm.png" style="width:3.09375in;height:3.58333in" />
 
 - Click the **Edit** button.
 
 The **Edit Report** form should appear as follows:
 
-<img src="media/image24.png" style="width:6.5in;height:4.63542in" />
+<img src="media/EditReportForm.png" style="width:6.5in;height:4.63542in" />
 
 - On the left side of the form, click on the plus icon by **Peptides**
   to expand the list.
@@ -649,7 +649,7 @@ The **Edit Report** form should appear as follows:
 
 The **Edit Report** form should now look like this:
 
-<img src="media/image25.png" style="width:6.5in;height:4.63542in" />
+<img src="media/EditReportFormWithSelectedColumns.png" style="width:6.5in;height:4.63542in" />
 
 - Click the **OK** button.
 
@@ -734,13 +734,13 @@ use advanced peak picking:
 
 A form like the following should appear:
 
-<img src="media/image26.png" style="width:4.34375in;height:4.19792in" />
+<img src="media/ManageResultsForm.png" style="width:4.34375in;height:4.19792in" />
 
 - Click the **Re-score** button
 
 The following form should appear:
 
-<img src="media/image27.png" style="width:4.47917in;height:2.11458in" />
+<img src="media/ReScoreResultsForm.png" style="width:4.47917in;height:2.11458in" />
 
 - Click the **Re-score in place** button.
 
@@ -760,7 +760,7 @@ Do the following to return to the **Edit Peak Scoring Model** form:
 This will show the model from the previous dataset, applied to the
 peptides in the present dataset.
 
-<img src="media/image28.png" style="width:6.5in;height:4.18819in" />
+<img src="media/EditPeakScoringModelFormSrmModelAppliedToDiaData.png" style="width:6.5in;height:4.18819in" />
 
 A model trained on one dataset can be applied to another, or you can
 train a new model for each dataset, provided your dataset contains
@@ -791,7 +791,7 @@ advanced peak picking. Perform the following steps to do this:
 
 The model should look like this:
 
-<img src="media/image29.png" style="width:6.5in;height:3.91319in" />
+<img src="media/EditPeakScoringModelFormDiaPeakScoringDialogWithSecondBest.png" style="width:6.5in;height:3.91319in" />
 
 Note that some of the scores that were unavailable in the SRM model are
 available here, such as **Product mass error**. This is because the
@@ -809,7 +809,7 @@ scores.
   Scores** graph.
 
 - A find button
-  (<img src="media/image10.png" style="width:0.23181in;height:0.21136in" />)
+  (<img src="media/FindButton.png" style="width:0.23181in;height:0.21136in" />)
   should appear – click it.
 
 A **Find Results Form** should appear behind the **Edit Peak Scoring

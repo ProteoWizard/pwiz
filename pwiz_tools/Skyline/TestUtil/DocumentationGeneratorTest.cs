@@ -1,4 +1,6 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Resources;
@@ -11,6 +13,8 @@ namespace pwiz.SkylineTestUtil
 {
     public abstract class DocumentationGeneratorTest : AbstractFunctionalTestEx
     {
+        private HashSet<string> _savedImages = new HashSet<string>();
+
         protected StringWriter _resourceStringWriter;
         protected DocumentationGeneratorTest()
         {
@@ -45,9 +49,17 @@ namespace pwiz.SkylineTestUtil
 
         public void SaveImage(Image image, ImageFormat imageFormat, string filename)
         {
+            Assert.IsTrue(_savedImages.Add(filename), "{0} has already been saved", filename);
             var imagesFolder = GetImagesFolder();
             Assert.IsTrue(Directory.Exists(imagesFolder), "Folder {0} does not exist", imagesFolder);
-            image.Save(Path.Combine(imagesFolder, filename), imageFormat);
+            try
+            {
+                image.Save(Path.Combine(imagesFolder, filename), imageFormat);
+            }
+            catch (Exception e)
+            {
+                throw new IOException("Error saving to " + filename, e);
+            }
         }
 
         public void SaveScreenshot(Control form, string filename)
