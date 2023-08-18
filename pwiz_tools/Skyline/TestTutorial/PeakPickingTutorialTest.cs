@@ -174,9 +174,6 @@ namespace pwiz.SkylineTestTutorial
                     dlg.FontSize = GraphFontSize.LARGE;
                     dlg.OkDialog();
                 });
-            // wait for the document to finish loading so that there is nothing showing in the status bar
-            WaitForDocumentLoaded();
-
             RunUISaveScreenshot(SkylineWindow, "MainWindow");
 
             // Test different point types on RTLinearRegressionGraph

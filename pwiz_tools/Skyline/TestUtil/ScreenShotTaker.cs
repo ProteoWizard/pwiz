@@ -20,12 +20,16 @@ namespace pwiz.SkylineTestUtil
             }
             if (control is Form || control is UserControl || control == topLevelForm)
             {
+                Point offset = new Point(0, 0);
+                if (control != topLevelForm && control.Parent != null)
+                {
+                    var myPosition = GetScreenLocation(control);
+                    var topLevelPosition = GetScreenLocation(topLevelForm);
+                    offset = new Point(myPosition.X - topLevelPosition.X, myPosition.Y - topLevelPosition.Y);
+                }
+
                 var childForm = new Bitmap(control.Width, control.Height);
                 control.DrawToBitmap(childForm, new Rectangle(0, 0, control.Width, control.Height));
-
-                var myPosition = control.PointToScreen(new Point(0, 0));
-                var topLevelPosition = topLevelForm.PointToScreen(new Point(0, 0));
-                var offset = new Point(myPosition.X - topLevelPosition.X, myPosition.Y - topLevelPosition.Y);
                 var g = Graphics.FromImage(bitmap);
 
                 g.DrawImage(childForm, offset);
@@ -34,6 +38,15 @@ namespace pwiz.SkylineTestUtil
             {
                 DrawForms(topLevelForm, bitmap, child);
             }
+        }
+
+        private Point GetScreenLocation(Control control)
+        {
+            if (control.Parent != null)
+            {
+                return control.Parent.PointToScreen(control.Location);
+            }
+            return control.Location;
         }
     }
 }
