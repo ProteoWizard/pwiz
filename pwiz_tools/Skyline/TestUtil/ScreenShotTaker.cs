@@ -1,7 +1,7 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 
-namespace pwiz.SkylineTestTutorial.Generators
+namespace pwiz.SkylineTestUtil
 {
     public class ScreenShotTaker
     {

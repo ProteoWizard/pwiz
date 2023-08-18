@@ -206,7 +206,7 @@ tabs show further statistical information:
 This will show the distribution of p values according to the Gaussian
 model to which the decoys were fit:
 
-![](media/image7.emf){width="5.114583333333333in"
+![](media/EditPeakScoringModelFormPValueGraph.emf){width="5.114583333333333in"
 height="4.604166666666667in"}
 
 This graph is another way to assess whether decoys are Gaussian: if they
@@ -222,7 +222,7 @@ chosen peak. You can also see the q values themselves:
 
 This will show a graph of the q values assigned to all the targets:
 
-![](media/image8.emf){width="5.114583333333333in"
+![](media/EditPeakScoringModelFormQValueGraph.emf){width="5.114583333333333in"
 height="4.604166666666667in"}
 
 For a given FDR cut-off, any q value below the FDR value will be

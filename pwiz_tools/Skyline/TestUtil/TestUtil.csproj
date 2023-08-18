@@ -146,6 +146,7 @@
     <Compile Include="AuditLogUtil.cs" />
     <Compile Include="CheckDocumentState.cs" />
     <Compile Include="CheckReportCompatibility.cs" />
+    <Compile Include="DocumentationGeneratorTest.cs" />
     <Compile Include="ExampleText.cs" />
     <Compile Include="ExtensionTestContext.cs" />
     <Compile Include="FileLockingProcessFinder.cs" />
@@ -167,6 +168,7 @@
     <Compile Include="AbstractUnitTest.cs" />
     <Compile Include="Schemas\SchemaDocuments.cs" />
     <Compile Include="ScreenshotManager.cs" />
+    <Compile Include="ScreenShotTaker.cs" />
     <Compile Include="StackTraceLogger.cs" />
     <Compile Include="TestDocumentContainer.cs" />
     <Compile Include="TestFilesDir.cs" />

@@ -493,7 +493,7 @@ namespace ZedGraph
 		/// Note that this handler saves as an Emf format only.  The default handler is
 		/// <see cref="SaveAs()" />, which allows for Bitmap or EMF formats.
 		/// </remarks>
-		internal void SaveEmfFile( string fileName )
+		public void SaveEmfFile( string fileName )
 		{
 			using (Graphics g = this.CreateGraphics())
 			{

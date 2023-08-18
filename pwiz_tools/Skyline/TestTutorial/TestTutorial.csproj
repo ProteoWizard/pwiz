@@ -125,10 +125,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AuditLogTutorialTest.cs" />
-    <Compile Include="Generators\DocumentationGeneratorTest.cs" />
-    <Compile Include="Generators\PeakPickingTutorialGeneratorTest.cs" />
-    <Compile Include="Generators\PivotEditorDocumentation.cs" />
-    <Compile Include="Generators\ScreenShotTaker.cs" />
     <Compile Include="SmallMolMethodDevCEOptTutorial.cs" />
     <Compile Include="SmallMoleculesQuantificationTutorial.cs" />
     <Compile Include="SmallMoleculesTutorial.cs" />

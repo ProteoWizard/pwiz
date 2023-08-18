@@ -43,7 +43,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestTutorial
 {
     [TestClass]
-    public class PeakPickingTutorialTest : AbstractFunctionalTestEx
+    public class PeakPickingTutorialTest : DocumentationGeneratorTest
     {
         private readonly string[] _importFiles =
             {
@@ -115,13 +115,16 @@ namespace pwiz.SkylineTestTutorial
                 generateDecoysDlg.DecoysMethod = DecoyGeneration.REVERSE_SEQUENCE;
                 generateDecoysDlg.NumDecoys = 29;
             });
-            PauseForScreenShot<GenerateDecoysDlg>("Add Decoy Peptides form", 2);
-            
+            RunUISaveScreenshot(generateDecoysDlg, "GenerateDecoysDlg");
+
             OkDialog(generateDecoysDlg, generateDecoysDlg.OkDialog);
 
             RestoreViewOnScreen(3);
-            RunUI(() => SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.Nodes[11]);
-            PauseForScreenShot("Targets view clipped from main window", 3);
+            RunUI(() =>
+            {
+                SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.Nodes[11];
+            });
+            RunUISaveScreenshot((SequenceTreeForm)SkylineWindow.SequenceTree.FindForm(), "SequenceTree");
 
             // Open the file with decoys
             RunUI(() => SkylineWindow.OpenFile(GetTestPath("SRMCourse_DosR-hDP__20130501-tutorial-empty-decoys.sky")));
@@ -142,7 +145,7 @@ namespace pwiz.SkylineTestTutorial
                 importResultsDlg.NamedPathSets = path;
             });
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg.OkDialog);
-            PauseForScreenShot<ImportResultsNameDlg>("Import Results common prefix form", 4);
+            RunUISaveScreenshot(importResultsNameDlg, "ImportResultsCommonPrefix");
             RunUI(() =>
             {
                 string prefix = importResultsNameDlg.Prefix;
@@ -171,7 +174,7 @@ namespace pwiz.SkylineTestTutorial
                     dlg.FontSize = GraphFontSize.LARGE;
                     dlg.OkDialog();
                 });
-            PauseForScreenShot("Main window", 5);
+            RunUISaveScreenshot(SkylineWindow, "MainWindow");
 
             // Test different point types on RTLinearRegressionGraph
             RunUI(() =>
@@ -189,17 +192,17 @@ namespace pwiz.SkylineTestTutorial
 
             // Train the peak scoring model
             var reintegrateDlg = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
-            PauseForScreenShot<ReintegrateDlg>("Reintegrate form", 6);
+            RunUISaveScreenshot(reintegrateDlg, "ReintegrateForm");
             var editDlg = ShowDialog<EditPeakScoringModelDlg>(reintegrateDlg.AddPeakScoringModel);
             RunUI(() => editDlg.TrainModel());
-            PauseForScreenShot<EditPeakScoringModelDlg.ModelTab>("Edit Peak Scoring Model form trained model", 6);
+            RunUISaveScreenshot(editDlg, "EditPeakScoringModelFormTrainedModel");
             RunUI(() => Assert.AreEqual(0.5992, editDlg.PeakCalculatorsGrid.Items[3].PercentContribution ?? 0, 0.005));
 
             RunUI(() => editDlg.SelectedGraphTab = 2);
-            PauseForScreenShot<EditPeakScoringModelDlg.PvalueTab>("Edit Peak Scoring Model form p value graph metafile", 7);
+            RunUI(()=>SaveGraphEmf(editDlg.ZedGraphPValues, "EditPeakScoringModelFormPValueGraph"));
 
             RunUI(() => editDlg.SelectedGraphTab = 3);
-            PauseForScreenShot<EditPeakScoringModelDlg.QvalueTab>("Edit Peak Scoring Model form q value graph metafile", 8);
+            RunUI(()=>SaveGraphEmf(editDlg.ZedGraphQValues, "EditPeakScoringModelFormQValueGraph"));
 
             RunUI(() => editDlg.SelectedGraphTab = 1);
             RunUI(() => editDlg.PeakCalculatorsGrid.SelectRow(3));

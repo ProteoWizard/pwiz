@@ -5,9 +5,9 @@ using System.Resources;
 using System.Text;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.SkylineTestUtil;
+using ZedGraph;
 
-namespace pwiz.SkylineTestTutorial.Generators
+namespace pwiz.SkylineTestUtil
 {
     public abstract class DocumentationGeneratorTest : AbstractFunctionalTestEx
     {
@@ -38,8 +38,8 @@ namespace pwiz.SkylineTestTutorial.Generators
                 AssertEx.Fail("Could not source file folder");
             }
 
-            string grandParentFolder = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(thisFile)));
-            Assert.IsNotNull(grandParentFolder, "Unable to get great-grandparent folder of {0}", thisFile);
+            string grandParentFolder = Path.GetDirectoryName(Path.GetDirectoryName(thisFile));
+            Assert.IsNotNull(grandParentFolder, "Unable to get grandparent folder of {0}", thisFile);
             return Path.Combine(grandParentFolder, "Documentation\\Tutorials\\Markdown\\" + CoverShotName + "\\media");
         }
 
@@ -53,7 +53,7 @@ namespace pwiz.SkylineTestTutorial.Generators
         public void SaveScreenshot(Form form, string filename)
         {
             var image = TakeScreenShot(form);
-            SaveImage(image, ImageFormat.Png, filename);
+            SaveImage(image, ImageFormat.Png, filename + ".png");
         }
 
         public void RunUISaveScreenshot(Form form, string filename)
@@ -62,6 +62,11 @@ namespace pwiz.SkylineTestTutorial.Generators
             {
                 SaveScreenshot(form, filename);
             });
+        }
+
+        public void SaveGraphEmf(ZedGraphControl zedGraphControl, string filename)
+        {
+            zedGraphControl.SaveEmfFile(Path.Combine(GetImagesFolder(), filename + ".emf"));
         }
     }
 }
