@@ -115,14 +115,17 @@ namespace pwiz.SkylineTestTutorial.Generators
             {
                 generateDecoysDlg.DecoysMethod = DecoyGeneration.REVERSE_SEQUENCE;
                 generateDecoysDlg.NumDecoys = 29;
+                SaveScreenshot(generateDecoysDlg, "GenerateDecoysDlg.png");
             });
-            PauseForScreenShot<GenerateDecoysDlg>("Add Decoy Peptides form", 2);
             
             OkDialog(generateDecoysDlg, generateDecoysDlg.OkDialog);
 
             RestoreViewOnScreen(3);
-            RunUI(() => SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.Nodes[11]);
-            SaveScreenshot(TakeScreenShot((SequenceTreeForm)SkylineWindow.SequenceTree.Parent), ImageFormat.Png, "SequenceTree.png");
+            RunUI(() =>
+            {
+                SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.Nodes[11];
+                SaveScreenshot((SequenceTreeForm)SkylineWindow.SequenceTree.FindForm(), "SequenceTree.png");
+            });
 
             // Open the file with decoys
             RunUI(() => SkylineWindow.OpenFile(GetTestPath("SRMCourse_DosR-hDP__20130501-tutorial-empty-decoys.sky")));

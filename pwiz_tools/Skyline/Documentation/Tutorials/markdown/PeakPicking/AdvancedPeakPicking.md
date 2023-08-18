@@ -80,7 +80,7 @@ radically smaller. To add the decoys:
 
 The **Add Decoy Peptides** form should now look like this:
 
-> ![](media/image1.png){width="2.8854166666666665in"
+> ![](Images/image1.png){width="2.8854166666666665in"
 > height="1.9583333333333333in"}
 
 -   Click the **OK** button.
@@ -88,7 +88,7 @@ The **Add Decoy Peptides** form should now look like this:
 A set of decoy peptides should appear below the real peptides in the
 **Targets** view of the main Skyline window:
 
-![](media/image2.png){width="2.8256944444444443in"
+![](Images/SequenceTree.png){width="2.8256944444444443in"
 height="4.615972222222222in"}
 
 ## Importing SRM Data

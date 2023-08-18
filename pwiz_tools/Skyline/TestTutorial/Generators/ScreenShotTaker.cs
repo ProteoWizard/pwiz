@@ -23,17 +23,9 @@ namespace pwiz.SkylineTestTutorial.Generators
                 var childForm = new Bitmap(control.Width, control.Height);
                 control.DrawToBitmap(childForm, new Rectangle(0, 0, control.Width, control.Height));
 
-                Point offset;
-                if (control.Parent != null)
-                {
-                    var myPosition = control.Parent.PointToScreen(control.Location);
-                    var topLevelPosition = topLevelForm.Location;
-                    offset = new Point(myPosition.X - topLevelPosition.X, myPosition.Y - topLevelPosition.Y);
-                }
-                else
-                {
-                    offset = new Point(0, 0);
-                }
+                var myPosition = control.PointToScreen(new Point(0, 0));
+                var topLevelPosition = topLevelForm.PointToScreen(new Point(0, 0));
+                var offset = new Point(myPosition.X - topLevelPosition.X, myPosition.Y - topLevelPosition.Y);
                 var g = Graphics.FromImage(bitmap);
 
                 g.DrawImage(childForm, offset);

@@ -24,12 +24,8 @@ namespace pwiz.SkylineTestTutorial.Generators
 
         public Image TakeScreenShot(Form form)
         {
-            Image image = null;
-            RunUI(() =>
-            {
-                var screenShotTaker = new ScreenShotTaker();
-                image = screenShotTaker.TakeScreenShot(form);
-            });
+            var screenShotTaker = new ScreenShotTaker();
+            var image = screenShotTaker.TakeScreenShot(form);
             Assert.IsNotNull(image);
             return image;
         }
@@ -42,14 +38,22 @@ namespace pwiz.SkylineTestTutorial.Generators
                 AssertEx.Fail("Could not source file folder");
             }
 
-            string grandParentFolder = Path.GetDirectoryName(Path.GetDirectoryName(thisFile));
-            Assert.IsNotNull(grandParentFolder, "Unable to get grandparent folder of {0}", thisFile);
+            string grandParentFolder = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(thisFile)));
+            Assert.IsNotNull(grandParentFolder, "Unable to get great-grandparent folder of {0}", thisFile);
             return Path.Combine(grandParentFolder, "Documentation\\Tutorials\\Markdown\\" + CoverShotName + "\\Images");
         }
 
-        public void SaveScreenshot(Image image, ImageFormat imageFormat, string filename)
+        public void SaveImage(Image image, ImageFormat imageFormat, string filename)
         {
-            image.Save(Path.Combine(GetImagesFolder(), filename), imageFormat);
+            var imagesFolder = GetImagesFolder();
+            Assert.IsTrue(Directory.Exists(imagesFolder), "Folder {0} does not exist", imagesFolder);
+            image.Save(Path.Combine(imagesFolder, filename), imageFormat);
+        }
+
+        public void SaveScreenshot(Form form, string filename)
+        {
+            var image = TakeScreenShot(form);
+            SaveImage(image, ImageFormat.Png, filename);
         }
     }
 }
