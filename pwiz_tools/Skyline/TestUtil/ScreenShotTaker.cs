@@ -5,7 +5,7 @@ namespace pwiz.SkylineTestUtil
 {
     public class ScreenShotTaker
     {
-        public Image TakeScreenShot(Control form)
+        public Bitmap TakeScreenShot(Control form)
         {
             var bitmap = new Bitmap(form.Width, form.Height);
             DrawForms(form, bitmap, form);

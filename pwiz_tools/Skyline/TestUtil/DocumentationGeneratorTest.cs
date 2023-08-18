@@ -25,7 +25,7 @@ namespace pwiz.SkylineTestUtil
         protected StringBuilder DocumentationStringBuilder { get; }
         protected ResXResourceWriter ResXResourceWriter { get; }
 
-        public Image TakeScreenShot(Control form)
+        public Bitmap TakeScreenShot(Control form)
         {
             var screenShotTaker = new ScreenShotTaker();
             var image = screenShotTaker.TakeScreenShot(form);

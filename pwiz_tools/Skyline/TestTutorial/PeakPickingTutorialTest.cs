@@ -19,6 +19,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -231,9 +233,28 @@ namespace pwiz.SkylineTestTutorial
 
             OkDialog(editDlg, editDlg.OkDialog);
             OkDialog(reintegrateDlg, reintegrateDlg.CancelDialog);
+
             var findResultsForm = FindOpenForm<FindResultsForm>();
-            // TODO(nicksh): make sure form is tall enough to show all 6 items
-            RunUISaveScreenshot(findResultsForm, "FindResultsViewClippedFromMainWindow");
+            RunUI(() =>
+            {
+                int oldHeight = SkylineWindow.Height;
+                // Make the Skyline window tall enough so that everything in the Find Results window can be seen.
+                // It would be nice if we could just make the Find Results window bigger, but I could not figure out how to do that
+                SkylineWindow.Height = oldHeight * 4 / 3;
+
+                var image = TakeScreenShot(SkylineWindow);
+                
+                // Crop the image so that it starts at the top of the Find Results window
+                int offset = findResultsForm.PointToScreen(new Point(0, 0)).Y - SkylineWindow.Location.Y;
+                var cropRect = new Rectangle(0,
+                    offset, image.Width,
+                    image.Height - offset);
+                var croppedImage = image.Clone(cropRect, image.PixelFormat);
+                
+                SaveImage(croppedImage, ImageFormat.Png, "FindResultsViewClippedFromMainWindow.png");
+                SkylineWindow.Height = oldHeight;
+            });
+
             // Remove the peptide with no library dot product, and train again
             var missingPeptides = new List<string> { "LGGNEQVTR", "IPVDSIYSPVLK", "YFNDGDIVEGTIVK", 
                                                      "DFDSLGTLR", "GGYAGMLVGSVGETVAQLAR", "GGYAGMLVGSVGETVAQLAR"};
