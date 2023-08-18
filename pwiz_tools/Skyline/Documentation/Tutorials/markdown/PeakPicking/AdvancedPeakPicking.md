@@ -77,7 +77,7 @@ radically smaller. To add the decoys:
 - In the **Number of Decoy Precursors** field, enter ‘29’.
 
 - In the **Decoy generation method** drop down list, select ‘Reverse
-  Sequence**’**.
+  Sequence’.
 
 The **Add Decoy Peptides** form should now look like this:
 
@@ -148,7 +148,7 @@ on these files:
 Once loading is complete, chromatograms will be displayed for both the
 target (real) and decoy peptides.
 
-- Select the peptide LPDGNGIEL**<u>C</u>R** under the protein
+- Select the peptide LPDGNGIEL<ins>**C**</ins>**R** under the protein
   **Rv3133c\|devR**, just above the ‘Decoys’ peptide list.
 
 - Select ‘006_StC-DosR_B2’ from the **Replicates** dropdown list, at the
@@ -517,7 +517,7 @@ The **Reintegrate** dialog box should look like this:
 A form displaying a progress bar should appear and after a few seconds
 the reintegration should complete.
 
-- Select the peptide LPDGNGIEL**<u>C</u>R** under the protein
+- Select the peptide LPDGNGIEL<ins>**C**</ins>**R** under the protein
   **Rv3133c\|devR**, just above the ‘Decoys’ peptide list.
 
 - Select ‘006_StC-DosR_B2’ from the **Replicates** dropdown list, at the
@@ -553,7 +553,7 @@ of its sequence:
 
 <img src="media/TargetsViewWithSomeNullPeaks.png" style="width:3.29097in;height:0.8375in" />
 
-This is now the case for the peptide LPDGNGIEL**<u>C</u>R** in the
+This is now the case for the peptide LPDGNGIEL<ins>**C**</ins>**R** in the
 replicate 006_StC-DosR_B2. You will also see that the chromatogram graph
 now lacks the right-pointing arrowheads, indicating the chosen peak:
 
