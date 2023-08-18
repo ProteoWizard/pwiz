@@ -107,7 +107,7 @@ peptides that were actually measured for this experiment.
   first file.
 
 - Select the file
-  **‘**SRMCourse_DosR-hDP\_\_20130501-tutorial-empty-decoys.sky’ from
+  ‘SRMCourse_DosR-hDP\_\_20130501-tutorial-empty-decoys.sky’ from
   the ‘PeakPicking’ folder you created for this tutorial.
 
 - Click the **Open** button.
@@ -700,7 +700,7 @@ To open the DIA dataset included with this tutorial, do the following:
 - Click the **No** button when asked whether to save your changes to the
   first file.
 
-- Select the file **‘**AQUA4_Human_picked_napedro2-mod2.sky’ from the
+- Select the file ‘AQUA4_Human_picked_napedro2-mod2.sky’ from the
   ‘PeakPicking’ folder you created for this tutorial.
 
 - Click the **Open** button.

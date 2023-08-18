@@ -123,6 +123,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.Nodes[11];
+                SkylineWindow.SelectedPath = new IdentityPath(SkylineWindow.DocumentUI.Children.Last().Id);
             });
             RunUISaveScreenshot(SkylineWindow.SequenceTree, "SequenceTree");
 
@@ -230,14 +231,14 @@ namespace pwiz.SkylineTestTutorial
 
             OkDialog(editDlg, editDlg.OkDialog);
             OkDialog(reintegrateDlg, reintegrateDlg.CancelDialog);
-
-            RunUISaveFormScreenshot<FindResultsForm>("FindResultsViewClippedFromMainWindow");
-
+            var findResultsForm = FindOpenForm<FindResultsForm>();
+            // TODO(nicksh): make sure form is tall enough to show all 6 items
+            RunUISaveScreenshot(findResultsForm, "FindResultsViewClippedFromMainWindow");
             // Remove the peptide with no library dot product, and train again
-            FindResultsForm findResultsForm = null;
             var missingPeptides = new List<string> { "LGGNEQVTR", "IPVDSIYSPVLK", "YFNDGDIVEGTIVK", 
                                                      "DFDSLGTLR", "GGYAGMLVGSVGETVAQLAR", "GGYAGMLVGSVGETVAQLAR"};
             var isDecoys = new List<bool> {false, false, false, false, false, true};
+
             RunUI(() =>
             {
                 findResultsForm = FormUtil.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
@@ -345,7 +346,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(18.0, chromGroupInfo.RetentionTime.Value, 0.1);
             });
             FindNode(peptideSeqHighlight);
-            RunUISaveFormScreenshot<GraphChromatogram>("ChromatogramGraphCorrectedPeakAt18");
+            RunUISaveScreenshot(GetActiveGraphChromatogram(), "ChromatogramGraphCorrectedPeakAt18");
 
             // Reintegrate slightly differently, with a q value cutoff
             var reintegrateDlgQ = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
@@ -356,8 +357,9 @@ namespace pwiz.SkylineTestTutorial
                     reintegrateDlgQ.OverwriteManual = true;
                 });
             OkDialog(reintegrateDlgQ, reintegrateDlgQ.OkDialog);
+            WaitForGraphs();
             RunUISaveScreenshot(SkylineWindow, "TargetsViewWithSomeNullPeaks");
-            RunUISaveFormScreenshot<GraphChromatogram>("ChromatogramGraphWithNoPickedPeak");
+            RunUISaveScreenshot(GetActiveGraphChromatogram(), "ChromatogramGraphWithNoPickedPeak");
 
             RestoreViewOnScreen(14);
             FindNode((622.3086).ToString(CultureInfo.CurrentCulture) + "++");
@@ -519,6 +521,24 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(SkylineWindow.RTGraphController.GraphSummary.TryGetGraphPane(out pane));
                 Assert.AreEqual(expectedPoints, pane.StatisticsRefined.ListRetentionTimes.Count);
             });
+        }
+
+        private GraphChromatogram GetActiveGraphChromatogram()
+        {
+            GraphChromatogram result = null;
+            RunUI(() =>
+            {
+                var chromatogramSet =
+                    SkylineWindow.DocumentUI.MeasuredResults.Chromatograms[SkylineWindow.SelectedResultsIndex];
+                foreach (var graph in FormUtil.OpenForms.OfType<GraphChromatogram>())
+                {
+                    if (graph.NameSet == chromatogramSet.Name)
+                    {
+                        result = graph;
+                    }
+                }
+            });
+            return result;
         }
     }
 }

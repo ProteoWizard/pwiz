@@ -7,7 +7,6 @@ using System.Resources;
 using System.Text;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ZedGraph;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -74,16 +73,6 @@ namespace pwiz.SkylineTestUtil
             {
                 SaveScreenshot(form, filename);
             });
-        }
-
-        public void RunUISaveFormScreenshot<TForm>(string filename) where TForm : Form
-        {
-            RunUI(()=>SaveScreenshot(FindOpenForm<TForm>(), filename));
-        }
-
-        public void SaveGraphEmf(ZedGraphControl zedGraphControl, string filename)
-        {
-            zedGraphControl.SaveEmfFile(Path.Combine(GetImagesFolder(), filename + ".emf"));
         }
     }
 }
