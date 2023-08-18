@@ -163,7 +163,7 @@ namespace pwiz.Skyline.Model.AuditLog
             }
 
             nodeSelector = nodeSelector ?? (n => true);
-            if (objectInfo.ObjectPair.ReferenceEquals() && !expand)
+            if (objectInfo.ObjectPair.Equals() && !expand)
                 yield break;
 
             resultNode = resultNode ?? (thisProperty.IsCollectionElement
@@ -318,7 +318,7 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             var objectPair = objectInfo.ObjectPair;
 
-            if (objectPair.ReferenceEquals())
+            if (objectPair.Equals())
                 return true;
             if (ReferenceEquals(objectPair.OldObject, null) || ReferenceEquals(objectPair.NewObject, null))
                 return false;
