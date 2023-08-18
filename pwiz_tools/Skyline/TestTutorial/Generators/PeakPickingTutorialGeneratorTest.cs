@@ -146,7 +146,7 @@ namespace pwiz.SkylineTestTutorial.Generators
                 importResultsDlg.NamedPathSets = path;
             });
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg.OkDialog);
-            PauseForScreenShot<ImportResultsNameDlg>("Import Results common prefix form", 4);
+            RunUISaveScreenshot(importResultsNameDlg, "ImportResultsCommonPrefix.png");
             RunUI(() =>
             {
                 string prefix = importResultsNameDlg.Prefix;
@@ -175,7 +175,7 @@ namespace pwiz.SkylineTestTutorial.Generators
                     dlg.FontSize = GraphFontSize.LARGE;
                     dlg.OkDialog();
                 });
-            PauseForScreenShot("Main window", 5);
+            RunUISaveScreenshot(SkylineWindow, "MainWindow.png");
 
             // Test different point types on RTLinearRegressionGraph
             RunUI(() =>
@@ -193,14 +193,14 @@ namespace pwiz.SkylineTestTutorial.Generators
 
             // Train the peak scoring model
             var reintegrateDlg = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
-            PauseForScreenShot<ReintegrateDlg>("Reintegrate form", 6);
+            RunUISaveScreenshot(reintegrateDlg, "ReintegrateForm.png");
             var editDlg = ShowDialog<EditPeakScoringModelDlg>(reintegrateDlg.AddPeakScoringModel);
             RunUI(() => editDlg.TrainModel());
-            PauseForScreenShot<EditPeakScoringModelDlg.ModelTab>("Edit Peak Scoring Model form trained model", 6);
+            RunUISaveScreenshot(editDlg, "EditPeakScoringModelFormTrainedModel.png");
             RunUI(() => Assert.AreEqual(0.5992, editDlg.PeakCalculatorsGrid.Items[3].PercentContribution ?? 0, 0.005));
 
             RunUI(() => editDlg.SelectedGraphTab = 2);
-            PauseForScreenShot<EditPeakScoringModelDlg.PvalueTab>("Edit Peak Scoring Model form p value graph metafile", 7);
+            RunUISaveScreenshot(editDlg, "EditPeakScoringModelFormPValueGraphMetafile.png");
 
             RunUI(() => editDlg.SelectedGraphTab = 3);
             PauseForScreenShot<EditPeakScoringModelDlg.QvalueTab>("Edit Peak Scoring Model form q value graph metafile", 8);

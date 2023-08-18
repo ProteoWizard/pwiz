@@ -80,16 +80,14 @@ radically smaller. To add the decoys:
 
 The **Add Decoy Peptides** form should now look like this:
 
-> ![](Images/image1.png){width="2.8854166666666665in"
-> height="1.9583333333333333in"}
+> ![](media/GenerateDecoysDlg.png)
 
 -   Click the **OK** button.
 
 A set of decoy peptides should appear below the real peptides in the
 **Targets** view of the main Skyline window:
 
-![](Images/SequenceTree.png){width="2.8256944444444443in"
-height="4.615972222222222in"}
+![](media/SequenceTree.png)
 
 ## Importing SRM Data
 
@@ -140,8 +138,7 @@ this document, do the following:
 Skyline will show a form suggesting that it can remove the common prefix
 on these files:
 
-![](media/image3.png){width="3.2604166666666665in"
-height="2.4895833333333335in"}
+![](media/ImportResultsCommonPrefix.png)
 
 -   Delete the 0 at the end of the **Common prefix** field.
 
@@ -161,7 +158,7 @@ at 16.5 minutes, whereas (as you will see later) the correct peak is
 actually at 18.0 minutes, close to the predicted retention time,
 annotated at 18.2 minutes in the graph.
 
-![](media/image4.png){width="6.5in" height="4.784027777777778in"}
+![](media/MainWindow.png)
 
 ## Training a Peak Scoring Model
 
@@ -173,7 +170,7 @@ peptide peak picking:
 
 You should see the following form:
 
-![](media/image5.png){width="3.4166666666666665in" height="2.90625in"}
+![](media/ReintegrateForm.png)
 
 -   From the **Peak Scoring Model** dropdown list, choose
     **\<Add...\>**.
@@ -184,7 +181,7 @@ A large form should appear.
 
 You should be presented with a screen that looks like this:
 
-![](media/image6.png){width="6.5in" height="3.816666666666667in"}
+![](media/EditPeakScoringModelFormTrainedModel.png){width="6.5in" height="3.816666666666667in"}
 
 This form allows you to create and customize new peak scoring models,
 rather than always relying on the default heuristic Skyline Legacy

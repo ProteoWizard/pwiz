@@ -40,7 +40,7 @@ namespace pwiz.SkylineTestTutorial.Generators
 
             string grandParentFolder = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(thisFile)));
             Assert.IsNotNull(grandParentFolder, "Unable to get great-grandparent folder of {0}", thisFile);
-            return Path.Combine(grandParentFolder, "Documentation\\Tutorials\\Markdown\\" + CoverShotName + "\\Images");
+            return Path.Combine(grandParentFolder, "Documentation\\Tutorials\\Markdown\\" + CoverShotName + "\\media");
         }
 
         public void SaveImage(Image image, ImageFormat imageFormat, string filename)
@@ -54,6 +54,14 @@ namespace pwiz.SkylineTestTutorial.Generators
         {
             var image = TakeScreenShot(form);
             SaveImage(image, ImageFormat.Png, filename);
+        }
+
+        public void RunUISaveScreenshot(Form form, string filename)
+        {
+            RunUI(() =>
+            {
+                SaveScreenshot(form, filename);
+            });
         }
     }
 }
