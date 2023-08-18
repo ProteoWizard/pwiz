@@ -325,7 +325,7 @@ are not yet ready to do. (If you did, click **Undo** now.)
 
 On the **Find Results** dialog, there should be 6 peptides in the list.
 
-<img src="media/image12.png" style="width:6.48958in;height:1.6875in" />
+<img src="media/FindResultsViewClippedFromMainWindow.png" style="width:6.48958in;height:1.6875in" />
 
 - Double-click on the first peptide in the list, LGGNEQVTR.
 
@@ -344,7 +344,7 @@ dot-product** score active. This first peptide appears under the
 used in this experiment, it was obviously not included in the iRT
 calculator for this document. In the **Targets** view, it lacks the tiny
 clock icon
-<img src="media/image13.png" style="width:0.15625in;height:0.15625in" />
+<img src="media/PeptideWithClockIcon.png" style="width:0.15625in;height:0.15625in" />
 (in the upper-right corner of the peptide icon) indicating an iRT
 standard peptide. Skyline automatically excludes standard peptides from
 scoring consideration. Although, in this document, all of the other iRT
@@ -420,7 +420,7 @@ The **Library intensity dot-product** score should now have a weight and
 a percent contribution, and scoring should be slightly improved. The
 **Edit Peak Scoring Model** form should look like this:
 
-<img src="media/image14.png" style="width:6.5in;height:4.13889in" />
+<img src="media/EditPeakScoringModelFormWithLibraryScore.png" style="width:6.5in;height:4.13889in" />
 
 The **Q Values** plot will now be improved as well:
 
@@ -428,7 +428,7 @@ The **Q Values** plot will now be improved as well:
 
 You should see a graph like the following:
 
-<img src="media/image15.emf" style="width:4.44792in;height:4.48958in" />
+<img src="media/EditPeakScoringModelFormQValueGraphWithLibraryScore.png" style="width:4.44792in;height:4.48958in" />
 
 As you can see, most of the q values are now smaller after adding the
 new scores, indicating higher confidence in the picked peaks.
@@ -482,7 +482,7 @@ re-train the model:
 The graphs should now update and the scores that were unchecked should
 be removed. The model should look like this:
 
-<img src="media/image16.png" style="width:6.5in;height:4.01736in" />
+<img src="media/EditPeakScoringModelFormWithSecondBest.png" style="width:6.5in;height:4.01736in" />
 
 You will not use this modified model. To return to the original model,
 simply cancel the form:

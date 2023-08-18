@@ -64,6 +64,11 @@ namespace pwiz.SkylineTestUtil
             });
         }
 
+        public void RunUISaveFormScreenshot<TForm>(string filename) where TForm : Form
+        {
+            RunUI(()=>SaveScreenshot(FindOpenForm<TForm>(), filename));
+        }
+
         public void SaveGraphEmf(ZedGraphControl zedGraphControl, string filename)
         {
             zedGraphControl.SaveEmfFile(Path.Combine(GetImagesFolder(), filename + ".emf"));

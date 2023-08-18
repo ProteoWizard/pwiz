@@ -174,6 +174,9 @@ namespace pwiz.SkylineTestTutorial
                     dlg.FontSize = GraphFontSize.LARGE;
                     dlg.OkDialog();
                 });
+            // wait for the document to finish loading so that there is nothing showing in the status bar
+            WaitForDocumentLoaded();
+
             RunUISaveScreenshot(SkylineWindow, "MainWindow");
 
             // Test different point types on RTLinearRegressionGraph
@@ -231,7 +234,7 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(editDlg, editDlg.OkDialog);
             OkDialog(reintegrateDlg, reintegrateDlg.CancelDialog);
 
-            PauseForScreenShot<FindResultsForm>("Find Results view clipped from main window", 12);
+            RunUISaveFormScreenshot<FindResultsForm>("FindResultsViewClippedFromMainWindow");
 
             // Remove the peptide with no library dot product, and train again
             FindResultsForm findResultsForm = null;
@@ -296,10 +299,10 @@ namespace pwiz.SkylineTestTutorial
                     }
                     editDlgLibrary.TrainModel(true);
                 });
-            PauseForScreenShot<EditPeakScoringModelDlg.ModelTab>("Edit Peak Scoring Model form with library score", 13);
+            RunUISaveScreenshot(editDlgLibrary, "EditPeakScoringModelFormWithLibraryScore");
 
             RunUI(() => editDlgLibrary.SelectedGraphTab = 3);
-            PauseForScreenShot<EditPeakScoringModelDlg.QvalueTab>("Edit Peak Scoring Model form q value graph with library score metafile", 14);
+            RunUISaveScreenshot(editDlgLibrary.ZedGraphQValues, "EditPeakScoringModelFormQValueGraphWithLibraryScore");
 
             OkDialog(editDlgLibrary, editDlgLibrary.OkDialog);
 
@@ -321,7 +324,7 @@ namespace pwiz.SkylineTestTutorial
                     // Check that these cells are still active even though they've been unchecked
                     Assert.IsTrue(editDlgNew.IsActiveCell(6, 0));
                 });
-            PauseForScreenShot<EditPeakScoringModelDlg.ModelTab>("Edit Peak Scoring Model form with second best", 15);
+            RunUISaveScreenshot(editDlgNew, "EditPeakScoringModelFormWithSecondBest");
 
             OkDialog(editDlgNew, editDlgNew.CancelDialog);
             OkDialog(editListLibrary, editListLibrary.OkDialog);
