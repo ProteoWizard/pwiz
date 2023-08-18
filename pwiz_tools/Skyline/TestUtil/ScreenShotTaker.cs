@@ -18,7 +18,7 @@ namespace pwiz.SkylineTestUtil
             {
                 return;
             }
-            if (control is Form || control is UserControl)
+            if (control is Form || control is UserControl || control == topLevelForm)
             {
                 var childForm = new Bitmap(control.Width, control.Height);
                 control.DrawToBitmap(childForm, new Rectangle(0, 0, control.Width, control.Height));
