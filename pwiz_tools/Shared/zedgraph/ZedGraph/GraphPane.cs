@@ -1516,71 +1516,7 @@ namespace ZedGraph
 
 	#region General Utility Methods
 
-   //      public void AdjustObjectSpacing(List<TextObj> objects, int i)
-   //      {
-   //
-			// // need to add either limit to movment out of range our strong pushing force away from edge
-			// // need to have stronger pushing force against other text objects
-   //
-			//
-   //          double adjustPushForce = .01 * testFactor;
-   //          double staticPushForce = .01 * testFactor;
-   //          double pullForce = .005 * testFactor;
-   //          double forceRange = .5;
-   //
-   //          foreach (TextObj t in objects)
-   //          {
-   //              List<double> errorVector = new List<double>{0,0};
-   //              var originalPos = new List<double>{t.Location.X, t.Location.Y};
-   //              double magnitude;
-   //              List<double> vector;
-			// 	foreach (var g in GraphObjList)
-   //              {
-   //                  if (t.Location == g.Location)
-   //                  {
-   //                      continue;
-   //                  }
-   //
-   //                  vector = calculateNormalVector(t.Location, g.Location.X, g.Location.Y, out magnitude);
-   //                  if (magnitude > forceRange)
-   //                  {
-			// 			continue;
-   //                  }
-   //                  var forceVector = vector.Select(v => v * adjustPushForce).ToList();
-   //                  errorVector[0] += forceVector[0];
-   //                  errorVector[1] += forceVector[1];
-   //              }
-   //
-   //              foreach (CurveItem c in CurveList)
-   //              {
-   //                  IPointList points = c.Points;
-   //                  for (var j = 0; j < points.Count; j++)
-   //                  {
-   //                      var curPoint = points[j];
-   //
-   //                      vector = calculateNormalVector(t.Location, curPoint.X, curPoint.Y, out magnitude);
-   //
-   //                      if (magnitude > forceRange)
-   //                      {
-   //                          continue;
-   //                      }
-   //                      var forceVector = vector.Select(v => v * staticPushForce).ToList();
-   //                      errorVector[0] += forceVector[0];
-   //                      errorVector[1] += forceVector[1];
-   //                  }
-   //              }
-   //              t.Location.X += errorVector[0];
-   //              t.Location.Y += errorVector[1];
-   //              vector = calculateNormalVector(t.Location, originalPos[0], originalPos[1], out magnitude);
-   //              var pullVector = vector.Select(v => -v * pullForce).ToList();
-   //              t.Location.X += pullVector[0];
-   //              t.Location.Y += pullVector[1];
-   //
-   //          }
-   //          testFactor++;
-   //      }
-
-   public void AdjustLabelSpacings(List<TextObj> objects, List<PointPair> points, int maxIter = 5)
+    public void AdjustLabelSpacings(List<TextObj> objects, List<PointPair> points, int maxIter = 5)
         {
             using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
             {
@@ -1658,7 +1594,7 @@ namespace ZedGraph
             connectorPoints.Add(new PointPair(rect.Left, middleY));
             connectorPoints.Add(new PointPair(rect.Right, middleY));
             var endPoint = connectorPoints.OrderBy(p => Math.Pow(point.X - p.X, 2) + Math.Pow(point.Y - p.Y, 2)).First();
-            var line = new LineObj(Color.Red, point.X, point.Y, endPoint.X, endPoint.Y);
+            var line = new LineObj(obj.FontSpec.FontColor, point.X, point.Y, endPoint.X, endPoint.Y);
 			GraphObjList.Add(line);
         }
         public void InflateRectangle(ref RectangleF rect, float size)
