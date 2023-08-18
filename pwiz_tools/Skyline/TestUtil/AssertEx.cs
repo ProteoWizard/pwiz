@@ -1186,12 +1186,25 @@ namespace pwiz.SkylineTestUtil
                         if (exceptIndex.HasValue && exceptIndex.Value == i)
                             continue; // Just ignore this column
 
-                        if (!Equals(fieldsTarget[i], fieldsActual[i]))
+                        var targetField = fieldsTarget[i].ToUpper(CultureInfo.InvariantCulture);
+                        var actualField = fieldsActual[i].ToUpper(CultureInfo.InvariantCulture);
+                        if (!Equals(targetField, actualField))
                         {
+                            if (targetField.Contains(@"E") && actualField.Contains(@"E"))
+                            {
+                                // Same exponent? Then only compare the mantissa
+                                var targetFieldParts = targetField.Split('E');
+                                var actualFieldParts = actualField.Split('E');
+                                if (Equals(targetFieldParts[1], actualFieldParts[1]))
+                                {
+                                    targetField = targetFieldParts[0];
+                                    actualField = actualFieldParts[0];
+                                }
+                            }
                             // Test numerics with the precision presented in the output text
                             double dTarget, dActual;
-                            if (Double.TryParse(fieldsTarget[i], NumberStyles.Float, culture, out dTarget) &&
-                                Double.TryParse(fieldsActual[i], NumberStyles.Float, culture, out dActual))
+                            if (Double.TryParse(targetField, NumberStyles.Float, culture, out dTarget) &&
+                                Double.TryParse(actualField, NumberStyles.Float, culture, out dActual))
                             {
                                 if (tolerance.HasValue)
                                 {
@@ -1201,8 +1214,8 @@ namespace pwiz.SkylineTestUtil
                                 if (allowForTinyNumericDifferences)
                                 {
                                     // how much of that was decimal places?
-                                    var precTarget = fieldsTarget[i].Length - String.Format("{0}.", (int)dTarget).Length;
-                                    var precActual = fieldsActual[i].Length - String.Format("{0}.", (int)dActual).Length;
+                                    var precTarget = targetField.Length - String.Format("{0}.", (int)dTarget).Length;
+                                    var precActual = actualField.Length - String.Format("{0}.", (int)dActual).Length;
                                     if (precTarget == -1 && precActual == -1)
                                     {
                                         // Integers - allow for rounding errors on larger values

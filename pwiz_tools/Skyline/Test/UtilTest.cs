@@ -195,6 +195,16 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestFieldsEqual()
         {
+
+            AssertEx.FieldsEqual(new StringReader("747.3871 1.01456e+07"),
+                new StringReader("747.3871 1.014561e+07"),
+                null, // Variable field count
+                null, // Ignore no columns
+                true, // Allow for rounding errors
+                0, // Allow no extra lines
+                null, // No overall tolerance
+                0); // Skip first line with its timestamp
+
             var txtA =
                 "H\tCreationDate Thu May 18 10:22:17 2023\n" +
                 "H\tExtractor\tProteoWizard\n" +
