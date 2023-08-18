@@ -5,14 +5,14 @@ namespace pwiz.SkylineTestUtil
 {
     public class ScreenShotTaker
     {
-        public Image TakeScreenShot(Form form)
+        public Image TakeScreenShot(Control form)
         {
             var bitmap = new Bitmap(form.Width, form.Height);
             DrawForms(form, bitmap, form);
             return bitmap;
         }
 
-        private void DrawForms(Form topLevelForm, Bitmap bitmap, Control control)
+        private void DrawForms(Control topLevelForm, Bitmap bitmap, Control control)
         {
             if (!control.Visible || control.Width <= 0 || control.Height <= 0)
             {

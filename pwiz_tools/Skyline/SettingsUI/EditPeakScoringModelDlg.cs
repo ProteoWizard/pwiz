@@ -1268,5 +1268,10 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return zedGraphQValues; }
         }
+
+        public ToolStrip ToolStripFind
+        {
+            get { return toolStripFind; }
+        }
     }
 }

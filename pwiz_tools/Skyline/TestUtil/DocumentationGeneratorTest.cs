@@ -22,7 +22,7 @@ namespace pwiz.SkylineTestUtil
         protected StringBuilder DocumentationStringBuilder { get; }
         protected ResXResourceWriter ResXResourceWriter { get; }
 
-        public Image TakeScreenShot(Form form)
+        public Image TakeScreenShot(Control form)
         {
             var screenShotTaker = new ScreenShotTaker();
             var image = screenShotTaker.TakeScreenShot(form);
@@ -50,13 +50,13 @@ namespace pwiz.SkylineTestUtil
             image.Save(Path.Combine(imagesFolder, filename), imageFormat);
         }
 
-        public void SaveScreenshot(Form form, string filename)
+        public void SaveScreenshot(Control form, string filename)
         {
             var image = TakeScreenShot(form);
             SaveImage(image, ImageFormat.Png, filename + ".png");
         }
 
-        public void RunUISaveScreenshot(Form form, string filename)
+        public void RunUISaveScreenshot(Control form, string filename)
         {
             RunUI(() =>
             {

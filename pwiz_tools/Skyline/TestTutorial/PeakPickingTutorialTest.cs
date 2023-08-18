@@ -124,7 +124,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.Nodes[11];
             });
-            RunUISaveScreenshot((SequenceTreeForm)SkylineWindow.SequenceTree.FindForm(), "SequenceTree");
+            RunUISaveScreenshot(SkylineWindow.SequenceTree, "SequenceTree");
 
             // Open the file with decoys
             RunUI(() => SkylineWindow.OpenFile(GetTestPath("SRMCourse_DosR-hDP__20130501-tutorial-empty-decoys.sky")));
@@ -199,14 +199,15 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => Assert.AreEqual(0.5992, editDlg.PeakCalculatorsGrid.Items[3].PercentContribution ?? 0, 0.005));
 
             RunUI(() => editDlg.SelectedGraphTab = 2);
-            RunUI(()=>SaveGraphEmf(editDlg.ZedGraphPValues, "EditPeakScoringModelFormPValueGraph"));
+            // TODO(nicksh): Save an emf instead of a png
+            RunUISaveScreenshot(editDlg.ZedGraphPValues, "EditPeakScoringModelFormPValueGraph");
 
             RunUI(() => editDlg.SelectedGraphTab = 3);
-            RunUI(()=>SaveGraphEmf(editDlg.ZedGraphQValues, "EditPeakScoringModelFormQValueGraph"));
+            RunUISaveScreenshot(editDlg.ZedGraphQValues, "EditPeakScoringModelFormQValueGraph");
 
             RunUI(() => editDlg.SelectedGraphTab = 1);
             RunUI(() => editDlg.PeakCalculatorsGrid.SelectRow(3));
-            PauseForScreenShot<EditPeakScoringModelDlg.FeaturesTab>("Edit Peak Scoring Model form feature score", 10);
+            RunUISaveScreenshot(editDlg, "EditPeakScoringModelFormFeatureScore");
 
             RunUI(() =>
             {
@@ -220,7 +221,12 @@ namespace pwiz.SkylineTestTutorial
                 editDlg.FindMissingValues(2);   // Retention time
                 editDlg.PeakScoringModelName = "test1";
             });
-            PauseForScreenShot<EditPeakScoringModelDlg.FeaturesTab>("Edit Peak Scoring Model form find missing scores", 11);
+            RunUI(() =>
+            {
+                editDlg.ToolStripFind.Visible = true;
+                SaveScreenshot(editDlg.ToolStripFind, "FindButton");
+                SaveScreenshot(editDlg, "EditPeakScoringModelFormFindMissingScores");
+            });
 
             OkDialog(editDlg, editDlg.OkDialog);
             OkDialog(reintegrateDlg, reintegrateDlg.CancelDialog);

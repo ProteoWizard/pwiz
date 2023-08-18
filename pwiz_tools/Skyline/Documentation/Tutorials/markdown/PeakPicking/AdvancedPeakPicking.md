@@ -206,8 +206,7 @@ tabs show further statistical information:
 This will show the distribution of p values according to the Gaussian
 model to which the decoys were fit:
 
-![](media/EditPeakScoringModelFormPValueGraph.emf){width="5.114583333333333in"
-height="4.604166666666667in"}
+![](media/EditPeakScoringModelFormPValueGraph.png)
 
 This graph is another way to assess whether decoys are Gaussian: if they
 are, the p values of the decoys should be uniformly distributed over the
@@ -222,8 +221,7 @@ chosen peak. You can also see the q values themselves:
 
 This will show a graph of the q values assigned to all the targets:
 
-![](media/EditPeakScoringModelFormQValueGraph.emf){width="5.114583333333333in"
-height="4.604166666666667in"}
+![](media/EditPeakScoringModelFormQValueGraph.png)
 
 For a given FDR cut-off, any q value below the FDR value will be
 declared a true peak, and any q value above the FDR value will be
@@ -314,7 +312,7 @@ values:
 
 The graph should change to the following:
 
-![](media/image9.png){width="6.5in" height="4.0680555555555555in"}
+![](media/EditPeakScoringModelFormFeatureScore.png)
 
 Note that the library dot-product is "unknown" for several of the target
 values, and for this reason the score is grayed and not used in the
@@ -330,11 +328,9 @@ the following:
 -   Move the mouse over the bar labeled ***unknown*** in the **Feature
     Scores** graph.
 
-A find button (![](media/image10.png){width="0.23181102362204725in"
-height="0.21135608048993876in"}) should appear.
+A find button (![](media/FindButton.png)) should appear.
 
-![](media/image11.png){width="4.677083333333333in"
-height="4.760416666666667in"}
+![](media/EditPeakScoringModelFormFindMissingScores.png)
 
 -   Click the find button.
 
