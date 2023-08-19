@@ -298,7 +298,7 @@
     <value>0</value>
   </data>
   <data name="lblControlAnnotation.Text" xml:space="preserve">
-    <value>グループ注釈をコントロール(&amp;C)</value>
+    <value>グループ注釈をコントロール(&amp;C)：</value>
   </data>
   <data name="&gt;&gt;lblControlAnnotation.Name" xml:space="preserve">
     <value>lblControlAnnotation</value>
@@ -538,7 +538,7 @@
     <value>10</value>
   </data>
   <data name="lblConfidenceLevel.Text" xml:space="preserve">
-    <value>信頼度レベル(&amp;E):</value>
+    <value>信頼度レベル(&amp;E)：</value>
   </data>
   <data name="&gt;&gt;lblConfidenceLevel.Name" xml:space="preserve">
     <value>lblConfidenceLevel</value>
@@ -568,7 +568,7 @@
     <value>2</value>
   </data>
   <data name="lblControlValue.Text" xml:space="preserve">
-    <value>グループ値をコントロール(&amp;O)</value>
+    <value>グループ値をコントロール(&amp;O)：</value>
   </data>
   <data name="&gt;&gt;lblControlValue.Name" xml:space="preserve">
     <value>lblControlValue</value>
@@ -598,7 +598,7 @@
     <value>4</value>
   </data>
   <data name="lblCompareAgainst.Text" xml:space="preserve">
-    <value>次に対して比較する値(&amp;V):</value>
+    <value>次に対して比較する値(&amp;V)：</value>
   </data>
   <data name="&gt;&gt;lblCompareAgainst.Name" xml:space="preserve">
     <value>lblCompareAgainst</value>
@@ -691,7 +691,7 @@
     <value>6</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>同一注釈(技術的繰り返し用)(&amp;D):</value>
+    <value>同一注釈(技術的繰り返し用)(&amp;D)：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -745,7 +745,7 @@
     <value>8</value>
   </data>
   <data name="lblNormalizationMethod.Text" xml:space="preserve">
-    <value>正規化メソッド(&amp;M):</value>
+    <value>正規化メソッド(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;lblNormalizationMethod.Name" xml:space="preserve">
     <value>lblNormalizationMethod</value>

@@ -253,13 +253,13 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="messageTextBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>68, 10</value>
+    <value>89, 10</value>
   </data>
   <data name="messageTextBox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
   </data>
   <data name="messageTextBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>421, 20</value>
+    <value>400, 20</value>
   </data>
   <data name="messageTextBox.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
