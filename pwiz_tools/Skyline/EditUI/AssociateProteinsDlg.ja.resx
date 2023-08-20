@@ -340,7 +340,7 @@
     <value>TopRight</value>
   </data>
   <data name="lblSharedPeptides.ToolTip" xml:space="preserve">
-    <value>FASTAかバックグラウンドプロテオームの1つ以上のタンパク質には多くのペプチドが含まれます。Skylineにこれらのペプチドをどのように割り当てさせるか選択してください。</value>
+    <value>FASTA又はバックグラウンドプロテオームには多くのペプチドが含まれるタンパク質が1つ以上存在します。Skylineにこれらのペプチドをどのように割り当てさせるか選択してください。</value>
   </data>
   <data name="&gt;&gt;lblSharedPeptides.Name" xml:space="preserve">
     <value>lblSharedPeptides</value>
@@ -547,7 +547,7 @@
     <value>サブセットのタンパク質を削除(&amp;R)</value>
   </data>
   <data name="lblRemoveSubsetProteins.ToolTip" xml:space="preserve">
-    <value>サブセットのタンパク質を削除し、パーシモニーまたはサブセット以外のタンパク質は保持します。</value>
+    <value>サブセットのタンパク質を削除し、パーシモニーでないサブセット以外のタンパク質は保持します。</value>
   </data>
   <data name="&gt;&gt;lblRemoveSubsetProteins.Name" xml:space="preserve">
     <value>lblRemoveSubsetProteins</value>
