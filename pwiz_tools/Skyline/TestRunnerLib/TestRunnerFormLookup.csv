@@ -77,7 +77,7 @@ EditPepModsDlg,TestExplicitVariable
 EditRemoteAccountDlg,TestUnifi
 EditRTDlg,TestRetentionTimeFilter
 EditServerDlg,TestAccessServer
-EditSpectrumFilterDlg,TestSpectrumClassFilter
+EditSpectrumFilterDlg,TestEditSpectrumFilter
 EditStaticModDlg.IsotopeModView,TestEditStaticMod
 EditStaticModDlg.StructuralModView,TestEditStaticMod
 EmptyProteinsDlg,TestImportPeptideSearch

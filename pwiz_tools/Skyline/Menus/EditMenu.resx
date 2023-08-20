@@ -271,7 +271,7 @@
     <value>207, 22</value>
   </data>
   <data name="findNextMenuItem.Text" xml:space="preserve">
-    <value>Find Ne&amp;xt</value>
+    <value>Find &amp;Next</value>
   </data>
   <data name="toolStripSeparator8.Size" type="System.Drawing.Size, System.Drawing">
     <value>204, 6</value>
@@ -286,7 +286,7 @@
     <value>207, 22</value>
   </data>
   <data name="editNoteToolStripMenuItem.Text" xml:space="preserve">
-    <value>Edit &amp;Note</value>
+    <value>&amp;Edit Note</value>
   </data>
   <data name="toolStripSeparator42.Size" type="System.Drawing.Size, System.Drawing">
     <value>204, 6</value>
@@ -502,7 +502,7 @@
     <value>207, 22</value>
   </data>
   <data name="editSpectrumFilterMenuItem.Text" xml:space="preserve">
-    <value>Edit Spectrum Filter...</value>
+    <value>Edit Spectrum Fi&amp;lter...</value>
   </data>
   <data name="toolStripSeparator30.Size" type="System.Drawing.Size, System.Drawing">
     <value>204, 6</value>
@@ -526,7 +526,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.506, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;editToolStripMenuItem.Name" xml:space="preserve">
     <value>editToolStripMenuItem</value>
@@ -826,6 +826,6 @@
     <value>EditMenu</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Menus.SkylineControl, Skyline-daily, Version=21.2.1.506, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Menus.SkylineControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
