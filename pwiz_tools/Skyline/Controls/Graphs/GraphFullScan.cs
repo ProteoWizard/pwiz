@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
+using System.Management;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
@@ -619,44 +620,27 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             if (_precursor.Spectra?.Count > 0)
                             {
-                                var libSpectrum = _precursor.Spectra[0].SpectrumPeaksInfo;
+                                var libIntensities = _precursor.DocNode.Children.Select(t => t as TransitionDocNode)
+                                   .Where(t => t?.HasLibInfo == true && t.Id is Transition tran && tran.IonType != IonType.precursor)
+                                   .ToDictionary(t => t.Id as Transition, t => t.LibInfo.Intensity);
 
-                                // Rank the library spectrum with the most generic options. We need it to identify ion types
-                                var matchedSpectrum = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(
-                                        libSpectrum,
-                                        _precursor.DocNode.LabelType,
-                                        nodePath.Precursor, stateProvider.DocumentUI.Settings,
-                                        nodePath.Peptide.SourceUnmodifiedTarget, nodePath.Peptide.SourceExplicitMods,
-                                        Adduct.COMMON_PROTONATED_ADDUCTS,
-                                        Enum.GetValues(typeof(IonType)).OfType<IonType>(),
-                                        Adduct.COMMON_PROTONATED_ADDUCTS,
-                                        Enum.GetValues(typeof(IonType)).OfType<IonType>(),
-                                        null)
-                                    .PeaksMatched;
-
-                                var docTransitions = (from t in _msDataFileScanHelper.ScanProvider.Transitions
+                                var docTransitions = (
+                                    from t in _msDataFileScanHelper.ScanProvider.Transitions
                                     where (t.Id as Transition)?.IonType != IonType.precursor
                                     select t).ToList();
 
-                                if (docTransitions.Count > 1)
+                                if (libIntensities.Count > 1)
                                 {
-                                    var thisSpectrum = GetPeakIntensities(docTransitions);
-                                    var matchedSpectrumTransitions = docTransitions.Select(t => t.Id as Transition)
-                                        .Select(t =>
-                                            new
-                                            {
-                                                t, m = matchedSpectrum.FirstOrDefault(rmi => rmi.MatchedIons.Any(i =>
-                                                    i.IonType == t.IonType && i.Ordinal == t.Ordinal &&
-                                                    i.Charge.AdductCharge == t.Charge))
-                                            }).Where(d => d.m != null).ToDictionary(d => d.t, d => d.m);
+                                    // expectedSpectrum to docTransitions join
+                                    var thisSpectrumHash = GetPeakIntensities(docTransitions, stateProvider.DocumentUI);
 
-                                    var dotpList = thisSpectrum
-                                        .Where(peak => peak.Key.Id is Transition t && matchedSpectrumTransitions.ContainsKey(t))
-                                        .Select(peak => new
-                                    {
-                                        im = matchedSpectrumTransitions[(peak.Key.Id as Transition)!].Intensity,
-                                        it = peak.Value
-                                    }).ToList();
+                                    var dotpList = (from peak in thisSpectrumHash
+                                        join libPeak in libIntensities on peak.Key equals libPeak.Key
+                                        select new
+                                        {
+                                            im = libIntensities[peak.Key],
+                                            it = peak.Value
+                                        }).ToList();
 
                                     if (dotpList.Count > 1)
                                         spectrumProperties.dotp = new Statistics(dotpList.Select(d => (double)d.im))
@@ -672,7 +656,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 (t.Id as Transition)?.IonType == IonType.precursor).ToList();
                             if (docPrecursors.Count > 2)
                             {
-                                var transitionIntensities = GetPeakIntensities(docPrecursors);
+                                var transitionIntensities = GetPeakIntensities(docPrecursors, stateProvider.DocumentUI);
 
                                 var isotopeDist = nodePath.Precursor.Children
                                     .Where(t => (t.Id as Transition)?.IonType == IonType.precursor)
@@ -698,28 +682,28 @@ namespace pwiz.Skyline.Controls.Graphs
                 graphControlExtension.PropertiesSheet.SelectedObject = spectrumProperties;
         }
 
-        private Dictionary<TransitionFullScanInfo, double> GetPeakIntensities(
-            IEnumerable<TransitionFullScanInfo> transitions)
+        private Dictionary<Transition, double> GetPeakIntensities(
+            List<TransitionFullScanInfo> transitions, SrmDocument document)
         {
-            // aggregate the peak intensities a in single pass through the spectrum
-            var spectrumIndex = 0;
-            var transitionIntensities = transitions.ToDictionary(t => t, t => 0.0);
-            foreach (var docTransition in transitionIntensities.Keys.OrderBy(t => t.ProductMz))
-            {
-                while (_peaks[spectrumIndex].Mz <
-                       docTransition.ProductMz - docTransition.ExtractionWidth / 2)
-                    spectrumIndex++;
+            var docTransitions = transitions.ToDictionary(t => t.ProductMz, t => t);
 
-                while (_peaks[spectrumIndex].Mz >=
-                       docTransition.ProductMz - docTransition.ExtractionWidth / 2 &&
-                       _peaks[spectrumIndex].Mz <=
-                       docTransition.ProductMz + docTransition.ExtractionWidth / 2)
-                {
-                    transitionIntensities[docTransition] += _peaks[spectrumIndex].Intensity;
-                    spectrumIndex++;
-                }
-            }
-            return transitionIntensities;
+            var isNegative = (_precursor.DocNode.Id as TransitionGroup)?.PrecursorAdduct.AdductCharge < 0;
+            var signedQ1FilterValues = docTransitions.Select(q => q.Key).ToList();
+            var key = new PrecursorTextId(_precursor.DocNode.PrecursorMz, null, null, null, null, ChromExtractor.summed);
+            var filter = new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, 0, null, null, false, false);
+            filter.AddQ1FilterValues(signedQ1FilterValues, document.Settings.TransitionSettings.FullScan.GetProductFilterWindow);
+
+            // extract peak intensities for the document fragments from the current spectrum
+            var expectedSpectrum = filter.FilterQ1SpectrumList(new[] { new MsDataSpectrum
+                { Mzs = _peaks.Select(p => p.Mz).ToArray(), Intensities = _peaks.Select(p => (double)p.Intensity).ToArray(), NegativeCharge = isNegative } });
+
+            // expectedSpectrum to docTransitions join
+            var thisSpectrumHash = Enumerable.Range(0, expectedSpectrum.ProductFilters.Length)
+                .Select(i => new { mz = expectedSpectrum.ProductFilters[i].TargetMz, intensity = (double)expectedSpectrum.Intensities[i] })
+                .Where(d => docTransitions.ContainsKey(d.mz) && docTransitions[d.mz]?.Id is Transition)
+                .ToDictionary(d => docTransitions[d.mz]?.Id as Transition, d => d.intensity);
+
+            return thisSpectrumHash;
         }
 
         private class RankingContext
