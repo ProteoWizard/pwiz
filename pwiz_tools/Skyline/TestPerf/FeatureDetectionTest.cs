@@ -332,13 +332,13 @@ namespace TestPerf
         private void VerifyAuditLog()
         {
             var english = "en";
-            if (CultureInfo.CurrentCulture.Name != english)
+            if (CultureInfo.CurrentCulture.TwoLetterISOLanguageName != english)
             {
                 return; // Keep it simple, only worry about one language
             }
             var auditLogActual = Path.Combine(GetTestPath(@".."), "..", this.TestContext.TestName, @"Auditlog", english, this.TestContext.TestName) + ".log";
             var auditLogExpected = GetTestPath(@"TestHardklorFeatureDetection.log");
-            AssertEx.FileEquals(auditLogExpected, auditLogActual);
+            AssertEx.FileEquals(auditLogExpected, auditLogActual, null, true);
         }
 
     }
