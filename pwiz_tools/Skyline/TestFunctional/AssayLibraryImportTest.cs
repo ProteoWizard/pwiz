@@ -1569,7 +1569,7 @@ importIrt => importIrt.Btn1Click());
         private void VerifyAuditLog()
         {
             var english = "en";
-            if (CultureInfo.CurrentCulture.Name != english)
+            if (CultureInfo.CurrentCulture.TwoLetterISOLanguageName != english)
             {
                 return; // Keep it simple, only worry about one language
             }
@@ -1624,7 +1624,7 @@ importIrt => importIrt.Btn1Click());
                 auditLogExpected = auditLogExpected.Replace(".log", "_as_small_molecules.log");
                 File.WriteAllLines(auditLogExpected, adjustedExpectedLines);
             }
-            AssertEx.FileEquals(auditLogExpected, auditLogActual);
+            AssertEx.FileEquals(auditLogExpected, auditLogActual, null, true);
         }
     }
 }
