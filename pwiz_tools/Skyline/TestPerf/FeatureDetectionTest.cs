@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -324,6 +325,20 @@ namespace TestPerf
             RunUI(() => SkylineWindow.SaveDocument());
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 12, 368,  369, 1115);
             PauseForScreenShot("complete");
+
+            VerifyAuditLog();
+        }
+
+        private void VerifyAuditLog()
+        {
+            var english = "en";
+            if (CultureInfo.CurrentCulture.Name != english)
+            {
+                return; // Keep it simple, only worry about one language
+            }
+            var auditLogActual = Path.Combine(GetTestPath(@".."), "..", this.TestContext.TestName, @"Auditlog", english, this.TestContext.TestName) + ".log";
+            var auditLogExpected = GetTestPath(@"TestHardklorFeatureDetection.log");
+            AssertEx.FileEquals(auditLogExpected, auditLogActual);
         }
 
     }
