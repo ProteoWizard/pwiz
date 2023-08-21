@@ -175,7 +175,7 @@ namespace pwiz.SkylineTestFunctional
             _deployment.UpdateCheckError = new Exception(errorText);
             var errorDlg = ShowDialog<MessageDlg>(SkylineWindow.CheckForUpdate);
             Assert.AreEqual(Skyline.Properties.Resources.UpgradeManager_updateCheck_Complete_Failed_attempting_to_check_for_an_upgrade_, errorDlg.Message);
-            Assert.AreEqual(_deployment.UpdateCheckError.ToString(), errorDlg.DetailMessage);
+            Assert.AreEqual(AlertDlg.FormatExceptionDetailMessage(_deployment.UpdateCheckError), errorDlg.DetailMessage);
             RunDlg<UpgradeDlg>(errorDlg.OkDialog, noUpdateDlg =>
             {
                 Assert.IsFalse(noUpdateDlg.UpdateFound);
@@ -191,7 +191,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<MessageDlg>(upgradeDlg.AcceptButton.PerformClick, dlg =>
             {
                 Assert.AreEqual(Skyline.Properties.Resources.UpgradeManager_updateCheck_Complete_Failed_attempting_to_upgrade_, dlg.Message);
-                Assert.AreEqual(_deployment.UpdateError.ToString(), errorDlg.DetailMessage);
+                Assert.AreEqual(AlertDlg.FormatExceptionDetailMessage(_deployment.UpdateError), errorDlg.DetailMessage);
                 dlg.OkDialog();
             });
             upgradeDlg = WaitForOpenForm<UpgradeDlg>();
