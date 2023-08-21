@@ -103,14 +103,12 @@ namespace pwiz.Skyline.Alerts
                 label.Width += 10;
             }
 
-            using (var dlg = new MultiButtonMsgDlg(layout, Resources.AlertDlg_GetDefaultButtonText__Yes, Resources.AlertDlg_GetDefaultButtonText__No, false)
+            using (var dlg = new MultiButtonMsgDlg(layout, Resources.AlertDlg_GetDefaultButtonText__Yes, Resources.AlertDlg_GetDefaultButtonText__No, false))
             {
-                Text = title,
-                ClientSize = new Size(defaultWidth, defaultHeight),
-                StartPosition = FormStartPosition.CenterParent,
-                ShowInTaskbar = false
-            })
-            {
+                dlg.Text = title;
+                dlg.ClientSize = new Size(defaultWidth, defaultHeight);
+                dlg.StartPosition = FormStartPosition.CenterParent;
+                dlg.ShowInTaskbar = false;
                 dlg.MinimumSize = dlg.Size;
                 layout.Size = dlg.ClientSize;
                 layout.Height -= 35;
@@ -120,8 +118,10 @@ namespace pwiz.Skyline.Alerts
                     return result;
             }
 
-            using (var dlg = new LongWaitDlg { Message = Resources.SimpleFileDownloaderDlg_Show_Downloading_required_files___, ProgressValue = 0 })
+            using (var dlg = new LongWaitDlg())
             {
+                dlg.Message = Resources.SimpleFileDownloaderDlg_Show_Downloading_required_files___;
+                dlg.ProgressValue = 0;
                 dlg.PerformWork(parent, 50, pm => SimpleFileDownloader.DownloadRequiredFiles(requiredFilesList, pm));
             }
             return DialogResult.Yes;

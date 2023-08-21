@@ -1281,6 +1281,8 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public bool HasChromatogramData => false;
+
         private void ZoomYAxis()
         {
             if (_msDataFileScanHelper.ScanProvider == null || _msDataFileScanHelper.ScanProvider.Transitions.Length == 0)
@@ -1592,7 +1594,7 @@ namespace pwiz.Skyline.Controls.Graphs
             using (Graphics g = CreateGraphics())
             {
                 object nearestObject;
-                if (GraphPane.FindNearestObject(mousePoint, g, out nearestObject, out var index))
+                if (GraphPane.FindNearestObject(mousePoint, g, out nearestObject, out _))
                 {
                     var textObj = nearestObject as TextObj;
                     if (textObj != null)

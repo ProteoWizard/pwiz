@@ -195,8 +195,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
                 double? precursor = null;
                 try
                 {
-                    int tmp;
-                    var chromKey = ChromKey.FromId(msd.GetChromatogramId(i, out tmp), false);
+                    var chromKey = ChromKey.FromId(msd.GetChromatogramId(i, out _), false);
                     precursor = chromKey.Precursor;
                 }
                 catch

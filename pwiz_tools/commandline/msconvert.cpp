@@ -161,6 +161,73 @@ static double string_to_double( const std::string& str )
 	return value;
 }
 
+void ShowExamples(ostringstream &usage)
+{
+    usage << "Examples:\n"
+        << endl
+        << "# convert data.RAW to data.mzML\n"
+        << "msconvert data.RAW\n"
+        << endl
+        << "# convert data.RAW to data.mzXML\n"
+        << "msconvert data.RAW --mzXML\n"
+        << endl
+        << "# put output file in my_output_dir\n"
+        << "msconvert data.RAW -o my_output_dir\n"
+        << endl
+        << "# combining options to create a smaller mzML file, much like the old ReAdW converter program\n"
+        << "msconvert data.RAW --32 --zlib --filter \"peakPicking true 1-\" --filter \"zeroSamples removeExtra\"\n"
+        << endl
+        << "# extract scan indices 5...10 and 20...25\n"
+        << "msconvert data.RAW --filter \"index [5,10] [20,25]\"\n"
+        << endl
+        << "# extract MS1 scans only\n"
+        << "msconvert data.RAW --filter \"msLevel 1\"\n"
+        << endl
+        << "# extract MS2 and MS3 scans only\n"
+        << "msconvert data.RAW --filter \"msLevel 2-3\"\n"
+        << endl
+        << "# extract MSn scans for n>1\n"
+        << "msconvert data.RAW --filter \"msLevel 2-\"\n"
+        << endl
+        << "# apply ETD precursor mass filter\n"
+        << "msconvert data.RAW --filter ETDFilter\n"
+        << endl
+        << "# remove non-flanking zero value samples\n"
+        << "msconvert data.RAW --filter \"zeroSamples removeExtra\"\n"
+        << endl
+        << "# remove non-flanking zero value samples in MS2 and MS3 only\n"
+        << "msconvert data.RAW --filter \"zeroSamples removeExtra 2 3\"\n"
+        << endl
+        << "# add missing zero value samples (with 5 flanking zeros) in MS2 and MS3 only\n"
+        << "msconvert data.RAW --filter \"zeroSamples addMissing=5 2 3\"\n"
+        << endl
+        << "# keep only HCD spectra from a decision tree data file\n"
+        << "msconvert data.RAW --filter \"activation HCD\"\n"
+        << endl
+        << "# keep the top 42 peaks or samples (depending on whether spectra are centroid or profile):\n"
+        << "msconvert data.RAW --filter \"threshold count 42 most-intense\"\n"
+        << endl
+        << "# multiple filters: select scan numbers and recalculate precursors\n"
+        << "msconvert data.RAW --filter \"scanNumber [500,1000]\" --filter \"precursorRecalculation\"\n"
+        << endl
+        << "# multiple filters: apply peak picking and then keep the bottom 100 peaks:\n"
+        << "msconvert data.RAW --filter \"peakPicking true 1-\" --filter \"threshold count 100 least-intense\"\n"
+        << endl
+        << "# multiple filters: apply peak picking and then keep all peaks that are at least 50% of the intensity of the base peak:\n"
+        << "msconvert data.RAW --filter \"peakPicking true 1-\" --filter \"threshold bpi-relative .5 most-intense\"\n"
+        << endl
+        << "# use a configuration file\n"
+        << "msconvert data.RAW -c config.txt\n"
+        << endl
+        << "# example configuration file\n"
+        << "mzXML=true\n"
+        << "zlib=true\n"
+        << "filter=\"index [3,7]\"\n"
+        << "filter=\"precursorRecalculation\"\n"
+        << endl
+        << endl;
+}
+
 /// Parses command line arguments to setup execution parameters, and
 /// contructs help text. Inputs are the arguments to main. A filled
 /// Config object is returned.
@@ -215,19 +282,20 @@ Config parseCommandLine(int argc, char** argv)
     string ms_numpress_slof_default = (boost::format("%4.2g") % BinaryDataEncoder_default_numpressSlofErrorTolerance).str();
     string runIndexSet;
     bool detailedHelp = false;
+    bool writeDoc = false;
     string helpForFilter;
     bool showExamples = false;
 
     pair<int, int> consoleBounds = get_console_bounds(); // get platform-specific console bounds, or default values if an error occurs
-
-    po::options_description od_config("Options", consoleBounds.first);
+    int wrapWidth = consoleBounds.first;
+    po::options_description od_config("Options", wrapWidth);
     od_config.add_options()
         ("filelist,f",
             po::value<string>(&filelistFilename),
             ": specify text file containing filenames")
         ("outdir,o",
             po::value<string>(&config.outputPath)->default_value(config.outputPath),
-            ": set output directory ('-' for stdout) [.]")
+            ": set output directory ('-' for stdout, '.' for current directory) [.]")
         ("config,c", 
             po::value<string>(&configFilename),
             ": configuration file (optionName=value)")
@@ -375,7 +443,10 @@ Config parseCommandLine(int argc, char** argv)
         ("show-examples",
             po::value<bool>(&showExamples)->zero_tokens(),
             ": show examples of how to run msconvert.exe")
-        ;
+        ("doc",
+            po::value<bool>(&writeDoc)->zero_tokens(),
+           ": writes output of --help and --show-examples, without version info")
+                ;
 
     // handle positional arguments
 
@@ -400,6 +471,12 @@ Config parseCommandLine(int argc, char** argv)
     // negate unknownInstrumentIsError value since command-line parameter (ignoreUnknownInstrumentError) and the Config parameters use inverse semantics
     config.unknownInstrumentIsError = !config.unknownInstrumentIsError;
 
+    if (writeDoc)
+    {
+        detailedHelp = true;
+        showExamples = true;
+    }
+
     if (!runIndexSet.empty())
         config.runIndexSet.parse(runIndexSet);
 
@@ -407,71 +484,9 @@ Config parseCommandLine(int argc, char** argv)
     {
         usage << SpectrumListFactory::usage(helpForFilter) << endl;
     }
-    else if (showExamples)
+    else if (showExamples && !writeDoc)
     {
-        usage << "Examples:\n"
-              << endl
-              << "# convert data.RAW to data.mzML\n"
-              << "msconvert data.RAW\n"
-              << endl
-              << "# convert data.RAW to data.mzXML\n"
-              << "msconvert data.RAW --mzXML\n"
-              << endl
-              << "# put output file in my_output_dir\n"
-              << "msconvert data.RAW -o my_output_dir\n"
-              << endl
-              << "# combining options to create a smaller mzML file, much like the old ReAdW converter program\n"
-              << "msconvert data.RAW --32 --zlib --filter \"peakPicking true 1-\" --filter \"zeroSamples removeExtra\"\n"
-              << endl
-              << "# extract scan indices 5...10 and 20...25\n"
-              << "msconvert data.RAW --filter \"index [5,10] [20,25]\"\n"
-              << endl
-              << "# extract MS1 scans only\n"
-              << "msconvert data.RAW --filter \"msLevel 1\"\n"
-              << endl
-              << "# extract MS2 and MS3 scans only\n"
-              << "msconvert data.RAW --filter \"msLevel 2-3\"\n"
-              << endl
-              << "# extract MSn scans for n>1\n"
-              << "msconvert data.RAW --filter \"msLevel 2-\"\n"
-              << endl
-              << "# apply ETD precursor mass filter\n"
-              << "msconvert data.RAW --filter ETDFilter\n"
-              << endl
-              << "# remove non-flanking zero value samples\n"
-              << "msconvert data.RAW --filter \"zeroSamples removeExtra\"\n"
-              << endl
-              << "# remove non-flanking zero value samples in MS2 and MS3 only\n"
-              << "msconvert data.RAW --filter \"zeroSamples removeExtra 2 3\"\n"
-              << endl
-              << "# add missing zero value samples (with 5 flanking zeros) in MS2 and MS3 only\n"
-              << "msconvert data.RAW --filter \"zeroSamples addMissing=5 2 3\"\n"
-              << endl
-              << "# keep only HCD spectra from a decision tree data file\n"
-              << "msconvert data.RAW --filter \"activation HCD\"\n"
-              << endl
-              << "# keep the top 42 peaks or samples (depending on whether spectra are centroid or profile):\n"
-              << "msconvert data.RAW --filter \"threshold count 42 most-intense\"\n"
-              << endl
-              << "# multiple filters: select scan numbers and recalculate precursors\n"
-              << "msconvert data.RAW --filter \"scanNumber [500,1000]\" --filter \"precursorRecalculation\"\n"
-              << endl
-              << "# multiple filters: apply peak picking and then keep the bottom 100 peaks:\n"
-              << "msconvert data.RAW --filter \"peakPicking true 1-\" --filter \"threshold count 100 least-intense\"\n"
-              << endl
-              << "# multiple filters: apply peak picking and then keep all peaks that are at least 50% of the intensity of the base peak:\n"
-              << "msconvert data.RAW --filter \"peakPicking true 1-\" --filter \"threshold bpi-relative .5 most-intense\"\n"
-              << endl
-              << "# use a configuration file\n"
-              << "msconvert data.RAW -c config.txt\n"
-              << endl
-              << "# example configuration file\n"
-              << "mzXML=true\n"
-              << "zlib=true\n"
-              << "filter=\"index [3,7]\"\n"
-              << "filter=\"precursorRecalculation\"\n"
-              << endl
-              << endl;
+        ShowExamples(usage);
     }
     else
     {
@@ -479,19 +494,38 @@ Config parseCommandLine(int argc, char** argv)
         usage << od_config;
 
         // extra usage
-        usage << SpectrumListFactory::usage(detailedHelp, "(run this program with --help to see details for all filters)", consoleBounds.first);
-        usage << ChromatogramListFactory::usage(detailedHelp, nullptr, consoleBounds.first) << endl;
+        if (writeDoc)
+        {
+            wrapWidth = 10000; // Let viewer handle wrapping
+        }
+        usage << SpectrumListFactory::usage(detailedHelp, detailedHelp ? nullptr : "(run this program with --help to see details for all filters)", wrapWidth);
+        usage << ChromatogramListFactory::usage(detailedHelp, nullptr, wrapWidth) << endl;
+        if (writeDoc)
+        {
+            usage << "\n";
+            ShowExamples(usage);
+        }
 
         usage << "Questions, comments, and bug reports:\n"
-              << "https://github.com/ProteoWizard\n"
-              << "support@proteowizard.org\n"
-              << "\n"
-              << "ProteoWizard release: " << pwiz::Version::str() << " (" << pwiz::Version::LastModified() << ")" << endl
-              << "Build date: " << __DATE__ << " " << __TIME__ << endl;
+            << "https://github.com/ProteoWizard\n"
+            << "support@proteowizard.org\n";
+        if (!writeDoc)
+        {
+            usage << "\n"
+                << "ProteoWizard release: " << pwiz::Version::str() << " (" << pwiz::Version::LastModified() << ")" << endl
+                << "Build date: " << __DATE__ << " " << __TIME__ << endl;
+        }
     }
 
-    if ((argc <= 1) || detailedHelp || !helpForFilter.empty() || showExamples)
-        throw usage_exception(usage.str().c_str());
+    if (argc <= 1)
+    {
+        throw usage_exception(usage.str().c_str()); // Write the help text to stderr
+    }
+    if (detailedHelp || !helpForFilter.empty() || showExamples)
+    {
+        *os_ << usage.str().c_str(); // Write the help text to stdout
+        throw usage_exception(""); // Exit
+    }
 
     // parse config file if required
 

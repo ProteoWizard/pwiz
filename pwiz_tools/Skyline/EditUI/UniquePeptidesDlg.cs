@@ -197,12 +197,10 @@ namespace pwiz.Skyline.EditUI
 
         private void LaunchPeptideProteinsQuery()
         {
-            using (var longWaitDlg = new LongWaitDlg
-                {
-                    Text = Resources.UniquePeptidesDlg_LaunchPeptideProteinsQuery_Querying_Background_Proteome_Database,
-                    Message = Resources.UniquePeptidesDlg_LaunchPeptideProteinsQuery_Looking_for_proteins_with_matching_peptide_sequences
-                })
+            using (var longWaitDlg = new LongWaitDlg())
             {
+                longWaitDlg.Text = Resources.UniquePeptidesDlg_LaunchPeptideProteinsQuery_Querying_Background_Proteome_Database;
+                longWaitDlg.Message = Resources.UniquePeptidesDlg_LaunchPeptideProteinsQuery_Looking_for_proteins_with_matching_peptide_sequences;
                 try
                 {
                     longWaitDlg.PerformWork(this, 1000, QueryPeptideProteins);

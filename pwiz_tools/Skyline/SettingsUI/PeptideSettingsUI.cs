@@ -728,14 +728,16 @@ namespace pwiz.Skyline.SettingsUI
 
             // Libraries built for full-scan filtering can have important retention time information,
             // and the redundant libraries are more likely to be desirable for showing spectra.
-            using (var dlg = new BuildLibraryDlg(_parent) { LibraryKeepRedundant = _parent.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled })
+            using (var dlg = new BuildLibraryDlg(_parent))
             {
+                dlg.LibraryKeepRedundant = _parent.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled;
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     if (!string.IsNullOrEmpty(dlg.AddLibraryFile))
                     {
-                        using (var editLibDlg = new EditLibraryDlg(Settings.Default.SpectralLibraryList) {LibraryPath = dlg.AddLibraryFile})
+                        using (var editLibDlg = new EditLibraryDlg(Settings.Default.SpectralLibraryList))
                         {
+                            editLibDlg.LibraryPath = dlg.AddLibraryFile;
                             if (editLibDlg.ShowDialog(this) == DialogResult.OK)
                             {
                                 _driverLibrary.List.Add(editLibDlg.LibrarySpec);
@@ -812,12 +814,10 @@ namespace pwiz.Skyline.SettingsUI
                 if (filterDlg.ShowDialog(this) == DialogResult.OK)
                 {
                     MidasLibrary midasLib = null;
-                    using (var longWait = new LongWaitDlg
-                           {
-                               Text = Resources.PeptideSettingsUI_ShowFilterMidasDlg_Loading_MIDAS_Library,
-                               Message = string.Format(Resources.PeptideSettingsUI_ShowFilterMidasDlg_Loading__0_, Path.GetFileName(midasLibSpec.FilePath))
-                           })
+                    using (var longWait = new LongWaitDlg())
                     {
+                        longWait.Text = Resources.PeptideSettingsUI_ShowFilterMidasDlg_Loading_MIDAS_Library;
+                        longWait.Message = string.Format(Resources.PeptideSettingsUI_ShowFilterMidasDlg_Loading__0_, Path.GetFileName(midasLibSpec.FilePath));
                         longWait.PerformWork(this, 800, monitor => midasLib =
                             _libraryManager.LoadLibrary(midasLibSpec, () => new DefaultFileLoadMonitor(monitor)) as MidasLibrary);
                     }
@@ -1804,12 +1804,10 @@ namespace pwiz.Skyline.SettingsUI
             public void EditList()
             {
                 var heavyMods = GetHeavyModifications().ToArray();
-                using (var dlg = new EditLabelTypeListDlg
-                              {
-                                  LabelTypes = from typedMods in heavyMods
-                                               select typedMods.LabelType
-                              })
+                using (var dlg = new EditLabelTypeListDlg())
                 {
+                    dlg.LabelTypes = from typedMods in heavyMods
+                        select typedMods.LabelType;
                     if (dlg.ShowDialog(Combo.TopLevelControl) == DialogResult.OK)
                     {
                         // Store existing values in dictionary by lowercase name.
