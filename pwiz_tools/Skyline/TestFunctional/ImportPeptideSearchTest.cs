@@ -522,7 +522,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(4, peptides);
                 Assert.AreEqual(4, precursors);
                 Assert.AreEqual(12, transitions);
-                Assert.AreEqual(0, unmappedOrRemoved);
+                Assert.AreEqual(1, unmappedOrRemoved);
                 peptidesPerProteinDlg2.RemoveRepeatedPeptides = true;
             });
             WaitForConditionUI(() => peptidesPerProteinDlg2.DocumentFinalCalculated);
@@ -533,7 +533,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(2, peptides);
                 Assert.AreEqual(2, precursors);
                 Assert.AreEqual(6, transitions);
-                Assert.AreEqual(0, unmappedOrRemoved);
+                Assert.AreEqual(1, unmappedOrRemoved);
                 peptidesPerProteinDlg2.RemoveRepeatedPeptides = false;
                 peptidesPerProteinDlg2.RemoveDuplicatePeptides = true;
             });
@@ -541,10 +541,10 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 peptidesPerProteinDlg2.NewTargetsFinalSync(out proteins, out peptides, out precursors, out transitions, out unmappedOrRemoved);
-                Assert.AreEqual(2, proteins);
-                Assert.AreEqual(2, peptides);
-                Assert.AreEqual(2, precursors);
-                Assert.AreEqual(6, transitions);
+                Assert.AreEqual(0, proteins);
+                Assert.AreEqual(0, peptides);
+                Assert.AreEqual(0, precursors);
+                Assert.AreEqual(0, transitions);
                 Assert.AreEqual(1, unmappedOrRemoved);
             });
             OkDialog(peptidesPerProteinDlg2, peptidesPerProteinDlg2.CancelDialog);
@@ -559,17 +559,17 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(2, peptides);
                 Assert.AreEqual(2, precursors);
                 Assert.AreEqual(6, transitions);
-                Assert.AreEqual(0, unmappedOrRemoved);
+                Assert.AreEqual(1, unmappedOrRemoved);
                 peptidesPerProteinDlg.MinPeptides = 2;
             });
             WaitForConditionUI(() => peptidesPerProteinDlg2.DocumentFinalCalculated);
             RunUI(() =>
             {
                 peptidesPerProteinDlg.NewTargetsFinalSync(out proteins, out peptides, out precursors, out transitions, out unmappedOrRemoved);
-                Assert.AreEqual(2, proteins);
-                Assert.AreEqual(2, peptides);
-                Assert.AreEqual(2, precursors);
-                Assert.AreEqual(6, transitions);
+                Assert.AreEqual(0, proteins);
+                Assert.AreEqual(0, peptides);
+                Assert.AreEqual(0, precursors);
+                Assert.AreEqual(0, transitions);
                 Assert.AreEqual(1, unmappedOrRemoved);
                 peptidesPerProteinDlg.MinPeptides = 1;
             });
@@ -581,7 +581,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(2, peptides);
                 Assert.AreEqual(2, precursors);
                 Assert.AreEqual(6, transitions);
-                Assert.AreEqual(0, unmappedOrRemoved);
+                Assert.AreEqual(1, unmappedOrRemoved);
             });
             // The AllChromatogramsGraph will immediately show an error because the file being imported is bogus.
             var importResultsDlg = ShowDialog<AllChromatogramsGraph>(peptidesPerProteinDlg.OkDialog);

@@ -41,9 +41,11 @@ namespace pwiz.Skyline.Model.Proteome
         private Dictionary<PeptideDocNode, List<IProteinRecord>> _peptideToProteins, _peptideToProteinGroups;
         private MappingResultsInternal _results, _finalResults, _proteinGroupResults;
         private IDictionary<IProteinRecord, PeptideAssociationGroup> _proteinGroupAssociations;
+        private HashSet<PeptideDocNode> _peptidesRemovedByFilters;
 
         public IDictionary<IProteinRecord, PeptideAssociationGroup> AssociatedProteins { get; private set; }
         public IDictionary<IProteinRecord, PeptideAssociationGroup> ParsimoniousProteins { get; private set; }
+        public int PeptidesRemovedByFiltersCount => _peptideToProteins?.Count ?? 0;
 
         public IMappingResults Results
         {
@@ -77,6 +79,7 @@ namespace pwiz.Skyline.Model.Proteome
             _finalResults = null;
             _peptideToProteinGroups = null;
             _peptideToProteins = null;
+            _peptidesRemovedByFilters = null;
         }
 
         public void UseFastaFile(string file, Func<FastaSequence, IEnumerable<Peptide>> digestProteinToPeptides, ILongWaitBroker broker)
@@ -410,6 +413,8 @@ namespace pwiz.Skyline.Model.Proteome
 
             broker.Message = Resources.AssociateProteinsDlg_UpdateParsimonyResults_Applying_parsimony_options;
 
+            _peptidesRemovedByFilters = new HashSet<PeptideDocNode>();
+
             if (groupProteins)
             {
                 if (_proteinGroupAssociations == null)
@@ -458,7 +463,10 @@ namespace pwiz.Skyline.Model.Proteome
                 foreach (var kvp in peptideToProteinGroups)
                 {
                     if (sharedPeptides == SharedPeptides.Removed && kvp.Value.Count > 1)
+                    {
+                        _peptidesRemovedByFilters.Add(kvp.Key);
                         continue;
+                    }
                     if (broker.IsCanceled)
                         return;
 
@@ -525,6 +533,9 @@ namespace pwiz.Skyline.Model.Proteome
 
             if (minPeptidesPerProtein > 1)
             {
+                foreach (var kvp in ParsimoniousProteins.Where(p => p.Value.Peptides.Count < minPeptidesPerProtein))
+                foreach (var peptide in kvp.Value.Peptides)
+                    _peptidesRemovedByFilters.Add(peptide);
                 ParsimoniousProteins = ParsimoniousProteins.Where(p => p.Value.Peptides.Count >= minPeptidesPerProtein).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
                 _finalResults = _finalResults.Clone();
                 _finalResults.FinalProteinCount = ParsimoniousProteins.Count;
@@ -812,6 +823,7 @@ namespace pwiz.Skyline.Model.Proteome
             // Move unmapped peptides from FastaSequence node to "Unmapped Peptides" list
             var unmappedPeptideNodes = _peptideToPath.SelectMany(kvp => kvp.Value).Where(p => !p.IsDecoy).ToHashSet();
             unmappedPeptideNodes.ExceptWith(ParsimoniousProteins.Values.SelectMany(pag => pag.Peptides));
+            unmappedPeptideNodes.ExceptWith(_peptidesRemovedByFilters);
 
             // Modifies and adds old groups that still contain unmatched peptides to newPeptideGroups
             foreach (var nodePepGroup in current.MoleculeGroups)

@@ -106,7 +106,7 @@ namespace pwiz.SkylineTestFunctional
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
                 AdditionalSettings = new List<KeyValuePair<string, string>>(),
-                ExpectedResultsFinal = new ExpectedResults(138, 337, 400, 1200)
+                ExpectedResultsFinal = new ExpectedResults(133, 332, 394, 1182, 163)
             };
 
             RunFunctionalTest();
@@ -134,7 +134,7 @@ namespace pwiz.SkylineTestFunctional
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
                 AdditionalSettings = new List<KeyValuePair<string, string>>(),
-                ExpectedResultsFinal = new ExpectedResults(108, 260, 323, 969)
+                ExpectedResultsFinal = new ExpectedResults(104, 256, 317, 951, 124)
             };
 
             RunFunctionalTest();
@@ -166,7 +166,7 @@ namespace pwiz.SkylineTestFunctional
                     new KeyValuePair<string, string>("calibrate_mass", "0"),
                     new KeyValuePair<string, string>("train-fdr", Convert.ToString(0.1, CultureInfo.CurrentCulture))
                 },
-                ExpectedResultsFinal = new ExpectedResults(134, 312, 393, 1179)
+                ExpectedResultsFinal = new ExpectedResults(127, 305, 384, 1152, 150)
             };
 
             RunFunctionalTest();

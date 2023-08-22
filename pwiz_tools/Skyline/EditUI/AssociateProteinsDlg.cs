@@ -699,7 +699,8 @@ namespace pwiz.Skyline.EditUI
         public void NewTargetsFinalSync(out int proteins, out int peptides, out int precursors, out int transitions, out int unmappedOrRemoved)
         {
             var doc = DocumentFinal;
-            unmappedOrRemoved = doc.PeptideGroups.FirstOrDefault(pg => pg.Name == Resources.ProteinAssociation_CreateDocTree_Unmapped_Peptides)?.PeptideCount ?? 0;
+            var unmappedPeptideGroup = doc.PeptideGroups.FirstOrDefault(pg => pg.Name == Resources.ProteinAssociation_CreateDocTree_Unmapped_Peptides);
+            unmappedOrRemoved = _proteinAssociation.PeptidesRemovedByFiltersCount + (unmappedPeptideGroup?.PeptideCount ?? 0);
             proteins = doc.PeptideGroupCount;
             peptides = doc.PeptideCount;
             precursors = doc.PeptideTransitionGroupCount;

@@ -150,7 +150,7 @@ namespace TestPerf
                     RemoveDuplicates = true,
                     ChromatogramClickPoint = new PointF(34.18F, 108.0F),
                     //TargetCounts = new[] { 4700, 36628, 37960, 227760 },
-                    FinalTargetCounts = new[] { 2401, 31923, 33000, 198000 },
+                    FinalTargetCounts = new[] { 2399, 26144, 27078, 162468 },
                     ScoringModelCoefficients = "-0.0842|-0.7448|4.2689|-0.2083|-0.2644|0.7594|0.3123|-0.0659",
                     MassErrorStats = new[]
                     {
@@ -236,7 +236,7 @@ namespace TestPerf
                     RemoveDuplicates = true,
                     ChromatogramClickPoint = new PointF(32.05F, 268334.7F),
                     //TargetCounts = new[] { 3991, 30916, 33841, 203044 },
-                    FinalTargetCounts = new[] { 2040, 26889, 29295, 175767 },
+                    FinalTargetCounts = new[] { 2038, 21960, 24013, 144076 },
                     ScoringModelCoefficients = "0.3173|-0.8915|3.7830|0.2262|-0.0825|0.7332|0.0012|-0.0606",
                     MassErrorStats = new[]
                     {
@@ -292,7 +292,7 @@ namespace TestPerf
                     RemoveDuplicates = true,
                     ChromatogramClickPoint = new PointF(10.79F, 3800.0F),
                     //TargetCounts = new[] { 4937, 37152, 38716, 232296 },
-                    FinalTargetCounts = new[] { 2698, 32785, 34116, 204696 },
+                    FinalTargetCounts = new[] { 2697, 27225, 28373, 170238 },
                     ScoringModelCoefficients = "-0.3355|-0.9056|4.5022|3.5338|-0.1011|0.7389|0.4436|-0.1319",
                     MassErrorStats = new[]
                     {
