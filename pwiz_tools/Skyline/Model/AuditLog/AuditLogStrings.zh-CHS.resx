@@ -675,4 +675,7 @@
   <data name="permuted_isotope_label_complete" xml:space="preserve">
     <value>已添加同位素修饰 '{0}' 的完整排列</value>
   </data>
+  <data name="added_spectrum_filter" xml:space="preserve">
+    <value>添加的谱图过滤器</value>
+  </data>
 </root>
