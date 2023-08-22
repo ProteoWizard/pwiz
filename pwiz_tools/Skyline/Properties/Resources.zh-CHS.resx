@@ -2244,7 +2244,7 @@
     <value>错误：未添加新结果。跳过 Panorama 导入。</value>
   </data>
   <data name="CommandLine_ProcessDocument_Error_saving_file" xml:space="preserve">
-    <value>保存文件时出错</value>
+    <value>错误：保存文件时出错</value>
   </data>
   <data name="CommandLine_RefineDocument_Choose_one_of__0_" xml:space="preserve">
     <value>选择一个 {0}</value>
