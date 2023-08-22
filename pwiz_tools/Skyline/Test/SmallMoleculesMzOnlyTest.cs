@@ -45,8 +45,8 @@ namespace pwiz.SkylineTest
                 "320.",
                 "177.044724",
                 "88.522088",
-                "819.42",
                 "1639.7",
+                "819.42",
                 "351.217698",
                 "355.242805",
                 "335.001097",
@@ -64,10 +64,10 @@ namespace pwiz.SkylineTest
                         expectedPrecursorAdduct = Adduct.M_PLUS_2;
                         break;
                     case 8:
-                        expectedPrecursorAdduct = Adduct.M_MINUS_2.ChangeIsotopeLabels(-.86055);
+                        expectedPrecursorAdduct = Adduct.M_MINUS;
                         break;
                     case 9:
-                        expectedPrecursorAdduct = Adduct.M_MINUS;
+                        expectedPrecursorAdduct = Adduct.M_MINUS_2.ChangeIsotopeLabels(-.86055);
                         break;
                     case 10:
                         expectedPrecursorAdduct = Adduct.M_MINUS_H;

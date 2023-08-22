@@ -63,8 +63,7 @@ namespace pwiz.SkylineTestFunctional
             var skyFile = "test_b.sky";
             var basename = "289_97";
             var sourceData = TestFilesDir.GetTestPath(basename + ExtensionTestContext.ExtMzml);
-            string docPath;
-            var doc = InitHighReplicateCountDocument(testFilesDir, skyFile, out docPath);
+            var doc = InitHighReplicateCountDocument(testFilesDir, skyFile);
             Settings.Default.ImportResultsSimultaneousFiles =
                 (int) MultiFileLoader.ImportResultsSimultaneousFileOptions
                     .many; // use maximum threads for multiple file import
@@ -93,9 +92,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 for (var f = 0; f < filenames.Count; f++)
                 {
-                    ChromatogramGroupInfo[] chromGroupInfo;
                     Assert.IsTrue(document.Settings.MeasuredResults.TryLoadChromatogram(f, pair.NodePep, pair.NodeGroup,
-                        tolerance, out chromGroupInfo));
+                        tolerance, out _));
                 }
             }
 
@@ -145,9 +143,9 @@ namespace pwiz.SkylineTestFunctional
             return (count==Skyline.SkylineWindow.MAX_GRAPH_CHROM ? "distinct" : "R" + count) + ExtensionTestContext.ExtMzml;
         }
 
-        private SrmDocument InitHighReplicateCountDocument(TestFilesDir testFilesDir, string fileName, out string docPath)
+        private SrmDocument InitHighReplicateCountDocument(TestFilesDir testFilesDir, string fileName)
         {
-            docPath = testFilesDir.GetTestPath(fileName);
+            var docPath = testFilesDir.GetTestPath(fileName);
 
             var documentFile = TestFilesDir.GetTestPath(docPath);
             WaitForCondition(() => File.Exists(documentFile));

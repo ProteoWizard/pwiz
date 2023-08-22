@@ -164,8 +164,9 @@ namespace pwiz.Skyline.Model.Crosslinking
             if (_precursorMassDistribution == null)
             {
                 var fragmentedMoleculeSettings = FragmentedMolecule.Settings.FromSrmSettings(Settings);
+                var moleculeMassOffset = GetPrecursorFormula();
                 _precursorMassDistribution = fragmentedMoleculeSettings
-                    .GetMassDistribution(GetPrecursorFormula().Molecule, 0, 0);
+                    .GetMassDistribution(moleculeMassOffset.Molecule, moleculeMassOffset.MonoMassOffset, 0);
             }
 
             return _precursorMassDistribution;

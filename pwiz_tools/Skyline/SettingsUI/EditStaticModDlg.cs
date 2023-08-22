@@ -23,7 +23,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -679,8 +678,9 @@ namespace pwiz.Skyline.SettingsUI
             var listFragmentLosses = new List<FragmentLoss>(Losses);
             listFragmentLosses.Remove(lossEdit);
 
-            using (var dlg = new EditFragmentLossDlg(listFragmentLosses) { Loss = lossEdit })
+            using (var dlg = new EditFragmentLossDlg(listFragmentLosses))
             {
+                dlg.Loss = lossEdit;
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     listFragmentLosses.Add(dlg.Loss);

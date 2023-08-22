@@ -29,7 +29,6 @@ using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Hibernate;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -129,8 +128,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 else
                 {
                     var parent = DataSchema.Document.FindNode(IdentityPath.Parent) as PeptideDocNode;
-                    Adduct adduct;
-                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, parent, out adduct, DocNode.TransitionGroup.PrecursorAdduct.AdductCharge, DocNode.TransitionGroup.LabelType);
+                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, parent, out _, DocNode.TransitionGroup.PrecursorAdduct.AdductCharge, DocNode.TransitionGroup.LabelType);
                     return molecule.InvariantName ?? string.Empty;
                 }
             }
@@ -417,6 +415,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        public string SpectrumFilter { get { return DocNode.SpectrumClassFilter.ToString(); } }
+
         [InvariantDisplayName("PrecursorNote")]
         [Importable]
         public string Note
@@ -437,28 +437,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public string LibraryType
         {
-            get
-            {
-                if (DocNode.LibInfo is NistSpectrumHeaderInfo)
-                {
-                    return @"NIST";
-                }
-                if (DocNode.LibInfo is XHunterSpectrumHeaderInfo)
-                {
-                    return @"GPM";
-                }
-                if (DocNode.LibInfo is BiblioSpecSpectrumHeaderInfo)
-                {
-                    return @"BiblioSpec";
-                }
-                return null;
-            }
+            get { return DocNode.LibInfo?.LibraryTypeName; }
         }
 
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public double? LibraryProbabilityScore
         {
-            get { return (DocNode.LibInfo as BiblioSpecSpectrumHeaderInfo)?.Score; }
+            get { return DocNode.LibInfo?.Score; }
         }
 
         [Format(NullValue = TextUtil.EXCEL_NA)]

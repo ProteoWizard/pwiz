@@ -404,8 +404,9 @@ namespace pwiz.Skyline.SettingsUI
                 if (selectedLibrarySpec == null)
                     return;
 
-                using (var longWait = new LongWaitDlg { Text = Resources.ViewLibraryDlg_LoadLibrary_Loading_Library })
+                using (var longWait = new LongWaitDlg())
                 {
+                    longWait.Text = Resources.ViewLibraryDlg_LoadLibrary_Loading_Library;
                     try
                     {
                         var status = longWait.PerformWork(this, 800, monitor =>
@@ -713,8 +714,7 @@ namespace pwiz.Skyline.SettingsUI
 
                 if (-1 != index)
                 {
-                    SpectrumPeaksInfo loadedSpectrum;
-                    if (_selectedLibrary.TryLoadSpectrum(_peptides[index].Key, out loadedSpectrum))
+                    if (_selectedLibrary.TryLoadSpectrum(_peptides[index].Key, out _))
                     {
                         SrmSettings settings = Program.ActiveDocumentUI.Settings;
 
@@ -2034,12 +2034,10 @@ namespace pwiz.Skyline.SettingsUI
 
             SrmDocument newDocument;
             var hasSmallMolecules = HasSmallMolecules;
-            using (var longWaitDlg = new LongWaitDlg
-                {
-                    Text = hasSmallMolecules ? Resources.ViewLibraryDlg_AddAllPeptides_Matching_Molecules : Resources.ViewLibraryDlg_AddAllPeptides_Matching_Peptides,
-                    Message = hasSmallMolecules ? Resources.ViewLibraryDlg_AddAllPeptides_Matching_molecules_to_the_current_document_settings : Resources.ViewLibraryDlg_AddAllPeptides_Matching_peptides_to_the_current_document_settings
-                })
+            using (var longWaitDlg = new LongWaitDlg())
             {
+                longWaitDlg.Text = hasSmallMolecules ? Resources.ViewLibraryDlg_AddAllPeptides_Matching_Molecules : Resources.ViewLibraryDlg_AddAllPeptides_Matching_Peptides;
+                longWaitDlg.Message = hasSmallMolecules ? Resources.ViewLibraryDlg_AddAllPeptides_Matching_molecules_to_the_current_document_settings : Resources.ViewLibraryDlg_AddAllPeptides_Matching_peptides_to_the_current_document_settings;
                 longWaitDlg.PerformWork(this, 1000, broker => pepMatcher.AddAllPeptidesToDocument(broker, entryCreatorList));
                 newDocument = pepMatcher.DocAllPeptides;
                 if (longWaitDlg.IsCanceled || newDocument == null)

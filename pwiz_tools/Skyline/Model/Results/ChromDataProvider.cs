@@ -24,6 +24,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results.Spectra;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -78,11 +79,11 @@ namespace pwiz.Skyline.Model.Results
 
         public abstract IEnumerable<ChromKeyProviderIdPair> ChromIds { get; }
 
-        public virtual byte[] MSDataFileScanIdBytes { get { return new byte[0]; } }
+        public virtual IResultFileMetadata ResultFileData { get { return null; } }
 
         public virtual void SetRequestOrder(IList<IList<int>> orderedSets) { }
 
-        public abstract bool GetChromatogram(int id, Target modifiedSequence, Color color, out ChromExtra extra, out TimeIntensities timeIntensities);
+        public abstract bool GetChromatogram(int id, ChromatogramGroupId chromatogramGroupId, Color color, out ChromExtra extra, out TimeIntensities timeIntensities);
 
         public abstract double? MaxRetentionTime { get; }
 
@@ -454,7 +455,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override eIonMobilityUnits IonMobilityUnits { get { return _ionMobilityUnits; } }
 
-        public override bool GetChromatogram(int id, Target modifiedSequence, Color color, out ChromExtra extra, out TimeIntensities timeIntensities)
+        public override bool GetChromatogram(int id, ChromatogramGroupId chromatogramGroupId, Color color, out ChromExtra extra, out TimeIntensities timeIntensities)
         {
             float[] times, intensities;
             if (!_globalChromatogramExtractor.GetChromatogram(id, out times, out intensities))
@@ -478,7 +479,7 @@ namespace pwiz.Skyline.Model.Results
             var loadingStatus = Status as ChromatogramLoadingStatus;
             if (loadingStatus != null)
                 loadingStatus.Transitions.AddTransition(
-                    modifiedSequence,
+                    chromatogramGroupId,
                     color,
                     index, -1,
                     times,

@@ -521,25 +521,16 @@ namespace pwiz.Skyline.SettingsUI
                     return null;
                 }
 
-                IsolationWindow isolationWindow;
                 try
                 {
-                    double startValue = editWindow.Start.Value;
-                    double endValue = editWindow.End.Value;
-                    if (Equals(comboIsolation.SelectedItem, WindowType.MEASUREMENT))
-                    {
-                        startValue += editWindow.StartMargin ?? 0;
-                        endValue -= editWindow.StartMargin ?? 0;
-                    }
-                    isolationWindow = new IsolationWindow(
-                        // ReSharper disable PossibleInvalidOperationException
-                        startValue,
-                        endValue,
-                        // ReSharper restore PossibleInvalidOperationException
+                    var isolationWindow = IsolationWindow.CreateWithMargin(
+                        editWindow.Start.Value,
+                        editWindow.End.Value,
+                        Equals(comboIsolation.SelectedItem, WindowType.MEASUREMENT),
                         null,
                         cbSpecifyMargin.Checked ? editWindow.StartMargin : null,
-                        cbSpecifyMargin.Checked ? editWindow.StartMargin : null,
                         cbSpecifyCERange.Checked ? editWindow.CERange : null);
+                    windowList.Add(isolationWindow);
                 }
                 catch (InvalidDataException exception)
                 {
@@ -547,7 +538,6 @@ namespace pwiz.Skyline.SettingsUI
                     MessageDlg.ShowException(this, exception);
                     return null;
                 }
-                windowList.Add(isolationWindow);
             }
             return windowList;
         }
@@ -1036,11 +1026,9 @@ namespace pwiz.Skyline.SettingsUI
             try
             {
                 IsolationScheme isolationScheme = null;
-                using (var dlg = new LongWaitDlg
+                using (var dlg = new LongWaitDlg())
                 {
-                    Message = Resources.EditIsolationSchemeDlg_ImportRangesFromFiles_Reading_isolation_scheme___
-                })
-                {
+                    dlg.Message = Resources.EditIsolationSchemeDlg_ImportRangesFromFiles_Reading_isolation_scheme___;
                     var reader = new IsolationSchemeReader(dataSources);
                     dlg.PerformWork(this, 500, progressMonitor => isolationScheme = reader.Import(@"temp", progressMonitor));
                 }

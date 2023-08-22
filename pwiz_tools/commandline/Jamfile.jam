@@ -42,6 +42,12 @@ exe msconvert
     : <include>../../..
     ;
 
+# Pipe the current msconvert help text to a source controlled file for use in online documentation
+make msconvert-help.txt : msconvert : @make_msconvert_help : <location>$(PWIZ_ROOT_PATH)/pwiz_tools/commandline ;
+    actions make_msconvert_help
+    {
+        "$(>)" --doc > "$(<)"
+    }
 
 exe msdir
     : msdir.cpp

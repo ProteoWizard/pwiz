@@ -92,14 +92,12 @@ namespace pwiz.Skyline.SettingsUI
             string filterProtDb = TextUtil.FileDialogFiltersAll(FILTER_PROTDB);
             
             string fileName;
-            using (var openFileDialog = new OpenFileDialog
+            using (var openFileDialog = new OpenFileDialog())
             {
-                Filter = filterProtDb,
-                InitialDirectory = Settings.Default.ProteomeDbDirectory,
-                Title = Resources.BuildBackgroundProteomeDlg_btnOpen_Click_Open_Background_Protoeme,
-                CheckFileExists = true,
-            })
-            {
+                openFileDialog.Filter = filterProtDb;
+                openFileDialog.InitialDirectory = Settings.Default.ProteomeDbDirectory;
+                openFileDialog.Title = Resources.BuildBackgroundProteomeDlg_btnOpen_Click_Open_Background_Protoeme;
+                openFileDialog.CheckFileExists = true;
                 if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
                     return;
 
@@ -128,14 +126,12 @@ namespace pwiz.Skyline.SettingsUI
             string filterProtDb = TextUtil.FileDialogFilters(FILTER_PROTDB);
 
             string fileName;
-            using (var saveFileDialog = new SaveFileDialog
+            using (var saveFileDialog = new SaveFileDialog())
             {
-                Filter = filterProtDb,
-                InitialDirectory = Settings.Default.ProteomeDbDirectory,
-                Title = Resources.BuildBackgroundProteomeDlg_btnCreate_Click_Create_Background_Proteome,
-                OverwritePrompt = true,
-            })
-            {
+                saveFileDialog.Filter = filterProtDb;
+                saveFileDialog.InitialDirectory = Settings.Default.ProteomeDbDirectory;
+                saveFileDialog.Title = Resources.BuildBackgroundProteomeDlg_btnCreate_Click_Create_Background_Proteome;
+                saveFileDialog.OverwritePrompt = true;
                 if (saveFileDialog.ShowDialog(this) == DialogResult.Cancel)
                     return;
 
@@ -277,14 +273,11 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnAddFastaFile_Click(object sender, EventArgs e)
         {
-            using (var openFileDialog = new OpenFileDialog
+            using (var openFileDialog = new OpenFileDialog())
             {
-                Title = Resources.BuildBackgroundProteomeDlg_btnAddFastaFile_Click_Add_FASTA_File,
-                InitialDirectory = Settings.Default.FastaDirectory,
-                CheckPathExists = true
-                // FASTA files often have no extension as well as .fasta and others
-            })
-            {
+                openFileDialog.Title = Resources.BuildBackgroundProteomeDlg_btnAddFastaFile_Click_Add_FASTA_File;
+                openFileDialog.InitialDirectory = Settings.Default.FastaDirectory;
+                openFileDialog.CheckPathExists = true; // FASTA files often have no extension as well as .fasta and others
                 if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
                 {
                     return;
@@ -300,8 +293,9 @@ namespace pwiz.Skyline.SettingsUI
             String databasePath = textPath.Text;
             Settings.Default.FastaDirectory = Path.GetDirectoryName(fastaFilePath);
             int duplicateSequenceCount = 0;
-            using (var longWaitDlg = new LongWaitDlg { ProgressValue = 0 })
+            using (var longWaitDlg = new LongWaitDlg())
             {
+                longWaitDlg.ProgressValue = 0;
                 try
                 {
                     longWaitDlg.PerformWork(this, 0, progressMonitor =>
@@ -379,15 +373,12 @@ namespace pwiz.Skyline.SettingsUI
                 int proteinCount = 0;
                 try
                 {
-                    using (var longWaitDlg = new LongWaitDlg
+                    using (var longWaitDlg = new LongWaitDlg())
                     {
-                        Text = Resources.BuildBackgroundProteomeDlg_RefreshStatus_Loading_Proteome_File,
-                        Message =
-                            string.Format(
-                                Resources.BuildBackgroundProteomeDlg_RefreshStatus_Loading_protein_information_from__0__,
-                                textPath.Text)
-                    })
-                    {
+                        longWaitDlg.Text = Resources.BuildBackgroundProteomeDlg_RefreshStatus_Loading_Proteome_File;
+                        longWaitDlg.Message = string.Format(
+                            Resources.BuildBackgroundProteomeDlg_RefreshStatus_Loading_protein_information_from__0__,
+                            textPath.Text);
                         longWaitDlg.PerformWork(this, 1000, () =>
                         {
                             proteomeDb = ProteomeDb.OpenProteomeDb(textPath.Text);

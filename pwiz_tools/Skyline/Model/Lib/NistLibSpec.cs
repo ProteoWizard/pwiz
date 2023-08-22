@@ -142,8 +142,10 @@ namespace pwiz.Skyline.Model.Lib
         {
         }
 
+        public override string LibraryTypeName => @"NIST";
+
         #region Implementation of IXmlSerializable
-        
+
         /// <summary>
         /// For serialization
         /// </summary>
@@ -159,7 +161,7 @@ namespace pwiz.Skyline.Model.Lib
         #endregion
     }
 
-    public class NistSpectrumHeaderInfoBase : SpectrumHeaderInfo
+    public abstract class NistSpectrumHeaderInfoBase : SpectrumHeaderInfo
     {
         public NistSpectrumHeaderInfoBase(string libraryName, float tfRatio, double? rt, double? irt, float totalIntensity, int spectrumCount)
             : base(libraryName)
@@ -412,7 +414,6 @@ namespace pwiz.Skyline.Model.Lib
 
                 // http://sashimi.svn.sourceforge.net/viewvc/sashimi/trunk/trans_proteomic_pipeline/src/Search/SpectraST/Peptide.cpp?revision=5277&view=markup
                 // line 1196
-// ReSharper disable LocalizableElement
                 {"ICAT_light", SequenceMassCalc.GetModDiffDescription(227.126991)}, 
                 {"ICAT-C", SequenceMassCalc.GetModDiffDescription(227.126991)}, // PSI new name
                 {"ICAT_heavy", SequenceMassCalc.GetModDiffDescription(236.157185)},
@@ -464,7 +465,6 @@ namespace pwiz.Skyline.Model.Lib
                 {"Ub_LysC", SequenceMassCalc.GetModDiffDescription(1431.831075)}, // Ubiquitin LysC tail
                 {"GlyGly", SequenceMassCalc.GetModDiffDescription(114.042927)}, // Ubiquitin/NEDD8 Tryptic tail (2 glycines)
             };
-        // ReSharper restore LocalizableElement
 
 #pragma warning disable 169
         private static readonly Dictionary<string, string> MODIFICATION_MASSES_AVG = new Dictionary<string, string>
@@ -1084,11 +1084,11 @@ namespace pwiz.Skyline.Model.Lib
                             string mzField = linePeak.Substring(0, iSeperator1++);
                             string intensityField = linePeak.Substring(iSeperator1, iSeperator2 - iSeperator1);
 
-                            if (!TryParseFloatUncertainCulture(mzField, out var mz))
+                            if (!TextUtil.TryParseFloatUncertainCulture(mzField, out var mz))
                             {
                                 ThrowIoExceptionInvalidPeakFormat(lineCount, i, sequence);
                             }
-                            if (!TryParseFloatUncertainCulture(intensityField, out var intensity))
+                            if (!TextUtil.TryParseFloatUncertainCulture(intensityField, out var intensity))
                             {
                                 ThrowIoExceptionInvalidPeakFormat(lineCount, i, sequence);
                             }
@@ -1458,7 +1458,7 @@ namespace pwiz.Skyline.Model.Lib
                 match = REGEX_MOLWEIGHT.Match(line);
                 if (match.Success)
                 {
-                    if (!TryParseDoubleUncertainCulture(match.Groups[1].Value, out var mw))
+                    if (!TextUtil.TryParseDoubleUncertainCulture(match.Groups[1].Value, out var mw))
                     {
                         ThrowIOException(lineCount,
                             string.Format(Resources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__,
@@ -1661,31 +1661,9 @@ namespace pwiz.Skyline.Model.Lib
         {
             double rt;
             var valString = rtString.Split(MINOR_SEP).First();
-            if (!TryParseDoubleUncertainCulture(valString, out rt))
+            if (!TextUtil.TryParseDoubleUncertainCulture(valString, out rt))
                 return null;
             return isMinutes ? rt : rt / 60;
-        }
-
-        private static bool TryParseDoubleUncertainCulture(string valString, out double dval)
-        {
-            // .MSP from Golm GMD may have European decimals
-            if (!double.TryParse(valString, NumberStyles.Float, CultureInfo.InvariantCulture, out dval) &&
-                !double.TryParse(valString.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out dval))
-            {
-                return false;
-            }
-            return true;
-        }
-
-        private static bool TryParseFloatUncertainCulture(string valString, out float fval)
-        {
-            // .MSP from Golm GMD may have European decimals
-            if (!float.TryParse(valString, NumberStyles.Float, CultureInfo.InvariantCulture, out fval) &&
-                !float.TryParse(valString.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out fval))
-            {
-                return false;
-            }
-            return true;
         }
 
         protected override void SetLibraryEntries(IEnumerable<NistSpectrumInfo> entries)

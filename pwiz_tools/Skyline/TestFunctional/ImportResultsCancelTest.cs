@@ -128,11 +128,10 @@ namespace pwiz.SkylineTestFunctional
                 foreach (var file in files)
                 {
                     int index;
-                    ChromatogramSet chromatogramSet;
                     var chromatogramSetName = file.Replace(mz5, "");
                     // Can we find a loaded chromatogram set by this name?
                     SkylineWindow.Document.Settings.MeasuredResults.TryGetChromatogramSet(chromatogramSetName,
-                        out chromatogramSet, out index);
+                        out _, out index);
                     if (!chromatogramSetName.Equals(cancelTarget))
                     {
                         // Should always find it since we didn't try to cancel this one

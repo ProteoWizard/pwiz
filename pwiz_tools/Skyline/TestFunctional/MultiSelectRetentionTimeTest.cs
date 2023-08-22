@@ -72,8 +72,7 @@ namespace pwiz.SkylineTestFunctional
                 }
                 Assert.AreEqual(curveCount, SkylineWindow.GraphRetentionTime.CurveCount);
                 Assert.AreEqual(BarType.SortedOverlay, SkylineWindow.GraphRetentionTime.GraphControl.GraphPane.BarSettings.Type);
-                SummaryReplicateGraphPane pane;
-                Assert.IsTrue(SkylineWindow.GraphRetentionTime.TryGetGraphPane(out pane));
+                Assert.IsTrue(SkylineWindow.GraphRetentionTime.TryGetGraphPane(out SummaryReplicateGraphPane _));
                 
                 // Select first indavidual peptide (not worth selecting them all - slows test for not much extra coverage)
                 SelectNode(peptideGroupTreeNode.Nodes[0]);

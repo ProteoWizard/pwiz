@@ -23,7 +23,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
@@ -654,12 +653,10 @@ namespace pwiz.Skyline.Controls.Startup
 
         private string OpenFileDlg()
         {
-            using (var openNewFileDlg = new OpenFileDialog
+            using (var openNewFileDlg = new OpenFileDialog())
             {
-                Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP, SrmDocumentSharing.FILTER_SHARING, SkypFile.FILTER_SKYP),
-                FilterIndex = 1
-            })
-            {
+                openNewFileDlg.Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP, SrmDocumentSharing.FILTER_SHARING, SkypFile.FILTER_SKYP);
+                openNewFileDlg.FilterIndex = 1;
                 if (openNewFileDlg.ShowDialog() != DialogResult.OK)
                     return null;
 

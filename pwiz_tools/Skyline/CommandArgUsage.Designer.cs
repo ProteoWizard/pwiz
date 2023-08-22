@@ -79,6 +79,51 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Proteins that match the same set of peptides will be combined into a single target in the document..
+        /// </summary>
+        internal static string _associate_proteins_group_proteins {
+            get {
+                return ResourceManager.GetString("_associate_proteins_group_proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The minimum number of peptides a protein must have to be added to the document..
+        /// </summary>
+        internal static string _associate_proteins_min_peptides {
+            get {
+                return ResourceManager.GetString("_associate_proteins_min_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apply an algorithm to find the smallest (parsimonious) set of proteins that explains all of the peptides..
+        /// </summary>
+        internal static string _associate_proteins_minimal_protein_list {
+            get {
+                return ResourceManager.GetString("_associate_proteins_minimal_protein_list", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove subset proteins but keep non-parsimonious, non-subset proteins..
+        /// </summary>
+        internal static string _associate_proteins_remove_subsets {
+            get {
+                return ResourceManager.GetString("_associate_proteins_remove_subsets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sets how to assign peptides that are contained in more than one protein in the FASTA or background proteome..
+        /// </summary>
+        internal static string _associate_proteins_shared_peptides {
+            get {
+                return ResourceManager.GetString("_associate_proteins_shared_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Runs a file line by line treating each line like a SkylineRunner/Cmd input. Useful for automating the execution of multiple commands.  The open Skyline file remains active through all commands..
         /// </summary>
         internal static string _batch_commands {
@@ -142,7 +187,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Limits the length of the chromatagrams to a number of minutes around the chromatogram peak, i.e. ± minutes..
+        ///   Looks up a localized string similar to Limits the length of the chromatograms to a number of minutes around the chromatogram peak, i.e. ± minutes..
         /// </summary>
         internal static string _chromatograms_limit_noise {
             get {
@@ -349,6 +394,60 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The acquisition method (None, DIA, PRM, DDA, SureQuant) for extracting from full scan data..
+        /// </summary>
+        internal static string _full_scan_acquisition_method {
+            get {
+                return ResourceManager.GetString("_full_scan_acquisition_method", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of a predefined isolation scheme or a path to a data file from which to import the isolation scheme used when extracting from full scan DIA data..
+        /// </summary>
+        internal static string _full_scan_isolation_scheme {
+            get {
+                return ResourceManager.GetString("_full_scan_isolation_scheme", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The mass analyzer for precursor spectra (MS1), or &quot;centroided&quot; to use centroid spectra (and a mass error in PPM) instead of profile (and a resolving power)..
+        /// </summary>
+        internal static string _full_scan_precursor_analyzer {
+            get {
+                return ResourceManager.GetString("_full_scan_precursor_analyzer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skip SIM scans when extracting from full scan MS1 spectra. For use when both survey MS1 and SIM scans are present to avoid chromatograms extracted from both..
+        /// </summary>
+        internal static string _full_scan_precursor_ignore_sim {
+            get {
+                return ResourceManager.GetString("_full_scan_precursor_ignore_sim", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of predefined isotope enrichment settings to use for extracting from full scan data. If none are available, use the Transition Settings form in the user interface to add a new isotope enrichment settings..
+        /// </summary>
+        internal static string _full_scan_precursor_isotope_enrichment {
+            get {
+                return ResourceManager.GetString("_full_scan_precursor_isotope_enrichment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The meaning of the precursor threshold value applied when choosing precursor isotope transitions for extraction from high-resolution mass spectra. Count indicates a constant number starting from the monoisotopic precursor. Percent indicates a minimum percentage from the most intense precursor species, i.e. the base peak. Defaults to Count..
+        /// </summary>
+        internal static string _full_scan_precursor_isotopes {
+            get {
+                return ResourceManager.GetString("_full_scan_precursor_isotopes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Resolving power of the precursor mass analyzer. If the mass analyzer is &apos;Centroided&apos; the value is in PPM..
         /// </summary>
         internal static string _full_scan_precursor_res {
@@ -367,6 +466,24 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The constant number of isotopes (starting with the monoisotopic precursor) or the percentage of base isotope intensity to extract from high resolution spectra..
+        /// </summary>
+        internal static string _full_scan_precursor_threshold {
+            get {
+                return ResourceManager.GetString("_full_scan_precursor_threshold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The mass analyzer for product spectra, or &quot;centroided&quot; to use centroid spectra (and a mass error in PPM) instead of profile (and a resolving power)..
+        /// </summary>
+        internal static string _full_scan_product_analyzer {
+            get {
+                return ResourceManager.GetString("_full_scan_product_analyzer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Resolving power of the product mass analyzer. If the mass analyzer is &apos;Centroided&apos; the value is in PPM..
         /// </summary>
         internal static string _full_scan_product_res {
@@ -381,6 +498,15 @@ namespace pwiz.Skyline {
         internal static string _full_scan_product_res_mz {
             get {
                 return ResourceManager.GetString("_full_scan_product_res_mz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sets whether chromatogram start and stop times will be limited by a range around either predicted retention times or MS/MS ID retention times..
+        /// </summary>
+        internal static string _full_scan_rt_filter {
+            get {
+                return ResourceManager.GetString("_full_scan_rt_filter", resourceCulture);
             }
         }
         
@@ -592,7 +718,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A number of sub-processes will be run for single-file import, after which the results from each single file will be joined by the main process. This can produce 10x performance gains on24-core NUMA servers and 3-4x even on i7 processors, under the right conditions. Be sure to test with your system..
+        ///   Looks up a localized string similar to A number of sub-processes will be run for single-file import, after which the results from each single file will be joined by the main process. This can produce 10x performance gains on 24-core NUMA servers and 3-4x even on i7 processors, under the right conditions. Be sure to test with your system..
         /// </summary>
         internal static string _import_process_count {
             get {
@@ -633,6 +759,15 @@ namespace pwiz.Skyline {
         internal static string _import_search_cutoff_score {
             get {
                 return ResourceManager.GetString("_import_search_cutoff_score", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exclude the result files used to build a library from consideration for chromatogram extraction. This can be useful when conversion and pre-processing were used on the files used for peptide spectrum matching which may not be appropriate for chromatogram extraction..
+        /// </summary>
+        internal static string _import_search_exclude_library_sources {
+            get {
+                return ResourceManager.GetString("_import_search_exclude_library_sources", resourceCulture);
             }
         }
         
@@ -736,6 +871,69 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to If set, minimum m/z value for product ions is calculated dynamically from the precursor m/z using a specific equation provided by Thermo-Scientific for LTQ instruments..
+        /// </summary>
+        internal static string _instrument_dynamic_min_mz {
+            get {
+                return ResourceManager.GetString("_instrument_dynamic_min_mz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum measurable m/z value for the target instrument to avoid adding precursors and transitions that cannot be measured..
+        /// </summary>
+        internal static string _instrument_max_mz {
+            get {
+                return ResourceManager.GetString("_instrument_max_mz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum time allowed in chromatograms regardless of how they were acquired.  Setting this can save memory and disk space that might be used on uninteresting parts of the gradient..
+        /// </summary>
+        internal static string _instrument_max_time {
+            get {
+                return ResourceManager.GetString("_instrument_max_time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum delta for matching instrument method transition m/z values with predicted transition m/z values. (Applies only to SRM and PRM isolated m/z values.).
+        /// </summary>
+        internal static string _instrument_method_mz_tolerance {
+            get {
+                return ResourceManager.GetString("_instrument_method_mz_tolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum measurable m/z value for the target instrument to avoid adding precursors and transitions that cannot be measured..
+        /// </summary>
+        internal static string _instrument_min_mz {
+            get {
+                return ResourceManager.GetString("_instrument_min_mz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum time allowed in chromatograms regardless of how they were acquired.  Setting this can save memory and disk space that might be used on uninteresting parts of the gradient..
+        /// </summary>
+        internal static string _instrument_min_time {
+            get {
+                return ResourceManager.GetString("_instrument_min_time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates that there may be large gaps in the retention times when spectra were acquired for certain analytes. Peaks will be truncated to not overlap with these gaps and background subtraction will not be performed..
+        /// </summary>
+        internal static string _instrument_triggered_chromatograms {
+            get {
+                return ResourceManager.GetString("_instrument_triggered_chromatograms", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add an ion mobility library to the open document, based on its currently loaded chromatograms..
         /// </summary>
         internal static string _ionmobility_library_create {
@@ -799,6 +997,42 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Maximum delta allowed when matching predicted product ion m/z values with measured MS/MS spectral library peak m/z values. The delta may be specified in either m/z or PPM units..
+        /// </summary>
+        internal static string _library_match_tolerance {
+            get {
+                return ResourceManager.GetString("_library_match_tolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Keep only precursors with at least this many product transitions matching peaks in a library spectrum..
+        /// </summary>
+        internal static string _library_min_product_ions {
+            get {
+                return ResourceManager.GetString("_library_min_product_ions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The set of product ions to consider in picking transitions matching library spectrum peak m/z values. (all: all specified ion charges and types, filter: filter based on start and end transitions and special ions, or all_plus: the union of the two other options).
+        /// </summary>
+        internal static string _library_pick_product_ions {
+            get {
+                return ResourceManager.GetString("_library_pick_product_ions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum number of product transitions for each precursor matching peaks in a library spectrum, ordered by peak intensity ranking..
+        /// </summary>
+        internal static string _library_product_ions {
+            get {
+                return ResourceManager.GetString("_library_product_ions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Sends all logged output to a file..
         /// </summary>
         internal static string _log_file {
@@ -817,11 +1051,29 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Create a new document using the current Skyline settings..
+        /// </summary>
+        internal static string _new {
+            get {
+                return ResourceManager.GetString("_new", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Same as save except writes to the specified file.
         /// </summary>
         internal static string _out {
             get {
                 return ResourceManager.GetString("_out", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Overwrite the filepath specified by --new if it already exists, instead of producing an error..
+        /// </summary>
+        internal static string _overwrite {
+            get {
+                return ResourceManager.GetString("_overwrite", resourceCulture);
             }
         }
         
@@ -1560,6 +1812,33 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add a named predefined special ion as specified in the Transition Settings form..
+        /// </summary>
+        internal static string _tran_product_add_special_ion {
+            get {
+                return ResourceManager.GetString("_tran_product_add_special_ion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove all special ions from the transition filter settings..
+        /// </summary>
+        internal static string _tran_product_clear_special_ions {
+            get {
+                return ResourceManager.GetString("_tran_product_clear_special_ions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The largest product ion to allow a transition for..
+        /// </summary>
+        internal static string _tran_product_end_ion {
+            get {
+                return ResourceManager.GetString("_tran_product_end_ion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A comma-separated list of product ion charge states to apply to peptide fragments to generate product ion transitions. Changes the transition filter settings for the open document..
         /// </summary>
         internal static string _tran_product_ion_charges {
@@ -1574,6 +1853,24 @@ namespace pwiz.Skyline {
         internal static string _tran_product_ion_types {
             get {
                 return ResourceManager.GetString("_tran_product_ion_types", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The smallest product ion to allow a transition for..
+        /// </summary>
+        internal static string _tran_product_start_ion {
+            get {
+                return ResourceManager.GetString("_tran_product_start_ion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exclude product ion transitions with m/z values that fall within the precursor isolation window range. This is recommended for DIA/SWATH data where signal from unfragmented precursors can increase the probability of interference..
+        /// </summary>
+        internal static string _tran_use_dia_window_exclusion {
+            get {
+                return ResourceManager.GetString("_tran_use_dia_window_exclusion", resourceCulture);
             }
         }
         
@@ -1639,6 +1936,16 @@ namespace pwiz.Skyline {
         internal static string CommandArgs_ARG_EXP_Thermo {
             get {
                 return ResourceManager.GetString("CommandArgs_ARG_EXP_Thermo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to path/to/result-file to import the isolation scheme from.
+        /// </summary>
+        internal static string CommandArgs_ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME_path_to_result_file_to_import_the_isolation_scheme {
+            get {
+                return ResourceManager.GetString("CommandArgs_ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME_path_to_result_file_to_import_" +
+                        "the_isolation_scheme", resourceCulture);
             }
         }
         

@@ -70,8 +70,8 @@ namespace SkylineTester
                 run.CommittedMemory = committedMemory;
                 run.TotalMemory = totalMemory;
             }
-            int userHandles, gdiHandles, unexpected;
-            if (handlesIndex < parts.Length && ParseMemoryPart(parts[handlesIndex], out userHandles, out gdiHandles, out unexpected))
+            int userHandles, gdiHandles;
+            if (handlesIndex < parts.Length && ParseMemoryPart(parts[handlesIndex], out userHandles, out gdiHandles, out _))
             {
                 run.UserHandles = userHandles;
                 run.GdiHandles = gdiHandles;

@@ -76,6 +76,7 @@
             this.irtStandardMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.modifyPeptideMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.manageUniquePeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.editSpectrumFilterMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator30 = new System.Windows.Forms.ToolStripSeparator();
             this.manageResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
@@ -114,6 +115,7 @@
             this.setStandardTypeMenuItem,
             this.modifyPeptideMenuItem,
             this.manageUniquePeptidesMenuItem,
+            this.editSpectrumFilterMenuItem,
             this.toolStripSeparator30,
             this.manageResultsMenuItem});
             resources.ApplyResources(this.editToolStripMenuItem, "editToolStripMenuItem");
@@ -414,6 +416,12 @@
             resources.ApplyResources(this.manageUniquePeptidesMenuItem, "manageUniquePeptidesMenuItem");
             this.manageUniquePeptidesMenuItem.Click += new System.EventHandler(this.manageUniquePeptidesMenuItem_Click);
             // 
+            // editSpectrumFilterMenuItem
+            // 
+            this.editSpectrumFilterMenuItem.Name = "editSpectrumFilterMenuItem";
+            resources.ApplyResources(this.editSpectrumFilterMenuItem, "editSpectrumFilterMenuItem");
+            this.editSpectrumFilterMenuItem.Click += new System.EventHandler(this.editSpectrumFilterMenuItem_Click);
+            // 
             // toolStripSeparator30
             // 
             this.toolStripSeparator30.Name = "toolStripSeparator30";
@@ -489,5 +497,6 @@
         private System.Windows.Forms.ToolStripMenuItem manageResultsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem synchronizedIntegrationToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem editSpectrumFilterMenuItem;
     }
 }

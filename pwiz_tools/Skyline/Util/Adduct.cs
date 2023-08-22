@@ -58,14 +58,7 @@ namespace pwiz.Skyline.Util
             }
             set
             {
-                if (!_dict.ContainsKey(a))
-                {
-                    _dict.Add(a, value);
-                }
-                else
-                {
-                    _dict[a] = value;
-                }
+                _dict[a] = value;
             }            
         }
 
@@ -229,9 +222,9 @@ namespace pwiz.Skyline.Util
                     {
                         return null;
                     }
-                    double test;
+
                     if (double.TryParse(input.Substring(posNext, limit - posNext),
-                        NumberStyles.Float | NumberStyles.AllowThousands, NumberFormatInfo.InvariantInfo, out test))
+                            NumberStyles.Float | NumberStyles.AllowThousands, NumberFormatInfo.InvariantInfo, out _))
                     {
                         return limit;  // Started with a mass label
                     }
@@ -1727,6 +1720,7 @@ namespace pwiz.Skyline.Util
             return ReferenceEquals(null, obj) ? 1 : CompareTo(obj as Adduct);
         }
 
+        // Sort by polarity (- then +), then by abs(charge), then by resulting m/z when applied to an arbitrary mass, then by text description
         public int CompareTo(Adduct that)
         {
             if (ReferenceEquals(null, that))
@@ -1737,22 +1731,27 @@ namespace pwiz.Skyline.Util
             {
                 return 0;
             }
-            var comp = AdductCharge.CompareTo(that.AdductCharge);
+            // Negatives then Positives
+            var comp = Math.Sign(AdductCharge).CompareTo(Math.Sign(that.AdductCharge));
             if (comp != 0)
             {
                 return comp;
             }
+            // Now charge low to high e.g -1,-2,-3,1,2,3
+            comp = Math.Abs(AdductCharge).CompareTo(Math.Abs(that.AdductCharge));
+            if (comp != 0)
+            {
+                return comp;
+            }
+            // Now by mz including the mass multiplier and any isotope labels
+            const double mass = 2000;
+            comp = MzFromNeutralMass(mass, MassType.Monoisotopic).CompareTo(that.MzFromNeutralMass(mass, MassType.Monoisotopic));
+            if (comp != 0)
+            {
+                return comp;
+            }
+            // Last ditch, an alpha sort on the whole thing as text
             comp = string.Compare(Description, that.Description, StringComparison.Ordinal);
-            if (comp != 0)
-            {
-                return comp;
-            }
-            comp =  Composition.CompareTo(that.Composition);
-            if (comp != 0)
-            {
-                return comp;
-            }
-            comp = IsotopeLabels.CompareTo(that.IsotopeLabels);
             if (comp != 0)
             {
                 return comp;

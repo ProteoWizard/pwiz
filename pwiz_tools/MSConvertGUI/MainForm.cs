@@ -577,6 +577,9 @@ namespace MSConvertGUI
                             DemuxMassErrorTypeBox.Text);
                     }
 
+                    if (DemuxRemoveNonOverlappingEdgesCheckbox.Checked)
+                        demuxArgs += " removeNonOverlappingEdges=true";
+
                     FilterDGV.Rows.Add(new[]
                         {
                             "demultiplex",

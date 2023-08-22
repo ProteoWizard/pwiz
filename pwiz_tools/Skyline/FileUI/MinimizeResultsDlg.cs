@@ -220,15 +220,13 @@ namespace pwiz.Skyline.FileUI
             if (asNewFile || string.IsNullOrEmpty(targetFile))
             {
                 using (var saveFileDialog =
-                    new SaveFileDialog
-                    {
-                        InitialDirectory = Properties.Settings.Default.ActiveDirectory,
-                        OverwritePrompt = true,
-                        DefaultExt = SrmDocument.EXT,
-                        Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC),
-                        FileName = Path.GetFileName(targetFile),
-                    })
+                    new SaveFileDialog())
                 {
+                    saveFileDialog.InitialDirectory = Properties.Settings.Default.ActiveDirectory;
+                    saveFileDialog.OverwritePrompt = true;
+                    saveFileDialog.DefaultExt = SrmDocument.EXT;
+                    saveFileDialog.Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC);
+                    saveFileDialog.FileName = Path.GetFileName(targetFile);
                     if (saveFileDialog.ShowDialog(this) != DialogResult.OK)
                     {
                         return;

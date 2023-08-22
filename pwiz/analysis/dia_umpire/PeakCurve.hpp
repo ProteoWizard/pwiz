@@ -34,6 +34,8 @@
 #include "ScanData.hpp"
 #include "DiaUmpireMath.hpp"
 #include "pwiz/data/msdata/MSData.hpp"
+#include "pwiz/utility/misc/Container.hpp"
+#include "pwiz/utility/misc/String.hpp"
 
 namespace DiaUmpire {
 

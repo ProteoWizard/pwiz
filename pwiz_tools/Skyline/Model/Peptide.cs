@@ -128,7 +128,13 @@ namespace pwiz.Skyline.Model
 
         public static int CompareGroups(TransitionGroupDocNode node1, TransitionGroupDocNode node2)
         {
-            return CompareGroups(node1.TransitionGroup, node2.TransitionGroup);
+            int result = CompareGroups(node1.TransitionGroup, node2.TransitionGroup);
+            if (result == 0)
+            {
+                result = node1.SpectrumClassFilter.CompareTo(node2.SpectrumClassFilter);
+            }
+
+            return result;
         }
 
         public static int CompareGroups(TransitionGroup group1, TransitionGroup group2)
