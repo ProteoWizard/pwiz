@@ -1707,11 +1707,11 @@
     <value>仪器类型{0}不是针对方法导出的有效类型</value>
   </data>
   <data name="CommandArgs_PanoramaArgsComplete_" xml:space="preserve">
-    <value>错误： 请为向 Panorma 上传文档时需要的以下参数指定一个值：
+    <value>错误：请为向 Panorma 上传文档时需要的以下参数指定一个值：
 {0}</value>
   </data>
   <data name="CommandArgs_PanoramaArgsComplete_plural_" xml:space="preserve">
-    <value>错误： 请为向 Panorma 上传文档时需要的以下参数指定一个值：
+    <value>错误：请为向 Panorma 上传文档时需要的以下参数指定一个值：
 {0}</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal______0__or___1__" xml:space="preserve">
@@ -1815,10 +1815,10 @@
     <value>错误：肽段数目 {0} 必须小于针对诱饵 {1} 的肽段母离子模型数目，或使用 {2}={3} 诱饵生成方法。</value>
   </data>
   <data name="CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_file_name_pattern___0___" xml:space="preserve">
-    <value>错误： 没有与文件名模式 '{0}' 相匹配的文件。</value>
+    <value>错误：没有与文件名模式 '{0}' 相匹配的文件。</value>
   </data>
   <data name="CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_sample_name_pattern___0___" xml:space="preserve">
-    <value>错误： 没有与示例名称模式 '{0}' 相匹配的文件。</value>
+    <value>错误：没有与示例名称模式 '{0}' 相匹配的文件。</value>
   </data>
   <data name="CommandLine_ApplyFileNameRegex_File_name___0___does_not_match_the_pattern___1____Ignoring__2_" xml:space="preserve">
     <value>文件名“{0}”不符合模式“{1}”。忽视{2}</value>
@@ -1839,7 +1839,7 @@
     <value>样品名“{0}”不符合模式“{1}”。忽视{2}</value>
   </data>
   <data name="CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins" xml:space="preserve">
-    <value>错误: 必须先导入 FASTA 文件，然后才能关联蛋白质</value>
+    <value>错误：必须先导入 FASTA 文件，然后才能关联蛋白质</value>
   </data>
   <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins" xml:space="preserve">
     <value>正在关联肽段与蛋白质</value>
@@ -2037,7 +2037,7 @@
     <value>错误：读取注释时失败。</value>
   </data>
   <data name="CommandLine_ImportDataFilesWithAppend_Error__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_" xml:space="preserve">
-    <value>错误： 指定的文档中已存在重复测定 {0}，并且未指定 --import-append 选项。该重复测定不会添加到文档中。</value>
+    <value>错误：指定的文档中已存在重复测定 {0}，并且未指定 --import-append 选项。该重复测定不会添加到文档中。</value>
   </data>
   <data name="CommandLine_ImportFasta_Importing_FASTA_file__0____" xml:space="preserve">
     <value>FASTA 文件{0}导入中...</value>
@@ -2049,7 +2049,7 @@
     <value>正在从 {0} 导入峰边界 </value>
   </data>
   <data name="CommandLine_ImportResults_Error__No_files_left_to_import_" xml:space="preserve">
-    <value>错误： 没有可供导入的文件。</value>
+    <value>错误：没有可供导入的文件。</value>
   </data>
   <data name="CommandLine_ImportResultsFile__0______1___Note__The_file_has_already_been_imported__Ignoring___" xml:space="preserve">
     <value>{0} -&gt; {1} 注释：文件已导入。忽视...</value>
@@ -2091,7 +2091,7 @@
     <value>警告：无法找到结果文件“{0}”</value>
   </data>
   <data name="CommandLine_ImportSearchInternal_Error___0__must_be_set_when_using_CiRT_peptides_" xml:space="preserve">
-    <value>错误： 使用 CiRT 肽段时必须设置 {0}。</value>
+    <value>错误：使用 CiRT 肽段时必须设置 {0}。</value>
   </data>
   <data name="CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_" xml:space="preserve">
     <value>iRT 标准设置为 {0}，但找到多个 iRT 标准。必须明确设置 iRT 标准。</value>
@@ -2100,13 +2100,13 @@
     <value>iRT标准名称 '{0}' 无效。</value>
   </data>
   <data name="CommandLine_ImportSkyr_" xml:space="preserve">
-    <value>错误： 加载 {0} 失败。</value>
+    <value>错误：加载 {0} 失败。</value>
   </data>
   <data name="CommandLine_ImportSkyr_Error___0__does_not_exist____report_add_command_failed_" xml:space="preserve">
     <value>错误：{0}不存在。“--报告-添加”命令失败。</value>
   </data>
   <data name="CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_" xml:space="preserve">
-    <value>错误: 无法从 {0} 导入报告</value>
+    <value>错误：无法从 {0} 导入报告</value>
   </data>
   <data name="CommandLine_ImportSkyr_Success__Imported_Reports_from__0_" xml:space="preserve">
     <value>成功！从{0}中导入报告</value>
@@ -2139,7 +2139,7 @@
     <value>警告：工具{0}已被覆盖</value>
   </data>
   <data name="CommandLine_ImportToolsFromZip_Error__Canceled_installing_tools_from__0__" xml:space="preserve">
-    <value>错误： 已取消从 {0} 安装工具。</value>
+    <value>错误：已取消从 {0} 安装工具。</value>
   </data>
   <data name="CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_does_not_exist__Please_verify_the_file_location_and_try_again_" xml:space="preserve">
     <value>错误：以“--工具-添加-zip”命令指定的文件不存在。请验证文件位置并重试。</value>
@@ -2241,7 +2241,7 @@
     <value>文件打开中...</value>
   </data>
   <data name="CommandLine_PerformExportOperations_Error__No_new_results_added__Skipping_Panorama_import_" xml:space="preserve">
-    <value>错误： 未添加新结果。跳过 Panorama 导入。</value>
+    <value>错误：未添加新结果。跳过 Panorama 导入。</value>
   </data>
   <data name="CommandLine_ProcessDocument_Error_saving_file" xml:space="preserve">
     <value>保存文件时出错</value>
@@ -2290,7 +2290,7 @@
     <value>错误：打开日志文件 {0} 失败</value>
   </data>
   <data name="CommandLine_Run_Error__Failure_occurred__Exiting___" xml:space="preserve">
-    <value>错误： 发生故障。正在退出...</value>
+    <value>错误：发生故障。正在退出...</value>
   </data>
   <data name="CommandLine_Run_Error__You_cannot_simultaneously_export_a_transition_list_and_a_method___Neither_will_be_exported__" xml:space="preserve">
     <value>错误：您无法同时导出离子对列表和方法。 这样操作不会导出任何内容。请更改命令行参数。</value>
@@ -2395,7 +2395,7 @@
     <value>错误：尝试更改离子迁移设置失败。</value>
   </data>
   <data name="CommandLine_SetInstrumentSettings_Error__Failed_attempting_to_change_the_transition_instrument_settings_" xml:space="preserve">
-    <value>错误: 尝试更改离子对仪器设置失败。</value>
+    <value>错误：尝试更改离子对仪器设置失败。</value>
   </data>
   <data name="CommandLine_SetLibrary_Error__Cannot_set_library_name_without_path_" xml:space="preserve">
     <value>错误：无法在没有路径的情况下设定库名称。</value>
@@ -2413,7 +2413,7 @@
     <value>错误：您试图添加的库与文件中已经存在的库发生冲突。</value>
   </data>
   <data name="CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_library_settings_" xml:space="preserve">
-    <value>错误: 尝试更改离子对库设置失败。</value>
+    <value>错误：尝试更改离子对库设置失败。</value>
   </data>
   <data name="CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transition_prediction_settings_" xml:space="preserve">
     <value>错误：尝试更改离子对预测设置失败。</value>
@@ -4268,7 +4268,7 @@ Example: Looplink: T [4]
     <value>编辑酶</value>
   </data>
   <data name="Error___0_" xml:space="preserve">
-    <value>错误: {0}</value>
+    <value>错误：{0}</value>
   </data>
   <data name="ExceptionDialog_Caused_by_____" xml:space="preserve">
     <value>原因---&gt;</value>
@@ -7213,19 +7213,19 @@ Example: Looplink: T [4]
     <value>..\Resources\Panorama.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="PanoramaHelper_ValidateFolder_Exception_" xml:space="preserve">
-    <value>错误： 尝试验证对服务器 {1} 上 Panorama 文件夹 '{0}' 的访问权限时发生未知错误。
+    <value>错误：尝试验证对服务器 {1} 上 Panorama 文件夹 '{0}' 的访问权限时发生未知错误。
 {2}</value>
   </data>
   <data name="PanoramaHelper_ValidateFolder_PanoramaServerException_" xml:space="preserve">
-    <value>错误： 无法验证对 Panorama 文件夹的访问权限。
+    <value>错误：无法验证对 Panorama 文件夹的访问权限。
 {0}</value>
   </data>
   <data name="PanoramaHelper_ValidateServer_Exception_" xml:space="preserve">
-    <value>错误： 尝试验证 Panorama 服务器信息时发生未知错误。
+    <value>错误：尝试验证 Panorama 服务器信息时发生未知错误。
 {0}</value>
   </data>
   <data name="PanoramaHelper_ValidateServer_PanoramaServerException_" xml:space="preserve">
-    <value>错误： 无法验证 Panorama 服务器信息。
+    <value>错误：无法验证 Panorama 服务器信息。
 {0}</value>
   </data>
   <data name="PanoramaPublish" type="System.Resources.ResXFileRef, System.Windows.Forms">
@@ -7236,10 +7236,10 @@ Example: Looplink: T [4]
 {0}</value>
   </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Error__An_import_error_occurred_on_the_Panorama_server__0__" xml:space="preserve">
-    <value>错误： Panorama 服务器 {0} 发生导入错误。</value>
+    <value>错误：Panorama 服务器 {0} 发生导入错误。</value>
   </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Error__Document_import_was_cancelled_on_the_Panorama_server__0__" xml:space="preserve">
-    <value>错误： Panorama 服务器 {0} 上取消了文档导入。</value>
+    <value>错误：Panorama 服务器 {0} 上取消了文档导入。</value>
   </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Error_details_can_be_found_at__0_" xml:space="preserve">
     <value>错误细节可见于{0}。</value>
