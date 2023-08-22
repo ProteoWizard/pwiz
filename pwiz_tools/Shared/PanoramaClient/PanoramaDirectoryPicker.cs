@@ -49,13 +49,28 @@ namespace pwiz.PanoramaClient
             {
                 FolderBrowser = new LKContainerBrowser(servers, state, false, selectedPath);
             }
-            FolderBrowser.Dock = DockStyle.Fill;
-            FolderBrowser.NodeClick += DirectoryPicker_MouseClick;
-            folderPanel.Controls.Add(FolderBrowser);
-            up.Enabled = false;
             SelectedPath = selectedPath;
-            back.Enabled = false;
-            forward.Enabled = false;
+
+            InitializeDialog();
+        }
+
+        private void InitializeDialog()
+        {
+            FolderBrowser.Dock = DockStyle.Fill;
+            folderPanel.Controls.Add(FolderBrowser);
+            FolderBrowser.NodeClick += DirectoryPicker_MouseClick;
+            if (string.IsNullOrEmpty(_treeState))
+            {
+                up.Enabled = false;
+                back.Enabled = false;
+                forward.Enabled = false;
+            }
+            else
+            {
+                up.Enabled = FolderBrowser.UpEnabled;
+                back.Enabled = FolderBrowser.BackEnabled;
+                forward.Enabled = FolderBrowser.ForwardEnabled;
+            }
         }
 
         private void Open_Click(object sender, EventArgs e)
@@ -141,31 +156,16 @@ namespace pwiz.PanoramaClient
 
 
         #region Test Support
-        public PanoramaDirectoryPicker()
+
+        public PanoramaDirectoryPicker(Uri serverUri, string user, string pass, JToken folderJson)
         {
             InitializeComponent();
-            IsLoaded = false;
-        }
 
-        public void InitializeTestDialog(Uri serverUri, string user, string pass, JToken folderJson)
-        {
             var server = new PanoramaServer(serverUri, user, pass);
             FolderBrowser = new TestPanoramaFolderBrowser(server, folderJson);
-            FolderBrowser.Dock = DockStyle.Fill;
-            folderPanel.Controls.Add(FolderBrowser);
-            FolderBrowser.NodeClick += DirectoryPicker_MouseClick;
-            if (string.IsNullOrEmpty(_treeState))
-            {
-                up.Enabled = false;
-                back.Enabled = false;
-                forward.Enabled = false;
-            }
-            else
-            {
-                up.Enabled = FolderBrowser.UpEnabled;
-                back.Enabled = FolderBrowser.BackEnabled;
-                forward.Enabled = FolderBrowser.ForwardEnabled;
-            }
+
+            InitializeDialog();
+
             IsLoaded = true;
         }
 

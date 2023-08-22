@@ -32,29 +32,30 @@
 #include <limits>
 #include <iostream>
 #include <fstream>
+#include <boost/geometry.hpp> // compile error without top-level header
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/index/rtree.hpp>
 #include "InstrumentParameter.hpp"
 #include "ScanData.hpp"
 #include "PeakCurve.hpp"
 #include "IsotopePatternMap.hpp"
 #include <boost/container/flat_map.hpp>
-#include <boost/geometry.hpp> // compile error without top-level header
-#include <boost/geometry/geometries/point.hpp>
-#include <boost/geometry/index/rtree.hpp>
 
 namespace DiaUmpire {
 
 using std::map;
 using std::multimap;
 using std::vector;
-using std::set;
 using std::string;
 using std::runtime_error;
+using std::min;
+using std::max;
 
 namespace bg = boost::geometry;
 namespace bgi = bg::index;
 
 typedef bg::model::point<float, 2, bg::cs::cartesian> ApexRtTargetMzPoint;
-typedef pair<ApexRtTargetMzPoint, PeakCurvePtr> PeakCurveTreeNode;
+typedef std::pair<ApexRtTargetMzPoint, PeakCurvePtr> PeakCurveTreeNode;
 typedef bgi::rtree<PeakCurveTreeNode, bgi::linear<3>> PeakCurveSearchTree;
 typedef bg::model::box<ApexRtTargetMzPoint> PeakCurveSearchBox;
 
@@ -88,7 +89,7 @@ class PeakCluster
 {
     mutable vector<float> SNR;
     XYPointCollection FragmentScan;
-    set<float> MatchScores;
+    std::set<float> MatchScores;
     mutable float conflictCorr = -1;
     mutable float mass = 0;
     const ChiSquareGOF& chiSquaredGof;

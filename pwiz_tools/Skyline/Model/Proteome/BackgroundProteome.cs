@@ -123,14 +123,7 @@ namespace pwiz.Skyline.Model.Proteome
                 }
                 foreach (var pair in newDict)
                 {
-                    if (!_peptideUniquenessDict.ContainsKey(pair.Key))
-                    {
-                        _peptideUniquenessDict.Add(pair.Key, pair.Value);
-                    }
-                    else
-                    {
-                        _peptideUniquenessDict[pair.Key] = pair.Value;
-                    }
+                    _peptideUniquenessDict[pair.Key] = pair.Value;
                 }
                 _enzymeNameForPeptideUniquenessDictDigest = enzyme.Name;
                 if (!_parent.UpdateProgressAndCheckForCancellation(progressMonitor, 100))

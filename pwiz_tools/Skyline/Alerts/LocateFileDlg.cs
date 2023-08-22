@@ -88,11 +88,9 @@ namespace pwiz.Skyline.Alerts
 
         private void FindPath()
         {
-            using (var openFileDialog = new OpenFileDialog
+            using (var openFileDialog = new OpenFileDialog())
             {
-                Multiselect = false
-            })
-            {
+                openFileDialog.Multiselect = false;
                 if (openFileDialog.ShowDialog(this) == DialogResult.OK)
                 {
                     textPath.Text = openFileDialog.FileName;                    
@@ -117,12 +115,7 @@ namespace pwiz.Skyline.Alerts
 
                 else
                 {
-                    if (!filePaths.ContainsKey(_pathContainer))
-                        filePaths.Add(_pathContainer, textPath.Text);
-                    else
-                    {
-                        filePaths[_pathContainer] = textPath.Text;
-                    }
+                    filePaths[_pathContainer] = textPath.Text;
                 }
 
                 Settings.Default.ToolFilePaths = CopyFilePaths(filePaths);

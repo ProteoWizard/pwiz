@@ -31,7 +31,6 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
-using ZedGraph;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -348,15 +347,12 @@ namespace pwiz.SkylineTestFunctional
         protected EditPeakScoringModelDlg.HistogramGroup GetHistogramForScoreIndex(EditPeakScoringModelDlg editDlg, int scoreIndex)
         {
             EditPeakScoringModelDlg.HistogramGroup scoreHistograms;
-            EditPeakScoringModelDlg.HistogramGroup pValueHistograms;
-            EditPeakScoringModelDlg.HistogramGroup qValueHistograms;
-            PointPairList piZeroLine;
             editDlg.GetPoints(
                 scoreIndex,
                 out scoreHistograms,
-                out pValueHistograms,
-                out qValueHistograms,
-                out piZeroLine);
+                out _,
+                out _,
+                out _);
             return scoreHistograms;
         }
 
@@ -364,8 +360,7 @@ namespace pwiz.SkylineTestFunctional
                                     bool isPresent,
                                     Type[] scoreTypes)
         {
-            List<double?> scores;
-            VerifyScores(editDlg, isPresent, scoreTypes, out scores);
+            VerifyScores(editDlg, isPresent, scoreTypes, out _);
         }
 
         protected void VerifyScores(EditPeakScoringModelDlg editDlg, 

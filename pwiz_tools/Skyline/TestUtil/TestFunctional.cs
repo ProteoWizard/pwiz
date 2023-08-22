@@ -533,8 +533,7 @@ namespace pwiz.SkylineTestUtil
                     string[] fields = line.ParseDsvFields(TextUtil.SEPARATOR_CSV);
                     for (int i = 0; i < fields.Length; i++)
                     {
-                        double result;
-                        if (double.TryParse(fields[i], NumberStyles.Number, CultureInfo.InvariantCulture, out result))
+                        if (double.TryParse(fields[i], NumberStyles.Number, CultureInfo.InvariantCulture, out _))
                             fields[i] = fields[i].Replace(decimalSep, decimalIntl);
                     }
                     sb.AppendLine(fields.ToCsvLine());
@@ -2242,6 +2241,22 @@ namespace pwiz.SkylineTestUtil
             {
                 // We're expecting errors, collect them then move on
                 var errDlg = ShowDialog<ImportTransitionListErrorDlg>(columnSelectDlg.OkDialog);
+
+                // Check for a scenario discovered 7-5-23 where interaction of "check for errors" dialog results in improper
+                // error handling: user isn't given the chance to cancel after OK if errors were previously reviewed
+                // 
+                // In column select dialog, hit OK
+                // Get the error dialog, hit cancel - takes you back to column select
+                // In column select, hit "Check for Errors"
+                // Get the error dialog, hit OK - takes you back to column select
+                // In column select dialog, hit OK - skips right over the expected error check dialog
+                OkDialog(errDlg, errDlg.CancelDialog); // Cancel the error window rather than accepting - should take us back to column select dialog
+                WaitForClosedForm(errDlg);
+                errDlg = ShowDialog<ImportTransitionListErrorDlg>(columnSelectDlg.CheckForErrors);
+                OkDialog(errDlg, errDlg.OkDialog); // Acknowledge the error should take us back to column select dialog
+                WaitForClosedForm(errDlg);
+                errDlg = ShowDialog<ImportTransitionListErrorDlg>(columnSelectDlg.OkDialog); // Should take us back to the error dialog that asks about proceeding with errors
+
                 errorList.Clear();
                 foreach (var err in errDlg.ErrorList)
                 {
@@ -2587,8 +2602,9 @@ namespace pwiz.SkylineTestUtil
         {
             var list = new List<DbRefSpectra>();
             var hasAnnotations = SqliteOperations.TableExists(connection, @"RefSpectraPeakAnnotations");
-            using (var select = new SQLiteCommand(connection) { CommandText = "SELECT * FROM RefSpectra" })
-            using (var reader = @select.ExecuteReader())
+            using var select = new SQLiteCommand(connection);
+            select.CommandText = "SELECT * FROM RefSpectra";
+            using (var reader = select.ExecuteReader())
             {
                 var iAdduct = reader.GetOrdinal("precursorAdduct");
                 var iIonMobility = reader.GetOrdinal("ionMobility");
@@ -2630,8 +2646,9 @@ namespace pwiz.SkylineTestUtil
         private static IList<DbRefSpectraPeakAnnotations> GetRefSpectraPeakAnnotations(SQLiteConnection connection, DbRefSpectra refSpectrum, int refSpectraId)
         {
             var list = new List<DbRefSpectraPeakAnnotations>();
-            using (var select = new SQLiteCommand(connection) { CommandText = "SELECT * FROM RefSpectraPeakAnnotations WHERE RefSpectraId = " + refSpectraId })
-            using (var reader = @select.ExecuteReader())
+            using var select = new SQLiteCommand(connection);
+            select.CommandText = "SELECT * FROM RefSpectraPeakAnnotations WHERE RefSpectraId = " + refSpectraId;
+            using (var reader = select.ExecuteReader())
             {
                 while (reader.Read())
                 {

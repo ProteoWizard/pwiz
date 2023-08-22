@@ -338,15 +338,13 @@ namespace pwiz.Skyline.SettingsUI
                 fileName = string.Empty;
             }
 
-            using (var dlg = new SaveFileDialog
-                {
-                    InitialDirectory = Settings.Default.LibraryDirectory,
-                    FileName = fileName,
-                    OverwritePrompt = true,
-                    DefaultExt = BiblioSpecLiteSpec.EXT,
-                    Filter = TextUtil.FileDialogFiltersAll(BiblioSpecLiteSpec.FILTER_BLIB)
-                })
+            using (var dlg = new SaveFileDialog())
             {
+                dlg.InitialDirectory = Settings.Default.LibraryDirectory;
+                dlg.FileName = fileName;
+                dlg.OverwritePrompt = true;
+                dlg.DefaultExt = BiblioSpecLiteSpec.EXT;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(BiblioSpecLiteSpec.FILTER_BLIB);
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.LibraryDirectory = Path.GetDirectoryName(dlg.FileName);
@@ -418,20 +416,18 @@ namespace pwiz.Skyline.SettingsUI
             var buttonText = parent is FormEx formEx ?
                 formEx.GetModeUIHelper().Translate(Resources.BuildLibraryDlg_btnAddFile_Click_Matched_Peptides) :
                 Resources.BuildLibraryDlg_btnAddFile_Click_Matched_Peptides;
-            using (var dlg = new OpenFileDialog
-                {
-                    Title = Resources.BuildLibraryDlg_btnAddFile_Click_Add_Input_Files,
-                    InitialDirectory = initialDirectory,
-                    CheckPathExists = true,
-                    SupportMultiDottedExtensions = true,
-                    Multiselect = true,
-                    DefaultExt = BiblioSpecLibSpec.EXT,
-                    Filter = TextUtil.FileDialogFiltersAll(
-                        buttonText + string.Join(@",", wildExts) + @")|" +
-                        string.Join(@";", wildExts),
-                        BiblioSpecLiteSpec.FILTER_BLIB)
-                })
+            using (var dlg = new OpenFileDialog())
             {
+                dlg.Title = Resources.BuildLibraryDlg_btnAddFile_Click_Add_Input_Files;
+                dlg.InitialDirectory = initialDirectory;
+                dlg.CheckPathExists = true;
+                dlg.SupportMultiDottedExtensions = true;
+                dlg.Multiselect = true;
+                dlg.DefaultExt = BiblioSpecLibSpec.EXT;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(
+                    buttonText + string.Join(@",", wildExts) + @")|" +
+                    string.Join(@";", wildExts),
+                    BiblioSpecLiteSpec.FILTER_BLIB);
                 if (dlg.ShowDialog(parent) == DialogResult.OK)
                 {
                     Settings.Default.LibraryResultsDirectory = Path.GetDirectoryName(dlg.FileName);
@@ -444,13 +440,11 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnAddDirectory_Click(object sender, EventArgs e)
         {
-            using (var dlg = new FolderBrowserDialog
-                {
-                    Description = Resources.BuildLibraryDlg_btnAddDirectory_Click_Add_Input_Directory,
-                    ShowNewFolderButton = false,
-                    SelectedPath = Settings.Default.LibraryResultsDirectory
-                })
+            using (var dlg = new FolderBrowserDialog())
             {
+                dlg.Description = Resources.BuildLibraryDlg_btnAddDirectory_Click_Add_Input_Directory;
+                dlg.ShowNewFolderButton = false;
+                dlg.SelectedPath = Settings.Default.LibraryResultsDirectory;
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.LibraryResultsDirectory = dlg.SelectedPath;
@@ -462,11 +456,9 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddDirectory(string dirPath)
         {
-            using (var longWaitDlg = new LongWaitDlg
-                {
-                    Text = Resources.BuildLibraryDlg_AddDirectory_Find_Input_Files,
-                })
+            using (var longWaitDlg = new LongWaitDlg())
             {
+                longWaitDlg.Text = Resources.BuildLibraryDlg_AddDirectory_Find_Input_Files;
                 try
                 {
                     var inputFiles = new List<string>();

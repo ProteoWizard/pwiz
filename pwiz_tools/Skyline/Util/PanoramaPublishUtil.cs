@@ -315,8 +315,9 @@ namespace pwiz.Skyline.Util
             try
             {
                 var isCanceled = false;
-                using (var waitDlg = new LongWaitDlg { Text = Resources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File })
+                using (var waitDlg = new LongWaitDlg())
                 {
+                    waitDlg.Text = Resources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File;
                     waitDlg.PerformWork(parent, 1000, longWaitBroker =>
                     {
                         result = SendZipFile(server, folderPath,

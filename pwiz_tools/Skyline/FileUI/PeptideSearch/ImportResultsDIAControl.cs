@@ -94,11 +94,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public void Browse(string path = null)
         {
-            using (var dlgOpen = new OpenDataSourceDialog(Settings.Default.RemoteAccountList)
+            using (var dlgOpen = new OpenDataSourceDialog(Settings.Default.RemoteAccountList))
             {
-                Text = BrowseResultsDialogText
-            })
-            {
+                dlgOpen.Text = BrowseResultsDialogText;
                 // The dialog expects null to mean no directory was supplied, so don't assign an empty string.
                 string initialDir = path ?? Path.GetDirectoryName(DocumentContainer.DocumentFilePath);
                 dlgOpen.InitialDirectory = new MsDataFilePath(initialDir);

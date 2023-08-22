@@ -87,7 +87,7 @@ namespace pwiz.SkylineTestFunctional
             var folderJson = testClient.GetInfoForFolders(new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD),
                 TARGETED);
             var remoteDlg = ShowDialog<PanoramaFilePicker>(() => 
-                SkylineWindow.ShowPanoramaFilePicker(VALID_SERVER, string.Empty, string.Empty, folderJson, fileJson, sizeJson));
+                ShowPanoramaFilePicker(VALID_SERVER, string.Empty, string.Empty, folderJson, fileJson, sizeJson));
 
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
 
@@ -121,7 +121,7 @@ namespace pwiz.SkylineTestFunctional
             var folderJson = testClient.GetInfoForFolders(new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD),
                 TARGETED);
             var remoteDlg = ShowDialog<PanoramaFilePicker>(() =>
-                SkylineWindow.ShowPanoramaFilePicker(VALID_SERVER, string.Empty, string.Empty, folderJson, fileJson, sizeJson));
+                ShowPanoramaFilePicker(VALID_SERVER, string.Empty, string.Empty, folderJson, fileJson, sizeJson));
 
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
 
@@ -157,7 +157,7 @@ namespace pwiz.SkylineTestFunctional
             var folderJson = testClient.GetInfoForFolders(new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD),
                 TARGETED);
             var remoteDlg = ShowDialog<PanoramaFilePicker>(() =>
-                SkylineWindow.ShowPanoramaFilePicker(VALID_SERVER, string.Empty, string.Empty, folderJson, fileJson, sizeJson));
+                ShowPanoramaFilePicker(VALID_SERVER, string.Empty, string.Empty, folderJson, fileJson, sizeJson));
 
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
 
@@ -194,7 +194,7 @@ namespace pwiz.SkylineTestFunctional
             var folderJson = testClient.GetInfoForFolders(new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD),
                 TARGETED);
             var remoteDlg = ShowDialog<PanoramaFilePicker>(() =>
-                SkylineWindow.ShowPanoramaFilePicker(VALID_SERVER, string.Empty, string.Empty, folderJson, filesJson, sizesJson));
+                ShowPanoramaFilePicker(VALID_SERVER, string.Empty, string.Empty, folderJson, filesJson, sizesJson));
 
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
 
@@ -240,7 +240,7 @@ namespace pwiz.SkylineTestFunctional
             var folderJson = testClient.GetInfoForFolders(new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD),
                 TARGETED);
             var remoteDlg = ShowDialog<PanoramaFilePicker>(() =>
-                SkylineWindow.ShowPanoramaFilePicker(VALID_SERVER, string.Empty, string.Empty, folderJson, filesJson, sizesJson));
+                ShowPanoramaFilePicker(VALID_SERVER, string.Empty, string.Empty, folderJson, filesJson, sizesJson));
 
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
             var sizeObj = new FileSizeFormatProvider();
@@ -295,7 +295,7 @@ namespace pwiz.SkylineTestFunctional
             var folderJson = testClient.GetInfoForFolders(new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD),
                 TARGETED);
             var remoteDlg = ShowDialog<PanoramaFilePicker>(() =>
-                SkylineWindow.ShowPanoramaFilePicker(VALID_SERVER, string.Empty, string.Empty, folderJson, fileJson, sizeJson));
+                ShowPanoramaFilePicker(VALID_SERVER, string.Empty, string.Empty, folderJson, fileJson, sizeJson));
 
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
 
@@ -346,10 +346,21 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(remoteDlg, remoteDlg.OkDialog);
         }
 
+        /// <summary>
+        /// Method used for testing <see cref="PanoramaFilePicker"/>
+        /// </summary>
+        public void ShowPanoramaFilePicker(string server, string user, string pass, JToken folderJson, JToken fileJson = null, JToken sizeJson = null)
+        {
+            using var dlg = new PanoramaFilePicker(new Uri(server), user, pass, folderJson, fileJson, sizeJson);
+            dlg.ShowDialog(SkylineWindow);
+        }
+
+        /// <summary>
+        /// Method used for testing <see cref="PanoramaDirectoryPicker"/>
+        /// </summary>
         private void ShowPanoramaDirectoryPicker(JToken folderJson)
         {
-            using var remoteDlg = new PanoramaDirectoryPicker();
-            remoteDlg.InitializeTestDialog(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD, folderJson);
+            using var remoteDlg = new PanoramaDirectoryPicker(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD, folderJson);
             remoteDlg.ShowDialog(SkylineWindow);
         }
 

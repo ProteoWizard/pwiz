@@ -120,13 +120,10 @@ namespace pwiz.Skyline.EditUI
 
         private void btnBrukerTemplateBrowse_Click(object sender, EventArgs e)
         {
-            using (var openFileDialog = new OpenFileDialog
+            using (var openFileDialog = new OpenFileDialog())
             {
-                Title = Resources.ExportMethodDlg_btnBrowseTemplate_Click_Method_Template,
-                // Extension based on currently selected type
-                CheckPathExists = true
-            })
-            {
+                openFileDialog.Title = Resources.ExportMethodDlg_btnBrowseTemplate_Click_Method_Template; // Extension based on currently selected type
+                openFileDialog.CheckPathExists = true;
                 var templateName = textBrukerTemplate.Text;
                 if (!string.IsNullOrEmpty(templateName))
                 {

@@ -336,8 +336,7 @@ namespace pwiz.Skyline.Controls.Graphs
             using (Graphics g = sender.CreateGraphics())
             {
                 object nearestObject;
-                int index;
-                if (FindNearestObject(new PointF(mouseEventArgs.X, mouseEventArgs.Y), g, out nearestObject, out index))
+                if (FindNearestObject(new PointF(mouseEventArgs.X, mouseEventArgs.Y), g, out nearestObject, out _))
                 {
                     var axis = nearestObject as XAxis;
                     if (axis != null)
