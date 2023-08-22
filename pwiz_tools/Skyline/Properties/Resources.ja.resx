@@ -11534,7 +11534,7 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="TransitionTreeNode_GetLabel_irank__0__" xml:space="preserve">
     <value>iランク{0}</value>
-    <comment>Isotope rank for transition node</comment>
+    <comment>Isotope rank "irank" for transition node</comment>
   </data>
   <data name="TransitionTreeNode_GetLabel_rank__0__" xml:space="preserve">
     <value>ランク{0}</value>

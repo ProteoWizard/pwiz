@@ -5835,7 +5835,7 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="TransitionTreeNode_GetLabel_irank__0__" xml:space="preserve">
     <value>irank {0}</value>
-    <comment>Isotope rank for transition node</comment>
+    <comment>Isotope rank "irank" for transition node</comment>
   </data>
   <data name="CommandLine_ReintegratePeaks_Error__Unknown_peak_scoring_model___0__" xml:space="preserve">
     <value>Error: Unknown peak scoring model '{0}'</value>

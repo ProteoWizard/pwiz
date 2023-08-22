@@ -322,7 +322,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblIonCount.Location" type="System.Drawing.Point, System.Drawing">
-    <value>141, 224</value>
+    <value>161, 224</value>
   </data>
   <data name="lblIonCount.Size" type="System.Drawing.Size, System.Drawing">
     <value>31, 13</value>
@@ -352,7 +352,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblIonCountUnits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>226, 243</value>
+    <value>245, 243</value>
   </data>
   <data name="lblIonCountUnits.Size" type="System.Drawing.Size, System.Drawing">
     <value>65, 13</value>
@@ -376,7 +376,7 @@
     <value>9</value>
   </data>
   <data name="txtIonCount.Location" type="System.Drawing.Point, System.Drawing">
-    <value>144, 240</value>
+    <value>164, 240</value>
   </data>
   <data name="txtIonCount.Size" type="System.Drawing.Size, System.Drawing">
     <value>76, 20</value>
@@ -433,7 +433,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblMinIonCountUnits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>226, 269</value>
+    <value>245, 269</value>
   </data>
   <data name="lblMinIonCountUnits.Size" type="System.Drawing.Size, System.Drawing">
     <value>84, 13</value>
@@ -457,7 +457,7 @@
     <value>3</value>
   </data>
   <data name="txtMinIonCount.Location" type="System.Drawing.Point, System.Drawing">
-    <value>144, 266</value>
+    <value>163, 266</value>
   </data>
   <data name="txtMinIonCount.Size" type="System.Drawing.Size, System.Drawing">
     <value>76, 20</value>
@@ -490,7 +490,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>子离子起始(&amp;O)：</value>
+    <value>子离子起始(&amp;R)：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -532,7 +532,7 @@
     <value>NoControl</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>127, 0</value>
+    <value>147, 0</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
     <value>81, 13</value>
@@ -556,7 +556,7 @@
     <value>4</value>
   </data>
   <data name="comboRangeTo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>130, 16</value>
+    <value>149, 16</value>
   </data>
   <data name="comboRangeTo.Size" type="System.Drawing.Size, System.Drawing">
     <value>107, 21</value>
@@ -667,7 +667,7 @@
     <value>NoControl</value>
   </data>
   <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
-    <value>212, 79</value>
+    <value>231, 79</value>
   </data>
   <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
     <value>25, 13</value>
@@ -691,7 +691,7 @@
     <value>1</value>
   </data>
   <data name="txtMaxMz.Location" type="System.Drawing.Point, System.Drawing">
-    <value>130, 76</value>
+    <value>149, 76</value>
   </data>
   <data name="txtMaxMz.Size" type="System.Drawing.Size, System.Drawing">
     <value>76, 20</value>
@@ -718,7 +718,7 @@
     <value>NoControl</value>
   </data>
   <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
-    <value>127, 60</value>
+    <value>147, 60</value>
   </data>
   <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
     <value>51, 13</value>
@@ -763,7 +763,7 @@
     <value>2</value>
   </data>
   <data name="comboMatchToleranceUnit.Items" xml:space="preserve">
-    <value>m/z</value>
+    <value>质荷比</value>
   </data>
   <data name="comboMatchToleranceUnit.Items1" xml:space="preserve">
     <value>ppm</value>
@@ -802,7 +802,7 @@
     <value>19</value>
   </data>
   <data name="label7.Text" xml:space="preserve">
-    <value>Ion match toleran&amp;ce unit:</value>
+    <value>离子匹配耐受性单位(&amp;C)：</value>
   </data>
   <data name="&gt;&gt;label7.Name" xml:space="preserve">
     <value>label7</value>
