@@ -92,7 +92,6 @@ namespace TestPerf
             public string IrtFilterText;
             public int? MinPeptidesPerProtein;
             public bool RemoveDuplicates;
-            public int[] TargetCounts;
             public int[] FinalTargetCounts;
             public string ScoringModelCoefficients;
             public PointF ChromatogramClickPoint;
@@ -793,8 +792,6 @@ namespace TestPerf
             interestingParameters.Add(searchSettings.PrecursorTolerance.Value.ToString(CultureInfo.InvariantCulture));
             interestingParameters.Add(searchSettings.FragmentTolerance.Value.ToString(CultureInfo.InvariantCulture));
             interestingParameters.Add(analysisValues.LibraryPeptideCount.ToString());
-            for (int i = 0; i < 4; ++i)
-                interestingParameters.Add(analysisValues.TargetCounts[i].ToString());
             for (int i = 0; i < 4; ++i)
                 interestingParameters.Add(analysisValues.FinalTargetCounts[i].ToString());
             Console.WriteLine(string.Join("\t", interestingParameters));
