@@ -941,8 +941,7 @@ namespace pwiz.Skyline.Model
             var transitionRanks = new Dictionary<double, LibraryRankedSpectrumInfo.RankedMI>();
             if (diff.DiffTransitionGroupProps)
             {
-                TypedMass mass;
-                precursorMz = CalcPrecursorMZ(settingsNew, mods, out isotopeDist, out mass);
+                precursorMz = CalcPrecursorMZ(settingsNew, mods, out isotopeDist, out _);
                 // Preserve reference equality if no change
                 Helpers.AssignIfEquals(ref isotopeDist, IsotopeDist);
                 relativeRT = CalcRelativeRT(settingsNew, mods);

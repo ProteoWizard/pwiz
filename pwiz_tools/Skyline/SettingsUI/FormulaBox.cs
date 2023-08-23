@@ -318,14 +318,12 @@ namespace pwiz.Skyline.SettingsUI
 
         public bool ValidateMonoText(MessageBoxHelper helper)
         {
-            double val;
-            return helper.ValidateDecimalTextBox(textMono, out val);
+            return helper.ValidateDecimalTextBox(textMono, out _);
         }
 
         public bool ValidateAverageText(MessageBoxHelper helper)
         {
-            double val;
-            return helper.ValidateDecimalTextBox(textAverage, out val);
+            return helper.ValidateDecimalTextBox(textAverage, out _);
         }
 
         public void ShowTextBoxErrorAverageMass(MessageBoxHelper helper, string message)

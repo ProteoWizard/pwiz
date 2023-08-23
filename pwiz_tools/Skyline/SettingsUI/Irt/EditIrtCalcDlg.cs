@@ -235,15 +235,13 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     return;
             }
 
-            using (var dlg = new SaveFileDialog
-                   {
-                       Title = Resources.EditIrtCalcDlg_btnCreateDb_Click_Create_iRT_Database,
-                       InitialDirectory = Settings.Default.ActiveDirectory,
-                       OverwritePrompt = true,
-                       DefaultExt = IrtDb.EXT,
-                       Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB) 
-                   })
+            using (var dlg = new SaveFileDialog())
             {
+                dlg.Title = Resources.EditIrtCalcDlg_btnCreateDb_Click_Create_iRT_Database;
+                dlg.InitialDirectory = Settings.Default.ActiveDirectory;
+                dlg.OverwritePrompt = true;
+                dlg.DefaultExt = IrtDb.EXT;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB);
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
@@ -299,14 +297,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     return;
             }
 
-            using (var dlg = new OpenFileDialog
-                   {
-                       Title = Resources.EditIrtCalcDlg_btnBrowseDb_Click_Open_iRT_Database,
-                       InitialDirectory = Settings.Default.ActiveDirectory,
-                       DefaultExt = IrtDb.EXT,
-                       Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB, BiblioSpecLiteSpec.FILTER_BLIB, ChromatogramLibrarySpec.FILTER_CLIB)
-                   })
+            using (var dlg = new OpenFileDialog())
             {
+                dlg.Title = Resources.EditIrtCalcDlg_btnBrowseDb_Click_Open_iRT_Database;
+                dlg.InitialDirectory = Settings.Default.ActiveDirectory;
+                dlg.DefaultExt = IrtDb.EXT;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB, BiblioSpecLiteSpec.FILTER_BLIB, ChromatogramLibrarySpec.FILTER_CLIB);
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
@@ -337,8 +333,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             IrtDb db = null;
             IList<DbIrtPeptide> dbPeptides = null;
-            using (var dlg = new LongWaitDlg { Message = Resources.EditIrtCalcDlg_OpenDatabase_Opening_database })
+            using (var dlg = new LongWaitDlg())
             {
+                dlg.Message = Resources.EditIrtCalcDlg_OpenDatabase_Opening_database;
                 var status = dlg.PerformWork(this, 800, progressMonitor => db = IrtDb.GetIrtDb(path, progressMonitor, out dbPeptides));
                 if (status.IsError)
                 {
@@ -417,8 +414,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     MessageDlg.Show(this, chromLib
                         ? Resources.EditIrtCalcDlg_OkDialog_Chromatogram_libraries_cannot_be_modified__You_must_save_this_iRT_calculator_as_a_new_file_
                         : Resources.EditIrtCalcDlg_OkDialog_Spectral_libraries_cannot_be_modified__You_must_save_this_iRT_calculator_as_a_new_file_);
-                    using (var saveDlg = new SaveFileDialog {Filter = IrtDb.FILTER_IRTDB})
+                    using (var saveDlg = new SaveFileDialog())
                     {
+                        saveDlg.Filter = IrtDb.FILTER_IRTDB;
                         if (saveDlg.ShowDialog(this) == DialogResult.Cancel)
                         {
                             return;
@@ -484,8 +482,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         }
                         
                         db = db.SetRedundant(IsRedundant);
-                        using (var longWaitDlg = new LongWaitDlg { Text = Resources.EditIrtCalcDlg_OkDialog_Saving_to_database })
+                        using (var longWaitDlg = new LongWaitDlg())
                         {
+                            longWaitDlg.Text = Resources.EditIrtCalcDlg_OkDialog_Saving_to_database;
                             var dbCopy = db;
                             longWaitDlg.PerformWork(this, 800, monitor => db = dbCopy.UpdatePeptides(AllPeptides.ToArray(), monitor));
                         }
@@ -905,13 +904,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 }
 
                 ProcessedIrtAverages irtAverages = null;
-                using (var longWait = new LongWaitDlg
-                       {
-                           Text = Resources.LibraryGridViewDriver_AddResults_Adding_Results,
-                           Message = Resources.LibraryGridViewDriver_AddResults_Adding_retention_times_from_imported_results,
-                           FormBorderStyle = FormBorderStyle.Sizable
-                       })
+                using (var longWait = new LongWaitDlg())
                 {
+                    longWait.Text = Resources.LibraryGridViewDriver_AddResults_Adding_Results;
+                    longWait.Message = Resources.LibraryGridViewDriver_AddResults_Adding_retention_times_from_imported_results;
+                    longWait.FormBorderStyle = FormBorderStyle.Sizable;
                     try
                     {
                         var status = longWait.PerformWork(MessageParent, 800, monitor =>
@@ -1008,13 +1005,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 try
                 {
                     library = libraryManager.TryGetLibrary(librarySpec);
-                    using (var longWait = new LongWaitDlg
-                           {
-                               Text = Resources.LibraryGridViewDriver_AddSpectralLibrary_Adding_Spectral_Library,
-                               Message = string.Format(Resources.LibraryGridViewDriver_AddSpectralLibrary_Adding_retention_times_from__0__, librarySpec.FilePath),
-                               FormBorderStyle = FormBorderStyle.Sizable
-                           })
+                    using (var longWait = new LongWaitDlg())
                     {
+                        longWait.Text = Resources.LibraryGridViewDriver_AddSpectralLibrary_Adding_Spectral_Library;
+                        longWait.Message = string.Format(Resources.LibraryGridViewDriver_AddSpectralLibrary_Adding_retention_times_from__0__, librarySpec.FilePath);
+                        longWait.FormBorderStyle = FormBorderStyle.Sizable;
                         try
                         {
                             var status = longWait.PerformWork(MessageParent, 800, monitor =>
@@ -1085,13 +1080,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
             private void AddIrtDatabase(RCalcIrt irtCalc)
             {
                 ProcessedIrtAverages irtAverages = null;
-                using (var longWait = new LongWaitDlg
-                       {
-                           Text = Resources.LibraryGridViewDriver_AddIrtDatabase_Adding_iRT_Database,
-                           Message = string.Format(Resources.LibraryGridViewDriver_AddSpectralLibrary_Adding_retention_times_from__0__, irtCalc.DatabasePath),
-                           FormBorderStyle = FormBorderStyle.Sizable
-                       })
+                using (var longWait = new LongWaitDlg())
                 {
+                    longWait.Text = Resources.LibraryGridViewDriver_AddIrtDatabase_Adding_iRT_Database;
+                    longWait.Message = string.Format(Resources.LibraryGridViewDriver_AddSpectralLibrary_Adding_retention_times_from__0__, irtCalc.DatabasePath);
+                    longWait.FormBorderStyle = FormBorderStyle.Sizable;
                     try
                     {
                         var status = longWait.PerformWork(MessageParent, 800, monitor =>
@@ -1187,12 +1180,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
                             case DialogResult.Cancel:
                                 return;
                             case DialogResult.Yes:
-                                using (var longWait = new LongWaitDlg
-                                       {
-                                           Text = Resources.LibraryGridViewDriver_AddToLibrary_Recalibrate_iRT_Standard_Peptides,
-                                           Message = Resources.LibraryGridViewDriver_AddToLibrary_Recalibrating_iRT_standard_peptides_and_reprocessing_iRT_values
-                                       })
+                                using (var longWait = new LongWaitDlg())
                                 {
+                                    longWait.Text = Resources.LibraryGridViewDriver_AddToLibrary_Recalibrate_iRT_Standard_Peptides;
+                                    longWait.Message = Resources.LibraryGridViewDriver_AddToLibrary_Recalibrating_iRT_standard_peptides_and_reprocessing_iRT_values;
                                     try
                                     {
                                         newStandards = irtAverages.RecalibrateStandards(StandardPeptideList.ToArray());

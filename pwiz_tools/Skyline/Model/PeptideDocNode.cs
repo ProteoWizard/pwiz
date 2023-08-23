@@ -1984,7 +1984,8 @@ namespace pwiz.Skyline.Model
                 Equals(other.InternalStandardConcentration, InternalStandardConcentration) &&
                 Equals(other.ConcentrationMultiplier, ConcentrationMultiplier) &&
                 Equals(other.NormalizationMethod, NormalizationMethod) &&
-                Equals(other.AttributeGroupId, AttributeGroupId);
+                Equals(other.AttributeGroupId, AttributeGroupId) &&
+                Equals(other.GlobalStandardType, GlobalStandardType);
             return equal; // For debugging convenience
         }
 
@@ -2010,6 +2011,7 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ ConcentrationMultiplier.GetHashCode();
                 result = (result*397) ^ (NormalizationMethod == null ? 0 : NormalizationMethod.GetHashCode());
                 result = (result*397) ^ (AttributeGroupId == null ? 0 : AttributeGroupId.GetHashCode());
+                result = (result*397) ^ (GlobalStandardType == null ? 0 : GlobalStandardType.GetHashCode());
                 return result;
             }
         }

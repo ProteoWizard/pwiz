@@ -244,8 +244,7 @@ namespace pwiz.Skyline.Model
             var peakTimes = new List<double>();
             string line = reader.ReadLine();
             int[] fieldIndices;
-            int fieldsTotal;
-            char correctSeparator = ReadFirstLine(line, FIELD_NAMES, REQUIRED_FIELDS, out fieldIndices, out fieldsTotal);
+            char correctSeparator = ReadFirstLine(line, FIELD_NAMES, REQUIRED_FIELDS, out fieldIndices, out _);
             // Find the first 50 peak times that are not #N/A, if any is larger than the maxRT, then times are in seconds
             while (peakTimes.Count < 50)
             {

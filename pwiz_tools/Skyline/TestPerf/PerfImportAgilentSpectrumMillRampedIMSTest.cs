@@ -284,9 +284,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     string errMsg = string.Empty;
                     var key = new LibKey(pair.NodePep.ModifiedSequence, pair.NodeGroup.PrecursorAdduct);
                     double tolerCCS = 5;
-                    if (expectedDiffs.ContainsKey(key))
+                    if (expectedDiffs.TryGetValue(key, out var diff))
                     {
-                        tolerCCS = expectedDiffs[key] + .1;
+                        tolerCCS = diff + .1;
                     }
                     if (!explicitDTs.ContainsKey(key))
                     {

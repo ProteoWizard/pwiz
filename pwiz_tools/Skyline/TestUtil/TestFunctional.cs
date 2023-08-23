@@ -533,8 +533,7 @@ namespace pwiz.SkylineTestUtil
                     string[] fields = line.ParseDsvFields(TextUtil.SEPARATOR_CSV);
                     for (int i = 0; i < fields.Length; i++)
                     {
-                        double result;
-                        if (double.TryParse(fields[i], NumberStyles.Number, CultureInfo.InvariantCulture, out result))
+                        if (double.TryParse(fields[i], NumberStyles.Number, CultureInfo.InvariantCulture, out _))
                             fields[i] = fields[i].Replace(decimalSep, decimalIntl);
                     }
                     sb.AppendLine(fields.ToCsvLine());
@@ -2603,8 +2602,9 @@ namespace pwiz.SkylineTestUtil
         {
             var list = new List<DbRefSpectra>();
             var hasAnnotations = SqliteOperations.TableExists(connection, @"RefSpectraPeakAnnotations");
-            using (var select = new SQLiteCommand(connection) { CommandText = "SELECT * FROM RefSpectra" })
-            using (var reader = @select.ExecuteReader())
+            using var select = new SQLiteCommand(connection);
+            select.CommandText = "SELECT * FROM RefSpectra";
+            using (var reader = select.ExecuteReader())
             {
                 var iAdduct = reader.GetOrdinal("precursorAdduct");
                 var iIonMobility = reader.GetOrdinal("ionMobility");
@@ -2646,8 +2646,9 @@ namespace pwiz.SkylineTestUtil
         private static IList<DbRefSpectraPeakAnnotations> GetRefSpectraPeakAnnotations(SQLiteConnection connection, DbRefSpectra refSpectrum, int refSpectraId)
         {
             var list = new List<DbRefSpectraPeakAnnotations>();
-            using (var select = new SQLiteCommand(connection) { CommandText = "SELECT * FROM RefSpectraPeakAnnotations WHERE RefSpectraId = " + refSpectraId })
-            using (var reader = @select.ExecuteReader())
+            using var select = new SQLiteCommand(connection);
+            select.CommandText = "SELECT * FROM RefSpectraPeakAnnotations WHERE RefSpectraId = " + refSpectraId;
+            using (var reader = select.ExecuteReader())
             {
                 while (reader.Read())
                 {

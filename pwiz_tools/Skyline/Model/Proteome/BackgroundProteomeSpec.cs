@@ -107,8 +107,7 @@ namespace pwiz.Skyline.Model.Proteome
 
         public FastaSequence GetFastaSequence(String proteinName)
         {
-            ProteinMetadata metadata;
-            return GetFastaSequence(proteinName, out metadata);
+            return GetFastaSequence(proteinName, out _);
         }
 
         public FastaSequence GetFastaSequence(String proteinName, out ProteinMetadata foundMetadata)

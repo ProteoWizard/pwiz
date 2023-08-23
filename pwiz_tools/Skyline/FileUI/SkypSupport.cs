@@ -46,11 +46,9 @@ namespace pwiz.Skyline.FileUI
 
             try
             {
-                using (var longWaitDlg = new LongWaitDlg
+                using (var longWaitDlg = new LongWaitDlg())
                 {
-                    Text = Resources.SkypSupport_Open_Downloading_Skyline_Document_Archive,
-                })
-                {
+                    longWaitDlg.Text = Resources.SkypSupport_Open_Downloading_Skyline_Document_Archive;
                     var progressStaus = longWaitDlg.PerformWork(parentWindow ?? _skyline, 1000, progressMonitor => Download(skyp, progressMonitor));
                     if (longWaitDlg.IsCanceled)
                         return false;

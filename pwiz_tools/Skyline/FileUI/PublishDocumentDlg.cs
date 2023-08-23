@@ -85,11 +85,9 @@ namespace pwiz.Skyline.FileUI
 
             try
             {
-                using (var waitDlg = new LongWaitDlg
-                    {
-                        Text = Resources.PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers
-                    })
+                using (var waitDlg = new LongWaitDlg())
                 {
+                    waitDlg.Text = Resources.PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers;
                     waitDlg.PerformWork(this, 800, () => PublishDocumentDlgLoad(listServerFolders));
                 }
             }
@@ -303,19 +301,16 @@ namespace pwiz.Skyline.FileUI
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            using (var dlg = new SaveFileDialog
-                                 {
-                                     InitialDirectory = Settings.Default.LibraryDirectory,
-                                     SupportMultiDottedExtensions = true,
-                                     DefaultExt = SrmDocumentSharing.EXT_SKY_ZIP,
-                                     Filter =
-                                         TextUtil.FileDialogFiltersAll(
-                                             Resources.PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents,
-                                             SrmDocumentSharing.EXT),
-                                     FileName = tbFilePath.Text,
-                                     Title = Resources.PublishDocumentDlg_btnBrowse_Click_Upload_Document
-                                 })
+            using (var dlg = new SaveFileDialog())
             {
+                dlg.InitialDirectory = Settings.Default.LibraryDirectory;
+                dlg.SupportMultiDottedExtensions = true;
+                dlg.DefaultExt = SrmDocumentSharing.EXT_SKY_ZIP;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(
+                    Resources.PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents,
+                    SrmDocumentSharing.EXT);
+                dlg.FileName = tbFilePath.Text;
+                dlg.Title = Resources.PublishDocumentDlg_btnBrowse_Click_Upload_Document;
                 if (dlg.ShowDialog(Parent) == DialogResult.OK)
                 {
                     tbFilePath.Text = dlg.FileName;

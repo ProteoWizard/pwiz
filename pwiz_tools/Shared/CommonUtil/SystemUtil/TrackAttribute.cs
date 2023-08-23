@@ -155,11 +155,6 @@ namespace pwiz.Common.SystemUtil
             return Equals(OldObject, NewObject);
         }
 
-        public bool ReferenceEquals()
-        {
-            return ReferenceEquals(OldObject, NewObject);
-        }
-
         public T OldObject { get; private set; }
         public T NewObject { get; private set; }
     }

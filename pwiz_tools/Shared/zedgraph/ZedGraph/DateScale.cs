@@ -341,13 +341,12 @@ namespace ZedGraph
 		{
 			int nTics = 1;
 
-			int year1, year2, month1, month2, day1, day2, hour1, hour2, minute1, minute2;
-			int second1, second2, millisecond1, millisecond2;
+			int year1, year2, month1, month2;
 
-			XDate.XLDateToCalendarDate( _min, out year1, out month1, out day1,
-										out hour1, out minute1, out second1, out millisecond1 );
-			XDate.XLDateToCalendarDate( _max, out year2, out month2, out day2,
-										out hour2, out minute2, out second2, out millisecond2 );
+			XDate.XLDateToCalendarDate( _min, out year1, out month1, out _,
+										out _, out _, out _, out _ );
+			XDate.XLDateToCalendarDate( _max, out year2, out month2, out _,
+										out _, out _, out _, out _ );
 
 			switch ( _majorUnit )
 			{

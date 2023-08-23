@@ -311,8 +311,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private bool ValidateEntries()
         {
             var helper = new MessageBoxHelper(this.ParentForm);
-            double ms1Tol;
-            if (!helper.ValidateDecimalTextBox(txtMS1Tolerance, 0, 100, out ms1Tol))
+            if (!helper.ValidateDecimalTextBox(txtMS1Tolerance, 0, 100, out _))
             {
                 helper.ShowTextBoxError(txtMS1Tolerance, 
                     Resources.DdaSearch_SearchSettingsControl_MS1_Tolerance_incorrect);
@@ -320,8 +319,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
             ImportPeptideSearch.SearchEngine.SetPrecursorMassTolerance(PrecursorTolerance);
 
-            double ms2Tol;
-            if (!helper.ValidateDecimalTextBox(txtMS2Tolerance, 0, 100, out ms2Tol))
+            if (!helper.ValidateDecimalTextBox(txtMS2Tolerance, 0, 100, out _))
             {
                 helper.ShowTextBoxError(txtMS2Tolerance, 
                     Resources.DdaSearch_SearchSettingsControl_MS2_Tolerance_incorrect);
