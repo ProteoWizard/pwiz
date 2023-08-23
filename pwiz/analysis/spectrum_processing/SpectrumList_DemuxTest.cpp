@@ -39,10 +39,10 @@ using namespace pwiz::analysis;
 
 ostream* os_ = 0;
 
-const size_t TEST_SPECTRUM_OVERLAP = 134;
-const size_t TEST_SPECTRUM_OVERLAP_ORIGINAL = 67;
+const size_t TEST_SPECTRUM_OVERLAP = 128;
+const size_t TEST_SPECTRUM_OVERLAP_ORIGINAL = 64; // controllerType=0 controllerNumber=1 scan=20026
 const size_t NUM_DECONV_IN_TEST_SPECTRUM_OVERLAP = 2;
-const size_t TEST_SPECTRUM_OVERLAP_DEMUX_INDEX = 134;
+const size_t TEST_SPECTRUM_OVERLAP_DEMUX_INDEX = 128;
 
 const size_t TEST_SPECTRUM_MSX = 105;
 const size_t TEST_SPECTRUM_MSX_ORIGINAL = 21;
@@ -109,7 +109,7 @@ void DemuxTest::GetMask(const vector<double>& original, const vector<double>& de
     unit_assert_operator_equal(derived.size(), mask.size());
 }
 
-void testOverlapOnly(const string& filepath)
+void testOverlapOnly(const string& filepath, bool removeNonOverlappingEdges = false)
 {
     // Select the appropriate overlap demux file
     bfs::path overlapTestFile = filepath;
@@ -123,10 +123,12 @@ void testOverlapOnly(const string& filepath)
     auto originalSpectrumList = test.GenerateSpectrumList(overlapTestFile.string());
     SpectrumList_Demux::Params demuxParams;
     demuxParams.optimization = DemuxOptimization::OVERLAP_ONLY;
+    demuxParams.removeNonOverlappingEdges = removeNonOverlappingEdges;
     auto demuxList = test.GenerateSpectrumList(overlapTestFile.string(), true, demuxParams);
 
+    int testOffset = removeNonOverlappingEdges ? 3 : 0;
     // Find the original spectrum for this demux spectrum
-    auto demuxID = demuxList.spectrumList->spectrumIdentity(TEST_SPECTRUM_OVERLAP);
+    auto demuxID = demuxList.spectrumList->spectrumIdentity(TEST_SPECTRUM_OVERLAP - testOffset);
     size_t originalIndex;
     unit_assert(TryGetOriginalIndex(demuxID, originalIndex));
 
@@ -146,7 +148,7 @@ void testOverlapOnly(const string& filepath)
     {
         // Calculate summed intensites of the demux spectra
         vector<double> peakSums(originalIntensities.size(), 0.0);
-        for (size_t i = 0, demuxIndex = TEST_SPECTRUM_OVERLAP; i < NUM_DECONV_IN_TEST_SPECTRUM_OVERLAP; ++i, ++demuxIndex)
+        for (size_t i = 0, demuxIndex = TEST_SPECTRUM_OVERLAP - testOffset; i < NUM_DECONV_IN_TEST_SPECTRUM_OVERLAP; ++i, ++demuxIndex)
         {
             auto demuxSpectrum = demuxList.spectrumList->spectrum(demuxIndex);
             auto demuxIntensities = demuxSpectrum->getIntensityArray()->data;
@@ -177,7 +179,7 @@ void testOverlapOnly(const string& filepath)
         double originalUpperOffset = originalPrecursor.isolationWindow.cvParam(MS_isolation_window_upper_offset).valueAs<double>();
         auto expectedOffset = (originalLowerOffset + originalUpperOffset) / (2.0 * static_cast<double>(NUM_DECONV_IN_TEST_SPECTRUM_OVERLAP));
         auto windowStart = originalTarget - originalLowerOffset;
-        for (size_t i = 0, demuxIndex = TEST_SPECTRUM_OVERLAP; i < NUM_DECONV_IN_TEST_SPECTRUM_OVERLAP; ++i, ++demuxIndex)
+        for (size_t i = 0, demuxIndex = TEST_SPECTRUM_OVERLAP - testOffset; i < NUM_DECONV_IN_TEST_SPECTRUM_OVERLAP; ++i, ++demuxIndex)
         {
             double expectedTarget = windowStart + expectedOffset + 2.0 * expectedOffset * i;
 
@@ -248,7 +250,7 @@ void testOverlapOnly(const string& filepath)
         40075.65
     };
 
-    auto demuxSpectrumAbsoluteCheck = demuxList.spectrumList->spectrum(TEST_SPECTRUM_OVERLAP_DEMUX_INDEX);
+    auto demuxSpectrumAbsoluteCheck = demuxList.spectrumList->spectrum(TEST_SPECTRUM_OVERLAP_DEMUX_INDEX - testOffset);
     auto demuxIntensities = demuxSpectrumAbsoluteCheck->getIntensityArray()->data;
     auto demuxMzs = demuxSpectrumAbsoluteCheck->getMZArray()->data;
 
@@ -459,6 +461,7 @@ int main(int argc, char* argv[])
             else if (bal::ends_with(filepath, "OverlapTest.mzML"))
             {
                 testOverlapOnly(filepath);
+                testOverlapOnly(filepath, true);
                 overlapTested = true;
             }
         }

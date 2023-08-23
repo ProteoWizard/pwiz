@@ -193,4 +193,28 @@
   <data name="PanoramaFilePicker_Open_Click_You_must_select_a_file_first_" xml:space="preserve">
 	  <value>You must select a file first!</value>
   </data>
+  <data name="PanoramaFolderBrowser_InitializeServers_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password" xml:space="preserve">
+	  <value>Go to Tools - Options - Panorama tab to update the username and password</value>
+  </data>
+  <data name="PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers" xml:space="preserve">
+	  <value>Failed attempting to retrieve information from the following servers</value>
+  </data>
+  <data name="PanoramaDirectoryPicker_DirectoryPicker_Load_Open" xml:space="preserve">
+	  <value>Open</value>
+  </data>
+  <data name="WebDavBrowser_AddWebDavFolders_Failed_attempting_to_retrieve_information_from_the_following_folders_" xml:space="preserve">
+	  <value>Failed attempting to retrieve information from the following folders:</value>
+  </data>
+  <data name="PanoramaFilePicker_ShowFiles_There_are_no_files_in_this_folder" xml:space="preserve">
+	  <value>There are no files in this folder</value>
+  </data>
+  <data name="PanoramaFilePicker_ShowFiles_There_are_no_Skyline_files_in_this_folder" xml:space="preserve">
+	  <value>There are no Skyline files in this folder</value>
+  </data>
+  <data name="PanoramaFilePicker_ALL_VER_All" xml:space="preserve">
+      <value>All</value>
+  </data>
+  <data name="PanoramaFilePicker_RECENT_VER_Most_recent" xml:space="preserve">
+      <value>Most recent</value>
+  </data>
 </root>

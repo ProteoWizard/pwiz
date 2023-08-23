@@ -437,7 +437,10 @@ namespace TestRunner
             //Process.GetCurrentProcess().Kill();
 
             if (commandLineArgs.ArgAsBool("wait"))
-                Console.ReadKey();
+            {
+                Console.Out.WriteLine("Press <enter> to continue");
+                Console.ReadLine();
+            }
 
             // delete per-process tools directory
             if (Path.GetFileName(ToolDescriptionHelpers.GetToolsDirectory()) != "Tools")
@@ -647,7 +650,7 @@ namespace TestRunner
                 var pwizRoot = Path.GetDirectoryName(Path.GetDirectoryName(GetSkylineDirectory().FullName));
                 string workerName = $"docker_check{GetTestRunTimeStamp()}";
                 string testRunnerExe = GetTestRunnerExe();
-                string dockerArgs = $"run --name {workerName} -it --rm -v \"{pwizRoot}\":c:\\pwiz {RunTests.DOCKER_IMAGE_NAME} \"{testRunnerExe} help\"";
+                string dockerArgs = $"run --name {workerName} -it --rm -v \"{pwizRoot}\":c:\\pwiz --entrypoint cmd {RunTests.DOCKER_IMAGE_NAME} \"/c {testRunnerExe} help\"";
                 string checkOutput = RunTests.RunCommand("docker", dockerArgs, "Error checking whether always_up_runner can start");
                 if (checkOutput.Contains("StartService FAILED"))
                 {
@@ -792,9 +795,10 @@ namespace TestRunner
             int testsFailed = 0;
             int testsResultsReturned = 0;
             int workerCount = (int) commandLineArgs.ArgAsLong("workercount");
-            int workerTimeout = Convert.ToInt32(commandLineArgs.ArgAsStringOrDefault("workertimeout", "60"));
+            var dockerTimeoutSecondsOverride = Environment.GetEnvironmentVariable("SKYLINE_TESTRUNNER_DOCKER_TIMEOUT_SEC");
+            int workerTimeout = Convert.ToInt32(commandLineArgs.ArgAsStringOrDefault("workertimeout", dockerTimeoutSecondsOverride ?? "60"));
             int loop = (int) commandLineArgs.ArgAsLong("loop");
-            var languages = commandLineArgs.ArgAsString("language").Split(',');
+            var languages = GetLanguages(commandLineArgs);
 
             if (commandLineArgs.ArgAsBool("buildcheck"))
             {
@@ -843,8 +847,8 @@ namespace TestRunner
                 }
                 else
                 {
-                    // // Select the first unused port above 9810 to communicate with the worker.
-                    // // The Windows server "macs2.gs.washington.edu" is configured to be able to use any port between 9810 and 9820
+                    // Select the first unused port above 9810 to communicate with the worker.
+                    // The Windows server "macs2.gs.washington.edu" is configured to be able to use any port between 9810 and 9820
                     workerPort = UnusedPortFinder.FindUnusedPort(9810, 65535);
                 }
                 receiver.Bind($"tcp://*:{workerPort}");
@@ -1154,6 +1158,14 @@ namespace TestRunner
             return testsFailed == 0;
         }
 
+        private static string[] GetLanguages(CommandLineArgs args)
+        {
+            string value = args.ArgAsString("language");
+            if (value == "all")
+                return allLanguages;
+            return value.Split(',');
+        }
+
         private static DirectoryInfo GetSkylineDirectory()
         {
             string skylinePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -1347,7 +1359,7 @@ namespace TestRunner
                 // Get list of languages
                 var languages = buildMode
                     ? new[] { "en" }
-                    : commandLineArgs.ArgAsString("language").Split(',');
+                    : GetLanguages(commandLineArgs);
 
                 if (showFormNames)
                     runTests.Skyline.Set("ShowFormNames", true);

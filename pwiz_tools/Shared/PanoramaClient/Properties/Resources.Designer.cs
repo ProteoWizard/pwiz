@@ -129,11 +129,76 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open.
+        /// </summary>
+        public static string PanoramaDirectoryPicker_DirectoryPicker_Load_Open {
+            get {
+                return ResourceManager.GetString("PanoramaDirectoryPicker_DirectoryPicker_Load_Open", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All.
+        /// </summary>
+        public static string PanoramaFilePicker_ALL_VER_All {
+            get {
+                return ResourceManager.GetString("PanoramaFilePicker_ALL_VER_All", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You must select a file first!.
         /// </summary>
         public static string PanoramaFilePicker_Open_Click_You_must_select_a_file_first_ {
             get {
                 return ResourceManager.GetString("PanoramaFilePicker_Open_Click_You_must_select_a_file_first_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Most recent.
+        /// </summary>
+        public static string PanoramaFilePicker_RECENT_VER_Most_recent {
+            get {
+                return ResourceManager.GetString("PanoramaFilePicker_RECENT_VER_Most_recent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There are no files in this folder.
+        /// </summary>
+        public static string PanoramaFilePicker_ShowFiles_There_are_no_files_in_this_folder {
+            get {
+                return ResourceManager.GetString("PanoramaFilePicker_ShowFiles_There_are_no_files_in_this_folder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There are no Skyline files in this folder.
+        /// </summary>
+        public static string PanoramaFilePicker_ShowFiles_There_are_no_Skyline_files_in_this_folder {
+            get {
+                return ResourceManager.GetString("PanoramaFilePicker_ShowFiles_There_are_no_Skyline_files_in_this_folder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed attempting to retrieve information from the following servers.
+        /// </summary>
+        public static string PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers {
+            get {
+                return ResourceManager.GetString("PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information" +
+                        "_from_the_following_servers", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Go to Tools - Options - Panorama tab to update the username and password.
+        /// </summary>
+        public static string PanoramaFolderBrowser_InitializeServers_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password {
+            get {
+                return ResourceManager.GetString("PanoramaFolderBrowser_InitializeServers_Go_to_Tools___Options___Panorama_tab_to_u" +
+                        "pdate_the_username_and_password", resourceCulture);
             }
         }
         
@@ -239,6 +304,16 @@ namespace pwiz.PanoramaClient.Properties {
             get {
                 return ResourceManager.GetString("UserState_GetErrorMessage_There_was_an_error_authenticating_user_credentials_on_t" +
                         "he_server__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed attempting to retrieve information from the following folders:.
+        /// </summary>
+        public static string WebDavBrowser_AddWebDavFolders_Failed_attempting_to_retrieve_information_from_the_following_folders_ {
+            get {
+                return ResourceManager.GetString("WebDavBrowser_AddWebDavFolders_Failed_attempting_to_retrieve_information_from_the" +
+                        "_following_folders_", resourceCulture);
             }
         }
         

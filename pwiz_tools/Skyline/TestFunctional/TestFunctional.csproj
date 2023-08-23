@@ -206,6 +206,7 @@
     <Compile Include="SaveAfterProteinAssociationTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
     <Compile Include="TestPanoramaClient.cs" />
+    <Compile Include="SkydFileModifiedTest.cs" />
     <Compile Include="SpectrumGridTest.cs" />
     <Compile Include="ToolServiceTestSharedClasses.cs" />
     <Compile Include="EditSpectrumFilterTest.cs" />
@@ -436,6 +437,7 @@
     <Compile Include="UpdateGlobalStandardTest.cs" />
     <Compile Include="UpgradeTest.cs" />
     <Compile Include="VolcanoPlotFormattingTest.cs" />
+    <Compile Include="ZeroLengthSrmChromatogramTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj">
@@ -632,6 +634,7 @@
     <None Include="SettingsChangeReimportTest.zip" />
     <None Include="ShareSettingsTest.zip" />
     <None Include="SingleReplicateResponseCurveTest.zip" />
+    <None Include="SkydFileModifiedTest.zip" />
     <None Include="SkylineCmdTest.zip" />
     <None Include="SkypTest.zip" />
     <None Include="SmallMoleculeIrtTest.zip" />

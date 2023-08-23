@@ -907,25 +907,16 @@ namespace pwiz.Skyline
         }
 
         /// <summary>
-        /// Method used for testing server folder browser
+        /// Method used for testing <see cref="PanoramaFilePicker"/>
         /// </summary>
-        /// <param name="server"></param>
-        /// <param name="user"></param>
-        /// <param name="pass"></param>
-        /// <param name="folderJson"></param>
-        /// <param name="fileJson"></param>
-        /// <param name="sizeJson"></param>
-        public void OpenFromPanorama(string server, string user, string pass, JToken folderJson, JToken fileJson = null, JToken sizeJson = null)
+        public void ShowPanoramaFilePicker(string server, string user, string pass, JToken folderJson, JToken fileJson = null, JToken sizeJson = null)
         {
             using var dlg = new PanoramaFilePicker();
             dlg.InitializeTestDialog(new Uri(server), user, pass, folderJson, fileJson, sizeJson);
-            if (dlg.ShowDialog() != DialogResult.Cancel)
-            {
-
-            }
+            dlg.ShowDialog(this);
         }
 
-        public void OpenFromPanorama()
+        public void OpenFromPanorama(string downloadFilePath = null)
         {
             var servers = Settings.Default.ServerList;
             if (servers.Count == 0)
@@ -960,38 +951,39 @@ namespace pwiz.Skyline
             }
 
             try
-            { 
-                using (var dlg = new PanoramaFilePicker(panoramaServers, state, true))
+            {
+                using var dlg = new PanoramaFilePicker(panoramaServers, state);
+                using (var longWaitDlg = new LongWaitDlg
+                       {
+                           Text = Resources.SkylineWindow_OpenFromPanorama_Loading_remote_server_folders,
+                       })
                 {
-                    using (var longWaitDlg = new LongWaitDlg 
-                           { 
-                               Text = Resources.SkylineWindow_OpenFromPanorama_Loading_remote_server_folders,
-                           })
+                    longWaitDlg.PerformWork(this, 0,
+                        () => dlg.InitializeDialog());
+                    if (longWaitDlg.IsCanceled)
+                        return;
+                }
+                if (dlg.ShowDialog(this) != DialogResult.Cancel)
+                {
+                    Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;
+                    var folderPath = string.Empty;
+                    if (!string.IsNullOrEmpty(Settings.Default.PanoramaLocalSavePath))
                     {
-                        longWaitDlg.PerformWork(this, 0,
-                            () => dlg.InitializeDialog());
-                        if (longWaitDlg.IsCanceled)
-                            return;
+                        folderPath = Settings.Default.PanoramaLocalSavePath;
                     }
-                    if (dlg.ShowDialog() != DialogResult.Cancel)
-                    {
-                        Settings.Default.PanoramaTreeState = dlg.TreeState;
-                        var folderPath = string.Empty;
-                        if (!string.IsNullOrEmpty(Settings.Default.PanoramaLocalSavePath))
-                        {
-                            folderPath = Settings.Default.PanoramaLocalSavePath;
-                        }
-                        var curServer = dlg.ActiveServer;
+                    var curServer = dlg.FolderBrowser.GetActiveServer();
 
-                        var downloadPath = string.Empty;
-                        var extension = dlg.FileName.EndsWith(SrmDocumentSharing.EXT) ? SrmDocumentSharing.EXT : SrmDocument.EXT;
-                        using (var saveAsDlg = new SaveFileDialog 
-                               { 
-                                   FileName = dlg.FileName, 
-                                   DefaultExt = extension, 
-                                   SupportMultiDottedExtensions = true, 
-                                   Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP, SrmDocumentSharing.FILTER_SHARING, SkypFile.FILTER_SKYP), 
-                                   InitialDirectory = folderPath, 
+                    var downloadPath = string.Empty;
+                    var extension = dlg.FileName.EndsWith(SrmDocumentSharing.EXT) ? SrmDocumentSharing.EXT : SrmDocument.EXT;
+                    if (downloadFilePath == null)
+                    {
+                        using (var saveAsDlg = new SaveFileDialog
+                               {
+                                   FileName = dlg.FileName,
+                                   DefaultExt = extension,
+                                   SupportMultiDottedExtensions = true,
+                                   Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP, SrmDocumentSharing.FILTER_SHARING, SkypFile.FILTER_SKYP),
+                                   InitialDirectory = folderPath,
                                    OverwritePrompt = true,
                                })
                         {
@@ -999,31 +991,35 @@ namespace pwiz.Skyline
                             {
                                 return;
                             }
-                            
+
                             Settings.Default.PanoramaLocalSavePath = Path.GetDirectoryName(saveAsDlg.FileName);
                             var folder = Path.GetDirectoryName(saveAsDlg.FileName);
                             if (!string.IsNullOrEmpty(folder))
                             {
-                                downloadPath = saveAsDlg.FileName; 
-                            }
-                        }
-
-                        if (!string.IsNullOrEmpty(downloadPath))
-                        {
-                            var size = dlg.FileSize;
-                            var success = DownloadPanoramaFile(downloadPath, dlg.FileName, dlg.FileUrl, curServer, size);
-                            if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && success)
-                            {
-                                OpenSharedFile(downloadPath);
-                            }
-                            else if (dlg.FileName.EndsWith(SrmDocument.EXT) && success)
-                            {
-                                OpenFile(downloadPath);
+                                downloadPath = saveAsDlg.FileName;
                             }
                         }
                     }
-                    Settings.Default.PanoramaTreeState = dlg.TreeState;
+                    else
+                    {
+                        downloadPath = downloadFilePath;
+                    }
+
+                    if (!string.IsNullOrEmpty(downloadPath))
+                    {
+                        var size = dlg.FileSize;
+                        var success = DownloadPanoramaFile(downloadPath, dlg.FileName, dlg.FileUrl, curServer, size);
+                        if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && success)
+                        {
+                            OpenSharedFile(downloadPath);
+                        }
+                        else if (dlg.FileName.EndsWith(SrmDocument.EXT) && success)
+                        {
+                            OpenFile(downloadPath);
+                        }
+                    }
                 }
+                Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;
             }
             catch (Exception e)
             {
@@ -1058,10 +1054,10 @@ namespace pwiz.Skyline
                                 var message = progressStatus.ErrorException.Message;
                                 if (message.Contains(@"404"))
                                 {
-                                    message = "@File does not exist. It may have been deleted on the server.";
+                                    message = Resources.SkylineWindow_DownloadPanoramaFile_File_does_not_exist__It_may_have_been_deleted_on_the_server_;
                                 }
-                                var alertDlg = new AlertDlg(message, MessageBoxButtons.OK) { Exception = progressStatus.ErrorException };
-                                alertDlg.ShowAndDispose(this);
+                                MessageDlg.ShowWithException(this, message, progressStatus.ErrorException);
+                                return false;
                             }
                             return false;
 
@@ -1083,28 +1079,6 @@ namespace pwiz.Skyline
                 MessageDlg.ShowException(this, e);
                 return false;
             }
-        }
-
-        private string GetDownloadName(string fullPath)
-        {
-            var count = 1;
-            var fileName = fullPath;
-            var extension = Path.GetExtension(fullPath);
-            if (fullPath.EndsWith(SrmDocumentSharing.EXT_SKY_ZIP))
-            {
-                extension = SrmDocumentSharing.EXT_SKY_ZIP;
-                fileName = fileName.Replace(SrmDocumentSharing.EXT_SKY_ZIP, string.Empty);
-            }
-            fileName = Path.GetFileNameWithoutExtension(fileName);
-
-            var newName = fullPath;
-            var path = Path.GetDirectoryName(fullPath);
-            while (File.Exists(newName))
-            {
-                var formattedName = string.Format(Resources.SkylineWindow_GetDownloadName__0___1__, fileName, count++);
-                if (path != null) newName = Path.Combine(path, formattedName + extension);
-            }
-            return newName;
         }
 
         private void saveMenuItem_Click(object sender, EventArgs e)
@@ -2099,13 +2073,11 @@ namespace pwiz.Skyline
             {
                 return;
             }
-            // Do a garbage collection in case any finalizer is supposed to release a file handle
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
-
-            FileEx.SafeDelete(AssayLibraryFileName);
-            FileEx.SafeDelete(Path.ChangeExtension(AssayLibraryFileName, BiblioSpecLiteSpec.EXT_REDUNDANT));
+            else
+            {
+                FileEx.SafeDelete(AssayLibraryFileName);
+                FileEx.SafeDelete(Path.ChangeExtension(AssayLibraryFileName, BiblioSpecLiteSpec.EXT_REDUNDANT));
+            }
             ImportMassList(inputs, description, true);
         }
 

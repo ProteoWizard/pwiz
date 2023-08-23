@@ -21,7 +21,7 @@ Core code and libraries are under the Apache open source license; the vendor lib
 
 | OS      | Status |
 | ------- | ------ |
-| Windows | ![Windows status](https://img.shields.io/teamcity/http/teamcity.labkey.org/s/bt83.svg?label=VS%202019) |
+| Windows | ![Windows status](https://img.shields.io/teamcity/http/teamcity.labkey.org/s/bt83.svg?label=VS%202022) |
 | Native Linux | ![Linux status](https://img.shields.io/teamcity/http/teamcity.labkey.org/s/bt17.svg?label=GCC%204.9) |
 | Wine Linux | ![Docker-Wine status](https://img.shields.io/teamcity/http/teamcity.labkey.org/s/ProteoWizardAndSkylineDockerContainerWineX8664.svg?label=Docker-Wine) |
 

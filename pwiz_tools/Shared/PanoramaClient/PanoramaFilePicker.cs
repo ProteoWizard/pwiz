@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient.Properties;
 
 
@@ -16,62 +18,45 @@ namespace pwiz.PanoramaClient
     {
         private static JToken _runsInfoJson;
         private static JToken _sizeInfoJson;
-        private static Dictionary<long, long> _sizeDictionary = new Dictionary<long, long>();
-        private static Dictionary<long, string> _nameDictionary = new Dictionary<long, string>();
+        private readonly Dictionary<long, long> _sizeDictionary = new Dictionary<long, long>(); // Stores the Id of a mass spec run and its size in a dictionary
+        private readonly Dictionary<long, string> _nameDictionary = new Dictionary<long, string>(); // Stores the Id of a mass spec run and its name in a dictionary
+        private readonly List<PanoramaServer> _servers;
+        private string _treeState;
         private bool _restoring;
+        private readonly bool _showWebDav;
         private int _sortColumn = -1;
-        private const string EXT = ".sky";
-        private const string RECENT_VER = "Most recent";
-        private const string ALL_VER = "All";
+
+        public static string RECENT_VER => Resources.PanoramaFilePicker_RECENT_VER_Most_recent;
+        public static string ALL_VER => Resources.PanoramaFilePicker_ALL_VER_All;
+        public const string EXT = ".sky";
         public const string ZIP_EXT = ".sky.zip";
 
-        public PanoramaFilePicker(List<PanoramaServer> servers, string stateString, bool showingSky, bool showWebDav = false, string selectedPath = null)
+        public string OkButtonText { get; set; }
+        public bool IsLoaded { get; private set; }
+        public PanoramaFolderBrowser FolderBrowser { get; private set; }
+        public string FileUrl { get; private set; } 
+        public string FileName { get; private set; } // Skyline documents can be renamed in Panorama and may have a different name than what is stored on the server
+        public long FileSize { get; private set; }
+        public JToken TestFileJson;
+        public JToken TestSizeJson;
+        public string SelectedPath { get; private set; }
+
+        public PanoramaFilePicker(List<PanoramaServer> servers, string stateString, bool showWebDav = false, string selectedPath = null)
         {
             InitializeComponent();
-            Servers = servers;
-            IsLoaded = false;
-            TreeState = stateString;
+
+            _servers = servers;
+            _treeState = stateString;
             _restoring = true;
-            ShowingSky = showingSky;
-            ShowWebDav = showWebDav;
+            _showWebDav = showWebDav;
             versionOptions.Text = RECENT_VER;
             SelectedPath = selectedPath;
             noFiles.Visible = false;
-            _restoring = false;
         }
 
         /// <summary>
-        /// Used for testing purposes
-        /// </summary>
-        public PanoramaFilePicker()
-        {
-            InitializeComponent();
-            _restoring = true;
-            IsLoaded = false;
-            versionOptions.Text = RECENT_VER;
-            ShowingSky = true;
-            _restoring = false;
-        }
-
-        public string OkButtonText { get; set; }
-        public string TreeState { get; set; }
-        public bool IsLoaded { get; set; }
-        public PanoramaFolderBrowser FolderBrowser { get; private set; }
-        public List<PanoramaServer> Servers { get; }
-        public string FileUrl { get; private set; }
-        public string FileName { get; private set; }
-        public string DownloadName { get; private set; }
-        public bool ShowingSky { get; private set; }
-        public PanoramaServer ActiveServer { get; private set; }
-        public bool FormHasClosed { get; private set; }
-        public long FileSize { get; private set; }
-        public JToken FileJson;
-        public JToken SizeJson;
-        public string SelectedPath { get; set; }
-        public bool ShowWebDav { get; set; }
-
-        /// <summary>
-        /// Sets a username and password and changes the 'Open' button text if a custom string is passed in
+        /// Changes the 'Open' button text if a custom string is passed in
+        /// and docks the PanoramaFolderBrowser user control in a panel
         /// </summary>
         private void FilePicker_Load(object sender, EventArgs e)
         {
@@ -81,83 +66,40 @@ namespace pwiz.PanoramaClient
             }
             FolderBrowser.AddFiles += AddFiles;
             FolderBrowser.Dock = DockStyle.Fill;
-            splitContainer1.Panel1.Controls.Add(FolderBrowser);
+            browserSplitContainer.Panel1.Controls.Add(FolderBrowser);
             FolderBrowser.NodeClick += FilePicker_MouseClick;
-            FolderBrowser.ShowWebDav = true;
+            urlLink.Text = FolderBrowser.GetSelectedUri();
             IsLoaded = true;
-            urlLink.Text = FolderBrowser.SelectedUrl;
-            CheckEnabled();
+            UpdateButtonState();
         }
 
         /// <summary>
-        /// Loads FolderBrowser and sets the state of navigation arrows
+        /// Loads PanoramaFolderBrowser and sets the state of navigation arrows
         /// </summary>
         public void InitializeDialog()
         {
-            if (SelectedPath != null)
+            if (_showWebDav)
             {
-                FolderBrowser = new PanoramaFolderBrowser(false, ShowingSky, TreeState, Servers, SelectedPath);
-
-                if (ShowWebDav)
-                {
-                    FolderBrowser.ShowWebDav = true;
-                }
-                
+                FolderBrowser = new WebDavBrowser(_servers.FirstOrDefault(), _treeState, SelectedPath);
             }
             else
             {
-                FolderBrowser = new PanoramaFolderBrowser(false, ShowingSky, TreeState, Servers);
+                FolderBrowser = new LKContainerBrowser(_servers, _treeState, false, SelectedPath);
             }
-            if (string.IsNullOrEmpty(TreeState))
+
+            if (string.IsNullOrEmpty(_treeState))
             {
                 up.Enabled = false;
                 back.Enabled = false;
                 forward.Enabled = false;
             }
         }
-
-        /// <summary>
-        /// Used for testing purposes
-        /// </summary>
-        /// <param name="serverUri"></param>
-        /// <param name="user"></param>
-        /// <param name="pass"></param>
-        /// <param name="folderJson"></param>
-        /// <param name="fileJson"></param>
-        /// <param name="sizeJson"></param>
-        public void InitializeTestDialog(Uri serverUri, string user, string pass, JToken folderJson, JToken fileJson, JToken sizeJson)
-        {
-            FileJson = fileJson;
-            SizeJson = sizeJson;
-            var server = new PanoramaServer(serverUri, user, pass);
-            FolderBrowser = new PanoramaFolderBrowser(server, folderJson);
-            FolderBrowser.Dock = DockStyle.Fill;
-            splitContainer1.Panel1.Controls.Add(FolderBrowser);
-            FolderBrowser.NodeClick += FilePicker_MouseClick;
-            ActiveServer = server;
-            if (string.IsNullOrEmpty(TreeState))
-            {
-                up.Enabled = false;
-                back.Enabled = false;
-                forward.Enabled = false;
-            }
-            else
-            {
-                up.Enabled = FolderBrowser.UpEnabled();
-                back.Enabled = FolderBrowser.BackEnabled();
-                forward.Enabled = FolderBrowser.ForwardEnabled();
-            }
-            IsLoaded = true;
-        }
-
 
         /// <summary>
         /// Builds a string that will be used as a URI to find all .sky folders
         /// </summary>
-        /// <returns></returns>
         private static Uri BuildQuery(string server, string folderPath, string queryName, string folderFilter, string[] columns, string sortParam)
         {
-
             var columnsQueryParam = columns != null ? "&query.columns=" + string.Join(",", columns) : string.Empty;
             var sortQueryParam = !string.IsNullOrEmpty(sortParam) ? "&query.sort={sortParam}" : string.Empty;
             var allQueryParams = $"schemaName=targetedms&query.queryName={queryName}&query.containerFilterName={folderFilter}{columnsQueryParam}{sortQueryParam}";
@@ -168,27 +110,25 @@ namespace pwiz.PanoramaClient
         /// <summary>
         /// Takes in a query string and returns the associated JSON
         /// </summary>
-        /// <param name="queryUri"></param>
-        /// <returns></returns>
         private JToken GetJson(Uri queryUri)
         {
-            var webClient = new WebClientWithCredentials(queryUri, ActiveServer.Username, ActiveServer.Password);
+            var webClient = new WebClientWithCredentials(queryUri, FolderBrowser.GetActiveServer().Username, FolderBrowser.GetActiveServer().Password);
             JToken json = webClient.Get(queryUri);
             return json;
         }
 
-
         /// <summary>
-        /// Adds all files in a particular folder 
+        /// Adds all files in a particular folder to
+        /// a ListView
         /// </summary>
-        /// <param name="newUri"></param>
-        public void AddChildFiles(Uri newUri)
+        private void AddAllFiles(Uri newUri)
         {
             var json = GetJson(newUri);
+            ShowFiles((int)json[@"fileCount"] != 0);
             if ((int)json[@"fileCount"] != 0)
             {
                 var files = json[@"files"];
-                foreach (dynamic file in files)
+                foreach (var file in files)
                 {
                     var listItem = new string[5];
                     var fileName = (string)file[@"text"];
@@ -202,34 +142,35 @@ namespace pwiz.PanoramaClient
                             continue;
                         }
 
-                        if (ShowingSky)
-                        {
-                            if (!fileName.EndsWith(EXT) && !fileName.EndsWith(ZIP_EXT))
-                            {
-                                continue;
-                            }
-                        }
 
                         var link = (string)file[@"href"];
                         link = link.Substring(1);
                         var size = (long)file[@"size"];
-                        var sizeObj = new FileSize(size);
-                        listItem[1] = sizeObj.ToString();
-                        listItem[4] = (string)file[@"creationdate"];
-                        var fileNode = fileName.EndsWith(EXT) ? new ListViewItem(listItem, 1) : new ListViewItem(listItem, 0);
+                        var sizeObj = new FileSizeFormatProvider();
+                        var sizeString = sizeObj.Format(@"fs1", size, sizeObj);
+                        listItem[1] = sizeString;
+                        // The date format for webDav files is: Thu Jul 13 12:00:00 PDT 2023
+                        // We need to use a custom date format and remove the time zone characters
+                        // in order to apply an InvariantCulture
+                        var date = (string)file[@"creationdate"];
+                        date = date.Remove(20, 4);
+                        var format = "ddd MMM dd HH:mm:ss yyyy";
+                        DateTime.TryParseExact(date, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out var formattedDate);
+                        listItem[4] = formattedDate.ToString(CultureInfo.CurrentCulture);
+                        var fileNode = fileName.EndsWith(EXT) || fileName.EndsWith(ZIP_EXT) ? new ListViewItem(listItem, 1) : new ListViewItem(listItem, 0);
                         fileNode.Tag = size;
                         fileNode.Name = link;
                         listView.Items.Add(fileNode);
                     }
                 }
             }
-            else
-            {
-                listView.HeaderStyle = ColumnHeaderStyle.None;
-                noFiles.Visible = true;
-            }
         }
 
+        /// <summary>
+        /// Populates one dictionary with the ID of a mass spec run and its
+        /// name on the server, and populates another dictionary with the ID of
+        /// a mass spec run and its size
+        /// </summary>
         private void GetRunsDict()
         {
             _nameDictionary.Clear();
@@ -250,111 +191,21 @@ namespace pwiz.PanoramaClient
         }
 
         /// <summary>
-        /// Gets the latest versions of all files in a folder and adds
-        /// them to ListView
-        /// </summary>
-        /// <exception cref="Exception"></exception>
-        private void GetLatestVersion()
-        {
-            var rowCount = _runsInfoJson[@"rowCount"];
-            if ((int)rowCount > 0)
-            {
-                listView.HeaderStyle = ColumnHeaderStyle.Clickable;
-                noFiles.Visible = false;
-                listView.Columns[3].Width = 0;
-                listView.Items.Clear();
-                var result = new string[5];
-                var fileInfos = new string[5];
-                var rows = _runsInfoJson[@"rows"];
-                GetRunsDict();
-
-                foreach (var row in rows)
-                {
-                    var versions = row[@"File/Versions"].ToString();
-                    var rowReplaced = (string)row[@"ReplacedByRun"];
-                    var replaces = (string)row[@"ReplacesRun"];
-                    var id = (long)row[@"File/Id"];
-                    _nameDictionary.TryGetValue(id, out var serverName);
-                    if ((!string.IsNullOrEmpty(replaces) && string.IsNullOrEmpty(rowReplaced)) ||
-                        versions.Equals(1.ToString()))
-                    {
-                        long size = 0;
-                        try
-                        {
-                            if (_sizeDictionary.TryGetValue(id, out var value))
-                            {
-                                size = value;
-                            }
-
-                            if (size > 0)
-                            {
-                                var sizeObj = new FileSize(size);
-                                result[1] = sizeObj.ToString();
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            throw new Exception(e.Message);
-                        }
-
-                        result[2] = versions;
-                        var name = row[@"Name"].ToString();
-                        result[0] = name;
-                        fileInfos[0] = (string)row[@"File/Proteins"];
-                        fileInfos[1] = (string)row[@"File/Peptides"];
-                        fileInfos[2] = (string)row[@"File/Precursors"];
-                        fileInfos[3] = (string)row[@"File/Transitions"];
-                        fileInfos[4] = (string)row[@"File/Replicates"];
-                        DateTime.TryParse((string)row[@"Created"], CultureInfo.CurrentCulture, DateTimeStyles.None, out var formattedDate);
-                        result[4] = formattedDate.ToString(CultureInfo.CurrentCulture);
-                        var fileNode = new ListViewItem(result, 1)
-                        {
-                            ToolTipText =
-                                $"Proteins: {fileInfos[0]}, Peptides: {fileInfos[1]}, Precursors: {fileInfos[2]}, Transitions: {fileInfos[3]}, Replicates: {fileInfos[4]}",
-                            Name = serverName,
-                            Tag = size
-                        };
-                        listView.Items.Add(fileNode);
-                    }
-                }
-                listView.Columns[4].Width = -2;
-            }
-            else
-            {
-                listView.HeaderStyle = ColumnHeaderStyle.None;
-                noFiles.Visible = true;
-            }
-        }
-
-        /// <summary>
         /// Returns true if a file has multiple versions, and false if not
         /// </summary>
-        /// <param name="json"></param>
-        /// <returns></returns>
         private bool HasVersions(JToken json)
         {
             var rows = json[@"rows"];
-            foreach (var row in rows)
-            {
-                var replaced = row[@"Replaced"].ToString();
-                if (replaced.Equals("True"))
-                {
-                    return true;
-                }
-            }
-            return false;
+            return rows.Select(row => row[@"Replaced"].ToString()).Any(replaced => replaced.Equals("True"));
         }
 
         /// <summary>
-        /// Find number of rows which gives version, and latest version is the only version where replaced is false
+        /// Given the ID of the mass spec run, find that run and
+        /// return the number of versions associated with the run and its name
         /// </summary>
-        /// <param name="json"></param>
-        /// <param name="replacedBy"></param>
-        /// <returns></returns>
         private string[] GetVersionInfo(JToken json, string replacedBy)
         {
             var result = new string[2];
-
             var rows = json[@"rows"];
             foreach (var row in rows)
             {
@@ -369,72 +220,261 @@ namespace pwiz.PanoramaClient
             return result;
         }
 
-
         /// <summary>
-        /// Given a folder path, try and add all .sky files inside that folder to this ListView
+        /// Adds Skyline files in a particular folder to the ListView
+        /// If showLatestVersion is true, only the most recent version
+        /// of all files will be shown, otherwise all versions will be shown
         /// </summary>
-        /// <param name="nodePath"></param>
-        /// <param name="l"></param>
-        /// <param name="options"></param>
-        private void AddQueryFiles(string nodePath, Control l, Control options)
+        private void AddSkyFiles(bool hasVersions, bool showLatestVersion)
         {
+            ModifyListViewCols(hasVersions, showLatestVersion);
             var rows = _runsInfoJson[@"rows"];
-            var rowCount = _runsInfoJson[@"rowCount"];
-            if ((int)rowCount > 0)
+
+            foreach (var row in rows)
             {
-                listView.HeaderStyle = ColumnHeaderStyle.Clickable;
-                noFiles.Visible = false;
-                foreach (var row in rows)
+                var fileName = (string)row[@"Name"];
+                var id = (long)row[@"File/Id"];
+                var versions = row[@"File/Versions"].ToString();
+                var rowReplaced = (string)row[@"ReplacedByRun"];
+                var replaces = (string)row[@"ReplacesRun"];
+                var listItem = new string[5];
+                _nameDictionary.TryGetValue(id, out var serverName);
+                listItem[0] = fileName;
+                long size = 0;
+                if (_sizeDictionary.TryGetValue(id, out var value))
                 {
-                    var fileName = (string)row[@"Name"];
-                    var filePath = (string)row[@"Container/Path"];
-                    var id = (long)row[@"File/Id"];
-                    _nameDictionary.TryGetValue(id, out var serverName);
-                    if (filePath.Equals(nodePath))
+                    size = value;
+                }
+
+                if (size > 0)
+                {
+                    var sizeObj = new FileSizeFormatProvider();
+                    var sizeString = sizeObj.Format(@"fs1", size, sizeObj);
+                    listItem[1] = sizeString;
+                }
+
+                if (showLatestVersion)
+                {
+                    listItem[2] = versions;
+                }
+                else
+                {
+                    var numVersions = GetVersionInfo(_runsInfoJson, rowReplaced);
+                    if (numVersions[0] != null)
                     {
-                        var listItem = new string[5];
-                        var replacedBy = row[@"ReplacedByRun"].ToString();
+                        listItem[2] = versions;
+                    }
+                    else
+                    {
+                        listItem[2] = 1.ToString();
+                    }
 
-                        listView.Columns[3].Width = 100;
-                        listView.Columns[2].Width = 60;
-                        l.Visible = true;
-                        options.Visible = true;
-                        var numVersions = GetVersionInfo(_runsInfoJson, replacedBy);
-                        listItem[0] = fileName;
-                        long size = 0;
-                        if (_sizeDictionary.TryGetValue(id, out var value))
-                        {
-                            size = value;
-                        }
-                        if (size > 0)
-                        {
-                            var sizeObj = new FileSize(size);
-                            listItem[1] = sizeObj.ToString();
-                        }
+                    if (numVersions[1] != null)
+                    {
+                        listItem[3] = numVersions[1];
+                    }
+                }
 
-                        if (numVersions[0] != null)
-                        {
-                            listItem[2] = row[@"File/Versions"].ToString(); 
-                        }
-                        else
-                        {
-                            listItem[2] = 1.ToString();
-                        }
-
-                        if (numVersions[1] != null)
-                        {
-                            listItem[3] = numVersions[1];
-                        }
-                        DateTime.TryParse((string)row[@"Created"], CultureInfo.CurrentCulture, DateTimeStyles.None, out var formattedDate);
-                        listItem[4] = formattedDate.ToString(CultureInfo.CurrentCulture);
-                        var fileNode = new ListViewItem(listItem, 1)
-                        {
-                            Name = serverName,
-                            ToolTipText = $"Proteins: {row[@"File/Proteins"]}, Peptides: {row[@"File/Peptides"]}, Precursors: {row[@"File/Precursors"]}, Transitions: {row[@"File/Transitions"]}, Replicates: {row[@"File/Replicates"]}", Tag = size
-                        };
+                DateTime.TryParse((string)row[@"Created"], CultureInfo.InvariantCulture, DateTimeStyles.None,
+                    out var formattedDate);
+                listItem[4] = formattedDate.ToString(CultureInfo.CurrentCulture);
+                var fileNode = new ListViewItem(listItem, 1)
+                {
+                    Name = serverName,
+                    ToolTipText =
+                        $"Proteins: {row[@"File/Proteins"]}, Peptides: {row[@"File/Peptides"]}, Precursors: {row[@"File/Precursors"]}, Transitions: {row[@"File/Transitions"]}, Replicates: {row[@"File/Replicates"]}",
+                    Tag = size
+                };
+                if (showLatestVersion)
+                {
+                    if ((!string.IsNullOrEmpty(replaces) && string.IsNullOrEmpty(rowReplaced)) ||
+                        versions.Equals(1.ToString()))
+                    {
                         listView.Items.Add(fileNode);
                     }
                 }
+                else
+                {
+                    listView.Items.Add(fileNode);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks if a given node has any Skyline files on the server
+        /// and if it does, updates the ListView accordingly, otherwise, show a message
+        /// saying there are no files
+        /// </summary>
+        public void AddFiles(object sender, EventArgs e)
+        {
+            try
+            {
+                _restoring = true;
+                urlLink.Text = FolderBrowser.GetSelectedUri();
+                ShowFiles(true);
+                versionOptions.Text = RECENT_VER;
+                var path = FolderBrowser.GetFolderPath();
+                listView.Items.Clear();
+                _restoring = false;
+                if (!string.IsNullOrEmpty(path))
+                {
+                    if (!_showWebDav)
+                    {
+                        if (FolderBrowser.GetNodeIsTargetedMS())
+                        {
+                            // This means we're running a test
+                            if (TestFileJson != null)
+                            {
+                                _sizeInfoJson = TestSizeJson;
+                                _runsInfoJson = TestFileJson;
+                            } 
+                            else
+                            {
+                                // Add File/DocumentSize column when it is linked up
+                                var query = BuildQuery(FolderBrowser.GetActiveServer().URI.ToString(), path, @"TargetedMSRuns", @"Current",
+                                    new[] { @"Name", @"Deleted", @"Container/Path", @"File/Proteins", @"File/Peptides", @"File/Precursors", @"File/Transitions", @"File/Replicates", @"Created", @"File/Versions", @"Replaced", @"ReplacedByRun", @"ReplacesRun", @"File/Id", @"RowId" }, string.Empty);
+                                var sizeQuery = BuildQuery(FolderBrowser.GetActiveServer().URI.ToString(), path, "Runs", "Current",
+                                    new[] { "DocumentSize", "Id", "FileName" }, string.Empty);
+                                _sizeInfoJson = GetJson(sizeQuery);
+                                _runsInfoJson = GetJson(query);
+                            }
+
+                            var versions = HasVersions(_runsInfoJson);
+                            ModifyListViewCols(versions, true);
+                            GetRunsDict();
+                            AddSkyFiles(versions, true);
+                        }
+                    }
+                    else
+                    {
+                        // For the WebDAV browser
+                        ModifyListViewCols(false);
+                        var uriString = string.Concat(FolderBrowser.GetActiveServer().URI.ToString(), PanoramaUtil.WEBDAV,
+                            path + @"/?method=json");
+                        var uri = new Uri(uriString);
+                        AddAllFiles(uri);
+                    }
+
+                    ShowFiles(listView.Items.Count >= 1);
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex is InvalidDataException
+                    || ex is IOException
+                    || ex is UnauthorizedAccessException)
+                {
+                    var alert = new AlertDlg(ex.Message, MessageBoxButtons.OK);
+                    alert.ShowDialog();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Displays either all versions of the files in a particular folder,
+        /// or only the most recent versions
+        /// </summary>
+        private void VersionOptions_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (!_restoring)
+            {
+                listView.Items.Clear();
+                AddSkyFiles(true, versionOptions.Text.Equals(RECENT_VER));
+            }
+        }
+
+        /// <summary>
+        /// When a user clicks 'Open', information is stored about the selected file
+        /// if there is one, otherwise the user is prompted to select a file
+        /// </summary>
+        private void Open_Click(object sender, EventArgs e)
+        {
+            ClickOpen();
+        }
+
+        public void ClickOpen()
+        {
+            if (listView.SelectedItems.Count != 0 && listView.SelectedItems[0] != null)
+            {
+                var downloadName = listView.SelectedItems[0].Name;
+                if (listView.SelectedItems[0].SubItems[1] != null)
+                {
+                    FileSize = (long)listView.SelectedItems[0].Tag;
+                }
+
+
+                var folderPath = FolderBrowser.GetSelectedFolderPath();
+                if (folderPath != null)
+                {
+                    if (!_showWebDav)
+                    {
+                        downloadName =
+                            string.Concat(PanoramaUtil.WEBDAV, folderPath, PanoramaUtil.FILES_W_SLASH, @"/",
+                                listView.SelectedItems[0].Name);
+                    }
+
+                    SelectedPath = folderPath;
+                }
+
+                FileUrl = FolderBrowser.GetActiveServer().URI + downloadName;
+                DialogResult = DialogResult.Yes;
+            }
+            else
+            {
+                var alert = new AlertDlg(Resources.PanoramaFilePicker_Open_Click_You_must_select_a_file_first_,
+                    MessageBoxButtons.OK);
+                alert.ShowDialog();
+            }
+        }
+
+        private void PanoramaFilePicker_FormClosing(object sender, FormClosingEventArgs e) 
+        {
+            FileName = listView.SelectedItems.Count != 0 ? listView.SelectedItems[0].Text : string.Empty;
+            _treeState = FolderBrowser.GetClosingTreeState();
+        }
+
+        /// <summary>
+        /// Given a boolean, display columns 2 and 3 if there are multiple
+        /// versions of a file, otherwise hide columns 2 and 3 if there
+        /// are not multiple versions of a file
+        /// The optional second parameter is used in cases where we are viewing
+        /// a folder with multiple versions, but we only want the latest versions
+        /// </summary>
+        private void ModifyListViewCols(bool versions, bool latestVersion = false)
+        {
+            versionLabel.Visible = versions;
+            versionOptions.Visible = versions;
+            // We extend the date column if there are no versions or if we are viewing the latest versions only
+            // If there are no versions, or we are showing latest versions, we don't need the Replaced By column
+            if (!versions || latestVersion)
+            {
+                listView.Columns[3].Width = 0;
+                listView.Columns[4].Width = -2;
+                listView.Columns[2].Width = !versions ? 0 : 60;
+            }
+            else 
+            {
+                listView.Columns[3].Width = -2;
+                listView.Columns[2].Width = -2;
+            }
+        }
+
+        /// <summary>
+        /// Given a boolean value representing if there
+        /// are files in a particular folder, display
+        /// a message saying there are no files if the boolean
+        /// is false, otherwise do not display this message if the
+        /// boolean is true
+        /// </summary>
+        private void ShowFiles(bool files)
+        {
+            noFiles.Text = _showWebDav
+                ? Resources.PanoramaFilePicker_ShowFiles_There_are_no_files_in_this_folder
+                : Resources.PanoramaFilePicker_ShowFiles_There_are_no_Skyline_files_in_this_folder;
+            if (files)
+            {
+                listView.HeaderStyle = ColumnHeaderStyle.Clickable;
+                noFiles.Visible = false;
             }
             else
             {
@@ -444,358 +484,72 @@ namespace pwiz.PanoramaClient
         }
 
         /// <summary>
-        /// Check if a given node has any skyline files on the server
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        /// <exception cref="Exception"></exception>
-        public void AddFiles(object sender, EventArgs e)
-        {
-            try
-            {
-                if (FolderBrowser.Testing)
-                {
-                    _restoring = true;
-                    versionOptions.Visible = false;
-                    versionLabel.Visible = false;
-                    versionOptions.Text = RECENT_VER;
-                    var path = FolderBrowser.Path;
-                    listView.Items.Clear();
-                    ActiveServer = FolderBrowser.ActiveServer;
-                    _restoring = false;
-                    if (!string.IsNullOrEmpty(path))
-                    {
-                        if (FolderBrowser.ShowSky)
-                        {
-                            if (FolderBrowser.CurNodeIsTargetedMS.Equals(@"True"))
-                            {
-                                _runsInfoJson = FileJson;
-                                _sizeInfoJson = SizeJson;
-                                var versions = HasVersions(_runsInfoJson);
-                                if (versions)
-                                {
-
-                                    listView.Columns[3].Width = 100;
-                                    listView.Columns[2].Width = 60;
-                                    versionLabel.Visible = true;
-                                    versionOptions.Visible = true;
-                                }
-                                else
-                                {
-                                    listView.Columns[3].Width = 0;
-                                    listView.Columns[2].Width = 0;
-                                    versionLabel.Visible = false;
-                                    versionOptions.Visible = false;
-                                }
-                                GetLatestVersion();
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    _restoring = true;
-                    urlLink.Text = FolderBrowser.SelectedUrl;
-                    versionOptions.Visible = false;
-                    versionLabel.Visible = false;
-                    versionOptions.Text = RECENT_VER;
-                    var path = FolderBrowser.Path;
-                    listView.Items.Clear();
-                    listView.HeaderStyle = ColumnHeaderStyle.Clickable;
-                    noFiles.Visible = false;
-                    ActiveServer = FolderBrowser.ActiveServer;
-                    _restoring = false;
-                    if (!string.IsNullOrEmpty(path))
-                    {
-                        if (FolderBrowser.CurNodeIsTargetedMS.Equals(@"True"))
-                        {
-                            
-                            if (FolderBrowser.ShowSky)
-                            {
-                                //Add File/DocumentSize column when it is linked up
-                                var query = BuildQuery(ActiveServer.URI.ToString(), path, @"TargetedMSRuns", @"Current",
-                                    new[] { @"Name", @"Deleted", @"Container/Path", @"File/Proteins", @"File/Peptides", @"File/Precursors", @"File/Transitions", @"File/Replicates", @"Created", @"File/Versions", @"Replaced", @"ReplacedByRun", @"ReplacesRun", @"File/Id", @"RowId" }, string.Empty);
-                                var sizeQuery = BuildQuery(ActiveServer.URI.ToString(), path, "Runs", "Current",
-                                    new[] { "DocumentSize", "Id", "FileName" }, string.Empty);
-                                _sizeInfoJson = GetJson(sizeQuery);
-                                _runsInfoJson = GetJson(query);
-                                var versions = HasVersions(_runsInfoJson);
-                                if (versions)
-                                {
-
-                                    listView.Columns[3].Width = 100;
-                                    listView.Columns[2].Width = 60;
-                                    versionLabel.Visible = true;
-                                    versionOptions.Visible = true;
-                                }
-                                else
-                                {
-                                    listView.Columns[3].Width = 0;
-                                    listView.Columns[2].Width = 0;
-                                    versionLabel.Visible = false;
-                                    versionOptions.Visible = false;
-                                }
-                                GetLatestVersion();
-                            }
-                            else
-                            {
-                                var uriString = string.Concat(ActiveServer.URI.ToString(), @"_webdav/",
-                                    path + @"/@files?method=json");
-                                var uri = new Uri(uriString);
-                                AddChildFiles(uri);
-                            }
-                        }
-                        else if (ShowWebDav)
-                        {
-                            listView.Columns[3].Width = 0;
-                            listView.Columns[2].Width = 0;
-                            versionLabel.Visible = false;
-                            versionOptions.Visible = false;
-                            var uriString = string.Concat(ActiveServer.URI.ToString(), @"_webdav/",
-                                path + @"?method=json");
-                            var uri = new Uri(uriString);
-                            AddChildFiles(uri);
-                        }
-                        else
-                        {
-                            listView.HeaderStyle = ColumnHeaderStyle.None;
-                            noFiles.Visible = true;
-                        }
-
-                        if (listView.Items.Count < 1)
-                        {
-                            listView.HeaderStyle = ColumnHeaderStyle.None;
-                            noFiles.Visible = true;
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                var alert = new AlertDlg(ex.Message, MessageBoxButtons.OK);
-                alert.ShowDialog();
-            }
-        }
-
-
-
-        /// <summary>
-        /// Displays either all versions of a Skyline file, or only the most recent version
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void VersionOptions_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (!_restoring)
-            {
-                listView.Items.Clear();
-                if (versionOptions.Text.Equals(RECENT_VER))
-                {
-                    GetLatestVersion();
-                }
-                else
-                {
-                    ActiveServer = FolderBrowser.ActiveServer;
-                    AddQueryFiles((string)FolderBrowser.Clicked.Tag, versionLabel, versionOptions);
-                }
-
-            }
-            
-        }
-
-        /// <summary>
-        /// Used for testing purposes
-        /// </summary>
-        public void TestCancel()
-        {
-            DialogResult = DialogResult.Cancel;
-            Close();
-        }
-
-        private void Cancel_Click(object sender, EventArgs e)
-        {
-            Close();
-        }
-
-        /// <summary>
-        /// When a user clicks 'Open', information is stored about the selected file
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Open_Click(object sender, EventArgs e)
-        {
-            if (listView.SelectedItems.Count != 0 && listView.SelectedItems[0] != null)
-            {
-                var downloadName = listView.SelectedItems[0].Name;
-                if (listView.SelectedItems[0].SubItems[1] != null)
-                {
-                    FileSize =(long) listView.SelectedItems[0].Tag;
-                }
-                if (FolderBrowser.ShowSky && !ShowWebDav)
-                {
-                    downloadName =
-                        string.Concat(@"_webdav", FolderBrowser.Clicked.Tag, @"/@files/", listView.SelectedItems[0]
-                            .Name); 
-                }
-                DownloadName = downloadName;
-                FileUrl = ActiveServer.URI + downloadName;
-                SelectedPath = string.Concat(ActiveServer.URI, @"_webdav", FolderBrowser.Clicked.Tag);
-
-                DialogResult = DialogResult.Yes;
-                Close();
-            }
-            else
-            {
-                var alert = new AlertDlg(Resources.PanoramaFilePicker_Open_Click_You_must_select_a_file_first_, MessageBoxButtons.OK);
-                alert.ShowDialog();
-            }
-        }
-
-
-
-        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            FormHasClosed = true;
-            FileName = listView.SelectedItems.Count != 0 ? listView.SelectedItems[0].Text : string.Empty;
-            TreeState = FolderBrowser.ClosingState();
-        }
-
-
-        /// <summary>
         /// Navigates to the parent folder of the currently selected folder
-        /// and displays it's files 
+        /// and displays its files 
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void UpButton_Click(object sender, EventArgs e)
         {
-            FolderBrowser.UpClick();
-            CheckEnabled();
+            ClickUp();
+        }
+
+        public void ClickUp()
+        {
+            FolderBrowser.UpButtonClick();
+            UpdateButtonState();
             forward.Enabled = false;
         }
 
         /// <summary>
         /// Navigates to the previous folder a user was looking at
-        /// and displays it's files
+        /// and displays its files
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void Back_Click(object sender, EventArgs e)
         {
-            back.Enabled = FolderBrowser.BackEnabled();
-            FolderBrowser.BackClick();
-            CheckEnabled();
-        }
-
-        /// <summary>
-        /// Navigates to the next folder a user was looking at
-        /// and displays it's files
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Forward_Click(object sender, EventArgs e)
-        {
-            forward.Enabled = FolderBrowser.ForwardEnabled();
-            FolderBrowser.ForwardClick();
-            CheckEnabled();
+            ClickBack();
         }
 
         public void ClickBack()
         {
-            FolderBrowser.BackClick();
-            CheckEnabled();
+            back.Enabled = FolderBrowser.BackEnabled;
+            FolderBrowser.BackButtonClick();
+            UpdateButtonState();
+        }
+
+        /// <summary>
+        /// Navigates to the next folder a user was looking at
+        /// and displays its files
+        /// </summary>
+        private void Forward_Click(object sender, EventArgs e)
+        {
+            ClickForward();
         }
 
         public void ClickForward()
         {
-            FolderBrowser.ForwardClick();
-            CheckEnabled();
+            forward.Enabled = FolderBrowser.ForwardEnabled;
+            FolderBrowser.ForwardButtonClick();
+            UpdateButtonState();
         }
 
-        public void ClickUp()
+        private void FilePicker_MouseClick(object sender, EventArgs e)
         {
-            FolderBrowser.UpClick();
-            CheckEnabled();
-        }
-
-        public void ClickOpen()
-        {
-            Open_Click(this, EventArgs.Empty);
-        }
-
-
-        public void FilePicker_MouseClick(object sender, EventArgs e)
-        {
-            up.Enabled = FolderBrowser.UpEnabled();
+            up.Enabled = FolderBrowser.UpEnabled;
             forward.Enabled = false;
-            back.Enabled = FolderBrowser.BackEnabled();
+            back.Enabled = FolderBrowser.BackEnabled;
         }
 
-        private void CheckEnabled()
+        private void UpdateButtonState()
         {
-            up.Enabled = FolderBrowser.UpEnabled();
-            forward.Enabled = FolderBrowser.ForwardEnabled();
-            back.Enabled = FolderBrowser.BackEnabled();
+            up.Enabled = FolderBrowser.UpEnabled;
+            forward.Enabled = FolderBrowser.ForwardEnabled;
+            back.Enabled = FolderBrowser.BackEnabled;
+            urlLink.Text = FolderBrowser.GetSelectedUri();
         }
 
-        public bool UpEnabled()
-        {
-            return up.Enabled;
-        }
-
-        public bool BackEnabled()
-        {
-            return back.Enabled;
-        }
-
-        public bool ForwardEnabled()
-        {
-            return FolderBrowser.ForwardEnabled();
-        }
-
-        public bool VersionsVisible()
-        {
-            return versionOptions.Visible;
-        }
-
-        public string GetItemValue(int index)
-        {
-            return listView.SelectedItems[0].SubItems[index].Text;
-        }
-
-        public string GetItemName(int index)
-        {
-            return listView.SelectedItems[0].SubItems[index].Name;
-        }
-
-        public void ClickVersions()
-        {
-            if (versionOptions.Text.Equals(RECENT_VER))
-            {
-                versionOptions.Text = ALL_VER;
-            }
-            else
-            {
-                versionOptions.Text = RECENT_VER;
-            }
-        }
-
-        public bool ColumnVisible(int index)
-        {
-            return listView.Columns[index].Width > 0;
-        }
-
-        public int FileNumber()
-        {
-            return listView.Items.Count;
-        }
-
-        public string VersionsOption()
-        {
-            return versionOptions.Text;
-        }
-
-        private void listView_ColumnClick(object sender, ColumnClickEventArgs e)
+        /// <summary>
+        /// Adapted from https://learn.microsoft.com/en-us/previous-versions/dotnet/articles/ms996467(v=msdn.10)?redirectedfrom=MSDN
+        /// </summary>
+        private void ListView_ColumnClick(object sender, ColumnClickEventArgs e)
         {
             // Determine whether the column is the same as the last column clicked.
             if (e.Column != _sortColumn)
@@ -818,44 +572,52 @@ namespace pwiz.PanoramaClient
             listView.Sort();
             // Set the ListViewItemSorter property to a new ListViewItemComparer
             // object.
-            this.listView.ListViewItemSorter = new ListViewItemComparer(e.Column,
+            listView.ListViewItemSorter = new ListViewItemComparer(e.Column,
                 listView.Sorting);
         }
 
-        public void ClickFile(string name)
+        private void ListView_DoubleClick(object sender, EventArgs e)
         {
-            listView.SelectedItems.Clear();
-            foreach (ListViewItem item in listView.Items)
-            {
-                var itemName = item.Text;
-                if (name.Equals(itemName))
-                {
-                    item.Selected = true;
-                    listView.Select();
-                    DialogResult = DialogResult.Yes;
-                    open.PerformClick();
-                }
-            }
-        }
-
-        private void listView_DoubleClick(object sender, EventArgs e)
-        {
-            Open_Click(this, e);
+            ClickOpen();
         }
 
         private void PanoramaFilePicker_SizeChanged(object sender, EventArgs e)
         {
-            noFiles.Location = new Point((listView.Location.Y + listView.Width - noFiles.Width) / 2,
-                noFiles.Location.Y);
+            ResizeLabel(e);
         }
 
+        private void ListView_SizeChanged(object sender, EventArgs e)
+        {
+            ResizeLabel(e);
+        }
 
-        private void listView_SizeChanged(object sender, EventArgs e)
+        private void ResizeLabel(EventArgs e)
         {
             noFiles.Location = new Point((listView.Location.Y + listView.Width - noFiles.Width) / 2,
                 noFiles.Location.Y);
         }
 
+        private void UrlLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            switch (e.Button)
+            {
+                case MouseButtons.Right:
+                    contextMenuStrip.Show();
+                    break;
+                case MouseButtons.Left:
+                    Process.Start(urlLink.Text);
+                    break;
+            }
+        }
+
+        private void CopyLinkAddressToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Clipboard.SetText(urlLink.Text);
+        }
+
+        /// <summary>
+        /// Adapted from https://learn.microsoft.com/en-us/previous-versions/dotnet/articles/ms996467(v=msdn.10)?redirectedfrom=MSDN
+        /// </summary>
         class ListViewItemComparer : IComparer
         {
             private int col;
@@ -867,19 +629,11 @@ namespace pwiz.PanoramaClient
             }
             public int Compare(object x, object y)
             {
-                int returnVal = -1;
+                int returnVal;
                 if (col == 1)
                 {
-                    var xTag = ((ListViewItem)x)?.Tag;
-                    var yTag = ((ListViewItem)y)?.Tag;
-                    if (xTag != null && yTag != null)
-                    {
-                        var xBytes = (long) xTag;
-                        var yBytes = (long) yTag;
-                        var xFS = new FileSize(xBytes);
-                        var yFS = new FileSize(yBytes);
-                        returnVal = xFS.CompareTo(yFS);
-                    }
+                    returnVal = Comparer<long?>.Default.Compare(((ListViewItem)x)?.Tag as long?,
+                        ((ListViewItem)y)?.Tag as long?);
                 }
                 else
                 {
@@ -895,120 +649,89 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        private void urlLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        #region Test Support
+        public PanoramaFilePicker()
         {
-            Process.Start(urlLink.Text);
-        }
-    }
+            InitializeComponent();
 
-
-    class FileSizeFormatProvider : IFormatProvider, ICustomFormatter
-    {
-        public object GetFormat(Type formatType)
-        {
-            if (formatType == typeof(ICustomFormatter)) return this;
-            return null;
+            _restoring = true;
+            versionOptions.Text = RECENT_VER;
+            _restoring = false;
         }
 
-        private const string FILE_SIZE_FORMAT = "fs";
-        private const Decimal ONE_KILO_BYTE = 1024M;
-        private const Decimal ONE_MEGA_BYTE = ONE_KILO_BYTE * 1024M;
-        private const Decimal ONE_GIGA_BYTE = ONE_MEGA_BYTE * 1024M;
-
-        public string Format(string format, object arg, IFormatProvider formatProvider)
+        public void InitializeTestDialog(Uri serverUri, string user, string pass, JToken folderJson, JToken fileJson,
+            JToken sizeJson)
         {
-            if (format == null || !format.StartsWith(FILE_SIZE_FORMAT))
+            TestFileJson = fileJson;
+            TestSizeJson = sizeJson;
+            var server = new PanoramaServer(serverUri, user, pass);
+            FolderBrowser = new TestPanoramaFolderBrowser(server, folderJson)
             {
-                return DefaultFormat(format, arg, formatProvider);
-            }
-
-            if (arg is string)
+                Dock = DockStyle.Fill
+            };
+            browserSplitContainer.Panel1.Controls.Add(FolderBrowser);
+            FolderBrowser.NodeClick += FilePicker_MouseClick;
+            if (string.IsNullOrEmpty(_treeState))
             {
-                return DefaultFormat(format, arg, formatProvider);
-            }
-
-            Decimal size;
-
-            try
-            {
-                size = Convert.ToDecimal(arg);
-            }
-            catch (InvalidCastException)
-            {
-                return DefaultFormat(format, arg, formatProvider);
-            }
-
-            string suffix;
-
-            if (size > ONE_GIGA_BYTE)
-            {
-                size /= ONE_GIGA_BYTE;
-                suffix = @" GB";
-            }
-            else if (size > ONE_MEGA_BYTE)
-            {
-                size /= ONE_MEGA_BYTE;
-                suffix = @" MB";
-            }
-            else if (size > ONE_KILO_BYTE)
-            {
-                size /= ONE_KILO_BYTE;
-                suffix = @" KB";
+                up.Enabled = false;
+                back.Enabled = false;
+                forward.Enabled = false;
             }
             else
             {
-                suffix = @" B";
+                up.Enabled = FolderBrowser.UpEnabled;
+                back.Enabled = FolderBrowser.BackEnabled;
+                forward.Enabled = FolderBrowser.ForwardEnabled;
             }
-
-            string precision = format.Substring(2);
-            if (String.IsNullOrEmpty(precision))
-                precision = @"1";
-            string formatString = @"{0:N" + precision + @"}{1}";  // Avoid ReSharper analysis
-            return String.Format(formatString, size, suffix);
         }
 
-        private static string DefaultFormat(string format, object arg, IFormatProvider formatProvider)
+        public bool UpEnabled => up.Enabled;
+
+        public bool BackEnabled => back.Enabled;
+
+        public bool ForwardEnabled => FolderBrowser.ForwardEnabled;
+
+        public bool VersionsVisible => versionOptions.Visible;
+
+        public string GetItemValue(int index)
         {
-            IFormattable formattableArg = arg as IFormattable;
-            if (formattableArg != null)
-            {
-                return formattableArg.ToString(format, formatProvider);
-            }
-            return arg.ToString();
+            return listView.SelectedItems[0].SubItems[index].Text;
         }
+
+        public string GetItemName(int index)
+        {
+            return listView.SelectedItems[0].SubItems[index].Name;
+        }
+
+        public void ClickVersions()
+        {
+            versionOptions.Text = versionOptions.Text.Equals(RECENT_VER) ? ALL_VER : RECENT_VER;
+        }
+
+        public bool ColumnVisible(int index)
+        {
+            return listView.Columns[index].Width > 0;
+        }
+
+        public int FileNumber => listView.Items.Count;
+
+        public string VersionsOption => versionOptions.Text;
+
+        public void ClickFile(string name)
+        {
+            listView.SelectedItems.Clear();
+            foreach (ListViewItem item in listView.Items)
+            {
+                var itemName = item.Text;
+                if (name.Equals(itemName))
+                {
+                    item.Selected = true;
+                    listView.Select();
+                    ClickOpen();
+                }
+            }
+        }
+
+        #endregion
     }
-
-    struct FileSize : IComparable
-    {
-        private static readonly FileSizeFormatProvider FORMAT_PROVIDER = new FileSizeFormatProvider();
-        public static FileSizeFormatProvider FormatProvider
-        {
-            get { return FORMAT_PROVIDER; }
-        }
-        public FileSize(long byteCount) : this()
-        {
-            ByteCount = byteCount;
-        }
-
-        public long ByteCount { get; private set; }
-        public override string ToString()
-        {
-            return String.Format(FORMAT_PROVIDER, @"{0:fs}", ByteCount);
-        }
-
-        public int CompareTo(object obj)
-        {
-            if (null == obj)
-            {
-                return 1;
-            }
-            if (!(obj is FileSize))
-            {
-                throw new ArgumentException(@"Must be FileSize");
-            }
-            return ByteCount.CompareTo(((FileSize)obj).ByteCount);
-        }
-    }
-
-
 }

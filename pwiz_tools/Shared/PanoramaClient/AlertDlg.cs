@@ -22,7 +22,7 @@ using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.PanoramaClient
 {
@@ -51,8 +51,14 @@ namespace pwiz.PanoramaClient
             _labelPadding = messageScrollPanel.Width - labelMessage.MaximumSize.Width;
             Message = message;
             btnMoreInfo.Parent.Controls.Remove(btnMoreInfo);
-            Text = "Skyline";
+            Text = @"Skyline";
             toolStrip1.Renderer = new NoBorderSystemRenderer();
+        }
+
+        public sealed override string Text
+        {
+            get { return base.Text; }
+            set { base.Text = value; }
         }
 
         public AlertDlg(string message, MessageBoxButtons messageBoxButtons) : this(message, messageBoxButtons, DialogResult.None)

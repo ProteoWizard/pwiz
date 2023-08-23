@@ -31,11 +31,22 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class EditSpectrumFilterTest : AbstractFunctionalTest
+    public class EditSpectrumFilterTest : AbstractFunctionalTestEx
     {
+        private RefinementSettings.ConvertToSmallMoleculesMode SmallMoleculeTestMode { get; set; }
+
         [TestMethod]
         public void TestEditSpectrumFilter()
         {
+            SmallMoleculeTestMode = RefinementSettings.ConvertToSmallMoleculesMode.none;
+            TestFilesZip = @"TestFunctional\EditSpectrumFilterTest.zip";
+            RunFunctionalTest();
+        }
+
+        [TestMethod]
+        public void TestEditSpectrumFilterAsSmallMolecules()
+        {
+            SmallMoleculeTestMode = RefinementSettings.ConvertToSmallMoleculesMode.formulas;
             TestFilesZip = @"TestFunctional\EditSpectrumFilterTest.zip";
             RunFunctionalTest();
         }
@@ -45,6 +56,10 @@ namespace pwiz.SkylineTestFunctional
             RunUI(()=>
             {
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath("SpectrumClassFilterTestDocument.sky"));
+                if (SmallMoleculeTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none)
+                {
+                    ConvertDocumentToSmallMolecules(SmallMoleculeTestMode);
+                }
                 Assert.AreEqual(1, SkylineWindow.Document.MoleculeCount);
                 Assert.AreEqual(1, SkylineWindow.Document.MoleculeTransitionGroupCount);
                 SkylineWindow.SelectedPath =

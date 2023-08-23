@@ -381,8 +381,13 @@ Version.cpp
 /pwiz_tools/Bumbershoot/idpicker/Resources/Resources.*
 /pwiz_tools/Skyline/Executables/SkylineBatch/SkylineBatch/Properties/AssemblyInfo.cs
 
+# Vendor reader test data extracted from tarballs (newer data should be committed directly to git)
+/pwiz/data/vendor_readers/*/Reader*Test.data/**/1SRef
+/pwiz/data/vendor_readers/*/Reader*Test.data/**.raw
+/pwiz/data/vendor_readers/Bruker/Reader_Bruker_Test.data
+/pwiz/data/vendor_readers/UIMF/Reader_UIMF_Test.data
+
 # Files that get extracted from vendor reader distros
-Reader*Test.data
 /pwiz_aux/msrc/utility/vendor_api/**/*.dll
 /pwiz_aux/msrc/utility/vendor_api/*/EULA.*
 /pwiz_aux/msrc/utility/vendor_api/ABI/LicenseKey.h
