@@ -208,7 +208,7 @@
     <value>msGraphExtension</value>
   </data>
   <data name="&gt;&gt;msGraphExtension.Type" xml:space="preserve">
-    <value>pwiz.Skyline.SettingsUI.MsGraphExtension, Skyline-daily, Version=21.2.1.537, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.SettingsUI.MsGraphExtension, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;msGraphExtension.Parent" xml:space="preserve">
     <value>GraphPanel</value>
