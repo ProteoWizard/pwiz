@@ -98,7 +98,8 @@ namespace pwiz.SkylineTestFunctional
                 },
                 {"DataPoints",67630.ToString(@"N0", CultureInfo.CurrentCulture)},
                 {"MzCount",31378.ToString(@"N0", CultureInfo.CurrentCulture)},
-                {"IsCentroided","False"}
+                {"IsCentroided","False"},
+                { "dotp", 0.81.ToString(CultureInfo.CurrentCulture) }
             };
 
             var expectedPropertiesProduct2 = new Dictionary<string, object>

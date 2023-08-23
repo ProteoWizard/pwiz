@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
-using System.Management;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
@@ -616,61 +615,34 @@ namespace pwiz.Skyline.Controls.Graphs
                                 nodePath.Peptide, nodePath.Precursor);
                         }
 
-                        if (_msDataFileScanHelper.Source == ChromSource.fragment) // Calculate library dotp
+                        // expectedSpectrum to docTransitions join
+                        var thisSpectrumHash = GetPeakIntensities(_msDataFileScanHelper.ScanProvider.Transitions.ToList(), stateProvider.DocumentUI);
+
+                        var isMs1 = _msDataFileScanHelper.Source == ChromSource.ms1;
+                        if (_precursor.Spectra?.Count > 0)
                         {
-                            if (_precursor.Spectra?.Count > 0)
+                            if (_precursor.DocNode.Transitions.Count(t => t.IsMs1 == isMs1) > 1)
                             {
-                                var libIntensities = _precursor.DocNode.Children.Select(t => t as TransitionDocNode)
-                                   .Where(t => t?.HasLibInfo == true && t.Id is Transition tran && tran.IonType != IonType.precursor)
-                                   .ToDictionary(t => t.Id as Transition, t => t.LibInfo.Intensity);
-
-                                var docTransitions = (
-                                    from t in _msDataFileScanHelper.ScanProvider.Transitions
-                                    where (t.Id as Transition)?.IonType != IonType.precursor
-                                    select t).ToList();
-
-                                if (libIntensities.Count > 1)
-                                {
-                                    // expectedSpectrum to docTransitions join
-                                    var thisSpectrumHash = GetPeakIntensities(docTransitions, stateProvider.DocumentUI);
-
-                                    var dotpList = (from peak in thisSpectrumHash
-                                        join libPeak in libIntensities on peak.Key equals libPeak.Key
-                                        select new
-                                        {
-                                            im = libIntensities[peak.Key],
-                                            it = peak.Value
-                                        }).ToList();
-
-                                    if (dotpList.Count > 1)
-                                        spectrumProperties.dotp = new Statistics(dotpList.Select(d => (double)d.im))
-                                            .NormalizedContrastAngleSqrt(new Statistics(
-                                                dotpList.Select(d => d.it))).ToString(Formats.PEAK_FOUND_RATIO);
-                                }
-                            }
-                        }
-
-                        if (_msDataFileScanHelper.Source == ChromSource.ms1)    // calculate isotope dotp
-                        {
-                            var docPrecursors = _msDataFileScanHelper.ScanProvider.Transitions.Where(t =>
-                                (t.Id as Transition)?.IonType == IonType.precursor).ToList();
-                            if (docPrecursors.Count > 2)
-                            {
-                                var transitionIntensities = GetPeakIntensities(docPrecursors, stateProvider.DocumentUI);
-
-                                var isotopeDist = nodePath.Precursor.Children
-                                    .Where(t => (t.Id as Transition)?.IonType == IonType.precursor)
-                                    .Select(t => new
+                                var dotpList = (
+                                    from peakDoc in _precursor.DocNode.Transitions
+                                    join peakSpec in thisSpectrumHash on peakDoc.Id equals peakSpec.Key
+                                    where peakDoc.IsMs1 == isMs1 && (peakDoc.HasLibInfo || peakDoc.IsMs1)
+                                    select new
                                     {
-                                        im = (t.Id as Transition)?.MassIndex,
-                                        isotope = (t as TransitionDocNode)?.IsotopeDistInfo
-                                    }).ToList().OrderBy(id => id.im);
+                                        expected = peakDoc.IsMs1 ? peakDoc.IsotopeDistInfo.Proportion : peakDoc.LibInfo.Intensity,
+                                        actual = peakSpec.Value
+                                    }).ToList();
 
-                                spectrumProperties.idotp =
-                                    new Statistics(isotopeDist.Select(d => (double)d.isotope.Proportion))
-                                        .NormalizedContrastAngleSqrt(
-                                            new Statistics(transitionIntensities.Values))
-                                        .ToString(Formats.PEAK_FOUND_RATIO);
+                                if (dotpList.Count > 1)
+                                {
+                                    var dotp = new Statistics(dotpList.Select(d => (double)d.expected))
+                                        .NormalizedContrastAngleSqrt(new Statistics(
+                                            dotpList.Select(d => d.actual))).ToString(Formats.PEAK_FOUND_RATIO);
+                                    if (isMs1)
+                                        spectrumProperties.idotp = dotp;
+                                    else
+                                        spectrumProperties.dotp = dotp;
+                                }
                             }
                         }
                     }
@@ -682,16 +654,23 @@ namespace pwiz.Skyline.Controls.Graphs
                 graphControlExtension.PropertiesSheet.SelectedObject = spectrumProperties;
         }
 
-        private Dictionary<Transition, double> GetPeakIntensities(
+        private Dictionary<Identity, double> GetPeakIntensities(
             List<TransitionFullScanInfo> transitions, SrmDocument document)
         {
-            var docTransitions = transitions.ToDictionary(t => t.ProductMz, t => t);
+            
+            var docTransitions = CollectionUtil.SafeToDictionary(
+                transitions.Select(t => new KeyValuePair<SignedMz, TransitionFullScanInfo>(t.ProductMz, t)));
 
             var isNegative = (_precursor.DocNode.Id as TransitionGroup)?.PrecursorAdduct.AdductCharge < 0;
             var signedQ1FilterValues = docTransitions.Select(q => q.Key).ToList();
             var key = new PrecursorTextId(_precursor.DocNode.PrecursorMz, null, null, null, null, ChromExtractor.summed);
             var filter = new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, 0, null, null, false, false);
-            filter.AddQ1FilterValues(signedQ1FilterValues, document.Settings.TransitionSettings.FullScan.GetProductFilterWindow);
+            filter.AddQ1FilterValues(signedQ1FilterValues, mz =>
+            {
+                docTransitions.TryGetValue(new SignedMz(mz, isNegative), out var transitionFullScanInfo);
+                return transitionFullScanInfo?.ExtractionWidth ??
+                       document.Settings.TransitionSettings.FullScan.GetProductFilterWindow(mz);
+            });
 
             // extract peak intensities for the document fragments from the current spectrum
             var expectedSpectrum = filter.FilterQ1SpectrumList(new[] { new MsDataSpectrum
@@ -701,7 +680,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var thisSpectrumHash = Enumerable.Range(0, expectedSpectrum.ProductFilters.Length)
                 .Select(i => new { mz = expectedSpectrum.ProductFilters[i].TargetMz, intensity = (double)expectedSpectrum.Intensities[i] })
                 .Where(d => docTransitions.ContainsKey(d.mz) && docTransitions[d.mz]?.Id is Transition)
-                .ToDictionary(d => docTransitions[d.mz]?.Id as Transition, d => d.intensity);
+                .ToDictionary(d => docTransitions[d.mz].Id, d => d.intensity);
 
             return thisSpectrumHash;
         }
