@@ -238,7 +238,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(errDlg.Message.Contains(expectedErr));
             Assert.IsTrue(errDlg.Message.Contains(TestDownloadClient.ERROR401));
 
-            // Create a client that will return a server with the same URI as a server that already exists
+            // Create a client that will return a server with the same URI as a server that is already saved in settings
             IPanoramaClient testClient = new AllValidPanoramaClient(_anotherServerUrl);
 
             var editServerDlg = ShowDialog<EditServerDlg>(errDlg.ClickOk);

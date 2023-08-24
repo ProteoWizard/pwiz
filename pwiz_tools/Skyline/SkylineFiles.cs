@@ -899,7 +899,7 @@ namespace pwiz.Skyline
                         TextUtil.LineSeparate(
                             Resources.SkylineWindow_OpenFromPanorama_No_Panorama_servers_were_found_,
                             Resources.SkylineWindow_OpenFromPanorama_Press__Add__to_add_a_new_server_),
-                        Resources.SkylineWindow_OpenFromPanorama_Add) == DialogResult.Cancel)
+                        Resources.SkylineWindow_Add) == DialogResult.Cancel)
                     return;
 
                 var serverPanoramaWeb = new Server(PanoramaUtil.PANORAMA_WEB, string.Empty, string.Empty);
@@ -987,7 +987,7 @@ namespace pwiz.Skyline
         {
             try
             {
-                var panoramaClient = new WebPanoramaClient(curServer.URI, curServer.Username, curServer.Password);
+                panoramaClient ??= new WebPanoramaClient(curServer.URI, curServer.Username, curServer.Password);
                 using (var fileSaver = new FileSaver(downloadPath))
                 {
                     using (var longWaitDlg = new LongWaitDlg())
