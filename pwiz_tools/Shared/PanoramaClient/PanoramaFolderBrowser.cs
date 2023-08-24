@@ -479,12 +479,12 @@ public class LKContainerBrowser : PanoramaFolderBrowser
             {
                 if (isTargetedMsFolder)
                 {
-                    JToken moduleProperties = subFolder[@"moduleProperties"];
+                    var moduleProperties = subFolder[@"moduleProperties"];
                     if (moduleProperties == null)
                         folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.labkey;
                     else
                     {
-                        string effectiveValue = (string)moduleProperties[0][@"effectiveValue"];
+                        var effectiveValue = (string)moduleProperties[0][@"effectiveValue"];
 
                         folderNode.ImageIndex =
                             folderNode.SelectedImageIndex =
@@ -502,12 +502,11 @@ public class LKContainerBrowser : PanoramaFolderBrowser
             if (showFiles)
             {
                 var containsTargetedMs = PanoramaUtil.HasTargetedMsModule(subFolder);
-                folderNode.Tag = (string)subFolder[@"path"];
-                folderNode.Name = containsTargetedMs.ToString();
+                folderNode.Tag = new FolderInformation(server, (string)subFolder[@"path"], containsTargetedMs);
             }
             else
             {
-                //folderNode.Tag = new FolderInformation(server, canUpload);
+                folderNode.Tag = new FolderInformation(server, canUpload);
             }
         }
     }

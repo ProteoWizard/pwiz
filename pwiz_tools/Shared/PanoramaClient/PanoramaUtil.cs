@@ -174,8 +174,6 @@ namespace pwiz.PanoramaClient
         /// <summary>
         /// Parses the JSON returned from the getContainers LabKey API to look for user permissions in the container.
         /// </summary>
-        /// <param name="folderJson"></param>
-        /// <param name="permissionType"></param>
         /// <returns>True if the user has the given permission type.</returns>
         public static bool CheckFolderPermissions(JToken folderJson, FolderPermission permissionType)
         {
