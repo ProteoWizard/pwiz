@@ -502,12 +502,11 @@ public class LKContainerBrowser : PanoramaFolderBrowser
             if (showFiles)
             {
                 var containsTargetedMs = PanoramaUtil.HasTargetedMsModule(subFolder);
-                folderNode.Tag = (string)subFolder[@"path"];
-                folderNode.Name = containsTargetedMs.ToString();
+                folderNode.Tag = new FolderInformation(server, (string)subFolder[@"path"], containsTargetedMs);
             }
             else
             {
-                //folderNode.Tag = new FolderInformation(server, canUpload);
+                folderNode.Tag = new FolderInformation(server, canUpload);
             }
         }
     }
