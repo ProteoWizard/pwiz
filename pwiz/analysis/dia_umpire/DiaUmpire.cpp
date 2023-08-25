@@ -38,12 +38,12 @@
 #include <boost/container/flat_set.hpp>
 #include <atomic>
 #include <memory>
+#include "PeakCluster.hpp"
+#include "PeakCurve.hpp"
+#include "DiaUmpire.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"
-#include "PeakCurve.hpp"
-#include "PeakCluster.hpp"
-#include "DiaUmpire.hpp"
 #include "IsotopePatternMap.hpp"
 
 

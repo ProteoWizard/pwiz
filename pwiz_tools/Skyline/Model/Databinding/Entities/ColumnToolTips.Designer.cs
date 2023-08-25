@@ -134,6 +134,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The type of analyzer that was used to collect the spectrum.
+        ///If more than one analyzer was used, the names of the analyzers will be separated by slashes..
+        /// </summary>
+        public static string Analyzer {
+            get {
+                return ResourceManager.GetString("Analyzer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Area under the curve (AUC), minus background, for the transition peak..
         /// </summary>
         public static string Area {
@@ -538,6 +548,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string CollisionEnergy {
             get {
                 return ResourceManager.GetString("CollisionEnergy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The voltage that was applied when the FAIMS spectrum was collected.
+        /// </summary>
+        public static string CompensationVoltage {
+            get {
+                return ResourceManager.GetString("CompensationVoltage", resourceCulture);
             }
         }
         
@@ -1689,6 +1708,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The subset of the selected precursors whose precursor m/z matches any of the spectra represented by the row in the Spectrum Grid..
+        /// </summary>
+        public static string MatchingPrecursors {
+            get {
+                return ResourceManager.GetString("MatchingPrecursors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Max.
         /// </summary>
         public static string Max {
@@ -2231,6 +2259,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The m/z values of the precursors that were isolated.
+        /// </summary>
+        public static string Ms1Precursors {
+            get {
+                return ResourceManager.GetString("Ms1Precursors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to For spectra that are MS Level 3 or higher, the m/z values of the precursors that were isolated after the first level of precursors were fragmented.
+        /// </summary>
+        public static string Ms2Precursors {
+            get {
+                return ResourceManager.GetString("Ms2Precursors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Indicates whether the result was obtained using only precursor intensities (MS Level 1) or product intensities (MS Level 2)..
         /// </summary>
         public static string MsLevel {
@@ -2627,6 +2673,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Number of spectra in the spectral library which match the peptide and result file..
+        /// </summary>
+        public static string PeptideSpectrumMatchCount {
+            get {
+                return ResourceManager.GetString("PeptideSpectrumMatchCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Number of data points that were used in the curve fit..
         /// </summary>
         public static string PointCount {
@@ -2876,6 +2931,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string PredictedRetentionTime {
             get {
                 return ResourceManager.GetString("PredictedRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A number representing the settings that were applied to the spectrum.
+        /// </summary>
+        public static string PresetScanConfiguration {
+            get {
+                return ResourceManager.GetString("PresetScanConfiguration", resourceCulture);
             }
         }
         
@@ -3529,6 +3593,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Text description that was added to the spectrum by the instrument method.
+        /// </summary>
+        public static string ScanDescription {
+            get {
+                return ResourceManager.GetString("ScanDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Difference between the upper and lower m/z values that the spectrum might have intensity values for.
+        /// </summary>
+        public static string ScanWindowWidth {
+            get {
+                return ResourceManager.GetString("ScanWindowWidth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The numerical value for the particular feature..
         /// </summary>
         public static string Score {
@@ -3579,6 +3661,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string SMILES {
             get {
                 return ResourceManager.GetString("SMILES", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Extra criteria that spectra must pass to be included in the extracted ion chromatogram.
+        /// </summary>
+        public static string SpectrumFilter {
+            get {
+                return ResourceManager.GetString("SpectrumFilter", resourceCulture);
             }
         }
         

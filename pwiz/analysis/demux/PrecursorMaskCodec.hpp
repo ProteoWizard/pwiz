@@ -37,13 +37,17 @@ namespace analysis{
         {
             Params() :
             variableFill(false),
-            minimumWindowSize(0.2) {}
+            minimumWindowSize(0.2),
+            removeNonOverlappingEdges(false) {}
 
             /// Whether this data acquired with variable fill times or not.
             bool variableFill;
 
             /// This tolerance is used to decide whether window boundaries are aligned on the same point
             double minimumWindowSize;
+
+            /// In overlapping DIA schemes, remove any isolation window segments at the edges that are not covered at the same depth as the rest.
+            bool removeNonOverlappingEdges;
         };
 
         /// Construct a PrecursorMaskCodec for interpreting overlapping and MSX experiments for demultiplexing.
@@ -60,6 +64,7 @@ namespace analysis{
         void SpectrumToIndices(msdata::Spectrum_const_ptr spectrumPtr, std::vector<size_t>& indices) const override;
         IsolationWindow GetIsolationWindow(size_t i) const override;
         size_t GetNumDemuxWindows() const override;
+        const std::vector<size_t>& GetDemuxWindowEdgesRemoved() const override;
         int GetSpectraPerCycle() const override;
         int GetPrecursorsPerSpectrum() const override;
         int GetOverlapsPerCycle() const override;
@@ -100,7 +105,7 @@ namespace analysis{
         /// @param[in] demuxWindows Set of possibly overlapping DemuxWindows.
         /// @param[out] demuxWindows Set of non-overlapping DemuxWindows produced from the input demuxWindows. 
         /// \pre demuxWindows is sorted and has no duplicate elements.
-        /// \post demuxWindows is output as a vector of size equal to or greater than the input vector.
+        /// \post demuxWindows is output as a vector of size equal to or greater than the input vector, possibly with edge windows removed. allDemuxWindows has all windows (no edge windows removed)
         void IdentifyOverlap(std::vector<IsolationWindow>& demuxWindows);
     
     private:
@@ -116,6 +121,9 @@ namespace analysis{
 
         /// This is effectively the index to isolation window map for translating isolation windows to 
         std::vector<IsolationWindow> isolationWindows_;
+
+        /// Isolation windows removed by edge overlap filtering
+        std::vector<size_t> edgeWindowsToRemove_;
         
         /// Number of spectra required to cover all precursor windows. This is the number of spectra required to make a fully determined
         /// system of equations.

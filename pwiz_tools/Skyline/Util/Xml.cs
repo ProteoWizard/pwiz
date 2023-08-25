@@ -1079,6 +1079,28 @@ namespace pwiz.Skyline.Util
         {
             return xElement.Attribute(name.ToString());
         }
+
+        public static double? GetNullableDouble(this XElement xElement, Enum name)
+        {
+            XAttribute attr = xElement.Attribute(name);
+            if (attr == null)
+            {
+                return null;
+            }
+
+            return Convert.ToDouble(attr.Value, CultureInfo.InvariantCulture);
+        }
+
+        public static int? GetNullableInt(this XElement xElement, Enum name)
+        {
+            XAttribute attr = xElement.Attribute(name);
+            if (attr == null)
+            {
+                return null;
+            }
+
+            return Convert.ToInt32(attr.Value, CultureInfo.InvariantCulture);
+        }
     }
 
     public interface IXmlElementHelper<out TElem>

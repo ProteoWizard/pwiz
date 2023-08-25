@@ -89,14 +89,12 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnBrowse_Click(object sender, System.EventArgs e)
         {
-            using (var saveDlg = new SaveFileDialog
+            using (var saveDlg = new SaveFileDialog())
             {
-                Title = Resources.FilterMidasLibraryDlg_btnBrowse_Click_Export_Filtered_MIDAS_Library,
-                OverwritePrompt = true,
-                DefaultExt = BiblioSpecLiteSpec.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(BiblioSpecLiteSpec.FILTER_BLIB)
-            })
-            {
+                saveDlg.Title = Resources.FilterMidasLibraryDlg_btnBrowse_Click_Export_Filtered_MIDAS_Library;
+                saveDlg.OverwritePrompt = true;
+                saveDlg.DefaultExt = BiblioSpecLiteSpec.EXT;
+                saveDlg.Filter = TextUtil.FileDialogFiltersAll(BiblioSpecLiteSpec.FILTER_BLIB);
                 if (saveDlg.ShowDialog(this) == DialogResult.OK)
                 {
                     FileName = saveDlg.FileName;

@@ -176,7 +176,17 @@ namespace pwiz.Skyline.Controls.Databinding
 
             _selector = newSelector;
             _candidatePeakGroups.Clear();
-            _candidatePeakGroups.AddRange(GetCandidatePeakGroups(newSelector));
+            try
+            {
+                _candidatePeakGroups.AddRange(GetCandidatePeakGroups(newSelector));
+            }
+            catch (Exception ex)
+            {
+                if (ExceptionUtil.IsProgrammingDefect(ex))
+                {
+                    Program.ReportException(ex);
+                }
+            }
             _bindingList.ResetBindings();
         }
 

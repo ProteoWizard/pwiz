@@ -32,6 +32,7 @@ BuildParser::BuildParser(BlibBuilder& maker,
 : fullFilename_(filename),
   blibMaker_(maker),
   fileProgressIncrement_(0),
+  filteredOutPsmCount_(0),
   lookUpBy_(SCAN_NUM_ID)
 {
     // initialize amino acid masses
@@ -329,7 +330,7 @@ sqlite3_int64 BuildParser::insertProtein(const Protein* protein) {
 void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, bool showSpecProgress) {
     // return if no psms for this file
     if( psms_.size() == 0 ) {
-        Verbosity::status("No matches found in %s.", curSpecFileName_.c_str() );
+        Verbosity::warn("No matches passed score filter in %s. %d matches did not pass filter.", curSpecFileName_.c_str(), filteredOutPsmCount_ );
         curSpecFileName_.clear();
         if( fileProgress_ ) { 
             if( fileProgressIncrement_ == 0 ){
@@ -340,6 +341,8 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
         }
         return;
     }
+
+    Verbosity::status("Read %d matches that passed the score filter (%d matches did not pass).", psms_.size(), filteredOutPsmCount_);
 
     // make sure sequences are uppercase; generate modified sequences if necessary
     verifySequences();

@@ -6,16 +6,20 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using ZedGraph;
+using SampleType = pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.SampleType;
 
 namespace pwiz.SkylineTest.Quantification
 {
     [TestClass]
     public class PiecewiseLinearFittingTest : AbstractUnitTest
     {
+        private const float symbolSize = 16;
+        private const float lineWidth = 6;
         Tuple<double, double>[] points = new[]
         {
             Tuple.Create(0.005, 1.64867E-06),
@@ -54,6 +58,7 @@ namespace pwiz.SkylineTest.Quantification
         [TestMethod]
         public void TestPiecewiseLinearFitting()
         {
+            var folder = "D:\\test\\poster";
             var weightedPoints = points.Select(p => new WeightedPoint(p.Item1, p.Item2, 1 / p.Item1 / p.Item1)).ToList();
             foreach (var xOffset in weightedPoints.Select(pt => pt.X).Distinct().OrderBy(x => x))
             {
@@ -63,28 +68,19 @@ namespace pwiz.SkylineTest.Quantification
                 image.Save(path, ImageFormat.Png);
                 Console.Out.WriteLine("XOffset: {0} Curve: {1} Error: {2}", xOffset, scoredBilinearCurve.CalibrationCurve, scoredBilinearCurve.Error);
             }
+
+            var bootstrapImage = DisplayBootstrapCurves(weightedPoints);
+            bootstrapImage.Save(Path.Combine(folder, "BootstrapCurves.png"));
         }
 
         private Image DisplayCurve(double xOffset, IList<WeightedPoint> weightedPoints, ScoredBilinearCurve scoredBilinearCurve)
         {
             var xMin = weightedPoints.Min(pt => pt.X);
             var xMax = weightedPoints.Max(pt => pt.X);
-            var symbolSize = 16;
-            var lineWidth = 6;
 
             var metrics = scoredBilinearCurve.CalibrationCurve.GetMetrics(weightedPoints);
-            var zedGraphControl = new ZedGraphControl();
-            zedGraphControl.MasterPane.Border.IsVisible = false;
-            zedGraphControl.GraphPane.Border.IsVisible = false;
-            zedGraphControl.GraphPane.Chart.Border.IsVisible = false;
+            var zedGraphControl = CreateZedGraphControl();
             zedGraphControl.GraphPane.Title.Text = "Candidate Calibration Curve: Linear portion is where x > " + xOffset;
-            zedGraphControl.GraphPane.Title.FontSpec.Size = 24f;
-            zedGraphControl.GraphPane.IsFontsScaled = false;
-            zedGraphControl.GraphPane.XAxis.MajorTic.IsOpposite = false;
-            zedGraphControl.GraphPane.XAxis.MinorTic.IsOpposite = false;
-            zedGraphControl.GraphPane.YAxis.MajorTic.IsOpposite = false;
-            zedGraphControl.GraphPane.YAxis.MinorTic.IsOpposite = false;
-            zedGraphControl.GraphPane.Legend.FontSpec.Size = 18f;
 
             var linearPoints = new PointPairList(weightedPoints.Where(pt => pt.X > xOffset)
                 .Select(pt => new PointPair(pt.X, pt.Y)).ToList());
@@ -163,22 +159,7 @@ namespace pwiz.SkylineTest.Quantification
             //
             // var calibrationCurve = new LineItem(null, calibrationPoints, Color.Black, SymbolType.None, 2);
             // zedGraphControl.GraphPane.CurveList.Add(calibrationCurve);
-            zedGraphControl.GraphPane.XAxis.Scale.Min = xMin * .9;
-            zedGraphControl.GraphPane.XAxis.Scale.Max = xMax * 1.1;
-            zedGraphControl.GraphPane.XAxis.Type = AxisType.Log;
-            zedGraphControl.GraphPane.XAxis.Title.Text = "Analyte Concentration";
-            zedGraphControl.GraphPane.XAxis.Title.FontSpec.Size = 24f;
-            var allPoints =
-                zedGraphControl.GraphPane.CurveList.SelectMany(curve =>
-                    Enumerable.Range(0, curve.Points.Count).Select(index => curve.Points[index])).ToList();
-
-            double yMin = allPoints.Min(pt => pt.Y);
-            double yMax = allPoints.Max(pt => pt.Y);
-            zedGraphControl.GraphPane.YAxis.Scale.Min = yMin * .9;
-            zedGraphControl.GraphPane.YAxis.Scale.Max = yMax * 1.1;
-            zedGraphControl.GraphPane.YAxis.Type = AxisType.Log;
-            zedGraphControl.GraphPane.YAxis.Title.Text = "Peak Area";
-            zedGraphControl.GraphPane.YAxis.Title.FontSpec.Size = 24f;
+            SetScale(zedGraphControl.GraphPane);
             List<string> labelLines = new List<string>
             {
                 metrics.ToString(),
@@ -199,6 +180,48 @@ namespace pwiz.SkylineTest.Quantification
             return zedGraphControl.MasterPane.GetImage(1000, 1000, 96);
         }
 
+        private Image DisplayBootstrapCurves(IList<WeightedPoint> weightedPoints)
+        {
+            var bootstrapFiguresOfMeritCalculator = new BootstrapFiguresOfMeritCalculator(.4);
+            var bootstrapCurves = new List<ImmutableList<PointPair>>();
+            var lod = BootstrapFiguresOfMeritCalculator.ComputeLod(weightedPoints);
+            var loq = bootstrapFiguresOfMeritCalculator.ComputeBootstrappedLoq(weightedPoints, bootstrapCurves);
+            var calibrationCurve = RegressionFit.BILINEAR.Fit(weightedPoints);
+            var xMin = weightedPoints.Min(pt => pt.X);
+            var xMax = weightedPoints.Max(pt => pt.X);
+            var standards = new LineItem("Standard",
+                new PointPairList(weightedPoints.Select(pt => new PointPair(pt.X, pt.Y)).ToList()),
+                SampleType.STANDARD.Color, SampleType.STANDARD.SymbolType);
+            standards.Line.IsVisible = false;
+            standards.Symbol.Size = symbolSize;
+            var zedGraphControl = new ZedGraphControl();
+            zedGraphControl.GraphPane.CurveList.Add(standards);
+            List<CurveItem> bootstrapCurveItems = new List<CurveItem>();
+            var boostrapColor = Color.FromArgb(40, Color.Teal);
+            foreach (var bootstrapPoints in bootstrapCurves)
+            {
+                string title = bootstrapCurveItems.Count == 0 ? QuantificationStrings.CalibrationGraphControl_DoUpdate_Bootstrap_Curve : null;
+                var curve = new LineItem(title, new PointPairList(bootstrapPoints), boostrapColor, SymbolType.None,
+                    lineWidth);
+                bootstrapCurveItems.Add(curve);
+            }
+
+            GetYRange(zedGraphControl.GraphPane.CurveList.Concat(bootstrapCurveItems), out double minY, out double maxY);
+            zedGraphControl.GraphPane.CurveList.Add(new LineItem(QuantificationStrings.CalibrationGraphControl_DoUpdate_Limit_of_Detection, new PointPairList(new[] { lod, lod }, new[] { minY, maxY }), Color.Black, SymbolType.None)
+            {
+                Line = { Style = DashStyle.Dot, Width = lineWidth }
+            });
+
+            zedGraphControl.GraphPane.CurveList.Add(new LineItem(QuantificationStrings.CalibrationGraphControl_DoUpdate_Lower_Limit_of_Quantification, new PointPairList(new[] { loq, loq }, new[] { minY, maxY }), Color.Black, SymbolType.None)
+            {
+                Line = { Style = DashStyle.Dash, Width = lineWidth }
+            });
+            zedGraphControl.GraphPane.CurveList.AddRange(bootstrapCurveItems);
+            SetScale(zedGraphControl.GraphPane);
+            return zedGraphControl.MasterPane.GetImage(1000, 1000, 96);
+
+        }
+
         private ZedGraphControl CreateZedGraphControl()
         {
             var zedGraphControl = new ZedGraphControl();
@@ -214,7 +237,33 @@ namespace pwiz.SkylineTest.Quantification
             zedGraphControl.GraphPane.Legend.FontSpec.Size = 18f;
             zedGraphControl.GraphPane.XAxis.Type = AxisType.Log;
             zedGraphControl.GraphPane.XAxis.Title.Text = "Analyte Concentration";
+            zedGraphControl.GraphPane.XAxis.Title.FontSpec.Size = 24f;
+            zedGraphControl.GraphPane.YAxis.Type = AxisType.Log;
+            zedGraphControl.GraphPane.YAxis.Title.Text = "Normalized Peak Area";
+            zedGraphControl.GraphPane.YAxis.Title.FontSpec.Size = 24f;
+            return zedGraphControl;
+        }
 
+        private void SetScale(GraphPane graphPane)
+        {
+            var allPoints = graphPane.CurveList
+                .SelectMany(curve => Enumerable.Range(0, curve.Points.Count).Select(i => curve.Points[i])).ToList();
+            var xMin = allPoints.Min(pt => pt.X);
+            var xMax = allPoints.Max(pt => pt.X);
+            graphPane.XAxis.Scale.Min = xMin * .9;
+            graphPane.XAxis.Scale.Max = xMax * 1.1;
+            var yMin = allPoints.Min(pt => pt.Y);
+            var yMax = allPoints.Max(pt => pt.Y);
+            graphPane.YAxis.Scale.Min = yMin * .9;
+            graphPane.YAxis.Scale.Max = yMax * 1.1;
+        }
+
+        private void GetYRange(IEnumerable<CurveItem> curves, out double yMin, out double yMax)
+        {
+            var allPoints =
+                curves.SelectMany(curve => Enumerable.Range(0, curve.Points.Count).Select(i => curve.Points[i])).ToList();
+            yMin = allPoints.Min(pt => pt.Y);
+            yMax = allPoints.Max(pt => pt.Y);
         }
     }
 }

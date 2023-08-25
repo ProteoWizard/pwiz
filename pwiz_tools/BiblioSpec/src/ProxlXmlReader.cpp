@@ -407,6 +407,8 @@ void ProxlXmlReader::calcPsms() {
                             break;
                     }
                 }
+                else
+                    ++filteredOutPsmCount_;
                 delete proxlPsm;
             }
         }

@@ -678,12 +678,10 @@ namespace SkylineTester
 
         public void BrowseBuild()
         {
-            using (var dlg = new FolderBrowserDialog
+            using (var dlg = new FolderBrowserDialog())
             {
-                Description = "Select or create a root folder for build source files.",
-                ShowNewFolderButton = true
-            })
-            {
+                dlg.Description = "Select or create a root folder for build source files.";
+                dlg.ShowNewFolderButton = true;
                 if (dlg.ShowDialog(MainWindow) == DialogResult.OK)
                 {
                     var nightlyRoot = dlg.SelectedPath;
@@ -733,10 +731,8 @@ namespace SkylineTester
 
         private bool GraphMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
-            CurveItem nearestCurve;
-            int index;
             if (_mouseDownLocation == Point.Empty &&
-                sender.GraphPane.FindNearestPoint(new PointF(e.X, e.Y), out nearestCurve, out index))
+                sender.GraphPane.FindNearestPoint(new PointF(e.X, e.Y), out _, out _))
             {
                 sender.Cursor = Cursors.Hand;
                 return true;

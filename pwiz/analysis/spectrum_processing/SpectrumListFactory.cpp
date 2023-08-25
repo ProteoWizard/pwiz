@@ -851,6 +851,7 @@ SpectrumListPtr filterCreator_demux(const MSData& msd, const string& carg, pwiz:
     string optimization = parseKeyValuePair<string>(arg, "optimization=", "none");
     demuxParams.interpolateRetentionTime = parseKeyValuePair<LocaleBool>(arg, "interpolateRT=", k_defaultDemuxParams.interpolateRetentionTime);
     demuxParams.minimumWindowSize = parseKeyValuePair<double>(arg, "minWindowSize=", k_defaultDemuxParams.minimumWindowSize);
+    demuxParams.removeNonOverlappingEdges = parseKeyValuePair<LocaleBool>(arg, "removeNonOverlappingEdges=", k_defaultDemuxParams.removeNonOverlappingEdges);
     bal::trim(arg);
     if (!arg.empty())
         throw runtime_error("[demultiplex] unhandled text remaining in argument string: \"" + arg + "\"");
@@ -875,7 +876,8 @@ UsageInfo usage_demux = {
     " noSumNormalize=<bool (false)>"
     " optimization=<(none)|overlap_only>"
     " interpolateRT=<bool (true)>"
-    " minWindowSize=<real (0.2)>",
+    " minWindowSize=<real (0.2)>"
+    " removeNonOverlappingEdges=<bool (false)>",
     "Separates overlapping or MSX multiplexed spectra into several demultiplexed spectra by inferring from adjacent multiplexed spectra. Optionally handles variable fill times (for Thermo)." };
 
 SpectrumListPtr filterCreator_diaUmpire(const MSData& msd, const string& carg, pwiz::util::IterationListenerRegistry* ilr)
@@ -1743,15 +1745,15 @@ string SpectrumListFactory::usage(bool detailedHelp, const char *morehelp_prompt
     else
     {
         oss << endl;
-        oss << "Note: Filters are applied sequentially in the order that you list them, and the sequence order\n";
-        oss << "can make a large difference in your output.  In particular, the peakPicking filter must be first\n";
-        oss << "in line if you wish to use the vendor-supplied centroiding algorithms since these use the vendor\n";
+        oss << "Note: Filters are applied sequentially in the order that you list them, and the sequence order ";
+        oss << "can make a large difference in your output.  In particular, the peakPicking filter must be first ";
+        oss << "in line if you wish to use the vendor-supplied centroiding algorithms since these use the vendor ";
         oss << "DLLs, which only operate on raw untransformed data.\n\n";
         oss << "Many filters take 'int_set' arguments.  An \'int_set\' is a list of intervals of the form [a,b] or a[-][b].\n";
         oss << "For example \'[0,3]\' and \'0-3\' both mean \'the set of integers from 0 to 3 inclusive\'.\n";
         oss << "\'1-\' means \'the set of integers from 1 to the largest allowable number\'.  \n";
         oss << "\'9\' is also an integer set, equivalent to \'[9,9]\'.\n";
-        oss << "\'[0,2] 5-7\' is the set \'0 1 2 5 6 7\'. \n";
+        oss << "\'[0,2] 5-7\' is the set \'0 1 2 5 6 7\'. \n\n";
     }
 
     for (JumpTableEntry* it=jumpTable_; it!=jumpTableEnd_; ++it)

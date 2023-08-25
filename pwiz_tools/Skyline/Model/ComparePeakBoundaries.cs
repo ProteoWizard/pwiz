@@ -127,10 +127,9 @@ namespace pwiz.Skyline.Model
                 {
                     var line = reader.ReadLine();
                     var fieldNames = PeakBoundaryImporter.FIELD_NAMES.ToList();
-                    int fieldsTotal;
                     int[] fieldIndices;
                     var separator = PeakBoundaryImporter.DetermineCorrectSeparator(line, fieldNames,
-                        PeakBoundaryImporter.REQUIRED_NO_CHROM, out fieldIndices, out fieldsTotal);
+                        PeakBoundaryImporter.REQUIRED_NO_CHROM, out fieldIndices, out _);
                     ApexPresent = separator != null && fieldIndices[(int) PeakBoundaryImporter.Field.apex_time] != -1;
                 }
                 _docCompare = Importer.Import(FilePath, progressMonitor, lineCount, true, !ApexPresent);

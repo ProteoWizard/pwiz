@@ -1637,9 +1637,9 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             // Retention Index
             double retentionIndexKey = rt.GetValueOrDefault();
-            if (_retentionIndices.ContainsKey(retentionIndexKey))
+            if (_retentionIndices.TryGetValue(retentionIndexKey, out var retentionIndex))
             {
-                writer.Write(_retentionIndices[retentionIndexKey]);
+                writer.Write(retentionIndex);
             }
             else
             {
@@ -3848,7 +3848,7 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            public PointPairList Get(SchedulingMetrics metricType) { return _metrics.ContainsKey(metricType) ? _metrics[metricType] : new PointPairList(); }
+            public PointPairList Get(SchedulingMetrics metricType) { return _metrics.TryGetValue(metricType, out var metric) ? metric : new PointPairList(); }
         }
     }
 
@@ -4647,8 +4647,7 @@ namespace pwiz.Skyline.Model
 
             try
             {
-                uint type;
-                if (RegQueryValueEx(hKeyQuery, valueName, 0, out type, sb, ref size) != 0)
+                if (RegQueryValueEx(hKeyQuery, valueName, 0, out _, sb, ref size) != 0)
                     return null;
             }
             finally
