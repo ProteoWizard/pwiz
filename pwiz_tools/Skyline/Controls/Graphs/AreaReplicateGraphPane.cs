@@ -27,6 +27,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
@@ -709,10 +710,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public override ImmutableList<float> GetToolTipDataSeries()
-        {
-            return _dotpData;
-        }
         public override void PopulateTooltip(int index, CurveItem targetCurve)
         {
             if(targetCurve is LineItem line)
@@ -722,6 +719,18 @@ namespace pwiz.Skyline.Controls.Graphs
                 ToolTip.AddLine(
                     string.Format(CultureInfo.CurrentCulture, Resources.AreaReplicateGraphPane_Tooltip_Dotp, DotpLabelText),
                     string.Format(CultureInfo.CurrentCulture, @"{0:F02}", _dotpData[index]));
+                ToolTip.YPosition = null;
+            }
+
+            if (targetCurve is BarItem)
+            {
+                ToolTip.ClearData();
+                ToolTip.AddLine(Resources.AreaReplicateGraphPane_Tooltip_Replicate, XAxis.Scale.TextLabels[index]);
+                var total = CurveList.OfType<BarItem>().Sum(curve => curve.Points[index].Y);
+                foreach (var ion in CurveList.OfType<BarItem>())
+                    ToolTip.AddLine(ion.Label.Text, (ion.Points[index].Y / total).ToString(Formats.PEAK_AREA_NORMALIZED, CultureInfo.CurrentCulture));
+
+                ToolTip.YPosition = total;
             }
         }
 
