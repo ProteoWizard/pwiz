@@ -317,7 +317,7 @@ namespace pwiz.Skyline.Model.Results
                 var chromGroupIdProto = new ChromatogramGroupIdsProto.Types.ChromatogramGroupId()
                 {
                     TargetIndex = targets.Add(id.Target),
-                    QcTraceName = id.QcTraceName
+                    QcTraceName = id.QcTraceName ?? string.Empty
                 };
                 foreach (var filter in id.SpectrumClassFilter.Clauses)
                 {
