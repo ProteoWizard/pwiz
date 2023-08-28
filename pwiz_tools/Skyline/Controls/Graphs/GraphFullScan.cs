@@ -608,44 +608,59 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         var nodePath = DocNodePath.GetNodePath(_msDataFileScanHelper.CurrentTransition?.Id,
                             _documentContainer.DocumentUI);
-
-                        if (nodePath !=null && !nodePath.Precursor.Id.Equals(_precursor?.DocNode?.Id))
+                        //if current transition is deleted look up precursor from any of the transitions in the graph
+                        if(nodePath == null)
                         {
-                            _precursor = new GraphSpectrum.Precursor(_documentContainer.DocumentUI.Settings, null,
-                                nodePath.Peptide, nodePath.Precursor);
-                        }
-
-                        // expectedSpectrum to docTransitions join
-                        var thisSpectrumHash = GetPeakIntensities(_msDataFileScanHelper.ScanProvider.Transitions.ToList(), stateProvider.DocumentUI);
-
-                        var isMs1 = _msDataFileScanHelper.Source == ChromSource.ms1;
-                        if (_precursor.Spectra?.Count > 0)
-                        {
-                            if (_precursor.DocNode.Transitions.Count(t => t.IsMs1 == isMs1) > 1)
+                            foreach (var t in _msDataFileScanHelper.ScanProvider.Transitions)
                             {
-                                var dotpList = (
-                                    from peakDoc in _precursor.DocNode.Transitions
-                                    join peakSpec in thisSpectrumHash on peakDoc.Id equals peakSpec.Key
-                                    where peakDoc.IsMs1 == isMs1 && (peakDoc.HasLibInfo || peakDoc.IsMs1)
-                                    select new
-                                    {
-                                        expected = peakDoc.IsMs1 ? peakDoc.IsotopeDistInfo.Proportion : peakDoc.LibInfo.Intensity,
-                                        actual = peakSpec.Value
-                                    }).ToList();
-
-                                if (dotpList.Count > 1)
-                                {
-                                    var dotp = new Statistics(dotpList.Select(d => (double)d.expected))
-                                        .NormalizedContrastAngleSqrt(new Statistics(
-                                            dotpList.Select(d => d.actual))).ToString(Formats.PEAK_FOUND_RATIO);
-                                    if (isMs1)
-                                        spectrumProperties.idotp = dotp;
-                                    else
-                                        spectrumProperties.dotp = dotp;
-                                }
+                                nodePath = DocNodePath.GetNodePath(t.Id, _documentContainer.DocumentUI);
+                                if (nodePath != null)
+                                    break;
                             }
                         }
-                    }
+
+                        if (nodePath !=null)
+                        {
+                            if (!ReferenceEquals(nodePath.Precursor, _precursor?.DocNode))
+                            {
+                                _precursor = new GraphSpectrum.Precursor(_documentContainer.DocumentUI.Settings, null,
+                                    nodePath.Peptide, nodePath.Precursor);
+                            }
+
+                            // expectedSpectrum to docTransitions join
+                            var thisSpectrumHash = GetPeakIntensities(
+                                _msDataFileScanHelper.ScanProvider.Transitions.ToList(), stateProvider.DocumentUI);
+
+                            var isMs1 = _msDataFileScanHelper.Source == ChromSource.ms1;
+                            if (_precursor.Spectra?.Count > 0)
+                            {
+                                if (_precursor.DocNode.Transitions.Count(t => t.IsMs1 == isMs1) > 1)
+                                {
+                                    var dotpList = (
+                                        from peakDoc in _precursor.DocNode.Transitions
+                                        join peakSpec in thisSpectrumHash on peakDoc.Id equals peakSpec.Key
+                                        where peakDoc.IsMs1 == isMs1 && (peakDoc.HasLibInfo || peakDoc.IsMs1)
+                                        select new
+                                        {
+                                            expected = peakDoc.IsMs1
+                                                ? peakDoc.IsotopeDistInfo.Proportion
+                                                : peakDoc.LibInfo.Intensity,
+                                            actual = peakSpec.Value
+                                        }).ToList();
+
+                                    if (dotpList.Count > 1)
+                                    {
+                                        var dotp = new Statistics(dotpList.Select(d => (double)d.expected))
+                                            .NormalizedContrastAngleSqrt(new Statistics(
+                                                dotpList.Select(d => d.actual))).ToString(Formats.PEAK_FOUND_RATIO);
+                                        if (isMs1)
+                                            spectrumProperties.idotp = dotp;
+                                        else
+                                            spectrumProperties.dotp = dotp;
+                                    }
+                                }
+                            }
+                        }                    }
                 }
             }
 
