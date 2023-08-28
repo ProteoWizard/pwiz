@@ -13863,4 +13863,7 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="SkylineWindow_ShowPublishDlg_Document_cannot_be_uploaded_to_a_Panorama_server_without_a_user_account_" xml:space="preserve">
     <value>Document cannot be uploaded to a Panorama server without a user account.</value>
   </data>
+  <data name="ProteinAssociation_CreateDocTree_Unmapped_Peptides" xml:space="preserve">
+    <value>Unmapped Peptides</value>
+  </data>
 </root>
