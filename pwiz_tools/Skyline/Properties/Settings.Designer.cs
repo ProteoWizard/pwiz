@@ -3395,6 +3395,30 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string PanoramaTreeState {
+            get {
+                return ((string)(this["PanoramaTreeState"]));
+            }
+            set {
+                this["PanoramaTreeState"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string PanoramaLocalSavePath {
+            get {
+                return ((string)(this["PanoramaLocalSavePath"]));
+            }
+            set {
+                this["PanoramaLocalSavePath"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool FullScanPropertySheetVisible {
             get {

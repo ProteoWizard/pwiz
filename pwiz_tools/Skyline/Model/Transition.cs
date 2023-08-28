@@ -438,8 +438,7 @@ namespace pwiz.Skyline.Model
 
         public static Adduct GetChargeFromIndicator(string text, int min, int max)
         {
-            int foundAt;
-            return GetChargeFromIndicator(text, min, max, out foundAt);
+            return GetChargeFromIndicator(text, min, max, out _);
         }
 
         public static Adduct GetChargeFromIndicator(string text, int min, int max, Adduct defaultVal)

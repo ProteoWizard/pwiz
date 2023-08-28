@@ -54,7 +54,7 @@ namespace SkylineBatch
                 using (var wc = new WebClient())
                 {
                     var realName = Path.Combine(_panoramaFile.DownloadFolder, _panoramaFile.FileName);
-                    var panoramaServerUri = new Uri("https://panoramaweb.org/");
+                    var panoramaServerUri = new Uri(Uri.UnescapeDataString(_server.URI.GetLeftPart(UriPartial.Authority)));
                     var downloadUri = new Uri(_panoramaFile.DownloadUrl);
                     var size = PanoramaServerConnector.GetSize(downloadUri, panoramaServerUri,
                         new WebPanoramaClient(panoramaServerUri), _server.FileSource.Username,

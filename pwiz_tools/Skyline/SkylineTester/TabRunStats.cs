@@ -143,12 +143,10 @@ namespace SkylineTester
         /// </summary>
         public void ExportCSV()
         {
-            using (var openFileDlg = new SaveFileDialog
-                   {
-                       Filter = @"CSV files (*.csv)|*.csv|All files (*.*)|*.*",
-                       Title = @"Export Run Stats"
-                   })
+            using (var openFileDlg = new SaveFileDialog())
             {
+                openFileDlg.Filter = @"CSV files (*.csv)|*.csv|All files (*.*)|*.*";
+                openFileDlg.Title = @"Export Run Stats";
                 if (openFileDlg.ShowDialog() != DialogResult.OK)
                     return;
                 using (var report = new StreamWriter(openFileDlg.FileName))

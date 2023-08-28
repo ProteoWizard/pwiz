@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Windows.Forms;
+using pwiz.PanoramaClient;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -9,6 +10,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using AlertDlg = pwiz.Skyline.Alerts.AlertDlg;
 using Thread = System.Threading.Thread;
 
 namespace pwiz.Skyline.FileUI
@@ -44,11 +46,9 @@ namespace pwiz.Skyline.FileUI
 
             try
             {
-                using (var longWaitDlg = new LongWaitDlg
+                using (var longWaitDlg = new LongWaitDlg())
                 {
-                    Text = Resources.SkypSupport_Open_Downloading_Skyline_Document_Archive,
-                })
-                {
+                    longWaitDlg.Text = Resources.SkypSupport_Open_Downloading_Skyline_Document_Archive;
                     var progressStaus = longWaitDlg.PerformWork(parentWindow ?? _skyline, 1000, progressMonitor => Download(skyp, progressMonitor));
                     if (longWaitDlg.IsCanceled)
                         return false;
@@ -337,7 +337,7 @@ namespace pwiz.Skyline.FileUI
             {
                 if (skyp.HasCredentials())
                 {
-                    wc.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(skyp.ServerMatch.Username, skyp.ServerMatch.Password));
+                    wc.Headers.Add(HttpRequestHeader.Authorization, PanoramaServer.GetBasicAuthHeader(skyp.ServerMatch.Username, skyp.ServerMatch.Password));
                 }
 
                 wc.DownloadProgressChanged += (s,e) =>

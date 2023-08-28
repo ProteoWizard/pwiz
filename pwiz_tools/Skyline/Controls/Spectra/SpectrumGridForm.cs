@@ -726,11 +726,9 @@ namespace pwiz.Skyline.Controls.Spectra
             var filters = new List<FilterClause>();
             var transitionGroupIdentityPathLists = new List<ICollection<IdentityPath>>();
             var activeClassColumns = GetActiveClassColumns().ToList();
-            using (var longWaitDlg = new LongWaitDlg
-                   {
-                       Message = Resources.SpectraGridForm_AddSpectrumFilters_Examining_filters
-                   })
+            using (var longWaitDlg = new LongWaitDlg())
             {
+                longWaitDlg.Message = Resources.SpectraGridForm_AddSpectrumFilters_Examining_filters;
                 var document = SkylineWindow.DocumentUI;
                 longWaitDlg.PerformWork(this, 1000, broker =>
                 {

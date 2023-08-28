@@ -602,11 +602,9 @@ namespace pwiz.Skyline.Controls.Graphs
             if (settingsOld != null && settingsOld.HasResults && settingsNew.HasResults)
             {
                 ChromatogramSet chromatogramSetOld;
-                int resultsIndexOld;
                 ChromatogramSet chromatogramSetNew;
-                int resultsIndexNew;
-                if (settingsOld.MeasuredResults.TryGetChromatogramSet(_nameChromatogramSet, out chromatogramSetOld, out resultsIndexOld)
-                    != settingsNew.MeasuredResults.TryGetChromatogramSet(_nameChromatogramSet, out chromatogramSetNew, out resultsIndexNew))
+                if (settingsOld.MeasuredResults.TryGetChromatogramSet(_nameChromatogramSet, out chromatogramSetOld, out _)
+                    != settingsNew.MeasuredResults.TryGetChromatogramSet(_nameChromatogramSet, out chromatogramSetNew, out _))
                 {
                     return false;
                 }
@@ -910,17 +908,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Make sure all the chromatogram info for the relevant transition groups is present.
                 float mzMatchTolerance = (float) settings.TransitionSettings.Instrument.MzMatchTolerance;
                 var displayType = GetDisplayType(DocumentUI);
-                bool changedGroupIds;
-                if (displayToExtractor.ContainsKey(displayType))
+                if (displayToExtractor.TryGetValue(displayType, out var extractor))
                 {
-                    var extractor = displayToExtractor[displayType];
                     if (EnsureChromInfo(results,
-                                        chromatograms,
-                                        nodeGroups,
-                                        groupPaths,
-                                        extractor,
-                                        out changedGroups,
-                                        out changedGroupIds))
+                            chromatograms,
+                            nodeGroups,
+                            groupPaths,
+                            extractor,
+                            out changedGroups))
                     {
                         // Update the file choice toolbar, if the set of groups has changed
                         // Overkill for summary graphs, but the files still might change with any
@@ -954,8 +949,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                         nodeGroups,
                                         groupPaths,
                                         mzMatchTolerance,
-                                        out changedGroups,
-                                        out changedGroupIds))
+                                        out changedGroups))
                     {
                         // Update the file choice toolbar, if the set of groups has changed
                         if (changedGroups)
@@ -980,8 +974,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                                nodeGroups,
                                                                groupPaths,
                                                                mzMatchTolerance,
-                                                               out changedGroups,
-                                                               out changedGroupIds))
+                                                               out changedGroups))
                 {
                     // Update the file choice toolbar, if the set of groups has changed
                     if (changedGroups)
@@ -1652,9 +1645,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             float end = tranPeakInfo.EndRetentionTime;
             float start = tranPeakInfo.StartRetentionTime;
-            double[] allTimes;
-            double[] allIntensities;
-            chromatogramInfo.AsArrays(out allTimes, out allIntensities);
 
             var peakTimeIntensities = chromatogramInfo.TimeIntensities.InterpolateTime(start).InterpolateTime(end)
                 .Truncate(start, end);
@@ -2344,10 +2334,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     var listTimes = new List<double>();
                     foreach (var group in transitionGroups)
                     {
-                        IsotopeLabelType labelType;
                         double[] retentionTimes;
                         if (settings.TryGetRetentionTimes(lookupSequence, group.PrecursorAdduct,
-                                                          lookupMods, FilePath, out labelType, out retentionTimes))
+                                                          lookupMods, FilePath, out _, out retentionTimes))
                         {
                             listTimes.AddRange(retentionTimes);
                         }
@@ -2522,13 +2511,12 @@ namespace pwiz.Skyline.Controls.Graphs
                                      TransitionGroupDocNode[] nodeGroups,
                                      IdentityPath[] groupPaths,
                                      ChromExtractor extractor,
-                                     out bool changedGroups,
-                                     out bool changedGroupIds)
+                                     out bool changedGroups)
         {
             bool qcTraceNameMatches = extractor != ChromExtractor.qc ||
-                                      _arrayChromInfo?[0]?[0].TextId == Settings.Default.ShowQcTraceName;
+                                      _arrayChromInfo?[0]?[0].QcTraceName == Settings.Default.ShowQcTraceName;
 
-            if (UpdateGroups(nodeGroups, groupPaths, out changedGroups, out changedGroupIds) &&
+            if (UpdateGroups(nodeGroups, groupPaths, out changedGroups) &&
                 _extractor == extractor &&
                 qcTraceNameMatches &&
                 ReferenceEquals(results, _measuredResults))
@@ -2573,7 +2561,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             continue;
                         foreach (var chromInfo in arrayChromInfo)
                         {
-                            qcTraceNameMatches = extractor != ChromExtractor.qc || Settings.Default.ShowQcTraceName == chromInfo.TextId;
+                            qcTraceNameMatches = extractor != ChromExtractor.qc || Settings.Default.ShowQcTraceName == chromInfo.QcTraceName;
                             if (arrayNew[j] == null && Equals(listFiles[i], chromInfo.FilePath) && qcTraceNameMatches)
                                 arrayNew[j] = chromInfo;
                         }
@@ -2602,10 +2590,9 @@ namespace pwiz.Skyline.Controls.Graphs
                                      TransitionGroupDocNode[] nodeGroups,
                                      IdentityPath[] groupPaths,
                                      float mzMatchTolerance,
-                                     out bool changedGroups,
-                                     out bool changedGroupIds)
+                                     out bool changedGroups)
         {
-            if (UpdateGroups(nodeGroups, groupPaths, out changedGroups, out changedGroupIds) 
+            if (UpdateGroups(nodeGroups, groupPaths, out changedGroups) 
                 && !_extractor.HasValue 
                 && ReferenceEquals(results, _measuredResults))
                 return true;
@@ -2725,27 +2712,13 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         /// <returns>True if groups are already up to date, False if they were changed</returns>
         private bool UpdateGroups(TransitionGroupDocNode[] nodeGroups, IdentityPath[] groupPaths,
-                                  out bool changedGroups, out bool changedGroupIds)
+                                  out bool changedGroups)
         {
             changedGroups = false;
-            changedGroupIds = false;
             if (ArrayUtil.ReferencesEqual(nodeGroups, _nodeGroups) && _arrayChromInfo != null)
                 return true;
 
             changedGroups = true;
-            int lenNew = nodeGroups.SafeLength();
-            int lenOld = _nodeGroups.SafeLength();
-            if (lenNew != lenOld)
-                changedGroupIds = true;
-            else
-            {
-                for (int i = 0; i < lenNew; i++)
-                {
-                    if (!ReferenceEquals(nodeGroups[i].Id, _nodeGroups[i].Id))
-                        changedGroupIds = true;
-                }
-            }
-
             _nodeGroups = nodeGroups;
             _groupPaths = groupPaths;
             return false;
@@ -2924,8 +2897,8 @@ namespace pwiz.Skyline.Controls.Graphs
             graphItem = FindBestPeakItem(curve);
             if (graphItem != null)
             {
-                double displayTime, yTemp;
-                graphPane.ReverseTransform(pt, out displayTime, out yTemp);
+                double displayTime;
+                graphPane.ReverseTransform(pt, out displayTime, out _);
                 return graphItem.GetValidPeakBoundaryTime(displayTime);
             }
 
@@ -2941,8 +2914,8 @@ namespace pwiz.Skyline.Controls.Graphs
             graphPane = GraphPaneFromPoint(pt);
             if (null != graphPane)
             {
-                double time, yTemp;
-                graphPane.ReverseTransform(pt, out time, out yTemp);
+                double time;
+                graphPane.ReverseTransform(pt, out time, out _);
 
                 foreach (var graphItemNext in GetGraphItems(graphPane))
                 {
@@ -3085,18 +3058,15 @@ namespace pwiz.Skyline.Controls.Graphs
             using (Graphics g = CreateGraphics())
             {
                 object nearest;
-                int index;
                 GraphPane nearestGraphPane;
-                if (FindNearestObject(pt, g, out nearestGraphPane, out nearest, out index))
+                if (FindNearestObject(pt, g, out nearestGraphPane, out nearest))
                 {
                     var label = nearest as TextObj;
                     if (label != null)
                     {
                         doFullScanTracking = false;
-                        TransitionGroupDocNode nodeGroup;
-                        TransitionDocNode nodeTran;
                         if (_showPeptideTotals ||
-                            (!_extractor.HasValue && !FindAnnotatedPeakRetentionTime(label, out nodeGroup, out nodeTran).IsZero) ||
+                            (!_extractor.HasValue && !FindAnnotatedPeakRetentionTime(label, out _, out _).IsZero) ||
                             !FindAnnotatedSpectrumRetentionTime(label).IsZero)
                         {
                             graphControl.Cursor = Cursors.Hand;
@@ -3110,14 +3080,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     var line = nearest as LineObj;
                     if (line != null)
                     {
-                        ChromGraphItem graphItem;
                         if (!FindAnnotatedSpectrumRetentionTime(line).IsZero)
                         {
                             graphControl.Cursor = Cursors.Hand;
                             return true;
                         }
                         GraphPane graphPane;
-                        if (!_extractor.HasValue && (!FindBestPeakBoundary(pt, out graphPane, out graphItem).IsZero || graphPane != nearestGraphPane))
+                        if (!_extractor.HasValue && (!FindBestPeakBoundary(pt, out graphPane, out _).IsZero || graphPane != nearestGraphPane))
                         {
                             graphControl.Cursor = Cursors.VSplit;
                             return true;
@@ -3236,9 +3205,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     GraphPane nearestGraphPane;
                     object nearest;
-                    int index;
 
-                    if (FindNearestObject(pt, g, out nearestGraphPane, out nearest, out index))
+                    if (FindNearestObject(pt, g, out nearestGraphPane, out nearest))
                     {
                         var label = nearest as TextObj;
                         if (label != null)
@@ -3437,8 +3405,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool DoDrag(GraphPane graphPane, PointF pt)
         {
             // Calculate new location of boundary from mouse position
-            double time, yTemp;
-            graphPane.ReverseTransform(pt, out time, out yTemp);
+            double time;
+            graphPane.ReverseTransform(pt, out time, out _);
 
             bool changed = false;
             foreach (var dragInfo in _peakBoundDragInfos)
@@ -3469,14 +3437,14 @@ namespace pwiz.Skyline.Controls.Graphs
             Refresh();
         }
 
-        private bool FindNearestObject(PointF pt, Graphics g, out GraphPane nearestGraphPane, out object nearestCurve, out int index)
+        private bool FindNearestObject(PointF pt, Graphics g, out GraphPane nearestGraphPane, out object nearestCurve)
         {
             try
             {
                 var graphPane = GraphPaneFromPoint(pt);
                 if (null != graphPane)
                 {
-                    if (graphPane.FindNearestObject(pt, g, out nearestCurve, out index))
+                    if (graphPane.FindNearestObject(pt, g, out nearestCurve, out _))
                     {
                         nearestGraphPane = graphPane;
                         return true;
@@ -3492,7 +3460,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             nearestGraphPane = null;
             nearestCurve = null;
-            index = -1;
             return false;
         }
 

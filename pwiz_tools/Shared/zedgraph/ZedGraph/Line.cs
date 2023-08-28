@@ -650,7 +650,7 @@ namespace ZedGraph
 					lastX = int.MaxValue,
 					lastY = int.MaxValue;
 
-			double curX, curY, lowVal;
+			double curX, curY;
 			PointPair curPt, lastPt = new PointPair();
 
 			bool lastBad = true;
@@ -689,7 +689,7 @@ namespace ZedGraph
 						curPt = points[i];
 						if ( pane.LineType == LineType.Stack )
 						{
-							if ( !valueHandler.GetValues( curve, i, out curX, out lowVal, out curY ) )
+							if ( !valueHandler.GetValues( curve, i, out curX, out _, out curY ) )
 							{
 								curX = PointPair.Missing;
 								curY = PointPair.Missing;
@@ -863,7 +863,7 @@ namespace ZedGraph
 			float tmpX, tmpY,
 					lastX = float.MaxValue,
 					lastY = float.MaxValue;
-			double curX, curY, lowVal;
+			double curX, curY;
 			PointPair curPt, lastPt = new PointPair();
 
 			bool lastBad = true;
@@ -893,7 +893,7 @@ namespace ZedGraph
 						curPt = points[i];
 						if ( pane.LineType == LineType.Stack )
 						{
-							if ( !valueHandler.GetValues( curve, i, out curX, out lowVal, out curY ) )
+							if ( !valueHandler.GetValues( curve, i, out curX, out _, out curY ) )
 							{
 								curX = PointPair.Missing;
 								curY = PointPair.Missing;
@@ -1181,7 +1181,7 @@ namespace ZedGraph
 				float curX, curY,
 							lastX = 0,
 							lastY = 0;
-				double x, y, lowVal;
+				double x, y;
 				ValueHandler valueHandler = new ValueHandler( pane, false );
 
 				// Step type plots get twice as many points.  Always add three points so there is
@@ -1199,7 +1199,7 @@ namespace ZedGraph
 						// use the valueHandler only for stacked types
 						if ( pane.LineType == LineType.Stack )
 						{
-							valueHandler.GetValues( curve, i, out x, out lowVal, out y );
+							valueHandler.GetValues( curve, i, out x, out _, out y );
 						}
 						// otherwise, just access the values directly.  Avoiding the valueHandler for
 						// non-stacked types is an optimization to minimize overhead in case there are
@@ -1303,7 +1303,7 @@ namespace ZedGraph
 				float curX, curY,
 						lastX = 0,
 						lastY = 0;
-				double x, y, hiVal;
+				double x, y;
 				ValueHandler valueHandler = new ValueHandler( pane, false );
 
 				// Step type plots get twice as many points.  Always add three points so there is
@@ -1321,7 +1321,7 @@ namespace ZedGraph
 					if ( !points[i].IsInvalid )
 					{
 						// Get the user scale values for the current point
-						valueHandler.GetValues( curve, i, out x, out y, out hiVal );
+						valueHandler.GetValues( curve, i, out x, out y, out _ );
 
 						if ( x == PointPair.Missing || y == PointPair.Missing )
 							continue;

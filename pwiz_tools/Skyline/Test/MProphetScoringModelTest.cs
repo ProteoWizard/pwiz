@@ -385,9 +385,8 @@ namespace pwiz.SkylineTest
                 var dataIndex = 1;
                 foreach (var heading in Header)
                 {
-                    double d;
                     const NumberStyles numberStyle = NumberStyles.Float | NumberStyles.AllowThousands;
-                    if (!double.TryParse(heading, numberStyle, CultureInfo.InvariantCulture, out d))
+                    if (!double.TryParse(heading, numberStyle, CultureInfo.InvariantCulture, out _))
                     {
                         allNumeric = false;
                         break;

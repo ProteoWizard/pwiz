@@ -277,8 +277,7 @@ namespace pwiz.Skyline.Model
                     var shortName = mod.ShortName;
                     if (string.IsNullOrEmpty(shortName))
                     {
-                        bool isStructural;
-                        var foundMod = UniMod.GetModification(mod.Name, out isStructural);
+                        var foundMod = UniMod.GetModification(mod.Name, out _);
                         if (foundMod != null)
                             shortName = foundMod.ShortName;
                     }

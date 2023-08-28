@@ -228,15 +228,13 @@ namespace pwiz.Skyline.FileUI
             }
             strSaveFileName += @"Annotations.csv";
             bool success;
-            using (var dlg = new SaveFileDialog
+            using (var dlg = new SaveFileDialog())
             {
-                FileName = strSaveFileName,
-                DefaultExt = TextUtil.EXT_CSV,
-                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV),
-                InitialDirectory = Settings.Default.ExportDirectory,
-                OverwritePrompt = true,
-            })
-            {
+                dlg.FileName = strSaveFileName;
+                dlg.DefaultExt = TextUtil.EXT_CSV;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV);
+                dlg.InitialDirectory = Settings.Default.ExportDirectory;
+                dlg.OverwritePrompt = true;
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                 {
                     return;

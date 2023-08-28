@@ -67,12 +67,11 @@ namespace ZedGraph
 			// Determine object state
 			Point mousePt = this.PointToClient( Control.MousePosition );
 			int iPt;
-			GraphPane pane;
 			object nearestObj;
 
 			using ( Graphics g = this.CreateGraphics() )
 			{
-				if ( this.MasterPane.FindNearestPaneObject( mousePt, g, out pane,
+				if ( this.MasterPane.FindNearestPaneObject( mousePt, g, out _,
 						out nearestObj, out iPt ) )
 				{
 					CurveItem item = nearestObj as CurveItem;

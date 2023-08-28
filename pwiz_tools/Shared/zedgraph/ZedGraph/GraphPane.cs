@@ -2325,8 +2325,8 @@ namespace ZedGraph
 									curve is HiLowBarItem || curve is OHLCBarItem ||
 									curve is JapaneseCandleStickItem )
 								{
-									double baseVal, lowVal, hiVal;
-									valueHandler.GetValues( curve, iPt, out baseVal,
+									double lowVal, hiVal;
+									valueHandler.GetValues( curve, iPt, out _,
 											out lowVal, out hiVal );
 
 									if ( lowVal > hiVal )
@@ -2367,8 +2367,7 @@ namespace ZedGraph
 								{
 									if ( curve is LineItem && _lineType == LineType.Stack )
 									{
-										double zVal;
-										valueHandler.GetValues( curve, iPt, out xVal, out zVal, out yVal );
+										valueHandler.GetValues( curve, iPt, out xVal, out _, out yVal );
 									}
 
 									distX = ( xVal - xAct ) * xPixPerUnit;
@@ -2462,9 +2461,7 @@ namespace ZedGraph
 
 				if ( link.IsActive )
 				{
-					CurveItem nearestCurve;
-
-					if ( FindNearestPoint( mousePt, curve, out nearestCurve, out index ) )
+					if ( FindNearestPoint( mousePt, curve, out _, out index ) )
 					{
 						source = curve;
 						return true;

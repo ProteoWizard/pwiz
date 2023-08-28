@@ -162,8 +162,10 @@ namespace pwiz.Skyline.ToolsUI
             try
             {
                 string identifier = _tools[listBoxTools.SelectedIndex].Identifier;
-                using (var dlg = new LongWaitDlg {ProgressValue = 0, Message = string.Format(Resources.ToolStoreDlg_DownloadSelectedTool_Downloading__0_, _tools[listBoxTools.SelectedIndex].Name)})
+                using (var dlg = new LongWaitDlg())
                 {
+                    dlg.ProgressValue = 0;
+                    dlg.Message = string.Format(Resources.ToolStoreDlg_DownloadSelectedTool_Downloading__0_, _tools[listBoxTools.SelectedIndex].Name);
                     dlg.PerformWork(this, 500, progressMonitor => DownloadPath = _toolStoreClient.GetToolZipFile(progressMonitor, identifier, Path.GetTempPath()));
                     if (!dlg.IsCanceled)
                         DialogResult = DialogResult.OK;

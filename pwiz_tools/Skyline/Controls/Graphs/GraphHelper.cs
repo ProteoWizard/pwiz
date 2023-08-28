@@ -631,8 +631,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }
 
-                double tMinX, tMinY, tMaxX, tMaxY;
-                curveList.GetCurveRange(g, curve, out tMinX, out tMaxX, out tMinY, out tMaxY);
+                double tMaxY;
+                curveList.GetCurveRange(g, curve, out _, out _, out _, out tMaxY);
 
                 maxY = Math.Max(maxY, tMaxY);
             }
