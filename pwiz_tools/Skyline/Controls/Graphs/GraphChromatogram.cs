@@ -2514,7 +2514,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                      out bool changedGroups)
         {
             bool qcTraceNameMatches = extractor != ChromExtractor.qc ||
-                                      _arrayChromInfo?[0]?[0].TextId == Settings.Default.ShowQcTraceName;
+                                      _arrayChromInfo?[0]?[0].QcTraceName == Settings.Default.ShowQcTraceName;
 
             if (UpdateGroups(nodeGroups, groupPaths, out changedGroups) &&
                 _extractor == extractor &&
@@ -2561,7 +2561,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             continue;
                         foreach (var chromInfo in arrayChromInfo)
                         {
-                            qcTraceNameMatches = extractor != ChromExtractor.qc || Settings.Default.ShowQcTraceName == chromInfo.TextId;
+                            qcTraceNameMatches = extractor != ChromExtractor.qc || Settings.Default.ShowQcTraceName == chromInfo.QcTraceName;
                             if (arrayNew[j] == null && Equals(listFiles[i], chromInfo.FilePath) && qcTraceNameMatches)
                                 arrayNew[j] = chromInfo;
                         }
