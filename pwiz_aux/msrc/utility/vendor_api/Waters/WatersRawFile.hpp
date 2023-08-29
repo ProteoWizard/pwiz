@@ -42,6 +42,7 @@
 #include "MassLynxRawBase.hpp"
 #include "MassLynxRawScanReader.hpp"
 #include "MassLynxRawChromatogramReader.hpp"
+#include "MassLynxRawAnalogReader.hpp"
 #include "MassLynxRawInfoReader.hpp"
 //#include "MassLynxRawScanStatsReader.h"
 #include <boost/range/algorithm/find_if.hpp>
@@ -101,6 +102,7 @@ struct PWIZ_API_DECL RawData
     mutable Extended::MassLynxRawScanReader Reader;
     Extended::MassLynxRawInfo Info;
     MassLynxRawChromatogramReader ChromatogramReader;
+    MassLynxRawAnalogReader AnalogChromatogramReader;
 
     struct CachedCompressedDataCluster : public MassLynxRawScanReader
     {
@@ -108,7 +110,7 @@ struct PWIZ_API_DECL RawData
     };
 
     const string& RawFilepath() const {return rawpath_;}
-    const vector<int>& FunctionIndexList() const {return functionIndexList;}
+    const vector<int>&  FunctionIndexList() const {return functionIndexList;}
     const vector<bool>& IonMobilityByFunctionIndex() const {return ionMobilityByFunctionIndex;}
     const vector<bool>& SonarEnabledByFunctionIndex() const {return sonarEnabledByFunctionIndex;}
     const set<int>& FunctionsWithChromFiles() const { return functionsWithChromFiles; } // For detecting lockmass function
@@ -119,13 +121,41 @@ struct PWIZ_API_DECL RawData
     const vector<vector<float>>& TimesByFunctionIndex() const {return timesByFunctionIndex;}
     const vector<vector<float>>& TicByFunctionIndex() const {return ticByFunctionIndex;}
 
+    const vector<vector<float>>& ELSDTimesByChannel() const { return elsdtimes; }
+    const vector<vector<float>>& ELSDByChannel() const { return elsd; }
+
     size_t FunctionCount() const {return functionIndexList.size();}
     size_t LastFunctionIndex() const {return lastFunctionIndex_; }
+
+    void ReadAnalogChromatograms()
+    {
+        auto channels = AnalogChromatogramReader.GetChannelCount();
+
+        elsdtimes.clear();
+        elsd.clear();
+
+        elsdtimes.resize(channels);
+        elsd.resize(channels);
+
+        for (int ch=0; ch<channels; ch++)
+        {
+            /*string desc = AnalogChromatogramReader.GetChannelDescription(ch);
+
+            std::transform(desc.begin(), desc.end(), desc.begin(),
+                [](unsigned char c) { return std::toupper(c); });
+
+            if (desc.find("ELSD") == string::npos && desc.find("CORONA") == string::npos)
+                continue;*/
+
+            AnalogChromatogramReader.ReadChannel(ch, elsdtimes[ch], elsd[ch]);
+        }
+    }
 
     RawData(const string& rawpath, IterationListenerRegistry* ilr = nullptr)
         : Reader(rawpath),
           Info(Reader),
           ChromatogramReader(Reader),
+		  AnalogChromatogramReader(Reader),
           PeakPicker(rawpath, ilr),
           workingDriftTimeFunctionIndex_(-1),
           workingSonarFunctionIndex_(-1),
@@ -191,6 +221,8 @@ struct PWIZ_API_DECL RawData
             if (!hasProfile_)
                 hasProfile_ = hasProfile_ || Info.IsContinuum(itr.first);
         }
+
+        ReadAnalogChromatograms();
 
         initHeaderProps(rawpath);
     }
@@ -472,6 +504,10 @@ struct PWIZ_API_DECL RawData
     vector<bool> sonarEnabledByFunctionIndex;
     vector<vector<float>> timesByFunctionIndex;
     vector<vector<float>> ticByFunctionIndex;
+
+    vector<vector<float>> elsdtimes;
+    vector<vector<float>> elsd;
+
     map<string, string> headerProps;
     set<int> functionsWithChromFiles; // Used to puzzle out which MS function is lockmass data
     int numSpectra_; // not separated by ion mobility
