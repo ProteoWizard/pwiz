@@ -200,11 +200,13 @@
     <Compile Include="MultiInjectionReplicatesTest.cs" />
     <Compile Include="OpenDocWithBackgroundProteomeTest.cs" />
     <Compile Include="PeakAreaPeptideGraphTest.cs" />
+    <Compile Include="QcTraceNameTest.cs" />
     <Compile Include="RemoveHeavyModificationTest.cs" />
     <Compile Include="RemoveNeutralLossModificationTest.cs" />
     <Compile Include="ResultFileMetadataBackCompatTest.cs" />
     <Compile Include="SaveAfterProteinAssociationTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
+    <Compile Include="TestPanoramaClient.cs" />
     <Compile Include="SkydFileModifiedTest.cs" />
     <Compile Include="SpectrumGridTest.cs" />
     <Compile Include="ToolServiceTestSharedClasses.cs" />
@@ -447,13 +449,17 @@
       <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
       <Name>Common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Shared\Common\CommonUtil.csproj">
+    <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj">
       <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
       <Name>CommonUtil</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Shared\MSGraph\MSGraph.csproj">
       <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
       <Name>MSGraph</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Shared\PanoramaClient\PanoramaClient.csproj">
+      <Project>{bf849cf8-25d7-4619-b001-9ed8e3771c44}</Project>
+      <Name>PanoramaClient</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Shared\ProteomeDb\ProteomeDb.csproj">
       <Project>{09FC3CB3-FCCD-4906-A370-160B28725936}</Project>
@@ -607,6 +613,7 @@
     <None Include="ProteinMetadataBackgroundLoaderTest.zip" />
     <None Include="ProteinMetadataFunctionalTest.zip" />
     <None Include="ProxlTest.zip" />
+    <None Include="QcTraceNameTest.zip" />
     <None Include="QualitativeIonRatioTest.zip" />
     <None Include="QuantitativePeakAreaTest.zip" />
     <None Include="QuantitativeTest.zip" />

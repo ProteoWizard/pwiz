@@ -739,8 +739,8 @@ add_Nterm_protein = 0.000000
                 modParamLines.Add(@"add_C_cysteine = 0"); // disable default cysteine static mod
 
             foreach (var kvp in staticModsByAA)
-                if (AminoAcidFormulas.FullNames.ContainsKey(kvp.Key))
-                    modParamLines.Add($@"add_{kvp.Key}_{AminoAcidFormulas.FullNames[kvp.Key].ToLowerInvariant().Replace(' ', '_')} = {kvp.Value.ToString(CultureInfo.InvariantCulture)}");
+                if (AminoAcidFormulas.FullNames.TryGetValue(kvp.Key, out var fullName))
+                    modParamLines.Add($@"add_{kvp.Key}_{fullName.ToLowerInvariant().Replace(' ', '_')} = {kvp.Value.ToString(CultureInfo.InvariantCulture)}");
 
             modParamLines.Sort();
             _modParams = string.Join(Environment.NewLine, modParamLines);

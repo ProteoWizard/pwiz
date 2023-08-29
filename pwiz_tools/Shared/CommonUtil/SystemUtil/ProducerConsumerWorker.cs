@@ -224,8 +224,7 @@ namespace pwiz.Common.SystemUtil
         public void Clear()
         {
             // Clear work queue.
-            TItem item;
-            while (_queue.TryTake(out item))
+            while (_queue.TryTake(out _))
             {
             }
 

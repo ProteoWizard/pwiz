@@ -25,7 +25,6 @@ using pwiz.Skyline;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.SkylineTestUtil;
 using ZedGraph;
@@ -106,8 +105,7 @@ namespace pwiz.SkylineTestFunctional
         private void VerifyRawTimesCount(string chromName, TransitionDocNode transition, bool showing)
         {
             int resultIndex;
-            ChromatogramSet chromSet;
-            Assert.IsTrue(SkylineWindow.Document.Settings.MeasuredResults.TryGetChromatogramSet(chromName, out chromSet, out resultIndex));
+            Assert.IsTrue(SkylineWindow.Document.Settings.MeasuredResults.TryGetChromatogramSet(chromName, out _, out resultIndex));
 
             RunUI(() =>
             {

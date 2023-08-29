@@ -675,10 +675,9 @@ namespace pwiz.Skyline.Model.DocSettings
             try
             {
                 listRTs = new List<double>();
-                int minCount;
                 calcPeptides = allPeptides
                     ? listPeptides
-                    : calculator.ChooseRegressionPeptides(listPeptides, out minCount).ToList();
+                    : calculator.ChooseRegressionPeptides(listPeptides, out _).ToList();
                 peptideScores = RetentionTimeScoreCache.CalcScores(calculator, calcPeptides, scoreCache, token);
             }
             catch (Exception)

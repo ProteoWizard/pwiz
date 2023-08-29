@@ -236,13 +236,11 @@ namespace pwiz.Common.DataBinding
             {
                 var dataFormats = ListAvailableExportFormats().ToArray();
                 string fileFilter = string.Join(@"|", dataFormats.Select(format => format.FileFilter).ToArray());
-                using (var saveFileDialog = new SaveFileDialog
+                using (var saveFileDialog = new SaveFileDialog())
                 {
-                    Filter = fileFilter,
-                    InitialDirectory = GetExportDirectory(),
-                    FileName = GetDefaultExportFilename(bindingListSource.ViewInfo),
-                })
-                {
+                    saveFileDialog.Filter = fileFilter;
+                    saveFileDialog.InitialDirectory = GetExportDirectory();
+                    saveFileDialog.FileName = GetDefaultExportFilename(bindingListSource.ViewInfo);
                     if (saveFileDialog.ShowDialog(FormUtil.FindTopLevelOwner(owner)) == DialogResult.Cancel)
                     {
                         return;

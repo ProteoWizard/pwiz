@@ -24,6 +24,7 @@ using System.Linq;
 using System.Net;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
+using pwiz.PanoramaClient;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -84,11 +85,9 @@ namespace pwiz.Skyline.FileUI
 
             try
             {
-                using (var waitDlg = new LongWaitDlg
-                    {
-                        Text = Resources.PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers
-                    })
+                using (var waitDlg = new LongWaitDlg())
                 {
+                    waitDlg.Text = Resources.PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers;
                     waitDlg.PerformWork(this, 800, () => PublishDocumentDlgLoad(listServerFolders));
                 }
             }
@@ -129,8 +128,8 @@ namespace pwiz.Skyline.FileUI
                     if (ex is WebException || ex is PanoramaServerException)
                     {
                         var error = ex.Message;
-                        if (error != null && error.Contains(Resources
-                                .EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server))
+                        if (error != null && error.Contains(PanoramaClient.Properties.Resources
+                                .UserState_GetErrorMessage_The_username_and_password_could_not_be_authenticated_with_the_panorama_server_))
                         {
                             error = TextUtil.LineSeparate(error, Resources
                                 .PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password_);
@@ -302,19 +301,16 @@ namespace pwiz.Skyline.FileUI
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            using (var dlg = new SaveFileDialog
-                                 {
-                                     InitialDirectory = Settings.Default.LibraryDirectory,
-                                     SupportMultiDottedExtensions = true,
-                                     DefaultExt = SrmDocumentSharing.EXT_SKY_ZIP,
-                                     Filter =
-                                         TextUtil.FileDialogFiltersAll(
-                                             Resources.PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents,
-                                             SrmDocumentSharing.EXT),
-                                     FileName = tbFilePath.Text,
-                                     Title = Resources.PublishDocumentDlg_btnBrowse_Click_Upload_Document
-                                 })
+            using (var dlg = new SaveFileDialog())
             {
+                dlg.InitialDirectory = Settings.Default.LibraryDirectory;
+                dlg.SupportMultiDottedExtensions = true;
+                dlg.DefaultExt = SrmDocumentSharing.EXT_SKY_ZIP;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(
+                    Resources.PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents,
+                    SrmDocumentSharing.EXT);
+                dlg.FileName = tbFilePath.Text;
+                dlg.Title = Resources.PublishDocumentDlg_btnBrowse_Click_Upload_Document;
                 if (dlg.ShowDialog(Parent) == DialogResult.OK)
                 {
                     tbFilePath.Text = dlg.FileName;

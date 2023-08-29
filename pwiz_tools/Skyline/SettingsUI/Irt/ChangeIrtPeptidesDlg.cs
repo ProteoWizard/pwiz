@@ -298,8 +298,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             if (!_picker.HasScoredPeptides)
             {
-                using (var longWaitDlg = new LongWaitDlg { Text = Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculating_scores })
+                using (var longWaitDlg = new LongWaitDlg())
                 {
+                    longWaitDlg.Text = Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculating_scores;
                     longWaitDlg.PerformWork(this, 1000, pm => _picker.ScorePeptides(_document, pm));
                     if (longWaitDlg.IsCanceled)
                         return;

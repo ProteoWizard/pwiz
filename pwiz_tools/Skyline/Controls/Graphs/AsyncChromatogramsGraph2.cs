@@ -341,7 +341,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private GraphInfo GetInfo(string key)
         {
-            return key != null && _graphs.ContainsKey(key) ? _graphs[key] : null;
+            return key != null && _graphs.TryGetValue(key, out var graph) ? graph : null;
         }
 
         private void AddUnfinishedLine(GraphPane graphPane, float? currentTime)

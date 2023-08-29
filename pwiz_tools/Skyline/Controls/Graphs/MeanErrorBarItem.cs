@@ -96,9 +96,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
 
-            double curBase, curLowVal, curHiVal;
+            double curBase, curHiVal;
             ValueHandler valueHandler = new ValueHandler(pane, false);
-            valueHandler.GetValues(curve, index, out curBase, out curLowVal, out curHiVal);
+            valueHandler.GetValues(curve, index, out curBase, out _, out curHiVal);
 
             float pixBase = baseAxis.Scale.Transform(curve.IsOverrideOrdinal, index, curBase);
             double lowError = curHiVal - errorTag.Error;

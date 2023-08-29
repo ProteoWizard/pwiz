@@ -7,6 +7,7 @@
 #include <boost/algorithm/clamp.hpp>
 #include <boost/range/numeric.hpp>
 #include "ScanData.hpp"
+#include "pwiz/utility/misc/optimized_lexical_cast.hpp"
 
 namespace {
     //implements relative method - do not use for comparing with zero
@@ -504,7 +505,7 @@ struct Regression
         float CorrelationCoffe;
 
         string GetEquationText() {
-            return "Y=(" + lexical_cast<string>(std::round(Mvalue * 1000) / 1000) + ")X+" + lexical_cast<string>(std::round(Bvalue * 1000) / 1000);
+            return "Y=(" + boost::lexical_cast<string>(std::round(Mvalue * 1000) / 1000) + ")X+" + boost::lexical_cast<string>(std::round(Bvalue * 1000) / 1000);
         }
     };
 
