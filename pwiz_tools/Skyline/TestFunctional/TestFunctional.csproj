@@ -201,6 +201,7 @@
     <Compile Include="OpenDocWithBackgroundProteomeTest.cs" />
     <Compile Include="PeakAreaPeptideGraphTest.cs" />
     <Compile Include="PrmCeOptimizationTest.cs" />
+    <Compile Include="QcTraceNameTest.cs" />
     <Compile Include="RemoveHeavyModificationTest.cs" />
     <Compile Include="RemoveNeutralLossModificationTest.cs" />
     <Compile Include="ResultFileMetadataBackCompatTest.cs" />
@@ -613,6 +614,7 @@
     <None Include="ProteinMetadataBackgroundLoaderTest.zip" />
     <None Include="ProteinMetadataFunctionalTest.zip" />
     <None Include="ProxlTest.zip" />
+    <None Include="QcTraceNameTest.zip" />
     <None Include="QualitativeIonRatioTest.zip" />
     <None Include="QuantitativePeakAreaTest.zip" />
     <None Include="QuantitativeTest.zip" />

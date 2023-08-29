@@ -168,8 +168,8 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public int CompareTo(ChromatogramGroupId other)
         {
-            return ValueTuple.Create(Target, SpectrumClassFilter)
-                .CompareTo(ValueTuple.Create(other.Target, other.SpectrumClassFilter));
+            return ValueTuple.Create(Target, QcTraceName, SpectrumClassFilter)
+                .CompareTo(ValueTuple.Create(other.Target, other.QcTraceName, other.SpectrumClassFilter));
         }
 
         public override string ToString()
@@ -317,6 +317,7 @@ namespace pwiz.Skyline.Model.Results
                 var chromGroupIdProto = new ChromatogramGroupIdsProto.Types.ChromatogramGroupId()
                 {
                     TargetIndex = targets.Add(id.Target),
+                    QcTraceName = id.QcTraceName ?? string.Empty
                 };
                 foreach (var filter in id.SpectrumClassFilter.Clauses)
                 {
