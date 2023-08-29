@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Util
 
         public string GetKey()
         {
-            return URI + (HasUserAccount() ? string.Empty : " (anonymous)");
+            return URI + (HasUserAccount() ? string.Empty : Resources.Server_GetKey___anonymous_);
         }
 
 

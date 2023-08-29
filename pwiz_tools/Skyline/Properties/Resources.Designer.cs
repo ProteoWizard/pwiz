@@ -27912,6 +27912,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to  (anonymous).
+        /// </summary>
+        public static string Server_GetKey___anonymous_ {
+            get {
+                return ResourceManager.GetString("Server_GetKey___anonymous_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A Panorama server must be specified..
         /// </summary>
         public static string Server_ReadXml_A_Panorama_server_must_be_specified {
