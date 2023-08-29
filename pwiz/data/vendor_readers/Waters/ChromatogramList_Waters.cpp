@@ -244,6 +244,29 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
             }
         }
         break;
+
+        case MS_chromatogram:
+        {
+            if (detailLevel < DetailLevel_FullMetadata)
+                return result;
+
+            result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, MS_number_of_detector_counts);
+
+            vector<float> times;
+            vector<float> intensities;
+
+            times = rawdata_->ELSDTimesByChannel()[ie.function];
+            result->defaultArrayLength = times.size();
+
+            intensities = rawdata_->ELSDByChannel()[ie.function];
+
+            if (getBinaryData)
+            {
+                result->getTimeArray()->data.assign(times.begin(), times.end());
+                result->getIntensityArray()->data.assign(intensities.begin(), intensities.end());
+            }
+        }
+        break;
     }
 
     return result;
@@ -327,6 +350,21 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
             ie.id = oss.str();
             idToIndexMap_[ie.id] = ie.index;
         }
+    }
+
+    long eLSDChannels = rawdata_ -> ELSDByChannel().size();
+
+    for(int ch=0; ch < eLSDChannels; ch++)
+    {
+        index_.push_back(IndexEntry());
+        IndexEntry& ie = index_.back();
+        ie.index = index_.size() - 1;
+        ie.function = ch;
+        ie.offset = 0;
+        ie.Q1 = 0;
+        ie.id = "ELSD_";
+        ie.id += std::to_string(ch);
+        ie.chromatogramType = MS_chromatogram;
     }
 
     size_ = index_.size();
