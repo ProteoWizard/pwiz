@@ -103,6 +103,8 @@ struct PWIZ_API_DECL RawData
     Extended::MassLynxRawInfo Info;
     MassLynxRawChromatogramReader ChromatogramReader;
     MassLynxRawAnalogReader AnalogChromatogramReader;
+    std::vector<string> analogChannelNames;
+
 
     struct CachedCompressedDataCluster : public MassLynxRawScanReader
     {
@@ -110,7 +112,7 @@ struct PWIZ_API_DECL RawData
     };
 
     const string& RawFilepath() const {return rawpath_;}
-    const vector<int>&  FunctionIndexList() const {return functionIndexList;}
+    const vector<int>& FunctionIndexList() const {return functionIndexList;}
     const vector<bool>& IonMobilityByFunctionIndex() const {return ionMobilityByFunctionIndex;}
     const vector<bool>& SonarEnabledByFunctionIndex() const {return sonarEnabledByFunctionIndex;}
     const set<int>& FunctionsWithChromFiles() const { return functionsWithChromFiles; } // For detecting lockmass function
@@ -121,8 +123,9 @@ struct PWIZ_API_DECL RawData
     const vector<vector<float>>& TimesByFunctionIndex() const {return timesByFunctionIndex;}
     const vector<vector<float>>& TicByFunctionIndex() const {return ticByFunctionIndex;}
 
-    const vector<vector<float>>& ELSDTimesByChannel() const { return elsdtimes; }
-    const vector<vector<float>>& ELSDByChannel() const { return elsd; }
+    const vector<vector<float>>& AnalogTimesByChannel() const { return analogTimes; }
+    const vector<vector<float>>& AnalogIntensitiesByChannel() const { return analogIntensities; }
+    const vector<string>& AnalogChannelNames() const { return analogChannelNames; }
 
     size_t FunctionCount() const {return functionIndexList.size();}
     size_t LastFunctionIndex() const {return lastFunctionIndex_; }
@@ -131,23 +134,18 @@ struct PWIZ_API_DECL RawData
     {
         auto channels = AnalogChromatogramReader.GetChannelCount();
 
-        elsdtimes.clear();
-        elsd.clear();
+        analogTimes.clear();
+        analogIntensities.clear();
+        analogChannelNames.clear();
 
-        elsdtimes.resize(channels);
-        elsd.resize(channels);
+        analogTimes.resize(channels);
+        analogIntensities.resize(channels);
+        analogChannelNames.resize(channels);
 
         for (int ch=0; ch<channels; ch++)
         {
-            /*string desc = AnalogChromatogramReader.GetChannelDescription(ch);
-
-            std::transform(desc.begin(), desc.end(), desc.begin(),
-                [](unsigned char c) { return std::toupper(c); });
-
-            if (desc.find("ELSD") == string::npos && desc.find("CORONA") == string::npos)
-                continue;*/
-
-            AnalogChromatogramReader.ReadChannel(ch, elsdtimes[ch], elsd[ch]);
+			AnalogChromatogramReader.ReadChannel(ch, analogTimes[ch], analogIntensities[ch]);
+			analogChannelNames[ch] = AnalogChromatogramReader.GetChannelDescription(ch);
         }
     }
 
@@ -155,7 +153,7 @@ struct PWIZ_API_DECL RawData
         : Reader(rawpath),
           Info(Reader),
           ChromatogramReader(Reader),
-		  AnalogChromatogramReader(Reader),
+          AnalogChromatogramReader(Reader),
           PeakPicker(rawpath, ilr),
           workingDriftTimeFunctionIndex_(-1),
           workingSonarFunctionIndex_(-1),
@@ -520,8 +518,8 @@ struct PWIZ_API_DECL RawData
     vector<vector<float>> timesByFunctionIndex;
     vector<vector<float>> ticByFunctionIndex;
 
-    vector<vector<float>> elsdtimes;
-    vector<vector<float>> elsd;
+    vector<vector<float>> analogTimes;
+    vector<vector<float>> analogIntensities;
 
     map<string, string> headerProps;
     set<int> functionsWithChromFiles; // Used to puzzle out which MS function is lockmass data
