@@ -144,8 +144,8 @@ struct PWIZ_API_DECL RawData
 
         for (int ch=0; ch<channels; ch++)
         {
-			AnalogChromatogramReader.ReadChannel(ch, analogTimes[ch], analogIntensities[ch]);
-			analogChannelNames[ch] = AnalogChromatogramReader.GetChannelDescription(ch);
+            AnalogChromatogramReader.ReadChannel(ch, analogTimes[ch], analogIntensities[ch]);
+            analogChannelNames[ch] = AnalogChromatogramReader.GetChannelDescription(ch);
         }
     }
 
