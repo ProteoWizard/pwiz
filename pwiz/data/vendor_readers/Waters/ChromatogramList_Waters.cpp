@@ -245,7 +245,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
         }
         break;
 
-        case MS_chromatogram:
+        case MS_Analog_chromatogram:
         {
             if (detailLevel < DetailLevel_FullMetadata)
                 return result;
@@ -255,10 +255,10 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
             vector<float> times;
             vector<float> intensities;
 
-            times = rawdata_->ELSDTimesByChannel()[ie.function];
+            times = rawdata_->AnalogTimesByChannel()[ie.function];
             result->defaultArrayLength = times.size();
 
-            intensities = rawdata_->ELSDByChannel()[ie.function];
+            intensities = rawdata_->AnalogIntensitiesByChannel()[ie.function];
 
             if (getBinaryData)
             {
@@ -352,9 +352,9 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
         }
     }
 
-    long eLSDChannels = rawdata_ -> ELSDByChannel().size();
+    long analogChannels = rawdata_ -> AnalogIntensitiesByChannel().size();
 
-    for(int ch=0; ch < eLSDChannels; ch++)
+    for(int ch=0; ch < analogChannels; ch++)
     {
         index_.push_back(IndexEntry());
         IndexEntry& ie = index_.back();
@@ -362,9 +362,9 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
         ie.function = ch;
         ie.offset = 0;
         ie.Q1 = 0;
-        ie.id = "ELSD_";
-        ie.id += std::to_string(ch);
-        ie.chromatogramType = MS_chromatogram;
+        ie.id = rawdata_->AnalogChannelNames()[ch];
+        ie.id += "_" + std::to_string(ch+1);
+        ie.chromatogramType = MS_Analog_chromatogram;
     }
 
     size_ = index_.size();
