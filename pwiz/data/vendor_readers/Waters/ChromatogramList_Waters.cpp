@@ -362,12 +362,22 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
         ie.function = ch;
         ie.offset = 0;
         ie.Q1 = 0;
-        ie.id = rawdata_->AnalogChannelNames()[ch];
-        ie.id += "_" + std::to_string(ch+1);
+
+        std::string temp = rawdata_->AnalogChannelNames()[ch];
+
+        ie.id = trim((temp));
         ie.chromatogramType = MS_Analog_chromatogram;
     }
 
     size_ = index_.size();
+}
+
+std::string ChromatogramList_Waters::trim(std::string& str)
+{
+    std::string::iterator end_pos = std::remove(str.begin(), str.end(), ' ');
+    str.erase(end_pos, str.end());
+
+    return str;
 }
 
 
