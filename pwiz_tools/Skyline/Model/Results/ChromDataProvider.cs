@@ -323,22 +323,39 @@ namespace pwiz.Skyline.Model.Results
 
             foreach (var matchingGroup in ChromCacheBuilder.GetMatchingGroups(doc, this))
             {
-                SignedMz? lastProduct = null;
+                ChromKey lastChromKey = null;
                 var curGroup = new List<ChromData>();
                 foreach (var chromData in matchingGroup.Value.Chromatograms.OrderBy(chromData =>
                              chromData.Key.Product))
                 {
-                    if (lastProduct.HasValue)
+                    if (lastChromKey != null)
                     {
-                        if (!ChromatogramInfo.IsOptimizationSpacing(lastProduct.Value, chromData.Key.Product))
+                        bool optimizationSpacing =
+                            ChromatogramInfo.IsOptimizationSpacing(lastChromKey.Product, chromData.Key.Product);
+                        if (!optimizationSpacing)
+                        {
+                            if (_dataFile.IsAgilentFile)
+                            {
+                                // Agilent files sometimes round off the Q3 values, so if we consider all chromatograms
+                                // within mzMatchTolerance to be optimization steps
+                                // TODO(nicksh): Populate ChromKey.CollisionEnergy so that we can guarantee that these
+                                // ChromKeys are sorted correctly by collision energy
+                                if (chromData.Key.Product.CompareTolerant(lastChromKey.Product,
+                                        doc.Settings.TransitionSettings.Instrument.MzMatchTolerance) == 0)
+                                {
+                                    optimizationSpacing = true;
+                                }
+                            }
+                        }
+                        if (!optimizationSpacing)
                             SetOptStepsForGroup(idToIndex, matchingGroup.Key?.NodeGroup, curGroup);
                     }
 
                     curGroup.Add(chromData);
-                    lastProduct = chromData.Key.Product;
+                    lastChromKey = chromData.Key;
                 }
 
-                if (lastProduct.HasValue)
+                if (lastChromKey != null)
                 {
                     SetOptStepsForGroup(idToIndex, matchingGroup.Key?.NodeGroup, curGroup);
                 }
