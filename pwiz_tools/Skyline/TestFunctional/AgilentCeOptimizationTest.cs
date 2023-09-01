@@ -16,11 +16,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -38,7 +41,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             RunUI(() =>
-            {
+            { 
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath("AgilentCeTest.sky"));
             });
             RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResults=>{
@@ -68,7 +71,7 @@ namespace pwiz.SkylineTestFunctional
                         var optStepChromatograms = chromatogramGroupInfos[0].GetAllTransitionInfo(transition, tolerance,
                             chromatogramSet.OptimizationFunction, TransformChrom.raw);
                         int chromatogramCount = CountChromatograms(optStepChromatograms);
-                        Assert.IsTrue(chromatogramCount > 2, "Chromatogram count {0} for transition {1} should be more than 2", chromatogramCount, transition.Mz);
+                        Assert.AreEqual(7, chromatogramCount, "Incorrect number of chromatograms for Q1:{0} Q3:{1}", transitionGroup.PrecursorMz, transition.Mz);
                     }
                 }
             }
