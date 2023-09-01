@@ -17,13 +17,11 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
