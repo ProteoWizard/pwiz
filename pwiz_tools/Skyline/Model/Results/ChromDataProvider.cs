@@ -324,6 +324,7 @@ namespace pwiz.Skyline.Model.Results
             foreach (var matchingGroup in ChromCacheBuilder.GetMatchingGroups(doc, this))
             {
                 ChromKey lastChromKey = null;
+                ChromKey firstChromKey = null;
                 var curGroup = new List<ChromData>();
                 foreach (var chromData in matchingGroup.Value.Chromatograms.OrderBy(chromData =>
                              chromData.Key.Product))
@@ -337,22 +338,30 @@ namespace pwiz.Skyline.Model.Results
                             if (_dataFile.IsAgilentFile)
                             {
                                 // Agilent files sometimes round off the Q3 values, so if we consider all chromatograms
-                                // within mzMatchTolerance to be optimization steps
-                                // TODO(nicksh): Populate ChromKey.CollisionEnergy so that we can guarantee that these
-                                // ChromKeys are sorted correctly by collision energy
-                                if (chromData.Key.Product.CompareTolerant(lastChromKey.Product,
-                                        doc.Settings.TransitionSettings.Instrument.MzMatchTolerance) == 0)
+                                // within mzMatchTolerance of the document transition product m/z to be part of the same group of optimization steps
+
+                                // We do not know what the document transition product m/z is at this point, so if the m/z is within twice the tolerance
+                                // of the first product m/z in the series, that is good enough
+                                double tolerance = doc.Settings.TransitionSettings.Instrument.MzMatchTolerance * 2;
+                                if (chromData.Key.Product.CompareTolerant(firstChromKey.Product, tolerance) == 0)
                                 {
                                     optimizationSpacing = true;
                                 }
+                                // TODO(nicksh): Populate ChromKey.CollisionEnergy so that we can guarantee that these
+                                // ChromKeys are sorted correctly by collision energy
                             }
                         }
+
                         if (!optimizationSpacing)
+                        {
                             SetOptStepsForGroup(idToIndex, matchingGroup.Key?.NodeGroup, curGroup);
+                            firstChromKey = null;
+                        }
                     }
 
                     curGroup.Add(chromData);
                     lastChromKey = chromData.Key;
+                    firstChromKey ??= lastChromKey;
                 }
 
                 if (lastChromKey != null)
