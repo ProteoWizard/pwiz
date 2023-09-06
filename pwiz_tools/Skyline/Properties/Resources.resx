@@ -941,6 +941,9 @@
   <data name="AreaReplicateGraphPane_Tooltip_Replicate" xml:space="preserve">
     <value>Replicate:</value>
   </data>
+  <data name="AreaReplicateGraphPane_Tooltip_Total" xml:space="preserve">
+    <value>Total:</value>
+  </data>
   <data name="AreaReplicateGraphPane_Tooltip_Dotp" xml:space="preserve">
     <value>{0}:</value>
   </data>

@@ -581,6 +581,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     else if (!IsMultiSelect && BarSettings.Type != BarType.Stack && BarSettings.Type != BarType.PercentStack && dataScalingOption == DataScalingOption.none)
                     {
                         curveItem = new MeanErrorBarItem(label, pointPairList, color, Color.Black);
+                        ToolTip.TargetCurves.Add(curveItem);
                     }
                     else 
                     {
@@ -712,7 +713,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void PopulateTooltip(int index, CurveItem targetCurve)
         {
-            if(targetCurve is LineItem line)
+            if (targetCurve is LineItem line)
             {
                 ToolTip.ClearData();
                 ToolTip.AddLine(Resources.AreaReplicateGraphPane_Tooltip_Replicate, XAxis.Scale.TextLabels[index]);
@@ -721,16 +722,45 @@ namespace pwiz.Skyline.Controls.Graphs
                     string.Format(CultureInfo.CurrentCulture, @"{0:F02}", _dotpData[index]));
                 ToolTip.YPosition = null;
             }
-
             if (targetCurve is BarItem)
             {
+                NormalizeOption normalizeOption = AreaGraphController.AreaNormalizeOption.Constrain(GraphSummary.DocumentUIContainer.DocumentUI.Settings);
+
                 ToolTip.ClearData();
                 ToolTip.AddLine(Resources.AreaReplicateGraphPane_Tooltip_Replicate, XAxis.Scale.TextLabels[index]);
                 var total = CurveList.OfType<BarItem>().Sum(curve => curve.Points[index].Y);
-                foreach (var ion in CurveList.OfType<BarItem>())
-                    ToolTip.AddLine(ion.Label.Text, (ion.Points[index].Y / total).ToString(Formats.PEAK_AREA_NORMALIZED, CultureInfo.CurrentCulture));
+                var dataFormat = @"#,###";
 
-                ToolTip.YPosition = total;
+                foreach (var ion in CurveList.OfType<BarItem>())
+                {
+                    var dataPoint = "";
+                    if (NormalizeOption.DEFAULT.Equals(normalizeOption) || NormalizationMethod.EQUALIZE_MEDIANS.Equals(normalizeOption.NormalizationMethod))
+                    {
+                        if (index== 0)
+                            dataPoint = (ion.Points[index].Y / total ).ToString(Formats.PEAK_AREA_NORMALIZED, CultureInfo.CurrentCulture);
+                        else
+                            dataPoint = ion.Points[index].Y.ToString(@"#,###", CultureInfo.CurrentCulture);
+                    }
+                    else if (NormalizeOption.MAXIMUM.Equals(normalizeOption)
+                             || NormalizationMethod.TIC.Equals(normalizeOption.NormalizationMethod) 
+                             || NormalizeOption.TOTAL.Equals(normalizeOption))
+                    {
+                        dataFormat = Formats.PEAK_AREA_NORMALIZED;
+                        dataPoint = (ion.Points[index].Y/(NormalizeOption.TOTAL.Equals(normalizeOption) ? 100:1))
+                            .ToString(Formats.PEAK_AREA_NORMALIZED, CultureInfo.CurrentCulture);
+                    }
+                    else if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel)
+                        dataPoint = (ion.Points[index].Y).ToString(Formats.STANDARD_RATIO, CultureInfo.CurrentCulture);
+
+                    ToolTip.AddLine(ion.Label.Text,dataPoint);
+                }
+                if (!(normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel) && !NormalizeOption.TOTAL.Equals(normalizeOption))
+                    ToolTip.AddLine(Resources.AreaReplicateGraphPane_Tooltip_Total, total.ToString(dataFormat, CultureInfo.CurrentCulture));
+                
+                if (BarSettings.Type == BarType.Stack || BarSettings.Type == BarType.PercentStack)
+                    ToolTip.YPosition = total;
+                else
+                    ToolTip.YPosition = CurveList.OfType<BarItem>().Max(curve => curve.Points[index].Y);
             }
         }
 

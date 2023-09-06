@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (_table == null)
                     _table = new TableDesc();
-                _table.AddDetailRow(description, data, RenderTools);
+                _table.AddDetailRow(description, data, RenderTools, StringAlignment.Far);
             }
 
             public void ClearData()
