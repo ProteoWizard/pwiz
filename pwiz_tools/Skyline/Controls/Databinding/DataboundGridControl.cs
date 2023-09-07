@@ -175,26 +175,8 @@ namespace pwiz.Skyline.Controls.Databinding
                     return false;
                 }
 
-                var skylineWindow = DataSchemaSkylineWindow;
-                if (skylineWindow == null)
-                {
-                    return false;
-                }
-
-                bool complete = false;
-                if (skylineWindow.InvokeRequired)
-                {
-                    skylineWindow.Invoke(new Action(() =>
-                    {
-                        complete = ReferenceEquals(skylineWindow.DocumentUI, skylineWindow.Document);
-                    }));
-                }
-                else
-                {
-                    complete = ReferenceEquals(skylineWindow.DocumentUI, skylineWindow.Document);
-                }
-
-                return complete;
+                var skylineDataSchema = BindingListSource.ViewContext?.DataSchema as SkylineDataSchema;
+                return true == skylineDataSchema?.IsDocumentUpToDate();
             }
         }
 
@@ -283,10 +265,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public bool IsEnableFillDown()
         {
-            PropertyDescriptor[] propertyDescriptors;
-            int firstRowIndex;
-            int lastRowIndex;
-            return GetRectangularSelection(out propertyDescriptors, out firstRowIndex, out lastRowIndex);
+            return GetRectangularSelection(out _, out _, out _);
         }
 
         /// <summary>

@@ -244,32 +244,34 @@ namespace pwiz.Skyline.Model.Lists
             if (reader.IsEmptyElement)
             {
                 reader.ReadElementString(@"list_data");
-                return;
             }
-            reader.Read();
-            while (true)
+            else
             {
-                if (reader.IsStartElement(El.list_def))
+                reader.Read();
+                while (true)
                 {
-                    ListDef = ListDef.Deserialize(reader);
-                }
-                else if (reader.IsStartElement(El.column))
-                {
-                    string columnText = reader.ReadElementContentAsString();
-                    if (columns.Count < ListDef.Properties.Count)
+                    if (reader.IsStartElement(El.list_def))
                     {
-                        var annotationDef = ListDef.Properties[columns.Count];
-                        columns.Add(ColumnData.MakeColumnData(annotationDef).SetPersistedString(columnText));
+                        ListDef = ListDef.Deserialize(reader);
                     }
-                }
-                else if (reader.NodeType == XmlNodeType.EndElement)
-                {
-                    reader.ReadEndElement();
-                    break;
-                }
-                else
-                {
-                    reader.Skip();
+                    else if (reader.IsStartElement(El.column))
+                    {
+                        string columnText = reader.ReadElementContentAsString();
+                        if (columns.Count < ListDef.Properties.Count)
+                        {
+                            var annotationDef = ListDef.Properties[columns.Count];
+                            columns.Add(ColumnData.MakeColumnData(annotationDef).SetPersistedString(columnText));
+                        }
+                    }
+                    else if (reader.NodeType == XmlNodeType.EndElement)
+                    {
+                        reader.ReadEndElement();
+                        break;
+                    }
+                    else
+                    {
+                        reader.Skip();
+                    }
                 }
             }
             Columns = ImmutableList.ValueOf(columns);

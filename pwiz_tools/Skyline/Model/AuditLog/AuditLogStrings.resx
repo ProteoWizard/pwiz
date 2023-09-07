@@ -675,4 +675,7 @@ For reference, the audit log is located here: "{0}"</value>
   <data name="permuted_isotope_label_complete" xml:space="preserve">
     <value>Added complete permutations of isotope modification '{0}'</value>
   </data>
+  <data name="added_spectrum_filter" xml:space="preserve">
+	<value>Added spectrum filter</value>
+  </data>
 </root>

@@ -113,8 +113,6 @@
   <data name="Category_InstrumentInfo" xml:space="preserve">
     <value>Instrument</value>
   </data>
-  
-  
   <data name="FileName" xml:space="preserve">
     <value>File Name</value>
   </data>
@@ -123,9 +121,6 @@
   </data>
   <data name="FilePath" xml:space="preserve">
     <value>File Path</value>
-  </data>
-  <data name="ReplicateName" xml:space="preserve">
-    <value>Replicate Name</value>
   </data>
   <data name="ReplicateName" xml:space="preserve">
     <value>Replicate Name</value>
@@ -307,7 +302,6 @@
   <data name="Description_rdotp" xml:space="preserve">
     <value>Measure of similarity between labeled and non-labeled spectra.</value>
   </data> 
-
 </root>
 
 

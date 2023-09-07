@@ -90,13 +90,13 @@ namespace pwiz.Skyline.Model.Results
             /// <summary>
             /// Add transition points (partial data for multiple transitions) to AllChromatogramsGraph.
             /// </summary>
-            public void Add(Target modifiedSequence, Color color, int filterIndex, float time, float[] intensities)
+            public void Add(ChromatogramGroupId chromatogramGroupId, Color color, int filterIndex, float time, float[] intensities)
             {
                 MaxRetentionTime = Math.Max(MaxRetentionTime, time);
                 float intensity = 0;
                 for (int i = 0; i < intensities.Length; i++)
                     intensity += intensities[i];
-                AddIntensity(modifiedSequence, color, filterIndex, time, intensity);
+                AddIntensity(chromatogramGroupId, color, filterIndex, time, intensity);
             }
 
             /// <summary>
@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Model.Results
             /// <summary>
             /// Add a complete transition to AllChromatogramsGraph.
             /// </summary>
-            public void AddTransition(Target modifiedSequence, Color color, int index, int rank, IList<float> times, IList<float> intensities)
+            public void AddTransition(ChromatogramGroupId chromatogramGroupId, Color color, int index, int rank, IList<float> times, IList<float> intensities)
             {
                 if (rank == 0 || times.Count == 0)
                     return;
@@ -123,10 +123,10 @@ namespace pwiz.Skyline.Model.Results
                 MaxRetentionTime = Math.Max(MaxRetentionTime, maxTime);
 
                 for (int i = 0; i < times.Count; i++)
-                    AddIntensity(modifiedSequence, color, index, times[i], intensities[i]);
+                    AddIntensity(chromatogramGroupId, color, index, times[i], intensities[i]);
             }
 
-            private void AddIntensity(Target modifiedSequence, Color color, int filterIndex, float time, float intensity)
+            private void AddIntensity(ChromatogramGroupId chromatogramGroupId, Color color, int filterIndex, float time, float intensity)
             {
                 // Filter out small intensities quickly.
                 if (intensity < _maxImportedIntensity*DISPLAY_FILTER_PERCENT)
@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Model.Results
                 // Create a new bin of peaks.
                 if (_bin == null)
                 {
-                    _bin = new List<Peak>(MAX_PEAKS_PER_BIN) {new Peak(intensity, modifiedSequence, color, filterIndex, binIndex)};
+                    _bin = new List<Peak>(MAX_PEAKS_PER_BIN) {new Peak(intensity, chromatogramGroupId, color, filterIndex, binIndex)};
                     _maxImportedIntensity = Math.Max(_maxImportedIntensity, intensity);
                     return;
                 }
@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Model.Results
                 // If bin isn't full yet, add this peak.
                 if (_bin.Count < MAX_PEAKS_PER_BIN)
                 {
-                    _bin.Add(new Peak(intensity, modifiedSequence, color, filterIndex, binIndex));
+                    _bin.Add(new Peak(intensity, chromatogramGroupId, color, filterIndex, binIndex));
                     _maxImportedIntensity = Math.Max(_maxImportedIntensity, intensity);
                     return;
                 }
@@ -185,7 +185,7 @@ namespace pwiz.Skyline.Model.Results
 
                 // Overwrite lowest peak with new higher intensity peak.
                 minPeak.Intensity = intensity;
-                minPeak.ModifiedSequence = modifiedSequence;
+                minPeak.ChromatogramGroupId = chromatogramGroupId;
                 minPeak.Color = color;
                 minPeak.FilterIndex = filterIndex;
                 minPeak.BinIndex = binIndex;
@@ -194,16 +194,16 @@ namespace pwiz.Skyline.Model.Results
 
             public class Peak
             {
-                public Peak(float intensity, Target modifiedSequence, Color color, int filterIndex, int binIndex)
+                public Peak(float intensity, ChromatogramGroupId chromatogramGroupId, Color color, int filterIndex, int binIndex)
                 {
                     Intensity = intensity;
-                    ModifiedSequence = modifiedSequence;
+                    ChromatogramGroupId = chromatogramGroupId;
                     Color = color;
                     FilterIndex = filterIndex;
                     BinIndex = binIndex;
                 }
 
-                public Target ModifiedSequence;
+                public ChromatogramGroupId ChromatogramGroupId;
                 public Color Color;
                 public int FilterIndex;
                 public int BinIndex;

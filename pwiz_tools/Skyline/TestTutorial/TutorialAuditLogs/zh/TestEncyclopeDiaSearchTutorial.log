@@ -1,0 +1,170 @@
+Undo Redo : 已添加谱图库“20230123-abundant-proteins-z3_nce33.elib, 20230123-abundant-proteins-z3_nce33-quant.elib”
+Summary   : 已添加谱图库“20230123-abundant-proteins-z3_nce33.elib, 20230123-abundant-proteins-z3_nce33-quant.elib”
+All Info  :
+已添加谱图库“20230123-abundant-proteins-z3_nce33.elib, 20230123-abundant-proteins-z3_nce33-quant.elib”
+EncyclopeDIA Search > FASTA settings > 最大的漏切酶解位点数 是 "2"
+EncyclopeDIA Search > FASTA settings > FASTA 文件 是 "20230123-abundant-proteins.fasta"
+EncyclopeDIA Search > Prosit settings > Default NCE 是 "33"
+EncyclopeDIA Search > Prosit settings > Default charge 是 "3"
+EncyclopeDIA Search > Prosit settings > Min charge 是 "2"
+EncyclopeDIA Search > Prosit settings > Max charge 是 "3"
+EncyclopeDIA Search > Prosit settings > Max missed cleavages 是 "2"
+EncyclopeDIA Search > Narrow window results : 包含 "23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML"
+EncyclopeDIA Search > Wide window results : 包含 "23aug2017_hela_serum_timecourse_wide_1a.mzML"
+EncyclopeDIA Search > Wide window results : 包含 "23aug2017_hela_serum_timecourse_wide_1b.mzML"
+EncyclopeDIA Search > EncyclopeDIA settings 是 { Enzyme = "Trypsin", Frag = "CID", Ptol = "10", PtolUnits = "PPM", Ftol = "10", FtolUnits = "PPM", Lftol = "10", LftolUnits = "PPM", Poffset = "0", Foffset = "0", PercolatorThreshold = "0.01", PercolatorTrainingSetSize = "500000", PercolatorTrainingFDR = "0", Acquisition = "DIA", NumberOfThreadsUsed = "32", ExpectedPeakWidth = "25", PrecursorWindowSize = "-1", NumberOfQuantitativePeaks = "5", MinNumOfQuantitativePeaks = "3", TopNTargetsUsed = "-1", QuantifyAcrossSamples = "False", NumberOfExtraDecoyLibrariesSearched = "0", VerifyModificationIons = "True", MinIntensity = "-1", RtWindowInMin = "-1", FilterPeaklists = "False", V2scoring = "True" }
+EncyclopeDIA Search > Chromatogram library 是 "20230123-abundant-proteins-z3_nce33.elib"
+EncyclopeDIA Search > Quantification library 是 "20230123-abundant-proteins-z3_nce33-quant.elib"
+Extra Info: FASTA settings = 
+{
+    最大的漏切酶解位点数 = "2",
+    FASTA 文件 = "20230123-abundant-proteins.fasta"
+},
+Prosit settings = 
+{
+    Default NCE = "33",
+    Default charge = "3",
+    Min charge = "2",
+    Max charge = "3",
+    Max missed cleavages = "2"
+},
+Narrow window results = 
+[
+    "23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML"
+],
+Wide window results = 
+[
+    "23aug2017_hela_serum_timecourse_wide_1a.mzML",
+    "23aug2017_hela_serum_timecourse_wide_1b.mzML"
+],
+EncyclopeDIA settings = {
+Enzyme = "Trypsin",
+Frag = "CID",
+Ptol = "10",
+PtolUnits = "PPM",
+Ftol = "10",
+FtolUnits = "PPM",
+Lftol = "10",
+LftolUnits = "PPM",
+Poffset = "0",
+Foffset = "0",
+PercolatorThreshold = "0.01",
+PercolatorTrainingSetSize = "500000",
+PercolatorTrainingFDR = "0",
+Acquisition = "DIA",
+NumberOfThreadsUsed = "32",
+ExpectedPeakWidth = "25",
+PrecursorWindowSize = "-1",
+NumberOfQuantitativePeaks = "5",
+MinNumOfQuantitativePeaks = "3",
+TopNTargetsUsed = "-1",
+QuantifyAcrossSamples = "False",
+NumberOfExtraDecoyLibrariesSearched = "0",
+VerifyModificationIons = "True",
+MinIntensity = "-1",
+RtWindowInMin = "-1",
+FilterPeaklists = "False",
+V2scoring = "True"
+},
+Chromatogram library = "20230123-abundant-proteins-z3_nce33.elib",
+Quantification library = "20230123-abundant-proteins-z3_nce33-quant.elib"
+
+Undo Redo : 已导入肽段搜索
+Summary   : 已导入肽段搜索
+All Info  :
+已导入肽段搜索
+导入肽段搜索 > 提取色谱图 > 查找到结果文件 : 包含 "23aug2017_hela_serum_timecourse_wide_1a.mzML"
+导入肽段搜索 > 提取色谱图 > 查找到结果文件 : 包含 "23aug2017_hela_serum_timecourse_wide_1b.mzML"
+导入肽段搜索 > 提取色谱图 > 要同步导入的文件 是 "许多个"
+导入肽段搜索 > 提取色谱图 > 已删除前缀 是 "23aug2017_hela_serum_timecourse_wide_1"
+导入肽段搜索 > 配置离子对设置 > 母离子电荷 是 "2, 3"
+导入肽段搜索 > 配置离子对设置 > 离子电荷 是 "1, 2"
+导入肽段搜索 > 配置离子对设置 > 离子类型 是 "y, b, p"
+导入肽段搜索 > 配置离子对设置 > 离子匹配耐受性 是 "0.005" m/z
+导入肽段搜索 > 配置离子对设置 > 挑选最小子离子 是 "3"
+导入肽段搜索 > 配置离子对设置 > 挑选子离子 是 "5"
+导入肽段搜索 > 配置离子对设置 > 子离子选择开始 是 "离子 3"
+导入肽段搜索 > 配置离子对设置 > 子离子选择结束 是 "最后一个离子"
+导入肽段搜索 > 配置离子对设置 > 最大离子质荷比 是 "2000"
+导入肽段搜索 > 配置全扫描设置 > 采集方法 是 "DIA（数据非依赖性采集）"
+导入肽段搜索 > 配置全扫描设置 > 分离方案 是 "仅有结果"
+导入肽段搜索 > 配置全扫描设置 > 分离方案 > 分离宽度 是 "结果"
+导入肽段搜索 > 配置全扫描设置 > 分离方案 > 预指定分离窗口 是 空
+导入肽段搜索 > 配置全扫描设置 > 子离子质量分析仪 是 "棒状图形式"
+导入肽段搜索 > 配置全扫描设置 > 质量准确度 是 "10"
+导入肽段搜索 > 配置全扫描设置 > 同位素峰值包含 是 "计数"
+导入肽段搜索 > 配置全扫描设置 > 峰 是 "3"
+导入肽段搜索 > 配置全扫描设置 > 母离子质量分析仪 是 "棒状图形式"
+导入肽段搜索 > 配置全扫描设置 > 质量准确度 是 "10"
+导入肽段搜索 > 配置全扫描设置 > 同位素标记富集 是 "默认"
+导入肽段搜索 > 配置全扫描设置 > 保留时间过滤长度 是 "2"
+导入肽段搜索 > 导入 FASTA > 最大的漏切酶解位点数 是 "2"
+导入肽段搜索 > 导入 FASTA > FASTA 文件 是 "20230123-abundant-proteins.fasta"
+导入肽段搜索 > 关联蛋白质 > 蛋白质分组 是 假
+导入肽段搜索 > 关联蛋白质 > 查找最小蛋白质列表 是 假
+导入肽段搜索 > 关联蛋白质 > 删除蛋白质子集 是 假
+导入肽段搜索 > 关联蛋白质 > 共享的肽段选项 是 "重复的蛋白质"
+导入肽段搜索 > 关联蛋白质 > 每个蛋白质的最少肽段数 是 "1"
+导入肽段搜索 > 关联蛋白质 > 映射的蛋白质 是 "557"
+导入肽段搜索 > 关联蛋白质 > 映射的肽段 是 "5423"
+导入肽段搜索 > 关联蛋白质 > 取消映射的蛋白质 是 "1"
+导入肽段搜索 > 关联蛋白质 > 蛋白质目标 是 "557"
+导入肽段搜索 > 关联蛋白质 > 肽段目标 是 "5733"
+Extra Info: 提取色谱图 = 
+{
+    查找到结果文件 = 
+    [
+        "23aug2017_hela_serum_timecourse_wide_1a.mzML",
+        "23aug2017_hela_serum_timecourse_wide_1b.mzML"
+    ],
+    要同步导入的文件 = "许多个",
+    已删除前缀 = "23aug2017_hela_serum_timecourse_wide_1"
+},
+配置离子对设置 = 
+{
+    母离子电荷 = "2, 3",
+    离子电荷 = "1, 2",
+    离子类型 = "y, b, p",
+    离子匹配耐受性 = "0.005" m/z,
+    挑选最小子离子 = "3",
+    挑选子离子 = "5",
+    子离子选择开始 = "离子 3",
+    子离子选择结束 = "最后一个离子",
+    最大离子质荷比 = "2000"
+},
+配置全扫描设置 = 
+{
+    采集方法 = "DIA（数据非依赖性采集）",
+    分离方案 = "仅有结果": 
+{
+        分离宽度 = "结果",
+        预指定分离窗口 = 空
+    },
+    子离子质量分析仪 = "棒状图形式",
+    质量准确度 = "10",
+    同位素峰值包含 = "计数",
+    峰 = "3",
+    母离子质量分析仪 = "棒状图形式",
+    质量准确度 = "10",
+    同位素标记富集 = "默认",
+    保留时间过滤长度 = "2"
+},
+导入 FASTA = 
+{
+    最大的漏切酶解位点数 = "2",
+    FASTA 文件 = "20230123-abundant-proteins.fasta"
+},
+关联蛋白质 = 
+{
+    蛋白质分组 = 假,
+    查找最小蛋白质列表 = 假,
+    删除蛋白质子集 = 假,
+    共享的肽段选项 = "重复的蛋白质",
+    每个蛋白质的最少肽段数 = "1",
+    映射的蛋白质 = "557",
+    映射的肽段 = "5423",
+    取消映射的蛋白质 = "1",
+    蛋白质目标 = "557",
+    肽段目标 = "5733"
+}
+

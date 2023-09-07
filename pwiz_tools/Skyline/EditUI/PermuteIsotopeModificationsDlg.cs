@@ -98,11 +98,9 @@ namespace pwiz.Skyline.EditUI
                 var globalIsotopeMods = Settings.Default.HeavyModList.ToList();
                 var newDocument = deferSettingsChangeDoc;
                 var simplePermutation = SimplePermutation;
-                using (var longWaitDlg = new LongWaitDlg()
+                using (var longWaitDlg = new LongWaitDlg())
                 {
-                    Text = Resources.PermuteIsotopeModificationsDlg_OkDialog_Permuting_Isotope_Modifications
-                })
-                {
+                    longWaitDlg.Text = Resources.PermuteIsotopeModificationsDlg_OkDialog_Permuting_Isotope_Modifications;
                     longWaitDlg.PerformWork(this, 1000, progressMonitor =>
                     {
                         var isotopePermuter = new IsotopeModificationPermuter(isotopeModification,

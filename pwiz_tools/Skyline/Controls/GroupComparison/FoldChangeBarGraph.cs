@@ -286,9 +286,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 return null;
             }
-            CurveItem nearestCurve;
+
             int iNearest;
-            if (!zedGraphControl.GraphPane.FindNearestPoint(pt, _barGraph, out nearestCurve, out iNearest))
+            if (!zedGraphControl.GraphPane.FindNearestPoint(pt, _barGraph, out _, out iNearest))
             {
                 return null;
             }

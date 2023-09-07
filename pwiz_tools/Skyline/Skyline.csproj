@@ -34,6 +34,7 @@
     <MSBuildAssemblyName />
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' == '' ">Skyline-daily</AssemblyName>
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' != '' ">$(MSBuildAssemblyName)</AssemblyName>
+    <MascotParserPath>..\..\libraries\msparser_2_8_1_x86_win64</MascotParserPath>
     <PublishUrl>T:\www\site\skyline.ms\html\software\Skyline-daily13-64\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
@@ -51,8 +52,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>501</ApplicationRevision>
-    <ApplicationVersion>22.2.1.501</ApplicationVersion>
+    <ApplicationRevision>184</ApplicationRevision>
+    <ApplicationVersion>23.0.9.184</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -167,6 +168,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -402,6 +404,15 @@
     <Compile Include="Controls\Lists\ListViewContext.cs" />
     <Compile Include="Controls\SeqNode\PeptideFormatter.cs" />
     <Compile Include="Controls\PrositUIHelpers.cs" />
+    <Compile Include="Controls\Spectra\PrecursorClass.cs" />
+    <Compile Include="Controls\Spectra\MatchingPrecursors.cs" />
+    <Compile Include="Controls\Spectra\SpectrumGridForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Spectra\SpectrumGridForm.Designer.cs">
+      <DependentUpon>SpectrumGridForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Spectra\SpectrumClassRow.cs" />
     <Compile Include="Controls\Startup\TutorialImageResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -419,6 +430,12 @@
     </Compile>
     <Compile Include="EditUI\EditLinkedPeptidesDlg.Designer.cs">
       <DependentUpon>EditLinkedPeptidesDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\EditSpectrumFilterDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\EditSpectrumFilterDlg.Designer.cs">
+      <DependentUpon>EditSpectrumFilterDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="EditUI\PermuteIsotopeModificationsDlg.designer.cs">
       <DependentUpon>PermuteIsotopeModificationsDlg.cs</DependentUpon>
@@ -462,6 +479,26 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>EnumNames.resx</DependentUpon>
     </Compile>
+    <Compile Include="Model\AuditLog\AuditLogStrings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AuditLogStrings.resx</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\DDASearchControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\EncyclopeDiaSearchDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\EncyclopeDiaSearchDlg.Designer.cs">
+      <DependentUpon>EncyclopeDiaSearchDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\SearchControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\SearchControl.Designer.cs">
+      <DependentUpon>SearchControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Model\AuditLog\PropertyNames.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -484,6 +521,8 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Model\FullScanProperties.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumClassFilter.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -533,11 +572,6 @@
     </Compile>
     <Compile Include="Model\AbstractDdaConverter.cs" />
     <Compile Include="Model\AuditLog\AuditLogObject.cs" />
-    <Compile Include="Model\AuditLog\AuditLogStrings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>AuditLogStrings.resx</DependentUpon>
-    </Compile>
     <Compile Include="Model\AuditLog\AuditLogToStringHelper.cs" />
     <Compile Include="Model\AuditLog\BlockHash.cs" />
     <Compile Include="Model\AuditLog\Databinding\AuditLogColumn.cs" />
@@ -640,6 +674,7 @@
     <Compile Include="Model\Irt\Regression.cs" />
     <Compile Include="Model\LegacyCrosslinkConverter.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeakAnnotations.cs" />
+    <Compile Include="Model\Lib\EncyclopeDiaHelpers.cs" />
     <Compile Include="Model\Lib\ExplicitPeakBounds.cs" />
     <Compile Include="Model\Lib\LibKeyIndex.cs" />
     <Compile Include="Model\Lib\SpectralLibraryExporter.cs" />
@@ -648,10 +683,13 @@
     <Compile Include="Model\Lib\ViewLibraryPepInfo.cs" />
     <Compile Include="Model\MinimizeResults.cs" />
     <Compile Include="Model\MoleculeNameAndAccessions.cs" />
+    <Compile Include="Model\PrecursorKey.cs" />
     <Compile Include="Model\Proteome\ProteinAssociation.cs" />
     <Compile Include="Model\Proteome\ProteinGroupMetadata.cs" />
     <Compile Include="Model\ProteomicSequence.cs" />
     <Compile Include="Model\Results\CandidatePeakGroupData.cs" />
+    <Compile Include="Model\Results\ChromatogramGroupId.cs" />
+    <Compile Include="Model\Results\Legacy\ChromGroupHeaderInfo16.cs" />
     <Compile Include="Model\Results\OnDemandFeatureCalculator.cs" />
     <Compile Include="Model\Results\PeakGroupIntegrator.cs" />
     <Compile Include="Model\Results\PeakShapeStatistics.cs" />
@@ -671,6 +709,13 @@
     <Compile Include="Model\Results\Scoring\ScoreQValueMap.cs" />
     <Compile Include="Properties\MetadataRuleSetList.cs" />
     <Compile Include="Properties\RemoteAccountList.cs" />
+    <Compile Include="Model\Results\Spectra\FileSpectrumInfo.cs" />
+    <Compile Include="Model\Results\Spectra\ResultFileMetaData.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumClass.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumClassColumn.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumClassKey.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumMetadataList.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumPrecursors.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -821,12 +866,6 @@
     </Compile>
     <Compile Include="FileUI\PeptideSearch\SearchSettingsControl.Designer.cs">
       <DependentUpon>SearchSettingsControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="FileUI\PeptideSearch\DDASearchControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="FileUI\PeptideSearch\DDASearchControl.Designer.cs">
-      <DependentUpon>DDASearchControl.cs</DependentUpon>
     </Compile>
     <Compile Include="ToolsUI\ToolDescriptionRunUI.cs" />
     <Compile Include="ToolsUI\ToolService.cs" />
@@ -2515,6 +2554,9 @@
     <EmbeddedResource Include="Controls\Lists\ListDesigner.zh-CHS.resx">
       <DependentUpon>ListDesigner.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Spectra\SpectrumGridForm.resx">
+      <DependentUpon>SpectrumGridForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\ActionBoxControl.ja.resx">
       <DependentUpon>ActionBoxControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -2612,6 +2654,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\EditLinkedPeptidesDlg.zh-CHS.resx">
       <DependentUpon>EditLinkedPeptidesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\EditSpectrumFilterDlg.resx">
+      <DependentUpon>EditSpectrumFilterDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\MassErrorChartPropertyDlg.ja.resx">
       <DependentUpon>MassErrorChartPropertyDlg.cs</DependentUpon>
@@ -2718,15 +2763,8 @@
     <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.zh-CHS.resx">
       <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PeptideSearch\DDASearchControl.ja.resx">
-      <DependentUpon>DDASearchControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PeptideSearch\DDASearchControl.resx">
-      <DependentUpon>DDASearchControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PeptideSearch\DDASearchControl.zh-CHS.resx">
-      <DependentUpon>DDASearchControl.cs</DependentUpon>
-      <SubType>Designer</SubType>
+    <EmbeddedResource Include="FileUI\PeptideSearch\EncyclopeDiaSearchDlg.resx">
+      <DependentUpon>EncyclopeDiaSearchDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ImportResultsDIAControl.ja.resx">
       <DependentUpon>ImportResultsDIAControl.cs</DependentUpon>
@@ -2739,6 +2777,15 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.resx">
       <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\SearchControl.ja.resx">
+      <DependentUpon>SearchControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\SearchControl.resx">
+      <DependentUpon>SearchControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\SearchControl.zh-CHS.resx">
+      <DependentUpon>SearchControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\SearchSettingsControl.ja.resx">
       <DependentUpon>SearchSettingsControl.cs</DependentUpon>
@@ -3379,7 +3426,7 @@
       <Link>QTFLDebugLog.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\BiblioSpec\src\unimod.xml">
+    <Content Include="..\..\pwiz\data\common\unimod.xml">
       <Link>unimod.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -3736,6 +3783,7 @@
     <None Include="Resources\AnnotatedSpectum.png" />
     <None Include="Resources\Cluster.ico" />
     <None Include="Resources\Close.bmp" />
+    <None Include="Resources\PanoramaDownload.bmp" />
     <Content Include="SkylineDocPointer.ico" />
     <EmbeddedResource Include="Resources\prosit_logo_dark_blue.png" />
     <Content Include="SkylineProcessRunner.exe">
@@ -4429,12 +4477,12 @@
       <Link>modifications.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\BiblioSpec\src\quantitation_1.xsd">
+    <Content Include="$(MascotParserPath)\config\quantitation_1.xsd">
       <Link>quantitation_1.xsd</Link>
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\BiblioSpec\src\quantitation_2.xsd">
+    <Content Include="$(MascotParserPath)\config\quantitation_2.xsd">
       <Link>quantitation_2.xsd</Link>
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -4588,7 +4636,6 @@
     </Compile>
     <Compile Include="Util\DotTraceProfile.cs" />
     <Compile Include="Util\Extensions\ActionUtil.cs" />
-    <Compile Include="Util\FileSize.cs" />
     <Compile Include="Util\Install.cs" />
     <Compile Include="Util\Extensions\Text.cs" />
     <Compile Include="Util\Extensions\UtilProcess.cs" />
@@ -4597,7 +4644,7 @@
     <Compile Include="Util\Log.cs" />
     <Compile Include="Util\MemoryInfo.cs" />
     <Compile Include="Util\NameValueParameters.cs" />
-    <Compile Include="Util\PanoramaUtil.cs" />
+    <Compile Include="Util\PanoramaPublishUtil.cs" />
     <Compile Include="Util\PooledSqliteConnection.cs" />
     <Compile Include="Util\SystemMetrics.cs" />
     <Compile Include="Util\TextRendererHelper.cs" />
@@ -4614,6 +4661,7 @@
     <Compile Include="Util\UtilUI.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Util\ValueChecking.cs" />
     <Compile Include="Util\Xml.cs" />
     <Compile Include="Model\DocSettings\XmlNamedElement.cs" />
     <Compile Include="Util\ClipboardEx.cs" />
@@ -5592,7 +5640,7 @@
     <EmbeddedResource Include="Resources\Ions_Z.bmp" />
     <EmbeddedResource Include="Resources\Print.bmp" />
     <EmbeddedResource Include="Resources\ProteoWizard.bmp" />
-    <Content Include="..\BiblioSpec\src\unimod_2.xsd">
+    <Content Include="$(MascotParserPath)\config\unimod_2.xsd">
       <Link>unimod_2.xsd</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -5649,13 +5697,17 @@
       <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
       <Name>Common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Shared\Common\CommonUtil.csproj">
+    <ProjectReference Include="..\Shared\CommonUtil\CommonUtil.csproj">
       <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
       <Name>CommonUtil</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shared\MSGraph\MSGraph.csproj">
       <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
       <Name>MSGraph</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Shared\PanoramaClient\PanoramaClient.csproj">
+      <Project>{bf849cf8-25d7-4619-b001-9ed8e3771c44}</Project>
+      <Name>PanoramaClient</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shared\ProteomeDb\ProteomeDb.csproj">
       <Project>{09FC3CB3-FCCD-4906-A370-160B28725936}</Project>
@@ -5834,6 +5886,16 @@
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="PanoramaClient.pdb">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="ProteomeDb.pdb">
       <Visible>False</Visible>

@@ -35,6 +35,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -613,7 +614,7 @@ namespace pwiz.Skyline.Model.Serialization
                     throw new VersionNewerException(
                         string.Format(Resources.SrmDocument_ReadXml_The_document_format_version__0__is_newer_than_the_version__1__supported_by__2__,
                             formatVersionNumber, DocumentFormat.CURRENT.AsDouble(), Install.ProgramNameAndVersion));
-// Resharper enable ImpureMethodCallOnReadonlyValueField
+// ReSharper restore ImpureMethodCallOnReadonlyValueField
                 }
             }
 
@@ -1400,6 +1401,7 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 reader.ReadStartElement();
                 var annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.precursor);
+                var spectrumClassFilter = SpectrumClassFilter.ReadXml(reader);
                 var libInfo = ReadTransitionGroupLibInfo(reader);
                 var results = ReadTransitionGroupResults(reader);
 
@@ -1412,6 +1414,10 @@ namespace pwiz.Skyline.Model.Serialization
                                                   results,
                                                   children,
                                                   autoManageChildren);
+                if (!spectrumClassFilter.IsEmpty)
+                {
+                    nodeGroup = nodeGroup.ChangeSpectrumClassFilter(spectrumClassFilter);
+                }
                 children = ReadTransitionListXml(reader, nodeGroup, mods, pre422ExplicitValues);
 
                 reader.ReadEndElement();

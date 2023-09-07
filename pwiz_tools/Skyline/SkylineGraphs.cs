@@ -338,11 +338,10 @@ namespace pwiz.Skyline
                         // Look for matching chromatogram sets across the documents
                         ChromatogramSet chromSetOld;
                         ChromatogramSet chromSetNew;
-                        int index;
                         if (settingsOld.HasResults &&
-                            settingsOld.MeasuredResults.TryGetChromatogramSet(name, out chromSetOld, out index) &&
+                            settingsOld.MeasuredResults.TryGetChromatogramSet(name, out chromSetOld, out _) &&
                             settingsNew.HasResults &&
-                            settingsNew.MeasuredResults.TryGetChromatogramSet(chromSetOld.Id.GlobalIndex, out chromSetNew, out index))
+                            settingsNew.MeasuredResults.TryGetChromatogramSet(chromSetOld.Id.GlobalIndex, out chromSetNew, out _))
                         {
                             // If matching chromatogram found, but name has changed, then
                             // update the graph pane
@@ -1214,7 +1213,7 @@ namespace pwiz.Skyline
             }
 
 
-            if (_listGraphChrom.Any(c => c.Visible)) // Don't offer to show chromatograms when there are none
+            if (control is { HasChromatogramData: true }) // Don't offer to show chromatograms when there are none
             {
                 showLibraryChromatogramsSpectrumContextMenuItem.Checked = set.ShowLibraryChromatograms;
                 menuStrip.Items.Insert(iInsert++, showLibraryChromatogramsSpectrumContextMenuItem);
@@ -1453,7 +1452,7 @@ namespace pwiz.Skyline
                 _graphFullScan.Hide();
         }
 
-        private void ShowGraphFullScan(IScanProvider scanProvider, int transitionIndex, int scanIndex, int? optStep)
+        internal void ShowGraphFullScan(IScanProvider scanProvider, int transitionIndex, int scanIndex, int? optStep)
         {
             if (_graphFullScan != null)
             {
@@ -1893,8 +1892,7 @@ namespace pwiz.Skyline
         {
             get
             {
-                MsDataFileUri temp;
-                return GetGraphChromStrings(SelectedResultsIndex, null, out temp);
+                return GetGraphChromStrings(SelectedResultsIndex, null, out _);
             }
         }
 
@@ -1952,8 +1950,7 @@ namespace pwiz.Skyline
             {
                 var graphPosition = GetGraphChrom(namePosition);
 
-                IDockableForm formBefore;
-                DockPane paneExisting = FindChromatogramPane(graphPosition, out formBefore);
+                DockPane paneExisting = FindChromatogramPane(graphPosition);
                 if (paneExisting == null)
                     graphChrom.Show(dockPanel.Panes[firstDocumentPane], DockPaneAlignment.Left, 0.5);
                 else if (!split)
@@ -1978,7 +1975,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private DockPane FindChromatogramPane(GraphChromatogram graphChrom, out IDockableForm formBefore)
+        private DockPane FindChromatogramPane(GraphChromatogram graphChrom)
         {
             foreach (var pane in dockPanel.Panes)
             {
@@ -1987,12 +1984,10 @@ namespace pwiz.Skyline
                     if (form is GraphChromatogram &&
                         (graphChrom == null || graphChrom == form))
                     {
-                        formBefore = form;
                         return pane;
                     }
                 }
             }
-            formBefore = null;
             return null;
         }
 
@@ -2205,10 +2200,9 @@ namespace pwiz.Skyline
                 ? transitionGroupDocNode.Transitions.FirstOrDefault(tr => ReferenceEquals(tr.Id, args.Transition))
                 : null;
 
-            ChromatogramSet chromatograms;
             int indexSet;
             if (!Document.Settings.HasResults ||
-                !Document.Settings.MeasuredResults.TryGetChromatogramSet(args.NameSet, out chromatograms, out indexSet))
+                !Document.Settings.MeasuredResults.TryGetChromatogramSet(args.NameSet, out _, out indexSet))
                 return result;
 
             float? startTime = null;
@@ -2741,9 +2735,8 @@ namespace pwiz.Skyline
         public void ActivateReplicate(string name)
         {
             int index;
-            ChromatogramSet chromatogramSet;
 
-            if (DocumentUI.Settings.MeasuredResults.TryGetChromatogramSet(name, out chromatogramSet, out index))
+            if (DocumentUI.Settings.MeasuredResults.TryGetChromatogramSet(name, out _, out index))
             {
                 SelectedResultsIndex = index;
             }
@@ -3266,8 +3259,9 @@ namespace pwiz.Skyline
 
         public void ShowRegressionRTThresholdDlg()
         {
-            using (var dlg = new RegressionRTThresholdDlg {Threshold = Settings.Default.RTResidualRThreshold})
+            using (var dlg = new RegressionRTThresholdDlg())
             {
+                dlg.Threshold = Settings.Default.RTResidualRThreshold;
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.RTResidualRThreshold = dlg.Threshold;
@@ -3295,15 +3289,16 @@ namespace pwiz.Skyline
             if (regression != null)
                 regression = (RetentionTimeRegression) regression.ChangeName(name);
 
-            using (var dlg = new EditRTDlg(listRegression) { Regression = regression })
+            using (var dlg = new EditRTDlg(listRegression))
             {
+                dlg.Regression = regression;
                 dlg.ShowPeptides(true);
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     regression = dlg.Regression;
                     listRegression.Add(regression);
 
-                    ModifyDocument(string.Format(Resources.SkylineWindow_CreateRegression_Set_regression__0__, regression.Name),
+                    ModifyDocument(string.Format(Resources.SkylineWindow_CreateRegression_Set_regression__0__, regression!.Name),
                                    doc =>
                                    doc.ChangeSettings(
                                        doc.Settings.ChangePeptidePrediction(p => p.ChangeRetentionTime(regression))), AuditLogEntry.SettingsLogFunction);
@@ -4102,13 +4097,13 @@ namespace pwiz.Skyline
 
         private int AddReplicateOrderAndGroupByMenuItems(ToolStrip menuStrip, int iInsert)
         {
-            string currentGroupBy = SummaryReplicateGraphPane.GroupByReplicateAnnotation;
+            ReplicateValue currentGroupBy = ReplicateValue.FromPersistedString(DocumentUI.Settings, SummaryReplicateGraphPane.GroupByReplicateAnnotation);
             var groupByValues = ReplicateValue.GetGroupableReplicateValues(DocumentUI).ToArray();
             if (groupByValues.Length == 0)
                 currentGroupBy = null;
 
             // If not grouped by an annotation, show the order-by menuitem
-            if (string.IsNullOrEmpty(currentGroupBy))
+            if (currentGroupBy == null)
             {
                 var orderByReplicateAnnotationDef = groupByValues.FirstOrDefault(
                     value => SummaryReplicateGraphPane.OrderByReplicateAnnotation == value.ToPersistedString());
@@ -4137,11 +4132,11 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++, groupReplicatesByContextMenuItem);
                 groupReplicatesByContextMenuItem.DropDownItems.Clear();
                 groupReplicatesByContextMenuItem.DropDownItems.Add(groupByReplicateContextMenuItem);
-                groupByReplicateContextMenuItem.Checked = string.IsNullOrEmpty(currentGroupBy);
+                groupByReplicateContextMenuItem.Checked = currentGroupBy == null;
                 foreach (var replicateValue in groupByValues)
                 {
                     groupReplicatesByContextMenuItem.DropDownItems
-                        .Add(GroupByReplicateAnnotationMenuItem(replicateValue, currentGroupBy));
+                        .Add(GroupByReplicateAnnotationMenuItem(replicateValue, Equals(replicateValue, currentGroupBy)));
                 }
             }
             return iInsert;
@@ -4155,12 +4150,18 @@ namespace pwiz.Skyline
             }
         }
 
-        private ToolStripMenuItem GroupByReplicateAnnotationMenuItem(ReplicateValue replicateValue, string groupBy)
+        public ToolStripMenuItem ReplicateGroupByContextMenuItem
         {
-            return new ToolStripMenuItem(replicateValue.Title, null, (sender, eventArgs)=>GroupByReplicateValue(replicateValue))
-                       {
-                           Checked = replicateValue.ToPersistedString() == groupBy
-                       };
+            get { return groupReplicatesByContextMenuItem; }
+        }
+
+        private ToolStripMenuItem GroupByReplicateAnnotationMenuItem(ReplicateValue replicateValue, bool isChecked)
+        {
+            return new ToolStripMenuItem(replicateValue.Title, null,
+                (sender, eventArgs) => GroupByReplicateValue(replicateValue))
+            {
+                Checked = isChecked
+            };
         }
 
         private ToolStripMenuItem OrderByReplicateAnnotationMenuItem(ReplicateValue replicateValue, string currentOrderBy)
@@ -5644,6 +5645,7 @@ namespace pwiz.Skyline
             else
             {
                 rows = 1;
+                // ReSharper disable once PossibleLossOfFraction
                 while ((height / rows) / (width / (groups / rows + (groups % rows > 0 ? 1 : 0))) > MAX_TILED_ASPECT_RATIO)
                     rows++;
             }
@@ -5822,8 +5824,7 @@ namespace pwiz.Skyline
                 // already be.
                 foreach (var graph in listGraphs)
                 {
-                    int i;
-                    if (!dictOrder.TryGetValue(graph, out i))
+                    if (!dictOrder.TryGetValue(graph, out _))
                         dictOrder.Add(graph, iOrder++);
                 }
 

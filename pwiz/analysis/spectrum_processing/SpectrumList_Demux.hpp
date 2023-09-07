@@ -62,7 +62,8 @@ namespace analysis {
                 variableFill(false),
                 interpolateRetentionTime(true),
                 optimization(Optimization::NONE),
-                minimumWindowSize(0.2)
+                minimumWindowSize(0.2),
+                removeNonOverlappingEdges(false)
             {}
 
             /// Error scalar for extracting MS/MS peaks.
@@ -97,6 +98,9 @@ namespace analysis {
             Optimization optimization;
 
             double minimumWindowSize;
+
+            /// In overlapping DIA schemes, remove any isolation window segments at the edges that are not covered at the same depth as the rest.
+            bool removeNonOverlappingEdges;
         };
 
         /// Generates an abstract SpectrumList_Demux decorator from inner SpectrumList

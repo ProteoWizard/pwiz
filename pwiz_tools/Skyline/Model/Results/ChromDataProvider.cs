@@ -24,6 +24,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results.Spectra;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -78,11 +79,11 @@ namespace pwiz.Skyline.Model.Results
 
         public abstract IEnumerable<ChromKeyProviderIdPair> ChromIds { get; }
 
-        public virtual byte[] MSDataFileScanIdBytes { get { return new byte[0]; } }
+        public virtual IResultFileMetadata ResultFileData { get { return null; } }
 
         public virtual void SetRequestOrder(IList<IList<int>> orderedSets) { }
 
-        public abstract bool GetChromatogram(int id, Target modifiedSequence, Color color, out ChromExtra extra, out TimeIntensities timeIntensities);
+        public abstract bool GetChromatogram(int id, ChromatogramGroupId chromatogramGroupId, Color color, out ChromExtra extra, out TimeIntensities timeIntensities);
 
         public abstract double? MaxRetentionTime { get; }
 
@@ -322,22 +323,48 @@ namespace pwiz.Skyline.Model.Results
 
             foreach (var matchingGroup in ChromCacheBuilder.GetMatchingGroups(doc, this))
             {
-                SignedMz? lastProduct = null;
+                ChromKey lastChromKey = null;
+                ChromKey firstChromKey = null;
                 var curGroup = new List<ChromData>();
                 foreach (var chromData in matchingGroup.Value.Chromatograms.OrderBy(chromData =>
                              chromData.Key.Product))
                 {
-                    if (lastProduct.HasValue)
+                    if (lastChromKey != null)
                     {
-                        if (!ChromatogramInfo.IsOptimizationSpacing(lastProduct.Value, chromData.Key.Product))
+                        bool optimizationSpacing =
+                            ChromatogramInfo.IsOptimizationSpacing(lastChromKey.Product, chromData.Key.Product);
+                        if (!optimizationSpacing)
+                        {
+                            if (_dataFile.IsAgilentFile)
+                            {
+                                // Agilent files sometimes round off the Q3 values, so if we consider all chromatograms
+                                // within mzMatchTolerance of the document transition product m/z to be part of the same group of optimization steps
+
+                                // We do not know what the document transition product m/z is at this point, so if the m/z is within twice the tolerance
+                                // of the first product m/z in the series, that is good enough
+                                double tolerance = doc.Settings.TransitionSettings.Instrument.MzMatchTolerance * 2;
+                                if (chromData.Key.Product.CompareTolerant(firstChromKey.Product, tolerance) == 0)
+                                {
+                                    optimizationSpacing = true;
+                                }
+                                // TODO(nicksh): Populate ChromKey.CollisionEnergy so that we can guarantee that these
+                                // ChromKeys are sorted correctly by collision energy
+                            }
+                        }
+
+                        if (!optimizationSpacing)
+                        {
                             SetOptStepsForGroup(idToIndex, matchingGroup.Key?.NodeGroup, curGroup);
+                            firstChromKey = null;
+                        }
                     }
 
                     curGroup.Add(chromData);
-                    lastProduct = chromData.Key.Product;
+                    lastChromKey = chromData.Key;
+                    firstChromKey ??= lastChromKey;
                 }
 
-                if (lastProduct.HasValue)
+                if (lastChromKey != null)
                 {
                     SetOptStepsForGroup(idToIndex, matchingGroup.Key?.NodeGroup, curGroup);
                 }
@@ -454,7 +481,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override eIonMobilityUnits IonMobilityUnits { get { return _ionMobilityUnits; } }
 
-        public override bool GetChromatogram(int id, Target modifiedSequence, Color color, out ChromExtra extra, out TimeIntensities timeIntensities)
+        public override bool GetChromatogram(int id, ChromatogramGroupId chromatogramGroupId, Color color, out ChromExtra extra, out TimeIntensities timeIntensities)
         {
             float[] times, intensities;
             if (!_globalChromatogramExtractor.GetChromatogram(id, out times, out intensities))
@@ -478,7 +505,7 @@ namespace pwiz.Skyline.Model.Results
             var loadingStatus = Status as ChromatogramLoadingStatus;
             if (loadingStatus != null)
                 loadingStatus.Transitions.AddTransition(
-                    modifiedSequence,
+                    chromatogramGroupId,
                     color,
                     index, -1,
                     times,

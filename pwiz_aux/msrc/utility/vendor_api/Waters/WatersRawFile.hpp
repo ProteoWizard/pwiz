@@ -48,6 +48,7 @@
 #include "MassLynxLockMassProcessor.hpp"
 #include "MassLynxRawProcessor.hpp"
 #include "MassLynxParameters.hpp"
+#include "MassLynxScanProcessor.hpp"
 //#include "cdtdefs.h"
 //#include "compresseddatacluster.h"
 #pragma warning (pop)
@@ -346,38 +347,6 @@ struct PWIZ_API_DECL RawData
         return findItr->second;
     }
 
-    void Centroid() const
-    {
-        if (!hasProfile_)
-        {
-            centroidRaw_.reset(const_cast<RawData*>(this), boost::null_deleter());
-            return;
-        }
-
-        string centroidPath = rawpath_ + "\\centroid.raw";
-        if (!bfs::exists(centroidPath))
-            PeakPicker.Centroid(centroidPath);
-
-        if (!centroidRaw_)
-        {
-            try
-            {
-                centroidRaw_.reset(new RawData(centroidPath));
-            }
-            catch (MassLynxRawException&)
-            {
-                bfs::remove_all(centroidPath);
-                PeakPicker.Centroid(centroidPath);
-                centroidRaw_.reset(new RawData(centroidPath));
-            }
-        }
-    }
-
-    boost::shared_ptr<RawData> CentroidRawDataFile() const
-    {
-        return centroidRaw_;
-    }
-
     bool LockMassCanBeApplied() const
     {
         return Info.CanLockMassCorrect();
@@ -428,9 +397,11 @@ struct PWIZ_API_DECL RawData
         }
     }
 
-    void EnableDDAProcessing()
+    void EnableProcessing(bool bEnableDDAProcessing)
     {
-        DDAProcessor.SetRawReader(Reader);
+        ScanProcessor.SetRawData(Reader);
+        if (bEnableDDAProcessing)
+            DDAProcessor.SetRawData(Reader);      
     }
 
     unsigned int GetDDAScanCount()
@@ -475,11 +446,21 @@ struct PWIZ_API_DECL RawData
         return true;
     }
 
+    void ReadScan(int function, int scan, bool doCentroid, vector<float>& masses, vector<float>& intensities)
+    {
+        ScanProcessor.Load(function, scan);
+
+        if (doCentroid)
+            ScanProcessor.Centroid();
+
+        ScanProcessor.GetScan(masses, intensities);
+    }
+
     private:
     MassLynxLockMassProcessor LockMass;
     MassLynxDDAProcessor DDAProcessor;
+    MassLynxScanProcessor ScanProcessor;
     mutable MassLynxRawProcessorWithProgress PeakPicker;
-    mutable boost::shared_ptr<RawData> centroidRaw_;
     mutable int workingDriftTimeFunctionIndex_;
     mutable int workingSonarFunctionIndex_; // We're assuming that the Sonar calibration is the same across all functions
     mutable float sonarMassLowerLimit_, sonarMassUpperLimit_;  // We're assuming that the Sonar calibration is the same across all functions

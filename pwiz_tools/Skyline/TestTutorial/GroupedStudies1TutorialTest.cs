@@ -1286,9 +1286,8 @@ namespace pwiz.SkylineTestTutorial
         private static int GetChromIndex(string name)
         {
             int index;
-            ChromatogramSet chromatogramSet;
             Assert.IsTrue(SkylineWindow.Document.Settings.MeasuredResults.TryGetChromatogramSet(name,
-                out chromatogramSet, out index));
+                out _, out index));
             return index;
         }
 

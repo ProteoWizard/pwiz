@@ -338,8 +338,7 @@ namespace pwiz.SkylineTestUtil
         {
             Assert.IsTrue(document.Settings.HasResults,"Expected document to have results.");
             int index;
-            ChromatogramSet chromatogramSet;
-            document.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out chromatogramSet, out index);
+            document.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out _, out index);
             Assert.AreNotEqual(-1, index, string.Format("Replicate {0} not found among -> {1} <-", replicateName,
                 TextUtil.LineSeparate(document.Settings.MeasuredResults.Chromatograms.Select(c => c.Name))));
             int peptidesActual = 0;

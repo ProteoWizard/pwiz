@@ -338,9 +338,8 @@ namespace pwiz.Skyline.Util.Extensions
                 string fieldConverted = field
                     .Replace(CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator,
                              CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
-                double fieldValue;
                 // Convert if the field is numeric or contains modifications
-                if (double.TryParse(fieldConverted, out fieldValue) || new Regex(@"\[[+-]\d+\.\d\]").IsMatch(field))
+                if (double.TryParse(fieldConverted, out _) || new Regex(@"\[[+-]\d+\.\d\]").IsMatch(field))
                     fields[i] = fieldConverted;
             }
             return string.Join(separator.ToString(), fields);
@@ -731,6 +730,28 @@ namespace pwiz.Skyline.Util.Extensions
             {
                 return false;
             }
+        }
+
+        // Try to read a string as a double in InvariantCulture, failing that try to read it as a double using "," as the decimal separator
+        public static bool TryParseDoubleUncertainCulture(string valString, out double dval)
+        {
+            if (!double.TryParse(valString, NumberStyles.Float, CultureInfo.InvariantCulture, out dval) &&
+                !double.TryParse(valString.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out dval))
+            {
+                return false;
+            }
+            return true;
+        }
+
+        // Try to read a string as a float in InvariantCulture, failing that try to read it as a float using "," as the decimal separator
+        public static bool TryParseFloatUncertainCulture(string valString, out float fval)
+        {
+            if (!float.TryParse(valString, NumberStyles.Float, CultureInfo.InvariantCulture, out fval) &&
+                !float.TryParse(valString.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out fval))
+            {
+                return false;
+            }
+            return true;
         }
     }
 
