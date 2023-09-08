@@ -13857,6 +13857,9 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="ProteinAssociation_CreateDocTree_Unmapped_Peptides" xml:space="preserve">
     <value>Unmapped Peptides</value>
   </data>
+  <data name="SkylineWindow_OpenFromPanorama_Open_From_Panorama" xml:space="preserve">
+    <value>Open From Panorama</value>
+  </data>
   <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_" xml:space="preserve">
     <value>The chosen folder does not appear to contain an Agilent MassHunter 12 method template. The folder is expected to have a .m extension.</value>
   </data>

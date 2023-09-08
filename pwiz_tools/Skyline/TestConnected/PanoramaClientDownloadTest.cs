@@ -279,6 +279,7 @@ namespace pwiz.SkylineTestConnected
         private void ShowPanoramaFilePicker(List<PanoramaServer> serverList, string selectedPath)
         {
             using var remoteDlg = new PanoramaFilePicker(serverList, string.Empty, true, selectedPath);
+            remoteDlg.InitializeDialog();   // CONSIDER: Should this be using LongOptionRunner like SkylineWindow?
             remoteDlg.ShowDialog();
         }
 

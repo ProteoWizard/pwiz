@@ -30360,6 +30360,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open From Panorama.
+        /// </summary>
+        public static string SkylineWindow_OpenFromPanorama_Open_From_Panorama {
+            get {
+                return ResourceManager.GetString("SkylineWindow_OpenFromPanorama_Open_From_Panorama", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Press &apos;Add&apos; to add a new server..
         /// </summary>
         public static string SkylineWindow_OpenFromPanorama_Press__Add__to_add_a_new_server_ {
