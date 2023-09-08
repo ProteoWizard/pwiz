@@ -267,7 +267,7 @@
     <value>Line {0} field count {1} differs from the first line, which has {2}</value>
   </data>
   <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd" xml:space="preserve">
-    <value>Agilent 6400 series instrument type methods are expected to have a .m extension, and contain the file qqqacqmethod.xsd. If this is an Agilent TQ method, please choose ‘Agilent MassHunter 12 or higher’ as your instrument type.</value>
+    <value>Agilent 6400 series instrument type methods are expected to have a .m extension, and contain the file qqqacqmethod.xsd. If this is an Agilent TQ method, please choose "Agilent MassHunter 12 or higher" as your instrument type.</value>
   </data>
   <data name="NistLibraryBase_CreateCache_" xml:space="preserve">
     <value>Imported library contains multiple entries for one or more {0} pairs.
