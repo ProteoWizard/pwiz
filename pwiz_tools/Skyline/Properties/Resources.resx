@@ -13868,5 +13868,7 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   </data>
   <data name="Server_GetKey___anonymous_" xml:space="preserve">
     <value> (anonymous)</value>
+  <data name="SkylineWindow_OpenFromPanorama_Open_From_Panorama" xml:space="preserve">
+    <value>Open From Panorama</value>
   </data>
 </root>

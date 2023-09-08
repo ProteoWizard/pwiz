@@ -1357,7 +1357,7 @@
     <value>200, 22</value>
   </data>
   <data name="openPanoramaMenuItem.Text" xml:space="preserve">
-    <value>Open From &amp;Panorama...</value>
+    <value>Open From Panora&amp;ma...</value>
   </data>
   <data name="openContainingFolderMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>197, 22</value>

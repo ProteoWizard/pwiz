@@ -920,7 +920,15 @@ namespace pwiz.Skyline
 
             try
             {
-                using var dlg = new PanoramaFilePicker(panoramaServers, state);
+                using var dlg = new PanoramaFilePicker(panoramaServers, state) { Text = Resources.SkylineWindow_OpenFromPanorama_Open_From_Panorama };
+                var longOptionRunner = new LongOperationRunner
+                {
+                    ParentControl = this,
+                    JobTitle = Resources.SkylineWindow_OpenFromPanorama_Loading_remote_server_folders,
+                };
+                // TODO: This needs to be possible to cancel
+                longOptionRunner.Run(broker => dlg.InitializeDialog());
+
                 if (dlg.ShowDialog(this) != DialogResult.Cancel)
                 {
                     Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;
