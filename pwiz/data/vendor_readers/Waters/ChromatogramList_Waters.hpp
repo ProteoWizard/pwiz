@@ -67,7 +67,15 @@ class PWIZ_API_DECL ChromatogramList_Waters : public ChromatogramListBase
 
     void createIndex() const;
 
-    static std::string trim(std::string& str);
+    // trim from start (in place)
+    static void ltrim(std::string& s);
+    
+    // trim from end (in place)
+    static void rtrim(std::string& s);
+    
+    // trim from both ends (in place)
+    static void trim(std::string& s);
+
 #endif // PWIZ_READER_WATERS
 };
 
