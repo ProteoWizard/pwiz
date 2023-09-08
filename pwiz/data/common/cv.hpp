@@ -2614,7 +2614,7 @@ enum PWIZ_API_DECL CVID
     /// chromatogram: Representation of a chromatographic separation attribute measurement versus time.
     MS_chromatogram = 1000625,
 
-	/// chromatogram: Representation of a chromatographic separation attribute measurement versus time.
+    /// chromatogram: Representation of a chromatographic separation attribute measurement versus time.
     MS_Analog_chromatogram = MS_chromatogram,
 
     /// chromatogram type: Type of chromatogram measurement being represented.
