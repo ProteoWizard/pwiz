@@ -13899,4 +13899,10 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="SkylineWindow_DownloadPanoramaFile_File_does_not_exist__It_may_have_been_deleted_on_the_server_" xml:space="preserve">
     <value>File does not exist. It may have been deleted on the server.</value>
   </data>
+  <data name="ProteinAssociation_CreateDocTree_Unmapped_Peptides" xml:space="preserve">
+    <value>Unmapped Peptides</value>
+  </data>
+  <data name="SkylineWindow_OpenFromPanorama_Open_From_Panorama" xml:space="preserve">
+    <value>Open From Panorama</value>
+  </data>
 </root>

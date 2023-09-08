@@ -202,7 +202,13 @@ namespace boost
     template<>
     inline bool lexical_cast( const std::string& str )
     {
-        if (str == "0" || str == "false")
+        if (str == "0" ||
+            (str.length() == 5 &&
+             std::tolower(str[0]) == 'f' &&
+             std::tolower(str[1]) == 'a' &&
+             std::tolower(str[2]) == 'l' &&
+             std::tolower(str[3]) == 's' &&
+             std::tolower(str[4]) == 'e'))
             return false;
         return true;
     }
@@ -213,9 +219,7 @@ namespace boost
         using namespace boost::logic;
         if (str.empty())
             return tribool(indeterminate);
-        if (str == "0" || str == "false")
-            return false;
-        return true;
+        return lexical_cast<bool>(str);
     }
 
     /*template<>

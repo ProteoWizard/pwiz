@@ -25225,6 +25225,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unmapped Peptides.
+        /// </summary>
+        public static string ProteinAssociation_CreateDocTree_Unmapped_Peptides {
+            get {
+                return ResourceManager.GetString("ProteinAssociation_CreateDocTree_Unmapped_Peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Finding minimal protein list.
         /// </summary>
         public static string ProteinAssociation_Finding_minimal_protein_list {
@@ -30440,6 +30449,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_OpenFromPanorama_No_Panorama_servers_were_found_ {
             get {
                 return ResourceManager.GetString("SkylineWindow_OpenFromPanorama_No_Panorama_servers_were_found_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open From Panorama.
+        /// </summary>
+        public static string SkylineWindow_OpenFromPanorama_Open_From_Panorama {
+            get {
+                return ResourceManager.GetString("SkylineWindow_OpenFromPanorama_Open_From_Panorama", resourceCulture);
             }
         }
         
