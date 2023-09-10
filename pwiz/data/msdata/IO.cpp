@@ -161,14 +161,17 @@ PWIZ_API_DECL void read(std::istream& is, UserParam& userParam)
 //
 // CVParam
 //
-
-
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const CVParam& cvParam, const std::string& namePrefix)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const CVParam& cvParam)
 {
     XMLWriter::Attributes attributes;
     attributes.add("cvRef", cvTermInfo(cvParam.cvid).prefix());
     attributes.add("accession", cvTermInfo(cvParam.cvid).id);
-    attributes.add("name", namePrefix + cvTermInfo(cvParam.cvid).name);
+
+    if(!cvParam.namePrefix.empty())
+        attributes.add("name", cvParam.namePrefix + " " + cvTermInfo(cvParam.cvid).name);
+    else
+        attributes.add("name", cvTermInfo(cvParam.cvid).name);
+
     attributes.add("value", cvParam.value);
 
     if (cvParam.units != CVID_Unknown)
@@ -235,7 +238,7 @@ PWIZ_API_DECL void writeParamGroupRef(minimxml::XMLWriter& writer, const ParamGr
 }
 
 
-PWIZ_API_DECL void writeParamContainer(minimxml::XMLWriter& writer, const ParamContainer& pc, const std::string& namePrefix="")
+PWIZ_API_DECL void writeParamContainer(minimxml::XMLWriter& writer, const ParamContainer& pc)
 {
     for (vector<ParamGroupPtr>::const_iterator it=pc.paramGroupPtrs.begin(); 
          it!=pc.paramGroupPtrs.end(); ++it)
@@ -244,7 +247,7 @@ PWIZ_API_DECL void writeParamContainer(minimxml::XMLWriter& writer, const ParamC
 
     for (vector<CVParam>::const_iterator it=pc.cvParams.begin(); 
          it!=pc.cvParams.end(); ++it)
-         write(writer, *it, namePrefix );
+         write(writer, *it);
 
     for (vector<UserParam>::const_iterator it=pc.userParams.begin(); 
          it!=pc.userParams.end(); ++it)
@@ -2269,15 +2272,26 @@ void write(minimxml::XMLWriter& writer, const Chromatogram& chromatogram,
 
     std::string namePrefix;
 
-    for (auto user_param : chromatogram.userParams)
+    Chromatogram chr = chromatogram;
+    bool found = false;
+
+    for (int i = 0; i < chr.cvParams.size(); i++)
     {
-        if (user_param.name == "Channeltype")
+        for (auto user_param : chr.userParams)
         {
-            namePrefix = user_param.value;
+            if (user_param.name == "ChannelType")
+            {
+                chr.cvParams[i].namePrefix = user_param.value;
+                found = true;
+                break;
+            }
         }
+
+        if (found)
+            break;
     }
 
-    writeParamContainer(writer, chromatogram, namePrefix);
+    writeParamContainer(writer, chr);
     
     if (!chromatogram.precursor.empty())
         write(writer, chromatogram.precursor);

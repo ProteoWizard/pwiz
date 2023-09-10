@@ -46,6 +46,7 @@ struct PWIZ_API_DECL CVParam
     CVID cvid;
     std::string value;
     CVID units;
+    std::string namePrefix;
 
     CVParam(CVID _cvid, float _value, CVID _units = CVID_Unknown)
     :   cvid(_cvid), 
@@ -139,7 +140,7 @@ struct PWIZ_API_DECL CVParam
         return !operator==(that);
     }
 
-    bool empty() const {return cvid==CVID_Unknown && value.empty() && units==CVID_Unknown;}
+    bool empty() const {return cvid==CVID_Unknown && value.empty() && units==CVID_Unknown && namePrefix.empty();}
 };
 
 
