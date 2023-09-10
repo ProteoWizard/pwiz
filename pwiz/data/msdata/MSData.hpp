@@ -516,6 +516,8 @@ struct PWIZ_API_DECL ChromatogramIdentity
     /// a unique identifier for this chromatogram. It should be expected that external files may use this identifier together with the mzML filename or accession to reference a particular chromatogram.
     std::string id;
 
+    std::string additionalChannelInfo;
+
     /// for file-based MSData implementations, this attribute may refer to the chromatogram's position in the file
     boost::iostreams::stream_offset sourceFilePosition;
 
