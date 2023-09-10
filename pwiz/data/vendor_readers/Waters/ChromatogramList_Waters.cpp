@@ -104,6 +104,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
 
     result->index = index;
     result->id = ie.id;
+    result->additionalChannelInfo = ie.additionalChannelInfo;
     result->set(ie.chromatogramType);
 
     if (ie.function >= 0)
@@ -367,6 +368,7 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
 
         ie.id = trim((temp));
         ie.chromatogramType = MS_Analog_chromatogram;
+        ie.additionalChannelInfo = "analog";
     }
 
     size_ = index_.size();
