@@ -366,7 +366,8 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
 
         std::string temp = rawdata_->AnalogChannelNames()[ch];
 
-        ie.id = trim((temp));
+        trim((temp));
+        ie.id = temp;
         ie.chromatogramType = MS_Analog_chromatogram;
         ie.additionalChannelInfo = "analog";
     }
@@ -374,14 +375,26 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
     size_ = index_.size();
 }
 
-std::string ChromatogramList_Waters::trim(std::string& str)
+// trim from start (in place)
+void ChromatogramList_Waters::ltrim(std::string& s)
 {
-    std::string::iterator end_pos = std::remove(str.begin(), str.end(), ' ');
-    str.erase(end_pos, str.end());
-
-    return str;
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+        std::not1(std::ptr_fun<int, int>(std::isspace))));
 }
 
+// trim from end (in place)
+void ChromatogramList_Waters::rtrim(std::string& s)
+{
+    s.erase(std::find_if(s.rbegin(), s.rend(),
+        std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+}
+
+// trim from both ends (in place)
+void ChromatogramList_Waters::trim(std::string& s)
+{
+    rtrim(s);
+    ltrim(s);
+}
 
 } // detail
 } // msdata
