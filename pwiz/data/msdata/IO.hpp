@@ -70,7 +70,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const UserParam& userParam
 PWIZ_API_DECL void read(std::istream& is, UserParam& userParam);
     
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const CVParam& cv, const std::string& namePrefix="");
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const CVParam& cv);
 PWIZ_API_DECL void read(std::istream& is, CVParam& cv);
     
 
