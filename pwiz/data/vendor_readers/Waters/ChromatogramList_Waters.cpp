@@ -256,10 +256,10 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
             vector<float> times;
             vector<float> intensities;
 
-            times = rawdata_->AnalogTimesByChannel()[ie.function];
+            times = rawdata_->AnalogTimesByChannel()[ie.analogChannel];
             result->defaultArrayLength = times.size();
 
-            intensities = rawdata_->AnalogIntensitiesByChannel()[ie.function];
+            intensities = rawdata_->AnalogIntensitiesByChannel()[ie.analogChannel];
 
             if (getBinaryData)
             {
@@ -360,7 +360,8 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
         index_.push_back(IndexEntry());
         IndexEntry& ie = index_.back();
         ie.index = index_.size() - 1;
-        ie.function = ch;
+        ie.function = -1;
+        ie.analogChannel = ch;
         ie.offset = 0;
         ie.Q1 = 0;
 
