@@ -1602,8 +1602,7 @@ namespace pwiz.Skyline.Util
         {
             for (int i = name.Length; i > 0; i--)
             {
-                int num;
-                if (!int.TryParse(name.Substring(i - 1), out num))
+                if (!int.TryParse(name.Substring(i - 1), out _))
                     return i;
             }
             return 0;

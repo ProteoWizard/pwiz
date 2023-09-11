@@ -678,8 +678,9 @@ namespace pwiz.Skyline.SettingsUI
             var listFragmentLosses = new List<FragmentLoss>(Losses);
             listFragmentLosses.Remove(lossEdit);
 
-            using (var dlg = new EditFragmentLossDlg(listFragmentLosses) { Loss = lossEdit })
+            using (var dlg = new EditFragmentLossDlg(listFragmentLosses))
             {
+                dlg.Loss = lossEdit;
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     listFragmentLosses.Add(dlg.Loss);

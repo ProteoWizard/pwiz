@@ -8,5 +8,11 @@
     <Setting Name="XmlVersion" Type="System.Decimal" Scope="Application">
       <Value Profile="(Default)">21.12</Value>
     </Setting>
+    <Setting Name="PanoramaTreeState" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="ShowPanormaSkyFiles" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

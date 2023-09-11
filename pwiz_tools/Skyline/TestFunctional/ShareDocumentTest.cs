@@ -144,10 +144,9 @@ namespace pwiz.SkylineTestFunctional
             var doc = WaitForDocumentLoaded();
             AssertEx.IsDocumentState(doc, null, 1, 4, 4, 4); // int revision, int groups, int peptides, int tranGroups, int transitions
             SpectrumPeaksInfo spectrum;
-            IsotopeLabelType label;
             // ReSharper disable PossibleNullReferenceException
             doc.Settings.TryLoadSpectrum(doc.Molecules.FirstOrDefault().Target, Adduct.FromStringAssumeChargeOnly("M+NH4"),
-                null, out label, out spectrum);
+                null, out _, out spectrum);
             Assume.IsTrue(spectrum.Annotations.Count() == 1);
             var spectrumPeakAnnotations = (spectrum.Annotations.FirstOrDefault() ?? new SpectrumPeakAnnotation[0]).ToArray();
             Assume.IsTrue(spectrumPeakAnnotations.Length == 1);

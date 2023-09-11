@@ -207,7 +207,7 @@
     <None Include="Resources\Forward Lit.png" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Shared\Common\CommonUtil.csproj">
+    <ProjectReference Include="..\..\..\Shared\CommonUtil\CommonUtil.csproj">
       <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
       <Name>CommonUtil</Name>
     </ProjectReference>

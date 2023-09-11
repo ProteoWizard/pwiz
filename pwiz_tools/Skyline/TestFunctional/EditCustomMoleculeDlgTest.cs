@@ -73,13 +73,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
                 SkylineWindow.ModifyDocument("", doc =>
                 {
-                    IdentityPath first;
-                    IdentityPath next;
                     return doc.AddPeptideGroups(new[]
                     {
                         new PeptideGroupDocNode(new PeptideGroup(), doc.Annotations, "Molecule Group", "",
                             new PeptideDocNode[0])
-                    }, true, IdentityPath.ROOT, out first, out next);
+                    }, true, IdentityPath.ROOT, out _, out _);
                 }));
             var docNext = WaitForDocumentChange(origDoc);
             TestAddingSmallMoleculeAsMasses();
@@ -99,13 +97,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
                 SkylineWindow.ModifyDocument("", doc =>
                 {
-                    IdentityPath first;
-                    IdentityPath next;
                     return doc.AddPeptideGroups(new[]
                     {
                         new PeptideGroupDocNode(new PeptideGroup(), doc.Annotations, "Molecule Group", "",
                             new PeptideDocNode[0])
-                    }, true, IdentityPath.ROOT, out first, out next);
+                    }, true, IdentityPath.ROOT, out _, out _);
                 }));
             var docNext = WaitForDocumentChange(origDoc);
             TestAddingSmallMolecule();
@@ -1057,7 +1053,6 @@ namespace pwiz.SkylineTestFunctional
             VerifyPrecursorTransitionMz(403.38479203566, 7); // M+2 heavy
             VerifyFragmentTransitionMz(186.18633804, 186.18633804, 4); // fragment should not change
 
-
             // Change the adduct 
             SelectNode(SrmDocument.Level.TransitionGroups, 0);
             var editTransitionGroupDlg = ShowDialog<EditCustomMoleculeDlg>(
@@ -1074,15 +1069,15 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(editTransitionGroupDlg, editTransitionGroupDlg.OkDialog);
             // Verify that this updated all the precursor isotope mz values
-            VerifyPrecursorTransitionMz(199.182259, 0); // M
-            VerifyPrecursorTransitionMz(199.683934336183, 1); // M+1
-            VerifyPrecursorTransitionMz(200.185431221118, 2); // M+2
-            VerifyFragmentTransitionMz(186.18633804, 186.18633804, 4); // fragment should not change
+            VerifyPrecursorTransitionMz(199.182259, 5); // M
+            VerifyPrecursorTransitionMz(199.683934336183, 6); // M+1
+            VerifyPrecursorTransitionMz(200.185431221118, 7); // M+2
+            VerifyFragmentTransitionMz(186.18633804, 186.18633804, 9); // fragment should not change
 
             // But the heavy adduct wasn't changed, make sure no change to mz
-            VerifyPrecursorTransitionMz(401.3785033156, 5); // M heavy
-            VerifyPrecursorTransitionMz(402.381853413823, 6); // M+1 heavy
-            VerifyPrecursorTransitionMz(403.38479203566, 7); // M+2 heavy
+            VerifyPrecursorTransitionMz(401.3785033156, 0); // M heavy
+            VerifyPrecursorTransitionMz(402.381853413823, 1); // M+1 heavy
+            VerifyPrecursorTransitionMz(403.38479203566, 2); // M+2 heavy
             VerifyFragmentTransitionMz(186.18633804, 186.18633804, 4); // fragment should not change
 
         }

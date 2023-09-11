@@ -237,20 +237,18 @@ namespace pwiz.Skyline.SettingsUI
 
         private static bool ValidateRegressionCellValues(string[] values, IWin32Window parent, int lineNumber)
         {
-            int tempInt;
-            double tempDouble;
             string message;
 
             // Parse charge
-            if (!int.TryParse(values[0].Trim(), out tempInt))
+            if (!int.TryParse(values[0].Trim(), out _))
                 message = string.Format(Resources.EditCEDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_charge_Charges_must_be_integer_values_between_1_and_5, values[0]);
 
             // Parse slope
-            else if (!double.TryParse(values[1].Trim(), out tempDouble))
+            else if (!double.TryParse(values[1].Trim(), out _))
                 message = string.Format(Resources.EditCEDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_slope, values[1]);
 
             // Parse intercept
-            else if (!double.TryParse(values[2].Trim(), out tempDouble))
+            else if (!double.TryParse(values[2].Trim(), out _))
                 message = string.Format(Resources.EditCEDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_intercept, values[2]);
 
             else

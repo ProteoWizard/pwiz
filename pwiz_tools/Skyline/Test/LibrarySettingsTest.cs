@@ -53,13 +53,13 @@ namespace pwiz.SkylineTest
         }
 
         private static SrmDocument CreateNISTLibraryDocument(out LibraryManager libraryManager,
-            out TestDocumentContainer docContainer, out int startRev)
+            out int startRev)
         {
             SrmDocument docLoaded = CreateNISTLibraryDocument(ExampleText.TEXT_FASTA_YEAST_LIB,
                                                               false,
                                                               LibraryLoadTest.TEXT_LIB_YEAST_NIST,
                                                               out libraryManager,
-                                                              out docContainer,
+                                                              out _,
                                                               out startRev);
             AssertEx.IsDocumentState(docLoaded, startRev, 2, 4, 12);
             return docLoaded;
@@ -130,9 +130,8 @@ namespace pwiz.SkylineTest
         public void LibraryOnlyPeptidesTest()
         {
             LibraryManager libraryManager;
-            TestDocumentContainer docContainer;
             int startRev;
-            SrmDocument docLoaded = CreateNISTLibraryDocument(out libraryManager, out docContainer, out startRev);
+            SrmDocument docLoaded = CreateNISTLibraryDocument(out libraryManager, out startRev);
             Assert.IsTrue(HasAllLibraryInfo(docLoaded));
             AssertEx.Serializable(docLoaded, (doc1, doc2) => ValidateLibraryDocs(doc1, doc2, libraryManager));
 
@@ -271,9 +270,8 @@ namespace pwiz.SkylineTest
         public void LibraryTransitionTest()
         {
             LibraryManager libraryManager;
-            TestDocumentContainer docContainer;
             int startRev;
-            SrmDocument docLoaded = CreateNISTLibraryDocument(out libraryManager, out docContainer, out startRev);
+            SrmDocument docLoaded = CreateNISTLibraryDocument(out libraryManager, out startRev);
 
             // Test tolerance range
             SrmSettings settings = docLoaded.Settings.ChangeTransitionLibraries(l =>
