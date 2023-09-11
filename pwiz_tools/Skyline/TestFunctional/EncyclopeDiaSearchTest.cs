@@ -32,6 +32,7 @@ using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Util;
 using System;
 using System.Globalization;
+using Grpc.Core.Logging;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -51,12 +52,15 @@ namespace pwiz.SkylineTestFunctional
         }
 
         private bool IsRecordMode => false;
-        private int[] FinalTargetCounts = { 15, 15, 15, 60 };
+        private int[] FinalTargetCounts = { 10, 10, 10, 40 };
 
         protected override void DoTest()
         {
             if (!HasPrositServer())
+            {
+                Console.Error.WriteLine("NOTE: skipping EncyclopeDIA test because Prosit is not configured (replace PrositConfig.xml in Skyline\\Model\\Prosit\\Config)");
                 return;
+            }
 
             PrepareDocument("EncyclopeDiaSearchTest.sky");
             string fastaFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705.fasta");
@@ -83,8 +87,8 @@ namespace pwiz.SkylineTestFunctional
                 searchDlg.MaxMz = 705;
                 searchDlg.ImportFastaControl.MaxMissedCleavages = 2;
                 // use CurrentCulture to simulate user entering value in additional settings dialog
-                searchDlg.SetAdditionalSetting("PercolatorTrainingFDR", Convert.ToString(0.15, CultureInfo.CurrentCulture));
-                searchDlg.SetAdditionalSetting("PercolatorThreshold", Convert.ToString(0.15, CultureInfo.CurrentCulture));
+                searchDlg.SetAdditionalSetting("PercolatorTrainingFDR", Convert.ToString(0.1, CultureInfo.CurrentCulture));
+                searchDlg.SetAdditionalSetting("PercolatorThreshold", Convert.ToString(0.1, CultureInfo.CurrentCulture));
                 searchDlg.SetAdditionalSetting("MinNumOfQuantitativePeaks", "0");
                 searchDlg.SetAdditionalSetting("NumberOfQuantitativePeaks", "0");
                 searchDlg.SetAdditionalSetting("V2scoring", "false");
@@ -103,7 +107,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(searchDlg.NextPage); // now on EncyclopeDia settings
             RunUI(searchDlg.NextPage); // start search
 
-            var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
+            var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(System.Diagnostics.Debugger.IsAttached ? 200 : 2000);
             if (downloaderDlg != null)
             {
                 OkDialog(downloaderDlg, downloaderDlg.ClickYes);
