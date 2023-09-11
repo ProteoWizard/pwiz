@@ -517,10 +517,12 @@ struct PWIZ_API_DECL ChromatogramIdentity
 
     std::string additionalChannelInfo;
 
+    int analogChannel;
+
     /// for file-based MSData implementations, this attribute may refer to the chromatogram's position in the file
     boost::iostreams::stream_offset sourceFilePosition;
 
-    ChromatogramIdentity() : index(IDENTITY_INDEX_NONE), sourceFilePosition(-1) {}
+    ChromatogramIdentity() : index(IDENTITY_INDEX_NONE), analogChannel(-1), sourceFilePosition(-1) {}
 };
 
 
