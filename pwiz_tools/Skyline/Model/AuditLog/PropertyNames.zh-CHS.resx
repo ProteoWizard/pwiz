@@ -309,6 +309,9 @@
   <data name="StaticMod_IsCrosslinker" xml:space="preserve">
     <value>交联剂</value>
   </data>
+  <data name="StaticMod_RelativeRT" xml:space="preserve">
+    <value>相对保留时间</value>
+  </data>
   <data name="TransitionFullScan_UseSelectiveExtraction" xml:space="preserve">
     <value>使用高选择性提取</value>
   </data>
@@ -1708,5 +1711,56 @@
   </data>
   <data name="PeptideSettings_ProteinAssociationSettings" xml:space="preserve">
     <value>蛋白质关联设置</value>
+  </data>
+  <data name="GroupComparisonDef_MsLevel" xml:space="preserve">
+    <value>MS 级别</value>
+  </data>
+  <data name="EncyclopeDiaSettings" xml:space="preserve">
+    <value>EncyclopeDIA 搜索</value>
+  </data>
+  <data name="EncyclopeDiaSettings_EncyclopeDiaChromLibrary" xml:space="preserve">
+    <value>色谱图库</value>
+  </data>
+  <data name="EncyclopeDiaSettings_EncyclopeDiaConfig" xml:space="preserve">
+    <value>EncyclopeDIA 设置</value>
+  </data>
+  <data name="EncyclopeDiaSettings_EncyclopeDiaQuantLibrary" xml:space="preserve">
+    <value>定量库</value>
+  </data>
+  <data name="EncyclopeDiaSettings_FastaSettings" xml:space="preserve">
+    <value>FASTA 设置</value>
+  </data>
+  <data name="EncyclopeDiaSettings_NarrowWindowResults" xml:space="preserve">
+    <value>窄窗口结果</value>
+  </data>
+  <data name="EncyclopeDiaSettings_PrositSettings" xml:space="preserve">
+    <value>Prosit 设置</value>
+  </data>
+  <data name="EncyclopeDiaSettings_WideWindowResults" xml:space="preserve">
+    <value>宽窗口结果</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_DefaultCharge" xml:space="preserve">
+    <value>默认电荷</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_DefaultNCE" xml:space="preserve">
+    <value>默认 NCE</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_MaxCharge" xml:space="preserve">
+    <value>最大电荷</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_MaxMissedCleavage" xml:space="preserve">
+    <value>最大的漏切酶解位点数</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_MinCharge" xml:space="preserve">
+    <value>最小电荷</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_Enzyme" xml:space="preserve">
+    <value>酶</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_MaxMz" xml:space="preserve">
+    <value>最大质荷比</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_MinMz" xml:space="preserve">
+    <value>最小质荷比</value>
   </data>
 </root>
