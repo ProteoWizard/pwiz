@@ -7,7 +7,7 @@ set TARGETPLATFORM=32
 set ARGS=
 set TARGETS=
 set REGISTER=
-set OPTIMIZATION=optimization=speed
+set OPTIMIZATION=optimization=space
 set NOLOG=
 
 set ALL_ARGS= %*

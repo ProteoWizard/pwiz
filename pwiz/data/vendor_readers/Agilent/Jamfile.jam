@@ -95,6 +95,7 @@ lib pwiz_reader_agilent
         SpectrumList_Agilent.cpp
         ChromatogramList_Agilent.cpp
     : # requirements
+        <optimization>speed  # space optimization trouble in VS17.1.1
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
         <conditional>@vendor-api-requirements
     : # default-build
