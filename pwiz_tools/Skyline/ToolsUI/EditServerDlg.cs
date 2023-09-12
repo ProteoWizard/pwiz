@@ -68,10 +68,6 @@ namespace pwiz.Skyline.ToolsUI
                     if (!_server.HasUserAccount() && _existing.Contains(server => ReferenceEquals(server, _server)))
                     {
                         cbAnonymous.Checked = true;
-                        textPassword.Text = string.Empty;
-                        textPassword.Enabled = false;
-                        textUsername.Text = string.Empty;
-                        textUsername.Enabled = false;
                     }
                     else
                     {
@@ -160,7 +156,9 @@ namespace pwiz.Skyline.ToolsUI
         {
             var anonymousServer = cbAnonymous.Checked;
             textPassword.Enabled = !anonymousServer;
+            textPassword.Text = string.Empty;
             textUsername.Enabled = !anonymousServer;
+            textUsername.Text = string.Empty;
         }
 
         public string GetTextServerUrlControlLabel()
