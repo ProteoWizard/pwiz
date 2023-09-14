@@ -170,5 +170,12 @@ namespace pwiz.Skyline.ToolsUI
         {
             return new MessageBoxHelper(this).GetControlMessage(textUsername);
         }
+
+        #region Test Support
+        public bool AnonymousSeverCbEnabled()
+        {
+            return cbAnonymous.Enabled;
+        }
+        #endregion
     }
 }

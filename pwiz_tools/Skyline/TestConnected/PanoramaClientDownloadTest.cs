@@ -285,7 +285,6 @@ namespace pwiz.SkylineTestConnected
         private class TestPanoramaClient : BaseTestPanoramaClient
         {
             public string Server { get; }
-            public string Password { get; }
             public TestPanoramaClient(string server, string username, string password)
             {
                 Server = server;
@@ -302,7 +301,7 @@ namespace pwiz.SkylineTestConnected
             }
 
             public override void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
-                PanoramaServer server, IProgressMonitor pm, IProgressStatus progressStatus)
+                IProgressMonitor pm, IProgressStatus progressStatus)
             {
                 Exception e = null;
                 switch (fileSize)

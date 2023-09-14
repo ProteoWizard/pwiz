@@ -320,31 +320,34 @@ namespace pwiz.SkylineTestFunctional
             var pServer = new PanoramaServer(serverUri, string.Empty, string.Empty);
             Assert.AreEqual(pServer.URI.AbsoluteUri, PWEB_FULL);
 
-            Assert.IsFalse(pServer.RemoveContextPath(out var tempServer));
-            Assert.IsTrue(pServer.AddLabKeyContextPath(out tempServer));
-            Assert.IsNotNull(tempServer);
+            var tempServer = pServer.RemoveContextPath(); // pServer does not have a context path. Nothing to remove.
+            Assert.IsTrue(ReferenceEquals(pServer, tempServer)); 
+            tempServer = pServer.AddLabKeyContextPath(); // pServer does not have a context path. It should get added to tempServer.
+            Assert.IsFalse(ReferenceEquals(pServer, tempServer));
             Assert.AreEqual(tempServer.URI.AbsoluteUri, PWEB_LK_FULL);
 
             serverUri = PanoramaUtil.ServerNameToUri(PWEB_LK);
             pServer = new PanoramaServer(serverUri, string.Empty, string.Empty);
             Assert.AreEqual(pServer.URI.AbsoluteUri, PWEB_LK_FULL);
 
-            Assert.IsFalse(pServer.AddLabKeyContextPath(out tempServer));
-            Assert.IsTrue(pServer.RemoveContextPath(out tempServer));
-            Assert.IsNotNull(tempServer);
+            tempServer = pServer.AddLabKeyContextPath(); // pServer has a 'labkey' context path. Nothing to add.
+            Assert.IsTrue(ReferenceEquals(pServer, tempServer));
+            tempServer = pServer.RemoveContextPath(); // 'labkey' context path should be removed
+            Assert.IsFalse(ReferenceEquals(pServer, tempServer));
             Assert.AreEqual(tempServer.URI.AbsoluteUri, PWEB_FULL);
 
             serverUri = PanoramaUtil.ServerNameToUri(PWEB_LK);
             pServer = new PanoramaServer(serverUri, string.Empty, string.Empty);
             Assert.AreEqual(pServer.URI, PWEB_LK_FULL);
-            Assert.IsTrue(pServer.Redirect(PWEB_FULL + PanoramaUtil.ENSURE_LOGIN_PATH,
-                PanoramaUtil.ENSURE_LOGIN_PATH, out tempServer));
-            Assert.IsNotNull(tempServer);
+            // Redirect from https://panoramaweb.org/labkey/ -> "https://panoramaweb.org/
+            tempServer = pServer.Redirect(PWEB_FULL + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH); 
+            Assert.IsFalse(ReferenceEquals(pServer, tempServer));
             Assert.AreEqual(tempServer.URI, PWEB_FULL);
 
-            Assert.IsFalse(pServer.Redirect("/labkey/" + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH, out _)); // Need full URL
-            Assert.IsFalse(pServer.Redirect("http:/another.server/" + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH, out _)); // Not well formed URL.
-            Assert.IsFalse(pServer.Redirect("http://another.server/" + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH, out _)); // Not the same host
+            // No redirection in the following cases
+            Assert.IsTrue(ReferenceEquals(pServer, pServer.Redirect("/labkey/" + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH))); // Need full URL
+            Assert.IsTrue(ReferenceEquals(pServer, pServer.Redirect("http:/another.server/" + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH))); // Not well formed URL.
+            Assert.IsTrue(ReferenceEquals(pServer, pServer.Redirect("http://another.server/" + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH))); // Not the same host
         }
 
         private void TestAnonymousServers()
@@ -377,38 +380,24 @@ namespace pwiz.SkylineTestFunctional
 
 
             // Try "Upload to Panorama" again
-            // 1. Click "Edit existing" but save as anonymous again
-            // 2. Edit existing and add account information
-            // 3. PublishDocumentDlg should NOT display the "Show anonymous servers" checkbox
             noServersDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(publishClient));
             RunUI(() => Assert.IsTrue(noServersDlg.Message.Contains(Resources
                 .SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_with_a_user_account__To_upload_documents_to_a_server_a_user_account_is_required_)));
 
-            // 1. Click "Edit existing" but save as anonymous again
+            // 1. Click "Edit existing". "Anonymous access" checkbox should be disabled. Add account information
             var editServerDlg = ShowDialog<EditServerDlg>(noServersDlg.ClickYes);
-            RunUI(() =>
-            {
-                Assert.AreEqual(VALID_PANORAMA_SERVER, editServerDlg.URL);
-                editServerDlg.PanoramaClient = new TestAnonymousPanoramaClient(VALID_PANORAMA_SERVER);
-                editServerDlg.AnonymousServer = true;
-            });
-            var alertDlg = ShowDialog<AlertDlg>(editServerDlg.OkDialog);
-            RunUI(() => Assert.AreEqual(Resources.SkylineWindow_ShowPublishDlg_Document_cannot_be_uploaded_to_a_Panorama_server_without_a_user_account_, alertDlg.Message));
-            OkDialog(alertDlg, alertDlg.OkDialog);
-
-            // 2. Edit existing and add account information
-            noServersDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(publishClient));
-            editServerDlg = ShowDialog<EditServerDlg>(noServersDlg.ClickYes);
             var testClient = new TestPanoramaClient(VALID_PANORAMA_SERVER, VALID_USER_NAME, VALID_PASSWORD);
             RunUI(() =>
             {
+                Assert.IsFalse(editServerDlg.AnonymousSeverCbEnabled());
                 Assert.AreEqual(VALID_PANORAMA_SERVER, editServerDlg.URL);
                 editServerDlg.PanoramaClient = testClient;
                 editServerDlg.Username = testClient.Username;
                 editServerDlg.Password = testClient.Password;
             });
 
-            // 3. PublishDocumentDlg should NOT display the "Show anonymous servers" checkbox
+
+            // 2. PublishDocumentDlg should NOT display the "Show anonymous servers" checkbox
             var publishDocDlg = ShowDialog<PublishDocumentDlg>(editServerDlg.OkDialog);
             RunUI( () => Assert.IsFalse(publishDocDlg.CbAnonymousServersVisible));
             OkDialog(publishDocDlg, publishDocDlg.CancelDialog);
@@ -473,8 +462,7 @@ namespace pwiz.SkylineTestFunctional
 
         public class TestPanoramaClient : BaseTestPanoramaClient
         {
-            public string Server { get; } 
-            public string Password { get; }
+            public string Server { get; }
             public TestPanoramaClient(string server, string username, string password)
             {
                 Server = server;
@@ -516,7 +504,7 @@ namespace pwiz.SkylineTestFunctional
                 throw new PanoramaServerException(ServerStateEnum.unknown, "Test WebException - unknown failure", ServerUri, ServerUri);
             }
 
-            public override void ValidateFolder(string folderPath, FolderPermission? permission)
+            public override void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
             {
             }
         }

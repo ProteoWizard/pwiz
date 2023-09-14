@@ -88,7 +88,7 @@ namespace pwiz.Skyline.FileUI
 
         private void PublishDocumentDlg_Load(object sender, EventArgs e)
         {
-            var listServerFolders = new List<KeyValuePair<Server, JToken>>();
+            var listServerFolders = new List<ServerFolders>();
 
             try
             {
@@ -105,11 +105,11 @@ namespace pwiz.Skyline.FileUI
 
             foreach (var serverFolder in listServerFolders)
             {
-                var server = serverFolder.Key;
+                var server = serverFolder.Server;
                 var treeNode = new TreeNode(server.GetKey()) { Tag = new FolderInformation(server, false) };
                 treeViewFolders.Nodes.Add(treeNode);
-                if (serverFolder.Value != null)
-                    AddSubFolders(server, treeNode, serverFolder.Value);
+                if (serverFolder.FoldersJson != null)
+                    AddSubFolders(server, treeNode, serverFolder.FoldersJson);
             }
 
             ServerTreeStateRestorer.RestoreExpansionAndSelection(Settings.Default.PanoramaServerExpansion);
@@ -118,11 +118,11 @@ namespace pwiz.Skyline.FileUI
             IsLoaded = true;
         }
 
-        private void PublishDocumentDlgLoad(List<KeyValuePair<Server, JToken>> listServerFolders)
+        private void PublishDocumentDlgLoad(List<ServerFolders> listServerFolders)
         {
             if (PanoramaPublishClient == null)
                 PanoramaPublishClient = new WebPanoramaPublishClient();
-            var listErrorServers = new List<Tuple<Server, string>>();
+            var listErrorServers = new List<ServerError>();
             foreach (var server in _panoramaServers)
             {
                 if (!server.HasUserAccount())
@@ -149,14 +149,14 @@ namespace pwiz.Skyline.FileUI
 
                         }
 
-                        listErrorServers.Add(new Tuple<Server, string>(server, error ?? string.Empty));
+                        listErrorServers.Add(new ServerError(server, error ?? string.Empty));
                     }
                     else
                     {
                         throw;
                     }
                 }
-                listServerFolders.Add(new KeyValuePair<Server, JToken>(server, folders));
+                listServerFolders.Add(new ServerFolders(server, folders));
 
             }
             if (listErrorServers.Count > 0)
@@ -167,9 +167,38 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private string ServersToString(IEnumerable<Tuple<Server, string>> servers)
+        private string ServersToString(IEnumerable<ServerError> serverErrors)
         {
-            return TextUtil.LineSeparate(servers.Select(t => TextUtil.LineSeparate(t.Item1.URI.ToString(), t.Item2)));
+            return TextUtil.LineSeparate(serverErrors.Select(t => t.ToString()));
+        }
+
+        private class ServerError
+        {
+            private Server _server;
+            private string _errorMessage;
+
+            public ServerError(Server server, string errorMessage)
+            {
+                _server = server;
+                _errorMessage = errorMessage;
+            }
+
+            public override string ToString()
+            {
+                return TextUtil.LineSeparate(_server.URI.ToString(), _errorMessage);
+            }
+        }
+
+        private class ServerFolders
+        {
+            public Server Server { get; }
+            public JToken FoldersJson { get; }
+
+            public ServerFolders(Server server, JToken foldersJson)
+            {
+                Server = server;
+                FoldersJson = foldersJson;
+            }
         }
 
         private TreeViewStateRestorer ServerTreeStateRestorer { get; set; }
@@ -203,7 +232,7 @@ namespace pwiz.Skyline.FileUI
                 AddChildContainers(server, folderNode, subFolder);
 
                 // User can only upload to folders where TargetedMS is an active module.
-                var canUpload = PanoramaUtil.CheckInsertPermissions(subFolder) && PanoramaUtil.IsTargetedMsFolder(subFolder);
+                var canUpload = PanoramaUtil.CheckInsertPermissions(subFolder) && PanoramaUtil.HasTargetedMsModule(subFolder);
 
                 // If the user does not have write permissions in this folder or any
                 // of its subfolders, do not add it to the tree.

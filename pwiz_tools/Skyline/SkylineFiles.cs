@@ -890,6 +890,14 @@ namespace pwiz.Skyline
             OpenFromPanorama();
         }
 
+        /// <summary>
+        /// Allows user to browse Skyline documents on a Panorama server, and choose a document to download
+        /// and open in Skyline. 
+        /// </summary>
+        /// <param name="downloadFilePath">Local path where the file from Panorama is downloaded.
+        /// If null, the user selects the download path with the SaveFileDialog. Automated tests 
+        /// can set the download path to avoid using SaveFileDialog.
+        /// </param>
         public void OpenFromPanorama(string downloadFilePath = null)
         {
             var servers = Settings.Default.ServerList;
@@ -991,7 +999,8 @@ namespace pwiz.Skyline
             }
         }
 
-        public bool DownloadPanoramaFile(string downloadPath, string fileName, string fileUrl, PanoramaServer curServer, long size, IPanoramaClient panoramaClient = null)
+        public bool DownloadPanoramaFile(string downloadPath, string fileName, string fileUrl, PanoramaServer curServer, long size, 
+            IPanoramaClient panoramaClient = null /* Automated tests can provide their own IPanoramaClient when they call this method */)
         {
             try
             {
@@ -1002,7 +1011,7 @@ namespace pwiz.Skyline
                     {
                         longWaitDlg.Text = string.Format(Resources.SkylineWindow_OpenFromPanorama_Downloading_file__0_, fileName);
                         var progressStatus = longWaitDlg.PerformWork(this, 800,
-                            progressMonitor => panoramaClient.DownloadFile(fileUrl, fileSaver.SafeName, size, fileName, curServer,
+                            progressMonitor => panoramaClient.DownloadFile(fileUrl, fileSaver.SafeName, size, fileName,
                                 progressMonitor, new ProgressStatus()));
 
                         if (progressStatus.IsCanceled || progressStatus.IsError)
@@ -3458,7 +3467,7 @@ namespace pwiz.Skyline
                     if (servers.Count == 1)
                     {
                         var anonymousServer = servers[0];
-                        var editedServer = servers.EditCredentials(this, anonymousServer, servers, string.Empty, string.Empty);
+                        var editedServer = servers.AddCredentials(this, anonymousServer, servers);
                         if (editedServer == null)
                             return;
 
@@ -3479,7 +3488,7 @@ namespace pwiz.Skyline
                 else
                 {
                     // User wants to add a new server
-                    var newServer = servers.EditItem(this, null, servers, null);
+                    var newServer = servers.AddServerWithAccount(this, servers);
                     if (newServer == null)
                         return;
 
@@ -3587,7 +3596,7 @@ namespace pwiz.Skyline
             if (folders?[@"path"] == null || !folderPath.Contains(Uri.EscapeUriString(folders[@"path"].ToString())))
                 return false;
 
-            if (!(PanoramaUtil.CheckInsertPermissions(folders) && PanoramaUtil.IsTargetedMsFolder(folders)))
+            if (!(PanoramaUtil.CheckInsertPermissions(folders) && PanoramaUtil.HasTargetedMsModule(folders)))
                 return false;
 
             var fileInfo = new FolderInformation(server, true);

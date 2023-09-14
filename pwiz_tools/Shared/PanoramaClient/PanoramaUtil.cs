@@ -18,10 +18,11 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Security;
 using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
@@ -126,39 +127,12 @@ namespace pwiz.PanoramaClient
         }
 
         /// <summary>
-        /// Parses the JSON returned from the getContainers LabKey API to look for the folder type for a container.
+        /// Parses the JSON returned from the getContainers LabKey API to look "TargetedMS" in the 'activeModules' array.
         /// </summary>
-        /// <param name="folderJson"></param>
-        /// <returns>True if the folder type is "Targeted MS".</returns>
-        public static bool IsTargetedMsFolder(JToken folderJson)
-        {
-            if (folderJson != null)
-            {
-                var folderType = (string)folderJson[@"folderType"];
-                return Equals(@"Targeted MS", folderType); // A "Targeted MS" type folder will always have the "TargetedMS" module enabled.
-            }
-
-            return false;
-        }
-
         public static bool HasTargetedMsModule(JToken folderJson)
         {
-            if (folderJson != null)
-            {
-                var modules = folderJson[@"activeModules"];
-                if (modules != null)
-                {
-                    foreach (var module in modules)
-                    {
-                        if (string.Equals(module.ToString(), @"TargetedMS"))
-                            return true;
-                    }
-                }
-
-                return false;
-            }
-
-            return false;
+            var modules = folderJson?[@"activeModules"];
+            return modules != null && modules.Any(module => string.Equals(module.ToString(), @"TargetedMS"));
         }
 
         public static bool CheckReadPermissions(JToken folderJson)
@@ -232,13 +206,13 @@ namespace pwiz.PanoramaClient
     public enum ServerStateEnum { unknown, missing, notpanorama, available }
     public enum UserStateEnum { valid, nonvalid, unknown }
     public enum FolderState { valid, notpanorama, nopermission, notfound, unknown }
-    public enum FolderOperationStatus { OK, notpanorama, nopermission, notfound, alreadyexists, error }
 
     public enum FolderPermission
     {
         read = 1,   // Defined in org.labkey.api.security.ACL.java: public static final int PERM_READ = 0x00000001;
         insert = 2, // Defined in org.labkey.api.security.ACL.java: public static final int PERM_INSERT = 0x00000002;
-        delete = 8  // Defined in org.labkey.api.security.ACL.java: public static final int PERM_DELETE = 0x00000008;
+        delete = 8, // Defined in org.labkey.api.security.ACL.java: public static final int PERM_DELETE = 0x00000008;
+        admin = 32768  // Defined in org.labkey.api.security.ACL.java: public static final int PERM_ADMIN = 0x00008000;
     }
 
     public interface IPanoramaClient
@@ -247,24 +221,15 @@ namespace pwiz.PanoramaClient
 
         string Username { get; }
 
+        string Password { get; }
+
         PanoramaServer ValidateServer();
 
-        void ValidateFolder(string folderPath, FolderPermission? permission);
-
-        /**
-         * Returns FolderOperationStatus.OK if created successfully, otherwise returns the reason
-         * why the folder was not created.
-         */
-        FolderOperationStatus CreateFolder(string parentPath, string folderName);
-        /**
-         * Returns FolderOperationStatus.OK if the folder was successfully deleted, otherwise returns the reason
-         * why the folder was not deleted.
-         */
-        FolderOperationStatus DeleteFolder(string folderPath);
+        void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true);
 
         JToken GetInfoForFolders(string folder);
 
-        void DownloadFile(string fileUrl, string fileName, long fileSize, string realName, PanoramaServer server,
+        void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
             IProgressMonitor pm, IProgressStatus progressStatus);
     }
 
@@ -272,7 +237,7 @@ namespace pwiz.PanoramaClient
     {
         public Uri ServerUri { get; private set; }
         public string Username { get; }
-        private string Password { get; }
+        public string Password { get; }
 
         public WebPanoramaClient(Uri serverUri, string username, string password)
         {
@@ -344,19 +309,24 @@ namespace pwiz.PanoramaClient
 
                 if (response != null && response.StatusCode == HttpStatusCode.NotFound) // 404
                 {
-                    if (pServer.AddLabKeyContextPath(out var newServer))
+                    var newServer = pServer.AddLabKeyContextPath();
+                    if (!ReferenceEquals(pServer, newServer))
                     {
                         // e.g. Given server URL is https://panoramaweb.org but LabKey Server is not deployed as the root webapp.
                         // Try again with '/labkey' context path
                         return EnsureLogin(newServer);
                     }
-                    else if (pServer.RemoveContextPath(out newServer))
+                    else 
                     {
-                        // e.g. User entered the home page of the LabKey Server, running as the root webapp: 
-                        // https://panoramaweb.org/project/home/begin.view OR https://panoramaweb.org/home/project-begin.view
-                        // We will first try https://panoramaweb.org/project/ OR https://panoramaweb.org/home/ as the server URL. 
-                        // And that will fail.  Remove the assumed context path and try again.
-                        return EnsureLogin(newServer);
+                        newServer = pServer.RemoveContextPath();
+                        if (!ReferenceEquals(pServer, newServer))
+                        {
+                            // e.g. User entered the home page of the LabKey Server, running as the root webapp: 
+                            // https://panoramaweb.org/project/home/begin.view OR https://panoramaweb.org/home/project-begin.view
+                            // We will first try https://panoramaweb.org/project/ OR https://panoramaweb.org/home/ as the server URL. 
+                            // And that will fail.  Remove the assumed context path and try again.
+                            return EnsureLogin(newServer);
+                        }
                     }
                 }
 
@@ -426,7 +396,9 @@ namespace pwiz.PanoramaClient
                     {
                         // This means we were redirected.  Authorization headers are not persisted across redirects. Try again
                         // with the responseUri.
-                        if (pServer.Redirect(responseUri.AbsoluteUri, PanoramaUtil.ENSURE_LOGIN_PATH, out var redirectedServer))
+                        var redirectedServer =
+                            pServer.Redirect(responseUri.AbsoluteUri, PanoramaUtil.ENSURE_LOGIN_PATH);
+                        if (!ReferenceEquals(pServer, redirectedServer))
                         {
                             return EnsureLogin(redirectedServer);
                         }
@@ -451,9 +423,9 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        public void ValidateFolder(string folderPath, FolderPermission? permission)
+        public void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
         {
-            var folderState = GetFolderState(folderPath, permission);
+            var folderState = GetFolderState(folderPath, permission, checkTargetedMs);
             if (folderState != FolderState.valid)
             {
                 throw new PanoramaServerException(folderState, folderPath, null, ServerUri, null, Username);
@@ -475,7 +447,7 @@ namespace pwiz.PanoramaClient
                         return FolderState.nopermission;
                     }
 
-                    if (checkTargetedMs && !PanoramaUtil.IsTargetedMsFolder(response))
+                    if (checkTargetedMs && !PanoramaUtil.HasTargetedMsModule(response))
                     {
                         return FolderState.notpanorama;
                     }
@@ -495,84 +467,6 @@ namespace pwiz.PanoramaClient
                 }
             }
             return FolderState.valid;
-        }
-
-        public FolderOperationStatus CreateFolder(string folderPath, string folderName)
-        {
-
-            if (GetFolderState($@"{folderPath}/{folderName}", null, false) == FolderState.valid)
-                return FolderOperationStatus.alreadyexists;        //cannot create a folder with the same name
-            var parentFolderStatus = GetFolderState(folderPath, FolderPermission.insert, false);
-            switch (parentFolderStatus)
-            {
-                case FolderState.nopermission:
-                    return FolderOperationStatus.nopermission;
-                case FolderState.notfound:
-                    return FolderOperationStatus.notfound;
-                case FolderState.notpanorama:
-                    return FolderOperationStatus.notpanorama;
-            }
-    
-            //Create JSON body for the request
-            Dictionary<string, string> requestData = new Dictionary<string, string>();
-            requestData[@"name"] = folderName;
-            requestData[@"title"] = folderName;
-            requestData[@"description"] = folderName;
-            requestData[@"type"] = @"normal";
-            requestData[@"folderType"] = @"Targeted MS";
-            string createRequest = JsonConvert.SerializeObject(requestData);
-    
-            try
-            {
-                using (var webClient = new WebClientWithCredentials(ServerUri, Username, Password))
-                {
-                    Uri requestUri = PanoramaUtil.CallNewInterface(ServerUri, @"core", folderPath, @"createContainer", "", true);
-                    JObject result = webClient.Post(requestUri, createRequest);
-                    return FolderOperationStatus.OK;
-                }
-            }
-            catch (WebException ex)
-            {
-                var response = ex.Response as HttpWebResponse;
-                if (response != null && response.StatusCode != HttpStatusCode.OK)
-                {
-                    return FolderOperationStatus.error;
-                }
-                else throw;
-            }
-        }
-    
-        public FolderOperationStatus DeleteFolder(string folderPath)
-        {
-            var parentFolderStatus = GetFolderState(folderPath, FolderPermission.delete, false);
-            switch (parentFolderStatus)
-            {
-                case FolderState.nopermission:
-                    return FolderOperationStatus.nopermission;
-                case FolderState.notfound:
-                    return FolderOperationStatus.notfound;
-                case FolderState.notpanorama:
-                    return FolderOperationStatus.notpanorama;
-            }
-    
-            try
-            {
-                using (var webClient = new WebClientWithCredentials(ServerUri, Username, Password))
-                {
-                    Uri requestUri = PanoramaUtil.CallNewInterface(ServerUri, @"core", folderPath, @"deleteContainer", "", true);
-                    JObject result = webClient.Post(requestUri, "");
-                    return FolderOperationStatus.OK;
-                }
-            }
-            catch (WebException ex)
-            {
-                var response = ex.Response as HttpWebResponse;
-                if (response != null && response.StatusCode != HttpStatusCode.OK)
-                {
-                    return FolderOperationStatus.error;
-                }
-                else throw;
-            }
         }
 
         public JToken GetInfoForFolders(string folder)
@@ -598,9 +492,9 @@ namespace pwiz.PanoramaClient
         /// Downloads a given file to a given folder path and shows the progress
         /// of the download during downloading
         /// </summary>
-        public void DownloadFile(string fileUrl, string fileName, long fileSize, string realName, PanoramaServer server,  IProgressMonitor pm, IProgressStatus progressStatus)
+        public void DownloadFile(string fileUrl, string fileName, long fileSize, string realName, IProgressMonitor pm, IProgressStatus progressStatus)
         {
-            using var wc = new WebClientWithCredentials(server.URI, server.Username, server.Password);
+            using var wc = new WebClientWithCredentials(ServerUri, Username, Password);
             wc.DownloadProgressChanged += (s, e) =>
             {
                 var progressPercent = e.ProgressPercentage > 0 ? e.ProgressPercentage : -1;
@@ -672,23 +566,14 @@ namespace pwiz.PanoramaClient
     {
         public Uri ServerUri { get; set; }
         public string Username { get; set; }
+        public string Password { get; set; }
 
         public virtual PanoramaServer ValidateServer()
         {
             throw new NotImplementedException();
         }
 
-        public virtual void ValidateFolder(string folderPath, FolderPermission? permission)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual FolderOperationStatus CreateFolder(string parentPath, string folderName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual FolderOperationStatus DeleteFolder(string folderPath)
+        public virtual void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
         {
             throw new NotImplementedException();
         }
@@ -698,7 +583,7 @@ namespace pwiz.PanoramaClient
             throw new NotImplementedException();
         }
 
-        public virtual void DownloadFile(string fileUrl, string fileName, long fileSize, string realName, PanoramaServer server,
+        public virtual void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
             IProgressMonitor pm, IProgressStatus progressStatus)
         {
             throw new NotImplementedException();
@@ -1023,38 +908,33 @@ namespace pwiz.PanoramaClient
             return Username?.Trim().Length > 0 && Password?.Trim().Length > 0;
         }
 
-        public bool RemoveContextPath(out PanoramaServer panoramaServer)
+        public PanoramaServer RemoveContextPath()
         {
             if (!URI.AbsolutePath.Equals(@"/"))
             {
                 var newUri = new UriBuilder(URI) { Path = @"/" }.Uri;
-                panoramaServer = new PanoramaServer(newUri, Username, Password);
-                return true;
+                return new PanoramaServer(newUri, Username, Password);
             }
 
-            panoramaServer = null;
-            return false;
+            return this;
         }
 
-        public bool AddLabKeyContextPath(out PanoramaServer panoramaServer)
+        public PanoramaServer AddLabKeyContextPath()
         {
             if (URI.AbsolutePath.Equals(@"/"))
             {
                 var newUri = new UriBuilder(URI) { Path = PanoramaUtil.LABKEY_CTX }.Uri;
-                panoramaServer = new PanoramaServer(newUri, Username, Password);
-                return true;
+                return new PanoramaServer(newUri, Username, Password);
             }
 
-            panoramaServer = null;
-            return false;
+            return this;
         }
 
-        public bool Redirect(string redirectUri, string panoramaActionPath, out PanoramaServer redirectedServer)
+        public PanoramaServer Redirect(string redirectUri, string panoramaActionPath)
         {
-            redirectedServer = null;
             if (!Uri.IsWellFormedUriString(redirectUri, UriKind.Absolute))
             {
-                return false;
+                return this;
             }
 
             var idx = redirectUri.IndexOf(panoramaActionPath, StringComparison.Ordinal);
@@ -1063,13 +943,12 @@ namespace pwiz.PanoramaClient
                 var newUri = new Uri(redirectUri.Remove(idx));
                 if (!URI.Host.Equals(newUri.Host))
                 {
-                    return false;
+                    return this;
                 }
 
-                redirectedServer = new PanoramaServer(newUri, Username, Password);
-                return true;
+                return new PanoramaServer(newUri, Username, Password);
             }
-            return false;
+            return this;
         }
 
         public static string getFolderPath(PanoramaServer server, Uri serverPlusPath)

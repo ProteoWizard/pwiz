@@ -172,7 +172,7 @@ namespace pwiz.SkylineTestFunctional
                 remoteDlg.FolderBrowser.SelectNode(TARGETED_LIBRARY);
                 Assert.AreEqual(2, remoteDlg.FolderBrowser.TreeviewIcon);
                 remoteDlg.FolderBrowser.SelectNode(TARGETED_COLLABORATION);
-                Assert.AreEqual(3, remoteDlg.FolderBrowser.TreeviewIcon);
+                Assert.AreEqual(1, remoteDlg.FolderBrowser.TreeviewIcon);
                 remoteDlg.Close();
             });
             WaitForClosedForm(remoteDlg);
@@ -341,7 +341,7 @@ namespace pwiz.SkylineTestFunctional
                 remoteDlg.FolderBrowser.SelectNode(TARGETED_LIBRARY);
                 Assert.AreEqual(2, remoteDlg.FolderBrowser.TreeviewIcon);
                 remoteDlg.FolderBrowser.SelectNode(TARGETED_COLLABORATION);
-                Assert.AreEqual(3, remoteDlg.FolderBrowser.TreeviewIcon);
+                Assert.AreEqual(1, remoteDlg.FolderBrowser.TreeviewIcon);
             });
             OkDialog(remoteDlg, remoteDlg.OkDialog);
         }

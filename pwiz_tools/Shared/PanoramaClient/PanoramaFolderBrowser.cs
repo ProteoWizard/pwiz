@@ -456,9 +456,9 @@ public class LKContainerBrowser : PanoramaFolderBrowser
             var folderNode = new TreeNode(folderName);
             AddChildContainers(folderNode, subFolder, requireUploadPerms, showFiles, server);
 
-            var isTargetedMsFolder = PanoramaUtil.IsTargetedMsFolder(subFolder);
+            var hasTargetedMsModule = PanoramaUtil.HasTargetedMsModule(subFolder);
             // User can only upload to folders where TargetedMS is an active module.
-            var canUpload = PanoramaUtil.CheckInsertPermissions(subFolder) && isTargetedMsFolder;
+            var canUpload = hasTargetedMsModule && PanoramaUtil.CheckInsertPermissions(subFolder);
 
             if (requireUploadPerms && folderNode.Nodes.Count == 0 && !canUpload)
             {
@@ -469,40 +469,36 @@ public class LKContainerBrowser : PanoramaFolderBrowser
 
             node.Nodes.Add(folderNode);
 
-            if (requireUploadPerms && !(isTargetedMsFolder && canUpload))
+            if (requireUploadPerms && !(hasTargetedMsModule && canUpload))
             {
                 // User cannot upload files to folder
                 folderNode.ForeColor = Color.Gray;
                 folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.folder;
             }
+            else if (!hasTargetedMsModule)
+            {
+                folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.folder;
+            }
             else
             {
-                if (isTargetedMsFolder)
-                {
-                    var moduleProperties = subFolder[@"moduleProperties"];
-                    if (moduleProperties == null)
-                        folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.labkey;
-                    else
-                    {
-                        var effectiveValue = (string)moduleProperties[0][@"effectiveValue"];
-
-                        folderNode.ImageIndex =
-                            folderNode.SelectedImageIndex =
-                                (effectiveValue.Equals(@"Library") || effectiveValue.Equals(@"LibraryProtein"))
-                                    ? (int)ImageId.chrom_lib
-                                    : (int)ImageId.labkey;
-                    }
-                }
+                var moduleProperties = subFolder[@"moduleProperties"];
+                if (moduleProperties == null)
+                    folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.labkey;
                 else
                 {
-                    folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.folder;
+                    var effectiveValue = (string)moduleProperties[0][@"effectiveValue"];
+
+                    folderNode.ImageIndex =
+                        folderNode.SelectedImageIndex =
+                            (effectiveValue.Equals(@"Library") || effectiveValue.Equals(@"LibraryProtein"))
+                                ? (int)ImageId.chrom_lib
+                                : (int)ImageId.labkey;
                 }
             }
 
             if (showFiles)
             {
-                var containsTargetedMs = PanoramaUtil.HasTargetedMsModule(subFolder);
-                folderNode.Tag = new FolderInformation(server, (string)subFolder[@"path"], containsTargetedMs);
+                folderNode.Tag = new FolderInformation(server, (string)subFolder[@"path"], hasTargetedMsModule);
             }
             else
             {

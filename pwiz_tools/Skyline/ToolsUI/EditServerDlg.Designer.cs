@@ -171,7 +171,7 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.Label instructionLabel;
         private System.Windows.Forms.Panel InstructionPanel;
         private System.Windows.Forms.TableLayoutPanel ComponentOrganizer;
-        private System.Windows.Forms.CheckBox cbAnonymous;
+        internal System.Windows.Forms.CheckBox cbAnonymous;
         private System.Windows.Forms.ToolTip toolTipAnonymous;
     }
 }

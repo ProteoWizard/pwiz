@@ -3462,8 +3462,6 @@ namespace pwiz.SkylineTestData
 
         private class TestPanoramaClient : BaseTestPanoramaClient
         {
-            public string Password { get; set; }
-
             public ServerStateEnum MyServerState { get; set; }
             public UserStateEnum MyUserState { get; set; }
             public FolderState MyFolderState { get; set; }
@@ -3493,7 +3491,7 @@ namespace pwiz.SkylineTestData
                 return new PanoramaServer(ServerUri, Username, Password);
             }
 
-            public override void ValidateFolder(string folderPath, FolderPermission? permission)
+            public override void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
             {
                 if (MyFolderState != FolderState.valid)
                 {
