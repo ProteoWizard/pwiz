@@ -9,7 +9,6 @@ using SkylineBatch.Properties;
 using pwiz.PanoramaClient;
 using PanoramaServer = pwiz.PanoramaClient.PanoramaServer;
 using AlertDlg = SharedBatch.AlertDlg;
-using Newtonsoft.Json.Linq;
 using PanoramaUtil = pwiz.PanoramaClient.PanoramaUtil;
 
 namespace SkylineBatch
@@ -137,15 +136,6 @@ namespace SkylineBatch
         }
 
 
-        public void OpenFromPanorama(string server, string user, string pass, JToken folderJson)
-        {
-            using var dlg = new PanoramaDirectoryPicker(new Uri(server), user, pass, folderJson);
-            if (dlg.ShowDialog() != DialogResult.Cancel)
-            {
-
-            }
-        }
-
         public void OpenFromPanorama()
         {
             PanoramaServer server;
@@ -170,8 +160,9 @@ namespace SkylineBatch
             try
             {
                 
-                using (PanoramaDirectoryPicker dlg = new PanoramaDirectoryPicker(panoramaServers, state, showWebDavFolders:false, selectedPath:decodedUrl))
+                using (var dlg = new PanoramaDirectoryPicker(panoramaServers, state, false, decodedUrl))
                 {
+                    dlg.InitializeDialog(); // TODO: Should use a LongOperationRunner to show busy-wait UI
                     if (dlg.ShowDialog() != DialogResult.Cancel)
                     {
                         dlg.OkButtonText = "Select";

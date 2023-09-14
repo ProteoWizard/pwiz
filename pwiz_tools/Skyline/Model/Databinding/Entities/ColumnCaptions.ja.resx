@@ -141,6 +141,9 @@
   <data name="AnalyteConcentration">
     <value>アナライト濃度</value>
   </data>
+  <data name="Analyzer">
+    <value>アナライザー</value>
+  </data>
   <data name="Area">
     <value>面積</value>
   </data>
@@ -231,6 +234,9 @@
   <data name="Chromatogram">
     <value>クロマトグラム</value>
   </data>
+  <data name="ChromatogramEndTime">
+    <value>クロマトグラム終了時間</value>
+  </data>
   <data name="ChromatogramExtractionWidth">
     <value>クロマトグラムの抽出幅</value>
   </data>
@@ -252,6 +258,9 @@
   <data name="ChromatogramSource">
     <value>クロマトグラムのソース</value>
   </data>
+  <data name="ChromatogramStartTime">
+    <value>クロマトグラム開始時間</value>
+  </data>
   <data name="CleavageAa">
     <value>開裂Aa</value>
   </data>
@@ -266,6 +275,9 @@
   </data>
   <data name="CollisionEnergy">
     <value>衝突エネルギー</value>
+  </data>
+  <data name="CompensationVoltage">
+    <value>補償電圧</value>
   </data>
   <data name="ConcentrationMultiplier">
     <value>濃度乗数</value>
@@ -549,6 +561,9 @@
   <data name="Key">
     <value>キー</value>
   </data>
+  <data name="Kurtosis">
+    <value>尖度</value>
+  </data>
   <data name="LastPosition">
     <value>最後の位置</value>
   </data>
@@ -620,6 +635,9 @@
   </data>
   <data name="MassErrors">
     <value>質量誤差</value>
+  </data>
+  <data name="MatchingPrecursors">
+    <value>一致するプリカーサー</value>
   </data>
   <data name="Max">
     <value>最大</value>
@@ -798,6 +816,12 @@
   <data name="MonoisotopicMasses">
     <value>モノアイソトピック質量</value>
   </data>
+  <data name="Ms1Precursors">
+    <value>MS1プリカーサー</value>
+  </data>
+  <data name="Ms2Precursors">
+    <value>MS2プリカーサー</value>
+  </data>
   <data name="MsLevel">
     <value>MSレベル</value>
   </data>
@@ -829,13 +853,13 @@
     <value>最適ステップ</value>
   </data>
   <data name="PeakGroupEndTime">
-    <value>ピークグループ終了時刻</value>
+    <value>ピークグループ終了時間</value>
   </data>
   <data name="PeakGroupRetentionTime" xml:space="preserve">
     <value>ピークグループ保持時間</value>
   </data>
   <data name="PeakGroupStartTime">
-    <value>ピークグループ開始時刻</value>
+    <value>ピークグループ開始時間</value>
   </data>
   <data name="PeakQValue">
     <value>ピークのQ値</value>
@@ -848,6 +872,9 @@
   </data>
   <data name="PeakScores">
     <value>ピークスコア</value>
+  </data>
+  <data name="PeakStandardDeviation">
+    <value>ピーク標準偏差</value>
   </data>
   <data name="Peptide">
     <value>ペプチド</value>
@@ -986,6 +1013,9 @@
   </data>
   <data name="PredictedRetentionTime">
     <value>予測保持時間</value>
+  </data>
+  <data name="PresetScanConfiguration">
+    <value>プリセットスキャン設定</value>
   </data>
   <data name="PreviousAa">
     <value>前へAa</value>
@@ -1194,8 +1224,20 @@
   <data name="SampleType">
     <value>試料タイプ</value>
   </data>
+  <data name="ScanDescription">
+    <value>スキャン説明</value>
+  </data>
+  <data name="ScanWindowWidth">
+    <value>スキャンウィンドウ幅</value>
+  </data>
   <data name="Score">
     <value>スコア</value>
+  </data>
+  <data name="ShapeCorrelation">
+    <value>形状相関</value>
+  </data>
+  <data name="Skewness">
+    <value>歪度</value>
   </data>
   <data name="SkylineVersion">
     <value>Skylineバージョン</value>
@@ -1205,6 +1247,9 @@
   </data>
   <data name="SMILES">
     <value>SMILES</value>
+  </data>
+  <data name="SpectrumFilter">
+    <value>スペクトルフィルタ</value>
   </data>
   <data name="SpectrumIds">
     <value>スペクトルID</value>

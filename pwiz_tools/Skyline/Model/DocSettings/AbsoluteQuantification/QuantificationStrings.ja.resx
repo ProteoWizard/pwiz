@@ -329,4 +329,10 @@
     <value>デフォルト ({0})</value>
     <comment>Example: Default (Global Standards)</comment>
   </data>
+  <data name="MsLevelOption_ALL_All" xml:space="preserve">
+    <value>すべて</value>
+  </data>
+  <data name="MsLevelOption_DEFAULT_Default" xml:space="preserve">
+    <value>デフォルト</value>
+  </data>
 </root>
