@@ -46,7 +46,7 @@ namespace pwiz.Common.GraphicalUserInterface
         }
 
         [SuppressMessage("ReSharper", "VirtualMemberCallInConstructor")]
-        public CommonAlertDlg(string message)
+        protected CommonAlertDlg(string message)
         {
             InitializeComponent();
             _originalFormHeight = Height;

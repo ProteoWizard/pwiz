@@ -4,10 +4,10 @@ using System.IO;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
+using pwiz.Common.GraphicalUserInterface;
 using pwiz.PanoramaClient;
 using SkylineBatch;
 using SkylineBatch.Properties;
-using AlertDlg = SharedBatch.AlertDlg;
 using PanoramaServer = pwiz.PanoramaClient.PanoramaServer;
 
 namespace SkylineBatchTest
@@ -340,7 +340,7 @@ namespace SkylineBatchTest
             var remoteSourceForm = ShowDialog<RemoteSourceForm>(() =>
                 templateRemoteFileControl.comboRemoteFileSource.SelectedItem = "<Edit current...>");
             ChangeRemoteFileSource(remoteSourceForm, BRUDERER_SOURCE_NAME, BRUDERER_FOLDER_LINK, closeForm: false);
-            RunDlg<AlertDlg>(() => remoteSourceForm.btnSave.PerformClick(),
+            RunDlg<CommonAlertDlg>(() => remoteSourceForm.btnSave.PerformClick(),
                 dlg =>
                 {
                     var expectedMessage =
@@ -386,7 +386,7 @@ namespace SkylineBatchTest
             remoteSourceForm = ShowDialog<RemoteSourceForm>(() =>
                 dataRemoteFileControl.comboRemoteFileSource.SelectedItem = "<Edit current...>");
             ChangeRemoteFileSource(remoteSourceForm, BRUDERER_SOURCE_NAME, SELEVSEK_FOLDER_LINK, closeForm: false);
-            RunDlg<AlertDlg>(() => remoteSourceForm.btnSave.PerformClick(),
+            RunDlg<CommonAlertDlg>(() => remoteSourceForm.btnSave.PerformClick(),
                 dlg =>
                 {
                     var expectedMessage =

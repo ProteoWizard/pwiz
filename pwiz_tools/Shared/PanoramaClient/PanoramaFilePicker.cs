@@ -375,9 +375,7 @@ namespace pwiz.PanoramaClient
                     || ex is IOException
                     || ex is UnauthorizedAccessException)
                 {
-                    using var dlg = new CommonAlertDlg(ex.Message);
-                    dlg.Exception = ex;
-                    dlg.ShowDialog(FormUtil.FindTopLevelOwner(this));
+                    CommonAlertDlg.ShowException(FormUtil.FindTopLevelOwner(this), ex);
                 }
             }
         }
@@ -433,7 +431,7 @@ namespace pwiz.PanoramaClient
             }
             else
             {
-                using var alert = new CommonAlertDlg(Resources.PanoramaFilePicker_Open_Click_You_must_select_a_file_first_);
+                using var alert = new CommonAlertDlg(Resources.PanoramaFilePicker_Open_Click_You_must_select_a_file_first_, MessageBoxButtons.OK);
                 alert.ShowDialog(FormUtil.FindTopLevelOwner(this));
             }
         }

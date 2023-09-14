@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.GraphicalUserInterface;
 using pwiz.PanoramaClient;
 using SkylineBatch.Properties;
 using AlertDlg = SharedBatch.AlertDlg;
@@ -285,7 +286,7 @@ namespace SkylineBatch
             }
             catch (Exception e)
             {
-                AlertDlg.ShowError(this, Program.AppName(), e.Message);
+                CommonAlertDlg.ShowException(this, e);
             }
 
             Settings.Default.Save();
