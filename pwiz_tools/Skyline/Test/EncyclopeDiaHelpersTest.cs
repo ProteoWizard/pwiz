@@ -110,7 +110,7 @@ namespace pwiz.SkylineTest
                 };
                 var pm = new CommandProgressMonitor(new StringWriter(), new ProgressStatus());
                 EncyclopeDiaHelpers.Generate(dlibFilepath, elibFilepath, elibQuantFilepath, fastaFilepath, testConfig,
-                    narrowWindowFiles, wideWindowFiles, pm, pm, CancellationToken.None);
+                    narrowWindowFiles, wideWindowFiles, pm, pm, CancellationToken.None, new ProgressStatus());
 
                 var actual = SqliteOperations.DumpTable(elibFilepath, "entries", sortColumns: new[] { "PrecursorMz" })
                     .Concat(SqliteOperations.DumpTable(elibFilepath, "peptidescores", sortColumns: new[] { "PeptideModSeq", "PrecursorCharge" }));

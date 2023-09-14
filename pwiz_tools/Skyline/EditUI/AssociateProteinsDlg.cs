@@ -385,8 +385,11 @@ namespace pwiz.Skyline.EditUI
 
         private void tbxFastaTargets_TextChanged(object sender, EventArgs e)
         {
-            if (File.Exists(tbxFastaTargets.Text))
-                UseFastaFile(tbxFastaTargets.Text);
+            ActionUtil.RunAsync(() =>
+            {
+                if (File.Exists(tbxFastaTargets.Text))
+                    UseFastaFile(tbxFastaTargets.Text);
+            });
         }
 
         private void comboBackgroundProteome_SelectedIndexChanged(object sender, EventArgs e)

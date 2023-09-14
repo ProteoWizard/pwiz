@@ -24,7 +24,6 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -670,7 +669,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 if (!EnsureRequiredFilesDownloaded(EncyclopeDiaHelpers.FilesToDownload, this))
                     throw new InvalidOperationException(Resources.EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_could_not_find_EncyclopeDia);
 
-                status = status.ChangeSegments(0, 8);
+                status = status.ChangeSegments(0, 7);
 
                 string fastaFilepath = Settings.FastaSettings.FastaFile.Path;
                 string fastaBasename = Path.Combine(Path.GetDirectoryName(fastaFilepath) ?? "",
@@ -721,7 +720,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 EncyclopeDiaQuantLibraryPath = prositBasename + @"-quant.elib";
                 EncyclopeDiaHelpers.Generate(dlibFilepath, EncyclopeDiaChromLibraryPath,
                     EncyclopeDiaQuantLibraryPath, fastaFilepath, settings.EncyclopeDiaConfig,
-                    settings.NarrowWindowResultUris, settings.WideWindowResultUris, this, multiProgressControl, token.Token);
+                    settings.NarrowWindowResultUris, settings.WideWindowResultUris,
+                    this, multiProgressControl, token.Token, status);
             }
             catch (Exception e)
             {

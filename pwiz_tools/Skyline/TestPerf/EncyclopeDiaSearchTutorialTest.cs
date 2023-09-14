@@ -36,6 +36,7 @@ using pwiz.Skyline.Util;
 using System;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 
 namespace TestPerf
 {
@@ -54,7 +55,7 @@ namespace TestPerf
                 IsWholeProteome = false,
                 NarrowWindowDiaFiles = new[]
                 {
-                    //"23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML",
+                    "23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML",
                     "23aug2017_hela_serum_timecourse_4mz_narrow_2.mzML",
                     //"23aug2017_hela_serum_timecourse_4mz_narrow_3.mzML",
                     //"23aug2017_hela_serum_timecourse_4mz_narrow_4.mzML",
@@ -71,12 +72,12 @@ namespace TestPerf
                     //"23aug2017_hela_serum_timecourse_wide_1f.mzML",
                 },
 
-                FinalTargetCounts = new[] { 536, 2599, 2599, 18741 },
+                FinalTargetCounts = new[] { 317, 552, 552, 3922 },
                 MassErrorStats = new[]
                 {
-                    new[] {-0.3, 2.3},
-                    new[] {-0.3, 2.3},
-                    new[] {-0.3, 2.3},
+                    new[] {-0.3, 2.4},
+                    new[] {-0.2, 2.4},
+                    new[] {-0.4, 2.4},
                 },
                 ChromatogramClickPoint = new PointF(32.2f, 12.5f)
             };
@@ -133,7 +134,7 @@ namespace TestPerf
 
 
         /// <summary>Change to true to write coefficient arrays.</summary>
-        private bool IsRecordMode => true;
+        private bool IsRecordMode => false;
 
         /// <summary>Disable audit log comparison for FullFileset tests</summary>
         public override bool AuditLogCompareLogs => !TestContext.TestName.EndsWith("FullFileset");
@@ -208,9 +209,11 @@ namespace TestPerf
             string persistentPath = Path.GetDirectoryName(persistentBlibFilepath) ?? string.Empty;
             DirectoryEx.SafeDelete(Path.Combine(persistentPath, "elib_chrom"));
             DirectoryEx.SafeDelete(Path.Combine(persistentPath, "elib_quant"));
+            foreach (var demuxFile in Directory.EnumerateFiles(persistentPath, "*-demuxed"))
+                FileEx.SafeDelete(demuxFile);
 
             if (Program.UseOriginalURLs)
-                FileEx.SafeDelete(TestFilesDir.GetTestPath(_analysisValues.BlibPath), true);
+                FileEx.SafeDelete(tempBlibFilepath, true);
 
             RunUI(searchDlg.NextPage); // now on Prosit settings
 

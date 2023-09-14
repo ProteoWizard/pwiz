@@ -10,6 +10,7 @@ EncyclopeDIA Search > Prosit settings > Min charge is "2"
 EncyclopeDIA Search > Prosit settings > Max charge is "3"
 EncyclopeDIA Search > Prosit settings > Max missed cleavages is "2"
 EncyclopeDIA Search > Narrow window results : contains "23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML"
+EncyclopeDIA Search > Narrow window results : contains "23aug2017_hela_serum_timecourse_4mz_narrow_2.mzML"
 EncyclopeDIA Search > Wide window results : contains "23aug2017_hela_serum_timecourse_wide_1a.mzML"
 EncyclopeDIA Search > Wide window results : contains "23aug2017_hela_serum_timecourse_wide_1b.mzML"
 EncyclopeDIA Search > EncyclopeDIA settings is { Enzyme = "Trypsin", Frag = "CID", Ptol = "10", PtolUnits = "PPM", Ftol = "10", FtolUnits = "PPM", Lftol = "10", LftolUnits = "PPM", Poffset = "0", Foffset = "0", PercolatorThreshold = "0.01", PercolatorTrainingSetSize = "500000", PercolatorTrainingFDR = "0", Acquisition = "DIA", NumberOfThreadsUsed = "32", ExpectedPeakWidth = "25", PrecursorWindowSize = "-1", NumberOfQuantitativePeaks = "5", MinNumOfQuantitativePeaks = "3", TopNTargetsUsed = "-1", QuantifyAcrossSamples = "False", NumberOfExtraDecoyLibrariesSearched = "0", VerifyModificationIons = "True", MinIntensity = "-1", RtWindowInMin = "-1", FilterPeaklists = "False", V2scoring = "True" }
@@ -30,7 +31,8 @@ Prosit settings =
 },
 Narrow window results = 
 [
-    "23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML"
+    "23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML",
+    "23aug2017_hela_serum_timecourse_4mz_narrow_2.mzML"
 ],
 Wide window results = 
 [
@@ -105,11 +107,11 @@ Import Peptide Search > Associate Proteins > Find minimal protein list is False
 Import Peptide Search > Associate Proteins > Remove subset proteins is False
 Import Peptide Search > Associate Proteins > Shared peptides option is "Duplicated between proteins"
 Import Peptide Search > Associate Proteins > Min peptides per protein is "1"
-Import Peptide Search > Associate Proteins > Proteins mapped is "557"
-Import Peptide Search > Associate Proteins > Peptides mapped is "5423"
-Import Peptide Search > Associate Proteins > Proteins unmapped is "1"
-Import Peptide Search > Associate Proteins > Protein targets is "557"
-Import Peptide Search > Associate Proteins > Peptide targets is "5733"
+Import Peptide Search > Associate Proteins > Proteins mapped is "317"
+Import Peptide Search > Associate Proteins > Peptides mapped is "524"
+Import Peptide Search > Associate Proteins > Proteins unmapped is "241"
+Import Peptide Search > Associate Proteins > Protein targets is "317"
+Import Peptide Search > Associate Proteins > Peptide targets is "552"
 Extra Info: Extract Chromatograms = 
 {
     Found results files = 
@@ -161,10 +163,10 @@ Associate Proteins =
     Remove subset proteins = False,
     Shared peptides option = "Duplicated between proteins",
     Min peptides per protein = "1",
-    Proteins mapped = "557",
-    Peptides mapped = "5423",
-    Proteins unmapped = "1",
-    Protein targets = "557",
-    Peptide targets = "5733"
+    Proteins mapped = "317",
+    Peptides mapped = "524",
+    Proteins unmapped = "241",
+    Protein targets = "317",
+    Peptide targets = "552"
 }
 
