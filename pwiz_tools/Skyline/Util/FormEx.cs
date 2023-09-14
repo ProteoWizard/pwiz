@@ -18,13 +18,11 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
-using pwiz.Common;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
@@ -272,6 +270,15 @@ namespace pwiz.Skyline.Util
             }
             // No control on the form has focus
             return null;
+        }
+        public new static void SetOffscreen(Form form)
+        {
+            CommonFormEx.SetOffscreen(form);
+        }
+
+        public new static Point GetOffscreenPoint()
+        {
+            return CommonFormEx.GetOffscreenPoint();
         }
     }
 }

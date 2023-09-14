@@ -257,7 +257,7 @@ namespace pwiz.Skyline
             AuditLogEntry result = null;
             Invoke((Action)(() =>
             {
-                using (var alert = new Alerts.AlertDlg(
+                using (var alert = new AlertDlg(
                     AuditLogStrings
                         .SkylineWindow_AskForLogEntry_The_audit_log_does_not_match_the_current_document__Would_you_like_to_add_a_log_entry_describing_the_changes_made_to_the_document_,
                     MessageBoxButtons.YesNo))
@@ -914,7 +914,8 @@ namespace pwiz.Skyline
 
             try
             {
-                using var dlg = new PanoramaFilePicker(panoramaServers, state) { Text = Resources.SkylineWindow_OpenFromPanorama_Open_From_Panorama };
+                using var dlg = new PanoramaFilePicker(panoramaServers, state);
+                dlg.Text = Resources.SkylineWindow_OpenFromPanorama_Open_From_Panorama;
                 var longOptionRunner = new LongOperationRunner
                 {
                     ParentControl = this,

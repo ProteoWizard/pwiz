@@ -115,7 +115,7 @@ namespace pwiz.Common.SystemUtil
             // 2. It is difficult to switch to Skyline if there is a modal dialog which is not in the tasbar
             ShowInTaskbar = true;
 
-            return base.ShowDialog();
+            return ShowDialog();
         }
     }
 }
