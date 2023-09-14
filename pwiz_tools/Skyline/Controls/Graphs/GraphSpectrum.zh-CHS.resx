@@ -192,31 +192,28 @@
     <value>1</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="graphControl.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+  <data name="msGraphExtension.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
-  <data name="graphControl.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="msGraphExtension.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
-  <data name="graphControl.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>5, 5, 5, 5</value>
-  </data>
-  <data name="graphControl.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="msGraphExtension.Size" type="System.Drawing.Size, System.Drawing">
     <value>716, 572</value>
   </data>
-  <data name="graphControl.TabIndex" type="System.Int32, mscorlib">
+  <data name="msGraphExtension.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;graphControl.Name" xml:space="preserve">
-    <value>graphControl</value>
+  <data name="&gt;&gt;msGraphExtension.Name" xml:space="preserve">
+    <value>msGraphExtension</value>
   </data>
-  <data name="&gt;&gt;graphControl.Type" xml:space="preserve">
-    <value>pwiz.MSGraph.MSGraphControl, MSGraph, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e57071561ce779d9</value>
+  <data name="&gt;&gt;msGraphExtension.Type" xml:space="preserve">
+    <value>pwiz.Skyline.SettingsUI.MsGraphExtension, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;graphControl.Parent" xml:space="preserve">
+  <data name="&gt;&gt;msGraphExtension.Parent" xml:space="preserve">
     <value>GraphPanel</value>
   </data>
-  <data name="&gt;&gt;graphControl.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;msGraphExtension.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="GraphPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -317,5 +314,20 @@
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.DockableFormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="propertiesButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="propertiesButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>29, 20</value>
+  </data>
+  <data name="propertiesButton.ToolTipText" xml:space="preserve">
+    <value>谱图属性</value>
+  </data>
+  <data name="&gt;&gt;propertiesButton.Name" xml:space="preserve">
+    <value>propertiesButton</value>
+  </data>
+  <data name="&gt;&gt;propertiesButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

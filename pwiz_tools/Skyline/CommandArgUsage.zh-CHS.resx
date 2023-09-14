@@ -123,6 +123,12 @@
   <data name="_add_library_path" xml:space="preserve">
     <value>指定要添加到打开文档中的谱图库。</value>
   </data>
+  <data name="_ionmobility_library_create" xml:space="preserve">
+    <value>根据当前加载的色谱图，将离子迁移库添加到打开的文档中。</value>
+  </data>
+  <data name="_ionmobility_library_name" xml:space="preserve">
+    <value>在 --ionmobility-library-create operation 中为离子迁移库指定的名称。</value>
+  </data>
   <data name="_batch_commands" xml:space="preserve">
     <value>按照“SkylineRunner/Cmd”输入的方式处理每一行，逐行运行文件。用于自动执行多个命令。 打开的 Skyline 文件在所有命令中保持活动状态。</value>
   </data>
@@ -250,7 +256,7 @@
     <value>从逗号或制表符分隔的文件中读取峰边界</value>
   </data>
   <data name="_import_process_count" xml:space="preserve">
-    <value>将为单个文件导入运行的子进程数量，之后主进程将汇集各个文件的结果。在适当的条件下，这可以在 24 核 NUMA 服务器上带来 10 倍的性能提升，而在 i7 处理器上也可以带来 3-4 倍的性能提升。务必使用您的系统进行测试。</value>
+    <value>对于单一文件导入，将运行多个子流程，之后每个文件的结果将由主流程合并。在适当的条件下，这可以将 24 核 NUMA 服务器的性能提高 10 倍，即便在 i7 处理器上也可以提高 3-4 倍。确保使用您的系统进行测试。</value>
   </data>
   <data name="_import_replicate_name" xml:space="preserve">
     <value>在“-–import-file”操作中提供给新重复测定的名称。</value>
@@ -295,7 +301,7 @@
     <value>在分析库导入期间创建的 iRT 计算器的名称。 （可选）默认名称是文档基名。</value>
   </data>
   <data name="_irt_database_path" xml:space="preserve">
-    <value>现有 iRT 计算器（.irtdb 文件）的路径，用于导入的分析库。或者，如果使用“-–irt-standards-group-name”或“-–irt-standards-file”参数，则这是创建的 .irtdb 文件的输出路径。（可选）默认的 iRT 计算器路径是“path/to/document.irtdb”</value>
+    <value>要对导入的分析库使用的现有 iRT 计算器 (.irtdb 文件) 的路径。如果使用  -–irt-standards-group-name 或 -–irt-standards-file，则这就是创建的 .irtdb 文件的输出路径。(可选)默认 iRT 计算器路径为 path/to/document.irtdb</value>
   </data>
   <data name="_irt_standards_file" xml:space="preserve">
     <value>包含 iRT 标准的单独分析库的路径将被应用于导入的分析库。 （可选）</value>
@@ -386,6 +392,9 @@
   </data>
   <data name="CommandArgs_GROUP_IMPORT_Importing_results_replicates" xml:space="preserve">
     <value>正在导入结果重复测定</value>
+  </data>
+  <data name="CommandArgs_GROUP_CREATE_IMSDB_Ion_Mobility_Library" xml:space="preserve">
+    <value>创建离子迁移库</value>
   </data>
   <data name="CommandArgs_GROUP_REMOVE_Removing_results_replicates" xml:space="preserve">
     <value>正在删除结果重复测定</value>
@@ -815,6 +824,108 @@ Waters</value>
     <value>丢弃文档中所有未使用的色谱图。</value>
   </data>
   <data name="_chromatograms_limit_noise" xml:space="preserve">
-    <value>将色谱图长度限制在色谱峰周围的分钟数，即 ± 分钟。</value>
+    <value>将色谱图的长度限制为色谱峰周围的分钟数，即 ± 分钟。</value>
+  </data>
+  <data name="_full_scan_acquisition_method" xml:space="preserve">
+    <value>用于从全扫描数据提取的采集方法 (无、DIA、PRM、DDA、SureQuant)。</value>
+  </data>
+  <data name="_full_scan_isolation_scheme" xml:space="preserve">
+    <value>预定义分离方案的名称或数据文件的路径，从该数据文件将导入从全扫描 DIA 数据提取时所使用的分离方案。</value>
+  </data>
+  <data name="_full_scan_precursor_analyzer" xml:space="preserve">
+    <value>用于母离子谱图(MS1)的质量分析器或“棒状图形式”，以使用棒状谱图(和 PPM 中的质量误差)，不使用轮廓(和分辨能力)。</value>
+  </data>
+  <data name="_full_scan_precursor_ignore_sim" xml:space="preserve">
+    <value>从全扫描 MS1 谱中提取时跳过 SIM 扫描。用于同时存在调查 MS1 和 SIM 扫描的情况，以避免从两者中提取色谱图。 </value>
+  </data>
+  <data name="_full_scan_precursor_isotopes" xml:space="preserve">
+    <value>选择从高分辨率质谱中提取母离子同位素离子对时所应用的母离子阈值的含义。计数表示从单一同位素母离子开始的常数。百分比表示最强母离子物种(即基峰)的最小百分比。默认为计数。</value>
+  </data>
+  <data name="_full_scan_precursor_isotope_enrichment" xml:space="preserve">
+    <value>用于从全扫描数据中提取的预定义同位素富集设置的名称。如果都不可用，请使用用户界面中的“离子对设置”表单添加新的同位素富集设置。</value>
+  </data>
+  <data name="_full_scan_precursor_threshold" xml:space="preserve">
+    <value>从高分辨率谱图中提取的同位素常数(从单一同位素母离子开始)或基础同位素强度的百分比。</value>
+  </data>
+  <data name="_full_scan_product_analyzer" xml:space="preserve">
+    <value>子离子谱图的质量分析器或“棒状图形式”,以使用棒状谱图(和 PPM 中的质量误差)，不使用轮廓(和分辨能力)。</value>
+  </data>
+  <data name="_import_search_exclude_library_sources" xml:space="preserve">
+    <value>在提取色谱图时，不考虑用于建立库的结果文件。当对用于肽段谱图匹配的文件进行转换和预处理(可能不适合于色谱图提取)时，这非常有用。</value>
+  </data>
+  <data name="_new" xml:space="preserve">
+    <value>使用当前的 Skyline 设置创建新文档。</value>
+  </data>
+  <data name="_overwrite" xml:space="preserve">
+    <value>如果 --new 指定的文件路径已存在，则覆盖该文件路径，而不生成错误。</value>
+  </data>
+  <data name="_tran_product_end_ion" xml:space="preserve">
+    <value>允许离子对的最大子离子。</value>
+  </data>
+  <data name="_tran_product_start_ion" xml:space="preserve">
+    <value>允许离子对的最小子离子。</value>
+  </data>
+  <data name="_full_scan_rt_filter" xml:space="preserve">
+    <value>设置色谱图起止时间是否受预测的保留时间或 MS/MS ID 保留时间范围的限制。</value>
+  </data>
+  <data name="_library_match_tolerance" xml:space="preserve">
+    <value>预测的子离子质荷比值与测量的 MS/MS 谱图库峰值质荷比值匹配时允许的最大增量值。增量值可以用质荷比或 PPM 单位指定。 </value>
+  </data>
+  <data name="_library_min_product_ions" xml:space="preserve">
+    <value>仅保留至少有这些数量的子离子离子对与库谱图中的峰相匹配的母离子。</value>
+  </data>
+  <data name="_library_product_ions" xml:space="preserve">
+    <value>库谱图中每个母离子匹配峰的最大子离子离子对数，并按峰强度排序。</value>
+  </data>
+  <data name="_associate_proteins_group_proteins" xml:space="preserve">
+    <value>与同一组肽段匹配的蛋白质将组合为文档中的单个目标。</value>
+  </data>
+  <data name="_associate_proteins_minimal_protein_list" xml:space="preserve">
+    <value>运用算法来找到解释所有肽段的最小(简约)蛋白质组。</value>
+  </data>
+  <data name="_associate_proteins_min_peptides" xml:space="preserve">
+    <value>必须将蛋白质添加到文档中的肽段的最小数量。</value>
+  </data>
+  <data name="_associate_proteins_remove_subsets" xml:space="preserve">
+    <value>删除蛋白质子集，但保留非简约的非子集蛋白质。</value>
+  </data>
+  <data name="_associate_proteins_shared_peptides" xml:space="preserve">
+    <value>设置如何分配 FASTA 或背景蛋白质组中多种蛋白质中包含的肽段。</value>
+  </data>
+  <data name="_instrument_dynamic_min_mz" xml:space="preserve">
+    <value>如果设置，则使用 Thermo-Scientific 为 LTQ 仪器提供的特定方程，根据母离子质荷比动态计算子离子的最小质荷比值。</value>
+  </data>
+  <data name="_instrument_max_mz" xml:space="preserve">
+    <value>目标仪器可测的最大质荷比值，以避免添加无法测量的母离子和离子对。</value>
+  </data>
+  <data name="_instrument_max_time" xml:space="preserve">
+    <value>色谱图中允许的最大时间(无论采集方式如何）。设置此项可以节省可能用于梯度中不感兴趣的部分的内存和磁盘空间。</value>
+  </data>
+  <data name="_instrument_method_mz_tolerance" xml:space="preserve">
+    <value>仪器方法离子对质荷比值与预测离子对质荷比值匹配的最大增量值。(仅适用于 SRM 和 PRM 分离的质荷比值。)</value>
+  </data>
+  <data name="_instrument_min_mz" xml:space="preserve">
+    <value>目标仪器可测的最小质荷比值，以避免添加无法测量的母离子和离子对。</value>
+  </data>
+  <data name="_instrument_min_time" xml:space="preserve">
+    <value>色谱图中允许的最短时间(无论采集方式如何）。设置此项可以节省可能用于梯度中不感兴趣的部分的内存和磁盘空间。</value>
+  </data>
+  <data name="_instrument_triggered_chromatograms" xml:space="preserve">
+    <value>指示在获取某些分析物的谱图时，保留时间之间可能存在很大的间隙。为了不与这些间隙重叠，峰值将被截断，并且不执行背景减除。</value>
+  </data>
+  <data name="_library_pick_product_ions" xml:space="preserve">
+    <value>在挑选与库谱图峰质荷比值匹配的离子对时要考虑的子离子集。(all:所有指定的离子电荷和类型，filter: 基于开始和结束离子对以及特殊离子的过滤器，或 all_plus：其他两个选项的并集)</value>
+  </data>
+  <data name="_tran_product_add_special_ion" xml:space="preserve">
+    <value>添加“离子对设置”表单中指定的已命名预定义特殊离子。</value>
+  </data>
+  <data name="_tran_product_clear_special_ions" xml:space="preserve">
+    <value>删除离子对过滤器设置中的所有特殊离子。</value>
+  </data>
+  <data name="_tran_use_dia_window_exclusion" xml:space="preserve">
+    <value>排除质荷比值位于母离子隔离窗口范围内的子离子离子对。鉴于来自未碎片母离子的信号会提高干扰可能性，因此建议对 DIA/SWATH 数据使用这种方法。</value>
+  </data>
+  <data name="CommandArgs_ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME_path_to_result_file_to_import_the_isolation_scheme" xml:space="preserve">
+    <value>用于从中导入分离方案的 path/to/result-file</value>
   </data>
 </root>

@@ -172,7 +172,7 @@
     <value>207, 22</value>
   </data>
   <data name="undoMenuItem.Text" xml:space="preserve">
-    <value>撤销(&amp;N)</value>
+    <value>撤销(&amp;U)</value>
   </data>
   <data name="redoMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -271,7 +271,7 @@
     <value>207, 22</value>
   </data>
   <data name="findNextMenuItem.Text" xml:space="preserve">
-    <value>查找下一个(&amp;X)</value>
+    <value>查找下一个(&amp;N)</value>
   </data>
   <data name="toolStripSeparator8.Size" type="System.Drawing.Size, System.Drawing">
     <value>204, 6</value>
@@ -343,7 +343,7 @@
     <value>284, 22</value>
   </data>
   <data name="synchronizedIntegrationToolStripMenuItem.Text" xml:space="preserve">
-    <value>同步积分(&amp;Y)...</value>
+    <value>同步积分(&amp;Y)…</value>
   </data>
   <data name="insertToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>207, 22</value>
@@ -475,7 +475,7 @@
     <value>175, 22</value>
   </data>
   <data name="qcStandardMenuItem.Text" xml:space="preserve">
-    <value>质量控制(Q&amp;C)</value>
+    <value>质量控制(&amp;C)</value>
   </data>
   <data name="irtStandardMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -497,6 +497,12 @@
   </data>
   <data name="manageUniquePeptidesMenuItem.Text" xml:space="preserve">
     <value>唯一肽段(&amp;Q)…</value>
+  </data>
+  <data name="editSpectrumFilterMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>207, 22</value>
+  </data>
+  <data name="editSpectrumFilterMenuItem.Text" xml:space="preserve">
+    <value>编辑谱图过滤器(&amp;L)…</value>
   </data>
   <data name="toolStripSeparator30.Size" type="System.Drawing.Size, System.Drawing">
     <value>204, 6</value>
@@ -796,6 +802,12 @@
     <value>manageUniquePeptidesMenuItem</value>
   </data>
   <data name="&gt;&gt;manageUniquePeptidesMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;editSpectrumFilterMenuItem.Name" xml:space="preserve">
+    <value>editSpectrumFilterMenuItem</value>
+  </data>
+  <data name="&gt;&gt;editSpectrumFilterMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator30.Name" xml:space="preserve">

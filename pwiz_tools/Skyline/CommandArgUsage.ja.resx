@@ -123,6 +123,12 @@
   <data name="_add_library_path" xml:space="preserve">
     <value>開いているドキュメントに追加するようスペクトルライブラリを指定します。</value>
   </data>
+  <data name="_ionmobility_library_create" xml:space="preserve">
+    <value>現在読み込まれているクロマトグラムに基づき、開いているドキュメントにイオン移動度ライブラリを追加します。</value>
+  </data>
+  <data name="_ionmobility_library_name" xml:space="preserve">
+    <value>--ionmobility-library-create操作でイオン移動度ライブラリに与える名前。</value>
+  </data>
   <data name="_batch_commands" xml:space="preserve">
     <value>各行をSkylineRunner/Cmd入力のように扱ってファイルを行毎に実行します。複数コマンド実行の自動化に役立ちます。  開いているSkylineファイルはすべてのコマンド中、有効な状態を保ちます。</value>
   </data>
@@ -247,10 +253,10 @@
     <value>インポート中のデータは、最適な衝突エネルギーまたはデクラスタリングポテンシャルを検出するための、追加のトランジションが含まれていることを示します。</value>
   </data>
   <data name="_import_peak_boundaries" xml:space="preserve">
-    <value>カンマやタブで区切られたファイルのピーク境界を読み取る</value>	
+    <value>カンマやタブで区切られたファイルのピーク境界を読み取る</value>
   </data>
   <data name="_import_process_count" xml:space="preserve">
-    <value>多数のサブプロセスが単一ファイルのインポートで実行され、その後、各単一ファイルの結果がメインプロセスと結合されます。これにより、24コアNUMAサーバーでは10倍、i7プロセッサでも正しい条件の下では3～4倍に性能がアップされる可能性があります。お使いのシステムで必ずテストしてください。</value>
+    <value>単一ファイルのインポートに対し、多数のサブプロセスが実行されます。その後、各単一ファイルからの結果がメインプロセスによって結び付けられます。これによって、条件が正しければ、24コアのNUMAサーバーでは性能利得が10倍に、i7プロセッサでも3から4倍になります。必ずご利用のシステムでテストしてください。</value>
   </data>
   <data name="_import_replicate_name" xml:space="preserve">
     <value>–import-file操作で新しい繰り返し測定に与える名前です。</value>
@@ -295,7 +301,7 @@
     <value>アッセイライブラリのインポート中に作成されるiRTカルキュレータの名前です。（オプション）デフォルト名はドキュメントのベース名です。</value>
   </data>
   <data name="_irt_database_path" xml:space="preserve">
-    <value>インポート済みのアッセイライブラリで使用する、既存のiRTカルキュレータ（.irtdbファイル）へのパスです。あるいは、-–irt-standards-group-nameまたは-–irt-standards-fileが使用される場合には、作成済みの.irtdbファイルの出力パスです。（オプション）iRTカルキュレータのデフォルトパスはpath/to/document.irtdbです。</value>
+    <value>インポートしたアッセイライブラリでは、既存のiRTカルキュレータ(.irtdbファイル)へのパスを使用します。-–irt-standards-group-nameまたは-–irt-standards-fileを使用する場合は、これが作成される.irtdbファイルへの出力パスとなります。(オプション) デフォルトのiRTカルキュレータパスは、path/to/document.irtdbです</value>
   </data>
   <data name="_irt_standards_file" xml:space="preserve">
     <value>インポート済みのアッセイライブラリに適用されるiRT標準を含む別個のアッセイライブラリへのパスです。（オプション）</value>
@@ -386,6 +392,9 @@
   </data>
   <data name="CommandArgs_GROUP_IMPORT_Importing_results_replicates" xml:space="preserve">
     <value>結果の繰り返し測定をインポート中</value>
+  </data>
+  <data name="CommandArgs_GROUP_CREATE_IMSDB_Ion_Mobility_Library" xml:space="preserve">
+    <value>イオン移動度ライブラリを作成中</value>
   </data>
   <data name="CommandArgs_GROUP_REMOVE_Removing_results_replicates" xml:space="preserve">
     <value>結果の繰り返し測定を削除中</value>
@@ -823,6 +832,108 @@ Waters</value>
     <value>使用しないクロマトグラムをドキュメントからすべて破棄します。</value>
   </data>
   <data name="_chromatograms_limit_noise" xml:space="preserve">
-    <value>クロマトグラムの長さを±分などクロマトグラムピーク周囲の長さに制限します。</value>
+    <value>クロマトグラムの長さを、±分など、クロマトグラムピークの前後の分数に限定します。</value>
+  </data>
+  <data name="_full_scan_acquisition_method" xml:space="preserve">
+    <value>フルスキャンデータから抽出するための取得メソッド(なし、DIA、DDA、SureQuant)。</value>
+  </data>
+  <data name="_full_scan_isolation_scheme" xml:space="preserve">
+    <value>フルスキャンDIAデータから抽出するときに使用した、事前に定義した単離スキームの名前または単離スキームのインポート元であるデータファイルへのパス。</value>
+  </data>
+  <data name="_full_scan_precursor_analyzer" xml:space="preserve">
+    <value>プリカーサースペクトル(MS1)の場合は質量アナライザー、またはプロファイル(および分解能)の代わりにセントロイドスペクトル(およびPPMでの質量誤差)を使用する場合には「セントロイド化」。</value>
+  </data>
+  <data name="_full_scan_precursor_ignore_sim" xml:space="preserve">
+    <value>フルスキャンMS1スペクトルから抽出する場合にはSIMスキャンをスキップします。両者からクロマトグラムが抽出されるのを回避するため、調査MS1およびSIMスキャンの両者が存在する場合に使用します。</value>
+  </data>
+  <data name="_full_scan_precursor_isotopes" xml:space="preserve">
+    <value>高分解能質量スペクトルからの抽出にプリカーサー同位体トランジションを選択する際に適用されるプリカーサー閾値の意味。数は、モノアイソトピックプリカーサーから始まる定数を示します。パーセントは、ベースピークなど、最も強度の高いプリカーサー種からの最低パーセントを示し、デフォルトの数になります。</value>
+  </data>
+  <data name="_full_scan_precursor_isotope_enrichment" xml:space="preserve">
+    <value>フルスキャンデータからの抽出に使用する、事前に定義された同位体濃縮設定名。利用できるものがない場合は、ユーザーインターフェースにあるトランジション設定フォームを使用し、新しい同位体濃縮設定を追加します。</value>
+  </data>
+  <data name="_full_scan_precursor_threshold" xml:space="preserve">
+    <value>高分解能スペクトルから抽出される同位体の定数(モノアイソトピックプリカーサーで開始)または基本の同位体の割合。</value>
+  </data>
+  <data name="_full_scan_product_analyzer" xml:space="preserve">
+    <value>プロダクトスペクトルの場合には質量アナライザー、またはプロファイル(および分解能)の代わりにセントロイドスペクトル(およびPPMでの質量誤差)を使用する場合には「セントロイド化」。</value>
+  </data>
+  <data name="_import_search_exclude_library_sources" xml:space="preserve">
+    <value>ライブラリの構築に使用した結果ファイルをクロマトグラム抽出の考慮から除外します。これは、ペプチドスペクトル一致に使用したファイルに変換や前処理が使用され、クロマトグラム抽出に適切ではない可能性があるときに有用となることがあります。</value>
+  </data>
+  <data name="_new" xml:space="preserve">
+    <value>現在のSkyline設定を使用して新規ドキュメントを作成します。</value>
+  </data>
+  <data name="_overwrite" xml:space="preserve">
+    <value>--newで指定されたファイルパスが既に存在する場合に、エラーとなる代わりにファイルパスを上書きします。</value>
+  </data>
+  <data name="_tran_product_end_ion" xml:space="preserve">
+    <value>トランジションが許可される最大プロダクトイオン。</value>
+  </data>
+  <data name="_tran_product_start_ion" xml:space="preserve">
+    <value>トランジションが許可される最小プロダクトイオン。</value>
+  </data>
+  <data name="_full_scan_rt_filter" xml:space="preserve">
+    <value>クロマトグラムの開始時間および停止時間を、予測される保持時間またはMS/MS ID保持時間のいずれかの範囲で制限するかどうかを設定します。</value>
+  </data>
+  <data name="_library_match_tolerance" xml:space="preserve">
+    <value>予測されるプロダクトイオンのm/z値を測定されたMS/MSスペクトルライブラリピークm/z値に一致させる際に許容される最大デルタ。デルタはm/zまたはPPM単位のいずれかで指定可能。</value>
+  </data>
+  <data name="_library_min_product_ions" xml:space="preserve">
+    <value>ライブラリスペクトルでこの数以上のプロダクトトランジションがピークと一致するプリカーサーのみを維持します。</value>
+  </data>
+  <data name="_library_product_ions" xml:space="preserve">
+    <value>ライブラリスペクトルのピークと一致する、各プリカーサーの最大プロダクトトランジション数。順序はピーク強度順。</value>
+  </data>
+  <data name="_associate_proteins_group_proteins" xml:space="preserve">
+    <value>同じセットのペプチドと一致するタンパク質は、ドキュメント中で1つのターゲットにまとめられます。</value>
+  </data>
+  <data name="_associate_proteins_minimal_protein_list" xml:space="preserve">
+    <value>ペプチドすべてを説明するタンパク質の最小セット(わずか)を求めるアルゴリズムを適用します。</value>
+  </data>
+  <data name="_associate_proteins_min_peptides" xml:space="preserve">
+    <value>ドキュメントに追加するためにタンパク質に必要な最小ペプチド数。</value>
+  </data>
+  <data name="_associate_proteins_remove_subsets" xml:space="preserve">
+    <value>サブセットタンパク質を削除しますが、最小ではなくサブセットではないタンパク質は残します。</value>
+  </data>
+  <data name="_associate_proteins_shared_peptides" xml:space="preserve">
+    <value>FASTAまたはバックグラウンドプロテオームで2つ以上のタンパク質に含まれているペプチドの割り当て方を設定します。</value>
+  </data>
+  <data name="_instrument_dynamic_min_mz" xml:space="preserve">
+    <value>設定すると、Thermo-ScientificがLTQ装置に提供する特定の式を使用して、プリカーサーm/zから動的にプロダクトイオンの最小m/z値が計算されます。</value>
+  </data>
+  <data name="_instrument_max_mz" xml:space="preserve">
+    <value>測定できないプリカーサーやトランジションを追加しないよう、ターゲット装置に対して測定可能な最大m/z値。</value>
+  </data>
+  <data name="_instrument_max_time" xml:space="preserve">
+    <value>分析方法を問わず、クロマトグラムにおける最大許容時間。 これを設定すると、データ採取に関与しない部分のグラジエントで使用される可能性のあるメモリやディスク空き容量を節約できます。</value>
+  </data>
+  <data name="_instrument_method_mz_tolerance" xml:space="preserve">
+    <value>装置メソッドトランジションm/z値を予測されるトランジションm/z値に一致させるための最大デルタ。(SRMおよびPRM単離したm/z値にのみ適用。)</value>
+  </data>
+  <data name="_instrument_min_mz" xml:space="preserve">
+    <value>測定できないプリカーサーやトランジションを追加しないよう、ターゲット装置に対して測定可能な最小m/z値。</value>
+  </data>
+  <data name="_instrument_min_time" xml:space="preserve">
+    <value>分析方法を問わず、クロマトグラムにおける最小許容時間。 これを設定すると、データ採取に関与しない部分のグラジエントで使用される可能性のあるメモリやディスク空き容量を節約できます。</value>
+  </data>
+  <data name="_instrument_triggered_chromatograms" xml:space="preserve">
+    <value>特定のアナライトに対してスペクトルを取得した場合、保持時間に大きなギャップがある可能性があることを示しています。ピークは、これらのギャップと重ならないように切り詰められ、バックグラウンドは差し引かれません。</value>
+  </data>
+  <data name="_library_pick_product_ions" xml:space="preserve">
+    <value>トランジション一致ライブラリスペクトルピークm/z値の選択で考慮されるプロダクトイオンのセット。(all：指定されたすべてのイオン電荷および種類、filter：開始トランジション、終了トランジションおよび特殊イオンに基づくフィルタ、all_plus：2つの他のオプションの和)</value>
+  </data>
+  <data name="_tran_product_add_special_ion" xml:space="preserve">
+    <value>トランジション設定フォームで指定した、名前の付いた事前に定義された特殊イオンを追加します。</value>
+  </data>
+  <data name="_tran_product_clear_special_ions" xml:space="preserve">
+    <value>トランジションフィルタ設定からすべての特殊イオンを削除します。</value>
+  </data>
+  <data name="_tran_use_dia_window_exclusion" xml:space="preserve">
+    <value>m/z値がプリカーサー単離ウィンドウ範囲に収まるプロダクトイオントランジションを除外します。これは断片化していないプリカーサーからの信号によって干渉の可能性が高まる可能性のあるDIA/SWATHデータに対して推奨されます。</value>
+  </data>
+  <data name="CommandArgs_ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME_path_to_result_file_to_import_the_isolation_scheme" xml:space="preserve">
+    <value>単離スキームのインポート元となるpath/to/result-file</value>
   </data>
 </root>
