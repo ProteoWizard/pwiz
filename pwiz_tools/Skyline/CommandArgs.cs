@@ -1076,7 +1076,8 @@ namespace pwiz.Skyline
 
                 var panoramaClient = new WebPanoramaClient(serverUri, PanoramaUserName, PanoramaPassword);
                 var panoramaHelper = new PanoramaHelper(_out); // Helper writes messages for failures below
-                if (!panoramaHelper.ValidateServer(panoramaClient))
+                PanoramaServer = panoramaHelper.ValidateServer(panoramaClient);
+                if (PanoramaServer == null)
                     return false;
 
                 if (!panoramaHelper.ValidateFolder(panoramaClient, PanoramaFolder))
@@ -1129,12 +1130,11 @@ namespace pwiz.Skyline
                 _statusWriter = statusWriter;
             }
 
-            public bool ValidateServer(IPanoramaClient panoramaClient)
+            public PanoramaServer ValidateServer(IPanoramaClient panoramaClient)
             {
                 try
                 {
-                    panoramaClient.ValidateServer();
-                    return true;
+                    return panoramaClient.ValidateServer();
                 }
                 catch (PanoramaServerException x)
                 {
@@ -1145,7 +1145,7 @@ namespace pwiz.Skyline
                     _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateServer_Exception_, x.Message);
                 }
 
-                return false;
+                return null;
             }
 
             public bool ValidateFolder(IPanoramaClient panoramaClient, string panoramaFolder)
