@@ -61,7 +61,6 @@ using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using AlertDlg = pwiz.Skyline.Alerts.AlertDlg;
 using DatabaseOpeningException = pwiz.Skyline.Model.Irt.DatabaseOpeningException;
 
 namespace pwiz.Skyline
@@ -258,7 +257,7 @@ namespace pwiz.Skyline
             AuditLogEntry result = null;
             Invoke((Action)(() =>
             {
-                using (var alert = new AlertDlg(
+                using (var alert = new Alerts.AlertDlg(
                     AuditLogStrings
                         .SkylineWindow_AskForLogEntry_The_audit_log_does_not_match_the_current_document__Would_you_like_to_add_a_log_entry_describing_the_changes_made_to_the_document_,
                     MessageBoxButtons.YesNo))
