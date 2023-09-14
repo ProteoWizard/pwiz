@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
+using pwiz.Common.GraphicalUserInterface;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient.Properties;
 
@@ -374,8 +375,9 @@ namespace pwiz.PanoramaClient
                     || ex is IOException
                     || ex is UnauthorizedAccessException)
                 {
-                    var alert = new AlertDlg(ex.Message, MessageBoxButtons.OK);
-                    alert.ShowDialog();
+                    using var dlg = new CommonAlertDlg(ex.Message);
+                    dlg.Exception = ex;
+                    dlg.ShowDialog(FormUtil.FindTopLevelOwner(this));
                 }
             }
         }
@@ -431,9 +433,8 @@ namespace pwiz.PanoramaClient
             }
             else
             {
-                var alert = new AlertDlg(Resources.PanoramaFilePicker_Open_Click_You_must_select_a_file_first_,
-                    MessageBoxButtons.OK);
-                alert.ShowDialog();
+                using var alert = new CommonAlertDlg(Resources.PanoramaFilePicker_Open_Click_You_must_select_a_file_first_);
+                alert.ShowDialog(FormUtil.FindTopLevelOwner(this));
             }
         }
 

@@ -375,5 +375,12 @@ namespace pwiz.Common.GraphicalUserInterface
         {
             CancelButton.PerformClick();
         }
+
+        public static void ShowException(IWin32Window parent, Exception exception)
+        {
+            using var dlg = new CommonAlertDlg(exception.Message);
+            dlg.Exception = exception;
+            dlg.ShowDialog(parent);
+        }
     }
 }
