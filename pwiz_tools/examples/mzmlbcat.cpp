@@ -35,6 +35,7 @@
 
 
 using namespace pwiz::util;
+using namespace pwiz::msdata::mzmlb;
 
 
 /// Holds the results of the parseCommandLine function. 
@@ -177,6 +178,8 @@ Config parseCommandLine(int argc, char** argv)
 
 int go(const Config& config)
 {
+    using boost::iostreams::stream_offset;
+    using std::streamsize;
     int failedFileCount = 0;
 
     for (vector<string>::const_iterator it = config.filenames.begin();
