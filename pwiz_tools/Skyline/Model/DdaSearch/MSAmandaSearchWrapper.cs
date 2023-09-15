@@ -177,9 +177,9 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public override void SetFragmentIons(string ions)
         {
-            if (Settings.ChemicalData.Instruments.ContainsKey(ions))
+            if (Settings.ChemicalData.Instruments.TryGetValue(ions, out var instrument))
             {
-                Settings.ChemicalData.CurrentInstrumentSetting = Settings.ChemicalData.Instruments[ions];
+                Settings.ChemicalData.CurrentInstrumentSetting = instrument;
             }
         }
 
@@ -217,9 +217,9 @@ namespace pwiz.Skyline.Model.DdaSearch
                 Settings.ConsideredCharges.Add(Convert.ToInt32(chargeStr));
             Settings.ChemicalData.UseMonoisotopicMass = true;
             Settings.ReportBothBestHitsForTD = false;
-            Settings.CombineConsideredCharges = false;
-            //Settings.WriteResultsTwice = true;
-            //Settings.ForceTargetDecoyMode = false;
+            Settings.CombineConsideredCharges = true;
+            Settings.WriteResultsTwice = true;
+            Settings.ForceTargetDecoyMode = false;
             //Console.WriteLine("\nReportBothBestHitsForTD CombineConsideredCharges WriteResultsTwice ForceTargetDecoyMode");
             //Console.WriteLine($@"{Settings.ReportBothBestHitsForTD}       {Settings.CombineConsideredCharges}        {Settings.WriteResultsTwice}       {Settings.ForceTargetDecoyMode}");
             mzID.Settings = Settings;

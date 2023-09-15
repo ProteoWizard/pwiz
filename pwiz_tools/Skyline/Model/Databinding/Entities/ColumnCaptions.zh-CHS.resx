@@ -141,6 +141,9 @@
   <data name="AnalyteConcentration">
     <value>分析物浓度</value>
   </data>
+  <data name="Analyzer">
+    <value>分析器</value>
+  </data>
   <data name="Area">
     <value>面积</value>
   </data>
@@ -231,6 +234,9 @@
   <data name="Chromatogram">
     <value>色谱图</value>
   </data>
+  <data name="ChromatogramEndTime">
+    <value>色谱图结束时间</value>
+  </data>
   <data name="ChromatogramExtractionWidth">
     <value>色谱图提取宽度</value>
   </data>
@@ -252,6 +258,9 @@
   <data name="ChromatogramSource">
     <value>色谱图源</value>
   </data>
+  <data name="ChromatogramStartTime">
+    <value>色谱图开始时间</value>
+  </data>
   <data name="CleavageAa">
     <value>剪切 Aa</value>
   </data>
@@ -266,6 +275,9 @@
   </data>
   <data name="CollisionEnergy">
     <value>碰撞能量</value>
+  </data>
+  <data name="CompensationVoltage">
+    <value>补偿电压</value>
   </data>
   <data name="ConcentrationMultiplier">
     <value>浓度系数</value>
@@ -549,6 +561,9 @@
   <data name="Key">
     <value>关键</value>
   </data>
+  <data name="Kurtosis">
+    <value>峰度</value>
+  </data>
   <data name="LastPosition">
     <value>最后一个位置</value>
   </data>
@@ -620,6 +635,9 @@
   </data>
   <data name="MassErrors">
     <value>质量误差</value>
+  </data>
+  <data name="MatchingPrecursors">
+    <value>匹配母离子</value>
   </data>
   <data name="Max">
     <value>最大</value>
@@ -798,6 +816,12 @@
   <data name="MonoisotopicMasses">
     <value>单一同位素质量</value>
   </data>
+  <data name="Ms1Precursors">
+    <value>MS1 母离子</value>
+  </data>
+  <data name="Ms2Precursors">
+    <value>MS2 母离子</value>
+  </data>
   <data name="MsLevel">
     <value>MS 级别</value>
   </data>
@@ -848,6 +872,9 @@
   </data>
   <data name="PeakScores">
     <value>峰得分</value>
+  </data>
+  <data name="PeakStandardDeviation">
+    <value>峰标准偏差</value>
   </data>
   <data name="Peptide">
     <value>肽段</value>
@@ -986,6 +1013,9 @@
   </data>
   <data name="PredictedRetentionTime">
     <value>预测保留时间</value>
+  </data>
+  <data name="PresetScanConfiguration">
+    <value>预设扫描配置</value>
   </data>
   <data name="PreviousAa">
     <value>上一个 Aa</value>
@@ -1194,8 +1224,20 @@
   <data name="SampleType">
     <value>样品类型</value>
   </data>
+  <data name="ScanDescription">
+    <value>扫描说明</value>
+  </data>
+  <data name="ScanWindowWidth">
+    <value>扫描窗口宽度</value>
+  </data>
   <data name="Score">
     <value>得分</value>
+  </data>
+  <data name="ShapeCorrelation">
+    <value>形状关联</value>
+  </data>
+  <data name="Skewness">
+    <value>偏度</value>
   </data>
   <data name="SkylineVersion">
     <value>Skyline 版本</value>
@@ -1205,6 +1247,9 @@
   </data>
   <data name="SMILES">
     <value>SMILES（简化分子线性输入规范）</value>
+  </data>
+  <data name="SpectrumFilter">
+    <value>谱图过滤器</value>
   </data>
   <data name="SpectrumIds">
     <value>谱图 ID</value>

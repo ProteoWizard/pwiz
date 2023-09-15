@@ -52,8 +52,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>184</ApplicationRevision>
-    <ApplicationVersion>23.0.9.184</ApplicationVersion>
+    <ApplicationRevision>228</ApplicationRevision>
+    <ApplicationVersion>23.0.9.228</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -168,6 +168,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -2220,6 +2221,9 @@
     <EmbeddedResource Include="Alerts\PathChooserDlg.zh-CHS.resx">
       <DependentUpon>PathChooserDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ShareResultsFilesDlg.ja.resx">
+      <DependentUpon>ShareResultsFilesDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ShareResultsFilesDlg.resx">
       <DependentUpon>ShareResultsFilesDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -2229,6 +2233,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ReportErrorDlg.zh-CHS.resx">
       <DependentUpon>ReportErrorDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ShareResultsFilesDlg.zh-CHS.resx">
+      <DependentUpon>ShareResultsFilesDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ShareTypeDlg.ja.resx">
       <DependentUpon>ShareTypeDlg.cs</DependentUpon>
@@ -2455,6 +2462,12 @@
     <EmbeddedResource Include="Controls\Graphs\ImportResultsRetryCountdownDlg.zh-CHS.resx">
       <DependentUpon>ImportResultsRetryCountdownDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\MsGraphExtension.ja.resx">
+      <DependentUpon>MsGraphExtension.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\MsGraphExtension.zh-CHS.resx">
+      <DependentUpon>MsGraphExtension.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\RunToRunRegressionToolbar.ja.resx">
       <DependentUpon>RunToRunRegressionToolbar.cs</DependentUpon>
     </EmbeddedResource>
@@ -2553,7 +2566,13 @@
     <EmbeddedResource Include="Controls\Lists\ListDesigner.zh-CHS.resx">
       <DependentUpon>ListDesigner.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Spectra\SpectrumGridForm.ja.resx">
+      <DependentUpon>SpectrumGridForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Spectra\SpectrumGridForm.resx">
+      <DependentUpon>SpectrumGridForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Spectra\SpectrumGridForm.zh-CHS.resx">
       <DependentUpon>SpectrumGridForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\ActionBoxControl.ja.resx">
@@ -2654,7 +2673,13 @@
     <EmbeddedResource Include="EditUI\EditLinkedPeptidesDlg.zh-CHS.resx">
       <DependentUpon>EditLinkedPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\EditSpectrumFilterDlg.ja.resx">
+      <DependentUpon>EditSpectrumFilterDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditUI\EditSpectrumFilterDlg.resx">
+      <DependentUpon>EditSpectrumFilterDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\EditSpectrumFilterDlg.zh-CHS.resx">
       <DependentUpon>EditSpectrumFilterDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\MassErrorChartPropertyDlg.ja.resx">
@@ -2762,7 +2787,13 @@
     <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.zh-CHS.resx">
       <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\EncyclopeDiaSearchDlg.ja.resx">
+      <DependentUpon>EncyclopeDiaSearchDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\EncyclopeDiaSearchDlg.resx">
+      <DependentUpon>EncyclopeDiaSearchDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\EncyclopeDiaSearchDlg.zh-CHS.resx">
       <DependentUpon>EncyclopeDiaSearchDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ImportResultsDIAControl.ja.resx">
@@ -2971,6 +3002,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphSpectrum.ja.resx">
       <DependentUpon>GraphSpectrum.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphSpectrum.zh-CHS.resx">
       <DependentUpon>GraphSpectrum.cs</DependentUpon>
@@ -3306,14 +3338,30 @@
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\FullScanPropertiesRes.ja.resx">
+      <DependentUpon>FullScanPropertiesRes.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\FullScanPropertiesRes.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>FullScanPropertiesRes.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\FullScanPropertiesRes.zh-CHS.resx">
+      <DependentUpon>FullScanPropertiesRes.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\SpectrumPropertiesResx.ja.resx">
+      <DependentUpon>SpectrumPropertiesResx.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\SpectrumPropertiesResx.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>SpectrumPropertiesResx.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\SpectrumPropertiesResx.zh-CHS.resx">
+      <DependentUpon>SpectrumPropertiesResx.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.ja.resx" />
@@ -3677,6 +3725,7 @@
     <None Include="Resources\AnnotatedSpectum.png" />
     <None Include="Resources\Cluster.ico" />
     <None Include="Resources\Close.bmp" />
+    <None Include="Resources\PanoramaDownload.bmp" />
     <Content Include="SkylineDocPointer.ico" />
     <EmbeddedResource Include="Resources\prosit_logo_dark_blue.png" />
     <Content Include="SkylineProcessRunner.exe">
@@ -4537,7 +4586,7 @@
     <Compile Include="Util\Log.cs" />
     <Compile Include="Util\MemoryInfo.cs" />
     <Compile Include="Util\NameValueParameters.cs" />
-    <Compile Include="Util\PanoramaUtil.cs" />
+    <Compile Include="Util\PanoramaPublishUtil.cs" />
     <Compile Include="Util\PooledSqliteConnection.cs" />
     <Compile Include="Util\SystemMetrics.cs" />
     <Compile Include="Util\TextRendererHelper.cs" />
@@ -5596,13 +5645,17 @@
       <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
       <Name>Common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Shared\Common\CommonUtil.csproj">
+    <ProjectReference Include="..\Shared\CommonUtil\CommonUtil.csproj">
       <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
       <Name>CommonUtil</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shared\MSGraph\MSGraph.csproj">
       <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
       <Name>MSGraph</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Shared\PanoramaClient\PanoramaClient.csproj">
+      <Project>{bf849cf8-25d7-4619-b001-9ed8e3771c44}</Project>
+      <Name>PanoramaClient</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shared\ProteomeDb\ProteomeDb.csproj">
       <Project>{09FC3CB3-FCCD-4906-A370-160B28725936}</Project>
@@ -5781,6 +5834,16 @@
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="PanoramaClient.pdb">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="ProteomeDb.pdb">
       <Visible>False</Visible>

@@ -263,8 +263,7 @@ namespace pwiz.ProteomeDatabase.API
 
         public void AddFastaFile(StreamReader reader, IProgressMonitor progressMonitor, ref IProgressStatus status, bool delayAnalyzeDb)
         {
-            int duplicateSequenceCount;
-            AddFastaFile(reader, progressMonitor, ref status, delayAnalyzeDb, out duplicateSequenceCount);
+            AddFastaFile(reader, progressMonitor, ref status, delayAnalyzeDb, out _);
         }
 
         public void AddFastaFile(StreamReader reader, IProgressMonitor progressMonitor, ref IProgressStatus status,

@@ -291,8 +291,7 @@ namespace pwiz.Common.DataBinding.Controls
             base.OnRowValidating(e);
             if (!e.Cancel)
             {
-                bool cancelRowEdit;
-                if (_bindingListSource != null && !_bindingListSource.ValidateRow(e.RowIndex, out cancelRowEdit))
+                if (_bindingListSource != null && !_bindingListSource.ValidateRow(e.RowIndex, out _))
                 {
                     e.Cancel = true;
                 }

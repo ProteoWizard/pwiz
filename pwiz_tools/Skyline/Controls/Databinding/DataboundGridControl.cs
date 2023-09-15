@@ -265,10 +265,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public bool IsEnableFillDown()
         {
-            PropertyDescriptor[] propertyDescriptors;
-            int firstRowIndex;
-            int lastRowIndex;
-            return GetRectangularSelection(out propertyDescriptors, out firstRowIndex, out lastRowIndex);
+            return GetRectangularSelection(out _, out _, out _);
         }
 
         /// <summary>

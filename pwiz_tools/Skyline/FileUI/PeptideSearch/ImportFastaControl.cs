@@ -262,14 +262,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 initialDir = Path.GetDirectoryName(DocumentContainer.DocumentFilePath);
             }
-            using (OpenFileDialog dlg = new OpenFileDialog
+            using (OpenFileDialog dlg = new OpenFileDialog())
             {
-                Title = Resources.ImportFastaControl_browseFastaBtn_Click_Open_FASTA,
-                InitialDirectory = initialDir,
-                CheckPathExists = true,
-                Filter = @"FASTA files|*.fasta;*.fa;*.faa|All files|*.*"
-            })
-            {
+                dlg.Title = Resources.ImportFastaControl_browseFastaBtn_Click_Open_FASTA;
+                dlg.InitialDirectory = initialDir;
+                dlg.CheckPathExists = true;
+                dlg.Filter = @"FASTA files|*.fasta;*.fa;*.faa|All files|*.*";
                 if (dlg.ShowDialog(WizardForm) == DialogResult.OK)
                 {
                     fastaFilepath = dlg.FileName;
@@ -444,8 +442,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                         PasteError error = null;
                         // Import FASTA as content
-                        using (var longWaitDlg = new LongWaitDlg(DocumentContainer) { Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA })
+                        using (var longWaitDlg = new LongWaitDlg(DocumentContainer))
                         {
+                            longWaitDlg.Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA;
                             var docImportFasta = docNew;
                             longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker =>
                             {
@@ -467,8 +466,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         var fastaPath = string.IsNullOrEmpty(FastaImportTargetsFile) ? tbxFasta.Text : FastaImportTargetsFile;
                         try
                         {
-                            using (var longWaitDlg = new LongWaitDlg(DocumentContainer) { Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA })
+                            using (var longWaitDlg = new LongWaitDlg(DocumentContainer))
                             {
+                                longWaitDlg.Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA;
                                 IdentityPath to = selectedPath;
                                 var docImportFasta = docNew;
                                 longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker =>

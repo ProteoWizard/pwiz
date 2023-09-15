@@ -140,8 +140,9 @@ namespace pwiz.Skyline.Menus
             var docCopy = DocumentUI.RemoveAllBut(SequenceTree.SelectedDocNodes);
             docCopy = docCopy.ChangeMeasuredResults(null);
             var stringWriter = new XmlStringWriter();
-            using (var writer = new XmlTextWriter(stringWriter) { Formatting = Formatting.Indented })
+            using (var writer = new XmlTextWriter(stringWriter))
             {
+                writer.Formatting = Formatting.Indented;
                 XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
                 ser.Serialize(writer, docCopy);
             }
@@ -300,7 +301,6 @@ namespace pwiz.Skyline.Menus
 
                 try
                 {
-                    IdentityPath nextAdd;
                     ModifyDocument(string.Format(Resources.SkylineWindow_Paste_Paste__0__, (pasteToPeptideList ? Resources.SkylineWindow_Paste_peptides : Resources.SkylineWindow_Paste_proteins)), doc =>
                         doc.ImportDocumentXml(new StringReader(dataObjectSkyline.Substring(dataObjectSkyline.IndexOf('<'))),
                             null,
@@ -311,7 +311,7 @@ namespace pwiz.Skyline.Menus
                             Settings.Default.HeavyModList,
                             nodePaste != null ? nodePaste.Path : null,
                             out selectPath,
-                            out nextAdd,
+                            out _,
                             pasteToPeptideList), docPair => AuditLogEntry.DiffDocNodes(MessageType.pasted_targets, docPair));
                 }
                 catch (Exception)
@@ -579,8 +579,9 @@ namespace pwiz.Skyline.Menus
             // If filtered peptides, ask the user whether to filter or keep.
             if (listFilterPeptides.Count > 0)
             {
-                using (var dlg = new PasteFilteredPeptidesDlg { Peptides = listFilterPeptides })
+                using (var dlg = new PasteFilteredPeptidesDlg())
                 {
+                    dlg.Peptides = listFilterPeptides;
                     switch (dlg.ShowDialog(SkylineWindow))
                     {
                         case DialogResult.Cancel:
@@ -681,14 +682,12 @@ namespace pwiz.Skyline.Menus
             if (selectedSrmTreeNode == null)
                 return;
 
-            using (EditNoteDlg dlg = new EditNoteDlg
+            using (EditNoteDlg dlg = new EditNoteDlg())
             {
-                Text = selPaths.Count > 1
+                dlg.Text = selPaths.Count > 1
                     ? Resources.SkylineWindow_EditNote_Edit_Note
                     : TextUtil.SpaceSeparate(Resources.SkylineWindow_EditNote_Edit_Note, selectedSrmTreeNode.Heading,
-                        SequenceTree.SelectedNode.Text)
-            })
-            {
+                        SequenceTree.SelectedNode.Text);
                 dlg.Init(selectedSrmTreeNode.Document, selPaths);
                 if (dlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                 {
@@ -819,8 +818,9 @@ namespace pwiz.Skyline.Menus
                 return;
             }
 
-            using (var longWait = new LongWaitDlg(SkylineWindow) { Text = Resources.SkylineWindow_ApplyPeak_Applying_Peak })
+            using (var longWait = new LongWaitDlg(SkylineWindow))
             {
+                longWait.Text = Resources.SkylineWindow_ApplyPeak_Applying_Peak;
                 SrmDocument doc = null;
                 try
                 {
@@ -1097,12 +1097,10 @@ namespace pwiz.Skyline.Menus
 
         public void ShowPasteFastaDlg()  // Expose for test access
         {
-            using (var pasteDlg = new PasteDlg(SkylineWindow)
+            using (var pasteDlg = new PasteDlg(SkylineWindow))
             {
-                SelectedPath = SelectedPath,
-                PasteFormat = PasteFormat.fasta
-            })
-            {
+                pasteDlg.SelectedPath = SelectedPath;
+                pasteDlg.PasteFormat = PasteFormat.fasta;
                 if (pasteDlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                     SelectedPath = pasteDlg.SelectedPath;
             }
@@ -1115,12 +1113,10 @@ namespace pwiz.Skyline.Menus
 
         public void ShowPastePeptidesDlg()
         {
-            using (var pasteDlg = new PasteDlg(SkylineWindow)
+            using (var pasteDlg = new PasteDlg(SkylineWindow))
             {
-                SelectedPath = SelectedPath,
-                PasteFormat = PasteFormat.peptide_list
-            })
-            {
+                pasteDlg.SelectedPath = SelectedPath;
+                pasteDlg.PasteFormat = PasteFormat.peptide_list;
                 if (pasteDlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                     SelectedPath = pasteDlg.SelectedPath;
             }
@@ -1133,12 +1129,10 @@ namespace pwiz.Skyline.Menus
 
         public void ShowPasteProteinsDlg()
         {
-            using (var pasteDlg = new PasteDlg(SkylineWindow)
+            using (var pasteDlg = new PasteDlg(SkylineWindow))
             {
-                SelectedPath = SelectedPath,
-                PasteFormat = PasteFormat.protein_list
-            })
-            {
+                pasteDlg.SelectedPath = SelectedPath;
+                pasteDlg.PasteFormat = PasteFormat.protein_list;
                 if (pasteDlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                     SelectedPath = pasteDlg.SelectedPath;
             }
@@ -1158,10 +1152,9 @@ namespace pwiz.Skyline.Menus
 
                 IFormatProvider formatProvider;
                 char separator;
-                Type[] columnTypes;
                 var text = transitionDlg.TransitionListText;
                 // As long as it has columns we want to parse the input as a transition list
-                if (MassListImporter.IsColumnar(text, out formatProvider, out separator, out columnTypes))
+                if (MassListImporter.IsColumnar(text, out formatProvider, out separator, out _))
                 {
                     try
                     {
@@ -1174,13 +1167,13 @@ namespace pwiz.Skyline.Menus
                         {
                             throw;
                         }
-                        MessageDlg.ShowWithException(this, exception.Message, exception, true);
+                        MessageDlg.ShowWithException(SkylineWindow, exception.Message, exception, true);
                     }
                 }
                 else
                 {
                     // Alert the user that their list is not columnar
-                    MessageDlg.Show(this, Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
+                    MessageDlg.Show(SkylineWindow, Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
                 }
             }
         }
@@ -1723,10 +1716,8 @@ namespace pwiz.Skyline.Menus
             var skylineDataSchema = new SkylineDataSchema(SkylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var rootColumn = ColumnDescriptor.RootColumn(skylineDataSchema, typeof(SpectrumClass));
             using var autoComplete = new SpectrumFilterAutoComplete(SkylineWindow);
-            using var dlg = new EditSpectrumFilterDlg(rootColumn, filterPages)
-            {
-                AutoComplete = autoComplete
-            };
+            using var dlg = new EditSpectrumFilterDlg(rootColumn, filterPages);
+            dlg.AutoComplete = autoComplete;
             if (filterPagesSet.Count != 1)
             {
                 dlg.CreateCopy = true;
@@ -1740,7 +1731,7 @@ namespace pwiz.Skyline.Menus
                 // When editing a blank filter with two pages, start with the "MS2" page selected 
                 dlg.SelectPage(1);
             }
-            if (dlg.ShowDialog(this) != DialogResult.OK)
+            if (dlg.ShowDialog(SkylineWindow) != DialogResult.OK)
             {
                 return;
             }

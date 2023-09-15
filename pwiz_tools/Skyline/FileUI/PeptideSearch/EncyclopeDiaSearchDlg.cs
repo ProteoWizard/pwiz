@@ -41,7 +41,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
-    public partial class EncyclopeDiaSearchDlg : FormEx, IModifyDocumentContainer, IAuditLogModifier<EncyclopeDiaSearchDlg.EncyclopeDiaSettings>
+    public partial class EncyclopeDiaSearchDlg : FormEx, IModifyDocumentContainer, IAuditLogModifier<EncyclopeDiaSearchDlg.EncyclopeDiaSettings>, IMultipleViewProvider
     {
         public SkylineWindow SkylineWindow { get; set; }
         public EncyclopeDiaSearchControl SearchControl { get; private set; }
@@ -56,6 +56,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             run_page
         }
 
+        public class FastaPage : IFormView { }
+        public class PrositPage : IFormView { }
+        public class NarrowWindowPage : IFormView { }
+        public class WideWindowPage : IFormView { }
+        public class SearchSettingsPage : IFormView { }
+        public class RunPage : IFormView { }
+
+        private static readonly IFormView[] TAB_PAGES =
+        {
+            new FastaPage(), new PrositPage(), new NarrowWindowPage(), new WideWindowPage(), new SearchSettingsPage(), new RunPage()
+        };
+
         public EncyclopeDiaSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager)
         {
             SkylineWindow = skylineWindow;
@@ -64,6 +76,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             SetDocument(skylineWindow.Document, null);
 
             InitializeComponent();
+
+            Icon = SkylineWindow.Icon;
 
             ImportFastaControl = new ImportFastaControl(this, skylineWindow.SequenceTree);
             ImportFastaControl.IsDDASearch = true;
@@ -356,8 +370,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             var libraries = new List<Library>();
             var librarySpecs = new List<LibrarySpec>();
-            using (var longWait = new LongWaitDlg { Text = Resources.ViewLibraryDlg_LoadLibrary_Loading_Library })
+            using (var longWait = new LongWaitDlg())
             {
+                longWait.Text = Resources.ViewLibraryDlg_LoadLibrary_Loading_Library;
                 string libraryName = string.Empty;
 
                 try
@@ -568,6 +583,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             if (double.TryParse(txtMS2Tolerance.Text, out double tmp))
                 cbMS2TolUnit.SelectedIndex = tmp <= 3 ? 0 : 1;
+        }
+
+        public IFormView ShowingFormView
+        {
+            get
+            {
+                int selectedIndex = 0;
+                Invoke(new Action(() => selectedIndex = wizardPages.SelectedIndex));
+                return TAB_PAGES[selectedIndex];
+            }
         }
     }
 

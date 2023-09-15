@@ -235,9 +235,8 @@ namespace pwiz.Skyline.Model
                             actualPropType = propDict[val.Key].PropertyType.GetGenericArguments()[0];
                             converterKey = GetConverterKey(val.Value.GetType(), actualPropType);
                         }
-                        if (TypeConverterDictionary.ContainsKey(converterKey))
+                        if (TypeConverterDictionary.TryGetValue(converterKey, out var parseMethod))
                         {
-                            var parseMethod = TypeConverterDictionary[converterKey];
                             var value = parseMethod.Invoke(this, new[] { val.Value });
                             propDict[val.Key].SetValue(this, value);
                         }
@@ -247,7 +246,7 @@ namespace pwiz.Skyline.Model
                 }
             }
         }
-#endregion
+        #endregion
     }
 
     /// <summary>

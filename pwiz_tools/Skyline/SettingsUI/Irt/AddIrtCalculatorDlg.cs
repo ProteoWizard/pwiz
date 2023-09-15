@@ -135,13 +135,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private void btnBrowseFile_Click(object sender, EventArgs e)
         {
-            using (var dlg = new OpenFileDialog
-                                 {
-                                     CheckPathExists = true,
-                                     DefaultExt = BiblioSpecLibSpec.EXT,
-                                     Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB)
-                                 })
+            using (var dlg = new OpenFileDialog())
             {
+                dlg.CheckPathExists = true;
+                dlg.DefaultExt = BiblioSpecLibSpec.EXT;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB);
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                     return;
 

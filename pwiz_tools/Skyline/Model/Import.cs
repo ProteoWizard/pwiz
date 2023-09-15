@@ -1401,8 +1401,7 @@ namespace pwiz.Skyline.Model
                             continue;
 
                         int massShift;
-                        int nearestCharge;
-                        var charge = CalcPrecursorCharge(precursorMassH, null, precursorMz, tolerance, !nodePep.IsProteomic, isDecoy, out massShift, out nearestCharge);
+                        var charge = CalcPrecursorCharge(precursorMassH, null, precursorMz, tolerance, !nodePep.IsProteomic, isDecoy, out massShift, out _);
                         if (!charge.IsEmpty)
                         {
                             indexPrec = i;
@@ -1438,10 +1437,6 @@ namespace pwiz.Skyline.Model
                         if (productMz == 0)
                             continue;
 
-                        IonType? ionType;
-                        int? ordinal;
-                        TransitionLosses losses;
-                        int massShift;
                         var charge = TransitionCalc.CalcProductCharge(productPrecursorMass,
                                                                       null, // CONSIDER: Use product charge field?
                                                                       transitionExp.Precursor.PrecursorAdduct,
@@ -1452,10 +1447,10 @@ namespace pwiz.Skyline.Model
                                                                       tolerance,
                                                                       calc.MassType,
                                                                       transitionExp.ProductShiftType,
-                                                                      out ionType,
-                                                                      out ordinal,
-                                                                      out losses,
-                                                                      out massShift);
+                                                                      out _,
+                                                                      out _,
+                                                                      out _,
+                                                                      out _);
 
                         // Look for the maximum product m/z, or this function may settle for a
                         // collision energy or retention time that matches a single amino acid
@@ -1789,8 +1784,7 @@ namespace pwiz.Skyline.Model
                         continue;
 
                     string fieldValue = fields[i];
-                    double tempDouble;
-                    if (!double.TryParse(fieldValue, NumberStyles.Number, provider, out tempDouble))
+                    if (!double.TryParse(fieldValue, NumberStyles.Number, provider, out _))
                     {
                         if (fieldValue.Length > 2 && !EXCLUDE_PROTEIN_VALUES.Contains(fieldValue.ToLowerInvariant()))
                             listDescriptive.Add(i);
@@ -1819,8 +1813,7 @@ namespace pwiz.Skyline.Model
                     for (int i = valueCounts.Length - 1; i >= 0; i--)
                     {
                         // Discard any column with empty cells or which is less repetitive
-                        int count;
-                        if (valueCounts[i].TryGetValue(string.Empty, out count) || valueCounts[i].Count > sequenceCounts.Count)
+                        if (valueCounts[i].TryGetValue(string.Empty, out _) || valueCounts[i].Count > sequenceCounts.Count)
                             listDescriptive.RemoveAt(i);
                     }
                     // If more than one possible value, and there are headers, look for
@@ -1994,8 +1987,7 @@ namespace pwiz.Skyline.Model
 
             private static void AddCount(string key, IDictionary<string, int> dict)
             {
-                int count;
-                if (dict.TryGetValue(key, out count))
+                if (dict.TryGetValue(key, out _))
                     dict[key]++;
                 else
                     dict.Add(key, 1);
@@ -2288,8 +2280,7 @@ namespace pwiz.Skyline.Model
 
         private static Type GetColumnType(string value, IFormatProvider provider)
         {
-            double result;
-            if (double.TryParse(value, NumberStyles.Number, provider, out result))
+            if (double.TryParse(value, NumberStyles.Number, provider, out _))
                 return typeof(double);
             else if (FastaSequence.IsExSequence(value))
                 return typeof(FastaSequence);
