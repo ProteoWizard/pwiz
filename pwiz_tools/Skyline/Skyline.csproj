@@ -52,8 +52,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>184</ApplicationRevision>
-    <ApplicationVersion>23.0.9.184</ApplicationVersion>
+    <ApplicationRevision>228</ApplicationRevision>
+    <ApplicationVersion>23.0.9.228</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -2221,6 +2221,9 @@
     <EmbeddedResource Include="Alerts\PathChooserDlg.zh-CHS.resx">
       <DependentUpon>PathChooserDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ShareResultsFilesDlg.ja.resx">
+      <DependentUpon>ShareResultsFilesDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ShareResultsFilesDlg.resx">
       <DependentUpon>ShareResultsFilesDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -2230,6 +2233,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ReportErrorDlg.zh-CHS.resx">
       <DependentUpon>ReportErrorDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ShareResultsFilesDlg.zh-CHS.resx">
+      <DependentUpon>ShareResultsFilesDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ShareTypeDlg.ja.resx">
       <DependentUpon>ShareTypeDlg.cs</DependentUpon>
@@ -2456,6 +2462,12 @@
     <EmbeddedResource Include="Controls\Graphs\ImportResultsRetryCountdownDlg.zh-CHS.resx">
       <DependentUpon>ImportResultsRetryCountdownDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\MsGraphExtension.ja.resx">
+      <DependentUpon>MsGraphExtension.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\MsGraphExtension.zh-CHS.resx">
+      <DependentUpon>MsGraphExtension.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\RunToRunRegressionToolbar.ja.resx">
       <DependentUpon>RunToRunRegressionToolbar.cs</DependentUpon>
     </EmbeddedResource>
@@ -2554,7 +2566,13 @@
     <EmbeddedResource Include="Controls\Lists\ListDesigner.zh-CHS.resx">
       <DependentUpon>ListDesigner.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Spectra\SpectrumGridForm.ja.resx">
+      <DependentUpon>SpectrumGridForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Spectra\SpectrumGridForm.resx">
+      <DependentUpon>SpectrumGridForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Spectra\SpectrumGridForm.zh-CHS.resx">
       <DependentUpon>SpectrumGridForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\ActionBoxControl.ja.resx">
@@ -2655,7 +2673,13 @@
     <EmbeddedResource Include="EditUI\EditLinkedPeptidesDlg.zh-CHS.resx">
       <DependentUpon>EditLinkedPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\EditSpectrumFilterDlg.ja.resx">
+      <DependentUpon>EditSpectrumFilterDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditUI\EditSpectrumFilterDlg.resx">
+      <DependentUpon>EditSpectrumFilterDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\EditSpectrumFilterDlg.zh-CHS.resx">
       <DependentUpon>EditSpectrumFilterDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\MassErrorChartPropertyDlg.ja.resx">
@@ -2763,7 +2787,13 @@
     <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.zh-CHS.resx">
       <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\EncyclopeDiaSearchDlg.ja.resx">
+      <DependentUpon>EncyclopeDiaSearchDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\EncyclopeDiaSearchDlg.resx">
+      <DependentUpon>EncyclopeDiaSearchDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\EncyclopeDiaSearchDlg.zh-CHS.resx">
       <DependentUpon>EncyclopeDiaSearchDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ImportResultsDIAControl.ja.resx">
@@ -2972,6 +3002,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphSpectrum.ja.resx">
       <DependentUpon>GraphSpectrum.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphSpectrum.zh-CHS.resx">
       <DependentUpon>GraphSpectrum.cs</DependentUpon>
@@ -3307,14 +3338,30 @@
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\FullScanPropertiesRes.ja.resx">
+      <DependentUpon>FullScanPropertiesRes.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\FullScanPropertiesRes.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>FullScanPropertiesRes.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\FullScanPropertiesRes.zh-CHS.resx">
+      <DependentUpon>FullScanPropertiesRes.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\SpectrumPropertiesResx.ja.resx">
+      <DependentUpon>SpectrumPropertiesResx.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\SpectrumPropertiesResx.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>SpectrumPropertiesResx.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\SpectrumPropertiesResx.zh-CHS.resx">
+      <DependentUpon>SpectrumPropertiesResx.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.ja.resx" />

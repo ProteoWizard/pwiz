@@ -145,7 +145,7 @@
     <value>0, 0</value>
   </data>
   <data name="listPeptide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>270, 298</value>
+    <value>270, 294</value>
   </data>
   <data name="listPeptide.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -169,10 +169,10 @@
     <value>Bottom</value>
   </data>
   <data name="cbShowModMasses.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 298</value>
+    <value>0, 294</value>
   </data>
   <data name="cbShowModMasses.Size" type="System.Drawing.Size, System.Drawing">
-    <value>270, 17</value>
+    <value>270, 21</value>
   </data>
   <data name="cbShowModMasses.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -694,7 +694,7 @@
     <value>0, 0</value>
   </data>
   <data name="msGraphExtension1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>497, 407</value>
+    <value>485, 407</value>
   </data>
   <data name="msGraphExtension1.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -703,7 +703,7 @@
     <value>msGraphExtension1</value>
   </data>
   <data name="&gt;&gt;msGraphExtension1.Type" xml:space="preserve">
-    <value>pwiz.Skyline.SettingsUI.MsGraphExtension, Skyline-daily, Version=22.1.9.232, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.SettingsUI.MsGraphExtension, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;msGraphExtension1.Parent" xml:space="preserve">
     <value>GraphPanel</value>
@@ -712,7 +712,7 @@
     <value>0</value>
   </data>
   <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>331, 17</value>
+    <value>448, 17</value>
   </metadata>
   <data name="toolStrip1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Right</value>
@@ -721,7 +721,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnAIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>31, 28</value>
   </data>
   <data name="btnAIons.ToolTipText" xml:space="preserve">
     <value>A-离子</value>
@@ -730,7 +730,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnBIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>31, 28</value>
   </data>
   <data name="btnBIons.ToolTipText" xml:space="preserve">
     <value>B-离子</value>
@@ -739,7 +739,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnCIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>31, 28</value>
   </data>
   <data name="btnCIons.ToolTipText" xml:space="preserve">
     <value>C-离子</value>
@@ -748,7 +748,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnXIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>31, 28</value>
   </data>
   <data name="btnXIons.ToolTipText" xml:space="preserve">
     <value>X-离子</value>
@@ -757,7 +757,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnYIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>31, 28</value>
   </data>
   <data name="btnYIons.ToolTipText" xml:space="preserve">
     <value>Y-离子</value>
@@ -766,7 +766,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnZIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>31, 28</value>
   </data>
   <data name="btnZIons.ToolTipText" xml:space="preserve">
     <value>Z-离子</value>
@@ -775,19 +775,19 @@
     <value>Magenta</value>
   </data>
   <data name="btnFragmentIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>31, 28</value>
   </data>
   <data name="btnFragmentIons.ToolTipText" xml:space="preserve">
     <value>碎片离子</value>
   </data>
   <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 6</value>
+    <value>31, 6</value>
   </data>
   <data name="charge1Button.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
   <data name="charge1Button.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>31, 28</value>
   </data>
   <data name="charge1Button.ToolTipText" xml:space="preserve">
     <value>电荷 1 离子</value>
@@ -796,31 +796,31 @@
     <value>Magenta</value>
   </data>
   <data name="charge2Button.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>31, 28</value>
   </data>
   <data name="charge2Button.ToolTipText" xml:space="preserve">
     <value>电荷 2 离子</value>
   </data>
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 6</value>
+    <value>31, 6</value>
   </data>
   <data name="propertiesButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
   <data name="propertiesButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>31, 28</value>
   </data>
   <data name="propertiesButton.ToolTipText" xml:space="preserve">
-    <value>Spectrum Properties</value>
+    <value>谱图属性</value>
   </data>
   <data name="toolStripSeparator3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 6</value>
+    <value>31, 6</value>
   </data>
   <data name="copyMetafileButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
   <data name="copyMetafileButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>31, 28</value>
   </data>
   <data name="copyMetafileButton.ToolTipText" xml:space="preserve">
     <value>复制图元文件</value>
@@ -829,7 +829,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnCopy.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>34, 28</value>
   </data>
   <data name="btnCopy.ToolTipText" xml:space="preserve">
     <value>复制位图</value>
@@ -838,7 +838,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnSave.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>34, 28</value>
   </data>
   <data name="btnSave.ToolTipText" xml:space="preserve">
     <value>保存</value>
@@ -847,16 +847,16 @@
     <value>Magenta</value>
   </data>
   <data name="btnPrint.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>34, 28</value>
   </data>
   <data name="btnPrint.ToolTipText" xml:space="preserve">
     <value>打印</value>
   </data>
   <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>497, 0</value>
+    <value>485, 0</value>
   </data>
   <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>24, 407</value>
+    <value>36, 407</value>
   </data>
   <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -925,7 +925,7 @@
     <value>0</value>
   </data>
   <data name="labelFilename.Text" xml:space="preserve">
-    <value>文件(&amp;E)：</value>
+    <value>文件(&amp;E):</value>
   </data>
   <data name="&gt;&gt;labelFilename.Name" xml:space="preserve">
     <value>labelFilename</value>
@@ -1033,7 +1033,7 @@
     <value>208, 36</value>
   </data>
   <data name="cbAssociateProteins.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 17</value>
+    <value>119, 21</value>
   </data>
   <data name="cbAssociateProteins.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -1243,160 +1243,121 @@
     <value>1</value>
   </data>
   <metadata name="contextMenuSpectrum.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
+    <value>200, 17</value>
   </metadata>
-  <data name="aionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+  <data name="ionTypesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>263, 32</value>
   </data>
-  <data name="aionsContextMenuItem.Text" xml:space="preserve">
-    <value>A-离子</value>
-  </data>
-  <data name="bionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
-  </data>
-  <data name="bionsContextMenuItem.Text" xml:space="preserve">
-    <value>B-离子</value>
-  </data>
-  <data name="cionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
-  </data>
-  <data name="cionsContextMenuItem.Text" xml:space="preserve">
-    <value>C-离子</value>
-  </data>
-  <data name="xionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
-  </data>
-  <data name="xionsContextMenuItem.Text" xml:space="preserve">
-    <value>X-离子</value>
-  </data>
-  <data name="yionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
-  </data>
-  <data name="yionsContextMenuItem.Text" xml:space="preserve">
-    <value>Y-离子</value>
-  </data>
-  <data name="zionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
-  </data>
-  <data name="zionsContextMenuItem.Text" xml:space="preserve">
-    <value>Z-离子</value>
-  </data>
-  <data name="fragmentionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+  <data name="ionTypesContextMenuItem.Text" xml:space="preserve">
+    <value>离子类型</value>
   </data>
   <data name="fragmentionsContextMenuItem.Text" xml:space="preserve">
     <value>碎片离子</value>
   </data>
   <data name="precursorIonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>263, 32</value>
   </data>
   <data name="precursorIonContextMenuItem.Text" xml:space="preserve">
     <value>母离子</value>
   </data>
+  <data name="specialionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>263, 32</value>
+  </data>
+  <data name="specialionsContextMenuItem.Text" xml:space="preserve">
+    <value>特殊离子</value>
+  </data>
   <data name="toolStripSeparator11.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 6</value>
-  </data>
-  <data name="charge1ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>80, 22</value>
-  </data>
-  <data name="charge1ContextMenuItem.Text" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="charge2ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>80, 22</value>
-  </data>
-  <data name="charge2ContextMenuItem.Text" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="charge3ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>80, 22</value>
-  </data>
-  <data name="charge3ContextMenuItem.Text" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="charge4ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>80, 22</value>
-  </data>
-  <data name="charge4ContextMenuItem.Text" xml:space="preserve">
-    <value>4</value>
+    <value>260, 6</value>
   </data>
   <data name="chargesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>263, 32</value>
   </data>
   <data name="chargesContextMenuItem.Text" xml:space="preserve">
     <value>电荷</value>
   </data>
   <data name="toolStripSeparator12.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 6</value>
+    <value>260, 6</value>
   </data>
   <data name="ranksContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>263, 32</value>
   </data>
   <data name="ranksContextMenuItem.Text" xml:space="preserve">
     <value>排名</value>
   </data>
   <data name="scoreContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>263, 32</value>
   </data>
   <data name="scoreContextMenuItem.Text" xml:space="preserve">
     <value>得分</value>
   </data>
   <data name="ionMzValuesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>263, 32</value>
   </data>
   <data name="ionMzValuesContextMenuItem.Text" xml:space="preserve">
     <value>离子质荷比值</value>
   </data>
   <data name="observedMzValuesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>263, 32</value>
   </data>
   <data name="observedMzValuesContextMenuItem.Text" xml:space="preserve">
     <value>观察到的质荷比值</value>
   </data>
+  <data name="massErrorToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>263, 32</value>
+  </data>
+  <data name="massErrorToolStripMenuItem.Text" xml:space="preserve">
+    <value>质量误差</value>
+  </data>
   <data name="duplicatesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>263, 32</value>
   </data>
   <data name="duplicatesContextMenuItem.Text" xml:space="preserve">
     <value>复制离子</value>
   </data>
   <data name="toolStripSeparator13.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 6</value>
+    <value>260, 6</value>
   </data>
   <data name="lockYaxisContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>263, 32</value>
   </data>
   <data name="lockYaxisContextMenuItem.Text" xml:space="preserve">
     <value>自动调整 Y-轴</value>
   </data>
   <data name="toolStripSeparator14.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 6</value>
+    <value>260, 6</value>
+  </data>
+  <data name="graphPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>263, 32</value>
+  </data>
+  <data name="graphPropsContextMenuItem.Text" xml:space="preserve">
+    <value>图形属性...</value>
   </data>
   <data name="spectrumPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>263, 32</value>
   </data>
   <data name="spectrumPropsContextMenuItem.Text" xml:space="preserve">
-    <value>属性…</value>
+    <value>谱图属性</value>
   </data>
   <data name="showChromatogramsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>263, 32</value>
   </data>
   <data name="showChromatogramsContextMenuItem.Text" xml:space="preserve">
     <value>显示色谱图</value>
   </data>
   <data name="toolStripSeparator15.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 6</value>
+    <value>260, 6</value>
   </data>
   <data name="zoomSpectrumContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>263, 32</value>
   </data>
   <data name="zoomSpectrumContextMenuItem.Text" xml:space="preserve">
     <value>缩小</value>
   </data>
   <data name="toolStripSeparator27.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 6</value>
+    <value>260, 6</value>
   </data>
   <data name="contextMenuSpectrum.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 436</value>
+    <value>264, 616</value>
   </data>
   <data name="&gt;&gt;contextMenuSpectrum.Name" xml:space="preserve">
     <value>contextMenuSpectrum</value>
@@ -1426,7 +1387,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.1.9.232, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btnAIons.Name" xml:space="preserve">
     <value>btnAIons</value>
@@ -1668,6 +1629,12 @@
   <data name="&gt;&gt;toolStripSeparator14.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;graphPropsContextMenuItem.Name" xml:space="preserve">
+    <value>graphPropsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;graphPropsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;spectrumPropsContextMenuItem.Name" xml:space="preserve">
     <value>spectrumPropsContextMenuItem</value>
   </data>
@@ -1702,6 +1669,6 @@
     <value>ViewLibraryDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=22.1.9.232, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
