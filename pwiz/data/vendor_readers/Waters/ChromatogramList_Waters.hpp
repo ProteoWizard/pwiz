@@ -66,16 +66,7 @@ class PWIZ_API_DECL ChromatogramList_Waters : public ChromatogramListBase
     mutable std::map<std::string, size_t> idToIndexMap_;
 
     void createIndex() const;
-
-    // trim from start (in place)
-    static void ltrim(std::string& s);
     
-    // trim from end (in place)
-    static void rtrim(std::string& s);
-    
-    // trim from both ends (in place)
-    static void trim(std::string& s);
-
 #endif // PWIZ_READER_WATERS
 };
 

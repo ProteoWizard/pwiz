@@ -105,7 +105,6 @@ struct PWIZ_API_DECL RawData
     MassLynxRawAnalogReader AnalogChromatogramReader;
     std::vector<string> analogChannelNames;
 
-
     struct CachedCompressedDataCluster : public MassLynxRawScanReader
     {
         CachedCompressedDataCluster(Extended::MassLynxRawScanReader& massLynxRawReader) : MassLynxRawScanReader(massLynxRawReader) {}
@@ -129,25 +128,6 @@ struct PWIZ_API_DECL RawData
 
     size_t FunctionCount() const {return functionIndexList.size();}
     size_t LastFunctionIndex() const {return lastFunctionIndex_; }
-
-    void ReadAnalogChromatograms()
-    {
-        auto channels = AnalogChromatogramReader.GetChannelCount();
-
-        analogTimes.clear();
-        analogIntensities.clear();
-        analogChannelNames.clear();
-
-        analogTimes.resize(channels);
-        analogIntensities.resize(channels);
-        analogChannelNames.resize(channels);
-
-        for (int ch=0; ch<channels; ch++)
-        {
-            AnalogChromatogramReader.ReadChannel(ch, analogTimes[ch], analogIntensities[ch]);
-            analogChannelNames[ch] = AnalogChromatogramReader.GetChannelDescription(ch);
-        }
-    }
 
     RawData(const string& rawpath, IterationListenerRegistry* ilr = nullptr)
         : Reader(rawpath),
@@ -220,7 +200,7 @@ struct PWIZ_API_DECL RawData
                 hasProfile_ = hasProfile_ || Info.IsContinuum(itr.first);
         }
 
-        ReadAnalogChromatograms();
+        readAnalogChromatograms();
 
         initHeaderProps(rawpath);
     }
@@ -573,6 +553,26 @@ struct PWIZ_API_DECL RawData
         }
     }
 
+    private:
+
+	void readAnalogChromatograms()
+    {
+        const int channels = AnalogChromatogramReader.GetChannelCount();
+
+        analogTimes.clear();
+        analogIntensities.clear();
+        analogChannelNames.clear();
+
+        analogTimes.resize(channels);
+        analogIntensities.resize(channels);
+        analogChannelNames.resize(channels);
+
+        for (int ch = 0; ch < channels; ch++)
+        {
+            AnalogChromatogramReader.ReadChannel(ch, analogTimes[ch], analogIntensities[ch]);
+            analogChannelNames[ch] = AnalogChromatogramReader.GetChannelDescription(ch);
+        }
+    }
 };
 
 typedef shared_ptr<RawData> RawDataPtr;

@@ -104,7 +104,6 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
 
     result->index = index;
     result->id = ie.id;
-    result->additionalChannelInfo = ie.additionalChannelInfo;
     result->set(ie.chromatogramType);
 
     if (ie.function >= 0)
@@ -246,7 +245,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
         }
         break;
 
-        case MS_Analog_chromatogram:
+        case MS_chromatogram:
         {
             if (detailLevel < DetailLevel_FullMetadata)
                 return result;
@@ -256,16 +255,19 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
             vector<float> times;
             vector<float> intensities;
 
-            times = rawdata_->AnalogTimesByChannel()[ie.analogChannel];
+            times = rawdata_->AnalogTimesByChannel()[ie.offset];
             result->defaultArrayLength = times.size();
 
-            intensities = rawdata_->AnalogIntensitiesByChannel()[ie.analogChannel];
+            intensities = rawdata_->AnalogIntensitiesByChannel()[ie.offset];
 
             if (getBinaryData)
             {
                 result->getTimeArray()->data.assign(times.begin(), times.end());
                 result->getIntensityArray()->data.assign(intensities.begin(), intensities.end());
             }
+
+            result->userParams.push_back(UserParam("ChannelType",
+                "analog"));
         }
         break;
     }
@@ -361,40 +363,17 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
         IndexEntry& ie = index_.back();
         ie.index = index_.size() - 1;
         ie.function = -1;
-        ie.analogChannel = ch;
-        ie.offset = 0;
+        ie.offset = ch;
         ie.Q1 = 0;
 
         std::string temp = rawdata_->AnalogChannelNames()[ch];
 
-        trim((temp));
+        boost::algorithm::trim(temp);
         ie.id = temp;
-        ie.chromatogramType = MS_Analog_chromatogram;
-        ie.additionalChannelInfo = "analog";
+        ie.chromatogramType = MS_chromatogram;
     }
 
     size_ = index_.size();
-}
-
-// trim from start (in place)
-void ChromatogramList_Waters::ltrim(std::string& s)
-{
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
-        std::not1(std::ptr_fun<int, int>(std::isspace))));
-}
-
-// trim from end (in place)
-void ChromatogramList_Waters::rtrim(std::string& s)
-{
-    s.erase(std::find_if(s.rbegin(), s.rend(),
-        std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
-}
-
-// trim from both ends (in place)
-void ChromatogramList_Waters::trim(std::string& s)
-{
-    rtrim(s);
-    ltrim(s);
 }
 
 } // detail
