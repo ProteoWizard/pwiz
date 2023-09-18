@@ -3048,7 +3048,7 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             // For Agilent we do not call GetProductMz because we want all of the Q3 m/z values to be the same
             // for all of the optimization step chromatograms
-            writer.Write(SequenceMassCalc.PersistentMZ(nodeTran.Mz).ToString(CultureInfo));
+            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), 0).ToString(CultureInfo));
             writer.Write(FieldSeparator);
             writer.Write(@"Unit");   // MS2 Res
             writer.Write(FieldSeparator);
