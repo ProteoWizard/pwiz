@@ -166,12 +166,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const CVParam& cvParam)
     XMLWriter::Attributes attributes;
     attributes.add("cvRef", cvTermInfo(cvParam.cvid).prefix());
     attributes.add("accession", cvTermInfo(cvParam.cvid).id);
-
-    if(!cvParam.namePrefix.empty())
-        attributes.add("name", cvParam.namePrefix + " " + cvTermInfo(cvParam.cvid).name);
-    else
-        attributes.add("name", cvTermInfo(cvParam.cvid).name);
-
+    attributes.add("name", cvTermInfo(cvParam.cvid).name);
     attributes.add("value", cvParam.value);
 
     if (cvParam.units != CVID_Unknown)
@@ -2270,27 +2265,8 @@ void write(minimxml::XMLWriter& writer, const Chromatogram& chromatogram,
 
     writer.startElement("chromatogram", attributes);
 
-    std::string namePrefix;
-
     Chromatogram chr = chromatogram;
-    bool found = false;
-
-    for (int i = 0; i < chr.cvParams.size(); i++)
-    {
-        for (auto user_param : chr.userParams)
-        {
-            if (user_param.name == "ChannelType")
-            {
-                chr.cvParams[i].namePrefix = user_param.value;
-                found = true;
-                break;
-            }
-        }
-
-        if (found)
-            break;
-    }
-
+    
     writeParamContainer(writer, chr);
     
     if (!chromatogram.precursor.empty())
@@ -2583,12 +2559,6 @@ void write(minimxml::XMLWriter& writer, const ChromatogramList& chromatogramList
         // write the chromatogram
         if (chromatogram->index != i) throw runtime_error("[IO::write(ChromatogramList)] Bad index.");
         chromatogram->index -= skipped;
-
-        if(!chromatogram->additionalChannelInfo.empty())
-        {
-            chromatogram->userParams.push_back(UserParam("ChannelType",
-                                                         chromatogram->additionalChannelInfo));
-        }
 
         write(writer, *chromatogram, config);
         chromatogram->index += skipped; // restore original index in case same chromatogram is written again
