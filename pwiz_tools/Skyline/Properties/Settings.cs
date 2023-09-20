@@ -1469,14 +1469,40 @@ namespace pwiz.Skyline.Properties
             }
         }
 
+        public Server AddServerWithAccount(Control owner, IEnumerable<Server> existing)
+        {
+            return EditPanoramaServer(owner, null, existing, null, null, true);
+        }
+
+        public Server AddCredentials(Control owner, Server item, IEnumerable<Server> existing)
+        {
+            return EditPanoramaServer(owner, item, existing, null, null, true);
+        }
+
         public Server EditCredentials(Control owner, Server item, IEnumerable<Server> existing, string username, string password)
+        {
+            return EditPanoramaServer(owner, item, existing, username, password);
+        }
+
+        private Server EditPanoramaServer(Control owner, Server item, IEnumerable<Server> existing, string username, string password, bool disableAnonymousCb = false)
         {
             using (var editServerDlg = new EditServerDlg(existing ?? this))
             {
-                editServerDlg.Server = item;
+                if (item != null)
+                {
+                    editServerDlg.Server = item;
+                    editServerDlg.textServerURL.Enabled = false;
+                }
+
                 editServerDlg.Username = username;
                 editServerDlg.Password = password;
-                editServerDlg.textServerURL.Enabled = false;
+
+                if (disableAnonymousCb)
+                {
+                    editServerDlg.AnonymousServer = false;
+                    editServerDlg.cbAnonymous.Enabled = false;
+                }
+
                 return editServerDlg.ShowDialog(owner) == DialogResult.OK ? editServerDlg.Server : null;
             }
         }
