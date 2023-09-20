@@ -9,8 +9,9 @@ using pwiz.PanoramaClient;
 using SkylineBatch.Properties;
 using AlertDlg = SharedBatch.AlertDlg;
 using PanoramaClientServer = pwiz.PanoramaClient.PanoramaServer;
+using PanoramaServerException = pwiz.PanoramaClient.PanoramaServerException;
 using PanoramaUtil = pwiz.PanoramaClient.PanoramaUtil;
-using UserState = pwiz.PanoramaClient.UserState;
+using WebPanoramaClient = pwiz.PanoramaClient.WebPanoramaClient;
 
 namespace SkylineBatch
 {
@@ -73,10 +74,17 @@ namespace SkylineBatch
                 return;
             }
 
-            Uri uri = source.URI;
-            UserState state = PanoramaUtil.ValidateServerAndUser(ref uri,source.Username,source.Password);
-            ShowPanoramaBtn(state.IsValid());
 
+            var panoramaClient = new WebPanoramaClient(source.URI, source.Username, source.Password);
+            try
+            {
+                panoramaClient.ValidateServer();
+                ShowPanoramaBtn(true);
+            }
+            catch (PanoramaServerException)
+            {
+                ShowPanoramaBtn(false);
+            }
         }
 
         private void ShowPanoramaBtn(bool show)

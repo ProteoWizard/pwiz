@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Util
 
         public string GetKey()
         {
-            return URI.ToString();
+            return URI + (HasUserAccount() ? string.Empty : Resources.Server_GetKey___anonymous_);
         }
 
 
@@ -377,7 +377,7 @@ namespace pwiz.Skyline.Util
 
         public override JToken GetInfoForFolders(PanoramaServer server, string folder)
         {
-            return new WebPanoramaClient(server.URI).GetInfoForFolders(server, folder);
+            return new WebPanoramaClient(server.URI, server.Username, server.Password).GetInfoForFolders(folder);
         }
 
         public override Uri  SendZipFile(PanoramaServer server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor)

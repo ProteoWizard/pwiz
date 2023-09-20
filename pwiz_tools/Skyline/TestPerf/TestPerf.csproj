@@ -181,6 +181,7 @@
     <Compile Include="PerfUniquePeptidesTest.cs" />
     <Compile Include="PerfWatersSonarTest.cs" />
     <Compile Include="OrbiPrmTutorialTest.cs" />
+    <Compile Include="PerfSciexPrmCeOptTest.cs" />
     <Compile Include="SmallMolDriftTimePredictorTest.cs" />
     <Compile Include="SmallMolLibrariesTutorialTest.cs" />
   </ItemGroup>
