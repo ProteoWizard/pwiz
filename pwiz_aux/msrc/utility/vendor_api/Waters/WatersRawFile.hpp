@@ -555,7 +555,7 @@ struct PWIZ_API_DECL RawData
 
     private:
 
-	void readAnalogChromatograms()
+    void readAnalogChromatograms()
     {
         const int channels = AnalogChromatogramReader.GetChannelCount();
 
