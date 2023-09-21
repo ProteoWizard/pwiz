@@ -698,6 +698,10 @@ namespace pwiz.Skyline.Model.DocSettings
                     regressionFunction = new RegressionLineElement(statRT.Slope(stat), statRT.Intercept(stat));
                     break;
                 case RegressionMethodRT.kde:
+                    if (stat.Length <= 1)
+                    {
+                        return null;
+                    }
                     var kdeAligner = new KdeAligner();
                     kdeAligner.Train(stat.CopyList(), statRT.CopyList(), token);
 
