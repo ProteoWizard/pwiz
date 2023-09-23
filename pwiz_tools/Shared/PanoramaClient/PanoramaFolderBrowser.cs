@@ -408,8 +408,8 @@ public class LKContainerBrowser : PanoramaFolderBrowser
     /// </summary>
     public virtual void InitializeTreeServers(PanoramaServer server, List<KeyValuePair<PanoramaServer, JToken>> listServers)
     {
-        IPanoramaClient panoramaClient = new WebPanoramaClient(server.URI);
-        listServers.Add(new KeyValuePair<PanoramaServer, JToken>(server, panoramaClient.GetInfoForFolders(server, null)));
+        IPanoramaClient panoramaClient = new WebPanoramaClient(server.URI, server.Username, server.Password);
+        listServers.Add(new KeyValuePair<PanoramaServer, JToken>(server, panoramaClient.GetInfoForFolders(null)));
     }
 
     public override void InitializeTreeView(TreeView tree)
@@ -444,88 +444,61 @@ public class LKContainerBrowser : PanoramaFolderBrowser
         var subFolders = folder[@"children"].Children();
         foreach (var subFolder in subFolders)
         {
+            if (!PanoramaUtil.CheckReadPermissions(subFolder))
+            {
+                // Do not add the folder if user does not have read permissions in the folder. 
+                // Any subfolders, even if they have read permissions, will also not be added.
+                continue;
+            }
+
             var folderName = (string)subFolder[@"name"];
 
             var folderNode = new TreeNode(folderName);
             AddChildContainers(folderNode, subFolder, requireUploadPerms, showFiles, server);
 
+            var hasTargetedMsModule = PanoramaUtil.HasTargetedMsModule(subFolder);
             // User can only upload to folders where TargetedMS is an active module.
-            bool canUpload;
+            var canUpload = hasTargetedMsModule && PanoramaUtil.CheckInsertPermissions(subFolder);
 
-            if (requireUploadPerms)
+            if (requireUploadPerms && folderNode.Nodes.Count == 0 && !canUpload)
             {
-                canUpload = PanoramaUtil.CheckFolderPermissions(subFolder) &&
-                            PanoramaUtil.CheckFolderType(subFolder);
+                // If the user does not have write permissions in this folder or any
+                // of its subfolders, do not add it to the tree.
+                continue;
             }
-            else
-            {
-                var userPermissions = subFolder.Value<int?>(@"userPermissions");
-                canUpload = userPermissions != null && Equals(userPermissions & 1, 1);
-            }
-            // If the user does not have write permissions in this folder or any
-            // of its subfolders, do not add it to the tree.
-            if (requireUploadPerms)
-            {
-                if (folderNode.Nodes.Count == 0 && !canUpload)
-                {
-                    continue;
-                }
-            }
-            else
-            {
-                if (!canUpload)
-                {
-                    continue;
-                }
-            }
-
-
 
             node.Nodes.Add(folderNode);
 
-            // User cannot upload files to folder
-            if (!canUpload)
+            if (requireUploadPerms && !(hasTargetedMsModule && canUpload))
             {
+                // User cannot upload files to folder
                 folderNode.ForeColor = Color.Gray;
+                folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.folder;
+            }
+            else if (!hasTargetedMsModule)
+            {
                 folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.folder;
             }
             else
             {
-                if ((PanoramaUtil.CheckFolderType(subFolder) && !requireUploadPerms) || requireUploadPerms)
-                {
-                    var moduleProperties = subFolder[@"moduleProperties"];
-                    if (moduleProperties == null)
-                        folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.labkey;
-                    else
-                    {
-                        var effectiveValue = (string)moduleProperties[0][@"effectiveValue"];
-
-                        folderNode.ImageIndex =
-                            folderNode.SelectedImageIndex =
-                                (effectiveValue.Equals(@"Library") || effectiveValue.Equals(@"LibraryProtein"))
-                                    ? (int)ImageId.chrom_lib
-                                    : (int)ImageId.labkey;
-                    }
-                }
+                var moduleProperties = subFolder[@"moduleProperties"];
+                if (moduleProperties == null)
+                    folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.labkey;
                 else
                 {
-                    folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.folder;
+                    var effectiveValue = (string)moduleProperties[0][@"effectiveValue"];
+
+                    folderNode.ImageIndex =
+                        folderNode.SelectedImageIndex =
+                            (effectiveValue.Equals(@"Library") || effectiveValue.Equals(@"LibraryProtein"))
+                                ? (int)ImageId.chrom_lib
+                                : (int)ImageId.labkey;
                 }
             }
 
             if (showFiles)
             {
-                var modules = subFolder[@"activeModules"];
-                var containsTargetedMs = false;
-                foreach (var module in modules)
-                {
-                    if (string.Equals(module.ToString(), @"TargetedMS"))
-                    {
-                        containsTargetedMs = true;
-                    }
-
-                }
-                folderNode.Tag = new FolderInformation(server, (string)subFolder[@"path"], containsTargetedMs);
+                folderNode.Tag = new FolderInformation(server, (string)subFolder[@"path"], hasTargetedMsModule);
             }
             else
             {

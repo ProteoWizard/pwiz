@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
 using pwiz.Skyline.Alerts;
@@ -279,16 +278,13 @@ namespace pwiz.SkylineTestConnected
         private void ShowPanoramaFilePicker(List<PanoramaServer> serverList, string selectedPath)
         {
             using var remoteDlg = new PanoramaFilePicker(serverList, string.Empty, true, selectedPath);
+            remoteDlg.InitializeDialog();   // CONSIDER: Should this be using LongOptionRunner like SkylineWindow?
             remoteDlg.ShowDialog();
         }
 
-        private class TestPanoramaClient : IPanoramaClient
+        private class TestPanoramaClient : BaseTestPanoramaClient
         {
-            public Uri ServerUri { get; set; }
-
             public string Server { get; }
-            public string Username { get; }
-            public string Password { get; }
             public TestPanoramaClient(string server, string username, string password)
             {
                 Server = server;
@@ -304,38 +300,8 @@ namespace pwiz.SkylineTestConnected
                 }
             }
 
-            public ServerState GetServerState()
-            {
-                throw new NotImplementedException();
-            }
-
-            public UserState IsValidUser(string username, string password)
-            {
-                throw new NotImplementedException();
-            }
-
-            public FolderState IsValidFolder(string folderPath, string username, string password)
-            {
-                return FolderState.valid;
-            }
-
-            public FolderOperationStatus CreateFolder(string parentPath, string folderName, string username, string password)
-            {
-                throw new NotImplementedException();
-            }
-
-            public FolderOperationStatus DeleteFolder(string folderPath, string username, string password)
-            {
-                throw new NotImplementedException();
-            }
-
-            public JToken GetInfoForFolders(PanoramaServer server, string folder)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
-                PanoramaServer server, IProgressMonitor pm, IProgressStatus progressStatus)
+            public override void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
+                IProgressMonitor pm, IProgressStatus progressStatus)
             {
                 Exception e = null;
                 switch (fileSize)

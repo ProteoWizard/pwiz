@@ -232,9 +232,6 @@
   <data name="ToolInstaller_GetToolInfo_Error__It_does_not_contain_the_required__0__in_the__1__directory_" xml:space="preserve">
     <value>Error: It does not contain the required {0} in the {1} directory.</value>
   </data>
-  <data name="SkylineWindow_OpenFromPanorama_Add" xml:space="preserve">
-    <value>Add</value>
-  </data>
   <data name="WizardPeptideIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\StartPage\WizardPeptideIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -4192,7 +4189,7 @@ Supported values include:
   <data name="EditIrtCalcDlg_UpdateNumStandards__0__Standard_peptide___1__required_" xml:space="preserve">
     <value>{0} Standard peptide ({1} required)</value>
   </data>
-  <data name="SkylineWindow_ImportMassList_Add" xml:space="preserve">
+  <data name="SkylineWindow_Add" xml:space="preserve">
     <value>Add</value>
   </data>
   <data name="ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next" xml:space="preserve">
@@ -5835,7 +5832,7 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="TransitionTreeNode_GetLabel_irank__0__" xml:space="preserve">
     <value>irank {0}</value>
-    <comment>Isotope rank for transition node</comment>
+    <comment>Isotope rank "irank" for transition node</comment>
   </data>
   <data name="CommandLine_ReintegratePeaks_Error__Unknown_peak_scoring_model___0__" xml:space="preserve">
     <value>Error: Unknown peak scoring model '{0}'</value>
@@ -13854,7 +13851,25 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="SkylineWindow_DownloadPanoramaFile_File_does_not_exist__It_may_have_been_deleted_on_the_server_" xml:space="preserve">
     <value>File does not exist. It may have been deleted on the server.</value>
   </data>
+  <data name="SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_with_a_user_account__To_upload_documents_to_a_server_a_user_account_is_required_" xml:space="preserve">
+    <value>There are no Panorama servers with a user account. To upload documents to a server a user account is required.</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Edit_existing" xml:space="preserve">
+    <value>Edit existing</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Press_Edit_existing_to_add_user_account_information_for_an_existing_server_" xml:space="preserve">
+    <value>Press Edit existing to add user account information for an existing server.</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Document_cannot_be_uploaded_to_a_Panorama_server_without_a_user_account_" xml:space="preserve">
+    <value>Document cannot be uploaded to a Panorama server without a user account.</value>
+  </data>
   <data name="ProteinAssociation_CreateDocTree_Unmapped_Peptides" xml:space="preserve">
     <value>Unmapped Peptides</value>
+  </data>
+  <data name="SkylineWindow_OpenFromPanorama_Open_From_Panorama" xml:space="preserve">
+    <value>Open From Panorama</value>
+  </data>
+  <data name="Server_GetKey___anonymous_" xml:space="preserve">
+    <value> (anonymous)</value>
   </data>
 </root>
