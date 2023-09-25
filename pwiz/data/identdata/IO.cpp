@@ -1083,7 +1083,7 @@ struct HandlerPeptideEvidence : public HandlerIdentifiableParamContainer
             value.clear();
             getAttribute(attributes, "isDecoy", value);
             if (!value.empty())
-                pep->isDecoy = (value=="true" ? true : false);
+                pep->isDecoy = lexical_cast<bool>(value);
 
             HandlerIdentifiableParamContainer::id = pep;
         }

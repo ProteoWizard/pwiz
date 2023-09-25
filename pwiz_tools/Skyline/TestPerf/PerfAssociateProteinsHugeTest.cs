@@ -148,7 +148,7 @@ namespace TestPerf
                         nonProteins.Add(docNode);
                 }
                 Assert.AreEqual(3987, proteins.Count);
-                Assert.AreEqual(0, nonProteins.Count);
+                Assert.AreEqual(0, nonProteins.Count); // Unmapped Peptides
             });
         }
     }

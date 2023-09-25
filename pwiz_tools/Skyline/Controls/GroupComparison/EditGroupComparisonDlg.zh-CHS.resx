@@ -183,14 +183,89 @@
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="comboMsLevel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="comboMsLevel.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>System</value>
+  </data>
+  <data name="comboMsLevel.Items" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="comboMsLevel.Items1" xml:space="preserve">
+    <value>均衡中位数</value>
+  </data>
+  <data name="comboMsLevel.Items2" xml:space="preserve">
+    <value>分位数</value>
+  </data>
+  <data name="comboMsLevel.Items3" xml:space="preserve">
+    <value>相对于总体标准品</value>
+  </data>
+  <data name="comboMsLevel.Items4" xml:space="preserve">
+    <value>相对于内部标准品</value>
+  </data>
+  <data name="comboMsLevel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>221, 223</value>
+  </data>
+  <data name="comboMsLevel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>94, 21</value>
+  </data>
+  <data name="comboMsLevel.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="&gt;&gt;comboMsLevel.Name" xml:space="preserve">
+    <value>comboMsLevel</value>
+  </data>
+  <data name="&gt;&gt;comboMsLevel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboMsLevel.Parent" xml:space="preserve">
+    <value>panelMain</value>
+  </data>
+  <data name="&gt;&gt;comboMsLevel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lblMsLevel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblMsLevel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblMsLevel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>221, 207</value>
+  </data>
+  <data name="lblMsLevel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>51, 13</value>
+  </data>
+  <data name="lblMsLevel.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="lblMsLevel.Text" xml:space="preserve">
+    <value>MS 级别:</value>
+  </data>
+  <data name="&gt;&gt;lblMsLevel.Name" xml:space="preserve">
+    <value>lblMsLevel</value>
+  </data>
+  <data name="&gt;&gt;lblMsLevel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblMsLevel.Parent" xml:space="preserve">
+    <value>panelMain</value>
+  </data>
+  <data name="&gt;&gt;lblMsLevel.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="btnAdvanced.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
   <data name="btnAdvanced.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 296</value>
+    <value>3, 319</value>
   </data>
   <data name="btnAdvanced.Size" type="System.Drawing.Size, System.Drawing">
     <value>97, 23</value>
   </data>
   <data name="btnAdvanced.TabIndex" type="System.Int32, mscorlib">
-    <value>19</value>
+    <value>16</value>
   </data>
   <data name="btnAdvanced.Text" xml:space="preserve">
     <value>高级 &gt;&gt;</value>
@@ -205,7 +280,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;btnAdvanced.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="lblControlAnnotation.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -220,7 +295,7 @@
     <value>126, 13</value>
   </data>
   <data name="lblControlAnnotation.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>0</value>
   </data>
   <data name="lblControlAnnotation.Text" xml:space="preserve">
     <value>控制群组注释(&amp;C)：</value>
@@ -235,7 +310,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;lblControlAnnotation.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="comboControlAnnotation.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -247,7 +322,7 @@
     <value>486, 21</value>
   </data>
   <data name="comboControlAnnotation.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;comboControlAnnotation.Name" xml:space="preserve">
     <value>comboControlAnnotation</value>
@@ -259,7 +334,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;comboControlAnnotation.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="groupBoxScope.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -370,7 +445,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;groupBoxScope.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="lblPercent.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -385,7 +460,7 @@
     <value>15, 13</value>
   </data>
   <data name="lblPercent.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
+    <value>12</value>
   </data>
   <data name="lblPercent.Text" xml:space="preserve">
     <value>%</value>
@@ -400,7 +475,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;lblPercent.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="comboControlValue.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -412,7 +487,7 @@
     <value>486, 21</value>
   </data>
   <data name="comboControlValue.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;comboControlValue.Name" xml:space="preserve">
     <value>comboControlValue</value>
@@ -424,7 +499,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;comboControlValue.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="tbxConfidenceLevel.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 223</value>
@@ -433,7 +508,7 @@
     <value>90, 20</value>
   </data>
   <data name="tbxConfidenceLevel.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
+    <value>11</value>
   </data>
   <data name="&gt;&gt;tbxConfidenceLevel.Name" xml:space="preserve">
     <value>tbxConfidenceLevel</value>
@@ -445,7 +520,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;tbxConfidenceLevel.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>8</value>
   </data>
   <data name="lblConfidenceLevel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -460,10 +535,10 @@
     <value>89, 13</value>
   </data>
   <data name="lblConfidenceLevel.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
+    <value>10</value>
   </data>
   <data name="lblConfidenceLevel.Text" xml:space="preserve">
-    <value>置信水平(&amp;E)</value>
+    <value>置信水平(&amp;E)：</value>
   </data>
   <data name="&gt;&gt;lblConfidenceLevel.Name" xml:space="preserve">
     <value>lblConfidenceLevel</value>
@@ -475,7 +550,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;lblConfidenceLevel.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>9</value>
   </data>
   <data name="lblControlValue.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -490,7 +565,7 @@
     <value>102, 13</value>
   </data>
   <data name="lblControlValue.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>2</value>
   </data>
   <data name="lblControlValue.Text" xml:space="preserve">
     <value>控制群组值(&amp;O)：</value>
@@ -505,7 +580,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;lblControlValue.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>10</value>
   </data>
   <data name="lblCompareAgainst.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -520,7 +595,7 @@
     <value>130, 13</value>
   </data>
   <data name="lblCompareAgainst.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>4</value>
   </data>
   <data name="lblCompareAgainst.Text" xml:space="preserve">
     <value>比较值(&amp;V)：</value>
@@ -535,7 +610,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;lblCompareAgainst.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>11</value>
   </data>
   <data name="comboCaseValue.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -547,7 +622,7 @@
     <value>486, 21</value>
   </data>
   <data name="comboCaseValue.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>5</value>
   </data>
   <data name="&gt;&gt;comboCaseValue.Name" xml:space="preserve">
     <value>comboCaseValue</value>
@@ -559,7 +634,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;comboCaseValue.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>12</value>
   </data>
   <data name="comboNormalizationMethod.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -586,7 +661,7 @@
     <value>486, 21</value>
   </data>
   <data name="comboNormalizationMethod.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
+    <value>9</value>
   </data>
   <data name="&gt;&gt;comboNormalizationMethod.Name" xml:space="preserve">
     <value>comboNormalizationMethod</value>
@@ -598,7 +673,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;comboNormalizationMethod.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>13</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -613,10 +688,10 @@
     <value>212, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>6</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>身份注释（针对技术性重复测定）(&amp;D)</value>
+    <value>身份注释（针对技术性重复测定）(&amp;D)：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -628,7 +703,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>14</value>
   </data>
   <data name="comboIdentityAnnotation.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -640,7 +715,7 @@
     <value>486, 21</value>
   </data>
   <data name="comboIdentityAnnotation.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>7</value>
   </data>
   <data name="&gt;&gt;comboIdentityAnnotation.Name" xml:space="preserve">
     <value>comboIdentityAnnotation</value>
@@ -652,7 +727,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;comboIdentityAnnotation.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>15</value>
   </data>
   <data name="lblNormalizationMethod.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -667,7 +742,7 @@
     <value>111, 13</value>
   </data>
   <data name="lblNormalizationMethod.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>8</value>
   </data>
   <data name="lblNormalizationMethod.Text" xml:space="preserve">
     <value>校准方法(&amp;M)：</value>
@@ -682,7 +757,7 @@
     <value>panelMain</value>
   </data>
   <data name="&gt;&gt;lblNormalizationMethod.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>16</value>
   </data>
   <data name="panelMain.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Top</value>
@@ -691,7 +766,7 @@
     <value>0, 59</value>
   </data>
   <data name="panelMain.Size" type="System.Drawing.Size, System.Drawing">
-    <value>515, 322</value>
+    <value>515, 349</value>
   </data>
   <data name="panelMain.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -979,7 +1054,7 @@
     <value>Bottom</value>
   </data>
   <data name="panelButtons.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 531</value>
+    <value>0, 562</value>
   </data>
   <data name="panelButtons.Size" type="System.Drawing.Size, System.Drawing">
     <value>515, 32</value>
@@ -1003,7 +1078,7 @@
     <value>Top</value>
   </data>
   <data name="panelAdvanced.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 381</value>
+    <value>0, 408</value>
   </data>
   <data name="panelAdvanced.Size" type="System.Drawing.Size, System.Drawing">
     <value>515, 152</value>
@@ -1023,6 +1098,9 @@
   <data name="&gt;&gt;panelAdvanced.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -1030,7 +1108,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>515, 563</value>
+    <value>515, 594</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
@@ -1042,7 +1120,13 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=19.1.1.295, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
+    <value>toolTip1</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditGroupComparisonDlg</value>
