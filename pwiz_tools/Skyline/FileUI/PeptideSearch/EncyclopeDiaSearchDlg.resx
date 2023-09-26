@@ -223,7 +223,7 @@
     <value>23</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>Default Charge:</value>
+    <value>Default &amp;Charge:</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -316,7 +316,7 @@
     <value>28</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>Max m/z:</value>
+    <value>Ma&amp;x m/z:</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -346,7 +346,7 @@
     <value>27</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-    <value>Min m/z:</value>
+    <value>Min m/&amp;z:</value>
   </data>
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
@@ -397,7 +397,7 @@
     <value>25</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>Max Charge:</value>
+    <value>Max C&amp;harge:</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -448,7 +448,7 @@
     <value>21</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>Min Charge:</value>
+    <value>&amp;Min Charge:</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -478,7 +478,7 @@
     <value>20</value>
   </data>
   <data name="ceLabel.Text" xml:space="preserve">
-    <value>Default N&amp;CE:</value>
+    <value>Default &amp;NCE:</value>
   </data>
   <data name="&gt;&gt;ceLabel.Name" xml:space="preserve">
     <value>ceLabel</value>
@@ -529,7 +529,7 @@
     <value>17</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Text" xml:space="preserve">
-    <value>Include ambiguous &amp;matches</value>
+    <value>Include &amp;ambiguous matches</value>
   </data>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.Name" xml:space="preserve">
     <value>cbIncludeAmbiguousMatches</value>
@@ -913,7 +913,7 @@
     <value>36</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-    <value>Unit:</value>
+    <value>U&amp;nit:</value>
   </data>
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
@@ -943,7 +943,7 @@
     <value>35</value>
   </data>
   <data name="label7.Text" xml:space="preserve">
-    <value>Unit:</value>
+    <value>&amp;Unit:</value>
   </data>
   <data name="&gt;&gt;label7.Name" xml:space="preserve">
     <value>label7</value>
@@ -1198,7 +1198,7 @@
     <value>wizardPages</value>
   </data>
   <data name="&gt;&gt;wizardPages.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=22.2.1.516, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;wizardPages.Parent" xml:space="preserve">
     <value>$this</value>
@@ -1324,7 +1324,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.2.1.516, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;backgroundWorker1.Name" xml:space="preserve">
     <value>backgroundWorker1</value>
@@ -1336,6 +1336,6 @@
     <value>EncyclopeDiaSearchDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=22.2.1.516, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

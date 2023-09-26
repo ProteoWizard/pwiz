@@ -182,8 +182,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
             if (centerMz > 0)
             {
                 product.isolationWindow.set(MS_isolation_window_target_m_z, centerMz, MS_m_z);
-                product.isolationWindow.set(MS_isolation_window_lower_offset, centerMz - lowerLimit, MS_m_z);
-                product.isolationWindow.set(MS_isolation_window_upper_offset, upperLimit - centerMz, MS_m_z);
+                if (lowerLimit > 0 && upperLimit > 0)
+                {
+	                product.isolationWindow.set(MS_isolation_window_lower_offset, centerMz - lowerLimit, MS_m_z);
+                	product.isolationWindow.set(MS_isolation_window_upper_offset, upperLimit - centerMz, MS_m_z);
+                }
             }
 
             result->products.push_back(product);
@@ -196,8 +199,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
             if (centerMz > 0)
             {
                 precursor.isolationWindow.set(MS_isolation_window_target_m_z, centerMz, MS_m_z);
-                precursor.isolationWindow.set(MS_isolation_window_lower_offset, centerMz - lowerLimit, MS_m_z);
-                precursor.isolationWindow.set(MS_isolation_window_upper_offset, upperLimit - centerMz, MS_m_z);
+                if (lowerLimit > 0 && upperLimit > 0)
+                {
+	                precursor.isolationWindow.set(MS_isolation_window_lower_offset, centerMz - lowerLimit, MS_m_z);
+                	precursor.isolationWindow.set(MS_isolation_window_upper_offset, upperLimit - centerMz, MS_m_z);
+                }
             }
 
             selectedIon.set(MS_selected_ion_m_z, selectedMz, MS_m_z);
