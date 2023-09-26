@@ -546,7 +546,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 var iSpectrum = Precursors[i].Spectra.IndexOf(spectrumInfo => !spectrumInfo.IsBest && SpectrumMatches(spectrumInfo, spectrumIdentifier));
                 if (iSpectrum != -1)
                 {
-                    comboPrecursor.SelectedIndex = i;
+                    if (comboPrecursor.SelectedIndex != i)
+                    {
+                        comboPrecursor.SelectedIndex = i;
+                        DoUpdate();
+                    }
                     comboSpectrum.SelectedIndex = iSpectrum;
                     return;
                 }
