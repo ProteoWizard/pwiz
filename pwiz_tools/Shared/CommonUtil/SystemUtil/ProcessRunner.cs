@@ -123,6 +123,13 @@ namespace pwiz.Common.SystemUtil
                 }
             }
 
+            StringBuilder sbOutput = null;
+            if (writer == null)
+            {
+                sbOutput = new StringBuilder();
+                writer = new StringWriter(sbOutput);
+            }
+
             try
             {
                 var reader = new ProcessStreamReader(proc, StatusPrefix == null && MessagePrefix == null);
@@ -214,6 +221,17 @@ namespace pwiz.Common.SystemUtil
                         progress.UpdateProgress(status);
                 }
 
+            }
+            catch (Exception ex)
+            {
+                if (sbOutput != null)
+                {
+                    var sbError = new StringBuilder();
+                    sbError.AppendLine(ex.Message).AppendLine().AppendLine("Output:").Append(sbOutput);
+                    throw new IOException(sbError.ToString(), ex);
+                }
+
+                throw;
             }
             finally
             {
