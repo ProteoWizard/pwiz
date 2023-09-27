@@ -369,8 +369,10 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
         std::string temp = rawdata_->AnalogChannelNames()[ch];
 
         boost::algorithm::trim(temp);
+        boost::algorithm::replace_all(temp, "%", "");
         ie.id = temp;
         ie.chromatogramType = MS_chromatogram;
+        idToIndexMap_[ie.id] = ie.index;
     }
 
     size_ = index_.size();
