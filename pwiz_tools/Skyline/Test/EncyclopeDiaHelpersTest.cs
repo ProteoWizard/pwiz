@@ -70,7 +70,7 @@ namespace pwiz.SkylineTest
             string dlibFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33.dlib");
             string elibFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33.elib");
             string elibQuantFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected-quant-elib.elib");
-            var columnTolerances = new Dictionary<int, double>() { { -1, 0.0000000001 } };  // Allow some numerical wiggle in any column numerical column ("-1" means all columns)
+            var columnTolerances = new Dictionary<int, double>() { { -1, 0.00000001 } };  // Allow some numerical wiggle in any column numerical column ("-1" means all columns)
             IProgressStatus status = new ProgressStatus();
 
             // test prosit output to dlib
@@ -92,10 +92,10 @@ namespace pwiz.SkylineTest
                 string elibQuantExpectedTsvFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected-quant-elib.tsv");
                 var testConfig = new EncyclopeDiaHelpers.EncyclopeDiaConfig
                 {
-                    PercolatorTrainingFDR = 0.2,
-                    PercolatorThreshold = 0.2,
-                    MinNumOfQuantitativePeaks = 0,
-                    NumberOfQuantitativePeaks = 0,
+                    PercolatorTrainingFDR = 0.5,
+                    PercolatorThreshold = 0.5,
+                    MinNumOfQuantitativePeaks = 1,
+                    NumberOfQuantitativePeaks = 1,
                     V2scoring = false
                 };
                 var narrowWindowFiles = new MsDataFileUri[]
@@ -105,27 +105,29 @@ namespace pwiz.SkylineTest
                 };
                 var wideWindowFiles = new MsDataFileUri[]
                 {
+                    new MsDataFilePath(TestFilesDir.GetTestPath("23aug2017_hela_serum_timecourse_wide_1c.mzML")),
                     new MsDataFilePath(TestFilesDir.GetTestPath("23aug2017_hela_serum_timecourse_wide_1d.mzML")),
-                    new MsDataFilePath(TestFilesDir.GetTestPath("23aug2017_hela_serum_timecourse_wide_1e.mzML")),
                 };
                 var pm = new CommandProgressMonitor(new StringWriter(), new ProgressStatus());
                 EncyclopeDiaHelpers.Generate(dlibFilepath, elibFilepath, elibQuantFilepath, fastaFilepath, testConfig,
                     narrowWindowFiles, wideWindowFiles, pm, pm, CancellationToken.None, new ProgressStatus());
 
                 var actual = SqliteOperations.DumpTable(elibFilepath, "entries", sortColumns: new[] { "PrecursorMz" })
-                    .Concat(SqliteOperations.DumpTable(elibFilepath, "peptidescores", sortColumns: new[] { "PeptideModSeq", "PrecursorCharge" }));
+                    .Concat(SqliteOperations.DumpTable(elibFilepath, "peptidescores", sortColumns: new[] { "PeptideModSeq", "PrecursorCharge" }))
+                    .Concat(SqliteOperations.DumpTable(elibFilepath, "retentiontimes", sortColumns: new[] { "SourceFile", "Library", "Actual" }))
+                    .Concat(SqliteOperations.DumpTable(elibFilepath, "peptidequants", sortColumns: new [] { "PeptideModSeq", "PrecursorCharge", "SourceFile"}));
                 //string elibActualTsvFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected-elib-actual.tsv");
                 //File.WriteAllLines(elibActualTsvFilepath, actual);
                 AssertEx.NoDiff(File.ReadAllText(elibExpectedTsvFilepath), string.Join("\n", actual), null, columnTolerances);
 
                 var actualQuant = SqliteOperations.DumpTable(elibQuantFilepath, "entries", sortColumns: new[] { "PrecursorMz" })
                     .Concat(SqliteOperations.DumpTable(elibQuantFilepath, "peptidescores", sortColumns: new[] { "PeptideModSeq", "PrecursorCharge" }, excludeColumns: new[] { "SourceFile", "PosteriorErrorProbability" }))
-                    .Concat(SqliteOperations.DumpTable(elibQuantFilepath, "retentiontimes", sortColumns: new[] { "SourceFile", "Library" }));
-                //string elibQuantExpectedTsvFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected-quant-elib-actual.tsv");
-                //File.WriteAllLines(elibQuantExpectedTsvFilepath, actual);
+                    .Concat(SqliteOperations.DumpTable(elibQuantFilepath, "retentiontimes", sortColumns: new[] { "SourceFile", "Library", "Actual" }))
+                    .Concat(SqliteOperations.DumpTable(elibQuantFilepath, "peptidequants", sortColumns: new[] { "PeptideModSeq", "PrecursorCharge", "SourceFile" }));
+                //string elibQuantActualTsvFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected-quant-elib-actual.tsv");
+                //File.WriteAllLines(elibQuantActualTsvFilepath, actualQuant);
                 AssertEx.NoDiff(File.ReadAllText(elibQuantExpectedTsvFilepath), string.Join("\n", actualQuant), null, columnTolerances);
             }
-
             TestFilesDir.Cleanup();
         }
     }

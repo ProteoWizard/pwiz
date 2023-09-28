@@ -32,11 +32,11 @@ namespace pwiz.Common.Controls
         /// <summary>
         /// Add or update job info in the grid.
         /// </summary>
-        public void Update(string rowName, int progress, string progressMessage)
+        public void Update(string rowName, int progress, string progressMessage, bool error = false)
         {
             if (InvokeRequired)
             {
-                Invoke(new MethodInvoker(() => Update(rowName, progress, progressMessage)));
+                Invoke(new MethodInvoker(() => Update(rowName, progress, progressMessage, error)));
                 return;
             }
 
@@ -49,6 +49,8 @@ namespace pwiz.Common.Controls
             {
                 progressCell.Value = progress;
                 progressCell.Text = progressMessage;
+                if (error)
+                    progressCell.ErrorText = progressMessage;
             }
         }
 

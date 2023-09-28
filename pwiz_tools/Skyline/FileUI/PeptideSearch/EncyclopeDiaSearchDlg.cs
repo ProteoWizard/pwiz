@@ -624,6 +624,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 ProgressSplit.Panel2Collapsed = true;
             }
 
+            // ReSharper disable once InconsistentlySynchronizedField
             public bool IsCanceled => _hostControl.IsCanceled;
 
             public UpdateProgressResponse UpdateProgress(IProgressStatus status)
@@ -653,7 +654,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                     string name = match.Groups[1].Value;
                     string message = match.Groups[2].Value;
-                    Update(name, status.PercentComplete, message);
+                    Update(name, status.PercentComplete, message, status.ErrorException != null);
                     return IsCanceled ? UpdateProgressResponse.cancel : UpdateProgressResponse.normal;
                 }
             }
@@ -722,6 +723,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     EncyclopeDiaQuantLibraryPath, fastaFilepath, settings.EncyclopeDiaConfig,
                     settings.NarrowWindowResultUris, settings.WideWindowResultUris,
                     this, multiProgressControl, token.Token, status);
+            }
+            catch (OperationCanceledException e)
+            {
+                UpdateProgress(status.ChangeWarningMessage(e.InnerException?.Message ?? e.Message));
+                return false;
             }
             catch (Exception e)
             {

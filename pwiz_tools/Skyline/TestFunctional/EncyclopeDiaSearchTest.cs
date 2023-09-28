@@ -32,7 +32,6 @@ using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Util;
 using System;
 using System.Globalization;
-using Grpc.Core.Logging;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -52,7 +51,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         private bool IsRecordMode => false;
-        private int[] FinalTargetCounts = { 10, 10, 10, 40 };
+        private int[] FinalTargetCounts = { 34, 36, 36, 144 };
 
         protected override void DoTest()
         {
@@ -146,7 +145,7 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(searchDlg.NextPage); // now on wide fractions
             browseWideDlg = ShowDialog<OpenDataSourceDialog>(() => searchDlg.WideWindowResults.Browse());
-            RunUI(() => browseWideDlg.SelectFile("23aug2017_hela_serum_timecourse_wide_1e.mzML"));
+            RunUI(() => browseWideDlg.SelectFile("23aug2017_hela_serum_timecourse_wide_1c.mzML"));
             OkDialog(browseWideDlg, browseWideDlg.Open);
 
             RunUI(searchDlg.NextPage); // now on EncyclopeDia settings

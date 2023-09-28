@@ -36,7 +36,6 @@ using pwiz.Skyline.Util;
 using System;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Lib;
 
 namespace TestPerf
 {
@@ -72,12 +71,12 @@ namespace TestPerf
                     //"23aug2017_hela_serum_timecourse_wide_1f.mzML",
                 },
 
-                FinalTargetCounts = new[] { 317, 552, 552, 3922 },
+                FinalTargetCounts = new[] { 304, 509, 509, 3490 },
                 MassErrorStats = new[]
                 {
-                    new[] {-0.3, 2.4},
-                    new[] {-0.2, 2.4},
-                    new[] {-0.4, 2.4},
+                    new[] {-0.2, 2.5},
+                    new[] {-0.2, 2.5},
+                    new[] {-0.2, 2.5},
                 },
                 ChromatogramClickPoint = new PointF(32.2f, 12.5f)
             };
@@ -115,7 +114,6 @@ namespace TestPerf
                     "23aug2017_hela_serum_timecourse_wide_1f.mzML",
                 },
                 FinalTargetCounts = new[] { 546, 3244, 3244, 23503 },
-                //FinalTargetCounts = new[] { 558, 13631, 13631, 98734 }, // 558, 23522, 23522, 172806
                 MassErrorStats = new[]
                 {
                     new[] {-0.3, 2.3},
@@ -123,7 +121,7 @@ namespace TestPerf
                     new[] {-0.3, 2.3},
                     new[] {-0.3, 2.3},
                     new[] {-0.4, 2.3},
-                    new[] {-0.3, 2.3},
+                    new[] {-0.4, 2.3},
                     new[] {-0.3, 2.4},
                 },
                 ChromatogramClickPoint = new PointF(32.2f, 12.5f)
@@ -144,8 +142,6 @@ namespace TestPerf
             if (Program.UseOriginalURLs && !HasPrositServer())
                 return;
 
-            //TestFilesZip = @"https://skyline.ms/tutorials/EncyclopeDiaSearchTutorial.zip";
-            //TestFilesZip = @"https://skyline.ms/tutorials/EncyclopeDiaSearchTutorialDemux.zip";
             TestFilesPersistent = new[] { "23aug2017_hela_serum_timecourse", "z3_nce33-prosit" };
 
             RunFunctionalTest();
@@ -206,11 +202,15 @@ namespace TestPerf
                 .Replace(".fasta", $"-z3_nce33-prosit-{_analysisValues.PrositHash}.blib");
             FileEx.HardLinkOrCopyFile(persistentBlibFilepath, tempBlibFilepath);
 
-            string persistentPath = Path.GetDirectoryName(persistentBlibFilepath) ?? string.Empty;
-            DirectoryEx.SafeDelete(Path.Combine(persistentPath, "elib_chrom"));
-            DirectoryEx.SafeDelete(Path.Combine(persistentPath, "elib_quant"));
-            foreach (var demuxFile in Directory.EnumerateFiles(persistentPath, "*-demuxed"))
-                FileEx.SafeDelete(demuxFile);
+            // hard-link the mzMLs to a working directory inside the persistent files directory so the EncyclopeDIA intermediate files can be deleted easily;
+            // NB: some intermediate (demux'd) files are persisted in the ZIP file to speed up the processing
+            string workingDir = Path.Combine(TestFilesDir.PersistentFilesDir, "working");
+            if (Directory.Exists(workingDir))
+                Directory.Delete(workingDir, true);
+            Directory.CreateDirectory(workingDir);
+
+            foreach (var mzml in Directory.EnumerateFiles(TestFilesDir.PersistentFilesDir, "*.mzML"))
+                FileEx.HardLinkOrCopyFile(mzml, Path.Combine(workingDir, Path.GetFileName(mzml)));
 
             if (Program.UseOriginalURLs)
                 FileEx.SafeDelete(tempBlibFilepath, true);
@@ -235,7 +235,7 @@ namespace TestPerf
             var browseNarrowDlg = ShowDialog<OpenDataSourceDialog>(() => searchDlg.NarrowWindowResults.Browse());
             RunUI(() =>
             {
-                browseNarrowDlg.CurrentDirectory = new MsDataFilePath(TestFilesDir.PersistentFilesDir);
+                browseNarrowDlg.CurrentDirectory = new MsDataFilePath(workingDir);
                 browseNarrowDlg.SelectAllFileType("mzML", s => _analysisValues.NarrowWindowDiaFiles.Contains(s));
             });
             PauseForScreenShot<OpenDataSourceDialog>("Narrow Window Results - Browse for Results Files form", screenshotPage++);
@@ -246,7 +246,7 @@ namespace TestPerf
             var browseWideDlg = ShowDialog<OpenDataSourceDialog>(() => searchDlg.WideWindowResults.Browse());
             RunUI(() =>
             {
-                browseWideDlg.CurrentDirectory = new MsDataFilePath(TestFilesDir.PersistentFilesDir);
+                browseWideDlg.CurrentDirectory = new MsDataFilePath(workingDir);
                 browseWideDlg.SelectAllFileType("mzML", s => _analysisValues.WideWindowDiaFiles.Contains(s));
             });
             PauseForScreenShot<OpenDataSourceDialog>("Wide Window Results - Browse for Results Files form", screenshotPage++);
@@ -311,7 +311,7 @@ namespace TestPerf
 
             RunUI(() =>
             {
-                // modifications page is skipped
+                // modifications page is skipped 
 
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
                 importPeptideSearchDlg.TransitionSettingsControl.MinIonCount = 3;

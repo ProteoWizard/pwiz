@@ -23,7 +23,8 @@
 using System;
 using System.Windows.Forms;
 using System.Drawing;
-using System.ComponentModel;
+using System.Runtime.InteropServices;
+using pwiz.Common.Collections;
 
 
 namespace CustomProgressCell
@@ -107,8 +108,7 @@ namespace CustomProgressCell
                 Maximum = 100,
                 Style = ProgressBarStyle.Continuous
             };
-
-            _text = String.Format("{0} of {1}", MessageSpecialValue.CurrentValue, MessageSpecialValue.Maximum);
+            _text = String.Format(@"{0} of {1}", MessageSpecialValue.CurrentValue, MessageSpecialValue.Maximum);
 
             ValueType = typeof(int);
 
@@ -122,6 +122,35 @@ namespace CustomProgressCell
             _animationStopTimer.Tick += (x, y) => { _animationStepTimer.Stop(); _animationStopTimer.Stop(); };
         }
 
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = false)]
+        static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr w, IntPtr l);
+        const uint PBM_SETSTATE = 0x0410; // 1040
+
+        enum ProgressBarState
+        {
+            Normal = 1, // green
+            Error = 2, // red
+            Warning = 3 // yellow
+        }
+
+        private void SetProgressBarState(ProgressBarState state)
+        {
+            SendMessage(_progressBar.Handle, PBM_SETSTATE, (IntPtr)state, IntPtr.Zero);
+        }
+
+        protected override void OnDataGridViewChanged()
+        {
+            base.OnDataGridViewChanged();
+            if (DataGridView == null)
+                return;
+
+            DataGridView.CellErrorTextChanged += (sender, args) =>
+            {
+                if (args.RowIndex == RowIndex && args.ColumnIndex == ColumnIndex)
+                    SetProgressBarState(ErrorText.IsNullOrEmpty() ? ProgressBarState.Normal : ProgressBarState.Error);
+            };
+        }
+
         protected override object GetValue (int rowIndex)
         {
             return _progressBar.Value;
@@ -129,6 +158,8 @@ namespace CustomProgressCell
 
         protected override bool SetValue (int rowIndex, object value)
         {
+            if (OwningRow.Index > -1)
+                ReadOnly = true;
             if (value is int)
             {
                 _progressBar.Value = (int) value;
@@ -140,8 +171,6 @@ namespace CustomProgressCell
 
         protected override void Paint (Graphics g, Rectangle clipBounds, Rectangle cellBounds, int rowIndex, DataGridViewElementStates cellState, object value, object formattedValue, string errorText, DataGridViewCellStyle cellStyle, DataGridViewAdvancedBorderStyle advancedBorderStyle, DataGridViewPaintParts paintParts)
         {
-            ReadOnly = true;
-
             // Draw the cell border
             base.Paint(g, clipBounds, cellBounds,
                        rowIndex, cellState, value, formattedValue, errorText,

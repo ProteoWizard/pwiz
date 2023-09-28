@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MultiProgressControl));
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.ProgressSplit = new System.Windows.Forms.SplitContainer();
             this.progressGridView = new System.Windows.Forms.DataGridView();
@@ -43,22 +44,16 @@
             // 
             // ProgressSplit
             // 
-            this.ProgressSplit.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ProgressSplit.Location = new System.Drawing.Point(0, 0);
+            resources.ApplyResources(this.ProgressSplit, "ProgressSplit");
             this.ProgressSplit.Name = "ProgressSplit";
-            this.ProgressSplit.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
             // ProgressSplit.Panel1
             // 
             this.ProgressSplit.Panel1.Controls.Add(this.progressGridView);
-            this.ProgressSplit.Panel1MinSize = 45;
             // 
             // ProgressSplit.Panel2
             // 
             this.ProgressSplit.Panel2.Controls.Add(this.progressLogTextBox);
-            this.ProgressSplit.Size = new System.Drawing.Size(1041, 670);
-            this.ProgressSplit.SplitterDistance = 491;
-            this.ProgressSplit.TabIndex = 1;
             // 
             // progressGridView
             // 
@@ -69,20 +64,17 @@
             this.progressGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.NameColumn,
             this.ProgressColumn});
-            this.progressGridView.Dock = System.Windows.Forms.DockStyle.Fill;
+            resources.ApplyResources(this.progressGridView, "progressGridView");
             this.progressGridView.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
-            this.progressGridView.Location = new System.Drawing.Point(0, 0);
             this.progressGridView.MultiSelect = false;
             this.progressGridView.Name = "progressGridView";
             this.progressGridView.RowHeadersVisible = false;
             this.progressGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.progressGridView.Size = new System.Drawing.Size(1041, 491);
-            this.progressGridView.TabIndex = 0;
             // 
             // NameColumn
             // 
             this.NameColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.NameColumn.HeaderText = "Name";
+            resources.ApplyResources(this.NameColumn, "NameColumn");
             this.NameColumn.Name = "NameColumn";
             // 
             // ProgressColumn
@@ -93,27 +85,21 @@
             dataGridViewCellStyle1.SelectionForeColor = System.Drawing.Color.Black;
             this.ProgressColumn.DefaultCellStyle = dataGridViewCellStyle1;
             this.ProgressColumn.FillWeight = 60F;
-            this.ProgressColumn.HeaderText = "Progress";
-            this.ProgressColumn.MinimumWidth = 50;
+            resources.ApplyResources(this.ProgressColumn, "ProgressColumn");
             this.ProgressColumn.Name = "ProgressColumn";
             // 
             // progressLogTextBox
             // 
-            this.progressLogTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.progressLogTextBox.Location = new System.Drawing.Point(0, 0);
-            this.progressLogTextBox.Multiline = true;
+            resources.ApplyResources(this.progressLogTextBox, "progressLogTextBox");
             this.progressLogTextBox.Name = "progressLogTextBox";
             this.progressLogTextBox.ReadOnly = true;
-            this.progressLogTextBox.Size = new System.Drawing.Size(1041, 175);
-            this.progressLogTextBox.TabIndex = 0;
             // 
             // MultiProgressControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.ProgressSplit);
             this.Name = "MultiProgressControl";
-            this.Size = new System.Drawing.Size(1041, 670);
             this.ProgressSplit.Panel1.ResumeLayout(false);
             this.ProgressSplit.Panel2.ResumeLayout(false);
             this.ProgressSplit.Panel2.PerformLayout();

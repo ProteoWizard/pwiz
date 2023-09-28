@@ -13857,4 +13857,13 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="ProteinAssociation_CreateDocTree_Unmapped_Peptides" xml:space="preserve">
     <value>Unmapped Peptides</value>
   </data>
+  <data name="EncyclopeDiaHelpers_Generate_Waiting_for_chromatogram_library" xml:space="preserve">
+    <value>Waiting for chromatogram library</value>
+  </data>
+  <data name="ProgressMonitorForFile_UpdateProgress_Demultiplexing_spectra___0___1_" xml:space="preserve">
+    <value>Demultiplexing spectra: {0}/{1}</value>
+  </data>
+  <data name="ParallelRunner_Generate_An_EncyclopeDIA_task_failed_" xml:space="preserve">
+    <value>An EncyclopeDIA task failed.</value>
+  </data>
 </root>
