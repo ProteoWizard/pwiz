@@ -59,6 +59,7 @@ using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using AlertDlg = pwiz.Skyline.Alerts.AlertDlg;
@@ -882,9 +883,21 @@ namespace pwiz.Skyline
 
         private void openPanorama_Click(object sender, EventArgs e)
         {
+            if (!CheckSaveDocument())
+            {
+                return;
+            }
             OpenFromPanorama();
         }
 
+        /// <summary>
+        /// Allows user to browse Skyline documents on a Panorama server, and choose a document to download
+        /// and open in Skyline. 
+        /// </summary>
+        /// <param name="downloadFilePath">Local path where the file from Panorama is downloaded.
+        /// If null, the user selects the download path with the SaveFileDialog. Automated tests 
+        /// can set the download path to avoid using SaveFileDialog.
+        /// </param>
         public void OpenFromPanorama(string downloadFilePath = null)
         {
             var servers = Settings.Default.ServerList;
@@ -894,7 +907,7 @@ namespace pwiz.Skyline
                         TextUtil.LineSeparate(
                             Resources.SkylineWindow_OpenFromPanorama_No_Panorama_servers_were_found_,
                             Resources.SkylineWindow_OpenFromPanorama_Press__Add__to_add_a_new_server_),
-                        Resources.SkylineWindow_OpenFromPanorama_Add) == DialogResult.Cancel)
+                        Resources.SkylineWindow_Add) == DialogResult.Cancel)
                     return;
 
                 var serverPanoramaWeb = new Server(PanoramaUtil.PANORAMA_WEB, string.Empty, string.Empty);
@@ -915,7 +928,15 @@ namespace pwiz.Skyline
 
             try
             {
-                using var dlg = new PanoramaFilePicker(panoramaServers, state);
+                using var dlg = new PanoramaFilePicker(panoramaServers, state) { Text = Resources.SkylineWindow_OpenFromPanorama_Open_From_Panorama };
+                var longOptionRunner = new LongOperationRunner
+                {
+                    ParentControl = this,
+                    JobTitle = Resources.SkylineWindow_OpenFromPanorama_Loading_remote_server_folders,
+                };
+                // TODO: This needs to be possible to cancel
+                longOptionRunner.Run(broker => dlg.InitializeDialog());
+
                 if (dlg.ShowDialog(this) != DialogResult.Cancel)
                 {
                     Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;
@@ -978,18 +999,19 @@ namespace pwiz.Skyline
             }
         }
 
-        public bool DownloadPanoramaFile(string downloadPath, string fileName, string fileUrl, PanoramaServer curServer, long size, IPanoramaClient panoramaClient = null)
+        public bool DownloadPanoramaFile(string downloadPath, string fileName, string fileUrl, PanoramaServer curServer, long size, 
+            IPanoramaClient panoramaClient = null /* Automated tests can provide their own IPanoramaClient when they call this method */)
         {
             try
             {
-                panoramaClient ??= new WebPanoramaClient(curServer.URI);
+                panoramaClient ??= new WebPanoramaClient(curServer.URI, curServer.Username, curServer.Password);
                 using (var fileSaver = new FileSaver(downloadPath))
                 {
                     using (var longWaitDlg = new LongWaitDlg())
                     {
                         longWaitDlg.Text = string.Format(Resources.SkylineWindow_OpenFromPanorama_Downloading_file__0_, fileName);
                         var progressStatus = longWaitDlg.PerformWork(this, 800,
-                            progressMonitor => panoramaClient.DownloadFile(fileUrl, fileSaver.SafeName, size, fileName, curServer,
+                            progressMonitor => panoramaClient.DownloadFile(fileUrl, fileSaver.SafeName, size, fileName,
                                 progressMonitor, new ProgressStatus()));
 
                         if (progressStatus.IsCanceled || progressStatus.IsError)
@@ -2379,7 +2401,7 @@ namespace pwiz.Skyline
                     : Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_library_values___Add_these_iRT_values_to_the_iRT_calculator_;
                 var yesButton = calcIrt == null
                     ? Resources.SkylineWindow_ImportMassList__Create___
-                    : Resources.SkylineWindow_ImportMassList_Add;
+                    : Resources.SkylineWindow_Add;
                 switch (MultiButtonMsgDlg.Show(this, useIrtMessage, yesButton, Resources.SkylineWindow_ImportMassList__Skip, true))
                 {
                     case DialogResult.No:
@@ -3425,10 +3447,65 @@ namespace pwiz.Skyline
 
                 servers.Add(newServer);
             }
+            if (!servers.Any(server => server.HasUserAccount())) // None of the servers have a user account
+            {
+                DialogResult buttonPress = MultiButtonMsgDlg.Show(
+                    this,
+                    TextUtil.LineSeparate(
+                        Resources.SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_with_a_user_account__To_upload_documents_to_a_server_a_user_account_is_required_,
+                        string.Empty,
+                        Resources.SkylineWindow_ShowPublishDlg_Press_Edit_existing_to_add_user_account_information_for_an_existing_server_,
+                        Resources.SkylineWindow_OpenFromPanorama_Press__Add__to_add_a_new_server_),
+                    Resources.SkylineWindow_ShowPublishDlg_Edit_existing, Resources.SkylineWindow_Add,
+                    true);
+                if (buttonPress == DialogResult.Cancel)
+                    return;
+
+                if (buttonPress == DialogResult.Yes)
+                {
+                    // User intends to edit an existing server
+                    if (servers.Count == 1)
+                    {
+                        var anonymousServer = servers[0];
+                        var editedServer = servers.AddCredentials(this, anonymousServer, servers);
+                        if (editedServer == null)
+                            return;
+
+                        if (!editedServer.HasUserAccount())
+                        {
+                            var alertDlg = new AlertDlg(Resources.SkylineWindow_ShowPublishDlg_Document_cannot_be_uploaded_to_a_Panorama_server_without_a_user_account_, MessageBoxButtons.OK);
+                            alertDlg.ShowAndDispose(this);
+                            return;
+                        }
+                        servers[0] = editedServer; // Replace with edited server
+                    }
+                    else
+                    {
+                        ShowToolOptionsUI(ToolOptionsUI.TABS.Panorama);
+                        return;
+                    }
+                }
+                else
+                {
+                    // User wants to add a new server
+                    var newServer = servers.AddServerWithAccount(this, servers);
+                    if (newServer == null)
+                        return;
+
+                    if (!newServer.HasUserAccount())
+                    {
+                        var alertDlg = new AlertDlg(Resources.SkylineWindow_ShowPublishDlg_Document_cannot_be_uploaded_to_a_Panorama_server_without_a_user_account_, MessageBoxButtons.OK);
+                        alertDlg.ShowAndDispose(this);
+                        return;
+                    }
+                    servers.Add(newServer);
+                }
+            }
+
             var panoramaSavedUri = document.Settings.DataSettings.PanoramaPublishUri;
             var showPublishDocDlg = true;
 
-            // if the document has a saved uri prompt user for acton, check servers, and permissions, then publish
+            // if the document has a saved uri prompt user for action, check servers, and permissions, then publish
             // if something fails in the attempt to publish to the saved uri will bring up the usual PublishDocumentDlg
             if (panoramaSavedUri != null && !string.IsNullOrEmpty(panoramaSavedUri.ToString()))
             {
@@ -3516,10 +3593,10 @@ namespace pwiz.Skyline
             }
 
             // must escape uri string as panorama api does not and strings are escaped in schema
-            if (folders == null || !folderPath.Contains(Uri.EscapeUriString(folders[@"path"].ToString()))) 
+            if (folders?[@"path"] == null || !folderPath.Contains(Uri.EscapeUriString(folders[@"path"].ToString())))
                 return false;
 
-            if (!PanoramaUtil.CheckFolderPermissions(folders) || !PanoramaUtil.CheckFolderType(folders))
+            if (!(PanoramaUtil.CheckInsertPermissions(folders) && PanoramaUtil.HasTargetedMsModule(folders)))
                 return false;
 
             var fileInfo = new FolderInformation(server, true);
