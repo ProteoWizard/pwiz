@@ -80,7 +80,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             Icon = SkylineWindow.Icon;
 
-            ImportFastaControl = new ImportFastaControl(this, skylineWindow.SequenceTree);
+            ImportFastaControl = new ImportFastaControl(this, skylineWindow.SequenceTree, false);
             ImportFastaControl.IsDDASearch = true;
             AddPageControl(ImportFastaControl, fastaPage, 2, 60);
 
@@ -642,14 +642,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     if (RowCount == 0)
                     {
                         var hostDialog = _hostControl.HostDialog;
-                        if (hostDialog.InvokeRequired)
-                            hostDialog.Invoke(new MethodInvoker(() =>
-                            {
-                                _hostControl.progressSplitContainer.Panel1Collapsed = false;
-                                hostDialog.Size = new Size(Math.Min(
-                                    Screen.FromControl(hostDialog).Bounds.Width * 90 / 100,
-                                    hostDialog.Width * 2), hostDialog.Height);
-                            }));
+                        hostDialog.Invoke(new MethodInvoker(() =>
+                        {
+                            _hostControl.progressSplitContainer.Panel1Collapsed = false;
+                            hostDialog.Size = new Size(Math.Min(
+                                Screen.FromControl(hostDialog).Bounds.Width * 90 / 100,
+                                hostDialog.Width * 2), hostDialog.Height);
+                        }));
                     }
 
                     string name = match.Groups[1].Value;
