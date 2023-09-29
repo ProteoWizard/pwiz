@@ -19,7 +19,6 @@
 // limitations under the License.
 //
 
-
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/misc/Exception.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
@@ -36,6 +35,10 @@
 #include <iostream>
 #include <fstream>
 
+#ifdef BOOST_HAS_GETTIMEOFDAY
+#include <sys/time.h>
+#endif
+
 #pragma warning (push)
 #pragma warning (disable: 4189)
 //#include "MassLynxRawDataFile.h"
@@ -46,10 +49,13 @@
 #include "MassLynxRawInfoReader.hpp"
 //#include "MassLynxRawScanStatsReader.h"
 #include <boost/range/algorithm/find_if.hpp>
+#include <boost/winapi/time.hpp>
+
 #include "MassLynxLockMassProcessor.hpp"
 #include "MassLynxRawProcessor.hpp"
 #include "MassLynxParameters.hpp"
 #include "MassLynxScanProcessor.hpp"
+
 //#include "cdtdefs.h"
 //#include "compresseddatacluster.h"
 #pragma warning (pop)
@@ -104,7 +110,7 @@ struct PWIZ_API_DECL RawData
     MassLynxRawChromatogramReader ChromatogramReader;
     MassLynxRawAnalogReader AnalogChromatogramReader;
     std::vector<string> analogChannelNames;
-
+    
     struct CachedCompressedDataCluster : public MassLynxRawScanReader
     {
         CachedCompressedDataCluster(Extended::MassLynxRawScanReader& massLynxRawReader) : MassLynxRawScanReader(massLynxRawReader) {}
@@ -125,7 +131,7 @@ struct PWIZ_API_DECL RawData
     const vector<vector<float>>& AnalogTimesByChannel() const { return analogTimes; }
     const vector<vector<float>>& AnalogIntensitiesByChannel() const { return analogIntensities; }
     const vector<string>& AnalogChannelNames() const { return analogChannelNames; }
-
+    
     size_t FunctionCount() const {return functionIndexList.size();}
     size_t LastFunctionIndex() const {return lastFunctionIndex_; }
 
@@ -542,6 +548,17 @@ struct PWIZ_API_DECL RawData
 
     void readAnalogChromatograms()
     {
+        double startTime = 0.0;
+#ifdef BOOST_HAS_GETTIMEOFDAY
+        timeval tv;
+        gettimeofday(&tv, 0);
+        startTime = tv.tv_sec * 1.e3 + tv.tv_usec * 1.e-3;
+#else
+        #ifdef _WIN32
+	        startTime = GetTickCount();
+        #endif
+#endif
+
         const int channels = AnalogChromatogramReader.GetChannelCount();
 
         analogTimes.clear();
@@ -557,6 +574,24 @@ struct PWIZ_API_DECL RawData
             AnalogChromatogramReader.ReadChannel(ch, analogTimes[ch], analogIntensities[ch]);
             analogChannelNames[ch] = AnalogChromatogramReader.GetChannelDescription(ch);
         }
+
+        double endTime = 0.0;
+
+#ifdef BOOST_HAS_GETTIMEOFDAY
+        timeval tv;
+        gettimeofday(&tv, 0);
+        endTime = startTime = tv.tv_sec * 1.e3 + tv.tv_usec * 1.e-3; - startTime;
+#else
+        #ifdef _WIN32
+    	    endTime = GetTickCount() - startTime;
+        #endif
+#endif   
+
+        std::cout
+            << "Info: Time for reading all analog channels: "
+            << endTime
+            << "(ms)"
+            << std::endl;
     }
 };
 
