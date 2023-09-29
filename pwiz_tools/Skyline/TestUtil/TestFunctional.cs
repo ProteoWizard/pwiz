@@ -2176,9 +2176,9 @@ namespace pwiz.SkylineTestUtil
             WaitForCondition(() => BackgroundProteomeManager.DocumentHasLoadedBackgroundProteomeOrNone(SkylineWindow.Document, true)); 
         }
 
-        public static void ImportAssayLibrarySkipColumnSelect(string csvPath, List<string> errorList = null, bool proceedWithErrors = true)
+        public static void ImportAssayLibrarySkipColumnSelect(string csvPath, List<string> errorList = null, bool proceedWithErrors = true, bool isDemo = false)
         {
-            ImportAssayLibraryOrTransitionList(csvPath, true, errorList, proceedWithErrors);
+            ImportAssayLibraryOrTransitionList(csvPath, true, errorList, proceedWithErrors, isDemo);
         }
 
         // Determine whether a message was created using the given string format
@@ -2232,7 +2232,7 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        private static void ImportAssayLibraryOrTransitionList(string csvPath, bool isAssayLibrary, ICollection<string> errorList, bool proceedWithErrors)
+        private static void ImportAssayLibraryOrTransitionList(string csvPath, bool isAssayLibrary, ICollection<string> errorList, bool proceedWithErrors, bool isDemo=false)
         {
             var columnSelectDlg = isAssayLibrary ?
                 ShowDialog<ImportTransitionListColumnSelectDlg>(() =>  SkylineWindow.ImportAssayLibrary(csvPath)) :
@@ -2240,7 +2240,8 @@ namespace pwiz.SkylineTestUtil
 
             VerifyExplicitUseInColumnSelect(isAssayLibrary, columnSelectDlg);
             var currentDoc = SkylineWindow.Document;
-
+            if (isDemo) 
+                PauseTest("user column selection");
             if (errorList == null)
             {
                 OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
@@ -2299,9 +2300,9 @@ namespace pwiz.SkylineTestUtil
             AssertEx.IsTrue(!items.Any(forbidden.Contains));
         }
 
-        public static void ImportTransitionListSkipColumnSelect(string csvPath, ICollection<string> errorList = null, bool proceedWithErrors = true)
+        public static void ImportTransitionListSkipColumnSelect(string csvPath, ICollection<string> errorList = null, bool proceedWithErrors = true, bool pauseTest = false)
         {
-            ImportAssayLibraryOrTransitionList(csvPath, false, errorList, proceedWithErrors);
+            ImportAssayLibraryOrTransitionList(csvPath, false, errorList, proceedWithErrors, pauseTest);
         }
 
         public static void PasteTransitionListSkipColumnSelect(bool expectColumnSelectDialog = true)

@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
@@ -71,22 +70,41 @@ namespace pwiz.SkylineTestFunctional
         }
 
         private static bool _asSmallMolecules;
+        private static bool _smallMolDemo; // Set true for a convenient interactive  demo of small mol UI
+
+        private static void DemoPause(string message)
+        {
+            if (_smallMolDemo)
+            {
+                PauseTest(message);
+            }
+        }
 
         protected override void DoTest()
         {
+            _smallMolDemo = false; // _asSmallMolecules;
             if (_asSmallMolecules)
             {
-                TranslateTransitionListsToSmallMolecules();
+                AsSmallMoleculeTestUtil.TranslateFilesToSmallMolecules(TestFilesDir.FullPath, false);
             }
             TestAssayImportGeneral();
             if (!_asSmallMolecules)
             {
                 TestModificationMatcher();
             }
-            TestBlankDocScenario();
-            TestEmbeddedIrts();
+            if (!_smallMolDemo)
+            {
+                TestBlankDocScenario();
+                TestEmbeddedIrts();
+            }
+            DemoPause("now on to Assay Library Import");
 
             TestAssayImport2();
+            if (_smallMolDemo)
+            {
+                DemoPause("done");
+                return;
+            }
             TestPaser();
             VerifyAuditLog();
         }
@@ -94,9 +112,17 @@ namespace pwiz.SkylineTestFunctional
         protected void TestAssayImportGeneral()
         {
             var documentExisting = TestFilesDir.GetTestPath("AQUA4_Human_Existing_Calc.sky");
+            var documentBlank = TestFilesDir.GetTestPath("AQUA4_Human_Blank.sky");
+            string textConflict = TestFilesDir.GetTestPath("OpenSWATH_SM4_Overwrite.csv");
+            string textIrt = TestFilesDir.GetTestPath("OpenSWATH_SM4_iRT.csv");
+            string newDatabase = TestFilesDir.GetTestPath("irtNew.irtdb");
+            var smDecorate = _asSmallMolecules ? RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator : string.Empty;
+            string textNoError = TestFilesDir.GetTestPath("OpenSWATH_SM4_NoError.csv");
+            RCalcIrt calculator;
             // 1. Import mass list with iRT's into document, then cancel
             LoadDocument(documentExisting);
-            string textNoError = TestFilesDir.GetTestPath("OpenSWATH_SM4_NoError.csv");
+            if (!_smallMolDemo) // Error checks, not interesting to watch
+            {
             var docOld = SkylineWindow.Document;
             ImportTransitionListSkipColumnSelectWithMessage(textNoError,
                 Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_library_values___Add_these_iRT_values_to_the_iRT_calculator_, 
@@ -135,7 +161,6 @@ namespace pwiz.SkylineTestFunctional
             // 5. Peptide iRT in document conflicts with peptide iRT in database, respond by canceling whole operation
             LoadDocument(documentExisting);
             var docOldImport = SkylineWindow.Document;
-            string textConflict = TestFilesDir.GetTestPath("OpenSWATH_SM4_Overwrite.csv");
             ImportTransitionListSkipColumnSelectWithMessage(textConflict,
                 Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_library_values___Add_these_iRT_values_to_the_iRT_calculator_,
                 importIrt => importIrt.Btn0Click()); // Button0 is "Add"
@@ -161,8 +186,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(importIrtConflictOverwriteNo, importIrtConflictOverwriteNo.Btn0Click);
             SkipLibraryDlg();  // Wait for dialog offering to add to library, click "Skip"
             WaitForDocumentLoaded();
-            var calculator = ValidateDocAndIrt(355, 355, 10);
-            var smDecorate = _asSmallMolecules ? RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator : string.Empty;
+            calculator = ValidateDocAndIrt(355, 355, 10);
             RunUI(() =>
             {
                 var scores = calculator.PeptideScores.ToList();
@@ -241,7 +265,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(1, currentLibraries.Libraries.Count);
                 Assert.AreEqual(1, currentLibraries.LibrarySpecs.Count);
                 var aqua4HumanExistingCalcAssay = 
-                    $@"AQUA4_Human_Existing_Calc{(_asSmallMolecules ? AbstractUnitTestEx.SMALL_MOL_CONVERSION_TAG : string.Empty)}-assay" ;
+                    $@"AQUA4_Human_Existing_Calc{(_asSmallMolecules ? AsSmallMoleculeTestUtil.SMALL_MOL_CONVERSION_TAG : string.Empty)}-assay" ;
                 Assert.AreEqual(aqua4HumanExistingCalcAssay, currentLibraries.LibrarySpecs[0].Name);
                 var currentLibrary = currentLibraries.Libraries[0];
                 Assert.AreEqual(12, currentLibrary.SpectrumCount);
@@ -257,7 +281,7 @@ namespace pwiz.SkylineTestFunctional
             // 9. iRT not a number leads to error
             LoadDocument(documentExisting);
             var docNanIrt = SkylineWindow.Document;
-            var textIrtNan = AdjustTransitionListForTestMode("PrecursorMz\tProductMz\tTr_recalibrated\tLibraryIntensity\tdecoy\tPeptideSequence\tProteinName\n728.88\t924.539\tBAD_IRT\t3305.3\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n", 2);
+            var textIrtNan = AsSmallMoleculeTestUtil.AdjustTransitionListForTestMode("PrecursorMz\tProductMz\tTr_recalibrated\tLibraryIntensity\tdecoy\tPeptideSequence\tProteinName\n728.88\t924.539\tBAD_IRT\t3305.3\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n", 2, _asSmallMolecules);
             RunUI(() => ClipboardEx.SetText(textIrtNan));
             var mzExpected = _asSmallMolecules ? 723.8753698625 : 728.88;
             PasteTransitionListSkipColumnSelectWithMessage(string.Format(
@@ -268,7 +292,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreSame(docNanIrt, SkylineWindow.Document);
 
             // 10. iRT blank leads to error
-            var textIrtBlank = AdjustTransitionListForTestMode("PrecursorMz\tProductMz\tiRT\tLibraryIntensity\tdecoy\tPeptideSequence\tProteinName\n728.88\t924.539\t\t3305.3\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n", 2);
+            var textIrtBlank = AsSmallMoleculeTestUtil.AdjustTransitionListForTestMode("PrecursorMz\tProductMz\tiRT\tLibraryIntensity\tdecoy\tPeptideSequence\tProteinName\n728.88\t924.539\t\t3305.3\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n", 2, _asSmallMolecules);
             RunUI(() => ClipboardEx.SetText(textIrtBlank));
             PasteTransitionListSkipColumnSelectWithMessage(string.Format(Resources.MassListImporter_AddRow_Invalid_iRT_value_at_precusor_m_z__0__for_peptide__1_,
                                                         mzExpected,
@@ -277,7 +301,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreSame(docNanIrt, SkylineWindow.Document);
 
             // 11. Library not a number leads to error
-            var textLibraryNan = AdjustTransitionListForTestMode("PrecursorMz\tProductMz\tiRT\tLibraryIntensity\tdecoy\tPeptideSequence\tProteinName\n728.88\t924.539\t30.5\tBAD_LIBRARY\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n", 2);
+            var textLibraryNan = AsSmallMoleculeTestUtil.AdjustTransitionListForTestMode("PrecursorMz\tProductMz\tiRT\tLibraryIntensity\tdecoy\tPeptideSequence\tProteinName\n728.88\t924.539\t30.5\tBAD_LIBRARY\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n", 2, _asSmallMolecules);
             RunUI(() => ClipboardEx.SetText(textLibraryNan));
             PasteTransitionListSkipColumnSelectWithMessage(string.Format(Resources.MassListImporter_AddRow_Invalid_library_intensity_at_precursor__0__for_peptide__1_,
                                                         mzExpected,
@@ -286,7 +310,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreSame(docNanIrt, SkylineWindow.Document);
 
             // 12. Library blank leads to error
-            var textLibraryBlank = AdjustTransitionListForTestMode("PrecursorMz\tProductMz\tTr_recalibrated\tRelaTive_IntEnsity\tdecoy\tPeptideSequence\tProteinName\n728.88\t924.539\t30.5\t\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n", 2);
+            var textLibraryBlank = AsSmallMoleculeTestUtil.AdjustTransitionListForTestMode("PrecursorMz\tProductMz\tTr_recalibrated\tRelaTive_IntEnsity\tdecoy\tPeptideSequence\tProteinName\n728.88\t924.539\t30.5\t\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n", 2, _asSmallMolecules);
             RunUI(() => ClipboardEx.SetText(textLibraryBlank));
             PasteTransitionListSkipColumnSelectWithMessage(string.Format(Resources.MassListImporter_AddRow_Invalid_library_intensity_at_precursor__0__for_peptide__1_,
                                                         mzExpected,
@@ -355,7 +379,6 @@ namespace pwiz.SkylineTestFunctional
             // Test on-the-fly creation of iRT calculator as part of mass list import
 
             // 16. Attempt to create iRT calculator, then cancel, leaves the document the same
-            var documentBlank = TestFilesDir.GetTestPath("AQUA4_Human_Blank.sky");
             var docCreateIrtCancel = LoadDocument(documentBlank);
             docCreateIrtCancel = AllowAllIonTypes();
             ImportTransitionListSkipColumnSelectWithMessage(textConflict,
@@ -430,8 +453,6 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // 22. Missing new database name shows error message
-            string newDatabase = TestFilesDir.GetTestPath("irtNew.irtdb");
-            string textIrt = TestFilesDir.GetTestPath("OpenSWATH_SM4_iRT.csv");
             RunUI(() =>
             {
                 createIrtError.IrtImportType = CreateIrtCalculatorDlg.IrtType.separate_list;
@@ -486,15 +507,18 @@ namespace pwiz.SkylineTestFunctional
             // Document hasn't changed
             Assert.AreSame(docCreateIrtError, SkylineWindow.Document);
 
+            }
+
             // 25. Successful import and successful creation of iRT database and library
             // Document starts empty with no transitions and no iRT calculator
             // 355 transitions, libraries, and iRT times are imported, including libraries for the iRT times
             var docCalcGood = LoadDocument(documentBlank);
             Assert.AreEqual(0, docCalcGood.PeptideTransitions.Count());
+            DemoPause("blank document loaded, import transition list with iRTs " + textConflict);
             AllowAllIonTypes();
             ImportTransitionListSkipColumnSelectWithMessage(textConflict,
                 Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_values__but_the_document_does_not_have_an_iRT_calculator___Create_a_new_calculator_and_add_these_iRT_values_,
-                importIrt => importIrt.Btn0Click());
+                importIrt => importIrt.Btn0Click(), _smallMolDemo);
             var createIrtCalcGood = WaitForOpenForm<CreateIrtCalculatorDlg>();
             RunUI(() =>
             {
@@ -503,16 +527,21 @@ namespace pwiz.SkylineTestFunctional
                 createIrtCalcGood.TextFilename = textIrt;
                 createIrtCalcGood.NewDatabaseName = newDatabase;
             });
+            DemoPause("iRT calculator creation");
             if (_asSmallMolecules)
             {
                 // Expect Skyline to not recognize column headers, and to offer user the chance to set headers
                 var importTransitionListColumnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(createIrtCalcGood.OkDialog);
+                DemoPause("Expect Skyline to not recognize column headers, and to offer user the chance to set headers");
+
                 // Verify that cancel of column picker does not cancel the import
                 var errDlg = ShowDialog<AlertDlg>(importTransitionListColumnSelectDlg.CancelDialog);
                 // But it should show an error
+                DemoPause(" Verify that cancel of column picker does not cancel the import, but does cause an error");
                 OkDialog(errDlg, errDlg.OkDialog);
                 // Proceed
                 importTransitionListColumnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(createIrtCalcGood.OkDialog);
+                DemoPause("proceed");
                 OkDialog(importTransitionListColumnSelectDlg, importTransitionListColumnSelectDlg.OkDialog);
             }
             else
@@ -528,10 +557,11 @@ namespace pwiz.SkylineTestFunctional
                 doc = doc.ChangeSettings(settingsNew);
                 return doc;
             }));
+            DemoPause("library");
             OkDialog(libraryDlgAll, libraryDlgAll.Btn0Click);
             WaitForDocumentLoaded();
             ValidateDocAndIrt(355, 355, 10);
-            var AQUA4_Human_Blank_Assay = $@"AQUA4_Human_Blank{(_asSmallMolecules ? AbstractUnitTestEx.SMALL_MOL_CONVERSION_TAG : string.Empty)}-assay";
+            var AQUA4_Human_Blank_Assay = $@"AQUA4_Human_Blank{(_asSmallMolecules ? AsSmallMoleculeTestUtil.SMALL_MOL_CONVERSION_TAG : string.Empty)}-assay";
             RunUI(() =>
             {
                 var libraries = SkylineWindow.DocumentUI.Settings.PeptideSettings.Libraries;
@@ -574,7 +604,8 @@ namespace pwiz.SkylineTestFunctional
             var irtPeptides = calc.PeptideScores.Select(kvp => kvp.Key).ToList();
             Assert.AreEqual(documentPeptides.Count, irtPeptides.Count);
             Assert.AreEqual(documentPeptides.Count, documentPeptides.Intersect(irtPeptides).Count());
-
+            if (_smallMolDemo) 
+                return;
             // 26. Successful import and succesful load of existing database, with keeping of iRT's, plus successful library import
             var irtOriginal = TestFilesDir.GetTestPath("irtOriginal.irtdb");
             if (_asSmallMolecules)
@@ -678,7 +709,7 @@ namespace pwiz.SkylineTestFunctional
                 libraryDlgYesNew.Message));
             OkDialog(libraryDlgYesNew, libraryDlgYesNew.Btn0Click);
             var libraryDlgOverwrite = WaitForOpenForm<MultiButtonMsgDlg>();
-            string libraryName = Path.GetFileNameWithoutExtension(documentBlank) + (_asSmallMolecules ? AbstractUnitTestEx.SMALL_MOL_CONVERSION_TAG : string.Empty) + BiblioSpecLiteSpec.ASSAY_NAME;
+            string libraryName = Path.GetFileNameWithoutExtension(documentBlank) + (_asSmallMolecules ? AsSmallMoleculeTestUtil.SMALL_MOL_CONVERSION_TAG : string.Empty) + BiblioSpecLiteSpec.ASSAY_NAME;
             RunUI(() => Assert.AreEqual(string.Format(Resources.SkylineWindow_ImportMassList_There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created___Overwrite_this_library_or_skip_import_of_library_intensities_, libraryName),
                 libraryDlgOverwrite.Message));
             OkDialog(libraryDlgOverwrite, libraryDlgOverwrite.Btn0Click);
@@ -1115,35 +1146,39 @@ importIrt => importIrt.Btn1Click());
 
         private void TestAssayImport2()
         {
-            RunUI(() => SkylineWindow.NewDocument());
+            RunUI(() => SkylineWindow.NewDocument(true));
 
             var csvFile = TestFilesDir.GetTestPath("OpenSWATH_SM4_NoError.csv");
             var saveDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ImportAssayLibrary(csvFile));
+            DemoPause("user will cancel");
             OkDialog(saveDlg, saveDlg.BtnCancelClick);
             var doc = SkylineWindow.Document;
 
-            var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            var editMods = ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettings.EditHeavyMods);
-            RunUI(() =>
+            if (!_asSmallMolecules)
             {
-                editMods.AddItem(new StaticMod("Label:13C(6)15N(2) (C-term K)", "K", ModTerminus.C, LabelAtoms.C13 | LabelAtoms.N15));
-                editMods.AddItem(new StaticMod("Label:13C(6)15N(4) (C-term R)", "R", ModTerminus.C, LabelAtoms.C13 | LabelAtoms.N15));
-            });
-            OkDialog(editMods, editMods.OkDialog);
-            RunUI(() =>
-            {
-                peptideSettings.SetIsotopeModifications(0, true);
-                peptideSettings.SetIsotopeModifications(1, true);
-            });
-            OkDialog(peptideSettings, peptideSettings.OkDialog);
-            doc = WaitForDocumentChange(doc);
+                var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+                var editMods = ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettings.EditHeavyMods);
+                RunUI(() =>
+                {
+                    editMods.AddItem(new StaticMod("Label:13C(6)15N(2) (C-term K)", "K", ModTerminus.C, LabelAtoms.C13 | LabelAtoms.N15));
+                    editMods.AddItem(new StaticMod("Label:13C(6)15N(4) (C-term R)", "R", ModTerminus.C, LabelAtoms.C13 | LabelAtoms.N15));
+                });
+                OkDialog(editMods, editMods.OkDialog);
+                RunUI(() =>
+                {
+                    peptideSettings.SetIsotopeModifications(0, true);
+                    peptideSettings.SetIsotopeModifications(1, true);
+                });
+                OkDialog(peptideSettings, peptideSettings.OkDialog);
+                doc = WaitForDocumentChange(doc);
+            }
 
             var skyFile = TestFilesDir.GetTestPath("assayimport.sky");
             RunUI(() => Assert.IsTrue(SkylineWindow.SaveDocument(skyFile)));
             doc = WaitForDocumentChange(doc);
 
             // Import assay library and choose a protein
-            ImportAssayLibrarySkipColumnSelect(csvFile);
+            ImportAssayLibrarySkipColumnSelect(csvFile, null, true, _smallMolDemo);
             var chooseIrt = WaitForOpenForm<ChooseIrtStandardPeptidesDlg>();
             const string irtProteinName = "AQUA4SWATH_HMLangeG";
             RunUI(() =>
@@ -1154,6 +1189,7 @@ importIrt => importIrt.Btn1Click());
                     "AQUA4SWATH_HumanEbhardt", "AQUA4SWATH_Lepto", "AQUA4SWATH_MouseSabido", "AQUA4SWATH_MycoplasmaSchmidt", "AQUA4SWATH_PombeSchmidt", "AQUA4SWATH_Spyo"
                 });
             });
+            DemoPause("choose a molecule list");
             OkDialog(chooseIrt, () => chooseIrt.OkDialogProtein(irtProteinName));
             doc = WaitForDocumentChange(doc);
             AssertEx.IsDocumentState(doc, null, 14, 284, 1119);
@@ -1161,6 +1197,7 @@ importIrt => importIrt.Btn1Click());
             CheckAssayLibrarySettings();
 
             // Undo import
+            DemoPause("user is about to Undo");
             RunUI(SkylineWindow.Undo);
             WaitForDocumentChange(doc);
 
@@ -1168,12 +1205,16 @@ importIrt => importIrt.Btn1Click());
             doc = AllowAllIonTypes();
             var irtCsvFile = TestFilesDir.GetTestPath("OpenSWATH_SM4_iRT.csv");
             var overwriteDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ImportAssayLibrary(csvFile)); // Expect to be asked about library overwrite
+            DemoPause("Import assay library and choose a file");
             var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(overwriteDlg.BtnYesClick); // Expect a confirmation of column selections
+            DemoPause("Transition select");
             var chooseIrt2 = ShowDialog<ChooseIrtStandardPeptidesDlg>(transitionSelectdgl.OkDialog);
+            DemoPause("Irt select");
             if (_asSmallMolecules)
             {
                 // Expect a chance to verify columns
                 var columnsDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => chooseIrt2.OkDialogFile(irtCsvFile));
+                DemoPause("Confirm columns");
                 OkDialog(columnsDlg, columnsDlg.OkDialog);
             }
             else
@@ -1185,6 +1226,7 @@ importIrt => importIrt.Btn1Click());
             CollectionUtil.ForEach(SkylineWindow.Document.MoleculeGroups.Take(10), protein => Assert.IsTrue(protein.Name.StartsWith("AQRT_")));
             CheckAssayLibrarySettings();
 
+            DemoPause("Next, Import assay library and choose CiRTs");
             // Import assay library and choose CiRTs
             RunUI(() =>
             {
@@ -1211,7 +1253,7 @@ importIrt => importIrt.Btn1Click());
             cirtMixedLines.AddRange(cirtLines.Skip(1).ToArray().RandomOrder(ArrayUtil.RANDOM_SEED));
             File.WriteAllLines(cirtsMixedPath, cirtMixedLines);
 
-            if (!_asSmallMolecules)
+            if (!_asSmallMolecules) // Modifications stuff
             {
                 var errorList = new List<string>();
                 ImportAssayLibrarySkipColumnSelect(cirtsPath, errorList, false);
@@ -1254,12 +1296,15 @@ importIrt => importIrt.Btn1Click());
             }
 
             // Import assay library and choose a standard
+            DemoPause("now Import assay library and choose a standard");
             var chooseStandard = IrtStandard.BIOGNOSYS_11;
             if (_asSmallMolecules)
             {
                 doc = SkylineWindow.Document;
                 var columnSelectDlg2 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportAssayLibrary(cirtsPath));  // Expect a confirmation of column selections
+                DemoPause("confirm columns");
                 var chooseIrt4 = ShowDialog<ChooseIrtStandardPeptidesDlg>(columnSelectDlg2.OkDialog);
+                DemoPause("choose standards");
                 OkDialog(chooseIrt4, () => chooseIrt4.OkDialogStandard(chooseStandard));
             }
             else
@@ -1338,9 +1383,9 @@ importIrt => importIrt.Btn1Click());
         }
 
         // Expects a message dialog after import window closes
-        public static void ImportTransitionListSkipColumnSelectWithMessage(string csvPath, string expectedMessage, Action<MultiButtonMsgDlg> messageAction)
+        public static void ImportTransitionListSkipColumnSelectWithMessage(string csvPath, string expectedMessage, Action<MultiButtonMsgDlg> messageAction, bool isDemo = false)
         {
-            ImportTransitionListSkipColumnSelect(csvPath);
+            ImportTransitionListSkipColumnSelect(csvPath, null, true, isDemo);
             var messageDlg = WaitForOpenForm<MultiButtonMsgDlg>();
             AssertEx.AreEqual(expectedMessage, messageDlg.Message);
             OkDialog(messageDlg, () => messageAction(messageDlg));
@@ -1410,7 +1455,7 @@ importIrt => importIrt.Btn1Click());
         {
             if (_asSmallMolecules)
             {
-                var smallMolDoc = DocPathConvertedToSmallMolecules(document);
+                var smallMolDoc = AsSmallMoleculeTestUtil.DocPathConvertedToSmallMolecules(document);
                 if (!File.Exists(smallMolDoc))
                 {
                     RunUI(() => SkylineWindow.OpenFile(document));
@@ -1453,119 +1498,6 @@ importIrt => importIrt.Btn1Click());
             }
         }
 
-        private void TranslateTransitionListsToSmallMolecules()
-        {
-            var dir = TestFilesDir.FullPath;
-            foreach (var fname in Directory.GetFiles(dir, "*.?sv"))
-            {
-                // Modify the header line to make this look like a small molecule transition list that gives just names and mz
-                var lines = File.ReadAllLines(fname);
-                TranslateTransitionListToSmallMolecules(lines);
-                if (fname.Contains(@"cirts.tsv")) // Has conflicting IRTs, just remove the conflicts
-                {
-                    RemoveConflictLines(lines);
-                }
-                File.WriteAllLines(fname, lines);
-            }
-        }
-
-        private static string AdjustTransitionListForTestMode(string text, int addZ)
-        {
-            if (!_asSmallMolecules)
-            {
-                return text;
-            }
-            var lines = text.Split('\n');
-            TranslateTransitionListToSmallMolecules(lines, addZ);
-            return string.Join("\n", lines);
-        }
-
-        private static void TranslateTransitionListToSmallMolecules(string[] lines, int addZ = 0)
-        {
-            var header = lines[0].Replace("PeptideSequence", "Molecule")
-                .Replace("Peptide", "Molecule")
-                .Replace("Protein", "MoleculeListName")
-                .Replace("MoleculeListId", "MoleculeListName")
-                .Replace("MoleculeListNameName", "MoleculeListName")
-                .Replace("MoleculeListNameId", "MoleculeListName")
-                .Replace("CE", "CE_foo") // There's a negative CE in there, but not pertinent to this test
-                .Replace("CollisionEnergy", "CollisionEnergy_foo") // There's a negative CE in there, but not pertinent to this test
-                .Replace("ProductChange", "ProductCharge") // Typo in some lists
-                .Replace("Annotation", "Fragment Name")
-                .Replace("PrecursorMz", "mz_foo"); // Prefer to get mz from formula
-            AssertEx.AreNotEqual(header, lines[0], $@"unknown header type ""{header}""");
-            var headers = header.Split('\t');
-            var molCol = headers.IndexOf(col => col.Equals("Molecule", StringComparison.OrdinalIgnoreCase));
-            lines[0] = header + "\tChemicalFormula";
-            if (addZ != 0)
-            {
-                lines[0] += "\tPrecursor Adduct";
-            }
-            var masscalc = new SequenceMassCalc(MassType.Monoisotopic);
-            // Modify any peptides to look like just a name, e.g. PEPTIDER -> pep_PEPTIDER
-            for (var line = 1; line < lines.Length; line++)
-            {
-                var text = lines[line];
-                if (string.IsNullOrEmpty(text))
-                {
-                    continue; // Probably the last, empty, line
-                }
-
-                // Clean up a funky line in OpenSWATH_SM4_iRT.csv
-                var badPep = "YILAGVENSK";
-                var badtail = "0.00\t0\t0\t0\t2\tlight\t\t";
-                if (text.Contains(badPep) && text.EndsWith(badtail))
-                {
-                    text = text.Replace(badtail, badPep+"\t"+badtail).Replace("\t\t", "\t");
-                }
-
-                foreach (var z in Enumerable.Range(2, 5))
-                {
-                    text = text.Replace($"\t{z}\theavy\ty\t", $"\t[MC13+{z}H]\theavy\ty\t");
-                }
-
-                var parts = text.Split('\t');
-                var pep = molCol >= 0 ? parts[molCol] : null;
-                for (var part = 0; part < parts.Length; part++)
-                {
-                    if (parts[part].Length >= 5 && Regex.IsMatch(parts[part].Substring(0, 5), @"^[ACDEFGHIKLMNPQRSTVWY]+$"))
-                    {
-                        parts[part] = RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator + parts[part];
-                    }
-                }
-
-                // Insert chem formula
-                lines[line] = string.Join("\t", parts) +
-                              (string.IsNullOrEmpty(pep) ? string.Empty : ("\t" + masscalc.GetMolecularFormula(pep))) +
-                              ((addZ != 0) ? ("\t" + Adduct.FromChargeProtonated(addZ).AsFormula()) : string.Empty);
-            }
-        }
-
-        private void RemoveConflictLines(string[] lines)
-        {
-            var noted = new Dictionary<string,string>();
-            var headers = lines[0].Split('\t');
-            var irtCol = headers.IndexOf(c => c.StartsWith("NormalizedRetentionTime"));
-            for (var i = 1; i < lines.Length; i++)
-            {
-                var columns = lines[i].Split('\t');
-                var pep = columns.First(c =>
-                    c.StartsWith(RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator));
-                var rt = columns[irtCol].Trim();
-                if (noted.TryGetValue(pep, out var rtNoted))
-                {
-                    if (!Equals(rt, rtNoted))
-                    {
-                        lines[i] = string.Empty; // Conflict, eliminate it
-                    }
-                }
-                else
-                {
-                    noted.Add(pep, rt);
-                }
-            }
-        }
-
         private void VerifyAuditLog()
         {
             var english = "en";
@@ -1584,9 +1516,10 @@ importIrt => importIrt.Btn1Click());
                 var countActual = 0;
                 for (var count = 0; count < linesExpected.Length; count++)
                 {
-                    if ((count >= 29 && count <= 37) || 
-                        (count >= 132 && count <= 208) || 
-                        (count >= 251 && count <= 257))
+                    if ((count >= 29 && count <= 37) ||
+                        (count >= 132 && count <= 208) ||
+                        (count >= 216 && count <= 230) ||
+                        (count >= 245 && count <= 257))
                     {
                         // Skip sections that were purely peptide oriented
                         continue; 

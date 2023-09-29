@@ -1553,8 +1553,8 @@ namespace pwiz.Skyline.Model
             DOCUMENT_TYPE inputType = DOCUMENT_TYPE.none, // "None" means "don't know if it's peptides or small molecules, go figure it out".
             bool rowReadRequired = false, DOCUMENT_TYPE defaultDocumentType = DOCUMENT_TYPE.none) 
         {
-            var importer = new MassListImporter(this, inputs,  inputType);
-            if (importer.PreImport(progressMonitor, null, tolerateErrors, rowReadRequired, defaultDocumentType))
+            var importer = new MassListImporter(this, inputs, tolerateErrors,  inputType);
+            if (importer.PreImport(progressMonitor, null, rowReadRequired, defaultDocumentType))
             {
                 return importer;
             }

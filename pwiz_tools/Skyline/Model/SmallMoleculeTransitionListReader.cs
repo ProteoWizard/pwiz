@@ -2274,9 +2274,9 @@ namespace pwiz.Skyline.Model
 
             // Use the first 100 lines and the document to create an importer
             var inputs = new MassListInputs(testText, provider, sep);
-            var importer = new MassListImporter(settings, inputs);
+            var importer = new MassListImporter(settings, inputs, false);
             // See if creating a peptide row reader with the first 100 lines is possible
-            if (importer.TryCreateRowReader(null, false, csvText.Take(testLineCount).ToList(), null, out _, out _))
+            if (importer.TryCreateRowReader(null, csvText.Take(testLineCount).ToList(), null, out _, out _))
             {
                 // If the row reader is able to find a peptide column then it must be a protein transition list
                 return false;

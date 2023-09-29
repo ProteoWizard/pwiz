@@ -439,20 +439,22 @@ namespace pwiz.Skyline.Model
 
         // This constructor is only suitable for investigating the peptide-vs-small molecule nature of inputs
         // CONSIDER(henryS) Arguably that code should be split out into its own class
-        public MassListImporter(SrmSettings settings, MassListInputs inputs, SrmDocument.DOCUMENT_TYPE inputType = SrmDocument.DOCUMENT_TYPE.none)
+        public MassListImporter(SrmSettings settings, MassListInputs inputs, bool tolerateErrors, SrmDocument.DOCUMENT_TYPE inputType = SrmDocument.DOCUMENT_TYPE.none)
         {
             Settings = settings;
             Inputs = inputs;
             InputType = inputType;
+            IsTolerateErrors = tolerateErrors;
         }
 
         // This constructor is suitable for investigating the peptide-vs-small molecule nature of inputs as well as actually doing an import
-        public MassListImporter(SrmDocument document, MassListInputs inputs, SrmDocument.DOCUMENT_TYPE inputType = SrmDocument.DOCUMENT_TYPE.none)
+        public MassListImporter(SrmDocument document, MassListInputs inputs, bool tolerateErrors, SrmDocument.DOCUMENT_TYPE inputType = SrmDocument.DOCUMENT_TYPE.none)
         {
             Document = document;
             Settings = document.Settings;
             Inputs = inputs;
             InputType = inputType;
+            IsTolerateErrors = tolerateErrors;
         }
 
         public SrmDocument Document { get; private set; }
@@ -464,6 +466,7 @@ namespace pwiz.Skyline.Model
         // What we believe the text we are importing describes: proteomics vs small_molecule vs none (meaning unknown).
         // InputType is never set to 'mixed' as we handle small molecule and proteomics input separately 
         public SrmDocument.DOCUMENT_TYPE InputType { get; private set; }
+        public bool IsTolerateErrors { get; private set; }
 
         public PeptideModifications GetModifications(SrmDocument document)
         {
@@ -472,7 +475,7 @@ namespace pwiz.Skyline.Model
 
         private const int PERCENT_READER = 95;
 
-        public bool PreImport(IProgressMonitor progressMonitor, ColumnIndices indices, bool tolerateErrors, bool rowReadRequired = false, SrmDocument.DOCUMENT_TYPE defaultDocumentType = SrmDocument.DOCUMENT_TYPE.none)
+        public bool PreImport(IProgressMonitor progressMonitor, ColumnIndices indices, bool rowReadRequired = false, SrmDocument.DOCUMENT_TYPE defaultDocumentType = SrmDocument.DOCUMENT_TYPE.none)
         {
             IProgressStatus status = new ProgressStatus(Resources.MassListImporter_Import_Reading_transition_list).ChangeSegments(0, 3);
             // Get the lines used to guess the necessary columns and create the row reader
@@ -508,7 +511,7 @@ namespace pwiz.Skyline.Model
                 // If no numeric columns in the first row
                 if (rowReadRequired)
                 {
-                    SetRowReader(progressMonitor, tolerateErrors, lines.ToList(), status);
+                    SetRowReader(progressMonitor, lines.ToList(), status);
                 }
 
                 indices = ColumnIndices.FromLine(line, Separator, s => GetColumnType(s, FormatProvider));
@@ -533,7 +536,7 @@ namespace pwiz.Skyline.Model
             }
             else
             {
-                SetRowReader(progressMonitor, tolerateErrors, lines, status);
+                SetRowReader(progressMonitor, lines, status);
             }
             return true;
         }
@@ -541,10 +544,10 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Attempt to create a row reader and throw an exception upon failure
         /// </summary>
-        private void SetRowReader(IProgressMonitor progressMonitor, bool tolerateErrors, List<string> lines,
+        private void SetRowReader(IProgressMonitor progressMonitor, List<string> lines,
             IProgressStatus status)
         {
-            if (TryCreateRowReader(progressMonitor, tolerateErrors, lines, status, out var rowReader, out var mzException))
+            if (TryCreateRowReader(progressMonitor, lines, status, out var rowReader, out var mzException))
             {
                 RowReader = rowReader;
             }
@@ -569,10 +572,11 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// // Attempt to create either an ExPeptideRowReader or a GeneralRowReader
         /// </summary>
-        public bool TryCreateRowReader(IProgressMonitor progressMonitor, bool tolerateErrors, List<string> lines,
+        public bool TryCreateRowReader(IProgressMonitor progressMonitor, List<string> lines,
             IProgressStatus status, out MassListRowReader rowReader, out MzMatchException mzException)
         {
             mzException = null;
+            var tolerateErrors = IsTolerateErrors;
 
             // Check first line for validity
             var line = lines.FirstOrDefault();
