@@ -271,7 +271,7 @@
     <value>207, 22</value>
   </data>
   <data name="findNextMenuItem.Text" xml:space="preserve">
-    <value>次を検索(&amp;X)</value>
+    <value>次を検索(&amp;N)</value>
   </data>
   <data name="toolStripSeparator8.Size" type="System.Drawing.Size, System.Drawing">
     <value>204, 6</value>
@@ -286,7 +286,7 @@
     <value>207, 22</value>
   </data>
   <data name="editNoteToolStripMenuItem.Text" xml:space="preserve">
-    <value>メモを編集(&amp;N)</value>
+    <value>メモを編集(&amp;E)</value>
   </data>
   <data name="toolStripSeparator42.Size" type="System.Drawing.Size, System.Drawing">
     <value>204, 6</value>
@@ -343,7 +343,7 @@
     <value>284, 22</value>
   </data>
   <data name="synchronizedIntegrationToolStripMenuItem.Text" xml:space="preserve">
-    <value>統合の同期...(&amp;y)</value>
+    <value>統合の同期(&amp;Y)...</value>
   </data>
   <data name="insertToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>207, 22</value>
@@ -497,6 +497,12 @@
   </data>
   <data name="manageUniquePeptidesMenuItem.Text" xml:space="preserve">
     <value>ユニークペプチド(&amp;Q)...</value>
+  </data>
+  <data name="editSpectrumFilterMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>207, 22</value>
+  </data>
+  <data name="editSpectrumFilterMenuItem.Text" xml:space="preserve">
+    <value>スペクトラムフィルタの編集(&amp;L)...</value>
   </data>
   <data name="toolStripSeparator30.Size" type="System.Drawing.Size, System.Drawing">
     <value>204, 6</value>
@@ -796,6 +802,12 @@
     <value>manageUniquePeptidesMenuItem</value>
   </data>
   <data name="&gt;&gt;manageUniquePeptidesMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;editSpectrumFilterMenuItem.Name" xml:space="preserve">
+    <value>editSpectrumFilterMenuItem</value>
+  </data>
+  <data name="&gt;&gt;editSpectrumFilterMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator30.Name" xml:space="preserve">

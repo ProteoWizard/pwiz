@@ -122,6 +122,10 @@
   <data name="AnalyteConcentration">
     <value>加入外部或质量控制标准的已知量的分析物。</value>
   </data>
+  <data name="Analyzer">
+    <value>用于收集谱图的分析器类型。
+如果使用多个分析器，则用斜杠分隔分析器的名称。</value>
+  </data>
   <data name="Area">
     <value>离子对峰值的曲线下面积 (AUC) 减去背景。</value>
   </data>
@@ -222,6 +226,9 @@
   <data name="Chromatogram">
     <value>离子对和重复测定的色谱图。</value>
   </data>
+  <data name="ChromatogramEndTime">
+    <value>色谱图中的最后保留时间</value>
+  </data>
   <data name="ChromatogramExtractionWidth">
     <value>汇总了谱图强度的信道的全宽</value>
   </data>
@@ -244,6 +251,9 @@
     <value>提取色谱图所用的扫描类型：“片段”、“sim”、“ms1”或“未知”之一</value>
     <comment>Keep the english form of "fragment", "sim", "ms1", or "unknown" because that is what users see in the Document Grid. However, maybe put the localized translation in parentheses: "fragment" (translation of fragment), "sim" (translation of selected ion monitoring), etc. </comment>
   </data>
+  <data name="ChromatogramStartTime">
+    <value>色谱图中的第一保留时间</value>
+  </data>
   <data name="CleavageAa">
     <value>在肽段断裂后（C-末端）肽段中的特异性
 氨基酸残基。（例如 P、M、S、T 等。）</value>
@@ -260,6 +270,9 @@
   <data name="CollisionEnergy">
     <value>根据仪器/厂商特定的 Skyline 内的预设碰撞能量方程
 所计算出的母离子碰撞能量</value>
+  </data>
+  <data name="CompensationVoltage">
+    <value>收集 FAIMS 谱图时所施加的电压</value>
   </data>
   <data name="ConcentrationMultiplier">
     <value>重复测定的“分析物浓度”所乘的值，以获得特定肽段或分子的特定浓度。</value>
@@ -567,6 +580,9 @@
   <data name="Key">
     <value>关键</value>
   </data>
+  <data name="Kurtosis">
+    <value>色谱峰“拖尾度”的测量值。</value>
+  </data>
   <data name="LastPosition">
     <value>肽段的最后一个 (C-末端) 氨基酸在其包含的蛋白质序列中的位置，
 如果没有可用的蛋白质序列，则为 #N/A</value>
@@ -654,6 +670,9 @@
   </data>
   <data name="MassErrors">
     <value>色谱图的质量误差。</value>
+  </data>
+  <data name="MatchingPrecursors">
+    <value>所选母离子的子集，其母离子质荷比与谱图网格中的行表示的任何谱图相匹配。</value>
   </data>
   <data name="Max">
     <value>最大</value>
@@ -845,6 +864,12 @@
   <data name="MonoisotopicMasses">
     <value>以其单一同位素质量指代修饰的修饰序列，例如，"C[+57.021464]"。</value>
   </data>
+  <data name="Ms1Precursors">
+    <value>分离的母离子的质荷比值</value>
+  </data>
+  <data name="Ms2Precursors">
+    <value>对于 MS 级别 3 或更高的谱图，第一级母离子分裂后隔离的母离子的质荷比值</value>
+  </data>
   <data name="MsLevel">
     <value>指明该结果是否仅使用母离子强度（一级质谱）或子离子强度（二级质谱）获得。</value>
   </data>
@@ -902,6 +927,9 @@
   </data>
   <data name="PeakScores">
     <value>峰组的特征及其得分。</value>
+  </data>
+  <data name="PeakStandardDeviation">
+    <value>色谱图峰的标准偏差。</value>
   </data>
   <data name="Peptide">
     <value>肽段</value>
@@ -1054,6 +1082,9 @@
     <value>由一组测量结果和保留时间计算器
 （目前仅可以使用 SSRCalc 3.0）之间的保留时间回归预测的保留时间；
 或如果未分配保留时间回归，则为 #N/A。</value>
+  </data>
+  <data name="PresetScanConfiguration">
+    <value>代表应用于该谱图的设置的数字</value>
   </data>
   <data name="PreviousAa">
     <value>上一个 Aa</value>
@@ -1295,8 +1326,20 @@
       空白
       双空白</value>
   </data>
+  <data name="ScanDescription">
+    <value>通过仪器方法添加到谱图的文本描述</value>
+  </data>
+  <data name="ScanWindowWidth">
+    <value>谱图可能具有强度值的质荷比值上限和下限之间的差异</value>
+  </data>
   <data name="Score">
     <value>特定特征的数值。</value>
+  </data>
+  <data name="ShapeCorrelation">
+    <value>该离子对的色谱峰相较于同一母离子下所有离子对的中位数峰形状的 Pearson 关联。</value>
+  </data>
+  <data name="Skewness">
+    <value>色谱峰不对称性的测量值。</value>
   </data>
   <data name="SkylineVersion">
     <value>进行更改的 Skyline 版本</value>
@@ -1306,6 +1349,9 @@
   </data>
   <data name="SMILES" xml:space="preserve">
     <value>标准化分子标识符</value>
+  </data>
+  <data name="SpectrumFilter">
+    <value>谱图必须满足才能包含在提取的离子色谱图中的额外条件</value>
   </data>
   <data name="SpectrumIds">
     <value>用于色谱图的谱图标识符。</value>
