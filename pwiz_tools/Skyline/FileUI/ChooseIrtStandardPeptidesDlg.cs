@@ -74,7 +74,7 @@ namespace pwiz.Skyline.FileUI
             }
             else
             {
-                comboProteins.Enabled = radioProtein.Checked = radioProtein.Enabled = false; // No matching iRT standards (small molecule document?)
+                comboProteins.Enabled = radioProtein.Checked = radioProtein.Enabled = false; // No matching iRT standards
                 toolTip1.SetToolTip(radioProtein, Resources.ChooseIrtStandardPeptidesDlg_ChooseIrtStandardPeptidesDlg_Unavailable__no_matching_iRT_standards_found);
                 radioTransitionList.Checked = true;
             }
@@ -329,15 +329,33 @@ namespace pwiz.Skyline.FileUI
         #region Functional test support
         public IEnumerable<string> ProteinNames => from PeptideGroupItem protein in comboProteins.Items select protein.PeptideGroup.Name;
 
-        public void OkDialogStandard(IrtStandard standard)
+        public void SetDialogStandard(IrtStandard standard)
         {
             for (var i = 0; i < comboExisting.Items.Count; i++)
             {
                 if (ReferenceEquals((IrtStandard) comboExisting.Items[i], standard))
                 {
-                    radioExisting.Checked = true;
+                    radioExisting.Checked = radioExisting.Enabled = true;
                     comboExisting.SelectedIndex = i;
-                    OkDialog();
+                    return;
+                }
+            }
+        }
+
+        public void OkDialogStandard(IrtStandard standard)
+        {
+            SetDialogStandard(standard);
+            OkDialog();
+        }
+
+        public void SetDialogProtein(string proteinName)
+        {
+            for (var i = 0; i < comboProteins.Items.Count; i++)
+            {
+                if (((PeptideGroupItem)comboProteins.Items[i]).PeptideGroup.Name.Equals(proteinName))
+                {
+                    radioProtein.Checked = radioProtein.Enabled = true;
+                    comboProteins.SelectedIndex = i;
                     return;
                 }
             }
@@ -345,22 +363,19 @@ namespace pwiz.Skyline.FileUI
 
         public void OkDialogProtein(string proteinName)
         {
-            for (var i = 0; i < comboProteins.Items.Count; i++)
-            {
-                if (((PeptideGroupItem) comboProteins.Items[i]).PeptideGroup.Name.Equals(proteinName))
-                {
-                    radioProtein.Checked = true;
-                    comboProteins.SelectedIndex = i;
-                    OkDialog();
-                    return;
-                }
-            }
+            SetDialogProtein(proteinName);
+            OkDialog();
+        }
+
+        public void SetDialogFile(string filename)
+        {
+            radioTransitionList.Checked = radioTransitionList.Enabled = true;
+            SetTransitionListFile(filename);
         }
 
         public void OkDialogFile(string filename)
         {
-            radioTransitionList.Checked = true;
-            SetTransitionListFile(filename);
+            SetDialogFile(filename);
             OkDialog();
         }
         #endregion

@@ -72,10 +72,14 @@ namespace pwiz.SkylineTestFunctional
         private static bool _asSmallMolecules;
         private static bool _smallMolDemo; // Set true for a convenient interactive  demo of small mol UI
 
-        private static void DemoPause(string message)
+        private static void DemoPause(string message, Action action = null)
         {
             if (_smallMolDemo)
             {
+                if (action != null)
+                {
+                    RunUI(action);
+                }
                 PauseTest(message);
             }
         }
@@ -97,7 +101,7 @@ namespace pwiz.SkylineTestFunctional
                 TestBlankDocScenario();
                 TestEmbeddedIrts();
             }
-            DemoPause("now on to Assay Library Import");
+            DemoPause("Done with assay library detection - now on to direct Assay Library Import");
 
             TestAssayImport2();
             if (_smallMolDemo)
@@ -557,7 +561,7 @@ namespace pwiz.SkylineTestFunctional
                 doc = doc.ChangeSettings(settingsNew);
                 return doc;
             }));
-            DemoPause("library");
+            DemoPause("Skyline notices that this might actually be an assay library");
             OkDialog(libraryDlgAll, libraryDlgAll.Btn0Click);
             WaitForDocumentLoaded();
             ValidateDocAndIrt(355, 355, 10);
@@ -1189,7 +1193,7 @@ importIrt => importIrt.Btn1Click());
                     "AQUA4SWATH_HumanEbhardt", "AQUA4SWATH_Lepto", "AQUA4SWATH_MouseSabido", "AQUA4SWATH_MycoplasmaSchmidt", "AQUA4SWATH_PombeSchmidt", "AQUA4SWATH_Spyo"
                 });
             });
-            DemoPause("choose a molecule list");
+            DemoPause("choose a molecule list", () => chooseIrt.SetDialogProtein(irtProteinName));
             OkDialog(chooseIrt, () => chooseIrt.OkDialogProtein(irtProteinName));
             doc = WaitForDocumentChange(doc);
             AssertEx.IsDocumentState(doc, null, 14, 284, 1119);
@@ -1197,7 +1201,7 @@ importIrt => importIrt.Btn1Click());
             CheckAssayLibrarySettings();
 
             // Undo import
-            DemoPause("user is about to Undo");
+            DemoPause("and undo it, then go on to import an assay library");
             RunUI(SkylineWindow.Undo);
             WaitForDocumentChange(doc);
 
@@ -1205,14 +1209,14 @@ importIrt => importIrt.Btn1Click());
             doc = AllowAllIonTypes();
             var irtCsvFile = TestFilesDir.GetTestPath("OpenSWATH_SM4_iRT.csv");
             var overwriteDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ImportAssayLibrary(csvFile)); // Expect to be asked about library overwrite
-            DemoPause("Import assay library and choose a file");
             var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(overwriteDlg.BtnYesClick); // Expect a confirmation of column selections
-            DemoPause("Transition select");
+            DemoPause("confirm columns");
             var chooseIrt2 = ShowDialog<ChooseIrtStandardPeptidesDlg>(transitionSelectdgl.OkDialog);
-            DemoPause("Irt select");
+            DemoPause("Irt standards select");
             if (_asSmallMolecules)
             {
                 // Expect a chance to verify columns
+                DemoPause("Choose an iRT transition list", () => chooseIrt2.SetDialogFile(irtCsvFile));
                 var columnsDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => chooseIrt2.OkDialogFile(irtCsvFile));
                 DemoPause("Confirm columns");
                 OkDialog(columnsDlg, columnsDlg.OkDialog);
@@ -1296,7 +1300,6 @@ importIrt => importIrt.Btn1Click());
             }
 
             // Import assay library and choose a standard
-            DemoPause("now Import assay library and choose a standard");
             var chooseStandard = IrtStandard.BIOGNOSYS_11;
             if (_asSmallMolecules)
             {
@@ -1304,7 +1307,7 @@ importIrt => importIrt.Btn1Click());
                 var columnSelectDlg2 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportAssayLibrary(cirtsPath));  // Expect a confirmation of column selections
                 DemoPause("confirm columns");
                 var chooseIrt4 = ShowDialog<ChooseIrtStandardPeptidesDlg>(columnSelectDlg2.OkDialog);
-                DemoPause("choose standards");
+                DemoPause("choose standards", () => chooseIrt4.SetDialogStandard(chooseStandard));
                 OkDialog(chooseIrt4, () => chooseIrt4.OkDialogStandard(chooseStandard));
             }
             else

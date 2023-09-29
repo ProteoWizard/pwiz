@@ -217,6 +217,7 @@
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "CreateIrtCalculatorDlg";
+            this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.ResumeLayout(false);
             this.PerformLayout();
