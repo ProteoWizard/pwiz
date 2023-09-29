@@ -131,32 +131,32 @@
     <value>121, 28</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="graphControl.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+  <data name="graphControlExtension.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
-  <data name="graphControl.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="graphControlExtension.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 25</value>
   </data>
-  <data name="graphControl.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="graphControlExtension.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>7, 6, 7, 6</value>
   </data>
-  <data name="graphControl.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="graphControlExtension.Size" type="System.Drawing.Size, System.Drawing">
     <value>642, 452</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="graphControl.TabIndex" type="System.Int32, mscorlib">
+  <data name="graphControlExtension.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;graphControl.Name" xml:space="preserve">
-    <value>graphControl</value>
+  <data name="&gt;&gt;graphControlExtension.Name" xml:space="preserve">
+    <value>graphControlExtension</value>
   </data>
-  <data name="&gt;&gt;graphControl.Type" xml:space="preserve">
-    <value>pwiz.MSGraph.MSGraphControl, MSGraph, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e57071561ce779d9</value>
+  <data name="&gt;&gt;graphControlExtension.Type" xml:space="preserve">
+    <value>pwiz.Skyline.SettingsUI.MsGraphExtension, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;graphControl.Parent" xml:space="preserve">
+  <data name="&gt;&gt;graphControlExtension.Parent" xml:space="preserve">
     <value>GraphPanel</value>
   </data>
-  <data name="&gt;&gt;graphControl.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;graphControlExtension.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="toolBar.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -370,6 +370,12 @@
   <data name="contextMenuStrip1.Size" type="System.Drawing.Size, System.Drawing">
     <value>192, 54</value>
   </data>
+  <data name="propertyBtn.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="propertyBtn.ToolTipText" xml:space="preserve">
+    <value>プロパティシートの表示/非表示</value>
+  </data>
   <data name="&gt;&gt;contextMenuStrip1.Name" xml:space="preserve">
     <value>contextMenuStrip1</value>
   </data>
@@ -510,6 +516,12 @@
   </data>
   <data name="&gt;&gt;showCollisionEnergyContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;propertyBtn.Name" xml:space="preserve">
+    <value>propertyBtn</value>
+  </data>
+  <data name="&gt;&gt;propertyBtn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>GraphFullScan</value>

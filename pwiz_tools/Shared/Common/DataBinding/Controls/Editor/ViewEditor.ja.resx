@@ -400,6 +400,27 @@
   <data name="toolButtonFind.Text" xml:space="preserve">
     <value>列を検索</value>
   </data>
+  <data name="toolButtonAlphabetical.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFnSURBVDhPY0AG/mWH/kOZWMGDBw9A8v+hNCpoW3jtv2v2
+        9v9LN53HaQheA+IaDv2PrNjx3zVpGukGnL/1/r93wU6woHFA5/+Dp+9jNQSnAdmdx/7HVu/63zln/3/b
+        yAn/M+rXkmaAf9FuuMDhsw/+G/t3/L/35B2GIVgNyOs+9t8masr/jXuvggUdoiaADYjIn0ucAaQAnAZs
+        75v7f1PLpP/7Z634v6l9+v+lGbn/L61fTbwLNtU2wwXmR8b87/N0RFHwHwhANLoBMHE4ODR9/v86fdX/
+        V3ZuwzCgrq7u/5YtW8AG7Nq1639paSlIGKHu6eUb/ye5+/5fWZKHaioUwGyHYQxvLMpv/j/VzeY/yCCo
+        EAoAaRATEwNr5uLiQjXg2KK1//vt7f5fWLcKLri5ugTDoEePHoENuHXrFqpcr43R/xoT7f8bGqr/ry0v
+        +N9iZ/Z/XV0FhgEgW1taWjCdTwpA1czAAAAaXidra4m7BQAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="toolButtonAlphabetical.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="toolButtonAlphabetical.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="toolButtonAlphabetical.Text" xml:space="preserve">
+    <value>アルファベット順</value>
+  </data>
   <data name="toolButtonShowHiddenColumns.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
@@ -634,6 +655,12 @@
     <value>toolButtonFind</value>
   </data>
   <data name="&gt;&gt;toolButtonFind.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolButtonAlphabetical.Name" xml:space="preserve">
+    <value>toolButtonAlphabetical</value>
+  </data>
+  <data name="&gt;&gt;toolButtonAlphabetical.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolButtonShowHiddenColumns.Name" xml:space="preserve">
