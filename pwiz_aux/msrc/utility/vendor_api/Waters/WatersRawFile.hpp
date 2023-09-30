@@ -60,6 +60,8 @@
 //#include "compresseddatacluster.h"
 #pragma warning (pop)
 
+#define STOP_ANALOG_CHANNELS_READ_TIME
+
 namespace pwiz {
 namespace vendor_api {
 namespace Waters {
@@ -99,6 +101,40 @@ class MassLynxRawProcessorWithProgress : public MassLynxRawProcessor
                 ilr_->broadcastUpdateMessage(IterationListener::UpdateMessage(i, numSpectra_, "running MassLynx centroider for all spectra"));
             lastSpectrum_ = currentSpectrum_;
         }
+    }
+};
+
+class stop_watch_waters
+{
+private:
+    double startTime;
+
+public:
+    void start()
+    {
+        startTime = 0.0;
+#ifdef BOOST_HAS_GETTIMEOFDAY
+        timeval tv;
+        gettimeofday(&tv, 0);
+        startTime = tv.tv_sec * 1.e3 + tv.tv_usec * 1.e-3;
+#else
+#ifdef _WIN32
+        startTime = GetTickCount();
+#endif
+        #endif
+    }
+
+    double stop()
+    {
+#ifdef BOOST_HAS_GETTIMEOFDAY
+        timeval tv;
+        gettimeofday(&tv, 0);
+        endTime = startTime = tv.tv_sec * 1.e3 + tv.tv_usec * 1.e-3; -startTime;
+#else
+    #ifdef _WIN32
+        return GetTickCount() - startTime;
+    #endif
+#endif   
     }
 };
 
@@ -563,15 +599,9 @@ struct PWIZ_API_DECL RawData
 
     void readAnalogChromatograms()
     {
-        double startTime = 0.0;
-#ifdef BOOST_HAS_GETTIMEOFDAY
-        timeval tv;
-        gettimeofday(&tv, 0);
-        startTime = tv.tv_sec * 1.e3 + tv.tv_usec * 1.e-3;
-#else
-        #ifdef _WIN32
-	        startTime = GetTickCount();
-        #endif
+#ifdef STOP_ANALOG_CHANNELS_READ_TIME
+        stop_watch_waters watch;
+        watch.start();
 #endif
 
         const int channels = AnalogChromatogramReader.GetChannelCount();
@@ -590,23 +620,15 @@ struct PWIZ_API_DECL RawData
             analogChannelNames[ch] = AnalogChromatogramReader.GetChannelDescription(ch);
         }
 
-        double endTime = 0.0;
-
-#ifdef BOOST_HAS_GETTIMEOFDAY
-        timeval tv;
-        gettimeofday(&tv, 0);
-        endTime = startTime = tv.tv_sec * 1.e3 + tv.tv_usec * 1.e-3; - startTime;
-#else
-        #ifdef _WIN32
-    	    endTime = GetTickCount() - startTime;
-        #endif
-#endif   
+#ifdef STOP_ANALOG_CHANNELS_READ_TIME
+        const double end_time = watch.stop();
 
         std::cout
             << "Info: Time for reading all analog channels: "
-            << endTime
+            << end_time
             << "(ms)"
             << std::endl;
+#endif
     }
 };
 
