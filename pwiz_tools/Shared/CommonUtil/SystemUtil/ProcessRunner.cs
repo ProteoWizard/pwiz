@@ -222,14 +222,10 @@ namespace pwiz.Common.SystemUtil
                 }
 
             }
-            catch (Exception ex)
+            catch (IOException ex)  // CONSIDER: Should we handle more types like WrapAndThrowException does?
             {
                 if (sbOutput != null)
-                {
-                    var sbError = new StringBuilder();
-                    sbError.AppendLine(ex.Message).AppendLine().AppendLine("Output:").Append(sbOutput);
-                    throw new IOException(sbError.ToString(), ex);
-                }
+                    ThrowExceptionWithOutput(ex, sbOutput.ToString());
 
                 throw;
             }
@@ -240,6 +236,16 @@ namespace pwiz.Common.SystemUtil
 
                 CleanupTmpDir(); // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
             }
+        }
+
+        private void ThrowExceptionWithOutput(IOException exception, string output)
+        {
+            var sbText = new StringBuilder();
+            sbText.AppendLine(exception.Message)
+                .AppendLine()
+                .AppendLine("Output:")
+                .AppendLine(output);
+            throw new IOException(exception.Message, new IOException(sbText.ToString(), exception));
         }
 
         // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
