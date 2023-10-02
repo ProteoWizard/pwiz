@@ -222,7 +222,7 @@ namespace pwiz.Common.SystemUtil
                 }
 
             }
-            catch (IOException ex)  // CONSIDER: Should we handle more types like WrapAndThrowException does?
+            catch (Exception ex)  // CONSIDER: Should we handle more types like WrapAndThrowException does?
             {
                 if (sbOutput != null)
                     ThrowExceptionWithOutput(ex, sbOutput.ToString());
@@ -238,7 +238,7 @@ namespace pwiz.Common.SystemUtil
             }
         }
 
-        private void ThrowExceptionWithOutput(IOException exception, string output)
+        private void ThrowExceptionWithOutput(Exception exception, string output)
         {
             var sbText = new StringBuilder();
             sbText.AppendLine(exception.Message)
