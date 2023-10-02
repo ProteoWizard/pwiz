@@ -71,12 +71,12 @@ namespace TestPerf
                     //"23aug2017_hela_serum_timecourse_wide_1f.mzML",
                 },
 
-                FinalTargetCounts = new[] { 304, 509, 509, 3490 },
+                FinalTargetCounts = new[] { 317, 552, 552, 3922 },
                 MassErrorStats = new[]
                 {
-                    new[] {-0.2, 2.5},
-                    new[] {-0.2, 2.5},
-                    new[] {-0.2, 2.5},
+                    new[] {-0.3, 2.4},
+                    new[] {-0.2, 2.4},
+                    new[] {-0.4, 2.4},
                 },
                 ChromatogramClickPoint = new PointF(32.2f, 12.5f)
             };
