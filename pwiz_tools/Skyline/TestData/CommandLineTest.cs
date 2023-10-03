@@ -632,6 +632,33 @@ namespace pwiz.SkylineTestData
         }
 
         [TestMethod]
+        public void ConsoleExportSpecLibTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            var libPath = TestFilesDir.GetTestPath("sample.blib");
+            var docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            var outPath = TestFilesDir.GetTestPath("out_lib.blib"); // filepath to export library to
+            // Test error (no document);
+            var output = RunCommand(
+                "--exp-spec-lib-file=" + outPath
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandArgs_ParseArgsInternal_Error__Use___in_to_specify_a_Skyline_document_to_open_, docPath), output);
+            // Test error (no library)
+            output = RunCommand("--in=" + docPath,
+                "--add-library-path=" + libPath,
+                "--exp-spec-lib-file=" + outPath
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_SetLibrary_Error__The_file__0__is_not_a_supported_spectral_library_file_format_, docPath), output);
+            // Test export library
+            output = RunCommand("--in=" + docPath,
+                "--add-library-path=" + libPath,
+                "--exp-spec-lib-file=" + outPath
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_SetLibrary_Error__The_file__0__is_not_a_supported_spectral_library_file_format_, docPath), output);
+            AssertEx.FileExists(outPath); // Was a file created?
+
+        }
+        [TestMethod]
         public void ConsoleAddDecoysTest()
         {
             TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
