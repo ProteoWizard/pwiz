@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     RunUI(action);
                 }
-                PauseTest(message);
+                PauseForManualTutorialStep(message);
             }
         }
 
