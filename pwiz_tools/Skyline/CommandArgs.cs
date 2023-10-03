@@ -1046,6 +1046,7 @@ namespace pwiz.Skyline
 
         public string SpecLibFile { get; private set; }
 
+        public bool ExportingSpecLib { get { return !string.IsNullOrEmpty(SpecLibFile); } }
 
         // For publishing the document to Panorama
         public static readonly Argument ARG_PANORAMA_SERVER = new DocArgument(@"panorama-server", SERVER_URL_VALUE,

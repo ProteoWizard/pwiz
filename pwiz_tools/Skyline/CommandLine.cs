@@ -807,6 +807,15 @@ namespace pwiz.Skyline
                 }
             }
 
+
+            if (commandArgs.ExportingSpecLib)
+            {
+                if (!ExportSpecLib(commandArgs.SpecLibFile))
+                {
+                    return false;
+                }
+            }
+
             var exportTypes =
                 (string.IsNullOrEmpty(commandArgs.IsolationListInstrumentType) ? 0 : 1) +
                 (string.IsNullOrEmpty(commandArgs.TransListInstrumentType) ? 0 : 1) +
@@ -3103,6 +3112,15 @@ namespace pwiz.Skyline
                 return false;
             }
 
+            return true;
+        }
+
+        public bool ExportSpecLib(string specLibFile)
+        {
+            var libraryExporter = new SpectralLibraryExporter(Document, DocContainer.DocumentFilePath);
+            var status = new ProgressStatus(string.Empty);
+            IProgressMonitor broker = new CommandProgressMonitor(_out, status);
+            libraryExporter.ExportSpectralLibrary(specLibFile, broker);
             return true;
         }
 
