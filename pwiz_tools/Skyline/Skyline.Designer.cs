@@ -1840,7 +1840,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator49,
             this.exportReportMenuItem,
             this.toolStripSeparator50,
-            this.eSPFeaturesMenuItem,
+            //this.eSPFeaturesMenuItem, this menu item has been removed
             this.exportSpectralLibraryMenuItem,
             this.chromatogramsToolStripMenuItem,
             this.mProphetFeaturesMenuItem,
@@ -1884,10 +1884,12 @@ namespace pwiz.Skyline
             // 
             // eSPFeaturesMenuItem
             // 
-            this.eSPFeaturesMenuItem.Name = "eSPFeaturesMenuItem";
-            resources.ApplyResources(this.eSPFeaturesMenuItem, "eSPFeaturesMenuItem");
-            this.modeUIHandler.SetUIMode(this.eSPFeaturesMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
-            this.eSPFeaturesMenuItem.Click += new System.EventHandler(this.espFeaturesMenuItem_Click);
+            // This menu item has been removed
+            //
+            // this.eSPFeaturesMenuItem.Name = "eSPFeaturesMenuItem";
+            // resources.ApplyResources(this.eSPFeaturesMenuItem, "eSPFeaturesMenuItem");
+            // this.modeUIHandler.SetUIMode(this.eSPFeaturesMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            // this.eSPFeaturesMenuItem.Click += new System.EventHandler(this.espFeaturesMenuItem_Click);
             // 
             // exportSpectralLibraryMenuItem
             // 
