@@ -26570,6 +26570,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Molecule RT Results.
+        /// </summary>
+        public static string ReportSpecList_GetDefaults_Molecule_RT_Results {
+            get {
+                return ResourceManager.GetString("ReportSpecList_GetDefaults_Molecule_RT_Results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule Transition Results.
+        /// </summary>
+        public static string ReportSpecList_GetDefaults_Molecule_Transition_Results {
+            get {
+                return ResourceManager.GetString("ReportSpecList_GetDefaults_Molecule_Transition_Results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peak Boundaries.
         /// </summary>
         public static string ReportSpecList_GetDefaults_Peak_Boundaries {
