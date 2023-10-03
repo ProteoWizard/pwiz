@@ -358,6 +358,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The path to the .blib file to export spectral libraries to..
+        /// </summary>
+        internal static string _exp_spec_lib_file {
+            get {
+                return ResourceManager.GetString("_exp_spec_lib_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Strategy for dividing a method into injections. The default is “single”..
         /// </summary>
         internal static string _exp_strategy {
@@ -2136,6 +2145,15 @@ namespace pwiz.Skyline {
         internal static string CommandArgs_GROUP_MINIMIZE_RESULTS_Minimizing_results_file_size {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_MINIMIZE_RESULTS_Minimizing_results_file_size", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exporting other file types.
+        /// </summary>
+        internal static string CommandArgs_GROUP_OTHER_FILE_TYPES {
+            get {
+                return ResourceManager.GetString("CommandArgs_GROUP_OTHER_FILE_TYPES", resourceCulture);
             }
         }
         

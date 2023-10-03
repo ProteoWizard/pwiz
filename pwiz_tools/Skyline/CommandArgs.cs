@@ -37,6 +37,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Tools;
@@ -63,6 +64,7 @@ namespace pwiz.Skyline
         public static readonly Func<string> PATH_TO_CSV = () => GetPathToFile(TextUtil.EXT_CSV);
         public static readonly Func<string> PATH_TO_TSV = () => GetPathToFile(TextUtil.EXT_TSV);
         public static readonly Func<string> PATH_TO_IRTDB = () => GetPathToFile(IrtDb.EXT);
+        public static readonly Func<string> PATH_TO_BLIB = () => GetPathToFile(BiblioSpecLiteSpec.EXT);
         public static readonly Func<string> PATH_TO_IMSDB = () => GetPathToFile(IonMobilityDb.EXT);
         public static readonly Func<string> PATH_TO_REPORT = () => GetPathToFile(ReportSpecList.EXT_REPORTS);
         public static readonly Func<string> PATH_TO_INSTALL = () => GetPathToFile(ToolDescription.EXT_INSTALL);
@@ -1032,6 +1034,17 @@ namespace pwiz.Skyline
         public bool ChromatogramsBasePeaks { get; private set; }
         public bool ChromatogramsTics { get; private set; }
         public bool ExportingChromatograms { get { return !string.IsNullOrEmpty(ChromatogramsFile); } }
+
+        // For exporting other file types
+        public static readonly Argument ARG_SPEC_LIB_FILE = new DocArgument(@"exp-spec-lib-file", PATH_TO_BLIB,
+            (c, p) => c.SpecLibFile= p.ValueFullPath);
+
+        // TODO: Consider adding validation
+        private static readonly ArgumentGroup GROUP_OTHER_FILE_TYPES = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_OTHER_FILE_TYPES, false, 
+            ARG_SPEC_LIB_FILE
+        );
+
+        public string SpecLibFile { get; private set; }
 
 
         // For publishing the document to Panorama
@@ -2060,6 +2073,7 @@ namespace pwiz.Skyline
                     GROUP_REFINEMENT_W_RESULTS,
                     GROUP_REPORT,
                     GROUP_CHROMATOGRAM,
+                    GROUP_OTHER_FILE_TYPES,
                     GROUP_LISTS,
                     GROUP_METHOD,
                     GROUP_EXP_GENERAL,
