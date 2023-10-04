@@ -635,7 +635,7 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleExportSpecLibTest()
         {
-            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleExportSpecLibTest");
             var libPath = TestFilesDir.GetTestPath("sample.blib");
             // A document with no results. Attempting to export a spectral library should
             // provoke an error
@@ -676,46 +676,7 @@ namespace pwiz.SkylineTestData
             SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "DQGGELLSLR", "DQGGELLSLR", 2, 544.291, 4, 20.355);
             SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "DQGGELLSLR", "DQGGELLSLR[+10.00827]", 2, 549.295, 4, 20.311);
             SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "ELLTTMGDR", "ELLTTMGDR", 2, 518.261, 4, 16.904);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "ELLTTMGDR", "ELLTTMGDR[+10.00827]", 2, 523.265, 4, 16.904);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "FEELNADLFR", "FEELNADLFR", 2, 627.312, 3, 24.324);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "FEELNADLFR", "FEELNADLFR[+10.00827]", 2, 632.316, 4, 24.283);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "FHQLDIDDLQSIR", "FHQLDIDDLQSIR", 2, 800.410, 3, 22.960);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "FHQLDIDDLQSIR", "FHQLDIDDLQSIR[+10.00827]", 2, 805.414, 4, 22.919);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "FLIPNASQAESK", "FLIPNASQAESK", 2, 652.846, 4, 18.956);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "FLIPNASQAESK", "FLIPNASQAESK[+8.0142]", 2, 656.853, 4, 19.001);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "FTPGTFTNQIQAAFR", "FTPGTFTNQIQAAFR", 2, 849.934, 4, 26.833);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "FTPGTFTNQIQAAFR", "FTPGTFTNQIQAAFR[+10.00827]", 2, 854.938, 4, 26.833);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "ILTFDQLALDSPK", "ILTFDQLALDSPK", 2, 730.903, 4, 25.962);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "ILTFDQLALDSPK", "ILTFDQLALDSPK[+8.0142]", 2, 734.910, 4, 25.962);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "LSSEMNTSTVNSAR", "LSSEMNTSTVNSAR", 2, 748.854, 4, 14.068);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "LSSEMNTSTVNSAR", "LSSEMNTSTVNSAR[+10.00827]", 2, 753.858, 4, 14.068);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "NIVEAAAVR", "NIVEAAAVR", 2, 471.772, 4, 15.444);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "NIVEAAAVR", "NIVEAAAVR[+10.00827]", 2, 476.776, 4, 15.444);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "NLQYYDISAK", "NLQYYDISAK", 2, 607.806, 4, 18.204);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "NLQYYDISAK", "NLQYYDISAK[+8.0142]", 2, 611.813, 4, 18.204);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "TSAALSTVGSAISR", "TSAALSTVGSAISR", 2, 660.860, 4, 18.403);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "TSAALSTVGSAISR", "TSAALSTVGSAISR[+10.00827]", 2, 665.864, 4, 18.403);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "VHIEIGPDGR", "VHIEIGPDGR", 2, 546.793, 4, 15.672);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "VHIEIGPDGR", "VHIEIGPDGR[+10.00827]", 2, 551.798, 4, 15.672);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "VLTPELYAELR", "VLTPELYAELR", 2, 652.366, 4, 23.642);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "VLTPELYAELR", "VLTPELYAELR[+10.00827]", 2, 657.371, 4, 23.683);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "VNLAELFK", "VNLAELFK", 2, 467.274, 4, 25.787);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "VNLAELFK", "VNLAELFK[+8.0142]", 2, 471.281, 4, 25.829);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "VPDFSEYR", "VPDFSEYR", 2, 506.740, 4, 17.826);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "VPDFSEYR", "VPDFSEYR[+10.00827]", 2, 511.744, 4, 17.826);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "VPDGMVGFIIGR", "VPDGMVGFIIGR", 2, 630.842, 4, 26.775);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "VPDGMVGFIIGR", "VPDGMVGFIIGR[+10.00827]", 2, 635.846, 4, 26.734);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "ADVTPADFSEWSK", "ADVTPADFSEWSK", 2, 726.836, 3, 22.100);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "DGLDAASYYAPVR", "DGLDAASYYAPVR", 2, 699.338, 3, 20.500);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "GAGSSEPVTGLDAK", "GAGSSEPVTGLDAK", 2, 644.823, 3, 14.563);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "GTFIIDPAAVIR", "GTFIIDPAAVIR", 2, 636.869, 3, 27.025);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "GTFIIDPGGVIR", "GTFIIDPGGVIR", 2, 622.854, 3, 24.701);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "LFLQFGAQGSPFLK", "LFLQFGAQGSPFLK", 2, 776.930, 3, 28.778);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "LGGNEQVTR", "LGGNEQVTR", 2, 487.257, 3, 10.326);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "TPVISGGPYEYR", "TPVISGGPYEYR", 2, 669.838, 3, 18.156);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "TPVITGAPYEYR", "TPVITGAPYEYR", 2, 683.854, 3, 18.854);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "VEATFGVDESNAK", "VEATFGVDESNAK", 2, 683.828, 3, 16.021);
-            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "YILAGVENSK", "YILAGVENSK", 2, 547.298, 3, 17.118);
+            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "ELLTTMGDR", "ELLTTMGDR[+10.00827]", 2, 523.265, 4, 16.904); 
             Assert.IsTrue(!refSpectra.Any());
         }
 
