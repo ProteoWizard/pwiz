@@ -1884,12 +1884,10 @@ namespace pwiz.Skyline
             // 
             // eSPFeaturesMenuItem
             // 
-            // This menu item has been removed
-            //
-            // this.eSPFeaturesMenuItem.Name = "eSPFeaturesMenuItem";
-            // resources.ApplyResources(this.eSPFeaturesMenuItem, "eSPFeaturesMenuItem");
-            // this.modeUIHandler.SetUIMode(this.eSPFeaturesMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
-            // this.eSPFeaturesMenuItem.Click += new System.EventHandler(this.espFeaturesMenuItem_Click);
+            this.eSPFeaturesMenuItem.Name = "eSPFeaturesMenuItem";
+            resources.ApplyResources(this.eSPFeaturesMenuItem, "eSPFeaturesMenuItem");
+            this.modeUIHandler.SetUIMode(this.eSPFeaturesMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.eSPFeaturesMenuItem.Click += new System.EventHandler(this.espFeaturesMenuItem_Click);
             // 
             // exportSpectralLibraryMenuItem
             // 
