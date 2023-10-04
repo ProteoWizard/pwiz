@@ -3123,12 +3123,12 @@ namespace pwiz.Skyline
         public bool ExportSpecLib(string specLibFile)
         {
             _out.WriteLine(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____, specLibFile);
-            if (Document.MoleculeTransitionGroupCount == 0)
+            if (Document.MoleculeTransitionGroupCount == 0) // The document needs at least one peptide precursor
             {
                 _out.WriteLine(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library);
                 return false;
             }
-            else if (!Document.Settings.HasResults)
+            else if (!Document.Settings.HasResults) // The document must contain results
             {
                 _out.WriteLine(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_results_to_export_a_spectral_library);
                 return false;
@@ -3140,6 +3140,7 @@ namespace pwiz.Skyline
                 var status = new ProgressStatus(string.Empty);
                 IProgressMonitor broker = new CommandProgressMonitor(_out, status);
                 libraryExporter.ExportSpectralLibrary(specLibFile, broker);
+                broker.UpdateProgress(status.Complete());
                 _out.WriteLine(Resources.CommandLine_ExportSpecLib_Spectral_library_file__0__exported_successfully_, specLibFile);
             }
             catch(Exception x)

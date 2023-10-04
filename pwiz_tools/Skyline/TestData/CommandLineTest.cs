@@ -659,7 +659,7 @@ namespace pwiz.SkylineTestData
             output = RunCommand("--in=" + docWithResults, // Load a document with results
                 "--exp-spec-lib-file=" + exportPath // Export a spectral library
             );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportChromatograms_Chromatograms_file__0__exported_successfully_, exportPath), output);
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Spectral_library_file__0__exported_successfully_, exportPath), output);
             Assert.IsTrue(File.Exists(exportPath)); // Check that the exported file exists
             var refSpectra = SpectralLibraryTestUtil.GetRefSpectra(exportPath);
             CheckRefSpectraAll(refSpectra); // Check the spectra in the exported file
