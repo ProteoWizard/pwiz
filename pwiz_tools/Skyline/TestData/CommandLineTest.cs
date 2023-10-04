@@ -635,7 +635,7 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleExportSpecLibTest()
         {
-            TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleExportSpecLibTest");
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleExportSpecLibTest.zip");
             var libPath = TestFilesDir.GetTestPath("sample.blib");
             // A document with no results. Attempting to export a spectral library should
             // provoke an error
