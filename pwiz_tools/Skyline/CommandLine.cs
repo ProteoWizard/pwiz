@@ -3115,6 +3115,11 @@ namespace pwiz.Skyline
             return true;
         }
 
+        /// <summary>
+        /// Export a spectral library (.blib) file from the document
+        /// </summary>
+        /// <param name="specLibFile"> File path to export the spectral library to</param>
+        /// <returns></returns>
         public bool ExportSpecLib(string specLibFile)
         {
             _out.WriteLine(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____, specLibFile);
@@ -3138,7 +3143,7 @@ namespace pwiz.Skyline
             }
             catch(Exception x)
             {
-                _out.WriteLine("Failure attempting to save spectral library file file");
+                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Failure_attempting_to_save_spectral_library_file__0_);
                 _out.WriteLine(x.Message);
             }
             return true;

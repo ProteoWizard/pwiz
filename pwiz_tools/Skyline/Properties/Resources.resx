@@ -13878,4 +13878,7 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="Server_GetKey___anonymous_" xml:space="preserve">
     <value> (anonymous)</value>
   </data>
+  <data name="CommandLine_ExportSpecLib_Failure_attempting_to_save_spectral_library_file__0_" xml:space="preserve">
+	  <value>Failure attempting to save spectral library file {0}</value>
+  </data>
 </root>

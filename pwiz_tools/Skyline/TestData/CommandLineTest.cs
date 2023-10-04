@@ -642,27 +642,24 @@ namespace pwiz.SkylineTestData
             // A skyline document with results that should be able to export a spectral library
             var docWithResults = TestFilesDir.GetTestPath("msstatstest.sky");
             var outPath = TestFilesDir.GetTestPath("out_lib.blib"); // filepath to export library to
-            // Test export
-            var output = RunCommand("--in=" + docWithResults,
+            // Test error (no peptide precursors)
+            var output = RunCommand("--new=" + "new.sky",
+                "--overwrite", // the file may already exist in the bin
                 "--exp-spec-lib-file=" + outPath
             );
+            CheckRunCommandOutputContains(string.Format(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library_), output);
             // Test error (no results)
             output = RunCommand("--in=" + docWithNoResultsPath,
                 "--add-library-path=" + libPath,
                 "--exp-spec-lib-file=" + outPath
             );
-            // // Test error (no document);
-            // output = RunCommand(
-            //     "--exp-spec-lib-file=" + outPath
-            // );
-            // CheckRunCommandOutputContains(string.Format(Resources.CommandArgs_ParseArgsInternal_Error__Use___in_to_specify_a_Skyline_document_to_open_, docPath), output);
-            // // Test error (no library)
-            // output = RunCommand("--in=" + docPath,
-            //     "--add-library-path=" + libPath,
-            //     "--exp-spec-lib-file=" + outPath
-            // );
-            // CheckRunCommandOutputContains(string.Format(Resources.CommandLine_SetLibrary_Error__The_file__0__is_not_a_supported_spectral_library_file_format_, docPath), output);
-            // AssertEx.FileExists(outPath); // Was a file created?
+            AssertEx.Contains(output, string.Format(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_results_to_export_a_spectral_library_));
+            // Test export
+            output = RunCommand("--in=" + docWithResults,
+                "--exp-spec-lib-file=" + outPath
+            );
+            // CheckRunCommandOutputContains(string.Format(Resources.CommandArgs_ParseArgsInternal_Error__Use___in_to_specify_a_Skyline_document_to_open_, docPath), output)
+            Assert.IsTrue(File.Exists(outPath));
 
         }
         [TestMethod]

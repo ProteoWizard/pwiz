@@ -5973,6 +5973,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failure attempting to save spectral library file {0}.
+        /// </summary>
+        public static string CommandLine_ExportSpecLib_Failure_attempting_to_save_spectral_library_file__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportSpecLib_Failure_attempting_to_save_spectral_library_file__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Warning: Could not find the background proteome file {0}..
         /// </summary>
         public static string CommandLine_FindBackgroundProteome_Warning__Could_not_find_the_background_proteome_file__0__ {
