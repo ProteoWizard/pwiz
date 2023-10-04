@@ -75,17 +75,6 @@ void testAccept(const Reader& reader, const string& rawpath)
     unit_assert(accepted);
 }
 
-bool ContainsMsInfo(const Spectrum& s)
-{
-    for each (auto cvid in excludedSpectra)
-    {
-        if (s.hasCVParam(cvid))
-            return false;
-    }
-
-    return true;
-}
-
 void mangleSourceFileLocations(const string& sourceName, vector<SourceFilePtr>& sourceFiles, const string& newSourceName = "")
 {
     // mangling the absolute paths is necessary for the test to work from any path
@@ -456,15 +445,21 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         // test SpectrumList::min_level_accepted() for vendors
         if (msd.run.spectrumListPtr && msd.run.spectrumListPtr->size() > 0)
         {
-            DetailLevel msLevelDetailLevel = msd.run.spectrumListPtr->min_level_accepted([](const Spectrum& s) { return !ContainsMsInfo(s)
-                || s.hasCVParam(MS_ms_level);});
+            DetailLevel msLevelDetailLevel = msd.run.spectrumListPtr->min_level_accepted([](const Spectrum& s)
+            {
+	            return s.hasCVParamChild(MS_mass_spectrum) ? s.hasCVParam(MS_ms_level) : boost::indeterminate;
+            });
 
             unit_assert_operator_equal(DetailLevel_InstantMetadata, msLevelDetailLevel);
 
             if (!bal::iequals(reader.getType(), "UIMF"))
             {
-                DetailLevel polarityDetailLevel = msd.run.spectrumListPtr->min_level_accepted([](const Spectrum& s) { return !ContainsMsInfo(s) 
-                    || s.hasCVParamChild(MS_scan_polarity); });
+                DetailLevel polarityDetailLevel = msd.run.spectrumListPtr->min_level_accepted([](const Spectrum& s)
+                {
+	                return s.hasCVParamChild(MS_mass_spectrum)
+		                       ? s.hasCVParamChild(MS_scan_polarity)
+		                       : boost::indeterminate;
+                });
                 unit_assert(DetailLevel_FastMetadata >= polarityDetailLevel);
             }
         }
