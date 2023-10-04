@@ -3125,12 +3125,12 @@ namespace pwiz.Skyline
             _out.WriteLine(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____, specLibFile);
             if (Document.MoleculeTransitionGroupCount == 0)
             {
-                _out.WriteLine(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library_);
+                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library);
                 return false;
             }
             else if (!Document.Settings.HasResults)
             {
-                _out.WriteLine(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_results_to_export_a_spectral_library_);
+                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_results_to_export_a_spectral_library);
                 return false;
             }
 

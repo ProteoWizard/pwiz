@@ -13879,6 +13879,12 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
     <value> (anonymous)</value>
   </data>
   <data name="CommandLine_ExportSpecLib_Failure_attempting_to_save_spectral_library_file__0_" xml:space="preserve">
-	  <value>Failure attempting to save spectral library file {0}</value>
+    <value>Failure attempting to save spectral library file {0}</value>
+  </data>
+  <data name="CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library" xml:space="preserve">
+    <value>Error: The document must contain at least one peptide precursor to export a spectral library</value>
+  </data>
+  <data name="CommandLine_ExportSpecLib_Error__The_document_must_contain_results_to_export_a_spectral_library" xml:space="preserve">
+    <value>Error: The document must contain results to export a spectral library</value>
   </data>
 </root>

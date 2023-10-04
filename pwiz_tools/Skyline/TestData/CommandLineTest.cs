@@ -647,18 +647,17 @@ namespace pwiz.SkylineTestData
                 "--overwrite", // the file may already exist in the bin
                 "--exp-spec-lib-file=" + outPath
             );
-            CheckRunCommandOutputContains(string.Format(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library_), output);
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library), output);
             // Test error (no results)
             output = RunCommand("--in=" + docWithNoResultsPath,
                 "--add-library-path=" + libPath,
                 "--exp-spec-lib-file=" + outPath
             );
-            AssertEx.Contains(output, string.Format(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_results_to_export_a_spectral_library_));
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_results_to_export_a_spectral_library), output);
             // Test export
             output = RunCommand("--in=" + docWithResults,
                 "--exp-spec-lib-file=" + outPath
             );
-            // CheckRunCommandOutputContains(string.Format(Resources.CommandArgs_ParseArgsInternal_Error__Use___in_to_specify_a_Skyline_document_to_open_, docPath), output)
             Assert.IsTrue(File.Exists(outPath));
 
         }
