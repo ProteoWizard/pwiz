@@ -1879,28 +1879,21 @@ void writeBinaryDataArray(minimxml::XMLWriter& writer, const BinaryDataArrayType
         }
     }
 
-#ifndef WITHOUT_MZMLB        
-    if (mzMLb_os)
-    {
-        attributes.add("encodedLength", 0);
-    }
-    else
-#endif
-    {
-        attributes.add("encodedLength", encoded_size);
-    }
-    
+    attributes.add("encodedLength", encoded_size);
+
     if (binaryDataArray.dataProcessingPtr.get())
         attributes.add("dataProcessingRef", encode_xml_id_copy(binaryDataArray.dataProcessingPtr->id));
 
     writer.startElement("binaryDataArray", attributes);
 
+    bool isIntegerArray = typeid(BinaryDataArrayType) == typeid(IntegerDataArray);
+
     if (BinaryDataEncoder::Numpress_None == usedConfig.numpress)
     {
         if (usedConfig.precision == BinaryDataEncoder::Precision_32)
-            write(writer, typeid(BinaryDataArrayType) == typeid(IntegerDataArray) ? MS_32_bit_integer : MS_32_bit_float);
+            write(writer, isIntegerArray ? MS_32_bit_integer : MS_32_bit_float);
         else
-            write(writer, typeid(BinaryDataArrayType) == typeid(IntegerDataArray) ? MS_64_bit_integer : MS_64_bit_float);
+            write(writer, isIntegerArray ? MS_64_bit_integer : MS_64_bit_float);
     }
 
     if (usedConfig.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian)
@@ -1909,9 +1902,9 @@ void writeBinaryDataArray(minimxml::XMLWriter& writer, const BinaryDataArrayType
     bool zlib = false; // Handle numpress+zlib
 
     if (usedConfig.prediction == BinaryDataEncoder::Prediction_Linear)
-        write(writer, UserParam("linear prediction"));
+        write(writer, MS_truncation__linear_prediction_and_zlib_compression);
     else if (usedConfig.prediction == BinaryDataEncoder::Prediction_Delta)
-        write(writer, UserParam("delta prediction"));
+        write(writer, MS_truncation__delta_prediction_and_zlib_compression);
 
     switch (usedConfig.compression) {
         case BinaryDataEncoder::Compression_None:
@@ -1929,15 +1922,15 @@ void writeBinaryDataArray(minimxml::XMLWriter& writer, const BinaryDataArrayType
     }
     switch (usedConfig.numpress) {
         case BinaryDataEncoder::Numpress_Linear:
-            write(writer, MS_32_bit_float); // This should actually be ignored by any reader since numpress defines word size and format, but it makes output standards-compliant and is pretty close to true anyway
+            write(writer, isIntegerArray ? MS_32_bit_integer : MS_32_bit_float); // This should actually be ignored by any reader since numpress defines word size and format, but it makes output standards-compliant and is pretty close to true anyway
             write(writer, zlib ? MS_MS_Numpress_linear_prediction_compression_followed_by_zlib_compression : MS_MS_Numpress_linear_prediction_compression);
             break;
         case BinaryDataEncoder::Numpress_Pic:
-            write(writer, MS_32_bit_integer); // This should actually be ignored by any reader since numpress defines word size and format, but it makes output standards-compliant and is pretty close to true anyway
+            write(writer, isIntegerArray ? MS_32_bit_integer : MS_32_bit_float); // This should actually be ignored by any reader since numpress defines word size and format, but it makes output standards-compliant and is pretty close to true anyway
             write(writer, zlib ? MS_MS_Numpress_positive_integer_compression_followed_by_zlib_compression : MS_MS_Numpress_positive_integer_compression);
             break;
         case BinaryDataEncoder::Numpress_Slof:
-            write(writer, MS_32_bit_float); // This should actually be ignored by any reader since numpress defines word size and format, but it makes output standards-compliant and is pretty close to true anyway
+            write(writer, isIntegerArray ? MS_32_bit_integer : MS_32_bit_float); // This should actually be ignored by any reader since numpress defines word size and format, but it makes output standards-compliant and is pretty close to true anyway
             write(writer, zlib ? MS_MS_Numpress_short_logged_float_compression_followed_by_zlib_compression : MS_MS_Numpress_short_logged_float_compression);
             break;
         case BinaryDataEncoder::Numpress_None:
@@ -1946,18 +1939,15 @@ void writeBinaryDataArray(minimxml::XMLWriter& writer, const BinaryDataArrayType
             throw runtime_error("[IO::write()] Unsupported numpress method.");
             break;
     }
-    
+
 #ifndef WITHOUT_MZMLB
     if (mzMLb_os)
     {
-        write(writer, UserParam("external dataset", dataset));
-        write(writer, UserParam("external array length", toString(binaryDataArray.data.size())));
-        write(writer, UserParam("external offset", toString(offset)));
-
-        if (usedConfig.numpress != BinaryDataEncoder::Numpress_None)
-            write(writer, UserParam("external encoded length", toString(encoded_size)));
+        write(writer, CVParam(MS_external_HDF5_dataset, dataset));
+        write(writer, CVParam(MS_external_array_length, toString(binaryDataArray.data.size())));
+        write(writer, CVParam(MS_external_offset, toString(offset)));
     }
-#endif	
+#endif
 
     writeParamContainer(writer, binaryDataArray); 
 
@@ -2203,6 +2193,30 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         return result;
     }
 
+    template <typename ValueT>
+    bool extractCVParamValue(ParamContainer& container, CVID cvid, ValueT& value)
+    {
+        vector<CVParam>& params = container.cvParams;
+        vector<CVParam>::iterator it = find_if(params.begin(), params.end(),
+            CVParamIsChildOf(cvid));
+
+        if (it != params.end())
+        {
+            // found the cvid in container -- erase the CVParam
+            value = lexical_cast<ValueT>(it->value);
+            params.erase(it);
+        }
+        else
+        {
+            // didn't find it -- search recursively, but don't erase anything
+            CVParam temp = container.cvParamChild(cvid);
+            if (temp.empty())
+                return false;
+			value = lexical_cast<ValueT>(temp.value);
+        }
+        return true;
+    }
+
     void extractCVParams(ParamContainer& container, CVID cvid, vector<CVID> &results)
     {
         vector<CVParam>& params = container.cvParams;
@@ -2260,8 +2274,8 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         //
 
         // prediction
-        bool prediction_linear = extractUserParam(paramContainer, "linear prediction");
-        bool prediction_delta = extractUserParam(paramContainer, "delta prediction");
+        bool prediction_linear = extractCVParam(paramContainer, MS_truncation__linear_prediction_and_zlib_compression) != CVID_Unknown;
+        bool prediction_delta = extractCVParam(paramContainer, MS_truncation__delta_prediction_and_zlib_compression) != CVID_Unknown;
         if (prediction_linear)
             config.prediction = BinaryDataEncoder::Prediction_Linear;
         else if (prediction_delta)
@@ -2312,7 +2326,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         }
 
         // if numpress is on, make sure output is directed to BinaryDataArray instead of IntegerDataArray
-        if (BinaryDataEncoder::Numpress_None != config.numpress)
+        /*if (BinaryDataEncoder::Numpress_None != config.numpress)
             switch (cvidBinaryDataType)
             {
                 case MS_32_bit_integer:
@@ -2325,7 +2339,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
                     throw runtime_error("[IO::HandlerBinaryDataArray] Unknown binary data type.");
                 default:
                     break;
-            }
+            }*/
 
         switch (cvidBinaryDataType)
         {
@@ -2358,10 +2372,10 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         if (!mzMLb_is)
             return;
 
-        extractUserParam(*binaryDataArray, "external dataset", external_dataset_);
+        extractCVParamValue(*binaryDataArray, MS_external_HDF5_dataset, external_dataset_);
 
         string external_array_length;
-        if (extractUserParam(*binaryDataArray, "external array length", external_array_length))
+        if (extractCVParamValue(*binaryDataArray, MS_external_array_length, external_array_length))
         {
             arrayLength_ = lexical_cast<size_t>(external_array_length);
 
@@ -2377,12 +2391,8 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         }
 
         string external_offset;
-        if (extractUserParam(*binaryDataArray, "external offset", external_offset))
+        if (extractCVParamValue(*binaryDataArray, MS_external_offset, external_offset))
             external_offset_ = lexical_cast<size_t>(external_offset);
-
-        string external_encoded_length;
-        if (extractUserParam(*binaryDataArray, "external encoded length", external_encoded_length))
-            encodedLength_ = lexical_cast<size_t>(external_encoded_length);
 
         if (!external_dataset_.empty())
         {
@@ -2462,17 +2472,7 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum, const MSData& 
     if (!spectrum.spotID.empty())
         attributes.add("spotID", spectrum.spotID);   
     
-#ifndef WITHOUT_MZMLB
-    boost::iostreams::stream<Connection_mzMLb>* mzMLb_os = dynamic_cast<boost::iostreams::stream<Connection_mzMLb>*>(&writer.getOutputStream());
-    if (mzMLb_os)
-    {
-        attributes.add("defaultArrayLength", 0);
-    }
-    else
-#endif
-    {
-        attributes.add("defaultArrayLength", spectrum.defaultArrayLength);
-    }
+    attributes.add("defaultArrayLength", spectrum.defaultArrayLength);
     
     if (spectrum.dataProcessingPtr.get())
         attributes.add("dataProcessingRef", encode_xml_id_copy(spectrum.dataProcessingPtr->id));
