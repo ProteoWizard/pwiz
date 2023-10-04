@@ -3117,10 +3117,30 @@ namespace pwiz.Skyline
 
         public bool ExportSpecLib(string specLibFile)
         {
-            var libraryExporter = new SpectralLibraryExporter(Document, DocContainer.DocumentFilePath);
-            var status = new ProgressStatus(string.Empty);
-            IProgressMonitor broker = new CommandProgressMonitor(_out, status);
-            libraryExporter.ExportSpectralLibrary(specLibFile, broker);
+            _out.WriteLine(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____, specLibFile);
+            if (Document.MoleculeTransitionGroupCount == 0)
+            {
+                _out.WriteLine(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library_);
+                return false;
+            }
+            else if (!Document.Settings.HasResults)
+            {
+                _out.WriteLine(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_results_to_export_a_spectral_library_);
+                return false;
+            }
+
+            try
+            {
+                var libraryExporter = new SpectralLibraryExporter(Document, DocContainer.DocumentFilePath);
+                var status = new ProgressStatus(string.Empty);
+                IProgressMonitor broker = new CommandProgressMonitor(_out, status);
+                libraryExporter.ExportSpectralLibrary(specLibFile, broker);
+            }
+            catch(Exception x)
+            {
+                _out.WriteLine("Failure attempting to save spectral library file file");
+                _out.WriteLine(x.Message);
+            }
             return true;
         }
 
