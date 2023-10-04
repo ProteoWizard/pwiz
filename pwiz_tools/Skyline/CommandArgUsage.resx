@@ -931,7 +931,7 @@ greater peak area.</value>
   <data name="CommandArgs_GROUP_OTHER_FILE_TYPES" xml:space="preserve">
     <value>Exporting other file types</value>
   </data>
-  <data name="_exp_spec_lib_file" xml:space="preserve">
-    <value>The path to the .blib file to export spectral libraries to.</value>
+  <data name="_exp_speclib_file" xml:space="preserve">
+    <value>Export a spectral library.</value>
   </data>
 </root>

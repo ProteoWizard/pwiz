@@ -358,11 +358,11 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The path to the .blib file to export spectral libraries to..
+        ///   Looks up a localized string similar to Export a spectral library..
         /// </summary>
-        internal static string _exp_spec_lib_file {
+        internal static string _exp_speclib_file {
             get {
-                return ResourceManager.GetString("_exp_spec_lib_file", resourceCulture);
+                return ResourceManager.GetString("_exp_speclib_file", resourceCulture);
             }
         }
         

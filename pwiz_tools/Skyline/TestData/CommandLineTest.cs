@@ -646,18 +646,18 @@ namespace pwiz.SkylineTestData
             // Test error (no peptide precursors)
             var output = RunCommand("--new=" + "new.sky", // Create a new document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
-                "--exp-spec-lib-file=" + exportPath // Export a spectral library
+                "--exp-speclib-file=" + exportPath // Export a spectral library
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library), output);
             // Test error (no results)
             output = RunCommand("--in=" + docWithNoResultsPath, // Load a document with no results
                 "--add-library-path=" + libPath, // Add a library
-                "--exp-spec-lib-file=" + exportPath // Export a spectral library
+                "--exp-speclib-file=" + exportPath // Export a spectral library
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_results_to_export_a_spectral_library), output);
             // Test export
             output = RunCommand("--in=" + docWithResults, // Load a document with results
-                "--exp-spec-lib-file=" + exportPath // Export a spectral library
+                "--exp-speclib-file=" + exportPath // Export a spectral library
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Spectral_library_file__0__exported_successfully_, exportPath), output);
             Assert.IsTrue(File.Exists(exportPath)); // Check that the exported file exists

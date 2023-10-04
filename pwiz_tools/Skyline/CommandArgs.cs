@@ -1036,12 +1036,11 @@ namespace pwiz.Skyline
         public bool ExportingChromatograms { get { return !string.IsNullOrEmpty(ChromatogramsFile); } }
 
         // For exporting other file types
-        public static readonly Argument ARG_SPEC_LIB_FILE = new DocArgument(@"exp-spec-lib-file", PATH_TO_BLIB,
+        public static readonly Argument ARG_SPECTRAL_LIBRARY_FILE = new DocArgument(@"exp-speclib-file", PATH_TO_BLIB,
             (c, p) => c.SpecLibFile= p.ValueFullPath);
 
-        // TODO: Consider adding validation
         private static readonly ArgumentGroup GROUP_OTHER_FILE_TYPES = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_OTHER_FILE_TYPES, false, 
-            ARG_SPEC_LIB_FILE
+            ARG_SPECTRAL_LIBRARY_FILE
         );
 
         public string SpecLibFile { get; private set; }
