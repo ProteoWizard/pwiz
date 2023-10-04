@@ -393,7 +393,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         {
             DetailLevel msLevelDetailLevel = msd.run.spectrumListPtr->min_level_accepted([](const Spectrum& s)
             {
-	            return s.hasCVParamChild(MS_mass_spectrum) ? s.hasCVParam(MS_ms_level) : boost::indeterminate;
+	            return s.hasCVParamChild(MS_mass_spectrum) ? s.hasCVParam(MS_ms_level) : boost::tribool();
             });
 
             unit_assert_operator_equal(DetailLevel_InstantMetadata, msLevelDetailLevel);
@@ -404,7 +404,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
                 {
 	                return s.hasCVParamChild(MS_mass_spectrum)
 		                       ? s.hasCVParamChild(MS_scan_polarity)
-		                       : boost::indeterminate;
+		                       : boost::tribool();
                 });
                 unit_assert(DetailLevel_FastMetadata >= polarityDetailLevel);
             }
