@@ -6002,6 +6002,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Spectral library file {0} exported successfully..
+        /// </summary>
+        public static string CommandLine_ExportSpecLib_Spectral_library_file__0__exported_successfully_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportSpecLib_Spectral_library_file__0__exported_successfully_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Warning: Could not find the background proteome file {0}..
         /// </summary>
         public static string CommandLine_FindBackgroundProteome_Warning__Could_not_find_the_background_proteome_file__0__ {

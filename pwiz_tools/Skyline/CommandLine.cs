@@ -3140,6 +3140,7 @@ namespace pwiz.Skyline
                 var status = new ProgressStatus(string.Empty);
                 IProgressMonitor broker = new CommandProgressMonitor(_out, status);
                 libraryExporter.ExportSpectralLibrary(specLibFile, broker);
+                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Spectral_library_file__0__exported_successfully_, specLibFile);
             }
             catch(Exception x)
             {
