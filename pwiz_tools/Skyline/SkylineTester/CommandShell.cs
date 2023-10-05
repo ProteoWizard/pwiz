@@ -500,12 +500,14 @@ namespace SkylineTester
         /// </summary>
         void ProcessExit(object sender, EventArgs e)
         {
-            ProcessExit(false);
+            if (ReferenceEquals(sender, _process))
+                ProcessExit(false);
         }
 
         void ProcessExitIgnoreError(object sender, EventArgs e)
         {
-            ProcessExit(true);
+            if (ReferenceEquals(sender, _process))
+                ProcessExit(true);
         }
 
         void ProcessExit(bool ignoreError)

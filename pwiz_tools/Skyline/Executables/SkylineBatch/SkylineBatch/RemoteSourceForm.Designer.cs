@@ -141,8 +141,8 @@
             // 
             // btnOpenFromPanorama
             // 
-            this.btnOpenFromPanorama.Image = global::SkylineBatch.Properties.Resources.Panorama;
             resources.ApplyResources(this.btnOpenFromPanorama, "btnOpenFromPanorama");
+            this.btnOpenFromPanorama.Image = global::SkylineBatch.Properties.Resources.Panorama;
             this.btnOpenFromPanorama.Name = "btnOpenFromPanorama";
             this.btnOpenFromPanorama.UseVisualStyleBackColor = true;
             this.btnOpenFromPanorama.Click += new System.EventHandler(this.btn_OpenFromPanorama);

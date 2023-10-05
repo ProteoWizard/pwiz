@@ -44,14 +44,14 @@ namespace pwiz.SkylineTest
             PublishDocumentDlg.AddChildContainers(null, rootNode, containers);
             Assert.AreEqual(1, rootNode.Nodes.Count);
             TreeNode maccossFolder = rootNode.Nodes[0];
-            Assert.AreEqual("MacCoss", maccossFolder.Text); // Redable
+            Assert.AreEqual("MacCoss", maccossFolder.Text); // Readable
             Assert.AreEqual(1, maccossFolder.Nodes.Count);
             Assert.AreEqual("user1", maccossFolder.Nodes[0].Text); // Writable sub-folder
 
 
             // Test for JSON containing 
             // 1. a writable folder where the user has no permissions on the parent folder.
-            // 2. a writable folder that does not have the TargeteMS module enabled.
+            // 2. a writable folder that does not have the TargetedMS module enabled.
             //    All 3 top-level folders (Carr, MacCoss, Gibson) have writable sub-folders but
             //    only the MacCoss and Gibson folders have TargetedMS enabled sub-folders.
             containers = JObject.Parse(WRITABLEFOLDER_2_JSON);
@@ -188,7 +188,7 @@ namespace pwiz.SkylineTest
                                                         "         {\n" +
                                                         "         sortOrder: 0, \n" +
                                                         "         children:[ ], \n" +
-                                                        "         folderType: \"Targeted MS\", \n" +
+                                                        "         folderType: \"Collaboration\", \n" +
                                                         "         type: \"folder\", \n" +
                                                         "         activeModules: [\"Core\", \"Wiki\"], \n" + // No TargetedMS module
                                                         "         userPermissions: 2, \n" + // WRITABLE
