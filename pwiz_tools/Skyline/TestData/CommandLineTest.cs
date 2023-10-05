@@ -636,7 +636,6 @@ namespace pwiz.SkylineTestData
         public void ConsoleExportSpecLibTest()
         {
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleExportSpecLibTest.zip");
-            var libPath = TestFilesDir.GetTestPath("sample.blib");
             // A document with no results. Attempting to export a spectral library should
             // provoke an error
             var docWithNoResultsPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
@@ -651,7 +650,6 @@ namespace pwiz.SkylineTestData
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library), output);
             // Test error (no results)
             output = RunCommand("--in=" + docWithNoResultsPath, // Load a document with no results
-                "--add-library-path=" + libPath, // Add a library
                 "--exp-speclib-file=" + exportPath // Export a spectral library
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_results_to_export_a_spectral_library), output);
