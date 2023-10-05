@@ -123,6 +123,13 @@ namespace pwiz.Common.SystemUtil
                 }
             }
 
+            StringBuilder sbOutput = null;
+            if (writer == null)
+            {
+                sbOutput = new StringBuilder();
+                writer = new StringWriter(sbOutput);
+            }
+
             try
             {
                 var reader = new ProcessStreamReader(proc, StatusPrefix == null && MessagePrefix == null);
@@ -215,6 +222,13 @@ namespace pwiz.Common.SystemUtil
                 }
 
             }
+            catch (Exception ex)  // CONSIDER: Should we handle more types like WrapAndThrowException does?
+            {
+                if (sbOutput != null)
+                    ThrowExceptionWithOutput(ex, sbOutput.ToString());
+
+                throw;
+            }
             finally
             {
                 if (!proc.HasExited)
@@ -222,6 +236,16 @@ namespace pwiz.Common.SystemUtil
 
                 CleanupTmpDir(); // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
             }
+        }
+
+        private void ThrowExceptionWithOutput(Exception exception, string output)
+        {
+            var sbText = new StringBuilder();
+            sbText.AppendLine(exception.Message)
+                .AppendLine()
+                .AppendLine("Output:")
+                .AppendLine(output);
+            throw new IOException(exception.Message, new IOException(sbText.ToString(), exception));
         }
 
         // Clean out any tempfiles left behind, if forceTempfilesCleanup was set

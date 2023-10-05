@@ -136,7 +136,7 @@
     <value>True</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>审计日志额外信息</value>
+    <value>自动记录额外信息</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>AuditLogExtraInfoForm</value>
