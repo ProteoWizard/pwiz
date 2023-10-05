@@ -647,7 +647,7 @@ namespace pwiz.SkylineTestData
                 "--overwrite", // Overwrite, as the file may already exist in the bin
                 "--exp-speclib-file=" + exportPath // Export a spectral library
             );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library), output);
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_precursor_to_export_a_spectral_library), output);
             // Test error (no results)
             output = RunCommand("--in=" + docWithNoResultsPath, // Load a document with no results
                 "--exp-speclib-file=" + exportPath // Export a spectral library

@@ -5973,12 +5973,22 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: The document must contain at least one peptide precursor to export a spectral library.
+        ///   Looks up a localized string similar to Error: Failure attempting to save spectral library file {0}.
         /// </summary>
-        public static string CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library {
+        public static string CommandLine_ExportSpecLib_Error__Failure_attempting_to_save_spectral_library_file__0_ {
             get {
-                return ResourceManager.GetString("CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_peptide_p" +
-                        "recursor_to_export_a_spectral_library", resourceCulture);
+                return ResourceManager.GetString("CommandLine_ExportSpecLib_Error__Failure_attempting_to_save_spectral_library_file" +
+                        "__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The document must contain at least one precursor to export a spectral library.
+        /// </summary>
+        public static string CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_precursor_to_export_a_spectral_library {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_precursor" +
+                        "_to_export_a_spectral_library", resourceCulture);
             }
         }
         
@@ -5989,15 +5999,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandLine_ExportSpecLib_Error__The_document_must_contain_results_to_export_a_sp" +
                         "ectral_library", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failure attempting to save spectral library file {0}.
-        /// </summary>
-        public static string CommandLine_ExportSpecLib_Failure_attempting_to_save_spectral_library_file__0_ {
-            get {
-                return ResourceManager.GetString("CommandLine_ExportSpecLib_Failure_attempting_to_save_spectral_library_file__0_", resourceCulture);
             }
         }
         

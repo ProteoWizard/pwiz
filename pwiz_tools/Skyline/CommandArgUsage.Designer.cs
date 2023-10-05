@@ -358,7 +358,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Export a spectral library..
+        ///   Looks up a localized string similar to Export experimental data in the current document to a spectral library file. Peak areas are used as spectrum intensities, peak apex times are used as retention times, and if the document has iRT values they will also be stored in the library..
         /// </summary>
         internal static string _exp_speclib_file {
             get {

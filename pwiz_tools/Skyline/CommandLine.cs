@@ -3118,14 +3118,14 @@ namespace pwiz.Skyline
         /// <summary>
         /// Export a spectral library (.blib) file from the document
         /// </summary>
-        /// <param name="specLibFile"> File path to export the spectral library to</param>
-        /// <returns></returns>
+        /// <param name="specLibFile">File path to export the spectral library to</param>
+        /// <returns>True if the file is successfully exported and false if there is an error</returns>
         public bool ExportSpecLib(string specLibFile)
         {
             _out.WriteLine(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____, specLibFile);
-            if (Document.MoleculeTransitionGroupCount == 0) // The document needs at least one peptide precursor
+            if (Document.MoleculeTransitionGroupCount == 0) // The document needs at least one precursor
             {
-                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library);
+                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_precursor_to_export_a_spectral_library);
                 return false;
             }
             else if (!Document.Settings.HasResults) // The document must contain results
@@ -3145,8 +3145,9 @@ namespace pwiz.Skyline
             }
             catch(Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Failure_attempting_to_save_spectral_library_file__0_);
+                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Error__Failure_attempting_to_save_spectral_library_file__0_, specLibFile);
                 _out.WriteLine(x.Message);
+                return false;
             }
             return true;
         }
