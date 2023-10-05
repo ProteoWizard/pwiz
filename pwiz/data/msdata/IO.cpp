@@ -2325,8 +2325,13 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
             }
         }
 
-        // if numpress is on, make sure output is directed to BinaryDataArray instead of IntegerDataArray
-        /*if (BinaryDataEncoder::Numpress_None != config.numpress)
+        // with mzMLb, binary data type is used to indicate whether the array should be restored into a BinaryDataArray or an IntegerDataArray
+        // with mzML, when numpress is on, binary data type is used to indicate whether PIC compression was used;
+        //            when numpress is off, it is used to indicate the original array type
+
+        // if numpress is on, make sure Numpress PIC arrays are directed to BinaryDataArray instead of IntegerDataArray
+        auto mzMLb_is = dynamic_cast<stream<Connection_mzMLb>*>(is_);
+        if (BinaryDataEncoder::Numpress_None != config.numpress && !mzMLb_is)
             switch (cvidBinaryDataType)
             {
                 case MS_32_bit_integer:
@@ -2339,7 +2344,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
                     throw runtime_error("[IO::HandlerBinaryDataArray] Unknown binary data type.");
                 default:
                     break;
-            }*/
+            }
 
         switch (cvidBinaryDataType)
         {
