@@ -26,6 +26,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.PanoramaClient;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -1760,8 +1761,7 @@ namespace pwiz.SkylineTestData
             doc = ResultsUtil.DeserializeDocument(outPath2);
             Assert.AreEqual(2, doc.Settings.MeasuredResults.Chromatograms.Count, msg);
             ChromatogramSet chromatSet;
-            int idx;
-            doc.Settings.MeasuredResults.TryGetChromatogramSet("160109_Mix1_calcurve_070", out chromatSet, out idx);
+            doc.Settings.MeasuredResults.TryGetChromatogramSet("160109_Mix1_calcurve_070", out chromatSet, out _);
             Assert.IsNotNull(chromatSet, msg);
             Assert.IsTrue(chromatSet.MSDataFilePaths.Contains(rawPath2));
 
@@ -1801,15 +1801,14 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(initialFileCount + 7, totalImportedFiles);
             // In the "REP01" replicate we should have 1 file
             ChromatogramSet chromatogramSet;
-            int index;
-            doc.Settings.MeasuredResults.TryGetChromatogramSet("REP01", out chromatogramSet, out index);
+            doc.Settings.MeasuredResults.TryGetChromatogramSet("REP01", out chromatogramSet, out _);
             Assert.IsNotNull(chromatogramSet);
             Assert.IsTrue(chromatogramSet.MSDataFilePaths.Count() == 1);
             Assert.IsTrue(chromatogramSet.MSDataFilePaths.Contains(
                 new MsDataFilePath(TestFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" +
                                                             extRaw))));
             // REP012 should have the file REP01\CE_Vantage_15mTorr_0001_REP1_02.raw|mzML
-            doc.Settings.MeasuredResults.TryGetChromatogramSet("REP012", out chromatogramSet, out index);
+            doc.Settings.MeasuredResults.TryGetChromatogramSet("REP012", out chromatogramSet, out _);
             Assert.IsNotNull(chromatogramSet);
             Assert.IsTrue(chromatogramSet.MSDataFilePaths.Count() == 1);
             Assert.IsTrue(chromatogramSet.MSDataFilePaths.Contains(
@@ -3271,12 +3270,12 @@ namespace pwiz.SkylineTestData
 
             // Error: Unknown server
             var serverUri = PanoramaUtil.ServerNameToUri("unknown.server-state.com");
-            var client = new TestPanoramaClient() { MyServerState = new ServerState(ServerStateEnum.unknown, null, null), ServerUri = serverUri };
-            helper.ValidateServer(client, null, null);
+            var client = new TestPanoramaClient() { MyServerState = ServerStateEnum.unknown, ServerUri = serverUri };
+            helper.ValidateServer(client);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
-                        string.Format(Resources.ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__,
+                        string.Format(PanoramaClient.Properties.Resources.ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__,
                             serverUri.AbsoluteUri)));
             TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
@@ -3284,12 +3283,12 @@ namespace pwiz.SkylineTestData
 
             // Error: Not a Panorama Server
             serverUri = PanoramaUtil.ServerNameToUri("www.google.com");
-            client = new TestPanoramaClient() {MyUserState = new UserState(UserStateEnum.unknown, null, null), ServerUri = serverUri};
-            helper.ValidateServer(client, null, null);
+            client = new TestPanoramaClient() {MyUserState = UserStateEnum.unknown, ServerUri = serverUri};
+            helper.ValidateServer(client);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
-                        string.Format(Resources.UserState_getErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__,
+                        string.Format(PanoramaClient.Properties.Resources.UserState_GetErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__,
                             serverUri.AbsoluteUri)));
             TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
@@ -3297,20 +3296,20 @@ namespace pwiz.SkylineTestData
 
             // Error: Invalid user
             serverUri = PanoramaUtil.ServerNameToUri(PanoramaUtil.PANORAMA_WEB);
-            client = new TestPanoramaClient() { MyUserState = new UserState(UserStateEnum.nonvalid, null, null), ServerUri = serverUri };
-            helper.ValidateServer(client, "invalid", "user");
+            client = new TestPanoramaClient() { MyUserState = UserStateEnum.nonvalid, ServerUri = serverUri, Username = "invalid", Password = "user"};
+            helper.ValidateServer(client);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
-                        Resources
-                            .EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server));
+                        PanoramaClient.Properties.Resources
+                            .UserState_GetErrorMessage_The_username_and_password_could_not_be_authenticated_with_the_panorama_server_));
             TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
 
             // Error: unknown exception
             client = new TestPanoramaClientThrowsException();
-            helper.ValidateServer(client, null, null);
+            helper.ValidateServer(client);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
@@ -3320,15 +3319,15 @@ namespace pwiz.SkylineTestData
 
             
             // Error: folder does not exist
-            client = new TestPanoramaClient() { MyFolderState = FolderState.notfound, ServerUri = serverUri };
-            var server = helper.ValidateServer(client, "user", "password");
+            client = new TestPanoramaClient() { MyFolderState = FolderState.notfound, ServerUri = serverUri, Username = "user", Password = "password"};
+            helper.ValidateServer(client);
             var folder = "folder/not/found";
-            helper.ValidateFolder(client, server, folder);
+            helper.ValidateFolder(client, folder);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
                         string.Format(
-                            Resources.PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_,
+                            PanoramaClient.Properties.Resources.PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_,
                             folder, client.ServerUri)));
             TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
@@ -3337,13 +3336,13 @@ namespace pwiz.SkylineTestData
             // Error: no permissions on folder
             client = new TestPanoramaClient() { MyFolderState = FolderState.nopermission, ServerUri = serverUri };
             folder = "no/permissions";
-            helper.ValidateFolder(client, server, folder);
+            helper.ValidateFolder(client, folder);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
                         string.Format(
-                            Resources.PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_,
-                            "user", folder)));
+                            PanoramaClient.Properties.Resources.PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_,
+                            client.Username, folder)));
             TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
@@ -3351,10 +3350,10 @@ namespace pwiz.SkylineTestData
             // Error: not a Panorama folder
             client = new TestPanoramaClient() { MyFolderState = FolderState.notpanorama, ServerUri = serverUri };
             folder = "not/panorama";
-            helper.ValidateFolder(client, server, folder);
+            helper.ValidateFolder(client, folder);
             Assert.IsTrue(
                 buffer.ToString()
-                    .Contains(string.Format(Resources.PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder,
+                    .Contains(string.Format(PanoramaClient.Properties.Resources.PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder,
                         folder)));
             TestOutputHasErrorLine(buffer.ToString());
         }
@@ -3461,50 +3460,49 @@ namespace pwiz.SkylineTestData
                 string.Format("Expected RunCommand result message containing \n\"{0}\",\ngot\n\"{1}\"\ninstead.", expectedMessage, actualMessage));
         }
 
-        private class TestPanoramaClient : IPanoramaClient
+        private class TestPanoramaClient : BaseTestPanoramaClient
         {
-            public Uri ServerUri { get; set; }
-
-            public ServerState MyServerState { get; set; }
-            public UserState MyUserState { get; set; }
+            public ServerStateEnum MyServerState { get; set; }
+            public UserStateEnum MyUserState { get; set; }
             public FolderState MyFolderState { get; set; }
 
             public TestPanoramaClient()
             {
-                MyServerState = ServerState.VALID;
-                MyUserState = UserState.VALID;
+                MyServerState = ServerStateEnum.available;
+                MyUserState = UserStateEnum.valid;
                 MyFolderState = FolderState.valid;
+
+                ServerUri = new Uri("https://panoramaweb.org");
+                Username = "myuser";
+                Password = "mypassword";
             }
 
-            public virtual ServerState GetServerState()
+            public override PanoramaServer ValidateServer()
             {
-                return MyServerState;
+                if (ServerStateEnum.available != MyServerState)
+                {
+                    throw new PanoramaServerException(MyServerState, "Invalid server state", ServerUri);
+                }
+                if (UserStateEnum.valid != MyUserState)
+                {
+                    throw new PanoramaServerException(MyUserState, "Invalid user state", ServerUri);
+                }
+
+                return new PanoramaServer(ServerUri, Username, Password);
             }
 
-            public UserState IsValidUser(string username, string password)
+            public override void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
             {
-                return MyUserState;
-            }
-
-            public FolderState IsValidFolder(string folderPath, string username, string password)
-            {
-                return MyFolderState;
-            }
-
-            public FolderOperationStatus CreateFolder(string parentPath, string folderName, string username, string password)
-            {
-                return FolderOperationStatus.OK;
-            }
-
-            public FolderOperationStatus DeleteFolder(string folderPath, string username, string password)
-            {
-                return FolderOperationStatus.OK;
+                if (MyFolderState != FolderState.valid)
+                {
+                    throw new PanoramaServerException(MyFolderState, folderPath, null, ServerUri, null, Username);
+                }
             }
         }
 
         private class TestPanoramaClientThrowsException : TestPanoramaClient
         {
-            public override ServerState GetServerState()
+            public override PanoramaServer ValidateServer()
             {
                 throw new Exception("GetServerState threw an exception");
             }    

@@ -155,14 +155,11 @@ namespace pwiz.Skyline.EditUI
 
         private void btnFASTA_Click(object sender, EventArgs e)
         {
-            using (OpenFileDialog dlg = new OpenFileDialog
-                                            {
-                                                Title = Resources.RenameProteinsDlg_btnFASTA_Click_Add_FASTA_File,
-                                                InitialDirectory = Settings.Default.FastaDirectory,
-                                                CheckPathExists = true
-                                                // FASTA files often have no extension as well as .fasta and others
-                                            })
+            using (OpenFileDialog dlg = new OpenFileDialog())
             {
+                dlg.Title = Resources.RenameProteinsDlg_btnFASTA_Click_Add_FASTA_File;
+                dlg.InitialDirectory = Settings.Default.FastaDirectory;
+                dlg.CheckPathExists = true; // FASTA files often have no extension as well as .fasta and others
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.FastaDirectory = Path.GetDirectoryName(dlg.FileName);
@@ -300,8 +297,7 @@ namespace pwiz.Skyline.EditUI
             var dictNodeToNewName = new Dictionary<string, string>();
             foreach (var nodePepGroup in _document.MoleculeGroups)
             {
-                string newname;
-                if (!dictNodeToNewName.TryGetValue(nodePepGroup.Name, out newname))
+                if (!dictNodeToNewName.TryGetValue(nodePepGroup.Name, out _))
                 {
                     string text = null;
                     switch (mode)

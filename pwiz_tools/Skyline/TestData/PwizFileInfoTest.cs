@@ -165,7 +165,7 @@ namespace pwiz.SkylineTestData
 
                     Assert.AreEqual(0, tic.Count());    // No longer expect these in SRM data
                     Assert.AreEqual(0, bpc.Count());    // No longer expect these in SRM data
-                    var qcNames = qc.Select(o => o.TextId).ToArray();
+                    var qcNames = qc.Select(o => o.QcTraceName).ToArray();
                     Assert.AreEqual(6, qcNames.Length);
                     CollectionAssert.IsSubsetOf(new [] {"Column Pressure (channel 1)",
                                                         "Pump A Flowrate (channel 2)",

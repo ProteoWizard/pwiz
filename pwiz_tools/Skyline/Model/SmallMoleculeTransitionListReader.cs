@@ -171,8 +171,7 @@ namespace pwiz.Skyline.Model
                         continue; // This won't succeed, but keep gathering errors
                     }
                     IdentityPath first;
-                    IdentityPath next;
-                    document = document.AddPeptideGroups(new[] {node}, false, to, out first, out next);
+                    document = document.AddPeptideGroups(new[] {node}, false, to, out first, out _);
                     if (string.IsNullOrEmpty(defaultPepGroupName))
                     {
                         defaultPepGroupName = node.Name;
@@ -447,7 +446,7 @@ namespace pwiz.Skyline.Model
                             if (!visited.Contains(row2))
                             {
                                 if (@group.Equals(GetCellTrimmed(row2, INDEX_MOLECULE_GROUP) ?? string.Empty) &&
-                                    name.Equals(ReadMoleculeAccessionNumberColumns(row2)) &&
+                                    Equals(name, ReadMoleculeAccessionNumberColumns(row2)) &&
                                     row2.GetCellAsDouble(INDEX_PRECURSOR_MZ, out var mzParsed2))
                                 {
                                     var zString2 = GetCellTrimmed(row2, INDEX_PRECURSOR_ADDUCT) ?? 

@@ -414,7 +414,6 @@ namespace pwiz.Skyline.Model.Lib
 
                 // http://sashimi.svn.sourceforge.net/viewvc/sashimi/trunk/trans_proteomic_pipeline/src/Search/SpectraST/Peptide.cpp?revision=5277&view=markup
                 // line 1196
-// ReSharper disable LocalizableElement
                 {"ICAT_light", SequenceMassCalc.GetModDiffDescription(227.126991)}, 
                 {"ICAT-C", SequenceMassCalc.GetModDiffDescription(227.126991)}, // PSI new name
                 {"ICAT_heavy", SequenceMassCalc.GetModDiffDescription(236.157185)},
@@ -466,7 +465,6 @@ namespace pwiz.Skyline.Model.Lib
                 {"Ub_LysC", SequenceMassCalc.GetModDiffDescription(1431.831075)}, // Ubiquitin LysC tail
                 {"GlyGly", SequenceMassCalc.GetModDiffDescription(114.042927)}, // Ubiquitin/NEDD8 Tryptic tail (2 glycines)
             };
-        // ReSharper restore LocalizableElement
 
 #pragma warning disable 169
         private static readonly Dictionary<string, string> MODIFICATION_MASSES_AVG = new Dictionary<string, string>

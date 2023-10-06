@@ -157,14 +157,12 @@ namespace pwiz.Skyline.SettingsUI
                     return;
             }
 
-            using (OpenFileDialog dlg = new OpenFileDialog
+            using (OpenFileDialog dlg = new OpenFileDialog())
             {
-                Title = Resources.EditOptimizationLibraryDlg_btnOpen_Click_Open_Optimization_Library,
-                InitialDirectory = Settings.Default.ActiveDirectory,
-                DefaultExt = OptimizationDb.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(OptimizationDb.FILTER_OPTDB)
-            })
-            {
+                dlg.Title = Resources.EditOptimizationLibraryDlg_btnOpen_Click_Open_Optimization_Library;
+                dlg.InitialDirectory = Settings.Default.ActiveDirectory;
+                dlg.DefaultExt = OptimizationDb.EXT;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(OptimizationDb.FILTER_OPTDB);
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
@@ -213,15 +211,13 @@ namespace pwiz.Skyline.SettingsUI
                     return;
             }
 
-            using (var dlg = new SaveFileDialog
+            using (var dlg = new SaveFileDialog())
             {
-                Title = Resources.EditOptimizationLibraryDlg_btnCreate_Click_Create_Optimization_Library,
-                InitialDirectory = Settings.Default.ActiveDirectory,
-                OverwritePrompt = true,
-                DefaultExt = OptimizationDb.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(OptimizationDb.FILTER_OPTDB)
-            })
-            {
+                dlg.Title = Resources.EditOptimizationLibraryDlg_btnCreate_Click_Create_Optimization_Library;
+                dlg.InitialDirectory = Settings.Default.ActiveDirectory;
+                dlg.OverwritePrompt = true;
+                dlg.DefaultExt = OptimizationDb.EXT;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(OptimizationDb.FILTER_OPTDB);
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
@@ -698,12 +694,11 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 else
                 {
-                    double dVal;
                     if (string.IsNullOrWhiteSpace(val))
                     {
                         message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_Missing_value_on_line__0_, lineNumber);
                     }
-                    else if (!double.TryParse(val, out dVal))
+                    else if (!double.TryParse(val, out _))
                     {
                         message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_Invalid_decimal_number_format__0__on_line__1_, val, lineNumber);
                     }
@@ -966,13 +961,11 @@ namespace pwiz.Skyline.SettingsUI
             private void AddOptimizationLibrary(OptimizationLibrary optLibrary, SrmDocument document)
             {
                 IEnumerable<DbOptimization> optimizations = null;
-                using (var longWait = new LongWaitDlg
+                using (var longWait = new LongWaitDlg())
                 {
-                    Text = Resources.LibraryGridViewDriver_AddOptimizationLibrary_Adding_optimization_library,
-                    Message = string.Format(Resources.LibraryGridViewDriver_AddOptimizationLibrary_Adding_optimization_values_from__0_, optLibrary.DatabasePath),
-                    FormBorderStyle = FormBorderStyle.Sizable
-                })
-                {
+                    longWait.Text = Resources.LibraryGridViewDriver_AddOptimizationLibrary_Adding_optimization_library;
+                    longWait.Message = string.Format(Resources.LibraryGridViewDriver_AddOptimizationLibrary_Adding_optimization_values_from__0_, optLibrary.DatabasePath);
+                    longWait.FormBorderStyle = FormBorderStyle.Sizable;
                     try
                     {
                         var status = longWait.PerformWork(MessageParent, 800, monitor =>

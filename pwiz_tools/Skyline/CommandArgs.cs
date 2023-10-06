@@ -30,6 +30,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.SystemUtil;
+using pwiz.PanoramaClient;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -1056,7 +1057,7 @@ namespace pwiz.Skyline
         private string PanoramaPassword { get; set; }
         public string PanoramaFolder { get; private set; }
         public bool PublishingToPanorama { get; private set; }
-        public Server PanoramaServer { get; private set; }
+        public PanoramaServer PanoramaServer { get; private set; }
 
         private bool ValidatePanoramaArgs()
         {
@@ -1073,13 +1074,13 @@ namespace pwiz.Skyline
                     return false;
                 }
 
-                var panoramaClient = new WebPanoramaClient(serverUri);
+                var panoramaClient = new WebPanoramaClient(serverUri, PanoramaUserName, PanoramaPassword);
                 var panoramaHelper = new PanoramaHelper(_out); // Helper writes messages for failures below
-                PanoramaServer = panoramaHelper.ValidateServer(panoramaClient, PanoramaUserName, PanoramaPassword);
+                PanoramaServer = panoramaHelper.ValidateServer(panoramaClient);
                 if (PanoramaServer == null)
                     return false;
 
-                if (!panoramaHelper.ValidateFolder(panoramaClient, PanoramaServer, PanoramaFolder))
+                if (!panoramaHelper.ValidateFolder(panoramaClient, PanoramaFolder))
                     return false;
 
                 PublishingToPanorama = true;
@@ -1129,12 +1130,11 @@ namespace pwiz.Skyline
                 _statusWriter = statusWriter;
             }
 
-            public Server ValidateServer(IPanoramaClient panoramaClient, string panoramaUsername, string panoramaPassword)
+            public PanoramaServer ValidateServer(IPanoramaClient panoramaClient)
             {
                 try
                 {
-                    PanoramaUtil.VerifyServerInformation(panoramaClient, panoramaUsername, panoramaPassword);
-                    return new Server(panoramaClient.ServerUri, panoramaUsername, panoramaPassword);
+                    return panoramaClient.ValidateServer();
                 }
                 catch (PanoramaServerException x)
                 {
@@ -1148,11 +1148,11 @@ namespace pwiz.Skyline
                 return null;
             }
 
-            public bool ValidateFolder(IPanoramaClient panoramaClient, Server server, string panoramaFolder)
+            public bool ValidateFolder(IPanoramaClient panoramaClient, string panoramaFolder)
             {
                 try
                 {
-                    PanoramaUtil.VerifyFolder(panoramaClient, server, panoramaFolder);
+                    panoramaClient.ValidateFolder(panoramaFolder, FolderPermission.insert);
                     return true;
                 }
                 catch (PanoramaServerException x)

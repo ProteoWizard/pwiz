@@ -70,6 +70,7 @@ namespace pwiz.Skyline.Controls.Graphs
         bool IsAnnotated { get; }
         LibraryRankedSpectrumInfo SpectrumInfo { get; }
         bool ShowPropertiesSheet { get; set; }
+        bool HasChromatogramData { get; }
     }
 
     public interface ISpectrumScaleProvider
@@ -140,6 +141,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private SpectrumDisplayInfo _mirrorSpectrum;
         private SpectrumDisplayInfo _spectrum;
+                
 
         private bool _inToolbarUpdate;
         // TODO
@@ -544,7 +546,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 var iSpectrum = Precursors[i].Spectra.IndexOf(spectrumInfo => !spectrumInfo.IsBest && SpectrumMatches(spectrumInfo, spectrumIdentifier));
                 if (iSpectrum != -1)
                 {
-                    comboPrecursor.SelectedIndex = i;
+                    if (comboPrecursor.SelectedIndex != i)
+                    {
+                        comboPrecursor.SelectedIndex = i;
+                        DoUpdate();
+                    }
                     comboSpectrum.SelectedIndex = iSpectrum;
                     return;
                 }
@@ -1276,6 +1282,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     var spectrumChanged = !Equals(_spectrum?.SpectrumInfo, spectrum?.SpectrumInfo);
                     _spectrum = spectrum;
+                    if(spectrumChanged)
+                        HasChromatogramData = _spectrum?.LoadChromatogramData() != null;
 
                     ClearGraphPane();
 
@@ -1499,6 +1507,12 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public LibraryRankedSpectrumInfo SpectrumInfo => GraphItem?.SpectrumInfo;
+
+        public bool HasChromatogramData
+        {
+            get;
+            private set;
+        }
 
         public Scale IntensityScale
         {

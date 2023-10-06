@@ -153,10 +153,7 @@ namespace pwiz.Skyline.Model.Results
                         highEnergyIonMobilityValueOffset = Math.Round(ms2IonMobility.IonMobility.Mobility.Value - ms1IonMobility.IonMobility.Mobility.Value, 6); // Excessive precision is just distracting noise TODO(bspratt) ask vendors what "excessive" means here
                     }
                     var value =  IonMobilityAndCCS.GetIonMobilityAndCCS(ms1IonMobility.IonMobility, ms1IonMobility.CollisionalCrossSectionSqA, highEnergyIonMobilityValueOffset);
-                    if (!measured.ContainsKey(dt.Key))
-                        measured.Add(dt.Key, value);
-                    else
-                        measured[dt.Key] = value;
+                    measured[dt.Key] = value;
                 }
                 // Check for data for which we have only MS2 to go on
                 foreach (var im in _ms2IonMobilities)
@@ -178,10 +175,7 @@ namespace pwiz.Skyline.Model.Results
                             }
                         }
 
-                        if (!measured.ContainsKey(im.Key))
-                            measured.Add(im.Key, value);
-                        else
-                            measured[im.Key] = value;
+                        measured[im.Key] = value;
                     }
                 }
             }
@@ -364,10 +358,10 @@ namespace pwiz.Skyline.Model.Results
             double maxIntensity = 0;
 
             // Avoid picking MS2 ion mobility values wildly different from MS1 values
-            if ((msLevel == 2) && _ms1IonMobilities.ContainsKey(libKey))
+            if ((msLevel == 2) && _ms1IonMobilities.TryGetValue(libKey, out var mobility))
             {
                 _ms1IonMobilityBest =
-                    _ms1IonMobilities[libKey].OrderByDescending(p => p.Intensity)
+                    mobility.OrderByDescending(p => p.Intensity)
                         .FirstOrDefault()
                         .IonMobility.IonMobility;
                 var imMS1 = _ms1IonMobilityBest.Mobility ?? 0;

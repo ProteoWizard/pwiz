@@ -81,8 +81,7 @@ namespace pwiz.SkylineTestUtil
             {
                 var chromSet = chromatograms[resultsIndex];
                 Assert.IsTrue(chromSet.FileCount == 1);
-                ChromatogramGroupInfo[] chromGroupInfos;
-                Assert.IsTrue(settings.MeasuredResults.TryLoadChromatogram(chromSet, null, nodeTranGroup, mzMatchTolerance, out chromGroupInfos));
+                Assert.IsTrue(settings.MeasuredResults.TryLoadChromatogram(chromSet, null, nodeTranGroup, mzMatchTolerance, out _));
                 var rt = nodeTranGroup.Results[resultsIndex][0].RetentionTime;
                 Assert.IsTrue(rt.HasValue);
                 var chromName = chromSet.Name;

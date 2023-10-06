@@ -675,10 +675,9 @@ namespace pwiz.Skyline.Model.DocSettings
             try
             {
                 listRTs = new List<double>();
-                int minCount;
                 calcPeptides = allPeptides
                     ? listPeptides
-                    : calculator.ChooseRegressionPeptides(listPeptides, out minCount).ToList();
+                    : calculator.ChooseRegressionPeptides(listPeptides, out _).ToList();
                 peptideScores = RetentionTimeScoreCache.CalcScores(calculator, calcPeptides, scoreCache, token);
             }
             catch (Exception)
@@ -699,6 +698,10 @@ namespace pwiz.Skyline.Model.DocSettings
                     regressionFunction = new RegressionLineElement(statRT.Slope(stat), statRT.Intercept(stat));
                     break;
                 case RegressionMethodRT.kde:
+                    if (stat.Length <= 1)
+                    {
+                        return null;
+                    }
                     var kdeAligner = new KdeAligner();
                     kdeAligner.Train(stat.CopyList(), statRT.CopyList(), token);
 

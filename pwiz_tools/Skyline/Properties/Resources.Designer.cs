@@ -12378,30 +12378,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The username and password could not be authenticated with the panorama server..
-        /// </summary>
-        public static string EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server {
-            get {
-                return ResourceManager.GetString("EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_" +
-                        "the_panorama_server", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Verifying server information..
         /// </summary>
         public static string EditServerDlg_OkDialog_Verifying_server_information {
             get {
                 return ResourceManager.GetString("EditServerDlg_OkDialog_Verifying_server_information", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The server {0} does not exist..
-        /// </summary>
-        public static string EditServerDlg_VerifyServerInformation_The_server__0__does_not_exist {
-            get {
-                return ResourceManager.GetString("EditServerDlg_VerifyServerInformation_The_server__0__does_not_exist", resourceCulture);
             }
         }
         
@@ -15195,6 +15176,15 @@ namespace pwiz.Skyline.Properties {
         public static string FormatSuggestion_Scientific_Scientific {
             get {
                 return ResourceManager.GetString("FormatSuggestion_Scientific_Scientific", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Help.
+        /// </summary>
+        public static string FormulaBox_FormulaBox_Help {
+            get {
+                return ResourceManager.GetString("FormulaBox_FormulaBox_Help", resourceCulture);
             }
         }
         
@@ -22003,6 +21993,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap PanoramaDownload {
+            get {
+                object obj = ResourceManager.GetObject("PanoramaDownload", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: An unknown error occurred trying to verify access to Panorama folder &apos;{0}&apos; on the server {1}.
         ///{2}.
         /// </summary>
@@ -22135,34 +22135,6 @@ namespace pwiz.Skyline.Properties {
         public static string PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_ {
             get {
                 return ResourceManager.GetString("PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} is not a Panorama folder.
-        /// </summary>
-        public static string PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder {
-            get {
-                return ResourceManager.GetString("PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Folder {0} does not exist on the Panorama server {1}.
-        /// </summary>
-        public static string PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_ {
-            get {
-                return ResourceManager.GetString("PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to User {0} does not have permissions to upload to the Panorama folder {1}.
-        /// </summary>
-        public static string PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_ {
-            get {
-                return ResourceManager.GetString("PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Pan" +
-                        "orama_folder__1_", resourceCulture);
             }
         }
         
@@ -25128,6 +25100,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unmapped Peptides.
+        /// </summary>
+        public static string ProteinAssociation_CreateDocTree_Unmapped_Peptides {
+            get {
+                return ResourceManager.GetString("ProteinAssociation_CreateDocTree_Unmapped_Peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Finding minimal protein list.
         /// </summary>
         public static string ProteinAssociation_Finding_minimal_protein_list {
@@ -26589,6 +26570,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Molecule RT Results.
+        /// </summary>
+        public static string ReportSpecList_GetDefaults_Molecule_RT_Results {
+            get {
+                return ResourceManager.GetString("ReportSpecList_GetDefaults_Molecule_RT_Results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule Transition Results.
+        /// </summary>
+        public static string ReportSpecList_GetDefaults_Molecule_Transition_Results {
+            get {
+                return ResourceManager.GetString("ReportSpecList_GetDefaults_Molecule_Transition_Results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peak Boundaries.
         /// </summary>
         public static string ReportSpecList_GetDefaults_Peak_Boundaries {
@@ -27931,6 +27930,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to  (anonymous).
+        /// </summary>
+        public static string Server_GetKey___anonymous_ {
+            get {
+                return ResourceManager.GetString("Server_GetKey___anonymous_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A Panorama server must be specified..
         /// </summary>
         public static string Server_ReadXml_A_Panorama_server_must_be_specified {
@@ -28585,6 +28593,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add.
+        /// </summary>
+        public static string SkylineWindow_Add {
+            get {
+                return ResourceManager.GetString("SkylineWindow_Add", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All Replicates.
         /// </summary>
         public static string SkylineWindow_AddGroupByMenuItems_All_Replicates {
@@ -28956,6 +28973,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to File does not exist. It may have been deleted on the server..
+        /// </summary>
+        public static string SkylineWindow_DownloadPanoramaFile_File_does_not_exist__It_may_have_been_deleted_on_the_server_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_DownloadPanoramaFile_File_does_not_exist__It_may_have_been_deleted_" +
+                        "on_the_server_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delete {0}.
         /// </summary>
         public static string SkylineWindow_EditDelete_Delete__0__ {
@@ -29192,6 +29219,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SkylineWindow_generateDecoysMenuItem_Click_This_operation_will_replace_the_existi" +
                         "ng_decoys", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}({1}).
+        /// </summary>
+        public static string SkylineWindow_GetDownloadName__0___1__ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_GetDownloadName__0___1__", resourceCulture);
             }
         }
         
@@ -29508,15 +29544,6 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ImportMassList__Skip {
             get {
                 return ResourceManager.GetString("SkylineWindow_ImportMassList__Skip", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Add.
-        /// </summary>
-        public static string SkylineWindow_ImportMassList_Add {
-            get {
-                return ResourceManager.GetString("SkylineWindow_ImportMassList_Add", resourceCulture);
             }
         }
         
@@ -30292,6 +30319,51 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Downloading file {0}.
+        /// </summary>
+        public static string SkylineWindow_OpenFromPanorama_Downloading_file__0_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_OpenFromPanorama_Downloading_file__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loading remote server folders.
+        /// </summary>
+        public static string SkylineWindow_OpenFromPanorama_Loading_remote_server_folders {
+            get {
+                return ResourceManager.GetString("SkylineWindow_OpenFromPanorama_Loading_remote_server_folders", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No Panorama servers were found..
+        /// </summary>
+        public static string SkylineWindow_OpenFromPanorama_No_Panorama_servers_were_found_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_OpenFromPanorama_No_Panorama_servers_were_found_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open From Panorama.
+        /// </summary>
+        public static string SkylineWindow_OpenFromPanorama_Open_From_Panorama {
+            get {
+                return ResourceManager.GetString("SkylineWindow_OpenFromPanorama_Open_From_Panorama", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Press &apos;Add&apos; to add a new server..
+        /// </summary>
+        public static string SkylineWindow_OpenFromPanorama_Press__Add__to_add_a_new_server_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_OpenFromPanorama_Press__Add__to_add_a_new_server_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Extracting Files.
         /// </summary>
         public static string SkylineWindow_OpenSharedFile_Extracting_Files {
@@ -31058,11 +31130,40 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Document cannot be uploaded to a Panorama server without a user account..
+        /// </summary>
+        public static string SkylineWindow_ShowPublishDlg_Document_cannot_be_uploaded_to_a_Panorama_server_without_a_user_account_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_Document_cannot_be_uploaded_to_a_Panorama_server_wit" +
+                        "hout_a_user_account_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit existing.
+        /// </summary>
+        public static string SkylineWindow_ShowPublishDlg_Edit_existing {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_Edit_existing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Press Continue to use the server of your choice..
         /// </summary>
         public static string SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_ {
             get {
                 return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Press Edit existing to add user account information for an existing server..
+        /// </summary>
+        public static string SkylineWindow_ShowPublishDlg_Press_Edit_existing_to_add_user_account_information_for_an_existing_server_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_Press_Edit_existing_to_add_user_account_information_" +
+                        "for_an_existing_server_", resourceCulture);
             }
         }
         
@@ -31111,6 +31212,16 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to {
             get {
                 return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There are no Panorama servers with a user account. To upload documents to a server a user account is required..
+        /// </summary>
+        public static string SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_with_a_user_account__To_upload_documents_to_a_server_a_user_account_is_required_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_with_a_user_account__T" +
+                        "o_upload_documents_to_a_server_a_user_account_is_required_", resourceCulture);
             }
         }
         

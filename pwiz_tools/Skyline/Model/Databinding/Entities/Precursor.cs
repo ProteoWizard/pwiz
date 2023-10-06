@@ -128,8 +128,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 else
                 {
                     var parent = DataSchema.Document.FindNode(IdentityPath.Parent) as PeptideDocNode;
-                    Adduct adduct;
-                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, parent, out adduct, DocNode.TransitionGroup.PrecursorAdduct.AdductCharge, DocNode.TransitionGroup.LabelType);
+                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, parent, out _, DocNode.TransitionGroup.PrecursorAdduct.AdductCharge, DocNode.TransitionGroup.LabelType);
                     return molecule.InvariantName ?? string.Empty;
                 }
             }

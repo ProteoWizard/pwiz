@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.PanoramaClient;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -12,6 +12,7 @@ using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using AlertDlg = pwiz.Skyline.Alerts.AlertDlg;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -237,7 +238,8 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(errDlg.Message.Contains(expectedErr));
             Assert.IsTrue(errDlg.Message.Contains(TestDownloadClient.ERROR401));
 
-            IPanoramaClient testClient = new AllValidPanoramaClient();
+            // Create a client that will return a server with the same URI as a server that is already saved in settings
+            IPanoramaClient testClient = new AllValidPanoramaClient(_anotherServerUrl);
 
             var editServerDlg = ShowDialog<EditServerDlg>(errDlg.ClickOk);
             RunUI(() =>
@@ -535,33 +537,16 @@ namespace pwiz.SkylineTestFunctional
         }
     }
 
-    class AllValidPanoramaClient : IPanoramaClient
+    public class AllValidPanoramaClient : BaseTestPanoramaClient
     {
-        public Uri ServerUri { get { return null; } }
-
-        public ServerState GetServerState()
+        public AllValidPanoramaClient(string serverUri)
         {
-           return ServerState.VALID;
+            ServerUri = new Uri(serverUri);
+            Username = null;
         }
-
-        public UserState IsValidUser(string username, string password)
+        public override PanoramaServer ValidateServer()
         {
-            return UserState.VALID;
-        }
-
-        public FolderState IsValidFolder(string folderPath, string username, string password)
-        {
-            throw new NotImplementedException();
-        }
-
-        public FolderOperationStatus CreateFolder(string parentPath, string folderName, string username, string password)
-        {
-            throw new NotImplementedException();
-        }
-
-        public FolderOperationStatus DeleteFolder(string folderPath, string username, string password)
-        {
-            throw new NotImplementedException();
+            return new PanoramaServer(ServerUri, null, null);
         }
     }
 }

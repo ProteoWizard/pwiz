@@ -321,8 +321,9 @@ namespace pwiz.Skyline.Model.IonMobility
             // N.B. assumes we are not attempting to find multiple conformers
             // (so, returns Dictionary<LibKey, IonMobilityAndCCS> instead of Dictionary<LibKey, IList<IonMobilityAndCCS>>)
             Dictionary<LibKey, IonMobilityAndCCS> measured;
-            using (var finder = new IonMobilityFinder(document, documentFilePath, progressMonitor) { UseHighEnergyOffset = useHighEnergyOffset })
+            using (var finder = new IonMobilityFinder(document, documentFilePath, progressMonitor))
             {
+                finder.UseHighEnergyOffset = useHighEnergyOffset;
                 measured = finder.FindIonMobilityPeaks(); // Returns null on cancel
             }
             return measured;

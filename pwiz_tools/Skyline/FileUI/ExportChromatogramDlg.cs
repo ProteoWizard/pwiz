@@ -71,14 +71,12 @@ namespace pwiz.Skyline.FileUI
                 MessageDlg.Show(this, Resources.ExportChromatogramDlg_OkDialog_At_least_one_file_must_be_selected);
                 return;
             }
-            using (var dlg = new SaveFileDialog
-                {
-                    Title = Resources.ExportChromatogramDlg_OkDialog_Export_Chromatogram,
-                    OverwritePrompt = true,
-                    DefaultExt = EXT,
-                    Filter = TextUtil.FileDialogFilterAll(Resources.ExportChromatogramDlg_OkDialog_Chromatogram_Export_Files, EXT),
-                })
+            using (var dlg = new SaveFileDialog())
             {
+                dlg.Title = Resources.ExportChromatogramDlg_OkDialog_Export_Chromatogram;
+                dlg.OverwritePrompt = true;
+                dlg.DefaultExt = EXT;
+                dlg.Filter = TextUtil.FileDialogFilterAll(Resources.ExportChromatogramDlg_OkDialog_Chromatogram_Export_Files, EXT);
                 if (!string.IsNullOrEmpty(DocumentFilePath))
                 {
                     dlg.InitialDirectory = Path.GetDirectoryName(DocumentFilePath);
@@ -96,11 +94,9 @@ namespace pwiz.Skyline.FileUI
         {
             var fileNames = (from object fileName in checkedListVars.CheckedItems select fileName.ToString()).ToList();
 
-            using (var longWaitDlg = new LongWaitDlg
+            using (var longWaitDlg = new LongWaitDlg())
             {
-                Text = Resources.ExportChromatogramDlg_OkDialog_Exporting_Chromatograms,
-            })
-            {
+                longWaitDlg.Text = Resources.ExportChromatogramDlg_OkDialog_Exporting_Chromatograms;
                 try
                 {
                     longWaitDlg.PerformWork(this, 1000,

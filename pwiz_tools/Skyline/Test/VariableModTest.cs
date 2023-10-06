@@ -234,15 +234,13 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void VariableModLibraryTest()
         {
-            LibraryManager libraryManager;
-            TestDocumentContainer docContainer;
             int startRev;
             SrmDocument document = LibrarySettingsTest.CreateNISTLibraryDocument(
                 TEXT_FASTA_YEAST_39,
                 false,
                 TEXT_LIB_YEAST_NIST,
-                out libraryManager,
-                out docContainer,
+                out _,
+                out _,
                 out startRev);
             AssertEx.IsDocumentState(document, startRev, 1, 1, 3);
 
@@ -266,15 +264,13 @@ namespace pwiz.SkylineTest
         public void VariableModPeptideListTest()
         {
             // Create a document with a peptide lists of 3 peptides
-            LibraryManager libraryManager;
-            TestDocumentContainer docContainer;
             int startRev;
             SrmDocument document = LibrarySettingsTest.CreateNISTLibraryDocument(
                 TEXT_PEPTIDES_YEAST,
                 true,
                 TEXT_LIB_YEAST_NIST,
-                out libraryManager,
-                out docContainer,
+                out _,
+                out _,
                 out startRev);
             AssertEx.IsDocumentState(document, startRev, 1, 3, 1, 3);
 
@@ -341,12 +337,9 @@ namespace pwiz.SkylineTest
                                     });
             document = document.ChangeSettings(document.Settings.ChangePeptideModifications(mods =>
                 mods.ChangeStaticModifications(staticMods)));
-            IdentityPath pathTo;
-            List<MeasuredRetentionTime> irtPeptides;
-            List<SpectrumMzInfo> librarySpectra;
             List<TransitionImportErrorInfo> errorList;
             var inputsPhospho = new MassListInputs(TEXT_PHOSPHO_TRANSITION_LIST, CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV);
-            document.ImportMassList(inputsPhospho, null, out pathTo, out irtPeptides, out librarySpectra, out errorList);
+            document.ImportMassList(inputsPhospho, null, out _, out _, out _, out errorList);
             Assert.AreEqual(27, errorList.Count);
             AssertEx.AreComparableStrings(TextUtil.SpaceSeparate(Resources.MassListRowReader_CalcTransitionExplanations_The_product_m_z__0__is_out_of_range_for_the_instrument_settings__in_the_peptide_sequence__1_,
                                                 Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings),
@@ -356,7 +349,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(40, errorList[0].LineNum);
 
             var docHighMax = document.ChangeSettings(document.Settings.ChangeTransitionInstrument(inst => inst.ChangeMaxMz(1800)));
-            var docList = docHighMax.ImportMassList(inputsPhospho, null, null, out pathTo);
+            var docList = docHighMax.ImportMassList(inputsPhospho, null, null, out _);
 
             AssertEx.Serializable(docList);
             AssertEx.IsDocumentState(docList, 3, 68, 134, 157, 481);
@@ -367,7 +360,7 @@ namespace pwiz.SkylineTest
             }
 
             var inputsMultiLoss = new MassListInputs(TEXT_PHOSPHO_MULTI_LOSS, CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV);
-            docHighMax.ImportMassList(inputsMultiLoss, null, out pathTo, out irtPeptides, out librarySpectra, out errorList);
+            docHighMax.ImportMassList(inputsMultiLoss, null, out _, out _, out _, out errorList);
             Assert.AreEqual(5, errorList.Count);
             AssertEx.AreComparableStrings(Resources.MassListRowReader_CalcTransitionExplanations_Product_m_z_value__0__in_peptide__1__has_no_matching_product_ion,
                                          errorList[0].ErrorMessage,
@@ -377,7 +370,7 @@ namespace pwiz.SkylineTest
             
             var docMultiLos = docHighMax.ChangeSettings(docHighMax.Settings.ChangePeptideModifications(mods =>
                 mods.ChangeMaxNeutralLosses(2)));
-            docList = docMultiLos.ImportMassList(inputsMultiLoss, null, null, out pathTo);
+            docList = docMultiLos.ImportMassList(inputsMultiLoss, null, null, out _);
 
             AssertEx.IsDocumentState(docList, 4, 4, 4, 12);
         }

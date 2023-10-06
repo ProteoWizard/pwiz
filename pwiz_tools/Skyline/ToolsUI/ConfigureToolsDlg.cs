@@ -709,20 +709,18 @@ namespace pwiz.Skyline.ToolsUI
         public void CommandBtnClick()
         {
             int i = 0;
-            using (var dlg = new OpenFileDialog
+            using (var dlg = new OpenFileDialog())
             {
-                Filter = TextUtil.FileDialogFiltersAll(
-                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_All_Executables, ToolDescription.EXTENSIONS[i++]),
-                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Command_Files, ToolDescription.EXTENSIONS[i++]),
-                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Information_Files, ToolDescription.EXTENSIONS[i++]),
-                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Batch_Files, ToolDescription.EXTENSIONS[i++], ToolDescription.EXTENSIONS[i++]),
-                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Python_Scripts, ToolDescription.EXTENSIONS[i++]),
-                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Perl_Scripts, ToolDescription.EXTENSIONS[i])
-                               ),
-                FilterIndex = 1,
-                Multiselect = false
-            })
-            {
+                dlg.Filter = TextUtil.FileDialogFiltersAll(
+                    TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_All_Executables, ToolDescription.EXTENSIONS[i++]),
+                    TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Command_Files, ToolDescription.EXTENSIONS[i++]),
+                    TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Information_Files, ToolDescription.EXTENSIONS[i++]),
+                    TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Batch_Files, ToolDescription.EXTENSIONS[i++], ToolDescription.EXTENSIONS[i++]),
+                    TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Python_Scripts, ToolDescription.EXTENSIONS[i++]),
+                    TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Perl_Scripts, ToolDescription.EXTENSIONS[i])
+                );
+                dlg.FilterIndex = 1;
+                dlg.Multiselect = false;
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     textCommand.Text = dlg.FileName;

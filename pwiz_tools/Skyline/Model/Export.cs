@@ -1637,9 +1637,9 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             // Retention Index
             double retentionIndexKey = rt.GetValueOrDefault();
-            if (_retentionIndices.ContainsKey(retentionIndexKey))
+            if (_retentionIndices.TryGetValue(retentionIndexKey, out var retentionIndex))
             {
-                writer.Write(_retentionIndices[retentionIndexKey]);
+                writer.Write(retentionIndex);
             }
             else
             {
@@ -3046,7 +3046,9 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write(@"Unit");   // MS1 Res
             writer.Write(FieldSeparator);
-            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo));
+            // For Agilent we do not call GetProductMz because we want all of the Q3 m/z values to be the same
+            // for all of the optimization step chromatograms
+            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), 0).ToString(CultureInfo));
             writer.Write(FieldSeparator);
             writer.Write(@"Unit");   // MS2 Res
             writer.Write(FieldSeparator);
@@ -3845,7 +3847,7 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            public PointPairList Get(SchedulingMetrics metricType) { return _metrics.ContainsKey(metricType) ? _metrics[metricType] : new PointPairList(); }
+            public PointPairList Get(SchedulingMetrics metricType) { return _metrics.TryGetValue(metricType, out var metric) ? metric : new PointPairList(); }
         }
     }
 
@@ -4644,8 +4646,7 @@ namespace pwiz.Skyline.Model
 
             try
             {
-                uint type;
-                if (RegQueryValueEx(hKeyQuery, valueName, 0, out type, sb, ref size) != 0)
+                if (RegQueryValueEx(hKeyQuery, valueName, 0, out _, sb, ref size) != 0)
                     return null;
             }
             finally

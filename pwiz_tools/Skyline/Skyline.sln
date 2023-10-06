@@ -32,7 +32,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestData", "TestData\TestDa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "..\Shared\Common\Common.csproj", "{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonUtil", "..\Shared\Common\CommonUtil.csproj", "{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonUtil", "..\Shared\CommonUtil\CommonUtil.csproj", "{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiblioSpec", "..\Shared\BiblioSpec\BiblioSpec.csproj", "{32CC9B1A-9442-4B56-AF34-FB47595278A1}"
 EndProject
@@ -71,6 +71,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineCmd", "SkylineCmd\SkylineCmd.csproj", "{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineNightlyShim", "SkylineNightlyShim\SkylineNightlyShim.csproj", "{3C7F5209-6507-42C5-80CE-472AE6A51CD1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PanoramaClient", "..\Shared\PanoramaClient\PanoramaClient.csproj", "{BF849CF8-25D7-4619-B001-9ED8E3771C44}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -264,6 +266,14 @@ Global
 		{3C7F5209-6507-42C5-80CE-472AE6A51CD1}.Release|x64.Build.0 = Release|x64
 		{3C7F5209-6507-42C5-80CE-472AE6A51CD1}.Release|x86.ActiveCfg = Release|x86
 		{3C7F5209-6507-42C5-80CE-472AE6A51CD1}.Release|x86.Build.0 = Release|x86
+		{BF849CF8-25D7-4619-B001-9ED8E3771C44}.Debug|x64.ActiveCfg = Debug|x64
+		{BF849CF8-25D7-4619-B001-9ED8E3771C44}.Debug|x64.Build.0 = Debug|x64
+		{BF849CF8-25D7-4619-B001-9ED8E3771C44}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BF849CF8-25D7-4619-B001-9ED8E3771C44}.Debug|x86.Build.0 = Debug|Any CPU
+		{BF849CF8-25D7-4619-B001-9ED8E3771C44}.Release|x64.ActiveCfg = Release|x64
+		{BF849CF8-25D7-4619-B001-9ED8E3771C44}.Release|x64.Build.0 = Release|x64
+		{BF849CF8-25D7-4619-B001-9ED8E3771C44}.Release|x86.ActiveCfg = Release|Any CPU
+		{BF849CF8-25D7-4619-B001-9ED8E3771C44}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

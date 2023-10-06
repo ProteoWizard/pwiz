@@ -203,8 +203,7 @@ namespace pwiz.Skyline.Util
         {
             while (Helpers.RemoveRepeatedLabelText(Axis.Scale.TextLabels, FirstDataIndex))
             {
-                string maxLabel;
-                int maxWidth = MaxWidth(font, Axis.Scale.TextLabels, out maxLabel);
+                int maxWidth = MaxWidth(font, Axis.Scale.TextLabels, out _);
                 if (maxWidth <= dpAvailable)
                 {
                     return maxWidth;

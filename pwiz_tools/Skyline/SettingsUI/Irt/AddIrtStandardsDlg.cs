@@ -62,10 +62,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             if (_graphData != null)
             {
-                using (var graph = new GraphRegression(new[] { _graphData }) { Width = 800, Height = 600 })
-                {
-                    graph.ShowDialog(this);
-                }
+                using var graph = new GraphRegression(new[] { _graphData });
+                graph.Width = 800;
+                graph.Height = 600;
+                graph.ShowDialog(this);
             }
         }
 

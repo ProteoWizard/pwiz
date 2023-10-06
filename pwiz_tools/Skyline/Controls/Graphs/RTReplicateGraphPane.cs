@@ -364,8 +364,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 Assume.IsNotNull(chromInfoData, @"chromInfoData");
                 Assume.IsNotNull(chromInfoData.ChromFileInfo, @"chromInfoData.ChromFileInfo");
-                RegressionLine regressionFunction;
-                return !RetentionTimeTransform.RtTransformOp.TryGetRegressionFunction(chromInfoData.ChromFileInfo.FileId, out regressionFunction);
+                return !RetentionTimeTransform.RtTransformOp.TryGetRegressionFunction(chromInfoData.ChromFileInfo.FileId, out _);
             }
 
             protected override bool IsMissingValue(TransitionChromInfoData chromInfoData)

@@ -25,7 +25,6 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -235,19 +234,16 @@ namespace pwiz.SkylineTestData.Results
             settings = settings.ChangePeptideModifications(mods => mods.ChangeModifications(IsotopeLabelType.heavy, heavyMods));
             SrmDocument doc = new SrmDocument(settings);
 
-            IdentityPath selectPath;
             string path = testFilesDir.GetTestPath("051309_transition list.csv");
             // Product m/z out of range
             var docError = doc;
-            List<MeasuredRetentionTime> irtPeptides;
-            List<SpectrumMzInfo> librarySpectra;
             List<TransitionImportErrorInfo> errorList;
             var inputs = new MassListInputs(path)
             {
                 FormatProvider = CultureInfo.InvariantCulture,
                 Separator = TextUtil.SEPARATOR_CSV
             };
-            docError.ImportMassList(inputs, null, out selectPath, out irtPeptides, out librarySpectra, out errorList);
+            docError.ImportMassList(inputs, null, out _, out _, out _, out errorList);
             Assert.AreEqual(errorList.Count, 1);
             AssertEx.AreComparableStrings(TextUtil.SpaceSeparate(Resources.MassListRowReader_CalcTransitionExplanations_The_product_m_z__0__is_out_of_range_for_the_instrument_settings__in_the_peptide_sequence__1_,
                                                 Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings),
@@ -262,7 +258,7 @@ namespace pwiz.SkylineTestData.Results
                 FormatProvider = CultureInfo.InvariantCulture,
                 Separator = TextUtil.SEPARATOR_CSV
             };
-            doc = doc.ImportMassList(inputs, null, null, out selectPath);
+            doc = doc.ImportMassList(inputs, null, null, out _);
 
             AssertEx.IsDocumentState(doc, 2, 9, 9, 18, 54);
             return doc;

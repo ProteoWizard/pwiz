@@ -24,6 +24,7 @@ using System.Linq;
 using System.Net;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
+using pwiz.PanoramaClient;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -40,6 +41,7 @@ namespace pwiz.Skyline.FileUI
         private readonly IDocumentUIContainer _docContainer;
         private readonly SettingsList<Server> _panoramaServers;
         private readonly DocumentFormat? _fileFormatOnDisk;
+        private readonly List<Server> _anonymousServers;
         public IPanoramaPublishClient PanoramaPublishClient { get; set; }
         public bool IsLoaded { get; set; }
 
@@ -73,22 +75,26 @@ namespace pwiz.Skyline.FileUI
             treeViewFolders.ImageList.Images.Add(Resources.Folder);
 
             ServerTreeStateRestorer = new TreeViewStateRestorer(treeViewFolders);
+
+            _anonymousServers = new List<Server>(servers.Where(server => !server.HasUserAccount()));
+            cbAnonymousServers.Visible = _anonymousServers.Count > 0;
         }
 
         public string FileName { get { return tbFilePath.Text; } }
         public ShareType ShareType { get; set; }
 
+        public bool ShowAnonymousServers { get { return cbAnonymousServers.Checked; } set { cbAnonymousServers.Checked = value; } }
+
+
         private void PublishDocumentDlg_Load(object sender, EventArgs e)
         {
-            var listServerFolders = new List<KeyValuePair<Server, JToken>>();
+            var listServerFolders = new List<ServerFolders>();
 
             try
             {
-                using (var waitDlg = new LongWaitDlg
-                    {
-                        Text = Resources.PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers
-                    })
+                using (var waitDlg = new LongWaitDlg())
                 {
+                    waitDlg.Text = Resources.PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers;
                     waitDlg.PerformWork(this, 800, () => PublishDocumentDlgLoad(listServerFolders));
                 }
             }
@@ -99,11 +105,11 @@ namespace pwiz.Skyline.FileUI
 
             foreach (var serverFolder in listServerFolders)
             {
-                var server = serverFolder.Key;
-                var treeNode = new TreeNode(server.URI.ToString()) { Tag = new FolderInformation(server, false) };
+                var server = serverFolder.Server;
+                var treeNode = new TreeNode(server.GetKey()) { Tag = new FolderInformation(server, false) };
                 treeViewFolders.Nodes.Add(treeNode);
-                if (serverFolder.Value != null)
-                    AddSubFolders(server, treeNode, serverFolder.Value);
+                if (serverFolder.FoldersJson != null)
+                    AddSubFolders(server, treeNode, serverFolder.FoldersJson);
             }
 
             ServerTreeStateRestorer.RestoreExpansionAndSelection(Settings.Default.PanoramaServerExpansion);
@@ -112,13 +118,19 @@ namespace pwiz.Skyline.FileUI
             IsLoaded = true;
         }
 
-        private void PublishDocumentDlgLoad(List<KeyValuePair<Server, JToken>> listServerFolders)
+        private void PublishDocumentDlgLoad(List<ServerFolders> listServerFolders)
         {
             if (PanoramaPublishClient == null)
                 PanoramaPublishClient = new WebPanoramaPublishClient();
-            var listErrorServers = new List<Tuple<Server, string>>();
+            var listErrorServers = new List<ServerError>();
             foreach (var server in _panoramaServers)
             {
+                if (!server.HasUserAccount())
+                {
+                    // User has to be logged in to be able to upload a document to the server.
+                    continue;
+                }
+
                 JToken folders = null;
                 try
                 {
@@ -129,22 +141,22 @@ namespace pwiz.Skyline.FileUI
                     if (ex is WebException || ex is PanoramaServerException)
                     {
                         var error = ex.Message;
-                        if (error != null && error.Contains(Resources
-                                .EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server))
+                        if (error != null && error.Contains(PanoramaClient.Properties.Resources
+                                .UserState_GetErrorMessage_The_username_and_password_could_not_be_authenticated_with_the_panorama_server_))
                         {
                             error = TextUtil.LineSeparate(error, Resources
                                 .PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password_);
 
                         }
 
-                        listErrorServers.Add(new Tuple<Server, string>(server, error ?? string.Empty));
+                        listErrorServers.Add(new ServerError(server, error ?? string.Empty));
                     }
                     else
                     {
                         throw;
                     }
                 }
-                listServerFolders.Add(new KeyValuePair<Server, JToken>(server, folders));
+                listServerFolders.Add(new ServerFolders(server, folders));
 
             }
             if (listErrorServers.Count > 0)
@@ -155,9 +167,38 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private string ServersToString(IEnumerable<Tuple<Server, string>> servers)
+        private string ServersToString(IEnumerable<ServerError> serverErrors)
         {
-            return TextUtil.LineSeparate(servers.Select(t => TextUtil.LineSeparate(t.Item1.URI.ToString(), t.Item2)));
+            return TextUtil.LineSeparate(serverErrors.Select(t => t.ToString()));
+        }
+
+        private class ServerError
+        {
+            private Server _server;
+            private string _errorMessage;
+
+            public ServerError(Server server, string errorMessage)
+            {
+                _server = server;
+                _errorMessage = errorMessage;
+            }
+
+            public override string ToString()
+            {
+                return TextUtil.LineSeparate(_server.URI.ToString(), _errorMessage);
+            }
+        }
+
+        private class ServerFolders
+        {
+            public Server Server { get; }
+            public JToken FoldersJson { get; }
+
+            public ServerFolders(Server server, JToken foldersJson)
+            {
+                Server = server;
+                FoldersJson = foldersJson;
+            }
         }
 
         private TreeViewStateRestorer ServerTreeStateRestorer { get; set; }
@@ -191,7 +232,7 @@ namespace pwiz.Skyline.FileUI
                 AddChildContainers(server, folderNode, subFolder);
 
                 // User can only upload to folders where TargetedMS is an active module.
-                var canUpload = PanoramaUtil.CheckFolderPermissions(subFolder) && PanoramaUtil.CheckFolderType(subFolder);
+                var canUpload = PanoramaUtil.CheckInsertPermissions(subFolder) && PanoramaUtil.HasTargetedMsModule(subFolder);
 
                 // If the user does not have write permissions in this folder or any
                 // of its subfolders, do not add it to the tree.
@@ -302,19 +343,16 @@ namespace pwiz.Skyline.FileUI
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            using (var dlg = new SaveFileDialog
-                                 {
-                                     InitialDirectory = Settings.Default.LibraryDirectory,
-                                     SupportMultiDottedExtensions = true,
-                                     DefaultExt = SrmDocumentSharing.EXT_SKY_ZIP,
-                                     Filter =
-                                         TextUtil.FileDialogFiltersAll(
-                                             Resources.PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents,
-                                             SrmDocumentSharing.EXT),
-                                     FileName = tbFilePath.Text,
-                                     Title = Resources.PublishDocumentDlg_btnBrowse_Click_Upload_Document
-                                 })
+            using (var dlg = new SaveFileDialog())
             {
+                dlg.InitialDirectory = Settings.Default.LibraryDirectory;
+                dlg.SupportMultiDottedExtensions = true;
+                dlg.DefaultExt = SrmDocumentSharing.EXT_SKY_ZIP;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(
+                    Resources.PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents,
+                    SrmDocumentSharing.EXT);
+                dlg.FileName = tbFilePath.Text;
+                dlg.Title = Resources.PublishDocumentDlg_btnBrowse_Click_Upload_Document;
                 if (dlg.ShowDialog(Parent) == DialogResult.OK)
                 {
                     tbFilePath.Text = dlg.FileName;
@@ -364,6 +402,39 @@ namespace pwiz.Skyline.FileUI
         private void PublishDocumentDlg_FormClosing(object sender, FormClosingEventArgs e)
         {
             SaveServerTreeExpansion();
+        }
+
+        private void cbAnonymousServers_CheckedChanged(object sender, EventArgs e)
+        {
+            if (ShowAnonymousServers)
+            {
+                foreach (var server in _anonymousServers)
+                {
+                    var treeNode = new TreeNode(server.GetKey())
+                    {
+                        Tag = new FolderInformation(server, false),
+                        ForeColor = Color.Gray
+                    };
+                    treeViewFolders.Nodes.Add(treeNode);
+                }
+            }
+            else
+            {
+                var anonymousServerCount = _anonymousServers.Count;
+                for (var iNode = treeViewFolders.Nodes.Count - 1;
+                     iNode >= 0 && anonymousServerCount > 0;
+                     iNode--, anonymousServerCount--)
+                {
+                    treeViewFolders.Nodes.RemoveAt(iNode);
+                }
+            }
+        }
+
+        public bool CbAnonymousServersVisible => cbAnonymousServers.Visible;
+
+        public List<string> GetServers()
+        {
+            return new List<string>(treeViewFolders.Nodes.Cast<TreeNode>().Select(node => node.Text));
         }
     }
 }

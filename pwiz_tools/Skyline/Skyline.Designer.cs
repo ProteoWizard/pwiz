@@ -226,6 +226,7 @@ namespace pwiz.Skyline
             this.saveAsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.shareDocumentMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.publishMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openPanoramaMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1659,6 +1660,7 @@ namespace pwiz.Skyline
             this.startPageMenuItem,
             this.newMenuItem,
             this.openMenuItem,
+            this.openPanoramaMenuItem,
             this.openContainingFolderMenuItem,
             this.toolStripSeparator53,
             this.saveMenuItem,
@@ -1695,6 +1697,13 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.openMenuItem, "openMenuItem");
             this.openMenuItem.Name = "openMenuItem";
             this.openMenuItem.Click += new System.EventHandler(this.openMenuItem_Click);
+            // 
+            // openPanoramaMenuItem
+            // 
+            this.openPanoramaMenuItem.Image = global::pwiz.Skyline.Properties.Resources.PanoramaDownload;
+            resources.ApplyResources(this.openPanoramaMenuItem, "openPanoramaMenuItem");
+            this.openPanoramaMenuItem.Name = "openPanoramaMenuItem";
+            this.openPanoramaMenuItem.Click += new System.EventHandler(this.openPanorama_Click);
             // 
             // openContainingFolderMenuItem
             // 
@@ -2881,6 +2890,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem submitErrorReportMenuItem;
         private System.Windows.Forms.ToolStripMenuItem crashSkylineMenuItem;
         private System.Windows.Forms.ToolStripMenuItem encyclopeDiaSearchMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem openPanoramaMenuItem;
     }
 }
 

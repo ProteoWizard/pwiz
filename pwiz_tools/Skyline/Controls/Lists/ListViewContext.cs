@@ -128,9 +128,8 @@ namespace pwiz.Skyline.Controls.Lists
 
             try
             {
-                ListItemId listItemId;
                 var listData = SkylineDataSchema.Document.Settings.DataSettings.FindList(ListName);
-                listData.AddRow(values, out listItemId);
+                listData.AddRow(values, out _);
                 return true;
             }
             catch (Exception exception)

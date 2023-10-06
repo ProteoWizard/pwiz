@@ -232,13 +232,11 @@ namespace pwiz.Skyline
                     var toolsDirectory = ToolDescriptionHelpers.GetToolsDirectory();
                     if (!Directory.Exists(toolsDirectory))
                     {
-                        using (var longWaitDlg = new LongWaitDlg
+                        using (var longWaitDlg = new LongWaitDlg())
                         {
-                            Text = Name,
-                            Message = Resources.Program_Main_Copying_external_tools_from_a_previous_installation,
-                            ProgressValue = 0
-                        })
-                        {
+                            longWaitDlg.Text = Name;
+                            longWaitDlg.Message = Resources.Program_Main_Copying_external_tools_from_a_previous_installation;
+                            longWaitDlg.ProgressValue = 0;
                             longWaitDlg.PerformWork(null, 1000*3, broker => CopyOldTools(toolsDirectory, broker));
                         }
                     }

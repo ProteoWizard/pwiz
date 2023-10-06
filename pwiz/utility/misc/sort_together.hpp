@@ -19,6 +19,8 @@
 #ifndef _SORT_TOGETHER_
 #define _SORT_TOGETHER_
 
+#include <vector>
+
 namespace pwiz {
 namespace util {
 
@@ -37,7 +39,7 @@ namespace util {
     void sort_together(ContainerT& sortValues, ContainerOfContainerTIterator cosortValuesItrRangeBegin, ContainerOfContainerTIterator cosortValuesItrRangeEnd, bool stable = false)
     {
         size_t size = sortValues.size();
-        vector<size_t> indices(size);
+        std::vector<size_t> indices(size);
         for (size_t i = 0; i < size; ++i)
             indices[i] = i;
 
@@ -48,7 +50,7 @@ namespace util {
 
         ContainerT tmpSortValues(size);
         size_t numRanges = cosortValuesItrRangeEnd - cosortValuesItrRangeBegin;
-        vector<ContainerT> tmpValuesRanges(numRanges);
+        std::vector<ContainerT> tmpValuesRanges(numRanges);
         for (auto& tmpValues : tmpValuesRanges)
             tmpValues.resize(size);
 
