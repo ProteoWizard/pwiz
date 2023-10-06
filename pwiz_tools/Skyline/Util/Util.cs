@@ -31,6 +31,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -2126,6 +2127,19 @@ namespace pwiz.Skyline.Util
             }
 
             return true;
+        }
+
+        public static void DisplayOrReportException(IWin32Window parent, string message, Exception exception)
+        {
+            if (IsProgrammingDefect(exception))
+            {
+                Program.ReportException(exception);
+            }
+            else
+            {
+                string fullMessage = TextUtil.LineSeparate(TextUtil.AppendColon(message), exception.Message);
+                MessageDlg.ShowWithException(parent, fullMessage, exception);
+            }
         }
     }
 

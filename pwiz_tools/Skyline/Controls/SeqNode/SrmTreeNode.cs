@@ -1103,7 +1103,18 @@ namespace pwiz.Skyline.Controls.SeqNode
             _timer.Stop();
             if (_tipDisplayer == null || !_tipDisplayer.AllowDisplayTip)
                 return;
+            try
+            {
+                DisplayTip();
+            }
+            catch (Exception exception)
+            {
+                ExceptionUtil.DisplayOrReportException(this, "An error occurred displaying a tooltip", exception);
+            }
+        }
 
+        private void DisplayTip()
+        {
             Rectangle rectScreen = _tipDisplayer.ScreenRect;
             AnimateMode animate = AnimateMode.SlideTopToBottom;
 
