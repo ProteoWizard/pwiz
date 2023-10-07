@@ -928,7 +928,8 @@ namespace pwiz.Skyline
 
             try
             {
-                using var dlg = new PanoramaFilePicker(panoramaServers, state) { Text = Resources.SkylineWindow_OpenFromPanorama_Open_From_Panorama };
+                using var dlg = new PanoramaFilePicker(panoramaServers, state);
+                dlg.Text = Resources.SkylineWindow_OpenFromPanorama_Open_From_Panorama;
                 var longOptionRunner = new LongOperationRunner
                 {
                     ParentControl = this,

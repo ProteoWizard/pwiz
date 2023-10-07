@@ -647,24 +647,30 @@ namespace pwiz.ProteowizardWrapper
                         _ionMobilityUnits = _ionMobilitySpectrumList.getIonMobilityUnits();
                         _providesConversionCCStoIonMobility = _ionMobilitySpectrumList.canConvertIonMobilityAndCCS(_ionMobilityUnits);
                     }
-                    if (IsWatersFile  && _spectrumList != null && !_spectrumList.calibrationSpectraAreOmitted())
+                    if (IsWatersFile  && _spectrumList != null && !_spectrumList.calibrationSpectraAreOmitted() && !hasSrmSpectra)
                     {
-                        if (_spectrumList.size() > 0 && !hasSrmSpectra)
+                        for (var index = 0; index < _spectrumList.size(); index++)
                         {
                             // If lockmass scans aren't already being omitted at the top level, try to filter them out here.
-                            // If the first seen spectrum has MS1 data and function > 1 assume it's the lockspray function, 
-                            // and thus to be omitted from chromatogram extraction.
+                            // If the first seen MS spectrum has MS1 data and function > 1 assume it's the lockspray function, 
+                            // and thus to be omitted from chromatogram extraction. We've seen files where first spectrum is
+                            // "electromagnetic radiation spectrum", for example, which has no MS level value.
                             // N.B. for msE data we will always assume function 3 and greater are to be omitted
+                            // N.B. in all cases this assumes that any functions greater than the lockmass function are to be ignored
+                            // (e.g. "electromagnetic radiation spectrum") 
                             // CONSIDER(bspratt) I really wish there was some way to communicate decisions like this to the user
-                            using (var spectrum = _spectrumList.spectrum(0, DetailLevel.FullMetadata))
+                            using var spectrum = _spectrumList.spectrum(index, DetailLevel.FullMetadata);
+                            var msLevel = GetMsLevel(spectrum);
+                            if (msLevel == 1)
                             {
-                                if (GetMsLevel(spectrum) == 1)
-                                {
-                                    var function = MsDataSpectrum.WatersFunctionNumberFromId(id.abbreviate(spectrum.id), 
-                                        HasCombinedIonMobilitySpectra && spectrum.id.Contains(MERGED_TAG));
-                                    if (function > 1)
-                                        _lockmassFunction = function; // Ignore all scans in this function for chromatogram extraction purposes
-                                }
+                                var function = MsDataSpectrum.WatersFunctionNumberFromId(id.abbreviate(spectrum.id), 
+                                    HasCombinedIonMobilitySpectra && spectrum.id.Contains(MERGED_TAG));
+                                if (function > 1)
+                                    _lockmassFunction = function; // Ignore all scans in this function for chromatogram extraction purposes
+                            }
+                            if (msLevel.HasValue)
+                            {
+                                break; // This was first-seen MS spectrum
                             }
                         }
                     }

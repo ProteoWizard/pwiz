@@ -198,6 +198,7 @@
     <Compile Include="MinimizeIrtTest.cs" />
     <Compile Include="EADZIonsTest.cs" />
     <Compile Include="MixedSrmPrmTest.cs" />
+    <Compile Include="Ms1SpectrumFilterTest.cs" />
     <Compile Include="MultiInjectionReplicatesTest.cs" />
     <Compile Include="OpenDocWithBackgroundProteomeTest.cs" />
     <Compile Include="PeakAreaPeptideGraphTest.cs" />
