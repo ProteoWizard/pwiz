@@ -13898,4 +13898,5 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   </data>
   <data name="CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_precursor_to_export_a_spectral_library" xml:space="preserve">
     <value>Error: The document must contain at least one precursor to export a spectral library</value>
-  </data></root>
+  </data>
+</root>

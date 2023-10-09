@@ -3152,6 +3152,50 @@ namespace pwiz.Skyline
             return true;
         }
 
+        /// <summary>
+        /// Export mProphet features as a .csv file
+        /// </summary>
+        /// <param name="mProphetFile"></param>
+        /// <returns>True upon successful import, false upon error</returns>
+        public bool ExportMProphetFeatures(string mProphetFile, bool includeDecoys = true, bool bestOnly = true)
+        {
+            if (!Document.Settings.HasResults)
+            {
+                _out.WriteLine(Resources.SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_have_imported_results_);
+                return false;
+            }
+            if (Document.MoleculeCount == 0)
+            {
+                _out.WriteLine(Resources.SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_contain_targets_for_which_to_export_features_);
+                return false;
+            }
+
+            try
+            {
+                var scoringModel = Document.Settings.PeptideSettings.Integration.PeakScoringModel;
+                var mProphetScoringModel = scoringModel as MProphetPeakScoringModel;
+                var handler = new MProphetResultsHandler(Document, mProphetScoringModel);
+                var status = new ProgressStatus(string.Empty);
+                var calcs = FeatureCalculators.ALL; // TODO: turn this into an argument
+                var cultureInfo = LocalizationHelper.CurrentCulture;
+                IProgressMonitor progressMonitor = new CommandProgressMonitor(_out, status);
+                using (var fs = new FileSaver(mProphetFile))
+                using (var writer = new StreamWriter(fs.SafeName))
+                {
+                    handler.ScoreFeatures(progressMonitor);
+                    handler.WriteScores(writer, cultureInfo, calcs, bestOnly, includeDecoys, progressMonitor);
+                    writer.Close();
+                    fs.Commit();
+                }
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(x.Message);
+                return false;
+            }
+            return true;
+        }
+
         public enum ResolveZipToolConflicts
         {
             terminate,

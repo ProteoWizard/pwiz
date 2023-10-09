@@ -664,6 +664,35 @@ namespace pwiz.SkylineTestData
 
         }
 
+        [TestMethod]
+        public void ConsoleExportMProphetTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleExportMProphetTest.zip");
+            var exportPath = "out.csv";
+            // A document with no results. Attempting to export a spectral library should
+            // provoke an error
+            var docWithNoResultsPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            // A document with results that should be able to export a spectral library
+            var docWithResults = TestFilesDir.GetTestPath("msstatstest.sky");
+            // Test error (no precursors)
+            var output = RunCommand("--new=" + "new.sky", // Create a new document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--exp-mprophet-file=" + exportPath // Export mProphet features
+            );
+            // Test error (no results)
+            output = RunCommand("--in=" + docWithNoResultsPath, // Load a document with no results
+                "--exp-mprophet-file=" + exportPath // Export mProphet features
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_results_to_export_a_spectral_library), output);
+            // Test export
+            output = RunCommand("--in=" + docWithResults, // Load a document with results
+                "--exp-mprophet-file=" + exportPath // Export mProphet features
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Spectral_library_file__0__exported_successfully_, exportPath), output);
+            Assert.IsTrue(File.Exists(exportPath)); // Check that the exported file exists
+
+        }
+
         private static void CheckRefSpectraAll(IList<DbRefSpectra> refSpectra)
         {
 
