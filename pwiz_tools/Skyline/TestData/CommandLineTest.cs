@@ -668,7 +668,7 @@ namespace pwiz.SkylineTestData
         public void ConsoleExportMProphetTest()
         {
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleExportMProphetTest.zip");
-            var exportPath = "out.csv";
+            var exportPath = TestFilesDir.GetTestPath("out.csv");
             // A document with no results. Attempting to export a spectral library should
             // provoke an error
             var docWithNoResultsPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
@@ -679,16 +679,17 @@ namespace pwiz.SkylineTestData
                 "--overwrite", // Overwrite, as the file may already exist in the bin
                 "--exp-mprophet-file=" + exportPath // Export mProphet features
             );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features), output);
             // Test error (no results)
             output = RunCommand("--in=" + docWithNoResultsPath, // Load a document with no results
                 "--exp-mprophet-file=" + exportPath // Export mProphet features
             );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_results_to_export_a_spectral_library), output);
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features), output);
             // Test export
             output = RunCommand("--in=" + docWithResults, // Load a document with results
                 "--exp-mprophet-file=" + exportPath // Export mProphet features
             );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Spectral_library_file__0__exported_successfully_, exportPath), output);
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
             Assert.IsTrue(File.Exists(exportPath)); // Check that the exported file exists
 
         }

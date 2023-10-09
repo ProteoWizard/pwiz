@@ -816,6 +816,14 @@ namespace pwiz.Skyline
                 }
             }
 
+            if (commandArgs.ExportingMProphetFeatures)
+            {
+                if (!ExportMProphetFeatures(commandArgs.MProphetFeaturesFile))
+                {
+                    return false;
+                }
+            }
+
             var exportTypes =
                 (string.IsNullOrEmpty(commandArgs.IsolationListInstrumentType) ? 0 : 1) +
                 (string.IsNullOrEmpty(commandArgs.TransListInstrumentType) ? 0 : 1) +
@@ -3157,16 +3165,17 @@ namespace pwiz.Skyline
         /// </summary>
         /// <param name="mProphetFile"></param>
         /// <returns>True upon successful import, false upon error</returns>
-        public bool ExportMProphetFeatures(string mProphetFile, bool includeDecoys = true, bool bestOnly = true)
+        public bool ExportMProphetFeatures(string mProphetFile, bool includeDecoys = false, bool bestOnly = false)
         {
-            if (!Document.Settings.HasResults)
-            {
-                _out.WriteLine(Resources.SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_have_imported_results_);
-                return false;
-            }
             if (Document.MoleculeCount == 0)
             {
-                _out.WriteLine(Resources.SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_contain_targets_for_which_to_export_features_);
+                _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features);
+                return false;
+            }
+
+            if (!Document.Settings.HasResults)
+            {
+                _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features);
                 return false;
             }
 
@@ -3176,7 +3185,7 @@ namespace pwiz.Skyline
                 var mProphetScoringModel = scoringModel as MProphetPeakScoringModel;
                 var handler = new MProphetResultsHandler(Document, mProphetScoringModel);
                 var status = new ProgressStatus(string.Empty);
-                var calcs = FeatureCalculators.ALL; // TODO: turn this into an argument
+                var calcs = new FeatureCalculators(FeatureCalculators.ALL); // TODO: turn this into an argument
                 var cultureInfo = LocalizationHelper.CurrentCulture;
                 IProgressMonitor progressMonitor = new CommandProgressMonitor(_out, status);
                 using (var fs = new FileSaver(mProphetFile))
@@ -3187,9 +3196,11 @@ namespace pwiz.Skyline
                     writer.Close();
                     fs.Commit();
                 }
+                _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, mProphetFile);
             }
             catch (Exception x)
             {
+                _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__Failure_attempting_to_save_mProphet_features_file__0_, mProphetFile);
                 _out.WriteLine(x.Message);
                 return false;
             }

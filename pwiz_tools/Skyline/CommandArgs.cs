@@ -65,6 +65,7 @@ namespace pwiz.Skyline
         public static readonly Func<string> PATH_TO_TSV = () => GetPathToFile(TextUtil.EXT_TSV);
         public static readonly Func<string> PATH_TO_IRTDB = () => GetPathToFile(IrtDb.EXT);
         public static readonly Func<string> PATH_TO_BLIB = () => GetPathToFile(BiblioSpecLiteSpec.EXT);
+        public static readonly Func<string> PATH_TO_MPROPHET_CSV = () => GetPathToFile(TextUtil.EXT_CSV);
         public static readonly Func<string> PATH_TO_IMSDB = () => GetPathToFile(IonMobilityDb.EXT);
         public static readonly Func<string> PATH_TO_REPORT = () => GetPathToFile(ReportSpecList.EXT_REPORTS);
         public static readonly Func<string> PATH_TO_INSTALL = () => GetPathToFile(ToolDescription.EXT_INSTALL);
@@ -1038,14 +1039,21 @@ namespace pwiz.Skyline
         // For exporting other file types
         public static readonly Argument ARG_SPECTRAL_LIBRARY_FILE = new DocArgument(@"exp-speclib-file", PATH_TO_BLIB,
             (c, p) => c.SpecLibFile= p.ValueFullPath);
+        
+        public static readonly Argument ARG_MPROPHET_FEATURES_FILE = new DocArgument(@"exp-mprophet-file", PATH_TO_MPROPHET_CSV,
+            (c, p) => c.MProphetFeaturesFile = p.ValueFullPath);
 
         private static readonly ArgumentGroup GROUP_OTHER_FILE_TYPES = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_OTHER_FILE_TYPES, false, 
-            ARG_SPECTRAL_LIBRARY_FILE
+            ARG_SPECTRAL_LIBRARY_FILE, ARG_MPROPHET_FEATURES_FILE
         );
 
         public string SpecLibFile { get; private set; }
 
         public bool ExportingSpecLib { get { return !string.IsNullOrEmpty(SpecLibFile); } }
+
+        public string MProphetFeaturesFile { get; private set; }
+
+        public bool ExportingMProphetFeatures { get { return !string.IsNullOrEmpty(MProphetFeaturesFile); } }
 
         // For publishing the document to Panorama
         public static readonly Argument ARG_PANORAMA_SERVER = new DocArgument(@"panorama-server", SERVER_URL_VALUE,
