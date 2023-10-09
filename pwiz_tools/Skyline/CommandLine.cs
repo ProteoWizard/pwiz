@@ -818,7 +818,8 @@ namespace pwiz.Skyline
 
             if (commandArgs.ExportingMProphetFeatures)
             {
-                if (!ExportMProphetFeatures(commandArgs.MProphetFeaturesFile))
+                if (!ExportMProphetFeatures(commandArgs.MProphetFeaturesFile, commandArgs.MProphetTargetPeptidesOnly, 
+                        commandArgs.MProphetUseBestScoringPeaks))
                 {
                     return false;
                 }
@@ -3163,17 +3164,19 @@ namespace pwiz.Skyline
         /// <summary>
         /// Export mProphet features as a .csv file
         /// </summary>
-        /// <param name="mProphetFile"></param>
+        /// <param name="mProphetFile">File path to export the mProphet file to</param>
+        /// <param name="targetPeptidesOnly">Do not include decoys, only target peptides</param>
+        /// <param name="bestOnly">Export best scoring peaks only</param>
         /// <returns>True upon successful import, false upon error</returns>
-        public bool ExportMProphetFeatures(string mProphetFile, bool includeDecoys = false, bool bestOnly = false)
+        public bool ExportMProphetFeatures(string mProphetFile, bool targetPeptidesOnly, bool bestOnly)
         {
-            if (Document.MoleculeCount == 0)
+            if (Document.MoleculeCount == 0) // The document must contain targets
             {
                 _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features);
                 return false;
             }
 
-            if (!Document.Settings.HasResults)
+            if (!Document.Settings.HasResults) // The document must contain results
             {
                 _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features);
                 return false;
@@ -3192,7 +3195,7 @@ namespace pwiz.Skyline
                 using (var writer = new StreamWriter(fs.SafeName))
                 {
                     handler.ScoreFeatures(progressMonitor);
-                    handler.WriteScores(writer, cultureInfo, calcs, bestOnly, includeDecoys, progressMonitor);
+                    handler.WriteScores(writer, cultureInfo, calcs, bestOnly, !targetPeptidesOnly, progressMonitor);
                     writer.Close();
                     fs.Commit();
                 }

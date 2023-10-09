@@ -105,7 +105,7 @@ namespace pwiz.Skyline
         public static readonly HashSet<Func<string>> PATH_TYPE_VALUES = new HashSet<Func<string>>
         {
             PATH_TO_DOCUMENT, PATH_TO_FILE, PATH_TO_FOLDER, PATH_TO_ZIP, PATH_TO_REPORT, PATH_TO_TSV, PATH_TO_IMSDB,
-            PATH_TO_INSTALL, PATH_TO_CSV, PATH_TO_IRTDB, PATH_TO_BLIB
+            PATH_TO_INSTALL, PATH_TO_CSV, PATH_TO_IRTDB, PATH_TO_BLIB, PATH_TO_MPROPHET_CSV
         };
 
         public static readonly HashSet<Func<string>> STRING_TYPE_VALUES = new HashSet<Func<string>>(new[]
@@ -1043,8 +1043,15 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_MPROPHET_FEATURES_FILE = new DocArgument(@"exp-mprophet-file", PATH_TO_MPROPHET_CSV,
             (c, p) => c.MProphetFeaturesFile = p.ValueFullPath);
 
+        public static readonly Argument ARG_MPROPHET_FEATURES_BEST_SCORING_PEAKS =
+            new DocArgument(@"exp-mprophet-best-scoring-peaks", (c, p) => c.MProphetUseBestScoringPeaks = true);
+
+        public static readonly Argument ARG_MPROPHET_FEATURES_TARGET_PEPTIDES_ONLY =
+            new DocArgument(@"exp-mprophet-target-peptides-only", (c, p) => c.MProphetTargetPeptidesOnly = true);
+
+
         private static readonly ArgumentGroup GROUP_OTHER_FILE_TYPES = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_OTHER_FILE_TYPES, false, 
-            ARG_SPECTRAL_LIBRARY_FILE, ARG_MPROPHET_FEATURES_FILE
+            ARG_SPECTRAL_LIBRARY_FILE, ARG_MPROPHET_FEATURES_FILE, ARG_MPROPHET_FEATURES_BEST_SCORING_PEAKS, ARG_MPROPHET_FEATURES_TARGET_PEPTIDES_ONLY
         );
 
         public string SpecLibFile { get; private set; }
@@ -1054,6 +1061,10 @@ namespace pwiz.Skyline
         public string MProphetFeaturesFile { get; private set; }
 
         public bool ExportingMProphetFeatures { get { return !string.IsNullOrEmpty(MProphetFeaturesFile); } }
+
+        public bool MProphetUseBestScoringPeaks { get; private set; }
+
+        public bool MProphetTargetPeptidesOnly { get; private set; }
 
         // For publishing the document to Panorama
         public static readonly Argument ARG_PANORAMA_SERVER = new DocArgument(@"panorama-server", SERVER_URL_VALUE,

@@ -685,13 +685,25 @@ namespace pwiz.SkylineTestData
                 "--exp-mprophet-file=" + exportPath // Export mProphet features
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features), output);
+            // TODO: Check contents of successful imports
             // Test export
             output = RunCommand("--in=" + docWithResults, // Load a document with results
                 "--exp-mprophet-file=" + exportPath // Export mProphet features
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
             Assert.IsTrue(File.Exists(exportPath)); // Check that the exported file exists
-
+            // Test export with target peptides only
+            output = RunCommand("--in=" + docWithResults, // Load a document with results
+                "--exp-mprophet-file=" + exportPath, // Export mProphet features
+                "--exp-mprophet-target-peptides-only" // Export should not include decoys peptides
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
+            // Test export with best scorting peaks
+            output = RunCommand("--in=" + docWithResults, // Load a document with results
+                "--exp-mprophet-file=" + exportPath, // Export mProphet features
+                "--exp-mprophet-best-scoring-peaks" // Export should contain best scoring peaks
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
         }
 
         private static void CheckRefSpectraAll(IList<DbRefSpectra> refSpectra)
