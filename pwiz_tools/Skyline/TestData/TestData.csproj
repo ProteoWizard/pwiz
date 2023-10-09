@@ -136,6 +136,7 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data.SQLite, Version=1.0.98.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139" />
     <Reference Include="System.Deployment" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
@@ -240,6 +241,7 @@
     <None Include="CommandLineRefineGroupComparisonTest.zip" />
     <None Include="CommandLineTest.zip" />
     <None Include="CommandLineWiffTest.zip" />
+    <None Include="ConsoleExportSpecLibTest.zip" />
     <None Include="ImportAllCmdLineTest.zip" />
     <None Include="ImportAllCmdLineTestMzml.zip" />
     <None Include="ImportCommandLineSameName.zip" />
