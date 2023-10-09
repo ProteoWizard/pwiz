@@ -642,7 +642,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     if (RowCount == 0)
                     {
                         var hostDialog = _hostControl.HostDialog;
-                        hostDialog.Invoke(new MethodInvoker(() =>
+                        hostDialog.BeginInvoke(new MethodInvoker(() =>
                         {
                             _hostControl.progressSplitContainer.Panel1Collapsed = false;
                             hostDialog.Size = new Size(Math.Min(
