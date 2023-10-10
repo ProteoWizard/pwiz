@@ -4313,6 +4313,8 @@ namespace pwiz.Skyline
 
     public class CommandProgressMonitor : IProgressMonitor, ILongWaitBroker
     {
+        public double SecondsBetweenStatusUpdates { get; }
+
         private IProgressStatus _currentProgress;
         private readonly bool _warnOnImportFailure;
         private readonly DateTime _waitStart;
@@ -4324,8 +4326,9 @@ namespace pwiz.Skyline
         private Thread _waitingThread;
         private volatile bool _waiting;
 
-        public CommandProgressMonitor(TextWriter outWriter, IProgressStatus status, bool warnOnImportFailure = false)
+        public CommandProgressMonitor(TextWriter outWriter, IProgressStatus status, bool warnOnImportFailure = false, double secondsBetweenStatusUpdates = 2.0)
         {
+            SecondsBetweenStatusUpdates = secondsBetweenStatusUpdates;
             _out = outWriter;
             _waitStart = _lastOutput = DateTime.UtcNow; // Said to be 117x faster than Now and this is for a delta
             _warnOnImportFailure = warnOnImportFailure;
@@ -4501,7 +4504,7 @@ namespace pwiz.Skyline
         {
             // Show progress at least every 2 seconds and at 100%, if any other percentage
             // output has been shown.
-            return (currentTime - _lastOutput).TotalSeconds < 2 && !status.IsError &&
+            return (currentTime - _lastOutput).TotalSeconds < SecondsBetweenStatusUpdates && !status.IsError &&
                    (status.PercentComplete != 100 || _lastOutput == _waitStart);
         }
 

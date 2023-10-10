@@ -248,11 +248,6 @@ namespace pwiz.Skyline.SettingsUI
             SpecLibLinkClicked(linkNIST, LibraryLink.NIST.Link);
         }
 
-        private void linkGPM_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            SpecLibLinkClicked(linkGPM, LibraryLink.GPM.Link);
-        }
-
         private void SpecLibLinkClicked(LinkLabel linkLabel, string link)
         {
             linkLabel.LinkVisited = true;
