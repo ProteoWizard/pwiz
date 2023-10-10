@@ -1501,6 +1501,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Library Retention Times.
+        /// </summary>
+        public static string LibraryRetentionTimes {
+            get {
+                return ResourceManager.GetString("LibraryRetentionTimes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Library Score1.
         /// </summary>
         public static string LibraryScore1 {
@@ -1690,6 +1699,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Max Library Retention Time.
+        /// </summary>
+        public static string MaxLibraryRetentionTime {
+            get {
+                return ResourceManager.GetString("MaxLibraryRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Max Retention Time.
         /// </summary>
         public static string MaxRetentionTime {
@@ -1749,6 +1767,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string MeanFwhm {
             get {
                 return ResourceManager.GetString("MeanFwhm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mean Library Retention Time.
+        /// </summary>
+        public static string MeanLibraryRetentionTime {
+            get {
+                return ResourceManager.GetString("MeanLibraryRetentionTime", resourceCulture);
             }
         }
         
@@ -1866,6 +1893,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string MinFoldChange {
             get {
                 return ResourceManager.GetString("MinFoldChange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min Library Retention Time.
+        /// </summary>
+        public static string MinLibraryRetentionTime {
+            get {
+                return ResourceManager.GetString("MinLibraryRetentionTime", resourceCulture);
             }
         }
         

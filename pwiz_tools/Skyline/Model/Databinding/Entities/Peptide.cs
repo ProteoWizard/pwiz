@@ -371,6 +371,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return DocNode.GetCrosslinkedSequence();
         }
 
+        [Format(Formats.RETENTION_TIME)]
+        [ChildDisplayName("{0}LibraryRetentionTime")]
+        public RetentionTimeValues LibraryRetentionTimes
+        {
+            get
+            {
+                return RetentionTimeValues.ForTimes(SrmDocument.Settings.GetUnalignedRetentionTimes(DocNode.Target, DocNode.ExplicitMods).Distinct());
+            }
+        }
+
         [InvariantDisplayName("PeptideDocumentLocation")]
         [Obsolete]
         public DocumentLocation DocumentLocation
