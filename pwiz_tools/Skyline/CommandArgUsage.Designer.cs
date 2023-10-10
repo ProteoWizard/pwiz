@@ -304,11 +304,20 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use to exclude a particular feature score by name. Names can be found in the user interface. This argument may be used multiple times to exclude multiple features..
+        ///   Looks up a localized string similar to Include feature scores only for the best scoring peaks. Requires the --exp-mprophet-file argument..
         /// </summary>
-        internal static string _exp_mprophet_exclude_scores {
+        internal static string _exp_mprophet_best_scoring_peaks_only {
             get {
-                return ResourceManager.GetString("_exp_mprophet_exclude_scores", resourceCulture);
+                return ResourceManager.GetString("_exp_mprophet_best_scoring_peaks_only", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use to exclude a particular feature score by name from the exported file. Names can be found in the user interface. This argument may be used multiple times to exclude multiple features. Requires the --exp-mprophet-file argument..
+        /// </summary>
+        internal static string _exp_mprophet_exclude_feature {
+            get {
+                return ResourceManager.GetString("_exp_mprophet_exclude_feature", resourceCulture);
             }
         }
         
@@ -318,6 +327,15 @@ namespace pwiz.Skyline {
         internal static string _exp_mprophet_file {
             get {
                 return ResourceManager.GetString("_exp_mprophet_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Include feature scores only for target peptides. Requires the --exp-mprophet-file argument..
+        /// </summary>
+        internal static string _exp_mprophet_target_peptides_only {
+            get {
+                return ResourceManager.GetString("_exp_mprophet_target_peptides_only", resourceCulture);
             }
         }
         

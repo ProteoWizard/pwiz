@@ -1051,12 +1051,12 @@ namespace pwiz.Skyline
             (c, p) => c.MProphetFeaturesFile = p.ValueFullPath);
 
         public static readonly Argument ARG_MPROPHET_FEATURES_BEST_SCORING_PEAKS =
-            new DocArgument(@"exp-mprophet-best-scoring-peaks", (c, p) => c.MProphetUseBestScoringPeaks = true);
+            new DocArgument(@"exp-mprophet-best-scoring-peaks-only", (c, p) => c.MProphetUseBestScoringPeaks = true);
 
         public static readonly Argument ARG_MPROPHET_FEATURES_TARGET_PEPTIDES_ONLY =
             new DocArgument(@"exp-mprophet-target-peptides-only", (c, p) => c.MProphetTargetPeptidesOnly = true);
         public static readonly Argument ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES = 
-            new DocArgument(@"exp-mprophet-exclude-scores", FEATURE_NAME_VALUE, 
+            new DocArgument(@"exp-mprophet-exclude-feature", FEATURE_NAME_VALUE, 
             (c, p) => c.ParseExcludeFeature(p));
 
 
