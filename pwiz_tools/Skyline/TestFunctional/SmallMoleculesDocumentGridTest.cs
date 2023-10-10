@@ -95,7 +95,7 @@ namespace pwiz.SkylineTestFunctional
                 14.64);
             CheckDocumentGridAndColumns(smallMoleculeSky,
                 Resources.ReportSpecList_GetDefaults_Molecule_Transition_Results,
-                113, 14, SrmDocument.DOCUMENT_TYPE.small_molecules,
+                118, 14, SrmDocument.DOCUMENT_TYPE.small_molecules,
                 null, null, null, null, null,
                 14.64);
         }
