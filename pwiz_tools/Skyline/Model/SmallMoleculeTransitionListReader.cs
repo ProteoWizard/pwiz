@@ -254,6 +254,15 @@ namespace pwiz.Skyline.Model
             return false;
         }
 
+        // Check for the various kinds of exceptions that may be thrown in the course of
+        // parsing sometimes-wonky user data
+        private bool IsParserException(Exception exception)
+        {
+            return exception is InvalidOperationException
+                   || exception is InvalidDataException
+                   || exception is ArgumentException;
+        }
+
         // Returns true on error
         private bool ErrorFindingTransitionGroupForPrecursor(ref SrmDocument document, ParsedIonInfo precursor, Row row,
             PeptideGroupDocNode pepGroup, Adduct adduct, double precursorMonoMz, double precursorAverageMz,
@@ -296,10 +305,8 @@ namespace pwiz.Skyline.Model
                                     _firstAddedPathPepGroup = _firstAddedPathPepGroup ?? pathGroup;
                                 }
                             }
-
-                            catch (Exception exception)
+                            catch (Exception exception) when (IsParserException(exception))
                             {
-                                ThrowIfNotParserError(exception);
                                 errmsg = exception.Message;
                             }
 
@@ -1009,18 +1016,6 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private void ThrowIfNotParserError(Exception exception)
-        {
-            if (exception is InvalidOperationException
-                || exception is InvalidDataException
-                || exception is ArgumentException)
-            {
-                return;
-            }
-
-            throw exception;
-        }
-
         // We need some combination of:
         //  Formula and mz
         //  Formula and charge
@@ -1367,7 +1362,7 @@ namespace pwiz.Skyline.Model
                             adduct = DetermineAdductFromFormulaChargeAndMz(formula, charge.Value, mz);
                         }
                     }
-                    catch (Exception e)
+                    catch (Exception e) when (IsParserException(e))
                     {
                         ShowTransitionError(new PasteError
                         {
@@ -1521,9 +1516,8 @@ namespace pwiz.Skyline.Model
                             }
                         }
                     }
-                    catch (Exception exception)
+                    catch (Exception exception) when (IsParserException(exception))
                     {
-                        ThrowIfNotParserError(exception);
                         massErrMsg = exception.Message;
                     }
                     if (massErrMsg != null)
@@ -1711,9 +1705,8 @@ namespace pwiz.Skyline.Model
                 adduct = Adduct.FromStringAssumeChargeOnly(adductText);
                 IonInfo.ApplyAdductToFormula(formula ?? string.Empty, adduct); // Just to see if it throws
             }
-            catch (Exception x)
+            catch (Exception x) when (IsParserException(x))
             {
-                ThrowIfNotParserError(x);
                 ShowTransitionError(new PasteError
                 {
                     Column = indexAdduct,
@@ -1839,9 +1832,8 @@ namespace pwiz.Skyline.Model
                     molecule = new CustomMolecule(parsedIonInfo.MonoMass, parsedIonInfo.AverageMass, shortName, parsedIonInfo.MoleculeID.AccessionNumbers);
                 }
             }
-            catch (Exception e)
+            catch (Exception e) when (IsParserException(e))
             {
-                ThrowIfNotParserError(e);
                 ShowTransitionError(new PasteError
                 {
                     Column = INDEX_MOLECULE_FORMULA,
@@ -1858,9 +1850,8 @@ namespace pwiz.Skyline.Model
                     return null;
                 return new PeptideDocNode(pep, document.Settings, null, null, parsedIonInfo.ExplicitRetentionTime, new[] { tranGroup }, false);
             }
-            catch (Exception e)
+            catch (Exception e) when (IsParserException(e))
             {
-                ThrowIfNotParserError(e);
                 ShowTransitionError(new PasteError
                 {
                     Column = INDEX_MOLECULE_FORMULA,
@@ -1918,9 +1909,8 @@ namespace pwiz.Skyline.Model
                 return new TransitionGroupDocNode(group, document.Annotations, document.Settings, null,
                     null, moleculeInfo.ExplicitTransitionGroupValues, null, new[] { tran }, false);
             }
-            catch (Exception x)
+            catch (Exception x) when (IsParserException(x))
             {
-                ThrowIfNotParserError(x);
                 errmsg = x.Message;
             }
             ShowTransitionError(new PasteError
