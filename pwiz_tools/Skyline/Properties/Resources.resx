@@ -3485,6 +3485,12 @@ Are you sure you want to continue?</value>
   <data name="ReportSpecList_GetDefaults_Peptide_RT_Results" xml:space="preserve">
     <value>Peptide RT Results</value>
   </data>
+  <data name="ReportSpecList_GetDefaults_Molecule_RT_Results" xml:space="preserve">
+    <value>Molecule RT Results</value>
+  </data>
+  <data name="ReportSpecList_GetDefaults_Molecule_Transition_Results" xml:space="preserve">
+    <value>Molecule Transition Results</value>
+  </data>
   <data name="MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty" xml:space="preserve">
     <value>{0} cannot be empty.</value>
   </data>
@@ -13868,5 +13874,14 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   </data>
   <data name="Server_GetKey___anonymous_" xml:space="preserve">
     <value> (anonymous)</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_Generate_Waiting_for_chromatogram_library" xml:space="preserve">
+    <value>Waiting for chromatogram library</value>
+  </data>
+  <data name="ProgressMonitorForFile_UpdateProgress_Demultiplexing_spectra___0___1_" xml:space="preserve">
+    <value>Demultiplexing spectra: {0}/{1}</value>
+  </data>
+  <data name="ParallelRunner_Generate_An_EncyclopeDIA_task_failed_" xml:space="preserve">
+    <value>An EncyclopeDIA task failed.</value>
   </data>
 </root>

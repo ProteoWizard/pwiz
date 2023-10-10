@@ -10,6 +10,7 @@ EncyclopeDIA 搜索 > Prosit 设置 > 最小电荷 是 "2"
 EncyclopeDIA 搜索 > Prosit 设置 > 最大电荷 是 "3"
 EncyclopeDIA 搜索 > Prosit 设置 > 最大的漏切酶解位点数 是 "2"
 EncyclopeDIA 搜索 > 窄窗口结果 : 包含 "23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML"
+EncyclopeDIA 搜索 > 窄窗口结果 : 包含 "23aug2017_hela_serum_timecourse_4mz_narrow_2.mzML"
 EncyclopeDIA 搜索 > 宽窗口结果 : 包含 "23aug2017_hela_serum_timecourse_wide_1a.mzML"
 EncyclopeDIA 搜索 > 宽窗口结果 : 包含 "23aug2017_hela_serum_timecourse_wide_1b.mzML"
 EncyclopeDIA 搜索 > EncyclopeDIA 设置 是 { Enzyme = "Trypsin", Frag = "CID", Ptol = "10", PtolUnits = "PPM", Ftol = "10", FtolUnits = "PPM", Lftol = "10", LftolUnits = "PPM", Poffset = "0", Foffset = "0", PercolatorThreshold = "0.01", PercolatorTrainingSetSize = "500000", PercolatorTrainingFDR = "0", Acquisition = "DIA", NumberOfThreadsUsed = "32", ExpectedPeakWidth = "25", PrecursorWindowSize = "-1", NumberOfQuantitativePeaks = "5", MinNumOfQuantitativePeaks = "3", TopNTargetsUsed = "-1", QuantifyAcrossSamples = "False", NumberOfExtraDecoyLibrariesSearched = "0", VerifyModificationIons = "True", MinIntensity = "-1", RtWindowInMin = "-1", FilterPeaklists = "False", V2scoring = "True" }
@@ -30,7 +31,8 @@ Prosit 设置 =
 },
 窄窗口结果 = 
 [
-    "23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML"
+    "23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML",
+    "23aug2017_hela_serum_timecourse_4mz_narrow_2.mzML"
 ],
 宽窗口结果 = 
 [
@@ -105,11 +107,11 @@ All Info  :
 导入肽段搜索 > 关联蛋白质 > 删除蛋白质子集 是 假
 导入肽段搜索 > 关联蛋白质 > 共享的肽段选项 是 "重复的蛋白质"
 导入肽段搜索 > 关联蛋白质 > 每个蛋白质的最少肽段数 是 "1"
-导入肽段搜索 > 关联蛋白质 > 映射的蛋白质 是 "557"
-导入肽段搜索 > 关联蛋白质 > 映射的肽段 是 "5423"
-导入肽段搜索 > 关联蛋白质 > 取消映射的蛋白质 是 "1"
-导入肽段搜索 > 关联蛋白质 > 蛋白质目标 是 "557"
-导入肽段搜索 > 关联蛋白质 > 肽段目标 是 "5733"
+导入肽段搜索 > 关联蛋白质 > 映射的蛋白质 是 "317"
+导入肽段搜索 > 关联蛋白质 > 映射的肽段 是 "524"
+导入肽段搜索 > 关联蛋白质 > 取消映射的蛋白质 是 "241"
+导入肽段搜索 > 关联蛋白质 > 蛋白质目标 是 "317"
+导入肽段搜索 > 关联蛋白质 > 肽段目标 是 "552"
 Extra Info: 提取色谱图 = 
 {
     查找到结果文件 = 
@@ -161,10 +163,10 @@ Extra Info: 提取色谱图 =
     删除蛋白质子集 = 假,
     共享的肽段选项 = "重复的蛋白质",
     每个蛋白质的最少肽段数 = "1",
-    映射的蛋白质 = "557",
-    映射的肽段 = "5423",
-    取消映射的蛋白质 = "1",
-    蛋白质目标 = "557",
-    肽段目标 = "5733"
+    映射的蛋白质 = "317",
+    映射的肽段 = "524",
+    取消映射的蛋白质 = "241",
+    蛋白质目标 = "317",
+    肽段目标 = "552"
 }
 
