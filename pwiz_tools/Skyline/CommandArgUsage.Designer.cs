@@ -304,6 +304,24 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Use to exclude a particular feature score by name. Names can be found in the user interface. This argument may be used multiple times to exclude multiple features..
+        /// </summary>
+        internal static string _exp_mprophet_exclude_scores {
+            get {
+                return ResourceManager.GetString("_exp_mprophet_exclude_scores", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Export all the individual feature scores for each peptide, as well as the composite score, the p value, and the q value into the mProphet format..
+        /// </summary>
+        internal static string _exp_mprophet_file {
+            get {
+                return ResourceManager.GetString("_exp_mprophet_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Export a method with extra transitions for finding optimal collision energy or declustering potential..
         /// </summary>
         internal static string _exp_optimizing {

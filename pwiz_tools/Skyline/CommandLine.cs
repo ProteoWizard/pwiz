@@ -819,7 +819,7 @@ namespace pwiz.Skyline
             if (commandArgs.ExportingMProphetFeatures)
             {
                 if (!ExportMProphetFeatures(commandArgs.MProphetFeaturesFile, commandArgs.MProphetTargetPeptidesOnly, 
-                        commandArgs.MProphetUseBestScoringPeaks))
+                        commandArgs.MProphetUseBestScoringPeaks, commandArgs.MProphetExcludeScores))
                 {
                     return false;
                 }
@@ -3167,9 +3167,12 @@ namespace pwiz.Skyline
         /// <param name="mProphetFile">File path to export the mProphet file to</param>
         /// <param name="targetPeptidesOnly">Do not include decoys, only target peptides</param>
         /// <param name="bestOnly">Export best scoring peaks only</param>
+        /// <param name="excludeScores">A comma-separated list of scores to exclude</param>
         /// <returns>True upon successful import, false upon error</returns>
-        public bool ExportMProphetFeatures(string mProphetFile, bool targetPeptidesOnly, bool bestOnly)
+        public bool ExportMProphetFeatures(string mProphetFile, bool targetPeptidesOnly, bool bestOnly, List<IPeakFeatureCalculator> excludeScores)
         {
+            // Excluding any scores requested by the caller
+            var calcs = new FeatureCalculators(PeakFeatureCalculator.Calculators.Where(c => excludeScores.IndexOf(c) < 0));
             if (Document.MoleculeCount == 0) // The document must contain targets
             {
                 _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features);
@@ -3188,7 +3191,6 @@ namespace pwiz.Skyline
                 var mProphetScoringModel = scoringModel as MProphetPeakScoringModel;
                 var handler = new MProphetResultsHandler(Document, mProphetScoringModel);
                 var status = new ProgressStatus(string.Empty);
-                var calcs = new FeatureCalculators(FeatureCalculators.ALL); // TODO: turn this into an argument
                 var cultureInfo = LocalizationHelper.CurrentCulture;
                 IProgressMonitor progressMonitor = new CommandProgressMonitor(_out, status);
                 using (var fs = new FileSaver(mProphetFile))

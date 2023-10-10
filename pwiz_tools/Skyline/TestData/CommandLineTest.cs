@@ -698,10 +698,16 @@ namespace pwiz.SkylineTestData
                 "--exp-mprophet-target-peptides-only" // Export should not include decoys peptides
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
-            // Test export with best scorting peaks
+            // Test export with best scoring peaks
             output = RunCommand("--in=" + docWithResults, // Load a document with results
                 "--exp-mprophet-file=" + exportPath, // Export mProphet features
                 "--exp-mprophet-best-scoring-peaks" // Export should contain best scoring peaks
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
+            // Test export with some scores excluded
+            output = RunCommand("--in=" + docWithResults, // Load a document with results
+                "--exp-mprophet-file=" + exportPath, // Export mProphet features
+                "--exp-mprophet-exclude-scores=" + "Intensity" // Export should contain best scoring peaks
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
         }

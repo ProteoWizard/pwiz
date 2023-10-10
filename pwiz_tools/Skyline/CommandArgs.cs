@@ -693,7 +693,7 @@ namespace pwiz.Skyline
         private static readonly Argument ARG_REINTEGRATE_LOG_TRAINING = new DocArgument(@"reintegrate-log-training",
             (c, p) => c.IsLogTraining = true) {InternalUse = true};
         private static readonly Argument ARG_REINTEGRATE_EXCLUDE_FEATURE = new DocArgument(@"reintegrate-exclude-feature", FEATURE_NAME_VALUE,
-                (c, p) => c.ParseReintegrateExcludeFeature(p))
+                (c, p) => c.ParseExcludeFeature(p))
             { WrapValue = true };
 
         private static readonly ArgumentGroup GROUP_REINTEGRATE = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_REINTEGRATE_Reintegrate_with_advanced_peak_picking_models, false,
@@ -790,7 +790,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private bool ParseReintegrateExcludeFeature(NameValuePair pair)
+        private bool ParseExcludeFeature(NameValuePair pair)
         {
             string featureName = pair.Value;
             var calc = PeakFeatureCalculator.Calculators.FirstOrDefault(c =>
@@ -813,7 +813,14 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            ExcludeFeatures.Add(calc);
+            if (pair.Name.Equals(ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES.Name))
+            {
+                MProphetExcludeScores.Add(calc);
+            }
+            else
+            {
+                ExcludeFeatures.Add(calc);
+            }
             return true;
         }
 
@@ -1048,10 +1055,14 @@ namespace pwiz.Skyline
 
         public static readonly Argument ARG_MPROPHET_FEATURES_TARGET_PEPTIDES_ONLY =
             new DocArgument(@"exp-mprophet-target-peptides-only", (c, p) => c.MProphetTargetPeptidesOnly = true);
+        public static readonly Argument ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES = 
+            new DocArgument(@"exp-mprophet-exclude-scores", FEATURE_NAME_VALUE, 
+            (c, p) => c.ParseExcludeFeature(p));
 
 
         private static readonly ArgumentGroup GROUP_OTHER_FILE_TYPES = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_OTHER_FILE_TYPES, false, 
-            ARG_SPECTRAL_LIBRARY_FILE, ARG_MPROPHET_FEATURES_FILE, ARG_MPROPHET_FEATURES_BEST_SCORING_PEAKS, ARG_MPROPHET_FEATURES_TARGET_PEPTIDES_ONLY
+            ARG_SPECTRAL_LIBRARY_FILE, ARG_MPROPHET_FEATURES_FILE, ARG_MPROPHET_FEATURES_BEST_SCORING_PEAKS, ARG_MPROPHET_FEATURES_TARGET_PEPTIDES_ONLY, 
+            ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES
         );
 
         public string SpecLibFile { get; private set; }
@@ -1065,6 +1076,8 @@ namespace pwiz.Skyline
         public bool MProphetUseBestScoringPeaks { get; private set; }
 
         public bool MProphetTargetPeptidesOnly { get; private set; }
+
+        public List<IPeakFeatureCalculator> MProphetExcludeScores { get; private set; }
 
         // For publishing the document to Panorama
         public static readonly Argument ARG_PANORAMA_SERVER = new DocArgument(@"panorama-server", SERVER_URL_VALUE,
