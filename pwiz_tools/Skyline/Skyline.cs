@@ -2950,6 +2950,7 @@ namespace pwiz.Skyline
 
         #endregion
 
+
         #region Help menu
 
         private void homeMenuItem_Click(object sender, EventArgs e)

@@ -30,7 +30,11 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public static readonly CalibrationCurve NO_EXTERNAL_STANDARDS
             = new Simple(1);
 
-        public abstract double? GetY(double? x);
+        public double? GetY(double? x)
+        {
+            return x == null ? (double?) null : GetY(x.Value);
+        }
+        public abstract double GetY(double x);
 
         /// <summary>
         /// Returns the inverse of GetY
@@ -71,10 +75,6 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             foreach (var point in points)
             {
                 double? yFitted = GetY(point.X);
-                if (!yFitted.HasValue)
-                {
-                    continue;
-                }
                 yValues.Add(point.Y);
                 residuals.Add(point.Y - yFitted.Value);
             }
@@ -99,7 +99,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             public double Slope { get; }
             public double? Intercept { get; }
 
-            public override double? GetY(double? x)
+            public override double GetY(double x)
             {
                 return x * Slope + Intercept.GetValueOrDefault();
             }
@@ -157,7 +157,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 return (-b + sqrtDiscriminant) / 2 / a;
             }
 
-            public override double? GetY(double? x)
+            public override double GetY(double x)
             {
                 return x * x * QuadraticCoefficient + x * Slope + Intercept;
             }
@@ -192,17 +192,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 get { return _linearCalibrationCurve.Intercept.GetValueOrDefault(); }
             }
 
-            public override double? GetY(double? x)
+            public override double GetY(double x)
             {
-                if (x.HasValue)
-                {
-                    var y = _linearCalibrationCurve.GetY(Math.Log(x.Value));
-                    if (y.HasValue)
-                    {
-                        return Math.Exp(y.Value);
-                    }
-                }
-                return null;
+                var y = _linearCalibrationCurve.GetY(Math.Log(x));
+                return Math.Exp(y);
             }
 
             public override double? GetX(double? y)
@@ -267,7 +260,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
             public double TurningPoint { get; }
 
-            public override double? GetY(double? x)
+            public override double GetY(double x)
             {
                 if (x < TurningPoint)
                 {
@@ -303,6 +296,11 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 return _linearCalibrationCurve + string.Format(@"; x > {0}", TurningPoint);
             }
+
+            public Linear GetLinearCalibrationCurve()
+            {
+                return _linearCalibrationCurve;
+            }
         }
 
         public class Simple : CalibrationCurve
@@ -313,7 +311,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             }
 
             public double Slope { get; }
-            public override double? GetY(double? x)
+            public override double GetY(double x)
             {
                 return x * Slope;
             }
@@ -342,9 +340,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             }
 
             public string ErrorMessage { get; }
-            public override double? GetY(double? x)
+            public override double GetY(double x)
             {
-                return null;
+                return 0;
             }
 
             public override double? GetX(double? y)

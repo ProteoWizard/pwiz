@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -55,14 +57,14 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public override string ToString()
         {
             var parts = new List<string>();
-            string format = string.IsNullOrEmpty(Units) ? Formats.CalibrationCurve : Formats.Concentration;
+            bool unitsSpecified = !string.IsNullOrEmpty(Units);
             if (LimitOfDetection.HasValue)
             {
-                parts.Add(QuantificationStrings.FiguresOfMerit_ToString_LOD__ + LimitOfDetection.Value.ToString(format));
+                parts.Add(QuantificationStrings.FiguresOfMerit_ToString_LOD__ + FormatValue(LimitOfDetection.Value, unitsSpecified));
             }
             if (LimitOfQuantification.HasValue)
             {
-                parts.Add(QuantificationStrings.FiguresOfMerit_ToString_LOQ__ + LimitOfQuantification.Value.ToString(format));
+                parts.Add(QuantificationStrings.FiguresOfMerit_ToString_LOQ__ + FormatValue(LimitOfQuantification.Value, unitsSpecified));
             }
             if (!parts.Any())
             {
@@ -73,6 +75,17 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 parts.Add(Units);
             }
             return TextUtil.SpaceSeparate(parts);
+        }
+
+        public static string FormatValue(double value, bool unitsSpecified)
+        {
+            // If the units have been specified, and the value is not too large, then use Formats.Concentration
+            if (unitsSpecified && Math.Abs(value) < 1e8)
+            {
+                return value.ToString(Formats.Concentration);
+            }
+            // Otherwise, use scientific format
+            return value.ToString(Formats.CalibrationCurve);
         }
     }
 }

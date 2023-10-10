@@ -1217,8 +1217,7 @@ namespace pwiz.Skyline.Properties
                 var calibrationCurveOptions = (CalibrationCurveOptions) this[@"CalibrationCurveOptions"];
                 if (calibrationCurveOptions == null)
                 {
-                    calibrationCurveOptions = new CalibrationCurveOptions();
-                    CalibrationCurveOptions = calibrationCurveOptions;
+                    CalibrationCurveOptions = calibrationCurveOptions = CalibrationCurveOptions.DEFAULT;
                 }
                 return calibrationCurveOptions;
             }
