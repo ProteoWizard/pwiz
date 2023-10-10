@@ -2135,11 +2135,11 @@ namespace pwiz.Skyline.Util
         /// Calls either <see cref="MessageDlg.ShowWithException"/> or <see cref="Program.ReportException"/> depending
         /// on what <see cref="IsProgrammingDefect"/> returns.
         /// <param name="parent">Parent window for message dialog</param>
-        /// <param name="message">Message which summarizes what Skyline was trying to do when the exception happened.
-        /// The exception's message will be concatenated on a separate line with this message.</param>
         /// <param name="exception">The exception that was caught</param>
+        /// <param name="message">Optional message which summarizes what Skyline was trying to do when the exception happened,
+        /// to be inserted on a separate line before the exception's message.</param>
         /// </summary>
-        public static void DisplayOrReportException(IWin32Window parent, string message, Exception exception)
+        public static void DisplayOrReportException(IWin32Window parent, Exception exception, string message = null)
         {
             if (IsProgrammingDefect(exception))
             {
@@ -2147,7 +2147,11 @@ namespace pwiz.Skyline.Util
             }
             else
             {
-                string fullMessage = TextUtil.LineSeparate(message, exception.Message);
+                string fullMessage = exception.Message;
+                if (string.IsNullOrEmpty(message))
+                {
+                    fullMessage = TextUtil.LineSeparate(message, fullMessage);
+                }
                 MessageDlg.ShowWithException(parent, fullMessage, exception);
             }
         }
