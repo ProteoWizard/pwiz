@@ -296,13 +296,11 @@ namespace pwiz.Skyline.Model
                                     _firstAddedPathPepGroup = _firstAddedPathPepGroup ?? pathGroup;
                                 }
                             }
-                            catch (InvalidDataException x)
+
+                            catch (Exception exception)
                             {
-                                errmsg = x.Message;
-                            }
-                            catch (InvalidOperationException x) // Adduct handling code can throw these
-                            {
-                                errmsg = x.Message;
+                                ThrowIfNotParserError(exception);
+                                errmsg = exception.Message;
                             }
 
                             if (errmsg != null)
@@ -1011,6 +1009,18 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        private void ThrowIfNotParserError(Exception exception)
+        {
+            if (exception is InvalidOperationException
+                || exception is InvalidDataException
+                || exception is ArgumentException)
+            {
+                return;
+            }
+
+            throw exception;
+        }
+
         // We need some combination of:
         //  Formula and mz
         //  Formula and charge
@@ -1511,13 +1521,10 @@ namespace pwiz.Skyline.Model
                             }
                         }
                     }
-                    catch (InvalidDataException x)
+                    catch (Exception exception)
                     {
-                        massErrMsg = x.Message;
-                    }
-                    catch (InvalidOperationException x)  // Adduct handling code can throw these
-                    {
-                        massErrMsg = x.Message;
+                        ThrowIfNotParserError(exception);
+                        massErrMsg = exception.Message;
                     }
                     if (massErrMsg != null)
                     {
@@ -1704,8 +1711,9 @@ namespace pwiz.Skyline.Model
                 adduct = Adduct.FromStringAssumeChargeOnly(adductText);
                 IonInfo.ApplyAdductToFormula(formula ?? string.Empty, adduct); // Just to see if it throws
             }
-            catch (Exception x) when ((x is InvalidOperationException) || (x is ArgumentException))
+            catch (Exception x)
             {
+                ThrowIfNotParserError(x);
                 ShowTransitionError(new PasteError
                 {
                     Column = indexAdduct,
@@ -1831,8 +1839,9 @@ namespace pwiz.Skyline.Model
                     molecule = new CustomMolecule(parsedIonInfo.MonoMass, parsedIonInfo.AverageMass, shortName, parsedIonInfo.MoleculeID.AccessionNumbers);
                 }
             }
-            catch (ArgumentException e)
+            catch (Exception e)
             {
+                ThrowIfNotParserError(e);
                 ShowTransitionError(new PasteError
                 {
                     Column = INDEX_MOLECULE_FORMULA,
@@ -1849,8 +1858,9 @@ namespace pwiz.Skyline.Model
                     return null;
                 return new PeptideDocNode(pep, document.Settings, null, null, parsedIonInfo.ExplicitRetentionTime, new[] { tranGroup }, false);
             }
-            catch (InvalidOperationException e)
+            catch (Exception e)
             {
+                ThrowIfNotParserError(e);
                 ShowTransitionError(new PasteError
                 {
                     Column = INDEX_MOLECULE_FORMULA,
@@ -1908,12 +1918,9 @@ namespace pwiz.Skyline.Model
                 return new TransitionGroupDocNode(group, document.Annotations, document.Settings, null,
                     null, moleculeInfo.ExplicitTransitionGroupValues, null, new[] { tran }, false);
             }
-            catch (InvalidDataException x)
+            catch (Exception x)
             {
-                errmsg = x.Message;
-            }
-            catch (InvalidOperationException x) // Adduct handling code can throw these
-            {
+                ThrowIfNotParserError(x);
                 errmsg = x.Message;
             }
             ShowTransitionError(new PasteError
