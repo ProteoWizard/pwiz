@@ -1109,7 +1109,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
             catch (Exception exception)
             {
-                ExceptionUtil.DisplayOrReportException(this, "An error occurred displaying a tooltip", exception);
+                ExceptionUtil.DisplayOrReportException(this, Resources.NodeTip_Timer_Tick_An_error_occurred_displaying_a_tooltip_, exception);
             }
         }
 

@@ -21410,11 +21410,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occurred displaying a tooltip.
+        ///   Looks up a localized string similar to An error occurred displaying a tooltip..
         /// </summary>
-        public static string NodeTip_Timer_Tick_An_error_occurred_displaying_a_tooltip {
+        public static string NodeTip_Timer_Tick_An_error_occurred_displaying_a_tooltip_ {
             get {
-                return ResourceManager.GetString("NodeTip_Timer_Tick_An_error_occurred_displaying_a_tooltip", resourceCulture);
+                return ResourceManager.GetString("NodeTip_Timer_Tick_An_error_occurred_displaying_a_tooltip_", resourceCulture);
             }
         }
         
