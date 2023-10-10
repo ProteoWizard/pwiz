@@ -136,15 +136,16 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm<DocumentGridForm>();
             var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
             RunUI(() => documentGrid.ChooseView(viewName));
-            WaitForCondition(() => (documentGrid.RowCount == rowCount)); // Let it initialize
+            WaitForConditionUI(() => (documentGrid.RowCount == rowCount),
+                () => string.Format("Expecting row count <{0}>, actual <{1}>", rowCount, documentGrid.RowCount)); // Let it initialize
             int iteration = 0;
-            WaitForCondition(() =>
+            WaitForConditionUI(() =>
             {
                 bool result = documentGrid.ColumnCount == colCount;
                 if (!result && iteration++ > 9)
                     Assert.AreNotEqual(colCount, documentGrid.ColumnCount);   // Put breakpoint on this line, if you have changed columns and need to update the numbers
                 return result;
-            }); // Let it initialize
+            }, () => string.Format("Expecting column count <{0}>, actual <{1}>", colCount, documentGrid.ColumnCount)); // Let it initialize
 
             var colProductIonFormula = documentGrid.FindColumn(PropertyPath.Parse("ProductIonFormula"));
             var colProductNeutralFormula = documentGrid.FindColumn(PropertyPath.Parse("ProductNeutralFormula"));
