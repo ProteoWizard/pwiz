@@ -819,7 +819,7 @@ namespace pwiz.Skyline
             if (commandArgs.ExportingMProphetFeatures)
             {
                 if (!ExportMProphetFeatures(commandArgs.MProphetFeaturesFile, commandArgs.MProphetTargetPeptidesOnly, 
-                        commandArgs.MProphetUseBestScoringPeaks, commandArgs.MProphetExcludeScores))
+                        commandArgs.MProphetUseBestScoringPeaks, new FeatureCalculators(commandArgs.MProphetExcludeScores)))
                 {
                     return false;
                 }
@@ -3167,9 +3167,9 @@ namespace pwiz.Skyline
         /// <param name="mProphetFile">File path to export the mProphet file to</param>
         /// <param name="targetPeptidesOnly">Do not include decoys, only target peptides</param>
         /// <param name="bestOnly">Export best scoring peaks only</param>
-        /// <param name="excludeScores">A comma-separated list of scores to exclude</param>
+        /// <param name="excludeScores">A list of features to exclude from the exported file</param>
         /// <returns>True upon successful import, false upon error</returns>
-        public bool ExportMProphetFeatures(string mProphetFile, bool targetPeptidesOnly, bool bestOnly, List<IPeakFeatureCalculator> excludeScores)
+        public bool ExportMProphetFeatures(string mProphetFile, bool targetPeptidesOnly, bool bestOnly, FeatureCalculators excludeScores)
         {
             // Excluding any scores requested by the caller
             var calcs = new FeatureCalculators(PeakFeatureCalculator.Calculators.Where(c => excludeScores.IndexOf(c) < 0));

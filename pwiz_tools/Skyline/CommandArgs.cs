@@ -2189,6 +2189,8 @@ namespace pwiz.Skyline
             ExcludeFeatures = new List<IPeakFeatureCalculator>();
             SharedFileType = ShareType.DEFAULT;
 
+            MProphetExcludeScores = new List<IPeakFeatureCalculator>();
+
             ImportBeforeDate = null;
             ImportOnOrAfterDate = null;
         }
