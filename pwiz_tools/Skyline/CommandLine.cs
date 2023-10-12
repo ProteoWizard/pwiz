@@ -3159,7 +3159,7 @@ namespace pwiz.Skyline
         /// Export mProphet features as a .csv file
         /// </summary>
         /// <param name="mProphetFile">File path to export the mProphet file to</param>
-        /// <param name="targetPeptidesOnly">Do not include decoys, only target peptides</param>
+        /// <param name="targetPeptidesOnly">Do not include decoys, only targets</param>
         /// <param name="bestOnly">Export best scoring peaks only</param>
         /// <param name="excludeScores">A list of features to exclude from the exported file</param>
         /// <returns>True upon successful import, false upon error</returns>
