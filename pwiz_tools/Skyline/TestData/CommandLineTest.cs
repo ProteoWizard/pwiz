@@ -684,7 +684,7 @@ namespace pwiz.SkylineTestData
             // A string that is not a feature name or a mProphet file header
             var invalidFeatureName = "-la";
 
-            // Test error (no precursors)
+            // Test error (no targets)
             var output = RunCommand("--new=" + "new.sky", // Create a new document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
                 "--exp-mprophet-file=" + exportPath // Export mProphet features

@@ -1301,8 +1301,8 @@ namespace pwiz.Skyline {
         ///will be removed from the document:
         ///
         ///Green = 1.0
-        ///Orange &amp;gt;= 0.5
-        ///Red &amp;lt; 0.5.
+        ///Orange &gt;= 0.5
+        ///Red &lt; 0.5.
         /// </summary>
         internal static string _refine_max_peak_found_ratio {
             get {
@@ -1368,8 +1368,8 @@ namespace pwiz.Skyline {
         ///will be removed from the document:
         ///
         ///Green = 1.0
-        ///Orange &amp;gt;= 0.5
-        ///Red &amp;lt; 0.5.
+        ///Orange &gt;= 0.5
+        ///Red &lt; 0.5.
         /// </summary>
         internal static string _refine_min_peak_found_ratio {
             get {

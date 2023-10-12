@@ -681,8 +681,8 @@ first occurrence of any peptide.</value>
 will be removed from the document:
 
 Green = 1.0
-Orange &amp;gt;= 0.5
-Red &amp;lt; 0.5</value>
+Orange &gt;= 0.5
+Red &lt; 0.5</value>
   </data>
   <data name="_refine_max_peptide_peak_rank" xml:space="preserve">
     <value>All transitions with an average area peak ranking
@@ -709,8 +709,8 @@ removed from the document.</value>
 will be removed from the document:
 
 Green = 1.0
-Orange &amp;gt;= 0.5
-Red &amp;lt; 0.5</value>
+Orange &gt;= 0.5
+Red &lt; 0.5</value>
   </data>
   <data name="_refine_min_time_correlation" xml:space="preserve">
     <value>Precursors will be removed from the document
