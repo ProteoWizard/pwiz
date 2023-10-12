@@ -813,7 +813,8 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            if (commandArgs.ExportingMProphetFeatures && !ExportMProphetFeatures(commandArgs.MProphetFeaturesFile, commandArgs.MProphetTargetsOnly, 
+            if (commandArgs.ExportingMProphetFeatures && 
+                !ExportMProphetFeatures(commandArgs.MProphetFeaturesFile, commandArgs.MProphetTargetsOnly, 
                     commandArgs.MProphetUseBestScoringPeaks, new FeatureCalculators(commandArgs.MProphetExcludeScores))) { 
                 return false;
             }
