@@ -13906,12 +13906,12 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
     <value>mProphet features file {0} exported successfully.</value>
   </data>
   <data name="CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features_" xml:space="preserve">
-	  <value>Error: The document must contain targets for which to export mProphet features.</value>
+    <value>Error: The document must contain targets for which to export mProphet features.</value>
   </data>
   <data name="CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features_" xml:space="preserve">
-	  <value>Error: The document must contain results to export mProphet features.</value>
+    <value>Error: The document must contain results to export mProphet features.</value>
   </data>
   <data name="CommandLine_ExportMProphetFeatures_Error__Failure_attempting_to_save_mProphet_features_file__0__" xml:space="preserve">
-	  <value>Error: Failure attempting to save mProphet features file {0}.</value>
+    <value>Error: Failure attempting to save mProphet features file {0}.</value>
   </data>
 </root>
