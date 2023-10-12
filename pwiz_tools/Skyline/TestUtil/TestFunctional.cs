@@ -2580,7 +2580,7 @@ namespace pwiz.SkylineTestUtil
 
         public static IList<DbRefSpectra> GetRefSpectra(string filename)
         {
-            return SpectralLibraryTestUtil.GetRefSpectra(filename);
+            return SpectralLibraryTestUtil.GetRefSpectraFromPath(filename);
         }
 
         public static IList<DbRefSpectra> GetRefSpectra(SQLiteConnection connection)
