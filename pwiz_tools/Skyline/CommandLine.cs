@@ -818,7 +818,7 @@ namespace pwiz.Skyline
 
             if (commandArgs.ExportingMProphetFeatures)
             {
-                if (!ExportMProphetFeatures(commandArgs.MProphetFeaturesFile, commandArgs.MProphetTargetPeptidesOnly, 
+                if (!ExportMProphetFeatures(commandArgs.MProphetFeaturesFile, commandArgs.MProphetTargetsOnly, 
                         commandArgs.MProphetUseBestScoringPeaks, new FeatureCalculators(commandArgs.MProphetExcludeScores)))
                 {
                     return false;
@@ -3175,13 +3175,13 @@ namespace pwiz.Skyline
             var calcs = new FeatureCalculators(PeakFeatureCalculator.Calculators.Where(c => excludeScores.IndexOf(c) < 0));
             if (Document.MoleculeCount == 0) // The document must contain targets
             {
-                _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features);
+                _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features_);
                 return false;
             }
 
             if (!Document.Settings.HasResults) // The document must contain results
             {
-                _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features);
+                _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features_);
                 return false;
             }
 
@@ -3205,7 +3205,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__Failure_attempting_to_save_mProphet_features_file__0_, mProphetFile);
+                _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__Failure_attempting_to_save_mProphet_features_file__0__, mProphetFile);
                 _out.WriteLine(x.Message);
                 return false;
             }

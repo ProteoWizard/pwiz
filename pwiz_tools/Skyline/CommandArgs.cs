@@ -1051,17 +1051,17 @@ namespace pwiz.Skyline
             (c, p) => c.MProphetFeaturesFile = p.ValueFullPath);
 
         public static readonly Argument ARG_MPROPHET_FEATURES_BEST_SCORING_PEAKS =
-            new DocArgument(@"exp-mprophet-best-scoring-peaks-only", (c, p) => c.MProphetUseBestScoringPeaks = true);
+            new DocArgument(@"exp-mprophet-best-peaks-only", (c, p) => c.MProphetUseBestScoringPeaks = true);
 
-        public static readonly Argument ARG_MPROPHET_FEATURES_TARGET_PEPTIDES_ONLY =
-            new DocArgument(@"exp-mprophet-target-peptides-only", (c, p) => c.MProphetTargetPeptidesOnly = true);
+        public static readonly Argument ARG_MPROPHET_FEATURES_TARGETS_ONLY =
+            new DocArgument(@"exp-mprophet-targets-only", (c, p) => c.MProphetTargetsOnly = true);
         public static readonly Argument ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES = 
             new DocArgument(@"exp-mprophet-exclude-feature", FEATURE_NAME_VALUE, 
             (c, p) => c.ParseExcludeFeature(p));
 
 
         private static readonly ArgumentGroup GROUP_OTHER_FILE_TYPES = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_OTHER_FILE_TYPES, false, 
-            ARG_SPECTRAL_LIBRARY_FILE, ARG_MPROPHET_FEATURES_FILE, ARG_MPROPHET_FEATURES_BEST_SCORING_PEAKS, ARG_MPROPHET_FEATURES_TARGET_PEPTIDES_ONLY, 
+            ARG_SPECTRAL_LIBRARY_FILE, ARG_MPROPHET_FEATURES_FILE, ARG_MPROPHET_FEATURES_BEST_SCORING_PEAKS, ARG_MPROPHET_FEATURES_TARGETS_ONLY, 
             ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES
         );
 
@@ -1075,7 +1075,7 @@ namespace pwiz.Skyline
 
         public bool MProphetUseBestScoringPeaks { get; private set; }
 
-        public bool MProphetTargetPeptidesOnly { get; private set; }
+        public bool MProphetTargetsOnly { get; private set; }
 
         public List<IPeakFeatureCalculator> MProphetExcludeScores { get; private set; }
 

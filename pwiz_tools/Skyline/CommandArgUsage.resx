@@ -943,7 +943,7 @@ greater peak area.</value>
   <data name="_exp_mprophet_best_scoring_peaks_only" xml:space="preserve">
     <value>Include feature scores only for the best scoring peaks. Requires the --exp-mprophet-file argument.</value>
   </data>
-  <data name="_exp_mprophet_target_peptides_only" xml:space="preserve">
-    <value>Include feature scores only for target peptides. Requires the --exp-mprophet-file argument.</value>
+  <data name="_exp_mprophet_targets_only" xml:space="preserve">
+    <value>Include feature scores only for targets. Requires the --exp-mprophet-file argument.</value>
   </data>
 </root>

@@ -689,12 +689,12 @@ namespace pwiz.SkylineTestData
                 "--overwrite", // Overwrite, as the file may already exist in the bin
                 "--exp-mprophet-file=" + exportPath // Export mProphet features
             );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features), output);
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features_), output);
             // Test error (no results)
             output = RunCommand("--in=" + docWithNoResultsPath, // Load a document with no results
                 "--exp-mprophet-file=" + exportPath // Export mProphet features
             );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features), output);
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features_), output);
             // Test error (invalid feature name)
             output = RunCommand("--in=" + docWithResults, // Load a document with no results
                 "--exp-mprophet-file=" + exportPath, // Export mProphet features
@@ -711,8 +711,8 @@ namespace pwiz.SkylineTestData
             // Test export with target peptides only and best scoring peaks only
             output = RunCommand("--in=" + docWithResults, // Load a document with results
                 "--exp-mprophet-file=" + exportPath, // Export mProphet features
-                "--exp-mprophet-target-peptides-only", // Export should not include decoys peptides
-                "--exp-mprophet-best-scoring-peaks-only" // Export should contain best scoring peaks
+                "--exp-mprophet-targets-only", // Export should not include decoys peptides
+                "--exp-mprophet-best-peaks-only" // Export should contain best scoring peaks
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
             AssertEx.FileEquals(expectedExportTargetsBestPeaks, exportPath);

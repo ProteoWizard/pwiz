@@ -331,11 +331,11 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Include feature scores only for target peptides. Requires the --exp-mprophet-file argument..
+        ///   Looks up a localized string similar to Include feature scores only for targets. Requires the --exp-mprophet-file argument..
         /// </summary>
-        internal static string _exp_mprophet_target_peptides_only {
+        internal static string _exp_mprophet_targets_only {
             get {
-                return ResourceManager.GetString("_exp_mprophet_target_peptides_only", resourceCulture);
+                return ResourceManager.GetString("_exp_mprophet_targets_only", resourceCulture);
             }
         }
         
