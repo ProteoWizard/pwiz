@@ -808,7 +808,7 @@ namespace pwiz.Skyline
             }
 
 
-            if (commandArgs.ExportingSpecLib && !ExportSpecLib(commandArgs.SpecLibFile))
+            if (commandArgs.ExportingSpecLib)
             {
                 if (!ExportSpecLib(commandArgs.SpecLibFile))
                 {
