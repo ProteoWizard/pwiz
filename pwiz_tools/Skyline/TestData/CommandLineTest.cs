@@ -647,19 +647,19 @@ namespace pwiz.SkylineTestData
                 "--overwrite", // Overwrite, as the file may already exist in the bin
                 "--exp-speclib-file=" + exportPath // Export a spectral library
             );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_precursor_to_export_a_spectral_library), output);
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_precursor_to_export_a_spectral_library_), output);
             // Test error (no results)
             output = RunCommand("--in=" + docWithNoResultsPath, // Load a document with no results
                 "--exp-speclib-file=" + exportPath // Export a spectral library
             );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_results_to_export_a_spectral_library), output);
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_results_to_export_a_spectral_library_), output);
             // Test export
             output = RunCommand("--in=" + docWithResults, // Load a document with results
                 "--exp-speclib-file=" + exportPath // Export a spectral library
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Spectral_library_file__0__exported_successfully_, exportPath), output);
             Assert.IsTrue(File.Exists(exportPath)); // Check that the exported file exists
-            var refSpectra = SpectralLibraryTestUtil.GetRefSpectra(exportPath);
+            var refSpectra = SpectralLibraryTestUtil.GetRefSpectraFromPath(exportPath);
             CheckRefSpectraAll(refSpectra); // Check the spectra in the exported file
 
         }

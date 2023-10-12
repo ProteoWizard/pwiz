@@ -10,7 +10,7 @@ namespace pwiz.SkylineTestUtil
 {
     public class SpectralLibraryTestUtil
     {
-        public static IList<DbRefSpectra> GetRefSpectra(string filename)
+        public static IList<DbRefSpectra> GetRefSpectraFromPath(string filename)
         {
             using (var connection = new SQLiteConnection(string.Format("Data Source='{0}';Version=3", filename)))
             {

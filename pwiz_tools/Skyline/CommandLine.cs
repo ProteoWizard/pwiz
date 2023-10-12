@@ -808,12 +808,9 @@ namespace pwiz.Skyline
             }
 
 
-            if (commandArgs.ExportingSpecLib)
-            {
-                if (!ExportSpecLib(commandArgs.SpecLibFile))
-                {
-                    return false;
-                }
+            if (commandArgs.ExportingSpecLib && !ExportSpecLib(commandArgs.SpecLibFile))
+            { 
+                return false;
             }
 
             if (commandArgs.ExportingMProphetFeatures)
@@ -3134,12 +3131,12 @@ namespace pwiz.Skyline
             _out.WriteLine(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____, specLibFile);
             if (Document.MoleculeTransitionGroupCount == 0) // The document needs at least one precursor
             {
-                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_precursor_to_export_a_spectral_library);
+                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_precursor_to_export_a_spectral_library_);
                 return false;
             }
             else if (!Document.Settings.HasResults) // The document must contain results
             {
-                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_results_to_export_a_spectral_library);
+                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_results_to_export_a_spectral_library_);
                 return false;
             }
 
@@ -3154,7 +3151,7 @@ namespace pwiz.Skyline
             }
             catch(Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Error__Failure_attempting_to_save_spectral_library_file__0_, specLibFile);
+                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Error__Failure_attempting_to_save_spectral_library_file__0__, specLibFile);
                 _out.WriteLine(x.Message);
                 return false;
             }
