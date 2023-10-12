@@ -3205,7 +3205,7 @@ namespace pwiz.Skyline
             }
             return true;
         }
-
+        
         public enum ResolveZipToolConflicts
         {
             terminate,
