@@ -1057,7 +1057,7 @@ namespace pwiz.Skyline
             new DocArgument(@"exp-mprophet-targets-only", (c, p) => c.MProphetTargetsOnly = true);
         public static readonly Argument ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES = 
             new DocArgument(@"exp-mprophet-exclude-feature", FEATURE_NAME_VALUE, 
-            (c, p) => c.ParseExcludeFeature(p));
+            (c, p) => c.ParseExcludeFeature(p)){WrapValue = true};
 
 
         private static readonly ArgumentGroup GROUP_OTHER_FILE_TYPES = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_OTHER_FILE_TYPES, false, 

@@ -940,7 +940,7 @@ greater peak area.</value>
   <data name="_exp_mprophet_file" xml:space="preserve">
     <value>Export all the individual feature scores for each peptide, as well as the composite score, the p value, and the q value into the mProphet format.</value>
   </data>
-  <data name="_exp_mprophet_best_scoring_peaks_only" xml:space="preserve">
+  <data name="_exp_mprophet_best_peaks_only" xml:space="preserve">
     <value>Include feature scores only for the best scoring peaks. Requires the --exp-mprophet-file argument.</value>
   </data>
   <data name="_exp_mprophet_targets_only" xml:space="preserve">

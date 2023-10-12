@@ -306,9 +306,9 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Include feature scores only for the best scoring peaks. Requires the --exp-mprophet-file argument..
         /// </summary>
-        internal static string _exp_mprophet_best_scoring_peaks_only {
+        internal static string _exp_mprophet_best_peaks_only {
             get {
-                return ResourceManager.GetString("_exp_mprophet_best_scoring_peaks_only", resourceCulture);
+                return ResourceManager.GetString("_exp_mprophet_best_peaks_only", resourceCulture);
             }
         }
         
