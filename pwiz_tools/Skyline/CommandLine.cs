@@ -809,15 +809,22 @@ namespace pwiz.Skyline
 
 
             if (commandArgs.ExportingSpecLib && !ExportSpecLib(commandArgs.SpecLibFile))
-            { 
-                return false;
+            {
+                if (!ExportSpecLib(commandArgs.SpecLibFile))
+                {
+                    return false;
+                }
             }
 
-            if (commandArgs.ExportingMProphetFeatures && 
-                !ExportMProphetFeatures(commandArgs.MProphetFeaturesFile, commandArgs.MProphetTargetsOnly, 
-                    commandArgs.MProphetUseBestScoringPeaks, new FeatureCalculators(commandArgs.MProphetExcludeScores))) { 
-                return false;
-            }
+            if (commandArgs.ExportingMProphetFeatures)
+            {
+                if (!ExportMProphetFeatures(commandArgs.MProphetFeaturesFile, commandArgs.MProphetTargetsOnly,
+                        commandArgs.MProphetUseBestScoringPeaks, 
+                        new FeatureCalculators(commandArgs.MProphetExcludeScores)))
+                {
+                    return false;
+                }
+            } 
 
             var exportTypes =
                 (string.IsNullOrEmpty(commandArgs.IsolationListInstrumentType) ? 0 : 1) +
@@ -3165,8 +3172,6 @@ namespace pwiz.Skyline
         /// <returns>True upon successful import, false upon error</returns>
         public bool ExportMProphetFeatures(string mProphetFile, bool targetPeptidesOnly, bool bestOnly, FeatureCalculators excludeScores)
         {
-            // Excluding any scores requested by the caller
-            var calcs = new FeatureCalculators(PeakFeatureCalculator.Calculators.Where(c => excludeScores.IndexOf(c) < 0));
             if (Document.MoleculeCount == 0) // The document must contain targets
             {
                 _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features_);
@@ -3191,6 +3196,8 @@ namespace pwiz.Skyline
                 using (var writer = new StreamWriter(fs.SafeName))
                 {
                     handler.ScoreFeatures(progressMonitor);
+                    // Excluding any scores requested by the caller
+                    var calcs = new FeatureCalculators(PeakFeatureCalculator.Calculators.Where(c => excludeScores.IndexOf(c) < 0));
                     handler.WriteScores(writer, cultureInfo, calcs, bestOnly, !targetPeptidesOnly, progressMonitor);
                     writer.Close();
                     fs.Commit();

@@ -676,11 +676,11 @@ namespace pwiz.SkylineTestData
             // A document with results that should be able to export mProphet features
             var docWithResults = TestFilesDir.GetTestPath("MProphetGold-trained-reduced.sky");
             // The expected .csv export
-            var expectedExport = TestFilesDir.GetTestPath("MProphet_expected.csv");
+            var expectedExport = TestFilesDir.GetTestPathLocale("MProphet_expected.csv");
             // The expected export with targets only and best scoring peaks only options
-            var expectedExportTargetsBestPeaks = TestFilesDir.GetTestPath("MProphet_expected_targets_only_best_peaks_only.csv");
+            var expectedExportTargetsBestPeaks = TestFilesDir.GetTestPathLocale("MProphet_expected_targets_only_best_peaks_only.csv");
             // The expected export when excluding the "Intensity" and "Standard signal to noise" features.
-            var expectedExportExcludeFeatures = TestFilesDir.GetTestPath("MProphet_expected_exclude_features.csv");
+            var expectedExportExcludeFeatures = TestFilesDir.GetTestPathLocale("MProphet_expected_exclude_features.csv");
             // A string that is not a feature name or a mProphet file header
             const string invalidFeatureName = "-la";
 
