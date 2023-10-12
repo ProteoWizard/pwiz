@@ -5947,16 +5947,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to mProphet features file {0} exported successfully.
-        /// </summary>
-        public static string CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully {
-            get {
-                return ResourceManager.GetString("CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successful" +
-                        "ly", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to mProphet features file {0} exported successfully..
         /// </summary>
         public static string CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_ {
