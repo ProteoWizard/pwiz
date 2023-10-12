@@ -670,10 +670,10 @@ namespace pwiz.SkylineTestData
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleExportMProphetTest.zip");
             // Path to export mProphet file to
             var exportPath = TestFilesDir.GetTestPath("out.csv");
-            // A document with no results. Attempting to export a spectral library should
+            // A document with no results. Attempting to export mProphet features should
             // provoke an error
             var docWithNoResultsPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
-            // A document with results that should be able to export a spectral library
+            // A document with results that should be able to export mProphet features
             var docWithResults = TestFilesDir.GetTestPath("MProphetGold-trained-reduced.sky");
             // The expected .csv export
             var expectedExport = TestFilesDir.GetTestPath("MProphet_expected.csv");
@@ -682,7 +682,7 @@ namespace pwiz.SkylineTestData
             // The expected export when excluding the "Intensity" and "Standard signal to noise" features.
             var expectedExportExcludeFeatures = TestFilesDir.GetTestPath("MProphet_expected_exclude_features.csv");
             // A string that is not a feature name or a mProphet file header
-            var invalidFeatureName = "-la";
+            const string invalidFeatureName = "-la";
 
             // Test error (no targets)
             var output = RunCommand("--new=" + "new.sky", // Create a new document
