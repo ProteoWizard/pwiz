@@ -179,6 +179,24 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!document.Settings.HasResults || iResult >= document.Settings.MeasuredResults.Chromatograms.Count)
                 return;
             GraphSummary.StateProvider.SelectedResultsIndex = iResult;
+
+            // Keep the currently selected replicate visible on the graph.
+            // Achieve this by "scrolling" the axis into view.
+            if (iResult >= 0)
+            {
+                var apparentReplicateIndex = iResult + 1;
+                while (apparentReplicateIndex > XAxis.Scale.Max)
+                {
+                    XAxis.Scale.Max++;
+                    XAxis.Scale.Min++;
+                }
+                while (apparentReplicateIndex < XAxis.Scale.Min)
+                {
+                    XAxis.Scale.Max--;
+                    XAxis.Scale.Min--;
+                }
+            }
+
             GraphSummary.Focus();
         }
 
@@ -206,7 +224,7 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = 0; i < resultNames.Length; i++)
                 pointPairList.Add(PointPairMissing(i));
             AxisChange();
-        }
+        } 
 
         protected Brush GetBrushForNode(SrmSettings settings, DocNode docNode, Color color)
         {
