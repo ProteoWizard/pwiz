@@ -664,6 +664,69 @@ namespace pwiz.SkylineTestData
 
         }
 
+        [TestMethod]
+        public void ConsoleExportMProphetTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleExportMProphetTest.zip");
+            // Path to export mProphet file to
+            var exportPath = TestFilesDir.GetTestPath("out.csv");
+            // A document with no results. Attempting to export mProphet features should
+            // provoke an error
+            var docWithNoResultsPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            // A document with results that should be able to export mProphet features
+            var docWithResults = TestFilesDir.GetTestPath("MProphetGold-trained-reduced.sky");
+            // The expected .csv export
+            var expectedExport = TestFilesDir.GetTestPathLocale("MProphet_expected.csv");
+            // The expected export with targets only and best scoring peaks only options
+            var expectedExportTargetsBestPeaks = TestFilesDir.GetTestPathLocale("MProphet_expected_targets_only_best_peaks_only.csv");
+            // The expected export when excluding the "Intensity" and "Standard signal to noise" features.
+            var expectedExportExcludeFeatures = TestFilesDir.GetTestPathLocale("MProphet_expected_exclude_features.csv");
+            // A string that is not a feature name or a mProphet file header
+            const string invalidFeatureName = "-la";
+
+            // Test error (no targets)
+            var output = RunCommand("--new=" + "new.sky", // Create a new document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--exp-mprophet-file=" + exportPath // Export mProphet features
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features_), output);
+            // Test error (no results)
+            output = RunCommand("--in=" + docWithNoResultsPath, // Load a document with no results
+                "--exp-mprophet-file=" + exportPath // Export mProphet features
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features_), output);
+            // Test error (invalid feature name)
+            output = RunCommand("--in=" + docWithResults, // Load a document with no results
+                "--exp-mprophet-file=" + exportPath, // Export mProphet features
+                "--exp-mprophet-exclude-feature=" + invalidFeatureName
+            );
+            CheckRunCommandOutputContains(string.Format(Resources
+                .CommandArgs_ParseArgsInternal_Error__Attempting_to_exclude_an_unknown_feature_name___0____Try_one_of_the_following_, invalidFeatureName), output);
+            // Test export
+            output = RunCommand("--in=" + docWithResults, // Load a document with results
+                "--exp-mprophet-file=" + exportPath // Export mProphet features
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
+            AssertEx.FileEquals(expectedExport, exportPath);
+            // Test export with target peptides only and best scoring peaks only
+            output = RunCommand("--in=" + docWithResults, // Load a document with results
+                "--exp-mprophet-file=" + exportPath, // Export mProphet features
+                "--exp-mprophet-targets-only", // Export should not include decoys peptides
+                "--exp-mprophet-best-peaks-only" // Export should contain best scoring peaks
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
+            AssertEx.FileEquals(expectedExportTargetsBestPeaks, exportPath);
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
+            // Test export with some scores excluded
+            output = RunCommand("--in=" + docWithResults, // Load a document with results
+                "--exp-mprophet-file=" + exportPath, // Export mProphet features
+                "--exp-mprophet-exclude-feature=" + "Intensity", // Export should not contain an "Intensity" column
+                "--exp-mprophet-exclude-feature=" + "Standard signal to noise" // Export should not contain a "Standard signal to noise" column
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
+            AssertEx.FileEquals(expectedExportExcludeFeatures, exportPath);
+        }
+
         private static void CheckRefSpectraAll(IList<DbRefSpectra> refSpectra)
         {
 

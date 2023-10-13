@@ -808,10 +808,23 @@ namespace pwiz.Skyline
             }
 
 
-            if (commandArgs.ExportingSpecLib && !ExportSpecLib(commandArgs.SpecLibFile))
-            { 
-                return false;
+            if (commandArgs.ExportingSpecLib)
+            {
+                if (!ExportSpecLib(commandArgs.SpecLibFile))
+                {
+                    return false;
+                }
             }
+
+            if (commandArgs.ExportingMProphetFeatures)
+            {
+                if (!ExportMProphetFeatures(commandArgs.MProphetFeaturesFile, commandArgs.MProphetTargetsOnly,
+                        commandArgs.MProphetUseBestScoringPeaks, 
+                        new FeatureCalculators(commandArgs.MProphetExcludeScores)))
+                {
+                    return false;
+                }
+            } 
 
             var exportTypes =
                 (string.IsNullOrEmpty(commandArgs.IsolationListInstrumentType) ? 0 : 1) +
@@ -3149,6 +3162,57 @@ namespace pwiz.Skyline
             return true;
         }
 
+        /// <summary>
+        /// Export mProphet features as a .csv file
+        /// </summary>
+        /// <param name="mProphetFile">File path to export the mProphet file to</param>
+        /// <param name="targetPeptidesOnly">Do not include decoys, only targets</param>
+        /// <param name="bestOnly">Export best scoring peaks only</param>
+        /// <param name="excludeScores">A list of features to exclude from the exported file</param>
+        /// <returns>True upon successful import, false upon error</returns>
+        public bool ExportMProphetFeatures(string mProphetFile, bool targetPeptidesOnly, bool bestOnly, FeatureCalculators excludeScores)
+        {
+            if (Document.MoleculeCount == 0) // The document must contain targets
+            {
+                _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features_);
+                return false;
+            }
+
+            if (!Document.Settings.HasResults) // The document must contain results
+            {
+                _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features_);
+                return false;
+            }
+
+            try
+            {
+                var scoringModel = Document.Settings.PeptideSettings.Integration.PeakScoringModel;
+                var mProphetScoringModel = scoringModel as MProphetPeakScoringModel;
+                var handler = new MProphetResultsHandler(Document, mProphetScoringModel);
+                var status = new ProgressStatus(string.Empty);
+                var cultureInfo = LocalizationHelper.CurrentCulture;
+                IProgressMonitor progressMonitor = new CommandProgressMonitor(_out, status);
+                using (var fs = new FileSaver(mProphetFile))
+                using (var writer = new StreamWriter(fs.SafeName))
+                {
+                    handler.ScoreFeatures(progressMonitor);
+                    // Excluding any scores requested by the caller
+                    var calcs = new FeatureCalculators(PeakFeatureCalculator.Calculators.Where(c => excludeScores.IndexOf(c) < 0));
+                    handler.WriteScores(writer, cultureInfo, calcs, bestOnly, !targetPeptidesOnly, progressMonitor);
+                    writer.Close();
+                    fs.Commit();
+                }
+                _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, mProphetFile);
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__Failure_attempting_to_save_mProphet_features_file__0__, mProphetFile);
+                _out.WriteLine(x.Message);
+                return false;
+            }
+            return true;
+        }
+        
         public enum ResolveZipToolConflicts
         {
             terminate,

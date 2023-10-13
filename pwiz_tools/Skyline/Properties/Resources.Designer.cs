@@ -5917,6 +5917,46 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Failure attempting to save mProphet features file {0}..
+        /// </summary>
+        public static string CommandLine_ExportMProphetFeatures_Error__Failure_attempting_to_save_mProphet_features_file__0__ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportMProphetFeatures_Error__Failure_attempting_to_save_mProphet_fea" +
+                        "tures_file__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The document must contain results to export mProphet features..
+        /// </summary>
+        public static string CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_ex" +
+                        "port_mProphet_features_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The document must contain targets for which to export mProphet features..
+        /// </summary>
+        public static string CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_w" +
+                        "hich_to_export_mProphet_features_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to mProphet features file {0} exported successfully..
+        /// </summary>
+        public static string CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successful" +
+                        "ly_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: If you specify a report, you must specify the --report-file=path/to/file.csv parameter..
         /// </summary>
         public static string CommandLine_ExportReport_ {

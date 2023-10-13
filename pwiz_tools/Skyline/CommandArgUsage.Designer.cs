@@ -304,6 +304,42 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Include feature scores only for the best scoring peaks. Requires the --exp-mprophet-file argument..
+        /// </summary>
+        internal static string _exp_mprophet_best_peaks_only {
+            get {
+                return ResourceManager.GetString("_exp_mprophet_best_peaks_only", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use to exclude a particular feature score by name from the exported file. Names can be found in the user interface. This argument may be used multiple times to exclude multiple features. Requires the --exp-mprophet-file argument..
+        /// </summary>
+        internal static string _exp_mprophet_exclude_feature {
+            get {
+                return ResourceManager.GetString("_exp_mprophet_exclude_feature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Export all the individual feature scores for each peptide, as well as the composite score, the p value, and the q value into the mProphet format..
+        /// </summary>
+        internal static string _exp_mprophet_file {
+            get {
+                return ResourceManager.GetString("_exp_mprophet_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Include feature scores only for targets. Requires the --exp-mprophet-file argument..
+        /// </summary>
+        internal static string _exp_mprophet_targets_only {
+            get {
+                return ResourceManager.GetString("_exp_mprophet_targets_only", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Export a method with extra transitions for finding optimal collision energy or declustering potential..
         /// </summary>
         internal static string _exp_optimizing {
@@ -1265,8 +1301,8 @@ namespace pwiz.Skyline {
         ///will be removed from the document:
         ///
         ///Green = 1.0
-        ///Orange &amp;gt;= 0.5
-        ///Red &amp;lt; 0.5.
+        ///Orange &gt;= 0.5
+        ///Red &lt; 0.5.
         /// </summary>
         internal static string _refine_max_peak_found_ratio {
             get {
@@ -1332,8 +1368,8 @@ namespace pwiz.Skyline {
         ///will be removed from the document:
         ///
         ///Green = 1.0
-        ///Orange &amp;gt;= 0.5
-        ///Red &amp;lt; 0.5.
+        ///Orange &gt;= 0.5
+        ///Red &lt; 0.5.
         /// </summary>
         internal static string _refine_min_peak_found_ratio {
             get {
