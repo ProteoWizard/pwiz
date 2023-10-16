@@ -288,6 +288,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { textCutoff.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
         }
 
+        public bool ValidateCutoffScoreText()
+        {
+            try
+            {
+                var test = CutOffScore;
+                return true;
+            }
+            catch (FormatException)
+            {
+                return false;
+            }
+        }
+
         public bool IncludeAmbiguousMatches
         {
             get { return cbIncludeAmbiguousMatches.Checked; }
@@ -643,5 +656,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             UpdatePerformDDASearch();
         }
+
+        #region test_support
+
+        // For test purposes, lets us test error handling
+        public void SetCutoffControlText(string cutoffControlText)
+        {
+            textCutoff.Text = cutoffControlText;
+        }
+
+        #endregion
     }
 }

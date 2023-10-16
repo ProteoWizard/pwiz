@@ -16746,6 +16746,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid cutoff score.
+        /// </summary>
+        public static string ImportPeptideSearchDlg_NextPage_Invalid_cutoff_score {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_Invalid_cutoff_score", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No isolation windows are configured, but are required for deconvoluting DIA raw files by DIA-Umpire in preparation for DDA search. Go back to full scan settings to configure the isolation scheme..
         /// </summary>
         public static string ImportPeptideSearchDlg_NextPage_No_isolation_windows_are_configured__ {

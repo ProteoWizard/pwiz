@@ -230,11 +230,17 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.BuildPepSearchLibControl.PerformDDASearch = true;
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).Take(1).ToArray();
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia; // will go back and switch to DDA
-                importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.9;
                 importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = IrtStandard.AUTO;
+                importPeptideSearchDlg.BuildPepSearchLibControl.SetCutoffControlText(@"12%"); // Intentionally bad 
+            });
+            var errMsgDlg = ShowDialog<MessageDlg>(() => importPeptideSearchDlg.ClickNextButton());
+            OkDialog(errMsgDlg, errMsgDlg.OkDialog);
+
+            RunUI(() =>
+            {
+                importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.9;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
-
             // With only 1 source, no add/remove prefix/suffix dialog
 
             // We're on the "Match Modifications" page. Add M+16 mod.
