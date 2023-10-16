@@ -946,4 +946,7 @@ greater peak area.</value>
   <data name="_exp_mprophet_targets_only" xml:space="preserve">
     <value>Include feature scores only for targets. Requires the --exp-mprophet-file argument.</value>
   </data>
+  <data name="_exp_annotations_file" xml:space="preserve">
+    <value>Export an annotations file</value>
+  </data>
 </root>

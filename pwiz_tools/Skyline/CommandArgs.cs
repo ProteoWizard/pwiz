@@ -816,6 +816,15 @@ namespace pwiz.Skyline
             return true;
         }
 
+        private bool ParseExcludeObject(NameValuePair pair)
+        {
+            var dataSchema = new SkylineDataSchema(this, DataSchemaLocalizer.INVARIANT);
+            var objectName = pair.Value;
+            // var dataSchema = SkylineDataSchema.MemoryDataSchema(Document, DataSchemaLocalizer.INVARIANT);
+            // var handlers = ImmutableList.ValueOf(ElementHandler.GetElementHandlers(dataSchema));
+            return true;
+        }
+
         // Refinement
         public static readonly Argument ARG_REFINE_MIN_PEPTIDES = new RefineArgument(@"refine-min-peptides", INT_VALUE,
             (c, p) => c.Refinement.MinPeptidesPerProtein = p.ValueInt);
@@ -1047,10 +1056,12 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES = 
             new DocArgument(@"exp-mprophet-exclude-feature", FEATURE_NAME_VALUE, 
                 (c, p) => c.ParseExcludeFeature(p, c.MProphetExcludeScores)){WrapValue = true};
+        public static readonly Argument ARG_ANNOTATIONS_FILE = new DocArgument(@"exp-annotations-file", PATH_TO_CSV,
+            (c, p) => c.AnnotationsFile = p.ValueFullPath){WrapValue = true};
 
         private static readonly ArgumentGroup GROUP_OTHER_FILE_TYPES = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_OTHER_FILE_TYPES, false, 
             ARG_SPECTRAL_LIBRARY_FILE, ARG_MPROPHET_FEATURES_FILE, ARG_MPROPHET_FEATURES_BEST_SCORING_PEAKS, ARG_MPROPHET_FEATURES_TARGETS_ONLY, 
-            ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES
+            ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES, ARG_ANNOTATIONS_FILE
         );
 
         public string SpecLibFile { get; private set; }
@@ -1064,6 +1075,10 @@ namespace pwiz.Skyline
         public bool MProphetUseBestScoringPeaks { get; private set; }
 
         public bool MProphetTargetsOnly { get; private set; }
+
+        public string AnnotationsFile { get; private set; }
+
+        public bool ExportingAnnotations { get { return !string.IsNullOrEmpty(AnnotationsFile); } }
 
         public List<IPeakFeatureCalculator> MProphetExcludeScores { get; private set; }
 
@@ -2209,6 +2224,10 @@ namespace pwiz.Skyline
             }
         }
 
+        private bool ParseAnnotataionFeatures(IEnumerable<string> features)
+        {
+            return true;
+        }
         private bool ParseArgsInternal(IEnumerable<string> args)
         {
             _seenArguments.Clear();

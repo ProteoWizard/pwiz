@@ -241,6 +241,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Export an annotations file.
+        /// </summary>
+        internal static string _exp_annotations_file {
+            get {
+                return ResourceManager.GetString("_exp_annotations_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Dwell time per transition. This option is required for unscheduled transition lists..
         /// </summary>
         internal static string _exp_dwell_time {

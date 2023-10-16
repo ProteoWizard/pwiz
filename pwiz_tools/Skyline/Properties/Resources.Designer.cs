@@ -5554,6 +5554,25 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Annotations file {0} exported successfully..
+        /// </summary>
+        public static string CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Failure attempting to save annotations file {0}..
+        /// </summary>
+        public static string CommandLine_ExportAnnotations_Error__Failure_attempting_to_save_annotations_file__0__ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportAnnotations_Error__Failure_attempting_to_save_annotations_file_" +
+                        "_0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Chromatograms file {0} exported successfully..
         /// </summary>
         public static string CommandLine_ExportChromatograms_Chromatograms_file__0__exported_successfully_ {

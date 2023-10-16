@@ -826,6 +826,13 @@ namespace pwiz.Skyline
                 }
             } 
 
+            if (commandArgs.ExportingAnnotations)
+            {
+                if (!ExportAnnotations(commandArgs.AnnotationsFile, ExportAnnotationSettings.EMPTY))
+                {
+                    return false;
+                }
+            }
             var exportTypes =
                 (string.IsNullOrEmpty(commandArgs.IsolationListInstrumentType) ? 0 : 1) +
                 (string.IsNullOrEmpty(commandArgs.TransListInstrumentType) ? 0 : 1) +
@@ -3210,6 +3217,44 @@ namespace pwiz.Skyline
                 _out.WriteLine(x.Message);
                 return false;
             }
+            return true;
+        }
+
+        /// <summary>
+        /// Export annotations to a .csv file
+        /// </summary>
+        /// <param name="annotationsFile">File path to export the annotations to</param>
+        /// <param name="settings">Settings for exporting the annotations</param>
+        /// <returns>True upon successful import, false upon error</returns>
+        public bool ExportAnnotations(string annotationsFile, ExportAnnotationSettings settings)
+        {
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(Document, DataSchemaLocalizer.INVARIANT);
+            var handlers = ImmutableList.ValueOf(ElementHandler.GetElementHandlers(dataSchema));
+            try
+            {
+                var documentAnnotations = new DocumentAnnotations(Document);
+                var status = new ProgressStatus(string.Empty);
+                IProgressMonitor broker = new CommandProgressMonitor(_out, status);
+                using (var fs = new FileSaver(annotationsFile))
+                {
+                    documentAnnotations.WriteAnnotationsToFile(CancellationToken.None, settings, fs.SafeName);
+                    fs.Commit();
+                }
+                _out.WriteLine(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, annotationsFile);
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_ExportAnnotations_Error__Failure_attempting_to_save_annotations_file__0__, annotationsFile);
+                _out.WriteLine(x.Message);
+                return false;
+            }
+            
+            return true;
+        }
+
+        private bool ParseFeatures(string userInput)
+        {
+            
             return true;
         }
         

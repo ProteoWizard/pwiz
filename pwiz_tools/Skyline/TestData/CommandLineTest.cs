@@ -727,6 +727,35 @@ namespace pwiz.SkylineTestData
             AssertEx.FileEquals(expectedExportExcludeFeatures, exportPath);
         }
 
+        [TestMethod]
+        public void ConsoleExportAnnotationsTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleExportAnnotationsTest.zip");
+            var exportPath = TestFilesDir.GetTestPath("out.csv");
+            const string invalidName = "-la";
+            // Test export
+            var output = RunCommand("--new=" + "new.sky", // Create a document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--exp-annotations-file=" + exportPath // Export mProphet features
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, exportPath), output);
+
+            // Test error (invalid exclude-object name)
+            output = RunCommand("--new=" + "new.sky", // Create a document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--exp-annotations-file=" + exportPath, // Export mProphet features
+                "-exp-annotations-exclude-object=" + invalidName
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, exportPath), output);
+            // Test error (invalid exclude-properties name)
+            output = RunCommand("--new=" + "new.sky", // Create a document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--exp-annotations-file=" + exportPath, // Export mProphet features
+                "-exp-annotations-exclude-properties=" + invalidName
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, exportPath), output);
+        }
+
         private static void CheckRefSpectraAll(IList<DbRefSpectra> refSpectra)
         {
 

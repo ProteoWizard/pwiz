@@ -13911,4 +13911,10 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="CommandLine_ExportMProphetFeatures_Error__Failure_attempting_to_save_mProphet_features_file__0__" xml:space="preserve">
     <value>Error: Failure attempting to save mProphet features file {0}.</value>
   </data>
+  <data name="CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_" xml:space="preserve">
+    <value>Annotations file {0} exported successfully.</value>
+  </data>
+  <data name="CommandLine_ExportAnnotations_Error__Failure_attempting_to_save_annotations_file__0__" xml:space="preserve">
+    <value>Error: Failure attempting to save annotations file {0}.</value>
+  </data>
 </root>
