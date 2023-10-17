@@ -5200,6 +5200,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Attempting to exclude an unknown object name &apos;{0}&apos;. Try one of the following:.
+        /// </summary>
+        public static string CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_name___0____Try_one_of_the_following_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_nam" +
+                        "e___0____Try_one_of_the_following_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: Regular expression &apos;{0}&apos; for {1} cannot be parsed..
         /// </summary>
         public static string CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_ {

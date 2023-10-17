@@ -13917,4 +13917,7 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="CommandLine_ExportAnnotations_Error__Failure_attempting_to_save_annotations_file__0__" xml:space="preserve">
     <value>Error: Failure attempting to save annotations file {0}.</value>
   </data>
+  <data name="CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_name___0____Try_one_of_the_following_" xml:space="preserve">
+    <value>Error: Attempting to exclude an unknown object name '{0}'. Try one of the following:</value>
+  </data>
 </root>

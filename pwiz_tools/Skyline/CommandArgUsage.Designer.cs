@@ -241,7 +241,25 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Export an annotations file.
+        ///   Looks up a localized string similar to Use to exclude a particular type of object by name from the exported file. Names can be found in the user interface. This argument may be used multiple times to exclude multiple types of objects. Requires the --exp-annotations-file argument..
+        /// </summary>
+        internal static string _exp_annotations_exclude_object {
+            get {
+                return ResourceManager.GetString("_exp_annotations_exclude_object", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use to exclude a particular property by name from the exported file. Names can be found in the user interface. This argument may be used multiple times to exclude multiple properties. Requires the --exp-annotations-file argument..
+        /// </summary>
+        internal static string _exp_annotations_exclude_property {
+            get {
+                return ResourceManager.GetString("_exp_annotations_exclude_property", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Export an annotations file..
         /// </summary>
         internal static string _exp_annotations_file {
             get {
@@ -2347,6 +2365,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;object name&gt;.
+        /// </summary>
+        internal static string CommandArgs_OBJECT_NAME_VALUE {
+            get {
+                return ResourceManager.GetString("CommandArgs_OBJECT_NAME_VALUE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &lt;password&gt;.
         /// </summary>
         internal static string CommandArgs_PASSWORD_VALUE {
@@ -2388,6 +2415,15 @@ namespace pwiz.Skyline {
         internal static string CommandArgs_PROGRAM_MACRO_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_PROGRAM_MACRO_VALUE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;property name&gt;.
+        /// </summary>
+        internal static string CommandArgs_PROPERTY_NAME_VALUE {
+            get {
+                return ResourceManager.GetString("CommandArgs_PROPERTY_NAME_VALUE", resourceCulture);
             }
         }
         

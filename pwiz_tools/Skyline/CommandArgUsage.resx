@@ -947,6 +947,18 @@ greater peak area.</value>
     <value>Include feature scores only for targets. Requires the --exp-mprophet-file argument.</value>
   </data>
   <data name="_exp_annotations_file" xml:space="preserve">
-    <value>Export an annotations file</value>
+    <value>Export an annotations file.</value>
+  </data>
+  <data name="CommandArgs_OBJECT_NAME_VALUE" xml:space="preserve">
+    <value>&lt;object name&gt;</value>
+  </data>
+  <data name="CommandArgs_PROPERTY_NAME_VALUE" xml:space="preserve">
+    <value>&lt;property name&gt;</value>
+  </data>
+  <data name="_exp_annotations_exclude_object" xml:space="preserve">
+    <value>Use to exclude a particular type of object by name from the exported file. Names can be found in the user interface. This argument may be used multiple times to exclude multiple types of objects. Requires the --exp-annotations-file argument.</value>
+  </data>
+  <data name="_exp_annotations_exclude_property" xml:space="preserve">
+    <value>Use to exclude a particular property by name from the exported file. Names can be found in the user interface. This argument may be used multiple times to exclude multiple properties. Requires the --exp-annotations-file argument.</value>
   </data>
 </root>

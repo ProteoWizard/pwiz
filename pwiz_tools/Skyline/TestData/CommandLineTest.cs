@@ -732,28 +732,32 @@ namespace pwiz.SkylineTestData
         {
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleExportAnnotationsTest.zip");
             var exportPath = TestFilesDir.GetTestPath("out.csv");
+            const string newDocumentName = "new.sky";
             const string invalidName = "-la";
+
+            // Test error (invalid exclude-object name)
+            var output = RunCommand("--new=" + newDocumentName, // Create a document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--exp-annotations-file=" + exportPath, // Export mProphet features
+                "--exp-annotations-exclude-object=" + invalidName // Test specifying an invalid object name
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.
+                    CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_name___0____Try_one_of_the_following_,
+                invalidName), output);
+            // Test error (invalid exclude-properties name)
+            output = RunCommand("--new=" + newDocumentName, // Create a document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--exp-annotations-file=" + exportPath, // Export mProphet features
+                "--exp-annotations-exclude-properties=" + invalidName // Test specifying an invalid property name
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, exportPath), output);
             // Test export
-            var output = RunCommand("--new=" + "new.sky", // Create a document
+            output = RunCommand("--new=" + newDocumentName, // Create a document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
                 "--exp-annotations-file=" + exportPath // Export mProphet features
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, exportPath), output);
-
-            // Test error (invalid exclude-object name)
-            output = RunCommand("--new=" + "new.sky", // Create a document
-                "--overwrite", // Overwrite, as the file may already exist in the bin
-                "--exp-annotations-file=" + exportPath, // Export mProphet features
-                "-exp-annotations-exclude-object=" + invalidName
-            );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, exportPath), output);
-            // Test error (invalid exclude-properties name)
-            output = RunCommand("--new=" + "new.sky", // Create a document
-                "--overwrite", // Overwrite, as the file may already exist in the bin
-                "--exp-annotations-file=" + exportPath, // Export mProphet features
-                "-exp-annotations-exclude-properties=" + invalidName
-            );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, exportPath), output);
+            // Test export with some object types excluded
         }
 
         private static void CheckRefSpectraAll(IList<DbRefSpectra> refSpectra)

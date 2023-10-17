@@ -828,7 +828,8 @@ namespace pwiz.Skyline
 
             if (commandArgs.ExportingAnnotations)
             {
-                if (!ExportAnnotations(commandArgs.AnnotationsFile, ExportAnnotationSettings.EMPTY))
+                if (!ExportAnnotations(commandArgs.AnnotationsFile, 
+                        new List<ElementHandler>(commandArgs.AnnotationsExcludeObjects)))
                 {
                     return false;
                 }
@@ -3224,20 +3225,26 @@ namespace pwiz.Skyline
         /// Export annotations to a .csv file
         /// </summary>
         /// <param name="annotationsFile">File path to export the annotations to</param>
-        /// <param name="settings">Settings for exporting the annotations</param>
+        /// <param name="excludeHandlers">List of element handlers to exclude from the export</param>
         /// <returns>True upon successful import, false upon error</returns>
-        public bool ExportAnnotations(string annotationsFile, ExportAnnotationSettings settings)
+        public bool ExportAnnotations(string annotationsFile, List<ElementHandler> excludeHandlers)
         {
             var dataSchema = SkylineDataSchema.MemoryDataSchema(Document, DataSchemaLocalizer.INVARIANT);
-            var handlers = ImmutableList.ValueOf(ElementHandler.GetElementHandlers(dataSchema));
+            var allHandlers = ElementHandler.GetElementHandlers(dataSchema);
             try
             {
                 var documentAnnotations = new DocumentAnnotations(Document);
-                var status = new ProgressStatus(string.Empty);
-                IProgressMonitor broker = new CommandProgressMonitor(_out, status);
+                
                 using (var fs = new FileSaver(annotationsFile))
                 {
-                    documentAnnotations.WriteAnnotationsToFile(CancellationToken.None, settings, fs.SafeName);
+
+                    // This is repeated from ExportAnnotationsDlg, so consider
+                    // centralizing in the future
+                    var settings = ExportAnnotationSettings.EMPTY
+                        .ChangeElementTypes(allHandlers.
+                            Where(c => excludeHandlers.IndexOf(c) < 0). // Drop handlers specified by the user
+                            Select(handler => handler.Name));
+                    documentAnnotations.WriteAnnotationsToFile(CancellationToken.None, settings, annotationsFile);
                     fs.Commit();
                 }
                 _out.WriteLine(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, annotationsFile);
@@ -3252,12 +3259,6 @@ namespace pwiz.Skyline
             return true;
         }
 
-        private bool ParseFeatures(string userInput)
-        {
-            
-            return true;
-        }
-        
         public enum ResolveZipToolConflicts
         {
             terminate,

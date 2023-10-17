@@ -24,16 +24,19 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Web;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
@@ -45,6 +48,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using static pwiz.Skyline.Model.Proteome.ProteinAssociation;
+using Thread = System.Threading.Thread;
 
 namespace pwiz.Skyline
 {
@@ -74,6 +78,7 @@ namespace pwiz.Skyline
         public static readonly Func<string> NUM_LIST_VALUE = () => CommandArgUsage.CommandArgs_NUM_LIST_VALUE;
         public static readonly Func<string> NAME_VALUE = () => CommandArgUsage.CommandArgs_NAME_VALUE;
         public static readonly Func<string> FEATURE_NAME_VALUE = () => CommandArgUsage.CommandArgs_FEATURE_NAME_VALUE;
+        public static readonly Func<string> OBJECT_NAME_VALUE = () => CommandArgUsage.CommandArgs_OBJECT_NAME_VALUE;
         public static readonly Func<string> REPORT_NAME_VALUE = () => CommandArgUsage.CommandArgs_REPORT_NAME_VALUE;
         public static readonly Func<string> PIPE_NAME_VALUE = () => CommandArgUsage.CommandArgs_PIPE_NAME_VALUE;
         public static readonly Func<string> REGEX_VALUE = () => CommandArgUsage.CommandArgs_REGEX_VALUE;
@@ -816,14 +821,36 @@ namespace pwiz.Skyline
             return true;
         }
 
+        /// <summary>
+        /// Associate a string to an object type in the settings
+        /// </summary>
+        /// <param name="pair"></param>
+        /// <returns>True if the object name is recognized, false if not</returns>
         private bool ParseExcludeObject(NameValuePair pair)
         {
-            var dataSchema = new SkylineDataSchema(this, DataSchemaLocalizer.INVARIANT);
             var objectName = pair.Value;
-            // var dataSchema = SkylineDataSchema.MemoryDataSchema(Document, DataSchemaLocalizer.INVARIANT);
-            // var handlers = ImmutableList.ValueOf(ElementHandler.GetElementHandlers(dataSchema));
+            // Creating a new document is probably not the best way to do this
+            var document = new SrmDocument(SrmSettingsList.GetDefault());
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT); // Object names are not localized
+            var handlers = ImmutableList.ValueOf(ElementHandler.GetElementHandlers(dataSchema));
+            var handler = handlers.FirstOrDefault(c => Equals(objectName, c.Name));
+            if (handler == null)
+            {
+                WriteLine(
+                    Resources.
+                        CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_name___0____Try_one_of_the_following_,
+                    objectName);
+                foreach (var validHandler in handlers)
+                {
+                    WriteLine(validHandler.Name);
+                }
+
+                return false;
+            }
+            AnnotationsExcludeObjects.Add(handler);
             return true;
         }
+
 
         // Refinement
         public static readonly Argument ARG_REFINE_MIN_PEPTIDES = new RefineArgument(@"refine-min-peptides", INT_VALUE,
@@ -1059,9 +1086,18 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_ANNOTATIONS_FILE = new DocArgument(@"exp-annotations-file", PATH_TO_CSV,
             (c, p) => c.AnnotationsFile = p.ValueFullPath){WrapValue = true};
 
+        public static readonly Argument ARG_ANNOTATIONS_EXCLUDE_OBJECTS =
+            new DocArgument(@"exp-annotations-exclude-object", OBJECT_NAME_VALUE,
+                (c, p) => c.ParseExcludeObject(p)){WrapValue = true};
+        public static readonly Argument ARG_ANNOTATIONS_EXCLUDE_PROPERTIES =
+            new DocArgument(@"exp-annotations-exclude-property", OBJECT_NAME_VALUE,
+                    (c, p) => c.ParseExcludeObject(p))
+                { WrapValue = true };
+
         private static readonly ArgumentGroup GROUP_OTHER_FILE_TYPES = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_OTHER_FILE_TYPES, false, 
             ARG_SPECTRAL_LIBRARY_FILE, ARG_MPROPHET_FEATURES_FILE, ARG_MPROPHET_FEATURES_BEST_SCORING_PEAKS, ARG_MPROPHET_FEATURES_TARGETS_ONLY, 
-            ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES, ARG_ANNOTATIONS_FILE
+            ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES, ARG_ANNOTATIONS_FILE, ARG_ANNOTATIONS_FILE, ARG_ANNOTATIONS_EXCLUDE_OBJECTS, 
+            ARG_ANNOTATIONS_EXCLUDE_PROPERTIES
         );
 
         public string SpecLibFile { get; private set; }
@@ -1080,7 +1116,10 @@ namespace pwiz.Skyline
 
         public bool ExportingAnnotations { get { return !string.IsNullOrEmpty(AnnotationsFile); } }
 
-        public List<IPeakFeatureCalculator> MProphetExcludeScores { get; private set; }
+        public List<ElementHandler> AnnotationsExcludeObjects { get; private set; }
+
+
+    public List<IPeakFeatureCalculator> MProphetExcludeScores { get; private set; }
 
         // For publishing the document to Panorama
         public static readonly Argument ARG_PANORAMA_SERVER = new DocArgument(@"panorama-server", SERVER_URL_VALUE,
@@ -2193,6 +2232,7 @@ namespace pwiz.Skyline
             SharedFileType = ShareType.DEFAULT;
 
             MProphetExcludeScores = new List<IPeakFeatureCalculator>();
+            AnnotationsExcludeObjects = new List<ElementHandler>();
 
             ImportBeforeDate = null;
             ImportOnOrAfterDate = null;
@@ -2224,10 +2264,6 @@ namespace pwiz.Skyline
             }
         }
 
-        private bool ParseAnnotataionFeatures(IEnumerable<string> features)
-        {
-            return true;
-        }
         private bool ParseArgsInternal(IEnumerable<string> args)
         {
             _seenArguments.Clear();
