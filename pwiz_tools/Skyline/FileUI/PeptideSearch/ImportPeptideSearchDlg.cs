@@ -485,9 +485,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     {
                         _pagesToSkip.Clear();
 
-                        if (!BuildPepSearchLibControl.ValidateCutoffScoreText())
+                        if (!BuildPepSearchLibControl.ValidateCutoffScore())
                         {
-                            MessageDlg.Show(this, Resources.ImportPeptideSearchDlg_NextPage_Invalid_cutoff_score);
                             return;
                         }
                         ImportPeptideSearch.IsDDASearch = BuildPepSearchLibControl.PerformDDASearch;
