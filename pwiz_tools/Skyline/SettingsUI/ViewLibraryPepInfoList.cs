@@ -29,25 +29,6 @@ using Resources = pwiz.Skyline.Properties.Resources;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    // Workaround for missing String.Contains(String, StringComparison)
-    // cf. https://learn.microsoft.com/en-us/dotnet/api/
-    // system.string.contains?view=netframework-4.7.2#system-string-contains(system-string-system-stringcomparison)
-    // Remove this if ever moving to .NET Core!
-    public static class StringExtensions
-    {
-        public static bool Contains(this String str, String substring,
-                                    StringComparison comp)
-        {
-            if (substring == null)
-                throw new ArgumentNullException("substring",
-                                             "substring cannot be null.");
-            else if (!Enum.IsDefined(typeof(StringComparison), comp))
-                throw new ArgumentException("comp is not a member of StringComparison",
-                                         "comp");
-
-            return str.IndexOf(substring, comp) >= 0;
-        }
-    }
 
     public class ViewLibraryPepInfoList : AbstractReadOnlyList<ViewLibraryPepInfo>
     {
@@ -288,10 +269,9 @@ namespace pwiz.Skyline.SettingsUI
             var indexedItems = _allEntries.Zip(orderedList, (item, i) => Tuple.Create(item, i));
 
             var matches = indexedItems.Where(item => GetStringValue(_selectedFilterCategory, item.Item1)
-                .Contains(filterText, StringComparison.OrdinalIgnoreCase));
+                .IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0);
             var indices = matches.Select(item => item.Item2);
             return indices.ToList();
-
         }
 
         /// <summary>
@@ -313,8 +293,18 @@ namespace pwiz.Skyline.SettingsUI
             // We have to deal with the UnmodifiedTargetText separately from the adduct because the
             // adduct has special sorting which is different than the way adduct.ToString() would sort.
 
-            // Find the indices of entries that have a field that contain the search term
-            var filteredIndices = ContainsSearchByProperty(filterText);
+            List<int> filteredIndices;
+            // For strings starting in "*", find the indices of entries that have a field
+            // that contain the search term
+            if(filterText.StartsWith("*"))
+            {
+                var _filterText = filterText.Substring(1);
+                filteredIndices = ContainsSearchByProperty(_filterText);
+            }
+            // Otherwise, find the indices of entries that have a field that could match the search term
+            // if something was appended to it 
+            else
+                filteredIndices = PrefixSearchByProperty(filterText);
 
             // Special filtering for numeric properties
             if (double.TryParse(filterText, NumberStyles.Any, CultureInfo.CurrentCulture, out var result) && _continuousFields.Contains(_selectedFilterCategory))
@@ -337,10 +327,11 @@ namespace pwiz.Skyline.SettingsUI
                     info => string.Compare(info.UnmodifiedTargetText, 0, filterText, 0,
                         info.UnmodifiedTargetText.Length,
                         StringComparison.OrdinalIgnoreCase));
+
                 // Return the elements from the range whose DisplayText actually matches the filter text.
                 return ImmutableList.ValueOf(new RangeList(range).Where(i => _allEntries[i].DisplayText
-                    .Contains(filterText, StringComparison.OrdinalIgnoreCase)));
-                    //.StartsWith(filterText, StringComparison.OrdinalIgnoreCase)));
+                    //.IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0));
+                    .StartsWith(filterText, StringComparison.OrdinalIgnoreCase)));
             }
             // Return the indices of the matches sorted alphabetically by display text
             return ImmutableList.ValueOf(filteredIndices.OrderBy(info => info));
