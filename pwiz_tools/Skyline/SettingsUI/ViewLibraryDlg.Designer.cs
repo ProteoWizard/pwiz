@@ -53,8 +53,10 @@ namespace pwiz.Skyline.SettingsUI
             this.PeptideLabel = new System.Windows.Forms.Label();
             this.textPeptide = new System.Windows.Forms.TextBox();
             this.GraphPanel = new System.Windows.Forms.Panel();
-            this.msGraphExtension1 = new pwiz.Skyline.Controls.Graphs.MsGraphExtension();
+            this.msGraphExtension1 = new MsGraphExtension();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.specialionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ionTypesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.btnAIons = new System.Windows.Forms.ToolStripButton();
             this.btnBIons = new System.Windows.Forms.ToolStripButton();
             this.btnCIons = new System.Windows.Forms.ToolStripButton();
@@ -81,8 +83,6 @@ namespace pwiz.Skyline.SettingsUI
             this.btnAdd = new System.Windows.Forms.Button();
             this.btnAddAll = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
-            this.specialionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.ionTypesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ViewLibraryPanel = new System.Windows.Forms.Panel();
             this.LibraryLabel = new System.Windows.Forms.Label();
             this.contextMenuSpectrum = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -296,14 +296,12 @@ namespace pwiz.Skyline.SettingsUI
             // 
             resources.ApplyResources(this.msGraphExtension1, "msGraphExtension1");
             this.msGraphExtension1.Name = "msGraphExtension1";
-            this.msGraphExtension1.PropertiesVisible = true;
             this.msGraphExtension1.PropertySheetVisibilityPropName = "ViewLibraryPropertiesVisible";
             // 
             // toolStrip1
             // 
             resources.ApplyResources(this.toolStrip1, "toolStrip1");
             this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.btnAIons,
             this.btnBIons,
@@ -518,19 +516,6 @@ namespace pwiz.Skyline.SettingsUI
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
-            // specialionsContextMenuItem
-            // 
-            this.specialionsContextMenuItem.CheckOnClick = true;
-            this.specialionsContextMenuItem.Name = "specialionsContextMenuItem";
-            resources.ApplyResources(this.specialionsContextMenuItem, "specialionsContextMenuItem");
-            this.specialionsContextMenuItem.Click += new System.EventHandler(this.specialionsContextMenuItem_Click);
-            // 
-            // ionTypesContextMenuItem
-            // 
-            this.ionTypesContextMenuItem.Name = "ionTypesContextMenuItem";
-            resources.ApplyResources(this.ionTypesContextMenuItem, "ionTypesContextMenuItem");
-            this.ionTypesContextMenuItem.DropDownOpening += new System.EventHandler(this.ionTypeMenuItem_DropDownOpening);
-            // 
             // ViewLibraryPanel
             // 
             this.ViewLibraryPanel.Controls.Add(this.splitMain);
@@ -544,8 +529,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // contextMenuSpectrum
             // 
-            this.contextMenuSpectrum.ImageScalingSize = new System.Drawing.Size(20, 20);
-            this.contextMenuSpectrum.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.contextMenuSpectrum.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { 
             this.ionTypesContextMenuItem,
             this.specialionsContextMenuItem,
             this.fragmentionsContextMenuItem,
@@ -570,6 +554,15 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator27});
             this.contextMenuSpectrum.Name = "contextMenuSpectrum";
             resources.ApplyResources(this.contextMenuSpectrum, "contextMenuSpectrum");
+
+            // 
+            // ionTypesContextMenuItem
+            // 
+            this.ionTypesContextMenuItem.Name = "ionTypesContextMenuItem";
+            resources.ApplyResources(this.ionTypesContextMenuItem, "ionTypesContextMenuItem");
+            this.ionTypesContextMenuItem.DropDownOpening += new System.EventHandler(this.ionTypeMenuItem_DropDownOpening);
+
+
             // 
             // fragmentionsContextMenuItem
             // 
@@ -583,6 +576,15 @@ namespace pwiz.Skyline.SettingsUI
             this.precursorIonContextMenuItem.Name = "precursorIonContextMenuItem";
             resources.ApplyResources(this.precursorIonContextMenuItem, "precursorIonContextMenuItem");
             this.precursorIonContextMenuItem.Click += new System.EventHandler(this.precursorIonContextMenuItem_Click);
+            
+            // 
+            // specialionsContextMenuItem
+            // 
+            this.specialionsContextMenuItem.CheckOnClick = true;
+            this.specialionsContextMenuItem.Name = "specialionsContextMenuItem";
+            resources.ApplyResources(this.specialionsContextMenuItem, "specialionsContextMenuItem");
+            this.specialionsContextMenuItem.Click += new System.EventHandler(this.specialionsContextMenuItem_Click);
+
             // 
             // toolStripSeparator11
             // 
