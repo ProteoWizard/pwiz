@@ -829,7 +829,8 @@ namespace pwiz.Skyline
             if (commandArgs.ExportingAnnotations)
             {
                 if (!ExportAnnotations(commandArgs.AnnotationsFile, 
-                        new List<ElementHandler>(commandArgs.AnnotationsExcludeObjects)))
+                        new List<ElementHandler>(commandArgs.AnnotationsExcludeObjects),
+                        new List<string>(commandArgs.AnnotationsExcludeProperties)))
                 {
                     return false;
                 }
@@ -3226,8 +3227,9 @@ namespace pwiz.Skyline
         /// </summary>
         /// <param name="annotationsFile">File path to export the annotations to</param>
         /// <param name="excludeHandlers">List of element handlers to exclude from the export</param>
+        /// <param name="excludeProperties">List of properties to exclude from the export</param>
         /// <returns>True upon successful import, false upon error</returns>
-        public bool ExportAnnotations(string annotationsFile, List<ElementHandler> excludeHandlers)
+        public bool ExportAnnotations(string annotationsFile, List<ElementHandler> excludeHandlers, IEnumerable<string> excludeProperties)
         {
             var dataSchema = SkylineDataSchema.MemoryDataSchema(Document, DataSchemaLocalizer.INVARIANT);
             var allHandlers = ElementHandler.GetElementHandlers(dataSchema);
@@ -3237,13 +3239,18 @@ namespace pwiz.Skyline
                 
                 using (var fs = new FileSaver(annotationsFile))
                 {
-
+                    // Drop handlers specified by the user
+                    var selectedHandlers = allHandlers.Where(c => 
+                            excludeHandlers.IndexOf(c) < 0). 
+                        Select(handler => handler.Name);
+                    // Drop properties specified by the user
+                    var selectedProperties = allHandlers.SelectMany(
+                        handler => handler.Properties.Select(pd => pd.Name)).Distinct();
                     // This is repeated from ExportAnnotationsDlg, so consider
                     // centralizing in the future
                     var settings = ExportAnnotationSettings.EMPTY
-                        .ChangeElementTypes(allHandlers.
-                            Where(c => excludeHandlers.IndexOf(c) < 0). // Drop handlers specified by the user
-                            Select(handler => handler.Name));
+                        .ChangeElementTypes(selectedHandlers)
+                        .ChangePropertyNames(selectedProperties);
                     documentAnnotations.WriteAnnotationsToFile(CancellationToken.None, settings, annotationsFile);
                     fs.Commit();
                 }
