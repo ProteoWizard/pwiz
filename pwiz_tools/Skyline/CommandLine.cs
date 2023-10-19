@@ -831,7 +831,8 @@ namespace pwiz.Skyline
                 if (!ExportAnnotations(commandArgs.AnnotationsFile, 
                         new List<ElementHandler>(commandArgs.AnnotationsExcludeObjects),
                         new List<string>(commandArgs.AnnotationsExcludeProperties), 
-                        commandArgs.AnnotationsRemoveBlankRows))
+                        commandArgs.AnnotationsRemoveBlankRows,
+                        commandArgs.AnnotationsSelectedNames))
                 {
                     return false;
                 }
@@ -3230,8 +3231,9 @@ namespace pwiz.Skyline
         /// <param name="excludeHandlers">List of element handlers to exclude from the export</param>
         /// <param name="excludeProperties">List of properties to exclude from the export</param>
         /// <param name="removeBlankRows">Should blank rows be removed from the export</param>
+        /// <param name="selectedAnnotationNames">Annotation names</param>
         /// <returns>True upon successful import, false upon error</returns>
-        public bool ExportAnnotations(string annotationsFile, List<ElementHandler> excludeHandlers, IEnumerable<string> excludeProperties, bool removeBlankRows)
+        public bool ExportAnnotations(string annotationsFile, List<ElementHandler> excludeHandlers, IEnumerable<string> excludeProperties, bool removeBlankRows, IEnumerable<string> selectedAnnotationNames)
         {
             var dataSchema = SkylineDataSchema.MemoryDataSchema(Document, DataSchemaLocalizer.INVARIANT);
             var allHandlers = ElementHandler.GetElementHandlers(dataSchema);
@@ -3253,7 +3255,8 @@ namespace pwiz.Skyline
                     var settings = ExportAnnotationSettings.EMPTY
                         .ChangeElementTypes(selectedHandlers)
                         .ChangePropertyNames(selectedProperties)
-                        .ChangeRemoveBlankRows(removeBlankRows);
+                        .ChangeRemoveBlankRows(removeBlankRows)
+                        .ChangeAnnotationNames(selectedAnnotationNames);
                     documentAnnotations.WriteAnnotationsToFile(CancellationToken.None, settings, annotationsFile);
                     fs.Commit();
                 }

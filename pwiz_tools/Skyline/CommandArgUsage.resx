@@ -961,7 +961,13 @@ greater peak area.</value>
   <data name="_exp_annotations_exclude_property" xml:space="preserve">
     <value>Use to exclude a particular property by name from the exported file. Names can be found in the user interface. This argument may be used multiple times to exclude multiple properties. Requires the --exp-annotations-file argument.</value>
   </data>
+  <data name="CommandArgs_ANNOTATION_NAME_VALUE" xml:space="preserve">
+    <value>&lt;annotation name&gt;</value>
+  </data>
   <data name="_exp_annotations_remove_blank_rows" xml:space="preserve">
     <value>Remove blank rows from the exported annotations. Requires the --exp-annotations-file argument.</value>
+  </data>
+  <data name="_exp_annotations_select_name" xml:space="preserve">
+    <value>Export this annotation. This argument can be used multiple times to select multiple annotations. Requires to --exp-annotations-file argument.</value>
   </data>
 </root>

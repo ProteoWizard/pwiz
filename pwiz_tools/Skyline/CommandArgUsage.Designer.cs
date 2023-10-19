@@ -277,6 +277,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Export this annotation. This argument can be used multiple times to select multiple annotations. Requires to --exp-annotations-file argument..
+        /// </summary>
+        internal static string _exp_annotations_select_name {
+            get {
+                return ResourceManager.GetString("_exp_annotations_select_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Dwell time per transition. This option is required for unscheduled transition lists..
         /// </summary>
         internal static string _exp_dwell_time {
@@ -1988,6 +1997,15 @@ namespace pwiz.Skyline {
         internal static string CommandArgGroup_ToString_Description {
             get {
                 return ResourceManager.GetString("CommandArgGroup_ToString_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;annotation name&gt;.
+        /// </summary>
+        internal static string CommandArgs_ANNOTATION_NAME_VALUE {
+            get {
+                return ResourceManager.GetString("CommandArgs_ANNOTATION_NAME_VALUE", resourceCulture);
             }
         }
         

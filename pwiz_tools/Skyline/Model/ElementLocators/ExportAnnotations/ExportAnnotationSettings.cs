@@ -16,6 +16,7 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
             AnnotationNames = ImmutableList<string>.EMPTY
         };
 
+
         public static ExportAnnotationSettings AllAnnotations(SrmDocument document)
         {
             return EMPTY.ChangeElementTypes(ElementHandler
