@@ -268,6 +268,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Remove blank rows from the exported annotations. Requires the --exp-annotations-file argument..
+        /// </summary>
+        internal static string _exp_annotations_remove_blank_rows {
+            get {
+                return ResourceManager.GetString("_exp_annotations_remove_blank_rows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Dwell time per transition. This option is required for unscheduled transition lists..
         /// </summary>
         internal static string _exp_dwell_time {

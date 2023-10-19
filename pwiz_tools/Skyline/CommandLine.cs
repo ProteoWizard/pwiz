@@ -830,7 +830,8 @@ namespace pwiz.Skyline
             {
                 if (!ExportAnnotations(commandArgs.AnnotationsFile, 
                         new List<ElementHandler>(commandArgs.AnnotationsExcludeObjects),
-                        new List<string>(commandArgs.AnnotationsExcludeProperties)))
+                        new List<string>(commandArgs.AnnotationsExcludeProperties), 
+                        commandArgs.AnnotationsRemoveBlankRows))
                 {
                     return false;
                 }
@@ -3228,8 +3229,9 @@ namespace pwiz.Skyline
         /// <param name="annotationsFile">File path to export the annotations to</param>
         /// <param name="excludeHandlers">List of element handlers to exclude from the export</param>
         /// <param name="excludeProperties">List of properties to exclude from the export</param>
+        /// <param name="removeBlankRows">Should blank rows be removed from the export</param>
         /// <returns>True upon successful import, false upon error</returns>
-        public bool ExportAnnotations(string annotationsFile, List<ElementHandler> excludeHandlers, IEnumerable<string> excludeProperties)
+        public bool ExportAnnotations(string annotationsFile, List<ElementHandler> excludeHandlers, IEnumerable<string> excludeProperties, bool removeBlankRows)
         {
             var dataSchema = SkylineDataSchema.MemoryDataSchema(Document, DataSchemaLocalizer.INVARIANT);
             var allHandlers = ElementHandler.GetElementHandlers(dataSchema);
@@ -3250,7 +3252,8 @@ namespace pwiz.Skyline
                     // centralizing in the future
                     var settings = ExportAnnotationSettings.EMPTY
                         .ChangeElementTypes(selectedHandlers)
-                        .ChangePropertyNames(selectedProperties);
+                        .ChangePropertyNames(selectedProperties)
+                        .ChangeRemoveBlankRows(removeBlankRows);
                     documentAnnotations.WriteAnnotationsToFile(CancellationToken.None, settings, annotationsFile);
                     fs.Commit();
                 }

@@ -1126,18 +1126,19 @@ namespace pwiz.Skyline
                 (c, p) => c.ParseExcludeFeature(p, c.MProphetExcludeScores)){WrapValue = true};
         public static readonly Argument ARG_ANNOTATIONS_FILE = new DocArgument(@"exp-annotations-file", PATH_TO_CSV,
             (c, p) => c.AnnotationsFile = p.ValueFullPath){WrapValue = true};
-
         public static readonly Argument ARG_ANNOTATIONS_EXCLUDE_OBJECTS =
             new DocArgument(@"exp-annotations-exclude-object", OBJECT_NAME_VALUE,
                 (c, p) => c.ParseExcludeObject(p.Value)){WrapValue = true};
         public static readonly Argument ARG_ANNOTATIONS_EXCLUDE_PROPERTIES =
             new DocArgument(@"exp-annotations-exclude-property", PROPERTY_NAME_VALUE,
                 (c, p) => c.ParseExcludeProperty(p.Value)){WrapValue = true};
+        public static readonly Argument ARG_ANNOTATIONS_REMOVE_BLANK_ROWS =
+            new DocArgument(@"exp-annotations-remove-blank-rows", (c, p) => c.AnnotationsRemoveBlankRows = true);
 
         private static readonly ArgumentGroup GROUP_OTHER_FILE_TYPES = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_OTHER_FILE_TYPES, false, 
             ARG_SPECTRAL_LIBRARY_FILE, ARG_MPROPHET_FEATURES_FILE, ARG_MPROPHET_FEATURES_BEST_SCORING_PEAKS, ARG_MPROPHET_FEATURES_TARGETS_ONLY, 
             ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES, ARG_ANNOTATIONS_FILE, ARG_ANNOTATIONS_FILE, ARG_ANNOTATIONS_EXCLUDE_OBJECTS, 
-            ARG_ANNOTATIONS_EXCLUDE_PROPERTIES
+            ARG_ANNOTATIONS_EXCLUDE_PROPERTIES, ARG_ANNOTATIONS_REMOVE_BLANK_ROWS
         );
 
         public string SpecLibFile { get; private set; }
@@ -1159,6 +1160,8 @@ namespace pwiz.Skyline
         public List<ElementHandler> AnnotationsExcludeObjects { get; private set; }
 
         public List<string> AnnotationsExcludeProperties { get; private set; }
+
+        public bool AnnotationsRemoveBlankRows { get; private set; }
 
 
         public List<IPeakFeatureCalculator> MProphetExcludeScores { get; private set; }

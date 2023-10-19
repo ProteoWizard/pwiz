@@ -734,7 +734,8 @@ namespace pwiz.SkylineTestData
             var exportPath = TestFilesDir.GetTestPath("out.csv");
             var documentWithAnnotations = TestFilesDir.GetTestPath("small_molecule_with_annotations.sky");
             var expectedAnnotationsFiltered = TestFilesDir.GetTestPath("expected_annotations_filtered.csv");
-            var emptyAnnotations = TestFilesDir.GetTestPath("empty_annotations.csv");
+            var expectedAnnotationsEmpty = TestFilesDir.GetTestPath("empty_annotations.csv");
+            var expectedAnnotationsNoBlankRows = TestFilesDir.GetTestPath("expected_annotations_no_blank_rows.csv");
             const string newDocumentName = "new.sky";
             const string invalidName = "-la";
 
@@ -744,8 +745,7 @@ namespace pwiz.SkylineTestData
                 "--exp-annotations-file=" + exportPath, // Export annotations
                 "--exp-annotations-exclude-object=" + invalidName // Test specifying an invalid object name
             );
-            CheckRunCommandOutputContains(string.Format(Resources.
-                    CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_name___0____Try_one_of_the_following_,
+            CheckRunCommandOutputContains(string.Format(Resources.CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_name___0____Try_one_of_the_following_,
                 invalidName), output);
             // Test error (invalid exclude-properties name)
             output = RunCommand("--new=" + newDocumentName, // Create a document
@@ -755,23 +755,30 @@ namespace pwiz.SkylineTestData
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandArgs_ParseExcludeProperty_Error__Attempting_to_exclude_an_unknown_property__0___Try_one_of_the_following_,
                 invalidName), output);
-            AssertEx.FileEquals(emptyAnnotations, exportPath);
-            // Test export
+            // Test export with new document
             output = RunCommand("--new=" + newDocumentName, // Create a document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
                 "--exp-annotations-file=" + exportPath // Export annotations
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, exportPath), output);
-            // Test export with object types and properties excluded
+            AssertEx.FileEquals(expectedAnnotationsEmpty, exportPath);
+            // Test export with a document with annotations, with some object types and properties excluded
             output = RunCommand("--in=" + documentWithAnnotations, // Load a document that already contains annotations
                 "--exp-annotations-file=" + exportPath, // Export annotations
                 "--exp-annotations-exclude-object=" + "MoleculeGroup", // Exclude "MoleculeGroup" object type
                 "--exp-annotations-exclude-object=" + "Transition", // Exclude "Transition" object type
-                "--exp-annotations-exclude-property=" + "AttributeGroupId", // Exclude "AttributeGroupId property
-                "--exp-annotations-exclude-property=" + "Note" // Exclude "AttributeGroupId property
+                "--exp-annotations-exclude-property=" + "AttributeGroupId", // Exclude "AttributeGroupId" property
+                "--exp-annotations-exclude-property=" + "Note" // Exclude "AttributeGroupId" property
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, exportPath), output);
             AssertEx.FileEquals(expectedAnnotationsFiltered, exportPath);
+            // Test export with blank rows excluded
+            output = RunCommand("--in=" + documentWithAnnotations, // Load a document that already contains annotations
+                "--exp-annotations-file=" + exportPath, // Export annotations
+                "--exp-annotations-remove-blank-rows" // Remove blank rows
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, exportPath), output);
+            AssertEx.FileEquals(expectedAnnotationsNoBlankRows, exportPath);
         }
 
         private static void CheckRefSpectraAll(IList<DbRefSpectra> refSpectra)
