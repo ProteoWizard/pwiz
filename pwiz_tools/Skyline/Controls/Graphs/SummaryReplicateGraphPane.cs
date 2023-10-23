@@ -178,7 +178,6 @@ namespace pwiz.Skyline.Controls.Graphs
             var document = GraphSummary.DocumentUIContainer.DocumentUI;
             if (!document.Settings.HasResults || iResult >= document.Settings.MeasuredResults.Chromatograms.Count)
                 return;
-            GraphSummary.StateProvider.SelectedResultsIndex = iResult;
 
             // Keep the currently selected replicate visible on the graph.
             // Achieve this by "scrolling" the axis into view.
@@ -196,7 +195,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     XAxis.Scale.Min--;
                 }
             }
-
+            // This propagates the change to synchronized zooming panels,
+            // and therefore must happen after the axis shift
+            GraphSummary.StateProvider.SelectedResultsIndex = iResult;
             GraphSummary.Focus();
         }
 

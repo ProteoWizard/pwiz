@@ -2710,6 +2710,9 @@ namespace pwiz.Skyline
                             focusStart.Focus();
                     }
                 }
+                // Propagate the change to all graphs
+                SynchronizeSummaryZooming();
+
             }
         }
 
