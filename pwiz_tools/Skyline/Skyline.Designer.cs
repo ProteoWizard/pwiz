@@ -1840,7 +1840,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator49,
             this.exportReportMenuItem,
             this.toolStripSeparator50,
-            this.eSPFeaturesMenuItem,
+            //this.eSPFeaturesMenuItem, this menu item has been removed
             this.exportSpectralLibraryMenuItem,
             this.chromatogramsToolStripMenuItem,
             this.mProphetFeaturesMenuItem,
