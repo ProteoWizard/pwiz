@@ -65,6 +65,7 @@ namespace pwiz.Skyline
         public static readonly Func<string> PATH_TO_TSV = () => GetPathToFile(TextUtil.EXT_TSV);
         public static readonly Func<string> PATH_TO_IRTDB = () => GetPathToFile(IrtDb.EXT);
         public static readonly Func<string> PATH_TO_BLIB = () => GetPathToFile(BiblioSpecLiteSpec.EXT);
+        public static readonly Func<string> PATH_TO_XML = () => GetPathToFile(DataSourceUtil.EXT_XML);
         public static readonly Func<string> PATH_TO_IMSDB = () => GetPathToFile(IonMobilityDb.EXT);
         public static readonly Func<string> PATH_TO_REPORT = () => GetPathToFile(ReportSpecList.EXT_REPORTS);
         public static readonly Func<string> PATH_TO_INSTALL = () => GetPathToFile(ToolDescription.EXT_INSTALL);
@@ -104,7 +105,7 @@ namespace pwiz.Skyline
         public static readonly HashSet<Func<string>> PATH_TYPE_VALUES = new HashSet<Func<string>>
         {
             PATH_TO_DOCUMENT, PATH_TO_FILE, PATH_TO_FOLDER, PATH_TO_ZIP, PATH_TO_REPORT, PATH_TO_TSV, PATH_TO_IMSDB,
-            PATH_TO_INSTALL, PATH_TO_CSV, PATH_TO_IRTDB, PATH_TO_BLIB
+            PATH_TO_INSTALL, PATH_TO_CSV, PATH_TO_IRTDB, PATH_TO_BLIB, PATH_TO_XML
         };
 
         public static readonly HashSet<Func<string>> STRING_TYPE_VALUES = new HashSet<Func<string>>(new[]
@@ -816,6 +817,52 @@ namespace pwiz.Skyline
             return true;
         }
 
+        private bool ParseAnnotationTargets(string targetName)
+        {
+            var ValidAnnotationTargets = new[]
+            {
+                AnnotationDef.AnnotationTarget.protein,
+                AnnotationDef.AnnotationTarget.peptide,
+                AnnotationDef.AnnotationTarget.precursor,
+                AnnotationDef.AnnotationTarget.transition,
+                AnnotationDef.AnnotationTarget.replicate,
+                AnnotationDef.AnnotationTarget.precursor_result,
+                AnnotationDef.AnnotationTarget.transition_result,
+            };
+            var target = ValidAnnotationTargets.FirstOrDefault(c => Equals(c.ToString(), targetName));
+            if (target == 0)
+            {
+                WriteLine(Resources.CommandArgs_ParseAnnotationTargets_Error__Attempting_to_exclude_an_unknown_annotation_target__0___Try_one_of_the_following_, targetName);
+                foreach (var validTarget in ValidAnnotationTargets)
+                {
+                    WriteLine(validTarget.ToString());
+                }
+
+                return false;
+            }
+
+            AddAnnotationsTargets.Add(target);
+            return true;
+        }
+
+        private bool ParseAnnotationTypes(string typeName)
+        {
+            var validAnnotationTypes = ListPropertyType.ListPropertyTypes().ToList();
+            var type = validAnnotationTypes.FirstOrDefault(c => Equals(c.ToString(), typeName));
+            if (type == null)
+            {
+                WriteLine(Resources.CommandArgs_ParseAnnotationTypes_Error__Attempting_to_exclude_an_unknown_annotation_type__0___Try_one_of_the_following_, typeName);
+                foreach (var validType in validAnnotationTypes)
+                {
+                    WriteLine(validType.ToString());
+                }
+
+                return false;
+            }
+
+            AddAnnotationsType = type;
+            return true;
+        }
         // Refinement
         public static readonly Argument ARG_REFINE_MIN_PEPTIDES = new RefineArgument(@"refine-min-peptides", INT_VALUE,
             (c, p) => c.Refinement.MinPeptidesPerProtein = p.ValueInt);
@@ -1066,6 +1113,42 @@ namespace pwiz.Skyline
         public bool MProphetTargetsOnly { get; private set; }
 
         public List<IPeakFeatureCalculator> MProphetExcludeScores { get; private set; }
+
+        // For defining annotations
+        public static readonly Argument ARG_ADD_ANNOTATIONS_FILE = new DocArgument(@"annotation-add-file",
+            PATH_TO_XML,
+            (c, p) => c.AddAnnotationsFile = p.ValueFullPath);
+        public static readonly Argument ARG_ADD_ANNOTATIONS_NAME = new DocArgument(@"annotation-add-name",
+            (c, p) => c.AddAnnotationsName = p.ValueFullPath);
+
+        private string[] array = ListPropertyType.ListPropertyTypes().Select(c => c.ToString()).ToArray();
+        public static readonly Argument ARG_ADD_ANNOTATIONS_TARGETS = new DocArgument(@"annotation-targets",
+            new[]
+            {
+                AnnotationDef.AnnotationTargetPluralName(AnnotationDef.AnnotationTarget.protein),
+                AnnotationDef.AnnotationTargetPluralName(AnnotationDef.AnnotationTarget.peptide),
+                AnnotationDef.AnnotationTargetPluralName(AnnotationDef.AnnotationTarget.precursor),
+                AnnotationDef.AnnotationTargetPluralName(AnnotationDef.AnnotationTarget.transition),
+                AnnotationDef.AnnotationTargetPluralName(AnnotationDef.AnnotationTarget.replicate),
+                AnnotationDef.AnnotationTargetPluralName(AnnotationDef.AnnotationTarget.precursor_result),
+                AnnotationDef.AnnotationTargetPluralName(AnnotationDef.AnnotationTarget.transition_result)
+            },
+            (c, p) => c.ParseAnnotationTargets(p.Value)){WrapValue = true};
+        public static readonly Argument ARG_ADD_ANNOTATIONS_TYPE = new DocArgument(@"annotation-type",
+            ListPropertyType.ListPropertyTypes().Select(c => c.ToString()).ToArray(),
+            (c, p) => c.ParseAnnotationTypes(p.Value));
+        public static readonly Argument ARG_ADD_ANNOTATIONS_VALUES = new DocArgument(@"annotation-values",
+            (c, p) => c.AddAnnotationsValues = p.ValueFullPath){WrapValue = true};
+
+        public static readonly ArgumentGroup GROUP_ADD_ANNOTATIONS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_ADD_ANNOTATIONS, false,
+            ARG_ADD_ANNOTATIONS_FILE, ARG_ADD_ANNOTATIONS_NAME, ARG_ADD_ANNOTATIONS_TARGETS, ARG_ADD_ANNOTATIONS_TYPE, ARG_ADD_ANNOTATIONS_VALUES);
+        public string AddAnnotationsFile { get; private set; }
+        public bool AddingAnnotationsFile { get { return !string.IsNullOrEmpty(AddAnnotationsFile); } }
+        public string AddAnnotationsName { get; private set; }
+        public List<AnnotationDef.AnnotationTarget> AddAnnotationsTargets { get; private set; }
+        public ListPropertyType AddAnnotationsType { get; private set; }
+        public string AddAnnotationsValues { get; private set; }
+
 
         // For publishing the document to Panorama
         public static readonly Argument ARG_PANORAMA_SERVER = new DocArgument(@"panorama-server", SERVER_URL_VALUE,
@@ -2082,6 +2165,7 @@ namespace pwiz.Skyline
                     GROUP_MINIMIZE_RESULTS,
                     GROUP_IMPORT_DOC,
                     GROUP_ANNOTATIONS,
+                    GROUP_ADD_ANNOTATIONS,
                     GROUP_FASTA,
                     GROUP_IMPORT_SEARCH,
                     GROUP_ASSOCIATE_PROTEINS,
@@ -2178,6 +2262,7 @@ namespace pwiz.Skyline
             SharedFileType = ShareType.DEFAULT;
 
             MProphetExcludeScores = new List<IPeakFeatureCalculator>();
+            AddAnnotationsTargets = new List<AnnotationDef.AnnotationTarget>();
 
             ImportBeforeDate = null;
             ImportOnOrAfterDate = null;

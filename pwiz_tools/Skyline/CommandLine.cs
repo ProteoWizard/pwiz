@@ -288,6 +288,19 @@ namespace pwiz.Skyline
                 }
             }
 
+            if (commandArgs.AddingAnnotationsFile)
+            {
+                if (!AddAnnotations(commandArgs.AddAnnotationsName, 
+                        commandArgs.AddAnnotationsFile, 
+                        commandArgs.AddAnnotationsTargets, 
+                        commandArgs.AddAnnotationsType,
+                        commandArgs.AddAnnotationsValues))
+                {
+                    
+                    return false;
+                }
+            }
+
             WaitForDocumentLoaded();
 
             if (_out.IsErrorReported)
@@ -2938,6 +2951,35 @@ namespace pwiz.Skyline
                 _out.WriteLine(Resources.Error___0_, x);
                 return false;
             }
+            return true;
+        }
+
+        /// <summary>
+        /// Add annotations defined by the user to the document
+        /// </summary>
+        /// <param name="name">Name of the annotations</param>
+        /// <param name="path">Path to the xml file containing the annotations</param>
+        /// <param name="targets">Which data types to apply the annotation to</param>
+        /// <param name="type">Type of annotation</param>
+        /// <returns>True upon successful</returns>
+        public bool AddAnnotations(string name, string path,
+            List<AnnotationDef.AnnotationTarget> targets, // Could this use Target Set instead? 
+            ListPropertyType type,
+            string value)
+        {
+            if (path != null)
+            {
+                // Read xml
+            }
+            var csvReader = new CsvFileReader(value);
+            var items = csvReader.ReadLine();
+            if (items == null)
+            {
+                _out.WriteLine(Resources.CommandLine_AddAnnotations_Error__Unable_to_read_values_file__0__);
+                return false;
+            }
+            var annotationDef = new AnnotationDef(name, AnnotationDef.AnnotationTargetSet.OfValues(targets), type, items);
+            Settings.Default.AnnotationDefList.SetValue(annotationDef);
             return true;
         }
 

@@ -79,6 +79,51 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Specify an annotation file to be added to the document..
+        /// </summary>
+        internal static string _annotation_add_file {
+            get {
+                return ResourceManager.GetString("_annotation_add_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name to give the annotation in an --annotation-add-file operation..
+        /// </summary>
+        internal static string _annotation_add_name {
+            get {
+                return ResourceManager.GetString("_annotation_add_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Data types to apply the annotation to in an --annotation-add-file operation. Defaults to replicate..
+        /// </summary>
+        internal static string _annotation_targets {
+            get {
+                return ResourceManager.GetString("_annotation_targets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Define the type of the annotation in an --annotation-add-file operation..
+        /// </summary>
+        internal static string _annotation_type {
+            get {
+                return ResourceManager.GetString("_annotation_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Define the values of the annotation in an --annotation-add-file operation..
+        /// </summary>
+        internal static string _annotation_values {
+            get {
+                return ResourceManager.GetString("_annotation_values", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Proteins that match the same set of peptides will be combined into a single target in the document..
         /// </summary>
         internal static string _associate_proteins_group_proteins {
@@ -2027,6 +2072,15 @@ namespace pwiz.Skyline {
         internal static string CommandArgs_FEATURE_NAME_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_FEATURE_NAME_VALUE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adding annotations.
+        /// </summary>
+        internal static string CommandArgs_GROUP_ADD_ANNOTATIONS {
+            get {
+                return ResourceManager.GetString("CommandArgs_GROUP_ADD_ANNOTATIONS", resourceCulture);
             }
         }
         

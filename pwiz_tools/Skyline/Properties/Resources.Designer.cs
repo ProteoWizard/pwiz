@@ -5009,6 +5009,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Attempting to exclude an unknown annotation target &apos;{0}&apos;. Try one of the following:.
+        /// </summary>
+        public static string CommandArgs_ParseAnnotationTargets_Error__Attempting_to_exclude_an_unknown_annotation_target__0___Try_one_of_the_following_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_ParseAnnotationTargets_Error__Attempting_to_exclude_an_unknown_annota" +
+                        "tion_target__0___Try_one_of_the_following_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Attempting to exclude an unknown annotation type &apos;{0}&apos;. Try one of the following:.
+        /// </summary>
+        public static string CommandArgs_ParseAnnotationTypes_Error__Attempting_to_exclude_an_unknown_annotation_type__0___Try_one_of_the_following_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_ParseAnnotationTypes_Error__Attempting_to_exclude_an_unknown_annotati" +
+                        "on_type__0___Try_one_of_the_following_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to     {0} or &apos;{1}&apos;.
         /// </summary>
         public static string CommandArgs_ParseArgsInternal______0__or___1__ {
@@ -5285,6 +5305,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argum" +
                         "ent__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Unable to read values file {0}..
+        /// </summary>
+        public static string CommandLine_AddAnnotations_Error__Unable_to_read_values_file__0__ {
+            get {
+                return ResourceManager.GetString("CommandLine_AddAnnotations_Error__Unable_to_read_values_file__0__", resourceCulture);
             }
         }
         

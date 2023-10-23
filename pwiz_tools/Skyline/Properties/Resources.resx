@@ -13911,4 +13911,13 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="CommandLine_ExportMProphetFeatures_Error__Failure_attempting_to_save_mProphet_features_file__0__" xml:space="preserve">
     <value>Error: Failure attempting to save mProphet features file {0}.</value>
   </data>
+  <data name="CommandArgs_ParseAnnotationTypes_Error__Attempting_to_exclude_an_unknown_annotation_type__0___Try_one_of_the_following_" xml:space="preserve">
+    <value>Error: Attempting to exclude an unknown annotation type '{0}'. Try one of the following:</value>
+  </data>
+  <data name="CommandArgs_ParseAnnotationTargets_Error__Attempting_to_exclude_an_unknown_annotation_target__0___Try_one_of_the_following_" xml:space="preserve">
+    <value>Error: Attempting to exclude an unknown annotation target '{0}'. Try one of the following:</value>
+  </data>
+  <data name="CommandLine_AddAnnotations_Error__Unable_to_read_values_file__0__" xml:space="preserve">
+	  <value>Error: Unable to read values file {0}.</value>
+  </data>
 </root>

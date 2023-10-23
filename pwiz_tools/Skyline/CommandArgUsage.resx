@@ -946,4 +946,22 @@ greater peak area.</value>
   <data name="_exp_mprophet_targets_only" xml:space="preserve">
     <value>Include feature scores only for targets. Requires the --exp-mprophet-file argument.</value>
   </data>
+  <data name="CommandArgs_GROUP_ADD_ANNOTATIONS" xml:space="preserve">
+    <value>Adding annotations</value>
+  </data>
+  <data name="_annotation_add_file" xml:space="preserve">
+    <value>Specify an annotation file to be added to the document.</value>
+  </data>
+  <data name="_annotation_add_name" xml:space="preserve">
+    <value>Name to give the annotation in an --annotation-add-file operation.</value>
+  </data>
+  <data name="_annotation_targets" xml:space="preserve">
+    <value>Data types to apply the annotation to in an --annotation-add-file operation. Defaults to replicate.</value>
+  </data>
+  <data name="_annotation_type" xml:space="preserve">
+    <value>Define the type of the annotation in an --annotation-add-file operation.</value>
+  </data>
+  <data name="_annotation_values" xml:space="preserve">
+    <value>Define the values of the annotation in an --annotation-add-file operation.</value>
+  </data>
 </root>

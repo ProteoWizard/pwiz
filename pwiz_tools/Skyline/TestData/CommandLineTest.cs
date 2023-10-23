@@ -742,6 +742,40 @@ namespace pwiz.SkylineTestData
         }
 
         [TestMethod]
+
+        public void ConsoleDefineAnnotationsTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleDefineAnnotationsTest.zip");
+            var annotationValuesFile = TestFilesDir.GetTestPath("Values.csv");
+            const string invalidValue = "-la";
+            const string annotationName = "Bioreplicate";
+            const string annotationType = "text";
+            // Test error (invalid annotation-targets value)
+            var output = RunCommand("--new=" + "new.sky", // Create a new document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--annotation-add=" + annotationName, // Name the annotation
+                "--annotation-targets=" + invalidValue, // Input an invalid target
+                "--annotation-type=" + annotationType, // Specify the type
+                "--annotation-values=" + annotationValuesFile // Specify the location of the values
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandArgs_ParseAnnotationTargets_Error__Attempting_to_exclude_an_unknown_annotation_target__0___Try_one_of_the_following_, invalidValue), output);
+            // Test error (invalid annotation-type value)
+            output = RunCommand("--new=" + "new.sky", // Create a new document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--annotation-add=" + annotationName, // Name the annotation
+                "--annotation-targets=" + invalidValue, // Input an invalid target
+                "--annotation-values=" + annotationValuesFile // Specify the location of the values
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandArgs_ParseAnnotationTypes_Error__Attempting_to_exclude_an_unknown_annotation_type__0___Try_one_of_the_following_, invalidValue), output);
+        }
+
+        private void TestDefineAnnotationCommand(string documentPath, string annotationName, string annotationTargets,
+            string annotationValuesFile, string outputMessage)
+        {
+
+        }
+
+        [TestMethod]
         public void ConsoleAddDecoysTest()
         {
             TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
