@@ -3260,7 +3260,9 @@ namespace pwiz.Skyline
                 {
                     foreach (var invalidAnnotationName in invalidAnnotationNames)
                     {
-                        _out.Write(Resources.CommandLine_ExportAnnotations_Error__Attempting_to_exclude_unknown_annotation_name__0__, invalidAnnotationName);
+                        _out.WriteLine(Resources
+                                .CommandLine_ExportAnnotations_Error__Attempting_to_exclude_unknown_annotation_name__0__,
+                            invalidAnnotationName);
                     }
                     // Suggest valid annotation names if they exist
                     if (allAnnotationNames.Any())

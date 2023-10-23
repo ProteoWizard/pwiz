@@ -5210,7 +5210,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: Attempting to exclude an unknown property {0}. Try one of the following:.
+        ///   Looks up a localized string similar to Error: Attempting to exclude an unknown property &apos;{0}&apos;. Try one of the following:.
         /// </summary>
         public static string CommandArgs_ParseExcludeProperty_Error__Attempting_to_exclude_an_unknown_property__0___Try_one_of_the_following_ {
             get {
@@ -5583,7 +5583,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: Attempting to exclude unknown annotation name {0}..
+        ///   Looks up a localized string similar to Error: Attempting to exclude an unknown annotation name &apos;{0}&apos;..
         /// </summary>
         public static string CommandLine_ExportAnnotations_Error__Attempting_to_exclude_unknown_annotation_name__0__ {
             get {

@@ -13921,12 +13921,12 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
     <value>Error: Attempting to exclude an unknown object name '{0}'. Try one of the following:</value>
   </data>
   <data name="CommandArgs_ParseExcludeProperty_Error__Attempting_to_exclude_an_unknown_property__0___Try_one_of_the_following_" xml:space="preserve">
-    <value>Error: Attempting to exclude an unknown property {0}. Try one of the following:</value>
-  </data>
-  <data name="CommandLine_ExportAnnotations_Error__Attempting_to_exclude_an_annotation_names_that_are_not_in_the_document_" xml:space="preserve">
-    <value>Error: Attempting to exclude an annotation names that are not in the document:</value>
+    <value>Error: Attempting to exclude an unknown property '{0}'. Try one of the following:</value>
   </data>
   <data name="CommandLine_ExportAnnotations_Try_one_of_the_following_" xml:space="preserve">
     <value>Try one of the following:</value>
+  </data>
+  <data name="CommandLine_ExportAnnotations_Error__Attempting_to_exclude_unknown_annotation_name__0__" xml:space="preserve">
+    <value>Error: Attempting to exclude an unknown annotation name '{0}'.</value>
   </data>
 </root>
