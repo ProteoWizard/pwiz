@@ -536,7 +536,7 @@ namespace pwiz.SkylineTestData
             TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
             string outPath = TestFilesDir.GetTestPath("Exported_test_report.csv");
-            
+
             // Import the first RAW file (or mzML for international)
             string rawPath = TestFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
                 ExtensionTestContext.ExtThermoRaw);

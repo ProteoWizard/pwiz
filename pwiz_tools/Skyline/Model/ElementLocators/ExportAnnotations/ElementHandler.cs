@@ -104,7 +104,6 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
                     new TransitionResultHandler(dataSchema)
             };
         }
-
     }
 
     public abstract class AbstractElementHandler<TSkylineObject> : ElementHandler where TSkylineObject : SkylineObject

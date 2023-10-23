@@ -88,6 +88,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreNotEqual(originalDocument, documentWithAnnotations);
             var propertiesCsv = TestContext.GetTestResultsPath("properties.csv");
             ExportProperties(propertiesCsv);
+
             // Reading back in the blank CSV file should obliterate the properties
             RunUI(()=>SkylineWindow.ImportAnnotations(blankPropertiesCsv));
             Assert.AreEqual(originalDocument, SkylineWindow.Document);
