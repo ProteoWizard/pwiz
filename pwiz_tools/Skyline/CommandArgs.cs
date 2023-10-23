@@ -118,7 +118,8 @@ namespace pwiz.Skyline
         public static readonly HashSet<Func<string>> STRING_TYPE_VALUES = new HashSet<Func<string>>(new[]
         {
             FEATURE_NAME_VALUE, REPORT_NAME_VALUE, PIPE_NAME_VALUE, REGEX_VALUE, SERVER_URL_VALUE, USERNAME_VALUE,
-            PASSWORD_VALUE, COMMAND_VALUE, COMMAND_ARGUMENTS_VALUE, PROGRAM_MACRO_VALUE, LABEL_VALUE, NAME_VALUE
+            PASSWORD_VALUE, COMMAND_VALUE, COMMAND_ARGUMENTS_VALUE, PROGRAM_MACRO_VALUE, LABEL_VALUE, NAME_VALUE, 
+            OBJECT_NAME_VALUE, PROPERTY_NAME_VALUE, ANNOTATION_NAME_VALUE
         }.Concat(PATH_TYPE_VALUES));
 
         private static void SetCulture(string cultureName)
@@ -880,6 +881,10 @@ namespace pwiz.Skyline
             return true;
         }
 
+        /// <summary>
+        /// Retrieve a list of all possible Element Handlers
+        /// </summary>
+        /// <returns>A list of Element handlers</returns>
         private static IList<ElementHandler> GetAllHandlers()
         {
             var memoryDocumentContainer = new MemoryDocumentContainer();
