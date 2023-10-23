@@ -646,7 +646,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 docEmpty = NewDocument();
                 line1 = BuildTestLine(imTypeIsDrift);
-                line1 = line1.Replace(caffeineFormula+"\t", caffeineFormulaUnicode + "\t"); // Test with unicode subscript numbers
+                if (imTypeIsDrift)
+                {
+                    // Nothing to do with imType, just want to alternate styles here
+                    line1 = line1.Replace(caffeineFormula+"\t", caffeineFormulaUnicode + "\t"); // Test with unicode subscript numbers
+                }
                 var expectedIM = imTypeIsDrift ? precursorDT : compensationVoltage;
                 double? expectedCV = imTypeIsDrift ? (double?)null : compensationVoltage;
                 var expectedTypeIM = imTypeIsDrift ? eIonMobilityUnits.drift_time_msec : eIonMobilityUnits.compensation_V;
