@@ -763,7 +763,7 @@ namespace pwiz.SkylineTestData
                 "--exp-annotations-file=" + exportPath, // Export annotations
                 "--exp-annotations-exclude-name=" + invalidName // Test specifying an invalid annotation name
             );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Error__Attempting_to_exclude_an_annotation_names_that_are_not_in_the_document_), output);
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Error__Attempting_to_exclude_unknown_annotation_name__0__), output);
             // Test export with new document (expecting just headers)
             output = RunCommand("--new=" + newDocumentName, // Create a document
                 "--overwrite", // Overwrite, as the file may already exist in the bin

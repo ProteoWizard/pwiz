@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Web;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
@@ -48,7 +49,6 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using static pwiz.Skyline.Model.Proteome.ProteinAssociation;
-using Thread = System.Threading.Thread;
 using Transition = pwiz.Skyline.Model.Transition;
 
 namespace pwiz.Skyline
@@ -882,16 +882,11 @@ namespace pwiz.Skyline
 
         private static IList<ElementHandler> GetAllHandlers()
         {
-            // Creating a new document is probably not the best way to do this
             var memoryDocumentContainer = new MemoryDocumentContainer();
             var document = new SrmDocument(SrmSettingsList.GetDefault());
             memoryDocumentContainer.SetDocument(document, memoryDocumentContainer.Document);
             var schema = SkylineDataSchema.MemoryDataSchema(memoryDocumentContainer.Document, DataSchemaLocalizer.INVARIANT);
-
-
             return ImmutableList.ValueOf(ElementHandler.GetElementHandlers(schema));
-
-
         }
 
         // Refinement
@@ -1157,6 +1152,8 @@ namespace pwiz.Skyline
 
         public bool MProphetTargetsOnly { get; private set; }
 
+        public List<IPeakFeatureCalculator> MProphetExcludeScores { get; private set; }
+
         public string AnnotationsFile { get; private set; }
 
         public bool ExportingAnnotations { get { return !string.IsNullOrEmpty(AnnotationsFile); } }
@@ -1168,9 +1165,6 @@ namespace pwiz.Skyline
         public bool AnnotationsRemoveBlankRows { get; private set; }
 
         public List<string> AnnotationsExcludeNames { get; private set; }
-
-
-        public List<IPeakFeatureCalculator> MProphetExcludeScores { get; private set; }
 
         // For publishing the document to Panorama
         public static readonly Argument ARG_PANORAMA_SERVER = new DocArgument(@"panorama-server", SERVER_URL_VALUE,

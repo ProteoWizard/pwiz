@@ -241,7 +241,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Exclude this annotation. This argument can be used multiple times to exclude multiple annotations. Requires to --exp-annotations-file argument..
+        ///   Looks up a localized string similar to Use to exclude a particular annotation by name from the exported file. This argument can be used multiple times to exclude multiple annotations. Requires the --exp-annotations-file argument..
         /// </summary>
         internal static string _exp_annotations_exclude_name {
             get {

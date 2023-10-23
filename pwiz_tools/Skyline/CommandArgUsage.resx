@@ -965,7 +965,7 @@ greater peak area.</value>
     <value>&lt;annotation name&gt;</value>
   </data>
   <data name="_exp_annotations_exclude_name" xml:space="preserve">
-    <value>Exclude this annotation. This argument can be used multiple times to exclude multiple annotations. Requires to --exp-annotations-file argument.</value>
+    <value> Use to exclude a particular annotation by name from the exported file. This argument can be used multiple times to exclude multiple annotations. Requires the --exp-annotations-file argument.</value>
   </data>
   <data name="_exp_annotations_remove_blank_rows" xml:space="preserve">
     <value>Remove blank rows from the exported annotations. Requires the --exp-annotations-file argument.</value>

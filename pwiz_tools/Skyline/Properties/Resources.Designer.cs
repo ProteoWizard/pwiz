@@ -5583,12 +5583,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: Attempting to exclude an annotation names that are not in the document:.
+        ///   Looks up a localized string similar to Error: Attempting to exclude unknown annotation name {0}..
         /// </summary>
-        public static string CommandLine_ExportAnnotations_Error__Attempting_to_exclude_an_annotation_names_that_are_not_in_the_document_ {
+        public static string CommandLine_ExportAnnotations_Error__Attempting_to_exclude_unknown_annotation_name__0__ {
             get {
-                return ResourceManager.GetString("CommandLine_ExportAnnotations_Error__Attempting_to_exclude_an_annotation_names_th" +
-                        "at_are_not_in_the_document_", resourceCulture);
+                return ResourceManager.GetString("CommandLine_ExportAnnotations_Error__Attempting_to_exclude_unknown_annotation_nam" +
+                        "e__0__", resourceCulture);
             }
         }
         
