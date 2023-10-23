@@ -141,6 +141,7 @@ namespace SkylineBatchTest
             var testClient = new TestClientJson();
             var folderJson = testClient.GetInfoForFolders(new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD),
                 TARGETED);
+            // TODO: Redesign this to set the TestClient on the remoteSourceForm and then call OpenFromPanorama on it
             var remoteDlg = ShowDialog<PanoramaDirectoryPicker>(() => OpenFromPanorama(VALID_SERVER, VALID_USER_NAME, VALID_PASSWORD, folderJson));
             WaitForConditionUI(9000, () => remoteDlg.IsLoaded);
             RunUI(() =>
@@ -152,8 +153,10 @@ namespace SkylineBatchTest
             WaitForClosedForm(remoteDlg);
             RunUI(() =>
             {
-                remoteSourceForm.textFolderUrl.Text = remoteDlg.SelectedPath;
-                Assert.AreEqual(remoteSourceForm.textFolderUrl.Text, TARGETED_FOLDER_LINK);
+                // TODO: Redesign this test to use more of the normal code path and avoid this copy-paste
+                var url = PanoramaFolderBrowser.GetSelectedUri(remoteDlg.FolderBrowser, true);
+                remoteSourceForm.textFolderUrl.Text = url;
+                Assert.AreEqual(TARGETED_FOLDER_LINK, remoteSourceForm.textFolderUrl.Text);
             });
             if (closeForm) CloseFormsInOrder(true,remoteSourceForm);
             WaitForClosedForm(remoteSourceForm);
@@ -176,6 +179,7 @@ namespace SkylineBatchTest
 
             var remoteSourceForm =
                 ShowDialog<RemoteSourceForm>(() => remoteFileControl.comboRemoteFileSource.SelectedItem = "<Add...>");
+            // WaitForConditionUI(10 * 1000, () => false);
             ChangeRemoteFileSource(remoteSourceForm, BRUDERER_SOURCE_NAME, BRUDERER_FOLDER_LINK, VALID_USER_NAME, VALID_PASSWORD);
 
             Assert.IsTrue(remoteFileControl.btnOpenFromPanorama.Visible);
@@ -189,7 +193,7 @@ namespace SkylineBatchTest
             RunUI(() =>
             {
                 Assert.AreEqual(name, remoteSourceForm.textName.Text, name);
-                Assert.AreEqual(url, remoteSourceForm.textFolderUrl.Text);
+                Assert.AreEqual(url, remoteSourceForm.textFolderUrl.Text.Replace("@", "%40"));
                 Assert.AreEqual(username ?? string.Empty, remoteSourceForm.textUserName.Text);
                 Assert.AreEqual(password ?? string.Empty, remoteSourceForm.textPassword.Text);
                 Assert.AreEqual(!encrypt, remoteSourceForm.checkBoxNoEncryption.Checked);
