@@ -732,9 +732,11 @@ namespace pwiz.SkylineTestData
         {
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleExportAnnotationsTest.zip");
             var exportPath = TestFilesDir.GetTestPath("out.csv");
-            var documentWithAnnotations = TestFilesDir.GetTestPath("small_molecule_with_annotations.sky");
-            var expectedAnnotationsFiltered = TestFilesDir.GetTestPath("expected_annotations_filtered.csv");
+            var documentWithAnnotations = TestFilesDir.GetTestPath("study9pilot_annotation_names.sky");
             var expectedAnnotationsEmpty = TestFilesDir.GetTestPath("empty_annotations.csv");
+            var expectedExcludeProperties = TestFilesDir.GetTestPath("expected_annotations_exclude_properties.csv");
+            var expectedExcludeObjects = TestFilesDir.GetTestPath("expected_annotations_exclude_objects.csv");
+            var expectedExcludeAnnotationNames = TestFilesDir.GetTestPath("expected_annotations_exclude_annotation_names.csv");
             var expectedAnnotationsNoBlankRows = TestFilesDir.GetTestPath("expected_annotations_no_blank_rows.csv");
             const string newDocumentName = "new.sky";
             const string invalidName = "-la";
@@ -755,23 +757,43 @@ namespace pwiz.SkylineTestData
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandArgs_ParseExcludeProperty_Error__Attempting_to_exclude_an_unknown_property__0___Try_one_of_the_following_,
                 invalidName), output);
-            // Test export with new document
+            // Test error (invalid exclude-name value)
+            output = RunCommand("--new=" + newDocumentName, // Create a document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--exp-annotations-file=" + exportPath, // Export annotations
+                "--exp-annotations-exclude-name=" + invalidName // Test specifying an invalid annotation name
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Error__Attempting_to_exclude_an_annotation_names_that_are_not_in_the_document_), output);
+            // Test export with new document (expecting just headers)
             output = RunCommand("--new=" + newDocumentName, // Create a document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
                 "--exp-annotations-file=" + exportPath // Export annotations
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, exportPath), output);
             AssertEx.FileEquals(expectedAnnotationsEmpty, exportPath);
-            // Test export with a document with annotations, with some object types and properties excluded
+            // Test export with some object types excluded
             output = RunCommand("--in=" + documentWithAnnotations, // Load a document that already contains annotations
                 "--exp-annotations-file=" + exportPath, // Export annotations
                 "--exp-annotations-exclude-object=" + "MoleculeGroup", // Exclude "MoleculeGroup" object type
-                "--exp-annotations-exclude-object=" + "Transition", // Exclude "Transition" object type
+                "--exp-annotations-exclude-object=" + "Transition" // Exclude "Transition" object type
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, exportPath), output);
+            AssertEx.FileEquals(expectedExcludeObjects, exportPath);
+            // Test export with some properties excluded
+            output = RunCommand("--in=" + documentWithAnnotations, // Load a document that already contains annotations
+                "--exp-annotations-file=" + exportPath, // Export annotations
                 "--exp-annotations-exclude-property=" + "AttributeGroupId", // Exclude "AttributeGroupId" property
                 "--exp-annotations-exclude-property=" + "Note" // Exclude "AttributeGroupId" property
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, exportPath), output);
-            AssertEx.FileEquals(expectedAnnotationsFiltered, exportPath);
+            AssertEx.FileEquals(expectedExcludeProperties, exportPath);
+            // Test export with some annotation names excluded
+            output = RunCommand("--in=" + documentWithAnnotations, // Load a document that already contains annotations
+                "--exp-annotations-file=" + exportPath, // Export annotations
+                "--exp-annotations-exclude-name=" + "Tailing" // Exclude "Tailing" annotation
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, exportPath), output);
+            AssertEx.FileEquals(expectedExcludeAnnotationNames, exportPath);
             // Test export with blank rows excluded
             output = RunCommand("--in=" + documentWithAnnotations, // Load a document that already contains annotations
                 "--exp-annotations-file=" + exportPath, // Export annotations

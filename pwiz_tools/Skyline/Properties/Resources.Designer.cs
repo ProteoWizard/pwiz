@@ -5583,12 +5583,31 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Attempting to exclude an annotation names that are not in the document:.
+        /// </summary>
+        public static string CommandLine_ExportAnnotations_Error__Attempting_to_exclude_an_annotation_names_that_are_not_in_the_document_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportAnnotations_Error__Attempting_to_exclude_an_annotation_names_th" +
+                        "at_are_not_in_the_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: Failure attempting to save annotations file {0}..
         /// </summary>
         public static string CommandLine_ExportAnnotations_Error__Failure_attempting_to_save_annotations_file__0__ {
             get {
                 return ResourceManager.GetString("CommandLine_ExportAnnotations_Error__Failure_attempting_to_save_annotations_file_" +
                         "_0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Try one of the following:.
+        /// </summary>
+        public static string CommandLine_ExportAnnotations_Try_one_of_the_following_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportAnnotations_Try_one_of_the_following_", resourceCulture);
             }
         }
         

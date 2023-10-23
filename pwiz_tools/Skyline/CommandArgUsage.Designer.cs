@@ -241,6 +241,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exclude this annotation. This argument can be used multiple times to exclude multiple annotations. Requires to --exp-annotations-file argument..
+        /// </summary>
+        internal static string _exp_annotations_exclude_name {
+            get {
+                return ResourceManager.GetString("_exp_annotations_exclude_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use to exclude a particular type of object by name from the exported file. Names can be found in the user interface. This argument may be used multiple times to exclude multiple types of objects. Requires the --exp-annotations-file argument..
         /// </summary>
         internal static string _exp_annotations_exclude_object {
@@ -273,15 +282,6 @@ namespace pwiz.Skyline {
         internal static string _exp_annotations_remove_blank_rows {
             get {
                 return ResourceManager.GetString("_exp_annotations_remove_blank_rows", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Export this annotation. This argument can be used multiple times to select multiple annotations. Requires to --exp-annotations-file argument..
-        /// </summary>
-        internal static string _exp_annotations_select_name {
-            get {
-                return ResourceManager.GetString("_exp_annotations_select_name", resourceCulture);
             }
         }
         

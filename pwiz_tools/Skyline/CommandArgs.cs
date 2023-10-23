@@ -880,16 +880,6 @@ namespace pwiz.Skyline
             return true;
         }
 
-        /// <summary>
-        /// Associate a string to an annotation
-        /// </summary>
-        /// <param name="annotationName">Annotation name provided by the user</param>
-        /// <returns>True if the annotation name is recognized, false if not</returns>
-        private bool ParseSelectedAnnotationName(string annotationName)
-        {
-            AnnotationsSelectedNames.Add(annotationName);
-            return true;
-        }
         private static IList<ElementHandler> GetAllHandlers()
         {
             // Creating a new document is probably not the best way to do this
@@ -1145,14 +1135,14 @@ namespace pwiz.Skyline
                 (c, p) => c.ParseExcludeProperty(p.Value)){WrapValue = true};
         public static readonly Argument ARG_ANNOTATIONS_REMOVE_BLANK_ROWS =
             new DocArgument(@"exp-annotations-remove-blank-rows", (c, p) => c.AnnotationsRemoveBlankRows = true);
-        public static readonly Argument ARG_ANNOTATION_SELECTED_NAMES = 
-            new DocArgument(@"exp-annotations-select-name", ANNOTATION_NAME_VALUE,
-                (c, p) => c.ParseSelectedAnnotationName(p.Value)){WrapValue = true};
+        public static readonly Argument ARG_ANNOTATION_EXCLUDE_NAMES = 
+            new DocArgument(@"exp-annotations-exclude-name", ANNOTATION_NAME_VALUE,
+                (c, p) => c.AnnotationsExcludeNames.Add(p.Value)){WrapValue = true};
 
         private static readonly ArgumentGroup GROUP_OTHER_FILE_TYPES = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_OTHER_FILE_TYPES, false, 
             ARG_SPECTRAL_LIBRARY_FILE, ARG_MPROPHET_FEATURES_FILE, ARG_MPROPHET_FEATURES_BEST_SCORING_PEAKS, ARG_MPROPHET_FEATURES_TARGETS_ONLY, 
-            ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES, ARG_ANNOTATIONS_FILE, ARG_ANNOTATIONS_FILE, ARG_ANNOTATIONS_EXCLUDE_OBJECTS, 
-            ARG_ANNOTATIONS_EXCLUDE_PROPERTIES, ARG_ANNOTATIONS_REMOVE_BLANK_ROWS, ARG_ANNOTATION_SELECTED_NAMES
+            ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES, ARG_ANNOTATIONS_FILE, ARG_ANNOTATIONS_EXCLUDE_OBJECTS, 
+            ARG_ANNOTATIONS_EXCLUDE_PROPERTIES, ARG_ANNOTATIONS_REMOVE_BLANK_ROWS, ARG_ANNOTATION_EXCLUDE_NAMES
         );
 
         public string SpecLibFile { get; private set; }
@@ -1177,7 +1167,7 @@ namespace pwiz.Skyline
 
         public bool AnnotationsRemoveBlankRows { get; private set; }
 
-        public List<string> AnnotationsSelectedNames { get; private set; }
+        public List<string> AnnotationsExcludeNames { get; private set; }
 
 
         public List<IPeakFeatureCalculator> MProphetExcludeScores { get; private set; }
@@ -2295,6 +2285,7 @@ namespace pwiz.Skyline
             MProphetExcludeScores = new List<IPeakFeatureCalculator>();
             AnnotationsExcludeObjects = new List<ElementHandler>();
             AnnotationsExcludeProperties = new List<string>();
+            AnnotationsExcludeNames = new List<string>();
 
             ImportBeforeDate = null;
             ImportOnOrAfterDate = null;
