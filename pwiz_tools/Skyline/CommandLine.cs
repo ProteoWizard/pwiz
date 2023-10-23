@@ -837,6 +837,7 @@ namespace pwiz.Skyline
                     return false;
                 }
             }
+            
             var exportTypes =
                 (string.IsNullOrEmpty(commandArgs.IsolationListInstrumentType) ? 0 : 1) +
                 (string.IsNullOrEmpty(commandArgs.TransListInstrumentType) ? 0 : 1) +
