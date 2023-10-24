@@ -230,7 +230,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 if (baseDef.DeclaringType != null)
                 {
                     DeclaringType = baseDef.DeclaringType;
-                    GetValue = o => firstAccessor.Invoke(o, Array.Empty<object>());
+                    GetValue = o => baseDef.Invoke(o, Array.Empty<object>());
                 }
 
             }
