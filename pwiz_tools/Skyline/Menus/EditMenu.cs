@@ -1167,13 +1167,13 @@ namespace pwiz.Skyline.Menus
                         {
                             throw;
                         }
-                        MessageDlg.ShowWithException(this, exception.Message, exception, true);
+                        MessageDlg.ShowWithException(SkylineWindow, exception.Message, exception, true);
                     }
                 }
                 else
                 {
                     // Alert the user that their list is not columnar
-                    MessageDlg.Show(this, Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
+                    MessageDlg.Show(SkylineWindow, Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
                 }
             }
         }
@@ -1731,7 +1731,7 @@ namespace pwiz.Skyline.Menus
                 // When editing a blank filter with two pages, start with the "MS2" page selected 
                 dlg.SelectPage(1);
             }
-            if (dlg.ShowDialog(this) != DialogResult.OK)
+            if (dlg.ShowDialog(SkylineWindow) != DialogResult.OK)
             {
                 return;
             }

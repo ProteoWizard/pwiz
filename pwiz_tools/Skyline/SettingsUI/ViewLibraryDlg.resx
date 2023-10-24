@@ -703,7 +703,7 @@
     <value>msGraphExtension1</value>
   </data>
   <data name="&gt;&gt;msGraphExtension1.Type" xml:space="preserve">
-    <value>pwiz.Skyline.SettingsUI.MsGraphExtension, Skyline-daily, Version=21.2.1.579, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.SettingsUI.MsGraphExtension, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;msGraphExtension1.Parent" xml:space="preserve">
     <value>GraphPanel</value>
@@ -1387,7 +1387,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.579, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btnAIons.Name" xml:space="preserve">
     <value>btnAIons</value>
@@ -1669,6 +1669,6 @@
     <value>ViewLibraryDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=21.2.1.579, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

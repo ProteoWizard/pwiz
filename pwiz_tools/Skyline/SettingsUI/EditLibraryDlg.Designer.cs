@@ -39,7 +39,6 @@
             this.labelSpecLibLinks = new System.Windows.Forms.Label();
             this.linkPeptideAtlas = new System.Windows.Forms.LinkLabel();
             this.linkNIST = new System.Windows.Forms.LinkLabel();
-            this.linkGPM = new System.Windows.Forms.LinkLabel();
             this.cbxUseExplicitPeakBounds = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
@@ -104,13 +103,6 @@
             this.linkNIST.TabStop = true;
             this.linkNIST.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkNIST_LinkClicked);
             // 
-            // linkGPM
-            // 
-            resources.ApplyResources(this.linkGPM, "linkGPM");
-            this.linkGPM.Name = "linkGPM";
-            this.linkGPM.TabStop = true;
-            this.linkGPM.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkGPM_LinkClicked);
-            // 
             // cbxUseExplicitPeakBounds
             // 
             resources.ApplyResources(this.cbxUseExplicitPeakBounds, "cbxUseExplicitPeakBounds");
@@ -126,7 +118,6 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.Controls.Add(this.cbxUseExplicitPeakBounds);
-            this.Controls.Add(this.linkGPM);
             this.Controls.Add(this.linkNIST);
             this.Controls.Add(this.linkPeptideAtlas);
             this.Controls.Add(this.labelSpecLibLinks);
@@ -159,7 +150,6 @@
         private System.Windows.Forms.Label labelSpecLibLinks;
         private System.Windows.Forms.LinkLabel linkPeptideAtlas;
         private System.Windows.Forms.LinkLabel linkNIST;
-        private System.Windows.Forms.LinkLabel linkGPM;
         private System.Windows.Forms.CheckBox cbxUseExplicitPeakBounds;
     }
 }

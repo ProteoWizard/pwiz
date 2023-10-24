@@ -199,6 +199,7 @@
     <Compile Include="MinimizeIrtTest.cs" />
     <Compile Include="EADZIonsTest.cs" />
     <Compile Include="MixedSrmPrmTest.cs" />
+    <Compile Include="Ms1SpectrumFilterTest.cs" />
     <Compile Include="MultiInjectionReplicatesTest.cs" />
     <Compile Include="OpenDocWithBackgroundProteomeTest.cs" />
     <Compile Include="PeakAreaPeptideGraphTest.cs" />
@@ -207,6 +208,7 @@
     <Compile Include="RemoveNeutralLossModificationTest.cs" />
     <Compile Include="ResultFileMetadataBackCompatTest.cs" />
     <Compile Include="SaveAfterProteinAssociationTest.cs" />
+    <Compile Include="SelectSpectrumTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
     <Compile Include="TestPanoramaClient.cs" />
     <Compile Include="SkydFileModifiedTest.cs" />

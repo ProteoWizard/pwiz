@@ -5917,6 +5917,46 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Failure attempting to save mProphet features file {0}..
+        /// </summary>
+        public static string CommandLine_ExportMProphetFeatures_Error__Failure_attempting_to_save_mProphet_features_file__0__ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportMProphetFeatures_Error__Failure_attempting_to_save_mProphet_fea" +
+                        "tures_file__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The document must contain results to export mProphet features..
+        /// </summary>
+        public static string CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_ex" +
+                        "port_mProphet_features_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The document must contain targets for which to export mProphet features..
+        /// </summary>
+        public static string CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_w" +
+                        "hich_to_export_mProphet_features_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to mProphet features file {0} exported successfully..
+        /// </summary>
+        public static string CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successful" +
+                        "ly_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: If you specify a report, you must specify the --report-file=path/to/file.csv parameter..
         /// </summary>
         public static string CommandLine_ExportReport_ {
@@ -5969,6 +6009,45 @@ namespace pwiz.Skyline.Properties {
         public static string CommandLine_ExportReport_Report__0__exported_successfully_ {
             get {
                 return ResourceManager.GetString("CommandLine_ExportReport_Report__0__exported_successfully_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Failure attempting to save spectral library file {0}..
+        /// </summary>
+        public static string CommandLine_ExportSpecLib_Error__Failure_attempting_to_save_spectral_library_file__0__ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportSpecLib_Error__Failure_attempting_to_save_spectral_library_file" +
+                        "__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The document must contain at least one precursor to export a spectral library..
+        /// </summary>
+        public static string CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_precursor_to_export_a_spectral_library_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_precursor" +
+                        "_to_export_a_spectral_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The document must contain results to export a spectral library..
+        /// </summary>
+        public static string CommandLine_ExportSpecLib_Error__The_document_must_contain_results_to_export_a_spectral_library_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportSpecLib_Error__The_document_must_contain_results_to_export_a_sp" +
+                        "ectral_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Spectral library file {0} exported successfully..
+        /// </summary>
+        public static string CommandLine_ExportSpecLib_Spectral_library_file__0__exported_successfully_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportSpecLib_Spectral_library_file__0__exported_successfully_", resourceCulture);
             }
         }
         
@@ -12633,6 +12712,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("EncyclopeDiaHelpers_ConvertPrositOutputToDlib_Converting_Prosit_output_to_Encyclo" +
                         "peDia_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for chromatogram library.
+        /// </summary>
+        public static string EncyclopeDiaHelpers_Generate_Waiting_for_chromatogram_library {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaHelpers_Generate_Waiting_for_chromatogram_library", resourceCulture);
             }
         }
         
@@ -22139,6 +22227,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An EncyclopeDIA task failed..
+        /// </summary>
+        public static string ParallelRunner_Generate_An_EncyclopeDIA_task_failed_ {
+            get {
+                return ResourceManager.GetString("ParallelRunner_Generate_An_EncyclopeDIA_task_failed_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} at position {1}.
         /// </summary>
         public static string ParseExceptionDetail_ToString__at_position__0_ {
@@ -24948,6 +25045,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Demultiplexing spectra: {0}/{1}.
+        /// </summary>
+        public static string ProgressMonitorForFile_UpdateProgress_Demultiplexing_spectra___0___1_ {
+            get {
+                return ResourceManager.GetString("ProgressMonitorForFile_UpdateProgress_Demultiplexing_spectra___0___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap Properties_Button {
@@ -26570,6 +26676,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Molecule RT Results.
+        /// </summary>
+        public static string ReportSpecList_GetDefaults_Molecule_RT_Results {
+            get {
+                return ResourceManager.GetString("ReportSpecList_GetDefaults_Molecule_RT_Results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule Transition Results.
+        /// </summary>
+        public static string ReportSpecList_GetDefaults_Molecule_Transition_Results {
+            get {
+                return ResourceManager.GetString("ReportSpecList_GetDefaults_Molecule_Transition_Results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peak Boundaries.
         /// </summary>
         public static string ReportSpecList_GetDefaults_Peak_Boundaries {
@@ -27912,6 +28036,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to  (anonymous).
+        /// </summary>
+        public static string Server_GetKey___anonymous_ {
+            get {
+                return ResourceManager.GetString("Server_GetKey___anonymous_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A Panorama server must be specified..
         /// </summary>
         public static string Server_ReadXml_A_Panorama_server_must_be_specified {
@@ -28562,6 +28695,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_acceptPeptidesMenuItem_Click_Accept_peptides {
             get {
                 return ResourceManager.GetString("SkylineWindow_acceptPeptidesMenuItem_Click_Accept_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add.
+        /// </summary>
+        public static string SkylineWindow_Add {
+            get {
+                return ResourceManager.GetString("SkylineWindow_Add", resourceCulture);
             }
         }
         
@@ -29512,15 +29654,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add.
-        /// </summary>
-        public static string SkylineWindow_ImportMassList_Add {
-            get {
-                return ResourceManager.GetString("SkylineWindow_ImportMassList_Add", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Adding iRT values.
         /// </summary>
         public static string SkylineWindow_ImportMassList_Adding_iRT_values_ {
@@ -30288,15 +30421,6 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to" +
                         "_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filenam" +
                         "e_extension_and_are_in_XML_format_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Add.
-        /// </summary>
-        public static string SkylineWindow_OpenFromPanorama_Add {
-            get {
-                return ResourceManager.GetString("SkylineWindow_OpenFromPanorama_Add", resourceCulture);
             }
         }
         
@@ -31112,11 +31236,40 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Document cannot be uploaded to a Panorama server without a user account..
+        /// </summary>
+        public static string SkylineWindow_ShowPublishDlg_Document_cannot_be_uploaded_to_a_Panorama_server_without_a_user_account_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_Document_cannot_be_uploaded_to_a_Panorama_server_wit" +
+                        "hout_a_user_account_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit existing.
+        /// </summary>
+        public static string SkylineWindow_ShowPublishDlg_Edit_existing {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_Edit_existing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Press Continue to use the server of your choice..
         /// </summary>
         public static string SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_ {
             get {
                 return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Press Edit existing to add user account information for an existing server..
+        /// </summary>
+        public static string SkylineWindow_ShowPublishDlg_Press_Edit_existing_to_add_user_account_information_for_an_existing_server_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_Press_Edit_existing_to_add_user_account_information_" +
+                        "for_an_existing_server_", resourceCulture);
             }
         }
         
@@ -31165,6 +31318,16 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to {
             get {
                 return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There are no Panorama servers with a user account. To upload documents to a server a user account is required..
+        /// </summary>
+        public static string SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_with_a_user_account__To_upload_documents_to_a_server_a_user_account_is_required_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_with_a_user_account__T" +
+                        "o_upload_documents_to_a_server_a_user_account_is_required_", resourceCulture);
             }
         }
         
