@@ -634,6 +634,116 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Shared Peptides.
+        /// </summary>
+        public static string AssociateProteinsDlg_CellValueNeeded_Shared_Peptides {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_CellValueNeeded_Shared_Peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find &amp;minimal gene group list that explains all peptides.
+        /// </summary>
+        public static string AssociateProteinsDlg_Find_minimal_gene_group_list_that_explains_all_peptides {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_Find_minimal_gene_group_list_that_explains_all_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find &amp;minimal protein group list that explains all peptides.
+        /// </summary>
+        public static string AssociateProteinsDlg_Find_minimal_protein_group_list_that_explains_all_peptides {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_Find_minimal_protein_group_list_that_explains_all_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finding peptides in FASTA file.
+        /// </summary>
+        public static string AssociateProteinsDlg_FindProteinMatchesWithFasta_Finding_peptides_in_FASTA_file {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_FindProteinMatchesWithFasta_Finding_peptides_in_FASTA_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matches were found using the imported fasta file..
+        /// </summary>
+        public static string AssociateProteinsDlg_FindProteinMatchesWithFasta_No_matches_were_found_using_the_imported_fasta_file_ {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_FindProteinMatchesWithFasta_No_matches_were_found_using_the_" +
+                        "imported_fasta_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mi&amp;n peptides per gene.
+        /// </summary>
+        public static string AssociateProteinsDlg_Min_peptides_per_gene {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_Min_peptides_per_gene", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mi&amp;n peptides per protein group.
+        /// </summary>
+        public static string AssociateProteinsDlg_Min_peptides_per_protein_group {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_Min_peptides_per_protein_group", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Existing protein associations will be discarded..
+        /// </summary>
+        public static string AssociateProteinsDlg_OnShown_Existing_protein_associations_will_be_discarded_ {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_OnShown_Existing_protein_associations_will_be_discarded_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Organize all document peptides into associated proteins or protein groups..
+        /// </summary>
+        public static string AssociateProteinsDlg_OnShown_Organize_all_document_peptides_into_associated_proteins_or_protein_groups {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_OnShown_Organize_all_document_peptides_into_associated_prote" +
+                        "ins_or_protein_groups", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Remove subset genes.
+        /// </summary>
+        public static string AssociateProteinsDlg_Remove_subset_genes {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_Remove_subset_genes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Remove subset protein groups.
+        /// </summary>
+        public static string AssociateProteinsDlg_Remove_subset_protein_groups {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_Remove_subset_protein_groups", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Applying parsimony options.
+        /// </summary>
+        public static string AssociateProteinsDlg_UpdateParsimonyResults_Applying_parsimony_options {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_UpdateParsimonyResults_Applying_parsimony_options", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No background proteome defined, see the Digestion tab in Peptide Settings for more information..
         /// </summary>
         public static string AssociateProteinsDlg_UseBackgroundProteome_No_background_proteome_defined {
@@ -7751,6 +7861,91 @@ namespace pwiz.Skyline.Properties {
             get {
                 object obj = ResourceManager.GetObject("Protein", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete the molecule list &apos;{0}&apos;?.
+        /// </summary>
+        public static string Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_molecule_list___0___ {
+            get {
+                return ResourceManager.GetString("Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_molecule_list__" +
+                        "_0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete the protein &apos;{0}&apos;?.
+        /// </summary>
+        public static string Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_protein___0___ {
+            get {
+                return ResourceManager.GetString("Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_protein___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete these {0} molecule lists?.
+        /// </summary>
+        public static string Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__molecule_lists_ {
+            get {
+                return ResourceManager.GetString("Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__molecule_" +
+                        "lists_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete these {0} proteins?.
+        /// </summary>
+        public static string Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__proteins_ {
+            get {
+                return ResourceManager.GetString("Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__proteins_" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculating protein groups.
+        /// </summary>
+        public static string ProteinAssociation_CalculateProteinGroups_Calculating_protein_groups {
+            get {
+                return ResourceManager.GetString("ProteinAssociation_CalculateProteinGroups_Calculating_protein_groups", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Group of {0} proteins.
+        /// </summary>
+        public static string ProteinAssociation_CalculateProteinGroups_Group_of__0__proteins {
+            get {
+                return ResourceManager.GetString("ProteinAssociation_CalculateProteinGroups_Group_of__0__proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculating gene groups.
+        /// </summary>
+        public static string ProteinAssociation_CalculateProteinOrGeneGroups_Calculating_gene_groups {
+            get {
+                return ResourceManager.GetString("ProteinAssociation_CalculateProteinOrGeneGroups_Calculating_gene_groups", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculating protein clusters.
+        /// </summary>
+        public static string ProteinAssociation_Calculating_protein_clusters {
+            get {
+                return ResourceManager.GetString("ProteinAssociation_Calculating_protein_clusters", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Creating protein targets and assigning their peptides.
+        /// </summary>
+        public static string ProteinAssociation_CreateDocTree_Creating_protein_targets_and_assigning_their_peptides {
+            get {
+                return ResourceManager.GetString("ProteinAssociation_CreateDocTree_Creating_protein_targets_and_assigning_their_pep" +
+                        "tides", resourceCulture);
             }
         }
         
