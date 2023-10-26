@@ -241,34 +241,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use to exclude a particular annotation by name from the exported file. This argument can be used multiple times to exclude multiple annotations. Requires the --exp-annotations-file argument..
-        /// </summary>
-        internal static string _exp_annotations_exclude_name {
-            get {
-                return ResourceManager.GetString("_exp_annotations_exclude_name", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Use to exclude a particular type of object by name from the exported file. Names can be found in the user interface. This argument may be used multiple times to exclude multiple types of objects. Requires the --exp-annotations-file argument..
-        /// </summary>
-        internal static string _exp_annotations_exclude_object {
-            get {
-                return ResourceManager.GetString("_exp_annotations_exclude_object", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Use to exclude a particular property by name from the exported file. Names can be found in the user interface. This argument may be used multiple times to exclude multiple properties. Requires the --exp-annotations-file argument..
-        /// </summary>
-        internal static string _exp_annotations_exclude_property {
-            get {
-                return ResourceManager.GetString("_exp_annotations_exclude_property", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Export an annotations file..
+        ///   Looks up a localized string similar to Export all the annotations in the document into an annotations file..
         /// </summary>
         internal static string _exp_annotations_file {
             get {
@@ -277,7 +250,25 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Remove blank rows from the exported annotations. Requires the --exp-annotations-file argument..
+        ///   Looks up a localized string similar to Use to specify which object types to include in the exported annotations. By default all object types are included. This argument can be used multiple times to specify multiple object types. Requires the -exp-annotations-file argument..
+        /// </summary>
+        internal static string _exp_annotations_include_object {
+            get {
+                return ResourceManager.GetString("_exp_annotations_include_object", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use to include all properties in the exported annotations. By default no properties are included. Requires the -exp-annotations-file argument..
+        /// </summary>
+        internal static string _exp_annotations_include_properties {
+            get {
+                return ResourceManager.GetString("_exp_annotations_include_properties", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use to remove blank rows from the exported annotations. Requires the --exp-annotations-file argument..
         /// </summary>
         internal static string _exp_annotations_remove_blank_rows {
             get {
@@ -2001,15 +1992,6 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;annotation name&gt;.
-        /// </summary>
-        internal static string CommandArgs_ANNOTATION_NAME_VALUE {
-            get {
-                return ResourceManager.GetString("CommandArgs_ANNOTATION_NAME_VALUE", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Agilent
         ///SCIEX.
         /// </summary>
@@ -2392,15 +2374,6 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;object name&gt;.
-        /// </summary>
-        internal static string CommandArgs_OBJECT_NAME_VALUE {
-            get {
-                return ResourceManager.GetString("CommandArgs_OBJECT_NAME_VALUE", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to &lt;password&gt;.
         /// </summary>
         internal static string CommandArgs_PASSWORD_VALUE {
@@ -2442,15 +2415,6 @@ namespace pwiz.Skyline {
         internal static string CommandArgs_PROGRAM_MACRO_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_PROGRAM_MACRO_VALUE", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &lt;property name&gt;.
-        /// </summary>
-        internal static string CommandArgs_PROPERTY_NAME_VALUE {
-            get {
-                return ResourceManager.GetString("CommandArgs_PROPERTY_NAME_VALUE", resourceCulture);
             }
         }
         

@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
 {
@@ -103,6 +105,19 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
                     new PrecursorResultHandler(dataSchema),
                     new TransitionResultHandler(dataSchema)
             };
+        }
+
+        /// <summary>
+        /// Retrieve a list of all possible Element Handlers
+        /// </summary>
+        /// <returns>A list of Element handlers</returns>
+        public static IList<ElementHandler> GetAllHandlers()
+        {
+            var memoryDocumentContainer = new MemoryDocumentContainer();
+            var document = new SrmDocument(SrmSettingsList.GetDefault());
+            memoryDocumentContainer.SetDocument(document, memoryDocumentContainer.Document);
+            var schema = SkylineDataSchema.MemoryDataSchema(memoryDocumentContainer.Document, DataSchemaLocalizer.INVARIANT);
+            return ImmutableList.ValueOf(GetElementHandlers(schema));
         }
     }
 

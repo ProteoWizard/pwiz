@@ -28,14 +28,11 @@ using System.Threading;
 using System.Web;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
-using pwiz.Common.Collections;
-using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.GroupComparison;
@@ -79,9 +76,6 @@ namespace pwiz.Skyline
         public static readonly Func<string> NUM_LIST_VALUE = () => CommandArgUsage.CommandArgs_NUM_LIST_VALUE;
         public static readonly Func<string> NAME_VALUE = () => CommandArgUsage.CommandArgs_NAME_VALUE;
         public static readonly Func<string> FEATURE_NAME_VALUE = () => CommandArgUsage.CommandArgs_FEATURE_NAME_VALUE;
-        public static readonly Func<string> OBJECT_NAME_VALUE = () => CommandArgUsage.CommandArgs_OBJECT_NAME_VALUE;
-        public static readonly Func<string> PROPERTY_NAME_VALUE = () => CommandArgUsage.CommandArgs_PROPERTY_NAME_VALUE;
-        public static readonly Func<string> ANNOTATION_NAME_VALUE = () => CommandArgUsage.CommandArgs_ANNOTATION_NAME_VALUE;
         public static readonly Func<string> REPORT_NAME_VALUE = () => CommandArgUsage.CommandArgs_REPORT_NAME_VALUE;
         public static readonly Func<string> PIPE_NAME_VALUE = () => CommandArgUsage.CommandArgs_PIPE_NAME_VALUE;
         public static readonly Func<string> REGEX_VALUE = () => CommandArgUsage.CommandArgs_REGEX_VALUE;
@@ -118,8 +112,7 @@ namespace pwiz.Skyline
         public static readonly HashSet<Func<string>> STRING_TYPE_VALUES = new HashSet<Func<string>>(new[]
         {
             FEATURE_NAME_VALUE, REPORT_NAME_VALUE, PIPE_NAME_VALUE, REGEX_VALUE, SERVER_URL_VALUE, USERNAME_VALUE,
-            PASSWORD_VALUE, COMMAND_VALUE, COMMAND_ARGUMENTS_VALUE, PROGRAM_MACRO_VALUE, LABEL_VALUE, NAME_VALUE, 
-            OBJECT_NAME_VALUE, PROPERTY_NAME_VALUE, ANNOTATION_NAME_VALUE
+            PASSWORD_VALUE, COMMAND_VALUE, COMMAND_ARGUMENTS_VALUE, PROGRAM_MACRO_VALUE, LABEL_VALUE, NAME_VALUE
         }.Concat(PATH_TYPE_VALUES));
 
         private static void SetCulture(string cultureName)
@@ -830,9 +823,9 @@ namespace pwiz.Skyline
         /// </summary>
         /// <param name="objectName">Object type name provided by the user</param>
         /// <returns>True if the object type name is recognized, false if not</returns>
-        private bool ParseExcludeObject(string objectName)
+        private bool ParseIncludeObject(string objectName)
         {
-            var handlers = GetAllHandlers();
+            var handlers = ElementHandler.GetAllHandlers();
             var handler = handlers.FirstOrDefault(c => Equals(objectName, c.Name));
             if (handler == null)
             {
@@ -847,51 +840,8 @@ namespace pwiz.Skyline
 
                 return false;
             }
-            AnnotationsExcludeObjects.Add(handler);
+            AnnotationsIncludeObjects.Add(handler);
             return true;
-        }
-
-        /// <summary>
-        /// Associate a string to a property in the annotation settings
-        /// </summary>
-        /// <param name="propertyName">Property name provided by the user</param>
-        /// <returns>True if the object name is recognized, false if not</returns>
-        private bool ParseExcludeProperty(string propertyName)
-        {
-            var handlers = GetAllHandlers();
-            var allProperties = handlers
-                .SelectMany(handler => handler.Properties
-                    .Select(pd => pd.Name))
-                .Distinct()
-                .ToArray();
-            var property = allProperties.FirstOrDefault(p => Equals(propertyName, p));
-            if (property == null)
-            {
-                WriteLine(string.Format(Resources.CommandArgs_ParseExcludeProperty_Error__Attempting_to_exclude_an_unknown_property__0___Try_one_of_the_following_,
-                    propertyName));
-                foreach (var validProperty in allProperties)
-                {
-                    WriteLine(validProperty);
-                }
-
-                return false;
-            }
-
-            AnnotationsExcludeProperties.Add(property);
-            return true;
-        }
-
-        /// <summary>
-        /// Retrieve a list of all possible Element Handlers
-        /// </summary>
-        /// <returns>A list of Element handlers</returns>
-        private static IList<ElementHandler> GetAllHandlers()
-        {
-            var memoryDocumentContainer = new MemoryDocumentContainer();
-            var document = new SrmDocument(SrmSettingsList.GetDefault());
-            memoryDocumentContainer.SetDocument(document, memoryDocumentContainer.Document);
-            var schema = SkylineDataSchema.MemoryDataSchema(memoryDocumentContainer.Document, DataSchemaLocalizer.INVARIANT);
-            return ImmutableList.ValueOf(ElementHandler.GetElementHandlers(schema));
         }
 
         // Refinement
@@ -1124,25 +1074,22 @@ namespace pwiz.Skyline
             new DocArgument(@"exp-mprophet-targets-only", (c, p) => c.MProphetTargetsOnly = true);
         public static readonly Argument ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES = 
             new DocArgument(@"exp-mprophet-exclude-feature", FEATURE_NAME_VALUE, 
-                (c, p) => c.ParseExcludeFeature(p, c.MProphetExcludeScores)){WrapValue = true};
+                (c, p) => c.ParseExcludeFeature(p, c.MProphetExcludeScores));
         public static readonly Argument ARG_ANNOTATIONS_FILE = new DocArgument(@"exp-annotations-file", PATH_TO_CSV,
-            (c, p) => c.AnnotationsFile = p.ValueFullPath){WrapValue = true};
-        public static readonly Argument ARG_ANNOTATIONS_EXCLUDE_OBJECTS =
-            new DocArgument(@"exp-annotations-exclude-object", OBJECT_NAME_VALUE,
-                (c, p) => c.ParseExcludeObject(p.Value)){WrapValue = true};
+            (c, p) => c.AnnotationsFile = p.ValueFullPath);
+        public static readonly Argument ARG_ANNOTATIONS_INCLUDE_OBJECTS =
+            new DocArgument(@"exp-annotations-include-object", ElementHandler.GetAllHandlers().Select(handler => handler.Name).ToArray(),
+                (c, p) => c.ParseIncludeObject(p.Value)){WrapValue = true};
         public static readonly Argument ARG_ANNOTATIONS_EXCLUDE_PROPERTIES =
-            new DocArgument(@"exp-annotations-exclude-property", PROPERTY_NAME_VALUE,
-                (c, p) => c.ParseExcludeProperty(p.Value)){WrapValue = true};
+            new DocArgument(@"exp-annotations-include-properties",
+                (c, p) => c.AnnotationsIncludeProperties = true){WrapValue = true};
         public static readonly Argument ARG_ANNOTATIONS_REMOVE_BLANK_ROWS =
             new DocArgument(@"exp-annotations-remove-blank-rows", (c, p) => c.AnnotationsRemoveBlankRows = true);
-        public static readonly Argument ARG_ANNOTATION_EXCLUDE_NAMES = 
-            new DocArgument(@"exp-annotations-exclude-name", ANNOTATION_NAME_VALUE,
-                (c, p) => c.AnnotationsExcludeNames.Add(p.Value)){WrapValue = true};
 
         private static readonly ArgumentGroup GROUP_OTHER_FILE_TYPES = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_OTHER_FILE_TYPES, false, 
             ARG_SPECTRAL_LIBRARY_FILE, ARG_MPROPHET_FEATURES_FILE, ARG_MPROPHET_FEATURES_BEST_SCORING_PEAKS, ARG_MPROPHET_FEATURES_TARGETS_ONLY, 
-            ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES, ARG_ANNOTATIONS_FILE, ARG_ANNOTATIONS_EXCLUDE_OBJECTS, 
-            ARG_ANNOTATIONS_EXCLUDE_PROPERTIES, ARG_ANNOTATIONS_REMOVE_BLANK_ROWS, ARG_ANNOTATION_EXCLUDE_NAMES
+            ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES, ARG_ANNOTATIONS_FILE, ARG_ANNOTATIONS_INCLUDE_OBJECTS, 
+            ARG_ANNOTATIONS_EXCLUDE_PROPERTIES, ARG_ANNOTATIONS_REMOVE_BLANK_ROWS
         );
 
         public string SpecLibFile { get; private set; }
@@ -1163,13 +1110,11 @@ namespace pwiz.Skyline
 
         public bool ExportingAnnotations { get { return !string.IsNullOrEmpty(AnnotationsFile); } }
 
-        public List<ElementHandler> AnnotationsExcludeObjects { get; private set; }
+        public List<ElementHandler> AnnotationsIncludeObjects { get; private set; }
 
-        public List<string> AnnotationsExcludeProperties { get; private set; }
+        public bool AnnotationsIncludeProperties { get; private set; }
 
         public bool AnnotationsRemoveBlankRows { get; private set; }
-
-        public List<string> AnnotationsExcludeNames { get; private set; }
 
         // For publishing the document to Panorama
         public static readonly Argument ARG_PANORAMA_SERVER = new DocArgument(@"panorama-server", SERVER_URL_VALUE,
@@ -2282,9 +2227,7 @@ namespace pwiz.Skyline
             SharedFileType = ShareType.DEFAULT;
 
             MProphetExcludeScores = new List<IPeakFeatureCalculator>();
-            AnnotationsExcludeObjects = new List<ElementHandler>();
-            AnnotationsExcludeProperties = new List<string>();
-            AnnotationsExcludeNames = new List<string>();
+            AnnotationsIncludeObjects = new List<ElementHandler>();
 
             ImportBeforeDate = null;
             ImportOnOrAfterDate = null;

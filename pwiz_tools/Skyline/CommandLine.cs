@@ -829,10 +829,9 @@ namespace pwiz.Skyline
             if (commandArgs.ExportingAnnotations)
             {
                 if (!ExportAnnotations(commandArgs.AnnotationsFile, 
-                        new List<ElementHandler>(commandArgs.AnnotationsExcludeObjects),
-                        new List<string>(commandArgs.AnnotationsExcludeProperties), 
-                        commandArgs.AnnotationsRemoveBlankRows,
-                        new List<string>(commandArgs.AnnotationsExcludeNames)))
+                        commandArgs.AnnotationsIncludeObjects,
+                        commandArgs.AnnotationsIncludeProperties, 
+                        commandArgs.AnnotationsRemoveBlankRows))
                 {
                     return false;
                 }
@@ -3229,57 +3228,43 @@ namespace pwiz.Skyline
         /// Export annotations to a .csv file
         /// </summary>
         /// <param name="annotationsFile">File path to export the annotations to</param>
-        /// <param name="excludeHandlers">Element handlers to exclude from the export</param>
-        /// <param name="excludeProperties">Properties to exclude from the export</param>
+        /// <param name="includeHandlers">Element handlers to exclude from the export</param>
+        /// <param name="includeProperties">Properties to exclude from the export</param>
         /// <param name="removeBlankRows">Do not include blank rows in the export</param>
-        /// <param name="excludeAnnotationNames">Annotation names to exclude from the export</param>
         /// <returns>True upon successful import, false upon error</returns>
-        public bool ExportAnnotations(string annotationsFile, List<ElementHandler> excludeHandlers, List<string> excludeProperties, bool removeBlankRows, List<string> excludeAnnotationNames)
+        public bool ExportAnnotations(string annotationsFile, List<ElementHandler> includeHandlers, bool includeProperties, bool removeBlankRows)
         {
             var dataSchema = SkylineDataSchema.MemoryDataSchema(Document, 
                 DataSchemaLocalizer.INVARIANT); // The INVARIANT version is used in the UI method as well
-            var allHandlers = ElementHandler.GetElementHandlers(dataSchema).ToList();
             try
             {
-                // Drop handlers specified by the user
-                var selectedHandlers = allHandlers.Where(c =>
-                    excludeHandlers.IndexOf(c) < 0).ToList();
-                // Only include properties applicable to the selected element handlers
-                var newProperties = selectedHandlers
-                    .SelectMany(handler => handler.Properties.Select(pd => pd.Name)).Distinct();
-                // Drop properties specified by the user
-                var selectedProperties = newProperties
-                    .OrderBy(name => name).Where(c =>
-                        excludeProperties.IndexOf(c) < 0).ToList();
+                // By default include all handlers
+                var handlers = ElementHandler.GetElementHandlers(dataSchema).ToList();
+                // If the user specifies handlers, include only those handlers
+                if (!includeHandlers.IsNullOrEmpty())
+                {
+                    handlers = includeHandlers;
+                }
+                // By default do not include properties. If the user asks, include all applicable properties.
+                var properties = Enumerable.Empty<string>();
+                if (includeProperties)
+                {
+                    // Only include properties applicable to the selected element handlers
+                    properties = handlers
+                        .SelectMany(handler => handler.Properties.Select(pd => pd.Name))
+                        .Distinct().OrderBy(pd => pd);
+                }
                 // Find all available annotation names
                 var allAnnotationNames =
-                    ExportAnnotationSettings.GetAllAnnotationNames(Document.Settings.DataSettings.AnnotationDefs, selectedHandlers);
-                // Throw an error if the user specifies names that are not in the document.
-                // We normally throw invalid argument errors in CommandArgs.cs, but we need to access the document in order to detect this error.
-                var invalidAnnotationNames = excludeAnnotationNames.Except(allAnnotationNames).ToList();
-                if (invalidAnnotationNames.Any())
-                {
-                    foreach (var invalidAnnotationName in invalidAnnotationNames)
-                    {
-                        _out.WriteLine(Resources
-                                .CommandLine_ExportAnnotations_Error__Attempting_to_exclude_unknown_annotation_name__0__,
-                            invalidAnnotationName);
-                    }
-                    // Suggest valid annotation names if they exist
-                    if (allAnnotationNames.Any())
-                    {
-                        _out.WriteLine(Resources.CommandLine_ExportAnnotations_Try_one_of_the_following_);
-                        foreach (var validAnnotationName in allAnnotationNames)
-                        {
-                            _out.WriteLine(validAnnotationName);
-                        }
-                    }
+                    ExportAnnotationSettings.GetAllAnnotationNames(Document.Settings.DataSettings.AnnotationDefs, handlers);
                 
+                // If there are no annotation names and we are not including properties, there is nothing to export
+                if (!allAnnotationNames.Any() && !includeProperties)
+                {
+                    _out.WriteLine(Resources.CommandLine_ExportAnnotations_Error__The_document_must_contain_annotations_in_order_to_export_annotations_);
                     return false;
                 }
-                // Drop annotation names specified by the user.
-                var selectedAnnotationNames = allAnnotationNames.Except(excludeAnnotationNames);
-                var settings = ExportAnnotationSettings.GetExportAnnotationSettings(selectedHandlers, selectedAnnotationNames, selectedProperties, removeBlankRows);
+                var settings = ExportAnnotationSettings.GetExportAnnotationSettings(handlers, allAnnotationNames, properties, removeBlankRows);
                 var documentAnnotations = new DocumentAnnotations(Document);
                 using (var fileSaver = new FileSaver(annotationsFile))
                 {
