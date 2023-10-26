@@ -119,6 +119,8 @@ namespace pwiz.Skyline.Model
         [Track(defaultValues: typeof(DefaultValuesTrue))]
         public bool ExplicitQuantitative { get; private set; }
 
+        public bool ParticipatesInScoring => !Transition.IsReporterIon(); // Don't use TMT etc in peak picking
+
         public TransitionDocNode ChangeExplicitSLens(double? value)
         {
             return ChangeExplicitValues(ExplicitValues.ChangeSLens(value));

@@ -1052,8 +1052,10 @@ namespace pwiz.Skyline.Model.Results
 
             // Only return a match, if at least two product ions match, or the precursor
             // has only a single product ion, and it matches
-            int countChildren = nodeGroup.Children.Count;
-            if (countChildren == 0 || listMatchingData.Count < Math.Min(2, countChildren))
+            // Ignore reporter ions for matching purposes, they don't participate in scoring
+            int countMatching = listMatchingData.Select(m => m.Trans).Count(t => t.ParticipatesInScoring);
+            int countChildren = nodeGroup.Transitions.Count(t => t.ParticipatesInScoring);
+            if (countChildren == 0 || countMatching < Math.Min(2, countChildren))
                 return null;
             // Assign all the doc nodes and return this list
             chromDataSet.ClearDataDocNodes();

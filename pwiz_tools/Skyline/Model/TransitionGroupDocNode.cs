@@ -2059,7 +2059,7 @@ namespace pwiz.Skyline.Model
                 double[] peakAreas = null, libIntensities = null;
                 if (nodeGroup.HasLibInfo)
                 {
-                    int countTransMsMs = nodeGroup.GetMsMsTransitions(isFullScanMs).Count();
+                    int countTransMsMs = nodeGroup.GetMsMsTransitions(isFullScanMs).Count(t => t.ParticipatesInScoring);
                     if (countTransMsMs >= MIN_DOT_PRODUCT_TRANSITIONS)
                     {
                         peakAreas = new double[countTransMsMs];
@@ -2098,7 +2098,7 @@ namespace pwiz.Skyline.Model
                                 countInfo++;
 
                             // Store information for correlation score
-                            if (peakAreas != null && (!isFullScanMs || !nodeTran.IsMs1))
+                            if (peakAreas != null && (!isFullScanMs || !nodeTran.IsMs1) && nodeTran.ParticipatesInScoring)
                             {
                                 peakAreas[countLibTrans] = GetSafeArea(chromInfo);
                                 libIntensities[countLibTrans] = GetSafeLibIntensity(nodeTran);

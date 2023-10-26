@@ -644,6 +644,11 @@ namespace pwiz.Skyline.Model
             return IsCustom() && !(CustomIon is SettingsCustomIon);
         }
 
+        public bool IsReporterIon()
+        {
+            return IsCustom() && (CustomIon is SettingsCustomIon);
+        }
+
         public char FragmentNTermAA
         {
             get { return GetFragmentNTermAA(_group.Peptide.Sequence, CleavageOffset); }

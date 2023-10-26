@@ -825,7 +825,8 @@ namespace pwiz.Skyline.Model.Results
         private void AddPeak(ChromDataPeak dataPeak)
         {
             // Avoid using optimization data from other optimization steps in scoring
-            if (dataPeak.Peak != null && (PeakCount == 0 || this[0].Data.OptimizationStep == dataPeak.Data.OptimizationStep))
+            if (dataPeak.Peak != null && (PeakCount == 0 || this[0].Data.OptimizationStep == dataPeak.Data.OptimizationStep) &&
+                dataPeak.NodeTran is { ParticipatesInScoring: true }) // Also don't use reporter ions in scoring
             {
                 MaxHeight = Math.Max(MaxHeight, dataPeak.Peak.Height);
                 double area = dataPeak.Peak.Area;
@@ -841,7 +842,8 @@ namespace pwiz.Skyline.Model.Results
         private void SubtractPeak(ChromDataPeak dataPeak)
         {
             // Avoid using optimization data in scoring
-            if (dataPeak.Peak != null && (PeakCount == 0 || this[0].Data.OptimizationStep == dataPeak.Data.OptimizationStep))
+            if (dataPeak.Peak != null && (PeakCount == 0 || this[0].Data.OptimizationStep == dataPeak.Data.OptimizationStep) &&
+                dataPeak.NodeTran is { ParticipatesInScoring: true }) // Also don't use reporter ions in scoring)
             {
                 double area = dataPeak.Peak.Area;
                 PeakCount--;
