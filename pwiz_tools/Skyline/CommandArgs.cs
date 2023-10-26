@@ -1074,7 +1074,7 @@ namespace pwiz.Skyline
             new DocArgument(@"exp-mprophet-targets-only", (c, p) => c.MProphetTargetsOnly = true);
         public static readonly Argument ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES = 
             new DocArgument(@"exp-mprophet-exclude-feature", FEATURE_NAME_VALUE, 
-                (c, p) => c.ParseExcludeFeature(p, c.MProphetExcludeScores));
+                (c, p) => c.ParseExcludeFeature(p, c.MProphetExcludeScores)) {WrapValue = true};
         public static readonly Argument ARG_ANNOTATIONS_FILE = new DocArgument(@"exp-annotations-file", PATH_TO_CSV,
             (c, p) => c.AnnotationsFile = p.ValueFullPath);
         public static readonly Argument ARG_ANNOTATIONS_INCLUDE_OBJECTS =
@@ -1090,7 +1090,7 @@ namespace pwiz.Skyline
             ARG_SPECTRAL_LIBRARY_FILE, ARG_MPROPHET_FEATURES_FILE, ARG_MPROPHET_FEATURES_BEST_SCORING_PEAKS, ARG_MPROPHET_FEATURES_TARGETS_ONLY, 
             ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES, ARG_ANNOTATIONS_FILE, ARG_ANNOTATIONS_INCLUDE_OBJECTS, 
             ARG_ANNOTATIONS_EXCLUDE_PROPERTIES, ARG_ANNOTATIONS_REMOVE_BLANK_ROWS
-        );
+        ) { LeftColumnWidth = 40 };
 
         public string SpecLibFile { get; private set; }
 
