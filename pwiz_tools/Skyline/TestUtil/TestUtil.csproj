@@ -167,6 +167,7 @@
     <Compile Include="AbstractUnitTest.cs" />
     <Compile Include="Schemas\SchemaDocuments.cs" />
     <Compile Include="ScreenshotManager.cs" />
+    <Compile Include="SpectralLibraryTestUtil.cs" />
     <Compile Include="StackTraceLogger.cs" />
     <Compile Include="TestDocumentContainer.cs" />
     <Compile Include="TestFilesDir.cs" />

@@ -37,6 +37,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
@@ -629,6 +630,115 @@ namespace pwiz.SkylineTestData
 
             string chromLines = File.ReadAllText(outPath);
             AssertEx.NoDiff(chromLines, programmaticReport);
+        }
+
+        [TestMethod]
+        public void ConsoleExportSpecLibTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleExportSpecLibTest.zip");
+            // A document with no results. Attempting to export a spectral library should
+            // provoke an error
+            var docWithNoResultsPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            // A document with results that should be able to export a spectral library
+            var docWithResults = TestFilesDir.GetTestPath("msstatstest.sky");
+            var exportPath = TestFilesDir.GetTestPath("out_lib.blib"); // filepath to export library to
+            // Test error (no peptide precursors)
+            var output = RunCommand("--new=" + "new.sky", // Create a new document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--exp-speclib-file=" + exportPath // Export a spectral library
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_precursor_to_export_a_spectral_library_), output);
+            // Test error (no results)
+            output = RunCommand("--in=" + docWithNoResultsPath, // Load a document with no results
+                "--exp-speclib-file=" + exportPath // Export a spectral library
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_results_to_export_a_spectral_library_), output);
+            // Test export
+            output = RunCommand("--in=" + docWithResults, // Load a document with results
+                "--exp-speclib-file=" + exportPath // Export a spectral library
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Spectral_library_file__0__exported_successfully_, exportPath), output);
+            Assert.IsTrue(File.Exists(exportPath)); // Check that the exported file exists
+            var refSpectra = SpectralLibraryTestUtil.GetRefSpectraFromPath(exportPath);
+            CheckRefSpectraAll(refSpectra); // Check the spectra in the exported file
+
+        }
+
+        [TestMethod]
+        public void ConsoleExportMProphetTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleExportMProphetTest.zip");
+            // Path to export mProphet file to
+            var exportPath = TestFilesDir.GetTestPath("out.csv");
+            // A document with no results. Attempting to export mProphet features should
+            // provoke an error
+            var docWithNoResultsPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            // A document with results that should be able to export mProphet features
+            var docWithResults = TestFilesDir.GetTestPath("MProphetGold-trained-reduced.sky");
+            // The expected .csv export
+            var expectedExport = TestFilesDir.GetTestPathLocale("MProphet_expected.csv");
+            // The expected export with targets only and best scoring peaks only options
+            var expectedExportTargetsBestPeaks = TestFilesDir.GetTestPathLocale("MProphet_expected_targets_only_best_peaks_only.csv");
+            // The expected export when excluding the "Intensity" and "Standard signal to noise" features.
+            var expectedExportExcludeFeatures = TestFilesDir.GetTestPathLocale("MProphet_expected_exclude_features.csv");
+            // A string that is not a feature name or a mProphet file header
+            const string invalidFeatureName = "-la";
+
+            // Test error (no targets)
+            var output = RunCommand("--new=" + "new.sky", // Create a new document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--exp-mprophet-file=" + exportPath // Export mProphet features
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features_), output);
+            // Test error (no results)
+            output = RunCommand("--in=" + docWithNoResultsPath, // Load a document with no results
+                "--exp-mprophet-file=" + exportPath // Export mProphet features
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features_), output);
+            // Test error (invalid feature name)
+            output = RunCommand("--in=" + docWithResults, // Load a document with no results
+                "--exp-mprophet-file=" + exportPath, // Export mProphet features
+                "--exp-mprophet-exclude-feature=" + invalidFeatureName
+            );
+            CheckRunCommandOutputContains(string.Format(Resources
+                .CommandArgs_ParseArgsInternal_Error__Attempting_to_exclude_an_unknown_feature_name___0____Try_one_of_the_following_, invalidFeatureName), output);
+            // Test export
+            output = RunCommand("--in=" + docWithResults, // Load a document with results
+                "--exp-mprophet-file=" + exportPath // Export mProphet features
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
+            AssertEx.FileEquals(expectedExport, exportPath);
+            // Test export with target peptides only and best scoring peaks only
+            output = RunCommand("--in=" + docWithResults, // Load a document with results
+                "--exp-mprophet-file=" + exportPath, // Export mProphet features
+                "--exp-mprophet-targets-only", // Export should not include decoys peptides
+                "--exp-mprophet-best-peaks-only" // Export should contain best scoring peaks
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
+            AssertEx.FileEquals(expectedExportTargetsBestPeaks, exportPath);
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
+            // Test export with some scores excluded
+            output = RunCommand("--in=" + docWithResults, // Load a document with results
+                "--exp-mprophet-file=" + exportPath, // Export mProphet features
+                "--exp-mprophet-exclude-feature=" + "Intensity", // Export should not contain an "Intensity" column
+                "--exp-mprophet-exclude-feature=" + "Standard signal to noise" // Export should not contain a "Standard signal to noise" column
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
+            AssertEx.FileEquals(expectedExportExcludeFeatures, exportPath);
+        }
+
+        private static void CheckRefSpectraAll(IList<DbRefSpectra> refSpectra)
+        {
+
+            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "APVPTGEVYFADSFDR", "APVPTGEVYFADSFDR", 2, 885.920, 4, 24.366);
+            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "APVPTGEVYFADSFDR", "APVPTGEVYFADSFDR[+10.00827]", 2, 890.924, 4, 24.532);
+            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "AVTELNEPLSNEDR", "AVTELNEPLSNEDR", 2, 793.886, 4, 17.095);
+            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "AVTELNEPLSNEDR", "AVTELNEPLSNEDR[+10.00827]", 2, 798.891, 4, 17.095);
+            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "DQGGELLSLR", "DQGGELLSLR", 2, 544.291, 4, 20.355);
+            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "DQGGELLSLR", "DQGGELLSLR[+10.00827]", 2, 549.295, 4, 20.311);
+            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "ELLTTMGDR", "ELLTTMGDR", 2, 518.261, 4, 16.904);
+            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "ELLTTMGDR", "ELLTTMGDR[+10.00827]", 2, 523.265, 4, 16.904); 
+            Assert.IsTrue(!refSpectra.Any());
         }
 
         [TestMethod]
