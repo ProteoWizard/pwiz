@@ -947,15 +947,15 @@ greater peak area.</value>
     <value>Include feature scores only for targets. Requires the --exp-mprophet-file argument.</value>
   </data>
   <data name="_exp_annotations_file" xml:space="preserve">
-    <value>Export all the annotations in the document into an annotations file.</value>
+    <value>Export all the annotations in the document into a text file. Use --exp-annotations-include-properties to include properties as well.</value>
   </data>
   <data name="_exp_annotations_remove_blank_rows" xml:space="preserve">
     <value>Use to remove blank rows from the exported annotations. Requires the --exp-annotations-file argument.</value>
   </data>
   <data name="_exp_annotations_include_object" xml:space="preserve">
-    <value>Use to specify which object types to include in the exported annotations. By default all object types are included. This argument can be used multiple times to specify multiple object types. Requires the -exp-annotations-file argument.</value>
+    <value>Use to specify which object types to include in the exported annotations. By default all object types are included. This argument can be used multiple times to specify multiple object types. Requires the --exp-annotations-file argument.</value>
   </data>
   <data name="_exp_annotations_include_properties" xml:space="preserve">
-    <value>Use to include all properties in the exported annotations. By default no properties are included. Requires the -exp-annotations-file argument.</value>
+    <value>Use to include all properties in the exported annotations. By default no properties are included. Requires the --exp-annotations-file argument.</value>
   </data>
 </root>

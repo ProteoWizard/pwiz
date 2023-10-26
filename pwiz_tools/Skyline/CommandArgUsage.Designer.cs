@@ -241,7 +241,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Export all the annotations in the document into an annotations file..
+        ///   Looks up a localized string similar to Export all the annotations in the document into a text file. Use --exp-annotations-include-properties to include properties as well..
         /// </summary>
         internal static string _exp_annotations_file {
             get {
@@ -250,7 +250,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use to specify which object types to include in the exported annotations. By default all object types are included. This argument can be used multiple times to specify multiple object types. Requires the -exp-annotations-file argument..
+        ///   Looks up a localized string similar to Use to specify which object types to include in the exported annotations. By default all object types are included. This argument can be used multiple times to specify multiple object types. Requires the --exp-annotations-file argument..
         /// </summary>
         internal static string _exp_annotations_include_object {
             get {
@@ -259,7 +259,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use to include all properties in the exported annotations. By default no properties are included. Requires the -exp-annotations-file argument..
+        ///   Looks up a localized string similar to Use to include all properties in the exported annotations. By default no properties are included. Requires the --exp-annotations-file argument..
         /// </summary>
         internal static string _exp_annotations_include_properties {
             get {
