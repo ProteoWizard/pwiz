@@ -402,6 +402,17 @@ namespace BuildSciexMethod
             }
             else
             {
+                if (experiment.ExperimentType == ExperimentType.IDA)
+                {
+                    if (experiment.ExperimentParts.Count != 2 ||
+                        experiment.ExperimentParts[0].ExperimentPartName != ExperimentPartName.MRM ||
+                        experiment.ExperimentParts[1].ExperimentPartName != ExperimentPartName.EPI)
+                        throw new Exception("Expected two experiment parts for an IDA experiment, MRM and EPI");
+                    var part = experiment.ExperimentParts[0];
+                    props = part.Properties;
+                    massTable = part.PropertiesTable;
+                }
+
                 // Set the method's MRMModeProperty.
                 var scheduledProp = props.TryGet<MRMModeProperty>();
                 if (scheduledProp == null)
@@ -503,7 +514,7 @@ namespace BuildSciexMethod
                         ? typeof(DwellTimeProperty)
                         : typeof(AccumulationTimeProperty);
 
-                var props = new[]
+                var props = new List<PropertyData>( new[]
                 {
                     new PropertyData(typeof(GroupIdProperty), t => t.Group),
                     new PropertyData(typeof(CompoundIdProperty), t => t.Label),
@@ -519,7 +530,12 @@ namespace BuildSciexMethod
                     new PropertyData(typeof(CollisionEnergyProperty), t => t.CE),
                     new PropertyData(typeof(CollisionCellExitPotentialProperty)),
                     new PropertyData(typeof(ElectronKeProperty))
-                };
+                });
+                if (Equals(instrument, InstrumentType.QQQ) && !standardMethod)
+                {
+                    var dwellTime = props.Find(p => p.Property.Equals(timeProp));
+                    props.Remove(dwellTime);
+                }
                 return props.Where(prop => prop.GetValueForTransition != null && prop.GetPropertiesRowObj(table.Rows[0]) != null);
             }
 

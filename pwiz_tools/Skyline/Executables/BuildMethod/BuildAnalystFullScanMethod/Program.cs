@@ -732,9 +732,8 @@ namespace BuildAnalystFullScanMethod
 
         public void WriteToTemplate(String templateMethodFile, MethodTransitions transitions)
         {
-            MassSpecMethod templateMsMethod;
 
-            IAcqMethod templateAcqMethod = GetAcqMethod(TemplateMethod, out templateMsMethod);
+            IAcqMethod templateAcqMethod = GetAcqMethod(TemplateMethod, out _);
 
             var method = ExtractMsMethod(templateAcqMethod);
 
