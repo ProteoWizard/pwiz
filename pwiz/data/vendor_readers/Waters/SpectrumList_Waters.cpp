@@ -108,30 +108,12 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
 
 PWIZ_API_DECL bool SpectrumList_Waters::isLockMassFunction(int function) const
 {
-    if (lockmassFunction_ == LOCKMASS_FUNCTION_UNINIT) // See if we can figure out which is the lockmass function
+    if (lockmassFunction_ == LOCKMASS_FUNCTION_UNINIT)
     {
-        bool hasChromMS = false;
-        const set<int>& functionsWithChromFiles = rawdata_->FunctionsWithChromFiles();
-        int apparentLockmassFunction = LOCKMASS_FUNCTION_UNINIT;
-        BOOST_FOREACH(int tryFunction, rawdata_->FunctionIndexList())
+        if (!rawdata_->Info.TryGetLockMassFunction(lockmassFunction_))
         {
-            int msLevel;
-            CVID spectrumType;
-            translateFunctionType(WatersToPwizFunctionType(rawdata_->Info.GetFunctionType(tryFunction)), msLevel, spectrumType);
-            if (cv::cvIsA(spectrumType, MS_mass_spectrum))
-            {
-                // Function has MS data - but does it have a _CHRO*.dat file? We've observed that lockmass functions don't
-                if (functionsWithChromFiles.find(tryFunction) == functionsWithChromFiles.end())
-                {
-                    apparentLockmassFunction = tryFunction; // No _CHRO*.DAT file, might be lockmass (value is 0-based)
-                }
-                else
-                {
-                    hasChromMS = true; // At least one function does have a _CHRO*.dat file
-                }
-            }
+            lockmassFunction_ = LOCKMASS_FUNCTION_UNKNOWN;
         }
-        lockmassFunction_ = hasChromMS ? apparentLockmassFunction : LOCKMASS_FUNCTION_UNKNOWN;
     }
     return function == lockmassFunction_;
 }
@@ -376,7 +358,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
             {
                 getDDAScan(index, doCentroid, masses, intensities);
             }
-            else if (ie.block >= 0 && !doCentroid && !isLockMassFunction(ie.function)) // Lockmass won't have IMS
+            else if (ie.block >= 0 && !doCentroid)
             {
                 MassLynxRawScanReader& scanReader = rawdata_->GetCompressedDataClusterForBlock(ie.function, ie.block);
                 scanReader.ReadScan(ie.function, ie.block, ie.scan, masses, intensities);
