@@ -1066,7 +1066,7 @@ namespace pwiz.Skyline
         // For exporting other file types
         public static readonly Argument ARG_SPECTRAL_LIBRARY_FILE = new DocArgument(@"exp-speclib-file", PATH_TO_BLIB,
             (c, p) => c.SpecLibFile= p.ValueFullPath);
-        public static readonly Argument ARG_MPROPHET_FEATURES_FILE = new DocArgument(@"exp-mprophet-file", PATH_TO_CSV,
+        public static readonly Argument ARG_MPROPHET_FEATURES_FILE = new DocArgument(@"exp-mprophet-features", PATH_TO_CSV,
             (c, p) => c.MProphetFeaturesFile = p.ValueFullPath);
         public static readonly Argument ARG_MPROPHET_FEATURES_BEST_SCORING_PEAKS =
             new DocArgument(@"exp-mprophet-best-peaks-only", (c, p) => c.MProphetUseBestScoringPeaks = true);
@@ -1075,7 +1075,7 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES = 
             new DocArgument(@"exp-mprophet-exclude-feature", FEATURE_NAME_VALUE, 
                 (c, p) => c.ParseExcludeFeature(p, c.MProphetExcludeScores)) {WrapValue = true};
-        public static readonly Argument ARG_ANNOTATIONS_FILE = new DocArgument(@"exp-annotations-file", PATH_TO_CSV,
+        public static readonly Argument ARG_ANNOTATIONS_FILE = new DocArgument(@"exp-annotations", PATH_TO_CSV,
             (c, p) => c.AnnotationsFile = p.ValueFullPath);
         public static readonly Argument ARG_ANNOTATIONS_INCLUDE_OBJECTS =
             new DocArgument(@"exp-annotations-include-object", ElementHandler.GetAllHandlers().Select(handler => handler.Name).ToArray(),
