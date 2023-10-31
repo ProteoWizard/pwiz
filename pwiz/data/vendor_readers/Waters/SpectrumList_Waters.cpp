@@ -773,12 +773,7 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
 
 PWIZ_API_DECL void SpectrumList_Waters::getDDAScan(unsigned int index, bool doCentroid, vector<float>& masses, vector<float>& intensities) const
 {
-    using namespace boost::spirit::karma;
-    
-    float setMass, precursorMass, retentionTime;
-    int function, startScan, endScan;
-    bool isMS1;
-    rawdata_->GetDDAScan(index, doCentroid, retentionTime, function, startScan, endScan, isMS1, setMass, precursorMass, masses, intensities);
+    rawdata_->GetDDAScan(index, doCentroid, masses, intensities);
 }
 
 PWIZ_API_DECL void SpectrumList_Waters::createDDAIndex()
