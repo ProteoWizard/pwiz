@@ -374,7 +374,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
 
             if (useDDAProcessor_)
             {
-                getDDAScan(index, masses, intensities);
+                getDDAScan(index, doCentroid, masses, intensities);
             }
             else if (ie.block >= 0 && !doCentroid && !isLockMassFunction(ie.function)) // Lockmass won't have IMS
             {
@@ -771,14 +771,14 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
     size_ = index_.size();
 }
 
-PWIZ_API_DECL void SpectrumList_Waters::getDDAScan(unsigned int index, vector<float>& masses, vector<float>& intensities) const
+PWIZ_API_DECL void SpectrumList_Waters::getDDAScan(unsigned int index, bool doCentroid, vector<float>& masses, vector<float>& intensities) const
 {
     using namespace boost::spirit::karma;
     
     float setMass, precursorMass, retentionTime;
     int function, startScan, endScan;
     bool isMS1;
-    rawdata_->GetDDAScan(index, retentionTime, function, startScan, endScan, isMS1, setMass, precursorMass, masses, intensities);
+    rawdata_->GetDDAScan(index, doCentroid, retentionTime, function, startScan, endScan, isMS1, setMass, precursorMass, masses, intensities);
 }
 
 PWIZ_API_DECL void SpectrumList_Waters::createDDAIndex()
