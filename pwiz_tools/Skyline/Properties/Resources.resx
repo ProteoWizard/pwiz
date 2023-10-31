@@ -13878,6 +13878,9 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="Server_GetKey___anonymous_" xml:space="preserve">
     <value> (anonymous)</value>
   </data>
+  <data name="NodeTip_Timer_Tick_An_error_occurred_displaying_a_tooltip_" xml:space="preserve">
+    <value>An error occurred displaying a tooltip.</value>
+  </data>
   <data name="EncyclopeDiaHelpers_Generate_Waiting_for_chromatogram_library" xml:space="preserve">
     <value>Waiting for chromatogram library</value>
   </data>
