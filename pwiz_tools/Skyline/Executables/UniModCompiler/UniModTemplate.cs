@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// ReSharper disable NonLocalizedString
+// ReSharper disable LocalizableElement
 namespace pwiz.Skyline.Model.DocSettings
 {
     public static class UniModData
@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Hardcoded Skyline Mods
             new UniModModificationData
             {
-                 Name = "Amonia Loss (K, N, Q, R)", 
+                 Name = "Ammonia Loss (K, N, Q, R)", 
                  AAs = "K, N, Q, R", LabelAtoms = LabelAtoms.None, Losses = new [] { new FragmentLoss("NH3"), }, 
                  Structural = true, Hidden = false, 
             },

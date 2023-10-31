@@ -28,11 +28,12 @@ namespace UniModCompiler
 {
     /// <summary>
     /// Takes an XML file of modifications,
-    /// We used: http://www.unimod.org/xml/unimod.xml.
+    /// We use: http://www.unimod.org/xml/unimod.xml
+    /// From: ..\..\..\..\pwiz\data\common
     /// Takes an XML file with short-names,
-    /// We used: ProteinPilot.DataDictionary.xml supplied by AB SCIEX
-    /// Takes a set of text files that contain line seperated lists of modifications.
-    /// We used: http://www.matrixscience.com/cgi/get_params.pl
+    /// We use: ProteinPilot.DataDictionary.xml supplied by AB SCIEX
+    /// Takes a set of text files that contain line separated lists of modifications.
+    /// We use: http://www.matrixscience.com/cgi/get_params.pl
     /// 
     /// UniModCompiler matches the modification names in the text files to the modification definitions in the XML.
     /// Modifications are then compiled into lists of static modifications for Skyline, which are output to UniMod.cs
@@ -45,9 +46,12 @@ namespace UniModCompiler
         private static List<Mod> _listedHiddenMods;
         private static List<string> _impossibleMods;
         private static Dictionary<string, ThreeLetterCodeUsed> _dictModNameToThreeLetterCode;
+        private static Dictionary<Mod, int> _requiredPrecisions;
+
+        // ReSharper disable InconsistentNaming
         private static readonly MassDistribution EmptyMassDistribution = new MassDistribution(.001, .00001);
         private static readonly IsotopeAbundances IsotopeAbundances = GetIsotopeAbundances();
-        private static Dictionary<Mod, int> _requiredPrecisions;
+        // ReSharper restore InconsistentNaming
 
         private class ThreeLetterCodeUsed
         {
@@ -62,6 +66,10 @@ namespace UniModCompiler
 
         private const string PROJECT_PATH = @"..\..";
         private static readonly string INPUT_FILES_PATH = Path.Combine(PROJECT_PATH, "InputFiles");
+        private const string PWIZ_ROOT_PATH = @"..\..\..\..\..\..";
+        private static readonly string UNIMOD_FOLDER_PATH = Path.Combine(PWIZ_ROOT_PATH, @"pwiz\data\common");
+        private const string UNIMOD_XML = "unimod.xml";
+        private const string PROTEIN_PILOT_XML = "ProteinPilot.DataDictionary.xml";
 
         static void Main()
         {
@@ -71,11 +79,11 @@ namespace UniModCompiler
 
                 _dictStructuralMods = new Dictionary<string, mod_t>();
                 _dictIsotopeMods = new Dictionary<string, mod_t>();
-                _dictModNameToThreeLetterCode = LoadShortNames(Path.Combine(INPUT_FILES_PATH, "ProteinPilot.DataDictionary.xml"));                
+                _dictModNameToThreeLetterCode = LoadShortNames(Path.Combine(INPUT_FILES_PATH, PROTEIN_PILOT_XML));                
 
                 // Read in XML, creating a dictionary of mod titles to mods.
-                StreamReader reader = new StreamReader(Path.Combine(INPUT_FILES_PATH, "unimod.xml"));
-                XmlSerializer serializer = new XmlSerializer(typeof (Modification));
+                var reader = new StreamReader(Path.Combine(UNIMOD_FOLDER_PATH, UNIMOD_XML));
+                var serializer = new XmlSerializer(typeof (Modification));
                 var modifications = ((Modification) serializer.Deserialize(reader)).modifications;
                 reader.Close();
                 foreach (mod_t mod in modifications)
@@ -133,12 +141,12 @@ namespace UniModCompiler
                 _impossibleMods = new List<string>();
 
                 // Writing the output file.
-                StreamWriter writer = new StreamWriter(Path.Combine(PROJECT_PATH, @"..\..\Model\DocSettings\UniModData.cs"));
+                var writer = new StreamWriter(Path.Combine(PROJECT_PATH, @"..\..\Model\DocSettings\UniModData.cs"));
                 var templateStream =
                     typeof (Program).Assembly.GetManifestResourceStream("UniModCompiler.UniModTemplate.cs");
                 if (templateStream == null)
                     throw new IOException("Failed to open template");
-                StreamReader templateReader = new StreamReader(templateStream);
+                var templateReader = new StreamReader(templateStream);
                 string templateLine;
                 while ((templateLine = templateReader.ReadLine()) != null)
                 {
@@ -294,12 +302,8 @@ namespace UniModCompiler
             AddNameAliases(dictModNameToThreeLetterCode,
                 new Dictionary<string, string>
                 {
-                    {"GlyGlyGln", "GGQ"},
-                    {"GlnThrGlyGly", "QTGG"},
-                    {"GlnGlnGlnThrGlyGly", "QQQTGG"},
                     {"Chloro", "Chlorination" },
                     {"Dichloro", "dichlorination"},
-                    {"Acetyl-PEO-Biotin", "PEO-Iodoacetyl-LC-Biotin"}
                 });
 
             return dictModNameToThreeLetterCode;
@@ -309,7 +313,12 @@ namespace UniModCompiler
         {
             foreach (var nameValue in dictAliases)
             {
-                dictModNameToThreeLetterCode.Add(nameValue.Value.ToLower(), dictModNameToThreeLetterCode[nameValue.Key.ToLower()]);
+                if (dictModNameToThreeLetterCode.TryGetValue(nameValue.Key.ToLower(), out var threeLetterCode))
+                    dictModNameToThreeLetterCode.Add(nameValue.Value.ToLower(), threeLetterCode);
+                else
+                {
+                    Console.WriteLine(@"Could not find alias modification '{0}' in ", nameValue.Key);
+                }
             }
         }
 
@@ -459,7 +468,7 @@ namespace UniModCompiler
                 writer.WriteLine(@"                 Name = ""{0}"", ", mod.Name);
                 writer.Write("                 ");
                 if (mod.AAs.Length > 0)
-                    writer.Write(@"AAs = ""{0}"", ", BuildAAString(mod.AAs));
+                    writer.Write(@"AAs = ""{0}"", ", BuildAaString(mod.AAs));
                 if (mod.Terminus != null)
                     writer.Write(@"Terminus = {0}, ", "ModTerminus." + mod.Terminus);
                 writer.Write("LabelAtoms = {0}, ", labelAtoms);
@@ -609,7 +618,7 @@ namespace UniModCompiler
             return true;
         }
 
-        private static string BuildAAString(char[] aas)
+        private static string BuildAaString(char[] aas)
         {
             string result = "" + aas[0];
             for (int i = 1; i < aas.Length; i++ )
@@ -625,14 +634,14 @@ namespace UniModCompiler
         private static bool ContainsSite(mod_t modification, string aa, out List<string> losses)
         {
             losses = new List<string>();
-            foreach (specificity_t specificty in modification.specificity)
+            foreach (specificity_t specificity in modification.specificity)
             {
-                if (Equals(specificty.site, aa) || 
-                    (aa.Length > 1 && specificty.position.ToString().ToLower().Contains(aa.ToLower().Replace("-", ""))))
+                if (Equals(specificity.site, aa) || 
+                    (aa.Length > 1 && specificity.position.ToString().ToLower().Contains(aa.ToLower().Replace("-", ""))))
                 {
-                    if (specificty.NeutralLoss != null && specificty.NeutralLoss.Length > 0)
+                    if (specificity.NeutralLoss != null && specificity.NeutralLoss.Length > 0)
                     {   
-                        foreach(NeutralLoss_t loss in specificty.NeutralLoss)
+                        foreach(NeutralLoss_t loss in specificity.NeutralLoss)
                         {
 // ReSharper disable CompareOfFloatsByEqualityOperator
                             if(loss.avge_mass == 0)
