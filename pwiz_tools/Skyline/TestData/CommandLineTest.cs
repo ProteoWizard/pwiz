@@ -806,21 +806,11 @@ namespace pwiz.SkylineTestData
             // exported from the original document
             AssertEx.FileEquals(annotationsPath, newAnnotationsPath);
             // Assert that the chromatograms (and their annotations) are identical
-            SrmDocument originalDocument = ReadSrmDocument(documentWithAnnotations);
-            SrmDocument outputDocument = ReadSrmDocument(documentWithImportedAnnotations);
+            SrmDocument originalDocument = ResultsUtil.DeserializeDocument(documentWithAnnotations);
+            SrmDocument outputDocument = ResultsUtil.DeserializeDocument(documentWithImportedAnnotations);
             Assert.AreEqual(originalDocument.Settings.MeasuredResults.Chromatograms, 
                 outputDocument.MeasuredResults.Chromatograms);
 
-        }
-
-        private static SrmDocument ReadSrmDocument(string filepath)
-        {
-            SrmDocument outputDocument;
-            using (var stream = new FileStream(filepath, FileMode.Open))
-            {
-                outputDocument = (SrmDocument)new XmlSerializer(typeof(SrmDocument)).Deserialize(stream);
-            }
-            return outputDocument;
         }
 
         private static void CheckRefSpectraAll(IList<DbRefSpectra> refSpectra)
