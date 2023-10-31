@@ -293,9 +293,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
     if (msLevel > 1 && isMS)
     {
         double setMass = 0;
+        double ddaPrecursorMass = 0;
         if (useDDAProcessor_)
         {
-            setMass = ie.setMass;
+            getDDAPrecursorMasses(index, setMass, ddaPrecursorMass);
         }
         else if (!hasSonarFunctions())
         {
@@ -328,7 +329,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
             precursor.activation.set(MS_collision_energy, collisionEnergy, UO_electronvolt);
 
 
-        double precursorMass = useDDAProcessor_ ? ie.precursorMass : setMass;
+        double precursorMass = useDDAProcessor_ ? ddaPrecursorMass : setMass;
         SelectedIon selectedIon(precursorMass);
 
         precursor.selectedIons.push_back(selectedIon);
@@ -801,8 +802,6 @@ PWIZ_API_DECL void SpectrumList_Waters::createDDAIndex()
         ie.block = -1; // The SDK DDA processor doesn't yet support ion mobility data
         ie.scan = startScan; // While it might combine multiple scans, use the first for getting the metadata
         ie.index = i;
-        ie.setMass = setMass;
-        ie.precursorMass = precursorMass;
 
         std::back_insert_iterator<std::string> sink(ie.id);
         if (startScan == endScan)
@@ -821,6 +820,18 @@ PWIZ_API_DECL void SpectrumList_Waters::createDDAIndex()
     }
 }
 
+PWIZ_API_DECL void SpectrumList_Waters::getDDAPrecursorMasses(int index, double& setMass, double& precursorMass) const
+{
+    // We get updated precursor mass at the point of reading each scan to ensure the lockmass
+    // correction is applied, which might not be the case when the index is created
+    float retentionTime, fSetMass, fPrecursorMass;
+    int function, startScan, endScan;
+    bool isMS1;
+    rawdata_->GetDDAScanInfo(index, retentionTime, function, startScan, endScan, isMS1, fSetMass, fPrecursorMass);
+
+    setMass = fSetMass;
+    precursorMass = fPrecursorMass;
+}
 
 } // detail
 } // msdata
