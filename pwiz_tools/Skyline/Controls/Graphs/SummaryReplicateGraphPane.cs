@@ -171,6 +171,26 @@ namespace pwiz.Skyline.Controls.Graphs
             UpdateGraph(true);
         }
 
+        public override void UpdateGraph(bool selectionChanged)
+        {
+            Console.WriteLine("Update graph");
+        }
+
+        /// <summary>
+        /// Retrieves the X coordinate on the graph corresponding to a replicateIndex.
+        /// </summary>
+        public int GetReplicateXCoordinate(int index)
+        {
+            int? coord = _replicateGroups.
+                Select((item, coordinate) => new { item, coordinate }).
+                Where(element => element.item.ReplicateIndexes.Contains(index)).
+                Select(element => element.coordinate).
+                First();
+            if (coord.HasValue)
+                return coord.Value;
+            return 0;
+        }
+
         protected void ChangeSelectedIndex(int iResult)
         {
             if (iResult < 0)
@@ -183,7 +203,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // Achieve this by "scrolling" the axis into view.
             if (iResult >= 0)
             {
-                var apparentReplicateIndex = iResult + 1;
+                var apparentReplicateIndex = GetReplicateXCoordinate(iResult) + 1;
                 while (apparentReplicateIndex > XAxis.Scale.Max)
                 {
                     XAxis.Scale.Max++;
