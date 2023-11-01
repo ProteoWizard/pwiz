@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _replicateGroups = graphData.ReplicateGroups;
         }
 
-        protected override int SelectedIndex
+        public override int SelectedIndex
         {
             get
             {
@@ -171,26 +171,6 @@ namespace pwiz.Skyline.Controls.Graphs
             UpdateGraph(true);
         }
 
-        public override void UpdateGraph(bool selectionChanged)
-        {
-            Console.WriteLine("Update graph");
-        }
-
-        /// <summary>
-        /// Retrieves the X coordinate on the graph corresponding to a replicateIndex.
-        /// </summary>
-        public int GetReplicateXCoordinate(int index)
-        {
-            int? coord = _replicateGroups.
-                Select((item, coordinate) => new { item, coordinate }).
-                Where(element => element.item.ReplicateIndexes.Contains(index)).
-                Select(element => element.coordinate).
-                First();
-            if (coord.HasValue)
-                return coord.Value;
-            return 0;
-        }
-
         protected void ChangeSelectedIndex(int iResult)
         {
             if (iResult < 0)
@@ -199,22 +179,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!document.Settings.HasResults || iResult >= document.Settings.MeasuredResults.Chromatograms.Count)
                 return;
 
-            // Keep the currently selected replicate visible on the graph.
-            // Achieve this by "scrolling" the axis into view.
-            if (iResult >= 0)
-            {
-                var apparentReplicateIndex = GetReplicateXCoordinate(iResult) + 1;
-                while (apparentReplicateIndex > XAxis.Scale.Max)
-                {
-                    XAxis.Scale.Max++;
-                    XAxis.Scale.Min++;
-                }
-                while (apparentReplicateIndex < XAxis.Scale.Min)
-                {
-                    XAxis.Scale.Max--;
-                    XAxis.Scale.Min--;
-                }
-            }
+
             // This propagates the change to synchronized zooming panels,
             // and therefore must happen after the axis shift
             GraphSummary.StateProvider.SelectedResultsIndex = iResult;
