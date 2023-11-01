@@ -1636,7 +1636,7 @@ namespace pwiz.Skyline.Properties
             new StaticMod(UniModData.DEFAULT.Name, UniModData.DEFAULT.AAs, UniModData.DEFAULT.Terminus, false,
                 UniModData.DEFAULT.Formula, UniModData.DEFAULT.LabelAtoms,
                 RelativeRT.Matching, null, null, UniModData.DEFAULT.Losses, UniModData.DEFAULT.ID,
-                UniModData.DEFAULT.ShortName, null)
+                UniModData.DEFAULT.ShortName)
         };
 
         public static StaticMod[] GetDefaultsOn()

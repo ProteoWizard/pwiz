@@ -414,7 +414,7 @@ namespace pwiz.SkylineTest
         private static readonly StaticMod LABEL15_N = new StaticMod("Label:15N", null, null, LabelAtoms.N15);
         private static readonly StaticMod MET_OX_ROUNDED = new StaticMod("Met Ox Rounded", "M", null, null, LabelAtoms.None, 16.0, 16.0);
         private static readonly StaticMod N_TERM_LABEL = new StaticMod("Label:13C(6)15N(2) (K)", "K", null, false, null, LabelAtoms.C13|LabelAtoms.N15, 
-                                                                        RelativeRT.Matching, null,null, null, 259, "+08", null);
+                                                                        RelativeRT.Matching, null,null, null, 259, "+08");
 
         private static List<string> _seqs;
         private static void InitSeqs()
