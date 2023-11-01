@@ -805,8 +805,8 @@ namespace pwiz.SkylineTestData
             // exported from the original document
             AssertEx.FileEquals(annotationsPath, newAnnotationsPath);
             // Assert that the chromatograms (and their annotations) are identical
-            SrmDocument originalDocument = ResultsUtil.DeserializeDocument(documentWithAnnotations);
-            SrmDocument outputDocument = ResultsUtil.DeserializeDocument(documentWithImportedAnnotations);
+            var originalDocument = ResultsUtil.DeserializeDocument(documentWithAnnotations);
+            var outputDocument = ResultsUtil.DeserializeDocument(documentWithImportedAnnotations);
             Assert.AreEqual(originalDocument.Settings.MeasuredResults.Chromatograms, 
                 outputDocument.MeasuredResults.Chromatograms);
 
