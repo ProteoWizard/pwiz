@@ -38,6 +38,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
@@ -2961,26 +2962,85 @@ namespace pwiz.Skyline
         /// <param name="path">Path to the xml file containing the annotations</param>
         /// <param name="targets">Which data types to apply the annotation to</param>
         /// <param name="type">Type of annotation</param>
+        /// <param name="values">An array of at least one value. Only used for the type Value List</param>
         /// <returns>True upon successful</returns>
         public bool AddAnnotations(string name, string path,
             List<AnnotationDef.AnnotationTarget> targets, // Could this use Target Set instead? 
             ListPropertyType type,
-            string value)
+            string[] values)
         {
+            // If there is an xml file, do not consider other arguments
             if (path != null)
             {
                 // Read xml
+                bool success;
+                using (var stream = File.OpenRead(path))
+                {
+                    var reader = new XmlTextReader(stream);
+                    success = ReadAnnotationsXml(reader);
+                }
+
+                if (success)
+                {
+                    _out.WriteLine(Resources.CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0_, path);
+                }
+                else
+                {
+                    _out.WriteLine(Resources.CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0_, path);
+                }
+
+                return success;
             }
-            var csvReader = new CsvFileReader(value);
-            var items = csvReader.ReadLine();
-            if (items == null)
+
+            var valueListName = AnnotationDef.AnnotationType.value_list.ToString();
+            if (Equals(type.AnnotationType.ToString(), valueListName) && values.IsNullOrEmpty())
             {
-                _out.WriteLine(Resources.CommandLine_AddAnnotations_Error__Unable_to_read_values_file__0__);
-                return false;
+                _out.WriteLine(Resources.CommandLine_AddAnnotations_Error__Values_cannot_be_empty_for_an_annotation_of_type__value_list__);
             }
-            var annotationDef = new AnnotationDef(name, AnnotationDef.AnnotationTargetSet.OfValues(targets), type, items);
+            var annotationDef = new AnnotationDef(name, AnnotationDef.AnnotationTargetSet.OfValues(targets), type, values);
             Settings.Default.AnnotationDefList.SetValue(annotationDef);
+            var defList = new AnnotationDefList { annotationDef };
+            SetAnnotations(defList);
+            _out.WriteLine(Resources.CommandLine_AddAnnotations_Annotation___0___successfully_defined_, name);
             return true;
+        }
+
+        private bool ReadAnnotationsXml(XmlReader reader)
+        {
+            var annotationDefList = new AnnotationDefList();
+            annotationDefList.ReadXml(reader);
+            SetAnnotations(annotationDefList);
+            return annotationDefList.Count > 0;
+        }
+
+        private void SetAnnotations(AnnotationDefList newAnnotationDefs)
+        {
+            var oldAnnotationDefs = Document.Settings.DataSettings.AnnotationDefs.ToList();
+            var allDefs = new HashSet<AnnotationDef>();
+            foreach (var annotationDef in newAnnotationDefs)
+            {
+                allDefs.Add(annotationDef);
+            }
+
+            foreach (var def in oldAnnotationDefs)
+            {
+                allDefs.Add(def);
+            }
+
+            foreach (var def in newAnnotationDefs)
+            {
+                Settings.Default.AnnotationDefList.Add(def);
+            }
+
+            ModifyDocument(doc =>
+            {
+                var dataSettingsNew = Document.Settings.DataSettings.ChangeAnnotationDefs(allDefs.ToList());
+                if (Equals(dataSettingsNew, doc.Settings.DataSettings))
+                    return doc;
+                doc = doc.ChangeSettings(doc.Settings.ChangeDataSettings(dataSettingsNew));
+                doc = MetadataExtractor.ApplyRules(doc, null, out _);
+                return doc;
+            });
         }
 
         public bool SetLibrary(string name, string path, bool append = true)

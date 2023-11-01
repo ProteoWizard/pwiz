@@ -746,33 +746,97 @@ namespace pwiz.SkylineTestData
         public void ConsoleDefineAnnotationsTest()
         {
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleDefineAnnotationsTest.zip");
-            var annotationValuesFile = TestFilesDir.GetTestPath("Values.csv");
+            var annotationsXmlFile = TestFilesDir.GetTestPath("Annotations.xml");
+            const string annotationValues = "Great,Good,Potentially,Bad";
             const string invalidValue = "-la";
-            const string annotationName = "Bioreplicate";
-            const string annotationType = "text";
+            const string annotationName = "Peptide Quality";
+            const string annotationTargets = "peptide";
+            const string annotationType = "value_list";
+            var newDocumentPath = TestFilesDir.GetTestPath("out.sky");
             // Test error (invalid annotation-targets value)
-            var output = RunCommand("--new=" + "new.sky", // Create a new document
+            var output = RunCommand("--new=" + newDocumentPath, // Create a new document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
                 "--annotation-add=" + annotationName, // Name the annotation
                 "--annotation-targets=" + invalidValue, // Input an invalid target
                 "--annotation-type=" + annotationType, // Specify the type
-                "--annotation-values=" + annotationValuesFile // Specify the location of the values
+                "--annotation-values=" + annotationValues // Specify the location of the values
             );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandArgs_ParseAnnotationTargets_Error__Attempting_to_exclude_an_unknown_annotation_target__0___Try_one_of_the_following_, invalidValue), output);
+            CheckRunCommandOutputContains(string.Format(Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_, 
+                invalidValue,
+                "--annotation-targets", 
+                string.Join(@", ", Enum.GetNames(typeof(AnnotationDef.AnnotationTarget)))), output);
             // Test error (invalid annotation-type value)
-            output = RunCommand("--new=" + "new.sky", // Create a new document
+            output = RunCommand("--new=" + newDocumentPath, // Create a new document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
                 "--annotation-add=" + annotationName, // Name the annotation
-                "--annotation-targets=" + invalidValue, // Input an invalid target
-                "--annotation-values=" + annotationValuesFile // Specify the location of the values
+                "--annotation-targets=" + annotationTargets, // Specify the target
+                "--annotation-type=" + invalidValue // Specify an invalid type value
             );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandArgs_ParseAnnotationTypes_Error__Attempting_to_exclude_an_unknown_annotation_type__0___Try_one_of_the_following_, invalidValue), output);
+            CheckRunCommandOutputContains(string.Format(Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                invalidValue,
+                "--annotation-type",
+                string.Join(@", ", ListPropertyType.ListPropertyTypes().Select(c=> c.AnnotationType.ToString()).ToArray())), output);
+            // Test error (specifying a value list type without providing a list of values)
+            output = RunCommand("--new=" + newDocumentPath, // Create a new document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--annotation-add=" + annotationName, // Name the annotation
+                "--annotation-targets=" + annotationTargets, // Input an invalid target
+                "--annotation-type=" + "value_list", // Specify the type
+                "--save"
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_AddAnnotations_Error__Values_cannot_be_empty_for_an_annotation_of_type__value_list__), output);
+            // Test define (from .xml file)
+            output = RunCommand("--new=" + newDocumentPath, // Create a document (without annotations)
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--annotation-add-file=" + annotationsXmlFile, // Specify file path
+                "--save"
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0_, annotationsXmlFile), output);
+            // Assert that the document has the right number of annotations
+            Assert.IsTrue(ResultsUtil.DeserializeDocument(newDocumentPath).Settings.DataSettings.AnnotationDefs.Count == 2);
+            // Assert that the annotations in the .xml file appear in the document
+            AssertAnnotationInDocument(newDocumentPath, 
+                annotationName, 
+                AnnotationDef.AnnotationTargetSet.OfValues(AnnotationDef.AnnotationTarget.peptide), 
+                AnnotationDef.AnnotationType.value_list, 
+                new []{"Great", "Good", "Potentially", "Bad"});
+            AssertAnnotationInDocument(newDocumentPath, 
+                "BioReplicate",
+                AnnotationDef.AnnotationTargetSet.OfValues(AnnotationDef.AnnotationTarget.replicate), 
+                AnnotationDef.AnnotationType.number, 
+                Array.Empty<string>());
+            // Test define (from arguments)
+            output = RunCommand("--new=" + newDocumentPath, // Create a new document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--annotation-add=" + annotationName, // Name the annotation
+                "--annotation-targets=" + annotationTargets, // Input a target
+                "--annotation-type=" + annotationType, // Specify the type
+                "--annotation-values=" + annotationValues, // Specify the values
+                "--save"
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_AddAnnotations_Annotation___0___successfully_defined_, annotationName), output);
+            // Assert that the document has the right number of annotations
+            Assert.IsTrue(ResultsUtil.DeserializeDocument(newDocumentPath).Settings.DataSettings.AnnotationDefs.Count == 1);
+            // Assert that the definition matches the one we defined
+            AssertAnnotationInDocument(newDocumentPath,
+                annotationName,
+                AnnotationDef.AnnotationTargetSet.OfValues(AnnotationDef.AnnotationTarget.peptide),
+                AnnotationDef.AnnotationType.value_list,
+                new[] { "Great", "Good", "Potentially", "Bad" });
         }
 
-        private void TestDefineAnnotationCommand(string documentPath, string annotationName, string annotationTargets,
-            string annotationValuesFile, string outputMessage)
+        private static void AssertAnnotationInDocument(string documentPath, string annotationName, 
+            AnnotationDef.AnnotationTargetSet annotationTargets, AnnotationDef.AnnotationType annotationType, string[] annotationValues)
         {
+            var doc = ResultsUtil.DeserializeDocument(documentPath);
+            var annotationDefs =  doc.Settings.DataSettings.AnnotationDefs;
+            var annotationInDocument = annotationDefs.Any(def => 
+                def.Name.Equals(annotationName) && 
+                def.AnnotationTargets.Equals(annotationTargets) && 
+                def.Type.Equals(annotationType) && 
+                def.Items.SequenceEqual(annotationValues));
 
+            Assert.IsTrue(annotationInDocument);
         }
 
         [TestMethod]

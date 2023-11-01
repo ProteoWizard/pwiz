@@ -76,6 +76,23 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        public static string GetAnnotationTypeCommandLineName(AnnotationDef.AnnotationType annotationType)
+        {
+            switch (annotationType)
+            {
+                case AnnotationDef.AnnotationType.text:
+                    return "text";
+                case AnnotationDef.AnnotationType.number:
+                    return Resources.ListPropertyType_GetAnnotationTypeName_Number;
+                case AnnotationDef.AnnotationType.true_false:
+                    return Resources.ListPropertyType_GetAnnotationTypeName_True_False;
+                case AnnotationDef.AnnotationType.value_list:
+                    return Resources.ListPropertyType_GetAnnotationTypeName_Value_List;
+                default:
+                    return annotationType.ToString();
+            }
+        }
+
         protected bool Equals(ListPropertyType other)
         {
             return string.Equals(Lookup, other.Lookup) && AnnotationType == other.AnnotationType;

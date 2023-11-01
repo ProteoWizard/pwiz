@@ -13917,7 +13917,19 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="CommandArgs_ParseAnnotationTargets_Error__Attempting_to_exclude_an_unknown_annotation_target__0___Try_one_of_the_following_" xml:space="preserve">
     <value>Error: Attempting to exclude an unknown annotation target '{0}'. Try one of the following:</value>
   </data>
-  <data name="CommandLine_AddAnnotations_Error__Unable_to_read_values_file__0__" xml:space="preserve">
-	  <value>Error: Unable to read values file {0}.</value>
+  <data name="CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0_" xml:space="preserve">
+    <value>Annotations successfully defined from file {0}</value>
+  </data>
+  <data name="CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0_" xml:space="preserve">
+    <value>Error: Unable to read annotations from file {0}</value>
+  </data>
+  <data name="CommandLine_AddAnnotations_Annotation___0___successfully_defined_" xml:space="preserve">
+    <value>Annotation '{0}' successfully defined.</value>
+  </data>
+  <data name="CommandArgs_ParseAnnotationTypes_Error__Attempting_to_specify_an_unknown_annotation_type___0____Try_one_of_the_following_" xml:space="preserve">
+    <value>Error: Attempting to specify an unknown annotation type '{0}'. Try one of the following:</value>
+  </data>
+  <data name="CommandLine_AddAnnotations_Error__Values_cannot_be_empty_for_an_annotation_of_type__value_list__" xml:space="preserve">
+    <value>Error: Values cannot be empty for an annotation of type 'value_list'.</value>
   </data>
 </root>

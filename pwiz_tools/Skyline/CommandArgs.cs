@@ -817,52 +817,6 @@ namespace pwiz.Skyline
             return true;
         }
 
-        private bool ParseAnnotationTargets(string targetName)
-        {
-            var ValidAnnotationTargets = new[]
-            {
-                AnnotationDef.AnnotationTarget.protein,
-                AnnotationDef.AnnotationTarget.peptide,
-                AnnotationDef.AnnotationTarget.precursor,
-                AnnotationDef.AnnotationTarget.transition,
-                AnnotationDef.AnnotationTarget.replicate,
-                AnnotationDef.AnnotationTarget.precursor_result,
-                AnnotationDef.AnnotationTarget.transition_result,
-            };
-            var target = ValidAnnotationTargets.FirstOrDefault(c => Equals(c.ToString(), targetName));
-            if (target == 0)
-            {
-                WriteLine(Resources.CommandArgs_ParseAnnotationTargets_Error__Attempting_to_exclude_an_unknown_annotation_target__0___Try_one_of_the_following_, targetName);
-                foreach (var validTarget in ValidAnnotationTargets)
-                {
-                    WriteLine(validTarget.ToString());
-                }
-
-                return false;
-            }
-
-            AddAnnotationsTargets.Add(target);
-            return true;
-        }
-
-        private bool ParseAnnotationTypes(string typeName)
-        {
-            var validAnnotationTypes = ListPropertyType.ListPropertyTypes().ToList();
-            var type = validAnnotationTypes.FirstOrDefault(c => Equals(c.ToString(), typeName));
-            if (type == null)
-            {
-                WriteLine(Resources.CommandArgs_ParseAnnotationTypes_Error__Attempting_to_exclude_an_unknown_annotation_type__0___Try_one_of_the_following_, typeName);
-                foreach (var validType in validAnnotationTypes)
-                {
-                    WriteLine(validType.ToString());
-                }
-
-                return false;
-            }
-
-            AddAnnotationsType = type;
-            return true;
-        }
         // Refinement
         public static readonly Argument ARG_REFINE_MIN_PEPTIDES = new RefineArgument(@"refine-min-peptides", INT_VALUE,
             (c, p) => c.Refinement.MinPeptidesPerProtein = p.ValueInt);
@@ -1118,37 +1072,77 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_ADD_ANNOTATIONS_FILE = new DocArgument(@"annotation-add-file",
             PATH_TO_XML,
             (c, p) => c.AddAnnotationsFile = p.ValueFullPath);
-        public static readonly Argument ARG_ADD_ANNOTATIONS_NAME = new DocArgument(@"annotation-add-name",
-            (c, p) => c.AddAnnotationsName = p.ValueFullPath);
-
-        private string[] array = ListPropertyType.ListPropertyTypes().Select(c => c.ToString()).ToArray();
-        public static readonly Argument ARG_ADD_ANNOTATIONS_TARGETS = new DocArgument(@"annotation-targets",
-            new[]
+        public static readonly Argument ARG_ADD_ANNOTATIONS_NAME = new DocArgument(@"annotation-add", NAME_VALUE,
+            (c, p) =>
             {
-                AnnotationDef.AnnotationTargetPluralName(AnnotationDef.AnnotationTarget.protein),
-                AnnotationDef.AnnotationTargetPluralName(AnnotationDef.AnnotationTarget.peptide),
-                AnnotationDef.AnnotationTargetPluralName(AnnotationDef.AnnotationTarget.precursor),
-                AnnotationDef.AnnotationTargetPluralName(AnnotationDef.AnnotationTarget.transition),
-                AnnotationDef.AnnotationTargetPluralName(AnnotationDef.AnnotationTarget.replicate),
-                AnnotationDef.AnnotationTargetPluralName(AnnotationDef.AnnotationTarget.precursor_result),
-                AnnotationDef.AnnotationTargetPluralName(AnnotationDef.AnnotationTarget.transition_result)
-            },
+                c.AddAnnotationsName = p.Value;
+                // The default annotation type is text
+                c.AddAnnotationsType = c.AddAnnotationsType ?? new ListPropertyType(AnnotationDef.AnnotationType.text, null);
+            }
+        );
+
+        public static readonly Argument ARG_ADD_ANNOTATIONS_TARGETS = new DocArgument(@"annotation-targets",
+            Enum.GetNames(typeof(AnnotationDef.AnnotationTarget)),
             (c, p) => c.ParseAnnotationTargets(p.Value)){WrapValue = true};
         public static readonly Argument ARG_ADD_ANNOTATIONS_TYPE = new DocArgument(@"annotation-type",
-            ListPropertyType.ListPropertyTypes().Select(c => c.ToString()).ToArray(),
-            (c, p) => c.ParseAnnotationTypes(p.Value));
-        public static readonly Argument ARG_ADD_ANNOTATIONS_VALUES = new DocArgument(@"annotation-values",
-            (c, p) => c.AddAnnotationsValues = p.ValueFullPath){WrapValue = true};
+            ListPropertyType.ListPropertyTypes().Select(c => c.AnnotationType.ToString()).ToArray(),
+            (c, p) => c.ParseAnnotationTypes(p.Value)){WrapValue = true};
+        public static readonly Argument ARG_ADD_ANNOTATIONS_VALUES = new DocArgument(@"annotation-values", PATH_TO_CSV,
+            (c, p) => c.ParseAnnotationValues(p.Value)){WrapValue = true};
+
 
         public static readonly ArgumentGroup GROUP_ADD_ANNOTATIONS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_ADD_ANNOTATIONS, false,
-            ARG_ADD_ANNOTATIONS_FILE, ARG_ADD_ANNOTATIONS_NAME, ARG_ADD_ANNOTATIONS_TARGETS, ARG_ADD_ANNOTATIONS_TYPE, ARG_ADD_ANNOTATIONS_VALUES);
+            ARG_ADD_ANNOTATIONS_FILE, ARG_ADD_ANNOTATIONS_NAME, ARG_ADD_ANNOTATIONS_TARGETS, ARG_ADD_ANNOTATIONS_TYPE, ARG_ADD_ANNOTATIONS_VALUES) { LeftColumnWidth = 30 };
         public string AddAnnotationsFile { get; private set; }
-        public bool AddingAnnotationsFile { get { return !string.IsNullOrEmpty(AddAnnotationsFile); } }
+        public bool AddingAnnotationsFile { get { return !string.IsNullOrEmpty(AddAnnotationsFile) || !string.IsNullOrEmpty(AddAnnotationsName); } }
         public string AddAnnotationsName { get; private set; }
         public List<AnnotationDef.AnnotationTarget> AddAnnotationsTargets { get; private set; }
         public ListPropertyType AddAnnotationsType { get; private set; }
-        public string AddAnnotationsValues { get; private set; }
+        public string[] AddAnnotationsValues { get; private set; }
 
+        private void ParseAnnotationValues(string commaSeparatedValues)
+        {
+            AddAnnotationsValues = commaSeparatedValues.Split(TextUtil.SEPARATOR_CSV);
+        }
+
+        private bool ParseAnnotationTargets(string targetName)
+        {
+            var validAnnotationTargets = Enum.GetValues(typeof(AnnotationDef.AnnotationTarget));
+            foreach (AnnotationDef.AnnotationTarget target in validAnnotationTargets)
+            {
+                if (Equals(target.ToString(), targetName))
+                {
+                    AddAnnotationsTargets.Add(target);
+                    return true;
+                }
+            }
+            WriteLine(Resources.CommandArgs_ParseAnnotationTargets_Error__Attempting_to_exclude_an_unknown_annotation_target__0___Try_one_of_the_following_, targetName);
+            foreach (var validTarget in validAnnotationTargets)
+            {
+                WriteLine(validTarget.ToString());
+            }
+            return false;
+        }
+
+        private bool ParseAnnotationTypes(string typeName)
+        {
+            var validAnnotationTypes = ListPropertyType.ListPropertyTypes().ToList();
+            foreach (var validType in validAnnotationTypes)
+            {
+                if (Equals(validType.AnnotationType.ToString(), typeName))
+                {
+                    AddAnnotationsType = validType;
+                    return true;
+                }
+            }
+            WriteLine(Resources.CommandArgs_ParseAnnotationTypes_Error__Attempting_to_specify_an_unknown_annotation_type___0____Try_one_of_the_following_, typeName);
+            foreach (var validType in validAnnotationTypes)
+            {
+                WriteLine(validType.AnnotationType.ToString());
+            }
+
+            return false;
+        }
 
         // For publishing the document to Panorama
         public static readonly Argument ARG_PANORAMA_SERVER = new DocArgument(@"panorama-server", SERVER_URL_VALUE,

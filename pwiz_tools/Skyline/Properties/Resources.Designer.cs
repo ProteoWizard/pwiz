@@ -5029,6 +5029,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Attempting to specify an unknown annotation type &apos;{0}&apos;. Try one of the following:.
+        /// </summary>
+        public static string CommandArgs_ParseAnnotationTypes_Error__Attempting_to_specify_an_unknown_annotation_type___0____Try_one_of_the_following_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_ParseAnnotationTypes_Error__Attempting_to_specify_an_unknown_annotati" +
+                        "on_type___0____Try_one_of_the_following_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to     {0} or &apos;{1}&apos;.
         /// </summary>
         public static string CommandArgs_ParseArgsInternal______0__or___1__ {
@@ -5309,11 +5319,39 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: Unable to read values file {0}..
+        ///   Looks up a localized string similar to Annotation &apos;{0}&apos; successfully defined..
         /// </summary>
-        public static string CommandLine_AddAnnotations_Error__Unable_to_read_values_file__0__ {
+        public static string CommandLine_AddAnnotations_Annotation___0___successfully_defined_ {
             get {
-                return ResourceManager.GetString("CommandLine_AddAnnotations_Error__Unable_to_read_values_file__0__", resourceCulture);
+                return ResourceManager.GetString("CommandLine_AddAnnotations_Annotation___0___successfully_defined_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Annotations successfully defined from file {0}.
+        /// </summary>
+        public static string CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Unable to read annotations from file {0}.
+        /// </summary>
+        public static string CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Values cannot be empty for an annotation of type &apos;value_list&apos;..
+        /// </summary>
+        public static string CommandLine_AddAnnotations_Error__Values_cannot_be_empty_for_an_annotation_of_type__value_list__ {
+            get {
+                return ResourceManager.GetString("CommandLine_AddAnnotations_Error__Values_cannot_be_empty_for_an_annotation_of_typ" +
+                        "e__value_list__", resourceCulture);
             }
         }
         

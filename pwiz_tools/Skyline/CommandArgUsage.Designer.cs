@@ -79,20 +79,20 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Name to give the annotation in an --annotation-add-file operation..
+        /// </summary>
+        internal static string _annotation_add {
+            get {
+                return ResourceManager.GetString("_annotation_add", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Specify an annotation file to be added to the document..
         /// </summary>
         internal static string _annotation_add_file {
             get {
                 return ResourceManager.GetString("_annotation_add_file", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Name to give the annotation in an --annotation-add-file operation..
-        /// </summary>
-        internal static string _annotation_add_name {
-            get {
-                return ResourceManager.GetString("_annotation_add_name", resourceCulture);
             }
         }
         
@@ -106,7 +106,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Define the type of the annotation in an --annotation-add-file operation..
+        ///   Looks up a localized string similar to Define the type of the annotation in an --annotation-add-file operation. Defaults to Text..
         /// </summary>
         internal static string _annotation_type {
             get {

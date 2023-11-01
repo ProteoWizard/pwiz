@@ -259,6 +259,22 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        
+
+        public static string[] GetAllAnnotationTargetPluralNames()
+        {
+            return new[]
+            {
+                AnnotationTargetPluralName(AnnotationTarget.protein),
+                AnnotationTargetPluralName(AnnotationTarget.peptide),
+                AnnotationTargetPluralName(AnnotationTarget.precursor),
+                AnnotationTargetPluralName(AnnotationTarget.transition),
+                AnnotationTargetPluralName(AnnotationTarget.replicate),
+                AnnotationTargetPluralName(AnnotationTarget.precursor_result),
+                AnnotationTargetPluralName(AnnotationTarget.transition_result)
+            };
+        }
+
 
         #region object overrides
 
