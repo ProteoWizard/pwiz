@@ -196,8 +196,10 @@ namespace pwiz.SkylineTest
             var nodeUniTerm = MATCHER.GetModifiedNode(STR_UNIMOD_TERMINUS);
             Assert.AreEqual(nodeUniTerm.ExplicitMods.HeavyModifications.Count, 1);
             Assert.IsNull(nodeUniTerm.ExplicitMods.StaticModifications);
-            Assert.AreEqual(nodeUniTerm.ExplicitMods.HeavyModifications[0].Modification.Terminus, ModTerminus.C);
-            Assert.AreEqual(nodeUniTerm.ExplicitMods.HeavyModifications[0].Modification.UnimodId, 298);
+            var heavyMod = nodeUniTerm.ExplicitMods.HeavyModifications[0];
+            Assert.IsNull(heavyMod.Modification.Terminus);
+            Assert.AreEqual(heavyMod.Modification.AAs, "R");
+            Assert.AreEqual(heavyMod.Modification.UnimodId, 298);
 
             // Basic multi-label test
             var heavyLabelType2 = new IsotopeLabelType("Heavy2", 1);
