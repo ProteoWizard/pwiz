@@ -749,6 +749,7 @@ namespace pwiz.SkylineTestData
             var annotationsXmlFile = TestFilesDir.GetTestPath("Annotations.xml");
             const string annotationValues = "Great,Good,Potentially,Bad";
             const string invalidValue = "-la";
+            const string invalidTargetsList = "protein,replicate," + invalidValue;
             const string annotationName = "Peptide Quality";
             const string annotationTargets = "peptide";
             const string annotationType = "value_list";
@@ -757,14 +758,15 @@ namespace pwiz.SkylineTestData
             var output = RunCommand("--new=" + newDocumentPath, // Create a new document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
                 "--annotation-add=" + annotationName, // Name the annotation
-                "--annotation-targets=" + invalidValue, // Input an invalid target
+                "--annotation-targets=" + invalidTargetsList, // Input an invalid target
                 "--annotation-type=" + annotationType, // Specify the type
                 "--annotation-values=" + annotationValues // Specify the location of the values
             );
-            CheckRunCommandOutputContains(string.Format(Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_, 
-                invalidValue,
-                "--annotation-targets", 
-                string.Join(@", ", Enum.GetNames(typeof(AnnotationDef.AnnotationTarget)))), output);
+            CheckRunCommandOutputContains(
+                new CommandArgs.ValueInvalidAnnotationTargetListException(
+                    CommandArgs.ARG_ADD_ANNOTATIONS_TARGETS, invalidTargetsList,
+                    "\"protein, peptide, precursor, transition, replicate, precursor_result, transition_result\"").Message,
+                output);
             // Test error (invalid annotation-type value)
             output = RunCommand("--new=" + newDocumentPath, // Create a new document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
@@ -821,6 +823,24 @@ namespace pwiz.SkylineTestData
             AssertAnnotationInDocument(newDocumentPath,
                 annotationName,
                 AnnotationDef.AnnotationTargetSet.OfValues(AnnotationDef.AnnotationTarget.peptide),
+                AnnotationDef.AnnotationType.value_list,
+                new[] { "Great", "Good", "Potentially", "Bad" });
+            // Test define (multiple targets)
+            output = RunCommand("--new=" + newDocumentPath, // Create a new document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--annotation-add=" + annotationName, // Name the annotation
+                "--annotation-targets=" + "peptide,replicate,transition", // Input a target
+                "--annotation-type=" + annotationType, // Specify the type
+                "--annotation-values=" + annotationValues, // Specify the values
+                "--save"
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_AddAnnotations_Annotation___0___successfully_defined_, annotationName), output);
+            // Assert that the document has the right number of annotations
+            Assert.IsTrue(ResultsUtil.DeserializeDocument(newDocumentPath).Settings.DataSettings.AnnotationDefs.Count == 1);
+            // Assert that the definition matches the one we defined
+            AssertAnnotationInDocument(newDocumentPath,
+                annotationName,
+                AnnotationDef.AnnotationTargetSet.OfValues(AnnotationDef.AnnotationTarget.peptide, AnnotationDef.AnnotationTarget.replicate, AnnotationDef.AnnotationTarget.transition),
                 AnnotationDef.AnnotationType.value_list,
                 new[] { "Great", "Good", "Potentially", "Bad" });
         }

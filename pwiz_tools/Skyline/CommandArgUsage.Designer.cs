@@ -79,7 +79,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Name to give the annotation in an --annotation-add-file operation..
+        ///   Looks up a localized string similar to Add an annotation to the document and environment with the specified name..
         /// </summary>
         internal static string _annotation_add {
             get {
@@ -88,7 +88,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Specify an annotation file to be added to the document..
+        ///   Looks up a localized string similar to Add an annotation to the document and environment from an XML format file..
         /// </summary>
         internal static string _annotation_add_file {
             get {
@@ -97,7 +97,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Data types to apply the annotation to in an --annotation-add-file operation. Defaults to replicate..
+        ///   Looks up a localized string similar to A comma-separated list of object types to apply the annotation to in an --annotation-add operation. Defaults to replicate..
         /// </summary>
         internal static string _annotation_targets {
             get {
@@ -106,7 +106,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Define the type of the annotation in an --annotation-add-file operation. Defaults to Text..
+        ///   Looks up a localized string similar to Define the data type of the annotation in an --annotation-add operation. Defaults to text..
         /// </summary>
         internal static string _annotation_type {
             get {
@@ -115,7 +115,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Define the values of the annotation in an --annotation-add-file operation..
+        ///   Looks up a localized string similar to A comma-separated list of values of a value_list type annotation in an --annotation-add operation. Required only in an --annotation-type=value_list operation..
         /// </summary>
         internal static string _annotation_values {
             get {
@@ -1997,6 +1997,15 @@ namespace pwiz.Skyline {
         internal static string CommandArgGroup_ToString_Description {
             get {
                 return ResourceManager.GetString("CommandArgGroup_ToString_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &quot;&lt;value&gt;, &lt;value&gt;, &lt;value&gt;...&quot;.
+        /// </summary>
+        internal static string CommandArgs_ANNOTATION_VALUES_VALUE {
+            get {
+                return ResourceManager.GetString("CommandArgs_ANNOTATION_VALUES_VALUE", resourceCulture);
             }
         }
         

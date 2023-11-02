@@ -5009,12 +5009,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: Attempting to exclude an unknown annotation target &apos;{0}&apos;. Try one of the following:.
+        ///   Looks up a localized string similar to Error: Attempting to specify an unknown annotation target &apos;{0}&apos;. Try one of the following:.
         /// </summary>
-        public static string CommandArgs_ParseAnnotationTargets_Error__Attempting_to_exclude_an_unknown_annotation_target__0___Try_one_of_the_following_ {
+        public static string CommandArgs_ParseAnnotationTarget_Error__Attempting_to_specify_an_unknown_annotation_target___0____Try_one_of_the_following_ {
             get {
-                return ResourceManager.GetString("CommandArgs_ParseAnnotationTargets_Error__Attempting_to_exclude_an_unknown_annota" +
-                        "tion_target__0___Try_one_of_the_following_", resourceCulture);
+                return ResourceManager.GetString("CommandArgs_ParseAnnotationTarget_Error__Attempting_to_specify_an_unknown_annotat" +
+                        "ion_target___0____Try_one_of_the_following_", resourceCulture);
             }
         }
         
@@ -36223,6 +36223,17 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ValidatingIonMobilityPeptide_ValidateSequence_The_sequence__0__is_not_a_valid_mod" +
                         "ified_peptide_sequence_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The value&apos;{0}&apos; is not valid for the argument &apos;{1}&apos; which requires a comma separated list of annotation targets &apos;{2}&apos;..
+        /// </summary>
+        public static string ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___ {
+            get {
+                return ResourceManager.GetString("ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListExcepti" +
+                        "on_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_sep" +
+                        "arated_list_of_annotation_targets___2___", resourceCulture);
             }
         }
         

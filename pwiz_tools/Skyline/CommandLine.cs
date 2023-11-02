@@ -2956,61 +2956,78 @@ namespace pwiz.Skyline
         }
 
         /// <summary>
-        /// Add annotations defined by the user to the document
+        /// Add annotation definitions to the document and the environment
         /// </summary>
-        /// <param name="name">Name of the annotations</param>
-        /// <param name="path">Path to the xml file containing the annotations</param>
-        /// <param name="targets">Which data types to apply the annotation to</param>
+        /// <param name="name">Name of the annotation</param>
+        /// <param name="path">Path to an XML file containing annotations</param>
+        /// <param name="targets">Data types to apply the annotation to</param>
         /// <param name="type">Type of annotation</param>
-        /// <param name="values">An array of at least one value. Only used for the type Value List</param>
-        /// <returns>True upon successful</returns>
+        /// <param name="values">An array of at least one value. Only used for the type value_list</param>
+        /// <returns>True upon successful definition</returns>
         public bool AddAnnotations(string name, string path,
-            List<AnnotationDef.AnnotationTarget> targets, // Could this use Target Set instead? 
+            List<AnnotationDef.AnnotationTarget> targets,
             ListPropertyType type,
             string[] values)
         {
-            // If there is an xml file, do not consider other arguments
+            // If there is an XML file, do not consider other arguments
             if (path != null)
             {
-                // Read xml
-                bool success;
-                using (var stream = File.OpenRead(path))
-                {
-                    var reader = new XmlTextReader(stream);
-                    success = ReadAnnotationsXml(reader);
-                }
-
-                if (success)
-                {
-                    _out.WriteLine(Resources.CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0_, path);
-                }
-                else
-                {
-                    _out.WriteLine(Resources.CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0_, path);
-                }
-
-                return success;
+                return AddAnnotationsFromXml(path);
             }
 
+            return AddAnnotationsFromArguments(name, targets, type, values);
+        }
+
+        /// <summary>
+        /// Add annotations to the document and environment from an XML file
+        /// </summary>
+        /// <param name="path">Path to the XMl file containing annotations</param>
+        /// <returns>True if we read at least one annotation from the file</returns>
+        private bool AddAnnotationsFromXml(string path)
+        {
+            // Read xml
+            var annotationDefList = new AnnotationDefList();
+            using (var stream = File.OpenRead(path))
+            {
+                var reader = new XmlTextReader(stream);
+                annotationDefList.ReadXml(reader);
+                SetAnnotations(annotationDefList);
+            }
+            var success = annotationDefList.Count > 0;
+            if (success)
+            {
+                _out.WriteLine(Resources.CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0_, path);
+            }
+            else
+            {
+                _out.WriteLine(Resources.CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0_, path);
+            }
+
+            return success;
+        }
+
+        /// <summary>
+        /// Add an annotation definition to the document and environment
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="targets"></param>
+        /// <param name="type"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        private bool AddAnnotationsFromArguments(string name, IEnumerable<AnnotationDef.AnnotationTarget> targets,
+            ListPropertyType type, IList<string> values)
+        {
             var valueListName = AnnotationDef.AnnotationType.value_list.ToString();
             if (Equals(type.AnnotationType.ToString(), valueListName) && values.IsNullOrEmpty())
             {
                 _out.WriteLine(Resources.CommandLine_AddAnnotations_Error__Values_cannot_be_empty_for_an_annotation_of_type__value_list__);
+                return false;
             }
             var annotationDef = new AnnotationDef(name, AnnotationDef.AnnotationTargetSet.OfValues(targets), type, values);
-            Settings.Default.AnnotationDefList.SetValue(annotationDef);
             var defList = new AnnotationDefList { annotationDef };
             SetAnnotations(defList);
             _out.WriteLine(Resources.CommandLine_AddAnnotations_Annotation___0___successfully_defined_, name);
             return true;
-        }
-
-        private bool ReadAnnotationsXml(XmlReader reader)
-        {
-            var annotationDefList = new AnnotationDefList();
-            annotationDefList.ReadXml(reader);
-            SetAnnotations(annotationDefList);
-            return annotationDefList.Count > 0;
         }
 
         private void SetAnnotations(AnnotationDefList newAnnotationDefs)
@@ -3026,7 +3043,7 @@ namespace pwiz.Skyline
             {
                 allDefs.Add(def);
             }
-
+            // Add the new annotations to the environment
             foreach (var def in newAnnotationDefs)
             {
                 Settings.Default.AnnotationDefList.Add(def);
@@ -3040,7 +3057,7 @@ namespace pwiz.Skyline
                 doc = doc.ChangeSettings(doc.Settings.ChangeDataSettings(dataSettingsNew));
                 doc = MetadataExtractor.ApplyRules(doc, null, out _);
                 return doc;
-            });
+            }, AuditLogEntry.SettingsLogFunction);
         }
 
         public bool SetLibrary(string name, string path, bool append = true)

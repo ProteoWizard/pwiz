@@ -950,18 +950,21 @@ greater peak area.</value>
     <value>Adding annotations</value>
   </data>
   <data name="_annotation_add_file" xml:space="preserve">
-    <value>Specify an annotation file to be added to the document.</value>
+    <value>Add an annotation to the document and environment from an XML format file.</value>
   </data>
   <data name="_annotation_add" xml:space="preserve">
-    <value>Name to give the annotation in an --annotation-add-file operation.</value>
+    <value>Add an annotation to the document and environment with the specified name.</value>
   </data>
   <data name="_annotation_targets" xml:space="preserve">
-    <value>Data types to apply the annotation to in an --annotation-add-file operation. Defaults to replicate.</value>
+    <value>A comma-separated list of object types to apply the annotation to in an --annotation-add operation. Defaults to replicate.</value>
   </data>
   <data name="_annotation_type" xml:space="preserve">
-    <value>Define the type of the annotation in an --annotation-add-file operation. Defaults to Text.</value>
+    <value>Define the data type of the annotation in an --annotation-add operation. Defaults to text.</value>
   </data>
   <data name="_annotation_values" xml:space="preserve">
-    <value>Define the values of the annotation in an --annotation-add-file operation.</value>
+    <value>A comma-separated list of values of a value_list type annotation in an --annotation-add operation. Required only in an --annotation-type=value_list operation.</value>
+  </data>
+  <data name="CommandArgs_ANNOTATION_VALUES_VALUE" xml:space="preserve">
+    <value>"&lt;value&gt;, &lt;value&gt;, &lt;value&gt;..."</value>
   </data>
 </root>

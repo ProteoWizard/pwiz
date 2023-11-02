@@ -28,6 +28,7 @@ using System.Threading;
 using System.Web;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
@@ -74,6 +75,7 @@ namespace pwiz.Skyline
         public static readonly Func<string> NUM_VALUE = () => CommandArgUsage.CommandArgs_NUM_VALUE;
         public static readonly Func<string> NUM_LIST_VALUE = () => CommandArgUsage.CommandArgs_NUM_LIST_VALUE;
         public static readonly Func<string> NAME_VALUE = () => CommandArgUsage.CommandArgs_NAME_VALUE;
+        public static readonly Func<string> ANNOTATION_VALUES_VALUE = () => CommandArgUsage.CommandArgs_ANNOTATION_VALUES_VALUE;
         public static readonly Func<string> FEATURE_NAME_VALUE = () => CommandArgUsage.CommandArgs_FEATURE_NAME_VALUE;
         public static readonly Func<string> REPORT_NAME_VALUE = () => CommandArgUsage.CommandArgs_REPORT_NAME_VALUE;
         public static readonly Func<string> PIPE_NAME_VALUE = () => CommandArgUsage.CommandArgs_PIPE_NAME_VALUE;
@@ -92,6 +94,7 @@ namespace pwiz.Skyline
         // ReSharper disable LocalizableElement
         public static readonly Func<string> INT_LIST_VALUE = () => "\"1, 2, 3...\"";  // Not L10N
         public static readonly Func<string> ION_TYPE_LIST_VALUE = () => "\"a, b, c, x, y, z, p\"";    // Not L10N
+        public static readonly Func<string> ANNOTATION_TARGET_LIST_VALUE = () => "\"protein, peptide, precursor, transition, replicate, precursor_result, transition_result\"";    // Not L10N
 
         public static readonly Func<string> MZTOLERANCE_VALUE = () => "\"" + 0.5 + "mz or 15ppm\"";
         // ReSharper restore LocalizableElement
@@ -1082,13 +1085,14 @@ namespace pwiz.Skyline
         );
 
         public static readonly Argument ARG_ADD_ANNOTATIONS_TARGETS = new DocArgument(@"annotation-targets",
-            Enum.GetNames(typeof(AnnotationDef.AnnotationTarget)),
-            (c, p) => c.ParseAnnotationTargets(p.Value)){WrapValue = true};
+            //Enum.GetNames(typeof(AnnotationDef.AnnotationTarget)),
+            ANNOTATION_TARGET_LIST_VALUE,
+            (c, p) => c.ParseAnnotationTargets(p)){WrapValue = true};
         public static readonly Argument ARG_ADD_ANNOTATIONS_TYPE = new DocArgument(@"annotation-type",
             ListPropertyType.ListPropertyTypes().Select(c => c.AnnotationType.ToString()).ToArray(),
-            (c, p) => c.ParseAnnotationTypes(p.Value)){WrapValue = true};
-        public static readonly Argument ARG_ADD_ANNOTATIONS_VALUES = new DocArgument(@"annotation-values", PATH_TO_CSV,
-            (c, p) => c.ParseAnnotationValues(p.Value)){WrapValue = true};
+            (c, p) => c.ParseAnnotationType(p.Value));
+        public static readonly Argument ARG_ADD_ANNOTATIONS_VALUES = new DocArgument(@"annotation-values", ANNOTATION_VALUES_VALUE,
+            (c, p) => c.ParseAnnotationValues(p.Value));
 
 
         public static readonly ArgumentGroup GROUP_ADD_ANNOTATIONS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_ADD_ANNOTATIONS, false,
@@ -1102,38 +1106,45 @@ namespace pwiz.Skyline
 
         private void ParseAnnotationValues(string commaSeparatedValues)
         {
-            AddAnnotationsValues = commaSeparatedValues.Split(TextUtil.SEPARATOR_CSV);
+            AddAnnotationsValues =
+                ArrayUtil.Parse(commaSeparatedValues, Convert.ToString, TextUtil.SEPARATOR_CSV, null);
         }
 
-        private bool ParseAnnotationTargets(string targetName)
+        private bool ParseAnnotationTargets(NameValuePair p)
         {
+            var userTargets = ArrayUtil.Parse(p.Value, ParseAnnotationTarget, TextUtil.SEPARATOR_CSV, null);
+            if (userTargets.IsNullOrEmpty())
+            {
+                throw new ValueInvalidAnnotationTargetListException(p.Match, p.Value, ANNOTATION_TARGET_LIST_VALUE.Invoke());
+            }
+
+            AddAnnotationsTargets = userTargets.ToList();
+            return true;
+        }
+
+        private AnnotationDef.AnnotationTarget ParseAnnotationTarget(string targetName)
+        {
+            targetName = targetName.ToLowerInvariant();
             var validAnnotationTargets = Enum.GetValues(typeof(AnnotationDef.AnnotationTarget));
             foreach (AnnotationDef.AnnotationTarget target in validAnnotationTargets)
             {
                 if (Equals(target.ToString(), targetName))
                 {
                     AddAnnotationsTargets.Add(target);
-                    return true;
+                    return target;
                 }
             }
-            WriteLine(Resources.CommandArgs_ParseAnnotationTargets_Error__Attempting_to_exclude_an_unknown_annotation_target__0___Try_one_of_the_following_, targetName);
-            foreach (var validTarget in validAnnotationTargets)
-            {
-                WriteLine(validTarget.ToString());
-            }
-            return false;
+
+            throw new ArgumentException();
         }
 
-        private bool ParseAnnotationTypes(string typeName)
+        private bool ParseAnnotationType(string typeName)
         {
             var validAnnotationTypes = ListPropertyType.ListPropertyTypes().ToList();
-            foreach (var validType in validAnnotationTypes)
+            foreach (var validType in validAnnotationTypes.Where(validType => Equals(validType.AnnotationType.ToString(), typeName)))
             {
-                if (Equals(validType.AnnotationType.ToString(), typeName))
-                {
-                    AddAnnotationsType = validType;
-                    return true;
-                }
+                AddAnnotationsType = validType;
+                return true;
             }
             WriteLine(Resources.CommandArgs_ParseAnnotationTypes_Error__Attempting_to_specify_an_unknown_annotation_type___0____Try_one_of_the_following_, typeName);
             foreach (var validType in validAnnotationTypes)
@@ -3065,6 +3076,14 @@ namespace pwiz.Skyline
         {
             public ValueInvalidIonTypeListException(Argument arg, string value)
                 : base(string.Format(Resources.ValueInvalidIonTypeListException_ValueInvalidIonTypeListException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_fragment_ion_types__a__b__c__x__y__z__p__, value, arg.ArgumentText))
+            {
+            }
+        }
+
+        public class ValueInvalidAnnotationTargetListException : UsageException
+        {
+            public ValueInvalidAnnotationTargetListException(Argument arg, string value, string annotationTargets)
+                : base(string.Format(Resources.ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___, value, arg, annotationTargets))
             {
             }
         }
