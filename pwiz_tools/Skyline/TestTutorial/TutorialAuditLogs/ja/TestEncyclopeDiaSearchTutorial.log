@@ -10,6 +10,7 @@ EncyclopeDIA検索>Prosit設定>最小電荷は"2"です
 EncyclopeDIA検索>Prosit設定>最大電荷は"3"です
 EncyclopeDIA検索>Prosit設定>最大未切断数は"2"です
 EncyclopeDIA検索>狭いウィンドウ結果："23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML"が含まれています
+EncyclopeDIA検索>狭いウィンドウ結果："23aug2017_hela_serum_timecourse_4mz_narrow_2.mzML"が含まれています
 EncyclopeDIA検索>広いウィンドウ結果："23aug2017_hela_serum_timecourse_wide_1a.mzML"が含まれています
 EncyclopeDIA検索>広いウィンドウ結果："23aug2017_hela_serum_timecourse_wide_1b.mzML"が含まれています
 EncyclopeDIA検索>EncyclopeDIA設定は{ Enzyme = "Trypsin", Frag = "CID", Ptol = "10", PtolUnits = "PPM", Ftol = "10", FtolUnits = "PPM", Lftol = "10", LftolUnits = "PPM", Poffset = "0", Foffset = "0", PercolatorThreshold = "0.01", PercolatorTrainingSetSize = "500000", PercolatorTrainingFDR = "0", Acquisition = "DIA", NumberOfThreadsUsed = "32", ExpectedPeakWidth = "25", PrecursorWindowSize = "-1", NumberOfQuantitativePeaks = "5", MinNumOfQuantitativePeaks = "3", TopNTargetsUsed = "-1", QuantifyAcrossSamples = "False", NumberOfExtraDecoyLibrariesSearched = "0", VerifyModificationIons = "True", MinIntensity = "-1", RtWindowInMin = "-1", FilterPeaklists = "False", V2scoring = "True" }です
@@ -30,7 +31,8 @@ Prosit設定 =
 },
 狭いウィンドウ結果 = 
 [
-    "23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML"
+    "23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML",
+    "23aug2017_hela_serum_timecourse_4mz_narrow_2.mzML"
 ],
 広いウィンドウ結果 = 
 [
@@ -105,11 +107,11 @@ All Info  :
 ペプチド検索のインポート>タンパク質の関連付け>サブセットのタンパク質を削除は偽です
 ペプチド検索のインポート>タンパク質の関連付け>共有ペプチドオプションは"タンパク質間で重複"です
 ペプチド検索のインポート>タンパク質の関連付け>タンパク質あたりの最小ペプチドは"1"です
-ペプチド検索のインポート>タンパク質の関連付け>マップ済みタンパク質は"557"です
-ペプチド検索のインポート>タンパク質の関連付け>マップ済みペプチドは"5423"です
-ペプチド検索のインポート>タンパク質の関連付け>マップ解除されたタンパク質は"1"です
-ペプチド検索のインポート>タンパク質の関連付け>タンパク質のターゲットは"557"です
-ペプチド検索のインポート>タンパク質の関連付け>ペプチドのターゲットは"5733"です
+ペプチド検索のインポート>タンパク質の関連付け>マップ済みタンパク質は"317"です
+ペプチド検索のインポート>タンパク質の関連付け>マップ済みペプチドは"524"です
+ペプチド検索のインポート>タンパク質の関連付け>マップ解除されたタンパク質は"241"です
+ペプチド検索のインポート>タンパク質の関連付け>タンパク質のターゲットは"317"です
+ペプチド検索のインポート>タンパク質の関連付け>ペプチドのターゲットは"552"です
 Extra Info: クロマトグラムを抽出 = 
 {
     結果ファイルが見つかりました = 
@@ -161,10 +163,10 @@ FASTAをインポート =
     サブセットのタンパク質を削除 = 偽,
     共有ペプチドオプション = "タンパク質間で重複",
     タンパク質あたりの最小ペプチド = "1",
-    マップ済みタンパク質 = "557",
-    マップ済みペプチド = "5423",
-    マップ解除されたタンパク質 = "1",
-    タンパク質のターゲット = "557",
-    ペプチドのターゲット = "5733"
+    マップ済みタンパク質 = "317",
+    マップ済みペプチド = "524",
+    マップ解除されたタンパク質 = "241",
+    タンパク質のターゲット = "317",
+    ペプチドのターゲット = "552"
 }
 

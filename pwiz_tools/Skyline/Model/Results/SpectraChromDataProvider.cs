@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
@@ -556,10 +557,32 @@ namespace pwiz.Skyline.Model.Results
                 for (int i = 0; i < _collectors.ChromKeys.Count; i++)
                     chromIds.Add(new ChromKeyProviderIdPair(_collectors.ChromKeys[i], i));
 
+                // The global chromatograms (TIC, Base Peak)  and QC traces are always at the end of the list
+                // of ChromIds.
                 _globalChromatogramExtractor.IndexOffset =
                     chromIds.Count - _globalChromatogramExtractor.GlobalChromatogramIndexes.Count -
                     _globalChromatogramExtractor.QcTraceByIndex.Count;
 
+                // Verify that the TIC and QC chromatograms are at the indexes where they are expected to be
+                for (int chromIndex = _globalChromatogramExtractor.IndexOffset; chromIndex < chromIds.Count; chromIndex++)
+                {
+                    var chromKey = chromIds[chromIndex].Key;
+                    Assume.AreEqual(SignedMz.ZERO, chromKey.Precursor);
+                    var globalChromIndex = chromIndex - _globalChromatogramExtractor.IndexOffset;
+                    if (_globalChromatogramExtractor.QcTraceByIndex.TryGetValue(globalChromIndex, out var qcTrace))
+                    {
+                        Assume.AreEqual(ChromExtractor.qc, chromKey.Extractor);
+                        Assume.AreEqual(qcTrace.Name, chromKey.ChromatogramGroupId?.QcTraceName);
+                    }
+                    else if (globalChromIndex == _globalChromatogramExtractor.TicChromatogramIndex)
+                    {
+                        Assume.AreEqual(ChromExtractor.summed, chromKey.Extractor);
+                    }
+                    else if (globalChromIndex == _globalChromatogramExtractor.BpcChromatogramIndex)
+                    {
+                        Assume.AreEqual(ChromExtractor.base_peak, chromKey.Extractor);
+                    }
+                }
                 return chromIds;
             }
         }
@@ -1209,32 +1232,21 @@ namespace pwiz.Skyline.Model.Results
             {
                 IsRunningAsync = runningAsync;
 
-                // Sort ChromKeys in order of max retention time, and note the sort order.
-                var chromKeyArray = chromKeys.ToArray();
-                if (chromKeyArray.Length > 1)
+                var chromKeyIndexes = chromKeys.Select((chromKey, index) => Tuple.Create(chromKey, index));
+                var groupedByEndTime = chromKeyIndexes.GroupBy(tuple => tuple.Item1.OptionalMaxTime ?? float.MaxValue)
+                    .OrderBy(group => group.Key).ToList();
+                ChromKeys = ImmutableList.ValueOf(groupedByEndTime.SelectMany(group => group.Select(tuple => tuple.Item1)));
+                if (groupedByEndTime.Count > 1)
                 {
-                    var lastMaxTime = chromKeyArray[0].OptionalMaxTime ?? float.MaxValue;
-                    for (int i = 1; i < chromKeyArray.Length; i++)
-                    {
-                        var maxTime = chromKeyArray[i].OptionalMaxTime ?? float.MaxValue;
-                        if (maxTime < lastMaxTime)
-                        {
-                            int[] sortIndexes;
-                            ArrayUtil.Sort(chromKeyArray, out sortIndexes);
-                            // The sort indexes tell us where the keys used to live. For lookup, we need
-                            // to go the other way. Chromatograms will come in indexed by where they used to
-                            // be, and we need to put them into the _chromList array in the new location of
-                            // the ChromKey.
-                            _chromKeyLookup = new int[sortIndexes.Length];
-                            for (int j = 0; j < sortIndexes.Length; j++)
-                                _chromKeyLookup[sortIndexes[j]] = j;
-                            break;
-                        }
-                        lastMaxTime = maxTime;
-                    }
+                    var sortIndexes = groupedByEndTime.SelectMany(group => group.Select(tuple => tuple.Item2)).ToArray();
+                    // The sort indexes tell us where the keys used to live. For lookup, we need
+                    // to go the other way. Chromatograms will come in indexed by where they used to
+                    // be, and we need to put them into the _chromList array in the new location of
+                    // the ChromKey.
+                    _chromKeyLookup = new int[sortIndexes.Length];
+                    for (int j = 0; j < sortIndexes.Length; j++)
+                        _chromKeyLookup[sortIndexes[j]] = j;
                 }
-                ChromKeys = chromKeyArray;
-
                 // Create empty chromatograms for each ChromKey.
                 _collectors = new ChromCollector[chromKeys.Count];
             }
