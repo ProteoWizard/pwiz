@@ -1085,12 +1085,10 @@ namespace pwiz.Skyline
         );
 
         public static readonly Argument ARG_ADD_ANNOTATIONS_TARGETS = new DocArgument(@"annotation-targets",
-            //Enum.GetNames(typeof(AnnotationDef.AnnotationTarget)),
             ANNOTATION_TARGET_LIST_VALUE,
             (c, p) => c.ParseAnnotationTargets(p)){WrapValue = true};
-        public static readonly Argument ARG_ADD_ANNOTATIONS_TYPE = new DocArgument(@"annotation-type",
-            ListPropertyType.ListPropertyTypes().Select(c => c.AnnotationType.ToString()).ToArray(),
-            (c, p) => c.ParseAnnotationType(p.Value));
+        public static readonly Argument ARG_ADD_ANNOTATIONS_TYPE = DocArgument.FromEnumType<AnnotationDef.AnnotationType>(@"annotation-type",
+            (c, p) => c.AddAnnotationsType = new ListPropertyType(p, null));
         public static readonly Argument ARG_ADD_ANNOTATIONS_VALUES = new DocArgument(@"annotation-values", ANNOTATION_VALUES_VALUE,
             (c, p) => c.ParseAnnotationValues(p.Value));
 
@@ -1136,23 +1134,6 @@ namespace pwiz.Skyline
             }
 
             throw new ArgumentException();
-        }
-
-        private bool ParseAnnotationType(string typeName)
-        {
-            var validAnnotationTypes = ListPropertyType.ListPropertyTypes().ToList();
-            foreach (var validType in validAnnotationTypes.Where(validType => Equals(validType.AnnotationType.ToString(), typeName)))
-            {
-                AddAnnotationsType = validType;
-                return true;
-            }
-            WriteLine(Resources.CommandArgs_ParseAnnotationTypes_Error__Attempting_to_specify_an_unknown_annotation_type___0____Try_one_of_the_following_, typeName);
-            foreach (var validType in validAnnotationTypes)
-            {
-                WriteLine(validType.AnnotationType.ToString());
-            }
-
-            return false;
         }
 
         // For publishing the document to Panorama

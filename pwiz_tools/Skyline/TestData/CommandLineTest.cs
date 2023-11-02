@@ -747,13 +747,14 @@ namespace pwiz.SkylineTestData
         {
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleDefineAnnotationsTest.zip");
             var annotationsXmlFile = TestFilesDir.GetTestPath("Annotations.xml");
+            var newDocumentPath = TestFilesDir.GetTestPath("out.sky");
             const string annotationValues = "Great,Good,Potentially,Bad";
             const string invalidValue = "-la";
-            const string invalidTargetsList = "protein,replicate," + invalidValue;
             const string annotationName = "Peptide Quality";
-            const string annotationTargets = "peptide";
+            const string annotationTargets = "peptide, replicate";
             const string annotationType = "value_list";
-            var newDocumentPath = TestFilesDir.GetTestPath("out.sky");
+            const string invalidTargetsList = annotationTargets + invalidValue;
+            var annotationValuesArray = new[] { "Great", "Good", "Potentially", "Bad" };
             // Test error (invalid annotation-targets value)
             var output = RunCommand("--new=" + newDocumentPath, // Create a new document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
@@ -801,7 +802,7 @@ namespace pwiz.SkylineTestData
                 annotationName, 
                 AnnotationDef.AnnotationTargetSet.OfValues(AnnotationDef.AnnotationTarget.peptide), 
                 AnnotationDef.AnnotationType.value_list, 
-                new []{"Great", "Good", "Potentially", "Bad"});
+                annotationValuesArray);
             AssertAnnotationInDocument(newDocumentPath, 
                 "BioReplicate",
                 AnnotationDef.AnnotationTargetSet.OfValues(AnnotationDef.AnnotationTarget.replicate), 
@@ -822,27 +823,9 @@ namespace pwiz.SkylineTestData
             // Assert that the definition matches the one we defined
             AssertAnnotationInDocument(newDocumentPath,
                 annotationName,
-                AnnotationDef.AnnotationTargetSet.OfValues(AnnotationDef.AnnotationTarget.peptide),
+                AnnotationDef.AnnotationTargetSet.OfValues(AnnotationDef.AnnotationTarget.peptide, AnnotationDef.AnnotationTarget.replicate),
                 AnnotationDef.AnnotationType.value_list,
-                new[] { "Great", "Good", "Potentially", "Bad" });
-            // Test define (multiple targets)
-            output = RunCommand("--new=" + newDocumentPath, // Create a new document
-                "--overwrite", // Overwrite, as the file may already exist in the bin
-                "--annotation-add=" + annotationName, // Name the annotation
-                "--annotation-targets=" + "peptide,replicate,transition", // Input a target
-                "--annotation-type=" + annotationType, // Specify the type
-                "--annotation-values=" + annotationValues, // Specify the values
-                "--save"
-            );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_AddAnnotations_Annotation___0___successfully_defined_, annotationName), output);
-            // Assert that the document has the right number of annotations
-            Assert.IsTrue(ResultsUtil.DeserializeDocument(newDocumentPath).Settings.DataSettings.AnnotationDefs.Count == 1);
-            // Assert that the definition matches the one we defined
-            AssertAnnotationInDocument(newDocumentPath,
-                annotationName,
-                AnnotationDef.AnnotationTargetSet.OfValues(AnnotationDef.AnnotationTarget.peptide, AnnotationDef.AnnotationTarget.replicate, AnnotationDef.AnnotationTarget.transition),
-                AnnotationDef.AnnotationType.value_list,
-                new[] { "Great", "Good", "Potentially", "Bad" });
+                annotationValuesArray);
         }
 
         private static void AssertAnnotationInDocument(string documentPath, string annotationName, 
