@@ -25,11 +25,12 @@
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
-#include <H5private.h>
 
 
 //using namespace std;
 using namespace boost::iostreams;
+
+#define CURRENT_VERSION "mzMLb 1.0"
 
 namespace pwiz {
 namespace msdata {
@@ -97,12 +98,12 @@ Connection_mzMLb::Connection_mzMLb(const std::string& id, bool identifyOnly)
                     char* ver = new char[H5Tget_size(atype)];
                     H5Aread(aid, atype_mem, ver);
                     std::string version = ver;
-                    if (version != "mzMLb 1.0")
+                    if (version != CURRENT_VERSION)
                     {
                         H5Aclose(aid);
                         H5Aclose(atype_mem);
                         close();
-                        throw std::runtime_error("[Connection_mzMLb::open()] Cannot read this version of mzMLb file: \"" + version + "\" (or version is not fixed-length string)");
+                        throw std::runtime_error("[Connection_mzMLb::open()] Cannot read this version of mzMLb: \"" + version + "\" (or version is not fixed-length string); only " CURRENT_VERSION " is supported");
                     }
                    
                 }
@@ -174,7 +175,7 @@ Connection_mzMLb::Connection_mzMLb(const std::string& id, int chunk_size, int co
                 H5Tset_strpad(atype, H5T_STR_NULLTERM);
                 hid_t attrid = H5Acreate(mzML_.dataset, "version", atype, aid, H5P_DEFAULT, H5P_DEFAULT);
                 {
-                    std::string version_out = "mzMLb 1.0";
+                    std::string version_out = CURRENT_VERSION;
                     H5Awrite(attrid, atype, version_out.c_str());
                 }
                 H5Aclose(attrid);
