@@ -25,6 +25,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
+#include <H5private.h>
 
 
 //using namespace std;
@@ -88,18 +89,20 @@ Connection_mzMLb::Connection_mzMLb(const std::string& id, bool identifyOnly)
             }
             
             hid_t atype = H5Aget_type(aid);
+            // at this point it's definitely an mzMLb file and if version is wrong it should not throw an exception that would cause Reader::identify to not identify the file
+            if (!identifyOnly)
             {
                 hid_t atype_mem = H5Tget_native_type(atype, H5T_DIR_ASCEND);
                 {
                     char* ver = new char[H5Tget_size(atype)];
                     H5Aread(aid, atype_mem, ver);
                     std::string version = ver;
-                    if (version != "mzMLb 0.6")
+                    if (version != "mzMLb 1.0")
                     {
                         H5Aclose(aid);
                         H5Aclose(atype_mem);
                         close();
-                        throw std::runtime_error("[Connection_mzMLb::open()] We cannot read this version of mzMLb file.");
+                        throw std::runtime_error("[Connection_mzMLb::open()] Cannot read this version of mzMLb file: \"" + version + "\" (or version is not fixed-length string)");
                     }
                    
                 }
@@ -171,7 +174,7 @@ Connection_mzMLb::Connection_mzMLb(const std::string& id, int chunk_size, int co
                 H5Tset_strpad(atype, H5T_STR_NULLTERM);
                 hid_t attrid = H5Acreate(mzML_.dataset, "version", atype, aid, H5P_DEFAULT, H5P_DEFAULT);
                 {
-                    std::string version_out = "mzMLb 0.6";
+                    std::string version_out = "mzMLb 1.0";
                     H5Awrite(attrid, atype, version_out.c_str());
                 }
                 H5Aclose(attrid);
