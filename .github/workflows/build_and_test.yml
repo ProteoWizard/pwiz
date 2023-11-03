@@ -113,4 +113,4 @@ jobs:
         run: |
           unset JAVA_HOME
           ./quickbuild.sh --abbreviate-paths --i-agree-to-the-vendor-licenses -j${{ steps.cpu-count.outputs.count }} address-model=64 pwiz executables ${{ matrix.config.toolset }}
-          ./quickbuild.sh --abbreviate-paths --i-agree-to-the-vendor-licenses --incremental -j${{ steps.cpu-count.outputs.count }} address-model=64 pwiz_tools/BiblioSpec ${{ matrix.config.toolset }}
+          ./quickbuild.sh --abbreviate-paths --i-agree-to-the-vendor-licenses -j${{ steps.cpu-count.outputs.count }} address-model=64 pwiz_tools/BiblioSpec ${{ matrix.config.toolset }}
