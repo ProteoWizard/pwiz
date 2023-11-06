@@ -54,6 +54,8 @@ struct PasefPrecursorInfo
     double monoisotopicMz;
     int charge;
     double intensity;
+    double inverseReducedIonMobility;
+    double collisionalCrossSectionalArea;
 };
 typedef boost::shared_ptr<PasefPrecursorInfo> PasefPrecursorInfoPtr;
 
@@ -63,6 +65,7 @@ struct DiaPasefIsolationInfo
     double isolationWidth;
     double collisionEnergy;
     int numScans;
+    double inverseReducedIonMobility;
 };
 
 struct PWIZ_API_DECL TimsFrame
