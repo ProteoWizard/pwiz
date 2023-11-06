@@ -305,6 +305,12 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                         if (charge > 0)
                             selectedIon.set(MS_charge_state, charge);
 
+                        if(isolationInfo[i].inverseReducedIonMobility>0)
+                            selectedIon.set(MS_inverse_reduced_ion_mobility, isolationInfo[i].inverseReducedIonMobility, MS_volt_second_per_square_centimeter);
+
+                        if(isolationInfo[i].intensity>0)
+                            selectedIon.set(MS_peak_intensity, isolationInfo[i].intensity, MS_number_of_detector_counts);
+
                         switch (fragModes[i])
                         {
                             case FragmentationMode_CID:

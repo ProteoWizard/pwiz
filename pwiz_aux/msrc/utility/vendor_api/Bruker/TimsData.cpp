@@ -285,6 +285,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
     vector<double> scanNumbers(maxNumScans+1);
     for (int i = 0; i <= maxNumScans; ++i)
         scanNumbers[i] = i;
+
     for (size_t i = 0; i < oneOverK0ByScanNumberByCalibration_.size(); ++i)
     {
         vector<double>& oneOverK0 = oneOverK0ByScanNumberByCalibration_[i];
@@ -319,7 +320,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
     {
         if (isDdaPasef)
         {
-            string querySql = "SELECT Frame, ScanNumBegin, ScanNumEnd, IsolationMz, IsolationWidth, CollisionEnergy, MonoisotopicMz, Charge, ScanNumber, Intensity, Parent "
+            string querySql = "SELECT Frame, ScanNumBegin, ScanNumEnd, IsolationMz, IsolationWidth, CollisionEnergy, LargestPeakMz, MonoisotopicMz, Charge, ScanNumber, Intensity, Parent "
                               "FROM PasefFrameMsMsInfo f "
                               "JOIN Precursors p ON p.id=f.precursor " +
                               pasefIsolationMzFilter +
@@ -337,6 +338,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 auto& frame = findItr->second;
 
                 frame->pasef_precursor_info_.emplace_back(new PasefPrecursorInfo);
+
                 PasefPrecursorInfo& info = *frame->pasef_precursor_info_.back();
 
                 info.scanBegin = row.get<int>(++idx);
@@ -345,10 +347,23 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 info.isolationMz = row.get<double>(++idx);
                 info.isolationWidth = row.get<double>(++idx);
                 info.collisionEnergy = row.get<double>(++idx);
+                double largestPeakMz = row.get<double>(++idx);
                 info.monoisotopicMz = row.get<double>(++idx);
                 info.charge = row.get<int>(++idx);
                 info.avgScanNumber = row.get<double>(++idx);
                 info.intensity = row.get<double>(++idx);
+
+                const map<double, int>& scanNumberByOneOverK0 = scanNumberByOneOverK0ByCalibrationIndex[frame->calibrationIndex_];
+
+                for (auto it = scanNumberByOneOverK0.begin(); it != scanNumberByOneOverK0.end(); ++it)
+                {
+                    if (it->second == round((info.scanEnd - info.scanBegin) / 2.0 + info.scanBegin))
+                    {
+                        info.inverseReducedIonMobility = it->first;
+                        info.collisionalCrossSectionalArea = tdfStorage_.timesOneOverK0toCCSMz(it->first, info.charge, largestPeakMz);
+                        break;
+                    }
+                }
             }
         }
         else if (isDiaPasef)
@@ -384,6 +399,8 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 // NB: some data has ScanNumEnd > NumScans, which should not happen because ScanNumEnd is supposed to be an exclusive 0-based index, so clamp it here
                 info.numScans = min(frame->numScans(), 1 + scanEnd) - scanBegin;
 
+                const map<double, int>& scanNumberByOneOverK0 = scanNumberByOneOverK0ByCalibrationIndex[frame->calibrationIndex_];
+
                 if (!isolationMzFilter_.empty())
                 {
                     // swap values for min/max below
@@ -408,8 +425,6 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                             break;
                         }
 
-                        const map<double, int>& scanNumberByOneOverK0 = scanNumberByOneOverK0ByCalibrationIndex[frame->calibrationIndex_];
-
                         // 1/k0 is inverse to scan number (lowest scan number is highest 1/k0)
                         auto scanNumLowerBoundItr = scanNumberByOneOverK0.upper_bound(mzMobilityWindow.mobilityBounds.get().second); --scanNumLowerBoundItr;
                         auto scanNumUpperBoundItr = scanNumberByOneOverK0.upper_bound(mzMobilityWindow.mobilityBounds.get().first); if (scanNumUpperBoundItr != scanNumberByOneOverK0.begin()) --scanNumUpperBoundItr;
@@ -427,6 +442,15 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                     scanBegin = filteredScanBegin;
                     scanEnd = filteredScanEnd;
                     info.numScans = 1 + scanEnd - scanBegin;
+                }
+
+                for (auto it = scanNumberByOneOverK0.begin(); it != scanNumberByOneOverK0.end(); ++it)
+                {
+                    if (it->second == round((scanEnd - scanBegin) / 2.0) + scanBegin)
+                    {
+                        info.inverseReducedIonMobility = it->first;
+                        break;
+                    }
                 }
 
                 frame->windowGroup_ = windowGroup; 
@@ -465,6 +489,17 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 info.charge = row.get<int>(++idx);
                 info.avgScanNumber = 0;
                 info.intensity = 0;
+
+                const map<double, int>& scanNumberByOneOverK0 = scanNumberByOneOverK0ByCalibrationIndex[frame->calibrationIndex_];
+                for (auto it = scanNumberByOneOverK0.begin(); it != scanNumberByOneOverK0.end(); ++it)
+                {
+                    if (it->second == round((info.scanEnd - info.scanBegin) / 2.0) + info.scanBegin)
+                    {
+                        info.inverseReducedIonMobility = it->first;
+                        info.collisionalCrossSectionalArea = tdfStorage_.timesOneOverK0toCCSMz(it->first, info.charge, info.isolationMz);
+                        break;
+                    }
+                }
             }
         }
     }
@@ -538,22 +573,22 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                     {
                         const auto& precursor = frame->pasef_precursor_info_[p];
 
-                            // add MS2s that don't have PASEF info (between last precursor's scanEnd and this precursor's scanBegin)
-                            if (p > 0)
+                        // add MS2s that don't have PASEF info (between last precursor's scanEnd and this precursor's scanBegin)
+                        if (p > 0)
+                        {
+                            const auto& lastPrecursor = frame->pasef_precursor_info_[p - 1];
+                            for (int i = lastPrecursor->scanEnd + 1; i < precursor->scanBegin; ++i, ++scanIndex)
                             {
-                                const auto& lastPrecursor = frame->pasef_precursor_info_[p - 1];
-                                for (int i = lastPrecursor->scanEnd + 1; i < precursor->scanBegin; ++i, ++scanIndex)
-                                {
-                                    spectra_.emplace_back(boost::make_shared<TimsSpectrumPASEF>(frame, i, TimsSpectrum::empty_));
-                                }
+                                spectra_.emplace_back(boost::make_shared<TimsSpectrumPASEF>(frame, i, TimsSpectrum::empty_));
                             }
-                            else
+                        }
+                        else
+                        {
+                            for (int i = 0; i < precursor->scanBegin; ++i, ++scanIndex)
                             {
-                                for (int i = 0; i < precursor->scanBegin; ++i, ++scanIndex)
-                                {
-                                    spectra_.emplace_back(boost::make_shared<TimsSpectrumPASEF>(frame, i, TimsSpectrum::empty_));
-                                }
+                                spectra_.emplace_back(boost::make_shared<TimsSpectrumPASEF>(frame, i, TimsSpectrum::empty_));
                             }
+                        }
 
                         // add MS2s for this precursor
                         for (int i = precursor->scanBegin; i <= precursor->scanEnd; ++i, ++scanIndex)
@@ -854,16 +889,22 @@ void TimsSpectrum::getIsolationData(std::vector<IsolationInfo>& isolationInfo) c
     if (HasPasefPrecursorInfo())
     {
         const auto& info = GetPasefPrecursorInfo();
-        isolationInfo.resize(1, IsolationInfo{ info.isolationMz, IsolationMode_On, info.collisionEnergy });
+        isolationInfo.resize(1, IsolationInfo{
+	                             info.isolationMz, IsolationMode_On, info.collisionEnergy,
+	                             info.inverseReducedIonMobility, info.collisionalCrossSectionalArea, info.intensity
+                             });
     }
     else if (!frame_.diaPasefIsolationInfoByScanNumber_.empty())
     {
         const auto& info = getDiaPasefIsolationInfo();
-        isolationInfo.resize(1, IsolationInfo{ info.isolationMz, IsolationMode_On, info.collisionEnergy });
+        isolationInfo.resize(1, IsolationInfo{
+	                             info.isolationMz, IsolationMode_On, info.collisionEnergy,
+	                             info.inverseReducedIonMobility, 0, 0
+                             });
     }
     else if (frame_.precursorMz_.is_initialized())
     {
-        isolationInfo.resize(1, IsolationInfo{ frame_.precursorMz_.get(), IsolationMode_On, 0 });
+        isolationInfo.resize(1, IsolationInfo{ frame_.precursorMz_.get(), IsolationMode_On, 0, 0, 0, 0 });
     }
 }
 
