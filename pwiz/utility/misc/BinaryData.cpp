@@ -23,6 +23,7 @@
 
 #include "BinaryData.hpp"
 #include "optimized_lexical_cast.hpp"
+#include <cstdint>
 
 #ifdef __cplusplus_cli
 #define PWIZ_MANAGED_PASSTHROUGH
