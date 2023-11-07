@@ -563,7 +563,7 @@ namespace pwiz.Skyline.Model.Results
                     chromIds.Count - _globalChromatogramExtractor.GlobalChromatogramIndexes.Count -
                     _globalChromatogramExtractor.QcTraceByIndex.Count;
 
-                // Verify that the TIC and QC chromatograms are at the indexes where they are expected to be
+                // Verify that the TIC and QC chromatograms are at the indexes where they are expected
                 for (int chromIndex = _globalChromatogramExtractor.IndexOffset; chromIndex < chromIds.Count; chromIndex++)
                 {
                     var chromKey = chromIds[chromIndex].Key;
