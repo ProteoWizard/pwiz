@@ -1088,19 +1088,29 @@ namespace pwiz.Skyline
             ANNOTATION_TARGET_LIST_VALUE,
             (c, p) => c.ParseAnnotationTargets(p)){WrapValue = true};
         public static readonly Argument ARG_ADD_ANNOTATIONS_TYPE = DocArgument.FromEnumType<AnnotationDef.AnnotationType>(@"annotation-type",
-            (c, p) => c.AddAnnotationsType = new ListPropertyType(p, null));
+            (c, p) => c.AddAnnotationsType = new ListPropertyType(p, null), false);
         public static readonly Argument ARG_ADD_ANNOTATIONS_VALUES = new DocArgument(@"annotation-values", ANNOTATION_VALUES_VALUE,
             (c, p) => c.ParseAnnotationValues(p.Value));
+        public static readonly Argument ARG_ADD_ANNOTATIONS_CONFLICT_RESOLUTION = new Argument(@"annotation-conflict-resolution",
+                new[] { ARG_VALUE_OVERWRITE, ARG_VALUE_SKIP },
+                (c, p) => c.AddAnnotationsResolveConflictsBySkipping = p.IsValue(ARG_VALUE_SKIP))
+            { WrapValue = true };
+        public static readonly Argument ARG_ADD_ANNOTATION_FROM_ENVIRONMENT =
+            new Argument(@"annotation-add-from-environment", NAME_VALUE, 
+                (c, p) => c.AddAnnotationsFromEnvironment = p.Value);
 
 
         public static readonly ArgumentGroup GROUP_ADD_ANNOTATIONS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_ADD_ANNOTATIONS, false,
-            ARG_ADD_ANNOTATIONS_FILE, ARG_ADD_ANNOTATIONS_NAME, ARG_ADD_ANNOTATIONS_TARGETS, ARG_ADD_ANNOTATIONS_TYPE, ARG_ADD_ANNOTATIONS_VALUES) { LeftColumnWidth = 30 };
+            ARG_ADD_ANNOTATIONS_FILE, ARG_ADD_ANNOTATIONS_NAME, ARG_ADD_ANNOTATIONS_TARGETS, ARG_ADD_ANNOTATIONS_TYPE, ARG_ADD_ANNOTATIONS_VALUES, ARG_ADD_ANNOTATIONS_CONFLICT_RESOLUTION, 
+            ARG_ADD_ANNOTATION_FROM_ENVIRONMENT) { LeftColumnWidth = 30 };
         public string AddAnnotationsFile { get; private set; }
         public bool AddingAnnotationsFile { get { return !string.IsNullOrEmpty(AddAnnotationsFile) || !string.IsNullOrEmpty(AddAnnotationsName); } }
         public string AddAnnotationsName { get; private set; }
         public List<AnnotationDef.AnnotationTarget> AddAnnotationsTargets { get; private set; }
         public ListPropertyType AddAnnotationsType { get; private set; }
         public string[] AddAnnotationsValues { get; private set; }
+        public bool ?AddAnnotationsResolveConflictsBySkipping { get; private set; }
+        public string AddAnnotationsFromEnvironment { get; private set; }
 
         private void ParseAnnotationValues(string commaSeparatedValues)
         {
@@ -2581,12 +2591,12 @@ namespace pwiz.Skyline
             {
             }
 
-            public static DocArgument FromEnumType<TEnum>(string name, Action<CommandArgs, TEnum> processValue)
+            public static DocArgument FromEnumType<TEnum>(string name, Action<CommandArgs, TEnum> processValue, bool wrapValue = true)
             {
                 var enumType = typeof(TEnum);
                 return new DocArgument(name, () => Enum.GetNames(enumType),
                         (c, p) => processValue(c, (TEnum) Enum.Parse(enumType, p.Value)))
-                    { WrapValue = true };
+                    { WrapValue = wrapValue };
             }
 
             private static bool ProcessValueOverride(CommandArgs c, NameValuePair p, Func<CommandArgs, NameValuePair, bool> processValue)

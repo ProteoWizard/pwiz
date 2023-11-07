@@ -5319,6 +5319,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Annotation &apos;{0}&apos; does not exist in the environment and cannot be added to the document..
+        /// </summary>
+        public static string CommandLine_AddAnnotationFromEnvironment_Error__Annotation___0___does_not_exist_in_the_environment_and_cannot_be_added_to_the_document_ {
+            get {
+                return ResourceManager.GetString("CommandLine_AddAnnotationFromEnvironment_Error__Annotation___0___does_not_exist_i" +
+                        "n_the_environment_and_cannot_be_added_to_the_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Annotation &apos;{0}&apos; successfully defined..
         /// </summary>
         public static string CommandLine_AddAnnotations_Annotation___0___successfully_defined_ {
@@ -5352,6 +5362,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandLine_AddAnnotations_Error__Values_cannot_be_empty_for_an_annotation_of_typ" +
                         "e__value_list__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Annotation &apos;{0}&apos; successfully addded to the document.
+        /// </summary>
+        public static string CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document {
+            get {
+                return ResourceManager.GetString("CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_" +
+                        "document", resourceCulture);
             }
         }
         
@@ -7073,6 +7093,34 @@ namespace pwiz.Skyline.Properties {
         public static string CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_ {
             get {
                 return ResourceManager.GetString("CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: An annotation titled &apos;{0}&apos; already exists.  Please use --annotation-conflict-resolution= &lt;overwrite | skip&gt;.  Annotation titled &apos;{0}&apos; was not added..
+        /// </summary>
+        public static string CommandLine_SetAnnotations_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetAnnotations_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: Skipping annotation &apos;{0}&apos; due to a name conflict..
+        /// </summary>
+        public static string CommandLine_SetAnnotations_Warning__Skipping_annotation___0___due_to_a_name_conflict_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetAnnotations_Warning__Skipping_annotation___0___due_to_a_name_confl" +
+                        "ict_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: The annotation &apos;{0}&apos; was overwritten..
+        /// </summary>
+        public static string CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_", resourceCulture);
             }
         }
         

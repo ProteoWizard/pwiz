@@ -97,6 +97,24 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Use to add an exisiting annotation definition from the environment to the document. Not used with any other arguments..
+        /// </summary>
+        internal static string _annotation_add_from_environment {
+            get {
+                return ResourceManager.GetString("_annotation_add_from_environment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specifies how to resolve annotation name conflicts, by either overwriting or skipping them, when using --annotation-add or --annotation-add-file (default is to output an error message for conflicts).
+        /// </summary>
+        internal static string _annotation_conflict_resolution {
+            get {
+                return ResourceManager.GetString("_annotation_conflict_resolution", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A comma-separated list of object types to apply the annotation to in an --annotation-add operation. Defaults to replicate..
         /// </summary>
         internal static string _annotation_targets {
@@ -115,7 +133,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A comma-separated list of values of a value_list type annotation in an --annotation-add operation. Required only in an --annotation-type=value_list operation..
+        ///   Looks up a localized string similar to A comma-separated list of values for a value_list type annotation in an --annotation-add operation. Required only in an --annotation-type=value_list operation..
         /// </summary>
         internal static string _annotation_values {
             get {

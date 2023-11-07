@@ -962,9 +962,15 @@ greater peak area.</value>
     <value>Define the data type of the annotation in an --annotation-add operation. Defaults to text.</value>
   </data>
   <data name="_annotation_values" xml:space="preserve">
-    <value>A comma-separated list of values of a value_list type annotation in an --annotation-add operation. Required only in an --annotation-type=value_list operation.</value>
+    <value>A comma-separated list of values for a value_list type annotation in an --annotation-add operation. Required only in an --annotation-type=value_list operation.</value>
   </data>
   <data name="CommandArgs_ANNOTATION_VALUES_VALUE" xml:space="preserve">
     <value>"&lt;value&gt;, &lt;value&gt;, &lt;value&gt;..."</value>
+  </data>
+  <data name="_annotation_add_from_environment" xml:space="preserve">
+    <value>Use to add an exisiting annotation definition from the environment to the document. Not used with any other arguments.</value>
+  </data>
+  <data name="_annotation_conflict_resolution" xml:space="preserve">
+    <value>Specifies how to resolve annotation name conflicts, by either overwriting or skipping them, when using --annotation-add or --annotation-add-file (default is to output an error message for conflicts)</value>
   </data>
 </root>

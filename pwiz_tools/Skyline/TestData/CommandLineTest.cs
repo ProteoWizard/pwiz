@@ -792,7 +792,7 @@ namespace pwiz.SkylineTestData
             output = RunCommand("--new=" + newDocumentPath, // Create a document (without annotations)
                 "--overwrite", // Overwrite, as the file may already exist in the bin
                 "--annotation-add-file=" + annotationsXmlFile, // Specify file path
-                "--save"
+                "save"
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0_, annotationsXmlFile), output);
             // Assert that the document has the right number of annotations
@@ -811,21 +811,31 @@ namespace pwiz.SkylineTestData
             // Test define (from arguments)
             output = RunCommand("--new=" + newDocumentPath, // Create a new document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--annotation-add=" + annotationName + 1, // Name the annotation
+                "--annotation-targets=" + annotationTargets, // Input a target
+                "--annotation-type=" + annotationType, // Specify the type
+                "--annotation-values=" + annotationValues, // Specify the values
+                "--save"
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_AddAnnotations_Annotation___0___successfully_defined_, annotationName + 1), output);
+            // Assert that the document has the right number of annotations
+            Assert.IsTrue(ResultsUtil.DeserializeDocument(newDocumentPath).Settings.DataSettings.AnnotationDefs.Count == 1);
+            // Assert that the definition matches the one we defined
+            AssertAnnotationInDocument(newDocumentPath,
+                annotationName + 1,
+                AnnotationDef.AnnotationTargetSet.OfValues(AnnotationDef.AnnotationTarget.peptide, AnnotationDef.AnnotationTarget.replicate),
+                AnnotationDef.AnnotationType.value_list,
+                annotationValuesArray);
+            
+            // Test error (conflicting annotation)
+            output = RunCommand("--in=" + newDocumentPath, // Load a document with annotations
                 "--annotation-add=" + annotationName, // Name the annotation
                 "--annotation-targets=" + annotationTargets, // Input a target
                 "--annotation-type=" + annotationType, // Specify the type
                 "--annotation-values=" + annotationValues, // Specify the values
                 "--save"
             );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_AddAnnotations_Annotation___0___successfully_defined_, annotationName), output);
-            // Assert that the document has the right number of annotations
-            Assert.IsTrue(ResultsUtil.DeserializeDocument(newDocumentPath).Settings.DataSettings.AnnotationDefs.Count == 1);
-            // Assert that the definition matches the one we defined
-            AssertAnnotationInDocument(newDocumentPath,
-                annotationName,
-                AnnotationDef.AnnotationTargetSet.OfValues(AnnotationDef.AnnotationTarget.peptide, AnnotationDef.AnnotationTarget.replicate),
-                AnnotationDef.AnnotationType.value_list,
-                annotationValuesArray);
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_SetAnnotations_, annotationName), output);
         }
 
         private static void AssertAnnotationInDocument(string documentPath, string annotationName, 
