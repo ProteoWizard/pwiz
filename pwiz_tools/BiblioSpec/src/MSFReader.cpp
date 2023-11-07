@@ -466,7 +466,9 @@ namespace BiblioSpec
                 psmFileName = fileIdToName(fileIdMapAccess->second);
                 fileIdMap.erase(fileIdMapAccess);
             } else {
-                psmFileName = bfs::path(lexical_cast<string>(sqlite3_column_text(statement, 5))).filename().string();
+                string rawPath = lexical_cast<string>(sqlite3_column_text(statement, 5));
+                bal::replace_all(rawPath, "\\", "/");
+                psmFileName = bfs::path(lexical_cast<string>(rawPath)).filename().string();
             }
 
             // filename
