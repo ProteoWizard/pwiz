@@ -420,7 +420,7 @@ void Index_mzML::Impl::createIndex() const
                     char* buf = new char[size];              
                     (*mzMLb_is)->read("mzML_spectrumIndex_idRef", buf, size);
                     istringstream idRefs(string(buf, size));
-                    delete buf;
+                    delete [] buf;
  
                     for (size_t i = 0; i < positions.size() - 1; i++)
                     {
@@ -440,7 +440,7 @@ void Index_mzML::Impl::createIndex() const
                     char* buf = new char[size];              
                     (*mzMLb_is)->read("mzML_spectrumIndex_spotID", buf, size);
                     istringstream spotIDs(string(buf, size));
-                    delete buf;
+                    delete [] buf;
                     
                     for (size_t i = 0; i < positions.size() - 1; i++)
                         getline(spotIDs, spectrumIndex_.back().spotID, '\0');                  
@@ -456,7 +456,7 @@ void Index_mzML::Impl::createIndex() const
                 char* buf = new char[size];              
                 (*mzMLb_is)->read("mzML_chromatogramIndex_idRef", buf, size);
                 istringstream idRefs(string(buf, size));
-                delete buf;
+                delete [] buf;
 
                 for (size_t i = 0; i < positions.size() - 1; i++)
                 {
