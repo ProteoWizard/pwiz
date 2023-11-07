@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="diaPASEF" version="1.1.0">
   <cvList count="2">
-    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.99" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.117" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
     <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
   </cvList>
   <fileDescription>
@@ -9,12 +9,12 @@
       <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
     </fileContent>
     <sourceFileList count="2">
-      <sourceFile id="diaPASEF.d_x005c_Analysis.tdf" name="Analysis.tdf" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data\diaPASEF.d">
+      <sourceFile id="diaPASEF.d_x005c_Analysis.tdf" name="Analysis.tdf" location="file://C:\github\pwiz\pwiz\data\vendor_readers\bruker\Reader_bruker_Test.data\diaPASEF.d">
         <cvParam cvRef="MS" accession="MS:1002818" name="Bruker TDF nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1002817" name="Bruker TDF format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="6406479af440ac2140c7bb81d33c003ac600f7c8"/>
       </sourceFile>
-      <sourceFile id="diaPASEF.d_x005c_Analysis.tdf_bin" name="Analysis.tdf_bin" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data\diaPASEF.d">
+      <sourceFile id="diaPASEF.d_x005c_Analysis.tdf_bin" name="Analysis.tdf_bin" location="file://C:\github\pwiz\pwiz\data\vendor_readers\bruker\Reader_bruker_Test.data\diaPASEF.d">
         <cvParam cvRef="MS" accession="MS:1002818" name="Bruker TDF nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1002817" name="Bruker TDF format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="d2d881dbb808568c74ecad34033bcab7c3a505c7"/>
@@ -34,7 +34,7 @@
     <software id="micrOTOFcontrol" version="6.0.110.229-14868-vc141">
       <cvParam cvRef="MS" accession="MS:1000726" name="micrOTOFcontrol" value=""/>
     </software>
-    <software id="pwiz_Reader_Bruker" version="3.0.22236">
+    <software id="pwiz_Reader_Bruker" version="3.0.23310">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -107,6 +107,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -161,6 +162,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -215,6 +217,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -269,6 +272,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -323,6 +327,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -377,6 +382,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -431,6 +437,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -485,6 +492,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -539,6 +547,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -593,6 +602,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -647,6 +657,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -701,6 +712,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -755,6 +767,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -809,6 +822,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -863,6 +877,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -917,6 +932,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -971,6 +987,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1025,6 +1042,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1079,6 +1097,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1133,6 +1152,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1187,6 +1207,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1241,6 +1262,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1295,6 +1317,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1349,6 +1372,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1403,6 +1427,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1457,6 +1482,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1511,6 +1537,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1565,6 +1592,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1619,6 +1647,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1673,6 +1702,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1727,6 +1757,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1781,6 +1812,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1835,6 +1867,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1889,6 +1922,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1943,6 +1977,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1997,6 +2032,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2051,6 +2087,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2105,6 +2142,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2159,6 +2197,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2213,6 +2252,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2267,6 +2307,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2321,6 +2362,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2375,6 +2417,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2429,6 +2472,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2483,6 +2527,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2537,6 +2582,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2591,6 +2637,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2645,6 +2692,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2699,6 +2747,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2753,6 +2802,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2807,6 +2857,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2861,6 +2912,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2915,6 +2967,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -2969,6 +3022,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3023,6 +3077,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3077,6 +3132,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3131,6 +3187,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3185,6 +3242,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3239,6 +3297,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3293,6 +3352,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3347,6 +3407,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3401,6 +3462,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3455,6 +3517,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3509,6 +3572,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3563,6 +3627,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3617,6 +3682,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3671,6 +3737,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3725,6 +3792,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3779,6 +3847,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3833,6 +3902,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3887,6 +3957,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3941,6 +4012,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -3995,6 +4067,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4049,6 +4122,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4103,6 +4177,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4157,6 +4232,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4211,6 +4287,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4265,6 +4342,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4319,6 +4397,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4373,6 +4452,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4427,6 +4507,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4481,6 +4562,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4535,6 +4617,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4589,6 +4672,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4643,6 +4727,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4697,6 +4782,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4751,6 +4837,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4805,6 +4892,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4859,6 +4947,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4913,6 +5002,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -4967,6 +5057,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -5021,6 +5112,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -5075,6 +5167,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -5129,6 +5222,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -5183,6 +5277,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -5237,6 +5332,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -5291,6 +5387,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -5345,6 +5442,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -5399,6 +5497,7 @@
             <selectedIonList count="1">
               <selectedIon>
                 <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="888.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
               </selectedIon>
             </selectedIonList>
             <activation>
