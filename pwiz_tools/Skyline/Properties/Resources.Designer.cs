@@ -21488,6 +21488,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occurred displaying a tooltip..
+        /// </summary>
+        public static string NodeTip_Timer_Tick_An_error_occurred_displaying_a_tooltip_ {
+            get {
+                return ResourceManager.GetString("NodeTip_Timer_Tick_An_error_occurred_displaying_a_tooltip_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No scans in {0} match the current filter settings..
         /// </summary>
         public static string NoFullScanDataException_NoFullScanDataException_No_scans_in__0__match_the_current_filter_settings_ {

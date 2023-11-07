@@ -142,6 +142,8 @@ namespace pwiz.Common.SystemUtil
                         throw new IOException(ex.Message, ex);
                     if (ex is OperationCanceledException)
                         throw new OperationCanceledException(ex.Message, ex);
+                    if (ex is UnauthorizedAccessException)
+                        throw new UnauthorizedAccessException(ex.Message, ex);
                     throw new TargetInvocationException(ex.Message, ex);
                 }
                 if (catchClause != null)
