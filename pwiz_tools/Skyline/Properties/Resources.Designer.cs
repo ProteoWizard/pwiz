@@ -20561,6 +20561,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fail.
+        /// </summary>
+        public static string MissingScoreBehavior_FAIL_Fail {
+            get {
+                return ResourceManager.GetString("MissingScoreBehavior_FAIL_Fail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replace.
+        /// </summary>
+        public static string MissingScoreBehavior_REPLACE_Replace {
+            get {
+                return ResourceManager.GetString("MissingScoreBehavior_REPLACE_Replace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skip.
+        /// </summary>
+        public static string MissingScoreBehavior_SKIP_Skip {
+            get {
+                return ResourceManager.GetString("MissingScoreBehavior_SKIP_Skip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to missing scores.
         /// </summary>
         public static string MissingScoresFinder_DisplayName_missing_scores {

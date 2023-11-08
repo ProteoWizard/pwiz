@@ -13914,4 +13914,13 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="CommandLine_ExportMProphetFeatures_Error__Failure_attempting_to_save_mProphet_features_file__0__" xml:space="preserve">
     <value>Error: Failure attempting to save mProphet features file {0}.</value>
   </data>
+  <data name="MissingScoreBehavior_FAIL_Fail" xml:space="preserve">
+    <value>Fail</value>
+  </data>
+  <data name="MissingScoreBehavior_REPLACE_Replace" xml:space="preserve">
+    <value>Replace</value>
+  </data>
+  <data name="MissingScoreBehavior_SKIP_Skip" xml:space="preserve">
+    <value>Skip</value>
+  </data>
 </root>

@@ -1100,7 +1100,6 @@ namespace pwiz.Skyline.SettingsUI
                                             : new LegacyScoringModel(ModelName);
                         break;
                 }
-
                 if (SetScoringModel(this, peakScoringModel))
                     _selectedIndex = comboModel.SelectedIndex;
                 else
