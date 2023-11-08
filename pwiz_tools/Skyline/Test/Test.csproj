@@ -154,6 +154,7 @@
     <Compile Include="PeptideTest.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\LegacySkylineDocumentProto.cs" />
     <Compile Include="ProtocolBuffers\LegacyProtocolBufferFormatsTest.cs" />
+    <Compile Include="ReferenceValueTest.cs" />
     <Compile Include="ScoreQValueMapTest.cs" />
     <Compile Include="MeasuredIonTest.cs" />
     <Compile Include="SchemaDocumentsTest.cs" />
