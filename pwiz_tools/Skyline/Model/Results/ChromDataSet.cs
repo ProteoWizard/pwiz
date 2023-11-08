@@ -101,8 +101,8 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                return _listChromData.Where(d => d.DocNode != null).Select(d => d.DocNode.Id)
-                    .Distinct(new IdentityEqualityComparer<Identity>()).Count();
+                return _listChromData.Where(d => d.DocNode != null).Select(d => ReferenceValue.Of(d.DocNode.Id))
+                    .Distinct().Count();
             }
         }
 
