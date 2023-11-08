@@ -35,7 +35,7 @@
     <software id="micrOTOFcontrol" version="5.0.2.528-10700-vc110">
       <cvParam cvRef="MS" accession="MS:1000726" name="micrOTOFcontrol" value=""/>
     </software>
-    <software id="pwiz_Reader_Bruker" version="3.0.23310">
+    <software id="pwiz_Reader_Bruker" version="3.0.23311">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -160,6 +160,7 @@
                 <cvParam cvRef="MS" accession="MS:1000041" name="charge state" value="1"/>
                 <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.383620942091" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
                 <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="38916.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="280.22653919474" unitCvRef="UO" unitAccession="UO:0000324" unitName="square angstrom"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -272,6 +273,7 @@
                 <cvParam cvRef="MS" accession="MS:1000041" name="charge state" value="2"/>
                 <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.312382768384" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
                 <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="3367.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="528.83829410135" unitCvRef="UO" unitAccession="UO:0000324" unitName="square angstrom"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -495,6 +497,7 @@
                 <cvParam cvRef="MS" accession="MS:1000041" name="charge state" value="2"/>
                 <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.360581816839" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
                 <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="693.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="547.796676571276" unitCvRef="UO" unitAccession="UO:0000324" unitName="square angstrom"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -607,6 +610,7 @@
                 <cvParam cvRef="MS" accession="MS:1000041" name="charge state" value="2"/>
                 <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.312382768384" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
                 <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="3367.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="528.83829410135" unitCvRef="UO" unitAccession="UO:0000324" unitName="square angstrom"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -830,6 +834,7 @@
                 <cvParam cvRef="MS" accession="MS:1000041" name="charge state" value="2"/>
                 <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.360581816839" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
                 <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="693.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="547.796676571276" unitCvRef="UO" unitAccession="UO:0000324" unitName="square angstrom"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -942,6 +947,7 @@
                 <cvParam cvRef="MS" accession="MS:1000041" name="charge state" value="2"/>
                 <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.312382768384" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
                 <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="3367.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="528.83829410135" unitCvRef="UO" unitAccession="UO:0000324" unitName="square angstrom"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1165,6 +1171,7 @@
                 <cvParam cvRef="MS" accession="MS:1000041" name="charge state" value="2"/>
                 <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.360581816839" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
                 <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="693.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="547.796676571276" unitCvRef="UO" unitAccession="UO:0000324" unitName="square angstrom"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1277,6 +1284,7 @@
                 <cvParam cvRef="MS" accession="MS:1000041" name="charge state" value="2"/>
                 <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.312382768384" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
                 <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="3367.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="528.83829410135" unitCvRef="UO" unitAccession="UO:0000324" unitName="square angstrom"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1500,6 +1508,7 @@
                 <cvParam cvRef="MS" accession="MS:1000041" name="charge state" value="2"/>
                 <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.360581816839" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
                 <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="693.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="547.796676571276" unitCvRef="UO" unitAccession="UO:0000324" unitName="square angstrom"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -1612,6 +1621,7 @@
                 <cvParam cvRef="MS" accession="MS:1000041" name="charge state" value="2"/>
                 <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.312382768384" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
                 <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="3367.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+                <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="528.83829410135" unitCvRef="UO" unitAccession="UO:0000324" unitName="square angstrom"/>
               </selectedIon>
             </selectedIonList>
             <activation>

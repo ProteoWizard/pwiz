@@ -30,7 +30,7 @@
     <software id="HCTcontrol" version="unknown">
       <cvParam cvRef="MS" accession="MS:1000725" name="HCTcontrol" value=""/>
     </software>
-    <software id="pwiz_Reader_Bruker" version="3.0.23310">
+    <software id="pwiz_Reader_Bruker" version="3.0.23311">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>

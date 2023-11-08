@@ -29,7 +29,7 @@
     <software id="apexControl" version="ApexControl 3.0.0.alpha.35 (development version, April 18, 2008)">
       <cvParam cvRef="MS" accession="MS:1000706" name="apexControl" value=""/>
     </software>
-    <software id="pwiz_Reader_Bruker" version="3.0.23310">
+    <software id="pwiz_Reader_Bruker" version="3.0.23311">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
