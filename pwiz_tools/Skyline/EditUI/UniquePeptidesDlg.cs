@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
@@ -620,21 +621,21 @@ namespace pwiz.Skyline.EditUI
 
             public UniquePeptideSettings(UniquePeptidesDlg dlg)
             {
-                ProteinPeptideSelections = new Dictionary<int, ProteinPeptideSelection>();
+                ProteinPeptideSelections = new Dictionary<ReferenceValue<PeptideGroup>, ProteinPeptideSelection>();
                 for (var i = 0; i < dlg.dataGridView1.Rows.Count; ++i)
                 {
                     var row = dlg.dataGridView1.Rows[i];
                     var rowTag = (Tuple<IdentityPath, PeptideDocNode>)row.Tag;
                     if (!(bool)row.Cells[dlg.PeptideIncludedColumn.Name].Value)
                     {
-                        var id = rowTag.Item1.GetIdentity(0);
-                        if (!ProteinPeptideSelections.ContainsKey(id.GlobalIndex))
+                        var id = (PeptideGroup) rowTag.Item1.GetIdentity(0);
+                        if (!ProteinPeptideSelections.ContainsKey(id))
                         {
                             var node = (PeptideGroupDocNode)dlg.SrmDocument.FindNode(id);
-                            ProteinPeptideSelections.Add(id.GlobalIndex, new ProteinPeptideSelection(node.ProteinMetadata.Name, new List<string>()));
+                            ProteinPeptideSelections.Add(id, new ProteinPeptideSelection(node.ProteinMetadata.Name, new List<string>()));
                         }
 
-                        var item = ProteinPeptideSelections[id.GlobalIndex];
+                        var item = ProteinPeptideSelections[id];
                         item.Peptides.Add(PeptideTreeNode.GetLabel(rowTag.Item2, string.Empty));
                         ++_excludedCount;
                     }
@@ -642,7 +643,7 @@ namespace pwiz.Skyline.EditUI
             }
 
             [TrackChildren]
-            public Dictionary<int, ProteinPeptideSelection> ProteinPeptideSelections { get; private set; }
+            public Dictionary<ReferenceValue<PeptideGroup>, ProteinPeptideSelection> ProteinPeptideSelections { get; private set; }
         }
 
         private PeptideGroupDocNode ExcludePeptides(PeptideGroupDocNode peptideGroupDocNode)

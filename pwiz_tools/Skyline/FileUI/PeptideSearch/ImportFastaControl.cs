@@ -45,7 +45,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
     {
         private readonly SequenceTree _sequenceTree;
 
-        public ImportFastaControl(IModifyDocumentContainer documentContainer, SequenceTree sequenceTree)
+        public ImportFastaControl(IModifyDocumentContainer documentContainer, SequenceTree sequenceTree, bool showDecoyOptions = true)
         {
             DocumentContainer = documentContainer;
             _sequenceTree = sequenceTree;
@@ -66,6 +66,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             cbDecoyMethod.SelectedIndex = 0;
 
             tbxFasta.Resize += TbxFasta_Resize;
+
+            if (!showDecoyOptions)
+                panelDecoys.Visible = false;
         }
 
         private IModifyDocumentContainer DocumentContainer { get; set; }

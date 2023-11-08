@@ -34,6 +34,7 @@
 #include <string>
 #include <map>
 #include <set>
+#include <cstdint>
 
 
 namespace pwiz {
