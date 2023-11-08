@@ -72,6 +72,8 @@ namespace pwiz.Skyline.SettingsUI
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.lblMissingScores = new System.Windows.Forms.Label();
+            this.comboMissingScoreBehavior = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.gridPeakCalculators)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingPeakCalculators)).BeginInit();
             this.tabControl1.SuspendLayout();
@@ -415,12 +417,26 @@ namespace pwiz.Skyline.SettingsUI
             this.dataGridViewTextBoxColumn3.Name = "dataGridViewTextBoxColumn3";
             this.dataGridViewTextBoxColumn3.ReadOnly = true;
             // 
+            // lblMissingScores
+            // 
+            resources.ApplyResources(this.lblMissingScores, "lblMissingScores");
+            this.lblMissingScores.Name = "lblMissingScores";
+            // 
+            // comboMissingScoreBehavior
+            // 
+            this.comboMissingScoreBehavior.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboMissingScoreBehavior.FormattingEnabled = true;
+            resources.ApplyResources(this.comboMissingScoreBehavior, "comboMissingScoreBehavior");
+            this.comboMissingScoreBehavior.Name = "comboMissingScoreBehavior";
+            // 
             // EditPeakScoringModelDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.comboMissingScoreBehavior);
+            this.Controls.Add(this.lblMissingScores);
             this.Controls.Add(this.gridPeakCalculators);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.groupBox2);
@@ -488,5 +504,7 @@ namespace pwiz.Skyline.SettingsUI
         private ZedGraph.ZedGraphControl zedGraphQValues;
         private System.Windows.Forms.TabPage tabPage4;
         private ZedGraph.ZedGraphControl zedGraphPValues;
+        private System.Windows.Forms.Label lblMissingScores;
+        private System.Windows.Forms.ComboBox comboMissingScoreBehavior;
     }
 }

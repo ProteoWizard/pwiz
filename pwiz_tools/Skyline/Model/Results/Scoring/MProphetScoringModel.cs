@@ -40,6 +40,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public const string NAME = "mProphet";  // Proper name not localized
 
         private FeatureCalculators _peakFeatureCalculators;
+        private MissingScoreBehavior _missingScoreBehavior = MissingScoreBehavior.FAIL;
 
         // Number of iterations to run.  Most weight values will converge within this number of iterations.
         private const int MAX_ITERATIONS = 10;
@@ -541,14 +542,27 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
             trainData[row, j] = category;
         }
-        public override bool ReplaceUnknownFeatureScores => false;
+
+        public override MissingScoreBehavior MissingScoreBehavior
+        {
+            get
+            {
+                return _missingScoreBehavior;
+            }
+        }
+
+        public MProphetPeakScoringModel ChangeMissingScoreBehavior(MissingScoreBehavior missingScoreBehavior)
+        {
+            return ChangeProp(ImClone(this), im => im._missingScoreBehavior = missingScoreBehavior);
+        }
 
         #region object overrides
         public bool Equals(MProphetPeakScoringModel other)
         {
-            return (base.Equals(other) &&
-                    ColinearWarning.Equals(other.ColinearWarning) &&
-                    Lambda.Equals(other.Lambda));
+            return base.Equals(other) &&
+                   ColinearWarning.Equals(other.ColinearWarning) &&
+                   Lambda.Equals(other.Lambda) &&
+                   Equals(MissingScoreBehavior, other.MissingScoreBehavior);
         }
 
         public override bool Equals(object obj)
@@ -567,6 +581,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 hashCode = (hashCode * 397) ^ ColinearWarning.GetHashCode();
                 hashCode = (hashCode * 397) ^ Lambda.GetHashCode();
                 hashCode = (hashCode * 397) ^ (PeakFeatureCalculators != null ? PeakFeatureCalculators.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ MissingScoreBehavior.GetHashCode();
                 return hashCode;
             }
         }
@@ -579,7 +594,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             colinear_warning,
             uses_decoys,
             uses_false_targets,
-            bias
+            bias,
+            missing_scores,
         }
 
         public static MProphetPeakScoringModel Deserialize(XmlReader reader)
@@ -596,6 +612,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             UsesDecoys = reader.GetBoolAttribute(ATTR.uses_decoys, true);
             UsesSecondBest = reader.GetBoolAttribute(ATTR.uses_false_targets);
             double bias = reader.GetDoubleAttribute(ATTR.bias);
+            _missingScoreBehavior = MissingScoreBehavior.FromName(reader.GetAttribute(ATTR.missing_scores));
 
             // Consume tag
             reader.Read();
@@ -625,6 +642,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             writer.WriteAttribute(ATTR.colinear_warning, ColinearWarning);
             writer.WriteAttribute(ATTR.uses_decoys, UsesDecoys, true);
             writer.WriteAttribute(ATTR.uses_false_targets, UsesSecondBest);
+            writer.WriteAttribute(ATTR.missing_scores, MissingScoreBehavior.Name);
             if (null != Parameters)
             {
                 writer.WriteAttribute(ATTR.bias, Parameters.Bias);

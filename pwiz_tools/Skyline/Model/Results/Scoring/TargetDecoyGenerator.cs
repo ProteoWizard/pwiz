@@ -38,11 +38,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
         private readonly PeakTransitionGroupFeatureSet _peakTransitionGroupFeaturesList;
 
         public Dictionary<PeakTransitionGroupIdKey, List<PeakTransitionGroupFeatures>> PeakTransitionGroupDictionary { get; private set; }
-        public bool ReplaceUnknownFeatureScores { get; }
+        public MissingScoreBehavior MissingScoreBehavior { get; }
 
         public TargetDecoyGenerator(IPeakScoringModel scoringModel, PeakTransitionGroupFeatureSet featureScores)
         {
-            ReplaceUnknownFeatureScores = scoringModel.ReplaceUnknownFeatureScores;
+            MissingScoreBehavior = scoringModel.MissingScoreBehavior;
             // Determine which calculators will be used to score peaks in this document.
             FeatureCalculators = scoringModel.PeakFeatureCalculators;
             _peakTransitionGroupFeaturesList = featureScores;
@@ -112,7 +112,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 .Select(i => i == calculatorIndex ? 1 : double.NaN));
             var linearModelParams = new LinearModelParams(weights);
             int invertSign = FeatureCalculators[calculatorIndex].IsReversedScore ? -1 : 1;
-            GetScores(linearModelParams, linearModelParams, targetScores, decoyScores, secondBestScores, false, invertSign);
+            GetScores(linearModelParams, linearModelParams, targetScores, decoyScores, secondBestScores, MissingScoreBehavior.FAIL, invertSign);
         }
 
         /// <summary>
@@ -126,7 +126,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public void GetScores(LinearModelParams calculatorParams, List<double> targetScores, List<double> decoyScores,
             List<double> secondBestScores)
         {
-            GetScores(calculatorParams, calculatorParams, targetScores, decoyScores, secondBestScores, ReplaceUnknownFeatureScores, 1);
+            GetScores(calculatorParams, calculatorParams, targetScores, decoyScores, secondBestScores, MissingScoreBehavior, 1);
         }
 
 
@@ -139,13 +139,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <param name="targetScores">Output list of target scores.</param>
         /// <param name="decoyScores">Output list of decoy scores.</param>
         /// <param name="secondBestScores">Output list of false target scores.</param>
-        /// <param name="replaceUnknownFeatureScores">If true, replace NaN and Infinite feature scores with zero</param>
+        /// <param name="missingScoreBehavior">What to do with missing scores</param>
         /// <param name="invertSign">Either 1 or -1 to multiply the final scores by</param>
         public void GetScores(LinearModelParams scoringParams, LinearModelParams calculatorParams,
             List<double> targetScores, List<double> decoyScores, List<double> secondBestScores,
-            bool replaceUnknownFeatureScores,
+            MissingScoreBehavior missingScoreBehavior,
             int invertSign)
         {
+            bool replaceUnknownFeatureScores = missingScoreBehavior == MissingScoreBehavior.REPLACE;
             foreach (var peakTransitionGroupFeatures in _peakTransitionGroupFeaturesList.Features)
             {
                 PeakGroupFeatures? maxFeatures = null;
@@ -177,6 +178,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
                 double currentScore = maxFeatures.HasValue
                     ? GetScore(calculatorParams, maxFeatures.Value, replaceUnknownFeatureScores) : Double.NaN;
+                if (missingScoreBehavior == MissingScoreBehavior.SKIP && IsUnknown(currentScore))
+                {
+                    continue;
+                }
                 if (peakTransitionGroupFeatures.IsDecoy)
                 {
                     if (decoyScores != null)
@@ -266,7 +271,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             List<double> decoyScores = peakScoringModel.UsesDecoys ? new List<double>(DecoyCount) : null;
             List<double> secondBestScores = peakScoringModel.UsesSecondBest ? new List<double>(TargetCount) : null;
 
-            GetScores(scoringParams, calculatorParams, targetScores, decoyScores, secondBestScores, ReplaceUnknownFeatureScores, 1);
+            GetScores(scoringParams, calculatorParams, targetScores, decoyScores, secondBestScores, MissingScoreBehavior, 1);
 
             if (peakScoringModel.UsesDecoys && !peakScoringModel.UsesSecondBest)
                 activeDecoyScores = decoyScores;
@@ -300,25 +305,39 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// </summary>
         private bool IsValidCalculator(int calculatorIndex)
         {
-            if (ReplaceUnknownFeatureScores)
-            {
-                return true;
-            }
             double maxValue = Double.MinValue;
             double minValue = Double.MaxValue;
 
             foreach (var peakTransitionGroupFeatures in _peakTransitionGroupFeaturesList.Features)
             {
+                double transitionGroupMax = double.MinValue;
+                double transitionGroupMin = double.MaxValue;
+                bool skipTransitionGroup = false;
                 // Find the highest and second highest scores among the transitions in this group.
                 foreach (var peakGroupFeatures in peakTransitionGroupFeatures.PeakGroupFeatures)
                 {
                     double value = peakGroupFeatures.Features[calculatorIndex];
                     if (IsUnknown(value))
                     {
-                        return false;
+                        if (MissingScoreBehavior == MissingScoreBehavior.FAIL)
+                        {
+                            return false;
+                        }
+                        if (MissingScoreBehavior == MissingScoreBehavior.SKIP)
+                        {
+                            skipTransitionGroup = true;
+                            break;
+                        }
+                        value = 0;
                     }
-                    maxValue = Math.Max(value, maxValue);
-                    minValue = Math.Min(value, minValue);
+                    transitionGroupMax = Math.Max(value, transitionGroupMax);
+                    transitionGroupMin = Math.Min(value, transitionGroupMin);
+                }
+
+                if (!skipTransitionGroup)
+                {
+                    maxValue = Math.Max(maxValue, transitionGroupMax);
+                    minValue = Math.Min(minValue, transitionGroupMin);
                 }
             }
             return maxValue > minValue;

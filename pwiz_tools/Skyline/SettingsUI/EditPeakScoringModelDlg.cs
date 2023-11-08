@@ -97,7 +97,10 @@ namespace pwiz.Skyline.SettingsUI
             comboModel.Items.Add(MProphetPeakScoringModel.NAME);
             comboModel.Items.Add(LegacyScoringModel.DEFAULT_NAME);
             gridPeakCalculators.DataBindingComplete += OnDataBindingComplete;
+            comboMissingScoreBehavior.Items.AddRange(MissingScoreBehavior.ALL.ToArray());
+            comboMissingScoreBehavior.SelectedIndex = 0;
             comboModel.SelectedIndexChanged += comboModel_SelectedIndexChanged;
+            comboMissingScoreBehavior.SelectedIndexChanged += ComboMissingScoreBehavior_SelectedIndexChanged;
 
             // Hide borders for better copy-paste images
             zedGraphMProphet.MasterPane.Border.IsVisible = false;
@@ -108,6 +111,18 @@ namespace pwiz.Skyline.SettingsUI
             zedGraphPValues.GraphPane.Border.IsVisible = false;
             zedGraphQValues.MasterPane.Border.IsVisible = false;
             zedGraphQValues.GraphPane.Border.IsVisible = false;
+        }
+
+        private void ComboMissingScoreBehavior_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_peakScoringModel is MProphetPeakScoringModel mProphetPeakScoringModel)
+            {
+                var newMissingScoreBehavior = GetMissingScoreBehavior();
+                if (newMissingScoreBehavior != mProphetPeakScoringModel.MissingScoreBehavior)
+                {
+                    SetScoringModel(this, mProphetPeakScoringModel.ChangeMissingScoreBehavior(newMissingScoreBehavior));
+                }
+            }
         }
 
         void gridPeakCalculators_Sorted(object sender, EventArgs e)
@@ -129,7 +144,7 @@ namespace pwiz.Skyline.SettingsUI
             var document = Program.MainWindow.Document;
             if (scoringModel == null)
             {
-                scoringModel = new MProphetPeakScoringModel(UNNAMED, document);
+                scoringModel = new MProphetPeakScoringModel(UNNAMED, document).ChangeMissingScoreBehavior(GetMissingScoreBehavior());
             }
 
             using (var longWaitDlg = new LongWaitDlg())
@@ -148,6 +163,9 @@ namespace pwiz.Skyline.SettingsUI
                 _originalName = _peakScoringModel.Name;
             var mProphetModel = _peakScoringModel as MProphetPeakScoringModel;
             _selectedIndex = mProphetModel != null ? MPROPHET_MODEL_INDEX : SKYLINE_LEGACY_MODEL_INDEX;
+            bool missingScoresBehaviorVisible = mProphetModel != null;
+            lblMissingScores.Visible = comboMissingScoreBehavior.Visible = missingScoresBehaviorVisible;
+            comboMissingScoreBehavior.SelectedItem = _peakScoringModel.MissingScoreBehavior;
 
             InitializeCalculatorGrid(owner);
 
@@ -252,7 +270,7 @@ namespace pwiz.Skyline.SettingsUI
             if (!decoyCheckBox.Checked)
                 decoyTransitionGroups = new List<IList<FeatureScores>>();
 
-            // Set intial weights based on previous model (with NaN's reset to 0)
+            // Set initial weights based on previous model (with NaN's reset to 0)
             var initialWeights = new double[peakScoringModel.PeakFeatureCalculators.Count];
             // But then set to NaN the weights that were suppressed by the user or have unknown values for this dataset
             for (int i = 0; i < initialWeights.Length; ++i)
@@ -1072,7 +1090,8 @@ namespace pwiz.Skyline.SettingsUI
                     default:
                         peakScoringModel = _lastTrainedScoringModel is MProphetPeakScoringModel
                                             ? _lastTrainedScoringModel
-                                            : new MProphetPeakScoringModel(ModelName);
+                                            : new MProphetPeakScoringModel(ModelName)
+                                                .ChangeMissingScoreBehavior(GetMissingScoreBehavior());
                         break;
 
                     case SKYLINE_LEGACY_MODEL_INDEX:
@@ -1081,6 +1100,7 @@ namespace pwiz.Skyline.SettingsUI
                                             : new LegacyScoringModel(ModelName);
                         break;
                 }
+
                 if (SetScoringModel(this, peakScoringModel))
                     _selectedIndex = comboModel.SelectedIndex;
                 else
@@ -1098,6 +1118,11 @@ namespace pwiz.Skyline.SettingsUI
             set { textName.Text = (value == UNNAMED) ? string.Empty : value; }
         }
 
+        private MissingScoreBehavior GetMissingScoreBehavior()
+        {
+            return comboMissingScoreBehavior.SelectedItem as MissingScoreBehavior ?? MissingScoreBehavior.FAIL;
+        }
+        
         private void decoyCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             if (_ignoreCheckChanged)

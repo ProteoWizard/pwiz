@@ -97,6 +97,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// True if this type of model ignores unknown (NaN or infinity) scores and replaces them with zero.
         /// </summary>
         bool ReplaceUnknownFeatureScores { get; }
+
+        MissingScoreBehavior MissingScoreBehavior { get; }
     }
 
 
@@ -152,7 +154,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public bool IsTrained { get { return Parameters != null && Parameters.Weights != null; } }
 
-        public abstract bool ReplaceUnknownFeatureScores { get; }
+        public bool ReplaceUnknownFeatureScores
+        {
+            get { return MissingScoreBehavior == MissingScoreBehavior.REPLACE; }
+        }
+        public abstract MissingScoreBehavior MissingScoreBehavior { get; }
         public abstract FeatureCalculators PeakFeatureCalculators { get; }
         public abstract IPeakScoringModel Train(IList<IList<FeatureScores>> targets, IList<IList<FeatureScores>> decoys, TargetDecoyGenerator targetDecoyGenerator, LinearModelParams initParameters,
             IList<double> cutoffs, int? iterations = null, bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null, string documentPath = null);

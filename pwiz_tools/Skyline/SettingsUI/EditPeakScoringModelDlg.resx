@@ -147,7 +147,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>11</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnTrainModel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
@@ -242,13 +242,13 @@ document to calculate the equation with linear regression</value>
     <value>gridPeakCalculators</value>
   </data>
   <data name="&gt;&gt;gridPeakCalculators.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=23.1.1.278, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridPeakCalculators.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;gridPeakCalculators.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -278,7 +278,7 @@ document to calculate the equation with linear regression</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>10</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -308,7 +308,7 @@ document to calculate the equation with linear regression</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>8</value>
   </data>
   <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -329,7 +329,7 @@ document to calculate the equation with linear regression</value>
     <value>zedGraphMProphet</value>
   </data>
   <data name="&gt;&gt;zedGraphMProphet.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.7932.27595, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.8678.22258, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphMProphet.Parent" xml:space="preserve">
     <value>tabPage1</value>
@@ -365,7 +365,7 @@ document to calculate the equation with linear regression</value>
     <value>0</value>
   </data>
   <metadata name="toolStripFind.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>426, 17</value>
+    <value>427, 17</value>
   </metadata>
   <data name="toolStripFind.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -422,7 +422,7 @@ document to calculate the equation with linear regression</value>
     <value>zedGraphSelectedCalculator</value>
   </data>
   <data name="&gt;&gt;zedGraphSelectedCalculator.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.7932.27595, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.8678.22258, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphSelectedCalculator.Parent" xml:space="preserve">
     <value>tabPage2</value>
@@ -473,7 +473,7 @@ document to calculate the equation with linear regression</value>
     <value>zedGraphPValues</value>
   </data>
   <data name="&gt;&gt;zedGraphPValues.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.7932.27595, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.8678.22258, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphPValues.Parent" xml:space="preserve">
     <value>tabPage4</value>
@@ -524,7 +524,7 @@ document to calculate the equation with linear regression</value>
     <value>zedGraphQValues</value>
   </data>
   <data name="&gt;&gt;zedGraphQValues.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.7932.27595, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.8678.22258, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphQValues.Parent" xml:space="preserve">
     <value>tabPage3</value>
@@ -578,7 +578,7 @@ document to calculate the equation with linear regression</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;tabControl1.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>12</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -608,7 +608,7 @@ document to calculate the equation with linear regression</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="decoyCheckBox.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -692,7 +692,7 @@ document to calculate the equation with linear regression</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;groupBox2.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -722,7 +722,7 @@ document to calculate the equation with linear regression</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="lblColinearWarning.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -755,7 +755,7 @@ document to calculate the equation with linear regression</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblColinearWarning.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="comboModel.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 77</value>
@@ -776,7 +776,7 @@ document to calculate the equation with linear regression</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboModel.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -806,7 +806,7 @@ document to calculate the equation with linear regression</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>9</value>
   </data>
   <data name="dataGridViewTextBoxColumn1.HeaderText" xml:space="preserve">
     <value>Peak calculator</value>
@@ -832,6 +832,54 @@ document to calculate the equation with linear regression</value>
   <data name="dataGridViewTextBoxColumn3.Width" type="System.Int32, mscorlib">
     <value>70</value>
   </data>
+  <data name="lblMissingScores.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblMissingScores.Location" type="System.Drawing.Point, System.Drawing">
+    <value>240, 61</value>
+  </data>
+  <data name="lblMissingScores.Size" type="System.Drawing.Size, System.Drawing">
+    <value>118, 13</value>
+  </data>
+  <data name="lblMissingScores.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="lblMissingScores.Text" xml:space="preserve">
+    <value>Missing score behavior:</value>
+  </data>
+  <data name="&gt;&gt;lblMissingScores.Name" xml:space="preserve">
+    <value>lblMissingScores</value>
+  </data>
+  <data name="&gt;&gt;lblMissingScores.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblMissingScores.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblMissingScores.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="comboMissingScoreBehavior.Location" type="System.Drawing.Point, System.Drawing">
+    <value>243, 77</value>
+  </data>
+  <data name="comboMissingScoreBehavior.Size" type="System.Drawing.Size, System.Drawing">
+    <value>154, 21</value>
+  </data>
+  <data name="comboMissingScoreBehavior.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="&gt;&gt;comboMissingScoreBehavior.Name" xml:space="preserve">
+    <value>comboMissingScoreBehavior</value>
+  </data>
+  <data name="&gt;&gt;comboMissingScoreBehavior.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboMissingScoreBehavior.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;comboMissingScoreBehavior.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -854,7 +902,7 @@ document to calculate the equation with linear regression</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=23.1.1.278, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -920,6 +968,6 @@ document to calculate the equation with linear regression</value>
     <value>EditPeakScoringModelDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=23.1.1.278, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
