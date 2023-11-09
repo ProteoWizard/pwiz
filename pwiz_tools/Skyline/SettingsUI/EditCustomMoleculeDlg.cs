@@ -749,7 +749,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     SetResult(new CustomMolecule(_formulaBox.NeutralFormula, name), Adduct);
                 }
-                catch (InvalidDataException x)
+                catch(Exception x) when(SmallMoleculeTransitionListReader.IsParserException(x))
                 {
                     _formulaBox.ShowTextBoxErrorFormula(helper, x.Message);
                     return;
