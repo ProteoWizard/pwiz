@@ -146,6 +146,7 @@ namespace pwiz.Skyline
             this.areaGraphContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaReplicateComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaPeptideComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaIntensityContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVHistogramContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVHistogram2DContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.graphTypeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1146,6 +1147,7 @@ namespace pwiz.Skyline
             this.areaGraphContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.areaReplicateComparisonContextMenuItem,
             this.areaPeptideComparisonContextMenuItem,
+            this.areaIntensityContextMenuItem,
             this.areaCVHistogramContextMenuItem,
             this.areaCVHistogram2DContextMenuItem});
             this.areaGraphContextMenuItem.Name = "areaGraphContextMenuItem";
@@ -1163,6 +1165,12 @@ namespace pwiz.Skyline
             this.areaPeptideComparisonContextMenuItem.Name = "areaPeptideComparisonContextMenuItem";
             resources.ApplyResources(this.areaPeptideComparisonContextMenuItem, "areaPeptideComparisonContextMenuItem");
             this.areaPeptideComparisonContextMenuItem.Click += new System.EventHandler(this.areaPeptideComparisonMenuItem_Click);
+            // 
+            // areaIntensityContextMenuItem
+            // 
+            this.areaIntensityContextMenuItem.Name = "areaIntensityContextMenuItem";
+            resources.ApplyResources(this.areaIntensityContextMenuItem, "areaIntensityContextMenuItem");
+            this.areaIntensityContextMenuItem.Click += new System.EventHandler(this.areaIntensityMenuItem_Click);
             // 
             // areaCVHistogramContextMenuItem
             // 
@@ -2683,6 +2691,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem areaGraphContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaReplicateComparisonContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaPeptideComparisonContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaIntensityContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaNormalizeContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem peptideLogScaleContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem peptideOrderContextMenuItem;

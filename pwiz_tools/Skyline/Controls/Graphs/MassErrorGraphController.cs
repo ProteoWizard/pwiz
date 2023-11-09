@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
@@ -131,6 +132,8 @@ namespace pwiz.Skyline.Controls.Graphs
             return pane is MassErrorPeptideGraphPane;
         }
 
+        public bool IsIntensityPane(SummaryGraphPane pane) => false;
+
         public SummaryGraphPane CreateReplicatePane(PaneKey key)
         {
             return new MassErrorReplicateGraphPane(GraphSummary, key);
@@ -139,6 +142,12 @@ namespace pwiz.Skyline.Controls.Graphs
         public SummaryGraphPane CreatePeptidePane(PaneKey key)
         {
             return new MassErrorPeptideGraphPane(GraphSummary, key);
+        }
+
+        // We don't implement this pane for mass errors yet
+        public SummaryGraphPane CreateIntensityPane(PaneKey key)
+        {
+            throw new NotImplementedException();
         }
 
         public bool HandleKeyDownEvent(object sender, KeyEventArgs e)

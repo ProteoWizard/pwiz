@@ -1,0 +1,549 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
+using ZedGraph;
+using pwiz.Skyline.Util.Extensions;
+
+namespace pwiz.Skyline.Controls.Graphs
+{
+
+    public abstract class SummaryIntensityGraphPane : SummaryBarGraphPaneBase
+    {
+        public static SummaryPeptideOrder PeptideOrder
+        {
+            get
+            {
+                return Helpers.ParseEnum(Settings.Default.AreaPeptideOrderEnum, SummaryPeptideOrder.area);
+            }
+
+            set { Settings.Default.AreaPeptideOrderEnum = value.ToString(); }
+        }
+
+        protected GraphData _graphData;
+
+        protected SummaryIntensityGraphPane(GraphSummary graphSummary, PaneKey paneKey)
+            : base(graphSummary)
+        {
+            PaneKey = paneKey;
+            string xAxisTitle =
+                Helpers.PeptideToMoleculeTextMapper.Translate("Protein Rank",
+                    graphSummary.DocumentUIContainer.DocumentUI.DocumentType);
+            if (null != paneKey.IsotopeLabelType && !paneKey.IsotopeLabelType.IsLight)
+            {
+                xAxisTitle += @" (" + paneKey.IsotopeLabelType + @")";
+            }
+            XAxis.Title.Text = xAxisTitle;
+            XAxis.Type = AxisType.Text;
+        }
+
+        protected override int SelectedIndex
+        {
+            get { return _graphData != null ? _graphData.SelectedIndex : -1; }
+        }
+
+        protected override IdentityPath GetIdentityPath(CurveItem curveItem, int barIndex)
+        {
+            if (0 <= barIndex && barIndex < _graphData.XScalePaths.Length)
+                return _graphData.XScalePaths[barIndex];
+            return null;
+        }
+
+        protected override void ChangeSelection(int selectedIndex, IdentityPath identityPath)
+        {
+            if (0 <= selectedIndex && selectedIndex < _graphData.XScalePaths.Length)
+                GraphSummary.StateProvider.SelectedPath = _graphData.XScalePaths[selectedIndex];
+        }
+
+        public override void UpdateGraph(bool selectionChanged)
+        {
+            Clear();
+
+            TransitionGroupDocNode selectedGroup = null;
+            PeptideGroupDocNode selectedProtein = null;
+            var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
+            if (selectedTreeNode != null)
+            {
+                if (selectedTreeNode is TransitionTreeNode)
+                    selectedGroup = (TransitionGroupDocNode)selectedTreeNode.SrmParent.Model;
+                else if (selectedTreeNode is TransitionGroupTreeNode)
+                    selectedGroup = (TransitionGroupDocNode)selectedTreeNode.Model;
+                else
+                {
+                    var node = selectedTreeNode as PeptideTreeNode;
+                    if (node != null)
+                    {
+                        var nodePep = node.DocNode;
+                        selectedGroup = nodePep.TransitionGroups.FirstOrDefault();
+                    }
+                }
+                var proteinTreeNode = selectedTreeNode.GetNodeOfType<PeptideGroupTreeNode>();
+                if (proteinTreeNode != null)
+                    selectedProtein = proteinTreeNode.DocNode;
+            }
+
+            SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
+
+            var displayType = GraphChromatogram.GetDisplayType(document, selectedTreeNode);
+
+            _graphData = CreateGraphData(document, selectedProtein, selectedGroup, displayType);
+
+            int iColor = 0;
+            int colorOffset = 0;
+            if (selectedGroup != null && displayType == DisplayTypeChrom.products)
+            {
+                // If we are only displaying product ions, we want to use an offset in the colors array
+                // so that we do not re-use colors that would be used for any precursor ions.
+                colorOffset =
+                   GraphChromatogram.GetDisplayTransitions(selectedGroup, DisplayTypeChrom.precursors).Count();
+            }
+
+            foreach (var pointPairList in _graphData.PointPairLists)
+            {
+                Color color = displayType == DisplayTypeChrom.total
+                    ? COLORS_GROUPS[iColor++ % COLORS_GROUPS.Count]
+                    : COLORS_TRANSITION[(iColor++ + colorOffset) % COLORS_TRANSITION.Count];
+
+                BarItem curveItem;
+                if (HiLowMiddleErrorBarItem.IsHiLoMiddleErrorList(pointPairList))
+                    curveItem = new HiLowMiddleErrorBarItem(string.Empty, pointPairList, color, Color.Black);
+                else
+                    curveItem = new MeanErrorBarItem(string.Empty, pointPairList, color, Color.Black);
+
+                curveItem.Bar.Border.IsVisible = false;
+                curveItem.Bar.Fill.Brush = new SolidBrush(color);
+                CurveList.Add(curveItem);
+            }
+
+            if (ShowSelection && SelectedIndex != -1)
+            {
+                double yValue = _graphData.SelectedMaxY;
+                double yMin = _graphData.SelectedMinY;
+                double height = yValue - yMin;
+                GraphObjList.Add(new BoxObj(SelectedIndex + .5, yValue, 0.99,
+                                            height, Color.Black, Color.Empty)
+                {
+                    IsClippedToChartRect = true,
+                });
+            }
+
+            UpdateAxes();
+        }
+
+        protected abstract GraphData CreateGraphData(SrmDocument document, PeptideGroupDocNode selectedProtein,
+            TransitionGroupDocNode selectedGroup, DisplayTypeChrom displayType);
+
+        protected virtual void UpdateAxes()
+        {
+            UpdateAxes(true);
+        }
+
+        protected void UpdateAxes(bool allowLogScale)
+        {
+            if (Settings.Default.AreaLogScale && allowLogScale)
+            {
+                YAxis.Title.Text = TextUtil.SpaceSeparate(Resources.SummaryPeptideGraphPane_UpdateAxes_Log, YAxis.Title.Text);
+                YAxis.Type = AxisType.Log;
+                YAxis.Scale.MinAuto = false;
+                FixedYMin = YAxis.Scale.Min = 1;
+                YAxis.Scale.Max = _graphData.MaxY * 10;
+            }
+            else
+            {
+                YAxis.Type = AxisType.Linear;
+                if (_graphData.MinY.HasValue)
+                {
+                    if (!IsZoomed && !YAxis.Scale.MinAuto)
+                        YAxis.Scale.MinAuto = true;
+                }
+                else
+                {
+                    YAxis.Scale.MinAuto = false;
+                    FixedYMin = YAxis.Scale.Min = 0;
+                    YAxis.Scale.Max = _graphData.MaxY * 1.05;
+                }
+            }
+            var aggregateOp = GraphValues.AggregateOp.FromCurrentSettings();
+            if (aggregateOp.Cv)
+                YAxis.Title.Text = aggregateOp.AnnotateTitle(YAxis.Title.Text);
+
+            if (!_graphData.MinY.HasValue && aggregateOp.Cv)
+            {
+                if (_graphData.MaxCVSetting != 0)
+                {
+                    YAxis.Scale.MaxAuto = false;
+                    YAxis.Scale.Max = _graphData.MaxCVSetting;
+                }
+                else if (!IsZoomed && !YAxis.Scale.MaxAuto)
+                {
+                    YAxis.Scale.MaxAuto = true;
+                }
+            }
+            else if (_graphData.MaxValueSetting != 0 || _graphData.MinValueSetting != 0)
+            {
+                if (_graphData.MaxValueSetting != 0)
+                {
+                    YAxis.Scale.MaxAuto = false;
+                    YAxis.Scale.Max = _graphData.MaxValueSetting;
+                }
+                if (_graphData.MinValueSetting != 0)
+                {
+                    YAxis.Scale.MinAuto = false;
+                    YAxis.Scale.Min = _graphData.MinValueSetting;
+                    if (!_graphData.MinY.HasValue)
+                        FixedYMin = YAxis.Scale.Min;
+                }
+            }
+            else if (!IsZoomed && !YAxis.Scale.MaxAuto)
+            {
+                YAxis.Scale.MaxAuto = true;
+            }
+
+            XAxis.Scale.TextLabels = _graphData.Labels;
+            ScaleAxisLabels();
+
+            AxisChange();
+        }
+
+        public abstract class GraphData : Immutable
+        {
+            // ReSharper disable PossibleMultipleEnumeration
+            protected GraphData(SrmDocument document, TransitionGroupDocNode selectedGroup, PeptideGroupDocNode selectedProtein,
+                             int? iResult, DisplayTypeChrom displayType, GraphValues.IRetentionTimeTransformOp retentionTimeTransformOp,
+                             PaneKey paneKey)
+            {
+                RetentionTimeTransformOp = retentionTimeTransformOp;
+
+                int pointListCount = 0;
+                var dictTypeToSet = new Dictionary<IsotopeLabelType, int>();
+                // Figure out how many point lists to create
+                bool displayTotals = (displayType == DisplayTypeChrom.total);
+                if (displayTotals)
+                {
+                    foreach (var nodeGroup in document.MoleculeTransitionGroups)
+                    {
+                        if (!paneKey.IncludesTransitionGroup(nodeGroup))
+                        {
+                            continue;
+                        }
+                        IsotopeLabelType labelType = nodeGroup.TransitionGroup.LabelType;
+                        if (!dictTypeToSet.ContainsKey(labelType))
+                            dictTypeToSet.Add(labelType, pointListCount++);
+                    }
+                }
+
+                // Build the list of points to show.
+                var listPoints = new List<GraphPointData>();
+                foreach (PeptideGroupDocNode nodeGroupPep in document.MoleculeGroups)
+                {
+                    if (AreaGraphController.AreaScope == AreaScope.protein)
+                    {
+                        if (!ReferenceEquals(nodeGroupPep, selectedProtein))
+                            continue;
+                    }
+
+                    var graphPointData = new GraphPointData(nodeGroupPep);
+                    listPoints.Add(graphPointData);
+                    // foreach (PeptideDocNode nodePep in nodeGroupPep.Children)
+                    // {
+                    //     bool addBlankPoint = onePointPerPeptide &&
+                    //                          !nodePep.TransitionGroups.Any(paneKey.IncludesTransitionGroup);
+                    //     foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
+                    //     {
+                    //         var path = new IdentityPath(nodeGroupPep.PeptideGroup,
+                    //                                     nodePep.Peptide, nodeGroup.TransitionGroup);
+                    //         var graphPointData = new GraphPointData(nodePep, nodeGroup, path);
+                    //         if (addBlankPoint || paneKey.IncludesTransitionGroup(nodeGroup))
+                    //         {
+                    //             listPoints.Add(graphPointData);
+                    //         }
+                    //         if (addBlankPoint)
+                    //         {
+                    //             break;
+                    //         }
+                    //     }
+                    // }
+                }
+
+                // Sort into correct order
+                listPoints.Sort(CompareGroupAreas);
+
+                // Init calculated values
+                var pointPairLists = new List<PointPairList>();
+                var labels = new List<string>();
+                var xscalePaths = new List<IdentityPath>();
+                double maxY = 0;
+                double minY = double.MaxValue;
+                int selectedIndex = -1;
+
+                for (int i = 0; i < pointListCount; i++)
+                    pointPairLists.Add(new PointPairList());
+
+                // Calculate lists and values
+                PeptideDocNode nodePepCurrent = null;
+                var chargeCurrent = Adduct.EMPTY;
+                foreach (var dataPoint in listPoints)
+                {
+                    var nodePep = dataPoint.NodePep;
+                    var nodeGroup = dataPoint.NodeGroup;
+                    if (!ReferenceEquals(nodePep, nodePepCurrent))
+                    {
+                        nodePepCurrent = nodePep;
+
+                        chargeCurrent = Adduct.EMPTY;
+                    }
+
+                    bool addLabel = !displayTotals;
+                    if (displayTotals && !Equals(nodeGroup.TransitionGroup.PrecursorAdduct, chargeCurrent))
+                    {
+                        LevelPointPairLists(pointPairLists);
+                        addLabel = true;
+                    }
+                    chargeCurrent = nodeGroup.TransitionGroup.PrecursorAdduct;
+
+                    var transitionGroup = nodeGroup.TransitionGroup;
+                    int iGroup = labels.Count;
+
+                    if (addLabel)
+                    {
+                        var label = dataPoint.NodePepGroup.Name;
+                        if (!displayTotals && null == paneKey.IsotopeLabelType)
+                            label += transitionGroup.LabelTypeText;
+                        labels.Add(label);
+                        xscalePaths.Add(dataPoint.IdentityPath);
+                    }
+
+                    double groupMaxY = 0;
+                    double groupMinY = double.MaxValue;
+
+                    // ReSharper disable DoNotCallOverridableMethodsInConstructor
+                    int? resultIndex = iResult.HasValue && iResult >= 0 ? iResult : null;
+                    if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.best && nodePep != null)
+                    {
+                        resultIndex = null;
+                        int iBest = nodePep.BestResult;
+                        if (iBest != -1)
+                            resultIndex = iBest;
+                    }
+                    if (displayTotals)
+                    {
+                        var labelType = nodeGroup.TransitionGroup.LabelType;
+                        if (dictTypeToSet.ContainsKey(labelType))
+                        {
+                            if (paneKey.IncludesTransitionGroup(nodeGroup)) //TODO rework logic to consider all transitions in protein
+                            {
+                                pointPairLists[dictTypeToSet[labelType]].Add(CreatePointPair(iGroup, dataPoint.NodePepGroup,
+                                                                                             ref groupMaxY, ref groupMinY,
+                                                                                             resultIndex));
+                            }
+                            else
+                            {
+                                pointPairLists[dictTypeToSet[labelType]].Add(PointPairMissing(iGroup));
+                            }
+                        }
+                    }
+                    // ReSharper restore DoNotCallOverridableMethodsInConstructor
+
+                    // Save the selected index and its y extent
+                    if (ReferenceEquals(selectedGroup, nodeGroup))
+                    {
+                        selectedIndex = labels.Count - 1;
+                        SelectedMaxY = groupMaxY;
+                        SelectedMinY = groupMinY;
+                    }
+                    // If multiple groups in the selection, make sure y extent is max of them
+                    else if (selectedIndex == labels.Count - 1)
+                    {
+                        SelectedMaxY = Math.Max(groupMaxY, SelectedMaxY);
+                        SelectedMinY = Math.Min(groupMinY, SelectedMinY);
+                    }
+                    maxY = Math.Max(maxY, groupMaxY);
+                    minY = Math.Min(minY, groupMinY);
+                }
+
+                PointPairLists = pointPairLists;
+                Labels = labels.ToArray();
+                XScalePaths = xscalePaths.ToArray();
+                SelectedIndex = selectedIndex;
+                MaxY = maxY;
+                if (minY != double.MaxValue)
+                    MinY = minY;
+            }
+            // ReSharper restore PossibleMultipleEnumeration
+
+            public GraphValues.IRetentionTimeTransformOp RetentionTimeTransformOp { get; private set; }
+            public IList<PointPairList> PointPairLists { get; private set; }
+            public string[] Labels { get; private set; }
+            public IdentityPath[] XScalePaths { get; private set; }
+            public double MaxY { get; private set; }
+            public double? MinY { get; private set; }
+            public int SelectedIndex { get; private set; }
+            public double SelectedMaxY { get; private set; }
+            public double SelectedMinY { get; private set; }
+
+            public virtual double MaxValueSetting { get { return 0; } }
+            public virtual double MinValueSetting { get { return 0; } }
+            public virtual double MaxCVSetting { get { return 0; } }
+
+
+            /*
+                        private static int ComparePeptideAreas(GraphPointData p1, GraphPointData p2)
+                        {
+                            if (ReferenceEquals(p2.NodePep, p1.NodePep))
+                                return Peptide.CompareGroups(p2.NodeGroup, p1.NodeGroup);
+                            return Comparer.Default.Compare(p2.AreaPepCharge, p1.AreaPepCharge);
+                        }
+            */
+
+            private static int CompareGroupAreas(GraphPointData p1, GraphPointData p2)
+            {
+                return Comparer.Default.Compare(p2.AreaGroup, p1.AreaGroup);
+            }
+
+            private void LevelPointPairLists(List<PointPairList> lists)
+            {
+                // Add missing points to lists to make them all of equal length
+                int maxPoints = 0;
+                lists.ForEach(l => maxPoints = Math.Max(maxPoints, l.Count));
+                lists.ForEach(l => { if (l.Count < maxPoints) l.Add(CreatePointPairMissing(maxPoints - 1)); });
+            }
+
+            protected static PointPair PointPairMissing(int iGroup)
+            {
+                return MeanErrorBarItem.MakePointPair(iGroup, PointPairBase.Missing, PointPairBase.Missing);
+            }
+
+            protected virtual PointPair CreatePointPairMissing(int iGroup)
+            {
+                return PointPairMissing(iGroup);
+            }
+
+            // Create a point pair representing the abundance of a PeptideGroupDocNode
+            // TODO multiple result indices representing the best replicate for each
+            protected virtual PointPair CreatePointPair(int iGroup, PeptideGroupDocNode nodePeptideGroup,
+                ref double maxY, ref double minY, int? resultIndex)
+            {
+                var transitionGroupAbundances = new List<double>();
+                var transitionGroupVariances = new List<double>();
+                foreach (PeptideDocNode nodePeptide in nodePeptideGroup.Children)
+                {
+                    foreach (TransitionGroupDocNode nodeTransitionGroup in nodePeptide.Children)
+                    {
+                        var listValues = new List<double>();
+                        foreach (var chromInfo in nodeTransitionGroup.GetChromInfos(resultIndex)) // If result index is null we return all chrom infos
+                        {
+                            double? value = GetValue(chromInfo);
+                            if (chromInfo.OptimizationStep == 0 && value.HasValue)
+                                listValues.Add(value.Value);
+                        }
+
+                        if (listValues.Count == 0)
+                        {
+                            continue;
+                        }
+                        var statValues = new Statistics(listValues);
+                        transitionGroupAbundances.Add(statValues.Mean()); // The abundance of the transition group
+                        transitionGroupVariances.Add(statValues.Variance());
+                    }
+                }
+
+                if (transitionGroupAbundances.Count == 0)
+                {
+                    return CreatePointPairMissing(iGroup);
+                }
+                var proteinAbundance = transitionGroupAbundances.Sum();
+                var statTransitionGroupVariances = new Statistics(transitionGroupVariances);
+                var proteinStdDev = Math.Sqrt(statTransitionGroupVariances.Mean());
+                var pointPair = MeanErrorBarItem.MakePointPair(iGroup, proteinAbundance, proteinStdDev);
+                maxY = Math.Max(maxY, MeanErrorBarItem.GetYTotal(pointPair));
+                minY = Math.Min(minY, MeanErrorBarItem.GetYMin(pointPair));
+                return pointPair;
+            }
+
+            protected abstract double? GetValue(TransitionGroupChromInfo chromInfo);
+
+            protected abstract double GetValue(TransitionChromInfo info);
+
+            protected virtual bool AddBlankPointsForGraphPanes { get { return false; } }
+        }
+
+        private class GraphPointData
+        {
+            public GraphPointData(PeptideGroupDocNode nodePepGroup)
+            {
+                NodePepGroup = nodePepGroup;
+                IdentityPath = new IdentityPath(IdentityPath.ROOT, NodePepGroup.PeptideGroup);
+                CalcStats(nodePepGroup);
+            }
+
+            public PeptideGroupDocNode NodePepGroup { get; private set; }
+            public PeptideDocNode NodePep { get; private set; }
+            public TransitionGroupDocNode NodeGroup { get; private set; }
+            public IdentityPath IdentityPath { get; private set; }
+            public double AreaGroup { get; private set; }
+            //            public double AreaPepCharge { get; private set; }
+            public double TimeGroup { get; private set; }
+            public double TimePepCharge { get; private set; }
+
+            private void CalcStats(PeptideGroupDocNode nodePepGroup)
+            {
+                var areas = new List<double>();
+                foreach (PeptideDocNode nodePep in nodePepGroup.Children)
+                {
+                    NodePep = nodePep;
+                    foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
+                    {
+                        double ? meanArea;
+                        CalcStats(nodePep, nodeGroup, out meanArea);
+                        areas.Add(meanArea ?? 0); // TODO deal with missing areas
+                        NodeGroup = nodeGroup;
+                    }
+                }
+
+                AreaGroup = areas.Sum();
+                TimeGroup = areas.Sum();
+                TimePepCharge = areas.Sum();
+            }
+            // ReSharper disable SuggestBaseTypeForParameter
+            private void CalcStats(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, out double? meanArea)
+            // ReSharper restore SuggestBaseTypeForParameter
+            {
+                meanArea = null;
+                foreach (TransitionGroupDocNode nodePepChild in nodePep.Children)
+                {
+                    double? meanTransitionGroupArea;
+                    CalcStats(nodePepChild, out meanTransitionGroupArea);
+                    if (!Equals(nodeGroup.TransitionGroup.PrecursorAdduct, nodePepChild.TransitionGroup.PrecursorAdduct))
+                        continue;
+                    if (ReferenceEquals(nodeGroup, nodePepChild))
+                    {
+                        meanArea = meanTransitionGroupArea ?? 0;
+                    }
+                }
+                //                AreaPepCharge = (areas.Count > 0 ? new Statistics(areas).Mean() : 0);
+            }
+
+            private static void CalcStats(TransitionGroupDocNode nodeGroup, out double? meanArea)
+            {
+                var areas = new List<double>();
+                foreach (var chromInfo in nodeGroup.ChromInfos)
+                {
+                    if (chromInfo.Area.HasValue)
+                        areas.Add(chromInfo.Area.Value);
+                }
+                meanArea = null;
+                if (areas.Count > 0)
+                    meanArea = new Statistics(areas).Mean();
+            }
+        }
+    }
+}

@@ -70,8 +70,10 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             bool IsReplicatePane(SummaryGraphPane pane);
             bool IsPeptidePane(SummaryGraphPane pane);
+            bool IsIntensityPane(SummaryGraphPane pane);
             SummaryGraphPane CreateReplicatePane(PaneKey key);
             SummaryGraphPane CreatePeptidePane(PaneKey key);
+            SummaryGraphPane CreateIntensityPane(PaneKey key);
         }
 
         public class RTGraphView : IFormView {}
@@ -459,6 +461,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     case GraphTypeSummary.peptide:
                         panesValid = GraphPanes.All(graphController.IsPeptidePane);
                         break;
+                    case GraphTypeSummary.intensity:
+                        panesValid = GraphPanes.All(graphController.IsIntensityPane);
+                        break;
                 }
             }
             if (panesValid)
@@ -473,6 +478,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     break;
                 case GraphTypeSummary.peptide:
                     GraphPanes = paneKeys.Select(graphController.CreatePeptidePane);
+                    break;
+                case GraphTypeSummary.intensity:
+                    GraphPanes = paneKeys.Select(graphController.CreateIntensityPane);
                     break;
             }
         }
@@ -584,7 +592,8 @@ namespace pwiz.Skyline.Controls.Graphs
         histogram = 1 << 5,
         histogram2d = 1 << 6,
         detections = 1 << 7,
-        detections_histogram = 1 << 8
+        detections_histogram = 1 << 8,
+        intensity = 1 << 9
     }
 
     public static class Extensions

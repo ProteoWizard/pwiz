@@ -3672,12 +3672,13 @@ namespace pwiz.Skyline
                 {
                     areaReplicateComparisonContextMenuItem,
                     areaPeptideComparisonContextMenuItem,
+                    areaIntensityContextMenuItem,
                     areaCVHistogramContextMenuItem,
                     areaCVHistogram2DContextMenuItem
                 });
             }
             var graphType = graphSummary.Type;
-            if (graphType == GraphTypeSummary.replicate)
+            if (graphType == GraphTypeSummary.replicate || graphType == GraphTypeSummary.intensity)
             {
                 menuStrip.Items.Insert(iInsert++, graphTypeToolStripMenuItem);
                 if (graphTypeToolStripMenuItem.DropDownItems.Count == 0)
@@ -3696,9 +3697,13 @@ namespace pwiz.Skyline
             var isHistogram = graphType == GraphTypeSummary.histogram || graphType == GraphTypeSummary.histogram2d;
 
             if (isHistogram)
+            {
                 EditMenu.AddGroupByMenuItems(menuStrip, groupReplicatesByContextMenuItem, SetAreaCVGroup, true, AreaGraphController.GroupByGroup, ref iInsert);
-            else
+            }
+            else if(graphType != GraphTypeSummary.intensity)
+            {
                 AddTransitionContextMenu(menuStrip, iInsert++);
+            }
 
             if (graphType == GraphTypeSummary.replicate)
             {
@@ -3754,7 +3759,7 @@ namespace pwiz.Skyline
                     }
                 } 
             }
-            else if (graphType == GraphTypeSummary.peptide)
+            else if (graphType == GraphTypeSummary.peptide || graphType == GraphTypeSummary.intensity)
             {
                 AddPeptideOrderContextMenu(menuStrip, iInsert++);
                 iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
@@ -4257,6 +4262,7 @@ namespace pwiz.Skyline
             var list = _listGraphPeakArea;
             areaReplicateComparisonContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.replicate);
             areaPeptideComparisonContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.peptide);
+            areaIntensityContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.intensity);
             areaCVHistogramContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.histogram);
             areaCVHistogram2DContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.histogram2d);
         }
@@ -4333,6 +4339,11 @@ namespace pwiz.Skyline
             ShowPeakAreaPeptideGraph();
         }
 
+        private void areaIntensityMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPeakAreaIntensityGraph();
+        }
+
         private void areaCVLogScaleToolStripMenuItem_Click(object sender, EventArgs e)
         {
             EnableAreaCVLogScale(!Settings.Default.AreaCVLogScale);
@@ -4389,6 +4400,14 @@ namespace pwiz.Skyline
         {
             Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.peptide);
             ShowGraphPeakArea(true, GraphTypeSummary.peptide);
+            UpdatePeakAreaGraph();
+            SynchronizeSummaryZooming();
+        }
+
+        public void ShowPeakAreaIntensityGraph()
+        {
+            Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.intensity);
+            ShowGraphPeakArea(true, GraphTypeSummary.intensity);
             UpdatePeakAreaGraph();
             SynchronizeSummaryZooming();
         }

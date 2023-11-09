@@ -221,6 +221,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 case GraphTypeSummary.peptide:
                     GraphSummary.DoUpdateGraph(this, GraphSummary.Type);
                     break;
+                case GraphTypeSummary.intensity:
+                    GraphSummary.DoUpdateGraph(this, GraphSummary.Type);
+                    break;
                 case GraphTypeSummary.histogram:
                     if (!(pane is AreaCVHistogramGraphPane))
                         GraphSummary.GraphPanes = new[] { new AreaCVHistogramGraphPane(GraphSummary) };
@@ -249,6 +252,10 @@ namespace pwiz.Skyline.Controls.Graphs
             return pane is AreaPeptideGraphPane;
         }
 
+        public bool IsIntensityPane(SummaryGraphPane pane)
+        {
+            return pane is AreaIntensityGraphPane;
+        }
         public SummaryGraphPane CreateReplicatePane(PaneKey key)
         {
             return new AreaReplicateGraphPane(GraphSummary, key);
@@ -259,6 +266,10 @@ namespace pwiz.Skyline.Controls.Graphs
             return new AreaPeptideGraphPane(GraphSummary, key);
         }
 
+        public SummaryGraphPane CreateIntensityPane(PaneKey key)
+        {
+            return new AreaIntensityGraphPane(GraphSummary, key);
+        }
         public bool HandleKeyDownEvent(object sender, KeyEventArgs e)
         {
             switch (e.KeyCode)
