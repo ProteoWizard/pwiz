@@ -1,37 +1,44 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using pwiz.Skyline.Model;
+﻿using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    internal class AreaIntensityGraphPane : SummaryIntensityGraphPane
+    // TODO make private
+    public class AreaIntensityGraphPane : SummaryIntensityGraphPane
     {
         public AreaIntensityGraphPane(GraphSummary graphSummary, PaneKey paneKey)
             : base(graphSummary, paneKey)
         {
         }
-        protected override GraphData CreateGraphData(SrmDocument document, PeptideGroupDocNode selectedProtein, TransitionGroupDocNode selectedGroup, DisplayTypeChrom displayType)
+        protected override GraphData CreateGraphData(SrmDocument document, PeptideGroupDocNode selectedProtein, DisplayTypeChrom displayType)
         {
             int? result = null;
             if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
                 result = GraphSummary.ResultsIndex;
-            return new AreaGraphData(document, selectedGroup, selectedProtein, result, displayType, PaneKey);
+            return new AreaGraphData(document, selectedProtein, result, displayType, PaneKey);
         }
+
+        protected override void UpdateAxes()
+        {
+            YAxis.Title.Text = Resources.AreaPeptideGraphPane_UpdateAxes_Peak_Area;
+
+            base.UpdateAxes();
+            // reformat YAxis for labels
+            var maxY = GraphHelper.GetMaxY(CurveList, this);
+            GraphHelper.ReformatYAxis(this, maxY);
+
+            FixedYMin = YAxis.Scale.Min = Settings.Default.AreaLogScale ? 1 : 0;
+        }
+
         internal class AreaGraphData : GraphData
         {
             public AreaGraphData(SrmDocument document,
-                TransitionGroupDocNode selectedGroup,
                 PeptideGroupDocNode selectedProtein,
                 int? result,
                 DisplayTypeChrom displayType,
                 PaneKey paneKey)
-                : base(document, selectedGroup, selectedProtein, result, displayType, null, paneKey)
+                : base(document, selectedProtein, result, displayType, paneKey)
             {
             }
 

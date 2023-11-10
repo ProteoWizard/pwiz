@@ -33304,6 +33304,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Protein Rank.
+        /// </summary>
+        public static string SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank {
+            get {
+                return ResourceManager.GetString("SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peptide.
         /// </summary>
         public static string SummaryPeptideGraphPane_SummaryPeptideGraphPane_Peptide {

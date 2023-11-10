@@ -771,7 +771,6 @@ namespace pwiz.Skyline.Menus
         }
         private void areaIntensityMenuItem_Click(object sender, EventArgs e)
         {
-            SkylineWindow.ShowTotalTransitions();
             SkylineWindow.ShowPeakAreaIntensityGraph();
         }
         private void areaCVHistogramToolStripMenuItem1_Click(object sender, EventArgs e)

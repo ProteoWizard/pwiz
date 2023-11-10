@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Util;
@@ -205,6 +206,11 @@ namespace pwiz.Skyline.Model.GroupComparison
                 : null;
         }
 
+        public string GetDisplayString(SrmDocument document, Protein protein)
+        {
+            return GetRowString(document, protein, null, false);
+        }
+
         public string GetDisplayString(SrmDocument document, Protein protein, Databinding.Entities.Peptide peptide)
         {
             return GetRowString(document, protein, peptide, true);
@@ -259,6 +265,11 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
 
             return GetRowDisplayText(protein, peptide);
+        }
+
+        public string GetMatchString(SrmDocument document, Protein protein)
+        {
+            return GetRowString(document, protein, null, false);
         }
 
         public string GetMatchString(SrmDocument document, Protein protein, Databinding.Entities.Peptide peptide)
@@ -318,7 +329,40 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             return true;
         }
+        public bool Matches(SrmDocument document, Protein protein, ProteinAbundanceBindingSource.ProteinAbundanceResult proteinAbundanceResult, ICutoffSettings cutoffSettings)
+        {
+            foreach (var match in matchOptions)
+            {
+                switch (match)
+                {
+                    case MatchOption.ProteinName:
+                    case MatchOption.ProteinAccession:
+                    case MatchOption.ProteinPreferredName:
+                    case MatchOption.ProteinGene:
+                    case MatchOption.PeptideSequence:
+                    case MatchOption.PeptideModifiedSequence:
+                    case MatchOption.MoleculeGroupName:
+                    case MatchOption.MoleculeName:
+                    case MatchOption.CAS:
+                    case MatchOption.HMDB:
+                    case MatchOption.InChiKey:
+                    {
+                        var matchString = GetMatchString(document, protein);
+                        if (matchString == null || !IsRegexValid() || !Regex.IsMatch(matchString, RegExpr))
+                            return false;
+                        break;
+                    }
+                    case MatchOption.BelowLeftCutoff:
+                    {
+                        if (!cutoffSettings.FoldChangeCutoffValid || proteinAbundanceResult.Abundance >= -cutoffSettings.Log2FoldChangeCutoff)
+                            return false;
+                        break;
+                    }
+                }
+            }
 
+            return true;
+        }
         protected bool Equals(MatchExpression other)
         {
             return ArrayUtil.EqualsDeep(matchOptions, other.matchOptions) && string.Equals(RegExpr, other.RegExpr);

@@ -13911,4 +13911,7 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="CommandLine_ExportMProphetFeatures_Error__Failure_attempting_to_save_mProphet_features_file__0__" xml:space="preserve">
     <value>Error: Failure attempting to save mProphet features file {0}.</value>
   </data>
+  <data name="SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank" xml:space="preserve">
+    <value>Protein Rank</value>
+  </data>
 </root>

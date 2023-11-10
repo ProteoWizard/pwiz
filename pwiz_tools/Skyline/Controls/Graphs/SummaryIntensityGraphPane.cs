@@ -2,13 +2,16 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
+using System.Windows.Forms;
+using EnvDTE;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -28,15 +31,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
             set { Settings.Default.AreaPeptideOrderEnum = value.ToString(); }
         }
-
+        // TODO set all of these
         protected GraphData _graphData;
-
+        public bool AnyProteomic;
+        public bool AnyMolecules;
+        public SrmDocument Document;
         protected SummaryIntensityGraphPane(GraphSummary graphSummary, PaneKey paneKey)
             : base(graphSummary)
         {
             PaneKey = paneKey;
             string xAxisTitle =
-                Helpers.PeptideToMoleculeTextMapper.Translate("Protein Rank",
+                Helpers.PeptideToMoleculeTextMapper.Translate(Resources.SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank,
                     graphSummary.DocumentUIContainer.DocumentUI.DocumentType);
             if (null != paneKey.IsotopeLabelType && !paneKey.IsotopeLabelType.IsLight)
             {
@@ -44,6 +49,10 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             XAxis.Title.Text = xAxisTitle;
             XAxis.Type = AxisType.Text;
+            Document = graphSummary.DocumentUIContainer.DocumentUI;
+
+            AnyMolecules = Document.HasPeptides;
+            AnyProteomic = Document.HasSmallMolecules;
         }
 
         protected override int SelectedIndex
@@ -51,11 +60,50 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return _graphData != null ? _graphData.SelectedIndex : -1; }
         }
 
+        // public void Select(IdentityPath identityPath)
+        // {
+        //     var skylineWindow = SkylineWindow.;
+        //     if (skylineWindow == null)
+        //         return;
+        //
+        //     var alreadySelected = IsPathSelected(skylineWindow.SelectedPath, identityPath);
+        //     if (alreadySelected)
+        //         skylineWindow.SequenceTree.SelectedNode = null;
+        //
+        //     skylineWindow.SelectedPath = identityPath;
+        //     skylineWindow.UpdateGraphPanes();
+        // }
+
         protected override IdentityPath GetIdentityPath(CurveItem curveItem, int barIndex)
         {
             if (0 <= barIndex && barIndex < _graphData.XScalePaths.Length)
                 return _graphData.XScalePaths[barIndex];
             return null;
+        }
+
+        protected List<RgbHexColor> MakeMatchingList()
+        {
+            var color = new RgbHexColor(Color.Black);
+            var list = new List<RgbHexColor>();
+            foreach (var protein in Document.MoleculeGroups)
+            {
+                var row = new RgbHexColor();
+            }
+            return new List<RgbHexColor>();
+        }
+        protected void ShowFormattingDlg()
+        {
+            var window = GraphSummary.Window;
+            using (var dlg = new IntensityGraphFormattingDlg(this, new List<MatchRgbHexColor>(), 
+                       Array.Empty<ProteinAbundanceBindingSource.ProteinAbundanceRow>(), 
+                       rows  =>
+                       {
+                           MakeMatchingList();
+                       }))
+            {
+                if (dlg.ShowDialog(window) == DialogResult.OK)
+                    UpdateGraph(false);
+            }
         }
 
         protected override void ChangeSelection(int selectedIndex, IdentityPath identityPath)
@@ -68,79 +116,53 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             Clear();
 
-            TransitionGroupDocNode selectedGroup = null;
             PeptideGroupDocNode selectedProtein = null;
             var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
             if (selectedTreeNode != null)
             {
-                if (selectedTreeNode is TransitionTreeNode)
-                    selectedGroup = (TransitionGroupDocNode)selectedTreeNode.SrmParent.Model;
-                else if (selectedTreeNode is TransitionGroupTreeNode)
-                    selectedGroup = (TransitionGroupDocNode)selectedTreeNode.Model;
-                else
-                {
-                    var node = selectedTreeNode as PeptideTreeNode;
-                    if (node != null)
-                    {
-                        var nodePep = node.DocNode;
-                        selectedGroup = nodePep.TransitionGroups.FirstOrDefault();
-                    }
-                }
                 var proteinTreeNode = selectedTreeNode.GetNodeOfType<PeptideGroupTreeNode>();
                 if (proteinTreeNode != null)
+                {
                     selectedProtein = proteinTreeNode.DocNode;
+                }
             }
 
             SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
 
             var displayType = GraphChromatogram.GetDisplayType(document, selectedTreeNode);
 
-            _graphData = CreateGraphData(document, selectedProtein, selectedGroup, displayType);
-
-            int iColor = 0;
-            int colorOffset = 0;
-            if (selectedGroup != null && displayType == DisplayTypeChrom.products)
-            {
-                // If we are only displaying product ions, we want to use an offset in the colors array
-                // so that we do not re-use colors that would be used for any precursor ions.
-                colorOffset =
-                   GraphChromatogram.GetDisplayTransitions(selectedGroup, DisplayTypeChrom.precursors).Count();
-            }
+            _graphData = CreateGraphData(document, selectedProtein, displayType);
 
             foreach (var pointPairList in _graphData.PointPairLists)
             {
-                Color color = displayType == DisplayTypeChrom.total
-                    ? COLORS_GROUPS[iColor++ % COLORS_GROUPS.Count]
-                    : COLORS_TRANSITION[(iColor++ + colorOffset) % COLORS_TRANSITION.Count];
-
-                BarItem curveItem;
-                if (HiLowMiddleErrorBarItem.IsHiLoMiddleErrorList(pointPairList))
-                    curveItem = new HiLowMiddleErrorBarItem(string.Empty, pointPairList, color, Color.Black);
-                else
-                    curveItem = new MeanErrorBarItem(string.Empty, pointPairList, color, Color.Black);
-
-                curveItem.Bar.Border.IsVisible = false;
-                curveItem.Bar.Fill.Brush = new SolidBrush(color);
+                var curveItem = CreateLineItem(null, pointPairList, Color.Black);
                 CurveList.Add(curveItem);
             }
 
             if (ShowSelection && SelectedIndex != -1)
             {
-                double yValue = _graphData.SelectedMaxY;
-                double yMin = _graphData.SelectedMinY;
-                double height = yValue - yMin;
-                GraphObjList.Add(new BoxObj(SelectedIndex + .5, yValue, 0.99,
-                                            height, Color.Black, Color.Empty)
+                var selectedY = (_graphData.SelectedMaxY + _graphData.SelectedMinY) / 2;
+                GraphObjList.Add(new LineObj(Color.Black, SelectedIndex + 1, 0, SelectedIndex+ 1, selectedY)
                 {
                     IsClippedToChartRect = true,
+                    Line = new Line() { Width = 2, Color = Color.Black, Style = DashStyle.Dash }
                 });
+                GraphObjList.Add(new TextObj(_graphData.SelectedName, SelectedIndex, selectedY));
             }
 
             UpdateAxes();
+            if (GraphSummary.Window != null)
+            {
+                ShowFormattingDlg();
+            }
         }
 
-        protected abstract GraphData CreateGraphData(SrmDocument document, PeptideGroupDocNode selectedProtein,
-            TransitionGroupDocNode selectedGroup, DisplayTypeChrom displayType);
+        protected static CurveItem CreateLineItem(string label, PointPairList pointPairList, Color color)
+        {
+            return new LineErrorBarItem(label, pointPairList, color, Color.Black);
+        }
+
+        protected abstract GraphData CreateGraphData(SrmDocument document, PeptideGroupDocNode selectedProtein, DisplayTypeChrom displayType);
 
         protected virtual void UpdateAxes()
         {
@@ -217,11 +239,10 @@ namespace pwiz.Skyline.Controls.Graphs
         public abstract class GraphData : Immutable
         {
             // ReSharper disable PossibleMultipleEnumeration
-            protected GraphData(SrmDocument document, TransitionGroupDocNode selectedGroup, PeptideGroupDocNode selectedProtein,
-                             int? iResult, DisplayTypeChrom displayType, GraphValues.IRetentionTimeTransformOp retentionTimeTransformOp,
-                             PaneKey paneKey)
+            protected GraphData(SrmDocument document, PeptideGroupDocNode selectedProtein,
+                int? iResult, DisplayTypeChrom displayType,
+                PaneKey paneKey)
             {
-                RetentionTimeTransformOp = retentionTimeTransformOp;
 
                 int pointListCount = 0;
                 var dictTypeToSet = new Dictionary<IsotopeLabelType, int>();
@@ -253,25 +274,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     var graphPointData = new GraphPointData(nodeGroupPep);
                     listPoints.Add(graphPointData);
-                    // foreach (PeptideDocNode nodePep in nodeGroupPep.Children)
-                    // {
-                    //     bool addBlankPoint = onePointPerPeptide &&
-                    //                          !nodePep.TransitionGroups.Any(paneKey.IncludesTransitionGroup);
-                    //     foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
-                    //     {
-                    //         var path = new IdentityPath(nodeGroupPep.PeptideGroup,
-                    //                                     nodePep.Peptide, nodeGroup.TransitionGroup);
-                    //         var graphPointData = new GraphPointData(nodePep, nodeGroup, path);
-                    //         if (addBlankPoint || paneKey.IncludesTransitionGroup(nodeGroup))
-                    //         {
-                    //             listPoints.Add(graphPointData);
-                    //         }
-                    //         if (addBlankPoint)
-                    //         {
-                    //             break;
-                    //         }
-                    //     }
-                    // }
                 }
 
                 // Sort into correct order
@@ -286,41 +288,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 int selectedIndex = -1;
 
                 for (int i = 0; i < pointListCount; i++)
+                {
                     pointPairLists.Add(new PointPairList());
+                }
 
-                // Calculate lists and values
-                PeptideDocNode nodePepCurrent = null;
-                var chargeCurrent = Adduct.EMPTY;
                 foreach (var dataPoint in listPoints)
                 {
                     var nodePep = dataPoint.NodePep;
                     var nodeGroup = dataPoint.NodeGroup;
-                    if (!ReferenceEquals(nodePep, nodePepCurrent))
-                    {
-                        nodePepCurrent = nodePep;
-
-                        chargeCurrent = Adduct.EMPTY;
-                    }
-
-                    bool addLabel = !displayTotals;
-                    if (displayTotals && !Equals(nodeGroup.TransitionGroup.PrecursorAdduct, chargeCurrent))
-                    {
-                        LevelPointPairLists(pointPairLists);
-                        addLabel = true;
-                    }
-                    chargeCurrent = nodeGroup.TransitionGroup.PrecursorAdduct;
-
-                    var transitionGroup = nodeGroup.TransitionGroup;
                     int iGroup = labels.Count;
 
-                    if (addLabel)
-                    {
-                        var label = dataPoint.NodePepGroup.Name;
-                        if (!displayTotals && null == paneKey.IsotopeLabelType)
-                            label += transitionGroup.LabelTypeText;
-                        labels.Add(label);
-                        xscalePaths.Add(dataPoint.IdentityPath);
-                    }
+                    var label = iGroup.ToString();
+                    labels.Add(label);
+                    xscalePaths.Add(dataPoint.IdentityPath);
+                    
 
                     double groupMaxY = 0;
                     double groupMinY = double.MaxValue;
@@ -341,9 +322,10 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             if (paneKey.IncludesTransitionGroup(nodeGroup)) //TODO rework logic to consider all transitions in protein
                             {
-                                pointPairLists[dictTypeToSet[labelType]].Add(CreatePointPair(iGroup, dataPoint.NodePepGroup,
-                                                                                             ref groupMaxY, ref groupMinY,
-                                                                                             resultIndex));
+                                var pointPair = CreatePointPair(iGroup, dataPoint.NodePepGroup,
+                                    ref groupMaxY, ref groupMinY,
+                                    resultIndex);
+                                pointPairLists[dictTypeToSet[labelType]].Add(pointPair);
                             }
                             else
                             {
@@ -354,9 +336,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     // ReSharper restore DoNotCallOverridableMethodsInConstructor
 
                     // Save the selected index and its y extent
-                    if (ReferenceEquals(selectedGroup, nodeGroup))
+                    if (ReferenceEquals(selectedProtein, dataPoint.NodePepGroup))
                     {
                         selectedIndex = labels.Count - 1;
+                        SelectedY = dataPoint.AreaGroup;
+                        SelectedName = dataPoint.NodePepGroup.Name;
                         SelectedMaxY = groupMaxY;
                         SelectedMinY = groupMinY;
                     }
@@ -376,45 +360,30 @@ namespace pwiz.Skyline.Controls.Graphs
                 SelectedIndex = selectedIndex;
                 MaxY = maxY;
                 if (minY != double.MaxValue)
+                {
                     MinY = minY;
+                }
             }
             // ReSharper restore PossibleMultipleEnumeration
 
-            public GraphValues.IRetentionTimeTransformOp RetentionTimeTransformOp { get; private set; }
             public IList<PointPairList> PointPairLists { get; private set; }
             public string[] Labels { get; private set; }
             public IdentityPath[] XScalePaths { get; private set; }
             public double MaxY { get; private set; }
             public double? MinY { get; private set; }
             public int SelectedIndex { get; private set; }
+            public double SelectedY { get; private set; }
             public double SelectedMaxY { get; private set; }
             public double SelectedMinY { get; private set; }
+            public string SelectedName { get; private set; }
 
             public virtual double MaxValueSetting { get { return 0; } }
             public virtual double MinValueSetting { get { return 0; } }
             public virtual double MaxCVSetting { get { return 0; } }
 
-
-            /*
-                        private static int ComparePeptideAreas(GraphPointData p1, GraphPointData p2)
-                        {
-                            if (ReferenceEquals(p2.NodePep, p1.NodePep))
-                                return Peptide.CompareGroups(p2.NodeGroup, p1.NodeGroup);
-                            return Comparer.Default.Compare(p2.AreaPepCharge, p1.AreaPepCharge);
-                        }
-            */
-
             private static int CompareGroupAreas(GraphPointData p1, GraphPointData p2)
             {
                 return Comparer.Default.Compare(p2.AreaGroup, p1.AreaGroup);
-            }
-
-            private void LevelPointPairLists(List<PointPairList> lists)
-            {
-                // Add missing points to lists to make them all of equal length
-                int maxPoints = 0;
-                lists.ForEach(l => maxPoints = Math.Max(maxPoints, l.Count));
-                lists.ForEach(l => { if (l.Count < maxPoints) l.Add(CreatePointPairMissing(maxPoints - 1)); });
             }
 
             protected static PointPair PointPairMissing(int iGroup)
@@ -472,8 +441,6 @@ namespace pwiz.Skyline.Controls.Graphs
             protected abstract double? GetValue(TransitionGroupChromInfo chromInfo);
 
             protected abstract double GetValue(TransitionChromInfo info);
-
-            protected virtual bool AddBlankPointsForGraphPanes { get { return false; } }
         }
 
         private class GraphPointData
@@ -491,8 +458,6 @@ namespace pwiz.Skyline.Controls.Graphs
             public IdentityPath IdentityPath { get; private set; }
             public double AreaGroup { get; private set; }
             //            public double AreaPepCharge { get; private set; }
-            public double TimeGroup { get; private set; }
-            public double TimePepCharge { get; private set; }
 
             private void CalcStats(PeptideGroupDocNode nodePepGroup)
             {
@@ -509,9 +474,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }
 
-                AreaGroup = areas.Sum();
-                TimeGroup = areas.Sum();
-                TimePepCharge = areas.Sum();
+                AreaGroup = areas.Sum(); //TODO is this the correct way to calculate area
             }
             // ReSharper disable SuggestBaseTypeForParameter
             private void CalcStats(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, out double? meanArea)

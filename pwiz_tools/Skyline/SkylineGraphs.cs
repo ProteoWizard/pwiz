@@ -1574,6 +1574,11 @@ namespace pwiz.Skyline
             ChromatogramContextMenu.BuildChromatogramMenu(zedGraphControl, paneKey, menuStrip, chromFileInfoId);
         }
 
+        // TODO rename?
+        private void AddIntensityFormattingForm(ToolStrip menuStrip, int iInsert)
+        {
+            ChromatogramContextMenu.AddIntensityFormattingMenu(menuStrip, iInsert);
+        }
         private void AddTransitionContextMenu(ToolStrip menuStrip, int iInsert)
         {
             ChromatogramContextMenu.AddTransitionContextMenu(menuStrip, iInsert);
@@ -1713,6 +1718,15 @@ namespace pwiz.Skyline
             SetDisplayTypeChrom(DisplayTypeChrom.products);
         }
 
+        public void ShowIntensityFormatting()
+        {
+            var list = _listGraphPeakArea;
+            foreach (var summary in _listGraphPeakArea.Where(summary => summary.Type == GraphTypeSummary.intensity))
+            {
+                summary.Window = this;
+            }
+            UpdatePeakAreaGraph();
+        }
         public void ShowAllTransitions()
         {
             SetDisplayTypeChrom(DisplayTypeChrom.all);
@@ -3705,6 +3719,11 @@ namespace pwiz.Skyline
                 AddTransitionContextMenu(menuStrip, iInsert++);
             }
 
+            if (graphType == GraphTypeSummary.intensity)
+            {
+                AddIntensityFormattingForm(menuStrip, iInsert++);
+            }
+
             if (graphType == GraphTypeSummary.replicate)
             {
                 iInsert = AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert);
@@ -3759,11 +3778,14 @@ namespace pwiz.Skyline
                     }
                 } 
             }
-            else if (graphType == GraphTypeSummary.peptide || graphType == GraphTypeSummary.intensity)
+            else if (graphType == GraphTypeSummary.peptide)
             {
                 AddPeptideOrderContextMenu(menuStrip, iInsert++);
-                iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
                 AddScopeContextMenu(menuStrip, iInsert++);
+            }
+            if (graphType == GraphTypeSummary.intensity || graphType == GraphTypeSummary.peptide)
+            {
+                iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
             }
 
             if (isHistogram)
@@ -4406,6 +4428,7 @@ namespace pwiz.Skyline
 
         public void ShowPeakAreaIntensityGraph()
         {
+            ShowTotalTransitions();
             Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.intensity);
             ShowGraphPeakArea(true, GraphTypeSummary.intensity);
             UpdatePeakAreaGraph();

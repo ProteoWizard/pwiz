@@ -372,6 +372,12 @@
     <Compile Include="Controls\Databinding\SkylineViewContext.cs" />
     <Compile Include="Controls\Databinding\SkylineWindowDataSchema.cs" />
     <Compile Include="Controls\Graphs\AreaIntensityGraphPane.cs" />
+    <Compile Include="Controls\Graphs\CreateIntensityMatchExpressionDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\CreateIntensityMatchExpressionDlg.Designer.cs">
+      <DependentUpon>CreateIntensityMatchExpressionDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Graphs\ExportMethodScheduleGraph.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -396,7 +402,14 @@
       <DependentUpon>DetectionToolbarProperties.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\GraphDataCalculator.cs" />
+    <Compile Include="Controls\Graphs\IntensityGraphFormattingDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\IntensityGraphFormattingDlg.Designer.cs">
+      <DependentUpon>IntensityGraphFormattingDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Graphs\PaneProgressBar.cs" />
+    <Compile Include="Controls\Graphs\ProteinAbundanceBindingSource.cs" />
     <Compile Include="Controls\Graphs\ReplicateGroupOp.cs" />
     <Compile Include="Controls\Graphs\ReplicateValue.cs" />
     <Compile Include="Controls\Graphs\SummaryIntensityGraphPane.cs" />
@@ -2552,6 +2565,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\VolcanoPlotFormattingDlg.resx">
       <DependentUpon>VolcanoPlotFormattingDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\VolcanoPlotFormattingDlg.zh-CHS.resx">
       <DependentUpon>VolcanoPlotFormattingDlg.cs</DependentUpon>
@@ -2843,9 +2857,11 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\ChromatogramContextMenu.ja.resx">
       <DependentUpon>ChromatogramContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\ChromatogramContextMenu.resx">
       <DependentUpon>ChromatogramContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\ChromatogramContextMenu.zh-CHS.resx">
       <DependentUpon>ChromatogramContextMenu.cs</DependentUpon>

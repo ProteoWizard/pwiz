@@ -318,7 +318,10 @@ namespace pwiz.Skyline.Menus
             }
         }
 
-
+        public void AddIntensityFormattingMenu(ToolStrip menuStrip, int iInsert)
+        {
+            menuStrip.Items.Insert(iInsert, intensityFormattingMenuItem);
+        }
         public void AddTransitionContextMenu(ToolStrip menuStrip, int iInsert)
         {
             menuStrip.Items.Insert(iInsert, transitionsContextMenuItem);
@@ -619,6 +622,11 @@ namespace pwiz.Skyline.Menus
             if (qcTraceItem == null)
                 throw new InvalidOperationException(@"qcMenuItem_Click must be triggered by a ToolStripMenuItem");
             SkylineWindow.ShowQc(qcTraceItem.Text);
+        }
+
+        private void intensityFormattingMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.ShowIntensityFormatting();
         }
         private void allTranMenuItem_Click(object sender, EventArgs e)
         {

@@ -130,6 +130,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool _activeLibrary;
         private int _targetResultsIndex;
         private int _originalResultsIndex;
+        public SkylineWindow Window;
 
         private GraphSummaryToolbar _toolbar;
         public GraphSummaryToolbar Toolbar
