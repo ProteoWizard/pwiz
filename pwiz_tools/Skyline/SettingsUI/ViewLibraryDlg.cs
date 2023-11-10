@@ -1228,21 +1228,7 @@ namespace pwiz.Skyline.SettingsUI
                 var propertyName = _peptides.comboFilterCategoryDict
                     .FirstOrDefault(x => x.Value == selectedCategory).Key;
 
-                var propertyValue = ViewLibraryPepInfoList.GetStringValue(propertyName, pepInfo);
-
-                // Shorten precursor m/z values to be uniform and match the tool tip
-                if (selectedCategory.Equals(Resources.PeptideTipProvider_RenderTip_Precursor_m_z))
-                {
-                    propertyValue = FormatPrecursorMz(double.TryParse(propertyValue, out var mz) ? mz : 0);
-                }
-                else if(selectedCategory.Equals(Resources.PeptideTipProvider_RenderTip_CCS))
-                {
-                    propertyValue = FormatCCS(double.Parse(propertyValue));
-                }
-                else if(selectedCategory.Equals(Resources.PeptideTipProvider_RenderTip_Ion_Mobility))
-                {
-                    propertyValue = FormatIonMobility(double.Parse(propertyValue), pepInfo.IonMobilityUnits);
-                }
+                var propertyValue = ViewLibraryPepInfoList.GetFormattedPropertyValue(propertyName, pepInfo);
                 categoryText = CreateTextSequence(propertyValue, false);
             }
             else
@@ -1854,17 +1840,17 @@ namespace pwiz.Skyline.SettingsUI
             }*/
         }
 
-        private static string FormatPrecursorMz(double precursorMz)
+        internal static string FormatPrecursorMz(double precursorMz)
         {
             return string.Format(@"{0:F04}", precursorMz);
         }
 
-        private static string FormatIonMobility(double mobility, string units)
+        internal static string FormatIonMobility(double mobility, string units)
         {
             return string.Format(@"{0:F04} {1}", mobility, units);
         }
 
-        private static string FormatCCS(double CCS)
+        internal static string FormatCCS(double CCS)
         {
             return string.Format(@"{0:F04}", CCS);
         }

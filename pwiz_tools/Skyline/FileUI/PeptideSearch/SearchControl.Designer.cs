@@ -24,7 +24,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.showTimestampsCheckbox = new System.Windows.Forms.CheckBox();
             this.txtSearchProgress = new pwiz.Common.Controls.AutoScrollTextBox();
             this.panelTextBoxBorder = new System.Windows.Forms.Panel();
+            this.progressSplitContainer = new System.Windows.Forms.SplitContainer();
             this.panelTextBoxBorder.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.progressSplitContainer)).BeginInit();
+            this.progressSplitContainer.Panel2.SuspendLayout();
+            this.progressSplitContainer.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -64,24 +68,37 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             // panelTextBoxBorder
             // 
-            resources.ApplyResources(this.panelTextBoxBorder, "panelTextBoxBorder");
             this.panelTextBoxBorder.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.panelTextBoxBorder.Controls.Add(this.txtSearchProgress);
+            resources.ApplyResources(this.panelTextBoxBorder, "panelTextBoxBorder");
             this.panelTextBoxBorder.Name = "panelTextBoxBorder";
+            // 
+            // progressSplitContainer
+            // 
+            resources.ApplyResources(this.progressSplitContainer, "progressSplitContainer");
+            this.progressSplitContainer.Name = "progressSplitContainer";
+            this.progressSplitContainer.Panel1Collapsed = true;
+            // 
+            // progressSplitContainer.Panel2
+            // 
+            this.progressSplitContainer.Panel2.Controls.Add(this.panelTextBoxBorder);
             // 
             // SearchControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.progressSplitContainer);
             this.Controls.Add(this.showTimestampsCheckbox);
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.lblProgress);
             this.Controls.Add(this.btnCancel);
-            this.Controls.Add(this.panelTextBoxBorder);
             this.DoubleBuffered = true;
             this.Name = "SearchControl";
             this.panelTextBoxBorder.ResumeLayout(false);
             this.panelTextBoxBorder.PerformLayout();
+            this.progressSplitContainer.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.progressSplitContainer)).EndInit();
+            this.progressSplitContainer.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -94,5 +111,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         protected CustomTextProgressBar progressBar;
         protected AutoScrollTextBox txtSearchProgress;
         private System.Windows.Forms.Panel panelTextBoxBorder;
+        protected System.Windows.Forms.SplitContainer progressSplitContainer;
     }
 }
