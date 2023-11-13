@@ -209,11 +209,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.NewDocument(true));
             var origDoc = SkylineWindow.Document;
             RunUI(() =>
-                SkylineWindow.ModifyDocument("", doc =>
+                SkylineWindow.ModifyDocument("", mdoc =>
                 {
-                    return doc.AddPeptideGroups(new[]
+                    return mdoc.AddPeptideGroups(new[]
                     {
-                        new PeptideGroupDocNode(new PeptideGroup(), doc.Annotations, "Molecule Group", "",
+                        new PeptideGroupDocNode(new PeptideGroup(), mdoc.Annotations, "Molecule Group", "",
                             new PeptideDocNode[0])
                     }, true, IdentityPath.ROOT, out _, out _);
                 }));
