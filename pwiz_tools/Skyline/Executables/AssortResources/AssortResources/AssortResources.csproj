@@ -8,4 +8,12 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="BlankResourcesFile.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="BlankResourcesFile.txt" />
+  </ItemGroup>
+
 </Project>

@@ -15,7 +15,7 @@ namespace Test
             var resourceFilePath = Path.Combine(Path.GetDirectoryName(sourceFilePath)!, "TestResources.resx");
             Assert.True(File.Exists(resourceFilePath));
             var resourceIdentifiers = ResourceIdentifiers.FromPath(resourceFilePath);
-            var references = resourceIdentifiers.GetReferencedNames(File.ReadAllText(sourceFilePath)).ToList();
+            var references = resourceIdentifiers.GetResourceReferences(File.ReadAllText(sourceFilePath)).ToList();
             Assert.Equal(1, references.Count);
         }
 

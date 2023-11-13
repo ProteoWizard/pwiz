@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 namespace AssortResources
@@ -8,61 +9,91 @@ namespace AssortResources
         private static Regex _regexWhitespaceDot =
             new Regex("\\s*\\.\\s*", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-        public ResourceIdentifiers(string resourceFileName, IEnumerable<string> resourceNames)
+        public ResourceIdentifiers(string resourceFileName, XDocument document)
         {
             ResourceFileName = resourceFileName;
-            Identifiers = resourceNames.OrderByDescending(name => name.Length).ToList();
+            var resources = new Dictionary<string, XElement>();
+            foreach (var element in document.Root!.Elements("data"))
+            {
+                string? name = (string?)element.Attribute("name");
+                if (name != null)
+                {
+                    resources.TryAdd(name, element);
+                }
+            }
+
+            Resources = resources;
         }
 
         public static ResourceIdentifiers FromPath(string path)
         {
-            return FromXDocument(Path.GetFileNameWithoutExtension(path), XDocument.Load(path));
+            return new ResourceIdentifiers(Path.GetFileNameWithoutExtension(path), XDocument.Load(path));
         }
-
-        public static ResourceIdentifiers FromXDocument(string resourceFilename, XDocument xDocument)
-        {
-            var resourceNames = xDocument.Root!.Elements("data").Select(el => (string?) el.Attribute("name")).OfType<string>();
-            return new ResourceIdentifiers(resourceFilename, resourceNames);
-        }
-
 
         public string ResourceFileName { get; }
-        public IList<string> Identifiers { get; }
+        public Dictionary<string, XElement> Resources { get; }
 
-        public IEnumerable<string> GetReferencedNames(string code)
+        public IEnumerable<ResourceReference> GetResourceReferences(string code)
         {
-            int ichLast = 0;
+            int ichPrev = 0;
             while (true)
             {
-                int ichNext = code.IndexOf(ResourceFileName, ichLast, StringComparison.Ordinal);
+                int ichNext = code.IndexOf(ResourceFileName, ichPrev, StringComparison.Ordinal);
                 if (ichNext < 0)
                 {
                     break;
                 }
-
-                ichLast = ichNext + ResourceFileName.Length;
-                var matchDot = _regexWhitespaceDot.Match(code, ichLast);
+                ichPrev = ichNext + ResourceFileName.Length;
+                if (ichNext > 0 && IsIdentifierChar(code[ichNext - 1]))
+                {
+                    continue;
+                }
+                var matchDot = _regexWhitespaceDot.Match(code, ichPrev);
                 if (!matchDot.Success)
                 {
                     continue;
                 }
 
-                int ichIdentifierStart = ichLast + matchDot.Length;
-                foreach (var name in Identifiers)
+                int ichIdentifierStart = ichPrev + matchDot.Length;
+                int ichIdentifierEnd = ichIdentifierStart;
+                while (ichIdentifierEnd < code.Length && IsIdentifierChar(code[ichIdentifierEnd]))
                 {
-                    if (code.Length <= ichIdentifierStart + name.Length)
-                    {
-                        continue;
-                    }
+                    ichIdentifierEnd++;
+                }
 
-                    string substring = code.Substring(ichIdentifierStart, name.Length);
-                    if (Equals(name, substring))
-                    {
-                        yield return substring;
-                        break;
-                    }
+                if (ichIdentifierEnd > ichIdentifierStart)
+                {
+                    string resourceIdentifier =
+                        code.Substring(ichIdentifierStart, ichIdentifierEnd - ichIdentifierStart);
+                    yield return new ResourceReference(ResourceFileName, ichNext, resourceIdentifier,
+                        ichIdentifierStart);
                 }
             }
+        }
+
+        public static bool IsIdentifierChar(char ch)
+        {
+            return char.IsLetterOrDigit(ch) || ch == '_';
+        }
+
+        public string ReplaceReferences(string code, string newResourcesName, HashSet<string> resourceIdentifiers)
+        {
+            StringBuilder newCode = new StringBuilder();
+            int ichLast = 0;
+            foreach (var resourceReference in GetResourceReferences(code))
+            {
+                if (!resourceIdentifiers.Contains(resourceReference.ResourceIdentifier))
+                {
+                    continue;
+                }
+
+                newCode.Append(code.Substring(ichLast, resourceReference.ResourceFileNameOffset - ichLast));
+                newCode.Append(newResourcesName);
+                ichLast = resourceReference.ResourceFileNameOffset + resourceReference.ResourceFileName.Length;
+            }
+
+            newCode.Append(code.Substring(ichLast));
+            return newCode.ToString();
         }
     }
 }
