@@ -1,12 +1,18 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Resources.Tools;
+using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+using Microsoft.CSharp;
 
 namespace AssortResources
 {
     public class ResourceAssorter
     {
-        private Dictionary<string, HashSet<string>> _referencedResourcesByFolder = new();
+        private Dictionary<string, HashSet<string>> _referencedResourcesByFolder = new Dictionary<string, HashSet<string>>();
 
         public ResourceAssorter(string rootFolder, string csProjPath, string resourceFilePath)
         {
@@ -30,11 +36,14 @@ namespace AssortResources
             var result = new HashSet<string>();
             foreach (var file in files)
             {
-                foreach (var reference in ResourceIdentifiers.GetResourceReferences(File.ReadAllText(Path.Combine(RootFolder, file))))
+                var absolutePath = Path.Combine(RootFolder, file);
+                if (File.Exists(absolutePath))
                 {
-                    result.Add(reference.ResourceIdentifier);
+                    foreach (var reference in ResourceIdentifiers.GetResourceReferences(File.ReadAllText(absolutePath)))
+                    {
+                        result.Add(reference.ResourceIdentifier);
+                    }
                 }
-                
             }
 
             return result;
@@ -89,6 +98,19 @@ namespace AssortResources
             {
                 MakeResourceFile(entry.Key, folders[entry.Key], entry.Value.ToHashSet());
             }
+
+            var stringsToDelete = uniqueReferences.SelectMany(entry => entry.Value).ToHashSet();
+            var resxDocument = XDocument.Load(ResourceFilePath);
+            foreach (var el in resxDocument.Root!.Elements("data").ToList())
+            {
+                string? name = (string?)el.Attribute("name");
+                if (name != null && stringsToDelete.Contains(name))
+                {
+                    el.Remove();
+                }
+            }
+            WriteDocument(resxDocument, ResourceFilePath);
+            RunCustomTool(ResourceFilePath);
             WriteDocument(CsProjFile.Document, CsProjPath);
         }
 
@@ -136,14 +158,18 @@ namespace AssortResources
                 }
             }
             WriteDocument(document, absoluteResourceFilePath);
+            RunCustomTool(absoluteResourceFilePath);
             foreach (var sourceFile in files)
             {
                 var absoluteSourceFile = Path.Combine(RootFolder, sourceFile);
-                var code = File.ReadAllText(absoluteSourceFile);
-                var newCode = ResourceIdentifiers.ReplaceReferences(code, newResourcesName, resourceIdentifiers);
-                if (newCode != code)
+                if (File.Exists(absoluteSourceFile))
                 {
-                    File.WriteAllText(absoluteSourceFile, newCode, Encoding.UTF8);
+                    var code = File.ReadAllText(absoluteSourceFile);
+                    var newCode = ResourceIdentifiers.ReplaceReferences(code, newResourcesName, resourceIdentifiers);
+                    if (newCode != code)
+                    {
+                        File.WriteAllText(absoluteSourceFile, newCode, Encoding.UTF8);
+                    }
                 }
             }
         }
@@ -167,6 +193,25 @@ namespace AssortResources
             {
                 document.Save(xmlWriter);
             }
+        }
+
+        public void RunCustomTool(string filePath)
+        {
+            var fullPath = Path.Combine(RootFolder, filePath);
+            string baseName = Path.GetFileNameWithoutExtension(filePath);
+            var namespaceName = CsProjFile.RootNamespace;
+            string folderName = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrEmpty(folderName))
+            {
+                if (namespaceName.Length > 0)
+                {
+                    namespaceName += '.';
+                }
+
+                namespaceName += folderName.Replace('\\','.');
+            }
+            Directory.SetCurrentDirectory(Path.GetDirectoryName(fullPath));
+            StronglyTypedResourceBuilder.Create(fullPath, baseName, namespaceName, new CSharpCodeProvider(), false, out _);
         }
     }
 }

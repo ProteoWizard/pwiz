@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
@@ -15,10 +18,15 @@ namespace AssortResources
             var resources = new Dictionary<string, XElement>();
             foreach (var element in document.Root!.Elements("data"))
             {
-                string? name = (string?)element.Attribute("name");
-                if (name != null)
+                string? type = (string?) element.Attribute("type");
+                if (type != null && type.StartsWith("System.Resources.ResXFileRef"))
                 {
-                    resources.TryAdd(name, element);
+                    continue;
+                }
+                string? name = (string?)element.Attribute("name");
+                if (name != null && !resources.ContainsKey(name))
+                {
+                    resources.Add(name, element);
                 }
             }
 
