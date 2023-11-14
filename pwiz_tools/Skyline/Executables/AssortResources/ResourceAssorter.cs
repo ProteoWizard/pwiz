@@ -18,10 +18,8 @@ namespace AssortResources
 
         public ResourceAssorter(string csProjPath, string resourceFilePath, params string[] otherProjectPaths)
         {
-            CsProjPath = csProjPath;
-            ResourceFilePath = resourceFilePath;
-            ResourceIdentifiers = ResourceIdentifiers.FromPath(ResourceFilePath);
             CsProjFile = CsProjFile.FromProjFilePath(csProjPath);
+            ResourceFile = ResourceFile.FromPath(resourceFilePath);
             OtherProjectFiles = new List<CsProjFile>();
             foreach (var otherProjectPath in otherProjectPaths)
             {
@@ -29,13 +27,11 @@ namespace AssortResources
             }
         }
 
-        public string CsProjPath { get; }
-        public string ResourceFilePath { get; }
 
         public CsProjFile CsProjFile { get; }
         public List<CsProjFile> OtherProjectFiles { get; }
 
-        public ResourceIdentifiers ResourceIdentifiers { get; }
+        public ResourceFile ResourceFile { get; }
 
         public IEnumerable<string> GetReferencedResourcesInFolder(IEnumerable<string> files)
         {
@@ -52,7 +48,7 @@ namespace AssortResources
         {
             if (File.Exists(absolutePath))
             {
-                foreach (var reference in ResourceIdentifiers.GetResourceReferences(File.ReadAllText(absolutePath)))
+                foreach (var reference in ResourceFile.ResourceIdentifiers.GetResourceReferences(File.ReadAllText(absolutePath)))
                 {
                     yield return reference.ResourceIdentifier;
                 }
@@ -77,7 +73,7 @@ namespace AssortResources
                 }
             }
             var uniqueReferences = new Dictionary<string, List<string>>();
-            foreach (var resourceName in ResourceIdentifiers.Resources.Keys)
+            foreach (var resourceName in ResourceFile.ResourceIdentifiers.Resources.Keys)
             {
                 if (otherReferences.Contains(resourceName))
                 {
@@ -118,7 +114,12 @@ namespace AssortResources
             }
 
             var stringsToDelete = uniqueReferences.SelectMany(entry => entry.Value).ToHashSet();
-            var resxDocument = XDocument.Load(ResourceFilePath);
+            RemoveResources(ResourceFile.FilePath, stringsToDelete);
+            foreach (var language in ResourceFile.Languages.Values)
+            {
+                RemoveResources(language.FilePath, stringsToDelete);
+            }
+            var resxDocument = XDocument.Load(ResourceFile.FilePath);
             foreach (var el in resxDocument.Root!.Elements("data").ToList())
             {
                 string? name = (string?)el.Attribute("name");
@@ -127,9 +128,23 @@ namespace AssortResources
                     el.Remove();
                 }
             }
-            WriteDocument(resxDocument, ResourceFilePath);
-            RunCustomTool(ResourceFilePath);
-            WriteDocument(CsProjFile.Document, CsProjPath);
+            WriteDocument(resxDocument, ResourceFile.FilePath);
+            RunCustomTool(ResourceFile.FilePath);
+            WriteDocument(CsProjFile.Document, CsProjFile.ProjFilePath);
+        }
+
+        public void RemoveResources(string filePath, HashSet<string> namesToDelete)
+        {
+            var resxDocument = XDocument.Load(filePath);
+            foreach (var el in resxDocument.Root!.Elements("data").ToList())
+            {
+                string? name = (string?)el.Attribute("name");
+                if (name != null && namesToDelete.Contains(name))
+                {
+                    el.Remove();
+                }
+            }
+            WriteDocument(resxDocument, filePath);
         }
 
         public void ProcessFolder(IGrouping<string, string> folder)
@@ -152,8 +167,33 @@ namespace AssortResources
             {
                 folderName = Path.GetFileNameWithoutExtension(folderPath);
             }
-            var newResourcesName = folderName + ResourceIdentifiers.ResourceFileName;
+            var newResourcesName = folderName + ResourceFile.ResourceIdentifiers.ResourceFileName;
             var resourceFilePath = Path.Combine(folderPath, newResourcesName + ".resx");
+            AddResources(resourceFilePath, ResourceFile.ResourceIdentifiers, resourceIdentifiers);
+            foreach (var languageEntry in ResourceFile.Languages)
+            {
+                var languageFilePath = Path.Combine(folderPath, newResourcesName + "." + languageEntry.Key + ".resx");
+                AddResources(languageFilePath, languageEntry.Value, resourceIdentifiers);
+            }
+            RunCustomTool(resourceFilePath);
+            CsProjFile.AddResourceFile(resourceFilePath, ResourceFile.Languages.Keys);
+            foreach (var sourceFile in files)
+            {
+                if (File.Exists(sourceFile))
+                {
+                    var code = File.ReadAllText(sourceFile);
+                    var newCode = ResourceFile.ResourceIdentifiers.ReplaceReferences(code, newResourcesName, resourceIdentifiers);
+                    if (newCode != code)
+                    {
+                        File.WriteAllText(sourceFile, newCode, Encoding.UTF8);
+                    }
+                }
+            }
+            Console.Error.WriteLine("Moved {0} resources into {1}", resourceIdentifiers.Count, resourceFilePath);
+        }
+
+        public void AddResources(string resourceFilePath, ResourceIdentifiers resourceIdentifiers, IEnumerable<string> identifiers)
+        {
             XDocument document;
             if (File.Exists(resourceFilePath))
             {
@@ -162,33 +202,21 @@ namespace AssortResources
             else
             {
                 document = GetBlankResourceDocument();
-                CsProjFile.AddResourceFile(resourceFilePath);
             }
 
             var names = document.Root!.Elements("data").Select(e => (string?)e.Attribute("name")).OfType<string>()
                 .ToHashSet();
-            foreach (var resourceIdentifier in resourceIdentifiers.OrderBy(x=>x))
+            foreach (var resourceIdentifier in identifiers.OrderBy(x => x))
             {
                 if (names.Add(resourceIdentifier))
                 {
-                    document.Root.Add(ResourceIdentifiers.Resources[resourceIdentifier]);
-                }
-            }
-            WriteDocument(document, resourceFilePath);
-            RunCustomTool(resourceFilePath);
-            foreach (var sourceFile in files)
-            {
-                if (File.Exists(sourceFile))
-                {
-                    var code = File.ReadAllText(sourceFile);
-                    var newCode = ResourceIdentifiers.ReplaceReferences(code, newResourcesName, resourceIdentifiers);
-                    if (newCode != code)
+                    if (resourceIdentifiers.Resources.TryGetValue(resourceIdentifier, out var resource))
                     {
-                        File.WriteAllText(sourceFile, newCode, Encoding.UTF8);
+                        document.Root.Add(resource);
                     }
                 }
             }
-            Console.Error.WriteLine("Moved {0} resources into {1}", resourceIdentifiers.Count, resourceFilePath);
+            WriteDocument(document, resourceFilePath);
         }
 
         public static XDocument GetBlankResourceDocument()

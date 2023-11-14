@@ -25,16 +25,20 @@ namespace AssortResources
                 }
             }
 
-            return new ResourceFile(path, resourceIdentifiers, languages);
+            return new ResourceFile(resourceIdentifiers, languages);
         }
 
-        public ResourceFile(string path, ResourceIdentifiers resourceIdentifiers,
+        public ResourceFile(ResourceIdentifiers resourceIdentifiers,
             Dictionary<string, ResourceIdentifiers> languages)
         {
-
+            ResourceIdentifiers = resourceIdentifiers;
+            Languages = languages;
         }
 
-        public string FilePath { get; }
+        public string FilePath
+        {
+            get { return ResourceIdentifiers.FilePath; }
+        }
         public ResourceIdentifiers ResourceIdentifiers { get; }
         public Dictionary<string, ResourceIdentifiers> Languages { get; }
     }

@@ -12,8 +12,9 @@ namespace AssortResources
         private static Regex _regexWhitespaceDot =
             new Regex("\\s*\\.\\s*", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-        public ResourceIdentifiers(string resourceFileName, XDocument document)
+        public ResourceIdentifiers(string filePath, string resourceFileName, XDocument document)
         {
+            FilePath = filePath;
             ResourceFileName = resourceFileName;
             var resources = new Dictionary<string, XElement>();
             foreach (var element in document.Root!.Elements("data"))
@@ -24,9 +25,13 @@ namespace AssortResources
                     continue;
                 }
                 string? name = (string?)element.Attribute("name");
-                if (name != null && !resources.ContainsKey(name))
+                if (name != null)
                 {
-                    resources.Add(name, element);
+                    name = name.Replace(' ', '_');
+                    if (!resources.ContainsKey(name))
+                    {
+                        resources.Add(name, element);
+                    }
                 }
             }
 
@@ -35,9 +40,10 @@ namespace AssortResources
 
         public static ResourceIdentifiers FromPath(string path)
         {
-            return new ResourceIdentifiers(Path.GetFileNameWithoutExtension(path), XDocument.Load(path));
+            return new ResourceIdentifiers(path, Path.GetFileNameWithoutExtension(path), XDocument.Load(path));
         }
 
+        public string FilePath { get; }
         public string ResourceFileName { get; }
         public Dictionary<string, XElement> Resources { get; }
 

@@ -10,16 +10,11 @@ namespace AssortResources
     {
         public static CsProjFile FromProjFilePath(string projFile)
         {
-            var projectFolder = Path.GetDirectoryName(projFile)!;
-            if (!projectFolder.EndsWith("\\"))
-            {
-                projectFolder += "\\";
-            }
-            return new CsProjFile(projectFolder, XDocument.Load(projFile));
+            return new CsProjFile(projFile, XDocument.Load(projFile));
         }
         public CsProjFile(string filePath, XDocument document)
         {
-            ProjectFilePath = filePath;
+            ProjFilePath = filePath;
             string projectFolder = Path.GetDirectoryName(filePath);
             if (!projectFolder.EndsWith("\\"))
             {
@@ -40,7 +35,7 @@ namespace AssortResources
             RootNamespace = GetRootNameSpace();
         }
 
-        public string ProjectFilePath { get; }
+        public string ProjFilePath { get; }
         public string ProjectFolder { get; } 
 
         private string GetRootNameSpace()
@@ -76,7 +71,7 @@ namespace AssortResources
             }
         }
 
-        public void AddResourceFile(string absoluteResourcePath)
+        public void AddResourceFile(string absoluteResourcePath, IEnumerable<string> languages)
         {
             var relativeResourcePath = GetRelativePath(absoluteResourcePath);
             string resourceName = Path.GetFileNameWithoutExtension(relativeResourcePath);
@@ -87,6 +82,15 @@ namespace AssortResources
                 new XElement(ElementName("Generator"), "PublicResXFileCodeGenerator"),
                 new XElement(ElementName("SubType"), "Designer"),
                 new XElement(ElementName("LastGenOutput"), designerName)));
+            foreach (var language in languages.OrderBy(l=>l))
+            {
+                string languageFileName = Path.Combine(Path.GetDirectoryName(relativeResourcePath),
+                    resourceName + "." + language + ".resx");
+                MainItemGroup.Add(new XElement(ElementName("EmbeddedResource"),
+                    new XAttribute("Include", languageFileName),
+                    new XElement(ElementName("DependentUpon"), Path.GetFileName(relativeResourcePath)),
+                    new XElement(ElementName("SubType"), "Designer")));
+            }
             MainItemGroup.Add(new XElement(ElementName("Compile"),
                 new XAttribute("Include", Path.Combine(folder, designerName)),
                 new XElement(
