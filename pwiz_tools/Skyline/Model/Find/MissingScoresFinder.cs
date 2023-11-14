@@ -62,11 +62,11 @@ namespace pwiz.Skyline.Model.Find
             {
                 _isLastNodeMatch = IsMatch(nodePep);
                 if (_isLastNodeMatch)
-                    return new FindMatch(string.Format(Resources.MissingScoresFinder_Match__0__missing_from_peptide, _calculatorName));
+                    return new FindMatch(bookmarkEnumerator.Current, string.Format(Resources.MissingScoresFinder_Match__0__missing_from_peptide, _calculatorName));
             }
             else if (IsMatch(bookmarkEnumerator.CurrentChromInfo, nodePep) && !_isLastNodeMatch)
             {
-                return new FindMatch(string.Format(Resources.MissingScoresFinder_Match__0__missing_from_chromatogram_peak, _calculatorName));
+                return new FindMatch(bookmarkEnumerator.Current, string.Format(Resources.MissingScoresFinder_Match__0__missing_from_chromatogram_peak, _calculatorName));
             }
             return null;
         }

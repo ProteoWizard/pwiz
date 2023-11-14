@@ -11,12 +11,15 @@ powershell "Get-Content tests.txt | ForEach-Object { $_.split(\"`t\")[1] }" > te
 set FailedTests=0
 FOR /F %%I IN (testNames.txt) DO (
 REM check if test is in skip list
-findstr /b %%I scripts\misc\tc-perftests-skiplist.txt >nul
+findstr /b /e %%I scripts\misc\tc-perftests-skiplist.txt >nul
 REM if test is in skiplist, ERRORLEVEL will be 0
 IF ERRORLEVEL 1 (pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe test=%%I loop=1 language=en perftests=on teamcitytestdecoration=on runsmallmoleculeversions=on showheader=off) ELSE echo Skipped %%I
 IF ERRORLEVEL 1 set /a FailedTests += 1
+echo Cleaning TestResults
 IF EXIST pwiz_tools\Skyline\TestResults rmdir /s /q pwiz_tools\Skyline\TestResults
+echo Cleaning downloads
 IF EXIST %SKYLINE_DOWNLOAD_PATH% rmdir /s /q %SKYLINE_DOWNLOAD_PATH%
+echo Cleaning temp
 IF EXIST z:\Temp del /f /s /q z:\Temp\*.* >nul
 )
 

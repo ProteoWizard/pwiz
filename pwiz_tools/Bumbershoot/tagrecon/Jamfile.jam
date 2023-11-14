@@ -81,7 +81,6 @@ using expat : 2.0.1 : $(EXPAT_SOURCE) ;
 
 install data-files
     : # sources
-        $(TAGRECON_PATH)/unimod.xml
         $(TAGRECON_PATH)/blosum62.fas
     : # requirements
         <conditional>@install-location

@@ -140,6 +140,10 @@ namespace pwiz.Skyline.Controls.Databinding
                 groupNode.SelectedImageIndex = groupNode.ImageIndex = indexImageFolder;
                 foreach (var viewSpec in _viewContext.GetViewSpecList(group.Id).ViewSpecs)
                 {
+                    if (!_viewContext.CanDisplayView(viewSpec))
+                    {
+                        continue;
+                    }
                     if (null == _viewContext.GetViewInfo(group, viewSpec))
                     {
                         continue;

@@ -24,6 +24,7 @@
 
 
 #include "MSDataMerger.hpp"
+#include "SpectrumListBase.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "Diff.hpp"
@@ -51,7 +52,7 @@ void mergeParamContainers(ParamContainer& target, const ParamContainer& source)
     }
 }
 
-class SpectrumListMerger : public SpectrumList
+class SpectrumListMerger : public SpectrumListBase
 {
     struct IndexEntry : public SpectrumIdentity
     {

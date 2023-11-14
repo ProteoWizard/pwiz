@@ -639,6 +639,12 @@
   <data name="textPeptide.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>436, 17</value>
+  </metadata>
+  <data name="textPeptide.ToolTip" xml:space="preserve">
+    <value>Filters beginning with * search within descriptions, e.g. *PEET will match PEETID and AAPEETB</value>
+  </data>
   <data name="&gt;&gt;textPeptide.Name" xml:space="preserve">
     <value>textPeptide</value>
   </data>
@@ -703,7 +709,7 @@
     <value>msGraphExtension1</value>
   </data>
   <data name="&gt;&gt;msGraphExtension1.Type" xml:space="preserve">
-    <value>pwiz.Skyline.SettingsUI.MsGraphExtension, Skyline-daily, Version=21.2.1.579, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.SettingsUI.MsGraphExtension, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;msGraphExtension1.Parent" xml:space="preserve">
     <value>GraphPanel</value>
@@ -1326,11 +1332,17 @@
   <data name="toolStripSeparator14.Size" type="System.Drawing.Size, System.Drawing">
     <value>260, 6</value>
   </data>
+  <data name="graphPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>263, 32</value>
+  </data>
+  <data name="graphPropsContextMenuItem.Text" xml:space="preserve">
+    <value>Graph Properties...</value>
+  </data>
   <data name="spectrumPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>263, 32</value>
   </data>
   <data name="spectrumPropsContextMenuItem.Text" xml:space="preserve">
-    <value>Properties...</value>
+    <value>Spectrum Properties</value>
   </data>
   <data name="showChromatogramsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>263, 32</value>
@@ -1381,7 +1393,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.579, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btnAIons.Name" xml:space="preserve">
     <value>btnAIons</value>
@@ -1623,6 +1635,12 @@
   <data name="&gt;&gt;toolStripSeparator14.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;graphPropsContextMenuItem.Name" xml:space="preserve">
+    <value>graphPropsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;graphPropsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;spectrumPropsContextMenuItem.Name" xml:space="preserve">
     <value>spectrumPropsContextMenuItem</value>
   </data>
@@ -1653,10 +1671,16 @@
   <data name="&gt;&gt;toolStripSeparator27.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
+    <value>toolTip1</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ViewLibraryDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=21.2.1.579, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

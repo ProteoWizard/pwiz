@@ -812,7 +812,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 if (IsRunToRun)
                 {
-                    _calculator = new DictionaryRetentionScoreCalculator(XmlNamedElement.NAME_INTERNAL, origTimesDict);
+                    _calculator = new DictionaryRetentionScoreCalculator(XmlNamedElement.NAME_INTERNAL, DocumentRetentionTimes.ConvertToMeasuredRetentionTimes(origTimesDict));
                     var alignedRetentionTimes = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimesDict,
                         origTimesDict, refine ? threshold : 0, _regressionMethod,
                         token);
@@ -845,7 +845,6 @@ namespace pwiz.Skyline.Controls.Graphs
                         // Initialize the one calculator
                         calc = Settings.Default.RTScoreCalculatorList.Initialize(null, calc);
 
-                        double unused;
                         _regressionAll = RetentionTimeRegression.CalcSingleRegression(XmlNamedElement.NAME_INTERNAL,
                             calc,
                             _targetTimes,
@@ -853,7 +852,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             true,
                             _regressionMethod,
                             out _statisticsAll,
-                            out unused,
+                            out _,
                             token);
 
                         token.ThrowIfCancellationRequested();

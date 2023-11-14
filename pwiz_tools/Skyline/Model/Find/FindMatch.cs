@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Find
 {
@@ -24,20 +24,16 @@ namespace pwiz.Skyline.Model.Find
     /// Holds a snippet of text to be displayed, and a region to be
     /// highlighted.
     /// </summary>
-    public class FindMatch
+    public class FindMatch : Immutable
     {
-        public FindMatch(String displayText)
+        public FindMatch(Bookmark bookmark, string displayText)
         {
+            Bookmark = bookmark;
             DisplayText = displayText;
             RangeStart = 0;
             RangeEnd = displayText.Length;
         }
-        public FindMatch(FindMatch findMatch)
-        {
-            DisplayText = findMatch.DisplayText;
-            RangeStart = findMatch.RangeStart;
-            RangeEnd = findMatch.RangeEnd;
-        }
+        public Bookmark Bookmark { get; }
         public string DisplayText { get; private set; }
         public int RangeStart { get; private set; }
         public int RangeEnd { get; private set; }
@@ -47,15 +43,22 @@ namespace pwiz.Skyline.Model.Find
 
         public FindMatch ChangeRange(int start, int end)
         {
-            return new FindMatch(this) {RangeStart = start, RangeEnd = end};
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.RangeStart = start;
+                im.RangeEnd = end;
+            });
         }
         public FindMatch ChangeAnnotationName(string annotationName)
         {
-            return new FindMatch(this) {AnnotationName = annotationName};
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.AnnotationName = annotationName;
+            });
         }
         public FindMatch ChangeNote(bool note)
         {
-            return new FindMatch(this) {Note = note};
+            return ChangeProp(ImClone(this), im => im.Note = note);
         }
 
         #region object overrides
@@ -63,11 +66,12 @@ namespace pwiz.Skyline.Model.Find
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(other.DisplayText, DisplayText) 
-                && other.RangeStart == RangeStart 
-                && other.RangeEnd == RangeEnd
-                && other.AnnotationName == AnnotationName
-                && other.Note == Note;
+            return Equals(other.Bookmark, Bookmark)
+                   && Equals(other.DisplayText, DisplayText)
+                   && other.RangeStart == RangeStart
+                   && other.RangeEnd == RangeEnd
+                   && other.AnnotationName == AnnotationName
+                   && other.Note == Note;
         }
 
         public override bool Equals(object obj)
@@ -82,7 +86,8 @@ namespace pwiz.Skyline.Model.Find
         {
             unchecked
             {
-                int result = DisplayText.GetHashCode();
+                int result = Bookmark.GetHashCode();
+                result = (result*397) ^ DisplayText.GetHashCode();
                 result = (result*397) ^ RangeStart;
                 result = (result*397) ^ RangeEnd;
                 result = (result*397) ^ Note.GetHashCode();

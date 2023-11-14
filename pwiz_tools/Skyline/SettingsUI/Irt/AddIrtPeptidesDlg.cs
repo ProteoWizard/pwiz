@@ -263,8 +263,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
             if (!_regressionGraphData.TryGetValue(row, out data))
                 return;
 
-            using (var graph = new GraphRegression(data) {Width = 800, Height = 600})
+            using (var graph = new GraphRegression(data))
             {
+                graph.Width = 800;
+                graph.Height = 600;
                 graph.ShowDialog(this);
             }
         }

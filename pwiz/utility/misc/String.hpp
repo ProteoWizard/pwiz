@@ -140,6 +140,9 @@ std::string toString(double value, RealConvertPolicy policyFlags = RealConvertPo
 /// uses boost::spirit::karma to do faster conversion (relative to lexical_cast) of int to string
 std::string toString(int value);
 
+/// uses boost::spirit::karma to do faster conversion (relative to lexical_cast) of size_t to string
+std::string toString(size_t value);
+
 } // namespace util
 } // namespace pwiz
 

@@ -109,6 +109,15 @@ namespace pwiz.Skyline.Model.Prosit.Models
             return new PrositRTInput.PrositPeptideInput(sequence);
         }
 
+        public static PrositRTInput.PrositPeptideInput CreatePrositInputRow(SrmSettings settings, string peptide, out PrositException exception)
+        {
+            var sequence = PrositHelpers.EncodeSequence(peptide, out exception);
+            if (sequence == null)
+                return null;
+
+            return new PrositRTInput.PrositPeptideInput(sequence);
+        }
+
         public override PrositRTInput CreatePrositInput(IList<PrositRTInput.PrositPeptideInput> prositInputRows)
         {
             return new PrositRTInput(prositInputRows);

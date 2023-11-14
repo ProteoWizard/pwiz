@@ -109,7 +109,7 @@ namespace pwiz.SkylineTestFunctional
             };
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSGFPLUS_UNICODE_ISSUES)]
         public void TestDiaSearchVariableWindows()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
@@ -122,7 +122,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSGFPLUS_UNICODE_ISSUES)]
         public void TestDiaSearchVariableWindowsMsgfPlus()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
@@ -136,7 +136,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
         public void TestDiaSearchVariableWindowsMsFragger()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
@@ -155,7 +155,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
         public void TestDiaSearchFixedWindows()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
@@ -367,6 +367,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
                 // Assert.IsFalse(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
+                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = false;
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath(testDetails.FastaPath));
                 importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages = 0;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
@@ -442,7 +443,7 @@ namespace pwiz.SkylineTestFunctional
                 // Run the search
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
-                importPeptideSearchDlg.SearchControl.OnSearchFinished += (success) => searchSucceeded = success;
+                importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
 
                 // Cancel search
@@ -500,6 +501,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on import FASTA
+                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = false;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on converter settings
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on search settings
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on search progress

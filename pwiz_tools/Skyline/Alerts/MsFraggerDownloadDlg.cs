@@ -103,13 +103,14 @@ namespace pwiz.Skyline.Alerts
 
         public void Download()
         {
-            using (var downloadProgressDlg = new LongWaitDlg { Message = string.Format(Resources.MsFraggerDownloadDlg_Download_Downloading_MSFragger__0_, MsFraggerSearchEngine.MSFRAGGER_VERSION) })
+            using (var downloadProgressDlg = new LongWaitDlg())
             {
+                downloadProgressDlg.Message = string.Format(Resources.MsFraggerDownloadDlg_Download_Downloading_MSFragger__0_, MsFraggerSearchEngine.MSFRAGGER_VERSION);
                 if (Program.FunctionalTest && !Program.UseOriginalURLs)
                 {
                     var msFraggerDownloadInfo = MsFraggerSearchEngine.MsFraggerDownloadInfo;
                     msFraggerDownloadInfo.DownloadUrl = DOWNLOAD_URL_FOR_FUNCTIONAL_TESTS;
-                    downloadProgressDlg.PerformWork(this, 50, () => SimpleFileDownloader.DownloadRequiredFiles(new[] { msFraggerDownloadInfo }, downloadProgressDlg));
+                    downloadProgressDlg.PerformWork(this, 50, pm => SimpleFileDownloader.DownloadRequiredFiles(new[] { msFraggerDownloadInfo }, pm));
                     return;
                 }
 

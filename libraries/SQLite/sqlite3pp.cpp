@@ -23,6 +23,7 @@
 // THE SOFTWARE.
 
 #include "sqlite3pp.h"
+#include "pwiz/utility/misc/Stream.hpp" // for boost::nowide cerr/endl
 
 namespace sqlite3pp
 {
@@ -316,7 +317,7 @@ namespace sqlite3pp
     {
         int rc = finish();
         if (rc != SQLITE_OK)
-            throw database_error(db_);
+            cerr << "[sqlite3pp::~statement()] " << database_error(db_).what() << endl;
     }
 
     int statement::prepare(const std::string& stmt)
@@ -643,7 +644,7 @@ namespace sqlite3pp
         if (db_) {
             int rc = db_->execute(fcommit_ ? "COMMIT" : "ROLLBACK");
             if (rc != SQLITE_OK)
-                throw database_error(*db_);
+                cerr << "[sqlite3pp::~transaction()] " << database_error(*db_).what() << endl;
         }
     }
 

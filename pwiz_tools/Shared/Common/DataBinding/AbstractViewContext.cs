@@ -198,7 +198,7 @@ namespace pwiz.Common.DataBinding
         {
             var dsvWriter = CreateDsvWriter(separator, bindingListSource.ColumnFormats);
             IList<RowItem> rows = Array.AsReadOnly(bindingListSource.Cast<RowItem>().ToArray());
-            IList<PropertyDescriptor> properties = bindingListSource.GetItemProperties(new PropertyDescriptor[0]).Cast<PropertyDescriptor>().ToArray();
+            IList<PropertyDescriptor> properties = bindingListSource.GetItemProperties(Array.Empty<PropertyDescriptor>()).Cast<PropertyDescriptor>().ToArray();
             dsvWriter.WriteHeaderRow(writer, properties);
             var rowCount = rows.Count;
             int startPercent = status.PercentComplete;
@@ -236,13 +236,11 @@ namespace pwiz.Common.DataBinding
             {
                 var dataFormats = ListAvailableExportFormats().ToArray();
                 string fileFilter = string.Join(@"|", dataFormats.Select(format => format.FileFilter).ToArray());
-                using (var saveFileDialog = new SaveFileDialog
+                using (var saveFileDialog = new SaveFileDialog())
                 {
-                    Filter = fileFilter,
-                    InitialDirectory = GetExportDirectory(),
-                    FileName = GetDefaultExportFilename(bindingListSource.ViewInfo),
-                })
-                {
+                    saveFileDialog.Filter = fileFilter;
+                    saveFileDialog.InitialDirectory = GetExportDirectory();
+                    saveFileDialog.FileName = GetDefaultExportFilename(bindingListSource.ViewInfo);
                     if (saveFileDialog.ShowDialog(FormUtil.FindTopLevelOwner(owner)) == DialogResult.Cancel)
                     {
                         return;
@@ -271,7 +269,6 @@ namespace pwiz.Common.DataBinding
         public void ExportToFile(Control owner, BindingListSource bindingListSource, String filename,
             char separator)
         {
-            var dsvWriter = CreateDsvWriter(separator, bindingListSource.ColumnFormats);
             SafeWriteToFile(owner, filename, stream =>
             {
                 var writer = new StreamWriter(stream, new UTF8Encoding(false));
@@ -491,10 +488,12 @@ namespace pwiz.Common.DataBinding
             }
             try
             {
-                var constructor = columnTypeAttribute.ColumnType.GetConstructor(new Type[0]);
+                var constructor = columnTypeAttribute.ColumnType.GetConstructor(Array.Empty<Type>());
                 Debug.Assert(null != constructor);
                 // ReSharper disable ConditionIsAlwaysTrueOrFalse
-                return constructor != null ? (DataGridViewColumn) constructor.Invoke(new object[0]) : null;
+                // ReSharper disable ConstantConditionalAccessQualifier
+                return (DataGridViewColumn) constructor?.Invoke(Array.Empty<object>());
+                // ReSharper restore ConstantConditionalAccessQualifier
                 // ReSharper restore ConditionIsAlwaysTrueOrFalse
             }
             catch (Exception exception)
@@ -663,7 +662,7 @@ namespace pwiz.Common.DataBinding
 
         public virtual Image[] GetImageList()
         {
-            return new Image[0];
+            return Array.Empty<Image>();
         }
 
         public virtual int GetImageIndex(ViewSpec viewItem)

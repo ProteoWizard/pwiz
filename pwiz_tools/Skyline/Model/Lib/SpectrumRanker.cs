@@ -106,7 +106,7 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             var spectrumRanker = new SpectrumRanker(targetInfo, settings, fragmentFilter);
-            return spectrumRanker.RankSpectrum(info, minPeaks, score);
+            return spectrumRanker.RankSpectrum(info ?? SpectrumPeaksInfo.EMPTY, minPeaks, score);
         }
 
 
@@ -155,7 +155,6 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 else if (!isProteomic && !Sequence.IsProteomic)
                 {
-                    string isotopicFormula;
                     var knownFragments = new List<MatchedFragmentIon>();
                     foreach (var tran in groupDocNode.Transitions)
                     {
@@ -165,7 +164,7 @@ namespace pwiz.Skyline.Model.Lib
                             knownFragments.Add(new MatchedFragmentIon(IonType.custom, knownFragments.Count + 1,
                                 tran.Transition.Adduct,
                                 tran.GetFragmentIonName(CultureInfo.CurrentCulture,
-                                    settings.TransitionSettings.Libraries.IonMatchTolerance),
+                                    settings.TransitionSettings.Libraries.IonMatchMzTolerance),
                                 null,
                                 tran.Mz));
                         }
@@ -178,7 +177,7 @@ namespace pwiz.Skyline.Model.Lib
                         new MoleculeMasses(
                             SequenceMassCalc.GetMZ(
                                 calcMatchPre.GetPrecursorMass(Sequence.Molecule, null, PrecursorAdduct,
-                                    out isotopicFormula), PrecursorAdduct), ionMasses);
+                                    out _), PrecursorAdduct), ionMasses);
                 }
                 else
                 {
@@ -384,7 +383,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 spectrumScore = score;
             }
-            return new LibraryRankedSpectrumInfo(PredictLabelType, Libraries.IonMatchTolerance, arrayResult, spectrumScore);
+            return new LibraryRankedSpectrumInfo(PredictLabelType, Libraries.IonMatchMzTolerance, arrayResult, spectrumScore);
         }
 
         /// <summary>
@@ -796,7 +795,7 @@ namespace pwiz.Skyline.Model.Lib
             if (!rankingState.matchAll && !HasLosses && ionMz > MaxMz)
                 return false;
             // Check filter properties, if appropriate
-            if ((rankingState.matchAll || ionMz >= MinMz) && Math.Abs(ionMz - rankedMI.ObservedMz) < Libraries.IonMatchTolerance)
+            if ((rankingState.matchAll || ionMz >= MinMz) && Libraries.IonMatchMzTolerance.IsWithinTolerance(ionMz, rankedMI.ObservedMz))
             {
                 // Make sure each m/z value is only used for the most intense peak
                 // that is within the tolerance range.

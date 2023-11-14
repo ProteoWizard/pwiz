@@ -399,7 +399,8 @@ namespace pwiz.SkylineTest
 
         private static SrmDocument ImportFileToDocAndSaveAs(string documentPath, string importFile, string outputFile)
         {
-            ImportPeakBoundariesAndSaveAs(documentPath, importFile, outputFile);
+            string output = ImportPeakBoundariesAndSaveAs(documentPath, importFile, outputFile);
+            AssertEx.DoesNotContain(output, string.Format(Resources.Error___0_, string.Empty));
             var serializer = new XmlSerializer(typeof(SrmDocument));
             using (var stream = File.OpenRead(outputFile))
             {
@@ -410,7 +411,7 @@ namespace pwiz.SkylineTest
         private static string ImportPeakBoundariesAndSaveAs(string inputDocumentPath, string peakBoundariesFile,
             string outputDocumentPath)
         {
-            return RunCommand("--in=" + inputDocumentPath, "--import-peak-boundaries=" + peakBoundariesFile, "--out=" + outputDocumentPath);
+            return RunCommand("--in=" + inputDocumentPath, "--import-peak-boundaries=" + peakBoundariesFile, "--out=" + outputDocumentPath, "--overwrite");
         }
 
         public void ReportToCsv(ReportSpec reportSpec, SrmDocument doc, string fileName)

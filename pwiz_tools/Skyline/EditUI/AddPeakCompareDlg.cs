@@ -24,6 +24,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
@@ -150,11 +151,9 @@ namespace pwiz.Skyline.EditUI
                 MessageDlg.Show(this, message);
                 return;
             }
-            using (var longWaitDlg = new LongWaitDlg
+            using (var longWaitDlg = new LongWaitDlg())
             {
-                Text = isModel ? Resources.AddPeakCompareDlg_OkDialog_Comparing_Models : Resources.AddPeakCompareDlg_OkDialog_Comparing_Imported_Files
-            })
-            {
+                longWaitDlg.Text = isModel ? Resources.AddPeakCompareDlg_OkDialog_Comparing_Models : Resources.AddPeakCompareDlg_OkDialog_Comparing_Imported_Files;
                 try
                 {
                     longWaitDlg.PerformWork(this, 1000, pm => BoundaryComparer.GenerateComparison(Document, pm));
@@ -206,15 +205,13 @@ namespace pwiz.Skyline.EditUI
 
         public void Browse()
         {
-            using (OpenFileDialog dlg = new OpenFileDialog
+            using (OpenFileDialog dlg = new OpenFileDialog())
             {
-                Title = Resources.CreateIrtCalculatorDlg_ImportTextFile_Import_Transition_List__iRT_standards_,
-                InitialDirectory = Settings.Default.ActiveDirectory,
-                DefaultExt = TextUtil.EXT_CSV,
-                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(
-                    Resources.SkylineWindow_importMassListMenuItem_Click_Transition_List, TextUtil.EXT_CSV, TextUtil.EXT_TSV))
-            })
-            {
+                dlg.Title = Resources.CreateIrtCalculatorDlg_ImportTextFile_Import_Transition_List__iRT_standards_;
+                dlg.InitialDirectory = Settings.Default.ActiveDirectory;
+                dlg.DefaultExt = TextUtil.EXT_CSV;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(
+                    Resources.SkylineWindow_importMassListMenuItem_Click_Transition_List, TextUtil.EXT_CSV, TextUtil.EXT_TSV));
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);

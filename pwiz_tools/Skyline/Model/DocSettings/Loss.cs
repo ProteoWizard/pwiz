@@ -25,6 +25,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using JetBrains.Annotations;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Serialization;
@@ -76,7 +77,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public const double MIN_LOSS_MASS = 0.0001;
         public const double MAX_LOSS_MASS = 5000;
 
-        private string _formula;
+        private ParsedMolecule _formula;
 
         public FragmentLoss(string formula)
             : this(formula, null, null)
@@ -87,30 +88,32 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             MonoisotopicMass = monoisotopicMass ?? 0;
             AverageMass = averageMass ?? 0;
-            Formula = formula;
+            ParsedMolecule = ParsedMolecule.Create(formula);
             Inclusion = inclusion;
 
             Validate();
         }
 
         [Track]
-        public string Formula
+        public string Formula => ParsedMolecule.IsNullOrEmpty(ParsedMolecule) ? null : ParsedMolecule.ToString();
+
+        public ParsedMolecule ParsedMolecule
         {
             get { return _formula; }
             private set
             {
-                _formula = value;
-                if (_formula != null)
+                _formula = value ?? ParsedMolecule.EMPTY;
+                if (!ParsedMolecule.IsNullOrEmpty(_formula))
                 {
-                    MonoisotopicMass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, Formula, SequenceMassCalc.MassPrecision);
-                    AverageMass = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, Formula, SequenceMassCalc.MassPrecision);
+                    MonoisotopicMass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, _formula, SequenceMassCalc.MassPrecision);
+                    AverageMass = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, _formula, SequenceMassCalc.MassPrecision);
                 }
             }
         }
 
         public string FormulaNoNull
         {
-            get { return _formula ?? Resources.Loss_FormulaUnknown; }
+            get { return ParsedMolecule.IsNullOrEmpty(_formula) ? Resources.Loss_FormulaUnknown : _formula.ToString(); }
         }
 
         [Track]
@@ -147,7 +150,7 @@ namespace pwiz.Skyline.Model.DocSettings
             get
             {
                 StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.Append(StaticMod.FormatFormulaOrMass(Formula, -MonoisotopicMass, -AverageMass));
+                stringBuilder.Append(StaticMod.FormatFormulaOrMass(_formula, -MonoisotopicMass, -AverageMass));
                 if (Charge != 0)
                 {
                     stringBuilder.Append(Adduct.FromChargeProtonated(Charge));
@@ -232,7 +235,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Read tag attributes
             MonoisotopicMass = reader.GetNullableDoubleAttribute(ATTR.massdiff_monoisotopic) ?? 0;
             AverageMass = reader.GetNullableDoubleAttribute(ATTR.massdiff_average) ?? 0;
-            Formula = reader.GetAttribute(ATTR.formula);
+            ParsedMolecule = ParsedMolecule.Create(reader.GetAttribute(ATTR.formula));
             Inclusion = reader.GetEnumAttribute(ATTR.inclusion, LossInclusion.Library);
             Charge = reader.GetIntAttribute(ATTR.charge, 0);
 
@@ -272,7 +275,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(other.Formula, Formula) &&
+            return Equals(other.ParsedMolecule, ParsedMolecule) &&
                    other.MonoisotopicMass.Equals(MonoisotopicMass) &&
                    other.AverageMass.Equals(AverageMass) &&
                    other.Inclusion.Equals(Inclusion) &&
@@ -291,7 +294,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             unchecked
             {
-                int result = (Formula != null ? Formula.GetHashCode() : 0);
+                int result = (ParsedMolecule != null ? ParsedMolecule.GetHashCode() : 0);
                 result = (result * 397) ^ MonoisotopicMass.GetHashCode();
                 result = (result * 397) ^ AverageMass.GetHashCode();
                 result = (result * 397) ^ Inclusion.GetHashCode();
@@ -323,7 +326,6 @@ namespace pwiz.Skyline.Model.DocSettings
 
     public sealed class TransitionLosses : Immutable
     {
-        private OneOrManyList<TransitionLoss> _losses;
 
         public TransitionLosses(List<TransitionLoss> losses, MassType massType)
         {
@@ -331,18 +333,18 @@ namespace pwiz.Skyline.Model.DocSettings
             if (losses.Count > 1)
                 losses.Sort((l1, l2) => Comparer<double>.Default.Compare(l1.Mass, l2.Mass));
 
-            _losses = new OneOrManyList<TransitionLoss>(losses);
+            Losses = ImmutableList.ValueOf(losses);
             MassType = massType;
             Mass = CalcLossMass(Losses);
         }
 
-        public IList<TransitionLoss> Losses { get { return _losses; } }
+        public ImmutableList<TransitionLoss> Losses { get; private set; }
         public MassType MassType { get; private set; }
         public double Mass { get; private set; }
 
         public int TotalCharge
         {
-            get { return _losses.Sum(loss => loss.Loss.Charge); }
+            get { return Losses.Sum(loss => loss.Loss.Charge); }
         }
 
         [CanBeNull]
@@ -375,14 +377,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public TransitionLosses ChangeMassType(MassType massType)
         {
-            var listLosses = new List<TransitionLoss>();
-            foreach (var loss in Losses)
-                listLosses.Add(new TransitionLoss(loss.PrecursorMod, loss.Loss, massType));
-            if (ArrayUtil.EqualsDeep(listLosses, _losses))
+            var listLosses =
+                ImmutableList.ValueOf(Losses.Select(loss =>
+                    new TransitionLoss(loss.PrecursorMod, loss.Loss, massType)));
+            if (Equals(listLosses, Losses))
                 return this;
             return ChangeProp(ImClone(this), im =>
             {
-                im._losses = new OneOrManyList<TransitionLoss>(listLosses);
+                im.Losses = listLosses;
                 im.Mass = CalcLossMass(im.Losses);
             });
         }
@@ -392,7 +394,7 @@ namespace pwiz.Skyline.Model.DocSettings
         #region object overrides
 
         /// <summary>
-        /// From a transition loss perspective, losses with equall masses
+        /// From a transition loss perspective, losses with equal masses
         /// are equal.  It is not necessary to compare the exact losses.
         /// </summary>
         public bool Equals(TransitionLosses other)

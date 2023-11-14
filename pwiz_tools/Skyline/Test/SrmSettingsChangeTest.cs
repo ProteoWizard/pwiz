@@ -409,14 +409,13 @@ namespace pwiz.SkylineTest
         private static SrmDocument CreateMixedDoc()
         {
             SrmDocument document = new SrmDocument(SrmSettingsList.GetDefault0_6());
-            IdentityPath path;
             // Add fasta sequences
             SrmDocument docFasta = document.ImportFasta(new StringReader(ExampleText.TEXT_FASTA_YEAST),
-                false, IdentityPath.ROOT, out path);
+                false, IdentityPath.ROOT, out _);
             AssertEx.IsDocumentState(docFasta, 1, 2, 98, 311);
             // Insert peptide list at beginnning
             SrmDocument docMixed = docFasta.ImportFasta(new StringReader(SrmDocEditTest.TEXT_BOVINE_PEPTIDES1),
-                true, docFasta.GetPathTo(0), out path);
+                true, docFasta.GetPathTo(0), out _);
             AssertEx.IsDocumentState(docMixed, 2, 3, 111, 352);
             return docMixed;            
         }

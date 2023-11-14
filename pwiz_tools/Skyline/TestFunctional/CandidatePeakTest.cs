@@ -225,7 +225,7 @@ namespace pwiz.SkylineTestFunctional
                             foreach (var transition in transitionGroup.Transitions)
                             {
                                 var chromatogramInfo = chromatogramGroupInfos[0]
-                                    .GetTransitionInfo(transition, tolerance, TransformChrom.raw, null);
+                                    .GetTransitionInfo(transition, tolerance, TransformChrom.raw);
                                 Assert.IsNotNull(chromatogramInfo);
                                 var peak = chromatogramInfo.GetPeak(peakIndex.Value);
                                 Assert.IsNotNull(peak);

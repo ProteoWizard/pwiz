@@ -252,7 +252,10 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsFalse(toolbar.DetectionsVisible);
             });
             AssertDataCorrect(pane, statsStartIndex++);
-            WaitForCondition(700, () => GetCache(pane).DataCount == 45);
+            if (!TryWaitForCondition(() => GetCache(pane).DataCount == 45))
+            {
+                Assert.AreEqual(45, GetCache(pane).DataCount);
+            }
             
             // Make sure that grouping by an annotation works correctly
             RunUI(() => SkylineWindow.SetAreaCVAnnotation("D102"));

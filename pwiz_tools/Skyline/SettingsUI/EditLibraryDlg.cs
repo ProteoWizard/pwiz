@@ -109,8 +109,9 @@ namespace pwiz.Skyline.SettingsUI
             librarySpec = librarySpec.ChangeUseExplicitPeakBounds(cbxUseExplicitPeakBounds.Checked);
             if (librarySpec is ChromatogramLibrarySpec)
             {
-                using (var longWait = new LongWaitDlg{ Text = Resources.EditLibraryDlg_OkDialog_Loading_chromatogram_library })
+                using (var longWait = new LongWaitDlg())
                 {
+                    longWait.Text = Resources.EditLibraryDlg_OkDialog_Loading_chromatogram_library;
                     Library lib = null;
                     try
                     {
@@ -124,10 +125,10 @@ namespace pwiz.Skyline.SettingsUI
                         {
                             // Library failed to load
                         }
-                        LibraryRetentionTimes libRts;
+
                         // (ReSharper 2019.1 seems not to notice the check that's already here)
                         // ReSharper disable PossibleNullReferenceException
-                        if (lib != null && lib.TryGetIrts(out libRts) &&
+                        if (lib != null && lib.TryGetIrts(out _) &&
                         // ReSharper restore PossibleNullReferenceException
                             Settings.Default.RTScoreCalculatorList.All(calc => calc.PersistencePath != path))
                         {
@@ -217,17 +218,15 @@ namespace pwiz.Skyline.SettingsUI
 
         public static string GetLibraryPath(IWin32Window parent, string fileName)
         {
-            using (var dlg = new OpenFileDialog
+            using (var dlg = new OpenFileDialog())
             {
-                InitialDirectory = Settings.Default.LibraryDirectory,
-                CheckPathExists = true,
-                SupportMultiDottedExtensions = true,
-                DefaultExt = BiblioSpecLibSpec.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(Resources.EditLibraryDlg_GetLibraryPath_Spectral_Libraries,
-                                                                                 BiblioSpecLiteSpec.EXT, ChromatogramLibrarySpec.EXT, XHunterLibSpec.EXT, NistLibSpec.EXT, SpectrastSpec.EXT, MidasLibSpec.EXT, EncyclopeDiaSpec.EXT),
-                                                       TextUtil.FileDialogFilter(Resources.EditLibraryDlg_GetLibraryPath_Legacy_Libraries, BiblioSpecLibSpec.EXT))
-            })
-            {
+                dlg.InitialDirectory = Settings.Default.LibraryDirectory;
+                dlg.CheckPathExists = true;
+                dlg.SupportMultiDottedExtensions = true;
+                dlg.DefaultExt = BiblioSpecLibSpec.EXT;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(Resources.EditLibraryDlg_GetLibraryPath_Spectral_Libraries,
+                        BiblioSpecLiteSpec.EXT, ChromatogramLibrarySpec.EXT, XHunterLibSpec.EXT, NistLibSpec.EXT, SpectrastSpec.EXT, MidasLibSpec.EXT, EncyclopeDiaSpec.EXT),
+                    TextUtil.FileDialogFilter(Resources.EditLibraryDlg_GetLibraryPath_Legacy_Libraries, BiblioSpecLibSpec.EXT));
                 if (fileName != null)
                     dlg.FileName = fileName;
 
@@ -247,11 +246,6 @@ namespace pwiz.Skyline.SettingsUI
         private void linkNIST_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             SpecLibLinkClicked(linkNIST, LibraryLink.NIST.Link);
-        }
-
-        private void linkGPM_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            SpecLibLinkClicked(linkGPM, LibraryLink.GPM.Link);
         }
 
         private void SpecLibLinkClicked(LinkLabel linkLabel, string link)

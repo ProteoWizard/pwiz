@@ -61,6 +61,21 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
+        public static IsolationWindow CreateWithMargin(double start, double end, bool isMeasurementType, double? target = null, double? margin = null, double? ceRange = null)
+        {
+            if (isMeasurementType)
+            {
+                start += margin ?? 0;
+                end -= margin ?? 0;
+            }
+
+            return new IsolationWindow(start, end, target, margin, margin, ceRange);
+        }
+        public static IsolationWindow CreateWithMargin(IsolationWindow window, bool isMeasurementType)
+        {
+            return CreateWithMargin(window.Start, window.End, isMeasurementType, window.Target, window.StartMargin, window.CERange);
+        }
+
         public bool TargetMatches(double isolationTarget, double mzMatchTolerance)
         {
             if (!Target.HasValue)

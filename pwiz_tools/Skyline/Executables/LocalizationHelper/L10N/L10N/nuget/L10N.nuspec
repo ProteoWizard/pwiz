@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>YuvalBoss.L10N</id>
+    <version>16.2</version>
+    <title>L10N</title>
+    <authors>Yuval Boss</authors>
+    <owners>UW</owners>
+    <projectUrl>https://skyline.gs.washington.edu/labkey/project/home/begin.view?</projectUrl>
+    <iconUrl>https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/l10nlogo.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Tool to help keep track of localized and not to be localzied strings.</description>
+    <releaseNotes>Minor cosmetic modifications to package.</releaseNotes>
+    <copyright>Copyright 2015</copyright>
+    <tags></tags>
+	<dependencies>
+      <dependency id="Wave" version="[6.0]" />
+    </dependencies>
+<references>
+      <group targetFramework=".NETFramework4.0">
+        <reference file="YuvalBoss.L10N.dll" />
+      </group>
+    </references>
+  </metadata>
+<files>
+    <file src="..\bin\Debug\YuvalBoss.L10N.dll" target="lib\"/>
+  </files>
+</package>

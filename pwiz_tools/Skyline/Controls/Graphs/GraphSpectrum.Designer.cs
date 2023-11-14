@@ -1,5 +1,9 @@
-﻿namespace pwiz.Skyline.Controls.Graphs
+﻿
+using System.Windows.Forms;
+
+namespace pwiz.Skyline.Controls.Graphs
 {
+
     partial class GraphSpectrum
     {
         /// <summary>
@@ -40,7 +44,8 @@
             this.ceLabel = new System.Windows.Forms.ToolStripLabel();
             this.comboCE = new System.Windows.Forms.ToolStripComboBox();
             this.GraphPanel = new System.Windows.Forms.Panel();
-            this.graphControl = new pwiz.MSGraph.MSGraphControl();
+            this.msGraphExtension = new MsGraphExtension();
+            this.propertiesButton = new System.Windows.Forms.ToolStripButton();
             this.toolBar.SuspendLayout();
             this.GraphPanel.SuspendLayout();
             this.SuspendLayout();
@@ -56,7 +61,9 @@
             this.mirrorLabel,
             this.comboMirrorSpectrum,
             this.ceLabel,
-            this.comboCE});
+            this.comboCE,
+            this.propertiesButton
+            });
             resources.ApplyResources(this.toolBar, "toolBar");
             this.toolBar.Name = "toolBar";
             // 
@@ -114,29 +121,24 @@
             // 
             // GraphPanel
             // 
-            this.GraphPanel.Controls.Add(this.graphControl);
+            this.GraphPanel.Controls.Add(this.msGraphExtension);
             resources.ApplyResources(this.GraphPanel, "GraphPanel");
             this.GraphPanel.Name = "GraphPanel";
             // 
-            // graphControl
+            // msGraphExtension
             // 
-            resources.ApplyResources(this.graphControl, "graphControl");
-            this.graphControl.EditButtons = System.Windows.Forms.MouseButtons.Left;
-            this.graphControl.EditModifierKeys = System.Windows.Forms.Keys.None;
-            this.graphControl.IsEnableVPan = false;
-            this.graphControl.IsEnableVZoom = false;
-            this.graphControl.IsShowCopyMessage = false;
-            this.graphControl.IsZoomOnMouseCenter = true;
-            this.graphControl.Name = "graphControl";
-            this.graphControl.ScrollGrace = 0D;
-            this.graphControl.ScrollMaxX = 0D;
-            this.graphControl.ScrollMaxY = 0D;
-            this.graphControl.ScrollMaxY2 = 0D;
-            this.graphControl.ScrollMinX = 0D;
-            this.graphControl.ScrollMinY = 0D;
-            this.graphControl.ScrollMinY2 = 0D;
-            this.graphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.graphControl_ContextMenuBuilder);
-            this.graphControl.ZoomEvent += new ZedGraph.ZedGraphControl.ZoomEventHandler(this.graphControl_ZoomEvent);
+            resources.ApplyResources(this.msGraphExtension, "msGraphExtension");
+            this.msGraphExtension.Name = "msGraphExtension";
+            this.msGraphExtension.PropertySheetVisibilityPropName = "ViewLibraryMatchPropsVisible";
+            //
+            // propertiesButton
+            //
+            resources.ApplyResources(this.propertiesButton, "propertiesButton");
+            this.propertiesButton.Name = "propertiesButton";
+            this.propertiesButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.propertiesButton.Alignment = ToolStripItemAlignment.Right;
+            this.propertiesButton.Image = global::pwiz.Skyline.Properties.Resources.Properties_Button;
+            this.propertiesButton.Click += new System.EventHandler(this.propertiesMenuItem_Click);
             // 
             // GraphSpectrum
             // 
@@ -154,13 +156,13 @@
             this.GraphPanel.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
-
         }
 
         #endregion
         private System.Windows.Forms.ToolStrip toolBar;
         private System.Windows.Forms.Panel GraphPanel;
-        private pwiz.MSGraph.MSGraphControl graphControl;
+        private MsGraphExtension msGraphExtension;
+        private System.Windows.Forms.ToolStripButton propertiesButton;
         private System.Windows.Forms.ToolStripLabel labelSpectrum;
         private System.Windows.Forms.ToolStripComboBox comboSpectrum;
         private System.Windows.Forms.ToolStripLabel mirrorLabel;

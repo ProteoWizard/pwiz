@@ -160,17 +160,15 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private void btnBrowseFile_Click(object sender, EventArgs e)
         {
-            using (var dlg = new OpenFileDialog
+            using (var dlg = new OpenFileDialog())
             {
-                InitialDirectory = Settings.Default.LibraryDirectory,
-                CheckPathExists = true,
-                DefaultExt = BiblioSpecLiteSpec.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(
+                dlg.InitialDirectory = Settings.Default.LibraryDirectory;
+                dlg.CheckPathExists = true;
+                dlg.DefaultExt = BiblioSpecLiteSpec.EXT;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(
                     TextUtil.FileDialogFilter(Resources.AddIrtSpectralLibrary_btnBrowseFile_Click_Spectral_Libraries,
-                                              BiblioSpecLiteSpec.EXT, ChromatogramLibrarySpec.EXT, SpectrastSpec.EXT)
-                )
-            })
-            {
+                        BiblioSpecLiteSpec.EXT, ChromatogramLibrarySpec.EXT, SpectrastSpec.EXT)
+                );
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                     return;
 

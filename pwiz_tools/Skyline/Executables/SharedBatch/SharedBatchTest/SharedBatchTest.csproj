@@ -3,12 +3,12 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{69531D2C-BAD8-4E79-9DF3-482A74D6D0BF}</ProjectGuid>
+    <ProjectGuid>{4955F974-381E-4902-8BAD-BAC7174CFC9F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SharedBatchTest</RootNamespace>
     <AssemblyName>SharedBatchTest</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

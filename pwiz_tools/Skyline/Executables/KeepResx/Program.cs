@@ -13,7 +13,6 @@ namespace KeepResx
         {
             @"msconvertgui\*",
             @"seems\*",
-            @"topograph\*",
             @"shared\zedgraph\*",
             @"shared\proteomedb\forms\proteomedbform.resx",
             @"skyline\executables\autoqc\*",

@@ -907,11 +907,9 @@ namespace pwiz.SkylineTestFunctional
                 editRTDlg.SetSlope(slope.ToString(LocalizationHelper.CurrentCulture));
                 editRTDlg.SetIntercept("0");
                 editRTDlg.SetTimeWindow(10);
-
-                editRTDlg.OkDialog();
             });
-            WaitForClosedForm(editRTDlg);
 
+            OkDialog(editRTDlg, editRTDlg.OkDialog);
             OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
         }
 

@@ -246,9 +246,9 @@ namespace pwiz.Skyline.Controls.Graphs
         protected static IList<Color> COLORS_TRANSITION {get { return GraphChromatogram.COLORS_LIBRARY; }}
         protected static IList<Color> COLORS_GROUPS {get { return GraphChromatogram.COLORS_GROUPS; }}
 
-        protected static int GetColorIndex(TransitionGroupDocNode nodeGroup, int countLabelTypes, ref Adduct charge, ref int iCharge)
+        protected static int GetColorIndex(PeptideDocNode peptideDocNode, TransitionGroupDocNode nodeGroup, int countLabelTypes)
         {
-            return GraphChromatogram.GetColorIndex(nodeGroup, countLabelTypes, ref charge, ref iCharge);
+            return GraphChromatogram.GetColorIndex(peptideDocNode, nodeGroup, countLabelTypes);
         }
 
         protected SummaryBarGraphPaneBase(GraphSummary graphSummary)
@@ -336,8 +336,7 @@ namespace pwiz.Skyline.Controls.Graphs
             using (Graphics g = sender.CreateGraphics())
             {
                 object nearestObject;
-                int index;
-                if (FindNearestObject(new PointF(mouseEventArgs.X, mouseEventArgs.Y), g, out nearestObject, out index))
+                if (FindNearestObject(new PointF(mouseEventArgs.X, mouseEventArgs.Y), g, out nearestObject, out _))
                 {
                     var axis = nearestObject as XAxis;
                     if (axis != null)

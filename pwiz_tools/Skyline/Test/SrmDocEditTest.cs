@@ -306,24 +306,23 @@ namespace pwiz.SkylineTest
         {
             // First try removals with no impact
             SrmDocument document = new SrmDocument(SrmSettingsList.GetDefault0_6());
-            IdentityPath path;
             SrmDocument docFasta = document.ImportFasta(new StringReader(string.Format(TEXT_FASTA_YEAST_FRAGMENT, 1)),
-                false, IdentityPath.ROOT, out path);
+                false, IdentityPath.ROOT, out _);
             AssertEx.IsDocumentState(docFasta, 1, 1, 11, 36);
             var refinementSettings = new RefinementSettings {RemoveDuplicatePeptides = true};
             SrmDocument docFasta2 = refinementSettings.Refine(docFasta);
             Assert.AreSame(docFasta, docFasta2);
 
             docFasta2 = docFasta.ImportFasta(new StringReader(string.Format(TEXT_FASTA_YEAST_FRAGMENT, 2)),
-                false, IdentityPath.ROOT, out path);
+                false, IdentityPath.ROOT, out _);
             // Adding same sequence twice, even with different custom names is ignored
             Assert.AreSame(docFasta, docFasta2);
 
             // Try a successful removal of duplicates that leaves no peptides
             SrmDocument docPeptides = document.ImportFasta(new StringReader(TEXT_BOVINE_PEPTIDES1),
-                true, IdentityPath.ROOT, out path);
+                true, IdentityPath.ROOT, out _);
             SrmDocument docPeptides2 = docPeptides.ImportFasta(new StringReader(TEXT_BOVINE_PEPTIDES1),
-                true, IdentityPath.ROOT, out path);            
+                true, IdentityPath.ROOT, out _);            
             AssertEx.IsDocumentState(docPeptides2, 2, 2, 26, 82);
             SrmDocument docPeptides3 = refinementSettings.Refine(docPeptides2);
             Assert.AreNotSame(docPeptides2, docPeptides3);
@@ -331,7 +330,7 @@ namespace pwiz.SkylineTest
 
             // Try again leaving a single peptide
             docPeptides2 = docPeptides.ImportFasta(new StringReader(TEXT_BOVINE_PEPTIDES1 + "\n" + TEXT_BOVINE_SINGLE_PEPTIDE),
-                true, IdentityPath.ROOT, out path);
+                true, IdentityPath.ROOT, out _);
             docPeptides3 = refinementSettings.Refine(docPeptides2);
             Assert.AreNotSame(docPeptides2, docPeptides3);
             AssertEx.IsDocumentState(docPeptides3, 3, 2, 1, 3);

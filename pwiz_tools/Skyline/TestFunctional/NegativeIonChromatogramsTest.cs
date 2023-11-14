@@ -118,7 +118,7 @@ namespace pwiz.SkylineTestFunctional
             var clipText = File.ReadAllText(testFilesDir.GetTestPath("SRMs.csv")).Replace(',', TextUtil.CsvSeparator)
                 .Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
             var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.TransitionListText = clipText);
-
+            docEmpty = SkylineWindow.Document;
             RunUI(() => {
                 col4Dlg.radioMolecule.PerformClick();
                 col4Dlg.SetSelectedColumnTypes(
@@ -134,6 +134,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             OkDialog(col4Dlg, col4Dlg.OkDialog);
+            DismissAutoManageDialog(docEmpty); // Say no to the offer to set new nodes to automanage
 
             var document = WaitForDocumentChangeLoaded(docEmpty);
 

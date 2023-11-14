@@ -207,6 +207,7 @@
             resources.ApplyResources(this.dataSourceGroupBox, "dataSourceGroupBox");
             this.dataSourceGroupBox.Name = "dataSourceGroupBox";
             this.dataSourceGroupBox.TabStop = false;
+            this.modeUIHandler.SetUIMode(this.dataSourceGroupBox, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // prositInfoSettingsBtn
             // 

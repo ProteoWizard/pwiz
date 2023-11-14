@@ -115,7 +115,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
 
         public override ElementRef GetElementRef()
         {
-            return AuditLogEntryRef.PROTOTYPE.ChangeParent(AuditLogRow.GetElementRef()).ChangeName(Id.Minor.ToString(CultureInfo.InvariantCulture));
+            return AuditLogDetailRef.PROTOTYPE.ChangeParent(AuditLogRow.GetElementRef()).ChangeName(Id.Minor.ToString(CultureInfo.InvariantCulture));
         }
     }
 }

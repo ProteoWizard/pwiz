@@ -137,10 +137,9 @@ namespace pwiz.Skyline.Model
         public static readonly char[] CLOSE_MOD = { ']', '}', ')' };
 
         public const string PEPTIDE_SEQUENCE_SEPARATOR = "::";
-        public static readonly Regex RGX_ALL = new Regex(@"(\[.*?\]|\{.*?\}|\(.*?\))");
-        public static readonly Regex RGX_LIGHT = new Regex(@"\[.*?\]");
-        public static readonly Regex RGX_HEAVY = new Regex(@"\{.*?\}");
-        public static readonly Regex RGX_DASH = new Regex(@"^-");
+        public static readonly Regex RGX_ALL = new Regex(@"(\[.*?\]|\{.*?\}|\(.*?\))", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        public static readonly Regex RGX_LIGHT = new Regex(@"\[.*?\]", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        public static readonly Regex RGX_HEAVY = new Regex(@"\{.*?\}", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         public static bool IsExSequence(string seq)
         {

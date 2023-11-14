@@ -20,6 +20,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Model.Results.Legacy;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -40,7 +41,9 @@ namespace pwiz.Skyline.Model.Results
         Fourteen = 14,  // Adds SampleId and SerialNumber to CachedFileHeaderStruct and moves centroiding from ChromCachedFile.FilePath to Flags
         Fifteen = 15, // Add import time to CachedFileHeaderStruct
         Sixteen = 16, // Skewness and Kurtosis
-        CURRENT = Sixteen,
+        Seventeen = 17, // Adds optimization step to ChromTransition
+        Eighteen = 18, // Add Spectrum Class Filter to ChromGroupHeaderInfo
+        CURRENT = Eighteen,
     }
     
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
@@ -248,15 +251,25 @@ namespace pwiz.Skyline.Model.Results
             };
         }
 
-        public IItemSerializer<ChromGroupHeaderInfo> ChromGroupHeaderInfoSerializer()
+        public IItemSerializer<ChromGroupHeaderInfo16> OldChromGroupHeaderInfoSerializer()
         {
             if (FormatVersion >= CacheFormatVersion.Five)
             {
-                return ChromGroupHeaderInfo.ItemSerializer(ChromGroupHeaderSize);
+                return ChromGroupHeaderInfo16.ItemSerializer(ChromGroupHeaderSize);
             }
 
             var v4Reader = ChromGroupHeaderInfo4.StructSerializer();
-            return ConvertedItemSerializer.Create(v4Reader, v4Header => new ChromGroupHeaderInfo(v4Header), header=>new ChromGroupHeaderInfo4(header));
+            return ConvertedItemSerializer.Create(v4Reader, v4Header => new ChromGroupHeaderInfo16(v4Header), header => { return new ChromGroupHeaderInfo4(header); });
+
+        }
+
+        public IItemSerializer<ChromGroupHeaderInfo> ChromGroupHeaderInfoSerializer()
+        {
+            if (FormatVersion < CacheFormatVersion.Seventeen)
+            {
+                throw new InvalidOperationException();
+            }
+            return ChromGroupHeaderInfo.ItemSerializer(ChromGroupHeaderSize);
         }
 
         public IItemSerializer<ChromTransition> ChromTransitionSerializer()
