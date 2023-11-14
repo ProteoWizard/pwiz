@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public partial class IntensityGraphFormattingDlg : FormEx, ColorGrid<MatchRgbHexColor>.IColorGridOwner
     {
-        private readonly ProteinAbundanceBindingSource.ProteinAbundanceRow[] _foldChangeRows;
+        private readonly ProteinAbundanceBindingSource.ProteinAbundanceRow[] _proteinAbundanceRows;
         private readonly Action<List<MatchRgbHexColor>> _updateGraph;
         private readonly BindingList<MatchRgbHexColor> _bindingList;
 
@@ -45,12 +45,12 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly DataGridViewComboBoxColumn _pointSizeCombo;
 
         public IntensityGraphFormattingDlg(SummaryIntensityGraphPane areaIntensityGraphPane, IList<MatchRgbHexColor> colorRows,
-            ProteinAbundanceBindingSource.ProteinAbundanceRow[] foldChangeRows, Action<List<MatchRgbHexColor>> updateGraph)
+            ProteinAbundanceBindingSource.ProteinAbundanceRow[] proteinAbundanceRows, Action<List<MatchRgbHexColor>> updateGraph)
         {
             InitializeComponent();
 
             AreaIntensityGraphPane = areaIntensityGraphPane;
-            _foldChangeRows = foldChangeRows;
+            _proteinAbundanceRows = proteinAbundanceRows;
             _updateGraph = updateGraph;
 
             _bindingList = new BindingList<MatchRgbHexColor>(colorRows);
@@ -242,7 +242,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (row >= 0 && row < regexColorRowGrid1.DataGridView.RowCount)
             {
                 using (var createMatchExpression =
-                       new CreateIntensityMatchExpressionDlg(this, _foldChangeRows, _bindingList[row]))
+                       new CreateIntensityMatchExpressionDlg(this, _proteinAbundanceRows, _bindingList[row]))
                 {
                     if (createMatchExpression.ShowDialog(this) == DialogResult.OK)
                     {

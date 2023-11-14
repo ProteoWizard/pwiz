@@ -1,27 +1,8 @@
-﻿/*
- * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
- *                  MacCoss Lab, Department of Genome Sciences, UW
- *
- * Copyright 2014 University of Washington - Seattle, WA
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
-using pwiz.Common.DataAnalysis;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Controls;
@@ -105,30 +86,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 var controlGroupIdentifier =
                     GroupComparisonModel.GroupComparisonDef.GetControlGroupIdentifier(_skylineDataSchema.Document
                         .Settings);
-                Dictionary<int, double> criticalValuesByDegreesOfFreedom = new Dictionary<int, double>();
-                var groupComparisonDef = results.GroupComparer.ComparisonDef;
-                var adjustedPValues = PValues.AdjustPValues(results.ResultRows.Select(
-                    row => row.LinearFitResult.PValue)).ToArray();
                 for (int iRow = 0; iRow < results.ResultRows.Count; iRow++)
                 {
                     var resultRow = results.ResultRows[iRow];
                     var protein = new Protein(_skylineDataSchema, new IdentityPath(resultRow.Selector.Protein.Id));
-                    Model.Databinding.Entities.Peptide peptide = null;
-                    if (null != resultRow.Selector.Peptide)
-                    {
-                        peptide = new Model.Databinding.Entities.Peptide(_skylineDataSchema,
-                            new IdentityPath(protein.IdentityPath, resultRow.Selector.Peptide.Id));
-                    }
-                    double criticalValue;
-                    if (!criticalValuesByDegreesOfFreedom.TryGetValue(resultRow.LinearFitResult.DegreesOfFreedom,
-                        out criticalValue))
-                    {
-                        criticalValue = FoldChangeResult.GetCriticalValue(groupComparisonDef.ConfidenceLevel,
-                            resultRow.LinearFitResult.DegreesOfFreedom);
-                        criticalValuesByDegreesOfFreedom.Add(resultRow.LinearFitResult.DegreesOfFreedom, criticalValue);
-                    }
-                    FoldChangeResult foldChangeResult = new FoldChangeResult(groupComparisonDef.ConfidenceLevel,
-                        adjustedPValues[iRow], resultRow.LinearFitResult, criticalValue);
                     var runAbundances = new Dictionary<Replicate, ReplicateRow>();
                     var abundances = protein.GetProteinAbundances();
                     var abundance = abundances[1].Abundance;
@@ -141,22 +102,21 @@ namespace pwiz.Skyline.Controls.Graphs
                                 controlGroupIdentifier : resultRow.Selector.GroupIdentifier
                             , runAbundance.BioReplicate, Math.Pow(2, runAbundance.Log2Abundance)));
                     }
-                    rows.Add(new ProteinAbundanceRow(protein, resultRow.Selector.LabelType,
-                        resultRow.Selector.MsLevel, resultRow.Selector.GroupIdentifier, resultRow.ReplicateCount, result, runAbundances));
+                    rows.Add(new ProteinAbundanceRow(protein, resultRow.Selector.GroupIdentifier, resultRow.ReplicateCount, result, runAbundances));
                 }
             }
 
             var detailRows = new List<ProteinAbundanceDetailRow>();
             foreach (var grouping in rows.ToLookup(row =>
-                Tuple.Create(row.Protein, row.IsotopeLabelType, row.MsLevel)))
+                Tuple.Create(row.Protein)))
             {
-                var foldChangeResults = grouping.ToDictionary(row => row.Group, row => row.ProteinAbundanceResult);
+                var proteinAbundanceResults = grouping.ToDictionary(row => row.Group, row => row.ProteinAbundanceResult);
                 var runAbundances = new Dictionary<Replicate, ReplicateRow>();
                 foreach (var abundance in grouping.SelectMany(row => row.ReplicateAbundances))
                 {
                     runAbundances[abundance.Key] = abundance.Value;
                 }
-                detailRows.Add(new ProteinAbundanceDetailRow(grouping.Key.Item1, grouping.Key.Item2, grouping.Key.Item3, foldChangeResults, runAbundances));
+                detailRows.Add(new ProteinAbundanceDetailRow(grouping.Key.Item1, proteinAbundanceResults, runAbundances));
             }
             SetRowSourceInfos(CreateRowSourceInfos(rows, detailRows));
         }
@@ -212,19 +172,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private ViewSpec GetDefaultViewSpec(IList<ProteinAbundanceRow> foldChangeRows)
         {
-            bool showLabelType;
-            bool showMsLevel;
             bool showGroup;
             if (foldChangeRows.Any())
             {
-                showLabelType = foldChangeRows.Select(row => row.IsotopeLabelType).Distinct().Count() > 1;
-                showMsLevel = foldChangeRows.Select(row => row.MsLevel).Distinct().Count() > 1;
                 showGroup = foldChangeRows.Select(row => row.Group).Distinct().Count() > 1;
             }
             else
             {
-                showLabelType = false;
-                showMsLevel = false;
                 showGroup = false;
             }
             // ReSharper disable LocalizableElement
@@ -232,14 +186,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 PropertyPath.Root.Property("Protein")
             };
-            if (showMsLevel)
-            {
-                columns.Add(PropertyPath.Root.Property("MsLevel"));
-            }
-            if (showLabelType)
-            {
-                columns.Add(PropertyPath.Root.Property("IsotopeLabelType"));
-            }
+            
             if (showGroup)
             {
                 columns.Add(PropertyPath.Root.Property("Group"));
@@ -321,19 +268,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public abstract class AbstractProteinAbundanceRow
         {
-            public AbstractProteinAbundanceRow(Protein protein,
-                IsotopeLabelType labelType,
-                int? msLevel, IDictionary<Replicate, ReplicateRow> replicateResults)
+            public AbstractProteinAbundanceRow(Protein protein, 
+                IDictionary<Replicate, ReplicateRow> replicateResults)
             {
                 Protein = protein;
-                IsotopeLabelType = labelType;
-                MsLevel = msLevel;
                 ReplicateAbundances = replicateResults;
             }
 
             public Protein Protein { get; private set; }
-            public IsotopeLabelType IsotopeLabelType { get; private set; }
-            public int? MsLevel { get; private set; }
 
             [OneToMany(IndexDisplayName = "Replicate")]
             public IDictionary<Replicate, ReplicateRow> ReplicateAbundances { get; private set; }
@@ -343,9 +285,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public class ProteinAbundanceRow : AbstractProteinAbundanceRow
         {
-            public ProteinAbundanceRow(Protein protein, IsotopeLabelType labelType,
-                int? msLevel, GroupIdentifier group, int replicateCount, ProteinAbundanceResult proteinAbundanceResult, IDictionary<Replicate, ReplicateRow> replicateResults)
-                : base(protein, labelType, msLevel, replicateResults)
+            public ProteinAbundanceRow(Protein protein, GroupIdentifier group, int replicateCount, ProteinAbundanceResult proteinAbundanceResult, IDictionary<Replicate, ReplicateRow> replicateResults)
+                : base(protein, replicateResults)
             {
                 ReplicateCount = replicateCount;
                 ProteinAbundanceResult = proteinAbundanceResult;
@@ -380,10 +321,9 @@ namespace pwiz.Skyline.Controls.Graphs
         }
         public class ProteinAbundanceDetailRow : AbstractProteinAbundanceRow
         {
-            public ProteinAbundanceDetailRow(Protein protein,
-                IsotopeLabelType labelType,
-                int? msLevel, Dictionary<GroupIdentifier, ProteinAbundanceResult> proteinAbundanceResults,
-                IDictionary<Replicate, ReplicateRow> replicateResult) : base(protein, labelType, msLevel, replicateResult)
+            public ProteinAbundanceDetailRow(Protein protein, 
+                Dictionary<GroupIdentifier, ProteinAbundanceResult> proteinAbundanceResults,
+                IDictionary<Replicate, ReplicateRow> replicateResult) : base(protein, replicateResult)
             {
                 ProteinAbundanceResults = proteinAbundanceResults;
             }
@@ -394,7 +334,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public override IEnumerable<ProteinAbundanceRow> GetProteinAbundanceRows()
             {
                 return ProteinAbundanceResults.Select(kvp =>
-                    new ProteinAbundanceRow(Protein, IsotopeLabelType, MsLevel, kvp.Key, 0, kvp.Value, ReplicateAbundances));
+                    new ProteinAbundanceRow(Protein, kvp.Key, 0, kvp.Value, ReplicateAbundances));
             }
         }
 

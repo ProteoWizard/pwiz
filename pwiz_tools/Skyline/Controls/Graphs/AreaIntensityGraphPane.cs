@@ -1,4 +1,5 @@
-﻿using pwiz.Skyline.Model;
+﻿using System.Collections.Generic;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 
@@ -11,12 +12,12 @@ namespace pwiz.Skyline.Controls.Graphs
             : base(graphSummary, paneKey)
         {
         }
-        protected override GraphData CreateGraphData(SrmDocument document, PeptideGroupDocNode selectedProtein, DisplayTypeChrom displayType)
+        protected override GraphData CreateGraphData(SrmDocument document, PeptideGroupDocNode selectedProtein, DisplayTypeChrom displayType, List<ProteinAbundanceBindingSource.ProteinAbundanceRow> rows)
         {
             int? result = null;
             if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
                 result = GraphSummary.ResultsIndex;
-            return new AreaGraphData(document, selectedProtein, result, displayType, PaneKey);
+            return new AreaGraphData(document, selectedProtein, result, displayType, PaneKey, rows);
         }
 
         protected override void UpdateAxes()
@@ -28,7 +29,6 @@ namespace pwiz.Skyline.Controls.Graphs
             var maxY = GraphHelper.GetMaxY(CurveList, this);
             GraphHelper.ReformatYAxis(this, maxY);
 
-            FixedYMin = YAxis.Scale.Min = Settings.Default.AreaLogScale ? 1 : 0;
         }
 
         internal class AreaGraphData : GraphData
@@ -37,8 +37,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 PeptideGroupDocNode selectedProtein,
                 int? result,
                 DisplayTypeChrom displayType,
-                PaneKey paneKey)
-                : base(document, selectedProtein, result, displayType, paneKey)
+                PaneKey paneKey, List<ProteinAbundanceBindingSource.ProteinAbundanceRow> rows)
+                : base(document, selectedProtein, result, displayType, paneKey, rows)
             {
             }
 

@@ -52,6 +52,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public GraphSummary GraphSummary { get; private set; }
+        public bool ShowingFormattingDlg { get; set; }
         public PaneKey PaneKey { get; protected set; }
 
         Rectangle ITipDisplayer.RectToScreen(Rectangle r)

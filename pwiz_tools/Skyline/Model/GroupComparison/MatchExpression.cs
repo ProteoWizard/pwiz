@@ -329,7 +329,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             return true;
         }
-        public bool Matches(SrmDocument document, Protein protein, ProteinAbundanceBindingSource.ProteinAbundanceResult proteinAbundanceResult, ICutoffSettings cutoffSettings)
+        public bool Matches(SrmDocument document, Protein protein, ProteinAbundanceBindingSource.ProteinAbundanceResult proteinAbundanceResult)
         {
             foreach (var match in matchOptions)
             {
@@ -349,12 +349,6 @@ namespace pwiz.Skyline.Model.GroupComparison
                     {
                         var matchString = GetMatchString(document, protein);
                         if (matchString == null || !IsRegexValid() || !Regex.IsMatch(matchString, RegExpr))
-                            return false;
-                        break;
-                    }
-                    case MatchOption.BelowLeftCutoff:
-                    {
-                        if (!cutoffSettings.FoldChangeCutoffValid || proteinAbundanceResult.Abundance >= -cutoffSettings.Log2FoldChangeCutoff)
                             return false;
                         break;
                     }

@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public partial class CreateIntensityMatchExpressionDlg : ModeUIInvariantFormEx // Dialog has explicit logic for handling UI modes
     {
-        private readonly ProteinAbundanceBindingSource.ProteinAbundanceRow[] _foldChangeRows;
+        private readonly ProteinAbundanceBindingSource.ProteinAbundanceRow[] _proteinAbundanceRows;
         private readonly bool _allowUpdateGrid;
         private readonly IntensityGraphFormattingDlg _formattingDlg;
         private CancellationTokenSource _cancellationTokenSource;
@@ -50,12 +50,12 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
 
-        public CreateIntensityMatchExpressionDlg(IntensityGraphFormattingDlg formattingDlg, ProteinAbundanceBindingSource.ProteinAbundanceRow[] foldChangeRows, MatchRgbHexColor rgbHexColor)
+        public CreateIntensityMatchExpressionDlg(IntensityGraphFormattingDlg formattingDlg, ProteinAbundanceBindingSource.ProteinAbundanceRow[] proteinAbundanceRows, MatchRgbHexColor rgbHexColor)
         {
             InitializeComponent();
 
             _formattingDlg = formattingDlg;
-            _foldChangeRows = foldChangeRows;
+            _proteinAbundanceRows = proteinAbundanceRows;
 
             PopulateComboBoxes();
 
@@ -223,7 +223,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else
             {
-                bindingSource1.DataSource = new BindingList<StringWrapper>(_foldChangeRows.Select(row =>
+                bindingSource1.DataSource = new BindingList<StringWrapper>(_proteinAbundanceRows.Select(row =>
                     RowToString(expr, row)).ToArray());
             }
         }
@@ -251,7 +251,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 ActionUtil.RunAsync(() =>
                 {
-                    GetFilteredRows(_cancellationTokenSource.Token, _foldChangeRows, expr);
+                    GetFilteredRows(_cancellationTokenSource.Token, _proteinAbundanceRows, expr);
                 });
             }
             else
@@ -273,7 +273,7 @@ namespace pwiz.Skyline.Controls.Graphs
             foreach (var row in rows)
             {
                 if (expr.Matches(_intensityGraph.Document, row.Protein,
-                        row.ProteinAbundanceResult, FoldChangeVolcanoPlot.CutoffSettings))
+                        row.ProteinAbundanceResult))
                 {
                     filteredRows.Add(RowToString(expr, row));
                 }
@@ -314,7 +314,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (e.ColumnIndex == nameColumn.Index && e.RowIndex >= 0)
             {
-                var row = _foldChangeRows[e.RowIndex];
+                var row = _proteinAbundanceRows[e.RowIndex];
                 //_intensityGraph.Select(row.Protein.IdentityPath);
             }
         }

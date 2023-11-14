@@ -1720,12 +1720,13 @@ namespace pwiz.Skyline
 
         public void ShowIntensityFormatting()
         {
-            var list = _listGraphPeakArea;
             foreach (var summary in _listGraphPeakArea.Where(summary => summary.Type == GraphTypeSummary.intensity))
             {
                 summary.Window = this;
+                UpdatePeakAreaGraph();
+                summary.Window = null;
             }
-            UpdatePeakAreaGraph();
+            
         }
         public void ShowAllTransitions()
         {
