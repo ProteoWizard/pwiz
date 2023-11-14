@@ -584,7 +584,7 @@ namespace ZedGraph
 			// (Dale-a-b) we'll set an element to true when it has been drawn	
 			bool[,] isPixelDrawn = new bool[maxX + 1, maxY + 1];
 
-			double curX, curY, lowVal;
+			double curX, curY;
 			IPointList points = curve.Points;
 
 			if ( points != null && ( _border.IsVisible || _fill.IsVisible ) )
@@ -623,7 +623,7 @@ namespace ZedGraph
 						    object tag = null; 
 							if ( pane.LineType == LineType.Stack )
 							{
-								valueHandler.GetValues( curve, i, out curX, out lowVal, out curY );
+								valueHandler.GetValues( curve, i, out curX, out _, out curY );
 							}
 							// otherwise, just access the values directly.  Avoiding the valueHandler for
 							// non-stacked types is an optimization to minimize overhead in case there are

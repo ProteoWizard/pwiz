@@ -22,7 +22,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
@@ -210,8 +209,7 @@ namespace pwiz.Skyline.EditUI
 
         private SrmDocument GetNewDocument(SrmDocument document, bool validating, ref IdentityPath selectedPath)
         {
-            List<PeptideGroupDocNode> newPeptideGroups;
-            return GetNewDocument(document, validating, ref selectedPath, out newPeptideGroups);
+            return GetNewDocument(document, validating, ref selectedPath, out _);
         }
 
         private SrmDocument GetNewDocument(SrmDocument document, bool validating, ref IdentityPath selectedPath, out List<PeptideGroupDocNode> newPeptideGroups)
@@ -762,8 +760,7 @@ namespace pwiz.Skyline.EditUI
                 return;
             }
             var proteinName = Convert.ToString(row.Cells[colPeptideProtein.Index].Value);
-            ProteinMetadata metadata;
-            FastaSequence fastaSequence = GetFastaSequence(row, proteinName, out metadata);
+            FastaSequence fastaSequence = GetFastaSequence(row, proteinName, out _);
             row.Cells[colPeptideProteinDescription.Index].Value = fastaSequence == null ? null : fastaSequence.Description;
         }
 
@@ -1263,11 +1260,9 @@ namespace pwiz.Skyline.EditUI
 
         static IEnumerable<IList<string>> ParseColumnarData(String text)
         {
-            IFormatProvider formatProvider;
             char separator;
-            Type[] types;
 
-            if (!MassListImporter.IsColumnar(text, out formatProvider, out separator, out types))
+            if (!MassListImporter.IsColumnar(text, out _, out separator, out _))
             {
                 string line;
                 var reader = new StringReader(text);
@@ -1533,9 +1528,9 @@ namespace pwiz.Skyline.EditUI
             {
                 var reader = new StringReader(TbxFasta.Text);
                 IdentityPath to = selectedPath;
-                IdentityPath firstAdded, nextAdd;
+                IdentityPath firstAdded;
                 newPeptideGroups = importer.Import(reader, monitor, -1).ToList();
-                document = document.AddPeptideGroups(newPeptideGroups, false, to, out firstAdded, out nextAdd);
+                document = document.AddPeptideGroups(newPeptideGroups, false, to, out firstAdded, out _);
                 selectedPath = firstAdded;
             }
             catch (Exception exception)

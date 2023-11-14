@@ -41,6 +41,7 @@
 #include "pwiz/data/vendor_readers/Thermo/SpectrumList_Thermo.hpp"
 #include "pwiz/data/vendor_readers/Waters/Reader_Waters.hpp"
 #include "pwiz/data/vendor_readers/Waters/SpectrumList_Waters.hpp"
+#include "SpectrumList_LockmassRefiner.hpp"
 
 
 namespace pwiz {
@@ -106,6 +107,12 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
         {
             mode_ = 7;
         }
+
+        SpectrumList_LockmassRefiner* lockmass = dynamic_cast<SpectrumList_LockmassRefiner*>(&*inner);
+        if (lockmass)
+        {
+            mode_ = 8;
+        }
     }
 
     // add processing methods to the copy of the inner SpectrumList's data processing
@@ -126,7 +133,7 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
         method.userParams.push_back(UserParam("Agilent/MassHunter peak picking"));
     else if (mode_ == 5)
         method.userParams.push_back(UserParam("ABI/DataExplorer peak picking"));
-    else if (mode_ == 6)
+    else if (mode_ == 6 || (!algorithm && mode_ == 8))
         method.userParams.push_back(UserParam("Waters/MassLynx peak picking"));
     else if (mode_ == 7)
         method.userParams.push_back(UserParam("Shimadzu peak picking"));
@@ -138,19 +145,8 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
         method.userParams.emplace_back("ms levels", msLevelsToPeakPickStr);
 
     if (algorithm_)
-        noVendorCentroidingWarningMessage_ = string("[SpectrumList_PeakPicker]: vendor centroiding requested but not available for this data; falling back to ") + algorithm_->name();
+        noVendorCentroidingWarningMessage_ = string("[SpectrumList_PeakPicker]: vendor centroiding requested but not available for non-vendor formats (and UNIFI); falling back to ") + algorithm_->name();
 
-    if (preferVendorPeakPicking && !mode_ && (algorithm_ != NULL)) // VendorOnlyPeakPicker sets algorithm null, we deal with this at get binary data time
-    {
-        cerr << "Warning: vendor peakPicking was requested, but is unavailable";
-#ifdef WIN32
-        cerr << " for this input data. ";
-#else
-        cerr << " as it depends on Windows DLLs.  ";
-#endif
-        cerr << "Using ProteoWizard centroiding algorithm instead." << endl;
-		cerr << "High-quality peak-picking can be enabled using the cwt flag." << endl;
-    }
     dp_->processingMethods.push_back(method);
 }
 
@@ -216,6 +212,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, Detail
 
         case 7:
             s = dynamic_cast<detail::SpectrumList_Shimadzu*>(&*inner_)->spectrum(index, detailLevel, msLevelsToPeakPick_);
+            break;
+
+        case 8:
+            s = dynamic_cast<SpectrumList_LockmassRefiner*>(&*inner_)->spectrum(index, detailLevel, msLevelsToPeakPick_);
             break;
 
         case 0:

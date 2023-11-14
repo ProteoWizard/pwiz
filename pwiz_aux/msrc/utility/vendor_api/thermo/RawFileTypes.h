@@ -160,11 +160,11 @@ struct InstrumentNameToModelMapping
 
 const InstrumentNameToModelMapping nameToModelMapping[] =
 {
-    {"MAT253", InstrumentModelType_MAT253, Exact},
-    {"MAT900XP", InstrumentModelType_MAT900XP, Exact},
-    {"MAT900XP TRAP", InstrumentModelType_MAT900XP_Trap, Exact},
-    {"MAT95XP", InstrumentModelType_MAT95XP, Exact},
-    {"MAT95XP TRAP", InstrumentModelType_MAT95XP_Trap, Exact},
+    {"MAT253", InstrumentModelType_MAT253, ExactNoSpaces},
+    {"MAT900XP", InstrumentModelType_MAT900XP, ExactNoSpaces},
+    {"MAT900XPTRAP", InstrumentModelType_MAT900XP_Trap, ExactNoSpaces},
+    {"MAT95XP", InstrumentModelType_MAT95XP, ExactNoSpaces},
+    {"MAT95XPTRAP", InstrumentModelType_MAT95XP_Trap, ExactNoSpaces},
     {"SSQ7000", InstrumentModelType_SSQ_7000, ExactNoSpaces},
     {"TSQ7000", InstrumentModelType_TSQ_7000, ExactNoSpaces},
     {"TSQ8000EVO", InstrumentModelType_TSQ_8000_Evo, ExactNoSpaces},

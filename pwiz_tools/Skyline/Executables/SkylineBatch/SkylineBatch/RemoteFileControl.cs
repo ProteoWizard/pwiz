@@ -1,8 +1,16 @@
 ﻿using SharedBatch;
 using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.PanoramaClient;
 using SkylineBatch.Properties;
+using AlertDlg = SharedBatch.AlertDlg;
+using PanoramaClientServer = pwiz.PanoramaClient.PanoramaServer;
+using PanoramaServerException = pwiz.PanoramaClient.PanoramaServerException;
+using PanoramaUtil = pwiz.PanoramaClient.PanoramaUtil;
+using WebPanoramaClient = pwiz.PanoramaClient.WebPanoramaClient;
 
 namespace SkylineBatch
 {
@@ -13,10 +21,13 @@ namespace SkylineBatch
         private readonly string _downloadFolder;
         private readonly bool _fileRequired;
         private readonly bool _preferPanoramaSource;
+        private readonly bool _templateFile;
 
-        public RemoteFileControl(IMainUiControl mainControl, SkylineBatchConfigManagerState state, Server editingServer, string downloadFolder, bool fileRequired, bool preferPanoramaSource)
+        public RemoteFileControl(IMainUiControl mainControl, SkylineBatchConfigManagerState state, Server editingServer, string downloadFolder, bool fileRequired, bool preferPanoramaSource, bool templateFile = false)
         {
             InitializeComponent();
+            Bitmap bmp = (Bitmap)this.btnOpenFromPanorama.Image;
+            bmp.MakeTransparent(bmp.GetPixel(0, 0));
 
             State = state;
             _mainControl = mainControl;
@@ -24,16 +35,74 @@ namespace SkylineBatch
             _downloadFolder = downloadFolder;
             _fileRequired = fileRequired;
             _preferPanoramaSource = preferPanoramaSource;
+            _templateFile = templateFile;  
             UpdateRemoteSourceList();
-
             if (editingServer != null)
             {
                 textRelativePath.Text = editingServer.RelativePath;
                 comboRemoteFileSource.SelectedItem = editingServer.FileSource.Name;
             }
+            CheckIfPanoramaSource();
+
         }
 
         public SkylineBatchConfigManagerState State { get; private set; }
+
+        private RemoteFileSource GetRemoteFileSource(){
+
+            RemoteFileSource remoteFileSource;
+            try
+            {
+                remoteFileSource = RemoteFileSourceFromUi();
+            }
+            catch
+            {
+                return null;
+            }
+
+            return remoteFileSource;
+
+        }
+
+        private void CheckIfPanoramaSource()
+        {
+            RemoteFileSource source = GetRemoteFileSource();
+            if (source == null)
+            {
+                ShowPanoramaBtn(false);
+                return;
+            }
+
+
+            var panoramaClient = new WebPanoramaClient(source.URI, source.Username, source.Password);
+            try
+            {
+                panoramaClient.ValidateServer();
+                ShowPanoramaBtn(true);
+            }
+            catch (PanoramaServerException)
+            {
+                ShowPanoramaBtn(false);
+            }
+        }
+
+        private void ShowPanoramaBtn(bool show)
+        {
+            if (show == btnOpenFromPanorama.Visible)
+                return;
+            if (show)
+            {
+
+                btnOpenFromPanorama.Visible = true;
+                textRelativePath.Width = comboRemoteFileSource.Width - btnOpenFromPanorama.Width;
+            }
+            else
+            {
+                btnOpenFromPanorama.Visible = false;
+                textRelativePath.Width = comboRemoteFileSource.Width;
+            }
+        }
+
 
         private void UpdateRemoteSourceList()
         {
@@ -54,24 +123,15 @@ namespace SkylineBatch
             });
         }
 
-        public Server ServerFromUI()
+        public Server ServerFromUi()
         {
-            var remoteFileSource = RemoteFileSourceFromUI();
+            var remoteFileSource = RemoteFileSourceFromUi();
             return remoteFileSource != null ? new Server(remoteFileSource, textRelativePath.Text) : null;
         }
 
         public void CheckPanoramaServer(CancellationToken cancelToken, Action<PanoramaFile, Exception> callback)
         {
-            RemoteFileSource remoteFileSource;
-            try
-            {
-                remoteFileSource = RemoteFileSourceFromUI();
-            }
-            catch (Exception ex)
-            {
-                callback(null, ex);
-                return;
-            }
+            RemoteFileSource remoteFileSource = GetRemoteFileSource();
             new Thread(() =>
             {
                 try
@@ -88,7 +148,7 @@ namespace SkylineBatch
             }).Start();
         }
 
-        public RemoteFileSource RemoteFileSourceFromUI()
+        public RemoteFileSource RemoteFileSourceFromUi()
         {
             if (comboRemoteFileSource.SelectedIndex == -1 && string.IsNullOrEmpty(textRelativePath.Text) && !_fileRequired)
                 return null;
@@ -133,7 +193,7 @@ namespace SkylineBatch
                         editingFileSource =
                             State.FileSources[(string) comboRemoteFileSource.Items[_lastStelectedIndex]];
                     }
-                    var remoteSourceForm = new RemoteSourceForm(editingFileSource, _mainControl, State, _preferPanoramaSource);
+                    var remoteSourceForm = new RemoteSourceForm(editingFileSource, _mainControl, State, _preferPanoramaSource); 
                     var dialogResult = remoteSourceForm.ShowDialog(this);
                     State = remoteSourceForm.State;
                     UpdateRemoteSourceList();
@@ -143,8 +203,12 @@ namespace SkylineBatch
                         comboRemoteFileSource.SelectedIndex = _lastStelectedIndex;
                 }
             }
+            CheckIfPanoramaSource();
+
             _lastStelectedIndex = comboRemoteFileSource.SelectedIndex;
         }
+
+        
 
         public void AddRemoteFileChangedEventHandler(EventHandler eventHandler)
         {
@@ -168,6 +232,76 @@ namespace SkylineBatch
             catch (InvalidOperationException)
             {
             }
+        }
+
+
+        public void OpenFromPanorama()
+        {
+            RemoteFileSource remoteFileSource = GetRemoteFileSource();
+            Uri uri = remoteFileSource.URI; // Need to get server URI
+            // string userName= remoteFileSource.Username;
+            // string textPassword = remoteFileSource.Password;
+
+            string host = $"https://{uri.Host}";
+            // var path = new Uri(remoteFileSource.SelectedPath);
+            PanoramaClientServer server = new PanoramaClientServer(new Uri(host), remoteFileSource.Username, remoteFileSource.Password);
+
+            var panoramaServers = new List<PanoramaClientServer>() { server };
+            var uriString = uri.ToString();
+            var selectedPath = uriString.Contains(PanoramaUtil.WEBDAV) ? uriString.Substring(uriString.LastIndexOf(PanoramaUtil.WEBDAV, StringComparison.Ordinal) + PanoramaUtil.WEBDAV.Length) : uriString.Substring(uriString.LastIndexOf(host, StringComparison.Ordinal) + host.Length);
+            var state = string.Empty;
+            selectedPath = selectedPath.Replace(string.Concat(PanoramaUtil.FILES, "/"), string.Empty);
+            /*if (!string.IsNullOrEmpty(Settings.Default.PanoramaTreeState))
+            {
+                state = Settings.Default.PanoramaTreeState;
+            }*/
+
+            try
+            {
+                if (_fileRequired) // If file is required use PanoramaFilePicker
+                {
+                    bool showWebdav = !_templateFile;
+                    using (var dlg = new PanoramaFilePicker(panoramaServers, state, showWebdav, selectedPath))
+                    {
+                        dlg.InitializeDialog(); // TODO: Should use a LongOperationRunner to show busy-wait UI
+                        dlg.OkButtonText = "Select";
+                        if (dlg.ShowDialog() != DialogResult.Cancel)
+                        {
+                            Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;
+                            textRelativePath.Text = string.Concat(@"/", dlg.FileName);
+                        }
+                        Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;
+                    }
+                }
+                else // if file not required use PanoramaDirectoryPicker
+                {
+                    using (var dlg = new PanoramaDirectoryPicker(panoramaServers, state, true, selectedPath))
+                    {
+                        dlg.InitializeDialog(); // TODO: Should use a LongOperationRunner to show busy-wait UI
+                        dlg.OkButtonText = "Select";
+                        if (dlg.ShowDialog() != DialogResult.Cancel)
+
+                        {
+                            var url = dlg.SelectedPath;
+                            var output = (url.EndsWith(PanoramaUtil.FILES) || !url.Contains(PanoramaUtil.FILES))
+                                ? "/"
+                                : $"/{url.Substring(url.LastIndexOf(PanoramaUtil.FILES, StringComparison.Ordinal) + (PanoramaUtil.FILES.Length + 1))}/";
+                            textRelativePath.Text = output;
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                AlertDlg.ShowError(this, Program.AppName(), e.Message);
+            }
+
+            Settings.Default.Save();
+        }
+
+        private void btnOpenFromPanorama_Click(object sender, EventArgs e)
+        {
+            OpenFromPanorama();
         }
     }
 }

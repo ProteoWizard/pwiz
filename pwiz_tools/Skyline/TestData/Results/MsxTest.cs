@@ -465,8 +465,7 @@ namespace pwiz.SkylineTestData.Results
             // Check that the caching worked correctly
             for (int spectrumIndex = firstSpectrum; spectrumIndex <= lastSpectrum; ++spectrumIndex)
             {
-                ScanCached specData;
-                Assert.IsTrue(spectrumProcessor.TryGetSpectrum(spectrumIndex, out specData));
+                Assert.IsTrue(spectrumProcessor.TryGetSpectrum(spectrumIndex, out _));
 
                 // Check that the cached processing results match the output of
                 // redoing the processing manually by extracting the spectrum from

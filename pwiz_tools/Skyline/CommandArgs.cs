@@ -30,12 +30,14 @@ using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.SystemUtil;
+using pwiz.PanoramaClient;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Tools;
@@ -62,6 +64,7 @@ namespace pwiz.Skyline
         public static readonly Func<string> PATH_TO_CSV = () => GetPathToFile(TextUtil.EXT_CSV);
         public static readonly Func<string> PATH_TO_TSV = () => GetPathToFile(TextUtil.EXT_TSV);
         public static readonly Func<string> PATH_TO_IRTDB = () => GetPathToFile(IrtDb.EXT);
+        public static readonly Func<string> PATH_TO_BLIB = () => GetPathToFile(BiblioSpecLiteSpec.EXT);
         public static readonly Func<string> PATH_TO_IMSDB = () => GetPathToFile(IonMobilityDb.EXT);
         public static readonly Func<string> PATH_TO_REPORT = () => GetPathToFile(ReportSpecList.EXT_REPORTS);
         public static readonly Func<string> PATH_TO_INSTALL = () => GetPathToFile(ToolDescription.EXT_INSTALL);
@@ -101,7 +104,7 @@ namespace pwiz.Skyline
         public static readonly HashSet<Func<string>> PATH_TYPE_VALUES = new HashSet<Func<string>>
         {
             PATH_TO_DOCUMENT, PATH_TO_FILE, PATH_TO_FOLDER, PATH_TO_ZIP, PATH_TO_REPORT, PATH_TO_TSV, PATH_TO_IMSDB,
-            PATH_TO_INSTALL, PATH_TO_CSV, PATH_TO_IRTDB
+            PATH_TO_INSTALL, PATH_TO_CSV, PATH_TO_IRTDB, PATH_TO_BLIB
         };
 
         public static readonly HashSet<Func<string>> STRING_TYPE_VALUES = new HashSet<Func<string>>(new[]
@@ -689,7 +692,7 @@ namespace pwiz.Skyline
         private static readonly Argument ARG_REINTEGRATE_LOG_TRAINING = new DocArgument(@"reintegrate-log-training",
             (c, p) => c.IsLogTraining = true) {InternalUse = true};
         private static readonly Argument ARG_REINTEGRATE_EXCLUDE_FEATURE = new DocArgument(@"reintegrate-exclude-feature", FEATURE_NAME_VALUE,
-                (c, p) => c.ParseReintegrateExcludeFeature(p))
+                (c, p) => c.ParseExcludeFeature(p, c.ExcludeFeatures))
             { WrapValue = true };
 
         private static readonly ArgumentGroup GROUP_REINTEGRATE = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_REINTEGRATE_Reintegrate_with_advanced_peak_picking_models, false,
@@ -786,9 +789,9 @@ namespace pwiz.Skyline
             }
         }
 
-        private bool ParseReintegrateExcludeFeature(NameValuePair pair)
+        private bool ParseExcludeFeature(NameValuePair pair, ICollection<IPeakFeatureCalculator> featureList)
         {
-            string featureName = pair.Value;
+            var featureName = pair.Value;
             var calc = PeakFeatureCalculator.Calculators.FirstOrDefault(c =>
                 Equals(featureName, c.HeaderName) || Equals(featureName, c.Name));
             if (calc == null)
@@ -808,8 +811,8 @@ namespace pwiz.Skyline
 
                 return false;
             }
-
-            ExcludeFeatures.Add(calc);
+            
+            featureList.Add(calc);
             return true;
         }
 
@@ -859,7 +862,7 @@ namespace pwiz.Skyline
             (c, p) => c.Refinement.UseBestResult = true);
         // Refinement consistency tab
         public static readonly Argument ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF = new RefineArgument(@"refine-cv-remove-above-cutoff", NUM_VALUE,
-            (c,p) => c.Refinement.CVCutoff = p.ValueDouble >= 1 ? p.ValueDouble : p.ValueDouble * 100);  // If a value like 0.2, interpret as 20%
+            (c,p) => c.Refinement.CVCutoff = p.ValueDouble >= 1 ? p.ValueDouble : p.ValueDouble * 100){WrapValue = true};  // If a value like 0.2, interpret as 20%
         public static readonly Argument ARG_REFINE_CV_GLOBAL_NORMALIZE = new RefineArgument(@"refine-cv-global-normalize",
             new[] { NormalizationMethod.GLOBAL_STANDARDS.Name, NormalizationMethod.EQUALIZE_MEDIANS.Name, NormalizationMethod.TIC.Name },
             (c, p) =>
@@ -1032,6 +1035,37 @@ namespace pwiz.Skyline
         public bool ChromatogramsTics { get; private set; }
         public bool ExportingChromatograms { get { return !string.IsNullOrEmpty(ChromatogramsFile); } }
 
+        // For exporting other file types
+        public static readonly Argument ARG_SPECTRAL_LIBRARY_FILE = new DocArgument(@"exp-speclib-file", PATH_TO_BLIB,
+            (c, p) => c.SpecLibFile= p.ValueFullPath);
+        public static readonly Argument ARG_MPROPHET_FEATURES_FILE = new DocArgument(@"exp-mprophet-file", PATH_TO_CSV,
+            (c, p) => c.MProphetFeaturesFile = p.ValueFullPath);
+        public static readonly Argument ARG_MPROPHET_FEATURES_BEST_SCORING_PEAKS =
+            new DocArgument(@"exp-mprophet-best-peaks-only", (c, p) => c.MProphetUseBestScoringPeaks = true);
+        public static readonly Argument ARG_MPROPHET_FEATURES_TARGETS_ONLY =
+            new DocArgument(@"exp-mprophet-targets-only", (c, p) => c.MProphetTargetsOnly = true);
+        public static readonly Argument ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES = 
+            new DocArgument(@"exp-mprophet-exclude-feature", FEATURE_NAME_VALUE, 
+                (c, p) => c.ParseExcludeFeature(p, c.MProphetExcludeScores)){WrapValue = true};
+
+        private static readonly ArgumentGroup GROUP_OTHER_FILE_TYPES = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_OTHER_FILE_TYPES, false, 
+            ARG_SPECTRAL_LIBRARY_FILE, ARG_MPROPHET_FEATURES_FILE, ARG_MPROPHET_FEATURES_BEST_SCORING_PEAKS, ARG_MPROPHET_FEATURES_TARGETS_ONLY, 
+            ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES
+        );
+
+        public string SpecLibFile { get; private set; }
+
+        public bool ExportingSpecLib { get { return !string.IsNullOrEmpty(SpecLibFile); } }
+
+        public string MProphetFeaturesFile { get; private set; }
+
+        public bool ExportingMProphetFeatures { get { return !string.IsNullOrEmpty(MProphetFeaturesFile); } }
+
+        public bool MProphetUseBestScoringPeaks { get; private set; }
+
+        public bool MProphetTargetsOnly { get; private set; }
+
+        public List<IPeakFeatureCalculator> MProphetExcludeScores { get; private set; }
 
         // For publishing the document to Panorama
         public static readonly Argument ARG_PANORAMA_SERVER = new DocArgument(@"panorama-server", SERVER_URL_VALUE,
@@ -1056,7 +1090,7 @@ namespace pwiz.Skyline
         private string PanoramaPassword { get; set; }
         public string PanoramaFolder { get; private set; }
         public bool PublishingToPanorama { get; private set; }
-        public Server PanoramaServer { get; private set; }
+        public PanoramaServer PanoramaServer { get; private set; }
 
         private bool ValidatePanoramaArgs()
         {
@@ -1073,13 +1107,13 @@ namespace pwiz.Skyline
                     return false;
                 }
 
-                var panoramaClient = new WebPanoramaClient(serverUri);
+                var panoramaClient = new WebPanoramaClient(serverUri, PanoramaUserName, PanoramaPassword);
                 var panoramaHelper = new PanoramaHelper(_out); // Helper writes messages for failures below
-                PanoramaServer = panoramaHelper.ValidateServer(panoramaClient, PanoramaUserName, PanoramaPassword);
+                PanoramaServer = panoramaHelper.ValidateServer(panoramaClient);
                 if (PanoramaServer == null)
                     return false;
 
-                if (!panoramaHelper.ValidateFolder(panoramaClient, PanoramaServer, PanoramaFolder))
+                if (!panoramaHelper.ValidateFolder(panoramaClient, PanoramaFolder))
                     return false;
 
                 PublishingToPanorama = true;
@@ -1129,12 +1163,11 @@ namespace pwiz.Skyline
                 _statusWriter = statusWriter;
             }
 
-            public Server ValidateServer(IPanoramaClient panoramaClient, string panoramaUsername, string panoramaPassword)
+            public PanoramaServer ValidateServer(IPanoramaClient panoramaClient)
             {
                 try
                 {
-                    PanoramaUtil.VerifyServerInformation(panoramaClient, panoramaUsername, panoramaPassword);
-                    return new Server(panoramaClient.ServerUri, panoramaUsername, panoramaPassword);
+                    return panoramaClient.ValidateServer();
                 }
                 catch (PanoramaServerException x)
                 {
@@ -1148,11 +1181,11 @@ namespace pwiz.Skyline
                 return null;
             }
 
-            public bool ValidateFolder(IPanoramaClient panoramaClient, Server server, string panoramaFolder)
+            public bool ValidateFolder(IPanoramaClient panoramaClient, string panoramaFolder)
             {
                 try
                 {
-                    PanoramaUtil.VerifyFolder(panoramaClient, server, panoramaFolder);
+                    panoramaClient.ValidateFolder(panoramaFolder, FolderPermission.insert);
                     return true;
                 }
                 catch (PanoramaServerException x)
@@ -2060,6 +2093,7 @@ namespace pwiz.Skyline
                     GROUP_REFINEMENT_W_RESULTS,
                     GROUP_REPORT,
                     GROUP_CHROMATOGRAM,
+                    GROUP_OTHER_FILE_TYPES,
                     GROUP_LISTS,
                     GROUP_METHOD,
                     GROUP_EXP_GENERAL,
@@ -2142,6 +2176,8 @@ namespace pwiz.Skyline
             SearchResultsFiles = new List<string>();
             ExcludeFeatures = new List<IPeakFeatureCalculator>();
             SharedFileType = ShareType.DEFAULT;
+
+            MProphetExcludeScores = new List<IPeakFeatureCalculator>();
 
             ImportBeforeDate = null;
             ImportOnOrAfterDate = null;

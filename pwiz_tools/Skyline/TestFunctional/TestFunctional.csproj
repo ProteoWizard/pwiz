@@ -164,6 +164,7 @@
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AddAllPeptidesWithModificationsTest.cs" />
     <Compile Include="AddMixedLibraryTest.cs" />
+    <Compile Include="AgilentCeOptimizationTest.cs" />
     <Compile Include="AgilentGCEITest.cs" />
     <Compile Include="AlphabeticalReportEditorTest.cs" />
     <Compile Include="AreaNormalizeOptionTest.cs" />
@@ -175,6 +176,7 @@
     <Compile Include="CantReadSkydTest.cs" />
     <Compile Include="CleavableCrosslinkTest.cs" />
     <Compile Include="ConstrainNormalizationMethodTest.cs" />
+    <Compile Include="CopyProteinGroupTest.cs" />
     <Compile Include="CrosslinkImsTest.cs" />
     <Compile Include="DdaPeakIntegrationTest.cs" />
     <Compile Include="DdaScoringTest.cs" />
@@ -197,17 +199,23 @@
     <Compile Include="MinimizeIrtTest.cs" />
     <Compile Include="EADZIonsTest.cs" />
     <Compile Include="MixedSrmPrmTest.cs" />
+    <Compile Include="Ms1SpectrumFilterTest.cs" />
     <Compile Include="MultiInjectionReplicatesTest.cs" />
     <Compile Include="OpenDocWithBackgroundProteomeTest.cs" />
     <Compile Include="PeakAreaPeptideGraphTest.cs" />
+    <Compile Include="QcTraceNameTest.cs" />
     <Compile Include="RemoveHeavyModificationTest.cs" />
     <Compile Include="RemoveNeutralLossModificationTest.cs" />
     <Compile Include="ResultFileMetadataBackCompatTest.cs" />
     <Compile Include="SaveAfterProteinAssociationTest.cs" />
+    <Compile Include="SelectSpectrumTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
+    <Compile Include="TestPanoramaClient.cs" />
+    <Compile Include="SkydFileModifiedTest.cs" />
     <Compile Include="SpectrumGridTest.cs" />
     <Compile Include="ToolServiceTestSharedClasses.cs" />
     <Compile Include="EditSpectrumFilterTest.cs" />
+    <Compile Include="EncyclopeDiaSearchTest.cs" />
     <Compile Include="UnreadableBlibTest.cs" />
     <Compile Include="RemoveSmallMoleculeLabelTypeTest.cs" />
     <Compile Include="StartPageInsertTransitionListTest.cs" />
@@ -434,6 +442,7 @@
     <Compile Include="UpdateGlobalStandardTest.cs" />
     <Compile Include="UpgradeTest.cs" />
     <Compile Include="VolcanoPlotFormattingTest.cs" />
+    <Compile Include="ZeroLengthSrmChromatogramTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj">
@@ -444,13 +453,17 @@
       <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
       <Name>Common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Shared\Common\CommonUtil.csproj">
+    <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj">
       <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
       <Name>CommonUtil</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Shared\MSGraph\MSGraph.csproj">
       <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
       <Name>MSGraph</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Shared\PanoramaClient\PanoramaClient.csproj">
+      <Project>{bf849cf8-25d7-4619-b001-9ed8e3771c44}</Project>
+      <Name>PanoramaClient</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Shared\ProteomeDb\ProteomeDb.csproj">
       <Project>{09FC3CB3-FCCD-4906-A370-160B28725936}</Project>
@@ -486,6 +499,7 @@
     <None Include="AddAllPeptidesWithModificationsTest.zip" />
     <None Include="AddLibraryTest.zip" />
     <None Include="AddMixedLibraryTest.zip" />
+    <None Include="AgilentCeOptimizationTest.zip" />
     <None Include="AgilentGCEITest.zip" />
     <None Include="AnnotationTest.zip" />
     <None Include="AreaCVHistogramTest.zip" />
@@ -604,6 +618,7 @@
     <None Include="ProteinMetadataBackgroundLoaderTest.zip" />
     <None Include="ProteinMetadataFunctionalTest.zip" />
     <None Include="ProxlTest.zip" />
+    <None Include="QcTraceNameTest.zip" />
     <None Include="QualitativeIonRatioTest.zip" />
     <None Include="QuantitativePeakAreaTest.zip" />
     <None Include="QuantitativeTest.zip" />
@@ -626,6 +641,7 @@
     <None Include="SettingsChangeReimportTest.zip" />
     <None Include="ShareSettingsTest.zip" />
     <None Include="SingleReplicateResponseCurveTest.zip" />
+    <None Include="SkydFileModifiedTest.zip" />
     <None Include="SkylineCmdTest.zip" />
     <None Include="SkypTest.zip" />
     <None Include="SmallMoleculeIrtTest.zip" />

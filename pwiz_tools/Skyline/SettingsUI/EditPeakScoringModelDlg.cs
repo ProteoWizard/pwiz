@@ -23,7 +23,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
-using pwiz.Common.Controls;
 using ZedGraph;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -133,8 +132,9 @@ namespace pwiz.Skyline.SettingsUI
                 scoringModel = new MProphetPeakScoringModel(UNNAMED, document);
             }
 
-            using (var longWaitDlg = new LongWaitDlg { Text = Resources.EditPeakScoringModelDlg_TrainModelClick_Scoring })
+            using (var longWaitDlg = new LongWaitDlg())
             {
+                longWaitDlg.Text = Resources.EditPeakScoringModelDlg_TrainModelClick_Scoring;
                 longWaitDlg.PerformWork(owner, 800, progressMonitor =>
                     _targetDecoyGenerator = new TargetDecoyGenerator(document, scoringModel, scoreProvider, progressMonitor));
                 if (longWaitDlg.IsCanceled)
@@ -263,8 +263,9 @@ namespace pwiz.Skyline.SettingsUI
             var initialParams = new LinearModelParams(initialWeights);
 
             // Train the model.
-            using (var longWaitDlg = new LongWaitDlg { Text = Resources.EditPeakScoringModelDlg_TrainModel_Training})
+            using (var longWaitDlg = new LongWaitDlg())
             {
+                longWaitDlg.Text = Resources.EditPeakScoringModelDlg_TrainModel_Training;
                 longWaitDlg.PerformWork(this, 800, progressMonitor => 
                 {
                     _peakScoringModel = peakScoringModel.Train(targetTransitionGroups, decoyTransitionGroups, _targetDecoyGenerator, initialParams,
@@ -278,13 +279,11 @@ namespace pwiz.Skyline.SettingsUI
             _gridViewDriver.Items.RaiseListChangedEvents = false;
             try
             {
-                using (var longWaitDlg = new LongWaitDlg
+                using (var longWaitDlg = new LongWaitDlg())
                 {
-                    Text = Resources.EditPeakScoringModelDlg_TrainModel_Calculating,
-                    Message = Resources.EditPeakScoringModelDlg_TrainModel_Calculating_score_contributions,
-                    ProgressValue = 0
-                })
-                {
+                    longWaitDlg.Text = Resources.EditPeakScoringModelDlg_TrainModel_Calculating;
+                    longWaitDlg.Message = Resources.EditPeakScoringModelDlg_TrainModel_Calculating_score_contributions;
+                    longWaitDlg.ProgressValue = 0;
                     int seenContributingScores = 0;
                     int totalContributingScores = _peakScoringModel.Parameters.Weights.Count(w => !double.IsNaN(w));
                     longWaitDlg.PerformWork(this, 800, progressMonitor =>
@@ -1015,13 +1014,11 @@ namespace pwiz.Skyline.SettingsUI
         {
             // Create list of calculators and their corresponding weights.
             PeakCalculatorWeight[] peakCalculatorWeights = null;
-            using (var longWaitDlg = new LongWaitDlg
+            using (var longWaitDlg = new LongWaitDlg())
             {
-                Text = Resources.EditPeakScoringModelDlg_TrainModel_Calculating,
-                Message = Resources.EditPeakScoringModelDlg_TrainModel_Calculating_score_contributions,
-                ProgressValue = 0
-            })
-            {
+                longWaitDlg.Text = Resources.EditPeakScoringModelDlg_TrainModel_Calculating;
+                longWaitDlg.Message = Resources.EditPeakScoringModelDlg_TrainModel_Calculating_score_contributions;
+                longWaitDlg.ProgressValue = 0;
                 longWaitDlg.PerformWork(owner, 800, progressMonitor => peakCalculatorWeights =
                     _targetDecoyGenerator.GetPeakCalculatorWeights(_peakScoringModel, progressMonitor));
             }
@@ -1222,15 +1219,15 @@ namespace pwiz.Skyline.SettingsUI
 
         public int GetTargetCount()
         {
-            List<IList<FeatureScores>> targetGroups, decoyGroups;
-            _targetDecoyGenerator.GetTransitionGroups(out targetGroups, out decoyGroups);
+            List<IList<FeatureScores>> targetGroups;
+            _targetDecoyGenerator.GetTransitionGroups(out targetGroups, out _);
             return targetGroups.Count;
         }
 
         public int GetDecoyCount()
         {
-            List<IList<FeatureScores>> targetGroups, decoyGroups;
-            _targetDecoyGenerator.GetTransitionGroups(out targetGroups, out decoyGroups);
+            List<IList<FeatureScores>> decoyGroups;
+            _targetDecoyGenerator.GetTransitionGroups(out _, out decoyGroups);
             return decoyGroups.Count;
         }
 

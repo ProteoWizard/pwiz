@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>UniModCompiler</RootNamespace>
     <AssemblyName>UniModCompiler</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -139,7 +139,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Shared\Common\CommonUtil.csproj">
+    <ProjectReference Include="..\..\..\Shared\CommonUtil\CommonUtil.csproj">
       <Project>{13bf2ffb-50a1-4ab1-83a4-5733e36905ce}</Project>
       <Name>CommonUtil</Name>
     </ProjectReference>

@@ -137,7 +137,7 @@ namespace pwiz.Skyline.Model
             return Math.Round(overlap / 2, 4);
         }
 
-        private const int MAX_SPECTRA_PER_CYCLE = 200; // SCIEX has used 100 and Thermo MSX can use 20 * 5
+        private const int MAX_SPECTRA_PER_CYCLE = 400; // SCIEX has used 100 and Thermo MSX can use 20 * 5, Astral using 300
         private const int MAX_MULTI_CYCLE = MAX_SPECTRA_PER_CYCLE * 3;
 
         private IsolationRange[] ReadIsolationRanges(MsDataFileUri dataSource, IsolationRange[] isolationRanges)
@@ -147,7 +147,8 @@ namespace pwiz.Skyline.Model
             double minStart = double.MaxValue, maxStart = double.MinValue;
 
             string path = dataSource.GetFilePath();
-            bool isPasef = Equals(DataSourceUtil.GetSourceType(new DirectoryInfo(path)), DataSourceUtil.TYPE_BRUKER);
+            bool isPasef = Directory.Exists(path) &&    // Below can be slow if it is not a directory
+                           Equals(DataSourceUtil.GetSourceType(new DirectoryInfo(path)), DataSourceUtil.TYPE_BRUKER);
             using (var dataFile = new MsDataFileImpl(path, simAsSpectra: true))
             {
                 int lookAheadCount = Math.Min(MAX_MULTI_CYCLE, dataFile.SpectrumCount);

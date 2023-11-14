@@ -20,7 +20,7 @@
 using System;
 using System.ComponentModel;
 using DigitalRune.Windows.Docking;
-using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Util
 {

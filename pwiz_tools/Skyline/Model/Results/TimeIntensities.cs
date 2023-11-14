@@ -65,8 +65,10 @@ namespace pwiz.Skyline.Model.Results
 
         public TimeIntensities Interpolate(IList<float> timesNew, bool inferZeros)
         {
-            if (timesNew.Count == 0 || NumPoints == 0)
+            if (timesNew.Count == 0)
                 return this;
+            if (NumPoints == 0)
+                return new TimeIntensities(timesNew, Enumerable.Repeat(0.0f, timesNew.Count));
             double intervalDelta = 0;
             if (timesNew.Count > 1)
             {

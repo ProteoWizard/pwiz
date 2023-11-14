@@ -438,9 +438,8 @@ namespace pwiz.SkylineTestTutorial
                 ITipProvider nodeTip = SkylineWindow.SequenceTree.SelectedNode as ITipProvider;
                 Assert.IsTrue(nodeTip != null && nodeTip.HasTip);
                 var nodeName = SkylineWindow.SequenceTree.Nodes[1].Name;
-                IdentityPath selectPath;
                 SkylineWindow.ModifyDocument("Drag and drop", // Not L10N
-                    doc => doc.MoveNode(SkylineWindow.Document.GetPathTo(0, 1), SkylineWindow.Document.GetPathTo(0, 0), out selectPath));
+                    doc => doc.MoveNode(SkylineWindow.Document.GetPathTo(0, 1), SkylineWindow.Document.GetPathTo(0, 0), out _));
                 Assert.IsTrue(SkylineWindow.SequenceTree.Nodes[0].Name == nodeName);
             });
 

@@ -92,12 +92,12 @@ bool MzIdentMLReader::parseFile(){
     specExtensions.push_back(".mzML");
     specExtensions.push_back(".mz5");
     #ifdef VENDOR_READERS
-	    specExtensions.push_back(".raw"); // Waters/Thermo
-	    specExtensions.push_back(".wiff"); // Sciex
-	    specExtensions.push_back(".wiff2"); // Sciex
-	    specExtensions.push_back(".d"); // Bruker/Agilent
-	    specExtensions.push_back(".lcd"); // Shimadzu
-	#endif
+        specExtensions.push_back(".raw"); // Waters/Thermo
+        specExtensions.push_back(".wiff"); // Sciex
+        specExtensions.push_back(".wiff2"); // Sciex
+        specExtensions.push_back(".d"); // Bruker/Agilent
+        specExtensions.push_back(".lcd"); // Shimadzu
+    #endif
     for(; fileIterator != fileMap_.end(); ++fileIterator) {
         vector<string> pathParts;
         boost::split(pathParts, fileIterator->first, boost::is_any_of(";"));
@@ -187,61 +187,67 @@ void MzIdentMLReader::collectPsms(map<DBSequencePtr, Protein>& proteins) {
                 // skip if it doesn't pass score threshold
                 double score = getScore(item);
                 if (!passThreshold(score)) {
-                    continue;
+                    ++filteredOutPsmCount_;
+                    curPSM_ = nullptr;
                 }
-
-                // now get the psm info
-                curPSM_ = new PSM();
-                switch (analysisType_) {
-                    case BYONIC_ANALYSIS:
-                        curPSM_->specName = result.cvParam(MS_spectrum_title).valueAs<string>();
-                        break;
-                    case MSGF_ANALYSIS:
-                        if (result.hasCVParam(MS_scan_number_s__OBSOLETE)) {
-                            curPSM_->specKey = result.cvParam(MS_scan_number_s__OBSOLETE).valueAs<int>();
-                            lookUpBy_ = SCAN_NUM_ID;
-                        } else {
-                            // If still no scan number, use nativeID
+                else
+                {
+                    // now get the psm info
+                    curPSM_ = new PSM();
+                    switch (analysisType_) {
+                        case BYONIC_ANALYSIS:
+                            curPSM_->specName = result.cvParam(MS_spectrum_title).valueAs<string>();
+                            break;
+                        case MSGF_ANALYSIS:
+                            if (result.hasCVParam(MS_scan_number_s__OBSOLETE)) {
+                                curPSM_->specKey = result.cvParam(MS_scan_number_s__OBSOLETE).valueAs<int>();
+                                lookUpBy_ = SCAN_NUM_ID;
+                            } else {
+                                // If still no scan number, use nativeID
+                                curPSM_->specName = idStr;
+                            }
+                            break;
+                        default:
                             curPSM_->specName = idStr;
-                        }
-                        break;
-                    default:
-                        curPSM_->specName = idStr;
-                        break;
-                }
-                if (curPSM_->specKey < 0) {
-                    stringToScan(curPSM_->specName, curPSM_);
-                }
-                curPSM_->score = score;
-                curPSM_->charge = item.chargeState;
-                extractIonMobility(result, item, curPSM_);
+                            break;
+                    }
+                    if (curPSM_->specKey < 0) {
+                        stringToScan(curPSM_->specName, curPSM_);
+                    }
+                    curPSM_->score = score;
+                    curPSM_->charge = item.chargeState;
+                    extractIonMobility(result, item, curPSM_);
 
-                PeptidePtr peptidePtr = item.peptidePtr;
-                for (const auto& peptideEvidencePtr : item.peptideEvidencePtr) {
-                    if (!peptideEvidencePtr->dbSequencePtr) {
-                        Verbosity::error("peptideEvidenceRef %s has null dbSequenceRef", peptideEvidencePtr->id.c_str());
-                        continue;
+                    PeptidePtr peptidePtr = item.peptidePtr;
+                    for (const auto& peptideEvidencePtr : item.peptideEvidencePtr) {
+                        if (!peptideEvidencePtr->dbSequencePtr) {
+                            Verbosity::error("peptideEvidenceRef %s has null dbSequenceRef", peptideEvidencePtr->id.c_str());
+                            continue;
+                        }
+                        const DBSequencePtr& dbSeq = peptideEvidencePtr->dbSequencePtr;
+                        if (!peptidePtr) peptidePtr = peptideEvidencePtr->peptidePtr;
+                        map<DBSequencePtr, Protein>::const_iterator j = proteins.find(dbSeq);
+                        if (j != proteins.end()) {
+                            curPSM_->proteins.insert(&j->second);
+                        } else {
+                            proteins[dbSeq] = Protein(dbSeq->accession);
+                            curPSM_->proteins.insert(&proteins[dbSeq]);
+                        }
                     }
-                    const DBSequencePtr& dbSeq = peptideEvidencePtr->dbSequencePtr;
-                    if (!peptidePtr) peptidePtr = peptideEvidencePtr->peptidePtr;
-                    map<DBSequencePtr, Protein>::const_iterator j = proteins.find(dbSeq);
-                    if (j != proteins.end()) {
-                        curPSM_->proteins.insert(&j->second);
-                    } else {
-                        proteins[dbSeq] = Protein(dbSeq->accession);
-                        curPSM_->proteins.insert(&proteins[dbSeq]);
-                    }
+                    extractModifications(peptidePtr, curPSM_);
+
+                    Verbosity::comment(V_DETAIL, "For file %s adding PSM: "
+                                       "scan '%s', charge %d, sequence '%s'.",
+                                       filename.c_str(), curPSM_->specName.c_str(),
+                                       curPSM_->charge, curPSM_->unmodSeq.c_str());
                 }
-                extractModifications(peptidePtr, curPSM_);
 
                 // add the psm to the map
-                Verbosity::comment(V_DETAIL, "For file %s adding PSM: "
-                                   "scan '%s', charge %d, sequence '%s'.",
-                                   filename.c_str(), curPSM_->specName.c_str(),
-                                   curPSM_->charge, curPSM_->unmodSeq.c_str());
                 map<string, vector<PSM*> >::iterator mapAccess =
                     fileMap_.find(filename);
-                if( mapAccess == fileMap_.end() ){ // not found, add the file
+                if (!curPSM_) {
+                    fileMap_.insert(make_pair(filename, vector<PSM*>()));
+                } else if( mapAccess == fileMap_.end() ){ // not found, add the file
                     vector<PSM*> tmpPsms(1, curPSM_);
                     fileMap_[filename] = tmpPsms;
                 } else {  // add this psm to existing file entry

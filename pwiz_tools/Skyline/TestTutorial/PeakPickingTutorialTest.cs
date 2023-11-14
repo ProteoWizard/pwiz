@@ -397,8 +397,7 @@ namespace pwiz.SkylineTestTutorial
                 while ((line = reader.ReadLine()) != null)
                 {
                     var fields = line.Split(TextUtil.CsvSeparator);
-                    double qvalue;
-                    if (double.TryParse(fields[qvalueColumnIndex], out qvalue))
+                    if (double.TryParse(fields[qvalueColumnIndex], out _))
                         qvalueCount++;
                 }
                 Assert.AreEqual(290, qvalueCount); // PrecursorResults field means 29 peptides * 5 replicates * 2 label types
