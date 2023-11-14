@@ -53,6 +53,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ResourceAssorter.cs" />
+    <Compile Include="ResourceFile.cs" />
     <Compile Include="ResourceIdentifiers.cs" />
     <Compile Include="ResourceReference.cs" />
   </ItemGroup>

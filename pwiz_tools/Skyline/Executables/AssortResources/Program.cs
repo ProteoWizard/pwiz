@@ -37,7 +37,18 @@ namespace AssortResources
                 return;
             }
 
-            var resourceAssorter = new ResourceAssorter(Path.GetDirectoryName(projectFile), projectFile, resourceFile);
+            // Look for any .csproj in the immediate subfolder of the main project
+            // Strings which are referenced by these other .csproj files will not get moved
+            var otherProjectPaths = new List<string>();
+            foreach (var subfolder in Directory.GetDirectories(Path.GetDirectoryName(projectFile)))
+            {
+                var otherProjectPath = Path.Combine(subfolder, Path.GetFileNameWithoutExtension(subfolder) + ".csproj");
+                if (File.Exists(otherProjectPath))
+                {
+                    otherProjectPaths.Add(otherProjectPath);
+                }
+            }
+            var resourceAssorter = new ResourceAssorter(projectFile, resourceFile, otherProjectPaths.ToArray());
             resourceAssorter.DoWork();
         }
     }

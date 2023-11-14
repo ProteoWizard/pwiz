@@ -16,20 +16,24 @@ namespace AssortResources
     {
         private Dictionary<string, HashSet<string>> _referencedResourcesByFolder = new Dictionary<string, HashSet<string>>();
 
-        public ResourceAssorter(string rootFolder, string csProjPath, string resourceFilePath)
+        public ResourceAssorter(string csProjPath, string resourceFilePath, params string[] otherProjectPaths)
         {
-            RootFolder = rootFolder;
             CsProjPath = csProjPath;
             ResourceFilePath = resourceFilePath;
             ResourceIdentifiers = ResourceIdentifiers.FromPath(ResourceFilePath);
-            CsProjFile = new CsProjFile(XDocument.Load(CsProjPath));
+            CsProjFile = CsProjFile.FromProjFilePath(csProjPath);
+            OtherProjectFiles = new List<CsProjFile>();
+            foreach (var otherProjectPath in otherProjectPaths)
+            {
+                OtherProjectFiles.Add(CsProjFile.FromProjFilePath(otherProjectPath));
+            }
         }
 
-        public string RootFolder { get; }
         public string CsProjPath { get; }
         public string ResourceFilePath { get; }
 
         public CsProjFile CsProjFile { get; }
+        public List<CsProjFile> OtherProjectFiles { get; }
 
         public ResourceIdentifiers ResourceIdentifiers { get; }
 
@@ -38,17 +42,21 @@ namespace AssortResources
             var result = new HashSet<string>();
             foreach (var file in files)
             {
-                var absolutePath = Path.Combine(RootFolder, file);
-                if (File.Exists(absolutePath))
-                {
-                    foreach (var reference in ResourceIdentifiers.GetResourceReferences(File.ReadAllText(absolutePath)))
-                    {
-                        result.Add(reference.ResourceIdentifier);
-                    }
-                }
+                result.UnionWith(GetReferencedResourcesInFile(file));
             }
 
             return result;
+        }
+
+        public IEnumerable<string> GetReferencedResourcesInFile(string absolutePath)
+        {
+            if (File.Exists(absolutePath))
+            {
+                foreach (var reference in ResourceIdentifiers.GetResourceReferences(File.ReadAllText(absolutePath)))
+                {
+                    yield return reference.ResourceIdentifier;
+                }
+            }
         }
 
         public void DoWork()
@@ -59,9 +67,22 @@ namespace AssortResources
             {
                 ProcessFolder(folder);
             }
+
+            var otherReferences = new HashSet<string>();
+            foreach (var otherProjectFile in OtherProjectFiles)
+            {
+                foreach (var sourceFile in otherProjectFile.ListAllSourceFiles())
+                {
+                    otherReferences.UnionWith(GetReferencedResourcesInFile(sourceFile));
+                }
+            }
             var uniqueReferences = new Dictionary<string, List<string>>();
             foreach (var resourceName in ResourceIdentifiers.Resources.Keys)
             {
+                if (otherReferences.Contains(resourceName))
+                {
+                    continue;
+                }
                 int count = 0;
                 string foundFolderPath = null;
                 foreach (var entry in _referencedResourcesByFolder)
@@ -125,7 +146,7 @@ namespace AssortResources
             string folderName;
             if (string.IsNullOrEmpty(folderPath))
             {
-                folderName = Path.GetFileNameWithoutExtension(RootFolder);
+                folderName = Path.GetFileNameWithoutExtension(CsProjFile.ProjectFolder);
             }
             else
             {
@@ -134,10 +155,9 @@ namespace AssortResources
             var newResourcesName = folderName + ResourceIdentifiers.ResourceFileName;
             var resourceFilePath = Path.Combine(folderPath, newResourcesName + ".resx");
             XDocument document;
-            var absoluteResourceFilePath = Path.Combine(RootFolder, resourceFilePath);
-            if (File.Exists(absoluteResourceFilePath))
+            if (File.Exists(resourceFilePath))
             {
-                document = XDocument.Load(absoluteResourceFilePath);
+                document = XDocument.Load(resourceFilePath);
             }
             else
             {
@@ -154,18 +174,17 @@ namespace AssortResources
                     document.Root.Add(ResourceIdentifiers.Resources[resourceIdentifier]);
                 }
             }
-            WriteDocument(document, absoluteResourceFilePath);
-            RunCustomTool(absoluteResourceFilePath);
+            WriteDocument(document, resourceFilePath);
+            RunCustomTool(resourceFilePath);
             foreach (var sourceFile in files)
             {
-                var absoluteSourceFile = Path.Combine(RootFolder, sourceFile);
-                if (File.Exists(absoluteSourceFile))
+                if (File.Exists(sourceFile))
                 {
-                    var code = File.ReadAllText(absoluteSourceFile);
+                    var code = File.ReadAllText(sourceFile);
                     var newCode = ResourceIdentifiers.ReplaceReferences(code, newResourcesName, resourceIdentifiers);
                     if (newCode != code)
                     {
-                        File.WriteAllText(absoluteSourceFile, newCode, Encoding.UTF8);
+                        File.WriteAllText(sourceFile, newCode, Encoding.UTF8);
                     }
                 }
             }
@@ -196,17 +215,7 @@ namespace AssortResources
         public void RunCustomTool(string filePath)
         {
             string baseName = Path.GetFileNameWithoutExtension(filePath);
-            var namespaceName = CsProjFile.RootNamespace;
-            string? folderName = Path.GetDirectoryName(GetRelativePath(filePath));
-            if (!string.IsNullOrEmpty(folderName))
-            {
-                if (namespaceName.Length > 0)
-                {
-                    namespaceName += '.';
-                }
-
-                namespaceName += folderName.Replace('\\','.');
-            }
+            var namespaceName = CsProjFile.GetNamespace(filePath);
             Directory.SetCurrentDirectory(Path.GetDirectoryName(filePath));
             var csharpProvider = new CSharpCodeProvider();
             CodeCompileUnit codeCompileUnit = StronglyTypedResourceBuilder.Create(filePath, baseName, namespaceName, csharpProvider, false, out _);
@@ -216,19 +225,6 @@ namespace AssortResources
             {
                 csharpProvider.GenerateCodeFromCompileUnit(codeCompileUnit, indentedTextWriter, new CodeGeneratorOptions());
             }
-        }
-
-        private string GetRelativePath(string path)
-        {
-            var rootFolder = RootFolder;
-            if (!rootFolder.EndsWith("\\"))
-            {
-                rootFolder += "\\";
-            }
-            var baseUri = new Uri(rootFolder);
-            var absoluteUri = new Uri(path);
-            string relativePath = Uri.UnescapeDataString(baseUri.MakeRelativeUri(absoluteUri).ToString());
-            return relativePath.Replace('/', Path.DirectorySeparatorChar);
         }
     }
 }

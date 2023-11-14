@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -7,8 +8,25 @@ namespace AssortResources
 {
     public class CsProjFile
     {
-        public CsProjFile(XDocument document)
+        public static CsProjFile FromProjFilePath(string projFile)
         {
+            var projectFolder = Path.GetDirectoryName(projFile)!;
+            if (!projectFolder.EndsWith("\\"))
+            {
+                projectFolder += "\\";
+            }
+            return new CsProjFile(projectFolder, XDocument.Load(projFile));
+        }
+        public CsProjFile(string filePath, XDocument document)
+        {
+            ProjectFilePath = filePath;
+            string projectFolder = Path.GetDirectoryName(filePath);
+            if (!projectFolder.EndsWith("\\"))
+            {
+                projectFolder += "\\";
+            }
+
+            ProjectFolder = projectFolder;
             Document = document;
             foreach (var el in document.Root!.Elements(ElementName("ItemGroup")))
             {
@@ -21,6 +39,9 @@ namespace AssortResources
 
             RootNamespace = GetRootNameSpace();
         }
+
+        public string ProjectFilePath { get; }
+        public string ProjectFolder { get; } 
 
         private string GetRootNameSpace()
         {
@@ -49,14 +70,15 @@ namespace AssortResources
                     string? include = (string?)compile.Attribute("Include");
                     if (include != null)
                     {
-                        yield return include;
+                        yield return GetAbsolutePath(include);
                     }
                 }
             }
         }
 
-        public void AddResourceFile(string relativeResourcePath)
+        public void AddResourceFile(string absoluteResourcePath)
         {
+            var relativeResourcePath = GetRelativePath(absoluteResourcePath);
             string resourceName = Path.GetFileNameWithoutExtension(relativeResourcePath);
             string folder = Path.GetDirectoryName(relativeResourcePath) ?? string.Empty;
             var designerName = resourceName + ".Designer.cs";
@@ -76,6 +98,45 @@ namespace AssortResources
         public static XName ElementName(string name)
         {
             return XName.Get(name, "http://schemas.microsoft.com/developer/msbuild/2003");
+        }
+
+        public string GetAbsolutePath(string path)
+        {
+            if (Path.IsPathRooted(path))
+            {
+                return path;
+            }
+
+            return Path.Combine(ProjectFolder, path);
+        }
+
+        public string GetRelativePath(string path)
+        {
+            if (!Path.IsPathRooted(path))
+            {
+                return path;
+            }
+            var baseUri = new Uri(ProjectFolder);
+            var absoluteUri = new Uri(path);
+            string relativePath = Uri.UnescapeDataString(baseUri.MakeRelativeUri(absoluteUri).ToString());
+            return relativePath.Replace('/', Path.DirectorySeparatorChar);
+        }
+
+        public string GetNamespace(string path)
+        {
+            var namespaceName = RootNamespace;
+            string? folderName = Path.GetDirectoryName(GetRelativePath(path));
+            if (!string.IsNullOrEmpty(folderName))
+            {
+                if (namespaceName.Length > 0)
+                {
+                    namespaceName += '.';
+                }
+
+                namespaceName += folderName.Replace('\\', '.');
+            }
+
+            return namespaceName;
         }
     }
 }
