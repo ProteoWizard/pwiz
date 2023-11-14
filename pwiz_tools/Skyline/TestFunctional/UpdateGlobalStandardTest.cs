@@ -387,7 +387,7 @@ namespace pwiz.SkylineTestFunctional
             var all = document.Molecules.SelectMany(peptideDocNode=>GetChromFileInfoIds(peptideDocNode.Results)
                 .Concat(peptideDocNode.TransitionGroups.SelectMany(tg => GetChromFileInfoIds(tg.Results)
                     .Concat(tg.Transitions.SelectMany(t => GetChromFileInfoIds(t.Results))))));
-            return all.Distinct(new IdentityEqualityComparer<ChromFileInfoId>());
+            return all.Distinct((IEqualityComparer<ChromFileInfoId>)ReferenceValue.EQUALITY_COMPARER);
         }
 
         private static IEnumerable<ChromFileInfoId> GetChromFileInfoIds<TItem>(Results<TItem> results) where TItem : ChromInfo

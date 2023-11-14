@@ -71,6 +71,7 @@ lib pwiz_data_msdata_core
         <library>/ext/boost//filesystem
         <library>/ext/boost//thread
         <library>/ext/zlib//z
+        [ mzmlb-build <library>mzmlb//pwiz_data_msdata_mzmlb ]
     : # default-build
     : # usage-requirements
         <library>pwiz_data_msdata_version
@@ -82,6 +83,7 @@ lib pwiz_data_msdata_core
         <library>/ext/boost//filesystem
         <library>/ext/boost//thread
         <library>/ext/zlib//z
+        [ mzmlb-build <library>mzmlb//pwiz_data_msdata_mzmlb ]
     ;
 
 lib pwiz_data_msdata
