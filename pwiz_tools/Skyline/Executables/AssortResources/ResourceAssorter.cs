@@ -1,4 +1,6 @@
 ﻿using System;
+using System.CodeDom;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -47,11 +49,6 @@ namespace AssortResources
             }
 
             return result;
-        }
-
-        public IEnumerable<string> GetSourceFilesInPath(string path)
-        {
-            return Directory.GetFiles(path, "*.cs");
         }
 
         public void DoWork()
@@ -172,6 +169,7 @@ namespace AssortResources
                     }
                 }
             }
+            Console.Error.WriteLine("Moved {0} resources into {1}", resourceIdentifiers.Count, resourceFilePath);
         }
 
         public static XDocument GetBlankResourceDocument()
@@ -197,10 +195,9 @@ namespace AssortResources
 
         public void RunCustomTool(string filePath)
         {
-            var fullPath = Path.Combine(RootFolder, filePath);
             string baseName = Path.GetFileNameWithoutExtension(filePath);
             var namespaceName = CsProjFile.RootNamespace;
-            string folderName = Path.GetDirectoryName(filePath);
+            string? folderName = Path.GetDirectoryName(GetRelativePath(filePath));
             if (!string.IsNullOrEmpty(folderName))
             {
                 if (namespaceName.Length > 0)
@@ -210,8 +207,28 @@ namespace AssortResources
 
                 namespaceName += folderName.Replace('\\','.');
             }
-            Directory.SetCurrentDirectory(Path.GetDirectoryName(fullPath));
-            StronglyTypedResourceBuilder.Create(fullPath, baseName, namespaceName, new CSharpCodeProvider(), false, out _);
+            Directory.SetCurrentDirectory(Path.GetDirectoryName(filePath));
+            var csharpProvider = new CSharpCodeProvider();
+            CodeCompileUnit codeCompileUnit = StronglyTypedResourceBuilder.Create(filePath, baseName, namespaceName, csharpProvider, false, out _);
+            var designerCsFileName = Path.Combine(Path.GetDirectoryName(filePath), baseName + ".designer.cs");
+            using (var writer = new StreamWriter(designerCsFileName))
+            using (var indentedTextWriter = new IndentedTextWriter(writer, "    "))
+            {
+                csharpProvider.GenerateCodeFromCompileUnit(codeCompileUnit, indentedTextWriter, new CodeGeneratorOptions());
+            }
+        }
+
+        private string GetRelativePath(string path)
+        {
+            var rootFolder = RootFolder;
+            if (!rootFolder.EndsWith("\\"))
+            {
+                rootFolder += "\\";
+            }
+            var baseUri = new Uri(rootFolder);
+            var absoluteUri = new Uri(path);
+            string relativePath = Uri.UnescapeDataString(baseUri.MakeRelativeUri(absoluteUri).ToString());
+            return relativePath.Replace('/', Path.DirectorySeparatorChar);
         }
     }
 }
