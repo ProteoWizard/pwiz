@@ -132,6 +132,7 @@ namespace MSConvertGUI
 
             var formatText = false;
             var formatMzMl = false;
+            var formatMzMlB = false;
             var formatMzXml = false;
             var formatMz5 = false;
             var formatMgf = false;
@@ -168,6 +169,9 @@ namespace MSConvertGUI
                         break;
                     case "--mzML":
                         formatMzMl = true;
+                        break;
+                    case "--mzMLb":
+                        formatMzMlB = true;
                         break;
                     case "--mzXML":
                         formatMzXml = true;
@@ -358,6 +362,7 @@ namespace MSConvertGUI
                 + (formatMzMl ? 1 : 0)
                 + (formatMzXml ? 1 : 0)
                 + (formatMz5 ? 1 : 0)
+                + (formatMzMlB ? 1 : 0)
                 + (formatMgf ? 1 : 0)
                 + (formatMs1 ? 1 : 0)
                 + (formatCms1 ? 1 : 0)
@@ -368,6 +373,7 @@ namespace MSConvertGUI
             if (formatMzMl) config.WriteConfig.format = MSDataFile.Format.Format_mzML;
             if (formatMzXml) config.WriteConfig.format = MSDataFile.Format.Format_mzXML;
             if (formatMz5) config.WriteConfig.format = MSDataFile.Format.Format_MZ5;
+            if (formatMzMlB) config.WriteConfig.format = MSDataFile.Format.Format_mzMLb;
             if (formatMgf) config.WriteConfig.format = MSDataFile.Format.Format_MGF;
             if (formatMs1) config.WriteConfig.format = MSDataFile.Format.Format_MS1;
             if (formatCms1) config.WriteConfig.format = MSDataFile.Format.Format_CMS1;
@@ -392,6 +398,9 @@ namespace MSConvertGUI
                     case MSDataFile.Format.Format_MZ5:
                         config.Extension = ".mz5";
                         break;
+                    case MSDataFile.Format.Format_mzMLb:
+                        config.Extension = ".mzMLb";
+                        break;    
                     case MSDataFile.Format.Format_MGF:
                         config.Extension = ".mgf";
                         break;
@@ -529,6 +538,7 @@ namespace MSConvertGUI
                                 switch (config.WriteConfig.format)
                                 {
                                     case MSDataFile.Format.Format_MZ5:
+                                    case MSDataFile.Format.Format_mzMLb:
                                     case MSDataFile.Format.Format_mzML:
                                         break;
                                     default:

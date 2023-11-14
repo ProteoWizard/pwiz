@@ -106,6 +106,7 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator15 = new System.Windows.Forms.ToolStripSeparator();
             this.zoomSpectrumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator27 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.splitPeptideList)).BeginInit();
             this.splitPeptideList.Panel1.SuspendLayout();
             this.splitPeptideList.Panel2.SuspendLayout();
@@ -279,6 +280,7 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.textPeptide, "textPeptide");
             this.textPeptide.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.textPeptide.Name = "textPeptide";
+            this.toolTip1.SetToolTip(this.textPeptide, resources.GetString("textPeptide.ToolTip"));
             this.textPeptide.TextChanged += new System.EventHandler(this.textPeptide_TextChanged);
             this.textPeptide.KeyDown += new System.Windows.Forms.KeyEventHandler(this.PeptideTextBox_KeyDown);
             // 
@@ -817,5 +819,6 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.ToolStripButton btnCopy;
         private System.Windows.Forms.ToolStripButton btnSave;
         private System.Windows.Forms.ToolStripButton btnPrint;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }
