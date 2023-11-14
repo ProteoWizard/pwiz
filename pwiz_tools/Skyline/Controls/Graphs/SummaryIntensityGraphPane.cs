@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
-using System.Web.ModelBinding;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -60,7 +59,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 xAxisTitle += @" (" + paneKey.IsotopeLabelType + @")";
             }
             XAxis.Title.Text = xAxisTitle;
-            XAxis.Type = AxisType.Text;
+            XAxis.Type = AxisType.Linear;
             Document = graphSummary.DocumentUIContainer.DocumentUI;
 
             AnyMolecules = Document.HasPeptides;
@@ -409,9 +408,6 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 YAxis.Scale.MaxAuto = true;
             }
-
-            XAxis.Scale.TextLabels = _graphData.Labels;
-            ScaleAxisLabels();
 
             AxisChange();
         }
