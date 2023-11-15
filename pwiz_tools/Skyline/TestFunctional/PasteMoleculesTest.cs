@@ -123,6 +123,7 @@ namespace pwiz.SkylineTestFunctional
         const string caffeineSMILES = "Cn1cnc2n(C)c(=O)n(C)c(=O)c12";
         const string caffeineKEGG = "C07481";
         const string caffeineFormula = "C8H10N4O2";
+        const string caffeineFormulaUnicode = "C\u2088H\u2081\u2080N\u2084O\u2082"; // Unicode subscripts
         const string caffeineFragment = "C6H5N2O"; // Not really a known fragment of caffeine
 
         const double precursorMzAtZNeg2 = 96.0329118;
@@ -645,6 +646,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 docEmpty = NewDocument();
                 line1 = BuildTestLine(imTypeIsDrift);
+                if (imTypeIsDrift)
+                {
+                    // Nothing to do with imType, just want to alternate styles here
+                    line1 = line1.Replace(caffeineFormula+"\t", caffeineFormulaUnicode + "\t"); // Test with unicode subscript numbers
+                }
                 var expectedIM = imTypeIsDrift ? precursorDT : compensationVoltage;
                 double? expectedCV = imTypeIsDrift ? (double?)null : compensationVoltage;
                 var expectedTypeIM = imTypeIsDrift ? eIonMobilityUnits.drift_time_msec : eIonMobilityUnits.compensation_V;
