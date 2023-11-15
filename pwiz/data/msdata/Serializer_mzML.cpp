@@ -31,6 +31,10 @@
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#ifndef WITHOUT_MZMLB
+#include "mzmlb/Connection_mzMLb.hpp"
+using namespace pwiz::msdata::mzmlb;
+#endif
 
 namespace pwiz {
 namespace msdata {
@@ -162,7 +166,12 @@ void Serializer_mzML::Impl::write(ostream& os, const MSData& msd,
 
     // <indexedmzML> start
 
+#ifndef WITHOUT_MZMLB
+    boost::iostreams::stream<Connection_mzMLb>* mzMLb_os = dynamic_cast<boost::iostreams::stream<Connection_mzMLb>*>(&os);
+    if (config_.indexed && !mzMLb_os)
+#else    
     if (config_.indexed)
+#endif
     {
         XMLWriter::Attributes attributes; 
         attributes.push_back(make_pair("xmlns", "http://psi.hupo.org/ms/mzml"));
@@ -186,8 +195,54 @@ void Serializer_mzML::Impl::write(ostream& os, const MSData& msd,
         return;
 
     // <indexedmzML> end
+    
+#ifndef WITHOUT_MZMLB
+    if (mzMLb_os)
+    {
+        if (!spectrumPositions.empty())
+        {
+            (*mzMLb_os)->write("mzML_spectrumIndex", &spectrumPositions[0], spectrumPositions.size());
+            
+            ostringstream idRefs;
+            ostringstream spotIDs;
+            bool hasSpotIDs = false;
+ 
+            for (unsigned int i = 0; i < spectrumPositions.size() - 1; ++i)
+            {
+                const SpectrumIdentity& si = msd.run.spectrumListPtr->spectrumIdentity(i);
+                idRefs.write(si.id.c_str(), si.id.size() + 1);
 
+                if(!si.spotID.empty())
+                {
+                    spotIDs.write(si.spotID.c_str(), si.spotID.size() + 1);
+                    hasSpotIDs = true;
+                }
+            }
+            
+            (*mzMLb_os)->write("mzML_spectrumIndex_idRef", idRefs.str().c_str(), idRefs.str().size());
+            
+            if (hasSpotIDs)
+                (*mzMLb_os)->write("mzML_spectrumIndex_spotID", spotIDs.str().c_str(), spotIDs.str().size());
+        }
+        
+        if (!chromatogramPositions.empty())
+        {
+            (*mzMLb_os)->write("mzML_chromatogramIndex", &chromatogramPositions[0], chromatogramPositions.size());
+            
+            ostringstream idRefs;
+            for (unsigned int i = 0; i < chromatogramPositions.size() - 1; ++i)
+            {
+                const ChromatogramIdentity& ci = msd.run.chromatogramListPtr->chromatogramIdentity(i);
+                idRefs.write(ci.id.c_str(), ci.id.size() + 1);
+            }
+            
+            (*mzMLb_os)->write("mzML_chromatogramIndex_idRef", idRefs.str().c_str(), idRefs.str().size());
+        }
+    }
+    else if (config_.indexed)
+#else
     if (config_.indexed)
+#endif
     {
         stream_offset indexListOffset = xmlWriter.positionNext();
 

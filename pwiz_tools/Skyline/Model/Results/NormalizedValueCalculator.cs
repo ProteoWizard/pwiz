@@ -29,12 +29,12 @@ namespace pwiz.Skyline.Model.Results
     public class NormalizedValueCalculator
     {
         private readonly Lazy<NormalizationData> _normalizationData;
-        private readonly Dictionary<ChromFileInfoId, FileInfo> _fileInfos;
+        private readonly Dictionary<ReferenceValue<ChromFileInfoId>, FileInfo> _fileInfos;
         public NormalizedValueCalculator(SrmDocument document)
         {
             Document = document;
             _normalizationData = new Lazy<NormalizationData>(()=>NormalizationData.GetNormalizationData(document, false, null));
-            _fileInfos = new Dictionary<ChromFileInfoId, FileInfo>(new IdentityEqualityComparer<ChromFileInfoId>());
+            _fileInfos = new Dictionary<ReferenceValue<ChromFileInfoId>, FileInfo>();
             if (document.MeasuredResults != null)
             {
                 var chromatograms = document.Settings.MeasuredResults.Chromatograms;

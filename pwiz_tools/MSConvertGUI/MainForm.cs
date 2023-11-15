@@ -568,7 +568,6 @@ namespace MSConvertGUI
                         String optimizationArgs = DemuxTypeBox.Text == "Overlap Only" ? " optimization=overlap_only" : String.Empty;
                         demuxArgs += optimizationArgs;
                     }
-
                     if (!String.IsNullOrEmpty(DemuxMassErrorValue.Text) &&
                         !String.IsNullOrEmpty(DemuxMassErrorTypeBox.Text))
                     {
@@ -753,6 +752,9 @@ namespace MSConvertGUI
                 case "mzXML":
                     commandLine.Append("--mzXML|");
                     break;
+                case "mzMLb":
+                    commandLine.Append("--mzMLb|");
+                    break;
                 case "mz5":
                     commandLine.Append("--mz5|");
                     break;
@@ -851,6 +853,7 @@ namespace MSConvertGUI
                         OutputExtension = words[++i];
                         break;
                     case "--mzXML":
+                    case "--mzMLb":
                     case "--mz5":
                     case "--mgf":
                     case "--text":
