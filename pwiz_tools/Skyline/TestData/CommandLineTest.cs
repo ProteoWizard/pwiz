@@ -737,11 +737,11 @@ namespace pwiz.SkylineTestData
             var expectedIncludeProperties = TestFilesDir.GetTestPath("expected_annotations_include_properties.csv");
             var expectedIncludeObjects = TestFilesDir.GetTestPath("expected_annotations_include_objects.csv");
             var expectedAnnotationsNoBlankRows = TestFilesDir.GetTestPath("expected_annotations_no_blank_rows.csv");
-            const string newDocumentName = "new.sky";
+            var newDocumentPath = TestFilesDir.GetTestPath("new.sky");
             const string invalidName = "-la";
 
             // Test error (invalid exclude-object name)
-            var output = RunCommand("--new=" + newDocumentName, // Create a document
+            var output = RunCommand("--new=" + newDocumentPath, // Create a document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
                 "--exp-annotations=" + exportPath, // Export annotations
                 "--exp-annotations-include-object=" + invalidName // Test specifying an invalid object name
@@ -750,7 +750,7 @@ namespace pwiz.SkylineTestData
                 invalidName,
                 "--exp-annotations-include-object", string.Join(", ", ElementHandler.GetAllHandlers().Select(c => c.Name))), output);
             // Test error (no annotations and not including properties)
-            output = RunCommand("--new=" + newDocumentName, // Create a document
+            output = RunCommand("--new=" + newDocumentPath, // Create a document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
                 "--exp-annotations=" + exportPath // Export annotations
             );
