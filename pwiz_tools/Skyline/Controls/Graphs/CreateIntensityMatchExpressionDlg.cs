@@ -24,7 +24,6 @@ using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
-using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -92,18 +91,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     new MatchOptionStringPair(MatchOption.MoleculeGroupName,
                         GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Molecule_List_Name));
             }
-
-            // Fold Change
-            AddComboBoxItems(foldChangeComboBox,
-                new MatchOptionStringPair(null, GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_None),
-                new MatchOptionStringPair(MatchOption.BelowLeftCutoff, GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Below_left_cutoff),
-                new MatchOptionStringPair(MatchOption.AboveRightCutoff, GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Above_right_cutoff));
-
-            // PValue
-            AddComboBoxItems(pValueComboBox,
-                new MatchOptionStringPair(null, GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_None),
-                new MatchOptionStringPair(MatchOption.BelowPValueCutoff, GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Below),
-                new MatchOptionStringPair(MatchOption.AbovePValueCutoff, GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Above));
         }
 
         private void AddComboBoxItems(ComboBox comboBox, params MatchOptionStringPair[] items)
@@ -118,9 +105,6 @@ namespace pwiz.Skyline.Controls.Graphs
             var matchExpr = rgbHexColor.MatchExpression ?? _formattingDlg.GetDefaultMatchExpression(rgbHexColor.Expression);
 
             matchComboBox.SelectedItem = GetSelectedItem(matchComboBox, matchExpr.matchOptions);
-            foldChangeComboBox.SelectedItem =
-                GetSelectedItem(foldChangeComboBox, matchExpr.matchOptions);
-            pValueComboBox.SelectedItem = GetSelectedItem(pValueComboBox, matchExpr.matchOptions);
 
             expressionTextBox.Text = matchExpr.RegExpr;
         }
@@ -171,15 +155,9 @@ namespace pwiz.Skyline.Controls.Graphs
             var regExpr = expressionTextBox.Text;
             var matchOptions = new List<MatchOption>();
 
-            var selected = (MatchOptionStringPair)foldChangeComboBox.SelectedItem;
-            if (selected.MatchOption.HasValue)
-                matchOptions.Add(selected.MatchOption.Value);
 
-            selected = (MatchOptionStringPair)pValueComboBox.SelectedItem;
-            if (selected.MatchOption.HasValue)
-                matchOptions.Add(selected.MatchOption.Value);
 
-            selected = (MatchOptionStringPair)matchComboBox.SelectedItem;
+            var selected = (MatchOptionStringPair)matchComboBox.SelectedItem;
             if (selected.MatchOption.HasValue)
                 matchOptions.Add(selected.MatchOption.Value);
 
@@ -325,28 +303,6 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get { return expressionTextBox.Text; }
             set { expressionTextBox.Text = value; }
-        }
-
-        public MatchOptionStringPair PValueSelectedItem
-        {
-            get { return (MatchOptionStringPair)pValueComboBox.SelectedItem; }
-            set { pValueComboBox.SelectedItem = value; }
-        }
-
-        public IEnumerable<MatchOptionStringPair> PValueItems
-        {
-            get { return pValueComboBox.Items.Cast<MatchOptionStringPair>(); }
-        }
-
-        public MatchOptionStringPair FoldChangeSelectedItem
-        {
-            get { return (MatchOptionStringPair)foldChangeComboBox.SelectedItem; }
-            set { foldChangeComboBox.SelectedItem = value; }
-        }
-
-        public IEnumerable<MatchOptionStringPair> FoldChangeItems
-        {
-            get { return foldChangeComboBox.Items.Cast<MatchOptionStringPair>(); }
         }
 
         public MatchOptionStringPair MatchSelectedItem

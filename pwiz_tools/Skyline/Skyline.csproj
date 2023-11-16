@@ -378,6 +378,7 @@
     <Compile Include="Controls\Graphs\CreateIntensityMatchExpressionDlg.Designer.cs">
       <DependentUpon>CreateIntensityMatchExpressionDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\DotPlotUtil.cs" />
     <Compile Include="Controls\Graphs\ExportMethodScheduleGraph.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2476,6 +2477,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\ImportResultsRetryCountdownDlg.zh-CHS.resx">
       <DependentUpon>ImportResultsRetryCountdownDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\IntensityGraphFormattingDlg.resx">
+      <DependentUpon>IntensityGraphFormattingDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\MsGraphExtension.ja.resx">
       <DependentUpon>MsGraphExtension.cs</DependentUpon>

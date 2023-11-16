@@ -13,6 +13,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -38,8 +39,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool AnyProteomic;
         public bool AnyMolecules;
         public SrmDocument Document;
-        private readonly List<LabeledPoint> _labeledPoints;
-        private ProteinAbundanceBindingSource _bindingSource;
+        private List<ProteinAbundanceBindingSource.ProteinAbundanceRow> _proteinAbundanceRows;
+        private readonly List<DotPlotUtil.LabeledPoint> _labeledPoints;
 
         public GroupComparisonModel GroupComparisonModel;
         private GroupComparisonDef GroupComparisonDef
@@ -61,32 +62,17 @@ namespace pwiz.Skyline.Controls.Graphs
             XAxis.Title.Text = xAxisTitle;
             XAxis.Type = AxisType.Linear;
             Document = graphSummary.DocumentUIContainer.DocumentUI;
-
-            AnyMolecules = Document.HasPeptides;
-            AnyProteomic = Document.HasSmallMolecules;
-            GroupComparisonModel = new GroupComparisonModel(graphSummary.DocumentUIContainer, "IntensityGraphGroupComparison");
-            _bindingSource = new ProteinAbundanceBindingSource(GroupComparisonModel);
-            _labeledPoints = new List<LabeledPoint>();
+            XAxis.Scale.Max = Document.MoleculeGroups.Count();
+            AnyMolecules = Document.HasSmallMolecules;
+            AnyProteomic = Document.HasPeptides;
+            GroupComparisonModel = new GroupComparisonModel(graphSummary.DocumentUIContainer, @"IntensityGraphGroupComparison");
+            _labeledPoints = new List<DotPlotUtil.LabeledPoint>();
         }
 
         protected override int SelectedIndex
         {
             get { return _graphData != null ? _graphData.SelectedIndex : -1; }
         }
-
-        // public void Select(IdentityPath identityPath)
-        // {
-        //     var skylineWindow = SkylineWindow.;
-        //     if (skylineWindow == null)
-        //         return;
-        //
-        //     var alreadySelected = IsPathSelected(skylineWindow.SelectedPath, identityPath);
-        //     if (alreadySelected)
-        //         skylineWindow.SequenceTree.SelectedNode = null;
-        //
-        //     skylineWindow.SelectedPath = identityPath;
-        //     skylineWindow.UpdateGraphPanes();
-        // }
 
         protected override IdentityPath GetIdentityPath(CurveItem curveItem, int barIndex)
         {
@@ -95,19 +81,9 @@ namespace pwiz.Skyline.Controls.Graphs
             return null;
         }
 
-        protected List<RgbHexColor> MakeMatchingList()
-        {
-            var color = new RgbHexColor(Color.Black);
-            var list = new List<RgbHexColor>();
-            foreach (var protein in Document.MoleculeGroups)
-            {
-                var row = new RgbHexColor();
-            }
-            return new List<RgbHexColor>();
-        }
         protected void ShowFormattingDialog()
         {
-            var proteinAbundanceRows = getProteinAbundanceRows().ToArray();
+            var proteinAbundanceRows = GetProteinAbundanceRows().ToArray();
             // This list will later be used as a BindingList, so we have to create a mutable clone
             var copy = GroupComparisonDef.ColorRows.Select(r => (MatchRgbHexColor)r.Clone()).ToList();
             var window = GraphSummary.Window;
@@ -116,7 +92,7 @@ namespace pwiz.Skyline.Controls.Graphs
                        proteinAbundanceRows, 
                        rows  =>
                        {
-                           MakeMatchingList();
+                           //TODO can we just use ChangeColorRows here instead
                            EditGroupComparisonDlg.ChangeGroupComparisonDef(false, GroupComparisonModel, GroupComparisonDef.ChangeColorRows(rows));
                            UpdateGraph(false);
                        }))
@@ -128,25 +104,52 @@ namespace pwiz.Skyline.Controls.Graphs
             ShowingFormattingDlg = false;
         }
 
-        private List<ProteinAbundanceBindingSource.ProteinAbundanceRow> getProteinAbundanceRows()
+        private static string GetProteinName(PeptideGroupDocNode pepGroupDocNode, SrmDocument document)
         {
-            var list = new List<ProteinAbundanceBindingSource.ProteinAbundanceRow>();
-            var container = new MemoryDocumentContainer();
-            container.SetDocument(Document, null);
-            var schema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
-            foreach (var pepGroupDocNode in Document.MoleculeGroups)
+            if (pepGroupDocNode.IsProteomic)
             {
+                var container = new MemoryDocumentContainer();
+                container.SetDocument(document, null);
+                var dataSchema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
                 var path = new IdentityPath(IdentityPath.ROOT, pepGroupDocNode.PeptideGroup);
-                Protein protein = new Protein(schema, path);
-                var proteinAbundances = protein.GetProteinAbundances();
-                var proteinAbundanceResult = new ProteinAbundanceBindingSource.ProteinAbundanceResult(proteinAbundances[1].Abundance);
-                var groupIdentifier = GroupIdentifier.MakeGroupIdentifier("control");
-                var replicateCount = proteinAbundances.Count();
-                var row = new ProteinAbundanceBindingSource.ProteinAbundanceRow(protein,groupIdentifier, replicateCount, proteinAbundanceResult, new Dictionary<Replicate, ProteinAbundanceBindingSource.ReplicateRow>());
-                list.Add(row);
+                var protein = new Protein(dataSchema, path);
+                return GetProteinName(protein);
             }
 
-            return list;
+            return pepGroupDocNode.Name;
+        }
+        // TODO consider what will happen when document changes in the background
+        // TODO add replicate number as an argument?
+        private List<ProteinAbundanceBindingSource.ProteinAbundanceRow> GetProteinAbundanceRows()
+        {
+            if (_proteinAbundanceRows == null)
+            {
+                var list = new List<ProteinAbundanceBindingSource.ProteinAbundanceRow>();
+                var container = new MemoryDocumentContainer();
+                container.SetDocument(Document, null);
+                var dataSchema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
+                foreach (var pepGroupDocNode in Document.MoleculeGroups)
+                {
+                    var path = new IdentityPath(IdentityPath.ROOT, pepGroupDocNode.PeptideGroup);
+                    var protein = new Protein(dataSchema, path);
+                    // if (!protein.GetProteinAbundances().TryGetValue(1, out var abundanceValue)) //TODO use the actual replicate number here
+                    // {
+                    //     continue;
+                    // }
+                    var proteinAbundances = protein.GetProteinAbundances();
+                    var proteinAbundanceResult =
+                        new ProteinAbundanceBindingSource.ProteinAbundanceResult(proteinAbundances[1].Abundance);
+                    var groupIdentifier = GroupIdentifier.MakeGroupIdentifier(@"control");
+                    var replicateCount = proteinAbundances.Count;
+                    var row = new ProteinAbundanceBindingSource.ProteinAbundanceRow(protein, groupIdentifier,
+                        replicateCount, proteinAbundanceResult,
+                        new Dictionary<Replicate, ProteinAbundanceBindingSource.ReplicateRow>());
+                    list.Add(row);
+                }
+                _proteinAbundanceRows = list;
+            }
+
+            return _proteinAbundanceRows;
         }
         protected override void ChangeSelection(int selectedIndex, IdentityPath identityPath)
         {
@@ -154,6 +157,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 GraphSummary.StateProvider.SelectedPath = _graphData.XScalePaths[selectedIndex];
         }
 
+        private bool IsSelected()
+        {
+            var window = GraphSummary.Window;
+            return window != null ;
+        }
         public override void UpdateGraph(bool selectionChanged)
         {
             Clear();
@@ -169,12 +177,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
+            var document = GraphSummary.DocumentUIContainer.DocumentUI;
 
             var displayType = GraphChromatogram.GetDisplayType(document, selectedTreeNode);
-            var rows = getProteinAbundanceRows();
+            var rows = GetProteinAbundanceRows();
             _graphData = CreateGraphData(document, selectedProtein, displayType, rows);
 
+            // For proper z-order, add the selected points first, then the matched points, then the unmatched points
             foreach (var pointPairList in _graphData.PointPairLists)
             {
                 var pointList = pointPairList;
@@ -191,14 +200,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     if (matchedPoints.Any())
                     {
-                        AddPoints(new PointPairList(matchedPoints), colorRow.Color, PointSizeToFloat(row.PointSize), row.Labeled, row.PointSymbol);
+                        AddPoints(new PointPairList(matchedPoints), colorRow.Color, DotPlotUtil.PointSizeToFloat(row.PointSize), row.Labeled, row.PointSymbol);
                         pointList = new PointPairList(pointPairList.Except(matchedPoints).ToArray());
                     }
                 }
-                AddPoints(new PointPairList(pointList), Color.Gray, PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
-                //var curveItem = CreateLineItem(null, pointList, Color.Black);
-                //curveItem = CreateLineItem(null, pointPairList, Color.Black);
-                //CurveList.Add(curveItem);
+                AddPoints(new PointPairList(pointList), Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
             }
 
             if (ShowSelection && SelectedIndex != -1)
@@ -209,7 +215,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     IsClippedToChartRect = true,
                     Line = new Line() { Width = 2, Color = Color.Black, Style = DashStyle.Dash }
                 });
-                GraphObjList.Add(new TextObj(_graphData.SelectedName, SelectedIndex, selectedY));
+                GraphObjList.Add(new TextObj(_graphData.SelectedName, SelectedIndex +1, selectedY));
             }
 
             UpdateAxes();
@@ -220,10 +226,10 @@ namespace pwiz.Skyline.Controls.Graphs
         }
         private void AddPoints(PointPairList points, Color color, float size, bool labeled, PointSymbol pointSymbol, bool selected = false)
         {
-            var symbolType = PointSymbolToSymbolType(pointSymbol);
+            var symbolType = DotPlotUtil.PointSymbolToSymbolType(pointSymbol);
 
             LineItem lineItem;
-            if (HasOutline(pointSymbol))
+            if (DotPlotUtil.HasOutline(pointSymbol))
             {
                 lineItem = new LineItem(null, points, Color.Black, symbolType)
                 {
@@ -245,7 +251,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 foreach (var point in points)
                 {
                     var label = CreateLabel(point, color, size);
-                    _labeledPoints.Add(new LabeledPoint(point, label, selected));
+                    _labeledPoints.Add(new DotPlotUtil.LabeledPoint(point, label, selected));
                     GraphObjList.Add(label);
                 }
             }
@@ -258,89 +264,27 @@ namespace pwiz.Skyline.Controls.Graphs
             var row = point.Tag as ProteinAbundanceBindingSource.ProteinAbundanceRow;
             if (row == null)
                 return null;
-
-            //var text = MatchExpression.GetProteinText(row.Protein, MatchOption.ProteinName); //TODO use all protein names here
-            var text = row.Protein.Name;
+            var text = GetProteinName(row.Protein);
 
             var textObj = new TextObj(text, point.X, point.Y, CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
             {
                 IsClippedToChartRect = true,
-                FontSpec = CreateFontSpec(color, size),
+                FontSpec = DotPlotUtil.CreateFontSpec(color, size),
                 ZOrder = ZOrder.A_InFront
             };
 
             return textObj;
         }
 
-        public static FontSpec CreateFontSpec(Color color, float size)
+        private static string GetProteinName(Protein protein)
         {
-            return new FontSpec(@"Arial", size, color, false, false, false, Color.Empty, null, FillType.None)
-            {
-                Border = { IsVisible = false }
-            };
+            var displayMode = Helpers.ParseEnum(Settings.Default.ShowPeptidesDisplayMode,
+                ProteinMetadataManager.ProteinDisplayMode.ByName);
+            return MatchExpression.GetProteinText(protein, displayMode);
         }
 
         //TODO centralize with volcano plot
-        protected static CurveItem CreateLineItem(string label, PointPairList pointPairList, Color color)
-        {
-            return new LineItem(null, pointPairList, color, SymbolType.Circle)
-            {
-                Line = { IsVisible = false },
-                Symbol = { Border = { IsVisible = false }, Fill = new Fill(color), Size = 2, IsAntiAlias = true }
-            };
-        }
 
-        public static SymbolType PointSymbolToSymbolType(PointSymbol symbol)
-        {
-            switch (symbol)
-            {
-                case PointSymbol.Circle:
-                    return SymbolType.Circle;
-                case PointSymbol.Square:
-                    return SymbolType.Square;
-                case PointSymbol.Triangle:
-                    return SymbolType.Triangle;
-                case PointSymbol.TriangleDown:
-                    return SymbolType.TriangleDown;
-                case PointSymbol.Diamond:
-                    return SymbolType.Diamond;
-                case PointSymbol.XCross:
-                    return SymbolType.XCross;
-                case PointSymbol.Plus:
-                    return SymbolType.Plus;
-                case PointSymbol.Star:
-                    return SymbolType.Star;
-                default:
-                    return SymbolType.Circle;
-            }
-        }
-
-        private bool HasOutline(PointSymbol pointSymbol)
-        {
-            return pointSymbol == PointSymbol.Circle || pointSymbol == PointSymbol.Square ||
-                   pointSymbol == PointSymbol.Triangle || pointSymbol == PointSymbol.TriangleDown ||
-                   pointSymbol == PointSymbol.Diamond;
-        }
-        public static float PointSizeToFloat(PointSize pointSize)
-        {
-            //return 12.0f + 2.0f * ((int) pointSize - 2);
-            return ((GraphFontSize[])GraphFontSize.FontSizes)[(int)pointSize].PointSize;
-        }
-
-        public class LabeledPoint
-        {
-            public LabeledPoint(PointPair point, TextObj label, bool isSelected)
-            {
-                Point = point;
-                Label = label;
-                IsSelected = isSelected;
-            }
-
-            public PointPair Point { get; private set; }
-            public TextObj Label { get; private set; }
-
-            public bool IsSelected { get; private set; }
-        }
 
         protected abstract GraphData CreateGraphData(SrmDocument document, PeptideGroupDocNode selectedProtein, DisplayTypeChrom displayType, List<ProteinAbundanceBindingSource.ProteinAbundanceRow> rows);
 
@@ -379,10 +323,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (!_graphData.MinY.HasValue && aggregateOp.Cv)
             {
-                if (_graphData.MaxCVSetting != 0)
+                if (_graphData.MaxCvSetting != 0)
                 {
                     YAxis.Scale.MaxAuto = false;
-                    YAxis.Scale.Max = _graphData.MaxCVSetting;
+                    YAxis.Scale.Max = _graphData.MaxCvSetting;
                 }
                 else if (!IsZoomed && !YAxis.Scale.MaxAuto)
                 {
@@ -451,30 +395,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     var graphPointData = new GraphPointData(row);
                     listPoints.Add(graphPointData);
                 }
-                // foreach (PeptideGroupDocNode nodeGroupPep in document.MoleculeGroups)
-                // {
-                //     if (AreaGraphController.AreaScope == AreaScope.protein)
-                //     {
-                //         if (!ReferenceEquals(nodeGroupPep, selectedProtein))
-                //             continue;
-                //     }
-                //
-                //     var graphPointData = new GraphPointData(nodeGroupPep);
-                //     listPoints.Add(graphPointData);
-                // }
 
-                // listPoints = new List<GraphPointData>();
-                // foreach (var row in rows)
-                // {
-                //     if (AreaGraphController.AreaScope == AreaScope.protein)
-                //     {
-                //         if (!ReferenceEquals(row, selectedProtein))
-                //             continue;
-                //     }
-                //
-                //     var graphPointData = new GraphPointData(row.ProteinAbundanceResult);
-                //     listPoints.Add(graphPointData);
-                // }
                 // Sort into correct order
                 listPoints.Sort(CompareGroupAreas);
 
@@ -540,7 +461,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         selectedIndex = labels.Count - 1;
                         SelectedY = dataPoint.AreaGroup;
-                        SelectedName = dataPoint.NodePepGroup.Name;
+                        SelectedName = GetProteinName(dataPoint.NodePepGroup, document);
                         SelectedMaxY = groupMaxY;
                         SelectedMinY = groupMinY;
                     }
@@ -557,7 +478,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 PointPairLists = pointPairLists;
                 Labels = labels.ToArray();
                 XScalePaths = xscalePaths.ToArray();
-                SelectedIndex = selectedIndex;
+                SelectedIndex = selectedIndex - 1; //TODO find a better fix
                 MaxY = maxY;
                 if (minY != double.MaxValue)
                 {
@@ -579,7 +500,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public virtual double MaxValueSetting { get { return 0; } }
             public virtual double MinValueSetting { get { return 0; } }
-            public virtual double MaxCVSetting { get { return 0; } }
+            public virtual double MaxCvSetting { get { return 0; } }
 
             private static int CompareGroupAreas(GraphPointData p1, GraphPointData p2)
             {

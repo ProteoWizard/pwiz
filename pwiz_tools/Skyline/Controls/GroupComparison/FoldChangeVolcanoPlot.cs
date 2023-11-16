@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private LineItem _minPValueLine;
 
         private readonly List<LineItem> _points;
-        private readonly List<LabeledPoint> _labeledPoints;
+        private readonly List<DotPlotUtil.LabeledPoint> _labeledPoints;
 
         private FoldChangeBindingSource.FoldChangeRow _selectedRow;
 
@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             zedGraphControl.IsZoomOnMouseCenter = true;
 
             _points = new List<LineItem>();
-            _labeledPoints = new List<LabeledPoint>();
+            _labeledPoints = new List<DotPlotUtil.LabeledPoint>();
         }
 
         public SrmDocument Document
@@ -121,14 +121,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
             get { return GroupComparisonDef.PerProtein; }
         }
 
-        public static FontSpec CreateFontSpec(Color color, float size)
-        {
-            return new FontSpec(@"Arial", size, color, false, false, false, Color.Empty, null, FillType.None)
-            {
-                Border = { IsVisible = false }
-            };
-        }
-
         private void AdjustLocations(GraphPane pane)
         {
             pane.YAxis.Scale.Min = 0.0;
@@ -149,21 +141,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 if (labeledPoint.Label != null)
                     labeledPoint.Label.Location.Y = labeledPoint.Point.Y + labeledPoint.Label.FontSpec.Size / 2.0f /
                                                     pane.Rect.Height * (pane.YAxis.Scale.Max - pane.YAxis.Scale.Min);
-        }
-
-        public class LabeledPoint
-        {
-            public LabeledPoint(PointPair point, TextObj label, bool isSelected)
-            {
-                Point = point;
-                Label = label;
-                IsSelected = isSelected;
-            }
-
-            public PointPair Point { get; private set; }
-            public TextObj Label { get; private set; }
-
-            public bool IsSelected { get; private set; }
         }
 
         private void GraphPane_AxisChangeEvent(GraphPane pane)
@@ -308,12 +285,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
             get { return CutoffSettings.FoldChangeCutoffValid || CutoffSettings.PValueCutoffValid; }
         }
 
-        public static float PointSizeToFloat(PointSize pointSize)
-        {
-            //return 12.0f + 2.0f * ((int) pointSize - 2);
-            return ((GraphFontSize[]) GraphFontSize.FontSizes)[(int) pointSize].PointSize;
-        }
-
         // ReSharper disable PossibleMultipleEnumeration
         private void UpdateGraph()
         {
@@ -352,7 +323,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
 
             // The order matters here, selected points should be highest in the zorder, followed by matched points and other(unmatched) points
-            AddPoints(selectedPoints, Color.Red, PointSizeToFloat(PointSize.large), true, PointSymbol.Circle, true);
+            AddPoints(selectedPoints, Color.Red, DotPlotUtil.PointSizeToFloat(PointSize.large), true, PointSymbol.Circle, true);
 
             foreach (var colorRow in GroupComparisonDef.ColorRows.Where(r => r.MatchExpression != null))
             {
@@ -366,12 +337,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
                 if (matchedPoints.Any())
                 {
-                    AddPoints(new PointPairList(matchedPoints), colorRow.Color, PointSizeToFloat(row.PointSize), row.Labeled, row.PointSymbol);
+                    AddPoints(new PointPairList(matchedPoints), colorRow.Color, DotPlotUtil.PointSizeToFloat(row.PointSize), row.Labeled, row.PointSymbol);
                     otherPoints = new PointPairList(otherPoints.Except(matchedPoints).ToArray());
                 }
             }
 
-            AddPoints(otherPoints, Color.Gray, PointSizeToFloat(PointSize.small), false, PointSymbol.Circle);
+            AddPoints(otherPoints, Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.small), false, PointSymbol.Circle);
 
             // The coordinates that depend on the axis scale don't matter here, the AxisChangeEvent will fix those
             // Insert after selected items, but before all other items
@@ -407,51 +378,20 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var textObj = new TextObj(text, point.X, point.Y, CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
             {
                 IsClippedToChartRect = true,
-                FontSpec = CreateFontSpec(color, size),
+                FontSpec = DotPlotUtil.CreateFontSpec(color, size),
                 ZOrder = ZOrder.A_InFront
             };
 
             return textObj;
         }
 
-        public static SymbolType PointSymbolToSymbolType(PointSymbol symbol)
-        {
-            switch (symbol)
-            {
-                case PointSymbol.Circle:
-                    return SymbolType.Circle;
-                case PointSymbol.Square:
-                    return SymbolType.Square;
-                case PointSymbol.Triangle:
-                    return SymbolType.Triangle;
-                case PointSymbol.TriangleDown:
-                    return SymbolType.TriangleDown;
-                case PointSymbol.Diamond:
-                    return SymbolType.Diamond;
-                case PointSymbol.XCross:
-                    return SymbolType.XCross;
-                case PointSymbol.Plus:
-                    return SymbolType.Plus;
-                case PointSymbol.Star:
-                    return SymbolType.Star;
-                default:
-                    return SymbolType.Circle;
-            }
-        }
-
-        private bool HasOutline(PointSymbol pointSymbol)
-        {
-            return pointSymbol == PointSymbol.Circle || pointSymbol == PointSymbol.Square ||
-                   pointSymbol == PointSymbol.Triangle || pointSymbol == PointSymbol.TriangleDown ||
-                   pointSymbol == PointSymbol.Diamond;
-        }
 
         private void AddPoints(PointPairList points, Color color, float size, bool labeled, PointSymbol pointSymbol, bool selected = false)
         {
-            var symbolType = PointSymbolToSymbolType(pointSymbol);
+            var symbolType = DotPlotUtil.PointSymbolToSymbolType(pointSymbol);
 
             LineItem lineItem;
-            if (HasOutline(pointSymbol))
+            if (DotPlotUtil.HasOutline(pointSymbol))
             {
                 lineItem = new LineItem(null, points, Color.Black, symbolType)
                 {
@@ -473,7 +413,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 foreach (var point in points)
                 {
                     var label = CreateLabel(point, color, size);
-                    _labeledPoints.Add(new LabeledPoint(point, label, selected));
+                    _labeledPoints.Add(new DotPlotUtil.LabeledPoint(point, label, selected));
                     zedGraphControl.GraphPane.GraphObjList.Add(label);
                 }
             }
@@ -1005,7 +945,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 outCount, inCount);
         }
 
-        public List<LabeledPoint> LabeledPoints
+        public List<DotPlotUtil.LabeledPoint> LabeledPoints
         {
             get { return _labeledPoints; }
         }

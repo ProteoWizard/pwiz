@@ -200,9 +200,14 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public static string GetProteinText(Protein protein, MatchOption matchOption)
         {
+            return GetProteinText(protein, MatchOptionToDisplayMode(matchOption));
+        }
+
+        public static string GetProteinText(Protein protein, ProteinMetadataManager.ProteinDisplayMode displayMode)
+        {
             return protein != null
                 ? ProteinMetadataManager.ProteinModalDisplayText(protein.DocNode.ProteinMetadata,
-                    MatchOptionToDisplayMode(matchOption))
+                    displayMode)
                 : null;
         }
 

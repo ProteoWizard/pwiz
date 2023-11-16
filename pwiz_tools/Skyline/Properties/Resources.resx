@@ -13914,4 +13914,7 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank" xml:space="preserve">
     <value>Protein Rank</value>
   </data>
+  <data name="Extensions_CustomToString_Protein_Expression" xml:space="preserve">
+    <value>Protein Expression</value>
+  </data>
 </root>

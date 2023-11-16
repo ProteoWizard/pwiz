@@ -14341,6 +14341,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Protein Expression.
+        /// </summary>
+        public static string Extensions_CustomToString_Protein_Expression {
+            get {
+                return ResourceManager.GetString("Extensions_CustomToString_Protein_Expression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Replicate Comparison.
         /// </summary>
         public static string Extensions_CustomToString_Replicate_Comparison {

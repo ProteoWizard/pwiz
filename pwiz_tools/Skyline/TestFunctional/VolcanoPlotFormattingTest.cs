@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.SkylineTestUtil;
@@ -380,8 +381,8 @@ namespace pwiz.SkylineTestFunctional
 
                     Assert.AreEqual(pointInfo.Color, lineItem.Symbol.Fill.Color);
                     Assert.AreEqual(pointInfo.PointCount, curveItem.Points.Count);
-                    Assert.AreEqual(FoldChangeVolcanoPlot.PointSymbolToSymbolType(pointInfo.PointSymbol), lineItem.Symbol.Type);
-                    Assert.AreEqual(FoldChangeVolcanoPlot.PointSizeToFloat(pointInfo.PointSize), lineItem.Symbol.Size);
+                    Assert.AreEqual(DotPlotUtil.PointSymbolToSymbolType(pointInfo.PointSymbol), lineItem.Symbol.Type);
+                    Assert.AreEqual(DotPlotUtil.PointSizeToFloat(pointInfo.PointSize), lineItem.Symbol.Size);
 
                     if (pointInfo.Labeled)
                     {
@@ -395,7 +396,7 @@ namespace pwiz.SkylineTestFunctional
                             Assert.IsInstanceOfType(graphObj, typeof(TextObj));
                             var label = (TextObj) graphObj;
 
-                            Assert.AreEqual(FoldChangeVolcanoPlot.PointSizeToFloat(pointInfo.PointSize), label.FontSpec.Size);
+                            Assert.AreEqual(DotPlotUtil.PointSizeToFloat(pointInfo.PointSize), label.FontSpec.Size);
                             Assert.AreEqual(label.Location.X, pointPair.X);
                             //Assert.AreEqual(label.Location.Y, pointPair.Y);
 

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -25,6 +26,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -321,6 +323,15 @@ namespace pwiz.Skyline.Menus
         public void AddIntensityFormattingMenu(ToolStrip menuStrip, int iInsert)
         {
             menuStrip.Items.Insert(iInsert, intensityFormattingMenuItem);
+        }
+
+        public void AddProteinsDropDownMenu(ToolStrip menuStrip, int iInsert)
+        {
+            var proteinsOptions = new List<ProteinMetadataManager.ProteinDisplayMode>();
+            proteinsOptions.Add(ProteinMetadataManager.ProteinDisplayMode.ByAccession);
+            proteinsOptions.Add(ProteinMetadataManager.ProteinDisplayMode.ByGene);
+            proteinsOptions.Add(ProteinMetadataManager.ProteinDisplayMode.ByName);
+            proteinsOptions.Add(ProteinMetadataManager.ProteinDisplayMode.ByPreferredName);
         }
         public void AddTransitionContextMenu(ToolStrip menuStrip, int iInsert)
         {

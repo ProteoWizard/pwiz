@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             public override double MaxValueSetting { get { return Settings.Default.PeakAreaMaxArea; } }
-            public override double MaxCVSetting { get { return Settings.Default.PeakAreaMaxCv; } }
+            public override double MaxCvSetting { get { return Settings.Default.PeakAreaMaxCv; } }
 
             protected override double? GetValue(TransitionGroupChromInfo chromInfo)
             {
