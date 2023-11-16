@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
@@ -131,30 +130,6 @@ namespace pwiz.Skyline.Model.Databinding
         {
             return SkylineDataSchema.Document.Settings.DataSettings.AnnotationDefs
                        .FirstOrDefault(def => def.Name == annotationDef.Name) ?? annotationDef;
-        }
-
-        protected bool Equals(AnnotationPropertyDescriptor other)
-        {
-            return base.Equals(other) && _isValid == other._isValid && AttributeArray.SequenceEqual(other.AttributeArray);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((AnnotationPropertyDescriptor)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                int hashCode = base.GetHashCode();
-                hashCode = (hashCode * 397) ^ _isValid.GetHashCode();
-                hashCode = (hashCode * 397) ^ CollectionUtil.GetHashCodeDeep(AttributeArray);
-                return hashCode;
-            }
         }
     }
 }
