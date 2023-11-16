@@ -280,7 +280,7 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected static TDlg ShowNestedDlg<TDlg>(Action act) where TDlg : Form
         {
-            var existingDialogs = FormUtil.OpenForms.OfType<TDlg>().ToHashSet(new IdentityEqualityComparer<TDlg>());
+            var existingDialogs = FormUtil.OpenForms.OfType<TDlg>().Select(ReferenceValue.Of).ToHashSet();
             SkylineBeginInvoke(act);
             TDlg result = null;
             WaitForCondition(() => null != (result =

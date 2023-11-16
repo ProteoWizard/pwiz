@@ -58,6 +58,14 @@ exe mscat
     ;
 
 
+exe mzmlbcat
+    : mzmlbcat.cpp
+      /ext/boost//program_options
+      /ext/boost//filesystem
+    : <include>../../.. <use>../commandline//mstool-requirements
+    ;
+
+
 exe txt2mzml
     : txt2mzml.cpp
       ../../pwiz/data/msdata//pwiz_data_msdata
@@ -131,6 +139,7 @@ install bin
       hello_analyzer 
       hello_analyzer_2
       mscat
+      mzmlbcat
       msbenchmark
       txt2mzml
       write_example_files

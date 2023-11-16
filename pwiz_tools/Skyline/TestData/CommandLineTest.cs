@@ -643,8 +643,9 @@ namespace pwiz.SkylineTestData
             // A document with results that should be able to export a spectral library
             var docWithResults = TestFilesDir.GetTestPath("msstatstest.sky");
             var exportPath = TestFilesDir.GetTestPath("out_lib.blib"); // filepath to export library to
+            var newDocumentPath = TestFilesDir.GetTestPath("new.sky");
             // Test error (no peptide precursors)
-            var output = RunCommand("--new=" + "new.sky", // Create a new document
+            var output = RunCommand("--new=" + newDocumentPath, // Create a new document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
                 "--exp-speclib-file=" + exportPath // Export a spectral library
             );
@@ -682,11 +683,12 @@ namespace pwiz.SkylineTestData
             var expectedExportTargetsBestPeaks = TestFilesDir.GetTestPathLocale("MProphet_expected_targets_only_best_peaks_only.csv");
             // The expected export when excluding the "Intensity" and "Standard signal to noise" features.
             var expectedExportExcludeFeatures = TestFilesDir.GetTestPathLocale("MProphet_expected_exclude_features.csv");
+            var newDocumentPath = TestFilesDir.GetTestPath("new.sky");
             // A string that is not a feature name or a mProphet file header
             const string invalidFeatureName = "-la";
 
             // Test error (no targets)
-            var output = RunCommand("--new=" + "new.sky", // Create a new document
+            var output = RunCommand("--new=" + newDocumentPath, // Create a new document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
                 "--exp-mprophet-features=" + exportPath // Export mProphet features
             );
