@@ -31,6 +31,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <cstdint>
 #include "pwiz/data/common/cv.hpp"
 
 
