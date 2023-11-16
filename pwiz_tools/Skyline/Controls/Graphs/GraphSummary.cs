@@ -131,6 +131,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private int _targetResultsIndex;
         private int _originalResultsIndex;
         public SkylineWindow Window;
+        public bool ShowFormattingDlg;
 
         private GraphSummaryToolbar _toolbar;
         public GraphSummaryToolbar Toolbar

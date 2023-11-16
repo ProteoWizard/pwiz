@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
@@ -39,6 +38,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool AnyProteomic;
         public bool AnyMolecules;
         public SrmDocument Document;
+        public bool ShowingFormattingDlg { get; set; }
         private List<ProteinAbundanceBindingSource.ProteinAbundanceRow> _proteinAbundanceRows;
         private readonly List<DotPlotUtil.LabeledPoint> _labeledPoints;
 
@@ -151,17 +151,95 @@ namespace pwiz.Skyline.Controls.Graphs
 
             return _proteinAbundanceRows;
         }
+
+        public override bool HandleMouseDownEvent(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
+        {
+            var ctrl = Control.ModifierKeys.HasFlag(Keys.Control); //TODO allow overide of modifier keys?
+            CurveItem nearestCurve;
+            int iNearest;
+            var axis = GetNearestXAxis(sender, mouseEventArgs);
+            if (axis != null)
+            {
+                iNearest = (int)axis.Scale.ReverseTransform(mouseEventArgs.X - axis.MajorTic.Size);
+                if (iNearest < 0)
+                {
+                    return false;
+                }
+                ChangeSelection(iNearest, GraphSummary.StateProvider.SelectedPath, ctrl);
+                return true;
+            }
+            if (!FindNearestPoint(new PointF(mouseEventArgs.X, mouseEventArgs.Y), out nearestCurve, out iNearest))
+            {
+                return false;
+            }
+            IdentityPath identityPath = GetIdentityPath(nearestCurve, iNearest);
+            if (identityPath == null)
+            {
+                return false;
+            }
+
+            ChangeSelection(iNearest, identityPath, ctrl);
+            return true;
+        }
+
+        private void ChangeSelection(int selectedIndex, IdentityPath identityPath, bool ctrl)
+        {
+            if (!ctrl)
+            {
+                ChangeSelection(selectedIndex, identityPath);
+            }
+            else
+            {
+                MultiSelect(identityPath);
+            }
+        }
+
+        private void MultiSelect(IdentityPath identityPath)
+        {
+            var skylineWindow = GraphSummary.Window;
+            if (skylineWindow == null)
+                return;
+
+            var list = skylineWindow.SequenceTree.SelectedPaths;
+            if (GetSelectedPath(identityPath) == null)
+            {
+                list.Insert(0, identityPath);
+                skylineWindow.SequenceTree.SelectedPaths = list;
+                if (!IsPathSelected(skylineWindow.SelectedPath, identityPath))
+                    skylineWindow.SequenceTree.SelectPath(identityPath);
+            }
+            skylineWindow.UpdateGraphPanes();
+        }
         protected override void ChangeSelection(int selectedIndex, IdentityPath identityPath)
         {
             if (0 <= selectedIndex && selectedIndex < _graphData.XScalePaths.Length)
+            {
                 GraphSummary.StateProvider.SelectedPath = _graphData.XScalePaths[selectedIndex];
+            }
         }
 
-        private bool IsSelected()
+        // TODO can we centralize checking selection with the volcano plots logic?
+        private bool IsSelected(Protein protein)
         {
+            var docNode = (SkylineDocNode)protein; 
             var window = GraphSummary.Window;
-            return window != null ;
+            return window != null && GetSelectedPath(docNode.IdentityPath) != null;
         }
+
+        private IdentityPath GetSelectedPath(IdentityPath identityPath)
+        {
+            var skylineWindow = GraphSummary.Window;
+            return skylineWindow != null ? skylineWindow.SequenceTree.SelectedPaths.FirstOrDefault(p => IsPathSelected(p, identityPath)) : null;
+        }
+
+        public bool IsPathSelected(IdentityPath selectedPath, IdentityPath identityPath)
+        {
+            return selectedPath != null && identityPath != null &&
+                   selectedPath.Depth <= (int)SrmDocument.Level.Molecules && identityPath.Depth <= (int)SrmDocument.Level.Molecules &&
+                   (selectedPath.Depth >= identityPath.Depth && Equals(selectedPath.GetPathTo(identityPath.Depth), identityPath) ||
+                    selectedPath.Depth <= identityPath.Depth && Equals(identityPath.GetPathTo(selectedPath.Depth), selectedPath));
+        }
+
         public override void UpdateGraph(bool selectionChanged)
         {
             Clear();
@@ -184,6 +262,15 @@ namespace pwiz.Skyline.Controls.Graphs
             _graphData = CreateGraphData(document, selectedProtein, displayType, rows);
 
             // For proper z-order, add the selected points first, then the matched points, then the unmatched points
+            var selectedPoints = new PointPairList();
+            foreach (var pointPairList in _graphData.PointPairLists)
+            {
+                foreach (var point in from point in pointPairList let proteinRow = (ProteinAbundanceBindingSource.ProteinAbundanceRow)point.Tag where IsSelected(proteinRow.Protein) select point)
+                {
+                    selectedPoints.Add(point);
+                }
+            }
+            AddPoints(new PointPairList(selectedPoints), GraphSummary.ColorSelected, DotPlotUtil.PointSizeToFloat(PointSize.large), true, PointSymbol.Circle, true);
             foreach (var pointPairList in _graphData.PointPairLists)
             {
                 var pointList = pointPairList;
@@ -207,19 +294,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 AddPoints(new PointPairList(pointList), Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
             }
 
-            if (ShowSelection && SelectedIndex != -1)
-            {
-                var selectedY = (_graphData.SelectedMaxY + _graphData.SelectedMinY) / 2;
-                GraphObjList.Add(new LineObj(Color.Black, SelectedIndex + 1, 0, SelectedIndex+ 1, selectedY)
-                {
-                    IsClippedToChartRect = true,
-                    Line = new Line() { Width = 2, Color = Color.Black, Style = DashStyle.Dash }
-                });
-                GraphObjList.Add(new TextObj(_graphData.SelectedName, SelectedIndex +1, selectedY));
-            }
-
             UpdateAxes();
-            if (GraphSummary.Window != null && !ShowingFormattingDlg)
+            if (GraphSummary.ShowFormattingDlg && !ShowingFormattingDlg)
             {
                 ShowFormattingDialog();
             }
@@ -282,8 +358,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 ProteinMetadataManager.ProteinDisplayMode.ByName);
             return MatchExpression.GetProteinText(protein, displayMode);
         }
-
-        //TODO centralize with volcano plot
 
 
         protected abstract GraphData CreateGraphData(SrmDocument document, PeptideGroupDocNode selectedProtein, DisplayTypeChrom displayType, List<ProteinAbundanceBindingSource.ProteinAbundanceRow> rows);

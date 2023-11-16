@@ -325,14 +325,6 @@ namespace pwiz.Skyline.Menus
             menuStrip.Items.Insert(iInsert, intensityFormattingMenuItem);
         }
 
-        public void AddProteinsDropDownMenu(ToolStrip menuStrip, int iInsert)
-        {
-            var proteinsOptions = new List<ProteinMetadataManager.ProteinDisplayMode>();
-            proteinsOptions.Add(ProteinMetadataManager.ProteinDisplayMode.ByAccession);
-            proteinsOptions.Add(ProteinMetadataManager.ProteinDisplayMode.ByGene);
-            proteinsOptions.Add(ProteinMetadataManager.ProteinDisplayMode.ByName);
-            proteinsOptions.Add(ProteinMetadataManager.ProteinDisplayMode.ByPreferredName);
-        }
         public void AddTransitionContextMenu(ToolStrip menuStrip, int iInsert)
         {
             menuStrip.Items.Insert(iInsert, transitionsContextMenuItem);

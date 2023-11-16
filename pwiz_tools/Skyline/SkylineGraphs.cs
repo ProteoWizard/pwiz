@@ -1722,9 +1722,9 @@ namespace pwiz.Skyline
         {
             foreach (var summary in _listGraphPeakArea.Where(summary => summary.Type == GraphTypeSummary.intensity))
             {
-                summary.Window = this;
+                summary.ShowFormattingDlg = true;
                 UpdatePeakAreaGraph();
-                summary.Window = null;
+                summary.ShowFormattingDlg = false;
             }
             
         }
@@ -4432,6 +4432,13 @@ namespace pwiz.Skyline
             ShowTotalTransitions();
             Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.intensity);
             ShowGraphPeakArea(true, GraphTypeSummary.intensity);
+            foreach (var summary in _listGraphPeakArea)
+            {
+                if (summary.Type == GraphTypeSummary.intensity)
+                {
+                    summary.Window = this;
+                }
+            }
             UpdatePeakAreaGraph();
             SynchronizeSummaryZooming();
         }
