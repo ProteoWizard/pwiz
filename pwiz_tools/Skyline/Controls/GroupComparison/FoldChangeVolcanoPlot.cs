@@ -378,7 +378,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var textObj = new TextObj(text, point.X, point.Y, CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
             {
                 IsClippedToChartRect = true,
-                FontSpec = DotPlotUtil.CreateFontSpec(color, size),
+                FontSpec = DotPlotUtil.CreateFontSpec(color, size, true),
                 ZOrder = ZOrder.A_InFront
             };
 

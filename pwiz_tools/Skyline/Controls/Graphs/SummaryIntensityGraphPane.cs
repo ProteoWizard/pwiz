@@ -341,12 +341,12 @@ namespace pwiz.Skyline.Controls.Graphs
             if (row == null)
                 return null;
             var text = GetProteinName(row.Protein);
-
+            //var labelBackground = new BoxObj(point.X, point.Y, );
             var textObj = new TextObj(text, point.X, point.Y, CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
             {
                 IsClippedToChartRect = true,
-                FontSpec = DotPlotUtil.CreateFontSpec(color, size),
-                ZOrder = ZOrder.A_InFront
+                FontSpec = DotPlotUtil.CreateFontSpec(color, size, true),
+                ZOrder = ZOrder.A_InFront,
             };
 
             return textObj;
@@ -535,7 +535,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         selectedIndex = labels.Count - 1;
                         SelectedY = dataPoint.AreaGroup;
-                        SelectedName = GetProteinName(dataPoint.NodePepGroup, document);
                         SelectedMaxY = groupMaxY;
                         SelectedMinY = groupMinY;
                     }
@@ -570,7 +569,6 @@ namespace pwiz.Skyline.Controls.Graphs
             public double SelectedY { get; private set; }
             public double SelectedMaxY { get; private set; }
             public double SelectedMinY { get; private set; }
-            public string SelectedName { get; private set; }
 
             public virtual double MaxValueSetting { get { return 0; } }
             public virtual double MinValueSetting { get { return 0; } }
@@ -599,6 +597,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 minY = Math.Min(minY, pointPair.Y);
                 return pointPair;
             }
+
 
             // Create a point pair representing the abundance of a PeptideGroupDocNode
             // TODO multiple result indices representing the best replicate for each
@@ -649,15 +648,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private class GraphPointData
         {
-            public GraphPointData(PeptideGroupDocNode nodePepGroup)
-            {
-                NodePepGroup = nodePepGroup;
-                IdentityPath = new IdentityPath(IdentityPath.ROOT, NodePepGroup.PeptideGroup);
-                CalcStats(nodePepGroup);
-            }
             public GraphPointData(ProteinAbundanceBindingSource.ProteinAbundanceRow row)
             {
                 Row = row;
+                
                 NodePepGroup = row.Protein.DocNode;
                 // TODO get rid of these variables
                 NodePep = (PeptideDocNode)NodePepGroup.Children.First();
@@ -671,56 +665,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public TransitionGroupDocNode NodeGroup { get; private set; }
             public IdentityPath IdentityPath { get; private set; }
             public double AreaGroup { get; private set; }
-            //            public double AreaPepCharge { get; private set; }
 
-            private void CalcStats(PeptideGroupDocNode nodePepGroup)
-            {
-                var areas = new List<double>();
-                foreach (PeptideDocNode nodePep in nodePepGroup.Children)
-                {
-                    NodePep = nodePep;
-                    foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
-                    {
-                        double ? meanArea;
-                        CalcStats(nodePep, nodeGroup, out meanArea);
-                        areas.Add(meanArea ?? 0); // TODO deal with missing areas
-                        NodeGroup = nodeGroup;
-                    }
-                }
-
-                AreaGroup = areas.Sum(); //TODO is this the correct way to calculate area
-            }
-            // ReSharper disable SuggestBaseTypeForParameter
-            private void CalcStats(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, out double? meanArea)
-            // ReSharper restore SuggestBaseTypeForParameter
-            {
-                meanArea = null;
-                foreach (TransitionGroupDocNode nodePepChild in nodePep.Children)
-                {
-                    double? meanTransitionGroupArea;
-                    CalcStats(nodePepChild, out meanTransitionGroupArea);
-                    if (!Equals(nodeGroup.TransitionGroup.PrecursorAdduct, nodePepChild.TransitionGroup.PrecursorAdduct))
-                        continue;
-                    if (ReferenceEquals(nodeGroup, nodePepChild))
-                    {
-                        meanArea = meanTransitionGroupArea ?? 0;
-                    }
-                }
-                //                AreaPepCharge = (areas.Count > 0 ? new Statistics(areas).Mean() : 0);
-            }
-
-            private static void CalcStats(TransitionGroupDocNode nodeGroup, out double? meanArea)
-            {
-                var areas = new List<double>();
-                foreach (var chromInfo in nodeGroup.ChromInfos)
-                {
-                    if (chromInfo.Area.HasValue)
-                        areas.Add(chromInfo.Area.Value);
-                }
-                meanArea = null;
-                if (areas.Count > 0)
-                    meanArea = new Statistics(areas).Mean();
-            }
         }
     }
 }

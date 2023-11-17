@@ -6,8 +6,16 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public static class DotPlotUtil
     {
-        public static FontSpec CreateFontSpec(Color color, float size)
+        private const int LABEL_BACKGROUND_OPACITY = 90;
+        public static FontSpec CreateFontSpec(Color color, float size, bool label = false)
         {
+            if (label)
+            {
+                return new FontSpec(@"Arial", size, color, false, false, false, Color.FromArgb(LABEL_BACKGROUND_OPACITY, Color.White) , new SolidBrush(Color.FromArgb(LABEL_BACKGROUND_OPACITY, Color.White)), FillType.Solid)
+                {
+                    Border = { IsVisible = false }
+                };
+            }
             return new FontSpec(@"Arial", size, color, false, false, false, Color.Empty, null, FillType.None)
             {
                 Border = { IsVisible = false }
