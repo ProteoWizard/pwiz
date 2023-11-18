@@ -1068,7 +1068,7 @@ namespace pwiz.Skyline.Model
                 });
                 childrenNew = childrenParallel;
             }
-            else
+            else if (diff.RequiresDocNodeUpdate)
             {
                 // Changes that do not change the peptides can be done quicker with
                 // parallel enumeration of the peptides
@@ -1104,6 +1104,10 @@ namespace pwiz.Skyline.Model
 
                 childrenNew = RegroupMolecules(Children, moleculeNodes,
                     (nodeGroup, children) => nodeGroup.RankChildren(settingsParallel, children));
+            }
+            else
+            {
+                childrenNew = Children;
             }
 
             if (!Equals(settingsNew.DataSettings.AnnotationDefs, Settings.DataSettings.AnnotationDefs))
