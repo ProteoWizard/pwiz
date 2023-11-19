@@ -235,6 +235,16 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                                 else
                                     selectedIon.set(MS_selected_ion_m_z, value, MS_m_z);
                             }
+                            else if (name == "INVREION")
+                            {
+                                bal::trim(value);
+                                selectedIon.set(MS_inverse_reduced_ion_mobility, value, MS_volt_second_per_square_centimeter);
+                            }
+                            else if (name == "COLLCROSSSA")
+                            {
+                                bal::trim(value);
+                                selectedIon.set(MS_collisional_cross_sectional_area, value, UO_square_angstrom);
+                            }
                             else if (name == "CHARGE")
                             {
                                 bal::trim_if(value, bal::is_any_of(" \t\r"));
