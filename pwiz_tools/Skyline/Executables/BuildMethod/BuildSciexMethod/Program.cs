@@ -516,7 +516,7 @@ namespace BuildSciexMethod
 
                 var props = new List<PropertyData>( new[]
                 {
-                    new PropertyData(typeof(GroupIdProperty), t => t.Group),
+                    new PropertyData(typeof(GroupNameProperty), t => t.Group),
                     new PropertyData(typeof(CompoundIdProperty), t => t.Label),
                     new PropertyData(typeof(Q1MassProperty), t => t.PrecursorMz),
                     new PropertyData(typeof(Q3MassProperty), t => t.ProductMz),
