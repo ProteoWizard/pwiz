@@ -327,6 +327,10 @@ namespace pwiz.SkylineTestData
                 "--tran-product-end-ion=" + TransitionFilter.EndFragmentFinder.LAST_ION_MINUS_1.Label,
                 "--tran-product-clear-special-ions",
                 "--tran-use-dia-window-exclusion",
+                "--pep-min-length=4",
+                "--pep-max-length=42",
+                "--pep-exclude-nterminal-aas=2",
+                "--pep-exclude-potential-ragged-ends",
                 "--library-product-ions=6",
                 "--library-min-product-ions=6",
                 "--library-match-tolerance=" + 0.05 + "mz",
@@ -360,6 +364,10 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(TransitionFilter.EndFragmentFinder.LAST_ION_MINUS_1.Label, doc.Settings.TransitionSettings.Filter.EndFragmentFinderLabel.Label);
             Assert.AreEqual(0, doc.Settings.TransitionSettings.Filter.MeasuredIons.Count);
             Assert.AreEqual(true, doc.Settings.TransitionSettings.Filter.ExclusionUseDIAWindow);
+            Assert.AreEqual(4, doc.Settings.PeptideSettings.Filter.MinPeptideLength);
+            Assert.AreEqual(42, doc.Settings.PeptideSettings.Filter.MaxPeptideLength);
+            Assert.AreEqual(2, doc.Settings.PeptideSettings.Filter.ExcludeNTermAAs);
+            Assert.AreEqual(true, doc.Settings.PeptideSettings.DigestSettings.ExcludeRaggedEnds);
             Assert.AreEqual(6, doc.Settings.TransitionSettings.Libraries.IonCount);
             Assert.AreEqual(6, doc.Settings.TransitionSettings.Libraries.MinIonCount);
             Assert.AreEqual(new MzTolerance(0.05), doc.Settings.TransitionSettings.Libraries.IonMatchMzTolerance);
