@@ -193,8 +193,7 @@ namespace pwiz.ProteowizardWrapper
                     combineIonMobilitySpectra = !ForceUncombinedIonMobility && combineIonMobilitySpectra,
                     ignoreCalibrationScans = true, // For Waters, we don't need to hear about lockmass values
                     reportSonarBins = true, // For Waters SONAR data, report bin number instead of false drift time
-                    globalChromatogramsAreMs1Only = true,
-                    ignoreScheduledLimitsForChromatograms = true
+                    globalChromatogramsAreMs1Only = true
                 };
                 _lockmassParameters = lockmassParameters;
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
