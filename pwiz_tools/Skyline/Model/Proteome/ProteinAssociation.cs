@@ -84,6 +84,9 @@ namespace pwiz.Skyline.Model.Proteome
 
         public void UseFastaFile(string file, Func<FastaSequence, IEnumerable<Peptide>> digestProteinToPeptides, ILongWaitBroker broker)
         {
+            if (!File.Exists(file))
+                return;
+
             ResetMapping();
             using var stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read);
             var fastaSource = new FastaSource(stream);

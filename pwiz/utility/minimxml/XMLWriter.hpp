@@ -127,6 +127,9 @@ class PWIZ_API_DECL XMLWriter
 
     /// returns stream position of next element start tag 
     stream_offset positionNext() const;
+    
+    // returns output stream for writing binary datasets if mzMLb 
+    std::ostream& getOutputStream() const;
 
 
     private:

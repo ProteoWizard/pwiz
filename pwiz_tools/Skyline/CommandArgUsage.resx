@@ -681,8 +681,8 @@ first occurrence of any peptide.</value>
 will be removed from the document:
 
 Green = 1.0
-Orange &amp;gt;= 0.5
-Red &amp;lt; 0.5</value>
+Orange &gt;= 0.5
+Red &lt; 0.5</value>
   </data>
   <data name="_refine_max_peptide_peak_rank" xml:space="preserve">
     <value>All transitions with an average area peak ranking
@@ -709,8 +709,8 @@ removed from the document.</value>
 will be removed from the document:
 
 Green = 1.0
-Orange &amp;gt;= 0.5
-Red &amp;lt; 0.5</value>
+Orange &gt;= 0.5
+Red &lt; 0.5</value>
   </data>
   <data name="_refine_min_time_correlation" xml:space="preserve">
     <value>Precursors will be removed from the document
@@ -927,5 +927,23 @@ greater peak area.</value>
   </data>
   <data name="CommandArgs_ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME_path_to_result_file_to_import_the_isolation_scheme" xml:space="preserve">
     <value>path/to/result-file to import the isolation scheme from</value>
+  </data>
+  <data name="CommandArgs_GROUP_OTHER_FILE_TYPES" xml:space="preserve">
+    <value>Exporting other file types</value>
+  </data>
+  <data name="_exp_speclib_file" xml:space="preserve">
+    <value>Export experimental data in the current document to a spectral library file. Peak areas are used as spectrum intensities, peak apex times are used as retention times, and if the document has iRT values they will also be stored in the library.</value>
+  </data>
+  <data name="_exp_mprophet_exclude_feature" xml:space="preserve">
+    <value>Use to exclude a particular feature score by name from the exported file. Names can be found in the user interface. This argument may be used multiple times to exclude multiple features. Requires the --exp-mprophet-file argument.</value>
+  </data>
+  <data name="_exp_mprophet_file" xml:space="preserve">
+    <value>Export all the individual feature scores for each peptide, as well as the composite score, the p value, and the q value into the mProphet format.</value>
+  </data>
+  <data name="_exp_mprophet_best_peaks_only" xml:space="preserve">
+    <value>Include feature scores only for the best scoring peaks. Requires the --exp-mprophet-file argument.</value>
+  </data>
+  <data name="_exp_mprophet_targets_only" xml:space="preserve">
+    <value>Include feature scores only for targets. Requires the --exp-mprophet-file argument.</value>
   </data>
 </root>

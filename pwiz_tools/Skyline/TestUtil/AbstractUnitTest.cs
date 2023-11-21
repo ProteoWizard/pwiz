@@ -122,6 +122,12 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
+        /// Controls whether or not certain machines run the often flaky TestToolService
+        /// </summary>
+        protected bool SkipTestToolService => Environment.MachineName.Equals(@"BRENDANX-UW7");
+        public const string MSG_SKIPPING_TEST_TOOL_SERVICE = @"AbstractUnitTest.SkipTestToolService is set for this machine, no test was actually performed";
+
+        /// <summary>
         /// Perf tests (long running, huge-data-downloading) should be declared
         /// in the TestPerf namespace so that they can be skipped when the RunPerfTests 
         /// flag is unset.

@@ -194,7 +194,8 @@ namespace pwiz.Skyline.Model.Results
                 bool canSchedule = !firstPass && CanSchedule(document, retentionTimePredictor);
                 // TODO: Figure out a way to turn off time sharing on first SIM scan so that
                 //       times can be shared for MS1 without SIM scans
-                _isSharedTime = !canSchedule && !_isIonMobilityFiltered;
+                _isSharedTime = !canSchedule && !_isIonMobilityFiltered && 
+                                document.MoleculeTransitionGroups.All(transitionGroup=>transitionGroup.SpectrumClassFilter.IsEmpty);
 
                 var ceSteps = Equals(optimization?.OptType, OptimizationType.collision_energy)
                     ? Enumerable.Range(-optimization.StepCount, optimization.StepCount * 2 + 1).Cast<int?>().ToArray()

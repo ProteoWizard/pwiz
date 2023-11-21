@@ -98,8 +98,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private readonly Stack<SrmDocument> _documents;
         public bool IsAutomatedTest; // Testing support
 
-        public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager,
-            Workflow? workflowType)
+        public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager, Workflow? workflowType, bool useExistingLibrary = false)
         {
             SkylineWindow = skylineWindow;
             _documents = new Stack<SrmDocument>();
@@ -151,12 +150,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             AddPageControl(ImportResultsDDAControl, getChromatogramsPage, 2, 60);
             ImportResultsControl = ImportResultsDDAControl;
 
-            ConverterSettingsControl = new ConverterSettingsControl(this, ImportPeptideSearch,
-                () => FullScanSettingsControl);
+            ConverterSettingsControl = new ConverterSettingsControl(this, ImportPeptideSearch, () => FullScanSettingsControl);
             AddPageControl(ConverterSettingsControl, converterSettingsPage, 18, 50);
 
-            SearchSettingsControl = new SearchSettingsControl(this, ImportPeptideSearch);
-            AddPageControl(SearchSettingsControl, ddaSearchSettingsPage, 18, 50);
+            if (!useExistingLibrary)
+            {
+                SearchSettingsControl = new SearchSettingsControl(this, ImportPeptideSearch);
+                AddPageControl(SearchSettingsControl, ddaSearchSettingsPage, 18, 50);
+            }
 
             SearchControl = new DDASearchControl(ImportPeptideSearch);
             AddPageControl(SearchControl, ddaSearch, 18, 50);
@@ -381,7 +382,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager, Workflow workflowType,
             IList<ImportPeptideSearch.FoundResultsFile> resultFiles, ImportFastaControl.ImportFastaSettings fastaSettings,
             IEnumerable<string> existingLibraryFilepaths)
-            : this(skylineWindow, libraryManager, workflowType)
+            : this(skylineWindow, libraryManager, workflowType, true)
         {
             BuildPepSearchLibControl.ForceWorkflow(workflowType);
 
