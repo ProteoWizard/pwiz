@@ -71,15 +71,8 @@ struct Config : public Reader::Config
     Config()
         : outputPath("."), verbose(false), merge(false)
     {
-        simAsSpectra = false;
-        srmAsSpectra = false;
-        combineIonMobilitySpectra = false;
-        ignoreCalibrationScans = false;
-        reportSonarBins = false;
-        unknownInstrumentIsError = true;
         stripLocationFromSourceFiles = false;
         stripVersionFromSoftware = false;
-        ddaProcessing = false;
     }
 
     string outputFilename(const string& inputFilename, const MSData& inputMSData) const;
