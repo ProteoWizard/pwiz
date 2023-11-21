@@ -3235,15 +3235,13 @@ namespace pwiz.Skyline
         /// <returns>True upon successful import, false upon error</returns>
         public bool ExportAnnotations(string annotationsFile, List<string> includeHandlerNames, bool includeProperties, bool removeBlankRows)
         {
-            var dataSchema = SkylineDataSchema.MemoryDataSchema(Document, 
-                DataSchemaLocalizer.INVARIANT); // The INVARIANT version is used in the UI method as well
             try
             {
                 List<ElementHandler> handlers;
                 if (includeHandlerNames.IsNullOrEmpty())
                 {
                     // By default include all handlers
-                    handlers = ElementHandler.GetElementHandlers(dataSchema).ToList();
+                    handlers = GetAllHandlers();
                 }
                 else
                 {
@@ -3299,12 +3297,10 @@ namespace pwiz.Skyline
         /// Retrieve a list of all possible Element Handlers
         /// </summary>
         /// <returns>A list of Element handlers</returns>
-        public IList<ElementHandler> GetAllHandlers()
+        public List<ElementHandler> GetAllHandlers()
         {
-            var memoryDocumentContainer = new MemoryDocumentContainer();
-            memoryDocumentContainer.SetDocument(_doc, null);
-            var schema = SkylineDataSchema.MemoryDataSchema(memoryDocumentContainer.Document, DataSchemaLocalizer.INVARIANT);
-            return ImmutableList.ValueOf(ElementHandler.GetElementHandlers(schema));
+            var schema = SkylineDataSchema.MemoryDataSchema(_doc, DataSchemaLocalizer.INVARIANT);
+            return ElementHandler.GetElementHandlers(schema).ToList();
         }
 
         /// <summary>
