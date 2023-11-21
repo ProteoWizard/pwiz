@@ -1052,7 +1052,7 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_ANNOTATIONS_FILE = new DocArgument(@"exp-annotations", PATH_TO_CSV,
             (c, p) => c.AnnotationsFile = p.ValueFullPath);
         public static readonly Argument ARG_ANNOTATIONS_INCLUDE_OBJECTS =
-            new DocArgument(@"exp-annotations-include-object", ElementHandler.GetAllHandlers().Select(handler => handler.Name).ToArray(),
+            new DocArgument(@"exp-annotations-include-object", ElementHandler.GetAllHandlerNames(),
                 (c, p) => c.AnnotationsIncludeObjects.Add(p.Value)){WrapValue = true};
         public static readonly Argument ARG_ANNOTATIONS_EXCLUDE_PROPERTIES =
             new DocArgument(@"exp-annotations-include-properties",

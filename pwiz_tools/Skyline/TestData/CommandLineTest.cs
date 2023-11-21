@@ -750,7 +750,7 @@ namespace pwiz.SkylineTestData
             );
             CheckRunCommandOutputContains(string.Format(Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
                 invalidName,
-                "--exp-annotations-include-object", string.Join(", ", ElementHandler.GetAllHandlers().Select(c => c.Name))), output);
+                "--exp-annotations-include-object", string.Join(", ", ElementHandler.GetAllHandlerNames())), output);
             // Test error (no annotations and not including properties)
             output = RunCommand("--new=" + newDocumentPath, // Create a document
                 "--overwrite", // Overwrite, as the file may already exist in the bin

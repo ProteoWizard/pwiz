@@ -108,16 +108,14 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
         }
 
         /// <summary>
-        /// Retrieve a list of all possible Element Handlers
+        /// Retrieve a list of all possible Element Handlers names to be displayed to the user
         /// </summary>
-        /// <returns>A list of Element handlers</returns>
-        public static IList<ElementHandler> GetAllHandlers()
+        /// <returns>A list of Element handlers names</returns>
+        public static string[] GetAllHandlerNames()
         {
-            var memoryDocumentContainer = new MemoryDocumentContainer();
             var document = new SrmDocument(SrmSettingsList.GetDefault());
-            memoryDocumentContainer.SetDocument(document, memoryDocumentContainer.Document);
-            var schema = SkylineDataSchema.MemoryDataSchema(memoryDocumentContainer.Document, DataSchemaLocalizer.INVARIANT);
-            return ImmutableList.ValueOf(GetElementHandlers(schema));
+            var schema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT);
+            return ImmutableList.ValueOf(GetElementHandlers(schema)).Select(handler => handler.Name).ToArray();
         }
     }
 
