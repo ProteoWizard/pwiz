@@ -3228,21 +3228,33 @@ namespace pwiz.Skyline
         /// Export annotations to a .csv file
         /// </summary>
         /// <param name="annotationsFile">File path to export the annotations to</param>
-        /// <param name="includeHandlers">Element handlers to exclude from the export</param>
+        /// <param name="includeHandlerNames">Names of element handlers to exclude from the export,
+        /// specified by the user.</param>
         /// <param name="includeProperties">Properties to exclude from the export</param>
         /// <param name="removeBlankRows">Do not include blank rows in the export</param>
         /// <returns>True upon successful import, false upon error</returns>
-        public bool ExportAnnotations(string annotationsFile, List<ElementHandler> includeHandlers, bool includeProperties, bool removeBlankRows)
+        public bool ExportAnnotations(string annotationsFile, List<string> includeHandlerNames, bool includeProperties, bool removeBlankRows)
         {
             var dataSchema = SkylineDataSchema.MemoryDataSchema(Document, 
                 DataSchemaLocalizer.INVARIANT); // The INVARIANT version is used in the UI method as well
             try
             {
-                // By default include all handlers
-                var handlers = ElementHandler.GetElementHandlers(dataSchema).ToList();
-                // If the user specifies handlers, include only those handlers
-                if (!includeHandlers.IsNullOrEmpty())
+                List<ElementHandler> handlers;
+                if (includeHandlerNames.IsNullOrEmpty())
                 {
+                    // By default include all handlers
+                    handlers = ElementHandler.GetElementHandlers(dataSchema).ToList();
+                }
+                else
+                {
+                    // If the user specifies handlers, include only those handlers
+                    // Parse the string names here (instead of CommandArgs.cs) in order to access the
+                    // valid element handlers in the document.
+                    var includeHandlers = ParseIncludeObject(includeHandlerNames);
+                    if (includeHandlers == null)
+                    {
+                        return false;
+                    }
                     handlers = includeHandlers;
                 }
                 // By default do not include properties. If the user asks, include all applicable properties.
@@ -3281,6 +3293,49 @@ namespace pwiz.Skyline
             }
             
             return true;
+        }
+
+        /// <summary>
+        /// Retrieve a list of all possible Element Handlers
+        /// </summary>
+        /// <returns>A list of Element handlers</returns>
+        public IList<ElementHandler> GetAllHandlers()
+        {
+            var memoryDocumentContainer = new MemoryDocumentContainer();
+            memoryDocumentContainer.SetDocument(_doc, null);
+            var schema = SkylineDataSchema.MemoryDataSchema(memoryDocumentContainer.Document, DataSchemaLocalizer.INVARIANT);
+            return ImmutableList.ValueOf(ElementHandler.GetElementHandlers(schema));
+        }
+
+        /// <summary>
+        /// Associate a string to an object type in the annotation settings
+        /// </summary>
+        /// <param name="objectNames">A list of object type names provided by the user</param>
+        /// <returns>A list of element handlers if all object type names are recognized, null if not</returns>
+        private List<ElementHandler> ParseIncludeObject(List<string> objectNames)
+        {
+            var handlers = GetAllHandlers();
+            var elementHandlers = new List<ElementHandler>();
+            foreach (var objectName in objectNames)
+            {
+                var handler = handlers.FirstOrDefault(c => Equals(objectName, c.Name));
+                if (handler == null)
+                {
+                    _out.WriteLine(
+                        Resources.
+                            CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_name___0____Try_one_of_the_following_,
+                        objectName);
+                    foreach (var validHandler in handlers)
+                    {
+                        _out.WriteLine(validHandler.Name);
+                    }
+
+                    return null;
+                }
+                elementHandlers.Add(handler);
+            }
+
+            return elementHandlers;
         }
 
         public enum ResolveZipToolConflicts

@@ -740,7 +740,7 @@ namespace pwiz.SkylineTestData
             var newDocumentPath = TestFilesDir.GetTestPath("new.sky");
             const string invalidName = "-la";
 
-            // Test error (invalid exclude-object name)
+            // Test error (invalid include-object name)
             var output = RunCommand("--new=" + newDocumentPath, // Create a document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
                 "--exp-annotations=" + exportPath, // Export annotations

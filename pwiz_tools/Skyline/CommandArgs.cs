@@ -818,32 +818,6 @@ namespace pwiz.Skyline
             return true;
         }
 
-        /// <summary>
-        /// Associate a string to an object type in the annotation settings
-        /// </summary>
-        /// <param name="objectName">Object type name provided by the user</param>
-        /// <returns>True if the object type name is recognized, false if not</returns>
-        private bool ParseIncludeObject(string objectName)
-        {
-            var handlers = ElementHandler.GetAllHandlers();
-            var handler = handlers.FirstOrDefault(c => Equals(objectName, c.Name));
-            if (handler == null)
-            {
-                WriteLine(
-                    Resources.
-                        CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_name___0____Try_one_of_the_following_,
-                    objectName);
-                foreach (var validHandler in handlers)
-                {
-                    WriteLine(validHandler.Name);
-                }
-
-                return false;
-            }
-            AnnotationsIncludeObjects.Add(handler);
-            return true;
-        }
-
         // Refinement
         public static readonly Argument ARG_REFINE_MIN_PEPTIDES = new RefineArgument(@"refine-min-peptides", INT_VALUE,
             (c, p) => c.Refinement.MinPeptidesPerProtein = p.ValueInt);
@@ -1079,7 +1053,7 @@ namespace pwiz.Skyline
             (c, p) => c.AnnotationsFile = p.ValueFullPath);
         public static readonly Argument ARG_ANNOTATIONS_INCLUDE_OBJECTS =
             new DocArgument(@"exp-annotations-include-object", ElementHandler.GetAllHandlers().Select(handler => handler.Name).ToArray(),
-                (c, p) => c.ParseIncludeObject(p.Value)){WrapValue = true};
+                (c, p) => c.AnnotationsIncludeObjects.Add(p.Value)){WrapValue = true};
         public static readonly Argument ARG_ANNOTATIONS_EXCLUDE_PROPERTIES =
             new DocArgument(@"exp-annotations-include-properties",
                 (c, p) => c.AnnotationsIncludeProperties = true){WrapValue = true};
@@ -1110,7 +1084,7 @@ namespace pwiz.Skyline
 
         public bool ExportingAnnotations { get { return !string.IsNullOrEmpty(AnnotationsFile); } }
 
-        public List<ElementHandler> AnnotationsIncludeObjects { get; private set; }
+        public List<string> AnnotationsIncludeObjects { get; private set; }
 
         public bool AnnotationsIncludeProperties { get; private set; }
 
@@ -2227,7 +2201,7 @@ namespace pwiz.Skyline
             SharedFileType = ShareType.DEFAULT;
 
             MProphetExcludeScores = new List<IPeakFeatureCalculator>();
-            AnnotationsIncludeObjects = new List<ElementHandler>();
+            AnnotationsIncludeObjects = new List<string>();
 
             ImportBeforeDate = null;
             ImportOnOrAfterDate = null;
