@@ -13915,6 +13915,6 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
     <value>Error: Failure attempting to save mProphet features file {0}.</value>
   </data>
   <data name="CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_peptide_filter_settings_" xml:space="preserve">
-	  <value>Error: Failed attempting to change the peptide filter settings.</value>
+    <value>Error: Failed attempting to change the peptide filter settings.</value>
   </data>
 </root>
