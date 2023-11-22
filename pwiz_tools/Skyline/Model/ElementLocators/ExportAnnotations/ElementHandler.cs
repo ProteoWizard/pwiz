@@ -108,7 +108,7 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
         }
 
         /// <summary>
-        /// Retrieve a list of all possible Element Handlers names to be displayed to the user
+        /// Retrieve a list of all possible Element Handler names to be displayed to the user
         /// </summary>
         /// <returns>A list of Element handlers names</returns>
         public static string[] GetAllHandlerNames()
