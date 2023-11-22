@@ -22,7 +22,7 @@ IF EXIST pwiz_tools\Skyline\TestResults rmdir /s /q pwiz_tools\Skyline\TestResul
 echo Cleaning downloads
 IF EXIST %SKYLINE_DOWNLOAD_PATH% rmdir /s /q %SKYLINE_DOWNLOAD_PATH%
 echo Cleaning temp
-IF EXIST z:\Temp del /f /s /q z:\Temp\*.* >nul
+IF EXIST z:\Temp del /f /s /q z:\Temp\*.* >nul 2>&1
 )
 
 FOR /F %%I IN (perfTestNames.txt) DO (
@@ -36,7 +36,7 @@ IF EXIST pwiz_tools\Skyline\TestResults rmdir /s /q pwiz_tools\Skyline\TestResul
 echo Cleaning downloads
 IF EXIST %SKYLINE_DOWNLOAD_PATH% rmdir /s /q %SKYLINE_DOWNLOAD_PATH%
 echo Cleaning temp
-IF EXIST z:\Temp del /f /s /q z:\Temp\*.* >nul
+IF EXIST z:\Temp del /f /s /q z:\Temp\*.* >nul 2>&1
 )
 
 echo %FailedTests% tests failed.
