@@ -67,52 +67,82 @@ public ref class ReaderConfig
 {
     public:
 
+    /// <summary>
     /// return Selected Ion Monitoring as spectra
+    /// </summary>
     bool simAsSpectra;
 
+    /// <summary>
     /// return Selected Reaction Monitoring as spectra
+    /// </summary>
     bool srmAsSpectra;
 
+    /// <summary>
 	/// when true, allows for skipping 0 length checks (and thus skip re-reading data for ABI)
+    /// </summary>
     bool acceptZeroLengthSpectra;
 
+    /// <summary>
     /// when true, allows certain vendor readers to produce profile data without zero intensity samples flanking each peak profile
+    /// </summary>
     bool ignoreZeroIntensityPoints;
 
+    /// <summary>
     /// when true, all drift bins/scans in a frame/block are written in combined form instead of as individual spectra
+    /// </summary>
     bool combineIonMobilitySpectra;
 
+    /// <summary>
     // when true, scans with only calibration data will be ignored (currently Waters lockmass only)
+    /// </summary>
     bool ignoreCalibrationScans;
 
+    /// <summary>
     /// when true, Waters SONAR data populates "drift" information with bin number instead of pseudo ion mobility values
+    /// </summary>
     bool reportSonarBins;
 
+    /// <summary>
     /// when true, if a reader cannot identify an instrument, an exception will be thrown asking users to report it
+    /// </summary>
     bool unknownInstrumentIsError;
 
+    /// <summary>
     /// when true, if a reader does not know what time zone was used to record a time, it will assume the time refers to the host's local time;
     /// when false, the reader will treat times with unknown time zone as UTC
+    /// </summary>
     bool adjustUnknownTimeZonesToHostTimeZone;
 
+    /// <summary>
     /// when nonzero, if reader can enumerate only spectra of ms level, it will (currently only supported by Bruker TDF)
+    /// </summary>
     int preferOnlyMsLevel;
 
+    /// <summary>
     /// when true, MS2 spectra without precursor/isolation information will be included in the output (currently only affects Bruker PASEF data)
+    /// </summary>
     bool allowMsMsWithoutPrecursor;
 
 
+    /// <summary>
     /// temporary(?) variable to avoid needing to regenerate Bruker test data
+    /// </summary>
     bool sortAndJitter;
 
+    /// <summary>
     /// when non-empty, only scans from precursors matching one of the included m/z and/or mobility windows will be enumerated; MS1 scans are affected only by the mobility filter
+    /// </summary>
     System::Collections::Generic::IList<MzMobilityWindow^>^ isolationMzAndMobilityFilter;
 
+    /// <summary>
     /// when true, global TIC and BPC chromatograms consist of only MS1 spectra (thus the number of time points cannot be assumed to be equal to the number of spectra)
+    /// </summary>
     bool globalChromatogramsAreMs1Only;
 
+    /// <summary>
     // When true, vendor-specific DDA processing is enabled. For Waters data, this involves combining MS2 scans which refer
     // to the same precursor from the same survey scan, and lockmass-correcting the precursor mass (if the lockmass refiner is active).
+    /// </summary>
     bool ddaProcessing;
 
     ReaderConfig()
