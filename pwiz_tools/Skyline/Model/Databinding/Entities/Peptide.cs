@@ -343,6 +343,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+
+        [DataGridViewColumnType(typeof(TargetDataGridViewColumn))]
+        public string SurrogateCalibrationCurve
+        {
+            get { return DocNode.SurrogateCalibrationCurve; }
+            set
+            {
+                ChangeDocNode(EditColumnDescription(nameof(SurrogateCalibrationCurve), value),
+                    docNode => docNode.ChangeSurrogateCalibrationCurve(value));
+            }
+        }
+
         [ProteomicDisplayName("PeptideNote")]
         [InvariantDisplayName("MoleculeNote")]
         [Importable]

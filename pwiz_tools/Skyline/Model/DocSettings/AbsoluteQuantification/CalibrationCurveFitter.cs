@@ -36,9 +36,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             = new Dictionary<CalibrationPoint, ImmutableList<PeptideQuantifier.Quantity>>();
         private HashSet<IdentityPath> _transitionsToQuantifyOn;
 
-        public CalibrationCurveFitter(PeptideQuantifier peptideQuantifier, SrmSettings srmSettings)
+        public CalibrationCurveFitter(PeptideQuantifier peptideQuantifier, PeptideQuantifier standardPeptideQuantifier, SrmSettings srmSettings)
         {
             PeptideQuantifier = peptideQuantifier;
+            StandardPeptideQuantifier = standardPeptideQuantifier;
             SrmSettings = srmSettings;
             IsotopologResponseCurve = peptideQuantifier.PeptideDocNode.HasPrecursorConcentrations;
         }
@@ -46,10 +47,14 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public static CalibrationCurveFitter GetCalibrationCurveFitter(SrmSettings srmSettings,
             PeptideGroupDocNode peptideGroup, PeptideDocNode peptide)
         {
-            return new CalibrationCurveFitter(PeptideQuantifier.GetPeptideQuantifier(null, srmSettings, peptideGroup, peptide), srmSettings);
+            var peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(null, srmSettings, peptideGroup, peptide);
+
+            return new CalibrationCurveFitter(, srmSettings);
         }
 
         public PeptideQuantifier PeptideQuantifier { get; private set; }
+
+        public PeptideQuantifier StandardPeptideQuantifier { get; private set; }
 
         public QuantificationSettings QuantificationSettings
         {
