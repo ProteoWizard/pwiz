@@ -511,7 +511,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\Databinding\TargetDataGridViewColumn.cs" />
+    <Compile Include="Model\Databinding\SurrogateStandardDataGridViewColumn.cs" />
     <Compile Include="Model\FullScanPropertiesRes.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -522,6 +522,7 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Model\FullScanProperties.cs" />
+    <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassFilter.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">

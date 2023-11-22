@@ -79,7 +79,7 @@ namespace pwiz.SkylineTest.Quantification
             PeptideGroupDocNode protein = srmDocument.MoleculeGroups.First();
             PeptideDocNode peptide = srmDocument.Peptides.First();
             peptide = peptide.ChangeInternalStandardConcentration(null);
-            CalibrationCurveFitter curveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(srmDocument.Settings, protein, peptide);
+            CalibrationCurveFitter curveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(srmDocument, protein, peptide);
             string expectedXAxis = CalibrationCurveFitter.AppendUnits(QuantificationStrings.Analyte_Concentration, "ng/mL");
             Assert.AreEqual(expectedXAxis, curveFitter.GetXAxisTitle());
             string expectedYAxis = QuantificationStrings.CalibrationCurveFitter_GetYAxisTitle_Peak_Area;
@@ -123,7 +123,7 @@ namespace pwiz.SkylineTest.Quantification
             PeptideGroupDocNode protein = srmDocument.MoleculeGroups.First();
             PeptideDocNode peptide = srmDocument.Peptides.First();
             peptide = peptide.ChangeInternalStandardConcentration(null);
-            CalibrationCurveFitter curveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(srmDocument.Settings, protein, peptide);
+            CalibrationCurveFitter curveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(srmDocument, protein, peptide);
             string expectedXAxis = CalibrationCurveFitter.AppendUnits(QuantificationStrings.Analyte_Concentration, "ng/mL");
             Assert.AreEqual(expectedXAxis, curveFitter.GetXAxisTitle());
             string expectedYAxis = CalibrationCurveFitter.PeakAreaRatioText(IsotopeLabelType.light, IsotopeLabelType.heavy);
@@ -168,7 +168,7 @@ namespace pwiz.SkylineTest.Quantification
             PeptideGroupDocNode protein = srmDocument.MoleculeGroups.First();
             PeptideDocNode peptide = srmDocument.Peptides.First();
             peptide = peptide.ChangeInternalStandardConcentration(internalStandardConcentration);
-            CalibrationCurveFitter curveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(srmDocument.Settings, protein, peptide);
+            CalibrationCurveFitter curveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(srmDocument, protein, peptide);
             string expectedXAxis = CalibrationCurveFitter.ConcentrationRatioText(IsotopeLabelType.light, IsotopeLabelType.heavy);
             Assert.AreEqual(expectedXAxis, curveFitter.GetXAxisTitle());
             string expectedYAxis = CalibrationCurveFitter.PeakAreaRatioText(IsotopeLabelType.light, IsotopeLabelType.heavy);
@@ -346,7 +346,7 @@ namespace pwiz.SkylineTest.Quantification
             baseDocument = baseDocument.ChangeMeasuredResults(baseDocument.Settings.MeasuredResults.ChangeChromatograms(
                 baseDocument.Settings.MeasuredResults.Chromatograms
                     .Select(c => c.AnalyteConcentration.HasValue ? c : c.ChangeAnalyteConcentration(10)).ToList()));
-            var baseCurveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(baseDocument.Settings,
+            var baseCurveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(baseDocument,
                 baseDocument.MoleculeGroups.First(), baseDocument.Molecules.First());
             var baseCurve = (CalibrationCurve.Linear) baseCurveFitter.GetCalibrationCurve();
             // Set the dilution factor of each external standard to 2.0, and each unknown to 3.0
@@ -355,7 +355,7 @@ namespace pwiz.SkylineTest.Quantification
                     chrom => Equals(chrom.SampleType, SampleType.STANDARD) ? chrom.ChangeDilutionFactor(2.0) : 
                         chrom.ChangeDilutionFactor(3.0)).ToArray()));
             var dilutionFactorCurveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(
-                docWithDilutionFactor.Settings, docWithDilutionFactor.MoleculeGroups.First(),
+                docWithDilutionFactor, docWithDilutionFactor.MoleculeGroups.First(),
                 docWithDilutionFactor.Molecules.First());
             var dilutionFactorCurve = (CalibrationCurve.Linear) dilutionFactorCurveFitter.GetCalibrationCurve();
             Assert.AreEqual(2.0 * baseCurve.Slope, dilutionFactorCurve.Slope);
@@ -410,7 +410,7 @@ namespace pwiz.SkylineTest.Quantification
             PeptideGroupDocNode protein = srmDocument.MoleculeGroups.First();
             PeptideDocNode peptide = protein.Peptides.First();
             peptide = peptide.ChangeInternalStandardConcentration(internalStandardConcentration);
-            CalibrationCurveFitter curveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(srmDocument.Settings, protein, peptide);
+            CalibrationCurveFitter curveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(srmDocument, protein, peptide);
             string expectedXAxis = CalibrationCurveFitter.AppendUnits(QuantificationStrings.Analyte_Concentration, "ng/mL");
             Assert.AreEqual(expectedXAxis, curveFitter.GetXAxisTitle());
             string expectedYAxis = CalibrationCurveFitter.PeakAreaRatioText(IsotopeLabelType.light, IsotopeLabelType.heavy);
@@ -437,7 +437,7 @@ namespace pwiz.SkylineTest.Quantification
         {
             var peptideQuantifier = new PeptideQuantifier(
                 null,
-                document.MoleculeGroups.First(),
+                document.PeptideGroups.First().PeptideGroup,
                 document.Peptides.First(), document.Settings.PeptideSettings.Quantification);
             return new CalibrationCurveFitter(peptideQuantifier, document.Settings);
         }

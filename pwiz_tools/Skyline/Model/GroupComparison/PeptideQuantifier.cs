@@ -12,16 +12,16 @@ namespace pwiz.Skyline.Model.GroupComparison
     {
         private NormalizationData _normalizationData;
         private Func<NormalizationData> _getNormalizationDataFunc;
-        public PeptideQuantifier(Func<NormalizationData> getNormalizationDataFunc, PeptideGroupDocNode peptideGroup, PeptideDocNode peptideDocNode,
+        public PeptideQuantifier(Func<NormalizationData> getNormalizationDataFunc, PeptideGroup peptideGroup, PeptideDocNode peptideDocNode,
             QuantificationSettings quantificationSettings)
         {
-            PeptideGroupDocNode = peptideGroup;
+            PeptideGroup = peptideGroup;
             PeptideDocNode = peptideDocNode;
             QuantificationSettings = quantificationSettings;
             _getNormalizationDataFunc = getNormalizationDataFunc;
         }
 
-        public static PeptideQuantifier GetPeptideQuantifier(Func<NormalizationData> getNormalizationDataFunc, SrmSettings srmSettings, PeptideGroupDocNode peptideGroup, PeptideDocNode peptide)
+        public static PeptideQuantifier GetPeptideQuantifier(Func<NormalizationData> getNormalizationDataFunc, SrmSettings srmSettings, PeptideGroup peptideGroup, PeptideDocNode peptide)
         {
             var mods = srmSettings.PeptideSettings.Modifications;
             // Quantify on all label types which are not internal standards.
@@ -34,14 +34,20 @@ namespace pwiz.Skyline.Model.GroupComparison
             };
         }
 
-        public static PeptideQuantifier GetPeptideQuantifier(SrmDocument document, PeptideGroupDocNode peptideGroup,
+        public static PeptideQuantifier GetPeptideQuantifier(SrmDocument document, PeptideGroup peptideGroup,
             PeptideDocNode peptide)
         {
             return GetPeptideQuantifier(() => NormalizationData.GetNormalizationData(document, false, null), 
                 document.Settings, peptideGroup, peptide);
         }
 
-        public PeptideGroupDocNode PeptideGroupDocNode { get; private set; }
+        public static PeptideQuantifier GetPeptideQuantifier(SrmDocument document,
+            PeptideGroupDocNode peptideGroupDocNode, PeptideDocNode peptideDocNode)
+        {
+            return GetPeptideQuantifier(document, peptideGroupDocNode.PeptideGroup, peptideDocNode);
+        }
+
+        public PeptideGroup  PeptideGroup  { get; private set; }
         public PeptideDocNode PeptideDocNode {get; private set; }
         public QuantificationSettings QuantificationSettings { get; private set; }
 
@@ -142,7 +148,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                         transition, treatMissingAsZero);
                     if (null != quantity)
                     {
-                        IdentityPath transitionIdentityPath = new IdentityPath(PeptideGroupDocNode.PeptideGroup,
+                        IdentityPath transitionIdentityPath = new IdentityPath(PeptideGroup,
                             PeptideDocNode.Peptide, precursor.TransitionGroup, transition.Transition);
                         quantities.Add(transitionIdentityPath, quantity);
                     }
