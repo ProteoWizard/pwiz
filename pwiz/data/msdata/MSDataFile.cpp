@@ -29,6 +29,10 @@
 #include "Serializer_mzXML.hpp"
 #include "Serializer_MGF.hpp"
 #include "Serializer_MSn.hpp"
+#ifndef WITHOUT_MZMLB
+#include "mzmlb/Connection_mzMLb.hpp"
+using namespace pwiz::msdata::mzmlb;
+#endif
 #ifndef WITHOUT_MZ5
 #include "Serializer_mz5.hpp"
 #endif
@@ -157,6 +161,7 @@ void writeStream(ostream& os, const MSData& msd, const MSDataFile::WriteConfig& 
             break;
         }
         case MSDataFile::Format_mzML:
+        case MSDataFile::Format_mzMLb:
         {
             Serializer_mzML::Config serializerConfig;
             serializerConfig.binaryDataEncoderConfig = config.binaryDataEncoderConfig;
@@ -232,6 +237,17 @@ void MSDataFile::write(const MSData& msd,
 #else
             Serializer_mz5 serializer(config);
             serializer.write(filename, msd, iterationListenerRegistry, config.useWorkerThreads);
+#endif
+            break;
+        }
+        case MSDataFile::Format_mzMLb:
+        {
+#ifdef WITHOUT_MZMLB
+            throw runtime_error("[MSDataFile::write()] library was not built with mzMLb support.");
+#else
+            Connection_mzMLb con(filename, config.mzMLb_chunk_size, config.mzMLb_compression_level);
+            boost::iostreams::stream<Connection_mzMLb> mzMLb_os(con, config.mzMLb_chunk_size);
+            writeStream(mzMLb_os, msd, config, iterationListenerRegistry);
 #endif
             break;
         }
@@ -331,6 +347,9 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, MSDataFile::Format format)
         case MSDataFile::Format_MZ5:
             os << "mz5";
             return os;
+        case MSDataFile::Format_mzMLb:
+            os << "mzMLb";
+            return os;
         default:
             os << "Unknown";
             return os;
@@ -345,7 +364,8 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, const MSDataFile::WriteConfig& co
         config.format == MSDataFile::Format_mzXML)
         os << " " << config.binaryDataEncoderConfig
            << " indexed=\"" << boolalpha << config.indexed << "\"";
-    else if (config.format == MSDataFile::Format_MZ5)
+    else if (config.format == MSDataFile::Format_MZ5 ||
+             config.format == MSDataFile::Format_mzMLb)
         os << " " << config.binaryDataEncoderConfig;
     return os;
 }

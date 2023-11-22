@@ -944,7 +944,7 @@ namespace pwiz.Skyline.Model
                 IEqualityComparer<TransitionGroup> transitionGroupEqualityComparer = null;
                 if (!IsProteomic)
                 {
-                    transitionGroupEqualityComparer = new IdentityEqualityComparer<TransitionGroup>();
+                    transitionGroupEqualityComparer = ReferenceValue.EQUALITY_COMPARER;
                 }
 
                 ILookup<TransitionGroup, TransitionGroupDocNode> mapIdToChild =
