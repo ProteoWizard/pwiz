@@ -1394,6 +1394,19 @@ namespace pwiz.Skyline
             (c, p) => c.PeptideFilterExcludePotentialRaggedEnds = p.IsNameOnly || bool.Parse(p.Value))
             { OptionalValue = true };
 
+        public static readonly Argument ARG_PEPTIDE_ENZYME_NAME = new DocArgument(@"pep-digest-enzyme", () => Settings.Default.EnzymeList.Select(e => e.Name).ToArray(),
+            (c, p) => c.PeptideDigestEnzymeName = p.Value)
+            { WrapValue = true };
+        public static readonly Argument ARG_PEPTIDE_MAX_MISSED_CLEAVAGES = new DocArgument(@"pep-max-missed-cleavages", INT_VALUE,
+            (c, p) => c.PeptideDigestMaxMissedCleavages = p.GetValueInt(DigestSettings.MIN_MISSED_CLEAVAGES, DigestSettings.MAX_MISSED_CLEAVAGES));
+        public static readonly Argument ARG_PEPTIDE_UNIQUE_BY = DocArgument.FromEnumType<PeptideFilter.PeptideUniquenessConstraint>(@"pep-unique-by",
+            (c, p) => c.PeptideDigestUniquenessConstraint = p);
+        public static readonly Argument ARG_BGPROTEOME_NAME = new DocArgument(@"background-proteome-name", () => GetDisplayNames(Settings.Default.BackgroundProteomeList),
+            (c, p) => c.BackgroundProteomeName = p.Value)
+            { WrapValue = true };
+        public static readonly Argument ARG_BGPROTEOME_PATH = new DocArgument(@"background-proteome-file", PATH_TO_FILE,
+            (c, p) => c.BackgroundProteomePath = p.Value);
+
         public static readonly Argument ARG_IMS_LIBRARY_RES = new DocArgument(@"ims-library-res", RP_VALUE,
                 (c, p) => c.IonMobilityLibraryRes = p.ValueDouble);
 
@@ -1426,6 +1439,7 @@ namespace pwiz.Skyline
             ARG_FULL_SCAN_ACQUISITION_METHOD, ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME,
             ARG_FULL_SCAN_PRODUCT_ANALYZER, ARG_FULL_SCAN_PRODUCT_RES, ARG_FULL_SCAN_PRODUCT_RES_MZ,
             ARG_FULL_SCAN_RT_FILTER, ARG_FULL_SCAN_RT_FILTER_TOLERANCE, ARG_IMS_LIBRARY_RES,
+            ARG_PEPTIDE_ENZYME_NAME, ARG_PEPTIDE_MAX_MISSED_CLEAVAGES, ARG_PEPTIDE_UNIQUE_BY, ARG_BGPROTEOME_NAME, ARG_BGPROTEOME_PATH,
             ARG_PEPTIDE_MIN_LENGTH, ARG_PEPTIDE_MAX_LENGTH, ARG_PEPTIDE_EXCLUDE_NTERMINAL_AAS, ARG_PEPTIDE_EXCLUDE_POTENTIAL_RAGGED_ENDS,
             ARG_INST_MIN_MZ, ARG_INST_MAX_MZ, ARG_INST_DYNAMIC_MIN_MZ,
             ARG_INST_METHOD_TOLERANCE, ARG_INST_MIN_TIME, ARG_INST_MAX_TIME,
@@ -1602,6 +1616,18 @@ namespace pwiz.Skyline
                                              PeptideFilterExcludePotentialRaggedEnds.HasValue ||
                                              PeptideFilterMaxLength.HasValue ||
                                              PeptideFilterMinLength.HasValue;
+
+        public string PeptideDigestEnzymeName { get; private set; }
+        public int? PeptideDigestMaxMissedCleavages { get; private set; }
+        public string BackgroundProteomeName { get; private set; }
+        public string BackgroundProteomePath { get; private set; }
+        public PeptideFilter.PeptideUniquenessConstraint? PeptideDigestUniquenessConstraint { get; private set; }
+
+        public bool PeptideDigestSettings => PeptideDigestEnzymeName != null ||
+                                             PeptideDigestMaxMissedCleavages.HasValue ||
+                                             BackgroundProteomeName != null ||
+                                             BackgroundProteomePath != null ||
+                                             PeptideDigestUniquenessConstraint.HasValue;
 
         public double? IonMobilityLibraryRes { get; private set; }
 
@@ -2532,11 +2558,11 @@ namespace pwiz.Skyline
             {
             }
 
-            public static DocArgument FromEnumType<TEnum>(string name, Action<CommandArgs, TEnum> processValue)
+            public static DocArgument FromEnumType<TEnum>(string name, Action<CommandArgs, TEnum> processValue) where TEnum : Enum
             {
                 var enumType = typeof(TEnum);
                 return new DocArgument(name, () => Enum.GetNames(enumType),
-                        (c, p) => processValue(c, (TEnum) Enum.Parse(enumType, p.Value)))
+                        (c, p) => processValue(c, (TEnum) Enum.Parse(enumType, p.Value, true)))
                     { WrapValue = true };
             }
 

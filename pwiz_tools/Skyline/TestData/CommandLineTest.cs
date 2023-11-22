@@ -327,6 +327,9 @@ namespace pwiz.SkylineTestData
                 "--tran-product-end-ion=" + TransitionFilter.EndFragmentFinder.LAST_ION_MINUS_1.Label,
                 "--tran-product-clear-special-ions",
                 "--tran-use-dia-window-exclusion",
+                "--pep-digest-enzyme=Chymotrypsin",
+                "--pep-max-missed-cleavages=9",
+                "--pep-unique-by=Protein",
                 "--pep-min-length=4",
                 "--pep-max-length=42",
                 "--pep-exclude-nterminal-aas=2",
@@ -363,6 +366,9 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(TransitionFilter.StartFragmentFinder.ION_1.Label, doc.Settings.TransitionSettings.Filter.StartFragmentFinderLabel.Label);
             Assert.AreEqual(TransitionFilter.EndFragmentFinder.LAST_ION_MINUS_1.Label, doc.Settings.TransitionSettings.Filter.EndFragmentFinderLabel.Label);
             Assert.AreEqual(0, doc.Settings.TransitionSettings.Filter.MeasuredIons.Count);
+            Assert.AreEqual(9, doc.Settings.PeptideSettings.DigestSettings.MaxMissedCleavages);
+            Assert.AreEqual("Chymotrypsin", doc.Settings.PeptideSettings.Enzyme.Name);
+            Assert.AreEqual(PeptideFilter.PeptideUniquenessConstraint.protein, doc.Settings.PeptideSettings.Filter.PeptideUniqueness);
             Assert.AreEqual(true, doc.Settings.TransitionSettings.Filter.ExclusionUseDIAWindow);
             Assert.AreEqual(4, doc.Settings.PeptideSettings.Filter.MinPeptideLength);
             Assert.AreEqual(42, doc.Settings.PeptideSettings.Filter.MaxPeptideLength);
@@ -448,6 +454,22 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(FullScanMassAnalyzerType.centroided, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
             Assert.AreEqual(5, doc.Settings.TransitionSettings.FullScan.PrecursorRes);
 
+            // test case insensitive enum parsing
+            settings = new[]
+            {
+                "--new=" + docPath,
+                "--overwrite",
+                "--pep-digest-enzyme=chymotrypsin",
+                "--pep-unique-by=proTEIN",
+                "--library-pick-product-ions=FilTER",
+            };
+
+            RunCommand(settings);
+            doc = ResultsUtil.DeserializeDocument(docPath);
+            Assert.AreEqual("Chymotrypsin", doc.Settings.PeptideSettings.Enzyme.Name);
+            Assert.AreEqual(PeptideFilter.PeptideUniquenessConstraint.protein, doc.Settings.PeptideSettings.Filter.PeptideUniqueness);
+            Assert.AreEqual(TransitionLibraryPick.filter, doc.Settings.TransitionSettings.Libraries.Pick);
+
             File.Delete(docPath);
 
             // run command that should cause an error and validate the output contains the expected output
@@ -500,6 +522,13 @@ namespace pwiz.SkylineTestData
                 PeptideFilter.MAX_MAX_LENGTH + 1, CommandArgs.ARG_PEPTIDE_MAX_LENGTH.ArgumentText, PeptideFilter.MIN_MAX_LENGTH, PeptideFilter.MAX_MAX_LENGTH));
 
             // parameter validation: bad bool
+            settings = new[] { "--pep-exclude-potential-ragged-ends=maybe" };
+
+            RunCommandAndValidateError(settings, string.Format(
+                Resources.ValueUnexpectedException_ValueUnexpectedException_The_argument__0__should_not_have_a_value_specified,
+                CommandArgs.ARG_PEPTIDE_EXCLUDE_POTENTIAL_RAGGED_ENDS.ArgumentText));
+
+            // parameter validation: bad enzyme
             settings = new[] { "--pep-exclude-potential-ragged-ends=maybe" };
 
             RunCommandAndValidateError(settings, string.Format(
