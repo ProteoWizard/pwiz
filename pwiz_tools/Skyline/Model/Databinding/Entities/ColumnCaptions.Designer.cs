@@ -3625,6 +3625,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Surrogate Calibration Curve.
+        /// </summary>
+        public static string SurrogateCalibrationCurve {
+            get {
+                return ResourceManager.GetString("SurrogateCalibrationCurve", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Target Qualitative Ion Ratio.
         /// </summary>
         public static string TargetQualitativeIonRatio {

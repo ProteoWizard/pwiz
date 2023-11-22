@@ -501,7 +501,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     QuantificationSettings quantificationSettings = SrmDocument.Settings.PeptideSettings.Quantification
                         .ChangeNormalizationMethod(normalizationMethod)
                         .ChangeMsLevel(selector.MsLevel);
-                    var peptideQuantifier = new PeptideQuantifier(GetNormalizationData, selector.Protein.PeptideGroup, peptide,
+                    var peptideQuantifier = new PeptideQuantifier(GetNormalizationData, selector.Protein, peptide,
                         quantificationSettings)
                     {
                         QValueCutoff = ComparisonDef.QValueCutoff

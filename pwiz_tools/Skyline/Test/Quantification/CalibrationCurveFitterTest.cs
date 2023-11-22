@@ -437,7 +437,7 @@ namespace pwiz.SkylineTest.Quantification
         {
             var peptideQuantifier = new PeptideQuantifier(
                 null,
-                document.PeptideGroups.First().PeptideGroup,
+                document.MoleculeGroups.First(),
                 document.Peptides.First(), document.Settings.PeptideSettings.Quantification);
             return new CalibrationCurveFitter(peptideQuantifier, document.Settings);
         }

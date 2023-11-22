@@ -257,8 +257,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 string curveLabel = sampleType.ToString();
                 if (!ReferenceEquals(samplePeptideQuantifier, mainPeptideQuantifier))
                 {
-                    var peptideDocNode = samplePeptideQuantifier.PeptideDocNode;
-                    curveLabel = sampleType + @" (" + peptideDocNode.ModifiedSequenceDisplay + @")";
+                    curveLabel = QualifyCurveNameWithSurrogate(curveLabel, samplePeptideQuantifier.PeptideDocNode);
                 }
 
                 if (pointPairList.Any())
@@ -840,6 +839,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             Settings.Default.CalibrationCurveOptions.SingleBatch =
                 !Settings.Default.CalibrationCurveOptions.SingleBatch;
             UpdateUI(false);
+        }
+
+        public static string QualifyCurveNameWithSurrogate(string curveName, PeptideDocNode surrogateMolecule)
+        {
+            return string.Format(@"{0} ({1})", curveName, surrogateMolecule.ModifiedSequenceDisplay);
         }
     }
 }

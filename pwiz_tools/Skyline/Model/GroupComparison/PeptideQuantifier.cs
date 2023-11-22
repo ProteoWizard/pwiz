@@ -21,6 +21,13 @@ namespace pwiz.Skyline.Model.GroupComparison
             _getNormalizationDataFunc = getNormalizationDataFunc;
         }
 
+        public PeptideQuantifier(Func<NormalizationData> getNormalizationDataFunc,
+            PeptideGroupDocNode peptideGroupDocNode, PeptideDocNode peptideDocNode,
+            QuantificationSettings quantificationSettings) : this(getNormalizationDataFunc,
+            peptideGroupDocNode.PeptideGroup, peptideDocNode, quantificationSettings)
+        {
+        }
+
         public static PeptideQuantifier GetPeptideQuantifier(Func<NormalizationData> getNormalizationDataFunc, SrmSettings srmSettings, PeptideGroup peptideGroup, PeptideDocNode peptide)
         {
             var mods = srmSettings.PeptideSettings.Modifications;
@@ -39,6 +46,11 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             return GetPeptideQuantifier(() => NormalizationData.GetNormalizationData(document, false, null), 
                 document.Settings, peptideGroup, peptide);
+        }
+        public static PeptideQuantifier GetPeptideQuantifier(Func<NormalizationData> getNormalizationDataFunc, SrmSettings settings, PeptideGroupDocNode peptideGroupDocNode,
+            PeptideDocNode peptide)
+        {
+            return GetPeptideQuantifier(getNormalizationDataFunc, settings, peptideGroupDocNode.PeptideGroup, peptide);
         }
 
         public static PeptideQuantifier GetPeptideQuantifier(SrmDocument document,

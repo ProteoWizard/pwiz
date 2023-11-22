@@ -1,0 +1,126 @@
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2023 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System.Linq;
+using System.Windows.Forms;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.Graphs.Calibration;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Util;
+using pwiz.SkylineTestUtil;
+using ZedGraph;
+using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
+using SampleType = pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.SampleType;
+
+namespace pwiz.SkylineTestFunctional
+{
+    [TestClass]
+    public class SurrogateCalibrationCurveTest : AbstractFunctionalTest
+    {
+        [TestMethod]
+        public void TestSurrogateCalibrationCurve()
+        {
+            TestFilesZip = @"TestFunctional\SurrogateCalibrationCurveTest.zip";
+            RunFunctionalTest();
+        }
+
+        protected override void DoTest()
+        {
+            RunUI(()=>
+            {
+                SkylineWindow.OpenFile(TestFilesDir.GetTestPath("SurrogateCalibrationCurveTest.sky"));
+                SkylineWindow.ShowDocumentGrid(true);
+            });
+            var documentGrid = FindOpenForm<DocumentGridForm>();
+            RunDlg<ViewEditor>(documentGrid.NavBar.CustomizeView, viewEditor =>
+            {
+                viewEditor.ChooseColumnsTab.RemoveColumns(0, viewEditor.ChooseColumnsTab.ColumnCount);
+                var ppPeptide = PropertyPath.Root
+                    .Property(nameof(SkylineDocument.Proteins)).LookupAllItems()
+                    .Property(nameof(Protein.Peptides)).LookupAllItems();
+                viewEditor.ChooseColumnsTab.AddColumn(ppPeptide);
+                viewEditor.ChooseColumnsTab.AddColumn(ppPeptide.Property(nameof(Peptide.StandardType)));
+                viewEditor.ChooseColumnsTab.AddColumn(ppPeptide.Property(nameof(Peptide.SurrogateCalibrationCurve)));
+                viewEditor.ViewName = "Surrogate Calibration Curves";
+                viewEditor.OkDialog();
+            });
+            WaitForCondition(() => documentGrid.IsComplete);
+            RunUI(() =>
+            {
+                Assert.AreEqual(2, documentGrid.RowCount);
+                var colStandardType = documentGrid.FindColumn(PropertyPath.Root.Property(nameof(Peptide.StandardType)));
+                Assert.IsNotNull(colStandardType);
+                var colSurrogateCalibrationCurve =
+                    documentGrid.FindColumn(PropertyPath.Root.Property(nameof(Peptide.SurrogateCalibrationCurve)));
+                Assert.IsNotNull(colSurrogateCalibrationCurve);
+                var dataGrid = documentGrid.DataGridView;
+                SetCellValue(dataGrid.Rows[0].Cells[colStandardType.Index], StandardType.SURROGATE_STANDARD.ToString());
+                SetCellValue(dataGrid.Rows[1].Cells[colSurrogateCalibrationCurve.Index], SkylineWindow.Document.Molecules.First().ModifiedTarget.InvariantName);
+                SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 1);
+                SkylineWindow.ShowCalibrationForm();
+            });
+            WaitForGraphs();
+            RunUI(() =>
+            {
+                var surrogateStandard = SkylineWindow.Document.Molecules.First();
+                Assert.AreEqual(StandardType.SURROGATE_STANDARD, surrogateStandard.GlobalStandardType);
+                var calibrationForm = FindOpenForm<CalibrationForm>();
+                Assert.IsNotNull(calibrationForm);
+                var unknownCurve = FindCurve(calibrationForm.ZedGraphControl, SampleType.UNKNOWN.ToString());
+                Assert.IsNotNull(unknownCurve);
+                var standardCurve = FindCurve(calibrationForm.ZedGraphControl,
+                    CalibrationForm.QualifyCurveNameWithSurrogate(SampleType.STANDARD.ToString(), surrogateStandard));
+                Assert.IsNotNull(standardCurve);
+            });
+        }
+
+        private void SetCellValue(DataGridViewCell cell, object value)
+        {
+            var dataGridView = cell.DataGridView;
+            IDataGridViewEditingControl editingControl = null;
+            DataGridViewEditingControlShowingEventHandler onEditingControlShowing =
+                (sender, args) =>
+                {
+                    Assume.IsNull(editingControl);
+                    editingControl = args.Control as IDataGridViewEditingControl;
+                };
+            try
+            {
+                dataGridView.EditingControlShowing += onEditingControlShowing;
+                dataGridView.CurrentCell = cell;
+                dataGridView.BeginEdit(true);
+                Assert.IsNotNull(editingControl);
+                editingControl.EditingControlFormattedValue = value;
+                Assert.IsTrue(dataGridView.EndEdit());
+            }
+            finally
+            {
+                dataGridView.EditingControlShowing -= onEditingControlShowing;
+            }
+        }
+
+        private CurveItem FindCurve(ZedGraphControl graph, string labelText)
+        {
+            return graph.GraphPane.CurveList.FirstOrDefault(curve => curve.Label.Text == labelText);
+        }
+    }
+}
