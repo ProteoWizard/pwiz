@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             IsotopologResponseCurve = peptideQuantifier.PeptideDocNode.HasPrecursorConcentrations;
         }
 
-        public static CalibrationCurveFitter GetCalibrationCurveFitter(Func<NormalizationData> getNormalizationDataFunc, SrmSettings settings,
+        public static CalibrationCurveFitter GetCalibrationCurveFitter(Lazy<NormalizationData> getNormalizationDataFunc, SrmSettings settings,
             IdPeptideDocNode idPeptideDocNode)
         {
             var peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(getNormalizationDataFunc, settings, idPeptideDocNode.PeptideGroup, idPeptideDocNode.PeptideDocNode);
@@ -63,8 +63,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public static CalibrationCurveFitter GetCalibrationCurveFitter(SrmDocument document,
             IdPeptideDocNode idPeptideDocNode)
         {
-            return GetCalibrationCurveFitter(NormalizationData.MakeGetNormalizationDataFunc(document),
-                document.Settings, idPeptideDocNode);
+            return GetCalibrationCurveFitter(NormalizationData.LazyNormalizationData(document), document.Settings,
+                idPeptideDocNode);
         }
 
 
@@ -254,7 +254,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                     {
                         continue;
                     }
-                    if (PeptideQuantifier.PeptideDocNode.IsExcludeFromCalibration(replicateIndex))
+                    if (GetPeptideQuantifier(chromatogramSet.SampleType).PeptideDocNode.IsExcludeFromCalibration(replicateIndex))
                     {
                         continue;
                     }

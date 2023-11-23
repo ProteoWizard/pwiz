@@ -312,7 +312,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 }
 
                 var calibrationCurveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(
-                    owner.DataSchema.GetNormalizationData, owner.SrmDocument.Settings,
+                    owner.DataSchema.LazyNormalizationData, owner.SrmDocument.Settings,
                     new IdPeptideDocNode(owner.Peptide.Protein.DocNode.PeptideGroup, owner.Peptide.DocNode));
                 calibrationCurveFitter.SingleBatchReplicateIndex = owner.ResultFile.Replicate.ReplicateIndex;
                 return calibrationCurveFitter;

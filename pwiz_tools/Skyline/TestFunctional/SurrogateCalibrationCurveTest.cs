@@ -60,6 +60,7 @@ namespace pwiz.SkylineTestFunctional
                 viewEditor.ChooseColumnsTab.AddColumn(ppPeptide);
                 viewEditor.ChooseColumnsTab.AddColumn(ppPeptide.Property(nameof(Peptide.StandardType)));
                 viewEditor.ChooseColumnsTab.AddColumn(ppPeptide.Property(nameof(Peptide.SurrogateCalibrationCurve)));
+                viewEditor.ChooseColumnsTab.AddColumn(ppPeptide.Property(nameof(Peptide.CalibrationCurve)));
                 viewEditor.ViewName = "Surrogate Calibration Curves";
                 viewEditor.OkDialog();
             });
@@ -78,19 +79,53 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 1);
                 SkylineWindow.ShowCalibrationForm();
             });
-            PauseTest();
+            WaitForConditionUI(() => documentGrid.IsComplete);
+            int calibrationPointCount = 0;
+            RunUI(() =>
+            {
+                var colCalibrationCurve =
+                    documentGrid.FindColumn(PropertyPath.Root.Property(nameof(Peptide.CalibrationCurve)));
+                Assert.IsNotNull(colCalibrationCurve);
+                var dataGrid = documentGrid.DataGridView;
+                var calCurve1 =
+                    ((LinkValue<CalibrationCurveMetrics>)dataGrid.Rows[0].Cells[colCalibrationCurve.Index].Value).Value;
+                var calCurve2 = ((LinkValue<CalibrationCurveMetrics>)dataGrid.Rows[1].Cells[colCalibrationCurve.Index].Value).Value;
+                Assert.AreEqual(calCurve1.Slope, calCurve2.Slope);
+                Assert.AreEqual(calCurve1.Intercept, calCurve2.Intercept);
+                Assert.IsNotNull(calCurve1.PointCount);
+                calibrationPointCount = calCurve1.PointCount.Value;
+                Assert.AreEqual(calCurve1.PointCount, calCurve2.PointCount);
+            });
             WaitForGraphs();
             RunUI(() =>
             {
-                var surrogateStandard = SkylineWindow.Document.Molecules.First();
-                Assert.AreEqual(StandardType.SURROGATE_STANDARD, surrogateStandard.GlobalStandardType);
                 var calibrationForm = FindOpenForm<CalibrationForm>();
                 Assert.IsNotNull(calibrationForm);
+                var surrogateStandard = SkylineWindow.Document.Molecules.First();
+                Assert.AreEqual(StandardType.SURROGATE_STANDARD, surrogateStandard.GlobalStandardType);
                 var unknownCurve = FindCurve(calibrationForm.ZedGraphControl, SampleType.UNKNOWN.ToString());
                 Assert.IsNotNull(unknownCurve);
                 var standardCurve = FindCurve(calibrationForm.ZedGraphControl,
                     CalibrationForm.QualifyCurveNameWithSurrogate(SampleType.STANDARD.ToString(), surrogateStandard));
                 Assert.IsNotNull(standardCurve);
+                int indexFirstStandard = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.IndexOf(
+                    chromatogramSet =>
+                        SampleType.STANDARD.Equals(chromatogramSet.SampleType));
+                calibrationForm.MakeExcludeStandardMenuItem(indexFirstStandard).PerformClick();
+            });
+            WaitForGraphs();
+            WaitForCondition(() => documentGrid.IsComplete);
+            RunUI(() =>
+            {
+                var colCalibrationCurve =
+                    documentGrid.FindColumn(PropertyPath.Root.Property(nameof(Peptide.CalibrationCurve)));
+                Assert.IsNotNull(colCalibrationCurve);
+                var dataGrid = documentGrid.DataGridView;
+                var calCurve1 =
+                    ((LinkValue<CalibrationCurveMetrics>)dataGrid.Rows[0].Cells[colCalibrationCurve.Index].Value).Value;
+                var calCurve2 = ((LinkValue<CalibrationCurveMetrics>)dataGrid.Rows[1].Cells[colCalibrationCurve.Index].Value).Value;
+                Assert.AreEqual(calibrationPointCount - 1, calCurve1.PointCount);
+                Assert.AreEqual(calibrationPointCount - 1, calCurve2.PointCount);
             });
         }
 

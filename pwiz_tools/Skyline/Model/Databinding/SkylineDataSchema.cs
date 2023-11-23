@@ -257,10 +257,11 @@ namespace pwiz.Skyline.Model.Databinding
             return _replicateSummaries = replicateSummaries;
         }
 
-        public NormalizationData GetNormalizationData()
+        public Lazy<NormalizationData> LazyNormalizationData
         {
-            return GetReplicateSummaries().GetNormalizationData();
+            get { return new Lazy<NormalizationData>(() => GetReplicateSummaries().GetNormalizationData()); }
         }
+
         public ChromDataCache ChromDataCache { get; private set; }
         public ElementRefs ElementRefs { get { return _elementRefCache.Value; } }
 

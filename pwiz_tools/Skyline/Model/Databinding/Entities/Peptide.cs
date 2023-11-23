@@ -345,6 +345,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
 
         [DataGridViewColumnType(typeof(SurrogateStandardDataGridViewColumn))]
+        [Importable]
         public string SurrogateCalibrationCurve
         {
             get { return DocNode.SurrogateCalibrationCurve; }
@@ -461,7 +462,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public PeptideQuantifier GetPeptideQuantifier()
         {
-            var quantifier = PeptideQuantifier.GetPeptideQuantifier(()=>DataSchema.GetReplicateSummaries().GetNormalizationData(), 
+            var quantifier = PeptideQuantifier.GetPeptideQuantifier(DataSchema.LazyNormalizationData, 
                 SrmDocument.Settings, Protein.DocNode.PeptideGroup, DocNode);
             return quantifier;
         }
@@ -575,7 +576,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
             protected override CalibrationCurveFitter CalculateValue(Peptide owner)
             {
-                return CalibrationCurveFitter.GetCalibrationCurveFitter(owner.DataSchema.GetNormalizationData,
+                return CalibrationCurveFitter.GetCalibrationCurveFitter(owner.DataSchema.LazyNormalizationData,
                     owner.SrmDocument.Settings,
                     new IdPeptideDocNode(owner.Protein.DocNode.PeptideGroup, owner.DocNode));
             }

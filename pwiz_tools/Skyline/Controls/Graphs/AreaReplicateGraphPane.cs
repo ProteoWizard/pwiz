@@ -1514,7 +1514,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var document = NormalizedValueCalculator.Document;
                 CalibrationCurve calibrationCurve = null;
                 var calibrationCurveFitter =
-                    CalibrationCurveFitter.GetCalibrationCurveFitter(NormalizedValueCalculator.GetNormalizationData,
+                    CalibrationCurveFitter.GetCalibrationCurveFitter(NormalizedValueCalculator.LazyNormalizationData,
                         document.Settings, new IdPeptideDocNode(peptideGroup.PeptideGroup, peptideDocNode));
                 if (_normalizeOption == NormalizeOption.CALIBRATED)
                 {

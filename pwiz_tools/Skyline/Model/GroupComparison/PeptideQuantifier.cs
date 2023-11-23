@@ -10,25 +10,24 @@ namespace pwiz.Skyline.Model.GroupComparison
 {
     public class PeptideQuantifier
     {
-        private NormalizationData _normalizationData;
-        private Func<NormalizationData> _getNormalizationDataFunc;
-        public PeptideQuantifier(Func<NormalizationData> getNormalizationDataFunc, PeptideGroup peptideGroup, PeptideDocNode peptideDocNode,
+        private readonly Lazy<NormalizationData> _normalizationData;
+        public PeptideQuantifier(Lazy<NormalizationData> normalizationData, PeptideGroup peptideGroup, PeptideDocNode peptideDocNode,
             QuantificationSettings quantificationSettings)
         {
             PeptideGroup = peptideGroup;
             PeptideDocNode = peptideDocNode;
             QuantificationSettings = quantificationSettings;
-            _getNormalizationDataFunc = getNormalizationDataFunc;
+            _normalizationData = normalizationData;
         }
 
-        public PeptideQuantifier(Func<NormalizationData> getNormalizationDataFunc,
+        public PeptideQuantifier(Lazy<NormalizationData> normalizationData,
             PeptideGroupDocNode peptideGroupDocNode, PeptideDocNode peptideDocNode,
-            QuantificationSettings quantificationSettings) : this(getNormalizationDataFunc,
+            QuantificationSettings quantificationSettings) : this(normalizationData,
             peptideGroupDocNode.PeptideGroup, peptideDocNode, quantificationSettings)
         {
         }
 
-        public static PeptideQuantifier GetPeptideQuantifier(Func<NormalizationData> getNormalizationDataFunc, SrmSettings srmSettings, PeptideGroup peptideGroup, PeptideDocNode peptide)
+        public static PeptideQuantifier GetPeptideQuantifier(Lazy<NormalizationData> getNormalizationDataFunc, SrmSettings srmSettings, PeptideGroup peptideGroup, PeptideDocNode peptide)
         {
             var mods = srmSettings.PeptideSettings.Modifications;
             // Quantify on all label types which are not internal standards.
@@ -44,10 +43,10 @@ namespace pwiz.Skyline.Model.GroupComparison
         public static PeptideQuantifier GetPeptideQuantifier(SrmDocument document, PeptideGroup peptideGroup,
             PeptideDocNode peptide)
         {
-            return GetPeptideQuantifier(() => NormalizationData.GetNormalizationData(document, false, null), 
-                document.Settings, peptideGroup, peptide);
+
+            return GetPeptideQuantifier(NormalizationData.LazyNormalizationData(document), document.Settings, peptideGroup, peptide);
         }
-        public static PeptideQuantifier GetPeptideQuantifier(Func<NormalizationData> getNormalizationDataFunc, SrmSettings settings, PeptideGroupDocNode peptideGroupDocNode,
+        public static PeptideQuantifier GetPeptideQuantifier(Lazy<NormalizationData> getNormalizationDataFunc, SrmSettings settings, PeptideGroupDocNode peptideGroupDocNode,
             PeptideDocNode peptide)
         {
             return GetPeptideQuantifier(getNormalizationDataFunc, settings, peptideGroupDocNode.PeptideGroup, peptide);
@@ -72,14 +71,6 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
         public ICollection<IsotopeLabelType> MeasuredLabelTypes { get; set; }
 
-        public NormalizationData GetNormalizationData()
-        {
-            if (_normalizationData == null)
-            {
-                _normalizationData = _getNormalizationDataFunc();
-            }
-            return _normalizationData;
-        }
         public double? QValueCutoff { get; set; }
 
         public bool IncludeTruncatedPeaks { get; set; }
@@ -315,7 +306,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 else if (Equals(normalizationMethod, NormalizationMethod.EQUALIZE_MEDIANS))
                 {
-                    var normalizationData = GetNormalizationData();
+                    var normalizationData = _normalizationData.Value;
                     if (null == normalizationData)
                     {
                         throw new InvalidOperationException(string.Format(@"Normalization method '{0}' is not supported here.", NormalizationMethod));
