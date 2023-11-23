@@ -75,7 +75,7 @@ namespace pwiz.SkylineTestTutorial
                 {
                     UseRawFiles
                         ? @"https://skyline.gs.washington.edu/tutorials/PeakPicking.zip"
-                        : @"https://skyline.gs.washington.edu/tutorials/PeakPickingMzml.zip",
+                        : @"https://skyline.gs.washington.edu/tutorials/PeakPickingMzml_2.zip",
                     @"TestTutorial\PeakPickingViews.zip"
                 };
             RunFunctionalTest();

@@ -84,7 +84,7 @@ namespace TestPerf
             RunTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME), Timeout(36000000)] // 10 hours
+        //[TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME), Timeout(36000000)] // 10 hours
         public void TestEncyclopeDiaSearchTutorialFullFileset()
         {
             if (!RunPerfTests)
