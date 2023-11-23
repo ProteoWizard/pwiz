@@ -35,11 +35,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         private readonly IDictionary<CalibrationPoint, ImmutableList<PeptideQuantifier.Quantity>> _replicateQuantities
             = new Dictionary<CalibrationPoint, ImmutableList<PeptideQuantifier.Quantity>>();
         private HashSet<IdentityPath> _transitionsToQuantifyOn;
-        public CalibrationCurveFitter(PeptideQuantifier peptideQuantifier, SrmSettings srmSettings) : this(peptideQuantifier, null, srmSettings)
-        {
-        }
         
-        public CalibrationCurveFitter(PeptideQuantifier peptideQuantifier, PeptideQuantifier standardPeptideQuantifier, SrmSettings srmSettings)
+        private CalibrationCurveFitter(PeptideQuantifier peptideQuantifier, PeptideQuantifier standardPeptideQuantifier, SrmSettings srmSettings)
         {
             PeptideQuantifier = peptideQuantifier;
             StandardPeptideQuantifier = standardPeptideQuantifier;
@@ -47,21 +44,29 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             IsotopologResponseCurve = peptideQuantifier.PeptideDocNode.HasPrecursorConcentrations;
         }
 
-        public static CalibrationCurveFitter GetCalibrationCurveFitter(SrmDocument document,
+        public static CalibrationCurveFitter GetCalibrationCurveFitter(Func<NormalizationData> getNormalizationDataFunc, SrmSettings settings,
             IdPeptideDocNode idPeptideDocNode)
         {
-            var peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(document, idPeptideDocNode.PeptideGroup, idPeptideDocNode.PeptideDocNode);
+            var peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(getNormalizationDataFunc, settings, idPeptideDocNode.PeptideGroup, idPeptideDocNode.PeptideDocNode);
             PeptideQuantifier standardPeptideQuantifier = null;
             if (null != idPeptideDocNode.PeptideDocNode.SurrogateCalibrationCurve)
             {
-                var standard = document.Settings.GetSurrogateStandards(idPeptideDocNode.PeptideDocNode.SurrogateCalibrationCurve).FirstOrDefault();
+                var standard = settings.GetSurrogateStandards(idPeptideDocNode.PeptideDocNode.SurrogateCalibrationCurve).FirstOrDefault();
                 if (standard != null)
                 {
-                    standardPeptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(document, standard.PeptideGroup, standard.PeptideDocNode);
+                    standardPeptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(getNormalizationDataFunc, settings, standard.PeptideGroup, standard.PeptideDocNode);
                 }
             }
-            return new CalibrationCurveFitter(peptideQuantifier, standardPeptideQuantifier, document.Settings);
+            return new CalibrationCurveFitter(peptideQuantifier, standardPeptideQuantifier, settings);
         }
+
+        public static CalibrationCurveFitter GetCalibrationCurveFitter(SrmDocument document,
+            IdPeptideDocNode idPeptideDocNode)
+        {
+            return GetCalibrationCurveFitter(NormalizationData.MakeGetNormalizationDataFunc(document),
+                document.Settings, idPeptideDocNode);
+        }
+
 
         public static CalibrationCurveFitter GetCalibrationCurveFitter(SrmDocument document,
             PeptideGroupDocNode peptideGroup, PeptideDocNode peptide)

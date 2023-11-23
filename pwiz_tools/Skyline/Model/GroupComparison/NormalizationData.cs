@@ -399,6 +399,12 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
             }
         }
+
+        public static Func<NormalizationData> MakeGetNormalizationDataFunc(SrmDocument document)
+        {
+            var normalizationData = new Lazy<NormalizationData>(()=> GetNormalizationData(document, false, null));
+            return () => normalizationData.Value;
+        }
     }
 
 }

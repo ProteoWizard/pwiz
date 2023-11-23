@@ -508,8 +508,9 @@ namespace pwiz.Skyline.Model.GroupComparison
                     };
                     if (useCalibrationCurve)
                     {
-                        var calibrationCurveFitter =
-                            new CalibrationCurveFitter(peptideQuantifier, SrmDocument.Settings);
+                        var calibrationCurveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(
+                            GetNormalizationData, SrmDocument.Settings,
+                            new IdPeptideDocNode(selector.Protein.PeptideGroup, peptide));
                         calibrationCurveFitter.SingleBatchReplicateIndex = replicateEntry.Key;
                         var calculatedConcentration =
                             calibrationCurveFitter.GetCalculatedConcentration(

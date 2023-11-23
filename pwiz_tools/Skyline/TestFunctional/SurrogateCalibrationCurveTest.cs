@@ -78,6 +78,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 1);
                 SkylineWindow.ShowCalibrationForm();
             });
+            PauseTest();
             WaitForGraphs();
             RunUI(() =>
             {
