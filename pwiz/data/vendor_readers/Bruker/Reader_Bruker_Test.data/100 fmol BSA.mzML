@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="100 fmol BSA" version="1.1.0">
   <cvList count="2">
-    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.12" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.117" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
     <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
   </cvList>
   <fileDescription>
@@ -10,27 +10,27 @@
       <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
     </fileContent>
     <sourceFileList count="5">
-      <sourceFile id="_x0031_00_x0020_fmol_x0020_BSA_x002f_0_B1_x002f_1_x002f_1SRef_x002f_fid" name="fid" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data\100 fmol BSA\0_B1\1\1SRef">
+      <sourceFile id="_x0031_00_x0020_fmol_x0020_BSA_x002f_0_B1_x002f_1_x002f_1SRef_x002f_fid" name="fid" location="file://C:\github\pwiz\pwiz\data\vendor_readers\bruker\Reader_bruker_Test.data\100 fmol BSA\0_B1\1\1SRef">
         <cvParam cvRef="MS" accession="MS:1000773" name="Bruker FID nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000825" name="Bruker FID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="79443fd17d6e57a688190c83abeb6ec3a4949f04"/>
       </sourceFile>
-      <sourceFile id="_x0031_00_x0020_fmol_x0020_BSA_x002f_0_B2_x002f_1_x002f_1249.4898.LIFT_x002f_1SRef_x002f_fid" name="fid" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data\100 fmol BSA\0_B2\1\1249.4898.LIFT\1SRef">
+      <sourceFile id="_x0031_00_x0020_fmol_x0020_BSA_x002f_0_B2_x002f_1_x002f_1249.4898.LIFT_x002f_1SRef_x002f_fid" name="fid" location="file://C:\github\pwiz\pwiz\data\vendor_readers\bruker\Reader_bruker_Test.data\100 fmol BSA\0_B2\1\1249.4898.LIFT\1SRef">
         <cvParam cvRef="MS" accession="MS:1000773" name="Bruker FID nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000825" name="Bruker FID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="84c2e288dbe816122fda47efd0710dcccea56eed"/>
       </sourceFile>
-      <sourceFile id="_x0031_00_x0020_fmol_x0020_BSA_x002f_0_B2_x002f_1_x002f_1287.4500.LIFT_x002f_1SRef_x002f_fid" name="fid" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data\100 fmol BSA\0_B2\1\1287.4500.LIFT\1SRef">
+      <sourceFile id="_x0031_00_x0020_fmol_x0020_BSA_x002f_0_B2_x002f_1_x002f_1287.4500.LIFT_x002f_1SRef_x002f_fid" name="fid" location="file://C:\github\pwiz\pwiz\data\vendor_readers\bruker\Reader_bruker_Test.data\100 fmol BSA\0_B2\1\1287.4500.LIFT\1SRef">
         <cvParam cvRef="MS" accession="MS:1000773" name="Bruker FID nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000825" name="Bruker FID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="33cb1333474c96a4914441b2c11c518af11473bf"/>
       </sourceFile>
-      <sourceFile id="_x0031_00_x0020_fmol_x0020_BSA_x002f_0_B2_x002f_1_x002f_1SRef_x002f_fid" name="fid" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data\100 fmol BSA\0_B2\1\1SRef">
+      <sourceFile id="_x0031_00_x0020_fmol_x0020_BSA_x002f_0_B2_x002f_1_x002f_1SRef_x002f_fid" name="fid" location="file://C:\github\pwiz\pwiz\data\vendor_readers\bruker\Reader_bruker_Test.data\100 fmol BSA\0_B2\1\1SRef">
         <cvParam cvRef="MS" accession="MS:1000773" name="Bruker FID nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000825" name="Bruker FID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="9527cfe861f2411a5e5fca8254ce73e670fce29d"/>
       </sourceFile>
-      <sourceFile id="_x0031_00_x0020_fmol_x0020_BSA_x002f_0_B3_x002f_1_x002f_1SRef_x002f_fid" name="fid" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data\100 fmol BSA\0_B3\1\1SRef">
+      <sourceFile id="_x0031_00_x0020_fmol_x0020_BSA_x002f_0_B3_x002f_1_x002f_1SRef_x002f_fid" name="fid" location="file://C:\github\pwiz\pwiz\data\vendor_readers\bruker\Reader_bruker_Test.data\100 fmol BSA\0_B3\1\1SRef">
         <cvParam cvRef="MS" accession="MS:1000773" name="Bruker FID nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000825" name="Bruker FID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="e1cc8d437a8fc4ee30839c8fd5dbe34047a7ee44"/>
@@ -50,7 +50,7 @@
     <software id="FlexControl" version="unknown">
       <cvParam cvRef="MS" accession="MS:1000540" name="FlexControl" value=""/>
     </software>
-    <software id="pwiz_Reader_Bruker" version="3.0.19105">
+    <software id="pwiz_Reader_Bruker" version="3.0.23311">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
