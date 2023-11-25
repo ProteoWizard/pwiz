@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="20percLaser_100fold_1_0_H6_MS" version="1.1.0">
   <cvList count="2">
-    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.99" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.117" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
     <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
   </cvList>
   <fileDescription>
@@ -9,12 +9,12 @@
       <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
     </fileContent>
     <sourceFileList count="2">
-      <sourceFile id="_x0032_0percLaser_100fold_1_0_H6_MS.d_x005c_Analysis.tsf" name="Analysis.tsf" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data\20percLaser_100fold_1_0_H6_MS.d">
+      <sourceFile id="_x0032_0percLaser_100fold_1_0_H6_MS.d_x005c_Analysis.tsf" name="Analysis.tsf" location="file://C:\github\pwiz\pwiz\data\vendor_readers\bruker\Reader_bruker_Test.data\20percLaser_100fold_1_0_H6_MS.d">
         <cvParam cvRef="MS" accession="MS:1003283" name="Bruker TSF nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1003282" name="Bruker TSF format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="f2ef8f5dd73702385dec525d9af542f01f4dfc41"/>
       </sourceFile>
-      <sourceFile id="_x0032_0percLaser_100fold_1_0_H6_MS.d_x005c_Analysis.tsf_bin" name="Analysis.tsf_bin" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data\20percLaser_100fold_1_0_H6_MS.d">
+      <sourceFile id="_x0032_0percLaser_100fold_1_0_H6_MS.d_x005c_Analysis.tsf_bin" name="Analysis.tsf_bin" location="file://C:\github\pwiz\pwiz\data\vendor_readers\bruker\Reader_bruker_Test.data\20percLaser_100fold_1_0_H6_MS.d">
         <cvParam cvRef="MS" accession="MS:1003283" name="Bruker TSF nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1003282" name="Bruker TSF format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="523917fb1b858272b4b98807f0f68eeacfe9e37d"/>
@@ -34,7 +34,7 @@
     <software id="Compass" version="3.0.22">
       <cvParam cvRef="MS" accession="MS:1000712" name="Compass" value=""/>
     </software>
-    <software id="pwiz_Reader_Bruker" version="3.0.22236">
+    <software id="pwiz_Reader_Bruker" version="3.0.23311">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
