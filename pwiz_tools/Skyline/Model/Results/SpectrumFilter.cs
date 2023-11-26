@@ -352,9 +352,9 @@ namespace pwiz.Skyline.Model.Results
                         listChromKeyFilterIds.Add(ChromKey.FromId(gce.GetChromatogramId(globalIndex, out int indexId), false));
                     }
 
-                    foreach (var qcTracePair in gce.QcTraceByIndex)
+                    foreach (var qcTrace in gce.QcTraces)
                     {
-                        listChromKeyFilterIds.Add(ChromKey.FromQcTrace(qcTracePair.Value));
+                        listChromKeyFilterIds.Add(ChromKey.FromQcTrace(qcTrace));
                     }
                 }
 

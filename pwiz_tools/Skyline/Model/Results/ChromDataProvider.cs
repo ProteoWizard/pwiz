@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
@@ -128,11 +129,7 @@ namespace pwiz.Skyline.Model.Results
             if (dataFile.ChromatogramCount > 1 && dataFile.GetChromatogramId(1, out _) == BPC_CHROMATOGRAM_ID)
                 BpcChromatogramIndex = 1;
 
-            QcTraceByIndex = new SortedDictionary<int, MsDataFileImpl.QcTrace>();
-            foreach (var qcTrace in dataFile.GetQcTraces() ?? new List<MsDataFileImpl.QcTrace>())
-            {
-                QcTraceByIndex[qcTrace.Index] = qcTrace;
-            }
+            QcTraces = ImmutableList.ValueOf(dataFile.GetQcTraces());
         }
 
         /// <summary>
@@ -157,7 +154,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public IDictionary<int, MsDataFileImpl.QcTrace> QcTraceByIndex { get; }
+        public ImmutableList<MsDataFileImpl.QcTrace> QcTraces { get; }
 
         public string GetChromatogramId(int index, out int indexId)
         {
@@ -167,19 +164,23 @@ namespace pwiz.Skyline.Model.Results
         public bool GetChromatogram(int index, out float[] times, out float[] intensities)
         {
             index -= IndexOffset;
-
-            if (QcTraceByIndex.TryGetValue(index, out MsDataFileImpl.QcTrace qcTrace))
-            {
-                times = MsDataFileImpl.ToFloatArray(qcTrace.Times);
-                intensities = MsDataFileImpl.ToFloatArray(qcTrace.Intensities);
-            }
-            else if (index == TicChromatogramIndex || index == BpcChromatogramIndex)
+            if (index == TicChromatogramIndex || index == BpcChromatogramIndex)
             {
                 _dataFile.GetChromatogram(index, out _, out times, out intensities, true);
             }
             else
             {
-                times = intensities = null;
+                index -= GlobalChromatogramIndexes.Count;
+                if (index >= 0 && index < QcTraces.Count)
+                {
+                    var qcTrace = QcTraces[index];
+                    times = MsDataFileImpl.ToFloatArray(qcTrace.Times);
+                    intensities = MsDataFileImpl.ToFloatArray(qcTrace.Intensities);
+                }
+                else
+                {
+                    times = intensities = null;
+                }
             }
 
             return times != null;
@@ -299,10 +300,10 @@ namespace pwiz.Skyline.Model.Results
 //                _chromIds.Add(new ChromKeyProviderIdPair(ChromKey.FromId(_globalChromatogramExtractor.GetChromatogramId(globalIndex, out int indexId), false), globalIndex));
 //            }
 
-            foreach (var qcTracePair in _globalChromatogramExtractor.QcTraceByIndex)
+            foreach (var qcTrace in _globalChromatogramExtractor.QcTraces)
             {
-                _chromIndices[qcTracePair.Key] = qcTracePair.Key;
-                _chromIds.Add(new ChromKeyProviderIdPair(ChromKey.FromQcTrace(qcTracePair.Value), qcTracePair.Key));
+                _chromIndices[qcTrace.Index] = qcTrace.Index;
+                _chromIds.Add(new ChromKeyProviderIdPair(ChromKey.FromQcTrace(qcTrace), qcTrace.Index));
             }
 
             // CONSIDER(kaipot): Some way to support mzML files converted from MIDAS wiff files

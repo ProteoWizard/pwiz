@@ -561,7 +561,7 @@ namespace pwiz.Skyline.Model.Results
                 // of ChromIds.
                 _globalChromatogramExtractor.IndexOffset =
                     chromIds.Count - _globalChromatogramExtractor.GlobalChromatogramIndexes.Count -
-                    _globalChromatogramExtractor.QcTraceByIndex.Count;
+                    _globalChromatogramExtractor.QcTraces.Count;
 
                 // Verify that the TIC and QC chromatograms are at the indexes where they are expected to be
                 for (int chromIndex = _globalChromatogramExtractor.IndexOffset; chromIndex < chromIds.Count; chromIndex++)
@@ -569,18 +569,20 @@ namespace pwiz.Skyline.Model.Results
                     var chromKey = chromIds[chromIndex].Key;
                     Assume.AreEqual(SignedMz.ZERO, chromKey.Precursor);
                     var globalChromIndex = chromIndex - _globalChromatogramExtractor.IndexOffset;
-                    if (_globalChromatogramExtractor.QcTraceByIndex.TryGetValue(globalChromIndex, out var qcTrace))
-                    {
-                        Assume.AreEqual(ChromExtractor.qc, chromKey.Extractor);
-                        Assume.AreEqual(qcTrace.Name, chromKey.ChromatogramGroupId?.QcTraceName);
-                    }
-                    else if (globalChromIndex == _globalChromatogramExtractor.TicChromatogramIndex)
+                    if (globalChromIndex == _globalChromatogramExtractor.TicChromatogramIndex)
                     {
                         Assume.AreEqual(ChromExtractor.summed, chromKey.Extractor);
                     }
                     else if (globalChromIndex == _globalChromatogramExtractor.BpcChromatogramIndex)
                     {
                         Assume.AreEqual(ChromExtractor.base_peak, chromKey.Extractor);
+                    }
+                    else
+                    {
+                        int qcTraceIndex = globalChromIndex - _globalChromatogramExtractor.GlobalChromatogramIndexes.Count;
+                        var qcTrace = _globalChromatogramExtractor.QcTraces[qcTraceIndex];
+                        Assume.AreEqual(ChromExtractor.qc, chromKey.Extractor);
+                        Assume.AreEqual(qcTrace.Name, chromKey.ChromatogramGroupId?.QcTraceName);
                     }
                 }
                 return chromIds;
