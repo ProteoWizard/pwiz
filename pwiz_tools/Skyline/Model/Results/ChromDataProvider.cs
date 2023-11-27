@@ -138,7 +138,7 @@ namespace pwiz.Skyline.Model.Results
                 TicChromatogramIndex = 0;
             if (dataFile.ChromatogramCount > 1 && dataFile.GetChromatogramId(1, out _) == BPC_CHROMATOGRAM_ID)
                 BpcChromatogramIndex = 1;
-            QcTraces = ImmutableList.ValueOf(dataFile.GetQcTraces());
+            QcTraces = ImmutableList.ValueOfOrEmpty(dataFile.GetQcTraces());
             _qcTracesByChromatogramIndex = QcTraces.ToDictionary(qcTrace => qcTrace.Index);
         }
 
