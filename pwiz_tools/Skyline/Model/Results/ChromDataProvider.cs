@@ -154,7 +154,7 @@ namespace pwiz.Skyline.Model.Results
 
         public bool GetChromatogram(int index, out float[] times, out float[] intensities)
         {
-            if (index == TicChromatogramIndex || index == BpcChromatogramIndex.Value)
+            if (index == TicChromatogramIndex || index == BpcChromatogramIndex)
             {
                 return ReadChromatogramFromDataFile(index, out times, out intensities);
             }
