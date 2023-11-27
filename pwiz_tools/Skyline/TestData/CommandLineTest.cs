@@ -451,9 +451,9 @@ namespace pwiz.SkylineTestData
             File.Delete(docPath);
 
             // run command that should cause an error and validate the output contains the expected output
-            void RunCommandAndValidateError(string[] settings, string expectedOutput)
+            void RunCommandAndValidateError(string[] extraSettings, string expectedOutput)
             {
-                var output = RunCommand(new[] { "--new=" + docPath }.Concat(settings).ToArray());
+                output = RunCommand(new[] { "--new=" + docPath }.Concat(extraSettings).ToArray());
                 StringAssert.Contains(output, expectedOutput);
             }
 
