@@ -2322,63 +2322,6 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
   <data name="CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transition_filter_settings_" xml:space="preserve">
     <value>エラー：トランジションフィルタ設定の変更に失敗しました。</value>
   </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0_" xml:space="preserve">
-    <value>フルスキャン取得メソッドを{0}に変更</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0__with_isolation_scheme___1__" xml:space="preserve">
-    <value>フルスキャン取得メソッドを単離スキーム「{1}」で{0}に変更</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_MS_MS_IDs_" xml:space="preserve">
-    <value>フルスキャン抽出をMS/MS IDから+/- {0}分に変更中。</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_predicted_value_" xml:space="preserve">
-    <value>フルスキャン抽出を予測値から+/-{0}分に変更中。</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_ignore_SIM_scans_to__0_" xml:space="preserve">
-    <value>フルスキャンSIMスキャン無視を{0}に変更</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_enrichment_to__0_" xml:space="preserve">
-    <value>フルスキャンプリカーサー同位体濃縮を{0}に変更</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peak_percentage_to__0_" xml:space="preserve">
-    <value>フルスキャンプリカーサー同位体ピーク割合を{0}に変更</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_count_to__0_" xml:space="preserve">
-    <value>フルスキャンプリカーサー同位体ピーク数を{0}に変更</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_to__0_" xml:space="preserve">
-    <value>フルスキャンプリカーサー同位体ピークを{0}に変更</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_accuracy_to__0__ppm_" xml:space="preserve">
-    <value>フルスキャンのプリカーサーの質量精度を{0} ppmに変更中です。</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_analyzer_to__0_" xml:space="preserve">
-    <value>フルスキャンプリカーサー質量アナライザーを{0}に変更</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolution_to__0__" xml:space="preserve">
-    <value>フルスキャンプリカーサー分解能を{0}に変更中。</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__" xml:space="preserve">
-    <value>フルスキャンプリカーサー分解能を{0}に変更中。</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__at__1__" xml:space="preserve">
-    <value>フルスキャンプリカーサー分解能を{1}で{0}に変更中。</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__ppm_" xml:space="preserve">
-    <value>フルスキャンのプロダクトの質量精度を{0} ppmに変更中です。</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_analyzer_to__0_" xml:space="preserve">
-    <value>フルスキャンプロダクト質量アナライザーを{0}に変更</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_resolution_to__0__" xml:space="preserve">
-    <value>フルスキャンプロダクト分解能を{0}に変更中。</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__" xml:space="preserve">
-    <value>フルスキャンプロダクト分解能を{0}に変更中。</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__at__1__" xml:space="preserve">
-    <value>フルスキャンプロダクト分解能を{1}で{0}に変更中。</value>
-  </data>
   <data name="CommandLine_SetFullScanSettings_Error__Failed_attempting_to_change_the_transiton_full_scan_settings_" xml:space="preserve">
     <value>エラー： トランジションフルスキャン設定の変更に失敗しました。</value>
   </data>

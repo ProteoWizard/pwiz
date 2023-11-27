@@ -1383,6 +1383,17 @@ namespace pwiz.Skyline
             (c, p) => c.FullScanRetentionTimeFilter = p);
         public static readonly Argument ARG_FULL_SCAN_RT_FILTER_TOLERANCE = new DocArgument(@"full-scan-rt-filter-tolerance", MINUTES_VALUE,
             (c, p) => c.FullScanRetentionTimeFilterLength = p.ValueDouble) { WrapValue = true };
+
+        public static readonly Argument ARG_PEPTIDE_MIN_LENGTH = new DocArgument(@"pep-min-length", INT_VALUE,
+            (c, p) => c.PeptideFilterMinLength = p.GetValueInt(PeptideFilter.MIN_MIN_LENGTH, PeptideFilter.MAX_MIN_LENGTH));
+        public static readonly Argument ARG_PEPTIDE_MAX_LENGTH = new DocArgument(@"pep-max-length", INT_VALUE,
+            (c, p) => c.PeptideFilterMaxLength = p.GetValueInt(PeptideFilter.MIN_MAX_LENGTH, PeptideFilter.MAX_MAX_LENGTH));
+        public static readonly Argument ARG_PEPTIDE_EXCLUDE_NTERMINAL_AAS = new DocArgument(@"pep-exclude-nterminal-aas", INT_VALUE,
+            (c, p) => c.PeptideFilterExcludeNTerminalAAs = p.GetValueInt(PeptideFilter.MIN_EXCLUDE_NTERM_AA, PeptideFilter.MAX_EXCLUDE_NTERM_AA));
+        public static readonly Argument ARG_PEPTIDE_EXCLUDE_POTENTIAL_RAGGED_ENDS = new DocArgument(@"pep-exclude-potential-ragged-ends",
+            (c, p) => c.PeptideFilterExcludePotentialRaggedEnds = p.IsNameOnly || bool.Parse(p.Value))
+            { OptionalValue = true };
+
         public static readonly Argument ARG_IMS_LIBRARY_RES = new DocArgument(@"ims-library-res", RP_VALUE,
                 (c, p) => c.IonMobilityLibraryRes = p.ValueDouble);
 
@@ -1415,6 +1426,7 @@ namespace pwiz.Skyline
             ARG_FULL_SCAN_ACQUISITION_METHOD, ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME,
             ARG_FULL_SCAN_PRODUCT_ANALYZER, ARG_FULL_SCAN_PRODUCT_RES, ARG_FULL_SCAN_PRODUCT_RES_MZ,
             ARG_FULL_SCAN_RT_FILTER, ARG_FULL_SCAN_RT_FILTER_TOLERANCE, ARG_IMS_LIBRARY_RES,
+            ARG_PEPTIDE_MIN_LENGTH, ARG_PEPTIDE_MAX_LENGTH, ARG_PEPTIDE_EXCLUDE_NTERMINAL_AAS, ARG_PEPTIDE_EXCLUDE_POTENTIAL_RAGGED_ENDS,
             ARG_INST_MIN_MZ, ARG_INST_MAX_MZ, ARG_INST_DYNAMIC_MIN_MZ,
             ARG_INST_METHOD_TOLERANCE, ARG_INST_MIN_TIME, ARG_INST_MAX_TIME,
             ARG_INST_TRIGGERED_CHROMATOGRAMS)
@@ -1580,6 +1592,16 @@ namespace pwiz.Skyline
                            ?? FullScanRetentionTimeFilterLength).HasValue;
             }
         }
+
+        public int? PeptideFilterMinLength { get; private set; }
+        public int? PeptideFilterMaxLength { get; private set; }
+        public int? PeptideFilterExcludeNTerminalAAs { get; private set; }
+        public bool? PeptideFilterExcludePotentialRaggedEnds { get; private set; }
+
+        public bool PeptideFilterSettings => PeptideFilterExcludeNTerminalAAs.HasValue ||
+                                             PeptideFilterExcludePotentialRaggedEnds.HasValue ||
+                                             PeptideFilterMaxLength.HasValue ||
+                                             PeptideFilterMinLength.HasValue;
 
         public double? IonMobilityLibraryRes { get; private set; }
 
