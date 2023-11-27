@@ -7127,6 +7127,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Failed attempting to change the peptide filter settings..
+        /// </summary>
+        public static string CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_peptide_filter_settings_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_pepti" +
+                        "de_filter_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: Failed attempting to change the transition prediction settings..
         /// </summary>
         public static string CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transition_prediction_settings_ {
