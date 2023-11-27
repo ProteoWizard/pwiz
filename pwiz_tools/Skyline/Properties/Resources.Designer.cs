@@ -7039,191 +7039,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Changing full scan acquisition method to {0}.
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full scan acquisition method to {0} with isolation scheme &apos;{1}&apos;.
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0__with_isolation_scheme___1__ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0__with" +
-                        "_isolation_scheme___1__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full-scan extraction to +/- {0} minutes from MS/MS IDs..
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_MS_MS_IDs_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_" +
-                        "from_MS_MS_IDs_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full-scan extraction to +/- {0} minutes from predicted value..
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_predicted_value_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_" +
-                        "from_predicted_value_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full scan ignore SIM scans to {0}.
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_ignore_SIM_scans_to__0_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_ignore_SIM_scans_to__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full scan precursor isotope enrichment to {0}.
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_enrichment_to__0_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_enrichment_t" +
-                        "o__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full scan precursor isotope peak percentage to {0}.
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peak_percentage_to__0_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peak_percent" +
-                        "age_to__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full scan precursor isotope peaks count to {0}.
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_count_to__0_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_count_" +
-                        "to__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full scan precursor isotope peaks to {0}.
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_to__0_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_to__0_" +
-                        "", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full scan precursor mass accuracy to {0} ppm..
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_accuracy_to__0__ppm_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_accuracy_to__0_" +
-                        "_ppm_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full scan precursor mass analyzer to {0}.
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_analyzer_to__0_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_analyzer_to__0_" +
-                        "", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full-scan precursor resolution to {0}..
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolution_to__0__ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolution_to__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full-scan precursor resolving power to {0}..
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__" +
-                        "0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full-scan precursor resolving power to {0} at {1}..
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__at__1__ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__" +
-                        "0__at__1__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full scan product mass accuracy to {0} ppm..
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__ppm_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__p" +
-                        "pm_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full scan product mass analyzer to {0}.
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_analyzer_to__0_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_analyzer_to__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full-scan product resolution to {0}..
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_product_resolution_to__0__ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_product_resolution_to__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full-scan product resolving power to {0}..
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0_" +
-                        "_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full-scan product resolving power to {0} at {1}..
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__at__1__ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0_" +
-                        "_at__1__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Error: Failed attempting to change the transiton full-scan settings..
         /// </summary>
         public static string CommandLine_SetFullScanSettings_Error__Failed_attempting_to_change_the_transiton_full_scan_settings_ {
@@ -7327,6 +7142,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_" +
                         "library_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Failed attempting to change the peptide filter settings..
+        /// </summary>
+        public static string CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_peptide_filter_settings_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_pepti" +
+                        "de_filter_settings_", resourceCulture);
             }
         }
         
