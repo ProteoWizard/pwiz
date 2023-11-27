@@ -26,6 +26,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Spectra;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -113,46 +114,36 @@ namespace pwiz.Skyline.Model.Results
         public abstract void Dispose();
     }
 
+
+    /// <summary>
+    /// Keeps track of the Total Ion Current chromatogram, the base peak chromatogram, and the QC Trace chromatograms.
+    /// When this class is used by ChromDataProvider, the chromatograms are identified by the chromatogram index
+    /// in the data file.
+    /// When this class is used by SpectraChromDataProvider, the chromatograms are identified by an integer which is
+    /// an index into the list returned by <see cref="ListChromKeys"/>.
+    /// </summary>
     public sealed class GlobalChromatogramExtractor
     {
         private MsDataFileImpl _dataFile;
         private const string TIC_CHROMATOGRAM_ID = @"TIC";
         private const string BPC_CHROMATOGRAM_ID = @"BPC";
+        private Dictionary<int, MsDataFileImpl.QcTrace> _qcTracesByChromatogramIndex;
+
 
         public GlobalChromatogramExtractor(MsDataFileImpl dataFile)
         {
             _dataFile = dataFile;
-            IndexOffset = 0;
 
             if (dataFile.ChromatogramCount > 0 && dataFile.GetChromatogramId(0, out _) == TIC_CHROMATOGRAM_ID)
                 TicChromatogramIndex = 0;
             if (dataFile.ChromatogramCount > 1 && dataFile.GetChromatogramId(1, out _) == BPC_CHROMATOGRAM_ID)
                 BpcChromatogramIndex = 1;
-
             QcTraces = ImmutableList.ValueOf(dataFile.GetQcTraces());
+            _qcTracesByChromatogramIndex = QcTraces.ToDictionary(qcTrace => qcTrace.Index);
         }
-
-        /// <summary>
-        /// Since global chromatograms can share the same index as Skyline's target chromatograms (they both start at 0),
-        /// the global chromatograms are given an index offset starting after the last target chromatogram
-        /// </summary>
-        public int IndexOffset { get; set; }
 
         public int? TicChromatogramIndex { get; set; }
         public int? BpcChromatogramIndex { get; }
-
-        public IList<int> GlobalChromatogramIndexes
-        {
-            get
-            {
-                var result = new List<int>();
-                if (TicChromatogramIndex.HasValue)
-                    result.Add(TicChromatogramIndex.Value);
-                if (BpcChromatogramIndex.HasValue)
-                    result.Add(BpcChromatogramIndex.Value);
-                return result;
-            }
-        }
 
         public ImmutableList<MsDataFileImpl.QcTrace> QcTraces { get; }
 
@@ -163,26 +154,24 @@ namespace pwiz.Skyline.Model.Results
 
         public bool GetChromatogram(int index, out float[] times, out float[] intensities)
         {
-            index -= IndexOffset;
-            if (index == TicChromatogramIndex || index == BpcChromatogramIndex)
+            if (index == TicChromatogramIndex || index == BpcChromatogramIndex.Value)
             {
-                _dataFile.GetChromatogram(index, out _, out times, out intensities, true);
-            }
-            else
-            {
-                index -= GlobalChromatogramIndexes.Count;
-                if (index >= 0 && index < QcTraces.Count)
-                {
-                    var qcTrace = QcTraces[index];
-                    times = MsDataFileImpl.ToFloatArray(qcTrace.Times);
-                    intensities = MsDataFileImpl.ToFloatArray(qcTrace.Intensities);
-                }
-                else
-                {
-                    times = intensities = null;
-                }
+                return ReadChromatogramFromDataFile(index, out times, out intensities);
             }
 
+            if (_qcTracesByChromatogramIndex.TryGetValue(index, out var qcTrace))
+            {
+                times = MsDataFileImpl.ToFloatArray(qcTrace.Times);
+                intensities = MsDataFileImpl.ToFloatArray(qcTrace.Intensities);
+                return true;
+            }
+
+            times = intensities = null;
+            return false;
+        }
+        private bool ReadChromatogramFromDataFile(int chromatogramIndex, out float[] times, out float[] intensities)
+        {
+            _dataFile.GetChromatogram(chromatogramIndex, out _, out times, out intensities, true);
             return times != null;
         }
 
@@ -209,6 +198,89 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return true;
+        }
+
+        public int ChromatogramCount
+        {
+            get
+            {
+                int count = QcTraces.Count;
+                if (TicChromatogramIndex.HasValue)
+                {
+                    count++;
+                }
+
+                if (BpcChromatogramIndex.HasValue)
+                {
+                    count++;
+                }
+
+                return count;
+            }
+        }
+
+        /// <summary>
+        /// Returns a flat list of the global chromatograms.
+        /// This list is always in the following order:
+        /// Total Ion Current
+        /// Base Peak
+        /// all qc traces
+        /// </summary>
+        public IList<ChromKey> ListChromKeys()
+        {
+            var list = new List<ChromKey>();
+            foreach (var possibleGlobalIndex in new[] { TicChromatogramIndex, BpcChromatogramIndex })
+            {
+                if (!possibleGlobalIndex.HasValue)
+                    continue;
+                int globalIndex = possibleGlobalIndex.Value;
+                list.Add(ChromKey.FromId(GetChromatogramId(globalIndex, out _), false));
+            }
+
+            foreach (var qcTrace in QcTraces)
+            {
+                list.Add(ChromKey.FromQcTrace(qcTrace));
+            }
+            Assume.AreEqual(list.Count, ChromatogramCount);
+            return list;
+        }
+
+        /// <summary>
+        /// Gets the chromatogram data for the chromatogram at a particular position in the list
+        /// returned by <see cref="ListChromKeys"/>
+        /// </summary>
+        public bool GetChromatogramAt(int index, out float[] times, out float[] intensities)
+        {
+            if (TicChromatogramIndex.HasValue)
+            {
+                if (index == 0)
+                {
+                    return ReadChromatogramFromDataFile(TicChromatogramIndex.Value, out times, out intensities);
+                }
+
+                index--;
+            }
+
+            if (BpcChromatogramIndex.HasValue)
+            {
+                if (index == 0)
+                {
+                    return ReadChromatogramFromDataFile(BpcChromatogramIndex.Value, out times, out intensities);
+                }
+
+                index--;
+            }
+
+            if (index >= 0 && index < QcTraces.Count)
+            {
+                var qcTrace = QcTraces[index];
+                times = MsDataFileImpl.ToFloatArray(qcTrace.Times);
+                intensities = MsDataFileImpl.ToFloatArray(qcTrace.Intensities);
+                return true;
+            }
+
+            times = intensities = null;
+            return false;
         }
     }
 
