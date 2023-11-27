@@ -745,7 +745,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         // we can verify that the MS1 full scan settings are valid.
                         return;
                     }
-                    SearchSettingsControl.UpdateControls(); // Feature Finding controls depend on FullScan settings
+                    SearchSettingsControl?.UpdateControls(); // Feature Finding controls depend on FullScan settings
                     break;
 
                 case Pages.import_fasta_page: // This is the last page (if there is no dda search)

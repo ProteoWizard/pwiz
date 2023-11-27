@@ -91,8 +91,10 @@ namespace pwiz.Skyline.SettingsUI
             if (_featureDetectionPhase != ImportPeptideSearch.eFeatureDetectionPhase.none)
             {
                 labelTimeAroundMs2Ids2.Text =
-                    Resources
-                        .FullScanSettingsControl_Initialize_minutes_of_detected_features; // Replaces "minutes of MS/MS IDs" in "Use only scans within [textbox] minutes of MS/MS IDs"
+                    Resources.FullScanSettingsControl_Initialize_minutes_of_detected_features; // Replaces "minutes of MS/MS IDs" in "Use only scans within [textbox] minutes of MS/MS IDs"
+                groupBoxRetentionTimeToKeep.AutoSize = true; // In case the replaced text is wider than what was there before
+                flowLayoutPanelTimeAroundMs2Ids.AutoSize = true;
+                labelTimeAroundMs2Ids2.AutoSize = true;
                 // Share some helpful tips
                 toolTip.SetToolTip(this.PrecursorChargesTextBox, string.Format(Resources.FullScanSettingsControl_InitializeFeatureDetectionUI_Hardklor_looks_for_isotope_envelopes_representing_charges_1__0___The_library_will_contain_only_ions_with_the_charges_listed_here_, HardklorSearchEngine.MaxCharge));
                 toolTip.SetToolTip(this.lblPrecursorCharges, string.Format(Resources.FullScanSettingsControl_InitializeFeatureDetectionUI_Hardklor_looks_for_isotope_envelopes_representing_charges_1__0___The_library_will_contain_only_ions_with_the_charges_listed_here_, HardklorSearchEngine.MaxCharge));
