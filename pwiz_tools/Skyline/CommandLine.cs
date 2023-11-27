@@ -272,6 +272,11 @@ namespace pwiz.Skyline
                 if (!SetFullScanSettings(commandArgs))
                     return false;
             }
+            if (commandArgs.PeptideFilterSettings)
+            {
+                if (!SetPeptideFilterSettings(commandArgs))
+                    return false;
+            }
 
             if (commandArgs.ImsSettings)
             {
@@ -1077,32 +1082,26 @@ namespace pwiz.Skyline
                     var precursorIsotopes = commandArgs.FullScanPrecursorIsotopes.Value;
                     double? threshold = commandArgs.FullScanPrecursorThreshold;
                     IsotopeEnrichments isotopeEnrichments = null;
-                    _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_to__0_, precursorIsotopes);
 
                     if (precursorIsotopes == FullScanPrecursorIsotopes.Count)
                     {
                         threshold ??= (double?) TransitionFullScan.DEFAULT_ISOTOPE_COUNT;
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_count_to__0_, threshold);
                     }
                     else if (precursorIsotopes == FullScanPrecursorIsotopes.Percent)
                     {
                         threshold ??= (double?) TransitionFullScan.DEFAULT_ISOTOPE_PERCENT;
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peak_percentage_to__0_, threshold);
                     }
 
                     if (!string.IsNullOrEmpty(commandArgs.FullScanPrecursorIsotopeEnrichment))
                     {
                         isotopeEnrichments = Settings.Default.IsotopeEnrichmentsList.FirstOrDefault(standard =>
                             Equals(standard.Name, commandArgs.FullScanPrecursorIsotopeEnrichment));
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_enrichment_to__0_, isotopeEnrichments);
-
                     }
 
                     newSettings = newSettings.ChangePrecursorIsotopes(commandArgs.FullScanPrecursorIsotopes.Value, threshold, isotopeEnrichments);
                 }
                 if (commandArgs.FullScanPrecursorIgnoreSimScans.HasValue)
                 {
-                    _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_ignore_SIM_scans_to__0_, commandArgs.FullScanPrecursorIgnoreSimScans);
                     newSettings = newSettings.ChangeIgnoreSimScans(commandArgs.FullScanPrecursorIgnoreSimScans.Value);
                 }
 
@@ -1129,83 +1128,81 @@ namespace pwiz.Skyline
                         }
                     }
 
-                    if (commandArgs.FullScanAcquisitionMethod == FullScanAcquisitionMethod.DIA)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0__with_isolation_scheme___1__,
-                            commandArgs.FullScanAcquisitionMethod, isolationSchemeName);
-                    else
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0_, commandArgs.FullScanAcquisitionMethod);
-
                     newSettings = newSettings.ChangeAcquisitionMethod(commandArgs.FullScanAcquisitionMethod, isolationScheme);
                 }
 
                 if (commandArgs.FullScanPrecursorRes.HasValue || commandArgs.FullScanPrecursorMassAnalyzerType.HasValue)
                 {
-                    double? res = commandArgs.FullScanPrecursorRes;
-                    double? resMz = commandArgs.FullScanPrecursorResMz;
-                    var precursorAnalyzer = commandArgs.FullScanPrecursorMassAnalyzerType;
-                    if (precursorAnalyzer.HasValue)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_analyzer_to__0_, precursorAnalyzer);
-
-                    if (commandArgs.FullScanPrecursorRes.HasValue && !_doc.Settings.TransitionSettings.FullScan.IsHighResPrecursor)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolution_to__0__, res);
-                    else if (_doc.Settings.TransitionSettings.FullScan.IsCentroidedMs)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_accuracy_to__0__ppm_, res);
-                    else if (resMz.HasValue)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__at__1__, res, resMz);
-                    else if (res.HasValue)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__, res);
-
                     newSettings = newSettings.ChangePrecursorResolution(
-                        precursorAnalyzer ?? newSettings.PrecursorMassAnalyzer,
-                        res ?? newSettings.PrecursorRes,
-                        resMz ?? newSettings.PrecursorResMz);
+                        commandArgs.FullScanPrecursorMassAnalyzerType ?? newSettings.PrecursorMassAnalyzer,
+                        commandArgs.FullScanPrecursorRes ?? newSettings.PrecursorRes,
+                        commandArgs.FullScanPrecursorResMz ?? newSettings.PrecursorResMz);
                 }
                 if (commandArgs.FullScanProductRes.HasValue || commandArgs.FullScanProductMassAnalyzerType.HasValue)
                 {
-                    double? res = commandArgs.FullScanProductRes;
-                    double? resMz = commandArgs.FullScanProductResMz;
-                    var productAnalyzer = commandArgs.FullScanProductMassAnalyzerType;
-                    if (productAnalyzer.HasValue)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_analyzer_to__0_, productAnalyzer);
-
-                    if (commandArgs.FullScanProductRes.HasValue && !_doc.Settings.TransitionSettings.FullScan.IsHighResProduct)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_resolution_to__0__, res);
-                    else if (_doc.Settings.TransitionSettings.FullScan.IsCentroidedMsMs)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__ppm_, res);
-                    else if (resMz.HasValue)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__at__1__, res, resMz);
-                    else if (res.HasValue)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__, res);
-
                     newSettings = newSettings.ChangeProductResolution(
-                        productAnalyzer ?? newSettings.ProductMassAnalyzer,
-                        res ?? newSettings.ProductRes,
-                        resMz ?? newSettings.ProductResMz);
+                        commandArgs.FullScanProductMassAnalyzerType ?? newSettings.ProductMassAnalyzer,
+                        commandArgs.FullScanProductRes ?? newSettings.ProductRes,
+                        commandArgs.FullScanProductResMz ?? newSettings.ProductResMz);
                 }
-
-                if (commandArgs.FullScanRetentionTimeFilter.HasValue)
+                if (commandArgs.FullScanRetentionTimeFilter.HasValue || commandArgs.FullScanRetentionTimeFilterLength.HasValue)
                 {
-                    var filterType = commandArgs.FullScanRetentionTimeFilter.Value;
-
-                    newSettings = newSettings.ChangeRetentionTimeFilter(filterType, newSettings.RetentionTimeFilterLength);
-                }
-                if (commandArgs.FullScanRetentionTimeFilterLength.HasValue)
-                {
-                    double rtLen = commandArgs.FullScanRetentionTimeFilterLength.Value;
-                    if (_doc.Settings.TransitionSettings.FullScan.RetentionTimeFilterType == RetentionTimeFilterType.scheduling_windows)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_predicted_value_, rtLen);
-                    else if (_doc.Settings.TransitionSettings.FullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_MS_MS_IDs_, rtLen);
-
-                    newSettings = newSettings.ChangeRetentionTimeFilter(newSettings.RetentionTimeFilterType, rtLen);
+                    newSettings = newSettings.ChangeRetentionTimeFilter(
+                        commandArgs.FullScanRetentionTimeFilter ?? newSettings.RetentionTimeFilterType,
+                        commandArgs.FullScanRetentionTimeFilterLength ?? newSettings.RetentionTimeFilterLength);
                 }
 
-                ModifyDocument(d => d.ChangeSettings(d.Settings.ChangeTransitionFullScan(f => newSettings)), AuditLogEntry.SettingsLogFunction);
+                ModifyDocumentWithLogging(d => d.ChangeSettings(d.Settings.ChangeTransitionFullScan(f => newSettings)), AuditLogEntry.SettingsLogFunction);
                 return true;
             }
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Error__Failed_attempting_to_change_the_transiton_full_scan_settings_);
+                _out.WriteLine(x.Message);
+                return false;
+            }
+        }
+
+        private bool SetPeptideFilterSettings(CommandArgs commandArgs)
+        {
+            try
+            {
+                ModifyDocumentWithLogging(d => d.ChangeSettings(d.Settings.ChangePeptideSettings(p =>
+                {
+                    var filterSettings = p.Filter;
+
+                    if (commandArgs.PeptideFilterMinLength.HasValue)
+                    {
+                        filterSettings = filterSettings.ChangeMinPeptideLength(commandArgs.PeptideFilterMinLength.Value);
+                        p = p.ChangeFilter(filterSettings);
+                    }
+
+                    if (commandArgs.PeptideFilterMaxLength.HasValue)
+                    {
+                        filterSettings = filterSettings.ChangeMaxPeptideLength(commandArgs.PeptideFilterMaxLength.Value);
+                        p = p.ChangeFilter(filterSettings);
+                    }
+
+                    if (commandArgs.PeptideFilterExcludeNTerminalAAs.HasValue)
+                    {
+                        filterSettings = filterSettings.ChangeExcludeNTermAAs(commandArgs.PeptideFilterExcludeNTerminalAAs.Value);
+                        p = p.ChangeFilter(filterSettings);
+                    }
+
+                    if (commandArgs.PeptideFilterExcludePotentialRaggedEnds.HasValue)
+                    {
+                        var digestSettings = p.DigestSettings;
+                        digestSettings = new DigestSettings(digestSettings.MaxMissedCleavages, commandArgs.PeptideFilterExcludePotentialRaggedEnds.Value);
+                        p = p.ChangeDigestSettings(digestSettings);
+                    }
+
+                    return p;
+                })), AuditLogEntry.SettingsLogFunction);
+                return true;
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_peptide_filter_settings_);
                 _out.WriteLine(x.Message);
                 return false;
             }

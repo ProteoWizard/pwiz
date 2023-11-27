@@ -327,6 +327,10 @@ namespace pwiz.SkylineTestData
                 "--tran-product-end-ion=" + TransitionFilter.EndFragmentFinder.LAST_ION_MINUS_1.Label,
                 "--tran-product-clear-special-ions",
                 "--tran-use-dia-window-exclusion",
+                "--pep-min-length=4",
+                "--pep-max-length=42",
+                "--pep-exclude-nterminal-aas=2",
+                "--pep-exclude-potential-ragged-ends",
                 "--library-product-ions=6",
                 "--library-min-product-ions=6",
                 "--library-match-tolerance=" + 0.05 + "mz",
@@ -360,6 +364,10 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(TransitionFilter.EndFragmentFinder.LAST_ION_MINUS_1.Label, doc.Settings.TransitionSettings.Filter.EndFragmentFinderLabel.Label);
             Assert.AreEqual(0, doc.Settings.TransitionSettings.Filter.MeasuredIons.Count);
             Assert.AreEqual(true, doc.Settings.TransitionSettings.Filter.ExclusionUseDIAWindow);
+            Assert.AreEqual(4, doc.Settings.PeptideSettings.Filter.MinPeptideLength);
+            Assert.AreEqual(42, doc.Settings.PeptideSettings.Filter.MaxPeptideLength);
+            Assert.AreEqual(2, doc.Settings.PeptideSettings.Filter.ExcludeNTermAAs);
+            Assert.AreEqual(true, doc.Settings.PeptideSettings.DigestSettings.ExcludeRaggedEnds);
             Assert.AreEqual(6, doc.Settings.TransitionSettings.Libraries.IonCount);
             Assert.AreEqual(6, doc.Settings.TransitionSettings.Libraries.MinIonCount);
             Assert.AreEqual(new MzTolerance(0.05), doc.Settings.TransitionSettings.Libraries.IonMatchMzTolerance);
@@ -442,43 +450,61 @@ namespace pwiz.SkylineTestData
 
             File.Delete(docPath);
 
-            // test parameter validation: analyzer specified with isotopes=none
+            // run command that should cause an error and validate the output contains the expected output
+            void RunCommandAndValidateError(string[] extraSettings, string expectedOutput)
+            {
+                output = RunCommand(new[] { "--new=" + docPath }.Concat(extraSettings).ToArray());
+                StringAssert.Contains(output, expectedOutput);
+            }
+
+            // parameter validation: analyzer specified with isotopes=none
             settings = new[]
             {
-                "--new=" + docPath,
                 "--full-scan-precursor-isotopes=None",
                 "--full-scan-precursor-analyzer=centroided",
             };
 
-            output = RunCommand(settings);
-            StringAssert.Contains(output, string.Format(
+            RunCommandAndValidateError(settings, string.Format(
                 Resources.CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_,
                 CommandArgs.ARG_FULL_SCAN_PRECURSOR_ANALYZER.ArgumentText,
                 CommandArgs.ARG_FULL_SCAN_PRECURSOR_RES.ArgumentText));
 
-            // test parameter validation: DDA method with isolation scheme
+            // parameter validation: DDA method with isolation scheme
             settings = new[]
             {
-                "--new=" + docPath,
                 "--full-scan-acquisition-method=DDA",
                 "--full-scan-isolation-scheme=All Ions",
             };
 
-            output = RunCommand(settings);
-            StringAssert.Contains(output, string.Format(
+            RunCommandAndValidateError(settings, string.Format(
                 Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in__0___mode,
                 FullScanAcquisitionMethod.DDA.Label));
 
-            // test parameter validation: DIA method without isolation scheme
-            settings = new[]
-            {
-                "--new=" + docPath,
-                "--full-scan-acquisition-method=DIA",
-            };
+            // parameter validation: DIA method without isolation scheme
+            settings = new[] { "--full-scan-acquisition-method=DIA" };
 
-            output = RunCommand(settings);
-            StringAssert.Contains(output,
-                Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_required_in_DIA_mode);
+            RunCommandAndValidateError(settings, Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_required_in_DIA_mode);
+
+            // parameter validation: int min
+            settings = new[] { "--pep-min-length=" + (PeptideFilter.MIN_MIN_LENGTH - 1) };
+
+            RunCommandAndValidateError(settings, string.Format(
+                Resources.ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__,
+                PeptideFilter.MIN_MIN_LENGTH - 1, CommandArgs.ARG_PEPTIDE_MIN_LENGTH.ArgumentText, PeptideFilter.MIN_MIN_LENGTH, PeptideFilter.MAX_MIN_LENGTH));
+
+            // parameter validation: int max
+            settings = new[] { "--pep-max-length=" + (PeptideFilter.MAX_MAX_LENGTH + 1) };
+
+            RunCommandAndValidateError(settings, string.Format(
+                Resources.ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__,
+                PeptideFilter.MAX_MAX_LENGTH + 1, CommandArgs.ARG_PEPTIDE_MAX_LENGTH.ArgumentText, PeptideFilter.MIN_MAX_LENGTH, PeptideFilter.MAX_MAX_LENGTH));
+
+            // parameter validation: bad bool
+            settings = new[] { "--pep-exclude-potential-ragged-ends=maybe" };
+
+            RunCommandAndValidateError(settings, string.Format(
+                Resources.ValueUnexpectedException_ValueUnexpectedException_The_argument__0__should_not_have_a_value_specified,
+                CommandArgs.ARG_PEPTIDE_EXCLUDE_POTENTIAL_RAGGED_ENDS.ArgumentText));
         }
 
         [TestMethod]

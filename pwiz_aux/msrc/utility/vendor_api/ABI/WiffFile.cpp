@@ -40,9 +40,11 @@
 #pragma managed
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
 #include <msclr/auto_gcroot.h>
+#using <System.dll>
 #using <System.Xml.dll>
 using namespace pwiz::util;
 using namespace System;
+using namespace System::Text::RegularExpressions;
 using namespace Clearcore2::Data;
 using namespace Clearcore2::Data::AnalystDataProvider;
 using namespace Clearcore2::Data::Client;
@@ -128,9 +130,9 @@ struct ExperimentImpl : public Experiment
     virtual size_t getSRMSize() const;
     virtual void getSRM(size_t index, Target& target) const;
 
-    virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities) const;
+    virtual double getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities, bool ignoreScheduledLimits) const;
     virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities,
-                        double& basePeakX, double& basePeakY) const;
+                        double& basePeakX, double& basePeakY, bool ignoreScheduledLimits) const;
 
     virtual void getAcquisitionMassRange(double& startMz, double& stopMz) const;
     virtual ScanType getScanType() const;
@@ -147,6 +149,7 @@ struct ExperimentImpl : public Experiment
     const WiffFileImpl* wifffile_;
     gcroot<MSExperiment^> msExperiment;
     int sample, period, experiment;
+    bool hasHalfSizeRTWindow;
 
     ExperimentType experimentType;
     size_t simCount;
@@ -439,6 +442,27 @@ ExperimentImpl::ExperimentImpl(const WiffFileImpl* wifffile, int sample, int per
             transitionCount = msExperiment->Details->MassRangeInfo->Length;
         else if (experimentType == SIM)
             simCount = msExperiment->Details->MassRangeInfo->Length;
+
+        hasHalfSizeRTWindow = false;
+        try
+        {
+            auto softwareVersion = wifffile_->batch->GetSample(sample)->Details->SoftwareVersion;
+            auto sciexOsVersionRegex = gcnew Regex(R"(SCIEX OS (\d+)\.(\d+))");
+
+            auto match = sciexOsVersionRegex->Match(softwareVersion);
+            if (match->Success)
+            {
+                int major = Convert::ToInt32(match->Groups[1]->Value);
+                int minor = Convert::ToInt32(match->Groups[2]->Value);
+                hasHalfSizeRTWindow = !(major >= 3 && minor >= 1); // currently assumed present in SCIEX OS lower than v3.1
+                //if (hasHalfSizeRTWindow)
+                //    Console::Error->WriteLine("NOTE: data from " + softwareVersion + " has bugged half-width RTWindows");
+            }
+        }
+        catch (Exception^)
+        {
+            // ignore read past end of stream: no version details? probably acquired with Analyst?
+        }
     }
     CATCH_AND_FORWARD
 }
@@ -523,11 +547,12 @@ void ExperimentImpl::getSIM(size_t index, Target& target) const
 
         SIMMassRange^ transition = (SIMMassRange^) msExperiment->Details->MassRangeInfo[index];
 
+        double rtWindowMultiplier = hasHalfSizeRTWindow ? 1 : 0.5;
         target.type = TargetType_SIM;
         target.Q1 = transition->Mass;
         target.dwellTime = transition->DwellTime;
-        target.startTime = transition->ExpectedRT - transition->RTWindow / 2;
-        target.endTime = transition->ExpectedRT + transition->RTWindow / 2;
+        target.startTime = transition->ExpectedRT - transition->RTWindow * rtWindowMultiplier;
+        target.endTime = transition->ExpectedRT + transition->RTWindow * rtWindowMultiplier;
         target.compoundID = ToStdString(transition->Name);
         
         auto parameters = transition->CompoundDepParameters;
@@ -561,12 +586,13 @@ void ExperimentImpl::getSRM(size_t index, Target& target) const
 
         MRMMassRange^ transition = (MRMMassRange^) msExperiment->Details->MassRangeInfo[index];
 
+        double rtWindowMultiplier = hasHalfSizeRTWindow ? 1 : 0.5;
         target.type = TargetType_SRM;
         target.Q1 = transition->Q1Mass;
         target.Q3 = transition->Q3Mass;
         target.dwellTime = transition->DwellTime;
-        target.startTime = transition->ExpectedRT - transition->RTWindow;
-        target.endTime = transition->ExpectedRT + transition->RTWindow;
+        target.startTime = transition->ExpectedRT - transition->RTWindow * rtWindowMultiplier;
+        target.endTime = transition->ExpectedRT + transition->RTWindow * rtWindowMultiplier;
         target.compoundID = ToStdString(transition->Name);
 
         auto parameters = transition->CompoundDepParameters;
@@ -583,14 +609,30 @@ void ExperimentImpl::getSRM(size_t index, Target& target) const
     CATCH_AND_FORWARD
 }
 
-void ExperimentImpl::getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities) const
+double ExperimentImpl::getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities, bool ignoreScheduledLimits) const
 {
     try
     {
         if (index >= transitionCount+simCount)
-            throw std::out_of_range("[Experiment::getSIC()] index out of range");
+            throw std::out_of_range("[Experiment::getSIC()] index " + lexical_cast<string>(index) + " out of range");
+
+        Target target;
+        getSRM(index, target);
 
         ExtractedIonChromatogramSettings^ option = gcnew ExtractedIonChromatogramSettings(index);
+        if (ignoreScheduledLimits)
+        {
+            option->StartCycle = 0;
+            option->EndCycle = convertRetentionTimeToCycle(cycleTimes().back());
+            option->UseStartEndCycle = true;
+        }
+        else if (target.startTime != target.endTime)
+        {
+            option->StartCycle = convertRetentionTimeToCycle(target.startTime);
+            option->EndCycle = convertRetentionTimeToCycle(target.endTime);
+            option->UseStartEndCycle = true;
+        }
+
         ExtractedIonChromatogram^ xic = msExperiment->GetExtractedIonChromatogram(option);
 
         ToBinaryData(xic->GetActualXValues(), times);
@@ -600,20 +642,12 @@ void ExperimentImpl::getSIC(size_t index, pwiz::util::BinaryData<double>& times,
 }
 
 void ExperimentImpl::getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities,
-                            double& basePeakX, double& basePeakY) const
+                            double& basePeakX, double& basePeakY, bool ignoreScheduledLimits) const
 {
+    basePeakY = getSIC(index, times, intensities, ignoreScheduledLimits);
+
     try
     {
-        if (index >= transitionCount)
-            throw std::out_of_range("[Experiment::getSIC()] index " + lexical_cast<string>(index) + " out of range");
-
-        ExtractedIonChromatogramSettings^ option = gcnew ExtractedIonChromatogramSettings(index);
-        ExtractedIonChromatogram^ xic = msExperiment->GetExtractedIonChromatogram(option);
-
-        ToBinaryData(xic->GetActualXValues(), times);
-        ToBinaryData(xic->GetActualYValues(), intensities);
-
-        basePeakY = xic->MaximumYValue;
         basePeakX = 0;
         for (size_t i=0; i < intensities.size(); ++i)
             if (intensities[i] == basePeakY)
