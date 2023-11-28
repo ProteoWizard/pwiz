@@ -256,7 +256,7 @@ namespace pwiz.Skyline.Model
 
         // Check for the various kinds of exceptions that may be thrown in the course of
         // parsing sometimes-wonky user data
-        private bool IsParserException(Exception exception)
+        public static bool IsParserException(Exception exception)
         {
             return exception is InvalidOperationException
                    || exception is InvalidDataException
