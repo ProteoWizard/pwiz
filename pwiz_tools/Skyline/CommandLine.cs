@@ -1168,51 +1168,6 @@ namespace pwiz.Skyline
             }
         }
 
-        private bool SetPeptideFilterSettings(CommandArgs commandArgs)
-        {
-            try
-            {
-                ModifyDocumentWithLogging(d => d.ChangeSettings(d.Settings.ChangePeptideSettings(p =>
-                {
-                    var filterSettings = p.Filter;
-
-                    if (commandArgs.PeptideFilterMinLength.HasValue)
-                    {
-                        filterSettings = filterSettings.ChangeMinPeptideLength(commandArgs.PeptideFilterMinLength.Value);
-                        p = p.ChangeFilter(filterSettings);
-                    }
-
-                    if (commandArgs.PeptideFilterMaxLength.HasValue)
-                    {
-                        filterSettings = filterSettings.ChangeMaxPeptideLength(commandArgs.PeptideFilterMaxLength.Value);
-                        p = p.ChangeFilter(filterSettings);
-                    }
-
-                    if (commandArgs.PeptideFilterExcludeNTerminalAAs.HasValue)
-                    {
-                        filterSettings = filterSettings.ChangeExcludeNTermAAs(commandArgs.PeptideFilterExcludeNTerminalAAs.Value);
-                        p = p.ChangeFilter(filterSettings);
-                    }
-
-                    if (commandArgs.PeptideFilterExcludePotentialRaggedEnds.HasValue)
-                    {
-                        var digestSettings = p.DigestSettings;
-                        digestSettings = new DigestSettings(digestSettings.MaxMissedCleavages, commandArgs.PeptideFilterExcludePotentialRaggedEnds.Value);
-                        p = p.ChangeDigestSettings(digestSettings);
-                    }
-
-                    return p;
-                })), AuditLogEntry.SettingsLogFunction);
-                return true;
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(Resources.CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_peptide_filter_settings_);
-                _out.WriteLine(x.Message);
-                return false;
-            }
-        }
-
         private bool SetPeptideDigestSettings(CommandArgs commandArgs)
         {
             try
@@ -1244,13 +1199,21 @@ namespace pwiz.Skyline
                         p = p.ChangeBackgroundProteome(new BackgroundProteome(bgProteome));
                     }
 
+                    if (commandArgs.BackgroundProteomePath != null)
+                    {
+                        string name = Path.GetFileNameWithoutExtension(commandArgs.BackgroundProteomePath);
+                        var bgProteome = new BackgroundProteomeSpec(name, commandArgs.BackgroundProteomePath);
+                        p = p.ChangeBackgroundProteome(new BackgroundProteome(bgProteome));
+                        Settings.Default.BackgroundProteomeList.Add(bgProteome);
+                    }
+
                     return p;
                 })), AuditLogEntry.SettingsLogFunction);
                 return true;
             }
             catch (Exception x)
             {
-                _out.WriteLine("Error: Failed attempting to change the peptide digestion settings.");
+                _out.WriteLine(Resources.CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_peptide_digestion_settings_);
                 _out.WriteLine(x.Message);
                 return false;
             }

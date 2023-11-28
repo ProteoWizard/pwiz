@@ -7127,6 +7127,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Failed attempting to change the peptide digestion settings..
+        /// </summary>
+        public static string CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_peptide_digestion_settings_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_pepti" +
+                        "de_digestion_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: Failed attempting to change the peptide filter settings..
         /// </summary>
         public static string CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_peptide_filter_settings_ {

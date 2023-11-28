@@ -958,4 +958,21 @@ greater peak area.</value>
   <data name="_pep_min_length" xml:space="preserve">
     <value>The minimum length of a peptide to add to the document.</value>
   </data>
+  <data name="_background_proteome_file" xml:space="preserve">
+    <value>The path to the background proteome (protdb) file to apply to the opened document. The name may be optionally specified by --background-proteome-name.</value>
+  </data>
+  <data name="_background_proteome_name" xml:space="preserve">
+    <value>The name of a background proteome to apply to the opened document. The background proteome specifies the full set of proteins that may be present in the sample matrix to be injected into the mass spectrometer. If the name is not already defined in Skyline, the path to the protdb file must also be set by --background-proteome-file.</value>
+  </data>
+  <data name="_pep_digest_enzyme" xml:space="preserve">
+    <value>The protease enzyme used for digesting proteins into peptides prior to injection into the mass spectrometer.</value>
+  </data>
+  <data name="_pep_max_missed_cleavages" xml:space="preserve">
+    <value>The maximum number of missed cleavages allowed in a peptide when considering protein digestion.</value>
+  </data>
+  <data name="_pep_unique_by" xml:space="preserve">
+    <value>"Protein" excludes any peptide that appears in more than one protein in the background proteome.  
+"Gene" excludes any peptide that appears in proteins for more than one gene in the background proteome.  
+"Species" excludes any peptide that appears in proteins for more than one species in the background proteome.</value>
+  </data>
 </root>

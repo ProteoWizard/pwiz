@@ -67,6 +67,7 @@ namespace pwiz.SkylineTestData
 
         private const string ZIP_FILE = @"TestData\Results\FullScan.zip";
         private const string COMMAND_FILE = @"TestData\CommandLineTest.zip";
+        private const string PROTDB_FILE = @"TestFunctional\AssociateProteinsTest.zip";
 
         private new static string RunCommand(params string[] args)
         {
@@ -307,6 +308,9 @@ namespace pwiz.SkylineTestData
             string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
             string fastaPath = TestFilesDir.GetTestPath("sample.fasta");
 
+            var protdbTestDir = new TestFilesDir(TestContext, PROTDB_FILE);
+            string protdbPath = protdbTestDir.GetTestPath("AssociateProteinMatches.protdb");
+
             // arguments that would normally be quoted on the command-line shouldn't be quoted here
             var settings = new[]
             {
@@ -334,6 +338,8 @@ namespace pwiz.SkylineTestData
                 "--pep-max-length=42",
                 "--pep-exclude-nterminal-aas=2",
                 "--pep-exclude-potential-ragged-ends",
+                "--background-proteome-file=" + protdbPath,
+                "--save-settings", // save the protdb to Settings.Default so we can test --background-proteome-name later
                 "--library-product-ions=6",
                 "--library-min-product-ions=6",
                 "--library-match-tolerance=" + 0.05 + "mz",
@@ -369,6 +375,8 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(9, doc.Settings.PeptideSettings.DigestSettings.MaxMissedCleavages);
             Assert.AreEqual("Chymotrypsin", doc.Settings.PeptideSettings.Enzyme.Name);
             Assert.AreEqual(PeptideFilter.PeptideUniquenessConstraint.protein, doc.Settings.PeptideSettings.Filter.PeptideUniqueness);
+            Assert.AreEqual(true, doc.Settings.HasBackgroundProteome);
+            Assert.AreEqual(protdbPath, doc.Settings.PeptideSettings.BackgroundProteome.DatabasePath);
             Assert.AreEqual(true, doc.Settings.TransitionSettings.Filter.ExclusionUseDIAWindow);
             Assert.AreEqual(4, doc.Settings.PeptideSettings.Filter.MinPeptideLength);
             Assert.AreEqual(42, doc.Settings.PeptideSettings.Filter.MaxPeptideLength);
@@ -462,6 +470,7 @@ namespace pwiz.SkylineTestData
                 "--pep-digest-enzyme=chymotrypsin",
                 "--pep-unique-by=proTEIN",
                 "--library-pick-product-ions=FilTER",
+                "--background-proteome-name=" + Path.GetFileNameWithoutExtension(protdbPath)
             };
 
             RunCommand(settings);
@@ -469,6 +478,8 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual("Chymotrypsin", doc.Settings.PeptideSettings.Enzyme.Name);
             Assert.AreEqual(PeptideFilter.PeptideUniquenessConstraint.protein, doc.Settings.PeptideSettings.Filter.PeptideUniqueness);
             Assert.AreEqual(TransitionLibraryPick.filter, doc.Settings.TransitionSettings.Libraries.Pick);
+            Assert.AreEqual(true, doc.Settings.HasBackgroundProteome);
+            Assert.AreEqual(protdbPath, doc.Settings.PeptideSettings.BackgroundProteome.DatabasePath);
 
             File.Delete(docPath);
 
@@ -529,11 +540,11 @@ namespace pwiz.SkylineTestData
                 CommandArgs.ARG_PEPTIDE_EXCLUDE_POTENTIAL_RAGGED_ENDS.ArgumentText));
 
             // parameter validation: bad enzyme
-            settings = new[] { "--pep-exclude-potential-ragged-ends=maybe" };
+            settings = new[] { "--pep-digest-enzyme=nope" };
 
             RunCommandAndValidateError(settings, string.Format(
-                Resources.ValueUnexpectedException_ValueUnexpectedException_The_argument__0__should_not_have_a_value_specified,
-                CommandArgs.ARG_PEPTIDE_EXCLUDE_POTENTIAL_RAGGED_ENDS.ArgumentText));
+                Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                "nope", CommandArgs.ARG_PEPTIDE_ENZYME_NAME.ArgumentText, string.Join(", ", Settings.Default.EnzymeList.Select(e => e.Name))));
         }
 
         [TestMethod]

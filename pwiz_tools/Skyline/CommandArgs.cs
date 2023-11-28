@@ -1404,8 +1404,7 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_BGPROTEOME_NAME = new DocArgument(@"background-proteome-name", () => GetDisplayNames(Settings.Default.BackgroundProteomeList),
             (c, p) => c.BackgroundProteomeName = p.Value)
             { WrapValue = true };
-        public static readonly Argument ARG_BGPROTEOME_PATH = new DocArgument(@"background-proteome-file", PATH_TO_FILE,
-            (c, p) => c.BackgroundProteomePath = p.Value);
+        public static readonly Argument ARG_BGPROTEOME_PATH = new DocArgument(@"background-proteome-file", PATH_TO_FILE, (c, p) => c.BackgroundProteomePath = p.Value);
 
         public static readonly Argument ARG_IMS_LIBRARY_RES = new DocArgument(@"ims-library-res", RP_VALUE,
                 (c, p) => c.IonMobilityLibraryRes = p.ValueDouble);

@@ -124,6 +124,24 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The path to the background proteome (protdb) file to apply to the opened document. The name may be optionally specified by --background-proteome-name..
+        /// </summary>
+        internal static string _background_proteome_file {
+            get {
+                return ResourceManager.GetString("_background_proteome_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of a background proteome to apply to the opened document. The background proteome specifies the full set of proteins that may be present in the sample matrix to be injected into the mass spectrometer. If the name is not already defined in Skyline, the path to the protdb file must also be set by --background-proteome-file..
+        /// </summary>
+        internal static string _background_proteome_name {
+            get {
+                return ResourceManager.GetString("_background_proteome_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Runs a file line by line treating each line like a SkylineRunner/Cmd input. Useful for automating the execution of multiple commands.  The open Skyline file remains active through all commands..
         /// </summary>
         internal static string _batch_commands {
@@ -1162,8 +1180,16 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Exclude all peptides starting before this amino acid position
-        ///in each protein..
+        ///   Looks up a localized string similar to The protease enzyme used for digesting proteins into peptides prior to injection into the mass spectrometer..
+        /// </summary>
+        internal static string _pep_digest_enzyme {
+            get {
+                return ResourceManager.GetString("_pep_digest_enzyme", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exclude all peptides starting before this amino acid position in each protein..
         /// </summary>
         internal static string _pep_exclude_nterminal_aas {
             get {
@@ -1172,8 +1198,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Exclude peptides resulting from cleavage sites with immediate
-        ///preceding or following cleavage sites. e.g. RR, KK, RK, KR for trypsin.
+        ///   Looks up a localized string similar to Exclude peptides resulting from cleavage sites with immediate preceding or following cleavage sites. e.g. RR, KK, RK, KR for trypsin.
         /// </summary>
         internal static string _pep_exclude_potential_ragged_ends {
             get {
@@ -1191,11 +1216,31 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The maximum number of missed cleavages allowed in a peptide when considering protein digestion..
+        /// </summary>
+        internal static string _pep_max_missed_cleavages {
+            get {
+                return ResourceManager.GetString("_pep_max_missed_cleavages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The minimum length of a peptide to add to the document..
         /// </summary>
         internal static string _pep_min_length {
             get {
                 return ResourceManager.GetString("_pep_min_length", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &quot;Protein&quot; excludes any peptide that appears in more than one protein in the background proteome.  
+        ///&quot;Gene&quot; excludes any peptide that appears in proteins for more than one gene in the background proteome.  
+        ///&quot;Species&quot; excludes any peptide that appears in proteins for more than one species in the background proteome..
+        /// </summary>
+        internal static string _pep_unique_by {
+            get {
+                return ResourceManager.GetString("_pep_unique_by", resourceCulture);
             }
         }
         

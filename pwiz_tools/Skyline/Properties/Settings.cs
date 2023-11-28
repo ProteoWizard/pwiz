@@ -470,7 +470,7 @@ namespace pwiz.Skyline.Properties
 
         public Enzyme GetEnzymeByName(string name, bool withoutRulesSuffix = false, bool ignoreCase = false)
         {
-            Enzyme enzyme;
+            Enzyme enzyme = null;
             if (!withoutRulesSuffix && !EnzymeList.TryGetValue(name, out enzyme))
             {
                 enzyme = EnzymeList.Count == 0 ?
@@ -480,7 +480,7 @@ namespace pwiz.Skyline.Properties
             {
                 enzyme = EnzymeList.GetDefault();
             }
-            else
+            else if (withoutRulesSuffix || ignoreCase)
             {
                 enzyme = EnzymeList.FirstOrDefault(e => e.Name.Equals(name,
                              ignoreCase
