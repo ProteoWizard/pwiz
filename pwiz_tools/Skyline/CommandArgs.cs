@@ -791,6 +791,16 @@ namespace pwiz.Skyline
             }
         }
 
+        /// <summary>
+        /// Retrieve an array of all possible element handler names to be displayed to the user
+        /// </summary>
+        /// <returns>An array of all possible element handler names </returns>
+        private static string[] GetAllHandlerNames()
+        {
+            var document = new SrmDocument(SrmSettingsList.GetDefault());
+            return CommandLine.GetAllHandlers(document).Select(handler => handler.Name).ToArray();
+        }
+
         private bool ParseExcludeFeature(NameValuePair pair, ICollection<IPeakFeatureCalculator> featureList)
         {
             var featureName = pair.Value;
@@ -1052,7 +1062,7 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_ANNOTATIONS_FILE = new DocArgument(@"exp-annotations", PATH_TO_CSV,
             (c, p) => c.AnnotationsFile = p.ValueFullPath);
         public static readonly Argument ARG_ANNOTATIONS_INCLUDE_OBJECTS =
-            new DocArgument(@"exp-annotations-include-object", ElementHandler.GetAllHandlerNames(),
+            new DocArgument(@"exp-annotations-include-object", GetAllHandlerNames(),
                 (c, p) => c.AnnotationsIncludeObjects.Add(p.Value)){WrapValue = true};
         public static readonly Argument ARG_ANNOTATIONS_EXCLUDE_PROPERTIES =
             new DocArgument(@"exp-annotations-include-properties",

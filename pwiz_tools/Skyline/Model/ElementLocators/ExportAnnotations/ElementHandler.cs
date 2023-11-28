@@ -106,17 +106,6 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
                     new TransitionResultHandler(dataSchema)
             };
         }
-
-        /// <summary>
-        /// Retrieve a list of all possible Element Handler names to be displayed to the user
-        /// </summary>
-        /// <returns>A list of Element handlers names</returns>
-        public static string[] GetAllHandlerNames()
-        {
-            var document = new SrmDocument(SrmSettingsList.GetDefault());
-            var schema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT);
-            return ImmutableList.ValueOf(GetElementHandlers(schema)).Select(handler => handler.Name).ToArray();
-        }
     }
 
     public abstract class AbstractElementHandler<TSkylineObject> : ElementHandler where TSkylineObject : SkylineObject

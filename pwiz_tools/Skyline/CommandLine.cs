@@ -3241,7 +3241,7 @@ namespace pwiz.Skyline
                 if (includeHandlerNames.IsNullOrEmpty())
                 {
                     // By default include all handlers
-                    handlers = GetAllHandlers();
+                    handlers = GetAllHandlers(_doc);
                 }
                 else
                 {
@@ -3294,23 +3294,23 @@ namespace pwiz.Skyline
         }
 
         /// <summary>
-        /// Retrieve a list of all possible Element Handlers
+        /// Retrieve a list of Element Handlers from the document
         /// </summary>
-        /// <returns>A list of Element handlers</returns>
-        public List<ElementHandler> GetAllHandlers()
+        /// <returns>A list of Element Handlers</returns>
+        public static List<ElementHandler> GetAllHandlers(SrmDocument doc)
         {
-            var schema = SkylineDataSchema.MemoryDataSchema(_doc, DataSchemaLocalizer.INVARIANT);
+            var schema = SkylineDataSchema.MemoryDataSchema(doc, DataSchemaLocalizer.INVARIANT);
             return ElementHandler.GetElementHandlers(schema).ToList();
         }
 
         /// <summary>
-        /// Associate a string to an object type in the annotation settings
+        /// Associate a list of strings to object types in the annotation settings
         /// </summary>
         /// <param name="objectNames">A list of object type names provided by the user</param>
         /// <returns>A list of element handlers if all object type names are recognized, null if not</returns>
         private List<ElementHandler> ParseIncludeObject(List<string> objectNames)
         {
-            var handlers = GetAllHandlers();
+            var handlers = GetAllHandlers(_doc);
             var elementHandlers = new List<ElementHandler>();
             foreach (var objectName in objectNames)
             {
