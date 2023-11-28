@@ -36,24 +36,6 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
             }
         }
 
-        protected bool Equals(ElementHandler other)
-        {
-            return Equals(ElementRefPrototype, other.ElementRefPrototype);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((ElementHandler)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return (ElementRefPrototype != null ? ElementRefPrototype.GetHashCode() : 0);
-        }
-
         public TextColumnWrapper FindProperty(string name)
         {
             TextColumnWrapper pd;

@@ -3310,14 +3310,8 @@ namespace pwiz.Skyline
                 var handler = handlers.FirstOrDefault(c => Equals(objectName, c.Name));
                 if (handler == null)
                 {
-                    _out.WriteLine(
-                        Resources.
-                            CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_name___0____Try_one_of_the_following_,
-                        objectName);
-                    foreach (var validHandler in handlers)
-                    {
-                        _out.WriteLine(validHandler.Name);
-                    }
+                    _out.WriteLine(TextUtil.LineSeparate(handlers.Select(x => x.Name).Prepend(Resources.
+                        CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_name___0____Try_one_of_the_following_)));
 
                     return null;
                 }

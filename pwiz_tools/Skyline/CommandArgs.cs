@@ -45,7 +45,6 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using static pwiz.Skyline.Model.Proteome.ProteinAssociation;
-using Transition = pwiz.Skyline.Model.Transition;
 
 namespace pwiz.Skyline
 {
