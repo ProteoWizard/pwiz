@@ -34,7 +34,6 @@ using pwiz.PanoramaClient;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
@@ -795,7 +794,7 @@ namespace pwiz.Skyline
         /// Retrieve an array of all possible element handler names to be displayed to the user
         /// </summary>
         /// <returns>An array of all possible element handler names </returns>
-        private static string[] GetAllHandlerNames()
+        public static string[] GetAllHandlerNames()
         {
             var document = new SrmDocument(SrmSettingsList.GetDefault());
             return CommandLine.GetAllHandlers(document).Select(handler => handler.Name).ToArray();

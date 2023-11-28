@@ -3237,23 +3237,14 @@ namespace pwiz.Skyline
         {
             try
             {
-                List<ElementHandler> handlers;
-                if (includeHandlerNames.IsNullOrEmpty())
+                // If the user specifies handlers, include only those handlers
+                // Parse the string names here (instead of CommandArgs.cs) in order to access the
+                // valid element handlers in the document.
+                var handlers = ParseIncludeObject(includeHandlerNames);
+                if (handlers  == null)
                 {
-                    // By default include all handlers
-                    handlers = GetAllHandlers(_doc);
-                }
-                else
-                {
-                    // If the user specifies handlers, include only those handlers
-                    // Parse the string names here (instead of CommandArgs.cs) in order to access the
-                    // valid element handlers in the document.
-                    var includeHandlers = ParseIncludeObject(includeHandlerNames);
-                    if (includeHandlers == null)
-                    {
-                        return false;
-                    }
-                    handlers = includeHandlers;
+                    // At least one name not recognized, error
+                    return false;
                 }
                 // By default do not include properties. If the user asks, include all applicable properties.
                 var properties = Enumerable.Empty<string>();
@@ -3304,13 +3295,18 @@ namespace pwiz.Skyline
         }
 
         /// <summary>
-        /// Associate a list of strings to object types in the annotation settings
+        /// Associate a list of strings to object types in the annotation settings. If the list is null
+        /// or empty, all handlers are returned.
         /// </summary>
         /// <param name="objectNames">A list of object type names provided by the user</param>
         /// <returns>A list of element handlers if all object type names are recognized, null if not</returns>
         private List<ElementHandler> ParseIncludeObject(List<string> objectNames)
         {
             var handlers = GetAllHandlers(_doc);
+            if (objectNames.IsNullOrEmpty())
+            {
+                return handlers;
+            }
             var elementHandlers = new List<ElementHandler>();
             foreach (var objectName in objectNames)
             {

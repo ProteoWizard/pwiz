@@ -1,12 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
 {
