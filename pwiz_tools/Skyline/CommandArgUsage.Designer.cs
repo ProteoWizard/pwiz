@@ -79,34 +79,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add an annotation to the document and environment with the specified name..
-        /// </summary>
-        internal static string _annotation_add {
-            get {
-                return ResourceManager.GetString("_annotation_add", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Add an annotation to the document and environment from an XML format file..
-        /// </summary>
-        internal static string _annotation_add_file {
-            get {
-                return ResourceManager.GetString("_annotation_add_file", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Use to add an exisiting annotation definition from the environment to the document. Not used with any other arguments..
-        /// </summary>
-        internal static string _annotation_add_from_environment {
-            get {
-                return ResourceManager.GetString("_annotation_add_from_environment", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Specifies how to resolve annotation name conflicts, by either overwriting or skipping them, when using --annotation-add or --annotation-add-file (default is to output an error message for conflicts).
+        ///   Looks up a localized string similar to Specifies how to resolve annotation name conflicts, by either overwriting or skipping them, when using --annotation-add, --annotation-add-file, or --annotation-add-from-environment (default is to output an error message for conflicts)..
         /// </summary>
         internal static string _annotation_conflict_resolution {
             get {
@@ -115,7 +88,25 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A comma-separated list of object types to apply the annotation to in an --annotation-add operation. Defaults to replicate..
+        ///   Looks up a localized string similar to Add an annotation to the document and environment from an XML format file. For an example of an XML format file, view the user.config file specified in the user interface window Tools &gt;Options &gt; Miscellaneous. Existing annotations with the same name will be overwritten..
+        /// </summary>
+        internal static string _annotation_file {
+            get {
+                return ResourceManager.GetString("_annotation_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add an annotation to the document with the specified name. Existing annotations with the same name will be overwritten..
+        /// </summary>
+        internal static string _annotation_name {
+            get {
+                return ResourceManager.GetString("_annotation_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A comma-separated list of target types to apply the annotation to in an --annotation-name operation..
         /// </summary>
         internal static string _annotation_targets {
             get {
@@ -124,7 +115,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Define the data type of the annotation in an --annotation-add operation. Defaults to text..
+        ///   Looks up a localized string similar to Define the data type of the annotation in an --annotation-name operation. Defaults to text..
         /// </summary>
         internal static string _annotation_type {
             get {
@@ -133,7 +124,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A comma-separated list of values for a value_list type annotation in an --annotation-add operation. Required only in an --annotation-type=value_list operation..
+        ///   Looks up a localized string similar to A comma-separated list of values for a value_list type annotation in an --annotation-name operation. Required only in an --annotation-type=value_list operation..
         /// </summary>
         internal static string _annotation_values {
             get {

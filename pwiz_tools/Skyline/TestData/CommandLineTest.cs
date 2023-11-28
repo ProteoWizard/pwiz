@@ -743,10 +743,11 @@ namespace pwiz.SkylineTestData
 
         [TestMethod]
 
-        public void ConsoleDefineAnnotationsTest()
+        public void ConsoleAddAnnotationsTest()
         {
-            TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleDefineAnnotationsTest.zip");
-            var annotationsXmlFile = TestFilesDir.GetTestPath("Annotations.xml");
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleAddAnnotationsTest.zip");
+            var annotationsXml = TestFilesDir.GetTestPath("Annotations.xml");
+            var annotationsXmlBadFormatting = TestFilesDir.GetTestPath("AnnotationsIncorrectFormatting.xml");
             var newDocumentPath = TestFilesDir.GetTestPath("out.sky");
             const string annotationValues = "Great,Good,Potentially,Bad";
             const string invalidValue = "-la";
@@ -758,7 +759,7 @@ namespace pwiz.SkylineTestData
             // Test error (invalid annotation-targets value)
             var output = RunCommand("--new=" + newDocumentPath, // Create a new document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
-                "--annotation-add=" + annotationName, // Name the annotation
+                "--annotation-name=" + annotationName, // Name the annotation
                 "--annotation-targets=" + invalidTargetsList, // Input an invalid target
                 "--annotation-type=" + annotationType, // Specify the type
                 "--annotation-values=" + annotationValues // Specify the location of the values
@@ -766,12 +767,12 @@ namespace pwiz.SkylineTestData
             CheckRunCommandOutputContains(
                 new CommandArgs.ValueInvalidAnnotationTargetListException(
                     CommandArgs.ARG_ADD_ANNOTATIONS_TARGETS, invalidTargetsList,
-                    "\"protein, peptide, precursor, transition, replicate, precursor_result, transition_result\"").Message,
+                    CommandArgs.ANNOTATION_TARGET_LIST_VALUE.Invoke()).Message,
                 output);
             // Test error (invalid annotation-type value)
             output = RunCommand("--new=" + newDocumentPath, // Create a new document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
-                "--annotation-add=" + annotationName, // Name the annotation
+                "--annotation-name=" + annotationName, // Name the annotation
                 "--annotation-targets=" + annotationTargets, // Specify the target
                 "--annotation-type=" + invalidValue // Specify an invalid type value
             );
@@ -782,7 +783,7 @@ namespace pwiz.SkylineTestData
             // Test error (specifying a value list type without providing a list of values)
             output = RunCommand("--new=" + newDocumentPath, // Create a new document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
-                "--annotation-add=" + annotationName, // Name the annotation
+                "--annotation-name=" + annotationName, // Name the annotation
                 "--annotation-targets=" + annotationTargets, // Input an invalid target
                 "--annotation-type=" + "value_list", // Specify the type
                 "--save"
@@ -791,10 +792,10 @@ namespace pwiz.SkylineTestData
             // Test define (from .xml file)
             output = RunCommand("--new=" + newDocumentPath, // Create a document (without annotations)
                 "--overwrite", // Overwrite, as the file may already exist in the bin
-                "--annotation-add-file=" + annotationsXmlFile, // Specify file path
+                "--annotation-file=" + annotationsXml, // Specify file path
                 "save"
             );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0_, annotationsXmlFile), output);
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0_, annotationsXml), output);
             // Assert that the document has the right number of annotations
             Assert.IsTrue(ResultsUtil.DeserializeDocument(newDocumentPath).Settings.DataSettings.AnnotationDefs.Count == 2);
             // Assert that the annotations in the .xml file appear in the document
@@ -808,10 +809,17 @@ namespace pwiz.SkylineTestData
                 AnnotationDef.AnnotationTargetSet.OfValues(AnnotationDef.AnnotationTarget.replicate), 
                 AnnotationDef.AnnotationType.number, 
                 Array.Empty<string>());
+            // Test error (.xml file with incorrect formatting)
+            output = RunCommand("--new=" + newDocumentPath, // Create a document (without annotations)
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--annotation-file=" + annotationsXmlBadFormatting, // Specify file path
+                "save"
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0_, annotationsXmlBadFormatting), output);
             // Test define (from arguments)
             output = RunCommand("--new=" + newDocumentPath, // Create a new document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
-                "--annotation-add=" + annotationName + 1, // Name the annotation
+                "--annotation-name=" + annotationName + 1, // Name the annotation
                 "--annotation-targets=" + annotationTargets, // Input a target
                 "--annotation-type=" + annotationType, // Specify the type
                 "--annotation-values=" + annotationValues, // Specify the values
@@ -826,16 +834,55 @@ namespace pwiz.SkylineTestData
                 AnnotationDef.AnnotationTargetSet.OfValues(AnnotationDef.AnnotationTarget.peptide, AnnotationDef.AnnotationTarget.replicate),
                 AnnotationDef.AnnotationType.value_list,
                 annotationValuesArray);
-            
-            // Test error (conflicting annotation)
-            output = RunCommand("--in=" + newDocumentPath, // Load a document with annotations
-                "--annotation-add=" + annotationName, // Name the annotation
+            // Test default behavior of resolving environment conflicts through overwriting
+            output = RunCommand("--new=" + newDocumentPath, // Create a new document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--annotation-name=" + annotationName, // Name the annotation
                 "--annotation-targets=" + annotationTargets, // Input a target
                 "--annotation-type=" + annotationType, // Specify the type
                 "--annotation-values=" + annotationValues, // Specify the values
                 "--save"
             );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_SetAnnotations_, annotationName), output);
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_, annotationName), output);
+            // Test resolving conflicts through skipping
+            output = RunCommand("--new=" + newDocumentPath, // Load a document with annotations
+                "--overwrite",
+                "--annotation-name=" + annotationName, // Name the annotation
+                "--annotation-targets=" + annotationTargets, // Input a target
+                "--annotation-type=" + annotationType, // Specify the type
+                "--annotation-values=" + annotationValues, // Specify the values
+                "--annotation-conflict-resolution=" + "skip",
+                "--save"
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_SetAnnotations_Warning__Skipping_annotation___0___due_to_a_name_conflict_
+                , annotationName), output);
+            // Test resolving conflicts through overwriting (using the annotation-conflict-resolution argument)
+            output = RunCommand("--new=" + newDocumentPath, // Load a document with annotations
+                "--overwrite",
+                "--annotation-name=" + annotationName, // Name the annotation
+                "--annotation-targets=" + annotationTargets, // Input a target
+                "--annotation-type=" + annotationType, // Specify the type
+                "--annotation-values=" + annotationValues, // Specify the values
+                "--annotation-conflict-resolution=" + "overwrite",
+                "--save"
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_
+                , annotationName), output);
+            // Test specifying an annotation name by itself. This should find the annotation in the environment
+            // and add it to the document
+            output = RunCommand("--new=" + newDocumentPath, // Create a document (without annotations)
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--annotation-name=" + annotationName, // Specify an annotation we added to the environment in a previous step
+                "save"
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document, annotationName), output);
+            // Test error (specifying an annotation that does not exist in the environment)
+            output = RunCommand("--new=" + newDocumentPath, // Create a document (without annotations)
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--annotation-name=" + invalidValue, // Specify an annotation we added to the environment in a previous step
+                "save"
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_AddAnnotationFromEnvironment_Error__Annotation___0___does_not_exist_in_the_environment_and_cannot_be_added_to_the_document_, invalidValue), output);
         }
 
         private static void AssertAnnotationInDocument(string documentPath, string annotationName, 

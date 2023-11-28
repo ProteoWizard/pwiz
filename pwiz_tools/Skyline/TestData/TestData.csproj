@@ -240,7 +240,7 @@
     <None Include="CommandLineRefineGroupComparisonTest.zip" />
     <None Include="CommandLineTest.zip" />
     <None Include="CommandLineWiffTest.zip" />
-    <None Include="ConsoleDefineAnnotationsTest.zip" />
+    <None Include="ConsoleAddAnnotationsTest.zip" />
     <None Include="ConsoleExportMProphetTest.zip" />
     <None Include="ConsoleExportSpecLibTest.zip" />
     <None Include="ImportAllCmdLineTest.zip" />

@@ -13939,15 +13939,15 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
     <value>Error: An annotation titled '{0}' already exists.  Please use --annotation-conflict-resolution= &lt;overwrite | skip&gt;.  Annotation titled '{0}' was not added.</value>
   </data>
   <data name="CommandLine_SetAnnotations_Warning__Skipping_annotation___0___due_to_a_name_conflict_" xml:space="preserve">
-    <value>Warning: Skipping annotation '{0}' due to a name conflict.</value>
+    <value>Warning: Skipping annotation '{0}' due to a name conflict with an existing annotation.</value>
   </data>
   <data name="CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_" xml:space="preserve">
-    <value>Warning: The annotation '{0}' was overwritten.</value>
+    <value>Warning: The annotation '{0}' was overwritten due to a name conflict with an existing annotation.</value>
   </data>
   <data name="CommandLine_AddAnnotationFromEnvironment_Error__Annotation___0___does_not_exist_in_the_environment_and_cannot_be_added_to_the_document_" xml:space="preserve">
     <value>Error: Annotation '{0}' does not exist in the environment and cannot be added to the document.</value>
   </data>
   <data name="CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document" xml:space="preserve">
-    <value>Annotation '{0}' successfully addded to the document</value>
+    <value>Annotation '{0}' successfully added to the document</value>
   </data>
 </root>

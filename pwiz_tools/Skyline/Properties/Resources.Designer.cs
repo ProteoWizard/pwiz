@@ -5366,7 +5366,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Annotation &apos;{0}&apos; successfully addded to the document.
+        ///   Looks up a localized string similar to Annotation &apos;{0}&apos; successfully added to the document.
         /// </summary>
         public static string CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document {
             get {
@@ -7097,7 +7097,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: An annotation titled &apos;{0}&apos; already exists.  Please use --annotation-conflict-resolution= &lt;overwrite | skip&gt;.  Annotation titled &apos;{0}&apos; was not added..
+        ///   Looks up a localized string similar to Error: An annotation definition titled &apos;{0}&apos; already exists.  Please use --annotation-conflict-resolution= &lt;overwrite | skip&gt;.  Annotation titled &apos;{0}&apos; was not added..
         /// </summary>
         public static string CommandLine_SetAnnotations_ {
             get {
@@ -7106,7 +7106,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: Skipping annotation &apos;{0}&apos; due to a name conflict..
+        ///   Looks up a localized string similar to Warning: Skipping annotation &apos;{0}&apos; due to a name conflict with an existing annotation definition..
         /// </summary>
         public static string CommandLine_SetAnnotations_Warning__Skipping_annotation___0___due_to_a_name_conflict_ {
             get {
@@ -7116,7 +7116,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: The annotation &apos;{0}&apos; was overwritten..
+        ///   Looks up a localized string similar to Warning: The annotation &apos;{0}&apos; was overwritten due to a name conflict with an existing annotation definition..
         /// </summary>
         public static string CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_ {
             get {

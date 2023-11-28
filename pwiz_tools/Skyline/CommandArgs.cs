@@ -94,7 +94,7 @@ namespace pwiz.Skyline
         // ReSharper disable LocalizableElement
         public static readonly Func<string> INT_LIST_VALUE = () => "\"1, 2, 3...\"";  // Not L10N
         public static readonly Func<string> ION_TYPE_LIST_VALUE = () => "\"a, b, c, x, y, z, p\"";    // Not L10N
-        public static readonly Func<string> ANNOTATION_TARGET_LIST_VALUE = () => "\"protein, peptide, precursor, transition, replicate, precursor_result, transition_result\"";    // Not L10N
+        public static readonly Func<string> ANNOTATION_TARGET_LIST_VALUE = () => ('"' + string.Join(@", ", GetAnnotationTargetDict().Keys.ToList()) + '"').ToString();    // Not L10N
 
         public static readonly Func<string> MZTOLERANCE_VALUE = () => "\"" + 0.5 + "mz or 15ppm\"";
         // ReSharper restore LocalizableElement
@@ -116,6 +116,12 @@ namespace pwiz.Skyline
             FEATURE_NAME_VALUE, REPORT_NAME_VALUE, PIPE_NAME_VALUE, REGEX_VALUE, SERVER_URL_VALUE, USERNAME_VALUE,
             PASSWORD_VALUE, COMMAND_VALUE, COMMAND_ARGUMENTS_VALUE, PROGRAM_MACRO_VALUE, LABEL_VALUE, NAME_VALUE
         }.Concat(PATH_TYPE_VALUES));
+
+        // For value examples that should wrap but do not contain "|" characters
+        public static readonly HashSet<Func<string>> WRAPPABLE_LIST_TYPE_VARIABLES = new HashSet<Func<string>>(new[]
+        {
+            ANNOTATION_TARGET_LIST_VALUE
+        });
 
         private static void SetCulture(string cultureName)
         {
@@ -1071,11 +1077,11 @@ namespace pwiz.Skyline
 
         public List<IPeakFeatureCalculator> MProphetExcludeScores { get; private set; }
 
-        // For defining annotations
-        public static readonly Argument ARG_ADD_ANNOTATIONS_FILE = new DocArgument(@"annotation-add-file",
+        // For adding annotations
+        public static readonly Argument ARG_ADD_ANNOTATIONS_FILE = new DocArgument(@"annotation-file",
             PATH_TO_XML,
-            (c, p) => c.AddAnnotationsFile = p.ValueFullPath);
-        public static readonly Argument ARG_ADD_ANNOTATIONS_NAME = new DocArgument(@"annotation-add", NAME_VALUE,
+            (c, p) => c.AddAnnotationsFile = p.ValueFullPath) {InternalUse = true};
+        public static readonly Argument ARG_ADD_ANNOTATIONS_NAME = new DocArgument(@"annotation-name", NAME_VALUE,
             (c, p) =>
             {
                 c.AddAnnotationsName = p.Value;
@@ -1094,15 +1100,12 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_ADD_ANNOTATIONS_CONFLICT_RESOLUTION = new Argument(@"annotation-conflict-resolution",
                 new[] { ARG_VALUE_OVERWRITE, ARG_VALUE_SKIP },
                 (c, p) => c.AddAnnotationsResolveConflictsBySkipping = p.IsValue(ARG_VALUE_SKIP))
-            { WrapValue = true };
-        public static readonly Argument ARG_ADD_ANNOTATION_FROM_ENVIRONMENT =
-            new Argument(@"annotation-add-from-environment", NAME_VALUE, 
-                (c, p) => c.AddAnnotationsFromEnvironment = p.Value);
+            { WrapValue = true, InternalUse = true};
 
 
         public static readonly ArgumentGroup GROUP_ADD_ANNOTATIONS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_ADD_ANNOTATIONS, false,
-            ARG_ADD_ANNOTATIONS_FILE, ARG_ADD_ANNOTATIONS_NAME, ARG_ADD_ANNOTATIONS_TARGETS, ARG_ADD_ANNOTATIONS_TYPE, ARG_ADD_ANNOTATIONS_VALUES, ARG_ADD_ANNOTATIONS_CONFLICT_RESOLUTION, 
-            ARG_ADD_ANNOTATION_FROM_ENVIRONMENT) { LeftColumnWidth = 30 };
+                ARG_ADD_ANNOTATIONS_NAME, ARG_ADD_ANNOTATIONS_TARGETS, ARG_ADD_ANNOTATIONS_TYPE, ARG_ADD_ANNOTATIONS_VALUES, ARG_ADD_ANNOTATIONS_FILE, ARG_ADD_ANNOTATIONS_CONFLICT_RESOLUTION) 
+            { LeftColumnWidth = 30 };
         public string AddAnnotationsFile { get; private set; }
         public bool AddingAnnotationsFile { get { return !string.IsNullOrEmpty(AddAnnotationsFile) || !string.IsNullOrEmpty(AddAnnotationsName); } }
         public string AddAnnotationsName { get; private set; }
@@ -1110,7 +1113,6 @@ namespace pwiz.Skyline
         public ListPropertyType AddAnnotationsType { get; private set; }
         public string[] AddAnnotationsValues { get; private set; }
         public bool ?AddAnnotationsResolveConflictsBySkipping { get; private set; }
-        public string AddAnnotationsFromEnvironment { get; private set; }
 
         private void ParseAnnotationValues(string commaSeparatedValues)
         {
@@ -1133,17 +1135,35 @@ namespace pwiz.Skyline
         private AnnotationDef.AnnotationTarget ParseAnnotationTarget(string targetName)
         {
             targetName = targetName.ToLowerInvariant();
-            var validAnnotationTargets = Enum.GetValues(typeof(AnnotationDef.AnnotationTarget));
-            foreach (AnnotationDef.AnnotationTarget target in validAnnotationTargets)
+            var allAnnotationTargets = GetAnnotationTargetDict();
+            if (allAnnotationTargets.TryGetValue(targetName, out AnnotationDef.AnnotationTarget target))
             {
-                if (Equals(target.ToString(), targetName))
-                {
-                    AddAnnotationsTargets.Add(target);
-                    return target;
-                }
+                AddAnnotationsTargets.Add(target);
+                return target;
+            }
+            throw new ArgumentException();
+        }
+
+        /// <summary>
+        /// Return a dictionary where the key is the text to be displayed and the value is the
+        /// enum value. This allows for redundant names for targets.
+        /// </summary>
+        /// <returns>A dictionary where the key is the text to be displayed and the value is the
+        /// enum value.</returns>
+        private static Dictionary<string, AnnotationDef.AnnotationTarget> GetAnnotationTargetDict()
+        {
+            var allAnnotationTargets = new Dictionary<string, AnnotationDef.AnnotationTarget>();
+            var validAnnotationTargets = Enum.GetValues(typeof(AnnotationDef.AnnotationTarget));
+            foreach (AnnotationDef.AnnotationTarget annotationTarget in validAnnotationTargets)
+            {
+                allAnnotationTargets.Add(annotationTarget.ToString(), annotationTarget);
+                var translatedTarget =
+                    Helpers.PeptideToMoleculeTextMapper.SMALL_MOLECULE_MAPPER.TranslateString(annotationTarget.ToString());
+                // Using the indexer here because entries can be safely overwritten
+                allAnnotationTargets[translatedTarget] = annotationTarget; 
             }
 
-            throw new ArgumentException();
+            return allAnnotationTargets;
         }
 
         // For publishing the document to Panorama
@@ -2946,7 +2966,7 @@ namespace pwiz.Skyline
                     if (hasAppliesTo)
                         sb.Append("<td>").Append(commandArg.AppliesTo != null ? HtmlEncode(commandArg.AppliesTo) : "&nbsp;").Append("</td>");
                     string argDescription = HtmlEncode(commandArg.ArgumentDescription);
-                    if (!argDescription.Contains('|'))
+                    if (!argDescription.Contains('|') && !WRAPPABLE_LIST_TYPE_VARIABLES.Contains(commandArg.ValueExample))
                         argDescription = argDescription.Replace(" ", "&nbsp;");
                     argDescription = argDescription.Replace(Environment.NewLine, "<br/>");
                     sb.Append("<td>").Append(argDescription).Append("</td>");

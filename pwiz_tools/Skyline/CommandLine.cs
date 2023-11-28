@@ -296,8 +296,7 @@ namespace pwiz.Skyline
                         commandArgs.AddAnnotationsTargets, 
                         commandArgs.AddAnnotationsType,
                         commandArgs.AddAnnotationsValues,
-                        commandArgs.AddAnnotationsResolveConflictsBySkipping,
-                        commandArgs.AddAnnotationsFromEnvironment))
+                        commandArgs.AddAnnotationsResolveConflictsBySkipping ?? false))
                 {
                     
                     return false;
@@ -2965,25 +2964,25 @@ namespace pwiz.Skyline
         /// <param name="targets">Data types to apply the annotation to</param>
         /// <param name="type">Type of annotation</param>
         /// <param name="values">An array of at least one value. Only used for the type value_list</param>
-        /// <param name="resolveConflictsBySkipping">True to skip conflicting annotations, false to overwrite, and null to error</param>
-        /// <param name="annotationFromEnvironment">Name of an annotation that exists in the
-        /// environment to be added to the document.</param>
+        /// <param name="resolveConflictsBySkipping">True to skip conflicting annotations,
+        /// false to overwrite, and null to error</param>
         /// <returns>True upon successful definition</returns>
         public bool AddAnnotations(string name, string path,
             List<AnnotationDef.AnnotationTarget> targets,
             ListPropertyType type,
             string[] values,
-            bool? resolveConflictsBySkipping,
-            string annotationFromEnvironment)
+            bool? resolveConflictsBySkipping)
         {
             if (path != null)
             {
                 return AddAnnotationsFromXml(path, resolveConflictsBySkipping);
             }
 
-            if (annotationFromEnvironment != null)
+            if (name != null && targets.IsNullOrEmpty())
             {
-                return AddAnnotationFromEnvironment(annotationFromEnvironment);
+                // If the user specifies the name alone, look for an existing annotation with that name in 
+                // the environment and then add it to the document
+                return AddAnnotationFromEnvironment(name, resolveConflictsBySkipping);
             }
 
             return AddAnnotationsFromArguments(name, targets, type, values, resolveConflictsBySkipping);
@@ -2993,8 +2992,10 @@ namespace pwiz.Skyline
         /// Add an existing annotation definition from the environment to the document.
         /// </summary>
         /// <param name="annotationFromEnvironment">Name of an annotation existing in the environment</param>
+        /// <param name="resolveConflictsBySkipping">True to skip conflicting annotations,
+        /// false to overwrite, and null to error</param>
         /// <returns>True if the annotation exists and is added successfully</returns>
-        private bool AddAnnotationFromEnvironment(string annotationFromEnvironment)
+        private bool AddAnnotationFromEnvironment(string annotationFromEnvironment, bool? resolveConflictsBySkipping)
         {
             foreach (var def in Settings.Default.AnnotationDefList)
             {
@@ -3006,6 +3007,8 @@ namespace pwiz.Skyline
                     {
                         _out.WriteLine(Resources.CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document, def.Name);
                     }
+
+                    return success;
                 }
             }
             // Error, annotation not in environment
@@ -3014,6 +3017,7 @@ namespace pwiz.Skyline
                 annotationFromEnvironment);
             return false;
         }
+
         /// <summary>
         /// Add annotations to the document and environment from an XML file
         /// </summary>
@@ -3024,21 +3028,27 @@ namespace pwiz.Skyline
         {
             // Read XML file
             var annotationDefList = new AnnotationDefList();
-            using (var stream = File.OpenRead(path))
+            try
             {
-                var reader = new XmlTextReader(stream);
-                annotationDefList.ReadXml(reader);
-                AddAnnotationsToEnvAndDocument(annotationDefList, resolveConflictsBySkipping);
+                using (var stream = File.OpenRead(path))
+                {
+                    var reader = new XmlTextReader(stream);
+                    annotationDefList.ReadXml(reader);
+                    AddAnnotationsToEnvAndDocument(annotationDefList, resolveConflictsBySkipping);
+                }
+            }
+            catch (Exception x)
+            {
+                if (x.InnerException != null)
+                {
+                    _out.WriteLine(Resources.Error___0_, x.InnerException.Message);
+                }
             }
             var success = annotationDefList.Count > 0;
-            if (success)
-            {
-                _out.WriteLine(Resources.CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0_, path);
-            }
-            else
-            {
-                _out.WriteLine(Resources.CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0_, path);
-            }
+            _out.WriteLine(
+                success
+                    ? Resources.CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0_
+                    : Resources.CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0_, path);
 
             return success;
         }
@@ -3046,12 +3056,12 @@ namespace pwiz.Skyline
         /// <summary>
         /// Add an annotation definition to the document and environment
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="targets"></param>
-        /// <param name="type"></param>
-        /// <param name="values"></param>
+        /// <param name="name">Name of the annotation</param>
+        /// <param name="targets">Data types to apply the annotation to</param>
+        /// <param name="type">Type of the annotation (text, number, true_false, or value_list)</param>
+        /// <param name="values">A list of values, only used in a value_list annotation</param>
         /// <param name="resolveConflictsBySkipping">True to skip conflicting annotations, false to overwrite, and null to error</param>
-        /// <returns></returns>
+        /// <returns>True upon successful addition of the annotation to the document, false upon failure</returns>
         private bool AddAnnotationsFromArguments(string name, IEnumerable<AnnotationDef.AnnotationTarget> targets,
             ListPropertyType type, IList<string> values, bool? resolveConflictsBySkipping)
         {
@@ -3079,6 +3089,7 @@ namespace pwiz.Skyline
             {
                 if (SettingsContainsAnnotation(def))
                 {
+                    // Name conflict
                     if (resolveConflictsBySkipping == null)
                     {
                         // Error
@@ -3094,12 +3105,10 @@ namespace pwiz.Skyline
                     {
                         // Warn that we are overwriting
                         _out.WriteLine(Resources.CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_, def.Name);
-                        foreach (var settingsDef in Settings.Default.AnnotationDefList)
+                        foreach (var settingsDef in Settings.Default.AnnotationDefList.ToList().
+                                     Where(settingsDef => Equals(settingsDef.Name, def.Name)))
                         {
-                            if (Equals(settingsDef.Name, def.Name))
-                            {
-                                Settings.Default.AnnotationDefList.Remove(settingsDef);
-                            }
+                            Settings.Default.AnnotationDefList.Remove(settingsDef);
                         }
                         Settings.Default.AnnotationDefList.Add(def);
                     }
@@ -3113,24 +3122,21 @@ namespace pwiz.Skyline
             return AddAnnotationsToDocument(newAnnotationDefs);
         }
 
-        public bool AddAnnotationsToDocument(AnnotationDefList newAnnotationDefs)
+        private bool AddAnnotationsToDocument(AnnotationDefList newAnnotationDefs)
         {
-            var docAnnotationDefs = Document.Settings.DataSettings.AnnotationDefs;
-            var allDefs = docAnnotationDefs.ToList();
-            allDefs.AddRange(newAnnotationDefs);
+            var docAnnotationDefs = Document.Settings.DataSettings.AnnotationDefs.ToList();
+            docAnnotationDefs.AddRange(newAnnotationDefs);
             ModifyDocument(doc =>
             {
-                var dataSettingsNew = Document.Settings.DataSettings.ChangeAnnotationDefs(allDefs.ToList());
+                var dataSettingsNew = Document.Settings.DataSettings.ChangeAnnotationDefs(docAnnotationDefs.ToList());
                 if (Equals(dataSettingsNew, doc.Settings.DataSettings))
                     return doc;
                 doc = doc.ChangeSettings(doc.Settings.ChangeDataSettings(dataSettingsNew));
                 doc = MetadataExtractor.ApplyRules(doc, null, out _);
                 return doc;
             }, AuditLogEntry.SettingsLogFunction);
-            foreach (var annotationDef in newAnnotationDefs)
-            {
-                _out.WriteLine(Resources.CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document, annotationDef.Name);
-            }
+            _out.WriteLine(TextUtil.LineSeparate(newAnnotationDefs.Select(x => x.Name).Prepend(Resources.
+                CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document)));
             return true;
         }
 
