@@ -304,12 +304,15 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleNewDocumentTest()
         {
-            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
-            string fastaPath = TestFilesDir.GetTestPath("sample.fasta");
+            TestFilesDirs = new []
+            {
+                new TestFilesDir(TestContext, ZIP_FILE),
+                new TestFilesDir(TestContext, PROTDB_FILE)
+            };
 
-            var protdbTestDir = new TestFilesDir(TestContext, PROTDB_FILE);
-            string protdbPath = protdbTestDir.GetTestPath("AssociateProteinMatches.protdb");
+            string docPath = TestFilesDirs[0].GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            string fastaPath = TestFilesDirs[0].GetTestPath("sample.fasta");
+            string protdbPath = TestFilesDirs[1].GetTestPath("AssociateProteinMatches.protdb");
 
             // arguments that would normally be quoted on the command-line shouldn't be quoted here
             var settings = new[]
