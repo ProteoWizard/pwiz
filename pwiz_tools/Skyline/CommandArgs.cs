@@ -1146,7 +1146,8 @@ namespace pwiz.Skyline
 
         /// <summary>
         /// Return a dictionary where the key is the text to be displayed and the value is the
-        /// enum value. This allows for redundant names for targets.
+        /// enum value. This allows for redundant names for targets e.g. molecule_list and protein
+        /// both mean protein
         /// </summary>
         /// <returns>A dictionary where the key is the text to be displayed and the value is the
         /// enum value.</returns>
@@ -1158,8 +1159,9 @@ namespace pwiz.Skyline
             {
                 allAnnotationTargets.Add(annotationTarget.ToString(), annotationTarget);
                 var translatedTarget =
-                    Helpers.PeptideToMoleculeTextMapper.SMALL_MOLECULE_MAPPER.TranslateString(annotationTarget.ToString());
-                // Using the indexer here because entries can be safely overwritten
+                    Helpers.PeptideToMoleculeTextMapper.SMALL_MOLECULE_MAPPER.
+                        TranslateString(annotationTarget.ToString());
+                translatedTarget = translatedTarget.Replace(' ', '_'); // Convert to snake case
                 allAnnotationTargets[translatedTarget] = annotationTarget; 
             }
 
