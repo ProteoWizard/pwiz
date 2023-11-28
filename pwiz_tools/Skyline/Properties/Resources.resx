@@ -13844,6 +13844,7 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   </data>
   <data name="CommandLine_ExportAnnotations_Error__The_document_must_contain_annotations_in_order_to_export_annotations_" xml:space="preserve">
     <value>Error: The document must contain annotations in order to export annotations.</value>
+  </data>
   <data name="CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_peptide_filter_settings_" xml:space="preserve">
     <value>Error: Failed attempting to change the peptide filter settings.</value>
   </data>
