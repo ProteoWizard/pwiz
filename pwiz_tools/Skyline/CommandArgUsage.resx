@@ -958,4 +958,16 @@ greater peak area.</value>
   <data name="_exp_annotations_include_properties" xml:space="preserve">
     <value>Use to include all properties in the exported annotations. By default no properties are included. Requires the --exp-annotations argument.</value>
   </data>
+  <data name="_pep_exclude_nterminal_aas" xml:space="preserve">
+    <value>Exclude all peptides starting before this amino acid position in each protein.</value>
+  </data>
+  <data name="_pep_exclude_potential_ragged_ends" xml:space="preserve">
+    <value>Exclude peptides resulting from cleavage sites with immediate preceding or following cleavage sites. e.g. RR, KK, RK, KR for trypsin</value>
+  </data>
+  <data name="_pep_max_length" xml:space="preserve">
+    <value>The maximum length of a peptide to add to the document.</value>
+  </data>
+  <data name="_pep_min_length" xml:space="preserve">
+    <value>The minimum length of a peptide to add to the document.</value>
+  </data>
 </root>

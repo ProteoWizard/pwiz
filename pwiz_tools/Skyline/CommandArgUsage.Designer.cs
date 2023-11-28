@@ -1198,6 +1198,44 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exclude all peptides starting before this amino acid position
+        ///in each protein..
+        /// </summary>
+        internal static string _pep_exclude_nterminal_aas {
+            get {
+                return ResourceManager.GetString("_pep_exclude_nterminal_aas", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exclude peptides resulting from cleavage sites with immediate
+        ///preceding or following cleavage sites. e.g. RR, KK, RK, KR for trypsin.
+        /// </summary>
+        internal static string _pep_exclude_potential_ragged_ends {
+            get {
+                return ResourceManager.GetString("_pep_exclude_potential_ragged_ends", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum length of a peptide to add to the document..
+        /// </summary>
+        internal static string _pep_max_length {
+            get {
+                return ResourceManager.GetString("_pep_max_length", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The minimum length of a peptide to add to the document..
+        /// </summary>
+        internal static string _pep_min_length {
+            get {
+                return ResourceManager.GetString("_pep_min_length", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add back precursors of an isotope label type..
         /// </summary>
         internal static string _refine_add_label_type {
