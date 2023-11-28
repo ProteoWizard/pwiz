@@ -344,18 +344,7 @@ namespace pwiz.Skyline.Model.Results
 
                 if (gce != null)
                 {
-                    foreach (var possibleGlobalIndex in new [] { gce.TicChromatogramIndex, gce.BpcChromatogramIndex })
-                    {
-                        if (!possibleGlobalIndex.HasValue)
-                            continue;
-                        int globalIndex = possibleGlobalIndex.Value;
-                        listChromKeyFilterIds.Add(ChromKey.FromId(gce.GetChromatogramId(globalIndex, out int indexId), false));
-                    }
-
-                    foreach (var qcTracePair in gce.QcTraceByIndex)
-                    {
-                        listChromKeyFilterIds.Add(ChromKey.FromQcTrace(qcTracePair.Value));
-                    }
+                    listChromKeyFilterIds.AddRange(gce.ListChromKeys());
                 }
 
                 _productChromKeys = listChromKeyFilterIds.ToArray();
