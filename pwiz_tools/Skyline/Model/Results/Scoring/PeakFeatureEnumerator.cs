@@ -44,11 +44,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
             IProgressStatus status = new ProgressStatus(Resources.PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores);
 
             // Set up run ID dictionary
-            var runEnumDict = new Dictionary<int, int>();
+            var runEnumDict = new Dictionary<ReferenceValue<ChromFileInfoId>, int>();
             var chromatograms = document.Settings.MeasuredResults.Chromatograms;
             foreach (var fileInfo in chromatograms.SelectMany(c => c.MSDataFileInfos))
             {
-                runEnumDict.Add(fileInfo.FileIndex, runEnumDict.Count + 1);
+                runEnumDict.Add(fileInfo.FileId, runEnumDict.Count + 1);
             }
 
             // Using Parallel.For is quicker, but order needs to be maintained
@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                                                                 PeptideGroupDocNode nodePepGroup,
                                                                                 PeptideDocNode nodePep,
                                                                                 FeatureCalculators calcs,
-                                                                                IDictionary<int, int> runEnumDict,
+                                                                                IDictionary<ReferenceValue<ChromFileInfoId>, int> runEnumDict,
                                                                                 bool verbose)
         {
             // Get peptide features for each set of comparable groups
@@ -140,7 +140,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                                                    IsotopeLabelType labelType,
                                                                    IList<TransitionGroupDocNode> nodeGroups,
                                                                    FeatureCalculators calcs,
-                                                                   IDictionary<int, int> runEnumDict,
+                                                                   IDictionary<ReferenceValue<ChromFileInfoId>, int> runEnumDict,
                                                                    bool verbose)
         {
             var chromatograms = settings.MeasuredResults.Chromatograms;
@@ -650,14 +650,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                      IsotopeLabelType labelType,
                                      ChromatogramSet chromatogramSet,
                                      ChromFileInfo chromFileInfo,
-                                     IDictionary<int, int> runEnumDict)
+                                     IDictionary<ReferenceValue<ChromFileInfoId>, int> runEnumDict)
         {
             NodePepGroup = nodePepGroup;
             LabelType = labelType;
             ChromatogramSet = chromatogramSet;
             FilePath = chromFileInfo.FilePath;
             FileId = chromFileInfo.FileId;
-            Run = runEnumDict[FileId.GlobalIndex];
+            Run = runEnumDict[FileId];
 
             // Avoid hanging onto the peptide, since it can end up being the primary memory root
             // for large-scale command-line processing

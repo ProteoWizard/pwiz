@@ -71,15 +71,8 @@ struct Config : public Reader::Config
     Config()
         : outputPath("."), verbose(false), merge(false)
     {
-        simAsSpectra = false;
-        srmAsSpectra = false;
-        combineIonMobilitySpectra = false;
-        ignoreCalibrationScans = false;
-        reportSonarBins = false;
-        unknownInstrumentIsError = true;
         stripLocationFromSourceFiles = false;
         stripVersionFromSoftware = false;
-        ddaProcessing = false;
     }
 
     string outputFilename(const string& inputFilename, const MSData& inputMSData) const;
@@ -108,6 +101,7 @@ string Config::outputFilename(const string& filename, const MSData& msd) const
             extension == ".cms1" ||
             extension == ".ms2" ||
             extension == ".cms2" ||
+            extension == ".mzmlb" ||
             extension == ".mz5")
             runId = bfs::basename(runId);
     }
@@ -115,7 +109,7 @@ string Config::outputFilename(const string& filename, const MSData& msd) const
     // this list is for Windows; it's a superset of the POSIX list
     string illegalFilename = "\\/*:?<>|\"";
     for(char& c : runId)
-        if (illegalFilename.find(c) != string::npos)
+        if (c < 0x20 || c == 0x7F || illegalFilename.find(c) != string::npos)
             c = '_';
 
     bfs::path newFilename = runId + extension;
@@ -150,15 +144,15 @@ ostream& operator<<(ostream& os, const Config& config)
 
 static double string_to_double( const std::string& str )
 {
-	errno = 0;
-	const char* stringToConvert = str.c_str();
-	const char* endOfConversion = stringToConvert;
-	double value = STRTOD( stringToConvert, const_cast<char**>(&endOfConversion) );
-	if( value == 0.0 && stringToConvert == endOfConversion ) // error: conversion could not be performed
-		throw bad_lexical_cast(); // not a double
-	if (*endOfConversion)
-		throw bad_lexical_cast(); // started out as a double but became something else - like "10foo.raw"
-	return value;
+    errno = 0;
+    const char* stringToConvert = str.c_str();
+    const char* endOfConversion = stringToConvert;
+    double value = STRTOD( stringToConvert, const_cast<char**>(&endOfConversion) );
+    if( value == 0.0 && stringToConvert == endOfConversion ) // error: conversion could not be performed
+        throw bad_lexical_cast(); // not a double
+    if (*endOfConversion)
+        throw bad_lexical_cast(); // started out as a double but became something else - like "10foo.raw"
+    return value;
 }
 
 void ShowExamples(ostringstream &usage)
@@ -259,6 +253,9 @@ Config parseCommandLine(int argc, char** argv)
     bool format_CMS1 = false;
     bool format_MS2 = false;
     bool format_CMS2 = false;
+    bool format_mzMLb = false;
+    int mzMLb_compression_level = 0;
+    int mzMLb_chunk_size = 0;    
     bool format_mz5 = false;
     bool precision_32 = false;
     bool precision_64 = false;
@@ -266,19 +263,25 @@ Config parseCommandLine(int argc, char** argv)
     bool mz_precision_64 = false;
     bool intensity_precision_32 = false;
     bool intensity_precision_64 = false;
+    int mz_truncation = 0;
+    int intensity_truncation = 0;
+    bool mz_delta = false;
+    bool intensity_delta = false;
+    bool mz_linear = false;
+    bool intensity_linear = false;
     bool noindex = false;
     bool zlib = false;
     bool gzip = false;
     bool ms_numpress_all = false; // if true, use this numpress compression with default tolerance
     double ms_numpress_linear = -1; // if >= 0, use this numpress linear compression with this tolerance
-	string ms_numpress_linear_str; // input as text, to help with the "msconvert --numpresslinear foo.raw" case
+    string ms_numpress_linear_str; // input as text, to help with the "msconvert --numpresslinear foo.raw" case
     string ms_numpress_linear_default = (boost::format("%4.2g") % BinaryDataEncoder_default_numpressLinearErrorTolerance).str();
     bool ms_numpress_pic = false; // if true, use this numpress Pic compression
     double ms_numpress_slof = -1; // if >= 0, use this numpress slof compression with this tolerance
     double ms_numpress_linear_abs_tolerance = -1; // if >= 0, use this numpress linear compression with this absolute Th tolerance
-	string ms_numpress_linear_abs_tolerance_str; // input as text
-	string ms_numpress_linear_abs_tolerance_str_default("-1"); // input as text
-	string ms_numpress_slof_str; // input as text, to help with the "msconvert --numpressslof foo.raw" case
+    string ms_numpress_linear_abs_tolerance_str; // input as text
+    string ms_numpress_linear_abs_tolerance_str_default("-1"); // input as text
+    string ms_numpress_slof_str; // input as text, to help with the "msconvert --numpressslof foo.raw" case
     string ms_numpress_slof_default = (boost::format("%4.2g") % BinaryDataEncoder_default_numpressSlofErrorTolerance).str();
     string runIndexSet;
     bool detailedHelp = false;
@@ -308,6 +311,9 @@ Config parseCommandLine(int argc, char** argv)
 #ifndef WITHOUT_MZ5
             "|mz5"
 #endif
+#ifndef WITHOUT_MZMLB
+            "|mzMLb"
+#endif
             "]")
         ("mzML",
             po::value<bool>(&format_mzML)->zero_tokens(),
@@ -319,6 +325,17 @@ Config parseCommandLine(int argc, char** argv)
         ("mz5",
             po::value<bool>(&format_mz5)->zero_tokens(),
             ": write mz5 format")
+#endif
+#ifndef WITHOUT_MZMLB
+        ("mzMLb",
+            po::value<bool>(&format_mzMLb)->zero_tokens(),
+            ": write mzMLb format")
+        ("mzMLbChunkSize",
+            po::value<int>(&mzMLb_chunk_size)->default_value(1048576),
+            ": mzMLb dataset chunk size in bytes")
+        ("mzMLbCompressionLevel",
+            po::value<int>(&mzMLb_compression_level)->default_value(0),
+            ": mzMLb GZIP compression level (0-9)")
 #endif
         ("mgf",
             po::value<bool>(&format_MGF)->zero_tokens(),
@@ -359,6 +376,24 @@ Config parseCommandLine(int argc, char** argv)
         ("inten32",
             po::value<bool>(&intensity_precision_32)->zero_tokens(),
             ": encode intensity values in 32-bit precision [default]")
+        ("mzTruncation",
+            po::value<int>(&mz_truncation)->default_value(0),
+            ": Number of mantissa precision bits to truncate for mz and rt, or if -1 will store integers only")
+        ("intenTruncation",
+            po::value<int>(&intensity_truncation)->default_value(0),
+            ": Number of mantissa precision bits to truncate for intensities, or if -1 will store integers only")
+        ("mzDelta",
+            po::value<bool>(&mz_delta)->zero_tokens(),
+            ": apply delta prediction to mz and rt values")
+        ("intenDelta",
+            po::value<bool>(&intensity_delta)->zero_tokens(),
+            ": apple delta prediction to intensity values")
+        ("mzLinear",
+            po::value<bool>(&mz_linear)->zero_tokens(),
+            ": apply linear prediction to mz and rt values")
+        ("intenLinear",
+            po::value<bool>(&intensity_linear)->zero_tokens(),
+            ": apply linear prediction to intensity values")
         ("noindex",
             po::value<bool>(&noindex)->zero_tokens(),
             ": do not write index")
@@ -581,37 +616,37 @@ Config parseCommandLine(int argc, char** argv)
 
     // check stuff
 
-	if (ms_numpress_slof_str.length()) // was that a numerical arg to --numpressSlof, or a filename?
-	{
-		try 
-		{
-			ms_numpress_slof = string_to_double(ms_numpress_slof_str); 
-		}
-		catch(...) {
-			config.filenames.push_back(ms_numpress_slof_str); // actually that was a filename
+    if (ms_numpress_slof_str.length()) // was that a numerical arg to --numpressSlof, or a filename?
+    {
+        try 
+        {
+            ms_numpress_slof = string_to_double(ms_numpress_slof_str); 
+        }
+        catch(...) {
+            config.filenames.push_back(ms_numpress_slof_str); // actually that was a filename
             ms_numpress_slof = BinaryDataEncoder_default_numpressSlofErrorTolerance;
-		}
-	}
-	if (ms_numpress_linear_abs_tolerance_str.length()) // this argument needs to be numerical
-	{
-		ms_numpress_linear_abs_tolerance = string_to_double(ms_numpress_linear_abs_tolerance_str);
-	}
-	if (ms_numpress_linear_str.length()) // was that a numerical arg to --numpressLinear, or a filename?
-	{
-		try 
-		{
-			ms_numpress_linear = string_to_double(ms_numpress_linear_str); 
-		}
-		catch(...) {
-			config.filenames.push_back(ms_numpress_linear_str); // actually that was a filename
+        }
+    }
+    if (ms_numpress_linear_abs_tolerance_str.length()) // this argument needs to be numerical
+    {
+        ms_numpress_linear_abs_tolerance = string_to_double(ms_numpress_linear_abs_tolerance_str);
+    }
+    if (ms_numpress_linear_str.length()) // was that a numerical arg to --numpressLinear, or a filename?
+    {
+        try 
+        {
+            ms_numpress_linear = string_to_double(ms_numpress_linear_str); 
+        }
+        catch(...) {
+            config.filenames.push_back(ms_numpress_linear_str); // actually that was a filename
             ms_numpress_linear = BinaryDataEncoder_default_numpressLinearErrorTolerance;
-		}
-	}
+        }
+    }
 
     if (config.filenames.empty())
         throw user_error("[msconvert] No files specified.");
 
-    int count = format_text + format_mzML + format_mzXML + format_MGF + format_MS2 + format_CMS2 + format_mz5;
+    int count = format_text + format_mzML + format_mzXML + format_MGF + format_MS2 + format_CMS2 + format_mz5 + format_mzMLb;
     if (count > 1) throw user_error("[msconvert] Multiple format flags specified.");
     if (format_text) config.writeConfig.format = MSDataFile::Format_Text;
     if (format_mzML) config.writeConfig.format = MSDataFile::Format_mzML;
@@ -622,6 +657,8 @@ Config parseCommandLine(int argc, char** argv)
     if (format_MS2) config.writeConfig.format = MSDataFile::Format_MS2;
     if (format_CMS2) config.writeConfig.format = MSDataFile::Format_CMS2;
     if (format_mz5) config.writeConfig.format = MSDataFile::Format_MZ5;
+    if (format_mzMLb) config.writeConfig.format = MSDataFile::Format_mzMLb;
+
 
     config.writeConfig.gzipped = gzip; // if true, file is written as .gz
 
@@ -653,6 +690,12 @@ Config parseCommandLine(int argc, char** argv)
             case MSDataFile::Format_CMS2:
                 config.extension = ".cms2";
                 break;
+            case MSDataFile::Format_mzMLb:
+#ifdef WITHOUT_MZMLB
+                throw user_error("[msconvert] Not built with mzMLb support.");
+#endif
+                config.extension = ".mzMLb";
+                break;                
             case MSDataFile::Format_MZ5:
 #ifdef WITHOUT_MZ5
                 throw user_error("[msconvert] Not built with mz5 support."); 
@@ -667,6 +710,23 @@ Config parseCommandLine(int argc, char** argv)
             config.extension += ".gz";
         }
     }
+
+    // handle prediction flags
+    if (intensity_delta)
+        config.writeConfig.binaryDataEncoderConfig.predictionOverrides[MS_intensity_array] = BinaryDataEncoder::Prediction_Delta;
+    if (mz_delta)
+    {
+        config.writeConfig.binaryDataEncoderConfig.predictionOverrides[MS_m_z_array] = BinaryDataEncoder::Prediction_Delta;
+        config.writeConfig.binaryDataEncoderConfig.predictionOverrides[MS_time_array] = BinaryDataEncoder::Prediction_Delta;
+    }
+    if (intensity_linear)
+        config.writeConfig.binaryDataEncoderConfig.predictionOverrides[MS_intensity_array] = BinaryDataEncoder::Prediction_Linear;
+    if (mz_linear)
+    {
+        config.writeConfig.binaryDataEncoderConfig.predictionOverrides[MS_m_z_array] = BinaryDataEncoder::Prediction_Linear;
+        config.writeConfig.binaryDataEncoderConfig.predictionOverrides[MS_time_array] = BinaryDataEncoder::Prediction_Linear;
+    }
+ 
 
     // precision defaults
 
@@ -705,13 +765,26 @@ Config parseCommandLine(int argc, char** argv)
     if (intensity_precision_64)
         config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_intensity_array] = BinaryDataEncoder::Precision_64;
 
+    if (mz_truncation != 0)
+        config.writeConfig.binaryDataEncoderConfig.truncationOverrides[MS_m_z_array] = mz_truncation;
+    if (intensity_truncation != 0)
+        config.writeConfig.binaryDataEncoderConfig.truncationOverrides[MS_intensity_array] = intensity_truncation;
+
     // other flags
 
     if (noindex)
         config.writeConfig.indexed = false;
 
-    if (zlib)
+    if (zlib || mzMLb_compression_level > 0)
+    {
         config.writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
+        if (mzMLb_compression_level == 0)
+            config.writeConfig.mzMLb_compression_level = 4;            
+        else
+            config.writeConfig.mzMLb_compression_level = mzMLb_compression_level;                       
+    }
+ 
+    config.writeConfig.mzMLb_chunk_size = mzMLb_chunk_size;
 
     if ((ms_numpress_slof>=0) && ms_numpress_pic)
         throw user_error("[msconvert] Incompatible compression flags 'numpressPic' and 'numpressSlof'.");

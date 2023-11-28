@@ -143,7 +143,17 @@ namespace BiblioSpec
         sqlite3_stmt* statement = NULL; // id, rt, mass, charge, peaks
         bool hasCompensationVoltage = false;
 
-        if (filtered_ || !versionLess(2, 2)) { // < 2.2 and filtered, or 2.2+
+        if (!versionLess(3, 1) && bfs::exists(bfs::change_extension(bfs::path(msfName_), ".pdResultDetails")))
+        {
+            bfs::path pdResultDetails = bfs::change_extension(bfs::path(msfName_), ".pdResultDetails");
+            sqlite3_exec(msfFile_, ("ATTACH DATABASE '" + pdResultDetails.generic_string() + "' AS details").c_str(), nullptr, nullptr, nullptr);
+            specCount = getRowCount("MSnSpectrumInfo WHERE SpectrumID IN (SELECT DISTINCT MSnSpectrumInfoSpectrumID FROM TargetPsmsMSnSpectrumInfo)");
+            statement = getStmt(
+                std::string("SELECT SpectrumID, MSnSpectrumInfo.RetentionTime, Mass, Charge, Spectrum, MSnSpectrumInfo.WorkflowID") +
+                (hasCompensationVoltage ? ", CompVoltageV " : " ") +
+                "FROM MSnSpectrumInfo "
+                "JOIN details.MassSpectrumItems ON MSnSpectrumInfo.SpectrumID = details.MassSpectrumItems.ID AND MSnSpectrumInfo.WorkflowID = details.MassSpectrumItems.WorkflowID");
+        } else if (filtered_ || !versionLess(2, 2)) { // < 2.2 and filtered, or 2.2+
             specCount = getRowCount("MSnSpectrumInfo WHERE SpectrumID IN (SELECT DISTINCT MSnSpectrumInfoSpectrumID FROM TargetPsmsMSnSpectrumInfo)");
             hasCompensationVoltage = columnExists(msfFile_, "MSnSpectrumInfo", "CompVoltageV");
             statement = getStmt(
@@ -173,7 +183,10 @@ namespace BiblioSpec
             specData->id = sqlite3_column_int(statement, 0);
             specData->retentionTime = sqlite3_column_double(statement, 1);
             specData->charge = sqlite3_column_int(statement, 3);
-            specData->mz = (mass + (PROTON_MASS * specData->charge)) / specData->charge;
+            if (specData->charge > 0)
+                specData->mz = (mass + (PROTON_MASS * specData->charge)) / specData->charge;
+            else
+                specData->mz = mass;
             if (hasCompensationVoltage)
             {
                 specData->ionMobilityType = IONMOBILITY_COMPENSATION_V;
@@ -369,6 +382,7 @@ namespace BiblioSpec
             string specId = uniqueSpecId(sqlite3_column_int(statement, 1), sqlite3_column_int(statement, 4));
             string sequence = lexical_cast<string>(sqlite3_column_text(statement, 2));
             double qvalue = pepConfidence <= 0 ? sqlite3_column_double(statement, 3) : 0;
+            int charge = sqlite3_column_int(statement, 7);
 
             auto findItr = spectra_.find(specId);
             if (findItr == spectra_.end()) {
@@ -427,7 +441,14 @@ namespace BiblioSpec
                 processedSpectra[specId] = ProcessedMsfSpectrum(curPSM_, qvalue, altScore);
             }
 
-            curPSM_->charge = findItr->second->charge;
+            if (findItr->second->charge > 0)
+                curPSM_->charge = findItr->second->charge;
+            else
+            {
+                // if charge was 0 for the spectrum, the mz should be mass, so convert it to m/z
+                curPSM_->charge = charge;
+                findItr->second->mz = (findItr->second->mz + (PROTON_MASS * charge)) / charge;
+            }
             curPSM_->unmodSeq = sequence;
             curPSM_->mods = versionLess(2, 2) && !filtered_
                 ? modSet.getMods(peptideId)
@@ -445,7 +466,9 @@ namespace BiblioSpec
                 psmFileName = fileIdToName(fileIdMapAccess->second);
                 fileIdMap.erase(fileIdMapAccess);
             } else {
-                psmFileName = lexical_cast<string>(sqlite3_column_text(statement, 5));
+                string rawPath = lexical_cast<string>(sqlite3_column_text(statement, 5));
+                bal::replace_all(rawPath, "\\", "/");
+                psmFileName = bfs::path(lexical_cast<string>(rawPath)).filename().string();
             }
 
             // filename
@@ -531,6 +554,17 @@ namespace BiblioSpec
             }
         }
 
+        string filenameCol;
+        string filenameJoin;
+        if (columnExists(msfFile_, "TargetPsms", "SpectrumFileId"))
+        {
+            filenameCol = "wf.FileName";
+            filenameJoin = " JOIN WorkflowInputfiles wf ON psms.SpectrumFileId = wf.FileId";
+        } else
+        {
+            filenameCol = "psms.SpectrumFileName";
+        }
+
         string qValueCol;
         string qValueWhere;
         if (!hasQValues()) {
@@ -559,8 +593,9 @@ namespace BiblioSpec
         }
         stmtStr =
             "SELECT psms.PeptideID, psm_spec.MSnSpectrumInfoSpectrumID, psms.Sequence, " +
-                qValueCol + ", psms.WorkflowID, psms.SpectrumFileName" + (*outProtConfidence > 0 ? ", prots.ProteinFDRConfidence" : "") +
+                qValueCol + ", psms.WorkflowID, " + filenameCol + (*outProtConfidence > 0 ? ", prots.ProteinFDRConfidence" : ", 0") + ", psms.Charge" +
             " FROM TargetPsms psms"
+            + filenameJoin +
             " JOIN TargetPsmsMSnSpectrumInfo psm_spec ON psms.PeptideID = psm_spec.TargetPsmsPeptideID"
             "   AND psm_spec.TargetPsmsWorkflowID = psms.WorkflowID";
         countStr =

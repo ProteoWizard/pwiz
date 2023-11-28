@@ -807,6 +807,25 @@ namespace pwiz.Skyline
                 }
             }
 
+
+            if (commandArgs.ExportingSpecLib)
+            {
+                if (!ExportSpecLib(commandArgs.SpecLibFile))
+                {
+                    return false;
+                }
+            }
+
+            if (commandArgs.ExportingMProphetFeatures)
+            {
+                if (!ExportMProphetFeatures(commandArgs.MProphetFeaturesFile, commandArgs.MProphetTargetsOnly,
+                        commandArgs.MProphetUseBestScoringPeaks, 
+                        new FeatureCalculators(commandArgs.MProphetExcludeScores)))
+                {
+                    return false;
+                }
+            } 
+
             var exportTypes =
                 (string.IsNullOrEmpty(commandArgs.IsolationListInstrumentType) ? 0 : 1) +
                 (string.IsNullOrEmpty(commandArgs.TransListInstrumentType) ? 0 : 1) +
@@ -3106,6 +3125,94 @@ namespace pwiz.Skyline
             return true;
         }
 
+        /// <summary>
+        /// Export a spectral library (.blib) file from the document
+        /// </summary>
+        /// <param name="specLibFile">File path to export the spectral library to</param>
+        /// <returns>True if the file is successfully exported and false if there is an error</returns>
+        public bool ExportSpecLib(string specLibFile)
+        {
+            _out.WriteLine(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____, specLibFile);
+            if (Document.MoleculeTransitionGroupCount == 0) // The document needs at least one precursor
+            {
+                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_precursor_to_export_a_spectral_library_);
+                return false;
+            }
+            else if (!Document.Settings.HasResults) // The document must contain results
+            {
+                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_results_to_export_a_spectral_library_);
+                return false;
+            }
+
+            try
+            {
+                var libraryExporter = new SpectralLibraryExporter(Document, DocContainer.DocumentFilePath);
+                var status = new ProgressStatus(string.Empty);
+                IProgressMonitor broker = new CommandProgressMonitor(_out, status);
+                libraryExporter.ExportSpectralLibrary(specLibFile, broker);
+                broker.UpdateProgress(status.Complete());
+                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Spectral_library_file__0__exported_successfully_, specLibFile);
+            }
+            catch(Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Error__Failure_attempting_to_save_spectral_library_file__0__, specLibFile);
+                _out.WriteLine(x.Message);
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Export mProphet features as a .csv file
+        /// </summary>
+        /// <param name="mProphetFile">File path to export the mProphet file to</param>
+        /// <param name="targetPeptidesOnly">Do not include decoys, only targets</param>
+        /// <param name="bestOnly">Export best scoring peaks only</param>
+        /// <param name="excludeScores">A list of features to exclude from the exported file</param>
+        /// <returns>True upon successful import, false upon error</returns>
+        public bool ExportMProphetFeatures(string mProphetFile, bool targetPeptidesOnly, bool bestOnly, FeatureCalculators excludeScores)
+        {
+            if (Document.MoleculeCount == 0) // The document must contain targets
+            {
+                _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features_);
+                return false;
+            }
+
+            if (!Document.Settings.HasResults) // The document must contain results
+            {
+                _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features_);
+                return false;
+            }
+
+            try
+            {
+                var scoringModel = Document.Settings.PeptideSettings.Integration.PeakScoringModel;
+                var mProphetScoringModel = scoringModel as MProphetPeakScoringModel;
+                var handler = new MProphetResultsHandler(Document, mProphetScoringModel);
+                var status = new ProgressStatus(string.Empty);
+                var cultureInfo = LocalizationHelper.CurrentCulture;
+                IProgressMonitor progressMonitor = new CommandProgressMonitor(_out, status);
+                using (var fs = new FileSaver(mProphetFile))
+                using (var writer = new StreamWriter(fs.SafeName))
+                {
+                    handler.ScoreFeatures(progressMonitor);
+                    // Excluding any scores requested by the caller
+                    var calcs = new FeatureCalculators(PeakFeatureCalculator.Calculators.Where(c => excludeScores.IndexOf(c) < 0));
+                    handler.WriteScores(writer, cultureInfo, calcs, bestOnly, !targetPeptidesOnly, progressMonitor);
+                    writer.Close();
+                    fs.Commit();
+                }
+                _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, mProphetFile);
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__Failure_attempting_to_save_mProphet_features_file__0__, mProphetFile);
+                _out.WriteLine(x.Message);
+                return false;
+            }
+            return true;
+        }
+        
         public enum ResolveZipToolConflicts
         {
             terminate,
@@ -4273,6 +4380,8 @@ namespace pwiz.Skyline
 
     public class CommandProgressMonitor : IProgressMonitor, ILongWaitBroker
     {
+        public double SecondsBetweenStatusUpdates { get; }
+
         private IProgressStatus _currentProgress;
         private readonly bool _warnOnImportFailure;
         private readonly DateTime _waitStart;
@@ -4284,8 +4393,9 @@ namespace pwiz.Skyline
         private Thread _waitingThread;
         private volatile bool _waiting;
 
-        public CommandProgressMonitor(TextWriter outWriter, IProgressStatus status, bool warnOnImportFailure = false)
+        public CommandProgressMonitor(TextWriter outWriter, IProgressStatus status, bool warnOnImportFailure = false, double secondsBetweenStatusUpdates = 2.0)
         {
+            SecondsBetweenStatusUpdates = secondsBetweenStatusUpdates;
             _out = outWriter;
             _waitStart = _lastOutput = DateTime.UtcNow; // Said to be 117x faster than Now and this is for a delta
             _warnOnImportFailure = warnOnImportFailure;
@@ -4461,7 +4571,7 @@ namespace pwiz.Skyline
         {
             // Show progress at least every 2 seconds and at 100%, if any other percentage
             // output has been shown.
-            return (currentTime - _lastOutput).TotalSeconds < 2 && !status.IsError &&
+            return (currentTime - _lastOutput).TotalSeconds < SecondsBetweenStatusUpdates && !status.IsError &&
                    (status.PercentComplete != 100 || _lastOutput == _waitStart);
         }
 

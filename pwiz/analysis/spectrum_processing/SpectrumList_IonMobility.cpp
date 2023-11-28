@@ -104,7 +104,7 @@ SpectrumList_IonMobility::SpectrumList_IonMobility(const msdata::SpectrumListPtr
                     units_ = IonMobilityUnits::drift_time_msec;
                 else if (scan.hasCVParam(CVID::MS_inverse_reduced_ion_mobility))
                     units_ = IonMobilityUnits::inverse_reduced_ion_mobility_Vsec_per_cm2;
-                else if (scan.hasCVParam(CVID::MS_FAIMS_compensation_voltage))
+                else if (spectrum->hasCVParam(CVID::MS_FAIMS_compensation_voltage))
                     units_ = IonMobilityUnits::compensation_V;
                 else if (!scan.userParam("drift time").empty()) // Oldest known mzML drift time style
                     units_ = IonMobilityUnits::drift_time_msec;

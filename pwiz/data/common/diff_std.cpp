@@ -156,7 +156,7 @@ void diff(const CVParam& a,
         // lexical_cast<int> is happy to read "1.1" as "1" - and "1.9" the same way
         if ((std::string::npos == a.value.find_first_of(".eE")) &&
             (std::string::npos == b.value.find_first_of(".eE")))  // any float-like chars?
-        {   
+        {
             bool successA, successB;
             // compare as ints if possible
             int ia = lexical_cast<int>(a.value, successA);
@@ -165,7 +165,7 @@ void diff(const CVParam& a,
                 asString = true;
             else
             {
-                if (ia != ib) 
+                if (ia != ib)
                 {
                     a_b.value = lexical_cast<string>(ia);
                     b_a.value = lexical_cast<string>(ib);
@@ -174,7 +174,7 @@ void diff(const CVParam& a,
                 {
                     if ((std::string::npos == a.value.find_first_not_of("0123456789")) &&
                         (std::string::npos == b.value.find_first_not_of("0123456789")))
-                    { 
+                    {
                         a_b.value.clear();
                         b_a.value.clear();
                     }
@@ -185,7 +185,8 @@ void diff(const CVParam& a,
                 }
             }
         }
-        else
+        else if (std::string::npos == a.value.find_first_not_of("01234567890.e-") &&
+				 std::string::npos == b.value.find_first_not_of("01234567890.e-"))
         {
             // use precision to compare floating point values
             bool successA, successB;
@@ -209,6 +210,9 @@ void diff(const CVParam& a,
                 }
             }
         }
+        else
+            asString = true;
+
         if (asString)
         {
              diff_string(a.value, b.value, a_b.value, b_a.value);
