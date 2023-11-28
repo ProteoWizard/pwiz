@@ -1119,6 +1119,8 @@ PWIZ_API_DECL size_t SpectrumList::findAbbreviated(const string& abbreviatedId, 
         if ((result >= 0 && result < size()) || s == 0)
             return result;
     }
+
+    return size();
 }
 
 

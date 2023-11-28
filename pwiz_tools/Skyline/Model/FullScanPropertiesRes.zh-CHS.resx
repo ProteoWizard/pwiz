@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+		Microsoft ResX Schema
+
+		Version 1.3
+
+		The primary goals of this format is to allow a simple XML format 
+		that is mostly human readable. The generation and parsing of the 
+		various data types are done through the TypeConverter classes 
+		associated with the data types.
+
+		Example:
+
+		... ado.net/XML headers & schema ...
+		<resheader name="resmimetype">text/microsoft-resx</resheader>
+		<resheader name="version">1.3</resheader>
+		<resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+		<resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+		<data name="Name1">this is my long string</data>
+		<data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+		<data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+			[base64 mime encoded serialized .NET Framework object]
+		</data>
+		<data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+			[base64 mime encoded string representing a byte array form of the .NET Framework object]
+		</data>
+
+		There are any number of "resheader" rows that contain simple 
+		name/value pairs.
+
+		Each data row contains a name, and value. The row also contains a 
+		type or mimetype. Type corresponds to a .NET class that support 
+		text/value conversion through the TypeConverter architecture. 
+		Classes that don't support this are serialized and stored with the 
+		mimetype set.
+
+		The mimetype is used for serialized objects, and tells the 
+		ResXResourceReader how to depersist the object. This is currently not 
+		extensible. For a given mimetype the value must be set accordingly:
+
+		Note - application/x-microsoft.net.object.binary.base64 is the format 
+		that the ResXResourceWriter will generate, however the reader can 
+		read any of the formats listed below.
+
+		mimetype: application/x-microsoft.net.object.binary.base64
+		value   : The object must be serialized with 
+			: System.Serialization.Formatters.Binary.BinaryFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.soap.base64
+		value   : The object must be serialized with 
+			: System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.bytearray.base64
+		value   : The object must be serialized into a byte array 
+			: using a System.ComponentModel.TypeConverter
+			: and then encoded with base64 encoding.
+	-->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>1.3</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Category_AcquisitionInfo" xml:space="preserve">
+    <value>采集</value>
+  </data>
+  <data name="Category_FileInfo" xml:space="preserve">
+    <value>文件</value>
+  </data>
+  <data name="Category_MatchInfo" xml:space="preserve">
+    <value>匹配</value>
+  </data>
+  <data name="Category_PrecursorInfo" xml:space="preserve">
+    <value>母离子</value>
+  </data>
+  <data name="Category_InstrumentInfo" xml:space="preserve">
+    <value>仪器</value>
+  </data>
+  <data name="FileName" xml:space="preserve">
+    <value>文件名</value>
+  </data>
+  <data name="Description_FileName" xml:space="preserve">
+    <value>作为谱图源的文件的文件名和可能的完整路径。</value>
+  </data>
+  <data name="FilePath" xml:space="preserve">
+    <value>文件路径</value>
+  </data>
+  <data name="ReplicateName" xml:space="preserve">
+    <value>重复测定名称</value>
+  </data>
+  <data name="Description_ReplicateName" xml:space="preserve">
+    <value>作为谱图源的重复测定的名称。</value>
+  </data>
+  <data name="PrecursorMz" xml:space="preserve">
+    <value>母离子质荷比</value>
+  </data>
+  <data name="Description_PrecursorMz" xml:space="preserve">
+    <value>所选 MS/MS 谱图的母离子质荷比。</value>
+  </data>
+  <data name="Charge" xml:space="preserve">
+    <value>电荷</value>
+  </data>
+  <data name="Description_Charge" xml:space="preserve">
+    <value>所选谱图母离子的电荷。</value>
+  </data>
+  <data name="Label" xml:space="preserve">
+    <value>标签</value>
+  </data>
+  <data name="Description_Label" xml:space="preserve">
+    <value>谱图母离子的同位素标签。</value>
+  </data>
+  <data name="RetentionTime" xml:space="preserve">
+    <value>保留时间</value>
+  </data>
+  <data name="Description_RetentionTime" xml:space="preserve">
+    <value>谱图采集的保留时间</value>
+  </data>
+  <data name="CCS" xml:space="preserve">
+    <value>CCS</value>
+  </data>
+  <data name="Description_CCS" xml:space="preserve">
+    <value>为获取谱图而分离的离子的碰撞横截面 (CCS)</value>
+  </data>
+  <data name="IonMobility" xml:space="preserve">
+    <value>离子迁移</value>
+  </data>
+  <data name="Description_IonMobility" xml:space="preserve">
+    <value>为采集谱图而分离的离子的原始离子迁移值(例如 msec、Vs/cm^2、V)</value>
+  </data>
+  <data name="IonMobilityRange" xml:space="preserve">
+    <value>离子迁移范围</value>
+  </data>
+  <data name="Description_IonMobilityRange" xml:space="preserve">
+    <value>3D 谱图中离子迁移值的范围。</value>
+  </data>
+  <data name="IonMobilityFilterRange" xml:space="preserve">
+    <value>离子迁移过滤范围</value>
+  </data>
+  <data name="Description_IonMobilityFilterRange" xml:space="preserve">
+    <value>用于提取该离子色谱图的离子迁移值区间。</value>
+  </data>
+  <data name="ScanId" xml:space="preserve">
+    <value>扫描 Id</value>
+  </data>
+  <data name="Description_ScanId" xml:space="preserve">
+    <value>源文件中的谱图扫描 Id。</value>
+  </data>
+  <data name="CE" xml:space="preserve">
+    <value>碰撞能量</value>
+  </data>
+  <data name="Description_CE" xml:space="preserve">
+    <value>用于获取该谱图的碰撞能量。</value>
+  </data>
+  <data name="MSLevel" xml:space="preserve">
+    <value>MS 级别</value>
+  </data>
+  <data name="Description_MSLevel" xml:space="preserve">
+    <value>质谱级: MS1、MS2 等...</value>
+  </data>
+  <data name="Instrument" xml:space="preserve">
+    <value>仪器</value>
+  </data>
+  <data name="Description_Instrument" xml:space="preserve">
+    <value>用于获取该谱图的仪器的描述。</value>
+  </data>
+  <data name="InstrumentSerialNumber" xml:space="preserve">
+    <value>序列号</value>
+  </data>
+  <data name="Description_InstrumentSerialNumber" xml:space="preserve">
+    <value>用于获取该谱图的仪器的序列号。</value>
+  </data>
+  <data name="InstrumentModel" xml:space="preserve">
+    <value>仪器型号</value>
+  </data>
+  <data name="Description_InstrumentModel" xml:space="preserve">
+    <value>用于获取该谱图的仪器型号。</value>
+  </data>
+  <data name="InstrumentManufacturer" xml:space="preserve">
+    <value>仪器制造商</value>
+  </data>
+  <data name="Description_InstrumentManufacturer" xml:space="preserve">
+    <value>用于获取该谱图的仪器的制造商。</value>
+  </data>
+  <data name="InstrumentComponents" xml:space="preserve">
+    <value>仪器组件</value>
+  </data>
+  <data name="Description_InstrumentComponents" xml:space="preserve">
+    <value>用于获取该谱图的 MS 仪器组件列表: 源、质量分析器等。</value>
+  </data>
+  <data name="Ionization" xml:space="preserve">
+    <value>离子化</value>
+  </data>
+  <data name="Description_Ionization" xml:space="preserve">
+    <value>仪器的离子源类型</value>
+  </data>
+  <data name="Analyzer" xml:space="preserve">
+    <value>分析器</value>
+  </data>
+  <data name="Description_Analyzer" xml:space="preserve">
+    <value>仪器分析器的类型</value>
+  </data>
+  <data name="Detector" xml:space="preserve">
+    <value>检测器</value>
+  </data>
+  <data name="Description_Detector" xml:space="preserve">
+    <value>仪器检测器的类型</value>
+  </data>
+  <data name="IsolationWindow" xml:space="preserve">
+    <value>分离窗口</value>
+  </data>
+  <data name="Description_IsolationWindow" xml:space="preserve">
+    <value>该谱图的 DIA 分离窗口。</value>
+  </data>
+  <data name="DataPoints" xml:space="preserve">
+    <value>数据点</value>
+  </data>
+  <data name="Description_DataPoints" xml:space="preserve">
+    <value>该谱图中数据点的数量。</value>
+  </data>
+  <data name="MzCount" xml:space="preserve">
+    <value>质荷比计数</value>
+  </data>
+  <data name="Description_MzCount" xml:space="preserve">
+    <value>该谱图中唯一质荷比值的数量。</value>
+  </data>
+  <data name="IonMobilityCount" xml:space="preserve">
+    <value>离子迁移计数</value>
+  </data>
+  <data name="Description_IonMobilityCount" xml:space="preserve">
+    <value>此谱图中唯一离子迁移值的数量。</value>
+  </data>
+  <data name="InjectionTime" xml:space="preserve">
+    <value>注射时间</value>
+  </data>
+  <data name="Description_InjectionTime" xml:space="preserve">
+    <value>用于获取该谱图的注射时间。</value>
+  </data>
+  <data name="IsCentroided" xml:space="preserve">
+    <value>是棒状图形式</value>
+  </data>
+  <data name="Description_IsCentroided" xml:space="preserve">
+    <value>这是棒状图形式还是高分辨率谱图?</value>
+  </data>
+  <data name="HighEnergyOffset" xml:space="preserve">
+    <value>高能偏置</value>
+  </data>
+  <data name="Description_HighEnergyOffset" xml:space="preserve">
+    <value>高能偏置用于获取 MS2 谱图</value>
+  </data>
+  <data name="dotp" xml:space="preserve">
+    <value>库点积</value>
+  </data>
+  <data name="Description_dotp" xml:space="preserve">
+    <value>该谱图与其库匹配之间相似性的测量值。</value>
+  </data>
+  <data name="idotp" xml:space="preserve">
+    <value>同位素点积</value>
+  </data>
+  <data name="Description_idotp" xml:space="preserve">
+    <value>母离子同位素峰和预期同位素分布之间相似性的测量值。</value>
+  </data>
+  <data name="rdotp" xml:space="preserve">
+    <value>比率点积</value>
+  </data>
+  <data name="Description_rdotp" xml:space="preserve">
+    <value>标记谱图和非标记谱图之间相似性的测量值。</value>
+  </data>
+</root>

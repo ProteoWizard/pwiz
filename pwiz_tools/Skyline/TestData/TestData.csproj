@@ -240,6 +240,10 @@
     <None Include="CommandLineRefineGroupComparisonTest.zip" />
     <None Include="CommandLineTest.zip" />
     <None Include="CommandLineWiffTest.zip" />
+    <None Include="ConsoleAnnotationsExportToImportTest.zip" />
+    <None Include="ConsoleExportAnnotationsTest.zip" />
+    <None Include="ConsoleExportMProphetTest.zip" />
+    <None Include="ConsoleExportSpecLibTest.zip" />
     <None Include="ImportAllCmdLineTest.zip" />
     <None Include="ImportAllCmdLineTestMzml.zip" />
     <None Include="ImportCommandLineSameName.zip" />

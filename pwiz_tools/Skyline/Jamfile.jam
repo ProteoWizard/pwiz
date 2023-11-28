@@ -32,8 +32,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     local year_2digit = [ MATCH "[0-9][0-9]([0-9][0-9])" : $(ymd) ] ;
 
     constant SKYLINE_YEAR : 23 ;
-    constant SKYLINE_ORDINAL : 0 ; # A count of official releases made so far this year
-    constant SKYLINE_BRANCH : 9 ; # 0 - release, 1 - daily, 9 - feature complete daily
+    constant SKYLINE_ORDINAL : 1 ; # A count of official releases made so far this year
+    constant SKYLINE_BRANCH : 1 ; # 0 - release, 1 - daily, 9 - feature complete daily
 
     # when releasing a patch for a previous year, the day-of-year component will be incremented by 365 for each year difference
     # (figuring out leap year here seems like overkill)
@@ -343,15 +343,15 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         ) > "$(<)"
     }
 
+    constant SKYLINE_PROSIT_CONFIG : "$(SKYLINE_PATH)/Model/Prosit/Config/PrositConfig_production.xml" ;
     if --official in [ modules.peek : ARGV ]
     {
-        constant SKYLINE_PROSIT_CONFIG : "$(SKYLINE_PATH)/Model/Prosit/Config/PrositConfig_production.xml" ;
         if ! [ path.exists $(SKYLINE_PROSIT_CONFIG) ]
         {
             errors.user-error "PrositConfig_production.xml must be present for an official build" ;
         }
     }
-    else
+    else if ! [ path.exists $(SKYLINE_PROSIT_CONFIG) ]
     {
         constant SKYLINE_PROSIT_CONFIG : "$(SKYLINE_PATH)/Model/Prosit/Config/PrositConfig_development.xml" ;
     }

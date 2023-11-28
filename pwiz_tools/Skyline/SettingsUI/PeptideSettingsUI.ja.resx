@@ -1275,6 +1275,37 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="&gt;&gt;tbxIonRatioThreshold.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="cbxSimpleRatios.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbxSimpleRatios.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 110</value>
+  </data>
+  <data name="cbxSimpleRatios.Size" type="System.Drawing.Size, System.Drawing">
+    <value>132, 17</value>
+  </data>
+  <data name="cbxSimpleRatios.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="cbxSimpleRatios.Text" xml:space="preserve">
+    <value>単純プリカーサー比(&amp;S)</value>
+  </data>
+  <data name="cbxSimpleRatios.ToolTip" xml:space="preserve">
+    <value>選択すると、プリカーサー間の比がトランジション面積の合計の比として計算されます。
+2個のプリカーサーからのトランジションは、欠損ピークの処理や、比率ドット積を計算する理由で対になることはありません。</value>
+  </data>
+  <data name="&gt;&gt;cbxSimpleRatios.Name" xml:space="preserve">
+    <value>cbxSimpleRatios</value>
+  </data>
+  <data name="&gt;&gt;cbxSimpleRatios.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbxSimpleRatios.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;cbxSimpleRatios.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
@@ -2201,37 +2232,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   </data>
   <data name="&gt;&gt;tabIntegration.ZOrder" xml:space="preserve">
     <value>6</value>
-  </data>
-  <data name="cbxSimpleRatios.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="cbxSimpleRatios.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 110</value>
-  </data>
-  <data name="cbxSimpleRatios.Size" type="System.Drawing.Size, System.Drawing">
-    <value>132, 17</value>
-  </data>
-  <data name="cbxSimpleRatios.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="cbxSimpleRatios.Text" xml:space="preserve">
-    <value>単純プリカーサー比(&amp;S)</value>
-  </data>
-  <data name="cbxSimpleRatios.ToolTip" xml:space="preserve">
-    <value>選択すると、プリカーサー間の比がトランジション面積の合計の比として計算されます。
-2個のプリカーサーからのトランジションは、欠損ピークの処理や、比率ドット積を計算する理由で対になることはありません。</value>
-  </data>
-  <data name="&gt;&gt;cbxSimpleRatios.Name" xml:space="preserve">
-    <value>cbxSimpleRatios</value>
-  </data>
-  <data name="&gt;&gt;cbxSimpleRatios.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbxSimpleRatios.Parent" xml:space="preserve">
-    <value>tabQuantification</value>
-  </data>
-  <data name="&gt;&gt;cbxSimpleRatios.ZOrder" xml:space="preserve">
-    <value>0</value>
   </data>
   <data name="groupBoxFiguresOfMerit.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>

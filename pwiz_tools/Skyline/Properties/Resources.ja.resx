@@ -755,6 +755,9 @@
   <data name="AssociateProteinsDlg_UseBackgroundProteome_No_matches_were_found_using_the_background_proteome_" xml:space="preserve">
     <value>バックグラウンドプロテオームを用いて一致が見つかりませんでした。</value>
   </data>
+  <data name="AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_" xml:space="preserve">
+    <value>タンパク質の関連付け中にエラーが発生しました。</value>
+  </data>
   <data name="AssociateProteinsDlg_UseFastaFile_There_was_an_error_reading_from_the_file_" xml:space="preserve">
     <value>ファイルから読み込み中にエラーが発生しました。</value>
   </data>
@@ -775,6 +778,12 @@
   </data>
   <data name="AutoTrainManager_LoadBackground_None_of_the_targets_in_the_document_have_any_chromatograms_" xml:space="preserve">
     <value>ドキュメント内にクロマトグラムのあるターゲットはありません。</value>
+  </data>
+  <data name="AuxiliaryFiles_GetStatusText__0__files_have_not_been_located_" xml:space="preserve">
+    <value>{0}個のファイルが見つかっていません。</value>
+  </data>
+  <data name="AuxiliaryFiles_GetStatusText__0__of__1__files_will_be_included_" xml:space="preserve">
+    <value>{1}個のファイルのうち{0}個が含まれます。</value>
   </data>
   <data name="BackgroundProteome_GetUniquenessDict_Examining_background_proteome_for_uniqueness_constraints" xml:space="preserve">
     <value>バックグラウンドプロテオームに一意性の制約がないか検査中</value>
@@ -957,6 +966,12 @@
   <data name="BookmarkEnumerator_GetNodeTypeName_Unknown" xml:space="preserve">
     <value>不明</value>
   </data>
+  <data name="BrukerTimsTofIsolationListExporter_CheckIonMobilities__0____1_____2__" xml:space="preserve">
+    <value>{0} ({1} - {2})</value>
+  </data>
+  <data name="BrukerTimsTofIsolationListExporter_CheckIonMobilities_All_targets_must_have_an_ion_mobility_between__0__and__1__as_specified_in_the_template_method__Either_use_a_different_template_method__or_change_the_ion_mobility_values_for_the_following_targets_" xml:space="preserve">
+    <value>すべてのターゲットのイオン移動度は、テンプレートメソッドでの指定にしたがって{0}と{1}の間である必要があります。別のテンプレートメソッドを使用するか、次のターゲットのイオン移動度値を変更してください。</value>
+  </data>
   <data name="BrukerTimsTofMethodExporter_ExportMethod_Error_copying_template_file_" xml:space="preserve">
     <value>テンプレートファイルをコピーできませんでした。</value>
   </data>
@@ -1117,17 +1132,14 @@
   <data name="BuildLibraryGridView_GetThresholds_Score_types_not_loaded_" xml:space="preserve">
     <value>スコアタイプが読み込まれていません。</value>
   </data>
-  <data name="BuildLibraryGridView_GridUpdateScoreInfo_Error_getting_score_type_for_this_file_" xml:space="preserve">
-    <value>このファイルをスコアタイプを取得中にエラーが発生しました。</value>
+  <data name="BuildLibraryGridView_GridUpdateScoreInfo_Score_type_not_found_" xml:space="preserve">
+    <value>スコアタイプが見つかりません。</value>
   </data>
-  <data name="BuildLibraryGridView_GridUpdateScoreInfo_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect__" xml:space="preserve">
-    <value>スコア閾値の最大値 (スコアは同定が誤である可能性あり)。</value>
+  <data name="BuildLibraryGridView_OnCellPainting_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___" xml:space="preserve">
+    <value>スコアしきい値「{0}」が無効です(10進値は{1}から{2}の間である必要があります)。</value>
   </data>
-  <data name="BuildLibraryGridView_GridUpdateScoreInfo_Score_threshold_minimum__score_is_probability_that_identification_is_correct__" xml:space="preserve">
-    <value>スコア閾値の最小値 (スコアは同定が正である可能性あり)。</value>
-  </data>
-  <data name="BuildLibraryGridView_OnCellValueChanged_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___" xml:space="preserve">
-    <value>スコア閾値 '{0}' が無効です ({1}と{2}の間の十進数でなければならない)。</value>
+  <data name="BuildLibraryGridView_OnRowPrepaint_Error_getting_score_type_for_this_file_" xml:space="preserve">
+    <value>このファイルのスコアタイプを取得中にエラーが発生しました。</value>
   </data>
   <data name="BuildLibraryGridView_Validate_Are_you_sure_you_want_to_continue_" xml:space="preserve">
     <value>続行してもよろしいですか？</value>
@@ -1486,9 +1498,6 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
   <data name="ChromDataSet_GetExtents_The_time_interval__0__to__1__is_not_valid" xml:space="preserve">
     <value>時間間隔{0}から{1}は無効です。</value>
   </data>
-  <data name="ChromDataSet_MarkOptimizationData_Incorrectly_sorted_chromatograms__0__1__" xml:space="preserve">
-    <value>不正確な並べ替えのクロマトグラム{0} &gt; {1}</value>
-  </data>
   <data name="ChromDataSet_MergePeaks_Unexpected_null_peak" xml:space="preserve">
     <value>予期しない空値のピーク</value>
   </data>
@@ -1537,6 +1546,9 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
   </data>
   <data name="ClipboardHelper_GetPasteErrorMessage_Failed_getting_data_from_the_clipboard_" xml:space="preserve">
     <value>クリップボードからのデータ取得に失敗しました。</value>
+  </data>
+  <data name="Close" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Close.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="Collapse" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\minus.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -1618,6 +1630,12 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
   </data>
   <data name="CollisionEnergyRegression_Validate_Collision_energy_regressions_require_at_least_one_regression_function" xml:space="preserve">
     <value>衝突エネルギー回帰には、最低1つの回帰関数が必要です。</value>
+  </data>
+  <data name="ColonEndOfLine" xml:space="preserve">
+    <value>：</value>
+  </data>
+  <data name="ColonSeparator" xml:space="preserve">
+    <value>{0}：{1}</value>
   </data>
   <data name="ColorSchemeList_DEFAULT_Skyline_classic" xml:space="preserve">
     <value>Skylineクラシック</value>
@@ -1817,6 +1835,15 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
   <data name="CommandLine_ApplySampleNameRegex_Sample_name___0___does_not_match_the_pattern___1____Ignoring__2_" xml:space="preserve">
     <value>試料名「{0}」がパターン「{1}」と一致しません。{2}を無視します</value>
   </data>
+  <data name="CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins" xml:space="preserve">
+    <value>エラー：タンパク質を関連付けする前に、FASTAファイルをインポートする必要があります</value>
+  </data>
+  <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins" xml:space="preserve">
+    <value>ペプチドをタンパク質と関連付け</value>
+  </data>
+  <data name="CommandLine_AssociateProteins_Failed_to_associate_proteins" xml:space="preserve">
+    <value>タンパク質の関連付けに失敗しました</value>
+  </data>
   <data name="CommandLine_CanReadFile_Error__File_does_not_exist___0__" xml:space="preserve">
     <value>エラー： ファイルが存在していません：{0}。</value>
   </data>
@@ -1828,6 +1855,9 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
   </data>
   <data name="CommandLine_ConnectLibrarySpecs_Warning__Could_not_find_the_spectral_library__0_" xml:space="preserve">
     <value>警告： スペクトルライブラリ{0}が見つかりませんでした</value>
+  </data>
+  <data name="CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____" xml:space="preserve">
+    <value>イオン移動度ライブラリ「{0}」を「{1}」に作成しています...</value>
   </data>
   <data name="CommandLine_CreateIrtDatabase_Error__Importing_an_assay_library_to_a_document_without_an_iRT_calculator_cannot_create__0___because_it_exists_" xml:space="preserve">
     <value>エラー： iRTカルキュレーターなしでドキュメントをアッセイライブラリにインポートすると、{0}が既に存在するためにこれを作成できません。</value>
@@ -2072,6 +2102,9 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
   <data name="CommandLine_ImportSkyr_Error___0__does_not_exist____report_add_command_failed_" xml:space="preserve">
     <value>エラー：{0}は存在していません。--report-addコマンドに失敗しました。</value>
   </data>
+  <data name="CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_" xml:space="preserve">
+    <value>エラー：{0}からレポートをインポートできませんでした</value>
+  </data>
   <data name="CommandLine_ImportSkyr_Success__Imported_Reports_from__0_" xml:space="preserve">
     <value>成功しました！ {0}からインポートされたレポート</value>
   </data>
@@ -2186,6 +2219,12 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
   <data name="CommandLine_MinimizeResults_Removing_unused_chromatograms___" xml:space="preserve">
     <value>使用していないクロマトグラムを削除しています...</value>
   </data>
+  <data name="CommandLine_NewSkyFile_Deleting_existing_file___0__" xml:space="preserve">
+    <value>既存のファイル「{0}」を削除</value>
+  </data>
+  <data name="CommandLine_NewSkyFile_FileAlreadyExists" xml:space="preserve">
+    <value>ファイル「{0}」は既に存在します。--overwriteを追加して、Skylineに上書きを許可します。</value>
+  </data>
   <data name="CommandLine_OpenSkyFile_Error__The_Skyline_file__0__does_not_exist_" xml:space="preserve">
     <value>エラー： Skylineファイル{0}は存在しません。</value>
   </data>
@@ -2200,6 +2239,9 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
   </data>
   <data name="CommandLine_PerformExportOperations_Error__No_new_results_added__Skipping_Panorama_import_" xml:space="preserve">
     <value>エラー：新しく追加された結果はありません。パノラマインポートをスキップします。</value>
+  </data>
+  <data name="CommandLine_ProcessDocument_Error_saving_file" xml:space="preserve">
+    <value>エラー：ファイルの保存</value>
   </data>
   <data name="CommandLine_RefineDocument_Choose_one_of__0_" xml:space="preserve">
     <value>{0}の1つを選択します。</value>
@@ -2280,36 +2322,6 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
   <data name="CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transition_filter_settings_" xml:space="preserve">
     <value>エラー：トランジションフィルタ設定の変更に失敗しました。</value>
   </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_MS_MS_IDs_" xml:space="preserve">
-    <value>フルスキャン抽出をMS/MS IDから+/- {0}分に変更中。</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_predicted_value_" xml:space="preserve">
-    <value>フルスキャン抽出を予測値から+/-{0}分に変更中。</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_accuracy_to__0__ppm_" xml:space="preserve">
-    <value>フルスキャンのプリカーサーの質量精度を{0} ppmに変更中です。</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolution_to__0__" xml:space="preserve">
-    <value>フルスキャンプリカーサー分解能を{0}に変更中。</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__" xml:space="preserve">
-    <value>フルスキャンプリカーサー分解能を{0}に変更中。</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__at__1__" xml:space="preserve">
-    <value>フルスキャンプリカーサー分解能を{1}で{0}に変更中。</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__ppm_" xml:space="preserve">
-    <value>フルスキャンのプロダクトの質量精度を{0} ppmに変更中です。</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_resolution_to__0__" xml:space="preserve">
-    <value>フルスキャンプロダクト分解能を{0}に変更中。</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__" xml:space="preserve">
-    <value>フルスキャンプロダクト分解能を{0}に変更中。</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__at__1__" xml:space="preserve">
-    <value>フルスキャンプロダクト分解能を{1}で{0}に変更中。</value>
-  </data>
   <data name="CommandLine_SetFullScanSettings_Error__Failed_attempting_to_change_the_transiton_full_scan_settings_" xml:space="preserve">
     <value>エラー： トランジションフルスキャン設定の変更に失敗しました。</value>
   </data>
@@ -2321,6 +2333,9 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
   </data>
   <data name="CommandLine_SetImsSettings_Error__Failed_attempting_to_change_the_ion_mobility_settings_" xml:space="preserve">
     <value>エラー：イオン移動度の設定を変更できませんでした。</value>
+  </data>
+  <data name="CommandLine_SetInstrumentSettings_Error__Failed_attempting_to_change_the_transition_instrument_settings_" xml:space="preserve">
+    <value>エラー：トランジション装置設定を変更しようとして失敗しました。</value>
   </data>
   <data name="CommandLine_SetLibrary_Error__Cannot_set_library_name_without_path_" xml:space="preserve">
     <value>エラー： パスなしでライブラリ名を設定することはできません。</value>
@@ -2336,6 +2351,9 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
   </data>
   <data name="CommandLine_SetLibrary_Error__The_library_you_are_trying_to_add_conflicts_with_a_library_already_in_the_file_" xml:space="preserve">
     <value>エラー： 追加しようとしているライブラリはファイル内に既にあるライブラリと競合しています。</value>
+  </data>
+  <data name="CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_library_settings_" xml:space="preserve">
+    <value>エラー：トランジションライブラリ設定を変更しようとして失敗しました。</value>
   </data>
   <data name="CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transition_prediction_settings_" xml:space="preserve">
     <value>エラー：トランジション予測設定の変更に失敗しました。</value>
@@ -2670,9 +2688,6 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
   </data>
   <data name="ConfigureToolsDlg_UnpackZipTool_There_is_a_naming_conflict__You_already_installed_a_tool_from_a_zip_folder_with_the_name__0___Would_you_like_to_overwrite_or_install_in_parallel_" xml:space="preserve">
     <value>名前の不一致があります。{0}という名前のzipフォルダから既にツールをインストールしています。上書きしますか、それとも並行インストールしますか？</value>
-  </data>
-  <data name="ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__Tool_importing_canceled_" xml:space="preserve">
-    <value>zipの解凍中に名前の不一致がありました。ツールのインポートがキャンセルされました！</value>
   </data>
   <data name="ConfigureToolsDlg_unpackZipTool_Title_and_Command_are_required" xml:space="preserve">
     <value>そのツールをスキップするには、</value>
@@ -3540,7 +3555,7 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
     <value>{0}個未満の標準ペプチドの使用は推奨されません。本当に{1}個のみで続行しますか？</value>
   </data>
   <data name="EditIrtCalcDlg_OpenDatabase_Opening_database" xml:space="preserve">
-    <value>開始データベース</value>
+    <value>データベースを開く</value>
   </data>
   <data name="EditIrtCalcDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Create_button_to_create_a_new_database_or_the_Open_button_to_find_the_missing_file_" xml:space="preserve">
     <value>ファイル{0}は存在しません。作成ボタンをクリックして新しいデータベースを作成するか、開くボタンをクリックして欠損しているファイルを検索します。</value>
@@ -3727,6 +3742,21 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
   </data>
   <data name="EditMeasuredIonDlg_ValidateAATextBox_The_character__0__is_not_a_valid_amino_acid" xml:space="preserve">
     <value>文字「{0}」は有効なアミノ酸ではありません。</value>
+  </data>
+  <data name="EditMenu_ChangeSpectrumFilter_Change_spectrum_filter" xml:space="preserve">
+    <value>スペクトルフィルタの変更</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Adding_spectrum_filter_to__0_" xml:space="preserve">
+    <value>{0}へのスペクトルフィルタの追加</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Adding_spectrum_filter_to__0__precursors" xml:space="preserve">
+    <value>{0}個のプリカーサーへのスペクトルフィルタの追加</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Editing_spectrum_filter_on__0_" xml:space="preserve">
+    <value>{0}でのスペクトルフィルタの編集</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Editing_spectrum_filter_on__0__precursors" xml:space="preserve">
+    <value>{0}個のプリカーサーでのスペクトルフィルタの編集</value>
   </data>
   <data name="EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_" xml:space="preserve">
     <value>同期した統合を{0}に変更</value>
@@ -3986,6 +4016,9 @@ Example: Looplink: T [4]
   <data name="EditRTDlg_UpdateCalculator_The_calculator_cannot_be_used_to_score_peptides_Please_check_its_settings" xml:space="preserve">
     <value>カルキュレータはペプチドのスコアには使用できません。設定を確認してください。</value>
   </data>
+  <data name="EditServerDlg_OkDialog__0__is_not_a_valid_email_address_" xml:space="preserve">
+    <value>{0}は有効なメールアドレスではありません。</value>
+  </data>
   <data name="EditServerDlg_OkDialog_The_server__0__already_exists_" xml:space="preserve">
     <value>サーバー「{0}」が既に存在しています。</value>
   </data>
@@ -3994,6 +4027,10 @@ Example: Looplink: T [4]
   </data>
   <data name="EditServerDlg_OkDialog_Verifying_server_information" xml:space="preserve">
     <value>サーバー情報の確認中。</value>
+  </data>
+  <data name="EditSpectrumFilterDlg_MakePageButton_Case__0_" xml:space="preserve">
+    <value>ケース{0}</value>
+    <comment>"Case" means "possibility" or "branch"</comment>
   </data>
   <data name="EditStaticModDlg_EditStaticModDlg_Chemical_formula_" xml:space="preserve">
     <value>化学式(&amp;C)：</value>
@@ -4065,8 +4102,53 @@ Example: Looplink: T [4]
   <data name="EmptyProteinsDlg_EmptyProteinsDlg_1_new_protein" xml:space="preserve">
     <value>1個の新しいタンパク質</value>
   </data>
+  <data name="EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_Converting_FASTA_to_Prosit_input" xml:space="preserve">
+    <value>FASTAのProsit入力への変換</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_could_not_find_EncyclopeDia" xml:space="preserve">
+    <value>EncyclopeDIAを見つけられませんでした</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_ConvertPrositOutputToDlib_Converting_Prosit_output_to_EncyclopeDia_library" xml:space="preserve">
+    <value>Prosit出力のEncyclopeDIAライブラリへの変換</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_GenerateLibrary_Combining_chromatogram_libraries" xml:space="preserve">
+    <value>クロマトグラムライブラリの統合</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_GenerateLibrary_Combining_quantification_libraries" xml:space="preserve">
+    <value>定量化ライブラリの統合</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2" xml:space="preserve">
+    <value>クロマトグラムライブラリ({1}の{0})：{2}の生成</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_GenerateLibrary_Generating_quantification_library_0_of_1_2" xml:space="preserve">
+    <value>定量化ライブラリ({1}の{0})：{2}の生成</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_" xml:space="preserve">
+    <value>コマンドの実行：{0} {1}</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_GetConvertedDiaDataFile_Converting_DIA_data_to_mzML" xml:space="preserve">
+    <value>DIAデータのmzMLへの変換</value>
+  </data>
   <data name="EncyclopediaLibrary_FILTER_ELIB_EncyclopeDIA_Libraries" xml:space="preserve">
     <value>EncyclopeDIAライブラリ</value>
+  </data>
+  <data name="EncyclopeDiaSearchControl_Search_Reusing_Prosit_predictions_from___0_" xml:space="preserve">
+    <value>Prosit予測の再利用元：{0}</value>
+  </data>
+  <data name="EncyclopeDiaSearchDlg_Browse_for_Narrow_Window_Results_Files" xml:space="preserve">
+    <value>狭いウィンドウ結果ファイルを参照</value>
+  </data>
+  <data name="EncyclopeDiaSearchDlg_Browse_For_Wide_Window_Results_Files" xml:space="preserve">
+    <value>広いウィンドウ結果ファイルを参照</value>
+  </data>
+  <data name="EncyclopeDiaSearchDlg_ImportEncyclopediaLibrary_Ran_EncyclopeDIA_Search" xml:space="preserve">
+    <value>EncyclopeDIA検索実行済み</value>
+  </data>
+  <data name="EncyclopeDiaSearchDlg_NextPage_A_FASTA_file_is_required_for_an_EncyclopeDia_Prosit_search_" xml:space="preserve">
+    <value>EncyclopeDIA Prosit検索には、FASTAファイルが必要です。</value>
+  </data>
+  <data name="EncyclopeDiaSearchDlg_NextPage_Run" xml:space="preserve">
+    <value>実行</value>
   </data>
   <data name="EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library" xml:space="preserve">
     <value>EncyclopeDIAライブラリ</value>
@@ -4179,6 +4261,9 @@ Example: Looplink: T [4]
   </data>
   <data name="ExportLiveReportDlg_ShowPreview_Preview__" xml:space="preserve">
     <value>プレビュー： </value>
+  </data>
+  <data name="ExportMethodDlg_ACCUMULATION_TIME_TXT" xml:space="preserve">
+    <value>蓄積時間(秒)：</value>
   </data>
   <data name="ExportMethodDlg_btnBrowseTemplate_Click__0__Method" xml:space="preserve">
     <value>{0}メソッド</value>
@@ -4322,11 +4407,17 @@ Example: Looplink: T [4]
   <data name="ExportMethodDlg_OkDialog_The_template_file__0__does_not_exist" xml:space="preserve">
     <value>テンプレートファイル{0}がありません。</value>
   </data>
+  <data name="ExportMethodDlg_OkDialog_The_transition_prediction_settings_for_this_document_are_set_to_use_optimized_values_by_transition_" xml:space="preserve">
+    <value>このドキュメントのトランジション予測設定は、トランジション毎に最適化された値を使用するように設定されています。</value>
+  </data>
   <data name="ExportMethodDlg_OkDialog_TOF" xml:space="preserve">
     <value>TOF</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_Transition_List" xml:space="preserve">
     <value>トランジションリスト</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_Using_optimized_values_by_transition_is_invalid_for_this_instrument_type__Would_you_like_to_use_optimized_values_by_precursor_instead_" xml:space="preserve">
+    <value>この装置タイプでは、トランジション毎に最適化された値の使用は無効です。プリカーサー毎に最適化されたファイルを使用しますか？</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_Would_you_like_to_use_the_defaults_instead" xml:space="preserve">
     <value>代わりにデフォルトを使用しますか？</value>
@@ -4602,6 +4693,9 @@ Example: Looplink: T [4]
   <data name="FastaSeqV01_GetPeptideList_Attempt_to_get_peptide_list_from_uncleaved_FASTA_sequence" xml:space="preserve">
     <value>非切断FASTAシークエンスからペプチドリストを取得しようとしています。</value>
   </data>
+  <data name="FastaToProsit_Enzyme_unsupported_enzyme___0____allowed_values_are___1_" xml:space="preserve">
+    <value>対応していない酵素「{0}」、許可されている値：{1}</value>
+  </data>
   <data name="File" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\file.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -4686,6 +4780,10 @@ Example: Looplink: T [4]
   </data>
   <data name="FileSaver_CanSave_Cannot_save_to__0__The_file_is_read_only" xml:space="preserve">
     <value>{0}に保存できません。ファイルは読み取り専用です。</value>
+  </data>
+  <data name="FileSpectrumInfo_ToString__0__Spectra" xml:space="preserve">
+    <value>{0}個のスペクトル</value>
+    <comment>Example: 20 Spectra</comment>
   </data>
   <data name="FileStreamManager_Commit_Could_not_replace_file_" xml:space="preserve">
     <value>ファイルを置換できませんでした</value>
@@ -4774,8 +4872,9 @@ Example: Looplink: T [4]
   <data name="FindOptions_GetNotFoundMessage_Could_not_find__0__" xml:space="preserve">
     <value>{0}が見つかりませんでした。</value>
   </data>
-  <data name="FindOptions_GetNotFoundMessage_Could_not_find_any_of__0__items" xml:space="preserve">
-    <value>{0}個のアイテムのいずれも見つかりませんでした。</value>
+  <data name="FindOptions_GetNotFoundMessage_Nothing_could_be_found_matching_any_of_the__0__criteria" xml:space="preserve">
+    <value>{0}個の基準のいずれに一致するものも見つかりませんでした</value>
+    <comment>{0} is an integer greater than 1</comment>
   </data>
   <data name="FindOptions_GetNotFoundMessage_The_text__0__could_not_be_found" xml:space="preserve">
     <value>テキスト「{0}」が見つかりませんでした。</value>
@@ -4791,6 +4890,9 @@ Example: Looplink: T [4]
   </data>
   <data name="FindPredicate_FindAll_Searching_for__0__" xml:space="preserve">
     <value>{0}を検索中</value>
+  </data>
+  <data name="FindPredicate_FindNext_Searching_for_next_result" xml:space="preserve">
+    <value>次の結果を検索</value>
   </data>
   <data name="FoldChangeForm_BuildContextMenu_Bar_Graph" xml:space="preserve">
     <value>棒グラフ</value>
@@ -4851,6 +4953,9 @@ Example: Looplink: T [4]
   </data>
   <data name="FragmentLibDecoy" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\FragmentLibDecoy.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="FragmentLoss_ItemDescription_Include_by_default" xml:space="preserve">
+    <value>デフォルトで含まれる</value>
   </data>
   <data name="FragmentLoss_Validate_Neutral_losses_must_be_greater_than_or_equal_to__0__" xml:space="preserve">
     <value>ニュートラルロスは{0}以上でなければなりません。</value>
@@ -4930,6 +5035,9 @@ Example: Looplink: T [4]
   <data name="GenerateDecoysError_No_peptide_precursor_models_for_decoys_were_found_" xml:space="preserve">
     <value>デコイのペプチドプリカーサーモデルは見つかりませんでした。</value>
   </data>
+  <data name="GenericState_AppendErrorAndUri_URL___0_" xml:space="preserve">
+    <value>URL：{0}</value>
+  </data>
   <data name="GraphChromatogram_DisplayOptimizationTotals_No_optimization_data_available" xml:space="preserve">
     <value>最適化データがありません。</value>
   </data>
@@ -4938,6 +5046,12 @@ Example: Looplink: T [4]
   </data>
   <data name="GraphChromatogram_UpdateUI_No_base_peak_chromatogram_found" xml:space="preserve">
     <value>ベースピーククロマトグラムが見つかりません</value>
+  </data>
+  <data name="GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_base_peak_chromatogram" xml:space="preserve">
+    <value>ベースピーククロマトグラムにMS1スペクトルはありません</value>
+  </data>
+  <data name="GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_TIC_chromatogram" xml:space="preserve">
+    <value>TICクロマトグラムにMS1スペクトルはありません</value>
   </data>
   <data name="GraphChromatogram_UpdateUI_No_precursor_ion_chromatograms_found" xml:space="preserve">
     <value>プリカーサーイオンクロマトグラムが見つかりません</value>
@@ -5447,6 +5561,9 @@ Example: Looplink: T [4]
   </data>
   <data name="ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Precursor_Adduct_and_or_Precursor_Charge" xml:space="preserve">
     <value>プリカーサー付加物やプリカーサー電荷</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Declustering_Potential" xml:space="preserve">
+    <value>デクラスタリングポテンシャル</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential" xml:space="preserve">
     <value>明示的デクラスタリングポテンシャル</value>
@@ -6021,6 +6138,9 @@ Example: Looplink: T [4]
   <data name="LibrarySpec_CreateFromPath_Unrecognized_library_type_at__0_" xml:space="preserve">
     <value>{0}で認識されていないライブラリタイプ</value>
   </data>
+  <data name="LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries" xml:space="preserve">
+    <value>明示的なピーク境界を無視</value>
+  </data>
   <data name="LibrarySpec_PEP_RANK_COPIES_Spectrum_count" xml:space="preserve">
     <value>スペクトル数</value>
   </data>
@@ -6299,6 +6419,9 @@ Example: Looplink: T [4]
   </data>
   <data name="MassListRowReader_NextRow_No_peptide_sequence_column_specified" xml:space="preserve">
     <value>ペプチド修飾シークエンス列が指定されていません</value>
+  </data>
+  <data name="MatchingPrecursors_ToString__0__precursors" xml:space="preserve">
+    <value>{0}個のプリカーサー</value>
   </data>
   <data name="MatchModificationsControl_AddCheckedModifications_Add_checked_modifications" xml:space="preserve">
     <value>選択した修飾を追加</value>
@@ -7057,6 +7180,24 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama" xml:space="preserve">
     <value>ドキュメントをPanoramaにアップロード中</value>
   </data>
+  <data name="PanoramaUtil_EnsureLogin_Could_not_authenticate_user__Response_received_from_server___0___1_" xml:space="preserve">
+    <value>ユーザーを認証できませんでした。サーバーから受信した応答：{0} {1}</value>
+  </data>
+  <data name="PanoramaUtil_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_" xml:space="preserve">
+    <value>サーバーは有効なJSON応答を返しませんでした。{0}はPanoramaサーバーではありません。</value>
+  </data>
+  <data name="PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_" xml:space="preserve">
+    <value>サーバーからの予期しないJSON応答：{0}</value>
+  </data>
+  <data name="PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder" xml:space="preserve">
+    <value>{0}はPanoramaフォルダではありません</value>
+  </data>
+  <data name="PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_" xml:space="preserve">
+    <value>フォルダ{0}はPanoramaサーバー{1}上に存在しません</value>
+  </data>
+  <data name="PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_" xml:space="preserve">
+    <value>ユーザー{0}には、Panoramaフォルダ{1}にアップロードする権限がありません</value>
+  </data>
   <data name="ParseExceptionDetail_ToString__at_position__0_" xml:space="preserve">
     <value>位置{1}での{0}</value>
     <comment>Examples: 
@@ -7211,8 +7352,17 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="PasteDlg_ShowNoErrors_No_errors" xml:space="preserve">
     <value>エラーなし</value>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_" xml:space="preserve">
+    <value>衝突断面積(sq A)</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Collision_Energy" xml:space="preserve">
+    <value>衝突エネルギー</value>
+  </data>
   <data name="PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_" xml:space="preserve">
     <value>衝突断面積（Sq A）</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Compensation_Voltage" xml:space="preserve">
+    <value>補償電圧</value>
   </data>
   <data name="PasteDlg_UpdateMoleculeType_Cone_Voltage" xml:space="preserve">
     <value>コーン電圧</value>
@@ -7241,6 +7391,12 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility" xml:space="preserve">
     <value>指定されたイオン移動度</value>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility__1_K0_" xml:space="preserve">
+    <value>指定されたイオン移動度(1/K0)</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility__msec_" xml:space="preserve">
+    <value>指定されたイオン移動度(msec)</value>
+  </data>
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset" xml:space="preserve">
     <value>指定されたイオン移動度の高エネルギーオフセット</value>
   </data>
@@ -7255,6 +7411,21 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="PasteDlg_UpdateMoleculeType_Fragment_Name" xml:space="preserve">
     <value>フラグメント名</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Ion_Mobility" xml:space="preserve">
+    <value>イオン移動度</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Ion_Mobility__1_K0_" xml:space="preserve">
+    <value>イオン移動度(1/K0)</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Ion_Mobility__msec_" xml:space="preserve">
+    <value>イオン移動度(msec)</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Ion_Mobility_High_Energy_Offset" xml:space="preserve">
+    <value>イオン移動度高エネルギーオフセット</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Ion_Mobility_Units" xml:space="preserve">
+    <value>イオン移動度の単位</value>
   </data>
   <data name="PasteDlg_UpdateMoleculeType_iRT" xml:space="preserve">
     <value>iRT</value>
@@ -7315,6 +7486,12 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="PasteDlg_UpdateMoleculeType_Protein_name" xml:space="preserve">
     <value>タンパク質名</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Retention_Time" xml:space="preserve">
+    <value>保持時間</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Retention_Time_Window" xml:space="preserve">
+    <value>保持時間ウィンドウ</value>
   </data>
   <data name="PasteDlg_UpdateMoleculeType_S_Lens" xml:space="preserve">
     <value>S-レンズ</value>
@@ -7735,6 +7912,9 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="PeptideSettingsUI_ShowBuildLibraryDlg_Finishing_up_building_library" xml:space="preserve">
     <value>ライブラリ構築の終了中</value>
   </data>
+  <data name="PeptideSettingsUI_ShowFilterMidasDlg_Failed_loading_MIDAS_library__0__" xml:space="preserve">
+    <value>MIDASライブラリ{0}の読み込みに失敗しました。</value>
+  </data>
   <data name="PeptideSettingsUI_ShowFilterMidasDlg_Loading__0_" xml:space="preserve">
     <value>{0}を読み込んでいます</value>
   </data>
@@ -7953,11 +8133,26 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="ProgramPathContainer_Validate_ProgramPathCollectors_must_have_a_program_name" xml:space="preserve">
     <value>ProgramPathCollectorsにはプログラム名が必要です</value>
   </data>
+  <data name="Properties_Button" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Properties.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="Property_DisambiguationPrefix_Property__" xml:space="preserve">
     <value>プロパティ： </value>
   </data>
   <data name="prosit_logo_dark_blue" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\prosit_logo_dark_blue.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PrositHelpers_ExportPrositSpectraToBlib_Exporting_Prosit_spectra_to_BiblioSpec_library" xml:space="preserve">
+    <value>PrositスペクトルのBiblioSpecライブラリへのエクスポート</value>
+  </data>
+  <data name="PrositHelpers_ExportPrositSpectraToBlib_failed_to_write_Prosit_output_to_blib" xml:space="preserve">
+    <value>Prosit出力をblibに書き込めませんでした</value>
+  </data>
+  <data name="PrositHelpers_PredictBatchesFromPrositCsv_Reading_Prosit_CSV_input" xml:space="preserve">
+    <value>Prosit CSV入力の読み取り</value>
+  </data>
+  <data name="PrositIntensityModel_CreatePrositInputRow_UnsupportedCharge" xml:space="preserve">
+    <value>Prositでは電荷{0}に対応していません。対応最大電荷は{1}です。</value>
   </data>
   <data name="Protein" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Protein.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -8853,6 +9048,9 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="SciexOsMethodExporter_EnsureSciexOs_Working___" xml:space="preserve">
     <value>処理中...</value>
   </data>
+  <data name="SciexOsMethodExporter_SciexOsMethodExporter_Invalid_instrument_type_for_SCIEX_OS_method_export_" xml:space="preserve">
+    <value>SCIEX OSメソッドエクスポートに無効な装置タイプです。</value>
+  </data>
   <data name="SearchSettingsControl_Additional_Settings" xml:space="preserve">
     <value>その他の設定</value>
   </data>
@@ -8904,6 +9102,9 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="ServerList_Title_Edit_Servers" xml:space="preserve">
     <value>サーバーを編集</value>
   </data>
+  <data name="ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__" xml:space="preserve">
+    <value>サーバー{0}に接続できません。</value>
+  </data>
   <data name="Setting_Validate_The_value___0___is_not_valid_for_the_argument__1__which_must_be_either__True__or__False__" xml:space="preserve">
     <value>引数{1}は「True」または「False」でなければならないため、値「{0}」は無効です。</value>
   </data>
@@ -8945,6 +9146,12 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="ShareListDlg_ShareListDlg_Skyline_Settings" xml:space="preserve">
     <value>Skyline設定</value>
+  </data>
+  <data name="ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_containing_the_missing_files_" xml:space="preserve">
+    <value>欠損しているファイルが含まれているフォルダを選択してください。</value>
+  </data>
+  <data name="ShareTypeDlg_OkDialog_Including_data_folders_is_not_supported_by_the_currently_selected_version_" xml:space="preserve">
+    <value>データフォルダの含有は、現在選択されているバージョンでは対応していません。</value>
   </data>
   <data name="ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__" xml:space="preserve">
     <value>現在保存されているファイル({0})</value>
@@ -9095,6 +9302,9 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="SkylineWindow_acceptPeptidesMenuItem_Click_Accept_peptides" xml:space="preserve">
     <value>ペプチドの受け入れ</value>
   </data>
+  <data name="SkylineWindow_Add" xml:space="preserve">
+    <value>追加</value>
+  </data>
   <data name="SkylineWindow_AddGroupByMenuItems_All_Replicates" xml:space="preserve">
     <value>すべての繰り返し測定</value>
   </data>
@@ -9142,9 +9352,6 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="SkylineWindow_ApplyPeak_Failed_to_apply_peak_" xml:space="preserve">
     <value>ピークを適用に失敗しました。</value>
-  </data>
-  <data name="SkylineWindow_ApplyPeak_No_results_found_for_the_precursor__0__in_the_file__1__" xml:space="preserve">
-    <value>ファイル{1}にはプリカーサー{0}の結果がありません。</value>
   </data>
   <data name="SkylineWindow_BuildAreaGraphMenu_Show_Expected" xml:space="preserve">
     <value>期待値を表示</value>
@@ -9201,6 +9408,9 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="SkylineWindow_ConnectLibrarySpecs_Spectral_Library" xml:space="preserve">
     <value>スペクトルライブラリ</value>
+  </data>
+  <data name="SkylineWindow_crashSkylineMenuItem_Click_Are_you_sure_you_want_to_abruptly_terminate_Skyline__You_will_lose_all_unsaved_work_" xml:space="preserve">
+    <value>Skylineを終了しますか？保存されていない作業はすべて失われます。</value>
   </data>
   <data name="SkylineWindow_CreateGraphDetections_Counts" xml:space="preserve">
     <value>検出</value>
@@ -9400,9 +9610,6 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="SkylineWindow_ImportMassList__Skip" xml:space="preserve">
     <value>スキップ(&amp;S)</value>
   </data>
-  <data name="SkylineWindow_ImportMassList_Add" xml:space="preserve">
-    <value>追加</value>
-  </data>
   <data name="SkylineWindow_ImportMassList_Adding_iRT_values_" xml:space="preserve">
     <value>iRT値の計算中</value>
   </data>
@@ -9414,6 +9621,21 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="SkylineWindow_ImportMassList_Columns_identified_as__0_" xml:space="preserve">
     <value>{0}と特定されている列</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Disable" xml:space="preserve">
+    <value>無効化(&amp;D)</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions" xml:space="preserve">
+    <value>自動選択を有効にし、ドキュメント設定を使用してこの新しいトランジションを管理しますか？
+
+自動選択を有効にする：{0}プリカーサーおよび{1}断片のトランジションが現在のドキュメントに追加されます。
+
+自動選択を無効にする：{2}プリカーサーおよび{3}断片のトランジションが現在のドキュメントに追加されます。
+
+無効化を選択した場合、「最適化 &gt; 詳細」メニュー項目で後から自動選択を有効にできます。</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Enable" xml:space="preserve">
+    <value>有効化(&amp;E)</value>
   </data>
   <data name="SkylineWindow_ImportMassList_Failed_reading_the_file___Peptide__0__matches_an_existing_iRT_standard_peptide_" xml:space="preserve">
     <value>ファイルの読み取りに失敗しました。 ペプチド{0}が既存のiRT標準ペプチドで一致しました。</value>
@@ -9955,6 +10177,9 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="SkylineWindow_sortProteinsMenuItem_Click_Sort_proteins_by_name" xml:space="preserve">
     <value>タンパク質を名前別で並べ替え</value>
   </data>
+  <data name="SkylineWindow_submitErrorReportMenuItem_Click_Submitting_an_unhandled_error_report" xml:space="preserve">
+    <value>未処理のエラーレポートを送信</value>
+  </data>
   <data name="SkylineWindow_targetsAt1FDRToolStripMenuItem_Click_Showing_targets_at_1__FDR_will_set_the_replicate_display_type_to_single__Do_you_want_to_continue_" xml:space="preserve">
     <value>[1% FDRにおけるターゲット]を表示すると、繰り返し測定の表示タイプを「単一」に設定します。続行しますか？</value>
   </data>
@@ -9982,6 +10207,21 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="SkylineWindow_ViewSpectralLibraries_No_libraries_to_show_Would_you_like_to_add_a_library" xml:space="preserve">
     <value>表示するライブラリがありません。ライブラリを追加しますか？</value>
   </data>
+  <data name="SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_for_the_user__1___This_user_does_not_have_permissions_to_download_the_file__The_skyp_file_was_downloaded_by__2__" xml:space="preserve">
+    <value>Skylineに保存されているPanoramaサーバー{0}の認証情報は、ユーザー{1}のものです。このユーザーにはファイルをダウンロードする権限がありません。skypファイルは{2}によってダウンロードされました。</value>
+  </data>
+  <data name="SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_invalid_" xml:space="preserve">
+    <value>Skylineに保存されているPanoramaサーバー{0}の認証情報は無効です。</value>
+  </data>
+  <data name="SkypDownloadException_GetMessage_The_skyp_file_was_downloaded_by_the_user__0___Credentials_saved_in_Skyline_for_this_server_are_for_the_user__1__" xml:space="preserve">
+    <value>ユーザー{0}がskypファイルをダウンロードしました。Skylineに保存されているこのサーバーの認証情報は、ユーザー{1}のものです。</value>
+  </data>
+  <data name="SkypDownloadException_GetMessage_Would_you_like_to_add__0__as_a_Panorama_server_in_Skyline_" xml:space="preserve">
+    <value>SkylineのPanoramaサーバーとして{0}を追加しますか？</value>
+  </data>
+  <data name="SkypDownloadException_GetMessage_Would_you_like_to_update_the_credentials_" xml:space="preserve">
+    <value>認証情報を更新しますか？</value>
+  </data>
   <data name="SkypFile_FILTER_SKYP_Skyline_Document_Pointer" xml:space="preserve">
     <value>Skylineドキュメントポインタ</value>
   </data>
@@ -9991,8 +10231,14 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="SkypFile_GetSkyFileUrl__0__is_not_a_valid_URL_on_a_Panorama_server_" xml:space="preserve">
     <value>{0}はPanoramaサーバーの有効なURLではありません。</value>
   </data>
+  <data name="SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive_file___0____Found_filename__1__instead_in_the_URL__2__" xml:space="preserve">
+    <value>共有しているSkylineドキュメントアーカイブファイル({0})のURLを待っていましたが、URL{2}の代わりにファイル名{1}が見つかりました。</value>
+  </data>
   <data name="SkypFile_GetSkyFileUrl_File_does_not_contain_the_URL_of_a_shared_Skyline_archive_file___0___on_a_Panorama_server_" xml:space="preserve">
     <value>PanoramaサーバーにあるSkyline共有アーカイブファイル({0})のURLがファイルに含まれていません。</value>
+  </data>
+  <data name="SkypSupport_Download_Downloading__0__from__1_" xml:space="preserve">
+    <value>{0}を{1}からダウンロードしています</value>
   </data>
   <data name="SkypSupport_Download_You_do_not_have_permissions_to_download_this_file_from__0__" xml:space="preserve">
     <value>{0}からこのファイルをダウンロードする権限がありません。</value>
@@ -10002,6 +10248,12 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="SkypSupport_Open_Failure_opening_skyp_file_" xml:space="preserve">
     <value>skypファイルを開けません。</value>
+  </data>
+  <data name="SkypSupport_Open_Path_to_skyp_file_cannot_be_empty_" xml:space="preserve">
+    <value>skypファイルへのパスは空欄にできません。</value>
+  </data>
+  <data name="SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document__0__from__1__" xml:space="preserve">
+    <value>Skylineドキュメント{0}の{1}からのダウンロード中にエラーが発生しました。</value>
   </data>
   <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass" xml:space="preserve">
     <value>平均質量</value>
@@ -10126,6 +10378,48 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_scan_time" xml:space="preserve">
     <value>スキャン時間のないスキャン{0}が見つかりました。</value>
   </data>
+  <data name="SpectraGridForm_AddSpectrumFilters__0__spectrum_filters_will_be_added_to_the_document_" xml:space="preserve">
+    <value>{0}個のスペクトルフィルタがドキュメントに追加されます。</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters_Change_spectrum_filter" xml:space="preserve">
+    <value>スペクトルフィルタの変更</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters_Examining_filters" xml:space="preserve">
+    <value>フィルタの調査</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters_No_spectrum_filters_were_added_to_the_document_" xml:space="preserve">
+    <value>ドキュメントにはスペクトルフィルタが追加されませんでした。</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters_One_spectrum_filter_will_be_added_to_the_document_" xml:space="preserve">
+    <value>1個のスペクトルフィルタがドキュメントに追加されます。</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters_The_selected_row_does_not_have_any_filters" xml:space="preserve">
+    <value>選択されている行にはフィルタがありません</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters_The_selected_rows_do_not_have_any_filters" xml:space="preserve">
+    <value>選択されている行にはフィルタがありません</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters_There_were_no_matching_precursors_to_add_any_filters_to_" xml:space="preserve">
+    <value>フィルタを追加する一致するプリカーサーがありません。</value>
+  </data>
+  <data name="SpectraGridForm_GetDefaultViewSpec_Default" xml:space="preserve">
+    <value>デフォルト</value>
+  </data>
+  <data name="SpectraGridForm_GetSummaryMessage_Showing_all_spectra" xml:space="preserve">
+    <value>すべてのスペクトルを表示</value>
+  </data>
+  <data name="SpectraGridForm_GetSummaryMessage_Showing_spectra_near__0__precursors_between__1__and__2_" xml:space="preserve">
+    <value>{1}と{2}の間にある{0}個のプリカーサー近辺のスペクトルを表示</value>
+  </data>
+  <data name="SpectraGridForm_GetSummaryMessage_Showing_spectra_near_precursor_m_z__0_" xml:space="preserve">
+    <value>プリカーサーm/z {0}近辺のスペクトルを表示</value>
+  </data>
+  <data name="SpectraGridForm_GetSummaryMessage_Showing_spectra_near_precursor_m_z__0__and__1_" xml:space="preserve">
+    <value>プリカーサーm/z {0}および{1}近辺のスペクトルを表示</value>
+  </data>
+  <data name="SpectraGridForm_SpectraGridForm_Spectrum_Grid" xml:space="preserve">
+    <value>スペクトルグリッド</value>
+  </data>
   <data name="SpectralLibraryList_Label_Libraries" xml:space="preserve">
     <value>ライブラリ(&amp;L)：</value>
   </data>
@@ -10134,6 +10428,36 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="SpectrastLibrary_SpecFilter_SpectraST_Library" xml:space="preserve">
     <value>SpectraSTライブラリ</value>
+  </data>
+  <data name="SpectrumClassColumn_Ms1Precursors_MS1" xml:space="preserve">
+    <value>MS1</value>
+  </data>
+  <data name="SpectrumClassColumn_Ms2Precursors_MS2" xml:space="preserve">
+    <value>MS2</value>
+  </data>
+  <data name="SpectrumClassFilter_GetAbbreviatedText__AND_" xml:space="preserve">
+    <value> AND </value>
+    <comment>This will be displayed in the tooltip for expressions like:
+      x + y = 7 AND x * y &lt; 20</comment>
+  </data>
+  <data name="SpectrumClassFilter_GetAbbreviatedText_OR" xml:space="preserve">
+    <value>OR</value>
+    <comment>"OR" is the logical operator</comment>
+  </data>
+  <data name="SpectrumClassFilter_MakePredicate_No_spectrum_column__0_" xml:space="preserve">
+    <value>スペクトル列{0}がありません</value>
+  </data>
+  <data name="SpectrumClassFilter_Ms1FilterPage_Criteria_which_MS1_spectra_must_satisfy_to_be_included_in_extracted_chromatogram" xml:space="preserve">
+    <value>MS1スペクトルを抽出されたクロマトグラムに含むために満たさなければならない基準</value>
+  </data>
+  <data name="SpectrumClassFilter_Ms1FilterPage_MS1" xml:space="preserve">
+    <value>MS1</value>
+  </data>
+  <data name="SpectrumClassFilter_Ms2FilterPage_Criteria_which_spectra_with_MS_level_2_or_higher_must_satisfy_to_be_included_in_extracted_chromatogram" xml:space="preserve">
+    <value>MSレベル2以上のスペクトルを抽出されたクロマトグラムに含むために満たさなければならない基準</value>
+  </data>
+  <data name="SpectrumClassFilter_Ms2FilterPage_MS2_" xml:space="preserve">
+    <value>MS2+</value>
   </data>
   <data name="SpectrumFilter_CalcDiaIsolationValues_Unable_to_determine_isolation_width_for_the_scan_targeted_at__0_" xml:space="preserve">
     <value>{0}でターゲットとするスキャンの単離幅を決定できません</value>
@@ -10200,6 +10524,9 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="SpectrumMzInfo_GetInfoFromLibrary_Library_spectrum_for_sequence__0__is_missing_" xml:space="preserve">
     <value>シークエンスに対するライブラリスペクトルが{0}欠損しています。</value>
+  </data>
+  <data name="SpectrumReader_ReadSpectraFromFile_Reading_spectra_from__0_" xml:space="preserve">
+    <value>{0}からスペクトルを読み取っています</value>
   </data>
   <data name="SrmDocument_AddIrtPeptides_Must_have_an_active_iRT_calculator_to_add_iRT_peptides" xml:space="preserve">
     <value>iRTペプチドを追加するには、アクティブなiRTカルキュレータが必要です。</value>
@@ -10366,6 +10693,37 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="StatementCompletionTextBox_CreateListViewItems_Descriptions" xml:space="preserve">
     <value>表記：</value>
   </data>
+  <data name="StaticMod_FormatFormulaOrMass___0__Da_" xml:space="preserve">
+    <value>({0} Da)</value>
+    <comment>"Da" stands for "Daltons". Example: (+57.2 Da)</comment>
+  </data>
+  <data name="StaticMod_FormatMass_Mass" xml:space="preserve">
+    <value>質量</value>
+  </data>
+  <data name="StaticMod_FormatMass_Unknown_mass" xml:space="preserve">
+    <value>未知の質量</value>
+  </data>
+  <data name="StaticMod_ItemDescription__0__losses" xml:space="preserve">
+    <value>{0}個のロス</value>
+  </data>
+  <data name="StaticMod_ItemDescription__0__neutral_losses" xml:space="preserve">
+    <value>{0}個のニュートラルロス</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Empty" xml:space="preserve">
+    <value>空</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Loss" xml:space="preserve">
+    <value>ロス</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Losses" xml:space="preserve">
+    <value>ロス</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Neutral_loss" xml:space="preserve">
+    <value>ニュートラルロス</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Neutral_losses" xml:space="preserve">
+    <value>ニュートラルロス</value>
+  </data>
   <data name="StaticMod_ToModTerminus_Invalid_terminus__0__" xml:space="preserve">
     <value>無効な末端「{0}」です。</value>
   </data>
@@ -10438,6 +10796,9 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="TextUtil_DESCRIPTION_TSV_TSV__Tab_delimited_" xml:space="preserve">
     <value>TSV（タブ区切り）</value>
+  </data>
+  <data name="TextUtil_DeterminDsvSeparator_Unable_to_determine_format_of_delimiter_separated_value_file" xml:space="preserve">
+    <value>値が区切り文字で分けられたファイルの形式を判定できません</value>
   </data>
   <data name="TextUtil_FileDialogFiltersAll_All_Files" xml:space="preserve">
     <value>すべてのファイル</value>
@@ -10525,6 +10886,9 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="ToolInstaller_UnpackZipTool_Error__There_is_a_file_missing_the__0__zip" xml:space="preserve">
     <value>エラー： {0}.zipが欠損しているファイルがあります</value>
+  </data>
+  <data name="ToolInstaller_UnpackZipTool_The_selected_zip_file_did_not_specify_any_items_to_add_to_the_Tools_menu_" xml:space="preserve">
+    <value>選択されたzipファイルはToolsメニューに追加するアイテムを指定しませんでした。</value>
   </data>
   <data name="ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_a_valid_installable_tool_" xml:space="preserve">
     <value>選択したzipファイルは有効なインストール可能なツールではありません。</value>
@@ -10638,8 +11002,20 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
     <value>デフォルト ({0})</value>
     <comment>Example: Default (English)</comment>
   </data>
+  <data name="ToolService_DeleteElementsNow_Unsupported_element__0_" xml:space="preserve">
+    <value>対応していない要素{0}</value>
+  </data>
+  <data name="ToolService_GetSelectedElementRefNow_Unsupported_element_type___0__" xml:space="preserve">
+    <value>対応していない要素タイプ「{0}」</value>
+  </data>
   <data name="ToolService_ImportFasta_Insert_proteins" xml:space="preserve">
     <value>タンパク質を挿入</value>
+  </data>
+  <data name="ToolService_ImportPeakBoundaries_Import_peak_boundaries_from_external_tool" xml:space="preserve">
+    <value>外部ツールからピーク境界をインポート</value>
+  </data>
+  <data name="ToolService_ImportProperties_Import_Properties_from_external_tool" xml:space="preserve">
+    <value>外部ツールからプロパティをインポート</value>
   </data>
   <data name="ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List" xml:space="preserve">
     <value>分子トランジションリストを挿入</value>
@@ -10934,6 +11310,9 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="TransitionGroupTreeNode_GetResultsText_total_ratio__0__" xml:space="preserve">
     <value>総比率{0}</value>
   </data>
+  <data name="TransitionGroupTreeNode_RenderSpectrumClassFilterTip_Spectrum_Filter" xml:space="preserve">
+    <value>スペクトルフィルタ</value>
+  </data>
   <data name="TransitionGroupTreeNode_RenderTip_Decoy_Mass_Shift" xml:space="preserve">
     <value>デコイ質量シフト</value>
   </data>
@@ -11098,7 +11477,7 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="TransitionTreeNode_GetLabel_irank__0__" xml:space="preserve">
     <value>iランク{0}</value>
-    <comment>Isotope rank for transition node</comment>
+    <comment>Isotope rank "irank" for transition node</comment>
   </data>
   <data name="TransitionTreeNode_GetLabel_rank__0__" xml:space="preserve">
     <value>ランク{0}</value>
@@ -11268,6 +11647,9 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="UpgradeManager_updateCheck_Complete_Upgrading__0_" xml:space="preserve">
     <value>{0}をアップグレードしています</value>
   </data>
+  <data name="UserState_getErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__" xml:space="preserve">
+    <value>サーバー{0}でのユーザー認証情報の認証中にエラーがありました。</value>
+  </data>
   <data name="UtilDB_Uncompress_Failure_uncompressing_data" xml:space="preserve">
     <value>データの解凍に失敗。</value>
   </data>
@@ -11309,6 +11691,9 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="ValueInvalidIonTypeListException_ValueInvalidIonTypeListException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_fragment_ion_types__a__b__c__x__y__z__p__" xml:space="preserve">
     <value>値「{0}」は、フラグメントイオンタイプ（a、b、c、x、y、z、p）のカンマ区切りリストを必要とする引数{1}に対して有効ではありません。</value>
+  </data>
+  <data name="ValueInvalidMzToleranceException_ValueInvalidMzToleranceException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_value_and_a_unit__For_example___2__" xml:space="preserve">
+    <value>値{0}は引数{1}に有効ではありません。値と単位が必要です。例：{2}</value>
   </data>
   <data name="ValueInvalidNumberListException_ValueInvalidNumberListException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_list_of_decimal_numbers_" xml:space="preserve">
     <value>値{0}は、十進数のリストを必要とする引数{1}に対して無効です。</value>
