@@ -715,30 +715,30 @@ namespace pwiz.SkylineTestData
             // Test error (no targets)
             var output = RunCommand("--new=" + newDocumentPath, // Create a new document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
-                "--exp-mprophet-file=" + exportPath // Export mProphet features
+                "--exp-mprophet-features=" + exportPath // Export mProphet features
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features_), output);
             // Test error (no results)
             output = RunCommand("--in=" + docWithNoResultsPath, // Load a document with no results
-                "--exp-mprophet-file=" + exportPath // Export mProphet features
+                "--exp-mprophet-features=" + exportPath // Export mProphet features
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features_), output);
             // Test error (invalid feature name)
             output = RunCommand("--in=" + docWithResults, // Load a document with no results
-                "--exp-mprophet-file=" + exportPath, // Export mProphet features
+                "--exp-mprophet-features=" + exportPath, // Export mProphet features
                 "--exp-mprophet-exclude-feature=" + invalidFeatureName
             );
             CheckRunCommandOutputContains(string.Format(Resources
                 .CommandArgs_ParseArgsInternal_Error__Attempting_to_exclude_an_unknown_feature_name___0____Try_one_of_the_following_, invalidFeatureName), output);
             // Test export
             output = RunCommand("--in=" + docWithResults, // Load a document with results
-                "--exp-mprophet-file=" + exportPath // Export mProphet features
+                "--exp-mprophet-features=" + exportPath // Export mProphet features
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
             AssertEx.FileEquals(expectedExport, exportPath);
             // Test export with target peptides only and best scoring peaks only
             output = RunCommand("--in=" + docWithResults, // Load a document with results
-                "--exp-mprophet-file=" + exportPath, // Export mProphet features
+                "--exp-mprophet-features=" + exportPath, // Export mProphet features
                 "--exp-mprophet-targets-only", // Export should not include decoys peptides
                 "--exp-mprophet-best-peaks-only" // Export should contain best scoring peaks
             );
@@ -747,12 +747,96 @@ namespace pwiz.SkylineTestData
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
             // Test export with some scores excluded
             output = RunCommand("--in=" + docWithResults, // Load a document with results
-                "--exp-mprophet-file=" + exportPath, // Export mProphet features
+                "--exp-mprophet-features=" + exportPath, // Export mProphet features
                 "--exp-mprophet-exclude-feature=" + "Intensity", // Export should not contain an "Intensity" column
                 "--exp-mprophet-exclude-feature=" + "Standard signal to noise" // Export should not contain a "Standard signal to noise" column
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
             AssertEx.FileEquals(expectedExportExcludeFeatures, exportPath);
+        }
+
+        [TestMethod]
+        public void ConsoleExportAnnotationsTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleExportAnnotationsTest.zip");
+            var exportPath = TestFilesDir.GetTestPath("out.csv");
+            var documentWithAnnotations = TestFilesDir.GetTestPath("Study9_1_Site56C_Final_CURVE_Annotated_reduced.sky");
+            var expectedIncludeProperties = TestFilesDir.GetTestPath("expected_annotations_include_properties.csv");
+            var expectedIncludeObjects = TestFilesDir.GetTestPath("expected_annotations_include_objects.csv");
+            var expectedAnnotationsNoBlankRows = TestFilesDir.GetTestPath("expected_annotations_no_blank_rows.csv");
+            var newDocumentPath = TestFilesDir.GetTestPath("new.sky");
+            const string invalidName = "-la";
+
+            // Test error (invalid include-object name)
+            var output = RunCommand("--new=" + newDocumentPath, // Create a document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--exp-annotations=" + exportPath, // Export annotations
+                "--exp-annotations-include-object=" + invalidName // Test specifying an invalid object name
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                invalidName,
+                "--exp-annotations-include-object", string.Join(", ", CommandArgs.GetAllHandlerNames())), output);
+            // Test error (no annotations and not including properties)
+            output = RunCommand("--new=" + newDocumentPath, // Create a document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--exp-annotations=" + exportPath // Export annotations
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Error__The_document_must_contain_annotations_in_order_to_export_annotations_), output);
+            // Test export with some object types included (everything else excluded) 
+            output = RunCommand("--in=" + documentWithAnnotations, // Load a document that already contains annotations
+                "--exp-annotations=" + exportPath, // Export annotations
+                "--exp-annotations-include-object=" + "PrecursorResult", // Include "PrecursorResult" object type
+                "--exp-annotations-include-object=" + "TransitionResult" // Include "TransitionResult" object type
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, exportPath), output);
+            AssertEx.FileEquals(expectedIncludeObjects, exportPath);
+            // Test export with properties included
+            output = RunCommand("--in=" + documentWithAnnotations, // Load a document that already contains annotations
+                "--exp-annotations=" + exportPath, // Export annotations
+                "--exp-annotations-include-properties" // Include all properties
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, exportPath), output);
+            AssertEx.FileEquals(expectedIncludeProperties, exportPath);
+            // Test export with blank rows excluded
+            output = RunCommand("--in=" + documentWithAnnotations, // Load a document that already contains annotations
+                "--exp-annotations=" + exportPath, // Export annotations
+                "--exp-annotations-remove-blank-rows" // Remove blank rows
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, exportPath), output);
+            AssertEx.FileEquals(expectedAnnotationsNoBlankRows, exportPath);
+        }
+
+        [TestMethod]
+        public void ConsoleAnnotationsExportToImportTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleAnnotationsExportToImportTest.zip");
+            var documentWithAnnotations = TestFilesDir.GetTestPath("Study 7ii (site 52)_heavily_annotated.sky");
+            var documentWithoutAnnotations = TestFilesDir.GetTestPath("Study 7ii (site 52)_no_annotations.sky");
+            var documentWithImportedAnnotations = TestFilesDir.GetTestPath("Study 7ii (site 52)_imported_annotations.sky");
+            var annotationsPath = TestFilesDir.GetTestPath("original_annotations.csv");
+            var newAnnotationsPath = TestFilesDir.GetTestPath("annotations_from_new_document.csv");
+            // Load a document that already contains annotations and export annotations
+            RunCommand(
+                "--in=" + documentWithAnnotations, 
+                "--exp-annotations=" + annotationsPath 
+            );
+            // Load the same document with empty annotations and import the annotations exported in the last step
+            // Then save the annotations and the document for comparison
+            RunCommand(
+                "--in=" + documentWithoutAnnotations,
+                "--import-annotations=" + annotationsPath,
+                "--exp-annotations=" + newAnnotationsPath, 
+                "--out=" + documentWithImportedAnnotations
+            );
+            // Assert that annotations exported from the document with imported annotations match annotations
+            // exported from the original document
+            AssertEx.FileEquals(annotationsPath, newAnnotationsPath);
+            // Assert that the chromatograms (and their annotations) are identical
+            var originalDocument = ResultsUtil.DeserializeDocument(documentWithAnnotations);
+            var outputDocument = ResultsUtil.DeserializeDocument(documentWithImportedAnnotations);
+            Assert.AreEqual(originalDocument.Settings.MeasuredResults.Chromatograms, 
+                outputDocument.MeasuredResults.Chromatograms);
+
         }
 
         private static void CheckRefSpectraAll(IList<DbRefSpectra> refSpectra)
