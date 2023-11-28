@@ -5200,6 +5200,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Attempting to exclude an unknown object name &apos;{0}&apos;. Try one of the following:.
+        /// </summary>
+        public static string CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_name___0____Try_one_of_the_following_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_nam" +
+                        "e___0____Try_one_of_the_following_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: Regular expression &apos;{0}&apos; for {1} cannot be parsed..
         /// </summary>
         public static string CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_ {
@@ -5550,6 +5560,44 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandLine_CreateUntrainedScoringModel_Error__Excluding_feature_scores_is_not_pe" +
                         "rmitted_with_the_default_Skyline_model_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Annotations file {0} exported successfully..
+        /// </summary>
+        public static string CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Failure attempting to save annotations file {0}..
+        /// </summary>
+        public static string CommandLine_ExportAnnotations_Error__Failure_attempting_to_save_annotations_file__0__ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportAnnotations_Error__Failure_attempting_to_save_annotations_file_" +
+                        "_0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The document must contain annotations in order to export annotations..
+        /// </summary>
+        public static string CommandLine_ExportAnnotations_Error__The_document_must_contain_annotations_in_order_to_export_annotations_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportAnnotations_Error__The_document_must_contain_annotations_in_ord" +
+                        "er_to_export_annotations_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Try one of the following:.
+        /// </summary>
+        public static string CommandLine_ExportAnnotations_Try_one_of_the_following_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportAnnotations_Try_one_of_the_following_", resourceCulture);
             }
         }
         
