@@ -241,6 +241,42 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Export all the annotations in the document into a text file with an ElementLocator field in the format required by --import-annotations. Use --exp-annotations-include-properties to include properties as well..
+        /// </summary>
+        internal static string _exp_annotations {
+            get {
+                return ResourceManager.GetString("_exp_annotations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use to specify which object types to include in the exported annotations. By default all object types are included. This argument can be used multiple times to specify multiple object types. Requires the --exp-annotations argument..
+        /// </summary>
+        internal static string _exp_annotations_include_object {
+            get {
+                return ResourceManager.GetString("_exp_annotations_include_object", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use to include all properties in the exported annotations. By default no properties are included. Requires the --exp-annotations argument..
+        /// </summary>
+        internal static string _exp_annotations_include_properties {
+            get {
+                return ResourceManager.GetString("_exp_annotations_include_properties", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use to remove blank rows from the exported annotations. Requires the --exp-annotations argument..
+        /// </summary>
+        internal static string _exp_annotations_remove_blank_rows {
+            get {
+                return ResourceManager.GetString("_exp_annotations_remove_blank_rows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Dwell time per transition. This option is required for unscheduled transition lists..
         /// </summary>
         internal static string _exp_dwell_time {
@@ -304,7 +340,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Include feature scores only for the best scoring peaks. Requires the --exp-mprophet-file argument..
+        ///   Looks up a localized string similar to Include feature scores only for the best scoring peaks. Requires the --exp-mprophet-features argument..
         /// </summary>
         internal static string _exp_mprophet_best_peaks_only {
             get {
@@ -313,7 +349,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use to exclude a particular feature score by name from the exported file. Names can be found in the user interface. This argument may be used multiple times to exclude multiple features. Requires the --exp-mprophet-file argument..
+        ///   Looks up a localized string similar to Use to exclude a particular feature score by name from the exported file. Names can be found in the user interface. This argument may be used multiple times to exclude multiple features. Requires the --exp-mprophet-features argument..
         /// </summary>
         internal static string _exp_mprophet_exclude_feature {
             get {
@@ -324,14 +360,14 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Export all the individual feature scores for each peptide, as well as the composite score, the p value, and the q value into the mProphet format..
         /// </summary>
-        internal static string _exp_mprophet_file {
+        internal static string _exp_mprophet_features {
             get {
-                return ResourceManager.GetString("_exp_mprophet_file", resourceCulture);
+                return ResourceManager.GetString("_exp_mprophet_features", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Include feature scores only for targets. Requires the --exp-mprophet-file argument..
+        ///   Looks up a localized string similar to Include feature scores only for targets. Requires the --exp-mprophet-features argument..
         /// </summary>
         internal static string _exp_mprophet_targets_only {
             get {
@@ -1158,6 +1194,44 @@ namespace pwiz.Skyline {
         internal static string _panorama_username {
             get {
                 return ResourceManager.GetString("_panorama_username", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exclude all peptides starting before this amino acid position
+        ///in each protein..
+        /// </summary>
+        internal static string _pep_exclude_nterminal_aas {
+            get {
+                return ResourceManager.GetString("_pep_exclude_nterminal_aas", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exclude peptides resulting from cleavage sites with immediate
+        ///preceding or following cleavage sites. e.g. RR, KK, RK, KR for trypsin.
+        /// </summary>
+        internal static string _pep_exclude_potential_ragged_ends {
+            get {
+                return ResourceManager.GetString("_pep_exclude_potential_ragged_ends", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum length of a peptide to add to the document..
+        /// </summary>
+        internal static string _pep_max_length {
+            get {
+                return ResourceManager.GetString("_pep_max_length", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The minimum length of a peptide to add to the document..
+        /// </summary>
+        internal static string _pep_min_length {
+            get {
+                return ResourceManager.GetString("_pep_min_length", resourceCulture);
             }
         }
         
