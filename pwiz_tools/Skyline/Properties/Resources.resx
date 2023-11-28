@@ -257,9 +257,6 @@
   <data name="CommandLine_ImportPeakBoundaries_Error__Failed_importing_peak_boundaries_" xml:space="preserve">
     <value>Error: Failed importing peak boundaries.</value>
   </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_to__0_" xml:space="preserve">
-    <value>Changing full scan precursor isotope peaks to {0}</value>
-  </data>
   <data name="PeakBoundaryImporter_Import_Line__0__field_count__1__differs_from_the_first_line__which_has__2_" xml:space="preserve">
     <value>Line {0} field count {1} differs from the first line, which has {2}</value>
   </data>
@@ -310,9 +307,6 @@ Here are the {0} pairs with multiple entries:
   </data>
   <data name="BiblioSpecLiteLibrary_DeleteDataFiles_Failed_attempting_to_filter_redundant_library__0__to__1_" xml:space="preserve">
     <value>Failed attempting to filter redundant library {0} to {1}</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__at__1__" xml:space="preserve">
-    <value>Changing full-scan product resolving power to {0} at {1}.</value>
   </data>
   <data name="SrmSettingsList_Label_Saved_Settings" xml:space="preserve">
     <value>&amp;Saved Settings:</value>
@@ -380,9 +374,6 @@ Here are the {0} pairs with multiple entries:
   <data name="ExportStrategyExtension_LOCALIZED_VALUES_Buckets" xml:space="preserve">
     <value>Buckets</value>
   </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_predicted_value_" xml:space="preserve">
-    <value>Changing full-scan extraction to +/- {0} minutes from predicted value.</value>
-  </data>
   <data name="CommandLine_ImportSkyr_Success__Imported_Reports_from__0_" xml:space="preserve">
     <value>Success! Imported Reports from {0}</value>
   </data>
@@ -397,9 +388,6 @@ Here are the {0} pairs with multiple entries:
   </data>
   <data name="ExportMethodDlg_OkDialog_A_template_file_is_required_to_export_a_method" xml:space="preserve">
     <value>A template file is required to export a method.</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_MS_MS_IDs_" xml:space="preserve">
-    <value>Changing full-scan extraction to +/- {0} minutes from MS/MS IDs.</value>
   </data>
   <data name="ValueUnexpectedException_ValueUnexpectedException_The_argument__0__should_not_have_a_value_specified" xml:space="preserve">
     <value>The argument {0} should not have a value specified</value>
@@ -4317,9 +4305,6 @@ Supported values include:
   <data name="LibKeyModificationMatcher_EnumerateSequenceInfos_The_number___0___is_not_in_the_correct_format_" xml:space="preserve">
     <value>The number '{0}' is not in the correct format.</value>
   </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_enrichment_to__0_" xml:space="preserve">
-    <value>Changing full scan precursor isotope enrichment to {0}</value>
-  </data>
   <data name="AreaReplicateGraphPane_UpdateGraph_Peak_Area_Percentage" xml:space="preserve">
     <value>Peak Area Percentage</value>
   </data>
@@ -4925,9 +4910,6 @@ It is recommended that you delete this file so that Skyline can create a new fil
   </data>
   <data name="SkylineWindow_sortProteinsByGeneToolStripMenuItem_Click_Sort_proteins_by_gene" xml:space="preserve">
     <value>Sort proteins by gene</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__at__1__" xml:space="preserve">
-    <value>Changing full-scan precursor resolving power to {0} at {1}.</value>
   </data>
   <data name="Could_not_open_web_Browser_to_show_link_" xml:space="preserve">
     <value>Could not open web Browser to show link:</value>
@@ -6401,9 +6383,6 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="DocumentGridViewContext_CreateViewEditor_Edit_Report" xml:space="preserve">
     <value>Edit Report</value>
   </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_analyzer_to__0_" xml:space="preserve">
-    <value>Changing full scan precursor mass analyzer to {0}</value>
-  </data>
   <data name="TransitionFullScan_ValidateRes_Mass_accuracy_must_be_between__0__and__1__for_centroided_data_" xml:space="preserve">
     <value>Mass accuracy must be between {0} and {1} for centroided data.</value>
   </data>
@@ -6475,9 +6454,6 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   </data>
   <data name="MassListRowReader_CalcPrecursorExplanations_" xml:space="preserve">
     <value>Precursor m/z {0} does not match the closest possible value {1} (delta = {2}), peptide {3}.</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_ignore_SIM_scans_to__0_" xml:space="preserve">
-    <value>Changing full scan ignore SIM scans to {0}</value>
   </data>
   <data name="TypedExplicitModifications_AddModMasses_Static_mod_masses_have_already_been_added_for_this_heavy_type" xml:space="preserve">
     <value>Static mod masses have already been added for this heavy type.</value>
@@ -6580,9 +6556,6 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   </data>
   <data name="SpectrumLibraryInfoDlg_SetDetailsText_ID" xml:space="preserve">
     <value>ID</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_accuracy_to__0__ppm_" xml:space="preserve">
-    <value>Changing full scan precursor mass accuracy to {0} ppm.</value>
   </data>
   <data name="OpenDataSourceDialog_populateComboBoxFromDirectory_Network_Share" xml:space="preserve">
     <value>Network Share</value>
@@ -6783,9 +6756,6 @@ Most peptide transition lists can be imported with the "File|Import|Transition L
   <data name="ExportLiveReportDlg_ShowPreview_Preview__" xml:space="preserve">
     <value>Preview: </value>
   </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0_" xml:space="preserve">
-    <value>Changing full scan acquisition method to {0}</value>
-  </data>
   <data name="RefineListDlg_OkDialog_The_peptide__0__is_not_in_the_document_Do_you_want_to_continue" xml:space="preserve">
     <value>The peptide '{0}' is not in the document. Do you want to continue?</value>
   </data>
@@ -6926,9 +6896,6 @@ Would you like to remove some or all of this suffix to shorten the names used in
   <data name="ConfigureToolsDlg_Cancel_Do_you_wish_to_Save_changes_" xml:space="preserve">
     <value>Do you wish to Save changes?</value>
   </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_analyzer_to__0_" xml:space="preserve">
-    <value>Changing full scan product mass analyzer to {0}</value>
-  </data>
   <data name="ExportMethodDlg_StrategyCheckChanged_Only_one_method_can_be_exported_in_DIA_mode" xml:space="preserve">
     <value>Only one method can be exported in DIA mode.</value>
   </data>
@@ -6982,9 +6949,6 @@ Would you like to remove some or all of this suffix to shorten the names used in
   </data>
   <data name="EditPepModsDlg_GetIsotopeLabelText_Isotope__0__" xml:space="preserve">
     <value>Isotope {0}:</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__ppm_" xml:space="preserve">
-    <value>Changing full scan product mass accuracy to {0} ppm.</value>
   </data>
   <data name="ListDesigner_OkDialog_No_such_property" xml:space="preserve">
     <value>No such property</value>
@@ -7362,9 +7326,6 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   </data>
   <data name="ProteinDecoy" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\ProteinDecoy.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_count_to__0_" xml:space="preserve">
-    <value>Changing full scan precursor isotope peaks count to {0}</value>
   </data>
   <data name="BiblioSpecLiteLibrary_ReadSpectrum_Unexpected_SQLite_failure_reading__0__" xml:space="preserve">
     <value>Unexpected SQLite failure reading {0}.</value>
@@ -7869,9 +7830,6 @@ Charge states are inferred from the presence of these adduct components:{1}</val
   </data>
   <data name="AddPeakCompareDlg_OkDialog_Document_has_no_eligible_chromatograms_for_analysis___Valid_chromatograms_must_not_be_decoys_or_iRT_standards_" xml:space="preserve">
     <value>Document has no eligible chromatograms for analysis.  Valid chromatograms must not be decoys or iRT standards.</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__" xml:space="preserve">
-    <value>Changing full-scan precursor resolving power to {0}.</value>
   </data>
   <data name="PublishDocumentDlg_OkDialog_Please_select_a_folder" xml:space="preserve">
     <value>Please select a folder</value>
@@ -8427,9 +8385,6 @@ Here are the last 3 errors:
   <data name="SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List" xml:space="preserve">
     <value>Small Molecule Transition List</value>
   </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peak_percentage_to__0_" xml:space="preserve">
-    <value>Changing full scan precursor isotope peak percentage to {0}</value>
-  </data>
   <data name="SaveSettingsDlg_OnClosing_The_name__0__already_exists" xml:space="preserve">
     <value>The name {0} already exists.</value>
   </data>
@@ -8639,9 +8594,6 @@ Here are the last 3 errors:
   </data>
   <data name="BioMassCalc_SynchMasses_Fixing_isotope_abundance_masses_requires_a_monoisotopic_mass_calculator" xml:space="preserve">
     <value>Fixing isotope abundance masses requires a monoisotopic mass calculator</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__" xml:space="preserve">
-    <value>Changing full-scan product resolving power to {0}.</value>
   </data>
   <data name="ResultsGrid_ResultsGrid_Total_Background" xml:space="preserve">
     <value>Total Background</value>
@@ -8908,9 +8860,6 @@ Here are the last 3 errors:
   <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptions" xml:space="preserve">
     <value>Click 'Embedded' to use embedded spectra.
 Click 'Retry' to try building again after placing the original spectrum files in one of the directories listed above.</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0__with_isolation_scheme___1__" xml:space="preserve">
-    <value>Changing full scan acquisition method to {0} with isolation scheme '{1}'</value>
   </data>
   <data name="ReportErrorDlg_ReportErrorDlg_An_unexpected_error_has_occurred_as_shown_below" xml:space="preserve">
     <value>An unexpected error has occurred, as shown below.</value>
@@ -9345,9 +9294,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="RatioPropertyAccessor_PrecursorRatioProperty_Total_Area_Ratio_To_Global_Standards" xml:space="preserve">
     <value>Total Area Ratio To Global Standards</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolution_to__0__" xml:space="preserve">
-    <value>Changing full-scan precursor resolution to {0}.</value>
   </data>
   <data name="NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_mass_error" xml:space="preserve">
     <value>Product mass error</value>
@@ -11925,9 +11871,6 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="EditIsolationSchemeDlg_ReadIsolationRanges_Missing_isolation_range_for_the_isolation_target__0__m_z_in_the_file__1_" xml:space="preserve">
     <value>Missing isolation range for the isolation target {0} m/z in the file {1}</value>
   </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_resolution_to__0__" xml:space="preserve">
-    <value>Changing full-scan product resolution to {0}.</value>
-  </data>
   <data name="PasteDlg_AddProteins_This_protein_was_not_found_in_the_background_proteome_database" xml:space="preserve">
     <value>This protein was not found in the background proteome database.</value>
   </data>
@@ -13691,33 +13634,6 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_library_settings_" xml:space="preserve">
     <value>Error: Failed attempting to change the transition library settings.</value>
   </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_to__0_" xml:space="preserve">
-    <value>Changing full scan precursor isotope peaks to {0}</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_count_to__0_" xml:space="preserve">
-    <value>Changing full scan precursor isotope peaks count to {0}</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peak_percentage_to__0_" xml:space="preserve">
-    <value>Changing full scan precursor isotope peak percentage to {0}</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_enrichment_to__0_" xml:space="preserve">
-    <value>Changing full scan precursor isotope enrichment to {0}</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_ignore_SIM_scans_to__0_" xml:space="preserve">
-    <value>Changing full scan ignore SIM scans to {0}</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0__with_isolation_scheme___1__" xml:space="preserve">
-    <value>Changing full scan acquisition method to {0} with isolation scheme '{1}'</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0_" xml:space="preserve">
-    <value>Changing full scan acquisition method to {0}</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_analyzer_to__0_" xml:space="preserve">
-    <value>Changing full scan precursor mass analyzer to {0}</value>
-  </data>
-  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_analyzer_to__0_" xml:space="preserve">
-    <value>Changing full scan product mass analyzer to {0}</value>
-  </data>
   <data name="CommandLine_NewSkyFile_Deleting_existing_file___0__" xml:space="preserve">
     <value>Deleting existing file '{0}'</value>
   </data>
@@ -13913,5 +13829,8 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   </data>
   <data name="CommandLine_ExportMProphetFeatures_Error__Failure_attempting_to_save_mProphet_features_file__0__" xml:space="preserve">
     <value>Error: Failure attempting to save mProphet features file {0}.</value>
+  </data>
+  <data name="CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_peptide_filter_settings_" xml:space="preserve">
+    <value>Error: Failed attempting to change the peptide filter settings.</value>
   </data>
 </root>
