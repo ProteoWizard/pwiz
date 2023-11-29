@@ -911,7 +911,7 @@ namespace pwiz.SkylineTestData
                 "save"
             );
             CheckRunCommandOutputContains(string.Format(
-                Resources.CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0__, annotationsXml)
+                    Resources.CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0__, annotationsXml)
                 , output);
             // Assert that the document has the correct number of annotations
             AssertDocumentAnnotationCount(newDocumentPath, 2);

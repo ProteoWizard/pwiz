@@ -5357,7 +5357,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: Cannot add a {0} type annotation without providing a list values of through {1}..
+        ///   Looks up a localized string similar to Error: Cannot add a {0} type annotation without providing a list of values through {1}..
         /// </summary>
         public static string CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1__ {
             get {
@@ -7166,7 +7166,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: The annotation &apos;{0}&apos; was overwritten due to a name conflict with an existing annotation..
+        ///   Looks up a localized string similar to Warning: Overwriting existing annotation &apos;{0}&apos; due to a name conflict..
         /// </summary>
         public static string CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_ {
             get {
@@ -36180,7 +36180,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The value &apos;{0}&apos; is not valid for the argument {1} which requires a comma separated list of annotation targets {2}..
+        ///   Looks up a localized string similar to The value &apos;{0}&apos; is not valid for the argument {1} which requires a comma-separated list of annotation targets {2}..
         /// </summary>
         public static string ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___ {
             get {

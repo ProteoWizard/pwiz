@@ -13846,7 +13846,7 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
     <value>Error: Attempting to specify an unknown annotation target '{0}'. Try one of the following:</value>
   </data>
   <data name="ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___" xml:space="preserve">
-    <value>The value '{0}' is not valid for the argument {1} which requires a comma separated list of annotation targets {2}.</value>
+    <value>The value '{0}' is not valid for the argument {1} which requires a comma-separated list of annotation targets {2}.</value>
   </data>
   <data name="CommandLine_SetAnnotations_" xml:space="preserve">
     <value>Error: An annotation titled '{0}' already exists.  Please use --annotation-conflict-resolution= &lt;overwrite | skip&gt;.  Annotation titled '{0}' was not added.</value>
@@ -13855,13 +13855,13 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
     <value>Warning: Skipping annotation '{0}' due to a name conflict with an existing annotation.</value>
   </data>
   <data name="CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_" xml:space="preserve">
-    <value>Warning: The annotation '{0}' was overwritten due to a name conflict with an existing annotation.</value>
+    <value>Warning: Overwriting existing annotation '{0}' due to a name conflict.</value>
   </data>
   <data name="CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document_" xml:space="preserve">
     <value>Annotation '{0}' successfully added to the document.</value>
   </data>
   <data name="CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1__" xml:space="preserve">
-    <value>Error: Cannot add a {0} type annotation without providing a list values of through {1}.</value>
+    <value>Error: Cannot add a {0} type annotation without providing a list of values through {1}.</value>
   </data>
   <data name="CommandLine_AddAnnotationFromEnvironment_Error__Cannot_add_new_annotation___0___without_providing_at_least_one_target_through__1__" xml:space="preserve">
     <value>Error: Cannot add new annotation '{0}' without providing at least one target through {1}.</value>

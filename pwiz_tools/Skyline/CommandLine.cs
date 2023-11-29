@@ -3104,6 +3104,11 @@ namespace pwiz.Skyline
                             Resources.CommandLine_SetAnnotations_Warning__Skipping_annotation___0___due_to_a_name_conflict_,
                             def.Name);
                         newAnnotationDefs.Remove(def);
+                        foreach (var settingsDef in Settings.Default.AnnotationDefList.ToList().
+                                     Where(settingsDef => Equals(settingsDef.Name, def.Name)))
+                        {
+                            newAnnotationDefs.Add(settingsDef);
+                        }
                     }
                     else
                     {
