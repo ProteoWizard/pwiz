@@ -13914,14 +13914,11 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="CommandArgs_ParseAnnotationTypes_Error__Attempting_to_exclude_an_unknown_annotation_type__0___Try_one_of_the_following_" xml:space="preserve">
     <value>Error: Attempting to exclude an unknown annotation type '{0}'. Try one of the following:</value>
   </data>
-  <data name="CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0_" xml:space="preserve">
-    <value>Annotations successfully defined from file {0}</value>
+  <data name="CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0__" xml:space="preserve">
+    <value>Annotations successfully defined from file {0}.</value>
   </data>
-  <data name="CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0_" xml:space="preserve">
-    <value>Error: Unable to read annotations from file {0}</value>
-  </data>
-  <data name="CommandLine_AddAnnotations_Annotation___0___successfully_defined_" xml:space="preserve">
-    <value>Annotation '{0}' successfully defined.</value>
+  <data name="CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0__" xml:space="preserve">
+    <value>Error: Unable to read annotations from file {0}.</value>
   </data>
   <data name="CommandArgs_ParseAnnotationTypes_Error__Attempting_to_specify_an_unknown_annotation_type___0____Try_one_of_the_following_" xml:space="preserve">
     <value>Error: Attempting to specify an unknown annotation type '{0}'. Try one of the following:</value>
@@ -13941,13 +13938,13 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_" xml:space="preserve">
     <value>Warning: The annotation '{0}' was overwritten due to a name conflict with an existing annotation.</value>
   </data>
-  <data name="CommandLine_AddAnnotationFromEnvironment_Error__Annotation___0___does_not_exist_in_the_environment_and_cannot_be_added_to_the_document_" xml:space="preserve">
-    <value>Error: Annotation '{0}' does not exist in the environment and cannot be added to the document.</value>
+  <data name="CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document_" xml:space="preserve">
+    <value>Annotation '{0}' successfully added to the document.</value>
   </data>
-  <data name="CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document" xml:space="preserve">
-    <value>Annotation '{0}' successfully added to the document</value>
+  <data name="CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1__" xml:space="preserve">
+    <value>Error: Cannot add a {0} type annotation without providing a list values of through {1}.</value>
   </data>
-  <data name="CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1_" xml:space="preserve">
-    <value>Error: Cannot add a {0} type annotation without providing a list values of through {1}</value>
+  <data name="CommandLine_AddAnnotationFromEnvironment_Error__Cannot_add_new_annotation___0___without_providing_at_least_one_target_through__1__" xml:space="preserve">
+    <value>Error: Cannot add new annotation '{0}' without providing at least one target through {1}.</value>
   </data>
 </root>

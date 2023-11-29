@@ -5319,59 +5319,50 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: Annotation &apos;{0}&apos; does not exist in the environment and cannot be added to the document..
+        ///   Looks up a localized string similar to Error: Cannot add new annotation &apos;{0}&apos; without providing at least one target through {1}..
         /// </summary>
-        public static string CommandLine_AddAnnotationFromEnvironment_Error__Annotation___0___does_not_exist_in_the_environment_and_cannot_be_added_to_the_document_ {
+        public static string CommandLine_AddAnnotationFromEnvironment_Error__Cannot_add_new_annotation___0___without_providing_at_least_one_target_through__1__ {
             get {
-                return ResourceManager.GetString("CommandLine_AddAnnotationFromEnvironment_Error__Annotation___0___does_not_exist_i" +
-                        "n_the_environment_and_cannot_be_added_to_the_document_", resourceCulture);
+                return ResourceManager.GetString("CommandLine_AddAnnotationFromEnvironment_Error__Cannot_add_new_annotation___0___w" +
+                        "ithout_providing_at_least_one_target_through__1__", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Annotation &apos;{0}&apos; successfully defined..
+        ///   Looks up a localized string similar to Annotations successfully defined from file {0}..
         /// </summary>
-        public static string CommandLine_AddAnnotations_Annotation___0___successfully_defined_ {
+        public static string CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0__ {
             get {
-                return ResourceManager.GetString("CommandLine_AddAnnotations_Annotation___0___successfully_defined_", resourceCulture);
+                return ResourceManager.GetString("CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0__", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Annotations successfully defined from file {0}.
+        ///   Looks up a localized string similar to Error: Unable to read annotations from file {0}..
         /// </summary>
-        public static string CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0_ {
+        public static string CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0__ {
             get {
-                return ResourceManager.GetString("CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0_", resourceCulture);
+                return ResourceManager.GetString("CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0__", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: Unable to read annotations from file {0}.
+        ///   Looks up a localized string similar to Error: Cannot add a {0} type annotation without providing a list values of through {1}..
         /// </summary>
-        public static string CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0_ {
-            get {
-                return ResourceManager.GetString("CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error: Cannot add a {0} type annotation without providing a list values of through {1}.
-        /// </summary>
-        public static string CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1_ {
+        public static string CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1__ {
             get {
                 return ResourceManager.GetString("CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_w" +
-                        "ithout_providing_a_list_values_of_through__1_", resourceCulture);
+                        "ithout_providing_a_list_values_of_through__1__", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Annotation &apos;{0}&apos; successfully added to the document.
+        ///   Looks up a localized string similar to Annotation &apos;{0}&apos; successfully added to the document..
         /// </summary>
-        public static string CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document {
+        public static string CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document_ {
             get {
                 return ResourceManager.GetString("CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_" +
-                        "document", resourceCulture);
+                        "document_", resourceCulture);
             }
         }
         

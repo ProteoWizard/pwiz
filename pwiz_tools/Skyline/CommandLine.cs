@@ -3007,9 +3007,7 @@ namespace pwiz.Skyline
                 }
             }
             // Error, annotation not in environment
-            _out.WriteLine(Resources.
-                    CommandLine_AddAnnotationFromEnvironment_Error__Annotation___0___does_not_exist_in_the_environment_and_cannot_be_added_to_the_document_, 
-                annotationFromEnvironment);
+            _out.WriteLine(Resources.CommandLine_AddAnnotationFromEnvironment_Error__Cannot_add_new_annotation___0___without_providing_at_least_one_target_through__1__, annotationFromEnvironment, CommandArgs.ARG_ADD_ANNOTATIONS_TARGETS.ArgumentText);
             return false;
         }
 
@@ -3042,8 +3040,8 @@ namespace pwiz.Skyline
             var success = annotationDefList.Count > 0;
             _out.WriteLine(
                 success
-                    ? Resources.CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0_
-                    : Resources.CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0_, path);
+                    ? Resources.CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0__
+                    : Resources.CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0__, path);
 
             return success;
         }
@@ -3064,17 +3062,12 @@ namespace pwiz.Skyline
             var valueListName = AnnotationDef.AnnotationType.value_list.ToString();
             if (Equals(type.AnnotationType.ToString(), valueListName) && values.IsNullOrEmpty())
             {
-                _out.WriteLine(Resources.CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1_, valueListName, CommandArgs.ARG_ADD_ANNOTATIONS_VALUES.ArgumentText);
+                _out.WriteLine(Resources.CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1__, valueListName, CommandArgs.ARG_ADD_ANNOTATIONS_VALUES.ArgumentText);
                 return false;
             }
             var annotationDef = new AnnotationDef(name, AnnotationDef.AnnotationTargetSet.OfValues(targets), type, values);
             var defList = new AnnotationDefList { annotationDef };
-            var success = AddAnnotationsToEnvAndDocument(defList, resolveConflictsBySkipping);
-            if (success)
-            {
-                _out.WriteLine(Resources.CommandLine_AddAnnotations_Annotation___0___successfully_defined_, name);
-            }
-            return success;
+            return AddAnnotationsToEnvAndDocument(defList, resolveConflictsBySkipping);
         }
 
         private bool AddAnnotationsToEnvAndDocument(AnnotationDefList newAnnotationDefs, bool? resolveConflictsBySkipping)
@@ -3131,7 +3124,7 @@ namespace pwiz.Skyline
                 return doc;
             }, AuditLogEntry.SettingsLogFunction);
             var successMessage = newAnnotationDefs.Select(def => string.Format(
-                Resources.CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document, def.Name)).ToList();
+                Resources.CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document_, def.Name)).ToList();
             _out.WriteLine(TextUtil.LineSeparate(successMessage));
             return true;
         }
