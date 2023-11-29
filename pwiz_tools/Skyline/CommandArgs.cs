@@ -1113,32 +1113,42 @@ namespace pwiz.Skyline
         public ListPropertyType AddAnnotationsType { get; private set; }
         public string[] AddAnnotationsValues { get; private set; }
         public bool ?AddAnnotationsResolveConflictsBySkipping { get; private set; }
-
+        
+        /// <summary>
+        /// Parse a comma-separated list of values to be associated with a value_list
+        /// type annotation.
+        /// </summary>
+        /// <param name="commaSeparatedValues">A comma-separated of annotation values</param>
         private void ParseAnnotationValues(string commaSeparatedValues)
         {
             AddAnnotationsValues =
                 ArrayUtil.Parse(commaSeparatedValues, Convert.ToString, TextUtil.SEPARATOR_CSV, null);
         }
 
-        private bool ParseAnnotationTargets(NameValuePair p)
+        /// <summary>
+        /// Parse a comma-separated list of target types to apply an annotation to. Case-insensitive.
+        /// </summary>
+        /// <param name="p">A NameValuePair where Match is the argument and Value is a comma-separated list</param>
+        /// <exception cref="ValueInvalidAnnotationTargetListException">Thrown if no targets are parsed from the list</exception>
+        private void ParseAnnotationTargets(NameValuePair p)
         {
-            var userTargets = ArrayUtil.Parse(p.Value, ParseAnnotationTarget, TextUtil.SEPARATOR_CSV, null);
+            var userTargets = 
+                ArrayUtil.Parse(p.Value, ParseAnnotationTarget, TextUtil.SEPARATOR_CSV, null);
             if (userTargets.IsNullOrEmpty())
             {
-                throw new ValueInvalidAnnotationTargetListException(p.Match, p.Value, ANNOTATION_TARGET_LIST_VALUE.Invoke());
+                throw new ValueInvalidAnnotationTargetListException(
+                    ARG_ADD_ANNOTATIONS_TARGETS, p.Value, ANNOTATION_TARGET_LIST_VALUE.Invoke());
             }
 
             AddAnnotationsTargets = userTargets.ToList();
-            return true;
         }
 
-        private AnnotationDef.AnnotationTarget ParseAnnotationTarget(string targetName)
+        private static AnnotationDef.AnnotationTarget ParseAnnotationTarget(string targetName)
         {
             targetName = targetName.ToLowerInvariant();
             var allAnnotationTargets = GetAnnotationTargetDict();
             if (allAnnotationTargets.TryGetValue(targetName, out AnnotationDef.AnnotationTarget target))
             {
-                AddAnnotationsTargets.Add(target);
                 return target;
             }
             throw new ArgumentException();
@@ -1146,8 +1156,8 @@ namespace pwiz.Skyline
 
         /// <summary>
         /// Return a dictionary where the key is the text to be displayed and the value is the
-        /// enum value. This allows for redundant names for targets e.g. molecule_list and protein
-        /// both mean protein
+        /// enum value. This allows for redundant target names e.g. molecule_list and protein
+        /// both mean protein.
         /// </summary>
         /// <returns>A dictionary where the key is the text to be displayed and the value is the
         /// enum value.</returns>
@@ -1157,12 +1167,15 @@ namespace pwiz.Skyline
             var validAnnotationTargets = Enum.GetValues(typeof(AnnotationDef.AnnotationTarget));
             foreach (AnnotationDef.AnnotationTarget annotationTarget in validAnnotationTargets)
             {
-                allAnnotationTargets.Add(annotationTarget.ToString(), annotationTarget);
-                var translatedTarget =
+                var untranslatedName = annotationTarget.ToString();
+                // Add the untranslated name
+                allAnnotationTargets.Add(untranslatedName, annotationTarget);
+                var translatedName =
                     Helpers.PeptideToMoleculeTextMapper.SMALL_MOLECULE_MAPPER.
-                        TranslateString(annotationTarget.ToString());
-                translatedTarget = translatedTarget.Replace(' ', '_'); // Convert to snake case
-                allAnnotationTargets[translatedTarget] = annotationTarget; 
+                        TranslateString(untranslatedName);
+                translatedName = translatedName.Replace(' ', '_'); // Convert to snake case
+                // Insert the translated name
+                allAnnotationTargets[translatedName] = annotationTarget; 
             }
 
             return allAnnotationTargets;
@@ -3096,7 +3109,7 @@ namespace pwiz.Skyline
         public class ValueInvalidAnnotationTargetListException : UsageException
         {
             public ValueInvalidAnnotationTargetListException(Argument arg, string value, string annotationTargets)
-                : base(string.Format(Resources.ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___, value, arg, annotationTargets))
+                : base(string.Format(Resources.ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___, value, arg.ArgumentText, annotationTargets))
             {
             }
         }

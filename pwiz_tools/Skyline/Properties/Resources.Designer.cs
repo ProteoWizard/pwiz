@@ -5356,12 +5356,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: Values cannot be empty for an annotation of type &apos;value_list&apos;..
+        ///   Looks up a localized string similar to Error: Cannot add a {0} type annotation without providing a list values of through {1}.
         /// </summary>
-        public static string CommandLine_AddAnnotations_Error__Values_cannot_be_empty_for_an_annotation_of_type__value_list__ {
+        public static string CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1_ {
             get {
-                return ResourceManager.GetString("CommandLine_AddAnnotations_Error__Values_cannot_be_empty_for_an_annotation_of_typ" +
-                        "e__value_list__", resourceCulture);
+                return ResourceManager.GetString("CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_w" +
+                        "ithout_providing_a_list_values_of_through__1_", resourceCulture);
             }
         }
         
@@ -7097,7 +7097,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: An annotation definition titled &apos;{0}&apos; already exists.  Please use --annotation-conflict-resolution= &lt;overwrite | skip&gt;.  Annotation titled &apos;{0}&apos; was not added..
+        ///   Looks up a localized string similar to Error: An annotation titled &apos;{0}&apos; already exists.  Please use --annotation-conflict-resolution= &lt;overwrite | skip&gt;.  Annotation titled &apos;{0}&apos; was not added..
         /// </summary>
         public static string CommandLine_SetAnnotations_ {
             get {
@@ -7106,7 +7106,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: Skipping annotation &apos;{0}&apos; due to a name conflict with an existing annotation definition..
+        ///   Looks up a localized string similar to Warning: Skipping annotation &apos;{0}&apos; due to a name conflict with an existing annotation..
         /// </summary>
         public static string CommandLine_SetAnnotations_Warning__Skipping_annotation___0___due_to_a_name_conflict_ {
             get {
@@ -7116,7 +7116,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: The annotation &apos;{0}&apos; was overwritten due to a name conflict with an existing annotation definition..
+        ///   Looks up a localized string similar to Warning: The annotation &apos;{0}&apos; was overwritten due to a name conflict with an existing annotation..
         /// </summary>
         public static string CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_ {
             get {
@@ -36275,7 +36275,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The value&apos;{0}&apos; is not valid for the argument &apos;{1}&apos; which requires a comma separated list of annotation targets &apos;{2}&apos;..
+        ///   Looks up a localized string similar to The value &apos;{0}&apos; is not valid for the argument {1} which requires a comma separated list of annotation targets {2}..
         /// </summary>
         public static string ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___ {
             get {

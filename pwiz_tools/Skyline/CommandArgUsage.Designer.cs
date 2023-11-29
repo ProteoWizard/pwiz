@@ -79,7 +79,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Specifies how to resolve annotation name conflicts, by either overwriting or skipping them, when using --annotation-add, --annotation-add-file, or --annotation-add-from-environment (default is to output an error message for conflicts)..
+        ///   Looks up a localized string similar to Specifies how to resolve annotation name conflicts, by either overwriting or skipping them, when using --annotation-add, --annotation-file, or --annotation-add-from-environment (default is to output an error message for conflicts)..
         /// </summary>
         internal static string _annotation_conflict_resolution {
             get {

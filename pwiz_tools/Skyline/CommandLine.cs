@@ -2975,6 +2975,7 @@ namespace pwiz.Skyline
         {
             if (path != null)
             {
+                // If the user specifies a .xml path, do not consider other arguments
                 return AddAnnotationsFromXml(path, resolveConflictsBySkipping);
             }
 
@@ -2982,7 +2983,7 @@ namespace pwiz.Skyline
             {
                 // If the user specifies the name alone, look for an existing annotation with that name in 
                 // the environment and then add it to the document
-                return AddAnnotationFromEnvironment(name, resolveConflictsBySkipping);
+                return AddAnnotationFromEnvironment(name);
             }
 
             return AddAnnotationsFromArguments(name, targets, type, values, resolveConflictsBySkipping);
@@ -2992,10 +2993,8 @@ namespace pwiz.Skyline
         /// Add an existing annotation definition from the environment to the document.
         /// </summary>
         /// <param name="annotationFromEnvironment">Name of an annotation existing in the environment</param>
-        /// <param name="resolveConflictsBySkipping">True to skip conflicting annotations,
-        /// false to overwrite, and null to error</param>
         /// <returns>True if the annotation exists and is added successfully</returns>
-        private bool AddAnnotationFromEnvironment(string annotationFromEnvironment, bool? resolveConflictsBySkipping)
+        private bool AddAnnotationFromEnvironment(string annotationFromEnvironment)
         {
             foreach (var def in Settings.Default.AnnotationDefList)
             {
@@ -3003,10 +3002,6 @@ namespace pwiz.Skyline
                 {
                     var list = new AnnotationDefList { def };
                     var success = AddAnnotationsToDocument(list);
-                    if (success)
-                    {
-                        _out.WriteLine(Resources.CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document, def.Name);
-                    }
 
                     return success;
                 }
@@ -3069,7 +3064,7 @@ namespace pwiz.Skyline
             var valueListName = AnnotationDef.AnnotationType.value_list.ToString();
             if (Equals(type.AnnotationType.ToString(), valueListName) && values.IsNullOrEmpty())
             {
-                _out.WriteLine(Resources.CommandLine_AddAnnotations_Error__Values_cannot_be_empty_for_an_annotation_of_type__value_list__);
+                _out.WriteLine(Resources.CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1_, valueListName, CommandArgs.ARG_ADD_ANNOTATIONS_VALUES.ArgumentText);
                 return false;
             }
             var annotationDef = new AnnotationDef(name, AnnotationDef.AnnotationTargetSet.OfValues(targets), type, values);
@@ -3135,8 +3130,9 @@ namespace pwiz.Skyline
                 doc = MetadataExtractor.ApplyRules(doc, null, out _);
                 return doc;
             }, AuditLogEntry.SettingsLogFunction);
-            _out.WriteLine(TextUtil.LineSeparate(newAnnotationDefs.Select(x => x.Name).Prepend(Resources.
-                CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document)));
+            var successMessage = newAnnotationDefs.Select(def => string.Format(
+                Resources.CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document, def.Name)).ToList();
+            _out.WriteLine(TextUtil.LineSeparate(successMessage));
             return true;
         }
 

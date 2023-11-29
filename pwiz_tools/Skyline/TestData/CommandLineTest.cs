@@ -755,14 +755,12 @@ namespace pwiz.SkylineTestData
             const string annotationTargets = "peptide, replicate";
             const string annotationType = "value_list";
             const string invalidTargetsList = annotationTargets + invalidValue;
-            var annotationValuesArray = new[] { "Great", "Good", "Potentially", "Bad" };
+            var annotationValuesArray = annotationValues.Split(',');
             // Test error (invalid annotation-targets value)
             var output = RunCommand("--new=" + newDocumentPath, // Create a new document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
                 "--annotation-name=" + annotationName, // Name the annotation
-                "--annotation-targets=" + invalidTargetsList, // Input an invalid target
-                "--annotation-type=" + annotationType, // Specify the type
-                "--annotation-values=" + annotationValues // Specify the location of the values
+                "--annotation-targets=" + invalidTargetsList // Input an invalid list of targets
             );
             CheckRunCommandOutputContains(
                 new CommandArgs.ValueInvalidAnnotationTargetListException(
@@ -780,7 +778,7 @@ namespace pwiz.SkylineTestData
                 invalidValue,
                 "--annotation-type",
                 string.Join(@", ", ListPropertyType.ListPropertyTypes().Select(c=> c.AnnotationType.ToString()).ToArray())), output);
-            // Test error (specifying a value list type without providing a list of values)
+            // Test error (specifying a value_list type annotation without providing a list of values)
             output = RunCommand("--new=" + newDocumentPath, // Create a new document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
                 "--annotation-name=" + annotationName, // Name the annotation
@@ -788,7 +786,9 @@ namespace pwiz.SkylineTestData
                 "--annotation-type=" + "value_list", // Specify the type
                 "--save"
             );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_AddAnnotations_Error__Values_cannot_be_empty_for_an_annotation_of_type__value_list__), output);
+            CheckRunCommandOutputContains(
+                string.Format(Resources.CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1_, 
+                    AnnotationDef.AnnotationType.value_list.ToString(), CommandArgs.ARG_ADD_ANNOTATIONS_VALUES.ArgumentText), output);
             // Test define (from .xml file)
             output = RunCommand("--new=" + newDocumentPath, // Create a document (without annotations)
                 "--overwrite", // Overwrite, as the file may already exist in the bin
@@ -868,7 +868,7 @@ namespace pwiz.SkylineTestData
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_
                 , annotationName), output);
-            // Test specifying an annotation name by itself. This should find the annotation in the environment
+            // Test specifying an annotation name without any other arguments. This should find the annotation in the environment
             // and add it to the document
             output = RunCommand("--new=" + newDocumentPath, // Create a document (without annotations)
                 "--overwrite", // Overwrite, as the file may already exist in the bin
