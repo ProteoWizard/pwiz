@@ -831,6 +831,17 @@ namespace pwiz.Skyline
                 }
             } 
 
+            if (commandArgs.ExportingAnnotations)
+            {
+                if (!ExportAnnotations(commandArgs.AnnotationsFile, 
+                        commandArgs.AnnotationsIncludeObjects,
+                        commandArgs.AnnotationsIncludeProperties, 
+                        commandArgs.AnnotationsRemoveBlankRows))
+                {
+                    return false;
+                }
+            }
+            
             var exportTypes =
                 (string.IsNullOrEmpty(commandArgs.IsolationListInstrumentType) ? 0 : 1) +
                 (string.IsNullOrEmpty(commandArgs.TransListInstrumentType) ? 0 : 1) +
@@ -3209,7 +3220,107 @@ namespace pwiz.Skyline
             }
             return true;
         }
-        
+
+        /// <summary>
+        /// Export annotations to a .csv file
+        /// </summary>
+        /// <param name="annotationsFile">File path to export the annotations to</param>
+        /// <param name="includeHandlerNames">Names of element handlers to exclude from the export,
+        /// specified by the user.</param>
+        /// <param name="includeProperties">Properties to exclude from the export</param>
+        /// <param name="removeBlankRows">Do not include blank rows in the export</param>
+        /// <returns>True upon successful import, false upon error</returns>
+        public bool ExportAnnotations(string annotationsFile, List<string> includeHandlerNames, bool includeProperties, bool removeBlankRows)
+        {
+            try
+            {
+                // If the user specifies handlers, include only those handlers
+                // Parse the string names here (instead of CommandArgs.cs) in order to access the
+                // valid element handlers in the document.
+                var handlers = ParseIncludeObject(includeHandlerNames);
+                if (handlers  == null)
+                {
+                    // At least one name not recognized, error
+                    return false;
+                }
+                // By default do not include properties. If the user asks, include all applicable properties.
+                var properties = Enumerable.Empty<string>();
+                if (includeProperties)
+                {
+                    // Only include properties applicable to the selected element handlers
+                    properties = handlers
+                        .SelectMany(handler => handler.Properties.Select(pd => pd.Name))
+                        .Distinct().OrderBy(pd => pd);
+                }
+                // Find all available annotation names
+                var allAnnotationNames =
+                    ExportAnnotationSettings.GetAllAnnotationNames(Document.Settings.DataSettings.AnnotationDefs, handlers);
+                
+                // If there are no annotation names and we are not including properties, there is nothing to export
+                if (!allAnnotationNames.Any() && !includeProperties)
+                {
+                    _out.WriteLine(Resources.CommandLine_ExportAnnotations_Error__The_document_must_contain_annotations_in_order_to_export_annotations_);
+                    return false;
+                }
+                var settings = ExportAnnotationSettings.GetExportAnnotationSettings(handlers, allAnnotationNames, properties, removeBlankRows);
+                var documentAnnotations = new DocumentAnnotations(Document);
+                using (var fileSaver = new FileSaver(annotationsFile))
+                {
+                    documentAnnotations.WriteAnnotationsToFile(CancellationToken.None, settings, fileSaver.SafeName);
+                    fileSaver.Commit();
+                }
+                _out.WriteLine(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, annotationsFile);
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_ExportAnnotations_Error__Failure_attempting_to_save_annotations_file__0__, annotationsFile);
+                _out.WriteLine(x.Message);
+                return false;
+            }
+            
+            return true;
+        }
+
+        /// <summary>
+        /// Retrieve a list of Element Handlers from the document
+        /// </summary>
+        /// <returns>A list of Element Handlers</returns>
+        public static List<ElementHandler> GetAllHandlers(SrmDocument doc)
+        {
+            var schema = SkylineDataSchema.MemoryDataSchema(doc, DataSchemaLocalizer.INVARIANT);
+            return ElementHandler.GetElementHandlers(schema).ToList();
+        }
+
+        /// <summary>
+        /// Associate a list of strings to object types in the annotation settings. If the list is null
+        /// or empty, all handlers are returned.
+        /// </summary>
+        /// <param name="objectNames">A list of object type names provided by the user</param>
+        /// <returns>A list of element handlers if all object type names are recognized, null if not</returns>
+        private List<ElementHandler> ParseIncludeObject(List<string> objectNames)
+        {
+            var handlers = GetAllHandlers(_doc);
+            if (objectNames.IsNullOrEmpty())
+            {
+                return handlers;
+            }
+            var elementHandlers = new List<ElementHandler>();
+            foreach (var objectName in objectNames)
+            {
+                var handler = handlers.FirstOrDefault(c => Equals(objectName, c.Name));
+                if (handler == null)
+                {
+                    _out.WriteLine(TextUtil.LineSeparate(handlers.Select(x => x.Name).Prepend(Resources.
+                        CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_name___0____Try_one_of_the_following_)));
+
+                    return null;
+                }
+                elementHandlers.Add(handler);
+            }
+
+            return elementHandlers;
+        }
+
         public enum ResolveZipToolConflicts
         {
             terminate,
@@ -3583,7 +3694,7 @@ namespace pwiz.Skyline
                     _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__A_template_file_is_required_to_export_a_method_);
                     return false;
                 }
-                if (Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT6400)
+                if (Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT6400) || Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT_MASSHUNTER_12)
                         ? !Directory.Exists(args.TemplateFile)
                         : !File.Exists(args.TemplateFile))
                 {
@@ -3594,6 +3705,12 @@ namespace pwiz.Skyline
                     !AgilentMethodExporter.IsAgilentMethodPath(args.TemplateFile))
                 {
                     _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_qqqacqmethod_xsd_, args.TemplateFile);
+                    return false;
+                }
+                if (Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT_MASSHUNTER_12) &&
+                    !AgilentUltivoMethodExporter.IsMethodPath(args.TemplateFile))
+                {
+                    _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_, args.TemplateFile);
                     return false;
                 }
             }
