@@ -1193,18 +1193,21 @@ namespace pwiz.Skyline
                         p = p.ChangeFilter(p.Filter.ChangePeptideUniqueness(commandArgs.PeptideDigestUniquenessConstraint.Value));
                     }
 
-                    if (commandArgs.BackgroundProteomeName != null)
-                    {
-                        var bgProteome = Settings.Default.BackgroundProteomeList.GetBackgroundProteomeSpec(commandArgs.BackgroundProteomeName);
-                        p = p.ChangeBackgroundProteome(new BackgroundProteome(bgProteome));
-                    }
-
                     if (commandArgs.BackgroundProteomePath != null)
                     {
-                        string name = Path.GetFileNameWithoutExtension(commandArgs.BackgroundProteomePath);
+                        if (!File.Exists(commandArgs.BackgroundProteomePath))
+                            throw new IOException(string.Format(
+                                Resources.CommandLine_FindBackgroundProteome_Warning__Could_not_find_the_background_proteome_file__0__,
+                                Path.GetFileName(commandArgs.BackgroundProteomePath)));
+                        string name = commandArgs.BackgroundProteomeName ?? Path.GetFileNameWithoutExtension(commandArgs.BackgroundProteomePath);
                         var bgProteome = new BackgroundProteomeSpec(name, commandArgs.BackgroundProteomePath);
                         p = p.ChangeBackgroundProteome(new BackgroundProteome(bgProteome));
                         Settings.Default.BackgroundProteomeList.Add(bgProteome);
+                    }
+                    else if (commandArgs.BackgroundProteomeName != null)
+                    {
+                        var bgProteome = Settings.Default.BackgroundProteomeList.GetBackgroundProteomeSpec(commandArgs.BackgroundProteomeName);
+                        p = p.ChangeBackgroundProteome(new BackgroundProteome(bgProteome));
                     }
 
                     return p;

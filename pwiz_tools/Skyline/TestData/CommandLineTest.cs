@@ -380,6 +380,7 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(PeptideFilter.PeptideUniquenessConstraint.protein, doc.Settings.PeptideSettings.Filter.PeptideUniqueness);
             Assert.AreEqual(true, doc.Settings.HasBackgroundProteome);
             Assert.AreEqual(protdbPath, doc.Settings.PeptideSettings.BackgroundProteome.DatabasePath);
+            Assert.AreEqual(Path.GetFileNameWithoutExtension(protdbPath), doc.Settings.PeptideSettings.BackgroundProteome.Name);
             Assert.AreEqual(true, doc.Settings.TransitionSettings.Filter.ExclusionUseDIAWindow);
             Assert.AreEqual(4, doc.Settings.PeptideSettings.Filter.MinPeptideLength);
             Assert.AreEqual(42, doc.Settings.PeptideSettings.Filter.MaxPeptideLength);
@@ -472,8 +473,7 @@ namespace pwiz.SkylineTestData
                 "--overwrite",
                 "--pep-digest-enzyme=chymotrypsin",
                 "--pep-unique-by=proTEIN",
-                "--library-pick-product-ions=FilTER",
-                "--background-proteome-name=" + Path.GetFileNameWithoutExtension(protdbPath)
+                "--library-pick-product-ions=FilTER"
             };
 
             RunCommand(settings);
@@ -481,8 +481,35 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual("Chymotrypsin", doc.Settings.PeptideSettings.Enzyme.Name);
             Assert.AreEqual(PeptideFilter.PeptideUniquenessConstraint.protein, doc.Settings.PeptideSettings.Filter.PeptideUniqueness);
             Assert.AreEqual(TransitionLibraryPick.filter, doc.Settings.TransitionSettings.Libraries.Pick);
+
+            // test using existing background proteome name
+            settings = new[]
+            {
+                "--new=" + docPath,
+                "--overwrite",
+                "--background-proteome-name=" + Path.GetFileNameWithoutExtension(protdbPath)
+            };
+
+            RunCommand(settings);
+            doc = ResultsUtil.DeserializeDocument(docPath);
             Assert.AreEqual(true, doc.Settings.HasBackgroundProteome);
             Assert.AreEqual(protdbPath, doc.Settings.PeptideSettings.BackgroundProteome.DatabasePath);
+            Assert.AreEqual(Path.GetFileNameWithoutExtension(protdbPath), doc.Settings.PeptideSettings.BackgroundProteome.Name);
+
+            // test new background proteome with explicit name
+            settings = new[]
+            {
+                "--new=" + docPath,
+                "--overwrite",
+                "--background-proteome-file=" + protdbPath,
+                "--background-proteome-name=protdb"
+            };
+
+            RunCommand(settings);
+            doc = ResultsUtil.DeserializeDocument(docPath);
+            Assert.AreEqual(true, doc.Settings.HasBackgroundProteome);
+            Assert.AreEqual(protdbPath, doc.Settings.PeptideSettings.BackgroundProteome.DatabasePath);
+            Assert.AreEqual("protdb", doc.Settings.PeptideSettings.BackgroundProteome.Name);
 
             File.Delete(docPath);
 
@@ -548,6 +575,19 @@ namespace pwiz.SkylineTestData
             RunCommandAndValidateError(settings, string.Format(
                 Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
                 "nope", CommandArgs.ARG_PEPTIDE_ENZYME_NAME.ArgumentText, string.Join(", ", Settings.Default.EnzymeList.Select(e => e.Name))));
+
+            // parameter validation: unknown background proteome name
+            settings = new[] { "--background-proteome-name=alien" };
+
+            RunCommandAndValidateError(settings, string.Format(
+                Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_,
+                "alien", CommandArgs.ARG_BGPROTEOME_NAME.ArgumentText, string.Join(", ", Settings.Default.BackgroundProteomeList.Select(e => e.Name))));
+
+            // parameter validation: bad background proteome path
+            settings = new[] { "--background-proteome-file=missing" };
+
+            RunCommandAndValidateError(settings, string.Format(
+                Resources.CommandLine_FindBackgroundProteome_Warning__Could_not_find_the_background_proteome_file__0__, "missing"));
         }
 
         [TestMethod]

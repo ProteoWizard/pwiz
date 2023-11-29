@@ -13836,4 +13836,7 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_peptide_digestion_settings_" xml:space="preserve">
     <value>Error: Failed attempting to change the peptide digestion settings.</value>
   </data>
+  <data name="CommandArgs_ARG_BGPROTEOME_NAME_name_to_give_protdb_imported_by___background_proteome_file" xml:space="preserve">
+    <value>name to give protdb imported by --background-proteome-file</value>
+  </data>
 </root>

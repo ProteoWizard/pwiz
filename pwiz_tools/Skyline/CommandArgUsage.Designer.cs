@@ -124,7 +124,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The path to the background proteome (protdb) file to apply to the opened document. The name may be optionally specified by --background-proteome-name..
+        ///   Looks up a localized string similar to The path to the background proteome (protdb) file to apply to the opened document. The name may be optionally specified by --background-proteome-name, and if not it defaults to the filename..
         /// </summary>
         internal static string _background_proteome_file {
             get {
@@ -1180,7 +1180,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The protease enzyme used for digesting proteins into peptides prior to injection into the mass spectrometer..
+        ///   Looks up a localized string similar to The protease enzyme definition used to parse peptide sequences from protein sequences added as targets to the document. Peptide lists added as targets ignore this setting other than counting missed cleavages..
         /// </summary>
         internal static string _pep_digest_enzyme {
             get {
@@ -1236,7 +1236,8 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to &quot;Protein&quot; excludes any peptide that appears in more than one protein in the background proteome.  
         ///&quot;Gene&quot; excludes any peptide that appears in proteins for more than one gene in the background proteome.  
-        ///&quot;Species&quot; excludes any peptide that appears in proteins for more than one species in the background proteome..
+        ///&quot;Species&quot; excludes any peptide that appears in proteins for more than one species in the background proteome.
+        ///Useful in sample mixtures including multiple species..
         /// </summary>
         internal static string _pep_unique_by {
             get {
@@ -2340,11 +2341,20 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Document Settings.
+        ///   Looks up a localized string similar to Peptide Settings.
         /// </summary>
-        internal static string CommandArgs_GROUP_SETTINGS_Document_Settings {
+        internal static string CommandArgs_GROUP_SETTINGS_Peptide_Settings {
             get {
-                return ResourceManager.GetString("CommandArgs_GROUP_SETTINGS_Document_Settings", resourceCulture);
+                return ResourceManager.GetString("CommandArgs_GROUP_SETTINGS_Peptide_Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transition Settings.
+        /// </summary>
+        internal static string CommandArgs_GROUP_SETTINGS_Transition_Settings {
+            get {
+                return ResourceManager.GetString("CommandArgs_GROUP_SETTINGS_Transition_Settings", resourceCulture);
             }
         }
         

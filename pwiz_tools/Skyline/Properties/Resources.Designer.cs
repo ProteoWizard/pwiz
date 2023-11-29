@@ -4930,6 +4930,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to name to give protdb imported by --background-proteome-file.
+        /// </summary>
+        public static string CommandArgs_ARG_BGPROTEOME_NAME_name_to_give_protdb_imported_by___background_proteome_file {
+            get {
+                return ResourceManager.GetString("CommandArgs_ARG_BGPROTEOME_NAME_name_to_give_protdb_imported_by___background_prot" +
+                        "eome_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The dwell time {0} must be between {1} and {2}..
         /// </summary>
         public static string CommandArgs_DwellTime_The_dwell_time__0__must_be_between__1__and__2__ {
