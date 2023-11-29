@@ -889,7 +889,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 //create and initialize a map of transition,accumulator pairs
                 var meanErrorsMap =
-                    new Dictionary<Identity, IntensityAccumulator>(_msDataFileScanHelper.ScanProvider.Transitions.Length, new IdentityEqualityComparer<Identity>());
+                    new Dictionary<ReferenceValue<Identity>, IntensityAccumulator>(_msDataFileScanHelper.ScanProvider.Transitions.Length);
                 _msDataFileScanHelper.ScanProvider.Transitions
                     .ForEach(t => meanErrorsMap.Add(t.Id,
                         new IntensityAccumulator(true, ChromExtractor.summed, t.ProductMz)));

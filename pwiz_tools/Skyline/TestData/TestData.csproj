@@ -241,6 +241,8 @@
     <None Include="CommandLineTest.zip" />
     <None Include="CommandLineWiffTest.zip" />
     <None Include="ConsoleAddAnnotationsTest.zip" />
+    <None Include="ConsoleAnnotationsExportToImportTest.zip" />
+    <None Include="ConsoleExportAnnotationsTest.zip" />
     <None Include="ConsoleExportMProphetTest.zip" />
     <None Include="ConsoleExportSpecLibTest.zip" />
     <None Include="ImportAllCmdLineTest.zip" />

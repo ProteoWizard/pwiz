@@ -136,6 +136,47 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
+        /// Find the string value of a property for a ViewLibraryPepInfo, formatted as in user display
+        /// </summary>
+        internal static string GetFormattedPropertyValue(string propertyName, ViewLibraryPepInfo pepInfo)
+        {
+            var property = typeof(ViewLibraryPepInfo).GetProperty(propertyName);
+            if (property is null)
+            {
+                return string.Empty;
+            }
+
+            var value = property.GetValue(pepInfo);
+            if (value is null)
+            {
+                return string.Empty;
+            }
+
+            string propertyValue;
+            var dbl = value as double? ?? 0;
+
+            // Shorten precursor m/z values to be uniform and match the tool tip
+            if (propertyName.Equals(PRECURSOR_MZ))
+            {
+                propertyValue = ViewLibraryDlg.FormatPrecursorMz(dbl);
+            }
+            else if (propertyName.Equals(CCS))
+            {
+                propertyValue = ViewLibraryDlg.FormatCCS(dbl);
+            }
+            else if (propertyName.Equals(ION_MOBILITY))
+            {
+                propertyValue = ViewLibraryDlg.FormatIonMobility(dbl, pepInfo.IonMobilityUnits);
+            }
+            else
+            {
+                propertyValue = value.ToString();
+            }
+
+            return propertyValue;
+        }
+
+        /// <summary>
         /// Find the string value of a property for a ViewLibraryPepInfo
         /// </summary>
         public static string GetStringValue(string propertyName, ViewLibraryPepInfo pepInfo)
@@ -258,6 +299,29 @@ namespace pwiz.Skyline.SettingsUI
 
         }
 
+        /// <summary>
+        /// Find entries which contain the filter text in the given property
+        /// </summary>
+        private List<int> ContainsSearchByProperty(string filterText)
+        {
+            if (string.IsNullOrEmpty(filterText))
+            {
+                return new List<int>();
+            }
+            var orderedList = _listCache.GetOrCreate(_selectedFilterCategory); // List of indexes of items that have values for property of interest
+            IEnumerable<int> matches;
+            if (_accessionNumberTypes.Contains(_selectedFilterCategory))
+            {
+                matches = orderedList.Where(item => _allEntries[item].OtherKeysDict[_selectedFilterCategory]
+                    .IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0);
+            }
+            else
+            {
+                matches = orderedList.Where(item => GetFormattedPropertyValue(_selectedFilterCategory, _allEntries[item])
+                    .IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0);
+            }
+            return matches.ToList();
+        }
 
         /// <summary>
         /// Find the indices of entries matching the filter text according to the filter type
@@ -278,33 +342,49 @@ namespace pwiz.Skyline.SettingsUI
             // We have to deal with the UnmodifiedTargetText separately from the adduct because the
             // adduct has special sorting which is different than the way adduct.ToString() would sort.
 
-            // Find the indices of entries that have a field that could match the search term if something was appended to it 
-            var filteredIndices = PrefixSearchByProperty(filterText);
-
-            // Special filtering for numeric properties
-            if (double.TryParse(filterText, NumberStyles.Any, CultureInfo.CurrentCulture, out var result) && _continuousFields.Contains(_selectedFilterCategory))
+            List<int> filteredIndices;
+            var isWildcard = filterText.StartsWith(@"*");
+            if (isWildcard)
             {
-                // Add entries that are close to the filter text numerically
-                // Create a list of object references sorted by their absolute difference from target
-                var sortedByDifference = _allEntries.OrderBy(entry => Math.Abs(double.Parse(GetStringValue(_selectedFilterCategory, entry), NumberStyles.Any, CultureInfo.CurrentCulture) - result));
-
-                // Then return everything before the first entry with a difference exceeding our match tolerance
-                var results = sortedByDifference.TakeWhile(entry => !(Math.Abs(
-                    double.Parse(GetStringValue(_selectedFilterCategory, entry), NumberStyles.Any, CultureInfo.CurrentCulture) - result) >  FILTER_TOLERANCE)).Select(IndexOf).ToList();
-                filteredIndices = filteredIndices.Union(results).ToList();
+                filterText = filterText.Substring(1);
             }
-
-            // If we have not found any matches yet and it is a peptide list look at all the entries which could match
-            // the target text, if they had something appended to them.
-            if (!filteredIndices.Any())
+            if (isWildcard && filterText.Length>0)
             {
-                var range = CollectionUtil.BinarySearch(_allEntries,
-                    info => string.Compare(info.UnmodifiedTargetText, 0, filterText, 0,
-                        info.UnmodifiedTargetText.Length,
-                        StringComparison.OrdinalIgnoreCase));
-                // Return the elements from the range whose DisplayText actually matches the filter text.
-                return ImmutableList.ValueOf(new RangeList(range).Where(i => _allEntries[i].DisplayText
-                    .StartsWith(filterText, StringComparison.OrdinalIgnoreCase)));
+                // For strings starting in "*", find the indices of entries that have a field
+                // that contain the search term
+                filteredIndices = ContainsSearchByProperty(filterText);
+            }
+            else
+            {
+                // Otherwise, find the indices of entries that have a field that could match the search term
+                // if something was appended to it 
+                filteredIndices = PrefixSearchByProperty(filterText);
+
+                // Special filtering for numeric properties
+                if (double.TryParse(filterText, NumberStyles.Any, CultureInfo.CurrentCulture, out var result) && _continuousFields.Contains(_selectedFilterCategory))
+                {
+                    // Add entries that are close to the filter text numerically
+                    // Create a list of object references sorted by their absolute difference from target
+                    var sortedByDifference = _allEntries.OrderBy(entry => Math.Abs(double.Parse(GetStringValue(_selectedFilterCategory, entry), NumberStyles.Any, CultureInfo.CurrentCulture) - result));
+
+                    // Then return everything before the first entry with a difference exceeding our match tolerance
+                    var results = sortedByDifference.TakeWhile(entry => !(Math.Abs(
+                        double.Parse(GetStringValue(_selectedFilterCategory, entry), NumberStyles.Any, CultureInfo.CurrentCulture) - result) >  FILTER_TOLERANCE)).Select(IndexOf).ToList();
+                    filteredIndices = filteredIndices.Union(results).ToList();
+                }
+
+                // If we have not found any matches yet and it is a peptide list look at all the entries which could match
+                // the target text, if they had something appended to them.
+                if (!filteredIndices.Any())
+                {
+                    var range = CollectionUtil.BinarySearch(_allEntries,
+                        info => string.Compare(info.UnmodifiedTargetText, 0, filterText, 0,
+                            info.UnmodifiedTargetText.Length,
+                            StringComparison.OrdinalIgnoreCase));
+                    // Return the elements from the range whose DisplayText actually matches the filter text.
+                    return ImmutableList.ValueOf(new RangeList(range).Where(i => _allEntries[i].DisplayText
+                        .StartsWith(filterText, StringComparison.OrdinalIgnoreCase)));
+                }
             }
             // Return the indices of the matches sorted alphabetically by display text
             return ImmutableList.ValueOf(filteredIndices.OrderBy(info => info));

@@ -343,15 +343,15 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         ) > "$(<)"
     }
 
+    constant SKYLINE_PROSIT_CONFIG : "$(SKYLINE_PATH)/Model/Prosit/Config/PrositConfig_production.xml" ;
     if --official in [ modules.peek : ARGV ]
     {
-        constant SKYLINE_PROSIT_CONFIG : "$(SKYLINE_PATH)/Model/Prosit/Config/PrositConfig_production.xml" ;
         if ! [ path.exists $(SKYLINE_PROSIT_CONFIG) ]
         {
             errors.user-error "PrositConfig_production.xml must be present for an official build" ;
         }
     }
-    else
+    else if ! [ path.exists $(SKYLINE_PROSIT_CONFIG) ]
     {
         constant SKYLINE_PROSIT_CONFIG : "$(SKYLINE_PATH)/Model/Prosit/Config/PrositConfig_development.xml" ;
     }

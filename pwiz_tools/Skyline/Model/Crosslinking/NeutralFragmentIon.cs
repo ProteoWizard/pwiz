@@ -177,11 +177,17 @@ namespace pwiz.Skyline.Model.Crosslinking
         /// <summary>
         /// Returns the text that should be displayed for this in the Targets tree.
         /// </summary>
-        public string GetLabel(PeptideStructure peptideStructure, bool includeResidues)
+        public string GetLabel(PeptideStructure peptideStructure, bool includeLossText, bool includeResidues)
         {
             if (IsIonTypePrecursor)
             {
-                return IonTypeExtension.GetLocalizedString(IonType.precursor) + GetTransitionLossesText();
+                string label = IonTypeExtension.GetLocalizedString(IonType.precursor);
+                if (includeLossText)
+                {
+                    label += GetTransitionLossesText();
+                }
+
+                return label;
             }
 
             StringBuilder stringBuilder = new StringBuilder();
@@ -198,8 +204,11 @@ namespace pwiz.Skyline.Model.Crosslinking
 
             stringBuilder.Append(@"[");
             stringBuilder.Append(IonChain);
-            stringBuilder.Append(GetTransitionLossesText());
             stringBuilder.Append(@"]");
+            if (includeLossText)
+            {
+                stringBuilder.Append(GetTransitionLossesText());
+            }
             if (includeResidues && IonChain.Count > 1)
             {
                 var lastAminoAcid = IonChain[IonChain.Count - 1]

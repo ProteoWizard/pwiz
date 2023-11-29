@@ -4,6 +4,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
 {
@@ -16,6 +17,16 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
             AnnotationNames = ImmutableList<string>.EMPTY
         };
 
+        public static ExportAnnotationSettings GetExportAnnotationSettings(IEnumerable<ElementHandler> selectedHandlers,
+            IEnumerable<string> selectedAnnotationNames, IEnumerable<string> selectedProperties, bool removeBlankRows)
+        {
+            return EMPTY
+            .ChangeElementTypes(selectedHandlers.Select(handler => handler.Name))
+            .ChangeAnnotationNames(selectedAnnotationNames)
+            .ChangePropertyNames(selectedProperties)
+            .ChangeRemoveBlankRows(removeBlankRows);
+        }
+
         public static ExportAnnotationSettings AllAnnotations(SrmDocument document)
         {
             return EMPTY.ChangeElementTypes(ElementHandler
@@ -24,6 +35,16 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
                 .ChangeAnnotationNames(
                     document.Settings.DataSettings.AnnotationDefs.Select(annotationDef => annotationDef.Name))
                 .ChangePropertyNames(new[] {@"Note"});
+        }
+
+        public static string[] GetAllAnnotationNames(ImmutableList<AnnotationDef> annotationDefs, List<ElementHandler> selectedHandlers)
+        {
+            var annotationTargets = selectedHandlers.Aggregate(AnnotationDef.AnnotationTargetSet.EMPTY,
+                (value, handler) => value.Union(handler.AnnotationTargets));
+            return annotationDefs.Where(
+                    annotationDef =>
+                        annotationDef.AnnotationTargets.Intersect(annotationTargets).Any())
+                .Select(annotationDef => annotationDef.Name).OrderBy(name => name).ToArray();
         }
 
         public ImmutableList<string> ElementTypes { get; private set; }
