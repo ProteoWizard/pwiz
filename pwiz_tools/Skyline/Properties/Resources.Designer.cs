@@ -5210,6 +5210,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Attempting to exclude an unknown object name &apos;{0}&apos;. Try one of the following:.
+        /// </summary>
+        public static string CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_name___0____Try_one_of_the_following_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_nam" +
+                        "e___0____Try_one_of_the_following_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: Regular expression &apos;{0}&apos; for {1} cannot be parsed..
         /// </summary>
         public static string CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_ {
@@ -5564,6 +5574,44 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Annotations file {0} exported successfully..
+        /// </summary>
+        public static string CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Failure attempting to save annotations file {0}..
+        /// </summary>
+        public static string CommandLine_ExportAnnotations_Error__Failure_attempting_to_save_annotations_file__0__ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportAnnotations_Error__Failure_attempting_to_save_annotations_file_" +
+                        "_0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The document must contain annotations in order to export annotations..
+        /// </summary>
+        public static string CommandLine_ExportAnnotations_Error__The_document_must_contain_annotations_in_order_to_export_annotations_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportAnnotations_Error__The_document_must_contain_annotations_in_ord" +
+                        "er_to_export_annotations_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Try one of the following:.
+        /// </summary>
+        public static string CommandLine_ExportAnnotations_Try_one_of_the_following_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportAnnotations_Try_one_of_the_following_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Chromatograms file {0} exported successfully..
         /// </summary>
         public static string CommandLine_ExportChromatograms_Chromatograms_file__0__exported_successfully_ {
@@ -5814,6 +5862,17 @@ namespace pwiz.Skyline.Properties {
         public static string CommandLine_ExportInstrumentFile_No_method_will_be_exported_ {
             get {
                 return ResourceManager.GetString("CommandLine_ExportInstrumentFile_No_method_will_be_exported_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The folder {0} does not appear to contain an Agilent MassHunter 12 method template. The folder is expected to have a .m extension..
+        /// </summary>
+        public static string CommandLine_ExportInstrumentFile_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportInstrumentFile_The_folder__0__does_not_appear_to_contain_an_Agi" +
+                        "lent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extensio" +
+                        "n_", resourceCulture);
             }
         }
         
@@ -13067,7 +13126,18 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The chosen folder does not appear to contain an Agilent QQQ method template. The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd..
+        ///   Looks up a localized string similar to The chosen folder does not appear to contain an Agilent MassHunter 12 method template. The folder is expected to have a .m extension..
+        /// </summary>
+        public static string ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_cont" +
+                        "ain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__" +
+                        "m_extension_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Agilent 6400 series instrument type methods are expected to have a .m extension, and contain the file qqqacqmethod.xsd. If this is an Agilent TQ method, please choose &quot;Agilent MassHunter 12 or higher&quot; as your instrument type..
         /// </summary>
         public static string ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd {
             get {
@@ -13439,6 +13509,16 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_a_Bruker_TOF_m" +
                         "ethod_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_" +
                         "file_submethods_xml_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The folder {0} does not appear to contain an Agilent MassHunter 12 method template. The folder is expected to have a .m extension..
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_Mas" +
+                        "sHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_", resourceCulture);
             }
         }
         
