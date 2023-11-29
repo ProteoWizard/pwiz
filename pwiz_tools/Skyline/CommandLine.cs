@@ -296,7 +296,7 @@ namespace pwiz.Skyline
                         commandArgs.AddAnnotationsTargets, 
                         commandArgs.AddAnnotationsType,
                         commandArgs.AddAnnotationsValues,
-                        commandArgs.AddAnnotationsResolveConflictsBySkipping ?? false))
+                        commandArgs.AddAnnotationsResolveConflictsBySkipping))
                 {
                     
                     return false;

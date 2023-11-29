@@ -117,7 +117,7 @@ namespace pwiz.Skyline
             PASSWORD_VALUE, COMMAND_VALUE, COMMAND_ARGUMENTS_VALUE, PROGRAM_MACRO_VALUE, LABEL_VALUE, NAME_VALUE
         }.Concat(PATH_TYPE_VALUES));
 
-        // For value examples that should wrap but do not contain "|" characters
+        // For value examples that should wrap but do not contain '|' characters
         public static readonly HashSet<Func<string>> WRAPPABLE_LIST_TYPE_VARIABLES = new HashSet<Func<string>>(new[]
         {
             ANNOTATION_TARGET_LIST_VALUE
@@ -1082,14 +1082,7 @@ namespace pwiz.Skyline
             PATH_TO_XML,
             (c, p) => c.AddAnnotationsFile = p.ValueFullPath) {InternalUse = true};
         public static readonly Argument ARG_ADD_ANNOTATIONS_NAME = new DocArgument(@"annotation-name", NAME_VALUE,
-            (c, p) =>
-            {
-                c.AddAnnotationsName = p.Value;
-                // The default annotation type is text
-                c.AddAnnotationsType = c.AddAnnotationsType ?? new ListPropertyType(AnnotationDef.AnnotationType.text, null);
-            }
-        );
-
+            (c, p) => c.AddAnnotationsName = p.Value);
         public static readonly Argument ARG_ADD_ANNOTATIONS_TARGETS = new DocArgument(@"annotation-targets",
             ANNOTATION_TARGET_LIST_VALUE,
             (c, p) => c.ParseAnnotationTargets(p)){WrapValue = true};
@@ -2293,7 +2286,10 @@ namespace pwiz.Skyline
             SharedFileType = ShareType.DEFAULT;
 
             MProphetExcludeScores = new List<IPeakFeatureCalculator>();
+
             AddAnnotationsTargets = new List<AnnotationDef.AnnotationTarget>();
+            AddAnnotationsResolveConflictsBySkipping = false;
+            AddAnnotationsType = ListPropertyType.TEXT;
 
             ImportBeforeDate = null;
             ImportOnOrAfterDate = null;
