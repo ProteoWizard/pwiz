@@ -13863,4 +13863,7 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_" xml:space="preserve">
     <value>The folder {0} does not appear to contain an Agilent MassHunter 12 method template. The folder is expected to have a .m extension.</value>
   </data>
+  <data name="CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_file__0_" xml:space="preserve">
+    <value>Error: Could not find background proteome file {0}</value>
+  </data>
 </root>

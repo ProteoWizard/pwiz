@@ -1208,7 +1208,7 @@ namespace pwiz.Skyline
                     {
                         if (!File.Exists(commandArgs.BackgroundProteomePath))
                             throw new IOException(string.Format(
-                                Resources.CommandLine_FindBackgroundProteome_Warning__Could_not_find_the_background_proteome_file__0__,
+                                Resources.CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_file__0_,
                                 Path.GetFileName(commandArgs.BackgroundProteomePath)));
                         string name = commandArgs.BackgroundProteomeName ?? Path.GetFileNameWithoutExtension(commandArgs.BackgroundProteomePath);
                         var bgProteome = new BackgroundProteomeSpec(name, commandArgs.BackgroundProteomePath);

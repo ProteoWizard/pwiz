@@ -2200,8 +2200,8 @@ namespace pwiz.Skyline
                     GROUP_EXP_GENERAL,
                     GROUP_EXP_INSTRUMENT,
                     GROUP_PANORAMA,
-                    GROUP_TRANSITION_SETTINGS,
                     GROUP_PEPTIDE_SETTINGS,
+                    GROUP_TRANSITION_SETTINGS,
                     GROUP_TOOLS
                 };
             }

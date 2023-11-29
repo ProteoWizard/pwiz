@@ -587,7 +587,7 @@ namespace pwiz.SkylineTestData
             settings = new[] { "--background-proteome-file=missing" };
 
             RunCommandAndValidateError(settings, string.Format(
-                Resources.CommandLine_FindBackgroundProteome_Warning__Could_not_find_the_background_proteome_file__0__, "missing"));
+                Resources.CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_file__0_, "missing"));
         }
 
         [TestMethod]

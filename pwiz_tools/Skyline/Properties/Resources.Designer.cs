@@ -7196,6 +7196,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Could not find background proteome file {0}.
+        /// </summary>
+        public static string CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_file__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_fi" +
+                        "le__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: Failed attempting to change the peptide digestion settings..
         /// </summary>
         public static string CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_peptide_digestion_settings_ {
