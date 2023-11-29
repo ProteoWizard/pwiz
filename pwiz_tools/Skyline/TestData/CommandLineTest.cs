@@ -774,10 +774,12 @@ namespace pwiz.SkylineTestData
                 "--annotation-targets=" + annotationTargets, // Specify the target
                 "--annotation-type=" + invalidValue // Specify an invalid type value
             );
-            CheckRunCommandOutputContains(string.Format(Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+            CheckRunCommandOutputContains(string.Format(
+                Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
                 invalidValue,
                 "--annotation-type",
-                string.Join(@", ", ListPropertyType.ListPropertyTypes().Select(c=> c.AnnotationType.ToString()).ToArray())), output);
+                string.Join(@", ", ListPropertyType.ListPropertyTypes().Select(c=> 
+                    c.AnnotationType.ToString()).ToArray())), output);
             // Test error (specifying a value_list type annotation without providing a list of values)
             output = RunCommand("--new=" + newDocumentPath, // Create a new document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
@@ -787,7 +789,8 @@ namespace pwiz.SkylineTestData
                 "--save"
             );
             CheckRunCommandOutputContains(
-                string.Format(Resources.CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1__, 
+                string.Format(
+                    Resources.CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1__, 
                     AnnotationDef.AnnotationType.value_list.ToString(), CommandArgs.ARG_ADD_ANNOTATIONS_VALUES.ArgumentText), output);
             // Test define (from .xml file)
             output = RunCommand("--new=" + newDocumentPath, // Create a document (without annotations)
@@ -795,7 +798,9 @@ namespace pwiz.SkylineTestData
                 "--annotation-file=" + annotationsXml, // Specify file path
                 "save"
             );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0__, annotationsXml), output);
+            CheckRunCommandOutputContains(string.Format(
+                Resources.CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0__, annotationsXml)
+                , output);
             // Assert that the document has the correct number of annotations
             AssertDocumentAnnotationCount(newDocumentPath, 2);
             // Assert that the annotations in the .xml file appear in the document
@@ -815,7 +820,9 @@ namespace pwiz.SkylineTestData
                 "--annotation-file=" + annotationsXmlBadFormatting, // Specify file path
                 "save"
             );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0__, annotationsXmlBadFormatting), output);
+            CheckRunCommandOutputContains(string.Format(
+                    Resources.CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0__, annotationsXmlBadFormatting),
+                output);
             // Test define (from arguments)
             output = RunCommand("--new=" + newDocumentPath, // Create a new document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
@@ -825,7 +832,9 @@ namespace pwiz.SkylineTestData
                 "--annotation-values=" + annotationValues, // Specify the values
                 "--save"
             );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document_, annotationName), output);
+            CheckRunCommandOutputContains(string.Format(
+                    Resources.CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document_, annotationName),
+                output);
             // Assert that the document has the correct number of annotations
             AssertDocumentAnnotationCount(newDocumentPath, 1);
             // Assert that the definition matches the one we defined
@@ -843,7 +852,9 @@ namespace pwiz.SkylineTestData
                 "--annotation-values=" + annotationValues, // Specify the values
                 "--save"
             );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_, annotationName), output);
+            CheckRunCommandOutputContains(string.Format(
+                    Resources.CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_, annotationName),
+                output);
             // Test resolving conflicts through skipping
             output = RunCommand("--new=" + newDocumentPath, // Load a document with annotations
                 "--overwrite",
@@ -854,7 +865,8 @@ namespace pwiz.SkylineTestData
                 "--annotation-conflict-resolution=" + "skip",
                 "--save"
             );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_SetAnnotations_Warning__Skipping_annotation___0___due_to_a_name_conflict_
+            CheckRunCommandOutputContains(string.Format(
+                Resources.CommandLine_SetAnnotations_Warning__Skipping_annotation___0___due_to_a_name_conflict_
                 , annotationName), output);
             // Test resolving conflicts through overwriting (using the annotation-conflict-resolution argument)
             output = RunCommand("--new=" + newDocumentPath, // Load a document with annotations
@@ -866,7 +878,8 @@ namespace pwiz.SkylineTestData
                 "--annotation-conflict-resolution=" + "overwrite",
                 "--save"
             );
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_
+            CheckRunCommandOutputContains(string.Format(
+                Resources.CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_
                 , annotationName), output);
             // Test specifying an annotation name without any other arguments. This should find the annotation in the environment
             // and add it to the document
@@ -876,7 +889,9 @@ namespace pwiz.SkylineTestData
                 "save"
             );
             CheckRunCommandOutputContains(
-                string.Format(Resources.CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document_, annotationName), output);
+                string.Format(
+                    Resources.CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document_, annotationName),
+                output);
             // Assert that the document has the correct number of annotations
             AssertDocumentAnnotationCount(newDocumentPath, 1);
             // Assert that the definition matches the one we defined

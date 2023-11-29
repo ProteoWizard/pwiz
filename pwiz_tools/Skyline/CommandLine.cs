@@ -2985,7 +2985,7 @@ namespace pwiz.Skyline
                 // the environment and then add it to the document
                 return AddAnnotationFromEnvironment(name);
             }
-
+            // Add a new annotation created from the arguments
             return AddAnnotationsFromArguments(name, targets, type, values, resolveConflictsBySkipping);
         }
 
@@ -3007,7 +3007,9 @@ namespace pwiz.Skyline
                 }
             }
             // Error, annotation not in environment
-            _out.WriteLine(Resources.CommandLine_AddAnnotationFromEnvironment_Error__Cannot_add_new_annotation___0___without_providing_at_least_one_target_through__1__, annotationFromEnvironment, CommandArgs.ARG_ADD_ANNOTATIONS_TARGETS.ArgumentText);
+            _out.WriteLine(
+                Resources.CommandLine_AddAnnotationFromEnvironment_Error__Cannot_add_new_annotation___0___without_providing_at_least_one_target_through__1__, 
+                annotationFromEnvironment, CommandArgs.ARG_ADD_ANNOTATIONS_TARGETS.ArgumentText);
             return false;
         }
 
@@ -3015,7 +3017,8 @@ namespace pwiz.Skyline
         /// Add annotations to the document and environment from an XML file
         /// </summary>
         /// <param name="path">Path to the XMl file containing annotations</param>
-        /// <param name="resolveConflictsBySkipping">True to skip conflicting annotations, false to overwrite, and null to error</param>
+        /// <param name="resolveConflictsBySkipping">True to skip conflicting annotations, false to overwrite,
+        /// and null to error</param>
         /// <returns>True if at least one annotation is defined from the XML file</returns>
         private bool AddAnnotationsFromXml(string path, bool? resolveConflictsBySkipping)
         {
@@ -3053,7 +3056,8 @@ namespace pwiz.Skyline
         /// <param name="targets">Data types to apply the annotation to</param>
         /// <param name="type">Type of the annotation (text, number, true_false, or value_list)</param>
         /// <param name="values">A list of values, only used in a value_list annotation</param>
-        /// <param name="resolveConflictsBySkipping">True to skip conflicting annotations, false to overwrite, and null to error</param>
+        /// <param name="resolveConflictsBySkipping">True to skip conflicting annotations, false to overwrite,
+        /// and null to error</param>
         /// <returns>True upon successful addition of the annotation to the document, false upon failure</returns>
         private bool AddAnnotationsFromArguments(string name, IEnumerable<AnnotationDef.AnnotationTarget> targets,
             ListPropertyType type, IList<string> values, bool? resolveConflictsBySkipping)
@@ -3062,7 +3066,9 @@ namespace pwiz.Skyline
             var valueListName = AnnotationDef.AnnotationType.value_list.ToString();
             if (Equals(type.AnnotationType.ToString(), valueListName) && values.IsNullOrEmpty())
             {
-                _out.WriteLine(Resources.CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1__, valueListName, CommandArgs.ARG_ADD_ANNOTATIONS_VALUES.ArgumentText);
+                _out.WriteLine(
+                    Resources.CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1__, 
+                    valueListName, CommandArgs.ARG_ADD_ANNOTATIONS_VALUES.ArgumentText);
                 return false;
             }
             var annotationDef = new AnnotationDef(name, AnnotationDef.AnnotationTargetSet.OfValues(targets), type, values);
@@ -3086,13 +3092,16 @@ namespace pwiz.Skyline
                     } else if (resolveConflictsBySkipping == true)
                     {
                         // Warn that we are skipping
-                        _out.WriteLine(Resources.CommandLine_SetAnnotations_Warning__Skipping_annotation___0___due_to_a_name_conflict_, def.Name);
+                        _out.WriteLine(
+                            Resources.CommandLine_SetAnnotations_Warning__Skipping_annotation___0___due_to_a_name_conflict_,
+                            def.Name);
                         newAnnotationDefs.Remove(def);
                     }
                     else
                     {
                         // Warn that we are overwriting
-                        _out.WriteLine(Resources.CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_, def.Name);
+                        _out.WriteLine(
+                            Resources.CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_, def.Name);
                         foreach (var settingsDef in Settings.Default.AnnotationDefList.ToList().
                                      Where(settingsDef => Equals(settingsDef.Name, def.Name)))
                         {
@@ -3124,7 +3133,8 @@ namespace pwiz.Skyline
                 return doc;
             }, AuditLogEntry.SettingsLogFunction);
             var successMessage = newAnnotationDefs.Select(def => string.Format(
-                Resources.CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document_, def.Name)).ToList();
+                Resources.CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document_,
+                def.Name)).ToList();
             _out.WriteLine(TextUtil.LineSeparate(successMessage));
             return true;
         }
