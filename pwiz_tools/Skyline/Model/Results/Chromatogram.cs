@@ -631,8 +631,8 @@ namespace pwiz.Skyline.Model.Results
             {
                 return msDataFileUri;
             }
-            string dataFilePathPartIgnore;
-            return GetExistingDataFilePath(cachePath, msDataFilePath, out dataFilePathPartIgnore);
+
+            return GetExistingDataFilePath(cachePath, msDataFilePath, out _);
         }
         
         /// <summary>
@@ -1310,8 +1310,7 @@ namespace pwiz.Skyline.Model.Results
             path = GetLocationPart(path); // Just in case the url args contain '|'
             string[] parts = path.Split('|');
 
-            int sampleIndex;
-            return parts.Length == 3 && int.TryParse(parts[2], out sampleIndex);
+            return parts.Length == 3 && int.TryParse(parts[2], out _);
         }
 
         public static string GetPathSampleNamePart(string path)

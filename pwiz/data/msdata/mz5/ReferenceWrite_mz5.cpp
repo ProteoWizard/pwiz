@@ -25,7 +25,7 @@
 #include "Translator_mz5.hpp"
 #include "Datastructures_mz5.hpp"
 #include "../../common/cv.hpp"
-#include <boost/lexical_cast.hpp>
+#include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/data/msdata/SpectrumWorkerThreads.hpp"
 
 namespace pwiz {
@@ -350,7 +350,8 @@ pwiz::util::IterationListener::Status ReferenceWrite_mz5::readAndWriteSpectra(
         Connection_mz5& connection, std::vector<BinaryDataMZ5>& bdl,
         std::vector<SpectrumMZ5>& spl,
         const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
-        bool useWorkerThreads)
+        bool useWorkerThreads,
+        bool continueOnError)
 {
     pwiz::util::IterationListener::Status status =
             pwiz::util::IterationListener::Status_Ok;
@@ -364,7 +365,7 @@ pwiz::util::IterationListener::Status ReferenceWrite_mz5::readAndWriteSpectra(
         pwiz::msdata::SpectrumPtr sp;
         pwiz::msdata::BinaryDataArrayPtr bdap;
         std::vector<double> mz;
-        SpectrumWorkerThreads spectrumWorkers(*sl, useWorkerThreads);
+        SpectrumWorkerThreads spectrumWorkers(*sl, useWorkerThreads, continueOnError);
         for (size_t i = 0; i < sl->size(); i++)
         {
             status = pwiz::util::IterationListener::Status_Ok;
@@ -374,8 +375,22 @@ pwiz::util::IterationListener::Status ReferenceWrite_mz5::readAndWriteSpectra(
             if (status == pwiz::util::IterationListener::Status_Cancel)
                 break;
 
-            //sp = sl->spectrum(i, true);
-            sp = spectrumWorkers.processBatch(i);
+            try
+            {
+                //sp = sl->spectrum(i, true);
+                sp = spectrumWorkers.processBatch(i);
+            }
+            catch (std::exception& e)
+            {
+                if (continueOnError)
+                {
+                    cerr << "Skipping spectrum " << i << " \"" << (sp ? sp->id : sl->spectrumIdentity(i).id) << "\": " << e.what() << endl;
+                    continue;
+                }
+                else
+                    throw;
+            }
+
             mz.clear();
             if (sp.get())
             {
@@ -413,7 +428,8 @@ pwiz::util::IterationListener::Status ReferenceWrite_mz5::readAndWriteSpectra(
 pwiz::util::IterationListener::Status ReferenceWrite_mz5::readAndWriteChromatograms(
         Connection_mz5& connection, std::vector<BinaryDataMZ5>& bdl,
         std::vector<ChromatogramMZ5>& cpl,
-        const pwiz::util::IterationListenerRegistry* iterationListenerRegistry)
+        const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+        bool continueOnError)
 {
     pwiz::util::IterationListener::Status status =
             pwiz::util::IterationListener::Status_Ok;
@@ -437,7 +453,22 @@ pwiz::util::IterationListener::Status ReferenceWrite_mz5::readAndWriteChromatogr
                             pwiz::util::IterationListener::UpdateMessage(i, cl->size(), "writing chromatograms"));
                 if (status == pwiz::util::IterationListener::Status_Cancel)
                     break;
-                cp = cl->chromatogram(i, true);
+
+                try
+                {
+                    cp = cl->chromatogram(i, true);
+                }
+                catch (std::exception& e)
+                {
+                    if (continueOnError)
+                    {
+                        cerr << "Skipping chromatogram " << i << " \"" << (cp ? cp->id : cl->chromatogramIdentity(i).id) << "\": " << e.what() << endl;
+                        continue;
+                    }
+                    else
+                        throw;
+                }
+
                 time.clear();
                 inten.clear();
                 if (cp.get())
@@ -474,14 +505,14 @@ pwiz::util::IterationListener::Status ReferenceWrite_mz5::readAndWriteChromatogr
 
 void ReferenceWrite_mz5::writeTo(Connection_mz5& connection,
         const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
-        bool useWorkerThreads)
+        bool useWorkerThreads, bool continueOnError)
 {
     pwiz::util::IterationListener::Status status;
 
     std::vector<ChromatogramMZ5> cl;
     std::vector<BinaryDataMZ5> cbdl;
     status = readAndWriteChromatograms(connection, cbdl, cl,
-            iterationListenerRegistry);
+            iterationListenerRegistry, continueOnError);
     if (cl.size() > 0)
         connection.createAndWrite1DDataSet(cl.size(), &cl[0],
                 Configuration_mz5::ChromatogramMetaData);
@@ -496,7 +527,7 @@ void ReferenceWrite_mz5::writeTo(Connection_mz5& connection,
         std::vector<SpectrumMZ5> sl;
         std::vector<BinaryDataMZ5> sbdl;
         status = readAndWriteSpectra(connection, sbdl, sl,
-                iterationListenerRegistry, useWorkerThreads);
+                iterationListenerRegistry, useWorkerThreads, continueOnError);
         if (sl.size() > 0)
             connection.createAndWrite1DDataSet(sl.size(), &sl[0],
                     Configuration_mz5::SpectrumMetaData);

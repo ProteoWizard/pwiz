@@ -21,10 +21,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -39,6 +36,9 @@ namespace MSConvertGUI
             public MainLogic workProcess;
             public TextBox updateTextbox;
             public DataGridViewRow rowShown;
+
+            public bool Started { get; set; }
+            public bool Finished { get; set; }
         }
 
         private IEnumerable<object> _filesToProcess;
@@ -129,9 +129,25 @@ namespace MSConvertGUI
             info.updateTextbox.Visible = true;
         }
 
+        private StringBuilder _stderrBuffer = new StringBuilder();
+        private void ShowStderr(object sender, string stderr)
+        {
+            _stderrBuffer.Append(stderr);
+            if (!stderr.EndsWith("\n"))
+                return;
+
+            // TODO: handle stderr coming from different threads when converting in parallel
+            foreach (var item in _tasksRunningList.Where(t => t.JobInfo.Started && !t.JobInfo.Finished))
+                UpdateLog(_stderrBuffer.ToString(), item.JobInfo);
+
+            _stderrBuffer.Clear();
+        }
+
         private void ProgressForm_Load(object sender, EventArgs e)
         {
             var boxShown = false;
+
+            Program.StderrCaptured += ShowStderr;
 
             foreach (var item in _filesToProcess)
             {
@@ -178,6 +194,7 @@ namespace MSConvertGUI
                     workItem = _unifiCredentialsByUrl[workItem].GetUrlWithAuthentication(workItem);
 
                 var config = runProgram.ParseCommandLine(_outputFolder, (workItem + "|" + _options).Trim('|'));
+                config.WriteConfig.continueOnError = true;
                 runProgram.QueueWork(config);
             }
 

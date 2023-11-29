@@ -314,7 +314,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return precursorCalc.GetPrecursorMass(seq);
         }
 
-        public TypedMass GetPrecursorMass(IsotopeLabelType labelType, CustomMolecule mol, TypedModifications mods, Adduct adductForIsotopeLabels, out string isotopicFormula)
+        public TypedMass GetPrecursorMass(IsotopeLabelType labelType, CustomMolecule mol, TypedModifications mods, Adduct adductForIsotopeLabels, out ParsedMolecule isotopicFormula)
         {
             return GetPrecursorCalc(labelType, ExplicitMods.EMPTY).GetPrecursorMass(mol, mods, adductForIsotopeLabels, out isotopicFormula);
         }
@@ -425,7 +425,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return new Target(strModifiedSequence);
         }
 
-        public Adduct GetModifiedAdduct(Adduct adduct, string neutralFormula,
+        public Adduct GetModifiedAdduct(Adduct adduct, ParsedMolecule neutralFormula,
                                           IsotopeLabelType labelType,
                                           ExplicitMods mods)
         {
@@ -1030,6 +1030,12 @@ namespace pwiz.Skyline.Model.DocSettings
                 var imAndCCS = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(nodeGroup.ExplicitValues.IonMobility, nodeGroup.ExplicitValues.IonMobilityUnits),
                     nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,
                     ExplicitTransitionValues.Get(nodeTran).IonMobilityHighEnergyOffset ?? 0);
+                if (instrumentInfo != null && instrumentInfo.ProvidesCollisionalCrossSectionConverter)
+                {
+                    // Try to get a CCS value for this explicitly stated IM value - useful in reports
+                    var ccs = instrumentInfo.CCSFromIonMobility(imAndCCS.IonMobility, nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge);
+                    imAndCCS = imAndCCS.ChangeCollisionalCrossSection(ccs);
+                }
                 // Now get the window width
                 var windowIM = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility.Mobility.Value, ionMobilityMax);
                 return IonMobilityFilter.GetIonMobilityFilter(imAndCCS, windowIM);
@@ -1064,14 +1070,15 @@ namespace pwiz.Skyline.Model.DocSettings
             LibraryIonMobilityInfo libraryIonMobilityInfo,
             double ionMobilityMax)
         {
+            IonMobilityFilter result = null;
             foreach (var typedSequence in GetTypedSequences(nodePep.Target, nodePep.ExplicitMods, nodeGroup.PrecursorAdduct))
             {
                 var chargedPeptide = new LibKey(typedSequence.ModifiedSequence, typedSequence.Adduct); // N.B. this may actually be a small molecule
 
                 // Try for a ion mobility library value (.imsdb file)
-                var result = TransitionSettings.IonMobilityFiltering.GetIonMobilityFilter(chargedPeptide, nodeGroup.PrecursorMz,  ionMobilityFunctionsProvider, ionMobilityMax);
+                result = TransitionSettings.IonMobilityFiltering.GetIonMobilityFilter(chargedPeptide, nodeGroup.PrecursorMz,  ionMobilityFunctionsProvider, ionMobilityMax);
                 if (result != null && result.HasIonMobilityValue)
-                    return result;
+                    break;
 
                 // Try other sources - BiblioSpec, Chromatogram libraries etc
                 if (libraryIonMobilityInfo != null)
@@ -1080,14 +1087,22 @@ namespace pwiz.Skyline.Model.DocSettings
                     if (imAndCCS.IonMobility.HasValue && TransitionSettings.IonMobilityFiltering.UseSpectralLibraryIonMobilityValues)
                     {
                         var ionMobilityWindow = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility.Mobility.Value, ionMobilityMax);
-                        return IonMobilityFilter.GetIonMobilityFilter(imAndCCS, ionMobilityWindow);
+                        result = IonMobilityFilter.GetIonMobilityFilter(imAndCCS, ionMobilityWindow);
+                        break;
                     }
                 }
             }
-            return IonMobilityFilter.EMPTY;
+
+            if (result != null && result.HasIonMobilityValue && 
+                !result.CollisionalCrossSectionSqA.HasValue &&
+                ionMobilityFunctionsProvider != null && ionMobilityFunctionsProvider.ProvidesCollisionalCrossSectionConverter)
+            {
+                // Try to get a CCS value for this IM value - useful in reports
+                var ccs = ionMobilityFunctionsProvider.CCSFromIonMobility(result.IonMobility, nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge);
+                result = result.ChangeCollisionCrossSection(ccs);
+            }
+            return result ?? IonMobilityFilter.EMPTY;
         }
-
-
 
         public bool TryGetRetentionTimes(Target sequence, Adduct adduct, ExplicitMods mods, MsDataFileUri filePath,
             out IsotopeLabelType type, out double[] retentionTimes)
@@ -1519,8 +1534,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods mods, Adduct charge)
         {
-            bool allowVariableMods;
-            return Accept(settings, peptide, mods, new[] { charge }, PeptideFilterType.library, out allowVariableMods);
+            return Accept(settings, peptide, mods, new[] { charge }, PeptideFilterType.library, out _);
         }
 
         private enum PeptideFilterType
@@ -2057,6 +2071,20 @@ namespace pwiz.Skyline.Model.DocSettings
                     peptideSettings.ChangeParsimonySettings(ProteinAssociation.ParsimonySettings.DEFAULT));
             }
 
+            if (documentFormat < DocumentFormat.VERSION_22_23)
+            {
+                if (result.TransitionSettings.Libraries.IonMatchMzTolerance.Unit == MzTolerance.Units.ppm)
+                {
+                    // Older versions of Skyline did not support library match tolerance ppm units
+                    // If the library match tolerance was in ppm, then convert it to mz units, assuming an mz of 1000.
+                    var newToleranceValue = result.TransitionSettings.Libraries.IonMatchMzTolerance.Value / 1000;
+                    newToleranceValue = Math.Min(TransitionLibraries.MAX_MATCH_TOLERANCE, Math.Max(TransitionLibraries.MIN_MATCH_TOLERANCE, newToleranceValue));
+                    result = result.ChangeTransitionSettings(transitionSettings =>
+                        transitionSettings.ChangeLibraries(
+                            transitionSettings.Libraries.ChangeIonMatchMzTolerance(new MzTolerance(newToleranceValue))));
+                }
+            }
+
             return result;
         }
 
@@ -2284,18 +2312,18 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         MassType MassType { get; }
         TypedMass GetPrecursorMass(Target seq);
-        TypedMass GetPrecursorMass(CustomMolecule custom, TypedModifications mods, Adduct adductForIsotopeLabels, out string isotopicFormula);
+        TypedMass GetPrecursorMass(CustomMolecule custom, TypedModifications mods, Adduct adductForIsotopeLabels, out ParsedMolecule isotopicFormula);
         bool IsModified(Target seq);
         Target GetModifiedSequence(Target seq, bool narrow);
         Target GetModifiedSequence(Target seq, SequenceModFormatType format, bool explicitModsOnly);
         Target GetModifiedSequenceDisplay(Target seq);
         double GetAAModMass(char aa, int seqIndex, int seqLength);
         MassDistribution GetMzDistribution(Target target, Adduct adduct, IsotopeAbundances abundances);
-        MassDistribution GetMZDistributionFromFormula(string formula, Adduct adduct, IsotopeAbundances abundances);
+        MassDistribution GetMZDistribution(MoleculeMassOffset formula, Adduct adduct, IsotopeAbundances abundances);
         MassDistribution GetMZDistributionSinglePoint(double mz);
-        string GetMolecularFormula(string peptideSequence);
+        MoleculeMassOffset GetMolecularFormula(string peptideSequence);
         bool HasLabels { get; }
-        Adduct GetModifiedAdduct(Adduct adduct, string neutralFormula);
+        Adduct GetModifiedAdduct(Adduct adduct, ParsedMolecule neutralFormula);
     }
 
     /// <summary>

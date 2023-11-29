@@ -277,6 +277,12 @@ namespace pwiz.Skyline.Util
                 writer.WriteAttribute(name, value.Value);
         }
 
+        public static void WriteAttributeNullable(this XmlWriter writer, Enum name, double? value, int precision)
+        {
+            if (value.HasValue)
+                writer.WriteAttribute(name, value.Value, precision);
+        }
+
         public static void WriteAttributeIfString(this XmlWriter writer, Enum name, string value)
         {
             if (!string.IsNullOrEmpty(value))
@@ -961,6 +967,18 @@ namespace pwiz.Skyline.Util
             return sb.ToString();
         }
 
+        // Inspect a file path for characters that must be escaped for use in XML (currently just "&")
+        // Return a suitably escaped version of the string
+        public static string EscapePath(string path)
+        {
+            if (path.Contains(@"&")) // Valid windows filename character, may need escaping
+            {
+                // But it may also be in use as an escape character - don't mess with &quot; etc
+                path = Regex.Replace(path, @"&(?!(?:apos|quot|[gl]t|amp);|#)", @"&amp;");
+            }
+            return path;
+        }
+
         public static string GetInvalidDataMessage(string path, Exception x)
         {
             StringBuilder sb = new StringBuilder();
@@ -1060,6 +1078,28 @@ namespace pwiz.Skyline.Util
         public static XAttribute Attribute(this XElement xElement, Enum name)
         {
             return xElement.Attribute(name.ToString());
+        }
+
+        public static double? GetNullableDouble(this XElement xElement, Enum name)
+        {
+            XAttribute attr = xElement.Attribute(name);
+            if (attr == null)
+            {
+                return null;
+            }
+
+            return Convert.ToDouble(attr.Value, CultureInfo.InvariantCulture);
+        }
+
+        public static int? GetNullableInt(this XElement xElement, Enum name)
+        {
+            XAttribute attr = xElement.Attribute(name);
+            if (attr == null)
+            {
+                return null;
+            }
+
+            return Convert.ToInt32(attr.Value, CultureInfo.InvariantCulture);
         }
     }
 

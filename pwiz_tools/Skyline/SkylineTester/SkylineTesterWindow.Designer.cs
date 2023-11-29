@@ -306,6 +306,7 @@ namespace SkylineTester
             this.radioButton5 = new System.Windows.Forms.RadioButton();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.myTreeView1 = new SkylineTester.MyTreeView();
+            this.labelParallelOffscreenHint = new System.Windows.Forms.Label();
             this.parallelWorkerCount = new System.Windows.Forms.NumericUpDown();
             this.label22 = new System.Windows.Forms.Label();
             this.runParallel = new System.Windows.Forms.RadioButton();
@@ -1065,6 +1066,7 @@ namespace SkylineTester
             // 
             // windowsGroup
             // 
+            this.windowsGroup.Controls.Add(this.labelParallelOffscreenHint);
             this.windowsGroup.Controls.Add(this.offscreen);
             this.windowsGroup.Location = new System.Drawing.Point(11, 240);
             this.windowsGroup.Margin = new System.Windows.Forms.Padding(4);
@@ -3211,6 +3213,14 @@ namespace SkylineTester
             this.myTreeView1.Size = new System.Drawing.Size(309, 350);
             this.myTreeView1.TabIndex = 15;
             // 
+            // labelParallelOffscreenHint
+            // 
+            this.labelParallelOffscreenHint.AutoSize = true;
+            this.labelParallelOffscreenHint.Location = new System.Drawing.Point(9, 44);
+            this.labelParallelOffscreenHint.Name = "labelParallelOffscreenHint";
+            this.labelParallelOffscreenHint.Size = new System.Drawing.Size(174, 13);
+            this.labelParallelOffscreenHint.TabIndex = 1;
+            this.labelParallelOffscreenHint.Text = "Tests run offscreen in parallel mode";
             // parallelWorkerCount
             // 
             this.parallelWorkerCount.Location = new System.Drawing.Point(150, 20);
@@ -3623,5 +3633,6 @@ namespace SkylineTester
         private RadioButton runSerial;
         private ComboBox testSet;
         private Button buttonRunStatsExportCSV;
+        private Label labelParallelOffscreenHint;
     }
 }

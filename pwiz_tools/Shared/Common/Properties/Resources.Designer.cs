@@ -693,6 +693,15 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid filter column &apos;{0}&apos;.
+        /// </summary>
+        internal static string FilterClause_MakePredicate_Invalid_filter_column___0__ {
+            get {
+                return ResourceManager.GetString("FilterClause_MakePredicate_Invalid_filter_column___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Contains.
         /// </summary>
         internal static string FilterOperations_Contains {
@@ -1295,15 +1304,6 @@ namespace pwiz.Common.Properties {
         internal static string SessionWithLock_SessionWithLock_Cant_acquire_write_lock_while_holding_read_lock {
             get {
                 return ResourceManager.GetString("SessionWithLock_SessionWithLock_Cant_acquire_write_lock_while_holding_read_lock", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed reading {0} bytes. Source may be corrupted..
-        /// </summary>
-        internal static string StreamEx_ReadOrThrow_Failed_reading__0__bytes__Source_may_be_corrupted_ {
-            get {
-                return ResourceManager.GetString("StreamEx_ReadOrThrow_Failed_reading__0__bytes__Source_may_be_corrupted_", resourceCulture);
             }
         }
         

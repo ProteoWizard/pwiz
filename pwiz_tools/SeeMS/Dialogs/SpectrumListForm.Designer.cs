@@ -103,7 +103,6 @@ namespace seems
             this.IsolationWindows,
             this.ScanInfo,
             this.IonMobility} );
-            this.gridView.Cursor = System.Windows.Forms.Cursors.Hand;
             this.gridView.DataSource = this.spectraSource;
             this.gridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.gridView.Location = new System.Drawing.Point( 0, 0 );

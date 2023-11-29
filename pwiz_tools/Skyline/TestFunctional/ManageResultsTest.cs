@@ -75,9 +75,8 @@ namespace pwiz.SkylineTestFunctional
                 dictGraphPositions.Add(ptLeftTop, graphChrom);
 
                 int index;
-                ChromatogramSet chromSet;
                 Assert.IsTrue(docLoading.Settings.MeasuredResults.TryGetChromatogramSet(
-                    graphChrom.NameSet, out chromSet, out index));
+                    graphChrom.NameSet, out _, out index));
                 dictChromPositions.Add(ptLeftTop, index);
             }
             WaitForConditionUI(() => SkylineWindow.DocumentUI.Settings.MeasuredResults.IsLoaded);
@@ -128,12 +127,8 @@ namespace pwiz.SkylineTestFunctional
 
             var renameDlg = ShowDialog<RenameResultDlg>(manageResultsDlg.RenameResult);
             const string newName = "Test this name";
-            RunUI(() =>
-            {
-                renameDlg.ReplicateName = newName;
-                renameDlg.OkDialog();
-            });
-            WaitForClosedForm(renameDlg);
+            RunUI(() => renameDlg.ReplicateName = newName);
+            OkDialog(renameDlg, renameDlg.OkDialog);
 
             OkDialog(manageResultsDlg, manageResultsDlg.OkDialog);
 
@@ -178,9 +173,8 @@ namespace pwiz.SkylineTestFunctional
             foreach (var graphChrom in listGraphChroms)
             {
                 int index;
-                ChromatogramSet chromSet;
                 Assert.IsTrue(docRename.Settings.MeasuredResults.TryGetChromatogramSet(
-                    graphChrom.NameSet, out chromSet, out index));
+                    graphChrom.NameSet, out _, out index));
 
                 Point ptLeftTop = GetTopLeft(graphChrom.Parent);
                 // Pane order started out in reversed document order
@@ -194,12 +188,8 @@ namespace pwiz.SkylineTestFunctional
             var missingFileMessage = ShowDialog<MessageDlg>(manageResultsDlg2.ReimportResults);
             Assert.IsTrue(missingFileMessage.Message.Contains(
                 docRename.Settings.MeasuredResults.Chromatograms[0].MSDataFilePaths.ToArray()[0].ToString()));
-            RunUI(() =>
-            {
-                missingFileMessage.OkDialog();
-                manageResultsDlg2.OkDialog();
-            });
-            WaitForClosedForm(manageResultsDlg2);
+            OkDialog(missingFileMessage, missingFileMessage.OkDialog);
+            OkDialog(manageResultsDlg2, manageResultsDlg2.OkDialog);
 
             // Reimport data for a replicate
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>

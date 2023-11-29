@@ -105,6 +105,8 @@ namespace pwiz.Skyline.Model.Lib
             ProcessedIntensity = processedIntensity;
         }
 
+        public override string LibraryTypeName => @"GPM";
+
         public float ProcessedIntensity { get; private set; }
         public float Expect { get; private set; }
 
@@ -266,8 +268,6 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     details.Revision = Revision;
                 }
-
-                details.AddLink(LibraryLink.GPM);
 
                 return details; 
             }

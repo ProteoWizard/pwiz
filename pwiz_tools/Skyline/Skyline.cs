@@ -297,18 +297,15 @@ namespace pwiz.Skyline
                     string.Format(Resources.SkylineWindow_HasFileToOpen_Unzip_the_file__0__first_and_then_open_the_extracted_file__1__, zipFileName, Path.GetFileName(_fileToOpen))));
                 return false;
             }
-
             return true;
         }
 
         public void OpenPasteFileDlg(PasteFormat pf)
         {
-            using (var pasteDlg = new PasteDlg(this)
+            using (var pasteDlg = new PasteDlg(this))
             {
-                SelectedPath = SelectedPath,
-                PasteFormat = pf
-            })
-            {
+                pasteDlg.SelectedPath = SelectedPath;
+                pasteDlg.PasteFormat = pf;
                 if (pasteDlg.ShowDialog(this) == DialogResult.OK)
                     SelectedPath = pasteDlg.SelectedPath;
             }
@@ -633,8 +630,9 @@ namespace pwiz.Skyline
                 docCurrent = DocumentUI;
                 docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangePeptideIntegration(i => i.ChangePeakScoringModel(newModel)));
                 var resultsHandler = new MProphetResultsHandler(docNew, newModel);
-                using (var longWaitDlg = new LongWaitDlg {Text = Resources.ReintegrateDlg_OkDialog_Reintegrating})
+                using (var longWaitDlg = new LongWaitDlg())
                 {
+                    longWaitDlg.Text = Resources.ReintegrateDlg_OkDialog_Reintegrating;
                     try
                     {
                         longWaitDlg.PerformWork(this, 1000, pm =>
@@ -1376,9 +1374,22 @@ namespace pwiz.Skyline
                     }
                     
                 }
-            }            
-            var findResult = DocumentUI.SearchDocument(bookmark,
-                findOptions, displaySettings);
+            }
+
+            FindResult findResult = null;
+            var document = DocumentUI;
+            using (var longWaitDlg = new LongWaitDlg())
+            {
+                longWaitDlg.PerformWork(this, 1000, progressMonitor =>
+                {
+                    findResult = document.SearchDocument(bookmark,
+                        findOptions, displaySettings, progressMonitor);
+                });
+                if (longWaitDlg.IsCanceled)
+                {
+                    return;
+                }
+            }
 
             if (findResult == null)
             {
@@ -1388,9 +1399,9 @@ namespace pwiz.Skyline
                 DisplayFindResult(null, findResult);
         }
 
-        private IEnumerable<FindResult> FindAll(ILongWaitBroker longWaitBroker, FindPredicate findPredicate)
+        private IEnumerable<FindResult> FindAll(IProgressMonitor progressMonitor, FindPredicate findPredicate)
         {
-            return findPredicate.FindAll(longWaitBroker, Document);
+            return findPredicate.FindAll(progressMonitor, Document);
         }
 
         public void FindAll(Control parent, FindOptions findOptions = null)
@@ -1398,10 +1409,13 @@ namespace pwiz.Skyline
             if (findOptions == null)
                 findOptions = FindOptions.ReadFromSettings(Settings.Default);
             var findPredicate = new FindPredicate(findOptions, SequenceTree.GetDisplaySettings(null));
-            IList<FindResult> results = null;
+            List<FindResult> results = new List<FindResult>();
             using (var longWaitDlg = new LongWaitDlg(this))
             {
-                longWaitDlg.PerformWork(parent, 2000, lwb => results = FindAll(lwb, findPredicate).ToArray());
+                longWaitDlg.PerformWork(parent, 2000, progressMonitor =>
+                {
+                    results.AddRange(FindAll(progressMonitor, findPredicate));
+                });
                 if (results.Count == 0)
                 {
                     if (!longWaitDlg.IsCanceled)
@@ -1646,6 +1660,11 @@ namespace pwiz.Skyline
                 });
         }
 
+        private void editSpectrumFilterContextMenuItem_Click(object sender, EventArgs args)
+        {
+            EditMenu.EditSpectrumFilter();
+        }
+
         public void ShowUniquePeptidesDlg()
         {
             EditMenu.ShowUniquePeptidesDlg();
@@ -1751,7 +1770,8 @@ namespace pwiz.Skyline
             var nodeTranGroupTree = SequenceTree.SelectedNode as TransitionGroupTreeNode;
             addTransitionMoleculeContextMenuItem.Visible = enabled && nodeTranGroupTree != null &&
                 nodeTranGroupTree.PepNode.Peptide.IsCustomMolecule;
-
+            editSpectrumFilterContextMenuItem.Visible = SequenceTree.SelectedPaths
+                .SelectMany(path => DocumentUI.EnumeratePathsAtLevel(path, SrmDocument.Level.TransitionGroups)).Any();
             var selectedQuantitativeValues = SelectedQuantitativeValues();
             if (selectedQuantitativeValues.Length == 0)
             {
@@ -2116,8 +2136,7 @@ namespace pwiz.Skyline
                 list.Clear();
                 list.Add(settingsDefault); // Add back default settings.
                 list.AddRange(listNew);
-                SrmSettings settings;
-                if (!list.TryGetValue(settingsCurrent.GetKey(), out settings))
+                if (!list.TryGetValue(settingsCurrent.GetKey(), out _))
                 {
                     // If the current settings were removed, then make
                     // them the default, and use them to avoid a shift
@@ -2467,13 +2486,11 @@ namespace pwiz.Skyline
                 {
                     var newSettings = changeSettings(Document.Settings);
                     bool success = false;
-                    using (var longWaitDlg = new LongWaitDlg(this)
+                    using (var longWaitDlg = new LongWaitDlg(this))
                     {
-                        Text = Text,    // Same as dialog box
-                        Message = message,
-                        ProgressValue = 0
-                    })
-                    {
+                        longWaitDlg.Text = Text; // Same as dialog box
+                        longWaitDlg.Message = message;
+                        longWaitDlg.ProgressValue = 0;
                         var undoState = GetUndoState();
                         longWaitDlg.PerformWork(parent, 800, progressMonitor =>
                         {
@@ -2867,7 +2884,7 @@ namespace pwiz.Skyline
                     if (_tool.OutputToImmediateWindow)
                     {
                         _parent.ShowImmediateWindow();
-                        _tool.RunTool(_parent.Document, _parent, _skylineTextBoxStreamWriterHelper, _parent, _parent);
+                        _tool.RunTool(_parent.Document, _parent, _parent._skylineTextBoxStreamWriterHelper, _parent, _parent);
                     }
                     else
                     {
@@ -2910,7 +2927,7 @@ namespace pwiz.Skyline
             }
         }
 
-        public static TextBoxStreamWriterHelper _skylineTextBoxStreamWriterHelper;
+        private TextBoxStreamWriterHelper _skylineTextBoxStreamWriterHelper;
 
         private ImmediateWindow CreateImmediateWindow()
         {
@@ -4436,7 +4453,7 @@ namespace pwiz.Skyline
 
         public bool HasProteomicMenuItems
         {
-            get { return GetModeUIHelper().MenuItemHasOriginalText(peptideSettingsMenuItem.Text); }
+            get { return GetModeUIHelper().MenuItemHasOriginalText(peptideSettingsMenuItem); }
         }
         #endregion
         /// <summary>

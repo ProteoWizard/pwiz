@@ -39,21 +39,55 @@ using namespace pwiz::analysis;
 namespace pwiz {
 namespace msdata {
 
+
+namespace {
+
+const SpectrumPtr& checkError(const SpectrumPtr& result)
+{
+    // did the task produce an error?
+    if (result && bal::starts_with(result->id, "error: "))
+        throw runtime_error(bal::replace_first_copy(result->id, "error: ", ""));
+    return result;
+}
+
+}
+
+
 class SpectrumWorkerThreads::Impl
 {
     public:
 
-    Impl(const SpectrumList& sl, bool useWorkerThreads)
+    Impl(const SpectrumList& sl, bool useWorkerThreads, bool continueOnError)
         : sl_(sl)
         , numThreads_(min(16u, boost::thread::hardware_concurrency()))
         , maxProcessedTaskCount_(numThreads_ * 4)
         , taskMRU_(maxProcessedTaskCount_)
+        , continueOnError_(continueOnError)
     {
         InstrumentConfigurationPtr icPtr;
         if (sl.size() > 0)
         {
-            SpectrumPtr s0 = sl.spectrum(0, false);
-            if (s0->scanList.scans.size() > 0)
+            SpectrumPtr s0;
+            try
+            {
+                s0 = sl.spectrum(0, false);
+            }
+            catch (exception& e)
+            {
+                // TODO: log this
+                cerr << "[SpectrumWorkerThreads::ctor] " << e.what() << endl;
+                if (!continueOnError_)
+                    throw;
+            }
+            catch (...)
+            {
+                runtime_error e("[SpectrumWorkerThreads::ctor] unknown exception");
+                cerr << e.what() << endl;
+                if (!continueOnError_)
+                    throw;
+            }
+
+            if (s0.get() && s0->scanList.scans.size() > 0)
                 icPtr = s0->scanList.scans[0].instrumentConfigurationPtr;
         }
 
@@ -101,7 +135,7 @@ class SpectrumWorkerThreads::Impl
             if (worker.thread)
             {
                 worker.thread->interrupt();
-                worker.thread->join();
+                worker.thread->try_join_for(boost::chrono::milliseconds(100));
             }
     }
 
@@ -115,7 +149,7 @@ class SpectrumWorkerThreads::Impl
         // if the task is already finished and has binary data if getBinaryData is true, return it as-is
         Task& task = tasks_[index];
         if (task.result && (detailLevel < DetailLevel_FullData || task.detailLevel == DetailLevel_FullData))
-            return task.result;
+            return checkError(task.result);
 
         // otherwise, add this task and the numThreads following tasks to the queue (skipping the tasks that are already processed or being worked on)
         for (size_t i = index; taskQueue_.size() < numThreads_ && i < tasks_.size(); ++i)
@@ -152,6 +186,8 @@ class SpectrumWorkerThreads::Impl
             // notify workers that tasks are available
             taskQueuedCondition_.notify_all();
             taskFinishedCondition_.wait_for(taskLock, boost::chrono::milliseconds(100));
+
+            checkError(task.result);
         }
 
         return task.result;
@@ -218,7 +254,24 @@ class SpectrumWorkerThreads::Impl
                 taskLock.unlock();
 
                 // get the spectrum
-                SpectrumPtr result = instance->sl_.spectrum(taskIndex, detailLevel);
+                SpectrumPtr result;
+                bool error = true;
+                try
+                {
+                    result = instance->sl_.spectrum(taskIndex, detailLevel);
+                    error = false;
+                }
+                catch (exception& e)
+                {
+                    result.reset(new Spectrum);
+                    result->id = string("error: ") + e.what();
+                }
+                catch (...)
+                {
+                    runtime_error e("[SpectrumWorkerThreads::work] unknown exception in worker thread");
+                    result.reset(new Spectrum);
+                    result->id = string("error: ") + e.what();
+                }
 
                 // lock the taskLock
                 taskLock.lock();
@@ -252,6 +305,9 @@ class SpectrumWorkerThreads::Impl
                 }
 
                 taskLock.unlock();
+
+                if (error && !instance->continueOnError_)
+                    break;
             }
         }
         catch (boost::thread_interrupted&)
@@ -275,6 +331,7 @@ class SpectrumWorkerThreads::Impl
 
     const size_t maxProcessedTaskCount_;
     vector<Task> tasks_;
+    bool continueOnError_;
     typedef deque<size_t> TaskQueue;
     TaskQueue taskQueue_;
     mru_list<size_t> taskMRU_;
@@ -285,7 +342,8 @@ class SpectrumWorkerThreads::Impl
 };
 
 
-SpectrumWorkerThreads::SpectrumWorkerThreads(const SpectrumList& sl, bool useWorkerThreads) : impl_(new Impl(sl, useWorkerThreads)) {}
+SpectrumWorkerThreads::SpectrumWorkerThreads(const SpectrumList& sl, bool useWorkerThreads, bool continueOnError)
+    : impl_(new Impl(sl, useWorkerThreads, continueOnError)) {}
 
 SpectrumWorkerThreads::~SpectrumWorkerThreads() {}
 

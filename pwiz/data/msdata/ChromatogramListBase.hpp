@@ -26,6 +26,7 @@
 
 
 #include "pwiz/data/msdata/MSData.hpp"
+#include "SpectrumListBase.hpp"
 #include <stdexcept>
 
 
@@ -38,11 +39,14 @@ class PWIZ_API_DECL ChromatogramListBase : public ChromatogramList
 {
     public:
 
-    /// implementation of ChromatogramList
-    virtual const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const {return dp_;}
+    /// issues a warning once per list instance (based on string hash)
+    void warn_once(const char* msg) const { impl_.warn_once(msg); }
+
+    /// implementation of ChromatogramList/SpectrumList
+    const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const { return dp_; }
 
     /// set DataProcessing
-    virtual void setDataProcessingPtr(DataProcessingPtr dp) {dp_ = dp;}
+    void setDataProcessingPtr(DataProcessingPtr dp) { dp_ = dp; }
 
     const char* polarityStringForFilter(CVID polarityType) const
     {
@@ -50,8 +54,10 @@ class PWIZ_API_DECL ChromatogramListBase : public ChromatogramList
     }
 
     protected:
-
     DataProcessingPtr dp_;
+
+    private:
+    ListBase impl_;
 };
 
 

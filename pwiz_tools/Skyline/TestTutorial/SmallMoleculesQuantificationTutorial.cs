@@ -253,7 +253,7 @@ namespace pwiz.SkylineTestTutorial
                         peptideSettingsUI.QuantMsLevel = null; // All
                         peptideSettingsUI.QuantUnits = "uM";
                     });
-                    PauseForScreenShot<PeptideSettingsUI.QuantificationTab>("Peptide Settings - Quantitation", 17);
+                    PauseForScreenShot<PeptideSettingsUI.QuantificationTab>("Molecule Settings - Quantification", 17);
                     OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
                 }
 
@@ -310,6 +310,12 @@ namespace pwiz.SkylineTestTutorial
                     concentrationsFileName = "Concentrations.xlsx";
                 }
                 SetExcelFileClipboardText(GetTestPath(concentrationsFileName), "Sheet1", 3, false);
+                // Wait for the grid to be ready and populated with replicates
+                WaitForConditionUI(() => documentGrid.IsComplete);
+                WaitForConditionUI(() => documentGrid.DataGridView.Rows.Cast<DataGridViewRow>()
+                    .Select(row => row.Cells[documentGrid.FindColumn(PropertyPath.Root).Index])
+                    .Count(cell => cell.Value is Replicate) > 0);
+
                 RunUI(() =>
                 {
                     // Find and select Blank_01 cell
@@ -388,14 +394,14 @@ namespace pwiz.SkylineTestTutorial
 
                 ImportReplicates(false); // Import the rest of the replicates
 
-                RunUI(() => documentGrid.ChooseView(Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results));
+                RunUI(() => documentGrid.ChooseView(Resources.PersistedViews_GetDefaults_Molecule_Ratio_Results));
                 WaitForConditionUI(() => documentGrid.ColumnCount > 6);
                 RunUI(() => {
                     var colReplicate = documentGrid.FindColumn(PropertyPath.Parse("Results!*.Value.ResultFile.Replicate"));
                     documentGrid.DataGridView.Sort(colReplicate, ListSortDirection.Ascending);
                 });
 
-                PauseForScreenShot<DocumentGridForm>("Document Grid - Peptide Ratio Results - manually widen to show all columns", 25);
+                PauseForScreenShot<DocumentGridForm>("Document Grid - Molecule Ratio Results - manually widen to show all columns", 25);
                 Settings.Default.CalibrationCurveOptions.LogXAxis = true;
                 Settings.Default.CalibrationCurveOptions.LogYAxis = true;
 

@@ -118,7 +118,7 @@ namespace pwiz.Skyline.Model.Results
                 if (intervalIndex >= 0 && intervalIndex < TimeIntervals.Count)
                 {
                     startTime = Math.Max(startTime, TimeIntervals.Starts[intervalIndex]);
-                    endTime = Math.Min(endTime, TimeIntervals.Ends[intervalIndex]);
+                    endTime = Math.Max(startTime, Math.Min(endTime, TimeIntervals.Ends[intervalIndex]));
                 }
             }
             return ChromPeak.IntegrateWithoutBackground(RawTimeIntensities ?? InterpolatedTimeIntensities, startTime,

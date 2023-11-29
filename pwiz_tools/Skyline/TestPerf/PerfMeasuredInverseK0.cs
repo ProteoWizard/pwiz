@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls;
@@ -107,16 +108,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 editIonMobilityLibraryDlg.GetIonMobilitiesFromResults();
             });
             // PauseTest(); // Uncomment this to inspect ion mobility finder results
-            RunUI(() =>
-            {
-                editIonMobilityLibraryDlg.OkDialog();
-            });
-            WaitForClosedForm(editIonMobilityLibraryDlg);
-            RunUI(() =>
-            {
-                transitionSettingsDlg.OkDialog();
-            });
-            WaitForClosedForm(transitionSettingsDlg);
+            OkDialog(editIonMobilityLibraryDlg, editIonMobilityLibraryDlg.OkDialog);
+            OkDialog(transitionSettingsDlg, transitionSettingsDlg.OkDialog);
 
             var docChangedDriftTimePredictor = WaitForDocumentChange(document);
 
@@ -203,8 +196,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             // Show anyone watching that work is being performed
             RunUI(() => {
-                using (var longWait = new LongWaitDlg(SkylineWindow) { Message = "Running command-line import" })
+                using (var longWait = new LongWaitDlg(SkylineWindow))
                 {
+                    longWait.Message = "Running command-line import";
                     longWait.PerformWork(SkylineWindow, 500, () =>
                         RunCommand("--in=" + skyFile,
                             "--import-file=" + TestFilesDir.GetTestPath(BSA_50fmol_TIMS_InfusionESI_10precd),
@@ -225,7 +219,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         private void VerifyFileInfoSerialization(string[] lines, string filePath, bool combinedIms)
         {
-            var encodePath = SampleHelp.EncodePath(filePath, null, -1, null);
+            var encodePath = PathEx.EscapePathForXML(SampleHelp.EncodePath(filePath, null, -1, null));
             var lineFilePath = lines.FirstOrDefault(l => l.Contains(encodePath + '"'));
             Assert.IsNotNull(lineFilePath);
             // Nothing gets serialized to the XML about whether the MsData had combined spectra - can only be found in the SKYD file

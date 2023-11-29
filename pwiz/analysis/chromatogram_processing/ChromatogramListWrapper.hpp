@@ -26,25 +26,26 @@
 #define _CHROMATOGRAMLISTWRAPPER_HPP_ 
 
 
-#include "pwiz/data/msdata/MSData.hpp"
+#include "pwiz/data/msdata/ChromatogramListBase.hpp"
 #include <stdexcept>
 
 
 namespace pwiz {
 namespace analysis {
 
+using namespace msdata;
 
 /// Inheritable pass-through implementation for wrapping a ChromatogramList 
-class PWIZ_API_DECL ChromatogramListWrapper : public msdata::ChromatogramList
+class PWIZ_API_DECL ChromatogramListWrapper : public ChromatogramListBase
 {
     public:
 
     ChromatogramListWrapper(const msdata::ChromatogramListPtr& inner)
-        : inner_(inner),
-          dp_(inner->dataProcessingPtr().get() ? new msdata::DataProcessing(*inner->dataProcessingPtr())
-                                               : new msdata::DataProcessing("pwiz_Chromatogram_Processing"))
+        : inner_(inner)
     {
         if (!inner.get()) throw std::runtime_error("[ChromatogramListWrapper] Null ChromatogramListPtr.");
+        setDataProcessingPtr(inner->dataProcessingPtr().get() ? boost::make_shared<DataProcessing>(*inner->dataProcessingPtr())
+                                                              : boost::make_shared<DataProcessing>("pwiz_Chromatogram_Processing"));
     }
 
     static bool accept(const msdata::ChromatogramListPtr& inner) {return true;}
@@ -55,12 +56,9 @@ class PWIZ_API_DECL ChromatogramListWrapper : public msdata::ChromatogramList
     virtual size_t find(const std::string& id) const {return inner_->find(id);}
     virtual msdata::ChromatogramPtr chromatogram(size_t index, bool getBinaryData = false) const { return inner_->chromatogram(index, getBinaryData); }
 
-    virtual const boost::shared_ptr<const msdata::DataProcessing> dataProcessingPtr() const { return dp_; }
-
     protected:
 
     msdata::ChromatogramListPtr inner_;
-    msdata::DataProcessingPtr dp_;
 };
 
 

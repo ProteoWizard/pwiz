@@ -610,8 +610,8 @@ namespace SkylineTester
             {
                 Path.GetFullPath(Path.Combine(ExeDir, @"..\..\x86\Release")),
                 Path.GetFullPath(Path.Combine(ExeDir, @"..\..\x64\Release")),
-                Path.Combine(GetBuildRoot(), @"pwiz\pwiz_tools\Skyline\bin\x86\Release"),
-                Path.Combine(GetBuildRoot(), @"pwiz\pwiz_tools\Skyline\bin\x64\Release"),
+                Path.Combine(GetBuildRoot(), @"pwiz_tools\Skyline\bin\x86\Release"),
+                Path.Combine(GetBuildRoot(), @"pwiz_tools\Skyline\bin\x64\Release"),
                 Path.Combine(GetNightlyBuildRoot(), @"pwiz\pwiz_tools\Skyline\bin\x86\Release"),
                 Path.Combine(GetNightlyBuildRoot(), @"pwiz\pwiz_tools\Skyline\bin\x64\Release"),
                 GetZipPath(32),
@@ -1939,13 +1939,16 @@ namespace SkylineTester
             _tabRunStats.ExportCSV();
         }
 
+        public void UpdateTestTabControls()
+        {
+            runSerial_CheckedChanged(null, null);
+        }
+
         private void runSerial_CheckedChanged(object sender, EventArgs e)
         {
-            Offscreen.Enabled = runSerial.Checked; // Everything happens offscreen in parallel tests, so don't offer the option if we're not serial mode
-            if (!Offscreen.Enabled)
-            {
-                Offscreen.Checked = true; // If we're not offering the choice of offscreen, it's because we're forcing it
-            }
+            labelParallelOffscreenHint.Location = Offscreen.Location;
+            Offscreen.Visible = runSerial.Checked; // Everything happens offscreen in parallel tests, so don't offer the option if we're not serial mode
+            labelParallelOffscreenHint.Visible = !Offscreen.Visible;
         }
 
         #endregion Control events

@@ -138,7 +138,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 true); // Also run the raw data as centroided data
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void zzzNativeVsMz5_BrukerFullScanMS1filteringPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(
@@ -148,7 +148,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 true); // Also run the raw data as centroided data
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void zzzNativeVsMz5_BrukerFullScanMSeDataPerformanceTest()
         {
             NativeVsMz5ChromatogramPerformanceTest(

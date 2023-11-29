@@ -930,6 +930,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         }
 
+        public IonMobilityFilter ChangeCollisionCrossSection(double ?ccs)
+        {
+            return Equals(CollisionalCrossSectionSqA, ccs) ? this : 
+                ChangeProp(ImClone(this), im => im.IonMobilityAndCCS = IonMobilityAndCCS.ChangeCollisionalCrossSection(ccs));
+        }
+
         private IonMobilityFilter(IonMobilityAndCCS ionMobilityAndCCS,
             double? ionMobilityExtractionWindowWidth)
         {

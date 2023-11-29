@@ -20,44 +20,33 @@
 //
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Text;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using DigitalRune.Windows.Docking;
 
 namespace seems
 {
-    public partial class TreeViewForm : DockableForm, IDataView
+    // courtesy of https://stackoverflow.com/a/10052686/638445
+    public class NoHScrollTree : TreeView
     {
-        private GraphItem graphItem;
-
-        #region IDataView Members
-        public IList<ManagedDataSource> Sources
+        protected override CreateParams CreateParams
         {
             get
             {
-                return new List<ManagedDataSource>( new ManagedDataSource[] { graphItem.Source } );
+                CreateParams cp = base.CreateParams;
+                cp.Style |= 0x8000; // TVS_NOHSCROLL
+                return cp;
             }
         }
+    }
 
-        public IList<GraphItem> DataItems
-        {
-            get
-            {
-                return new List<GraphItem>( new GraphItem[] { graphItem } );
-            }
-        }
-        #endregion
-
+    public partial class TreeViewForm : Form
+    {
         public TreeView TreeView { get { return treeView; } }
 
-        public TreeViewForm( GraphItem item )
+        public TreeViewForm( GraphItem item = null )
         {
             InitializeComponent();
-            graphItem = item;
         }
 
         private void updateNodeBounds( TreeNode node, bool expandedOnly, ref Size bounds )
@@ -82,9 +71,9 @@ namespace seems
 
         public void DoAutoSize()
         {
-            Application.DoEvents();
+            //Application.DoEvents();
             Size nodeSize = GetNodeBounds( true );
-            nodeSize = GetNodeBounds( true );
+            //nodeSize = GetNodeBounds( true );
             nodeSize.Height += 3;
             nodeSize.Width += 3;
             treeView.Size = nodeSize;
@@ -92,6 +81,18 @@ namespace seems
             nodeSize.Width += 6;
             this.Size = nodeSize;
             //MessageBox.Show( treeView.Size.ToString() + "\r\n" + Size.ToString() );
+        }
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                const int CS_DROPSHADOW = 0x20000;
+                CreateParams cp = base.CreateParams;
+                cp.ClassStyle |= CS_DROPSHADOW;
+                return cp;
+            }
+
         }
     }
 }

@@ -18,6 +18,7 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -50,6 +51,16 @@ namespace pwiz.SkylineTestFunctional
 
             // Extract chromatograms from an Agilent file describing GC EI data as MS1
             ImportResults(new[] { TestFilesDir.GetTestPath(@"cmsptc_00000_20230106_SCFA_1.mzML") });
+
+            // Now tinker with molecule details that don't change the molecule mass - should still be able to associate chromatograms
+            RunUI(() => { SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].FirstNode; });
+            var doc = SkylineWindow.Document;
+            var editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifyPeptide);
+            RunUI(() => { editMoleculeDlg.NameText = editMoleculeDlg.NameText + "_renamed"; }); // Change the name - will not break the molecule/chromatogram association
+            // RunUI(() => { editMoleculeDlg.FormulaBox.Formula += "N2"; }); This would break the molecule/chromatogram association
+            OkDialog(editMoleculeDlg, editMoleculeDlg.OkDialog);
+            WaitForDocumentChangeLoaded(doc);
+            VerifyAllTransitionsHaveChromatograms(); // Verify that name change did not break the molecule/chromatogram association
 
             // If data has not been properly understood as GC EI all-ions, some peaks won't be found
             var nPeaksFound = 0;

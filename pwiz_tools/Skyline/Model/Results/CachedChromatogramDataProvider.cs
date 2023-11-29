@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -60,11 +61,8 @@ namespace pwiz.Skyline.Model.Results
                                               ILoadMonitor loader)
             : base(fileInfo, status, startPercent, endPercent, loader)
         {
-            // Deal with older cache formats where we did not record chromatogram polarity
-            var assumeNegativeChargesInPreV11Caches = document.MoleculeTransitionGroups.All(p => p.PrecursorMz.IsNegative);
-
             // Need a newly loaded copy to allow for concurrent loading for multiple cached files
-            _cache = ChromatogramCache.Load(cache.CachePath, new ProgressStatus(), loader, assumeNegativeChargesInPreV11Caches);
+            _cache = ChromatogramCache.Load(cache.CachePath, new ProgressStatus(), loader, document);
 
             _fileIndex = cache.CachedFiles.IndexOf(f => Equals(f.FilePath, dataFilePath));
             _chromKeyIndices = cache.GetChromKeys(dataFilePath).OrderBy(v => v.LocationPoints).ToArray();
@@ -95,7 +93,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override eIonMobilityUnits IonMobilityUnits { get { return _cache != null ? _cache.CachedFiles[_fileIndex].IonMobilityUnits : eIonMobilityUnits.none; } }
 
-        public override bool GetChromatogram(int id, Target modifiedSequence, Color peptideColor, out ChromExtra extra, out TimeIntensities timeIntensities)
+        public override bool GetChromatogram(int id, ChromatogramGroupId chromatogramGroupId, Color peptideColor, out ChromExtra extra, out TimeIntensities timeIntensities)
         {
             var chromKeyIndices = _chromKeyIndices[id];
             if (_lastChromGroupInfo == null || _lastIndices.GroupIndex != chromKeyIndices.GroupIndex)
@@ -119,7 +117,7 @@ namespace pwiz.Skyline.Model.Results
             if (chromKeyIndices.Key.Precursor != 0 && Status is ChromatogramLoadingStatus)
             {
                 ((ChromatogramLoadingStatus)Status).Transitions.AddTransition(
-                    modifiedSequence,
+                    chromatogramGroupId,
                     peptideColor,
                     chromKeyIndices.StatusId,
                     chromKeyIndices.StatusRank,
@@ -129,9 +127,9 @@ namespace pwiz.Skyline.Model.Results
             return true;
         }
 
-        public override byte[] MSDataFileScanIdBytes
+        public override IResultFileMetadata ResultFileData
         {
-            get { return _cache.LoadMSDataFileScanIdBytes(_fileIndex); }
+            get { return _cache?.GetOrLoadResultFileMetadata(_fileIndex); }
         }
 
         public override double? MaxRetentionTime { get { return _maxRetentionTime; } }

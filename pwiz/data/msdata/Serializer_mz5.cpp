@@ -63,7 +63,7 @@ class Serializer_mz5::Impl
      */
     void write(const std::string& filename, const MSData& msd,
                const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
-               bool useWorkerThreads) const;
+               bool useWorkerThreads, bool continueOnError) const;
 
     /**
      * Not supported.
@@ -94,11 +94,11 @@ private:
 void Serializer_mz5::Impl::write(const std::string& filename,
                                  const MSData& msd,
                                  const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
-                                 bool useWorkerThreads) const
+                                 bool useWorkerThreads, bool continueOnError) const
 {
     ReferenceWrite_mz5 wref(msd);
     Connection_mz5 con(filename, Connection_mz5::RemoveAndCreate, config_);
-    wref.writeTo(con, iterationListenerRegistry, useWorkerThreads);
+    wref.writeTo(con, iterationListenerRegistry, useWorkerThreads, continueOnError);
 }
 
 void Serializer_mz5::Impl::write(std::ostream& os, const MSData& msd,
@@ -154,9 +154,9 @@ PWIZ_API_DECL Serializer_mz5::Serializer_mz5(const pwiz::msdata::MSDataFile::Wri
 PWIZ_API_DECL
 void Serializer_mz5::write(const std::string& filename, const MSData& msd,
                            const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
-                           bool useWorkerThreads) const
+                           bool useWorkerThreads, bool continueOnError) const
 {
-    return impl_->write(filename, msd, iterationListenerRegistry, useWorkerThreads);
+    return impl_->write(filename, msd, iterationListenerRegistry, useWorkerThreads, continueOnError);
 }
 
 PWIZ_API_DECL

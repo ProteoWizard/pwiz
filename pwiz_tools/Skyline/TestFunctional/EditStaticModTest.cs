@@ -95,9 +95,8 @@ namespace pwiz.SkylineTestFunctional
                 StaticMod uniMod;
                 Assert.IsTrue(UniMod.DictIsotopeModNames.TryGetValue(mod.Name, out uniMod));
                 Assert.AreEqual(mod, uniMod);
-                peptideSettingsUI.OkDialog();
             });
-            WaitForClosedForm(peptideSettingsUI);
+            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
         }
     }
 }

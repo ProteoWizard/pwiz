@@ -20,6 +20,7 @@
 
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model;
@@ -34,7 +35,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     public class ElectronIonizationAllIonsTest : AbstractFunctionalTestEx
     {
 
-        [TestMethod] 
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] 
         public void ElectronIonizationAllIonsPerfTest()
         {
             TestFilesZip = GetPerfTestDataURL(@"PerfElectronIonizationAllIonsTest.zip");
@@ -50,8 +51,18 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             OpenDocument(skyfile);
             
             SetCsvFileClipboardText(TestFilesDir.GetTestPath("Testing_list_for_skyline.csv"));
-            RunUI(SkylineWindow.Paste); // Paste into targets window
-            
+            PasteSmallMoleculeListNoAutoManage();  // Paste into targets window, say no to the offer to set new nodes to automanage
+            var doc0 = WaitForDocumentLoaded();
+
+            // Enable automanage children so settings change will act on doc structure
+            RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, refineDlg =>
+            {
+                refineDlg.AutoPrecursors = true;
+                refineDlg.AutoTransitions = true;
+                refineDlg.OkDialog();
+            });
+            WaitForDocumentChange(doc0);
+
             // Enable fragments only
             RunUI(() => SkylineWindow.ModifyDocument("fragments only", doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFilter(f =>
                 f.ChangeSmallMoleculeIonTypes(new[] { IonType.custom })))));

@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -269,10 +270,15 @@ namespace pwiz.Skyline.Controls.Graphs
             string prefix = string.Empty;
             if (seq != null)
                 prefix = seq + @" - ";
-            
-            return string.Format(@"{0}{1:F04}{2}{3}", prefix, nodeGroup.PrecursorMz,
-                                 Transition.GetChargeIndicator(nodeGroup.TransitionGroup.PrecursorAdduct),
-                                 nodeGroup.TransitionGroup.LabelTypeText);            
+
+            string title = string.Format(@"{0}{1:F04}{2}{3}", prefix, nodeGroup.PrecursorMz,
+                Transition.GetChargeIndicator(nodeGroup.TransitionGroup.PrecursorAdduct),
+                nodeGroup.TransitionGroup.LabelTypeText);
+            if (!nodeGroup.SpectrumClassFilter.IsEmpty)
+            {
+                title = TextUtil.SpaceSeparate(title, nodeGroup.SpectrumClassFilter.GetAbbreviatedText());
+            }
+            return title;
         }
 
         public static string GetTitle(PeptideDocNode nodePep)
@@ -296,7 +302,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         return string.Format(Resources.ChromGraphItem_Title__0____base_peak, title);
                     if (extractor == ChromExtractor.summed)
                         return string.Format(Resources.ChromGraphItem_Title__0____TIC, title);
-                    return Chromatogram.GroupInfo.TextId ?? @"no summary text";
+                    return Chromatogram.GroupInfo.ChromatogramGroupId?.Target?.ToString() ?? @"no summary text";
                 }
                 if (OptimizationStep.HasValue && !OptimizationStep.Value.Equals(0))
                     return string.Format(Resources.ChromGraphItem_Title_Step__0_, OptimizationStep);

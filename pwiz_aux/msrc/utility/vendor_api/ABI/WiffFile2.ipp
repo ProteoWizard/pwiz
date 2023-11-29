@@ -56,7 +56,9 @@ class WiffFile2Impl : public WiffFile
 
     ISampleDataApi^ DataReader() const
     {
-        static gcroot<ISampleDataApi^> dataReader = (gcnew DataApiFactory())->CreateSampleDataApi();
+        IDataApiFactory^ apiFactory = gcnew DataApiFactory();
+        apiFactory->LicenseKey = "<?xml version=\"1.0\" encoding=\"utf-8\"?><license_key><company_name>Proteowizard</company_name><product_name>Sciex Data API</product_name><features /><key_data>t6QaoUk9a7EedqZ/V/WAE98aSv1Z0tgvmnYXSveHSvLNChvDdMXh3A==</key_data></license_key>";
+        static gcroot<ISampleDataApi^> dataReader = apiFactory->CreateSampleDataApi();
         try
         {
             if (!dataReader)
@@ -128,9 +130,9 @@ struct Experiment2Impl : public Experiment
     virtual size_t getSRMSize() const;
     virtual void getSRM(size_t index, Target& target) const;
 
-    virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities) const;
+    virtual double getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities, bool ignoreScheduledLimits) const;
     virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities,
-                        double& basePeakX, double& basePeakY) const;
+                        double& basePeakX, double& basePeakY, bool ignoreScheduledLimits) const;
 
     virtual void getAcquisitionMassRange(double& startMz, double& stopMz) const;
     virtual ScanType getScanType() const;
@@ -391,6 +393,7 @@ InstrumentModel WiffFile2Impl::getInstrumentModel() const
         if (modelName->Contains("5500"))            return API5500; // predicted
         if (modelName->Contains("QTRAP6500"))       return API6500QTrap; // predicted
         if (modelName->Contains("6500"))            return API6500; // predicted
+        if (modelName->Contains("TRIPLEQUAD7500"))  return TripleQuad7500;
         if (modelName->Contains("QSTARPULSAR"))     return QStarPulsarI; // also covers variants like "API QStar Pulsar i, 0, Qstar"
         if (modelName->Contains("QSTARXL"))         return QStarXL;
         if (modelName->Contains("QSTARELITE"))      return QStarElite;
@@ -408,6 +411,7 @@ InstrumentModel WiffFile2Impl::getInstrumentModel() const
         if (modelName->Contains("350"))             return API350; // predicted
         if (modelName->Contains("365"))             return API365; // predicted
         if (modelName->Contains("X500QTOF"))        return X500QTOF;
+        if (modelName->Contains("ZENOTOF7600"))     return ZenoTOF7600;
         throw gcnew Exception("unknown instrument type: " + instrumentDetails->DeviceModelName);
     }
     CATCH_AND_FORWARD
@@ -564,14 +568,15 @@ void Experiment2Impl::getSRM(size_t index, Target& target) const
     CATCH_AND_FORWARD
 }
 
-void Experiment2Impl::getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities) const
+double Experiment2Impl::getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities, bool ignoreScheduledLimits) const
 {
     double x, y;
-    getSIC(index, times, intensities, x, y);
+    getSIC(index, times, intensities, x, y, ignoreScheduledLimits);
+    return y;
 }
 
 void Experiment2Impl::getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities,
-                            double& basePeakX, double& basePeakY) const
+                            double& basePeakX, double& basePeakY, bool ignoreScheduledLimits) const
 {
     try
     {
@@ -614,6 +619,10 @@ ExperimentType Experiment2Impl::getExperimentType() const
             return ExperimentType::MS;
         if (msExperiment->ScanType == "TOFMSMS")
             return ExperimentType::Product;
+        if (msExperiment->ScanType == "MRM")
+            return ExperimentType::MRM;
+        if (msExperiment->ScanType == "SIM")
+            return ExperimentType::SIM;
 
         return ExperimentType::MS;
 

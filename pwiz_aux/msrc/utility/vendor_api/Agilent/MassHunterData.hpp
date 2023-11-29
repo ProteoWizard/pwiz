@@ -242,6 +242,7 @@ struct PWIZ_API_DECL Spectrum
     virtual IonPolarity getIonPolarity() const = 0;
     virtual DeviceType getDeviceType() const = 0;
     virtual MassRange getMeasuredMassRange() const = 0;
+    virtual double getRetentionTime() const = 0;
     virtual int getParentScanId() const = 0;
     virtual void getPrecursorIons(std::vector<double>& precursorIons) const = 0;
     virtual bool getPrecursorCharge(int& charge) const = 0;
@@ -359,6 +360,9 @@ class PWIZ_API_DECL MassHunterData
 
     virtual const std::vector<Signal>& getSignals() const = 0;
     virtual SignalChromatogramPtr getSignal(const Signal& signal) const = 0;
+
+    virtual int getNonMsScanCount() const = 0;
+    virtual SpectrumPtr getNonMsSpectrum(int index) const = 0;
 
     virtual const pwiz::util::BinaryData<double>& getTicTimes(bool ms1Only = false) const = 0;
     virtual const pwiz::util::BinaryData<double>& getBpcTimes(bool ms1Only = false) const = 0;

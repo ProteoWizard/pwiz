@@ -52,10 +52,8 @@ using ZedGraph;
 using pwiz.Skyline.Util.Extensions;
 using Array = System.Array;
 using Label = System.Windows.Forms.Label;
-using Peptide = pwiz.Skyline.Model.Peptide;
 using Transition = pwiz.Skyline.Model.Transition;
 using static pwiz.Skyline.Model.Lib.BiblioSpecLiteLibrary;
-
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -109,7 +107,6 @@ namespace pwiz.Skyline.SettingsUI
         private ITipProvider _lastTipProvider;
         private bool _showChromatograms;
         private bool _hasChromatograms;
-        private bool _hasScores;
         private readonly GraphHelper _graphHelper;
         private string _originalFileLabelText;
         private string _sourceFile;
@@ -195,6 +192,9 @@ namespace pwiz.Skyline.SettingsUI
             }
             if (Settings.Default.ViewLibrarySplitMainDist > 0)
                 splitMain.SplitterDistance = Settings.Default.ViewLibrarySplitMainDist;
+
+            msGraphExtension1.RestorePropertiesSheet();
+            msGraphExtension1.PropertiesSheetVisibilityChanged += msGraphExtension_PropertiesSheetVisibilityChanged;
 
             _matcher = new LibKeyModificationMatcher();
             _showChromatograms = Settings.Default.ShowLibraryChromatograms;
@@ -356,10 +356,6 @@ namespace pwiz.Skyline.SettingsUI
             Settings.Default.ViewLibrarySize = Size;
             Settings.Default.ViewLibrarySplitMainDist = splitMain.SplitterDistance;
             Settings.Default.ViewLibraryPropertiesVisible = propertiesButton.Checked;
-            if (msGraphExtension1.PropertiesVisible)
-                Settings.Default.ViewLibrarySplitPropsDist = msGraphExtension1.Splitter.SplitterDistance;
-            Settings.Default.ViewLibraryPropertiesSorted =
-                msGraphExtension1.PropertiesSheet.PropertySort == PropertySort.Alphabetical;
 
             var ionTypeSelector = GetHostedControl<IonTypeSelectionPanel>();
             if (ionTypeSelector != null)
@@ -387,14 +383,6 @@ namespace pwiz.Skyline.SettingsUI
             UpdateListPeptide(0);
             textPeptide.Select();
             UpdateUI();
-            RestoreProperties();
-        }
-
-        private void RestoreProperties()
-        {
-            ShowProperties(Settings.Default.ViewLibraryPropertiesVisible);
-            if (Settings.Default.ViewLibraryPropertiesSorted)
-                GraphExtensionControl.PropertiesSheet.PropertySort = PropertySort.Alphabetical;
         }
 
         /// <summary>
@@ -416,8 +404,9 @@ namespace pwiz.Skyline.SettingsUI
                 if (selectedLibrarySpec == null)
                     return;
 
-                using (var longWait = new LongWaitDlg { Text = Resources.ViewLibraryDlg_LoadLibrary_Loading_Library })
+                using (var longWait = new LongWaitDlg())
                 {
+                    longWait.Text = Resources.ViewLibraryDlg_LoadLibrary_Loading_Library;
                     try
                     {
                         var status = longWait.PerformWork(this, 800, monitor =>
@@ -628,66 +617,6 @@ namespace pwiz.Skyline.SettingsUI
             IsUpdateComplete = true;
         }
 
-        public static void GetPeptideInfo(ViewLibraryPepInfo pepInfo, 
-                                        LibKeyModificationMatcher matcher,
-                                        out SrmSettings settings, out TransitionGroupDocNode transitionGroup, out ExplicitMods mods)
-        {
-            settings = Program.ActiveDocument.Settings;
-
-            if (matcher.HasMatches)
-                settings = settings.ChangePeptideModifications(modifications => matcher.MatcherPepMods);
-
-//            var pepInfo = (ViewLibraryPepInfo)lPeptide.SelectedItem;
-            var nodePep = pepInfo.PeptideNode;
-            if (nodePep != null)
-            {
-                mods = nodePep.ExplicitMods;
-                // Should always be just one child.  The child that matched this spectrum.
-                transitionGroup = nodePep.TransitionGroups.First();
-            }
-            else if (null != pepInfo.Key.LibraryKey.Target)
-            {
-                var peptide = pepInfo.Key.LibraryKey.CreatePeptideIdentityObj();
-                transitionGroup = new TransitionGroupDocNode(new TransitionGroup(peptide, pepInfo.Adduct,
-                                                      IsotopeLabelType.light, true, null), null);
-                if (pepInfo.Key.IsSmallMoleculeKey)
-                {
-                    mods = null;
-                    return;
-                }
-
-                // Because the document modifications do not explain this peptide, a set of
-                // explicit modifications must be constructed, even if they are empty.
-                IList<ExplicitMod> staticModList = new List<ExplicitMod>();
-                IEnumerable<ModificationInfo> modList = GetModifications(pepInfo);
-                foreach (var modInfo in modList)
-                {
-                    var aa = modInfo.ModifiedAminoAcid;
-                    var smod = new StaticMod(@"temp",
-                                             aa != 'X' ? aa.ToString(CultureInfo.InvariantCulture) : string.Join(@",", AminoAcid.All),
-                                             null,
-                                             null,
-                                             LabelAtoms.None,
-                                             modInfo.ModifiedMass,
-                                             modInfo.ModifiedMass);
-                    var exmod = new ExplicitMod(modInfo.IndexMod, smod);
-                    staticModList.Add(exmod);
-                }
-
-                mods = new ExplicitMods(peptide, staticModList, new TypedExplicitModifications[0]);
-            }
-            else
-            {
-                // Create custom ion node for midas library
-                var precursor = pepInfo.Key.PrecursorMz.GetValueOrDefault();
-                var precursorMono = new TypedMass(precursor, MassType.Monoisotopic);
-                var precursorAverage = new TypedMass(precursor, MassType.Average);
-                var peptide = new Peptide(new CustomMolecule(precursorMono, precursorAverage, precursor.ToString(CultureInfo.CurrentCulture)));
-                transitionGroup = new TransitionGroupDocNode(new TransitionGroup(peptide, Adduct.EMPTY, IsotopeLabelType.light, true, null), null);
-                mods = new ExplicitMods(peptide, new ExplicitMod[0], new TypedExplicitModifications[0]);
-            }
-        }
-
 
         public class ComboOption : IComparable<ComboOption>
         {
@@ -785,8 +714,7 @@ namespace pwiz.Skyline.SettingsUI
 
                 if (-1 != index)
                 {
-                    SpectrumPeaksInfo loadedSpectrum;
-                    if (_selectedLibrary.TryLoadSpectrum(_peptides[index].Key, out loadedSpectrum))
+                    if (_selectedLibrary.TryLoadSpectrum(_peptides[index].Key, out _))
                     {
                         SrmSettings settings = Program.ActiveDocumentUI.Settings;
 
@@ -805,7 +733,7 @@ namespace pwiz.Skyline.SettingsUI
 
                         ExplicitMods mods;
                         var pepInfo = (ViewLibraryPepInfo)listPeptide.SelectedItem;
-                        GetPeptideInfo(pepInfo, _matcher, out settings, out transitionGroupDocNode, out mods);
+                        pepInfo.GetPeptideInfo(_matcher, out settings, out transitionGroupDocNode, out mods);
                         var showAdducts = (isSmallMoleculeItem ?  transitionGroupDocNode.InUseAdducts : Transition.DEFAULT_PEPTIDE_LIBRARY_CHARGES).ToList();
                         var charges = ShowIonCharges(showAdducts);
 
@@ -910,29 +838,11 @@ namespace pwiz.Skyline.SettingsUI
                             }
 
                             // Generates the object that will go into the property sheet
-                            var newProperties = new SpectrumProperties
-                            {
-                                LibraryName = spectrumInfo.Name,
-                                PrecursorMz = CalcMz(pepInfo, _matcher).ToString(Formats.Mz),
-                                Score = (spectrumInfo?.SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo)?.Score,
-                                Charge = pepInfo.Charge,
-                                RetentionTime = baseRT,
-                                CCS = baseCCS,
-                                IonMobility = baseIM
-                            };
-                            newProperties.SetFileName(spectrumInfo.FileName);
-                            if (_selectedLibrary is BiblioSpecLiteLibrary)
-                            {
-                                newProperties = GetBiblioSpecAdditionalInfo(spectrumInfo, index, newProperties);
-                            }
-
-                            _currentProperties = newProperties;
+                            _currentProperties = spectrumInfo.CreateProperties(pepInfo, transitionGroupDocNode, _matcher, _currentProperties); 
                         }
 
-                        _hasScores = _currentProperties.Score != null;
-
                         var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(
-                            spectrumInfo.SpectrumPeaksInfo,
+                            spectrumInfo?.SpectrumPeaksInfo,
                             transitionGroupDocNode.TransitionGroup.LabelType,
                             transitionGroupDocNode,
                             settings,
@@ -949,7 +859,6 @@ namespace pwiz.Skyline.SettingsUI
                             ShowTypes = types,
                             ShowCharges = charges,
                             ShowRanks = Settings.Default.ShowRanks,
-                            ShowScores = Settings.Default.ShowLibraryScores,
                             ShowMz = Settings.Default.ShowIonMz,
                             ShowObservedMz = Settings.Default.ShowObservedMz,
                             ShowMassError = Settings.Default.ShowFullScanMassError,
@@ -1203,11 +1112,6 @@ namespace pwiz.Skyline.SettingsUI
             menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
             ranksContextMenuItem.Checked = set.ShowRanks;
             menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
-            if (_hasScores)
-            {
-                scoreContextMenuItem.Checked = set.ShowLibraryScores;
-                menuStrip.Items.Insert(iInsert++, scoreContextMenuItem);
-            }
             ionMzValuesContextMenuItem.Checked = set.ShowIonMz;
             menuStrip.Items.Insert(iInsert++, ionMzValuesContextMenuItem);
             observedMzValuesContextMenuItem.Checked = set.ShowObservedMz;
@@ -1220,6 +1124,8 @@ namespace pwiz.Skyline.SettingsUI
             lockYaxisContextMenuItem.Checked = set.LockYAxis;
             menuStrip.Items.Insert(iInsert++, lockYaxisContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator14);
+            menuStrip.Items.Insert(iInsert++, graphPropsContextMenuItem);
+            spectrumPropsContextMenuItem.Checked = msGraphExtension1.PropertiesVisible;
             menuStrip.Items.Insert(iInsert++, spectrumPropsContextMenuItem);
             if (_hasChromatograms)
             {
@@ -1322,21 +1228,7 @@ namespace pwiz.Skyline.SettingsUI
                 var propertyName = _peptides.comboFilterCategoryDict
                     .FirstOrDefault(x => x.Value == selectedCategory).Key;
 
-                var propertyValue = ViewLibraryPepInfoList.GetStringValue(propertyName, pepInfo);
-
-                // Shorten precursor m/z values to be uniform and match the tool tip
-                if (selectedCategory.Equals(Resources.PeptideTipProvider_RenderTip_Precursor_m_z))
-                {
-                    propertyValue = FormatPrecursorMz(double.TryParse(propertyValue, out var mz) ? mz : 0);
-                }
-                else if(selectedCategory.Equals(Resources.PeptideTipProvider_RenderTip_CCS))
-                {
-                    propertyValue = FormatCCS(double.Parse(propertyValue));
-                }
-                else if(selectedCategory.Equals(Resources.PeptideTipProvider_RenderTip_Ion_Mobility))
-                {
-                    propertyValue = FormatIonMobility(double.Parse(propertyValue), pepInfo.IonMobilityUnits);
-                }
+                var propertyValue = ViewLibraryPepInfoList.GetFormattedPropertyValue(propertyName, pepInfo);
                 categoryText = CreateTextSequence(propertyValue, false);
             }
             else
@@ -1676,17 +1568,14 @@ namespace pwiz.Skyline.SettingsUI
 
         private void propertiesMenuItem_Click(object sender, EventArgs e)
         {
-            ShowProperties(!propertiesButton.Checked);
+            msGraphExtension1.TogglePropertiesSheet();
+            propertiesButton.Checked = msGraphExtension1.PropertiesVisible;
+
         }
 
-        public void ShowProperties(bool show)
+        private void msGraphExtension_PropertiesSheetVisibilityChanged(object sender, EventArgs e)
         {
-            if (!show && msGraphExtension1.PropertiesVisible)
-                Settings.Default.ViewLibrarySplitPropsDist = msGraphExtension1.Splitter.SplitterDistance;
-            propertiesButton.Checked = show;
-            msGraphExtension1.SetPropertiesVisibility(propertiesButton.Checked);
-            if (show && Settings.Default.ViewLibrarySplitPropsDist > 0)
-                msGraphExtension1.Splitter.SplitterDistance = Settings.Default.ViewLibrarySplitPropsDist;
+            propertiesButton.Checked = msGraphExtension1.PropertiesVisible;
         }
 
         public void UpdateChargesMenu()
@@ -1757,13 +1646,18 @@ namespace pwiz.Skyline.SettingsUI
             LockYAxis(Settings.Default.LockYAxis = lockYaxisContextMenuItem.Checked);
         }
 
-        private void spectrumPropsContextMenuItem_Click(object sender, EventArgs e)
+        private void graphPropsContextMenuItem_Click(object sender, EventArgs e)
         {
             using (var dlg = new SpectrumChartPropertyDlg())
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                     UpdateUI();
             }
+        }
+        private void spectrumPropsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            msGraphExtension1.TogglePropertiesSheet();
+            propertiesButton.Checked = msGraphExtension1.PropertiesVisible;
         }
 
         private void zoomSpectrumContextMenuItem_Click(object sender, EventArgs e)
@@ -1946,17 +1840,17 @@ namespace pwiz.Skyline.SettingsUI
             }*/
         }
 
-        private static string FormatPrecursorMz(double precursorMz)
+        internal static string FormatPrecursorMz(double precursorMz)
         {
             return string.Format(@"{0:F04}", precursorMz);
         }
 
-        private static string FormatIonMobility(double mobility, string units)
+        internal static string FormatIonMobility(double mobility, string units)
         {
             return string.Format(@"{0:F04} {1}", mobility, units);
         }
 
-        private static string FormatCCS(double CCS)
+        internal static string FormatCCS(double CCS)
         {
             return string.Format(@"{0:F04}", CCS);
         }
@@ -2126,12 +2020,10 @@ namespace pwiz.Skyline.SettingsUI
 
             SrmDocument newDocument;
             var hasSmallMolecules = HasSmallMolecules;
-            using (var longWaitDlg = new LongWaitDlg
-                {
-                    Text = hasSmallMolecules ? Resources.ViewLibraryDlg_AddAllPeptides_Matching_Molecules : Resources.ViewLibraryDlg_AddAllPeptides_Matching_Peptides,
-                    Message = hasSmallMolecules ? Resources.ViewLibraryDlg_AddAllPeptides_Matching_molecules_to_the_current_document_settings : Resources.ViewLibraryDlg_AddAllPeptides_Matching_peptides_to_the_current_document_settings
-                })
+            using (var longWaitDlg = new LongWaitDlg())
             {
+                longWaitDlg.Text = hasSmallMolecules ? Resources.ViewLibraryDlg_AddAllPeptides_Matching_Molecules : Resources.ViewLibraryDlg_AddAllPeptides_Matching_Peptides;
+                longWaitDlg.Message = hasSmallMolecules ? Resources.ViewLibraryDlg_AddAllPeptides_Matching_molecules_to_the_current_document_settings : Resources.ViewLibraryDlg_AddAllPeptides_Matching_peptides_to_the_current_document_settings;
                 longWaitDlg.PerformWork(this, 1000, broker => pepMatcher.AddAllPeptidesToDocument(broker, entryCreatorList));
                 newDocument = pepMatcher.DocAllPeptides;
                 if (longWaitDlg.IsCanceled || newDocument == null)
@@ -2429,9 +2321,9 @@ namespace pwiz.Skyline.SettingsUI
 
         // Computes each ModificationInfo for the given peptide and returns a 
         // list of all modifications.
-        private static IEnumerable<ModificationInfo> GetModifications(ViewLibraryPepInfo pep)
+        private static IEnumerable<ViewLibraryPepInfo.ModificationInfo> GetModifications(ViewLibraryPepInfo pep)
         {
-            IList<ModificationInfo> modList = new List<ModificationInfo>();
+            IList<ViewLibraryPepInfo.ModificationInfo> modList = new List<ViewLibraryPepInfo.ModificationInfo>();
             string sequence;
             if (pep.Key.LibraryKey is PeptideLibraryKey peptideLibraryKey)
             {
@@ -2470,7 +2362,7 @@ namespace pwiz.Skyline.SettingsUI
                 double massDiff;
                 if (double.TryParse(sequence.Substring(i, iEnd - i), NumberStyles.Number, CultureInfo.InvariantCulture, out massDiff))
                 {
-                    modList.Add(new ModificationInfo(iMod, sequence[iAa], massDiff * signVal));
+                    modList.Add(new ViewLibraryPepInfo.ModificationInfo(iMod, sequence[iAa], massDiff * signVal));
                 }
                 i = iEnd;
             }
@@ -2587,24 +2479,6 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         #endregion
-
-        /// <summary>
-        /// Data structure to store information on a modification for a given
-        /// peptide sequence.
-        /// </summary>
-        private class ModificationInfo
-        {
-            public int IndexMod { get; private set; }
-            public char ModifiedAminoAcid { get; private set; }
-            public double ModifiedMass { get; private set; }
-
-            public ModificationInfo(int indexMod, char modifiedAminoAcid, double modifiedMass)
-            {
-                IndexMod = indexMod;
-                ModifiedAminoAcid = modifiedAminoAcid;
-                ModifiedMass = modifiedMass;
-            }
-        }
 
         /// <summary>
         /// If the library has a HUGE number of peptides, it may not be
@@ -2762,7 +2636,7 @@ namespace pwiz.Skyline.SettingsUI
                 TransitionGroupDocNode transitionGroup;
                 _pepInfo = pepInfo;
                 _matcher = matcher;
-                GetPeptideInfo(_pepInfo, _matcher, out _settings, out transitionGroup, out mods);
+                _pepInfo.GetPeptideInfo(_matcher, out _settings, out transitionGroup, out mods);
                 // build seq parts to draw
                 _seqPartsToDraw = GetSequencePartsToDraw(mods);
                 // Get small molecule info if any
@@ -2777,7 +2651,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (_pepInfo.Target != null)
                 {
                     // build mz range parts to draw
-                    _mz = CalcMz(_pepInfo, _settings, transitionGroup, mods);
+                    _mz = _pepInfo.CalcMz(_settings, transitionGroup, mods);
                     _mzRangePartsToDraw = GetMzRangeItemsToDraw(_mz);
                 }
                 else
@@ -3056,32 +2930,6 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
-        /// Get the information necessary to calculate precursor m/z and then calculate it
-        /// </summary>
-        public static double CalcMz(ViewLibraryPepInfo info, LibKeyModificationMatcher matcher)
-        {
-            if (info.Key.IsPrecursorKey)
-                return info.Key.PrecursorMz.GetValueOrDefault();
-
-            GetPeptideInfo(info, matcher, out var _settings, out var transitionGroup, out var mods);
-            return CalcMz(info, _settings, transitionGroup, mods);
-        }
-
-        /// <summary>
-        /// Calculate precursor m/z
-        /// </summary>
-        private static double CalcMz(ViewLibraryPepInfo info, SrmSettings settings,
-            TransitionGroupDocNode transitionGroup, ExplicitMods mods)
-        {
-            if (info.Key.IsPrecursorKey)
-                return info.Key.PrecursorMz.GetValueOrDefault();
-
-            var massH = settings.GetPrecursorCalc(transitionGroup.TransitionGroup.LabelType, mods)
-                .GetPrecursorMass(info.Target);
-            return SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorAdduct));
-        }
-
-        /// <summary>
         /// Retrieve and then set the ion mobility and CCS values for an entry if there are any
         /// </summary>
         private ViewLibraryPepInfo SetIonMobilityCCSValues(ViewLibraryPepInfo entry)
@@ -3154,34 +3002,6 @@ namespace pwiz.Skyline.SettingsUI
 
                 comboRedundantSpectra.EndUpdate();
                 _comboBoxUpdated = true;
-            }
-        }
-
-        public class SpectrumProperties : GlobalizedObject
-        {
-            [Category("FileInfo")] public string IdFileName { get; set; }
-            [Category("FileInfo")] public string FileName { get; set; }
-            [Category("FileInfo")] public string FilePath { get; set; }
-            [Category("FileInfo")] public string LibraryName { get; set; }
-            [Category("PrecursorInfo")] public string PrecursorMz { get; set; }
-            [Category("PrecursorInfo")] public int? Charge { get; set; }
-            [Category("AcquisitionInfo")] public string RetentionTime { get; set; }
-            [Category("AcquisitionInfo")] public string CCS { get; set; }
-            [Category("AcquisitionInfo")] public string IonMobility { get; set; }
-            [Category("AcquisitionInfo")] public string SpecIdInFile { get; set; }
-            [Category("MatchInfo")] public double? Score { get; set; }
-            [Category("MatchInfo")] public string ScoreType { get; set; }
-            [Category("MatchInfo")] public int? SpectrumCount { get; set; }
-
-            public void SetFileName(string fileName)
-            {
-                if (string.IsNullOrEmpty(Path.GetDirectoryName(fileName)))
-                    FileName = fileName;
-                else
-                {
-                    FilePath = fileName;
-                    FileName = Path.GetFileName(fileName);
-                }
             }
         }
     }

@@ -149,9 +149,7 @@
             // 
             // navBarButtonMatchCase
             // 
-            this.navBarButtonMatchCase.Checked = true;
             this.navBarButtonMatchCase.CheckOnClick = true;
-            this.navBarButtonMatchCase.CheckState = System.Windows.Forms.CheckState.Checked;
             this.navBarButtonMatchCase.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             resources.ApplyResources(this.navBarButtonMatchCase, "navBarButtonMatchCase");
             this.navBarButtonMatchCase.Name = "navBarButtonMatchCase";

@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromData(ChromKey key, int providerId)
         {
-            Key = PrimaryKey = key;
+            Key = key;
             ProviderId = providerId;
             Peaks = new List<ChromPeak>();
             MaxPeakIndex = -1;
@@ -77,12 +77,12 @@ namespace pwiz.Skyline.Model.Results
             return clone;
         }
 
-        public bool Load(ChromDataProvider provider, Target modifiedSequence, Color peptideColor)
+        public bool Load(ChromDataProvider provider, ChromatogramGroupId chromatogramGroupId, Color peptideColor)
         {
             ChromExtra extra;
             TimeIntensities timeIntensities;
             bool result = provider.GetChromatogram(
-                ProviderId, modifiedSequence, peptideColor,
+                ProviderId, chromatogramGroupId, peptideColor,
                 out extra, out timeIntensities);
             Extra = extra;
             TimeIntensities = RawTimeIntensities = timeIntensities;
@@ -299,8 +299,18 @@ namespace pwiz.Skyline.Model.Results
 
         public IList<ChromPeak> Peaks { get; private set; }
         public int MaxPeakIndex { get; set; }
-        public int OptimizationStep { get; set; }
-        public ChromKey PrimaryKey { get; set; }
+        public int OptimizationStep => Key.OptimizationStep;
+        public ChromKey PrimaryKey
+        {
+            get
+            {
+                if (Key.OptimizationStep == 0)
+                {
+                    return Key;
+                }
+                return Key.ChangeOptimizationStep(0, null);
+            }
+        }
 
         public void FixChromatogram(float[] timesNew, float[] intensitiesNew, int[] scanIndexesNew)
         {
@@ -393,7 +403,8 @@ namespace pwiz.Skyline.Model.Results
                 Key.ExtractionWidth,
                 (float) (Key.IonMobilityFilter.IonMobility.Mobility ?? 0),
                 (float) (Key.IonMobilityFilter.IonMobilityExtractionWindowWidth ?? 0),
-                Key.Source);
+                Key.Source,
+                (short) OptimizationStep);
         }
     }
 
@@ -720,8 +731,8 @@ namespace pwiz.Skyline.Model.Results
 
         private int ExtendBoundary(ChromDataPeak peakPrimary, bool useRaw, int indexBoundary, int increment, int toleranceLen)
         {
-            float maxIntensity, deltaIntensity;
-            GetIntensityMetrics(indexBoundary, useRaw, out maxIntensity, out deltaIntensity);
+            float maxIntensity;
+            GetIntensityMetrics(indexBoundary, useRaw, out maxIntensity);
 
             int lenIntensities = peakPrimary.Data.Intensities.Count;
             // Look for a descent proportional to the height of the peak.  Because, SRM data is
@@ -737,8 +748,8 @@ namespace pwiz.Skyline.Model.Results
                  i >= 0 && i < lenIntensities && Math.Abs(indexBoundary - i) < toleranceLen;
                  i += increment)
             {
-                float maxIntensityCurrent, deltaIntensityCurrent;
-                GetIntensityMetrics(i, useRaw, out maxIntensityCurrent, out deltaIntensityCurrent);
+                float maxIntensityCurrent;
+                GetIntensityMetrics(i, useRaw, out maxIntensityCurrent);
 
                 // If intensity goes above the maximum, stop looking
                 if (maxIntensityCurrent > maxHeight)
@@ -751,7 +762,7 @@ namespace pwiz.Skyline.Model.Results
                     if (indexBoundary == i)
                         maxIntensity = maxIntensityCurrent;
                     else
-                        GetIntensityMetrics(indexBoundary, useRaw, out maxIntensity, out deltaIntensity);
+                        GetIntensityMetrics(indexBoundary, useRaw, out maxIntensity);
                 }
             }
 
@@ -760,8 +771,8 @@ namespace pwiz.Skyline.Model.Results
 
         private int RetractBoundary(ChromDataPeak peakPrimary, bool useRaw, int indexBoundary, int increment)
         {
-            float maxIntensity, deltaIntensity;
-            GetIntensityMetrics(indexBoundary, useRaw, out maxIntensity, out deltaIntensity);
+            float maxIntensity;
+            GetIntensityMetrics(indexBoundary, useRaw, out maxIntensity);
 
             int lenIntensities = peakPrimary.Data.Intensities.Count;
             // Look for a descent proportional to the height of the peak.  Because, SRM data is
@@ -775,8 +786,8 @@ namespace pwiz.Skyline.Model.Results
             // Extend the index in the direction of the increment
             for (int i = indexBoundary + increment; i > 0 && i < lenIntensities - 1; i += increment)
             {
-                float maxIntensityCurrent, deltaIntensityCurrent;
-                GetIntensityMetrics(i, useRaw, out maxIntensityCurrent, out deltaIntensityCurrent);
+                float maxIntensityCurrent;
+                GetIntensityMetrics(i, useRaw, out maxIntensityCurrent);
 
                 // If intensity goes above the maximum, stop looking
                 if (maxIntensityCurrent > maxHeight || maxIntensityCurrent - maxIntensity > maxAscent)
@@ -789,7 +800,7 @@ namespace pwiz.Skyline.Model.Results
             return indexBoundary;
         }
 
-        private void GetIntensityMetrics(int i, bool useRaw, out float maxIntensity, out float deltaIntensity)
+        private void GetIntensityMetrics(int i, bool useRaw, out float maxIntensity)
         {
             var peakData = this[0];
             var intensities = (useRaw ? peakData.Data.Intensities
@@ -809,7 +820,6 @@ namespace pwiz.Skyline.Model.Results
                 else if (currentIntensity < minIntensity)
                     minIntensity = currentIntensity;
             }
-            deltaIntensity = maxIntensity - minIntensity;
         }
 
         private void AddPeak(ChromDataPeak dataPeak)

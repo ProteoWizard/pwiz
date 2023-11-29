@@ -26,6 +26,8 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -34,12 +36,14 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -136,8 +140,9 @@ namespace pwiz.Skyline.Menus
             var docCopy = DocumentUI.RemoveAllBut(SequenceTree.SelectedDocNodes);
             docCopy = docCopy.ChangeMeasuredResults(null);
             var stringWriter = new XmlStringWriter();
-            using (var writer = new XmlTextWriter(stringWriter) { Formatting = Formatting.Indented })
+            using (var writer = new XmlTextWriter(stringWriter))
             {
+                writer.Formatting = Formatting.Indented;
                 XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
                 ser.Serialize(writer, docCopy);
             }
@@ -296,7 +301,6 @@ namespace pwiz.Skyline.Menus
 
                 try
                 {
-                    IdentityPath nextAdd;
                     ModifyDocument(string.Format(Resources.SkylineWindow_Paste_Paste__0__, (pasteToPeptideList ? Resources.SkylineWindow_Paste_peptides : Resources.SkylineWindow_Paste_proteins)), doc =>
                         doc.ImportDocumentXml(new StringReader(dataObjectSkyline.Substring(dataObjectSkyline.IndexOf('<'))),
                             null,
@@ -307,7 +311,7 @@ namespace pwiz.Skyline.Menus
                             Settings.Default.HeavyModList,
                             nodePaste != null ? nodePaste.Path : null,
                             out selectPath,
-                            out nextAdd,
+                            out _,
                             pasteToPeptideList), docPair => AuditLogEntry.DiffDocNodes(MessageType.pasted_targets, docPair));
                 }
                 catch (Exception)
@@ -575,8 +579,9 @@ namespace pwiz.Skyline.Menus
             // If filtered peptides, ask the user whether to filter or keep.
             if (listFilterPeptides.Count > 0)
             {
-                using (var dlg = new PasteFilteredPeptidesDlg { Peptides = listFilterPeptides })
+                using (var dlg = new PasteFilteredPeptidesDlg())
                 {
+                    dlg.Peptides = listFilterPeptides;
                     switch (dlg.ShowDialog(SkylineWindow))
                     {
                         case DialogResult.Cancel:
@@ -677,14 +682,12 @@ namespace pwiz.Skyline.Menus
             if (selectedSrmTreeNode == null)
                 return;
 
-            using (EditNoteDlg dlg = new EditNoteDlg
+            using (EditNoteDlg dlg = new EditNoteDlg())
             {
-                Text = selPaths.Count > 1
+                dlg.Text = selPaths.Count > 1
                     ? Resources.SkylineWindow_EditNote_Edit_Note
                     : TextUtil.SpaceSeparate(Resources.SkylineWindow_EditNote_Edit_Note, selectedSrmTreeNode.Heading,
-                        SequenceTree.SelectedNode.Text)
-            })
-            {
+                        SequenceTree.SelectedNode.Text);
                 dlg.Init(selectedSrmTreeNode.Document, selPaths);
                 if (dlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                 {
@@ -815,8 +818,9 @@ namespace pwiz.Skyline.Menus
                 return;
             }
 
-            using (var longWait = new LongWaitDlg(SkylineWindow) { Text = Resources.SkylineWindow_ApplyPeak_Applying_Peak })
+            using (var longWait = new LongWaitDlg(SkylineWindow))
             {
+                longWait.Text = Resources.SkylineWindow_ApplyPeak_Applying_Peak;
                 SrmDocument doc = null;
                 try
                 {
@@ -1093,12 +1097,10 @@ namespace pwiz.Skyline.Menus
 
         public void ShowPasteFastaDlg()  // Expose for test access
         {
-            using (var pasteDlg = new PasteDlg(SkylineWindow)
+            using (var pasteDlg = new PasteDlg(SkylineWindow))
             {
-                SelectedPath = SelectedPath,
-                PasteFormat = PasteFormat.fasta
-            })
-            {
+                pasteDlg.SelectedPath = SelectedPath;
+                pasteDlg.PasteFormat = PasteFormat.fasta;
                 if (pasteDlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                     SelectedPath = pasteDlg.SelectedPath;
             }
@@ -1111,12 +1113,10 @@ namespace pwiz.Skyline.Menus
 
         public void ShowPastePeptidesDlg()
         {
-            using (var pasteDlg = new PasteDlg(SkylineWindow)
+            using (var pasteDlg = new PasteDlg(SkylineWindow))
             {
-                SelectedPath = SelectedPath,
-                PasteFormat = PasteFormat.peptide_list
-            })
-            {
+                pasteDlg.SelectedPath = SelectedPath;
+                pasteDlg.PasteFormat = PasteFormat.peptide_list;
                 if (pasteDlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                     SelectedPath = pasteDlg.SelectedPath;
             }
@@ -1129,12 +1129,10 @@ namespace pwiz.Skyline.Menus
 
         public void ShowPasteProteinsDlg()
         {
-            using (var pasteDlg = new PasteDlg(SkylineWindow)
+            using (var pasteDlg = new PasteDlg(SkylineWindow))
             {
-                SelectedPath = SelectedPath,
-                PasteFormat = PasteFormat.protein_list
-            })
-            {
+                pasteDlg.SelectedPath = SelectedPath;
+                pasteDlg.PasteFormat = PasteFormat.protein_list;
                 if (pasteDlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                     SelectedPath = pasteDlg.SelectedPath;
             }
@@ -1154,10 +1152,9 @@ namespace pwiz.Skyline.Menus
 
                 IFormatProvider formatProvider;
                 char separator;
-                Type[] columnTypes;
                 var text = transitionDlg.TransitionListText;
                 // As long as it has columns we want to parse the input as a transition list
-                if (MassListImporter.IsColumnar(text, out formatProvider, out separator, out columnTypes))
+                if (MassListImporter.IsColumnar(text, out formatProvider, out separator, out _))
                 {
                     try
                     {
@@ -1170,13 +1167,13 @@ namespace pwiz.Skyline.Menus
                         {
                             throw;
                         }
-                        MessageDlg.ShowWithException(this, exception.Message, exception, true);
+                        MessageDlg.ShowWithException(SkylineWindow, exception.Message, exception, true);
                     }
                 }
                 else
                 {
                     // Alert the user that their list is not columnar
-                    MessageDlg.Show(this, Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
+                    MessageDlg.Show(SkylineWindow, Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
                 }
             }
         }
@@ -1632,6 +1629,7 @@ namespace pwiz.Skyline.Menus
             manageUniquePeptidesMenuItem.Enabled = UniquePeptidesDlg.PeptideSelection(SequenceTree).Any(); // Only works for peptide molecules, and only if selected
             var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
             modifyPeptideMenuItem.Enabled = nodePepTree != null;
+            editSpectrumFilterMenuItem.Enabled = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>() != null;
             setStandardTypeMenuItem.Enabled = SkylineWindow.HasSelectedTargetPeptides();
         }
 
@@ -1687,5 +1685,167 @@ namespace pwiz.Skyline.Menus
             menuStrip?.Items.Insert(iInsert++, item);
         }
 
+        private void editSpectrumFilterMenuItem_Click(object sender, EventArgs e)
+        {
+            EditSpectrumFilter();
+        }
+
+        public void EditSpectrumFilter()
+        {
+            var document = SkylineWindow.DocumentUI;
+            var transitionGroupPaths = SequenceTree.SelectedPaths.SelectMany(path =>
+                document.EnumeratePathsAtLevel(path, SrmDocument.Level.TransitionGroups)).ToHashSet();
+            if (transitionGroupPaths.Count == 0)
+            {
+                return;
+            }
+
+            var transitionGroupDocNodes = transitionGroupPaths
+                .Select(path => (TransitionGroupDocNode)document.FindNode(path)).ToList();
+            var filterPagesSet = transitionGroupDocNodes.Select(SpectrumClassFilter.GetFilterPages).ToHashSet();
+            FilterPages filterPages;
+            if (filterPagesSet.Count == 1)
+            {
+                filterPages = filterPagesSet.First();
+            }
+            else
+            {
+                filterPages = SpectrumClassFilter.GetBlankFilterPages(transitionGroupDocNodes);
+            }
+
+            var skylineDataSchema = new SkylineDataSchema(SkylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var rootColumn = ColumnDescriptor.RootColumn(skylineDataSchema, typeof(SpectrumClass));
+            using var autoComplete = new SpectrumFilterAutoComplete(SkylineWindow);
+            using var dlg = new EditSpectrumFilterDlg(rootColumn, filterPages);
+            dlg.AutoComplete = autoComplete;
+            if (filterPagesSet.Count != 1)
+            {
+                dlg.CreateCopy = true;
+                dlg.CreateCopyEnabled = false;
+            }
+
+            dlg.Description =
+                GetEditSpectrumFilterDescription(document, transitionGroupPaths, filterPagesSet.Count == 1);
+            if (filterPages.Pages.Count == 2 && filterPages.Clauses[0].IsEmpty)
+            {
+                // When editing a blank filter with two pages, start with the "MS2" page selected 
+                dlg.SelectPage(1);
+            }
+            if (dlg.ShowDialog(SkylineWindow) != DialogResult.OK)
+            {
+                return;
+            }
+            ChangeSpectrumFilter(transitionGroupPaths, SpectrumClassFilter.FromFilterPages(dlg.FilterPages), dlg.CreateCopy);
+        }
+
+        public void ChangeSpectrumFilter(ICollection<IdentityPath> precursorIdentityPaths,
+            SpectrumClassFilter spectrumClassFilter, bool copy)
+        {
+            SkylineWindow.ModifyDocument(Resources.EditMenu_ChangeSpectrumFilter_Change_spectrum_filter, doc => ChangeSpectrumFilter(doc, precursorIdentityPaths, spectrumClassFilter, copy, out _),
+                docPair => AuditLogEntry.CreateSimpleEntry(MessageType.added_spectrum_filter, docPair.NewDocumentType));
+        }
+
+        private string GetEditSpectrumFilterDescription(SrmDocument document,
+            ICollection<IdentityPath> transitionGroupIdentityPaths, bool editing)
+        {
+            int precursorCount = 0;
+            foreach (var peptideGroup in transitionGroupIdentityPaths.GroupBy(path => path.Parent))
+            {
+                var peptideDocNode = (PeptideDocNode) document.FindNode(peptideGroup.Key);
+                precursorCount += peptideGroup.Select(path =>
+                    ((TransitionGroupDocNode)peptideDocNode.FindNode(path.Child)).PrecursorKey
+                    .ChangeSpectrumClassFilter(default)).Distinct().Count();
+            }
+
+            if (precursorCount == 1)
+            {
+                var transitionGroupDocNode = (TransitionGroupDocNode) document.FindNode(transitionGroupIdentityPaths.First());
+                var precursorDescription = TransitionGroupTreeNode.GetLabel(transitionGroupDocNode.TransitionGroup,
+                    transitionGroupDocNode.PrecursorMz, string.Empty);
+                if (editing)
+                {
+                    return string.Format(Resources.EditMenu_GetEditSpectrumFilterDescription_Editing_spectrum_filter_on__0_, precursorDescription);
+                }
+
+                return string.Format(Resources.EditMenu_GetEditSpectrumFilterDescription_Adding_spectrum_filter_to__0_, precursorDescription);
+            }
+
+            if (editing)
+            {
+                return string.Format(Resources.EditMenu_GetEditSpectrumFilterDescription_Editing_spectrum_filter_on__0__precursors, precursorCount);
+            }
+            return string.Format(Resources.EditMenu_GetEditSpectrumFilterDescription_Adding_spectrum_filter_to__0__precursors, precursorCount);
+        }
+
+        public SrmDocument ChangeSpectrumFilter(SrmDocument document, IEnumerable<IdentityPath> precursorIdentityPaths,
+            SpectrumClassFilter spectrumClassFilter, bool copy, out int changeCount)
+        {
+            changeCount = 0;
+            foreach (var peptidePathGroup in precursorIdentityPaths.GroupBy(path => path.Parent))
+            {
+                var peptideDocNode = (PeptideDocNode)document.FindNode(peptidePathGroup.Key);
+                if (peptideDocNode == null)
+                {
+                    continue;
+                }
+
+                bool changed = false;
+                var idPathSet = peptidePathGroup.ToHashSet();
+                var precursorGroups = peptideDocNode.TransitionGroups.GroupBy(tg =>
+                    tg.PrecursorKey.ChangeSpectrumClassFilter(default)).ToList();
+                var newTransitionGroups = new List<DocNode>();
+                foreach (var precursorGroup in precursorGroups)
+                {
+                    if (!precursorGroup.Any(tg =>
+                            idPathSet.Contains(new IdentityPath(peptidePathGroup.Key, tg.TransitionGroup)))
+                        || precursorGroup.Any(tg => Equals(tg.SpectrumClassFilter, spectrumClassFilter)))
+                    {
+                        newTransitionGroups.AddRange(precursorGroup);
+                        continue;
+                    }
+
+                    TransitionGroupDocNode transitionGroupToAdd;
+                    if (copy)
+                    {
+                        newTransitionGroups.AddRange(precursorGroup);
+                        transitionGroupToAdd = precursorGroup.First().CloneTransitionGroupId();
+                    }
+                    else
+                    {
+                        transitionGroupToAdd = null;
+                        foreach (var transitionGroup in precursorGroup)
+                        {
+                            var idPath = new IdentityPath(peptidePathGroup.Key, transitionGroup.TransitionGroup);
+                            if (idPathSet.Contains(idPath))
+                            {
+                                transitionGroupToAdd = transitionGroup;
+                            }
+                            else
+                            {
+                                newTransitionGroups.Add(transitionGroup);
+                            }
+                        }
+
+                        transitionGroupToAdd ??= precursorGroup.First().CloneTransitionGroupId();
+                    }
+
+                    transitionGroupToAdd = transitionGroupToAdd.ChangeSpectrumClassFilter(spectrumClassFilter);
+                    transitionGroupToAdd = transitionGroupToAdd.ChangeSettings(document.Settings, peptideDocNode,
+                        peptideDocNode.ExplicitMods, SrmSettingsDiff.ALL);
+                    newTransitionGroups.Add(transitionGroupToAdd);
+                    changed = true;
+                    changeCount++;
+                }
+
+                if (changed)
+                {
+                    newTransitionGroups.Sort(Peptide.CompareGroups);
+                    peptideDocNode = (PeptideDocNode)peptideDocNode.ChangeChildren(newTransitionGroups);
+                    document = (SrmDocument)document.ReplaceChild(peptidePathGroup.Key.Parent, peptideDocNode);
+                }
+            }
+
+            return document;
+        }
     }
 }

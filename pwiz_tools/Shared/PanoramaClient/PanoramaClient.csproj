@@ -1,0 +1,163 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{BF849CF8-25D7-4619-B001-9ED8E3771C44}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>pwiz.PanoramaClient</RootNamespace>
+    <AssemblyName>PanoramaClient</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>8.0</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>8.0</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AlertDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AlertDlg.designer.cs">
+      <DependentUpon>AlertDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PanoramaDirectoryPicker.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PanoramaDirectoryPicker.Designer.cs">
+      <DependentUpon>PanoramaDirectoryPicker.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PanoramaFolderBrowser.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PanoramaFolderBrowser.Designer.cs">
+      <DependentUpon>PanoramaFolderBrowser.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PanoramaUtil.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PanoramaFilePicker.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PanoramaFilePicker.Designer.cs">
+      <DependentUpon>PanoramaFilePicker.cs</DependentUpon>
+    </Compile>
+    <Compile Include="TextUtil.cs" />
+    <EmbeddedResource Include="AlertDlg.ja.resx">
+      <DependentUpon>AlertDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AlertDlg.resx">
+      <DependentUpon>AlertDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AlertDlg.zh-CHS.resx">
+      <DependentUpon>AlertDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PanoramaDirectoryPicker.resx">
+      <DependentUpon>PanoramaDirectoryPicker.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PanoramaFolderBrowser.resx">
+      <DependentUpon>PanoramaFolderBrowser.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <EmbeddedResource Include="PanoramaFilePicker.resx">
+      <DependentUpon>PanoramaFilePicker.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CommonUtil\CommonUtil.csproj">
+      <Project>{13bf2ffb-50a1-4ab1-83a4-5733e36905ce}</Project>
+      <Name>CommonUtil</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ChromLib.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Edit_Undo.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Folder.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\up-pro32.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Icojam-Blueberry-Basic-Arrow-left.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Icojam-Blueberry-Basic-Arrow-right.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Icojam-Blueberry-Basic-Arrow-up2.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\Copy.bmp" />
+    <Content Include="Resources\PanoramaDownload.ico" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

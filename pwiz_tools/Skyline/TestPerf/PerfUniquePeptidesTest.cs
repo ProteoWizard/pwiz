@@ -17,9 +17,11 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
@@ -35,13 +37,14 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     /// interaction of the UI with the background loader, and behaviour on cancellation.
     /// </summary>
     [TestClass]
-    public class PerfUniquePeptidesTest : AbstractFunctionalTest
+    public class PerfUniquePeptidesTest : AbstractFunctionalTestEx
     {
         private PeptideFilter.PeptideUniquenessConstraint _cancellationCheckType;
         private string _initialBackgroundProteome;
         private string _newBackgroundProteome;
         private string _skyfile;
         private bool _quickexit;
+        private bool _verbose;
 
         // Scenarios to test:
         // 0) Background proteome nicely digested and metatdata resolved
@@ -50,7 +53,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         // 3)  Current background proteome same as in new settings, needs protein metadata search
         // 4)  Current background proteome not same as in new settings
 
-        void scenario(PeptideFilter.PeptideUniquenessConstraint cancellationCheckType, string initialBackgroundProteome, string newBackgroundProteome = null)
+        void scenario(PeptideFilter.PeptideUniquenessConstraint cancellationCheckType, string initialBackgroundProteome, string newBackgroundProteome = null, bool verbose = false)
         {
             AllowInternetAccess = true; // Testing cancellation of web lookup is integral to this test
             TestFilesZip = GetPerfTestDataURL(@"PerfUniquePeptidesTest.zip");
@@ -59,10 +62,22 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             _initialBackgroundProteome = initialBackgroundProteome;
             _newBackgroundProteome = newBackgroundProteome;
             _quickexit = false;
+            _verbose = verbose;
             RunFunctionalTest();
         }
 
-        [TestMethod]
+        /// <summary>
+        /// For tracking down some hanging tests
+        /// </summary>
+        void LogToConsole(string message, [CallerLineNumber] int lineNumber = 0)
+        {
+            if (_verbose)
+            {
+                Console.WriteLine($@"{new TimeStampISO8601()} at line {lineNumber}: {message}");
+            }
+        }
+
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void UniquePeptides0PerfTest()
         {
             // Scenarios to test:
@@ -70,36 +85,35 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             scenario(PeptideFilter.PeptideUniquenessConstraint.none, "human_and_yeast.protdb");
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void UniquePeptides1PerfTest()
         {
             // 1)  No current background proteome
-using (new Assume.DebugOnFail())  // TODO(bspratt) remove then when this intermittent failure is diagnosed
-            scenario(PeptideFilter.PeptideUniquenessConstraint.gene, null, "human_and_yeast_no_metadata.protdb");
+            scenario(PeptideFilter.PeptideUniquenessConstraint.gene, null, "human_and_yeast_no_metadata.protdb", true);
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void UniquePeptides2PerfTest()
         {
             // 2)  Current background proteome same as in new settings, needs digest and protein metadata search
             scenario(PeptideFilter.PeptideUniquenessConstraint.protein, "human_and_yeast_no_digest.protdb");
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void UniquePeptides3PerfTest()
         {
             // 3)  Current background proteome same as in new settings, needs protein metadata search
             scenario(PeptideFilter.PeptideUniquenessConstraint.gene, "human_and_yeast_no_metadata_too.protdb");
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void UniquePeptides4PerfTest()
         {
             // 4)  Current background proteome not same as in new settings
             scenario(PeptideFilter.PeptideUniquenessConstraint.species, "human_and_yeast.protdb", "human_and_yeast_no_metadata.protdb");
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void UniquePeptides5PerfTest()
         {
             // Just verify that we've fixed a problem with opening files with uniqueness mode already turned on
@@ -115,6 +129,7 @@ using (new Assume.DebugOnFail())  // TODO(bspratt) remove then when this intermi
             runScenario(_cancellationCheckType, 
                 (_initialBackgroundProteome == null) ? null : TestFilesDir.GetTestPath(_initialBackgroundProteome),
                 (_newBackgroundProteome == null) ? null : TestFilesDir.GetTestPath(_newBackgroundProteome));
+            LogToConsole("test complete");
         }
 
         void runScenario(PeptideFilter.PeptideUniquenessConstraint cancellationCheckType, string initialBackgroundProteome, string newBackgroundProteome = null)
@@ -122,20 +137,25 @@ using (new Assume.DebugOnFail())  // TODO(bspratt) remove then when this intermi
             // In each scenario we want to test:
             //  a) Cancellation while protdb processing in is progress
             //  b) Proper changes to document when we eventually don't cancel
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath(_skyfile)));
-            WaitForDocumentLoaded();
+            LogToConsole("Begin debug output...");
+            LogToConsole($@"load {_skyfile}");
+            OpenDocument(_skyfile);
+            LogToConsole("loaded");
             if (_quickexit)
             {
                 // Just wanted to see if it loads OK
+                LogToConsole("attempting quick exit (calling NewDocument to shut down protdb load)");
                 RunUI(() => SkylineWindow.NewDocument(true)); // Force protdb shutdown
                 return;
             }
+            LogToConsole("Collapse proteins...");
             RunUI(() => { SkylineWindow.CollapseProteins(); }); // Things get pretty slow when trying to show tens of thousands of peptides
 
             if (initialBackgroundProteome != null)
             {
+                LogToConsole("Set the background loader to work...");
                 // Set the background loader to work
-                ChooseBackgroundProteomeAndUniqunessFilter(initialBackgroundProteome, 
+                ChooseBackgroundProteomeAndUniquenessFilter(initialBackgroundProteome, 
                     PeptideFilter.PeptideUniquenessConstraint.none, 
                     false);  // Don't attempt cancellation
             }
@@ -156,7 +176,10 @@ using (new Assume.DebugOnFail())  // TODO(bspratt) remove then when this intermi
                 }
                 foreach (var mode in cancelChecks) 
                 {
-                    ChooseBackgroundProteomeAndUniqunessFilter(protdbPath, mode, mode != PeptideFilter.PeptideUniquenessConstraint.none);
+                    var doCancel = mode != PeptideFilter.PeptideUniquenessConstraint.none;
+                    LogToConsole($@"cancelChecks: ChooseBackgroundProteomeAndUniquenessFilter({protdbPath}, {mode}, {doCancel})...");
+                    ChooseBackgroundProteomeAndUniquenessFilter(protdbPath, mode, doCancel);
+                    LogToConsole(@"done");
                     // Should have cancelled out of any longwait, so no changes to document nodes yet
                     AssertEx.IsDocumentState(SkylineWindow.Document, null, PROTEIN_COUNT, 8323, null, null, mode + "(cancelled): ");
                 }
@@ -171,15 +194,20 @@ using (new Assume.DebugOnFail())  // TODO(bspratt) remove then when this intermi
             };
             foreach (var mode in expectedPeptides.Keys)
             {
-                ChooseBackgroundProteomeAndUniqunessFilter(protdbPath, mode, false);
+                LogToConsole($@"uniqueness types: ChooseBackgroundProteomeAndUniquenessFilter({protdbPath}, {mode}, false)...");
+                ChooseBackgroundProteomeAndUniquenessFilter(protdbPath, mode, false);
+                LogToConsole($@"WaitForDocumentLoaded...");
                 WaitForDocumentLoaded();
+                LogToConsole(@"done");
                 AssertEx.IsDocumentState(SkylineWindow.Document, null, PROTEIN_COUNT,
                     expectedPeptides[mode], null, null, mode + ": ");
             }
+            LogToConsole(@"test complete, set new document...");
             RunUI(() => SkylineWindow.NewDocument(true)); // Force protdb shutdown
+            LogToConsole(@"done");
         }
 
-        private void ChooseBackgroundProteomeAndUniqunessFilter(string protdbPath, 
+        private void ChooseBackgroundProteomeAndUniquenessFilter(string protdbPath, 
             PeptideFilter.PeptideUniquenessConstraint constraint, 
             bool doCancel, 
             string fastaFilePath = null)
@@ -188,6 +216,7 @@ using (new Assume.DebugOnFail())  // TODO(bspratt) remove then when this intermi
             var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             if (!peptideSettingsUI.ListBackgroundProteomes.ToList().Contains(basename))
             {
+                LogToConsole(@"BuildBackgroundProteomeDlg...");
                 // Skyline doesn't know about this background proteome yet, use the Edit Background Proeteome dialog to load it
                 var buildBackgroundProteomeDlg = ShowDialog<BuildBackgroundProteomeDlg>(peptideSettingsUI.ShowBuildBackgroundProteomeDlg);
                 RunUI(() =>
@@ -201,6 +230,7 @@ using (new Assume.DebugOnFail())  // TODO(bspratt) remove then when this intermi
             }
             else
             {
+                LogToConsole(@"directly set peptideSettingsUI.SelectedBackgroundProteome");
                 RunUI(() => { peptideSettingsUI.SelectedBackgroundProteome = basename; });
             }
             RunUI(() => { peptideSettingsUI.ComboPeptideUniquenessConstraintSelected = constraint; });
@@ -214,9 +244,12 @@ using (new Assume.DebugOnFail())  // TODO(bspratt) remove then when this intermi
                     Equals(SkylineWindow.Document.Settings.PeptideSettings.BackgroundProteome.Name, selected) &&
                     (constraint == PeptideFilter.PeptideUniquenessConstraint.gene || constraint == PeptideFilter.PeptideUniquenessConstraint.species))
                 {
+                    LogToConsole(@"wait for SkylineWindow.BackgroundProteomeManager.ForegroundLoadRequested...");
                     WaitForCondition(() => SkylineWindow.BackgroundProteomeManager.ForegroundLoadRequested); // Verify that background loader is made to wait for us
                 }
+                LogToConsole("longWaitDlg.CancelButton.PerformClick...");
                 OkDialog(longWaitDlg, longWaitDlg.CancelButton.PerformClick);
+                LogToConsole("peptideSettingsUI.CancelDialog...");
                 OkDialog(peptideSettingsUI, peptideSettingsUI.CancelDialog);
             }
             else
@@ -225,13 +258,16 @@ using (new Assume.DebugOnFail())  // TODO(bspratt) remove then when this intermi
                 RunUI(() => settingsChanged = peptideSettingsUI.IsSettingsChanged);
                 if (!settingsChanged)
                 {
+                    LogToConsole("peptideSettingsUI.OkDialog");
                     // Click the OK button but it is not expected to change anything
                     OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
                 }
                 else
                 {
+                    LogToConsole("WaitDocumentChange");
                     using (new WaitDocumentChange(null, true))
                     {
+                        LogToConsole("peptideSettingsUI.OkDialog");
                         OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
                     }
                 }

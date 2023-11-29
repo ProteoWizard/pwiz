@@ -44,7 +44,6 @@ const int sizeDoubleMSn    = 8;
 const int sizeChargeMSn    = 12; // struct Charge{ int z; double mass; }
 const int sizePeakMSn      = 12; // struct Peak{ double mz; float intensity; }
 
-using namespace std;
 using boost::shared_ptr;
 using boost::iostreams::stream_offset;
 using namespace pwiz::util;
@@ -58,7 +57,7 @@ class Serializer_MSn::Impl
         
         void write(ostream& os, const MSData& msd, 
                    const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
-                   bool useWorkerThreads = true) const;
+                   bool useWorkerThreads = true, bool continueOnError = false) const;
         
         void read(shared_ptr<istream> is, MSData& msd) const;
 
@@ -437,7 +436,7 @@ namespace
 
 void Serializer_MSn::Impl::write(ostream& os, const MSData& msd,
     const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
-    bool useWorkerThreads) const
+    bool useWorkerThreads, bool continueOnError) const
 {
     CVID nativeIdFormat = id::getDefaultNativeIDFormat(msd);
 
@@ -458,11 +457,26 @@ void Serializer_MSn::Impl::write(ostream& os, const MSData& msd,
     // Go through the spectrum list and write each spectrum
     bool ms1File = MSn_Type_MS1 == _filetype || MSn_Type_BMS1 == _filetype || MSn_Type_CMS1 == _filetype;
     SpectrumList& sl = *msd.run.spectrumListPtr;
-    SpectrumWorkerThreads spectrumWorkers(sl, useWorkerThreads);
+    SpectrumWorkerThreads spectrumWorkers(sl, useWorkerThreads, continueOnError);
     for (size_t i=0, end=sl.size(); i < end; ++i)
     {
-        //SpectrumPtr s = sl.spectrum(i, true);
-        SpectrumPtr s = spectrumWorkers.processBatch(i);
+        SpectrumPtr s;
+        try
+        {
+            // s = sl->spectrum(i, true);
+            s = spectrumWorkers.processBatch(i);
+        }
+        catch (std::exception& e)
+        {
+            if (continueOnError)
+            {
+                cerr << "Skipping spectrum " << i << " \"" << (s ? s->id : sl.spectrumIdentity(i).id) << "\": " << e.what() << endl;
+                continue;
+            }
+            else
+                throw;
+        }
+
         int msLevel = s->cvParam(MS_ms_level).valueAs<int>();
         if ((ms1File && msLevel == 1) ||
             (!ms1File && msLevel == 2 && !s->precursors.empty() && !s->precursors[0].selectedIons.empty()))
@@ -535,7 +549,7 @@ PWIZ_API_DECL Serializer_MSn::Serializer_MSn(MSn_Type filetype)
 
 PWIZ_API_DECL void Serializer_MSn::write(ostream& os, const MSData& msd,
     const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
-    bool useWorkerThreads) const
+    bool useWorkerThreads, bool continueOnError) const
   
 {
     return impl_->write(os, msd, iterationListenerRegistry);

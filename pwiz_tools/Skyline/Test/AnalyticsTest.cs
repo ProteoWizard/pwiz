@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.SkylineTestUtil;
@@ -28,7 +29,10 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void SendGa4AnalyticsHitTest()
         {
-            Assert.AreEqual(204, Program.SendGa4AnalyticsHit(true));
+            int httpStatus = Program.SendGa4AnalyticsHit(out var responseStr, true);
+            if (httpStatus == 200)
+                Console.WriteLine(@"Unexpected response body from SendGa4AnalyticsHit: " + responseStr);
+            CollectionAssert.Contains(new [] {200, 204}, httpStatus, "SendGa4AnalyticsHit expected 200 or 204, responded with {0}", httpStatus);
         }
     }
 }

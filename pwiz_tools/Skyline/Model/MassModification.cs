@@ -137,7 +137,10 @@ namespace pwiz.Skyline.Model
             {
                 return new MassModification(mass, 0);
             }
-            return new MassModification(mass, strModification.Length - ichDot - strDecimal.Length);
+
+            int precision = strModification.Length - ichDot - strDecimal.Length;
+            precision = Math.Min(precision, MAX_PRECISION_TO_KEEP);
+            return new MassModification(mass, precision);
         }
 
         public static int InferPrecision(double modMass)

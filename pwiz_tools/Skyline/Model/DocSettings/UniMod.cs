@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             var newMod = new StaticMod(data.Name, data.AAs, data.Terminus, false, data.Formula, data.LabelAtoms,
                                        RelativeRT.Matching, null, null, data.Losses, data.ID,
-                                       data.ShortName, data.PrecisionRequired);
+                                       data.ShortName);
             if (data.ID.HasValue && data.ShortName != null)
             {
                 int id;
@@ -216,7 +216,6 @@ namespace pwiz.Skyline.Model.DocSettings
         public int? ID { get; set; }
         public bool Structural { get; set; }
         public bool Hidden { get; set; }
-        public int? PrecisionRequired { get; set; }
         public string ShortName { get; set; }
     }
 

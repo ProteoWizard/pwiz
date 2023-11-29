@@ -19,16 +19,21 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using Google.Protobuf.Collections;
 using Grpc.Core;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Prosit.Communication;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using Tensorflow;
@@ -248,13 +253,11 @@ namespace pwiz.Skyline.Model.Prosit.Models
         public TSkylineOutput PredictBatches(PredictionService.PredictionServiceClient predictionClient,
             IProgressMonitor progressMonitor, ref IProgressStatus progressStatus, SrmSettings settings, IList<TSkylineInputRow> inputs, CancellationToken token)
         {
-
             const int CONSTRUCTING_INPUTS_FRACTION = 50;
             progressMonitor.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(PrositResources.PrositModel_BatchPredict_Constructing_Prosit_inputs)
                 .ChangePercentComplete(0));
               
-
             inputs = inputs.Distinct().ToArray();
 
             var processed = 0;
@@ -262,9 +265,9 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
             var inputLock = new object();
             var inputsList =
-                new List<TPrositIn>();
+                new List<TPrositInputRow>();
             var validInputsList =
-                new List<List<TSkylineInputRow>>();
+                new List<TSkylineInputRow>();
 
             // Construct batch inputs in parallel
             var localProgressStatus = progressStatus;
@@ -288,24 +291,72 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
                     lock (inputLock)
                     {
-                        inputsList.Add(CreatePrositInput(batchInputs));
-                        validInputsList.Add(validSkylineInputs);
+                        inputsList.AddRange(batchInputs);
+                        validInputsList.AddRange(validSkylineInputs);
 
                         // ReSharper disable AccessToModifiedClosure
                         processed += batch.Length;
                         progressMonitor.UpdateProgress(localProgressStatus.ChangePercentComplete(CONSTRUCTING_INPUTS_FRACTION * processed / totalCount));
-                        // ReSharper enable AccessToModifiedClosure
+                        // ReSharper restore AccessToModifiedClosure
+                    }
+                });
+
+            processed = 0;
+            totalCount = inputsList.Count;
+
+            // Make predictions batch by batch in sequence and merge the outputs
+            var prositOutputAll = PredictBatches(predictionClient, progressMonitor, ref progressStatus, settings, inputsList, token);
+
+            return CreateSkylineOutput(settings, validInputsList.Select(i => i).ToArray(), prositOutputAll);
+        }
+
+        /// <summary>
+        /// Constructs batches and makes predictions in parallel
+        /// </summary>
+        /// <param name="predictionClient">Client to use for prediction</param>
+        /// <param name="progressMonitor">Monitor to show progress in UI</param>
+        /// <param name="progressStatus"/>
+        /// <param name="settings">Settings to use for constructing inputs and outputs</param>
+        /// <param name="inputs">List of inputs to predict</param>
+        /// <param name="token">Token for cancelling prediction</param>
+        /// <returns>Predictions from Prosit</returns>
+        public TPrositOut PredictBatches(PredictionService.PredictionServiceClient predictionClient,
+            IProgressMonitor progressMonitor, ref IProgressStatus progressStatus, SrmSettings settings, List<TPrositInputRow> inputs, CancellationToken token)
+        {
+            var processed = 0;
+            var totalCount = inputs.Count;
+
+            var inputLock = new object();
+            var inputsList =
+                new List<TPrositIn>();
+
+            // Construct batch inputs in parallel
+            var localProgressStatus = progressStatus;
+            ParallelEx.ForEach(PrositHelpers.EnumerateBatches(inputs, PrositConstants.BATCH_SIZE),
+                batchEnumerable =>
+                {
+                    var batch = batchEnumerable.ToArray();
+                    
+                    lock (inputLock)
+                    {
+                        inputsList.Add(CreatePrositInput(batch));
+
+                        // ReSharper disable AccessToModifiedClosure
+                        processed += batch.Length;
+                        progressMonitor.UpdateProgress(localProgressStatus);
+                        // ReSharper restore AccessToModifiedClosure
                     }
                 });
 
             processed = 0;
             totalCount = inputsList.Sum(pi => pi.InputRows.Count);
 
-            const int REQUESTING_INPUTS_FRACTION = 100 - CONSTRUCTING_INPUTS_FRACTION;
+            const int REQUESTING_INPUTS_FRACTION = 100;
             progressStatus = progressStatus
                 .ChangeMessage(PrositResources.PrositModel_BatchPredict_Requesting_predictions_from_Prosit)
-                .ChangePercentComplete(CONSTRUCTING_INPUTS_FRACTION);
-            progressMonitor.UpdateProgress(progressStatus);
+                .ChangePercentComplete(0);
+            if (progressMonitor.UpdateProgress(progressStatus) == UpdateProgressResponse.cancel)
+                return null;
 
             // Make predictions batch by batch in sequence and merge the outputs
             var prositOutputAll = new TPrositOut();
@@ -318,17 +369,98 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 progressStatus = progressStatus.ChangeMessage(TextUtil.SpaceSeparate(
                         PrositResources.PrositModel_BatchPredict_Requesting_predictions_from_Prosit,
                         processed.ToString(), @"/", totalCount.ToString()))
-                    .ChangePercentComplete(CONSTRUCTING_INPUTS_FRACTION +
-                                           REQUESTING_INPUTS_FRACTION * processed / totalCount);
-                progressMonitor.UpdateProgress(progressStatus);
+                    .ChangePercentComplete(REQUESTING_INPUTS_FRACTION * processed / totalCount);
+                if (progressMonitor.UpdateProgress(progressStatus) == UpdateProgressResponse.cancel)
+                    return null;
             }
 
-            return CreateSkylineOutput(settings, validInputsList.SelectMany(i => i).ToArray(), prositOutputAll);
+            return prositOutputAll;
         }
     }
 
-    public class PrositHelpers
+    public static class PrositHelpers
     {
+
+        public static PrositMS2Spectra PredictBatchesFromPrositCsv(string prositCsvFilePath, IProgressMonitor progressMonitor,
+            ref IProgressStatus progressStatus, CancellationToken token)
+        {
+            progressStatus = progressStatus.ChangeMessage(Resources.PrositHelpers_PredictBatchesFromPrositCsv_Reading_Prosit_CSV_input);
+
+            var inputRows = new List<PrositIntensityModel.PrositIntensityInput.PrositPrecursorInput>();
+            var peptides = new List<PrositIntensityModel.PeptidePrecursorNCE>();
+            var calc = new SequenceMassCalc(MassType.Monoisotopic);
+            var defaultSettings = SrmSettingsList.GetDefault();
+
+            using var csvReader = new StreamReader(prositCsvFilePath);
+            csvReader.ReadLine(); // skip header
+            while (csvReader.ReadLine() is { } row)
+            {
+                var values = row.Split(',');
+                string sequence = values[0];
+                var ce = Convert.ToSingle(values[1], CultureInfo.InvariantCulture);
+                var charge = Convert.ToInt32(values[2], CultureInfo.InvariantCulture);
+                inputRows.Add(PrositIntensityModel.CreatePrositInputRow(sequence, charge, ce, out _));
+                peptides.Add(new PrositIntensityModel.PeptidePrecursorNCE(sequence, charge, new SignedMz(calc.GetPrecursorMass(sequence) / charge),
+                    ExplicitMods.EMPTY, IsotopeLabelType.light, (int)ce));
+            }
+            progressStatus = progressStatus.NextSegment();
+
+            var prositOutput = PrositIntensityModel.Instance.PredictBatches(PrositPredictionClient.Current,
+                progressMonitor, ref progressStatus, defaultSettings, inputRows, token);
+            progressStatus = progressStatus.NextSegment();
+
+            var ms2 = new PrositMS2Spectra(SrmSettingsList.GetDefault(), peptides, prositOutput);
+
+            // Predict iRTs for peptides
+            var distinctModifiedSequences = new HashSet<string>();
+            var distinctPeps = new List<PrositRetentionTimeModel.PrositRTInput.PrositPeptideInput>();
+            foreach (var p in peptides)
+            {
+                if (distinctModifiedSequences.Add(p.Sequence))
+                    distinctPeps.Add(PrositRetentionTimeModel.CreatePrositInputRow(defaultSettings, p.Sequence, out _));
+            }
+
+            var irtOutput = PrositRetentionTimeModel.Instance.PredictBatches(PrositPredictionClient.Current,
+                progressMonitor, ref progressStatus, defaultSettings, distinctPeps, token);
+            //progressStatus = progressStatus.NextSegment();
+            var iRTMap = Enumerable.Range(0, distinctPeps.Count).ToDictionary(i => peptides[i], i => irtOutput.OutputRows[i].iRT);
+
+            for (var i = 0; i < peptides.Count; ++i)
+            {
+                if (iRTMap.TryGetValue(ms2.Spectra[i].PeptidePrecursorNCE, out var iRT))
+                    ms2.Spectra[i].SpecMzInfo.RetentionTime = iRT;
+                ms2.Spectra[i].SpecMzInfo.SourceFile = prositCsvFilePath;
+            }
+
+            return ms2;
+        }
+
+        public static void ExportPrositSpectraToBlib(PrositMS2Spectra spectra, string encyclopediaBlibFilePath, IProgressMonitor progressMonitor,
+            ref IProgressStatus progressStatus)
+        {
+            progressStatus = progressStatus.ChangeMessage(Resources.PrositHelpers_ExportPrositSpectraToBlib_Exporting_Prosit_spectra_to_BiblioSpec_library);
+            string libraryName = Path.GetFileName(encyclopediaBlibFilePath);
+
+            progressMonitor.UpdateProgress(progressStatus);
+
+            // Delete if already exists, no merging with Prosit
+            var libraryExists = File.Exists(encyclopediaBlibFilePath);
+            if (libraryExists)
+                FileEx.SafeDelete(encyclopediaBlibFilePath);
+
+            // Build the library
+            using (var blibDb = BlibDb.CreateBlibDb(encyclopediaBlibFilePath))
+            {
+                var docLibrarySpec = new BiblioSpecLiteSpec(libraryName, encyclopediaBlibFilePath);
+                var docLibrarySpec2 = docLibrarySpec;
+
+                var mzSpecInfo = spectra.Spectra.Select(s => s.SpecMzInfo);
+                var docLibraryNew = blibDb.CreateLibraryFromSpectra(docLibrarySpec2, mzSpecInfo.ToList(), libraryName, progressMonitor, ref progressStatus);
+                if (docLibraryNew == null)
+                    throw new InvalidOperationException(Resources.PrositHelpers_ExportPrositSpectraToBlib_failed_to_write_Prosit_output_to_blib);
+            }
+        }
+
         public class PrositRequest
         {
             protected CancellationTokenSource _tokenSource = new CancellationTokenSource();
@@ -416,7 +548,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
             {
                 return Client.Server == other.Client.Server && ReferenceEquals(IntensityModel, other.IntensityModel) &&
                        ReferenceEquals(RTModel, other.RTModel) && ReferenceEquals(Settings, other.Settings) &&
-                       ReferenceEquals(Peptide, other.Peptide) && ReferenceEquals(Precursor, other.Precursor) &&
+                       Equals(Peptide, other.Peptide) && Equals(Precursor, other.Precursor) &&
                        ReferenceEquals(LabelType, other.LabelType) && NCE == other.NCE;
             }
 
@@ -461,7 +593,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         /// <param name="spectrum1">First spectrum</param>
         /// <param name="spectrum2">Second spectrum</param>
         /// <param name="mzTolerance">Tolerance for considering two mzs the same</param>
-        public static double CalculateSpectrumDotpMzMatch(LibraryRankedSpectrumInfo spectrum1, LibraryRankedSpectrumInfo spectrum2, double mzTolerance)
+        public static double CalculateSpectrumDotpMzMatch(LibraryRankedSpectrumInfo spectrum1, LibraryRankedSpectrumInfo spectrum2, MzTolerance mzTolerance)
         {
             var matched1 = spectrum1.PeaksMatched.ToArray();
             var matched2 = spectrum2.PeaksMatched.ToArray();
@@ -473,8 +605,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
             {
                 var mz1 = matched1[matchIndex1].ObservedMz;
                 var mz2 = matched2[matchIndex2].ObservedMz;
-                if (Math.Abs(mz1 - mz2) <
-                    mzTolerance)
+                if (mzTolerance.IsWithinTolerance(mz1, mz2))
                 {
                     intensities1All.Add(matched1[matchIndex1].Intensity);
                     intensities2All.Add(matched2[matchIndex2].Intensity);
@@ -600,6 +731,34 @@ namespace pwiz.Skyline.Model.Prosit.Models
                     // Not modified
                     result[i] = prositAA.PrositIndex;
                 }
+            }
+
+            exception = null;
+            return result;
+        }
+
+        /// <summary>
+        /// Sequences are passed to Prosit as an array of indices mapping into an array
+        /// of amino acids (with modifications). Actually throwing exceptions in this method
+        /// slows down constructing inputs (for larger data sets with unknown mods (and aa's)significantly,
+        /// which is why PrositExceptions (only) are set as an output parameter and null is returned.
+        /// </summary>
+        public static int[] EncodeSequence(string sequence, out PrositException exception)
+        {
+            if (sequence.Length > PrositConstants.PEPTIDE_SEQ_LEN) {
+                exception = new PrositPeptideTooLongException(new Target(sequence));
+                return null;
+            }
+
+            var result = new int[PrositConstants.PEPTIDE_SEQ_LEN];
+
+            for (var i = 0; i < sequence.Length; ++i) {
+                if (!PrositConstants.AMINO_ACIDS.TryGetValue(sequence[i], out var prositAA)) {
+                    exception = new PrositUnsupportedAminoAcidException(new Target(sequence), i);
+                    return null;
+                }
+
+                result[i] = prositAA.PrositIndex;
             }
 
             exception = null;

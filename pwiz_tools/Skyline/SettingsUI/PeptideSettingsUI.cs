@@ -23,7 +23,6 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -82,18 +81,13 @@ namespace pwiz.Skyline.SettingsUI
         private readonly LabelTypeComboDriver _driverLabelType;
         private static readonly IList<int?> _quantMsLevels = ImmutableList.ValueOf(new int?[] {null, 1, 2});
         private readonly LabelTypeComboDriver _driverSmallMolInternalStandardTypes;
-        private readonly string _staticModsOriginalTooltip;
-        private readonly string _heavyModsOriginalTooltip;
-        private readonly string _librariesOriginalTooltip;
+        private string _staticModsOriginalTooltip;
+        private string _heavyModsOriginalTooltip;
+        private string _librariesOriginalTooltip;
 
         public PeptideSettingsUI(SkylineWindow parent, LibraryManager libraryManager, TABS? selectTab)
         {
             InitializeComponent();
-            // Remember the original tooltips which were set in the form designer.
-            // The original tooltip is displayed when the mouse is not pointing at any item in the list
-            _staticModsOriginalTooltip = helpTip.GetToolTip(listStaticMods);
-            _heavyModsOriginalTooltip = helpTip.GetToolTip(listHeavyMods);
-            _librariesOriginalTooltip = helpTip.GetToolTip(listLibraries);
 
             _tabPages = new Dictionary<TABS, TabWithPage>
             {
@@ -734,14 +728,16 @@ namespace pwiz.Skyline.SettingsUI
 
             // Libraries built for full-scan filtering can have important retention time information,
             // and the redundant libraries are more likely to be desirable for showing spectra.
-            using (var dlg = new BuildLibraryDlg(_parent) { LibraryKeepRedundant = _parent.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled })
+            using (var dlg = new BuildLibraryDlg(_parent))
             {
+                dlg.LibraryKeepRedundant = _parent.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled;
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     if (!string.IsNullOrEmpty(dlg.AddLibraryFile))
                     {
-                        using (var editLibDlg = new EditLibraryDlg(Settings.Default.SpectralLibraryList) {LibraryPath = dlg.AddLibraryFile})
+                        using (var editLibDlg = new EditLibraryDlg(Settings.Default.SpectralLibraryList))
                         {
+                            editLibDlg.LibraryPath = dlg.AddLibraryFile;
                             if (editLibDlg.ShowDialog(this) == DialogResult.OK)
                             {
                                 _driverLibrary.List.Add(editLibDlg.LibrarySpec);
@@ -818,12 +814,10 @@ namespace pwiz.Skyline.SettingsUI
                 if (filterDlg.ShowDialog(this) == DialogResult.OK)
                 {
                     MidasLibrary midasLib = null;
-                    using (var longWait = new LongWaitDlg
-                           {
-                               Text = Resources.PeptideSettingsUI_ShowFilterMidasDlg_Loading_MIDAS_Library,
-                               Message = string.Format(Resources.PeptideSettingsUI_ShowFilterMidasDlg_Loading__0_, Path.GetFileName(midasLibSpec.FilePath))
-                           })
+                    using (var longWait = new LongWaitDlg())
                     {
+                        longWait.Text = Resources.PeptideSettingsUI_ShowFilterMidasDlg_Loading_MIDAS_Library;
+                        longWait.Message = string.Format(Resources.PeptideSettingsUI_ShowFilterMidasDlg_Loading__0_, Path.GetFileName(midasLibSpec.FilePath));
                         longWait.PerformWork(this, 800, monitor => midasLib =
                             _libraryManager.LoadLibrary(midasLibSpec, () => new DefaultFileLoadMonitor(monitor)) as MidasLibrary);
                     }
@@ -1810,12 +1804,10 @@ namespace pwiz.Skyline.SettingsUI
             public void EditList()
             {
                 var heavyMods = GetHeavyModifications().ToArray();
-                using (var dlg = new EditLabelTypeListDlg
-                              {
-                                  LabelTypes = from typedMods in heavyMods
-                                               select typedMods.LabelType
-                              })
+                using (var dlg = new EditLabelTypeListDlg())
                 {
+                    dlg.LabelTypes = from typedMods in heavyMods
+                        select typedMods.LabelType;
                     if (dlg.ShowDialog(Combo.TopLevelControl) == DialogResult.OK)
                     {
                         // Store existing values in dictionary by lowercase name.
@@ -1874,6 +1866,12 @@ namespace pwiz.Skyline.SettingsUI
             {
                 staticMod = _driverStaticMod.Choices[itemIndex];
             }
+            // Remember the original tooltips which were set in the form designer.
+            // The original tooltip is displayed when the mouse is not pointing at any item in the list
+            if (string.IsNullOrEmpty(_staticModsOriginalTooltip))
+            {
+                _staticModsOriginalTooltip = helpTip.GetToolTip(listStaticMods);
+            }
             ChangeTooltip(listStaticMods, staticMod?.ItemDescription.ToString() ?? _staticModsOriginalTooltip);
         }
 
@@ -1885,6 +1883,12 @@ namespace pwiz.Skyline.SettingsUI
             {
                 heavyMod = _driverHeavyMod.Choices[itemIndex];
             }
+            // Remember the original tooltips which were set in the form designer.
+            // The original tooltip is displayed when the mouse is not pointing at any item in the list
+            if (string.IsNullOrEmpty(_heavyModsOriginalTooltip))
+            {
+                _heavyModsOriginalTooltip = helpTip.GetToolTip(listHeavyMods);
+            }
             ChangeTooltip(listHeavyMods, heavyMod?.ItemDescription.ToString() ?? _heavyModsOriginalTooltip);
         }
 
@@ -1895,6 +1899,12 @@ namespace pwiz.Skyline.SettingsUI
             if (itemIndex >= 0 && itemIndex < _driverLibrary.Choices.Length)
             {
                 librarySpec = _driverLibrary.Choices[itemIndex];
+            }
+            // Remember the original tooltips which were set in the form designer.
+            // The original tooltip is displayed when the mouse is not pointing at any item in the list
+            if (string.IsNullOrEmpty(_librariesOriginalTooltip))
+            {
+                _librariesOriginalTooltip = helpTip.GetToolTip(listLibraries);
             }
             ChangeTooltip(listLibraries, librarySpec?.ItemDescription?.ToString() ?? _librariesOriginalTooltip);
         }

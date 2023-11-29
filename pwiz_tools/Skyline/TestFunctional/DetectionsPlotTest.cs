@@ -75,12 +75,8 @@ namespace pwiz.SkylineTestFunctional
             });
 
             //verify data correct for 2 q-values
-            RunUI(() =>
-            {
-                propDialog.SetQValueTo(0.003f);
-                propDialog.OkDialog();
-            });
-            WaitForClosedForm(propDialog);
+            RunUI(() => propDialog.SetQValueTo(0.003f));
+            OkDialog(propDialog, propDialog.OkDialog);
             WaitForCondition(() => (DetectionsGraphController.Settings.QValueCutoff == 0.003f));
             AssertDataCorrect(pane, 0, 0.003f);
 
@@ -89,12 +85,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 toolbar.pbProperties_Click(graph.GraphControl, new EventArgs());
             });
-            RunUI(() =>
-            {
-                propDialog.SetQValueTo(0.001f);
-                propDialog.OkDialog();
-            });
-            WaitForClosedForm(propDialog);
+            RunUI(() => propDialog.SetQValueTo(0.001f));
+            OkDialog(propDialog, propDialog.OkDialog);
             WaitForCondition(() => (DetectionsGraphController.Settings.QValueCutoff == 0.001f));
             AssertDataCorrect(pane, 2, 0.001f);
 

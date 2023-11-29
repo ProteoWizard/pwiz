@@ -98,6 +98,10 @@ void testWriteRead()
             = BinaryDataEncoder::Precision_32;
     testWriteRead(msd, writeConfig);
 
+    //test with error skipping
+    writeConfig.continueOnError = true;
+    testWriteRead(msd, writeConfig);
+
     // TODO: test without compression
 }
 

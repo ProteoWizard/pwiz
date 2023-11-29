@@ -20,12 +20,63 @@
 //
 
 #include "IterationListener.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
 
 
 namespace pwiz {
 namespace CLI {
 namespace util {
 
+class functionbuf : public std::streambuf
+{
+private:
+    typedef std::streambuf::traits_type traits_type;
+    LogCallback logCallback;
+    char buf[1024];
+    std::wstring wbuf;
+
+    int overflow(int c) {
+        if (!traits_type::eq_int_type(c, traits_type::eof())) {
+            *this->pptr() = traits_type::to_char_type(c);
+            this->pbump(1);
+        }
+        return this->sync() ? traits_type::not_eof(c) : traits_type::eof();
+    }
+    int sync() {
+        if (this->pbase() != this->pptr())
+        {
+            const size_t cSize = (this->pptr() - this->pbase()) + 1;
+            size_t t;
+            wbuf.resize(cSize, L'#');
+            mbstowcs_s(&t, &wbuf[0], cSize, this->pbase(), cSize - 1);
+
+            logCallback(wbuf.c_str());
+
+            this->setp(this->pbase(), this->epptr());
+        }
+        return 0;
+    }
+public:
+    functionbuf(LogCallback function)
+        : logCallback(function), wbuf(2048, L'#') {
+        this->setp(this->buf, this->buf + sizeof(this->buf) - 1);
+    }
+};
+
+static std::unique_ptr<functionbuf> callback_on_cout_stream;
+static std::unique_ptr<functionbuf> callback_on_cerr_stream;
+
+void SetCoutCallback(LogCallback cb) {
+    callback_on_cout_stream = std::make_unique<functionbuf>(cb);
+    cout.rdbuf(callback_on_cout_stream.get()); // unqualified cout should be boost::nowide::cout
+    cout.setf(ios::unitbuf);
+}
+
+void SetCerrCallback(LogCallback cb) {
+    callback_on_cerr_stream = std::make_unique<functionbuf>(cb);
+    cerr.rdbuf(callback_on_cerr_stream.get()); // unqualified cerr should be boost::nowide::cerr
+    cerr.setf(ios::unitbuf);
+}
 
 namespace b = pwiz::util;
 using namespace System::Runtime::InteropServices;
