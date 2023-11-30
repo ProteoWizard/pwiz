@@ -119,7 +119,7 @@ namespace pwiz.Skyline
         }.Concat(PATH_TYPE_VALUES));
 
         // For value examples that should wrap but do not contain '|' characters
-        public static readonly HashSet<Func<string>> WRAPPABLE_LIST_TYPE_VARIABLES = new HashSet<Func<string>>(new[]
+        public static readonly HashSet<Func<string>> WRAPPABLE_LIST_TYPE_VALUES = new HashSet<Func<string>>(new[]
         {
             ANNOTATION_TARGET_LIST_VALUE
         });
@@ -3034,7 +3034,7 @@ namespace pwiz.Skyline
                     if (hasAppliesTo)
                         sb.Append("<td>").Append(commandArg.AppliesTo != null ? HtmlEncode(commandArg.AppliesTo) : "&nbsp;").Append("</td>");
                     string argDescription = HtmlEncode(commandArg.ArgumentDescription);
-                    if (!argDescription.Contains('|') && !WRAPPABLE_LIST_TYPE_VARIABLES.Contains(commandArg.ValueExample))
+                    if (!argDescription.Contains('|') && !WRAPPABLE_LIST_TYPE_VALUES.Contains(commandArg.ValueExample))
                         argDescription = argDescription.Replace(" ", "&nbsp;");
                     argDescription = argDescription.Replace(Environment.NewLine, "<br/>");
                     sb.Append("<td>").Append(argDescription).Append("</td>");
