@@ -1402,22 +1402,20 @@ namespace pwiz.SkylineTestFunctional
 
             PrositConstants.CACHE_PREV_PREDICTION = false;
 
-            PrositPredictionClient.FakeClient = RecordData
-                ? new FakePrositPredictionClient(string.Empty)
-                : new FakePrositPredictionClient(QUERIES);
+            using (new FakeProsit(RecordData ? null : QUERIES))
+            {
+                if (RecordData)
+                    Console.WriteLine(@"private static List<PrositQuery> QUERIES = new List<PrositQuery>(new PrositQuery[] {");
 
-            if (RecordData)
-                Console.WriteLine(@"private static List<PrositQuery> QUERIES = new List<PrositQuery>(new PrositQuery[] {");
-
-            TestPrositOptions();
-            TestPrositSinglePrecursorPredictions();
-            TestLivePrositMirrorPlots();
-            Settings.Default.Prosit = false; // Disable Prosit to avoid that last query after building the library
-            TestPrositLibraryBuild();
-            TestInvalidPepSequences(); // Do this at the end, otherwise it messes with the order of nodes
-            var expected = RecordData ? 0 : QUERIES.Count;
-            Assert.AreEqual(expected, ((FakePrositPredictionClient)PrositPredictionClient.Current).QueryIndex);
-            PrositPredictionClient.FakeClient = null;
+                TestPrositOptions();
+                TestPrositSinglePrecursorPredictions();
+                TestLivePrositMirrorPlots();
+                Settings.Default.Prosit = false; // Disable Prosit to avoid that last query after building the library
+                TestPrositLibraryBuild();
+                TestInvalidPepSequences(); // Do this at the end, otherwise it messes with the order of nodes
+                var expected = RecordData ? 0 : QUERIES.Count;
+                Assert.AreEqual(expected, ((FakePrositPredictionClient)PrositPredictionClient.Current).QueryIndex);
+            }
             PrositConstants.CACHE_PREV_PREDICTION = true;
             if (RecordData)
                 Console.WriteLine(@"});");
@@ -2086,6 +2084,21 @@ namespace pwiz.SkylineTestFunctional
         }
     }
 
+    internal class FakeProsit : IDisposable
+    {
+        public FakeProsit(IList<PrositQuery> expectedQueries = null)
+        {
+            var fakeClient = FakePrositPredictionClient.GetInstance();
+            fakeClient.SetExpectedQueries(expectedQueries);
+            PrositPredictionClient.FakeClient = fakeClient;
+        }
+
+        public void Dispose()
+        {
+            PrositPredictionClient.FakeClient = null;
+        }
+    }
+
     /// <summary>
     /// A fake prediction client for logging predictions and returning cached
     /// predictions. For logging, it needs to be constructed with a server address.
@@ -2093,15 +2106,24 @@ namespace pwiz.SkylineTestFunctional
     /// </summary>
     public class FakePrositPredictionClient : PrositPredictionClient
     {
-        private List<PrositQuery> _expectedQueries;
+        // Avoid creating more than one of these during testing, since
+        // PrositConfig.Channel can leak
+        private static FakePrositPredictionClient _instance;
 
-        public FakePrositPredictionClient(string server) :
+        public static FakePrositPredictionClient GetInstance()
+        {
+            return _instance ??= new FakePrositPredictionClient();
+        }
+
+        private IList<PrositQuery> _expectedQueries;
+
+        public FakePrositPredictionClient() :
             base(PrositConfig.GetPrositConfig())
         {
             QueryIndex = 0;
         }
 
-        public FakePrositPredictionClient(List<PrositQuery> expectedQueries)
+        public void SetExpectedQueries(IList<PrositQuery> expectedQueries)
         {
             _expectedQueries = expectedQueries;
             QueryIndex = 0;

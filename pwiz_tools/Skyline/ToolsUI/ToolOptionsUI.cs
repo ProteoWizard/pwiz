@@ -481,7 +481,18 @@ namespace pwiz.Skyline.ToolsUI
 
         private void ToolOptionsUI_Shown(object sender, EventArgs e)
         {
-            UpdateServerStatus();
+            if (tabControl.SelectedIndex == (int)TABS.Prosit)
+                UpdateServerStatus();
+            else
+            {
+                tabControl.SelectedIndexChanged += tabControl_SelectedIndexChanged;
+            }
+        }
+
+        private void tabControl_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (tabControl.SelectedIndex == (int)TABS.Prosit)
+                UpdateServerStatus();
         }
     }
 }
