@@ -157,7 +157,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblProgress.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 10</value>
+    <value>9, 6</value>
   </data>
   <data name="lblProgress.Size" type="System.Drawing.Size, System.Drawing">
     <value>87, 13</value>
@@ -247,7 +247,7 @@
     <value>Fill</value>
   </data>
   <data name="txtSearchProgress.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
+    <value>0, 0</value>
   </data>
   <data name="txtSearchProgress.Multiline" type="System.Boolean, mscorlib">
     <value>True</value>

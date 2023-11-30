@@ -1048,6 +1048,8 @@ namespace pwiz.Skyline.SettingsUI
                         }
                     }
                 }
+                groupBoxMS1.Left = 0;
+                groupBoxMS1.Top = 12;
             }
             else if (isWorkflowDda)
             {

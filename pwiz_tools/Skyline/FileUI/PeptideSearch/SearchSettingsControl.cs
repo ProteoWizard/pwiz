@@ -62,7 +62,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 _hardklorInstrumentSettingsControl = new FullScanSettingsControl(documentContainer, ImportPeptideSearch.eFeatureDetectionPhase.hardklor_settings);
                 _hardklorInstrumentSettingsControl.ModifyOptionsForImportPeptideSearchWizard(ImportPeptideSearchDlg.Workflow.feature_detection, false, ImportPeptideSearch.eFeatureDetectionPhase.hardklor_settings);
                 Controls.Add(_hardklorInstrumentSettingsControl);
-                _hardklorInstrumentSettingsControl.Location = new System.Drawing.Point(0, label2.Top);
+                _hardklorInstrumentSettingsControl.Location = new System.Drawing.Point(0, 0);
                 // And adjust location of the other settings controls
                 groupBoxHardklor.Enabled = groupBoxHardklor.Visible = true;
                 groupBoxHardklor.Location = new System.Drawing.Point(_hardklorInstrumentSettingsControl.GroupBoxMS1Bounds.Left, _hardklorInstrumentSettingsControl.Bottom + 10);

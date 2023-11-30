@@ -153,20 +153,22 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ConverterSettingsControl = new ConverterSettingsControl(this, ImportPeptideSearch, () => FullScanSettingsControl);
             AddPageControl(ConverterSettingsControl, converterSettingsPage, 18, 50);
 
+            var isFeatureDetection = workflowType is Workflow.feature_detection;
+
             if (!useExistingLibrary)
             {
                 SearchSettingsControl = new SearchSettingsControl(this, ImportPeptideSearch);
-                AddPageControl(SearchSettingsControl, ddaSearchSettingsPage, 18, 50);
+                AddPageControl(SearchSettingsControl, ddaSearchSettingsPage, 18, isFeatureDetection ? this.buildSpectralLibraryTitlePanel.Bottom : 50);
             }
 
             SearchControl = new DDASearchControl(ImportPeptideSearch);
-            AddPageControl(SearchControl, ddaSearch, 18, 50);
+            AddPageControl(SearchControl, ddaSearchPage, isFeatureDetection ? 3 : 18, 50);
 
             _pagesToSkip = new HashSet<Pages>();
 
             if (workflowType.HasValue)
             {
-                if (workflowType.Value == Workflow.feature_detection)
+                if (isFeatureDetection)
                 {
                     this.Text = Resources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection;
                     label14.Text =
@@ -179,6 +181,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
 
                 BuildPepSearchLibControl.ForceWorkflow(workflowType.Value);
+
+                if (isFeatureDetection)
+                {
+                    Height = BuildPepSearchLibControl.Bottom;
+                }
             }
         }
 
@@ -189,9 +196,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 ms1FullScanSettingsPage.Controls.Remove(FullScanSettingsControl);
             }
 
+            var isFeatureDetection = workflowType is Workflow.feature_detection;
             FullScanSettingsControl = new FullScanSettingsControl(this,
-                workflowType == Workflow.feature_detection ? ImportPeptideSearch.eFeatureDetectionPhase.fullscan_settings : ImportPeptideSearch.eFeatureDetectionPhase.none);
-            AddPageControl(FullScanSettingsControl, ms1FullScanSettingsPage, 18, 50);
+                isFeatureDetection ? ImportPeptideSearch.eFeatureDetectionPhase.fullscan_settings : ImportPeptideSearch.eFeatureDetectionPhase.none);
+            AddPageControl(FullScanSettingsControl, ms1FullScanSettingsPage, isFeatureDetection ? 0 : 18, isFeatureDetection ? 43 : 50);
 
             FullScanSettingsControl.FullScanEnabledChanged += OnFullScanEnabledChanged; // Adjusts ion settings when full scan settings change
         }

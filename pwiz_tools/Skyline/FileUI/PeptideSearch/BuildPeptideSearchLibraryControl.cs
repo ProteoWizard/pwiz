@@ -617,6 +617,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 comboStandards.Hide();
                 cbIncludeAmbiguousMatches.Hide();
                 cbFilterForDocumentPeptides.Hide();
+
+                panelPeptideSearch.Top = panel1.Top;
+                var bump = label2.Top - panelChooseFile.Top;
+                panelChooseFile.Top = 12;
+                lblFileCaption.Top += bump;
+                gridSearchFiles.Top += bump;
+                btnAddFile.Top += bump;
+                btnRemFile.Top += bump;
+                panelPeptideSearch.Height = gridSearchFiles.Bottom;
+                Height = panelPeptideSearch.Height;
             }
         }
 
