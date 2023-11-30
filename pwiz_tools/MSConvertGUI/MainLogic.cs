@@ -81,7 +81,7 @@ namespace MSConvertGUI
                 // this list is for Windows; it's a superset of the POSIX list
                 const string illegalFilename = "\\/*:?<>|\"";
                 foreach (var t in illegalFilename)
-                    if (runId.Contains(t))
+                    if (t < 0x20 || t == 0x7F || runId.Contains(t))
                         runId = runId.Replace(t, '_');
 
                 var newFilename = runId + Extension;
