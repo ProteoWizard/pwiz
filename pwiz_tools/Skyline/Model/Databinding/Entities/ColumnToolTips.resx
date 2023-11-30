@@ -1410,7 +1410,7 @@ values.</value>
   <data name="SummaryMessage">
     <value>Description of the change</value>
   </data>
-  <data name="SurrogateCalibrationCurve">
+  <data name="SurrogateExternalStandard">
     <value>Name of another peptide or molecule whose fitted calibration curve will be used for quantification of this peptide or molecule</value>
   </data>
   <data name="TargetQualitativeIonRatio">

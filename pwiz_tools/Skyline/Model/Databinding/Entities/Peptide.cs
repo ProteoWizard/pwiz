@@ -346,12 +346,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         [DataGridViewColumnType(typeof(SurrogateStandardDataGridViewColumn))]
         [Importable]
-        public string SurrogateCalibrationCurve
+        public string SurrogateExternalStandard
         {
             get { return DocNode.SurrogateCalibrationCurve; }
             set
             {
-                ChangeDocNode(EditColumnDescription(nameof(SurrogateCalibrationCurve), value),
+                ChangeDocNode(EditColumnDescription(nameof(SurrogateExternalStandard), value),
                     docNode => docNode.ChangeSurrogateCalibrationCurve(value));
             }
         }

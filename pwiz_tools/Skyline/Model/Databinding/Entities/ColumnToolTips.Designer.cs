@@ -3741,9 +3741,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         /// <summary>
         ///   Looks up a localized string similar to Name of another peptide or molecule whose fitted calibration curve will be used for quantification of this peptide or molecule.
         /// </summary>
-        public static string SurrogateCalibrationCurve {
+        public static string SurrogateExternalStandard {
             get {
-                return ResourceManager.GetString("SurrogateCalibrationCurve", resourceCulture);
+                return ResourceManager.GetString("SurrogateExternalStandard", resourceCulture);
             }
         }
         

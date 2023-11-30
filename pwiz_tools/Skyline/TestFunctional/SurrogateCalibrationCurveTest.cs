@@ -59,7 +59,7 @@ namespace pwiz.SkylineTestFunctional
                     .Property(nameof(Protein.Peptides)).LookupAllItems();
                 viewEditor.ChooseColumnsTab.AddColumn(ppPeptide);
                 viewEditor.ChooseColumnsTab.AddColumn(ppPeptide.Property(nameof(Peptide.StandardType)));
-                viewEditor.ChooseColumnsTab.AddColumn(ppPeptide.Property(nameof(Peptide.SurrogateCalibrationCurve)));
+                viewEditor.ChooseColumnsTab.AddColumn(ppPeptide.Property(nameof(Peptide.SurrogateExternalStandard)));
                 viewEditor.ChooseColumnsTab.AddColumn(ppPeptide.Property(nameof(Peptide.CalibrationCurve)));
                 viewEditor.ViewName = "Surrogate Calibration Curves";
                 viewEditor.OkDialog();
@@ -71,7 +71,7 @@ namespace pwiz.SkylineTestFunctional
                 var colStandardType = documentGrid.FindColumn(PropertyPath.Root.Property(nameof(Peptide.StandardType)));
                 Assert.IsNotNull(colStandardType);
                 var colSurrogateCalibrationCurve =
-                    documentGrid.FindColumn(PropertyPath.Root.Property(nameof(Peptide.SurrogateCalibrationCurve)));
+                    documentGrid.FindColumn(PropertyPath.Root.Property(nameof(Peptide.SurrogateExternalStandard)));
                 Assert.IsNotNull(colSurrogateCalibrationCurve);
                 var dataGrid = documentGrid.DataGridView;
                 SetCellValue(dataGrid.Rows[0].Cells[colStandardType.Index], StandardType.SURROGATE_STANDARD.ToString());
