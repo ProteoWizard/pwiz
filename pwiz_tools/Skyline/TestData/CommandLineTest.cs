@@ -853,7 +853,6 @@ namespace pwiz.SkylineTestData
             Assert.IsTrue(!refSpectra.Any());
         }
 
-
         [TestMethod]
         public void ConsoleAddDecoysTest()
         {
