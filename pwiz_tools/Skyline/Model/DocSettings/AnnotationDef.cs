@@ -259,7 +259,6 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        
 
         #region object overrides
 

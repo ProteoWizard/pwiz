@@ -1143,8 +1143,10 @@ namespace pwiz.Skyline
         /// <summary>
         /// Parse a comma-separated list of target types to apply an annotation to. Case-insensitive.
         /// </summary>
-        /// <param name="p">A NameValuePair where Match is the argument and Value is a comma-separated list</param>
-        /// <exception cref="ValueInvalidAnnotationTargetListException">Thrown if no targets are parsed from the list</exception>
+        /// <param name="p">A NameValuePair where Match is the argument and Value is a
+        /// comma-separated list</param>
+        /// <exception cref="ValueInvalidAnnotationTargetListException">Thrown if no targets are
+        /// parsed from the list</exception>
         private void ParseAnnotationTargets(NameValuePair p)
         {
             var userTargets = 

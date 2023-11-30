@@ -2971,7 +2971,8 @@ namespace pwiz.Skyline
         /// <param name="path">Path to an XML file containing annotations</param>
         /// <param name="targets">Data types to apply the annotation to</param>
         /// <param name="type">Type of annotation</param>
-        /// <param name="values">An array of at least one value. Only used for the type value_list</param>
+        /// <param name="values">An array of at least one value. Only used for the type
+        /// value_list</param>
         /// <param name="resolveConflictsBySkipping">True to skip conflicting annotations,
         /// false to overwrite, and null to error</param>
         /// <returns>True upon successful definition</returns>
@@ -3000,7 +3001,8 @@ namespace pwiz.Skyline
         /// <summary>
         /// Add an existing annotation definition from the environment to the document.
         /// </summary>
-        /// <param name="annotationFromEnvironment">Name of an annotation existing in the environment</param>
+        /// <param name="annotationFromEnvironment">Name of an annotation existing in
+        /// the environment</param>
         /// <returns>True if the annotation exists and is added successfully</returns>
         private bool AddAnnotationFromEnvironment(string annotationFromEnvironment)
         {
@@ -3025,8 +3027,8 @@ namespace pwiz.Skyline
         /// Add annotations to the document and environment from an XML file
         /// </summary>
         /// <param name="path">Path to the XMl file containing annotations</param>
-        /// <param name="resolveConflictsBySkipping">True to skip conflicting annotations, false to overwrite,
-        /// and null to error</param>
+        /// <param name="resolveConflictsBySkipping">True to skip conflicting annotations,
+        /// false to overwrite, and null to error</param>
         /// <returns>True if at least one annotation is defined from the XML file</returns>
         private bool AddAnnotationsFromXml(string path, bool? resolveConflictsBySkipping)
         {
@@ -3064,9 +3066,10 @@ namespace pwiz.Skyline
         /// <param name="targets">Data types to apply the annotation to</param>
         /// <param name="type">Type of the annotation (text, number, true_false, or value_list)</param>
         /// <param name="values">A list of values, only used in a value_list annotation</param>
-        /// <param name="resolveConflictsBySkipping">True to skip conflicting annotations, false to overwrite,
-        /// and null to error</param>
-        /// <returns>True upon successful addition of the annotation to the document, false upon failure</returns>
+        /// <param name="resolveConflictsBySkipping">True to skip conflicting annotations,
+        /// false to overwrite, and null to error</param>
+        /// <returns>True upon successful addition of the annotation to the document,
+        /// false upon failure</returns>
         private bool AddAnnotationsFromArguments(string name, IEnumerable<AnnotationDef.AnnotationTarget> targets,
             ListPropertyType type, IList<string> values, bool? resolveConflictsBySkipping)
         {
