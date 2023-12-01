@@ -44,7 +44,10 @@ namespace pwiz.SkylineTestFunctional
         public void TestAccessServer()
         {
             TestFilesZip = @"TestFunctional\AccessServerTest.zip";
-            RunFunctionalTest();
+            using (new FakeProsit(null))
+            {
+                RunFunctionalTest();
+            }
         }
 
         private readonly IPanoramaPublishClient _testPublishClient = new TestPanoramaPublishClient();
