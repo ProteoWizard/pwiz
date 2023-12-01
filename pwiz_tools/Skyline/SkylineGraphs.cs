@@ -1720,7 +1720,7 @@ namespace pwiz.Skyline
 
         public void ShowIntensityFormatting()
         {
-            foreach (var summary in _listGraphPeakArea.Where(summary => summary.Type == GraphTypeSummary.intensity))
+            foreach (var summary in _listGraphPeakArea.Where(summary => summary.Type == GraphTypeSummary.protein))
             {
                 summary.ShowFormattingDlg = true;
                 UpdatePeakAreaGraph();
@@ -3693,7 +3693,7 @@ namespace pwiz.Skyline
                 });
             }
             var graphType = graphSummary.Type;
-            if (graphType == GraphTypeSummary.replicate || graphType == GraphTypeSummary.intensity)
+            if (graphType == GraphTypeSummary.replicate || graphType == GraphTypeSummary.protein)
             {
                 menuStrip.Items.Insert(iInsert++, graphTypeToolStripMenuItem);
                 if (graphTypeToolStripMenuItem.DropDownItems.Count == 0)
@@ -3715,12 +3715,12 @@ namespace pwiz.Skyline
             {
                 EditMenu.AddGroupByMenuItems(menuStrip, groupReplicatesByContextMenuItem, SetAreaCVGroup, true, AreaGraphController.GroupByGroup, ref iInsert);
             }
-            else if(graphType != GraphTypeSummary.intensity)
+            else if(graphType != GraphTypeSummary.protein)
             {
                 AddTransitionContextMenu(menuStrip, iInsert++);
             }
 
-            if (graphType == GraphTypeSummary.intensity)
+            if (graphType == GraphTypeSummary.protein)
             {
                 AddIntensityFormattingForm(menuStrip, iInsert++);
             }
@@ -3784,7 +3784,7 @@ namespace pwiz.Skyline
                 AddPeptideOrderContextMenu(menuStrip, iInsert++);
                 AddScopeContextMenu(menuStrip, iInsert++);
             }
-            if (graphType == GraphTypeSummary.intensity || graphType == GraphTypeSummary.peptide)
+            if (graphType == GraphTypeSummary.protein || graphType == GraphTypeSummary.peptide)
             {
                 iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
             }
@@ -4285,7 +4285,7 @@ namespace pwiz.Skyline
             var list = _listGraphPeakArea;
             areaReplicateComparisonContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.replicate);
             areaPeptideComparisonContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.peptide);
-            areaIntensityContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.intensity);
+            areaIntensityContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.protein);
             areaCVHistogramContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.histogram);
             areaCVHistogram2DContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.histogram2d);
         }
@@ -4430,11 +4430,11 @@ namespace pwiz.Skyline
         public void ShowPeakAreaIntensityGraph()
         {
             ShowTotalTransitions();
-            Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.intensity);
-            ShowGraphPeakArea(true, GraphTypeSummary.intensity);
+            Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.protein);
+            ShowGraphPeakArea(true, GraphTypeSummary.protein);
             foreach (var summary in _listGraphPeakArea)
             {
-                if (summary.Type == GraphTypeSummary.intensity)
+                if (summary.Type == GraphTypeSummary.protein)
                 {
                     summary.Window = this;
                 }

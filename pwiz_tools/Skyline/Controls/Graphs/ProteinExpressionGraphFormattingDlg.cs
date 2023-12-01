@@ -31,7 +31,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public partial class IntensityGraphFormattingDlg : FormEx, ColorGrid<MatchRgbHexColor>.IColorGridOwner
+    public partial class ProteinExpressionGraphFormattingDlg : FormEx, ColorGrid<MatchRgbHexColor>.IColorGridOwner
     {
         private readonly ProteinAbundanceBindingSource.ProteinAbundanceRow[] _proteinAbundanceRows;
         private readonly Action<List<MatchRgbHexColor>> _updateGraph;
@@ -43,12 +43,12 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly DataGridViewComboBoxColumn _symbolCombo;
         private readonly DataGridViewComboBoxColumn _pointSizeCombo;
 
-        public IntensityGraphFormattingDlg(SummaryIntensityGraphPane areaIntensityGraphPane, IList<MatchRgbHexColor> colorRows,
+        public ProteinExpressionGraphFormattingDlg(SummaryProteinExpressionGraphPane areaProteinExpressionGraphPane, IList<MatchRgbHexColor> colorRows,
             ProteinAbundanceBindingSource.ProteinAbundanceRow[] proteinAbundanceRows, Action<List<MatchRgbHexColor>> updateGraph)
         {
             InitializeComponent();
 
-            AreaIntensityGraphPane = areaIntensityGraphPane;
+            AreaProteinExpressionGraphPane = areaProteinExpressionGraphPane;
             _proteinAbundanceRows = proteinAbundanceRows;
             _updateGraph = updateGraph;
 
@@ -179,7 +179,7 @@ namespace pwiz.Skyline.Controls.Graphs
             base.OnHandleDestroyed(e);
         }
 
-        public SummaryIntensityGraphPane AreaIntensityGraphPane { get; private set; }
+        public SummaryProteinExpressionGraphPane AreaProteinExpressionGraphPane { get; private set; }
 
         private void SetExpressionMinimumWidth()
         {
@@ -209,6 +209,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             _updateGraph(ResultList);
+            AreaProteinExpressionGraphPane.UpdateGraph(false);
         }
 
         private void regexColorRowGrid1_OnCellClick(object sender, DataGridViewCellEventArgs e)
@@ -241,7 +242,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (row >= 0 && row < regexColorRowGrid1.DataGridView.RowCount)
             {
                 using (var createMatchExpression =
-                       new CreateIntensityMatchExpressionDlg(this, _proteinAbundanceRows, _bindingList[row]))
+                       new CreateProteinExpressionMatchExpressionDlg(this, _proteinAbundanceRows, _bindingList[row]))
                 {
                     if (createMatchExpression.ShowDialog(this) == DialogResult.OK)
                     {
@@ -282,11 +283,11 @@ namespace pwiz.Skyline.Controls.Graphs
         public MatchExpression GetDefaultMatchExpression(string regex)
         {
             MatchOption? matchOption = null;
-            if (AreaIntensityGraphPane.AnyProteomic)
+            if (AreaProteinExpressionGraphPane.AnyProteomic)
             {
                 matchOption = DisplayModeToMatchOption(SequenceTree.ProteinsDisplayMode);
             }
-            else if (AreaIntensityGraphPane.AnyMolecules)
+            else if (AreaProteinExpressionGraphPane.AnyMolecules)
             {
                 matchOption = MatchOption.MoleculeGroupName;
             }

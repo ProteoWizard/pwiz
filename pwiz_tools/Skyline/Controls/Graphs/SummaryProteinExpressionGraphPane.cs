@@ -22,7 +22,7 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.Skyline.Controls.Graphs
 {
 
-    public abstract class SummaryIntensityGraphPane : SummaryBarGraphPaneBase
+    public abstract class SummaryProteinExpressionGraphPane : SummaryBarGraphPaneBase
     {
         public static SummaryPeptideOrder PeptideOrder
         {
@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return GroupComparisonModel.GroupComparisonDef; }
         }
 
-        protected SummaryIntensityGraphPane(GraphSummary graphSummary, PaneKey paneKey)
+        protected SummaryProteinExpressionGraphPane(GraphSummary graphSummary, PaneKey paneKey)
             : base(graphSummary)
         {
             PaneKey = paneKey;
@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var copy = GroupComparisonDef.ColorRows.Select(r => (MatchRgbHexColor)r.Clone()).ToList();
             var window = GraphSummary.Window;
             ShowingFormattingDlg = true;
-            using (var dlg = new IntensityGraphFormattingDlg(this, copy, 
+            using (var dlg = new ProteinExpressionGraphFormattingDlg(this, copy, 
                        proteinAbundanceRows, 
                        rows  =>
                        {
@@ -132,20 +132,51 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     var path = new IdentityPath(IdentityPath.ROOT, pepGroupDocNode.PeptideGroup);
                     var protein = new Protein(dataSchema, path);
-                    // if (!protein.GetProteinAbundances().TryGetValue(1, out var abundanceValue)) //TODO use the actual replicate number here
-                    // {
-                    //     continue;
-                    // }
                     var proteinAbundances = protein.GetProteinAbundances();
-                    var proteinAbundanceResult =
-                        new ProteinAbundanceBindingSource.ProteinAbundanceResult(proteinAbundances[1].Abundance);
-                    var groupIdentifier = GroupIdentifier.MakeGroupIdentifier(@"control");
-                    var replicateCount = proteinAbundances.Count;
-                    var row = new ProteinAbundanceBindingSource.ProteinAbundanceRow(protein, groupIdentifier,
-                        replicateCount, proteinAbundanceResult,
-                        new Dictionary<Replicate, ProteinAbundanceBindingSource.ReplicateRow>());
-                    list.Add(row);
+                    ProteinAbundanceBindingSource.ProteinAbundanceResult proteinAbundanceResult;
+                    var replicatesAll = true;
+                    var replicatesSingle = false;
+                    if (replicatesAll)
+                    {
+                        double totalAbundance = 0;
+                        int completeReplicates = 0;
+                        foreach (var proteinAbundance in proteinAbundances)
+                        {
+                            if (proteinAbundance.Value.Incomplete == false)
+                            {
+                                totalAbundance += proteinAbundance.Value.Abundance;
+                                completeReplicates++;
+                            }
+                        }
+
+                        var averageAbundance = totalAbundance / completeReplicates;
+                        proteinAbundanceResult =
+                            new ProteinAbundanceBindingSource.ProteinAbundanceResult(averageAbundance);
+                        var groupIdentifier = GroupIdentifier.MakeGroupIdentifier(@"control");
+                        var replicateCount = proteinAbundances.Count;
+                        var row = new ProteinAbundanceBindingSource.ProteinAbundanceRow(protein, groupIdentifier,
+                            replicateCount, proteinAbundanceResult,
+                            new Dictionary<Replicate, ProteinAbundanceBindingSource.ReplicateRow>());
+                        list.Add(row);
+                    } else if (replicatesSingle)
+                    {
+                        foreach (var replicate in proteinAbundances)
+                        {
+                            if (replicate.Value.Incomplete == false)
+                            {
+                                proteinAbundanceResult = new ProteinAbundanceBindingSource.ProteinAbundanceResult(replicate.Value.Abundance);
+                                var groupIdentifier = GroupIdentifier.MakeGroupIdentifier(@"control");
+                                var row = new ProteinAbundanceBindingSource.ProteinAbundanceRow(protein,
+                                    groupIdentifier, 1, proteinAbundanceResult,
+                                    new Dictionary<Replicate, ProteinAbundanceBindingSource.ReplicateRow>());
+                                list.Add(row);
+                            }
+                        }
+
+                    }
                 }
+
+                var count = Document.MoleculeGroups.Count();
                 _proteinAbundanceRows = list;
             }
 
@@ -212,9 +243,11 @@ namespace pwiz.Skyline.Controls.Graphs
         }
         protected override void ChangeSelection(int selectedIndex, IdentityPath identityPath)
         {
+            
             if (0 <= selectedIndex && selectedIndex < _graphData.XScalePaths.Length)
             {
-                GraphSummary.StateProvider.SelectedPath = _graphData.XScalePaths[selectedIndex];
+                GraphSummary.StateProvider.SelectedPath = identityPath;
+                //GraphSummary.StateProvider.SelectedPath = _graphData.XScalePaths[selectedIndex];
             }
         }
 
@@ -261,7 +294,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var rows = GetProteinAbundanceRows();
             _graphData = CreateGraphData(document, selectedProtein, displayType, rows);
 
-            // For proper z-order, add the selected points first, then the matched points, then the unmatched points
+            // For proper z-order, add the selected points, then the matched points, then the unmatched points
             var selectedPoints = new PointPairList();
             foreach (var pointPairList in _graphData.PointPairLists)
             {
@@ -282,13 +315,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         var proteinAbundanceRow = (ProteinAbundanceBindingSource.ProteinAbundanceRow)p.Tag;
                         return row.MatchExpression.Matches(Document, proteinAbundanceRow.Protein, 
-                            proteinAbundanceRow.ProteinAbundanceResult); //TODO remove abundance argument
+                            proteinAbundanceRow.ProteinAbundanceResult) && !selectedPoints.Contains(p); //TODO remove abundance argument
                     }).ToArray();
 
                     if (matchedPoints.Any())
                     {
                         AddPoints(new PointPairList(matchedPoints), colorRow.Color, DotPlotUtil.PointSizeToFloat(row.PointSize), row.Labeled, row.PointSymbol);
-                        pointList = new PointPairList(pointPairList.Except(matchedPoints).ToArray());
+                        pointList = new PointPairList(pointPairList.Except(matchedPoints).Except(selectedPoints).ToArray());
                     }
                 }
                 AddPoints(new PointPairList(pointList), Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);

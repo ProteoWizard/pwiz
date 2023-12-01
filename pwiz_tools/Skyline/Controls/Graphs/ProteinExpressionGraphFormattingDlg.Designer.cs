@@ -2,7 +2,7 @@
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    partial class IntensityGraphFormattingDlg
+    partial class ProteinExpressionGraphFormattingDlg
     {
         /// <summary>
         /// Required designer variable.
@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(IntensityGraphFormattingDlg));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ProteinExpressionGraphFormattingDlg));
             this.colorDialog1 = new System.Windows.Forms.ColorDialog();
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.advancedCheckBox.UseVisualStyleBackColor = true;
             this.advancedCheckBox.CheckedChanged += new System.EventHandler(this.advancedCheckBox_CheckedChanged);
             // 
-            // VolcanoPlotFormattingDlg
+            // IntensityGraphFormattingDlg
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.Controls.Add(this.button1);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "IntensityGraphhFormattingDlg";
+            this.Name = "ProteinExpressionGraphFormattingDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.ResumeLayout(false);

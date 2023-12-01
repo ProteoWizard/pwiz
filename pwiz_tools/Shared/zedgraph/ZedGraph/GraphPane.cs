@@ -2176,9 +2176,9 @@ namespace ZedGraph
 									}
 									// Pixel distance needs to be calculated differently for log scale graphs
 									distY = YAxis.Type == AxisType.Log ? LogScaleNumericToPixel(yVal, yAct, _chart._rect.Height) : 
-                                        (yVal - yAct) * yPixPerUnitAct;
+										(yVal - yAct) * yPixPerUnitAct;
 									distX = XAxis.Type == AxisType.Log ? LogScaleNumericToPixel(xVal, xAct, _chart._rect.Width) : 
-                                        ( xVal - xAct ) * xPixPerUnit;
+										( xVal - xAct ) * xPixPerUnit;
 									dist = distX * distX + distY * distY;
 
 									if ( dist >= minDist )
@@ -2224,11 +2224,11 @@ namespace ZedGraph
 				return false;
 		}
 
-        private double LogScaleNumericToPixel(double a, double b, double total)
-        {
-            var yFraction = (Math.Log(a) - Math.Log(b)) / Math.Log(total);
-            return yFraction * total;
-        }
+		private double LogScaleNumericToPixel(double a, double b, double total)
+		{
+			var yFraction = (Math.Log(a) - Math.Log(b)) / Math.Log(total);
+		return yFraction * total;
+		}
 		/// <summary>
 		/// Search through the <see cref="GraphObjList" /> and <see cref="CurveList" /> for
 		/// items that contain active <see cref="Link" /> objects.

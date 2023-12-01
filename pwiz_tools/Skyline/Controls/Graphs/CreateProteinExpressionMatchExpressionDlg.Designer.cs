@@ -2,7 +2,7 @@
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    partial class CreateIntensityMatchExpressionDlg
+    partial class CreateProteinExpressionMatchExpressionDlg
     {
         /// <summary>
         /// Required designer variable.
@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CreateMatchExpressionDlg));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CreateProteinExpressionMatchExpressionDlg));
             this.cancelButton = new System.Windows.Forms.Button();
             this.okButton = new System.Windows.Forms.Button();
             this.dataGridView1 = new pwiz.Skyline.Controls.DataGridViewEx();
@@ -41,6 +41,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.label3 = new System.Windows.Forms.Label();
             this.matchComboBox = new System.Windows.Forms.ComboBox();
             this.linkRegex = new System.Windows.Forms.LinkLabel();
+            this.enterListButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).BeginInit();
             this.SuspendLayout();
@@ -70,7 +71,6 @@ namespace pwiz.Skyline.Controls.Graphs
             this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.nameColumn});
             this.dataGridView1.DataSource = this.bindingSource1;
-            this.dataGridView1.MaximumColumnCount = null;
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
             this.dataGridView1.RowHeadersVisible = false;
@@ -114,12 +114,20 @@ namespace pwiz.Skyline.Controls.Graphs
             this.linkRegex.TabStop = true;
             this.linkRegex.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkRegex_LinkClicked);
             // 
-            // CreateMatchExpressionDlg
+            // enterListButton
+            // 
+            resources.ApplyResources(this.enterListButton, "enterListButton");
+            this.enterListButton.Name = "enterListButton";
+            this.enterListButton.UseVisualStyleBackColor = true;
+            this.enterListButton.Click += new System.EventHandler(this.enterListButton_Click);
+            // 
+            // CreateIntensityMatchExpressionDlg
             // 
             this.AcceptButton = this.okButton;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancelButton;
+            this.Controls.Add(this.enterListButton);
             this.Controls.Add(this.linkRegex);
             this.Controls.Add(this.expressionTextBox);
             this.Controls.Add(this.label3);
@@ -129,7 +137,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.Controls.Add(this.okButton);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "CreateMatchExpressionDlg";
+            this.Name = "CreateProteinExpressionMatchExpressionDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
@@ -149,5 +157,6 @@ namespace pwiz.Skyline.Controls.Graphs
         private System.Windows.Forms.LinkLabel linkRegex;
         private System.Windows.Forms.BindingSource bindingSource1;
         private System.Windows.Forms.DataGridViewLinkColumn nameColumn;
+        private System.Windows.Forms.Button enterListButton;
     }
 }

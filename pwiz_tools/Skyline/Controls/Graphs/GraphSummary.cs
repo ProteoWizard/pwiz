@@ -463,7 +463,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     case GraphTypeSummary.peptide:
                         panesValid = GraphPanes.All(graphController.IsPeptidePane);
                         break;
-                    case GraphTypeSummary.intensity:
+                    case GraphTypeSummary.protein:
                         panesValid = GraphPanes.All(graphController.IsIntensityPane);
                         break;
                 }
@@ -481,7 +481,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 case GraphTypeSummary.peptide:
                     GraphPanes = paneKeys.Select(graphController.CreatePeptidePane);
                     break;
-                case GraphTypeSummary.intensity:
+                case GraphTypeSummary.protein:
                     GraphPanes = paneKeys.Select(graphController.CreateIntensityPane);
                     break;
             }
@@ -595,7 +595,7 @@ namespace pwiz.Skyline.Controls.Graphs
         histogram2d = 1 << 6,
         detections = 1 << 7,
         detections_histogram = 1 << 8,
-        intensity = 1 << 9
+        protein = 1 << 9
     }
 
     public static class Extensions
@@ -610,7 +610,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     return Resources.Extensions_CustomToString_Replicate_Comparison;
                 case GraphTypeSummary.peptide:
                     return Resources.Extensions_CustomToString_Peptide_Comparison;
-                case GraphTypeSummary.intensity:
+                case GraphTypeSummary.protein:
                     return Resources.Extensions_CustomToString_Protein_Expression;
                 case GraphTypeSummary.score_to_run_regression:
                     return Resources.Extensions_CustomToString_Score_To_Run_Regression;

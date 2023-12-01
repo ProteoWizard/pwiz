@@ -6,7 +6,7 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public static class DotPlotUtil
     {
-        private const int LABEL_BACKGROUND_OPACITY = 90; // 0 is transparent, 250 is opaque
+        private const int LABEL_BACKGROUND_OPACITY = 150; // 0 is transparent, 250 is opaque
         public static FontSpec CreateFontSpec(Color color, float size, bool label = false)
         {
             if (label)

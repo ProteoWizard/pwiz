@@ -46,7 +46,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.ShowIntensityFormatting();
             });
             var peakAreaGraph = FormUtil.OpenForms.OfType<GraphSummary>().FirstOrDefault(graph =>
-                graph.Type == GraphTypeSummary.intensity && graph.Controller is AreaGraphController);
+                graph.Type == GraphTypeSummary.protein && graph.Controller is AreaGraphController);
             Assert.IsNotNull(peakAreaGraph);
             WaitForGraphs();
             PauseForManualTutorialStep();

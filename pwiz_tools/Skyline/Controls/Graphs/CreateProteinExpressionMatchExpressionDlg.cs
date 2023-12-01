@@ -30,26 +30,26 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public partial class CreateIntensityMatchExpressionDlg : ModeUIInvariantFormEx // Dialog has explicit logic for handling UI modes
+    public partial class CreateProteinExpressionMatchExpressionDlg : ModeUIInvariantFormEx // Dialog has explicit logic for handling UI modes
     {
         private readonly ProteinAbundanceBindingSource.ProteinAbundanceRow[] _proteinAbundanceRows;
         private readonly bool _allowUpdateGrid;
-        private readonly IntensityGraphFormattingDlg _formattingDlg;
+        private readonly ProteinExpressionGraphFormattingDlg _formattingDlg;
         private CancellationTokenSource _cancellationTokenSource;
         private IList<StringWrapper> _filteredRows;
 
-        private SummaryIntensityGraphPane _intensityGraph
+        private SummaryProteinExpressionGraphPane ProteinExpressionGraph
         {
-            get { return _formattingDlg.AreaIntensityGraphPane; }
+            get { return _formattingDlg.AreaProteinExpressionGraphPane; }
         }
 
-        public CreateIntensityMatchExpressionDlg() // for designer
+        public CreateProteinExpressionMatchExpressionDlg() // for designer
         {
             InitializeComponent();
         }
 
 
-        public CreateIntensityMatchExpressionDlg(IntensityGraphFormattingDlg formattingDlg, ProteinAbundanceBindingSource.ProteinAbundanceRow[] proteinAbundanceRows, MatchRgbHexColor rgbHexColor)
+        public CreateProteinExpressionMatchExpressionDlg(ProteinExpressionGraphFormattingDlg formattingDlg, ProteinAbundanceBindingSource.ProteinAbundanceRow[] proteinAbundanceRows, MatchRgbHexColor rgbHexColor)
         {
             InitializeComponent();
 
@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // Match
             AddComboBoxItems(matchComboBox, new MatchOptionStringPair(null, GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_None));
 
-            if (_intensityGraph.AnyProteomic)
+            if (ProteinExpressionGraph.AnyProteomic)
             {
                 AddComboBoxItems(matchComboBox,
                     new MatchOptionStringPair(MatchOption.ProteinName,
@@ -83,9 +83,11 @@ namespace pwiz.Skyline.Controls.Graphs
                         GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Protein_Preferred_Name),
                     new MatchOptionStringPair(MatchOption.ProteinGene,
                         GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Protein_Gene));
+
+
             }
 
-            if (_intensityGraph.AnyMolecules)
+            if (ProteinExpressionGraph.AnyMolecules)
             {
                 AddComboBoxItems(matchComboBox,
                     new MatchOptionStringPair(MatchOption.MoleculeGroupName,
@@ -100,6 +102,10 @@ namespace pwiz.Skyline.Controls.Graphs
             comboBox.Items.AddRange(items);
         }
 
+        public void SetRegexText(string expression)
+        {
+            expressionTextBox.Text = expression;
+        }
         private void SetSelectedItems(MatchRgbHexColor rgbHexColor)
         {
             var matchExpr = rgbHexColor.MatchExpression ?? _formattingDlg.GetDefaultMatchExpression(rgbHexColor.Expression);
@@ -208,7 +214,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private StringWrapper RowToString(MatchExpression expr, ProteinAbundanceBindingSource.ProteinAbundanceRow row)
         {
-            return new StringWrapper(expr.GetDisplayString(_intensityGraph.Document, row.Protein) ??
+            return new StringWrapper(expr.GetDisplayString(ProteinExpressionGraph.Document, row.Protein) ??
                                      TextUtil.EXCEL_NA);
         }
 
@@ -250,7 +256,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             foreach (var row in rows)
             {
-                if (expr.Matches(_intensityGraph.Document, row.Protein,
+                if (expr.Matches(ProteinExpressionGraph.Document, row.Protein,
                         row.ProteinAbundanceResult))
                 {
                     filteredRows.Add(RowToString(expr, row));
@@ -322,5 +328,16 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         #endregion
+
+        private void enterListButton_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new MatchExpressionListDlg(this))
+            {
+                if (dlg.ShowDialog(_formattingDlg) == DialogResult.OK)
+                {
+
+                }
+            }
+        }
     }
 }
