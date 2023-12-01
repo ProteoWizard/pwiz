@@ -67,6 +67,7 @@ namespace pwiz.SkylineTestData
 
         private const string ZIP_FILE = @"TestData\Results\FullScan.zip";
         private const string COMMAND_FILE = @"TestData\CommandLineTest.zip";
+        private const string PROTDB_FILE = @"TestFunctional\AssociateProteinsTest.zip";
 
         private new static string RunCommand(params string[] args)
         {
@@ -303,9 +304,15 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleNewDocumentTest()
         {
-            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
-            string fastaPath = TestFilesDir.GetTestPath("sample.fasta");
+            TestFilesDirs = new []
+            {
+                new TestFilesDir(TestContext, ZIP_FILE),
+                new TestFilesDir(TestContext, PROTDB_FILE)
+            };
+
+            string docPath = TestFilesDirs[0].GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            string fastaPath = TestFilesDirs[0].GetTestPath("sample.fasta");
+            string protdbPath = TestFilesDirs[1].GetTestPath("AssociateProteinMatches.protdb");
 
             // arguments that would normally be quoted on the command-line shouldn't be quoted here
             var settings = new[]
@@ -327,10 +334,15 @@ namespace pwiz.SkylineTestData
                 "--tran-product-end-ion=" + TransitionFilter.EndFragmentFinder.LAST_ION_MINUS_1.Label,
                 "--tran-product-clear-special-ions",
                 "--tran-use-dia-window-exclusion",
+                "--pep-digest-enzyme=Chymotrypsin",
+                "--pep-max-missed-cleavages=9",
+                "--pep-unique-by=Protein",
                 "--pep-min-length=4",
                 "--pep-max-length=42",
                 "--pep-exclude-nterminal-aas=2",
                 "--pep-exclude-potential-ragged-ends",
+                "--background-proteome-file=" + protdbPath,
+                "--save-settings", // save the protdb to Settings.Default so we can test --background-proteome-name later
                 "--library-product-ions=6",
                 "--library-min-product-ions=6",
                 "--library-match-tolerance=" + 0.05 + "mz",
@@ -363,6 +375,12 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(TransitionFilter.StartFragmentFinder.ION_1.Label, doc.Settings.TransitionSettings.Filter.StartFragmentFinderLabel.Label);
             Assert.AreEqual(TransitionFilter.EndFragmentFinder.LAST_ION_MINUS_1.Label, doc.Settings.TransitionSettings.Filter.EndFragmentFinderLabel.Label);
             Assert.AreEqual(0, doc.Settings.TransitionSettings.Filter.MeasuredIons.Count);
+            Assert.AreEqual(9, doc.Settings.PeptideSettings.DigestSettings.MaxMissedCleavages);
+            Assert.AreEqual("Chymotrypsin", doc.Settings.PeptideSettings.Enzyme.Name);
+            Assert.AreEqual(PeptideFilter.PeptideUniquenessConstraint.protein, doc.Settings.PeptideSettings.Filter.PeptideUniqueness);
+            Assert.AreEqual(true, doc.Settings.HasBackgroundProteome);
+            Assert.AreEqual(protdbPath, doc.Settings.PeptideSettings.BackgroundProteome.DatabasePath);
+            Assert.AreEqual(Path.GetFileNameWithoutExtension(protdbPath), doc.Settings.PeptideSettings.BackgroundProteome.Name);
             Assert.AreEqual(true, doc.Settings.TransitionSettings.Filter.ExclusionUseDIAWindow);
             Assert.AreEqual(4, doc.Settings.PeptideSettings.Filter.MinPeptideLength);
             Assert.AreEqual(42, doc.Settings.PeptideSettings.Filter.MaxPeptideLength);
@@ -448,6 +466,51 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(FullScanMassAnalyzerType.centroided, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
             Assert.AreEqual(5, doc.Settings.TransitionSettings.FullScan.PrecursorRes);
 
+            // test case insensitive enum parsing
+            settings = new[]
+            {
+                "--new=" + docPath,
+                "--overwrite",
+                "--pep-digest-enzyme=chymotrypsin",
+                "--pep-unique-by=proTEIN",
+                "--library-pick-product-ions=FilTER"
+            };
+
+            RunCommand(settings);
+            doc = ResultsUtil.DeserializeDocument(docPath);
+            Assert.AreEqual("Chymotrypsin", doc.Settings.PeptideSettings.Enzyme.Name);
+            Assert.AreEqual(PeptideFilter.PeptideUniquenessConstraint.protein, doc.Settings.PeptideSettings.Filter.PeptideUniqueness);
+            Assert.AreEqual(TransitionLibraryPick.filter, doc.Settings.TransitionSettings.Libraries.Pick);
+
+            // test using existing background proteome name
+            settings = new[]
+            {
+                "--new=" + docPath,
+                "--overwrite",
+                "--background-proteome-name=" + Path.GetFileNameWithoutExtension(protdbPath)
+            };
+
+            RunCommand(settings);
+            doc = ResultsUtil.DeserializeDocument(docPath);
+            Assert.AreEqual(true, doc.Settings.HasBackgroundProteome);
+            Assert.AreEqual(protdbPath, doc.Settings.PeptideSettings.BackgroundProteome.DatabasePath);
+            Assert.AreEqual(Path.GetFileNameWithoutExtension(protdbPath), doc.Settings.PeptideSettings.BackgroundProteome.Name);
+
+            // test new background proteome with explicit name
+            settings = new[]
+            {
+                "--new=" + docPath,
+                "--overwrite",
+                "--background-proteome-file=" + protdbPath,
+                "--background-proteome-name=protdb"
+            };
+
+            RunCommand(settings);
+            doc = ResultsUtil.DeserializeDocument(docPath);
+            Assert.AreEqual(true, doc.Settings.HasBackgroundProteome);
+            Assert.AreEqual(protdbPath, doc.Settings.PeptideSettings.BackgroundProteome.DatabasePath);
+            Assert.AreEqual("protdb", doc.Settings.PeptideSettings.BackgroundProteome.Name);
+
             File.Delete(docPath);
 
             // run command that should cause an error and validate the output contains the expected output
@@ -505,6 +568,26 @@ namespace pwiz.SkylineTestData
             RunCommandAndValidateError(settings, string.Format(
                 Resources.ValueUnexpectedException_ValueUnexpectedException_The_argument__0__should_not_have_a_value_specified,
                 CommandArgs.ARG_PEPTIDE_EXCLUDE_POTENTIAL_RAGGED_ENDS.ArgumentText));
+
+            // parameter validation: bad enzyme
+            settings = new[] { "--pep-digest-enzyme=nope" };
+
+            RunCommandAndValidateError(settings, string.Format(
+                Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                "nope", CommandArgs.ARG_PEPTIDE_ENZYME_NAME.ArgumentText, string.Join(", ", Settings.Default.EnzymeList.Select(e => e.Name))));
+
+            // parameter validation: unknown background proteome name
+            settings = new[] { "--background-proteome-name=alien" };
+
+            RunCommandAndValidateError(settings, string.Format(
+                Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_,
+                "alien", CommandArgs.ARG_BGPROTEOME_NAME.ArgumentText, string.Join(", ", Settings.Default.BackgroundProteomeList.Select(e => e.Name))));
+
+            // parameter validation: bad background proteome path
+            settings = new[] { "--background-proteome-file=missing" };
+
+            RunCommandAndValidateError(settings, string.Format(
+                Resources.CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_file__0_, "missing"));
         }
 
         [TestMethod]
