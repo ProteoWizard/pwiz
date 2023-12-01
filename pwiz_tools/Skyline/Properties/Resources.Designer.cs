@@ -4930,6 +4930,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to name to give protdb imported by --background-proteome-file.
+        /// </summary>
+        public static string CommandArgs_ARG_BGPROTEOME_NAME_name_to_give_protdb_imported_by___background_proteome_file {
+            get {
+                return ResourceManager.GetString("CommandArgs_ARG_BGPROTEOME_NAME_name_to_give_protdb_imported_by___background_prot" +
+                        "eome_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The dwell time {0} must be between {1} and {2}..
         /// </summary>
         public static string CommandArgs_DwellTime_The_dwell_time__0__must_be_between__1__and__2__ {
@@ -5852,6 +5862,17 @@ namespace pwiz.Skyline.Properties {
         public static string CommandLine_ExportInstrumentFile_No_method_will_be_exported_ {
             get {
                 return ResourceManager.GetString("CommandLine_ExportInstrumentFile_No_method_will_be_exported_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The folder {0} does not appear to contain an Agilent MassHunter 12 method template. The folder is expected to have a .m extension..
+        /// </summary>
+        public static string CommandLine_ExportInstrumentFile_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportInstrumentFile_The_folder__0__does_not_appear_to_contain_an_Agi" +
+                        "lent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extensio" +
+                        "n_", resourceCulture);
             }
         }
         
@@ -7171,6 +7192,26 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_" +
                         "library_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Could not find background proteome file {0}.
+        /// </summary>
+        public static string CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_file__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_fi" +
+                        "le__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Failed attempting to change the peptide digestion settings..
+        /// </summary>
+        public static string CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_peptide_digestion_settings_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_pepti" +
+                        "de_digestion_settings_", resourceCulture);
             }
         }
         
@@ -13095,7 +13136,18 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The chosen folder does not appear to contain an Agilent QQQ method template. The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd..
+        ///   Looks up a localized string similar to The chosen folder does not appear to contain an Agilent MassHunter 12 method template. The folder is expected to have a .m extension..
+        /// </summary>
+        public static string ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_cont" +
+                        "ain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__" +
+                        "m_extension_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Agilent 6400 series instrument type methods are expected to have a .m extension, and contain the file qqqacqmethod.xsd. If this is an Agilent TQ method, please choose &quot;Agilent MassHunter 12 or higher&quot; as your instrument type..
         /// </summary>
         public static string ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd {
             get {
@@ -13467,6 +13519,16 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_a_Bruker_TOF_m" +
                         "ethod_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_" +
                         "file_submethods_xml_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The folder {0} does not appear to contain an Agilent MassHunter 12 method template. The folder is expected to have a .m extension..
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_Mas" +
+                        "sHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_", resourceCulture);
             }
         }
         

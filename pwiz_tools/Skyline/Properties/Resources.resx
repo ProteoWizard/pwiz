@@ -261,7 +261,7 @@
     <value>Line {0} field count {1} differs from the first line, which has {2}</value>
   </data>
   <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd" xml:space="preserve">
-    <value>The chosen folder does not appear to contain an Agilent QQQ method template. The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd.</value>
+    <value>Agilent 6400 series instrument type methods are expected to have a .m extension, and contain the file qqqacqmethod.xsd. If this is an Agilent TQ method, please choose "Agilent MassHunter 12 or higher" as your instrument type.</value>
   </data>
   <data name="NistLibraryBase_CreateCache_" xml:space="preserve">
     <value>Imported library contains multiple entries for one or more {0} pairs.
@@ -13847,5 +13847,23 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   </data>
   <data name="CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_peptide_filter_settings_" xml:space="preserve">
     <value>Error: Failed attempting to change the peptide filter settings.</value>
+  </data>
+  <data name="CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_peptide_digestion_settings_" xml:space="preserve">
+    <value>Error: Failed attempting to change the peptide digestion settings.</value>
+  </data>
+  <data name="CommandArgs_ARG_BGPROTEOME_NAME_name_to_give_protdb_imported_by___background_proteome_file" xml:space="preserve">
+    <value>name to give protdb imported by --background-proteome-file</value>
+  </data>
+  <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_" xml:space="preserve">
+    <value>The chosen folder does not appear to contain an Agilent MassHunter 12 method template. The folder is expected to have a .m extension.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_" xml:space="preserve">
+    <value>The folder {0} does not appear to contain an Agilent MassHunter 12 method template. The folder is expected to have a .m extension.</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_" xml:space="preserve">
+    <value>The folder {0} does not appear to contain an Agilent MassHunter 12 method template. The folder is expected to have a .m extension.</value>
+  </data>
+  <data name="CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_file__0_" xml:space="preserve">
+    <value>Error: Could not find background proteome file {0}</value>
   </data>
 </root>
