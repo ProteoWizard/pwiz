@@ -288,7 +288,8 @@ void testIdentifyFileFormat()
         unit_assert_operator_equal(set<CVID>(), foundButNotExpected);
     }
 
-    unit_assert_operator_equal(2, extByType["Sciex WIFF/WIFF2"].size());
+    unit_assert_operator_equal(1, extByType["Sciex WIFF"].size());
+    unit_assert_operator_equal(1, extByType["Sciex WIFF2"].size());
     unit_assert_operator_equal(".wiff", extByType["Sciex WIFF"][0]);
     unit_assert_operator_equal(".wiff2", extByType["Sciex WIFF2"][0]);
     unit_assert_operator_equal(0, extByType["Waters UNIFI"].size());
