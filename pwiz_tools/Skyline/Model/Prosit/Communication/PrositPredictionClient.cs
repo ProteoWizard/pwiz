@@ -79,18 +79,10 @@ namespace pwiz.Skyline.Model.Prosit.Communication
         // a set of cached predictions
         public static PrositPredictionClient FakeClient { get; set; }
 
-        void IDisposable.Dispose()
+        public virtual void Dispose()
         {
-            Dispose(true);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                _channel?.ShutdownAsync().Wait();
-                _channel = null;
-            }
+            _channel?.ShutdownAsync().Wait();
+            _channel = null;
         }
     }
 }

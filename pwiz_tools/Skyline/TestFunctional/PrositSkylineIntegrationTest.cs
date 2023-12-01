@@ -2160,11 +2160,11 @@ namespace pwiz.SkylineTestFunctional
                 Assert.Fail("Unknown model \"{0}\"", request.ModelSpec.Name);
         }
 
-        protected override void Dispose(bool disposing)
+        public override void Dispose()
         {
             Assert.AreSame(this, FakeClient);
             FakeClient = null;
-            base.Dispose(disposing);
+            base.Dispose();
         }
     }
 }
