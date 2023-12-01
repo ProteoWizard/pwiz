@@ -2090,7 +2090,7 @@ namespace pwiz.SkylineTestFunctional
         public FakeProsit(IList<PrositQuery> expectedQueries)
         {
             _channel = PrositConfig.GetPrositConfig().CreateChannel();
-            _fakeClient = new FakePrositPredictionClient(expectedQueries);
+            _fakeClient = new FakePrositPredictionClient(_channel, expectedQueries);
             Assert.IsNull(PrositPredictionClient.FakeClient);
             PrositPredictionClient.FakeClient = _fakeClient;
         }
@@ -2112,8 +2112,8 @@ namespace pwiz.SkylineTestFunctional
     {
         private IList<PrositQuery> _expectedQueries;
 
-        public FakePrositPredictionClient(IList<PrositQuery> expectedQueries) :
-            base(PrositConfig.GetPrositConfig().CreateChannel(), PrositConfig.GetPrositConfig().Server)
+        public FakePrositPredictionClient(Channel channel, IList<PrositQuery> expectedQueries) :
+            base(channel, PrositConfig.GetPrositConfig().Server)
         {
             _expectedQueries = expectedQueries;
         }
