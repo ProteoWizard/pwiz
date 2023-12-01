@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using Grpc.Core;
 using pwiz.Skyline.Model.Prosit.Config;
 using Tensorflow.Serving;
@@ -28,10 +27,9 @@ namespace pwiz.Skyline.Model.Prosit.Communication
     /// A simple wrapper for simple construction of
     /// a prediction client through IP.
     /// </summary>
-    public class PrositPredictionClient : PredictionService.PredictionServiceClient, IDisposable
+    public class PrositPredictionClient : PredictionService.PredictionServiceClient
     {
         private static PrositPredictionClient _predictionClient;
-        private Channel _channel;
 
         public static PrositPredictionClient Current
         {
@@ -43,46 +41,43 @@ namespace pwiz.Skyline.Model.Prosit.Communication
                 if (_predictionClient != null)
                     return _predictionClient;
 
-                return _predictionClient = new PrositPredictionClient(PrositConfig.GetPrositConfig());
+                var config = PrositConfig.GetPrositConfig();
+                
+                // TODO(nicksh): this Channel never gets disposed, but it does not really matter
+                // because it only gets created once
+                var channel = config.CreateChannel();
+                _predictionClient = new PrositPredictionClient(channel, config.Server);
+                return _predictionClient;
             }
         }
 
         /// <summary>
         /// Public static wrapper for creating clients
         /// </summary>
-        /// <param name="prositConfig">Configuration parameters</param>
+        /// <param name="channel">Channel that the client should use. Caller is responsible for shutting down the channel.</param>
+        /// <param name="server">Name of the server</param>
         /// <returns>A client for making predictions with the given server</returns>
-        public static PrositPredictionClient CreateClient(PrositConfig prositConfig)
+        public static PrositPredictionClient CreateClient(Channel channel, string server)
         {
             if (FakeClient != null)
+            {
                 return FakeClient;
-
-            return _predictionClient?.Server == prositConfig.Server
-                ? _predictionClient
-                : new PrositPredictionClient(prositConfig);
+            }
+            return new PrositPredictionClient(channel, server);
         }
 
-        protected PrositPredictionClient(PrositConfig prositConfig)
-            : this(prositConfig.CreateChannel())
+        /// <summary>
+        /// Constructs a new client. Caller is responsible for shutting down the Channel.
+        /// </summary>
+        public PrositPredictionClient(Channel channel, string server) : base(channel)
         {
-            Server = prositConfig.Server;
-        }
-
-        private PrositPredictionClient(Channel channel) : base(channel)
-        {
-            _channel = channel;
+            Server = server;
         }
 
         public string Server { get; }
-        
+
         // For faking predictions, usually without an actual server but instead
         // a set of cached predictions
         public static PrositPredictionClient FakeClient { get; set; }
-
-        public virtual void Dispose()
-        {
-            _channel?.ShutdownAsync().Wait();
-            _channel = null;
-        }
     }
 }

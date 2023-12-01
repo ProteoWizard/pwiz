@@ -44,7 +44,7 @@ namespace pwiz.SkylineTestFunctional
         public void TestAccessServer()
         {
             TestFilesZip = @"TestFunctional\AccessServerTest.zip";
-            using (new FakePrositPredictionClient(null))    // Avoid constructing a real PrositPredictionClient
+            using (new FakeProsit(null))
             {
                 RunFunctionalTest();
             }
