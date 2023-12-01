@@ -46,8 +46,10 @@ namespace pwiz.SkylineTestConnected
             {
                 return;
             }
-            PrositPredictionClient client = PrositPredictionClient.CreateClient(PrositConfig.GetPrositConfig());
-            Assert.IsTrue(TestClient(client));
+            PrositConfig.GetPrositConfig().CallWithClient(client =>
+            {
+                Assert.IsTrue(TestClient(client));
+            });
         }
 
         public bool TestClient(PrositPredictionClient client)

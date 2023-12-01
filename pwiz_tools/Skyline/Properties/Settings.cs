@@ -468,13 +468,25 @@ namespace pwiz.Skyline.Properties
             }
         }
 
-        public Enzyme GetEnzymeByName(string name)
+        public Enzyme GetEnzymeByName(string name, bool withoutRulesSuffix = false, bool ignoreCase = false)
         {
-            Enzyme enzyme;
-            if (!EnzymeList.TryGetValue(name, out enzyme))
+            Enzyme enzyme = null;
+            if (!withoutRulesSuffix && !EnzymeList.TryGetValue(name, out enzyme))
             {
                 enzyme = EnzymeList.Count == 0 ?
                     EnzymeList.GetDefault() : EnzymeList[0];
+            }
+            else if (EnzymeList.Count == 0)
+            {
+                enzyme = EnzymeList.GetDefault();
+            }
+            else if (withoutRulesSuffix || ignoreCase)
+            {
+                enzyme = EnzymeList.FirstOrDefault(e => e.Name.Equals(name,
+                             ignoreCase
+                                 ? StringComparison.InvariantCultureIgnoreCase
+                                 : StringComparison.InvariantCulture)) ??
+                         EnzymeList[0];
             }
             return enzyme;
         }
