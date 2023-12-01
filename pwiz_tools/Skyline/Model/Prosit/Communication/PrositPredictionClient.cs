@@ -3,7 +3,7 @@
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2019 University of Washington - Seattle, WA
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 
+using System;
+using Grpc.Core;
 using pwiz.Skyline.Model.Prosit.Config;
 using Tensorflow.Serving;
 
@@ -26,9 +28,10 @@ namespace pwiz.Skyline.Model.Prosit.Communication
     /// A simple wrapper for simple construction of
     /// a prediction client through IP.
     /// </summary>
-    public class PrositPredictionClient : PredictionService.PredictionServiceClient
+    public class PrositPredictionClient : PredictionService.PredictionServiceClient, IDisposable
     {
         private static PrositPredictionClient _predictionClient;
+        private Channel _channel;
 
         public static PrositPredictionClient Current
         {
@@ -60,18 +63,34 @@ namespace pwiz.Skyline.Model.Prosit.Communication
         }
 
         protected PrositPredictionClient(PrositConfig prositConfig)
-            : base(prositConfig.CreateChannel())
+            : this(prositConfig.CreateChannel())
         {
             Server = prositConfig.Server;
         }
 
-        protected PrositPredictionClient()
-        { }
+        private PrositPredictionClient(Channel channel) : base(channel)
+        {
+            _channel = channel;
+        }
 
         public string Server { get; }
         
         // For faking predictions, usually without an actual server but instead
         // a set of cached predictions
         public static PrositPredictionClient FakeClient { get; set; }
+
+        void IDisposable.Dispose()
+        {
+            Dispose(true);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _channel?.ShutdownAsync().Wait();
+                _channel = null;
+            }
+        }
     }
 }

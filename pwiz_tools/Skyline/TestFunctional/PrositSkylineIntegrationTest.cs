@@ -1401,8 +1401,7 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.ShowCharge3 = true;
 
             PrositConstants.CACHE_PREV_PREDICTION = false;
-
-            using (new FakeProsit(RecordData ? null : QUERIES))
+            using (new FakePrositPredictionClient(RecordData ? null : QUERIES))
             {
                 if (RecordData)
                     Console.WriteLine(@"private static List<PrositQuery> QUERIES = new List<PrositQuery>(new PrositQuery[] {");
@@ -2084,21 +2083,6 @@ namespace pwiz.SkylineTestFunctional
         }
     }
 
-    internal class FakeProsit : IDisposable
-    {
-        public FakeProsit(IList<PrositQuery> expectedQueries = null)
-        {
-            var fakeClient = FakePrositPredictionClient.GetInstance();
-            fakeClient.SetExpectedQueries(expectedQueries);
-            PrositPredictionClient.FakeClient = fakeClient;
-        }
-
-        public void Dispose()
-        {
-            PrositPredictionClient.FakeClient = null;
-        }
-    }
-
     /// <summary>
     /// A fake prediction client for logging predictions and returning cached
     /// predictions. For logging, it needs to be constructed with a server address.
@@ -2106,21 +2090,15 @@ namespace pwiz.SkylineTestFunctional
     /// </summary>
     public class FakePrositPredictionClient : PrositPredictionClient
     {
-        // Avoid creating more than one of these during testing, since
-        // PrositConfig.Channel can leak
-        private static FakePrositPredictionClient _instance;
-
-        public static FakePrositPredictionClient GetInstance()
-        {
-            return _instance ??= new FakePrositPredictionClient();
-        }
-
         private IList<PrositQuery> _expectedQueries;
 
-        public FakePrositPredictionClient() :
+        public FakePrositPredictionClient(IList<PrositQuery> expectedQueries) :
             base(PrositConfig.GetPrositConfig())
         {
+            Assert.IsNull(FakeClient);
             QueryIndex = 0;
+            FakeClient = this;
+            _expectedQueries = expectedQueries;
         }
 
         public void SetExpectedQueries(IList<PrositQuery> expectedQueries)
@@ -2180,6 +2158,13 @@ namespace pwiz.SkylineTestFunctional
                     PrositRetentionTimeQuery.FromTensors(request, response).ToCode().Replace("\n", "\n    "));
             else
                 Assert.Fail("Unknown model \"{0}\"", request.ModelSpec.Name);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            Assert.AreSame(this, FakeClient);
+            FakeClient = null;
+            base.Dispose(disposing);
         }
     }
 }

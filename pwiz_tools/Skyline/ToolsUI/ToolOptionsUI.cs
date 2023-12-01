@@ -223,7 +223,7 @@ namespace pwiz.Skyline.ToolsUI
 
             try
             {
-                if (PrositIntensityModelCombo == null || PrositRetentionTimeModelCombo == null)
+                if (string.IsNullOrEmpty(PrositIntensityModelCombo) || string.IsNullOrEmpty(PrositRetentionTimeModelCombo))
                 {
                     _pingRequest?.Cancel();
                     SetServerStatus(ServerStatus.SELECT_MODEL);
