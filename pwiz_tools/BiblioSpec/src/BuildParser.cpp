@@ -23,12 +23,13 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "BuildParser.h"
 #include "SpecData.h"
+#include "SslReader.h"
 
 namespace BiblioSpec {
 
 BuildParser::BuildParser(BlibBuilder& maker,
-                         const char* filename,
-                         const ProgressIndicator* parentProgress_)
+                             const char* filename,
+                             const ProgressIndicator* parentProgress_)
 : fullFilename_(filename),
   blibMaker_(maker),
   fileProgressIncrement_(0),
@@ -526,14 +527,18 @@ void BuildParser::insertSpectrum(PSM* psm,
     sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.ccs);
     sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.getIonMobilityHighEnergyOffset());
     sqlite3_bind_int(insertSpectrumStmt_, field++, (int) (psm->ionMobilityType == IONMOBILITY_NONE ? curSpectrum.ionMobilityType : psm->ionMobilityType));
-    if (curSpectrum.retentionTime != 0) {
-        sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.retentionTime);
+    sslPSM* sslpsm = dynamic_cast<sslPSM*>(psm);
+    double rt = (curSpectrum.retentionTime == 0 && sslpsm != NULL) ? sslpsm->rtInfo.retentionTime : curSpectrum.retentionTime;
+    double rtStart = (curSpectrum.startTime == 0 && sslpsm != NULL) ? sslpsm->rtInfo.startTime : curSpectrum.startTime;
+    double rtEnd = (curSpectrum.endTime == 0 && sslpsm != NULL) ? sslpsm->rtInfo.endTime : curSpectrum.endTime;
+    if (rt != 0) {
+        sqlite3_bind_double(insertSpectrumStmt_, field++, rt);
     } else {
         sqlite3_bind_null(insertSpectrumStmt_, field++);
     }
-    if (curSpectrum.startTime != 0 && curSpectrum.endTime != 0) {
-        sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.startTime);
-        sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.endTime);
+    if (rtStart != 0 && rtEnd != 0) {
+        sqlite3_bind_double(insertSpectrumStmt_, field++, rtStart);
+        sqlite3_bind_double(insertSpectrumStmt_, field++, rtEnd);
     } else {
         sqlite3_bind_null(insertSpectrumStmt_, field++);
         sqlite3_bind_null(insertSpectrumStmt_, field++);
