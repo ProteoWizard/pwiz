@@ -595,7 +595,7 @@ namespace BuildSciexMethod
             [7] = (t, s) => { t.ProductWindow = string.IsNullOrEmpty(s) ? (double?)null : double.Parse(s, CultureInfo.InvariantCulture); },
             [8] = (t, s) => { t.Group = s; },
             [9] = (t, s) => { t.AveragePeakArea = string.IsNullOrEmpty(s) ? (float?)null : float.Parse(s, CultureInfo.InvariantCulture); },
-            [10] = (t, s) => { t.RTWindow = string.IsNullOrEmpty(s) ? (double?)null : 60 * double.Parse(s, CultureInfo.InvariantCulture); },
+            [10] = (t, s) => { t.RTWindow = string.IsNullOrEmpty(s) ? (double?)null : (60 * double.Parse(s, CultureInfo.InvariantCulture)/2); },
             [11] = (t, s) => { t.Threshold = string.IsNullOrEmpty(s) ? (double?)null : double.Parse(s, CultureInfo.InvariantCulture); },
             [12] = (t, s) => { t.Primary = string.IsNullOrEmpty(s) ? (int?)null : int.Parse(s, CultureInfo.InvariantCulture); },
             [13] = (t, s) => { t.Xic = string.IsNullOrEmpty(s) ? (double?)null : double.Parse(s, CultureInfo.InvariantCulture); },
