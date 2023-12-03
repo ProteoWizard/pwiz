@@ -8291,6 +8291,46 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Help Link:
+        ///{0}.
+        /// </summary>
+        public static string ConsoleVerboseExceptionsTest_ConsoleVerboseErrorsTest_Help_Link___0_ {
+            get {
+                return ResourceManager.GetString("ConsoleVerboseExceptionsTest_ConsoleVerboseErrorsTest_Help_Link___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Source:
+        ///{0}.
+        /// </summary>
+        public static string ConsoleVerboseExceptionsTest_ConsoleVerboseErrorsTest_Source___0_ {
+            get {
+                return ResourceManager.GetString("ConsoleVerboseExceptionsTest_ConsoleVerboseErrorsTest_Source___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stack Trace:
+        ///{0}.
+        /// </summary>
+        public static string ConsoleVerboseExceptionsTest_ConsoleVerboseErrorsTest_Stack_Trace___0_ {
+            get {
+                return ResourceManager.GetString("ConsoleVerboseExceptionsTest_ConsoleVerboseErrorsTest_Stack_Trace___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target Site:
+        ///{0}.
+        /// </summary>
+        public static string ConsoleVerboseExceptionsTest_ConsoleVerboseErrorsTest_Target_Site___0_ {
+            get {
+                return ResourceManager.GetString("ConsoleVerboseExceptionsTest_ConsoleVerboseErrorsTest_Target_Site___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap Copy {

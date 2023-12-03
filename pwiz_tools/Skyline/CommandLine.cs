@@ -314,7 +314,7 @@ namespace pwiz.Skyline
                 catch (Exception x)
                 {
                     _out.WriteLine(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, commandArgs.FastaPath,
-                        x.Message);
+                        x);
                     return false;
                 }
             }
@@ -329,7 +329,7 @@ namespace pwiz.Skyline
                 catch (Exception x)
                 {
                     _out.WriteLine(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_,
-                        commandArgs.TransitionListPath, x.Message);
+                        commandArgs.TransitionListPath, x);
                     return false;
                 }
             }
@@ -590,7 +590,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_ImportPeakBoundaries_Error__Failed_importing_peak_boundaries_);
-                _out.WriteLine(x.Message);
+                _out.WriteLine(x);
                 return false;
             }
         }
@@ -636,11 +636,11 @@ namespace pwiz.Skyline
             {
                 if (!_out.IsErrorReported)
                 {
-                    _out.WriteLine(Resources.Error___0_, x.Message);
+                    _out.WriteLine(Resources.Error___0_, x);
                 }
                 else
                 {
-                    _out.WriteLine(x.Message);
+                    _out.WriteLine(x);
                 }
                 return false;
             }
@@ -670,11 +670,11 @@ namespace pwiz.Skyline
             {
                 if (!_out.IsErrorReported)
                 {
-                    _out.WriteLine(Resources.Error___0_, x.Message);
+                    _out.WriteLine(Resources.Error___0_, x);
                 }
                 else
                 {
-                    _out.WriteLine(x.Message);
+                    _out.WriteLine(x);
                 }
                 return false;
             }
@@ -992,7 +992,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transition_prediction_settings_);
-                _out.WriteLine(x.Message);
+                _out.WriteLine(x);
                 return false;
             }
         }
@@ -1018,7 +1018,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_library_settings_);
-                _out.WriteLine(x.Message);
+                _out.WriteLine(x);
                 return false;
             }
         }
@@ -1050,7 +1050,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_SetInstrumentSettings_Error__Failed_attempting_to_change_the_transition_instrument_settings_);
-                _out.WriteLine(x.Message);
+                _out.WriteLine(x);
                 return false;
             }
         }
@@ -1082,7 +1082,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transition_filter_settings_);
-                _out.WriteLine(x.Message);
+                _out.WriteLine(x);
                 return false;
             }
         }
@@ -1174,7 +1174,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Error__Failed_attempting_to_change_the_transiton_full_scan_settings_);
-                _out.WriteLine(x.Message);
+                _out.WriteLine(x);
                 return false;
             }
         }
@@ -1228,7 +1228,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_peptide_digestion_settings_);
-                _out.WriteLine(x.Message);
+                _out.WriteLine(x);
                 return false;
             }
         }
@@ -1273,7 +1273,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_peptide_filter_settings_);
-                _out.WriteLine(x.Message);
+                _out.WriteLine(x);
                 return false;
             }
         }
@@ -1307,7 +1307,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_SetImsSettings_Error__Failed_attempting_to_change_the_ion_mobility_settings_);
-                _out.WriteLine(x.Message);
+                _out.WriteLine(x);
                 return false;
             }
         }
@@ -2251,7 +2251,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_AssociateProteins_Failed_to_associate_proteins);
-                _out.WriteLine(x.Message);
+                _out.WriteLine(x);
                 return false;
             }
         }
@@ -2367,9 +2367,9 @@ namespace pwiz.Skyline
                 }
                 catch (Exception x)
                 {
-                    _out.WriteLine(TextUtil.LineSeparate(
-                        Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_,
-                        x.Message));
+                    _out.WriteLine(
+                        Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_);
+                    _out.WriteLine(x);
                     return false;
                 }
 
@@ -4297,6 +4297,8 @@ namespace pwiz.Skyline
 
         public bool IsErrorReported { get; private set; }
 
+        public bool IsVerboseExceptions { get; set; }
+
         public override Encoding Encoding
         {
             get { return _writer.Encoding; }
@@ -4324,6 +4326,53 @@ namespace pwiz.Skyline
         public override void WriteLine()
         {
             WriteLine(string.Empty);
+        }
+
+        public void WriteLine(string stringA, string stringB, Exception x)
+        {
+            WriteLine(stringA, stringB, ExceptionString(x));
+        }
+        public void WriteLine(string message, Exception x)
+        {
+            WriteLine(message, ExceptionString(x));
+        }
+        public void WriteLine(Exception x)
+        {
+            WriteLine(ExceptionString(x));
+        }
+
+        /// <summary>
+        /// Get a string reporting the exception, with information depending on the verbose exception setting.
+        /// </summary>
+        /// <param name="x">Exception to be reporting</param>
+        /// <returns>A message reporting the exception</returns>
+        private string ExceptionString(Exception x)
+        {
+            var message = new List<string> { x.Message };
+            if (IsVerboseExceptions)
+            {
+                if (x.Source != null)
+                {
+                    message.Add(string.Format(Resources.ConsoleVerboseExceptionsTest_ConsoleVerboseErrorsTest_Source___0_, x.Source));
+                }
+
+                if (x.StackTrace != null)
+                {
+                    message.Add(string.Format(Resources.ConsoleVerboseExceptionsTest_ConsoleVerboseErrorsTest_Stack_Trace___0_, x.StackTrace));
+                }
+
+                if (x.TargetSite != null)
+                {
+                    message.Add(string.Format(Resources.ConsoleVerboseExceptionsTest_ConsoleVerboseErrorsTest_Target_Site___0_, x.TargetSite));
+                }
+
+                if (x.HelpLink != null)
+                {
+                    message.Add(string.Format(Resources.ConsoleVerboseExceptionsTest_ConsoleVerboseErrorsTest_Help_Link___0_, x.HelpLink));
+                }
+
+            }
+            return string.Join(Environment.NewLine, message);
         }
 
         public override void WriteLine(string value)

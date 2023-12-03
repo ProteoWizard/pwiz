@@ -199,10 +199,12 @@ namespace pwiz.Skyline
         public const string ARG_VALUE_ASCII = "ascii";
         public const string ARG_VALUE_NO_BORDERS = "no-borders";
         public static readonly Argument ARG_VERSION = new Argument(@"version", (c, p) => c.Version());
+        public static readonly Argument ARG_VERBOSE_EXCEPTIONS =
+            new Argument(@"verbose-exceptions", (c, p) => c._out.IsVerboseExceptions = true);
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
             ARG_IN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_NEW, ARG_OVERWRITE, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
-            ARG_LOG_FILE, ARG_HELP, ARG_VERSION)
+            ARG_LOG_FILE, ARG_HELP, ARG_VERSION, ARG_VERBOSE_EXCEPTIONS)
         {
             Validate = c => c.ValidateGeneralArgs()
         };
