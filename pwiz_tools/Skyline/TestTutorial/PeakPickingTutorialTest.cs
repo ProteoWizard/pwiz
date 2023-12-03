@@ -75,7 +75,7 @@ namespace pwiz.SkylineTestTutorial
                 {
                     UseRawFiles
                         ? @"https://skyline.gs.washington.edu/tutorials/PeakPicking.zip"
-                        : @"https://skyline.gs.washington.edu/tutorials/PeakPickingMzml.zip",
+                        : @"https://skyline.gs.washington.edu/tutorials/PeakPickingMzml_2.zip",
                     @"TestTutorial\PeakPickingViews.zip"
                 };
             RunFunctionalTest();
@@ -96,7 +96,7 @@ namespace pwiz.SkylineTestTutorial
 
         private readonly string[] EXPECTED_COEFFICIENTS =
         {
-            "-0.0783|-0.7492|2.2424|1.2062|0.0331|0.1515|0.1767| null |0.4983|6.3997|-0.0482|0.5476|0.6281| null | null | null | null | null ",
+            "-0.1095|-0.7689|1.9147|0.9647|0.0265|0.1822|0.2229| null |0.5529|6.5433|-0.0357|0.5285|0.6585| null | null | null | null | null ",
             "0.2900| null | null |5.9842|-0.0624|0.6681|0.7968| null | null | null | null | null | null | null | null | null | null | null ",
         };
 
@@ -193,7 +193,7 @@ namespace pwiz.SkylineTestTutorial
             var editDlg = ShowDialog<EditPeakScoringModelDlg>(reintegrateDlg.AddPeakScoringModel);
             RunUI(() => editDlg.TrainModel());
             PauseForScreenShot<EditPeakScoringModelDlg.ModelTab>("Edit Peak Scoring Model form trained model", 6);
-            RunUI(() => Assert.AreEqual(0.5992, editDlg.PeakCalculatorsGrid.Items[3].PercentContribution ?? 0, 0.005));
+            RunUI(() => Assert.AreEqual(0.5893, editDlg.PeakCalculatorsGrid.Items[3].PercentContribution ?? 0, 0.005));
 
             RunUI(() => editDlg.SelectedGraphTab = 2);
             PauseForScreenShot<EditPeakScoringModelDlg.PvalueTab>("Edit Peak Scoring Model form p value graph metafile", 7);

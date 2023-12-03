@@ -272,6 +272,16 @@ namespace pwiz.Skyline
                 if (!SetFullScanSettings(commandArgs))
                     return false;
             }
+            if (commandArgs.PeptideDigestSettings)
+            {
+                if (!SetPeptideDigestSettings(commandArgs))
+                    return false;
+            }
+            if (commandArgs.PeptideFilterSettings)
+            {
+                if (!SetPeptideFilterSettings(commandArgs))
+                    return false;
+            }
 
             if (commandArgs.ImsSettings)
             {
@@ -807,6 +817,36 @@ namespace pwiz.Skyline
                 }
             }
 
+
+            if (commandArgs.ExportingSpecLib)
+            {
+                if (!ExportSpecLib(commandArgs.SpecLibFile))
+                {
+                    return false;
+                }
+            }
+
+            if (commandArgs.ExportingMProphetFeatures)
+            {
+                if (!ExportMProphetFeatures(commandArgs.MProphetFeaturesFile, commandArgs.MProphetTargetsOnly,
+                        commandArgs.MProphetUseBestScoringPeaks, 
+                        new FeatureCalculators(commandArgs.MProphetExcludeScores)))
+                {
+                    return false;
+                }
+            } 
+
+            if (commandArgs.ExportingAnnotations)
+            {
+                if (!ExportAnnotations(commandArgs.AnnotationsFile, 
+                        commandArgs.AnnotationsIncludeObjects,
+                        commandArgs.AnnotationsIncludeProperties, 
+                        commandArgs.AnnotationsRemoveBlankRows))
+                {
+                    return false;
+                }
+            }
+            
             var exportTypes =
                 (string.IsNullOrEmpty(commandArgs.IsolationListInstrumentType) ? 0 : 1) +
                 (string.IsNullOrEmpty(commandArgs.TransListInstrumentType) ? 0 : 1) +
@@ -1058,32 +1098,26 @@ namespace pwiz.Skyline
                     var precursorIsotopes = commandArgs.FullScanPrecursorIsotopes.Value;
                     double? threshold = commandArgs.FullScanPrecursorThreshold;
                     IsotopeEnrichments isotopeEnrichments = null;
-                    _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_to__0_, precursorIsotopes);
 
                     if (precursorIsotopes == FullScanPrecursorIsotopes.Count)
                     {
                         threshold ??= (double?) TransitionFullScan.DEFAULT_ISOTOPE_COUNT;
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_count_to__0_, threshold);
                     }
                     else if (precursorIsotopes == FullScanPrecursorIsotopes.Percent)
                     {
                         threshold ??= (double?) TransitionFullScan.DEFAULT_ISOTOPE_PERCENT;
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peak_percentage_to__0_, threshold);
                     }
 
                     if (!string.IsNullOrEmpty(commandArgs.FullScanPrecursorIsotopeEnrichment))
                     {
                         isotopeEnrichments = Settings.Default.IsotopeEnrichmentsList.FirstOrDefault(standard =>
                             Equals(standard.Name, commandArgs.FullScanPrecursorIsotopeEnrichment));
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_enrichment_to__0_, isotopeEnrichments);
-
                     }
 
                     newSettings = newSettings.ChangePrecursorIsotopes(commandArgs.FullScanPrecursorIsotopes.Value, threshold, isotopeEnrichments);
                 }
                 if (commandArgs.FullScanPrecursorIgnoreSimScans.HasValue)
                 {
-                    _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_ignore_SIM_scans_to__0_, commandArgs.FullScanPrecursorIgnoreSimScans);
                     newSettings = newSettings.ChangeIgnoreSimScans(commandArgs.FullScanPrecursorIgnoreSimScans.Value);
                 }
 
@@ -1110,83 +1144,135 @@ namespace pwiz.Skyline
                         }
                     }
 
-                    if (commandArgs.FullScanAcquisitionMethod == FullScanAcquisitionMethod.DIA)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0__with_isolation_scheme___1__,
-                            commandArgs.FullScanAcquisitionMethod, isolationSchemeName);
-                    else
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0_, commandArgs.FullScanAcquisitionMethod);
-
                     newSettings = newSettings.ChangeAcquisitionMethod(commandArgs.FullScanAcquisitionMethod, isolationScheme);
                 }
 
                 if (commandArgs.FullScanPrecursorRes.HasValue || commandArgs.FullScanPrecursorMassAnalyzerType.HasValue)
                 {
-                    double? res = commandArgs.FullScanPrecursorRes;
-                    double? resMz = commandArgs.FullScanPrecursorResMz;
-                    var precursorAnalyzer = commandArgs.FullScanPrecursorMassAnalyzerType;
-                    if (precursorAnalyzer.HasValue)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_analyzer_to__0_, precursorAnalyzer);
-
-                    if (commandArgs.FullScanPrecursorRes.HasValue && !_doc.Settings.TransitionSettings.FullScan.IsHighResPrecursor)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolution_to__0__, res);
-                    else if (_doc.Settings.TransitionSettings.FullScan.IsCentroidedMs)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_accuracy_to__0__ppm_, res);
-                    else if (resMz.HasValue)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__at__1__, res, resMz);
-                    else if (res.HasValue)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__, res);
-
                     newSettings = newSettings.ChangePrecursorResolution(
-                        precursorAnalyzer ?? newSettings.PrecursorMassAnalyzer,
-                        res ?? newSettings.PrecursorRes,
-                        resMz ?? newSettings.PrecursorResMz);
+                        commandArgs.FullScanPrecursorMassAnalyzerType ?? newSettings.PrecursorMassAnalyzer,
+                        commandArgs.FullScanPrecursorRes ?? newSettings.PrecursorRes,
+                        commandArgs.FullScanPrecursorResMz ?? newSettings.PrecursorResMz);
                 }
                 if (commandArgs.FullScanProductRes.HasValue || commandArgs.FullScanProductMassAnalyzerType.HasValue)
                 {
-                    double? res = commandArgs.FullScanProductRes;
-                    double? resMz = commandArgs.FullScanProductResMz;
-                    var productAnalyzer = commandArgs.FullScanProductMassAnalyzerType;
-                    if (productAnalyzer.HasValue)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_analyzer_to__0_, productAnalyzer);
-
-                    if (commandArgs.FullScanProductRes.HasValue && !_doc.Settings.TransitionSettings.FullScan.IsHighResProduct)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_resolution_to__0__, res);
-                    else if (_doc.Settings.TransitionSettings.FullScan.IsCentroidedMsMs)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__ppm_, res);
-                    else if (resMz.HasValue)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__at__1__, res, resMz);
-                    else if (res.HasValue)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__, res);
-
                     newSettings = newSettings.ChangeProductResolution(
-                        productAnalyzer ?? newSettings.ProductMassAnalyzer,
-                        res ?? newSettings.ProductRes,
-                        resMz ?? newSettings.ProductResMz);
+                        commandArgs.FullScanProductMassAnalyzerType ?? newSettings.ProductMassAnalyzer,
+                        commandArgs.FullScanProductRes ?? newSettings.ProductRes,
+                        commandArgs.FullScanProductResMz ?? newSettings.ProductResMz);
                 }
-
-                if (commandArgs.FullScanRetentionTimeFilter.HasValue)
+                if (commandArgs.FullScanRetentionTimeFilter.HasValue || commandArgs.FullScanRetentionTimeFilterLength.HasValue)
                 {
-                    var filterType = commandArgs.FullScanRetentionTimeFilter.Value;
-
-                    newSettings = newSettings.ChangeRetentionTimeFilter(filterType, newSettings.RetentionTimeFilterLength);
-                }
-                if (commandArgs.FullScanRetentionTimeFilterLength.HasValue)
-                {
-                    double rtLen = commandArgs.FullScanRetentionTimeFilterLength.Value;
-                    if (_doc.Settings.TransitionSettings.FullScan.RetentionTimeFilterType == RetentionTimeFilterType.scheduling_windows)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_predicted_value_, rtLen);
-                    else if (_doc.Settings.TransitionSettings.FullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
-                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_MS_MS_IDs_, rtLen);
-
-                    newSettings = newSettings.ChangeRetentionTimeFilter(newSettings.RetentionTimeFilterType, rtLen);
+                    newSettings = newSettings.ChangeRetentionTimeFilter(
+                        commandArgs.FullScanRetentionTimeFilter ?? newSettings.RetentionTimeFilterType,
+                        commandArgs.FullScanRetentionTimeFilterLength ?? newSettings.RetentionTimeFilterLength);
                 }
 
-                ModifyDocument(d => d.ChangeSettings(d.Settings.ChangeTransitionFullScan(f => newSettings)), AuditLogEntry.SettingsLogFunction);
+                ModifyDocumentWithLogging(d => d.ChangeSettings(d.Settings.ChangeTransitionFullScan(f => newSettings)), AuditLogEntry.SettingsLogFunction);
                 return true;
             }
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Error__Failed_attempting_to_change_the_transiton_full_scan_settings_);
+                _out.WriteLine(x.Message);
+                return false;
+            }
+        }
+
+        private bool SetPeptideDigestSettings(CommandArgs commandArgs)
+        {
+            try
+            {
+                ModifyDocumentWithLogging(d => d.ChangeSettings(d.Settings.ChangePeptideSettings(p =>
+                {
+                    var digestSettings = p.DigestSettings;
+
+                    if (commandArgs.PeptideDigestEnzymeName != null)
+                    {
+                        var enzyme = Settings.Default.GetEnzymeByName(commandArgs.PeptideDigestEnzymeName, true, true);
+                        p = p.ChangeEnzyme(enzyme);
+                    }
+
+                    if (commandArgs.PeptideDigestMaxMissedCleavages.HasValue)
+                    {
+                        digestSettings = new DigestSettings(commandArgs.PeptideDigestMaxMissedCleavages.Value, digestSettings.ExcludeRaggedEnds);
+                        p = p.ChangeDigestSettings(digestSettings);
+                    }
+
+                    if (commandArgs.PeptideDigestUniquenessConstraint.HasValue)
+                    {
+                        p = p.ChangeFilter(p.Filter.ChangePeptideUniqueness(commandArgs.PeptideDigestUniquenessConstraint.Value));
+                    }
+
+                    if (commandArgs.BackgroundProteomePath != null)
+                    {
+                        if (!File.Exists(commandArgs.BackgroundProteomePath))
+                            throw new IOException(string.Format(
+                                Resources.CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_file__0_,
+                                Path.GetFileName(commandArgs.BackgroundProteomePath)));
+                        string name = commandArgs.BackgroundProteomeName ?? Path.GetFileNameWithoutExtension(commandArgs.BackgroundProteomePath);
+                        var bgProteome = new BackgroundProteomeSpec(name, commandArgs.BackgroundProteomePath);
+                        p = p.ChangeBackgroundProteome(new BackgroundProteome(bgProteome));
+                        Settings.Default.BackgroundProteomeList.Add(bgProteome);
+                    }
+                    else if (commandArgs.BackgroundProteomeName != null)
+                    {
+                        var bgProteome = Settings.Default.BackgroundProteomeList.GetBackgroundProteomeSpec(commandArgs.BackgroundProteomeName);
+                        p = p.ChangeBackgroundProteome(new BackgroundProteome(bgProteome));
+                    }
+
+                    return p;
+                })), AuditLogEntry.SettingsLogFunction);
+                return true;
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_peptide_digestion_settings_);
+                _out.WriteLine(x.Message);
+                return false;
+            }
+        }
+
+        private bool SetPeptideFilterSettings(CommandArgs commandArgs)
+        {
+            try
+            {
+                ModifyDocumentWithLogging(d => d.ChangeSettings(d.Settings.ChangePeptideSettings(p =>
+                {
+                    var filterSettings = p.Filter;
+
+                    if (commandArgs.PeptideFilterMinLength.HasValue)
+                    {
+                        filterSettings = filterSettings.ChangeMinPeptideLength(commandArgs.PeptideFilterMinLength.Value);
+                        p = p.ChangeFilter(filterSettings);
+                    }
+
+                    if (commandArgs.PeptideFilterMaxLength.HasValue)
+                    {
+                        filterSettings = filterSettings.ChangeMaxPeptideLength(commandArgs.PeptideFilterMaxLength.Value);
+                        p = p.ChangeFilter(filterSettings);
+                    }
+
+                    if (commandArgs.PeptideFilterExcludeNTerminalAAs.HasValue)
+                    {
+                        filterSettings = filterSettings.ChangeExcludeNTermAAs(commandArgs.PeptideFilterExcludeNTerminalAAs.Value);
+                        p = p.ChangeFilter(filterSettings);
+                    }
+
+                    if (commandArgs.PeptideFilterExcludePotentialRaggedEnds.HasValue)
+                    {
+                        var digestSettings = p.DigestSettings;
+                        digestSettings = new DigestSettings(digestSettings.MaxMissedCleavages, commandArgs.PeptideFilterExcludePotentialRaggedEnds.Value);
+                        p = p.ChangeDigestSettings(digestSettings);
+                    }
+
+                    return p;
+                })), AuditLogEntry.SettingsLogFunction);
+                return true;
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_peptide_filter_settings_);
                 _out.WriteLine(x.Message);
                 return false;
             }
@@ -3106,6 +3192,194 @@ namespace pwiz.Skyline
             return true;
         }
 
+        /// <summary>
+        /// Export a spectral library (.blib) file from the document
+        /// </summary>
+        /// <param name="specLibFile">File path to export the spectral library to</param>
+        /// <returns>True if the file is successfully exported and false if there is an error</returns>
+        public bool ExportSpecLib(string specLibFile)
+        {
+            _out.WriteLine(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____, specLibFile);
+            if (Document.MoleculeTransitionGroupCount == 0) // The document needs at least one precursor
+            {
+                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_precursor_to_export_a_spectral_library_);
+                return false;
+            }
+            else if (!Document.Settings.HasResults) // The document must contain results
+            {
+                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_results_to_export_a_spectral_library_);
+                return false;
+            }
+
+            try
+            {
+                var libraryExporter = new SpectralLibraryExporter(Document, DocContainer.DocumentFilePath);
+                var status = new ProgressStatus(string.Empty);
+                IProgressMonitor broker = new CommandProgressMonitor(_out, status);
+                libraryExporter.ExportSpectralLibrary(specLibFile, broker);
+                broker.UpdateProgress(status.Complete());
+                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Spectral_library_file__0__exported_successfully_, specLibFile);
+            }
+            catch(Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Error__Failure_attempting_to_save_spectral_library_file__0__, specLibFile);
+                _out.WriteLine(x.Message);
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Export mProphet features as a .csv file
+        /// </summary>
+        /// <param name="mProphetFile">File path to export the mProphet file to</param>
+        /// <param name="targetPeptidesOnly">Do not include decoys, only targets</param>
+        /// <param name="bestOnly">Export best scoring peaks only</param>
+        /// <param name="excludeScores">A list of features to exclude from the exported file</param>
+        /// <returns>True upon successful import, false upon error</returns>
+        public bool ExportMProphetFeatures(string mProphetFile, bool targetPeptidesOnly, bool bestOnly, FeatureCalculators excludeScores)
+        {
+            if (Document.MoleculeCount == 0) // The document must contain targets
+            {
+                _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features_);
+                return false;
+            }
+
+            if (!Document.Settings.HasResults) // The document must contain results
+            {
+                _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features_);
+                return false;
+            }
+
+            try
+            {
+                var scoringModel = Document.Settings.PeptideSettings.Integration.PeakScoringModel;
+                var mProphetScoringModel = scoringModel as MProphetPeakScoringModel;
+                var handler = new MProphetResultsHandler(Document, mProphetScoringModel);
+                var status = new ProgressStatus(string.Empty);
+                var cultureInfo = LocalizationHelper.CurrentCulture;
+                IProgressMonitor progressMonitor = new CommandProgressMonitor(_out, status);
+                using (var fs = new FileSaver(mProphetFile))
+                using (var writer = new StreamWriter(fs.SafeName))
+                {
+                    handler.ScoreFeatures(progressMonitor);
+                    // Excluding any scores requested by the caller
+                    var calcs = new FeatureCalculators(PeakFeatureCalculator.Calculators.Where(c => excludeScores.IndexOf(c) < 0));
+                    handler.WriteScores(writer, cultureInfo, calcs, bestOnly, !targetPeptidesOnly, progressMonitor);
+                    writer.Close();
+                    fs.Commit();
+                }
+                _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, mProphetFile);
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__Failure_attempting_to_save_mProphet_features_file__0__, mProphetFile);
+                _out.WriteLine(x.Message);
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Export annotations to a .csv file
+        /// </summary>
+        /// <param name="annotationsFile">File path to export the annotations to</param>
+        /// <param name="includeHandlerNames">Names of element handlers to exclude from the export,
+        /// specified by the user.</param>
+        /// <param name="includeProperties">Properties to exclude from the export</param>
+        /// <param name="removeBlankRows">Do not include blank rows in the export</param>
+        /// <returns>True upon successful import, false upon error</returns>
+        public bool ExportAnnotations(string annotationsFile, List<string> includeHandlerNames, bool includeProperties, bool removeBlankRows)
+        {
+            try
+            {
+                // If the user specifies handlers, include only those handlers
+                // Parse the string names here (instead of CommandArgs.cs) in order to access the
+                // valid element handlers in the document.
+                var handlers = ParseIncludeObject(includeHandlerNames);
+                if (handlers  == null)
+                {
+                    // At least one name not recognized, error
+                    return false;
+                }
+                // By default do not include properties. If the user asks, include all applicable properties.
+                var properties = Enumerable.Empty<string>();
+                if (includeProperties)
+                {
+                    // Only include properties applicable to the selected element handlers
+                    properties = handlers
+                        .SelectMany(handler => handler.Properties.Select(pd => pd.Name))
+                        .Distinct().OrderBy(pd => pd);
+                }
+                // Find all available annotation names
+                var allAnnotationNames =
+                    ExportAnnotationSettings.GetAllAnnotationNames(Document.Settings.DataSettings.AnnotationDefs, handlers);
+                
+                // If there are no annotation names and we are not including properties, there is nothing to export
+                if (!allAnnotationNames.Any() && !includeProperties)
+                {
+                    _out.WriteLine(Resources.CommandLine_ExportAnnotations_Error__The_document_must_contain_annotations_in_order_to_export_annotations_);
+                    return false;
+                }
+                var settings = ExportAnnotationSettings.GetExportAnnotationSettings(handlers, allAnnotationNames, properties, removeBlankRows);
+                var documentAnnotations = new DocumentAnnotations(Document);
+                using (var fileSaver = new FileSaver(annotationsFile))
+                {
+                    documentAnnotations.WriteAnnotationsToFile(CancellationToken.None, settings, fileSaver.SafeName);
+                    fileSaver.Commit();
+                }
+                _out.WriteLine(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, annotationsFile);
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_ExportAnnotations_Error__Failure_attempting_to_save_annotations_file__0__, annotationsFile);
+                _out.WriteLine(x.Message);
+                return false;
+            }
+            
+            return true;
+        }
+
+        /// <summary>
+        /// Retrieve a list of Element Handlers from the document
+        /// </summary>
+        /// <returns>A list of Element Handlers</returns>
+        public static List<ElementHandler> GetAllHandlers(SrmDocument doc)
+        {
+            var schema = SkylineDataSchema.MemoryDataSchema(doc, DataSchemaLocalizer.INVARIANT);
+            return ElementHandler.GetElementHandlers(schema).ToList();
+        }
+
+        /// <summary>
+        /// Associate a list of strings to object types in the annotation settings. If the list is null
+        /// or empty, all handlers are returned.
+        /// </summary>
+        /// <param name="objectNames">A list of object type names provided by the user</param>
+        /// <returns>A list of element handlers if all object type names are recognized, null if not</returns>
+        private List<ElementHandler> ParseIncludeObject(List<string> objectNames)
+        {
+            var handlers = GetAllHandlers(_doc);
+            if (objectNames.IsNullOrEmpty())
+            {
+                return handlers;
+            }
+            var elementHandlers = new List<ElementHandler>();
+            foreach (var objectName in objectNames)
+            {
+                var handler = handlers.FirstOrDefault(c => Equals(objectName, c.Name));
+                if (handler == null)
+                {
+                    _out.WriteLine(TextUtil.LineSeparate(handlers.Select(x => x.Name).Prepend(Resources.
+                        CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_name___0____Try_one_of_the_following_)));
+
+                    return null;
+                }
+                elementHandlers.Add(handler);
+            }
+
+            return elementHandlers;
+        }
+
         public enum ResolveZipToolConflicts
         {
             terminate,
@@ -3479,7 +3753,7 @@ namespace pwiz.Skyline
                     _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__A_template_file_is_required_to_export_a_method_);
                     return false;
                 }
-                if (Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT6400)
+                if (Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT6400) || Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT_MASSHUNTER_12)
                         ? !Directory.Exists(args.TemplateFile)
                         : !File.Exists(args.TemplateFile))
                 {
@@ -3490,6 +3764,12 @@ namespace pwiz.Skyline
                     !AgilentMethodExporter.IsAgilentMethodPath(args.TemplateFile))
                 {
                     _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_qqqacqmethod_xsd_, args.TemplateFile);
+                    return false;
+                }
+                if (Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT_MASSHUNTER_12) &&
+                    !AgilentUltivoMethodExporter.IsMethodPath(args.TemplateFile))
+                {
+                    _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_, args.TemplateFile);
                     return false;
                 }
             }
@@ -4267,6 +4547,8 @@ namespace pwiz.Skyline
 
     public class CommandProgressMonitor : IProgressMonitor, ILongWaitBroker
     {
+        public double SecondsBetweenStatusUpdates { get; }
+
         private IProgressStatus _currentProgress;
         private readonly bool _warnOnImportFailure;
         private readonly DateTime _waitStart;
@@ -4278,8 +4560,9 @@ namespace pwiz.Skyline
         private Thread _waitingThread;
         private volatile bool _waiting;
 
-        public CommandProgressMonitor(TextWriter outWriter, IProgressStatus status, bool warnOnImportFailure = false)
+        public CommandProgressMonitor(TextWriter outWriter, IProgressStatus status, bool warnOnImportFailure = false, double secondsBetweenStatusUpdates = 2.0)
         {
+            SecondsBetweenStatusUpdates = secondsBetweenStatusUpdates;
             _out = outWriter;
             _waitStart = _lastOutput = DateTime.UtcNow; // Said to be 117x faster than Now and this is for a delta
             _warnOnImportFailure = warnOnImportFailure;
@@ -4455,7 +4738,7 @@ namespace pwiz.Skyline
         {
             // Show progress at least every 2 seconds and at 100%, if any other percentage
             // output has been shown.
-            return (currentTime - _lastOutput).TotalSeconds < 2 && !status.IsError &&
+            return (currentTime - _lastOutput).TotalSeconds < SecondsBetweenStatusUpdates && !status.IsError &&
                    (status.PercentComplete != 100 || _lastOutput == _waitStart);
         }
 

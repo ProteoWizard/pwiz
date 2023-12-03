@@ -250,7 +250,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/HiResMetabolomics-20_1.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/HiResMetabolomics-23_1.pdf.
         /// </summary>
         internal static string HiResMetabolomics_pdf {
             get {
@@ -475,7 +475,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeMethodDevCEOpt-20_1.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeMethodDevCEOpt-23_1.pdf.
         /// </summary>
         internal static string SmallMoleculeMethodDevCEOpt_pdf {
             get {
@@ -493,7 +493,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeQuant-20_1.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeQuant-23_1.pdf.
         /// </summary>
         internal static string SmallMoleculeQuantification_pdf {
             get {

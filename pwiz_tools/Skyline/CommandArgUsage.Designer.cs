@@ -124,6 +124,24 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The path to the background proteome (protdb) file to apply to the opened document. The name may be optionally specified by --background-proteome-name, and if not it defaults to the filename..
+        /// </summary>
+        internal static string _background_proteome_file {
+            get {
+                return ResourceManager.GetString("_background_proteome_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of a background proteome to apply to the opened document. The background proteome specifies the full set of proteins that may be present in the sample matrix to be injected into the mass spectrometer. If the name is not already defined in Skyline, the path to the protdb file must also be set by --background-proteome-file..
+        /// </summary>
+        internal static string _background_proteome_name {
+            get {
+                return ResourceManager.GetString("_background_proteome_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Runs a file line by line treating each line like a SkylineRunner/Cmd input. Useful for automating the execution of multiple commands.  The open Skyline file remains active through all commands..
         /// </summary>
         internal static string _batch_commands {
@@ -241,6 +259,42 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Export all the annotations in the document into a text file with an ElementLocator field in the format required by --import-annotations. Use --exp-annotations-include-properties to include properties as well..
+        /// </summary>
+        internal static string _exp_annotations {
+            get {
+                return ResourceManager.GetString("_exp_annotations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use to specify which object types to include in the exported annotations. By default all object types are included. This argument can be used multiple times to specify multiple object types. Requires the --exp-annotations argument..
+        /// </summary>
+        internal static string _exp_annotations_include_object {
+            get {
+                return ResourceManager.GetString("_exp_annotations_include_object", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use to include all properties in the exported annotations. By default no properties are included. Requires the --exp-annotations argument..
+        /// </summary>
+        internal static string _exp_annotations_include_properties {
+            get {
+                return ResourceManager.GetString("_exp_annotations_include_properties", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use to remove blank rows from the exported annotations. Requires the --exp-annotations argument..
+        /// </summary>
+        internal static string _exp_annotations_remove_blank_rows {
+            get {
+                return ResourceManager.GetString("_exp_annotations_remove_blank_rows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Dwell time per transition. This option is required for unscheduled transition lists..
         /// </summary>
         internal static string _exp_dwell_time {
@@ -304,6 +358,42 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Include feature scores only for the best scoring peaks. Requires the --exp-mprophet-features argument..
+        /// </summary>
+        internal static string _exp_mprophet_best_peaks_only {
+            get {
+                return ResourceManager.GetString("_exp_mprophet_best_peaks_only", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use to exclude a particular feature score by name from the exported file. Names can be found in the user interface. This argument may be used multiple times to exclude multiple features. Requires the --exp-mprophet-features argument..
+        /// </summary>
+        internal static string _exp_mprophet_exclude_feature {
+            get {
+                return ResourceManager.GetString("_exp_mprophet_exclude_feature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Export all the individual feature scores for each peptide, as well as the composite score, the p value, and the q value into the mProphet format..
+        /// </summary>
+        internal static string _exp_mprophet_features {
+            get {
+                return ResourceManager.GetString("_exp_mprophet_features", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Include feature scores only for targets. Requires the --exp-mprophet-features argument..
+        /// </summary>
+        internal static string _exp_mprophet_targets_only {
+            get {
+                return ResourceManager.GetString("_exp_mprophet_targets_only", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Export a method with extra transitions for finding optimal collision energy or declustering potential..
         /// </summary>
         internal static string _exp_optimizing {
@@ -354,6 +444,15 @@ namespace pwiz.Skyline {
         internal static string _exp_scheduling_replicate {
             get {
                 return ResourceManager.GetString("_exp_scheduling_replicate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Export experimental data in the current document to a spectral library file. Peak areas are used as spectrum intensities, peak apex times are used as retention times, and if the document has iRT values they will also be stored in the library..
+        /// </summary>
+        internal static string _exp_speclib_file {
+            get {
+                return ResourceManager.GetString("_exp_speclib_file", resourceCulture);
             }
         }
         
@@ -1117,6 +1216,72 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The protease enzyme definition used to parse peptide sequences from protein sequences added as targets to the document. Peptide lists added as targets ignore this setting other than counting missed cleavages..
+        /// </summary>
+        internal static string _pep_digest_enzyme {
+            get {
+                return ResourceManager.GetString("_pep_digest_enzyme", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exclude all peptides starting before this amino acid position in each protein..
+        /// </summary>
+        internal static string _pep_exclude_nterminal_aas {
+            get {
+                return ResourceManager.GetString("_pep_exclude_nterminal_aas", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exclude peptides resulting from cleavage sites with immediate preceding or following cleavage sites. e.g. RR, KK, RK, KR for trypsin.
+        /// </summary>
+        internal static string _pep_exclude_potential_ragged_ends {
+            get {
+                return ResourceManager.GetString("_pep_exclude_potential_ragged_ends", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum length of a peptide to add to the document..
+        /// </summary>
+        internal static string _pep_max_length {
+            get {
+                return ResourceManager.GetString("_pep_max_length", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum number of missed cleavages allowed in a peptide when considering protein digestion..
+        /// </summary>
+        internal static string _pep_max_missed_cleavages {
+            get {
+                return ResourceManager.GetString("_pep_max_missed_cleavages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The minimum length of a peptide to add to the document..
+        /// </summary>
+        internal static string _pep_min_length {
+            get {
+                return ResourceManager.GetString("_pep_min_length", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &quot;Protein&quot; excludes any peptide that appears in more than one protein in the background proteome.  
+        ///&quot;Gene&quot; excludes any peptide that appears in proteins for more than one gene in the background proteome.  
+        ///&quot;Species&quot; excludes any peptide that appears in proteins for more than one species in the background proteome.
+        ///Useful in sample mixtures including multiple species..
+        /// </summary>
+        internal static string _pep_unique_by {
+            get {
+                return ResourceManager.GetString("_pep_unique_by", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add back precursors of an isotope label type..
         /// </summary>
         internal static string _refine_add_label_type {
@@ -1256,8 +1421,8 @@ namespace pwiz.Skyline {
         ///will be removed from the document:
         ///
         ///Green = 1.0
-        ///Orange &amp;gt;= 0.5
-        ///Red &amp;lt; 0.5.
+        ///Orange &gt;= 0.5
+        ///Red &lt; 0.5.
         /// </summary>
         internal static string _refine_max_peak_found_ratio {
             get {
@@ -1323,8 +1488,8 @@ namespace pwiz.Skyline {
         ///will be removed from the document:
         ///
         ///Green = 1.0
-        ///Orange &amp;gt;= 0.5
-        ///Red &amp;lt; 0.5.
+        ///Orange &gt;= 0.5
+        ///Red &lt; 0.5.
         /// </summary>
         internal static string _refine_min_peak_found_ratio {
             get {
@@ -2140,6 +2305,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exporting other file types.
+        /// </summary>
+        internal static string CommandArgs_GROUP_OTHER_FILE_TYPES {
+            get {
+                return ResourceManager.GetString("CommandArgs_GROUP_OTHER_FILE_TYPES", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to If the arguments above are used along with arguments to import results files into the document (--import-file or -–import-all) the Skyline document will be uploaded to the given Panorama server only if new results are added to the document..
         /// </summary>
         internal static string CommandArgs_GROUP_PANORAMA_postamble {
@@ -2203,11 +2377,20 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Document Settings.
+        ///   Looks up a localized string similar to Peptide Settings.
         /// </summary>
-        internal static string CommandArgs_GROUP_SETTINGS_Document_Settings {
+        internal static string CommandArgs_GROUP_SETTINGS_Peptide_Settings {
             get {
-                return ResourceManager.GetString("CommandArgs_GROUP_SETTINGS_Document_Settings", resourceCulture);
+                return ResourceManager.GetString("CommandArgs_GROUP_SETTINGS_Peptide_Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transition Settings.
+        /// </summary>
+        internal static string CommandArgs_GROUP_SETTINGS_Transition_Settings {
+            get {
+                return ResourceManager.GetString("CommandArgs_GROUP_SETTINGS_Transition_Settings", resourceCulture);
             }
         }
         

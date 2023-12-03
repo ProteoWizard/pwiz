@@ -269,8 +269,6 @@ namespace pwiz.Skyline.Model.Lib
                     details.Revision = Revision;
                 }
 
-                details.AddLink(LibraryLink.GPM);
-
                 return details; 
             }
         }

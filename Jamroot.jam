@@ -49,6 +49,7 @@ ECHO
 #                           tarballs - useful after your initial build
 #
 #   --without-mz5           Build without mz5 support
+#   --without-mzmlb         Build without mzMLb support
 #   --without-agilent       Build without Agilent support
 #   --without-bruker        Build without Bruker support
 #   --without-sciex         Build without Sciex support
@@ -152,9 +153,16 @@ if ( "--without-binary-msdata" in  [ modules.peek : ARGV ] ) # support only text
 {
     echo "NOTICE: building without support for binary msdata formats as requested" ;
 }
-else if ( "--without-mz5" in  [ modules.peek : ARGV ] )
+else
 {
-    echo "NOTICE: building without mz5 support as requested" ;
+    if ( "--without-mz5" in  [ modules.peek : ARGV ] )
+    {
+        echo "NOTICE: building without mz5 support as requested" ;
+    }
+    if ( "--without-mzmlb" in  [ modules.peek : ARGV ] )
+    {
+        echo "NOTICE: building without mzMLb support as requested" ;
+    }
 }
 
 # do we want to skip mz5 support?
@@ -169,6 +177,29 @@ rule without-mz5 ( properties * )
        return [ without-binary-msdata $(properties) ] ;
    }
 }
+
+# do we want to skip mzMLb support?
+rule without-mzmlb ( properties * )
+{
+   if --without-mzmlb in [ modules.peek : ARGV ]
+   {
+       return <location-prefix>without-mzmlb <define>WITHOUT_MZMLB ;
+   }
+   else 
+   {
+       return [ without-binary-msdata $(properties) ] ;
+   }
+}
+
+# do we want to skip all binary file formats (vendors and mz5)?
+rule without-binary-msdata ( properties * )
+{
+   if --without-binary-msdata in [ modules.peek : ARGV ]
+   {
+       return <location-prefix>without-binary-msdata <define>WITHOUT_MZ5 <define>WITHOUT_MZMLB <vendor-api-support>off ;
+   }
+}
+
 
 # do we want to skip all binary file formats (vendors and mz5)?
 rule without-binary-msdata ( properties * )
@@ -255,6 +286,16 @@ rule mz5-build ( itemname )
     if ( ! [ without-mz5 ] )
     {
         return $(itemname) ; # do build mz5
+    }
+}
+
+
+# return the itemname if mzmlb build is on (the default)
+rule mzmlb-build ( itemname )  
+{
+    if ( ! [ without-mzmlb ] )
+    {
+        return $(itemname) ; # do build mzmlb
     }
 }
 

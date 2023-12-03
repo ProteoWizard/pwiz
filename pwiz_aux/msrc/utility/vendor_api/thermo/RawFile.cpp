@@ -331,7 +331,16 @@ RawFileImpl::RawFileImpl(const string& filename)
         if (getNumberOfControllersOfType(Controller_MS) == 0)
             return; // none of the following metadata stuff works for non-MS controllers as far as I can tell
 
-        setCurrentController(Controller_MS, 1);
+        try
+        {
+	        setCurrentController(Controller_MS, 1);
+        }
+        catch (const runtime_error& e)
+        {
+            if (bal::contains(e.what(), "Instrument index not available for requested device"))
+                throw gcnew System::Exception("Error initializing MS controller (\"Instrument index not available for requested device\"); this usually means the RAW file is corrupt");
+            throw;
+        }
 
         auto trailerExtraInfo = raw_->GetTrailerExtraHeaderInformation();
         for (int i = 0; i < trailerExtraInfo->Length; ++i)
