@@ -617,7 +617,7 @@ namespace pwiz.Skyline.Model
                         break;
                 }
             }
-            else if(MethodType == ExportMethodType.Scheduled || instrumentType == ExportInstrumentType.ABI_7600)
+            else if (MethodType == ExportMethodType.Scheduled || instrumentType == ExportInstrumentType.ABI_7600)
                 exporter.AccumulationTime = AccumulationTime;
 
 

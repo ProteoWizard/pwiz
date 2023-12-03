@@ -356,8 +356,10 @@ namespace BuildSciexMethod
             // Edit method
             var writeTransitions = transitions.Transitions;
             if(WriteSciexOsQuantMethod)
+            {
                 // We need to write only precursors to the acquisition template. Fragments are used for the quant method only
                 writeTransitions = transitions.Transitions.Where(t => t.IsMs1Precursor).ToArray();
+            }
 
             var massTable = InitMethod(method, writeTransitions.Length);
             var props = PropertyData.GetAll(Instrument, StandardMethod, massTable).ToArray();
@@ -436,7 +438,9 @@ namespace BuildSciexMethod
         private void WriteQuantMethodFile(MethodTransitions transitions)
         {
             string filePath = Path.ChangeExtension(transitions.FinalMethod, ".Quant.txt");
-            string export = "IS\tGroup\tName\tPrecursor (Q1) Mass (Da)\tFragment (Q3) Mass (Da)\tXIC Width (Da)\tRetention Time (min)\tIS Name" + Environment.NewLine;
+            var export = new StringBuilder(
+                "IS\tGroup\tName\tPrecursor (Q1) Mass (Da)\tFragment (Q3) Mass (Da)\tXIC Width (Da)\tRetention Time (min)\tIS Name" +
+                Environment.NewLine);
 
             foreach (var transition in transitions.Transitions.Where(t => !t.IsMs1Precursor))
             {
@@ -447,16 +451,16 @@ namespace BuildSciexMethod
                 var rt = transition.Rt ?? 0; 
                 var xic = transition.Xic;
 
-                export += string.Format("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}",
-                    transition.IsHeavy ? "TRUE": "FALSE",
+                export.Append(string.Format("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}",
+                    transition.IsHeavy ? "TRUE" : "FALSE",
                     groupName,
                     transition.IsMs2Precursor ? transition.Label.Replace("precursor", "p") : transition.Label,
                     transition.PrecursorMz,
                     transition.IsMs2Precursor ? -1 : transition.ProductMz,
                     xic,
                     rt,
-                    transition.IsHeavy? "" : transition.Label.Replace("light", "heavy")).Replace("precursor", "p");
-                export += Environment.NewLine;
+                    transition.IsHeavy ? "" : transition.Label.Replace("light", "heavy")).Replace("precursor", "p"));
+                export.Append(Environment.NewLine);
             }
             using (var file = new StreamWriter(filePath))
             {
