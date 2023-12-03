@@ -94,7 +94,7 @@ namespace pwiz.Skyline
         // ReSharper disable LocalizableElement
         public static readonly Func<string> INT_LIST_VALUE = () => "\"1, 2, 3...\"";  // Not L10N
         public static readonly Func<string> ION_TYPE_LIST_VALUE = () => "\"a, b, c, x, y, z, p\"";    // Not L10N
-        public static readonly Func<string> ANNOTATION_TARGET_LIST_VALUE = () => ('"' + string.Join(@", ", GetAnnotationTargetDict().Keys.ToList()) + '"').ToString();    // Not L10N
+        public static readonly Func<string> ANNOTATION_TARGET_LIST_VALUE = () => "\"protein, molecule_list, peptide, molecule, precursor, transition, replicate, precursor_result, transition_result\""; // Not L10N
 
         public static readonly Func<string> MZTOLERANCE_VALUE = () => "\"" + 0.5 + "mz or 15ppm\"";
         // ReSharper restore LocalizableElement
@@ -1107,7 +1107,7 @@ namespace pwiz.Skyline
             (c, p) => c.AddAnnotationsName = p.Value);
         public static readonly Argument ARG_ADD_ANNOTATIONS_TARGETS = new DocArgument(@"annotation-targets",
             ANNOTATION_TARGET_LIST_VALUE,
-            (c, p) => c.ParseAnnotationTargets(p)){WrapValue = true};
+            (c, p) => c.ParseAnnotationTargets(p.Value)){WrapValue = true};
         public static readonly Argument ARG_ADD_ANNOTATIONS_TYPE = DocArgument.FromEnumType<AnnotationDef.AnnotationType>(@"annotation-type",
             (c, p) => c.AddAnnotationsType = new ListPropertyType(p, null), false);
         public static readonly Argument ARG_ADD_ANNOTATIONS_VALUES = new DocArgument(@"annotation-values", ANNOTATION_VALUES_VALUE,
@@ -1120,15 +1120,29 @@ namespace pwiz.Skyline
 
         public static readonly ArgumentGroup GROUP_ADD_ANNOTATIONS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_ADD_ANNOTATIONS, false,
                 ARG_ADD_ANNOTATIONS_NAME, ARG_ADD_ANNOTATIONS_TARGETS, ARG_ADD_ANNOTATIONS_TYPE, ARG_ADD_ANNOTATIONS_VALUES, ARG_ADD_ANNOTATIONS_FILE, ARG_ADD_ANNOTATIONS_CONFLICT_RESOLUTION) 
-            { LeftColumnWidth = 30 };
+            { LeftColumnWidth = 30, Validate = c => c.ValidateAddAnnotationsArgs()};
         public string AddAnnotationsFile { get; private set; }
         public bool AddingAnnotationsFile { get { return !string.IsNullOrEmpty(AddAnnotationsFile) || !string.IsNullOrEmpty(AddAnnotationsName); } }
         public string AddAnnotationsName { get; private set; }
-        public List<AnnotationDef.AnnotationTarget> AddAnnotationsTargets { get; private set; }
+        public AnnotationDef.AnnotationTargetSet AddAnnotationsTargets { get; private set; }
         public ListPropertyType AddAnnotationsType { get; private set; }
         public string[] AddAnnotationsValues { get; private set; }
         public bool ?AddAnnotationsResolveConflictsBySkipping { get; private set; }
-        
+
+        private bool ValidateAddAnnotationsArgs()
+        {
+            // The user must specify a list of values if they are trying to define a value_list type annotation
+            var valueListName = AnnotationDef.AnnotationType.value_list.ToString();
+            if (Equals(valueListName, AddAnnotationsType.AnnotationType.ToString()) && AddAnnotationsValues.IsNullOrEmpty())
+            {
+                _out.WriteLine(
+                    Resources.CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1__,
+                    valueListName, ARG_ADD_ANNOTATIONS_VALUES.ArgumentText);
+                return false;
+            }
+            return true;
+        }
+
         /// <summary>
         /// Parse a comma-separated list of values to be associated with a value_list
         /// type annotation.
@@ -1143,59 +1157,20 @@ namespace pwiz.Skyline
         /// <summary>
         /// Parse a comma-separated list of target types to apply an annotation to. Case-insensitive.
         /// </summary>
-        /// <param name="p">A NameValuePair where Match is the argument and Value is a
-        /// comma-separated list</param>
+        /// <param name="annotationTargets">A comma-separated list of annotation targets specified by the user</param>
         /// <exception cref="ValueInvalidAnnotationTargetListException">Thrown if no targets are
         /// parsed from the list</exception>
-        private void ParseAnnotationTargets(NameValuePair p)
+        private void ParseAnnotationTargets(string annotationTargets)
         {
-            var userTargets = 
-                ArrayUtil.Parse(p.Value, ParseAnnotationTarget, TextUtil.SEPARATOR_CSV, null);
-            if (userTargets.IsNullOrEmpty())
+            try
+            {
+                AddAnnotationsTargets = AnnotationDef.AnnotationTargetSet.Parse(annotationTargets.ToLowerInvariant());
+            }
+            catch (Exception)
             {
                 throw new ValueInvalidAnnotationTargetListException(
-                    ARG_ADD_ANNOTATIONS_TARGETS, p.Value, ANNOTATION_TARGET_LIST_VALUE.Invoke());
+                    ARG_ADD_ANNOTATIONS_TARGETS, annotationTargets, ANNOTATION_TARGET_LIST_VALUE.Invoke());
             }
-
-            AddAnnotationsTargets = userTargets.ToList();
-        }
-
-        private static AnnotationDef.AnnotationTarget ParseAnnotationTarget(string targetName)
-        {
-            targetName = targetName.ToLowerInvariant();
-            var allAnnotationTargets = GetAnnotationTargetDict();
-            if (allAnnotationTargets.TryGetValue(targetName, out AnnotationDef.AnnotationTarget target))
-            {
-                return target;
-            }
-            throw new ArgumentException();
-        }
-
-        /// <summary>
-        /// Return a dictionary where the key is the text to be displayed and the value is the
-        /// enum value. This allows for redundant target names e.g. molecule_list and protein
-        /// both mean protein.
-        /// </summary>
-        /// <returns>A dictionary where the key is the text to be displayed and the value is the
-        /// enum value.</returns>
-        private static Dictionary<string, AnnotationDef.AnnotationTarget> GetAnnotationTargetDict()
-        {
-            var allAnnotationTargets = new Dictionary<string, AnnotationDef.AnnotationTarget>();
-            var validAnnotationTargets = Enum.GetValues(typeof(AnnotationDef.AnnotationTarget));
-            foreach (AnnotationDef.AnnotationTarget annotationTarget in validAnnotationTargets)
-            {
-                var untranslatedName = annotationTarget.ToString();
-                // Add the untranslated name
-                allAnnotationTargets.Add(untranslatedName, annotationTarget);
-                var translatedName =
-                    Helpers.PeptideToMoleculeTextMapper.SMALL_MOLECULE_MAPPER.
-                        TranslateString(untranslatedName);
-                translatedName = translatedName.Replace(' ', '_'); // Convert to snake case
-                // Insert the translated name
-                allAnnotationTargets[translatedName] = annotationTarget; 
-            }
-
-            return allAnnotationTargets;
         }
       
         public string AnnotationsFile { get; private set; }
@@ -2245,7 +2220,6 @@ namespace pwiz.Skyline
                     GROUP_MINIMIZE_RESULTS,
                     GROUP_IMPORT_DOC,
                     GROUP_ANNOTATIONS,
-                    GROUP_ADD_ANNOTATIONS,
                     GROUP_FASTA,
                     GROUP_IMPORT_SEARCH,
                     GROUP_ASSOCIATE_PROTEINS,
@@ -2263,6 +2237,7 @@ namespace pwiz.Skyline
                     GROUP_EXP_GENERAL,
                     GROUP_EXP_INSTRUMENT,
                     GROUP_PANORAMA,
+                    GROUP_ADD_ANNOTATIONS,
                     GROUP_SETTINGS,
                     GROUP_TOOLS
                 };
@@ -2344,7 +2319,7 @@ namespace pwiz.Skyline
             MProphetExcludeScores = new List<IPeakFeatureCalculator>();
             AnnotationsIncludeObjects = new List<string>();
 
-            AddAnnotationsTargets = new List<AnnotationDef.AnnotationTarget>();
+            AddAnnotationsTargets = new AnnotationDef.AnnotationTargetSet();
             AddAnnotationsResolveConflictsBySkipping = false;
             AddAnnotationsType = ListPropertyType.TEXT;
 

@@ -5367,16 +5367,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Annotation &apos;{0}&apos; successfully added to the document..
-        /// </summary>
-        public static string CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document_ {
-            get {
-                return ResourceManager.GetString("CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_" +
-                        "document_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Added {0} decoy peptides using &apos;{1}&apos; method.
         /// </summary>
         public static string CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method {

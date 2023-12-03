@@ -2,6 +2,8 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
@@ -14,7 +16,7 @@ namespace pwiz.SkylineTestData
         private const string ANNOTATION_VALUES = "Great,Good,Potentially,Bad";
         private const string INVALID_VALUE = "-la";
         private const string ANNOTATION_NAME = "Peptide quality";
-        private const string ANNOTATION_TARGETS = "peptide, replicate";
+        private const string ANNOTATION_TARGETS = "molecule, replicate";
         private const string ANNOTATION_TYPE = "value_list";
         private const string INVALID_TARGETS_LIST = ANNOTATION_TARGETS + INVALID_VALUE;
         
@@ -33,8 +35,14 @@ namespace pwiz.SkylineTestData
                 "--annotation-values=" + ANNOTATION_VALUES, // Specify the values
                 "--save"
             );
+            var logMessage = new DetailLogMessage(LogLevel.all_info, MessageType.added_to,
+                SrmDocument.DOCUMENT_TYPE.proteomic,
+                string.Empty, false,
+                "{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}",
+                "\"Peptide quality\"");
+            var expectedText = logMessage.ToString();
             CommandLineTest.CheckRunCommandOutputContains(string.Format(
-                    Resources.CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document_, ANNOTATION_NAME),
+                    expectedText, ANNOTATION_NAME),
                 output);
             // Assert that the document has the correct number of annotations
             AssertDocumentAnnotationCount(newDocumentPath, 1);
@@ -91,7 +99,7 @@ namespace pwiz.SkylineTestData
             );
             CommandLineTest.CheckRunCommandOutputContains(
                 string.Format(
-                    Resources.CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document_, ANNOTATION_NAME),
+                    expectedText, ANNOTATION_NAME),
                 output);
             // Assert that the document has the correct number of annotations
             AssertDocumentAnnotationCount(newDocumentPath, 1);
@@ -241,7 +249,7 @@ namespace pwiz.SkylineTestData
 
         private static void AssertDocumentAnnotationCount(string documentPath, int annotationCount)
         {
-            Assert.IsTrue(ResultsUtil.DeserializeDocument(documentPath).Settings.DataSettings.AnnotationDefs.Count == annotationCount);
+            Assert.AreEqual(annotationCount, ResultsUtil.DeserializeDocument(documentPath).Settings.DataSettings.AnnotationDefs.Count);
         }
     }
 

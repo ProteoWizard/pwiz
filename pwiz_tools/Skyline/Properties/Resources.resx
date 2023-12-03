@@ -13857,9 +13857,6 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_" xml:space="preserve">
     <value>Warning: Overwriting existing annotation '{0}' due to a name conflict.</value>
   </data>
-  <data name="CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document_" xml:space="preserve">
-    <value>Annotation '{0}' successfully added to the document.</value>
-  </data>
   <data name="CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1__" xml:space="preserve">
     <value>Error: Cannot add a {0} type annotation without providing a list of values through {1}.</value>
   </data>

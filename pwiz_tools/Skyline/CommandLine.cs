@@ -2977,7 +2977,7 @@ namespace pwiz.Skyline
         /// false to overwrite, and null to error</param>
         /// <returns>True upon successful definition</returns>
         public bool AddAnnotations(string name, string path,
-            List<AnnotationDef.AnnotationTarget> targets,
+            AnnotationDef.AnnotationTargetSet targets,
             ListPropertyType type,
             string[] values,
             bool? resolveConflictsBySkipping)
@@ -3070,19 +3070,10 @@ namespace pwiz.Skyline
         /// false to overwrite, and null to error</param>
         /// <returns>True upon successful addition of the annotation to the document,
         /// false upon failure</returns>
-        private bool AddAnnotationsFromArguments(string name, IEnumerable<AnnotationDef.AnnotationTarget> targets,
+        private bool AddAnnotationsFromArguments(string name, AnnotationDef.AnnotationTargetSet targets,
             ListPropertyType type, IList<string> values, bool? resolveConflictsBySkipping)
         {
-            // The user must specify a list of values if they are trying to define a value_list type annotation
-            var valueListName = AnnotationDef.AnnotationType.value_list.ToString();
-            if (Equals(type.AnnotationType.ToString(), valueListName) && values.IsNullOrEmpty())
-            {
-                _out.WriteLine(
-                    Resources.CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1__, 
-                    valueListName, CommandArgs.ARG_ADD_ANNOTATIONS_VALUES.ArgumentText);
-                return false;
-            }
-            var annotationDef = new AnnotationDef(name, AnnotationDef.AnnotationTargetSet.OfValues(targets), type, values);
+            var annotationDef = new AnnotationDef(name, targets, type, values);
             var defList = new AnnotationDefList { annotationDef };
             return AddAnnotationsToEnvAndDocument(defList, resolveConflictsBySkipping);
         }
@@ -3139,7 +3130,7 @@ namespace pwiz.Skyline
         {
             var docAnnotationDefs = Document.Settings.DataSettings.AnnotationDefs.ToList();
             docAnnotationDefs.AddRange(newAnnotationDefs);
-            ModifyDocument(doc =>
+            ModifyDocumentWithLogging(doc =>
             {
                 var dataSettingsNew = Document.Settings.DataSettings.ChangeAnnotationDefs(docAnnotationDefs.ToList());
                 if (Equals(dataSettingsNew, doc.Settings.DataSettings))
@@ -3148,10 +3139,6 @@ namespace pwiz.Skyline
                 doc = MetadataExtractor.ApplyRules(doc, null, out _);
                 return doc;
             }, AuditLogEntry.SettingsLogFunction);
-            var successMessage = newAnnotationDefs.Select(def => string.Format(
-                Resources.CommandLine_AddAnnotationsToDocument_Annotation___0___successfully_addded_to_the_document_,
-                def.Name)).ToList();
-            _out.WriteLine(TextUtil.LineSeparate(successMessage));
             return true;
         }
 

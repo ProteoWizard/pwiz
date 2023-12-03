@@ -318,6 +318,20 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
                 return base.ParseElements(stringValue);
             }
+
+            protected override AnnotationTarget ParseElement(string stringValue)
+            {
+                if (stringValue.Contains(@"molecule_list"))
+                {
+                    return AnnotationTarget.protein;
+                }
+                if (stringValue.Contains(@"molecule"))
+                {
+                    return AnnotationTarget.peptide;
+                }
+
+                return base.ParseElement(stringValue);
+            }
         }
 
         public static string AnnotationTargetPluralName(AnnotationTarget annotationTarget)
