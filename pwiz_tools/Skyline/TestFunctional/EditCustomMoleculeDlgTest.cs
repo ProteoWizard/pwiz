@@ -60,6 +60,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            TestEditBogusMolecule();
             TestEditWithIsotopeDistribution();
             AsMasses();
             AsFormulas();
@@ -73,13 +74,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
                 SkylineWindow.ModifyDocument("", doc =>
                 {
-                    IdentityPath first;
-                    IdentityPath next;
                     return doc.AddPeptideGroups(new[]
                     {
                         new PeptideGroupDocNode(new PeptideGroup(), doc.Annotations, "Molecule Group", "",
                             new PeptideDocNode[0])
-                    }, true, IdentityPath.ROOT, out first, out next);
+                    }, true, IdentityPath.ROOT, out _, out _);
                 }));
             var docNext = WaitForDocumentChange(origDoc);
             TestAddingSmallMoleculeAsMasses();
@@ -99,13 +98,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
                 SkylineWindow.ModifyDocument("", doc =>
                 {
-                    IdentityPath first;
-                    IdentityPath next;
                     return doc.AddPeptideGroups(new[]
                     {
                         new PeptideGroupDocNode(new PeptideGroup(), doc.Annotations, "Molecule Group", "",
                             new PeptideDocNode[0])
-                    }, true, IdentityPath.ROOT, out first, out next);
+                    }, true, IdentityPath.ROOT, out _, out _);
                 }));
             var docNext = WaitForDocumentChange(origDoc);
             TestAddingSmallMolecule();
@@ -206,6 +203,44 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(testRTWindow, newdoc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTimeWindow.Value, massPrecisionTolerance);
 
         }
+        private static void TestEditBogusMolecule()
+        {
+            // Add a legit molecule, then try to modify it with garbage
+            RunUI(() => SkylineWindow.NewDocument(true));
+            var origDoc = SkylineWindow.Document;
+            RunUI(() =>
+                SkylineWindow.ModifyDocument("", mdoc =>
+                {
+                    return mdoc.AddPeptideGroups(new[]
+                    {
+                        new PeptideGroupDocNode(new PeptideGroup(), mdoc.Annotations, "Molecule Group", "",
+                            new PeptideDocNode[0])
+                    }, true, IdentityPath.ROOT, out _, out _);
+                }));
+            var doc = WaitForDocumentChange(origDoc);
+            RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(SkylineWindow.Document.MoleculeGroups.ElementAt(0).Id));
+            var editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.AddSmallMolecule);
+            RunUI(() =>
+            {
+                editMoleculeDlg.FormulaBox.Formula = "C3H7NO2[M+H]";
+            });
+            OkDialog(editMoleculeDlg, editMoleculeDlg.OkDialog);
+            doc = WaitForDocumentChange(doc);
+            RunUI(() =>
+            {
+                SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].FirstNode;
+            });
+            editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifyPeptide);
+            RunUI(() =>
+            {
+                editMoleculeDlg.FormulaBox.Formula = "[13C]3H7[15N]O2"; // CONSIDER: we should really support this nomenclature but we don't (yet?)
+            });
+            var errorDlg = ShowDialog<MessageDlg>(editMoleculeDlg.OkDialog); // This shouldn't actually close the dialog since the formula is in error and highlighted red
+            OkDialog(errorDlg, errorDlg.OkDialog);
+            OkDialog(editMoleculeDlg, editMoleculeDlg.CancelDialog);
+            RunUI(() => SkylineWindow.NewDocument(true));
+        }
+
         private static void TestEditingSmallMoleculeAsMasses()
         {
             RunUI(() =>
@@ -1057,7 +1092,6 @@ namespace pwiz.SkylineTestFunctional
             VerifyPrecursorTransitionMz(403.38479203566, 7); // M+2 heavy
             VerifyFragmentTransitionMz(186.18633804, 186.18633804, 4); // fragment should not change
 
-
             // Change the adduct 
             SelectNode(SrmDocument.Level.TransitionGroups, 0);
             var editTransitionGroupDlg = ShowDialog<EditCustomMoleculeDlg>(
@@ -1074,15 +1108,15 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(editTransitionGroupDlg, editTransitionGroupDlg.OkDialog);
             // Verify that this updated all the precursor isotope mz values
-            VerifyPrecursorTransitionMz(199.182259, 0); // M
-            VerifyPrecursorTransitionMz(199.683934336183, 1); // M+1
-            VerifyPrecursorTransitionMz(200.185431221118, 2); // M+2
-            VerifyFragmentTransitionMz(186.18633804, 186.18633804, 4); // fragment should not change
+            VerifyPrecursorTransitionMz(199.182259, 5); // M
+            VerifyPrecursorTransitionMz(199.683934336183, 6); // M+1
+            VerifyPrecursorTransitionMz(200.185431221118, 7); // M+2
+            VerifyFragmentTransitionMz(186.18633804, 186.18633804, 9); // fragment should not change
 
             // But the heavy adduct wasn't changed, make sure no change to mz
-            VerifyPrecursorTransitionMz(401.3785033156, 5); // M heavy
-            VerifyPrecursorTransitionMz(402.381853413823, 6); // M+1 heavy
-            VerifyPrecursorTransitionMz(403.38479203566, 7); // M+2 heavy
+            VerifyPrecursorTransitionMz(401.3785033156, 0); // M heavy
+            VerifyPrecursorTransitionMz(402.381853413823, 1); // M+1 heavy
+            VerifyPrecursorTransitionMz(403.38479203566, 2); // M+2 heavy
             VerifyFragmentTransitionMz(186.18633804, 186.18633804, 4); // fragment should not change
 
         }

@@ -239,6 +239,12 @@
   <data name="modifyPeptideContextMenuItem.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
+  <data name="editSpectrumFilterContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="editSpectrumFilterContextMenuItem.Text" xml:space="preserve">
+    <value>Edit Spectrum Filter...</value>
+  </data>
   <data name="toggleQuantitativeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
   </data>
@@ -308,11 +314,23 @@
   <metadata name="contextMenuSpectrum.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>197, 56</value>
   </metadata>
-  <data name="ionTypesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+  <data name="replicatesTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
   </data>
   <data name="ionTypesContextMenuItem.Text" xml:space="preserve">
     <value>Ion Types</value>
+  </data>
+  <data name="replicatesTreeContextMenuItem.Text" xml:space="preserve">
+    <value>Replicates</value>
+  </data>
+  <data name="contextMenuTreeNode.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 396</value>
+  </data>
+  <data name="&gt;&gt;contextMenuTreeNode.Name" xml:space="preserve">
+    <value>contextMenuTreeNode</value>
+  </data>
+  <data name="&gt;&gt;contextMenuTreeNode.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="fragmentionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -361,6 +379,12 @@
   </data>
   <data name="massErrorToolStripMenuItem.Text" xml:space="preserve">
     <value>Mass Error</value>
+  </data>
+  <data name="massErrorToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="massErrorToolStripMenuItem.Text" xml:space="preserve">
+    <value>Show Mass Error</value>
   </data>
   <data name="ionMzValuesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -442,9 +466,6 @@
   </data>
   <data name="synchMzScaleToolStripMenuItem.Text" xml:space="preserve">
     <value>Synchronize m/z Scale</value>
-  </data>
-  <data name="contextMenuSpectrum.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 442</value>
   </data>
   <data name="&gt;&gt;contextMenuSpectrum.Name" xml:space="preserve">
     <value>contextMenuSpectrum</value>
@@ -1329,6 +1350,15 @@
   <data name="openMenuItem.Text" xml:space="preserve">
     <value>&amp;Open...</value>
   </data>
+  <data name="openPanoramaMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="openPanoramaMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 22</value>
+  </data>
+  <data name="openPanoramaMenuItem.Text" xml:space="preserve">
+    <value>Open From Panora&amp;ma...</value>
+  </data>
   <data name="openContainingFolderMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>197, 22</value>
   </data>
@@ -1394,6 +1424,12 @@
   </data>
   <data name="importPeptideSearchMenuItem.Text" xml:space="preserve">
     <value>&amp;Peptide Search...</value>
+  </data>
+  <data name="encyclopeDiaSearchMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>194, 22</value>
+  </data>
+  <data name="encyclopeDiaSearchMenuItem.Text" xml:space="preserve">
+    <value>&amp;EncyclopeDIA Search...</value>
   </data>
   <data name="toolStripSeparator52.Size" type="System.Drawing.Size, System.Drawing">
     <value>167, 6</value>
@@ -2092,7 +2128,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.2.1.341, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;cutContextMenuItem.Name" xml:space="preserve">
     <value>cutContextMenuItem</value>
@@ -3144,6 +3180,12 @@
   <data name="&gt;&gt;openMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;openPanoramaMenuItem.Name" xml:space="preserve">
+    <value>openPanoramaMenuItem</value>
+  </data>
+  <data name="&gt;&gt;openPanoramaMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;openContainingFolderMenuItem.Name" xml:space="preserve">
     <value>openContainingFolderMenuItem</value>
   </data>
@@ -3214,6 +3256,12 @@
     <value>importPeptideSearchMenuItem</value>
   </data>
   <data name="&gt;&gt;importPeptideSearchMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;encyclopeDiaSearchMenuItem.Name" xml:space="preserve">
+    <value>encyclopeDiaSearchMenuItem</value>
+  </data>
+  <data name="&gt;&gt;encyclopeDiaSearchMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator52.Name" xml:space="preserve">
@@ -3868,6 +3916,7 @@
     <value>SkylineWindow</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=22.2.1.341, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
+

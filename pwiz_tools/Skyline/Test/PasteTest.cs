@@ -68,9 +68,8 @@ namespace pwiz.SkylineTest
             _yeastDoc = new SrmDocument(SrmSettingsList.GetDefault().ChangeTransitionInstrument(instrument => instrument.ChangeMaxMz(1600)));
             _yeastDoc = _yeastDoc.ChangeSettings(_yeastDoc.Settings.ChangeTransitionFilter(filter =>
                                                                                            filter.ChangeMeasuredIons(new MeasuredIon[0])));
-            IdentityPath path;
             _yeastDocReadOnly = _yeastDoc = _yeastDoc.ImportFasta(new StringReader(ExampleText.TEXT_FASTA_YEAST_LIB),
-                false, IdentityPath.ROOT, out path);
+                false, IdentityPath.ROOT, out _);
 
             _study7DocReadOnly = _study7Doc = CreateStudy7Doc();
 
@@ -206,12 +205,13 @@ namespace pwiz.SkylineTest
                 sourceDoc = sourceDoc.RemoveAllBut(nodes);
            
             var stringWriter = new XmlStringWriter();
-            using (var writer = new XmlTextWriter(stringWriter) { Formatting = Formatting.Indented })
+            using (var writer = new XmlTextWriter(stringWriter))
             {
+                writer.Formatting = Formatting.Indented;
                 XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
                 ser.Serialize(writer, sourceDoc);
             }
-            IdentityPath newPath, nextAdd;
+
             targetDoc = targetDoc.ImportDocumentXml(new StringReader(stringWriter.ToString()),
                                                     null,
                                                     MeasuredResults.MergeAction.remove,
@@ -220,8 +220,8 @@ namespace pwiz.SkylineTest
                                                     Settings.Default.StaticModList,
                                                     Settings.Default.HeavyModList,
                                                     to,
-                                                    out newPath,
-                                                    out nextAdd,
+                                                    out _,
+                                                    out _,
                                                     false);
             return targetDoc;
         }

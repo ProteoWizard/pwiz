@@ -105,13 +105,11 @@ namespace pwiz.Skyline.FileUI
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            using (var saveFileDialog = new SaveFileDialog
-                {
-                    InitialDirectory = Settings.Default.ActiveDirectory,
-                    CheckPathExists = true,
-                    Filter = Filter
-                })
+            using (var saveFileDialog = new SaveFileDialog())
             {
+                saveFileDialog.InitialDirectory = Settings.Default.ActiveDirectory;
+                saveFileDialog.CheckPathExists = true;
+                saveFileDialog.Filter = Filter;
                 saveFileDialog.ShowDialog(this);
                 if (!string.IsNullOrEmpty(saveFileDialog.FileName))
                     OkDialog(saveFileDialog.FileName);
@@ -193,13 +191,11 @@ namespace pwiz.Skyline.FileUI
 
         public static string GetImportFileName(Form parent, string filter)
         {
-            using (var dialog = new OpenFileDialog
-                {
-                    InitialDirectory = Settings.Default.ActiveDirectory,
-                    CheckPathExists = true,
-                    Filter = filter
-                })
+            using (var dialog = new OpenFileDialog())
             {
+                dialog.InitialDirectory = Settings.Default.ActiveDirectory;
+                dialog.CheckPathExists = true;
+                dialog.Filter = filter;
                 if (dialog.ShowDialog(parent) == DialogResult.Cancel)
                     return null;
                 return dialog.FileName;

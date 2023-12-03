@@ -31,6 +31,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -975,6 +976,25 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        public static BlockedArray<TItem> FromEnumerable(IEnumerable<TItem> enumerable, int itemCount, int itemSize,
+            int bytesPerBlock, IProgressMonitor progressMonitor, IProgressStatus status)
+        {
+            using (var enumerator = enumerable.GetEnumerator())
+            {
+                return new BlockedArray<TItem>(count =>
+                {
+                    var array = new TItem[count];
+                    for (int i = 0; i < count; i++)
+                    {
+                        Assume.IsTrue(enumerator.MoveNext());
+                        array[i] = enumerator.Current;
+                    }
+
+                    return array;
+                }, itemCount, itemSize, bytesPerBlock, progressMonitor, status);
+            }
+        }
+
         /// <summary>
         /// Copy a list into blocks.
         /// </summary>
@@ -1583,8 +1603,7 @@ namespace pwiz.Skyline.Util
         {
             for (int i = name.Length; i > 0; i--)
             {
-                int num;
-                if (!int.TryParse(name.Substring(i - 1), out num))
+                if (!int.TryParse(name.Substring(i - 1), out _))
                     return i;
             }
             return 0;
@@ -1902,6 +1921,8 @@ namespace pwiz.Skyline.Util
                 throw new IOException(x.Message, x);
             if (x is OperationCanceledException)
                 throw new OperationCanceledException(x.Message, x);
+            if (x is UnauthorizedAccessException)
+                throw new UnauthorizedAccessException(x.Message, x);
             throw new TargetInvocationException(x.Message, x);            
         }
 
@@ -2108,6 +2129,31 @@ namespace pwiz.Skyline.Util
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Calls either <see cref="MessageDlg.ShowWithException"/> or <see cref="Program.ReportException"/> depending
+        /// on what <see cref="IsProgrammingDefect"/> returns.
+        /// <param name="parent">Parent window for message dialog</param>
+        /// <param name="exception">The exception that was caught</param>
+        /// <param name="message">Optional message which summarizes what Skyline was trying to do when the exception happened,
+        /// to be inserted on a separate line before the exception's message.</param>
+        /// </summary>
+        public static void DisplayOrReportException(IWin32Window parent, Exception exception, string message = null)
+        {
+            if (IsProgrammingDefect(exception))
+            {
+                Program.ReportException(exception);
+            }
+            else
+            {
+                string fullMessage = exception.Message;
+                if (string.IsNullOrEmpty(message))
+                {
+                    fullMessage = TextUtil.LineSeparate(message, fullMessage);
+                }
+                MessageDlg.ShowWithException(parent, fullMessage, exception);
+            }
         }
     }
 

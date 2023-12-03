@@ -70,6 +70,7 @@ namespace pwiz.Skyline.Controls.Graphs
         bool IsAnnotated { get; }
         LibraryRankedSpectrumInfo SpectrumInfo { get; }
         bool ShowPropertiesSheet { get; set; }
+        bool HasChromatogramData { get; }
     }
 
     public interface ISpectrumScaleProvider
@@ -140,6 +141,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private SpectrumDisplayInfo _mirrorSpectrum;
         private SpectrumDisplayInfo _spectrum;
+                
 
         private bool _inToolbarUpdate;
         // TODO
@@ -544,7 +546,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 var iSpectrum = Precursors[i].Spectra.IndexOf(spectrumInfo => !spectrumInfo.IsBest && SpectrumMatches(spectrumInfo, spectrumIdentifier));
                 if (iSpectrum != -1)
                 {
-                    comboPrecursor.SelectedIndex = i;
+                    if (comboPrecursor.SelectedIndex != i)
+                    {
+                        comboPrecursor.SelectedIndex = i;
+                        DoUpdate();
+                    }
                     comboSpectrum.SelectedIndex = iSpectrum;
                     return;
                 }
@@ -933,8 +939,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             double? score = null;
             if(spectrum.SpectrumInfo is SpectrumInfoLibrary libInfo)
-                if (libInfo.SpectrumHeaderInfo is BiblioSpecSpectrumHeaderInfo biblioSpecInfo)
-                    score = biblioSpecInfo.Score;
+                score = libInfo.SpectrumHeaderInfo?.Score;
             var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrumPeaksOverride ?? spectrum.SpectrumPeaksInfo,
                 spectrum.LabelType,
                 precursor,
@@ -1277,6 +1282,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     var spectrumChanged = !Equals(_spectrum?.SpectrumInfo, spectrum?.SpectrumInfo);
                     _spectrum = spectrum;
+                    if(spectrumChanged)
+                        HasChromatogramData = _spectrum?.LoadChromatogramData() != null;
 
                     ClearGraphPane();
 
@@ -1501,6 +1508,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public LibraryRankedSpectrumInfo SpectrumInfo => GraphItem?.SpectrumInfo;
 
+        public bool HasChromatogramData
+        {
+            get;
+            private set;
+        }
+
         public Scale IntensityScale
         {
             get { return GraphPane.YAxis.Scale; }
@@ -1672,8 +1685,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 0, // compressedSize
                 0, // uncompressedsize
                 0,  //location
-                0, -1, -1, null, null, chromGroup.CCS, ionMobilityFilter.IonMobilityUnits);
-            var groupInfo = new ChromatogramGroupInfo(header,
+                0, null, null, chromGroup.CCS, ionMobilityFilter.IonMobilityUnits);
+            var groupInfo = new ChromatogramGroupInfo(header,null,
                 new[]
                 {
                     new ChromTransition(chromData.Mz, 0,

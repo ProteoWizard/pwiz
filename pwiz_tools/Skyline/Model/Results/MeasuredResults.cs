@@ -25,6 +25,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -671,6 +672,40 @@ namespace pwiz.Skyline.Model.Results
             return null;
         }
 
+        public IDictionary<MsDataFileUri, ResultFileMetaData> GetResultFileMetadatas()
+        {
+            var dictionary = new Dictionary<MsDataFileUri, ResultFileMetaData>();
+            foreach (var cache in Caches)
+            {
+                for (int i = 0; i < cache.CachedFiles.Count; i++)
+                {
+                    var resultFileMetadata = cache.GetResultFileMetadata(i);
+                    if (null != resultFileMetadata)
+                    {
+                        dictionary.Add(cache.CachedFiles[i].FilePath, resultFileMetadata);
+                    }
+                }
+            }
+
+            return dictionary;
+        }
+
+        public ResultFileMetaData GetResultFileMetaData(MsDataFileUri msDataFileUri)
+        {
+            foreach (var cache in Caches)
+            {
+                for (int i = 0; i < cache.CachedFiles.Count; i++)
+                {
+                    if (msDataFileUri.Equals(cache.CachedFiles[i].FilePath))
+                    {
+                        return cache.GetResultFileMetadata(i);
+                    }
+                }
+            }
+
+            return null;
+        }
+
         public bool HasAllIonsChromatograms
         {
             get { return Caches.Any(cache => cache.HasAllIonsChromatograms); }
@@ -747,7 +782,8 @@ namespace pwiz.Skyline.Model.Results
                 var qcTraceInfos = Caches.SelectMany(cache=>cache.ChromGroupHeaderInfos
                                                                  .Where(header => header.Flags.HasFlag(ChromGroupHeaderInfo.FlagValues.extracted_qc_trace))
                                                                  .Select(header => cache.LoadChromatogramInfo(header)));
-                var qcTraceNames = qcTraceInfos.Select(info => info.TextId).Distinct().ToList();
+                var qcTraceNames = qcTraceInfos.Select(info => info.ChromatogramGroupId.QcTraceName).Distinct()
+                    .ToList();
                 qcTraceNames.Sort();
                 return qcTraceNames;
             }

@@ -89,10 +89,8 @@ namespace pwiz.SkylineTest
             // Updating the settings.
             // Peptide settings should change to include new mods.
             var docNew = new SrmDocument(SrmSettingsList.GetDefault());
-            IdentityPath firstAdded;
-            IdentityPath nextAdded;
             docNew = docNew.AddPeptideGroups(new[] { new PeptideGroupDocNode(new PeptideGroup(), "PepGroup1", "",
-                new[] {MATCHER.GetModifiedNode(STR_MOD_BY_NAME)})}, true, null, out firstAdded, out nextAdded);
+                new[] {MATCHER.GetModifiedNode(STR_MOD_BY_NAME)})}, true, null, out _, out _);
             var pepSetNew = MATCHER.GetDocModifications(docNew);
             Assert.IsTrue(pepSetNew.StaticModifications.Contains(UniMod.GetModification("Phospho (ST)", true).ChangeExplicit(true)));
             // Update the document to the new settings.
@@ -198,8 +196,10 @@ namespace pwiz.SkylineTest
             var nodeUniTerm = MATCHER.GetModifiedNode(STR_UNIMOD_TERMINUS);
             Assert.AreEqual(nodeUniTerm.ExplicitMods.HeavyModifications.Count, 1);
             Assert.IsNull(nodeUniTerm.ExplicitMods.StaticModifications);
-            Assert.AreEqual(nodeUniTerm.ExplicitMods.HeavyModifications[0].Modification.Terminus, ModTerminus.C);
-            Assert.AreEqual(nodeUniTerm.ExplicitMods.HeavyModifications[0].Modification.UnimodId, 298);
+            var heavyMod = nodeUniTerm.ExplicitMods.HeavyModifications[0];
+            Assert.IsNull(heavyMod.Modification.Terminus);
+            Assert.AreEqual(heavyMod.Modification.AAs, "R");
+            Assert.AreEqual(heavyMod.Modification.UnimodId, 298);
 
             // Basic multi-label test
             var heavyLabelType2 = new IsotopeLabelType("Heavy2", 1);
@@ -215,7 +215,7 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(MATCHER.GetModifiedNode(STR_HEAVY_15_F).ExplicitMods.GetHeavyModifications().Contains(mod => Equals(mod.LabelType, heavyLabelType2)));
             // Peptide settings should not change.
             var docNew0 = new SrmDocument(settingsMultiLabel).AddPeptideGroups(new[] { new PeptideGroupDocNode(new PeptideGroup(), 
-                "PepGroup1", "", new[] {MATCHER.GetModifiedNode(STR_HEAVY_15_F)})}, true, null, out firstAdded, out nextAdded);
+                "PepGroup1", "", new[] {MATCHER.GetModifiedNode(STR_HEAVY_15_F)})}, true, null, out _, out _);
             var settingsNew = MATCHER.GetDocModifications(docNew0);
             Assert.AreEqual(settingsMultiLabel.PeptideSettings.Modifications.ChangeHasHeavyModifications(false), 
                 settingsNew.ChangeHasHeavyModifications(false));
@@ -414,7 +414,7 @@ namespace pwiz.SkylineTest
         private static readonly StaticMod LABEL15_N = new StaticMod("Label:15N", null, null, LabelAtoms.N15);
         private static readonly StaticMod MET_OX_ROUNDED = new StaticMod("Met Ox Rounded", "M", null, null, LabelAtoms.None, 16.0, 16.0);
         private static readonly StaticMod N_TERM_LABEL = new StaticMod("Label:13C(6)15N(2) (K)", "K", null, false, null, LabelAtoms.C13|LabelAtoms.N15, 
-                                                                        RelativeRT.Matching, null,null, null, 259, "+08", null);
+                                                                        RelativeRT.Matching, null,null, null, 259, "+08");
 
         private static List<string> _seqs;
         private static void InitSeqs()

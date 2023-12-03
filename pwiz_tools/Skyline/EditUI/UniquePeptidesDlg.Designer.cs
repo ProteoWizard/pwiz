@@ -29,10 +29,10 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UniquePeptidesDlg));
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UniquePeptidesDlg));
             this.dataGridView1 = new pwiz.Common.Controls.CommonDataGridView();
             this.PeptideIncludedColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.PeptideColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -58,15 +58,19 @@
             this.richTextBoxSequence = new System.Windows.Forms.RichTextBox();
             this.tbxProteinDetails = new System.Windows.Forms.TextBox();
             this.labelProteinDetails = new System.Windows.Forms.Label();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.contextMenuStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
             this.SuspendLayout();
             // 
             // dataGridView1
             // 
             this.dataGridView1.AllowUserToAddRows = false;
             this.dataGridView1.AllowUserToDeleteRows = false;
-            resources.ApplyResources(this.dataGridView1, "dataGridView1");
             dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
             dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -87,6 +91,7 @@
             dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
             this.dataGridView1.DefaultCellStyle = dataGridViewCellStyle2;
+            resources.ApplyResources(this.dataGridView1, "dataGridView1");
             this.dataGridView1.MaximumColumnCount = 2000;
             this.dataGridView1.Name = "dataGridView1";
             dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
@@ -253,6 +258,29 @@
             resources.ApplyResources(this.labelProteinDetails, "labelProteinDetails");
             this.labelProteinDetails.Name = "labelProteinDetails";
             // 
+            // splitContainer1
+            // 
+            resources.ApplyResources(this.splitContainer1, "splitContainer1");
+            this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
+            this.splitContainer1.Name = "splitContainer1";
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.dataGridView1);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.tbxProteinName);
+            this.splitContainer1.Panel2.Controls.Add(this.tbxProteinDetails);
+            this.splitContainer1.Panel2.Controls.Add(this.label1);
+            this.splitContainer1.Panel2.Controls.Add(this.labelProteinDetails);
+            this.splitContainer1.Panel2.Controls.Add(this.btnCancel);
+            this.splitContainer1.Panel2.Controls.Add(this.richTextBoxSequence);
+            this.splitContainer1.Panel2.Controls.Add(this.btnOK);
+            this.splitContainer1.Panel2.Controls.Add(this.tbxProteinDescription);
+            this.splitContainer1.Panel2.Controls.Add(this.label2);
+            this.splitContainer1.Panel2.Controls.Add(this.label3);
+            // 
             // UniquePeptidesDlg
             // 
             this.AcceptButton = this.btnOK;
@@ -260,25 +288,19 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.ContextMenuStrip = this.contextMenuStrip1;
-            this.Controls.Add(this.tbxProteinDetails);
-            this.Controls.Add(this.labelProteinDetails);
-            this.Controls.Add(this.richTextBoxSequence);
-            this.Controls.Add(this.dataGridView1);
-            this.Controls.Add(this.tbxProteinDescription);
-            this.Controls.Add(this.label3);
-            this.Controls.Add(this.tbxProteinName);
-            this.Controls.Add(this.label2);
-            this.Controls.Add(this.btnOK);
-            this.Controls.Add(this.btnCancel);
-            this.Controls.Add(this.label1);
+            this.Controls.Add(this.splitContainer1);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "UniquePeptidesDlg";
             this.ShowInTaskbar = false;
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.contextMenuStrip1.ResumeLayout(false);
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            this.splitContainer1.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
+            this.splitContainer1.ResumeLayout(false);
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
@@ -309,5 +331,6 @@
         private System.Windows.Forms.ToolStripMenuItem uniqueSpeciesToolStripMenuItem;
         private System.Windows.Forms.DataGridViewCheckBoxColumn PeptideIncludedColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn PeptideColumn;
+        private System.Windows.Forms.SplitContainer splitContainer1;
     }
 }

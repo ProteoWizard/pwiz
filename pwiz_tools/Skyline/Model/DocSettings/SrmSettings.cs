@@ -1534,8 +1534,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods mods, Adduct charge)
         {
-            bool allowVariableMods;
-            return Accept(settings, peptide, mods, new[] { charge }, PeptideFilterType.library, out allowVariableMods);
+            return Accept(settings, peptide, mods, new[] { charge }, PeptideFilterType.library, out _);
         }
 
         private enum PeptideFilterType
@@ -2070,6 +2069,20 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 result = result.ChangePeptideSettings(peptideSettings =>
                     peptideSettings.ChangeParsimonySettings(ProteinAssociation.ParsimonySettings.DEFAULT));
+            }
+
+            if (documentFormat < DocumentFormat.VERSION_22_23)
+            {
+                if (result.TransitionSettings.Libraries.IonMatchMzTolerance.Unit == MzTolerance.Units.ppm)
+                {
+                    // Older versions of Skyline did not support library match tolerance ppm units
+                    // If the library match tolerance was in ppm, then convert it to mz units, assuming an mz of 1000.
+                    var newToleranceValue = result.TransitionSettings.Libraries.IonMatchMzTolerance.Value / 1000;
+                    newToleranceValue = Math.Min(TransitionLibraries.MAX_MATCH_TOLERANCE, Math.Max(TransitionLibraries.MIN_MATCH_TOLERANCE, newToleranceValue));
+                    result = result.ChangeTransitionSettings(transitionSettings =>
+                        transitionSettings.ChangeLibraries(
+                            transitionSettings.Libraries.ChangeIonMatchMzTolerance(new MzTolerance(newToleranceValue))));
+                }
             }
 
             return result;

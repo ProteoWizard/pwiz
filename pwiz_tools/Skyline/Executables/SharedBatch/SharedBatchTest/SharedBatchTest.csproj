@@ -46,13 +46,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="pwiz.Common">
-      <HintPath>..\..\..\bin\x64\Release\pwiz.Common.dll</HintPath>
-    </Reference>
-    <Reference Include="pwiz.CommonUtil, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\bin\x64\Release\pwiz.CommonUtil.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -83,6 +76,10 @@
     <Folder Include="Test\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Shared\CommonUtil\CommonUtil.csproj">
+      <Project>{13bf2ffb-50a1-4ab1-83a4-5733e36905ce}</Project>
+      <Name>CommonUtil</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SharedBatch\SharedBatch.csproj">
       <Project>{9660e7b1-a0ad-4c2b-a395-350d4055640a}</Project>
       <Name>SharedBatch</Name>

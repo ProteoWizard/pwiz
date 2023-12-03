@@ -59,44 +59,44 @@
 			: and then encoded with base64 encoding.
 	-->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-		<xsd:element name="root" msdata:IsDataSet="true">
-			<xsd:complexType>
-				<xsd:choice maxOccurs="unbounded">
-					<xsd:element name="data">
-						<xsd:complexType>
-							<xsd:sequence>
-								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-								<xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
-							</xsd:sequence>
-							<xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
-							<xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
-							<xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
-						</xsd:complexType>
-					</xsd:element>
-					<xsd:element name="resheader">
-						<xsd:complexType>
-							<xsd:sequence>
-								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-							</xsd:sequence>
-							<xsd:attribute name="name" type="xsd:string" use="required" />
-						</xsd:complexType>
-					</xsd:element>
-				</xsd:choice>
-			</xsd:complexType>
-		</xsd:element>
-	</xsd:schema>
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
   <resheader name="resmimetype">
-		<value>text/microsoft-resx</value>
-	</resheader>
+    <value>text/microsoft-resx</value>
+  </resheader>
   <resheader name="version">
-		<value>1.3</value>
-	</resheader>
+    <value>1.3</value>
+  </resheader>
   <resheader name="reader">
-		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-	</resheader>
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
-		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-	</resheader>
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <data name="AbsFoldChange">
     <value>倍率変化の絶対値</value>
   </data>
@@ -120,6 +120,10 @@
   </data>
   <data name="AnalyteConcentration">
     <value>外部標準試料または、QC試料にスパイクしたアナライトの既知量です。</value>
+  </data>
+  <data name="Analyzer">
+    <value>スペクトルの収集に使用したアナライザーの種類です。
+1つ以上のアナライザーが使用された場合、アナライザー名はスラッシュで区切られます。</value>
   </data>
   <data name="Area">
     <value>トランジションピークの曲線下の面積（AUC）からバックグラウンドを引いたものです。</value>
@@ -202,7 +206,7 @@
     <value>試料タイプが[標準]で[アナライト濃度]が指定されている繰り返し測定を使用して計算された校正曲線です。</value>
   </data>
   <data name="CandidatePeakGroup">
-    <value>同じペプチドまたは分子に属するプリカーサーセットのトランジションクロマトグラムで、開始時刻と終了時刻が同じピークセット。</value>
+    <value>同じペプチドまたは分子に属するプリカーサーセットのトランジションクロマトグラムで、開始時間と終了時間が同じピークセット。</value>
   </data>
   <data name="CAS" xml:space="preserve">
     <value>標準分子ID</value>
@@ -212,6 +216,9 @@
   </data>
   <data name="Chromatogram">
     <value>トランジションおよび繰り返し測定のクロマトグラム。</value>
+  </data>
+  <data name="ChromatogramEndTime">
+    <value>クロマトグラム中での最後の保持時間です。</value>
   </data>
   <data name="ChromatogramExtractionWidth">
     <value>スペクトル強度の合計におけるチャネルの全幅です。</value>
@@ -235,6 +242,9 @@
     <value>クロマトグラムが抽出されたスキャンのタイプで、「fragment（フラグメント）」、「sim」、「ms1」か「unknown（不明）」のいずれかです。</value>
     <comment>Keep the english form of "fragment", "sim", "ms1", or "unknown" because that is what users see in the Document Grid. However, maybe put the localized translation in parentheses: "fragment" (translation of fragment), "sim" (translation of selected ion monitoring), etc. </comment>
   </data>
+  <data name="ChromatogramStartTime">
+    <value>クロマトグラム中での最初の保持時間です。</value>
+  </data>
   <data name="CleavageAa">
     <value>フラグメンテーションの際に切断された（C末端の）ペプチドの後の特定のアミノ酸残基 （例えば、P、M、S、Tなど）。</value>
   </data>
@@ -249,6 +259,9 @@
   </data>
   <data name="CollisionEnergy">
     <value>Skylineでの装置/ベンダー固有のデフォルトの衝突エネルギーの算出式による プリカーサーイオンの衝突エネルギー</value>
+  </data>
+  <data name="CompensationVoltage">
+    <value>FAIMSスペクトルが収集されたときに印加された電圧です。</value>
   </data>
   <data name="ConcentrationMultiplier">
     <value>特定のペプチドまたは分子の特定の濃度を得るために繰り返し測定の「アナライト濃度」に乗じる値です。</value>
@@ -534,6 +547,9 @@
   <data name="Key">
     <value>キー</value>
   </data>
+  <data name="Kurtosis">
+    <value>クロマトグラムピークの「裾」の尺度。</value>
+  </data>
   <data name="LastPosition">
     <value>ペプチドに含まれるタンパク質シークエンスの最後の（C末端）アミノ酸の位置です。タンパク質シークエンスがない場合には#N/Aとなります。</value>
   </data>
@@ -606,6 +622,9 @@
   <data name="MassErrors">
     <value>クロマトグラムの質量誤差です。</value>
   </data>
+  <data name="MatchingPrecursors">
+    <value>プリカーサーのm/zがスペクトルグリッド内の行で表されるスペクトルのいずれかと一致する、選択したプリカーサーのサブセットです。</value>
+  </data>
   <data name="Max">
     <value>最大値</value>
   </data>
@@ -673,10 +692,10 @@
     <value>mProphetモデルの適用後に、選択された各ターゲットのピークに割り当てられるfalse discovery rate（FDR）スコアの中央値です。</value>
   </data>
   <data name="MedianPeakArea">
-    <value>特定の結果ファイルに示されるトランジション結果の中間トランジションピーク面積。
-中間ピーク面積は正規化メソッドが「中央値を均一化」である場合に使用されます。
-内標準標識タイプがある場合、中間ピーク面積はプリカーサーの標識タイプが内標準のトランジションに示されるピーク面積のみを使って計算されます。
-内標準ピーク面積がない場合はすべてのトランジションピーク面積から中間トランジションピーク面積が計算されます。</value>
+    <value>特定の結果ファイルに示されるトランジション結果のトランジションピーク面積の中央値。
+中央値ピーク面積は正規化メソッドが「中央値を均一化」である場合に使用されます。
+内標準標識タイプがある場合、ピーク面積の中央値はプリカーサー標識タイプが内標準のトランジションで示されるピーク面積のみを使って計算されます。
+内標準ピーク面積がない場合はすべてのトランジションピーク面積からトランジションピーク面積の中央値が計算されます。</value>
   </data>
   <data name="Min">
     <value>最小値</value>
@@ -791,6 +810,12 @@
   <data name="MonoisotopicMasses">
     <value>「C[+57.021464]」のように修飾部分がモノアイソトピック質量で言い表される、修飾シークエンスです。</value>
   </data>
+  <data name="Ms1Precursors">
+    <value>単離されたプリカーサーのm/z値</value>
+  </data>
+  <data name="Ms2Precursors">
+    <value>MSレベル3以上のスペクトルで、プリカーサーの第1レベルが断片化された後に単離されたプリカーサーのm/z値です。</value>
+  </data>
   <data name="MsLevel">
     <value>プリカーサーの強度（MS1レベル）かプロダクトの強度（MS2レベル）のみを使用して結果を取得したかを示します。</value>
   </data>
@@ -826,7 +851,7 @@
     <value>ピークグループに含まれる個別ピークの最大終了時間。</value>
   </data>
   <data name="PeakGroupRetentionTime">
-    <value>ピークグループに含まれるすべてのトランジションの最大の高さでのピーク保持時間。</value>
+    <value>ピークグループに含まれるすべてのトランジションの最大高さでのピーク保持時間。</value>
   </data>
   <data name="PeakGroupStartTime">
     <value>ピークグループに含まれる個別ピークの最小開始時間。</value>
@@ -842,6 +867,9 @@
   </data>
   <data name="PeakScores">
     <value>ピークグループの機能とスコア。</value>
+  </data>
+  <data name="PeakStandardDeviation">
+    <value>クロマトグラフピークの標準偏差。</value>
   </data>
   <data name="Peptide">
     <value>ペプチド</value>
@@ -986,6 +1014,9 @@
   </data>
   <data name="PredictedRetentionTime">
     <value>測定結果と保持時間カルキュレーター（現在はSSRCalc 3.0のみ利用可能）との間の保持時間の回帰式によって予測される保持時間です。保持時間の回帰式が割り当てられていない場合には#N/Aとなります。</value>
+  </data>
+  <data name="PresetScanConfiguration">
+    <value>スペクトルに適用された設定を表す番号</value>
   </data>
   <data name="PreviousAa">
     <value>前のAa</value>
@@ -1211,8 +1242,20 @@ Solvent（溶媒）
 Blank（ブランク）
 Double Blank（ダブルブランク）</value>
   </data>
+  <data name="ScanDescription">
+    <value>装置メソッドによってスペクトルに追加されたテキスト説明</value>
+  </data>
+  <data name="ScanWindowWidth">
+    <value>スペクトルの強度値として考えられるm/z値の上限値と下限値の差</value>
+  </data>
   <data name="Score">
     <value>各機能の数値。</value>
+  </data>
+  <data name="ShapeCorrelation">
+    <value>同じプリカーサー下にあるすべてのトランジションの中央値ピーク形状と比較した場合の、このトランジションのクロマトグラフピークのピアソンの相関関係。</value>
+  </data>
+  <data name="Skewness">
+    <value>クロマトグラムピークの非対称性の尺度。</value>
   </data>
   <data name="SkylineVersion">
     <value>変更が行われたSkylineのバージョン</value>
@@ -1222,6 +1265,9 @@ Double Blank（ダブルブランク）</value>
   </data>
   <data name="SMILES" xml:space="preserve">
     <value>標準分子ID</value>
+  </data>
+  <data name="SpectrumFilter">
+    <value>抽出されたイオンクロマトグラムに含まれるようにスペクトルが満たさなければならない追加基準</value>
   </data>
   <data name="SpectrumIds">
     <value>クロマトグラムに寄与するスペクトルの識別子です。</value>

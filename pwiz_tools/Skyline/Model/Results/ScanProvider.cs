@@ -83,13 +83,20 @@ namespace pwiz.Skyline.Model.Results
         private WeakReference<MeasuredResults> _measuredResultsReference;
 
         public ScanProvider(string docFilePath, MsDataFileUri dataFilePath, ChromSource source,
-            IList<float> times, TransitionFullScanInfo[] transitions, MeasuredResults measuredResults)
+            IList<float> times, TransitionFullScanInfo[] transitions, MeasuredResults measuredResults) :
+            this(docFilePath, dataFilePath, source, times, transitions, measuredResults, null)
+        {
+        }
+
+        public ScanProvider(string docFilePath, MsDataFileUri dataFilePath, ChromSource source,
+            IList<float> times, TransitionFullScanInfo[] transitions, MeasuredResults measuredResults, MsDataFileScanIds msDataFileScanIds)
         {
             DocFilePath = docFilePath;
             DataFilePath = dataFilePath;
             Source = source;
             Times = times;
             Transitions = transitions;
+            _msDataFileScanIds = msDataFileScanIds;
             _measuredResults = measuredResults;
             _measuredResultsReference = new WeakReference<MeasuredResults>(measuredResults);
         }

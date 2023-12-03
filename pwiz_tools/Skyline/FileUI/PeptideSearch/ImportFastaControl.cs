@@ -45,7 +45,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
     {
         private readonly SequenceTree _sequenceTree;
 
-        public ImportFastaControl(IModifyDocumentContainer documentContainer, SequenceTree sequenceTree)
+        public ImportFastaControl(IModifyDocumentContainer documentContainer, SequenceTree sequenceTree, bool showDecoyOptions = true)
         {
             DocumentContainer = documentContainer;
             _sequenceTree = sequenceTree;
@@ -66,6 +66,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             cbDecoyMethod.SelectedIndex = 0;
 
             tbxFasta.Resize += TbxFasta_Resize;
+
+            if (!showDecoyOptions)
+                panelDecoys.Visible = false;
         }
 
         private IModifyDocumentContainer DocumentContainer { get; set; }
@@ -262,14 +265,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 initialDir = Path.GetDirectoryName(DocumentContainer.DocumentFilePath);
             }
-            using (OpenFileDialog dlg = new OpenFileDialog
+            using (OpenFileDialog dlg = new OpenFileDialog())
             {
-                Title = Resources.ImportFastaControl_browseFastaBtn_Click_Open_FASTA,
-                InitialDirectory = initialDir,
-                CheckPathExists = true,
-                Filter = @"FASTA files|*.fasta;*.fa;*.faa|All files|*.*"
-            })
-            {
+                dlg.Title = Resources.ImportFastaControl_browseFastaBtn_Click_Open_FASTA;
+                dlg.InitialDirectory = initialDir;
+                dlg.CheckPathExists = true;
+                dlg.Filter = @"FASTA files|*.fasta;*.fa;*.faa|All files|*.*";
                 if (dlg.ShowDialog(WizardForm) == DialogResult.OK)
                 {
                     fastaFilepath = dlg.FileName;
@@ -298,14 +299,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
         }
 
-        public void SetFastaContent(string fastaFilePath)
+        public void SetFastaContent(string fastaFilePath, bool forceFastaAsFilepath = false)
         {
             try
             {
                 FastaFile = fastaFilePath;
 
                 var fileInfo = new FileInfo(fastaFilePath);
-                if (IsDDASearch || fileInfo.Length > MAX_FASTA_TEXTBOX_LENGTH)
+                if (IsDDASearch || forceFastaAsFilepath || fileInfo.Length > MAX_FASTA_TEXTBOX_LENGTH)
                 {
                     _fastaFile = true;
                     tbxFasta.Text = fastaFilePath;
@@ -444,8 +445,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                         PasteError error = null;
                         // Import FASTA as content
-                        using (var longWaitDlg = new LongWaitDlg(DocumentContainer) { Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA })
+                        using (var longWaitDlg = new LongWaitDlg(DocumentContainer))
                         {
+                            longWaitDlg.Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA;
                             var docImportFasta = docNew;
                             longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker =>
                             {
@@ -467,8 +469,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         var fastaPath = string.IsNullOrEmpty(FastaImportTargetsFile) ? tbxFasta.Text : FastaImportTargetsFile;
                         try
                         {
-                            using (var longWaitDlg = new LongWaitDlg(DocumentContainer) { Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA })
+                            using (var longWaitDlg = new LongWaitDlg(DocumentContainer))
                             {
+                                longWaitDlg.Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA;
                                 IdentityPath to = selectedPath;
                                 var docImportFasta = docNew;
                                 longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker =>

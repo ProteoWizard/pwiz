@@ -151,13 +151,11 @@ namespace pwiz.Skyline.SettingsUI.Optimization
 
         private void btnBrowseFile_Click(object sender, EventArgs e)
         {
-            using (var dlg = new OpenFileDialog
+            using (var dlg = new OpenFileDialog())
             {
-                CheckPathExists = true,
-                DefaultExt = OptimizationDb.FILTER_OPTDB,
-                Filter = TextUtil.FileDialogFiltersAll(OptimizationDb.FILTER_OPTDB)
-            })
-            {
+                dlg.CheckPathExists = true;
+                dlg.DefaultExt = OptimizationDb.FILTER_OPTDB;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(OptimizationDb.FILTER_OPTDB);
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                     return;
 

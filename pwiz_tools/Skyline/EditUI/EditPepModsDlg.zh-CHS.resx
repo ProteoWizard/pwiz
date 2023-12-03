@@ -231,8 +231,27 @@
   <data name="&gt;&gt;labelHeavy1.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
+  <data name="comboStatic1.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Flat</value>
+  </data>
+  <data name="comboStatic1.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt</value>
+  </data>
+  <data name="comboStatic1.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAAAoAAAAECAYAAAC3OK7NAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        wQAADsEBuJFr7QAAADJJREFUGFdj+P//PwMQgAgwAw2AxcFqQAQOxXBFKArBHIRiFEVgOWQOWACLov//
+        /zMAAFhXSbdGTOUjAAAAAElFTkSuQmCC
+</value>
+  </data>
+  <data name="comboStatic1.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleRight</value>
+  </data>
   <data name="comboStatic1.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 21</value>
+  </data>
+  <data name="comboStatic1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
   </data>
   <data name="comboStatic1.Size" type="System.Drawing.Size, System.Drawing">
     <value>121, 21</value>
@@ -240,11 +259,14 @@
   <data name="comboStatic1.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
+  <data name="comboStatic1.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
   <data name="&gt;&gt;comboStatic1.Name" xml:space="preserve">
     <value>comboStatic1</value>
   </data>
   <data name="&gt;&gt;comboStatic1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>pwiz.Common.Controls.LiteDropDownList, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;comboStatic1.Parent" xml:space="preserve">
     <value>panelMain</value>
@@ -252,8 +274,27 @@
   <data name="&gt;&gt;comboStatic1.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
+  <data name="comboHeavy1_1.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Flat</value>
+  </data>
+  <data name="comboHeavy1_1.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt</value>
+  </data>
+  <data name="comboHeavy1_1.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAAAoAAAAECAYAAAC3OK7NAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
+        wQAADsEBuJFr7QAAADJJREFUGFdj+P//PwMQgAgwAw2AxcFqQAQOxXBFKArBHIRiFEVgOWQOWACLov//
+        /zMAAFhXSbdGTOUjAAAAAElFTkSuQmCC
+</value>
+  </data>
+  <data name="comboHeavy1_1.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleRight</value>
+  </data>
   <data name="comboHeavy1_1.Location" type="System.Drawing.Point, System.Drawing">
     <value>195, 21</value>
+  </data>
+  <data name="comboHeavy1_1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
   </data>
   <data name="comboHeavy1_1.Size" type="System.Drawing.Size, System.Drawing">
     <value>121, 21</value>
@@ -261,11 +302,14 @@
   <data name="comboHeavy1_1.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
+  <data name="comboHeavy1_1.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
   <data name="&gt;&gt;comboHeavy1_1.Name" xml:space="preserve">
     <value>comboHeavy1_1</value>
   </data>
   <data name="&gt;&gt;comboHeavy1_1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>pwiz.Common.Controls.LiteDropDownList, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;comboHeavy1_1.Parent" xml:space="preserve">
     <value>panelMain</value>
@@ -317,7 +361,7 @@
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAADW
-        BwAAAk1TRnQBSQFMAwEBAAEYAQABGAEAARABAAEQAQAE/wEJAQAI/wFCAU0BNgEEBgABNgEEAgABKAMA
+        BwAAAk1TRnQBSQFMAwEBAAE4AQABOAEAARABAAEQAQAE/wEJAQAI/wFCAU0BNgEEBgABNgEEAgABKAMA
         AUADAAEQAwABAQEAAQgGAAEEGAABgAIAAYADAAKAAQABgAMAAYABAAGAAQACgAIAA8ABAAHAAdwBwAEA
         AfABygGmAQABMwUAATMBAAEzAQABMwEAAjMCAAMWAQADHAEAAyIBAAMpAQADVQEAA00BAANCAQADOQEA
         AYABfAH/AQACUAH/AQABkwEAAdYBAAH/AewBzAEAAcYB1gHvAQAB1gLnAQABkAGpAa0CAAH/ATMDAAFm

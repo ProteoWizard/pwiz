@@ -468,13 +468,25 @@ namespace pwiz.Skyline.Properties
             }
         }
 
-        public Enzyme GetEnzymeByName(string name)
+        public Enzyme GetEnzymeByName(string name, bool withoutRulesSuffix = false, bool ignoreCase = false)
         {
-            Enzyme enzyme;
-            if (!EnzymeList.TryGetValue(name, out enzyme))
+            Enzyme enzyme = null;
+            if (!withoutRulesSuffix && !EnzymeList.TryGetValue(name, out enzyme))
             {
                 enzyme = EnzymeList.Count == 0 ?
                     EnzymeList.GetDefault() : EnzymeList[0];
+            }
+            else if (EnzymeList.Count == 0)
+            {
+                enzyme = EnzymeList.GetDefault();
+            }
+            else if (withoutRulesSuffix || ignoreCase)
+            {
+                enzyme = EnzymeList.FirstOrDefault(e => e.Name.Equals(name,
+                             ignoreCase
+                                 ? StringComparison.InvariantCultureIgnoreCase
+                                 : StringComparison.InvariantCulture)) ??
+                         EnzymeList[0];
             }
             return enzyme;
         }
@@ -1382,8 +1394,9 @@ namespace pwiz.Skyline.Properties
 
         public override Enzyme EditItem(Control owner, Enzyme item, IEnumerable<Enzyme> existing, object tag)
         {
-            using (EditEnzymeDlg editEnzyme = new EditEnzymeDlg(existing ?? this) { Enzyme = item })
+            using (EditEnzymeDlg editEnzyme = new EditEnzymeDlg(existing ?? this))
             {
+                editEnzyme.Enzyme = item;
                 if (editEnzyme.ShowDialog(owner) == DialogResult.OK)
                     return editEnzyme.Enzyme;
 
@@ -1420,8 +1433,9 @@ namespace pwiz.Skyline.Properties
         public override PeptideExcludeRegex EditItem(Control owner, PeptideExcludeRegex item,
             IEnumerable<PeptideExcludeRegex> existing, object tag)
         {
-            using (EditExclusionDlg editExclusion = new EditExclusionDlg(existing ?? this) { Exclusion = item })
+            using (EditExclusionDlg editExclusion = new EditExclusionDlg(existing ?? this))
             {
+                editExclusion.Exclusion = item;
                 if (editExclusion.ShowDialog(owner) == DialogResult.OK)
                     return editExclusion.Exclusion;
 
@@ -1452,8 +1466,9 @@ namespace pwiz.Skyline.Properties
 
         public override Server EditItem(Control owner, Server item, IEnumerable<Server> existing, object tag)
         {
-            using (EditServerDlg editServer = new EditServerDlg(existing ?? this) {Server = item})
+            using (EditServerDlg editServer = new EditServerDlg(existing ?? this))
             {
+                editServer.Server = item;
                 bool instructionsRequired = false;
                 if (tag != null)
                      instructionsRequired = (bool) tag;
@@ -1466,13 +1481,40 @@ namespace pwiz.Skyline.Properties
             }
         }
 
+        public Server AddServerWithAccount(Control owner, IEnumerable<Server> existing)
+        {
+            return EditPanoramaServer(owner, null, existing, null, null, true);
+        }
+
+        public Server AddCredentials(Control owner, Server item, IEnumerable<Server> existing)
+        {
+            return EditPanoramaServer(owner, item, existing, null, null, true);
+        }
+
         public Server EditCredentials(Control owner, Server item, IEnumerable<Server> existing, string username, string password)
         {
-            using (var editServerDlg = new EditServerDlg(existing ?? this) { Server = item })
+            return EditPanoramaServer(owner, item, existing, username, password);
+        }
+
+        private Server EditPanoramaServer(Control owner, Server item, IEnumerable<Server> existing, string username, string password, bool disableAnonymousCb = false)
+        {
+            using (var editServerDlg = new EditServerDlg(existing ?? this))
             {
+                if (item != null)
+                {
+                    editServerDlg.Server = item;
+                    editServerDlg.textServerURL.Enabled = false;
+                }
+
                 editServerDlg.Username = username;
                 editServerDlg.Password = password;
-                editServerDlg.textServerURL.Enabled = false;
+
+                if (disableAnonymousCb)
+                {
+                    editServerDlg.AnonymousServer = false;
+                    editServerDlg.cbAnonymous.Enabled = false;
+                }
+
                 return editServerDlg.ShowDialog(owner) == DialogResult.OK ? editServerDlg.Server : null;
             }
         }
@@ -1493,8 +1535,9 @@ namespace pwiz.Skyline.Properties
         public override LibrarySpec EditItem(Control owner, LibrarySpec item,
             IEnumerable<LibrarySpec> existing, object tag)
         {
-            using (EditLibraryDlg editLibrary = new EditLibraryDlg(existing ?? this) { LibrarySpec = item })
+            using (EditLibraryDlg editLibrary = new EditLibraryDlg(existing ?? this))
             {
+                editLibrary.LibrarySpec = item;
                 if (editLibrary.ShowDialog(owner) == DialogResult.OK)
                     return editLibrary.LibrarySpec;
 
@@ -1557,8 +1600,9 @@ namespace pwiz.Skyline.Properties
         public override BackgroundProteomeSpec EditItem(Control owner, BackgroundProteomeSpec item,
             IEnumerable<BackgroundProteomeSpec> existing, object tag)
         {
-            using (var editBackgroundProteomeDlg = new BuildBackgroundProteomeDlg(existing ?? this) { BackgroundProteomeSpec = item })
+            using (var editBackgroundProteomeDlg = new BuildBackgroundProteomeDlg(existing ?? this))
             {
+                editBackgroundProteomeDlg.BackgroundProteomeSpec = item;
                 if (editBackgroundProteomeDlg.ShowDialog(owner) == DialogResult.OK)
                 {
                     return editBackgroundProteomeDlg.BackgroundProteomeSpec;
@@ -1604,7 +1648,7 @@ namespace pwiz.Skyline.Properties
             new StaticMod(UniModData.DEFAULT.Name, UniModData.DEFAULT.AAs, UniModData.DEFAULT.Terminus, false,
                 UniModData.DEFAULT.Formula, UniModData.DEFAULT.LabelAtoms,
                 RelativeRT.Matching, null, null, UniModData.DEFAULT.Losses, UniModData.DEFAULT.ID,
-                UniModData.DEFAULT.ShortName, null)
+                UniModData.DEFAULT.ShortName)
         };
 
         public static StaticMod[] GetDefaultsOn()
@@ -1654,11 +1698,9 @@ namespace pwiz.Skyline.Properties
         public override StaticMod EditItem(Control owner, StaticMod item,
             IEnumerable<StaticMod> existing, object tag)
         {
-            using (EditStaticModDlg editMod = new EditStaticModDlg(item, existing ?? this, true)
-                                           {
-                                               Text = Resources.HeavyModList_EditItem_Edit_Isotope_Modification
-                                           })
+            using (EditStaticModDlg editMod = new EditStaticModDlg(item, existing ?? this, true))
             {
+                editMod.Text = Resources.HeavyModList_EditItem_Edit_Isotope_Modification;
                 if (editMod.ShowDialog(owner) == DialogResult.OK)
                     return editMod.Modification;
 
@@ -1914,8 +1956,9 @@ namespace pwiz.Skyline.Properties
         public override CollisionEnergyRegression EditItem(Control owner, CollisionEnergyRegression item,
             IEnumerable<CollisionEnergyRegression> existing, object tag)
         {
-            using (EditCEDlg editCE = new EditCEDlg(existing ?? this) { Regression = item })
+            using (EditCEDlg editCE = new EditCEDlg(existing ?? this))
             {
+                editCE.Regression = item;
                 if (editCE.ShowDialog(owner) == DialogResult.OK)
                     return editCE.Regression;
 
@@ -2030,8 +2073,9 @@ namespace pwiz.Skyline.Properties
         public override DeclusteringPotentialRegression EditItem(Control owner, DeclusteringPotentialRegression item,
             IEnumerable<DeclusteringPotentialRegression> existing, object tag)
         {
-            using (EditDPDlg editDP = new EditDPDlg(existing ?? this) { Regression = item })
+            using (EditDPDlg editDP = new EditDPDlg(existing ?? this))
             {
+                editDP.Regression = item;
                 if (editDP.ShowDialog(owner) == DialogResult.OK)
                     return editDP.Regression;
 
@@ -2472,8 +2516,9 @@ namespace pwiz.Skyline.Properties
         public override RetentionTimeRegression EditItem(Control owner, RetentionTimeRegression item,
             IEnumerable<RetentionTimeRegression> existing, object tag)
         {
-            using (EditRTDlg editRT = new EditRTDlg(existing ?? this) { Regression = item })
+            using (EditRTDlg editRT = new EditRTDlg(existing ?? this))
             {
+                editRT.Regression = item;
                 if (editRT.ShowDialog(owner) == DialogResult.OK)
                     return editRT.Regression;
             }
@@ -2520,33 +2565,59 @@ namespace pwiz.Skyline.Properties
         public static readonly MeasuredIon TMT_130_L = CreateMeasuredIon(@"TMT-130L", @"C5C'3H16N'");
         public static readonly MeasuredIon TMT_130_H = CreateMeasuredIon(@"TMT-130H", @"C4C'4H16N");
         public static readonly MeasuredIon TMT_131 = CreateMeasuredIon(@"TMT-131", @"C4C'4H16N'");
+        // TMTpro reporter ion chemical formulas from Phil Remes and the following papers
+        // https://pubs.acs.org/doi/full/10.1021/acs.analchem.9b04474
+        // https://www.nature.com/articles/s41592-020-0781-4
+        public static readonly MeasuredIon TMT_131_L = CreateMeasuredIon(@"TMT-131L", @"C4C'4H16N'");
+        public static readonly MeasuredIon TMT_131_H = CreateMeasuredIon(@"TMT-131H", @"C3C'5H16N");
+        public static readonly MeasuredIon TMT_132_L = CreateMeasuredIon(@"TMT-132L", @"C3C'5H16N'");
+        public static readonly MeasuredIon TMT_132_H = CreateMeasuredIon(@"TMT-132H", @"C2C'6H16N");
+        public static readonly MeasuredIon TMT_133_L = CreateMeasuredIon(@"TMT-133L", @"C2C'6H16N'");
+        public static readonly MeasuredIon TMT_133_H = CreateMeasuredIon(@"TMT-133H", @"C1C'7H16N");
+        public static readonly MeasuredIon TMT_134_L = CreateMeasuredIon(@"TMT-134L", @"C1C'7H16N'");
+        // https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8210943/
+        public static readonly MeasuredIon TMT_134_H = CreateMeasuredIon(@"TMT-134H", @"C'8H16N");
+        public static readonly MeasuredIon TMT_135 = CreateMeasuredIon(@"TMT-135", @"C'8H16N'");
 
         private static MeasuredIon CreateMeasuredIon(string name, string formula)
         {
             return new MeasuredIon(name, formula, null, null, Adduct.M_PLUS);
         }
 
-        public override int RevisionIndexCurrent { get { return 1; } }
+        public override int RevisionIndexCurrent { get { return 2; } }
 
         public override IEnumerable<MeasuredIon> GetDefaults(int revisionIndex)
         {
             var listDefaults = new List<MeasuredIon>(new[] {NTERM_PROLINE, CTERM_GLU_ASP});
             if (revisionIndex < 1)
                 return listDefaults;
-
-            listDefaults.AddRange(new[]
+            if (revisionIndex == 1)
             {
-                ITRAQ_114, ITRAQ_115, ITRAQ_116, ITRAQ_117,
-                TMT_126, TMT_127_L, TMT_127_H, TMT_128_L, TMT_128_H, TMT_129_L, TMT_129_H, TMT_130_L, TMT_130_H, TMT_131
-            });
+                listDefaults.AddRange(new[]
+                {
+                    ITRAQ_114, ITRAQ_115, ITRAQ_116, ITRAQ_117,
+                    TMT_126, TMT_127_L, TMT_127_H, TMT_128_L, TMT_128_H, TMT_129_L, TMT_129_H, TMT_130_L, TMT_130_H, TMT_131
+                });
+            }
+            else
+            {
+                listDefaults.AddRange(new[]
+                {
+                    ITRAQ_114, ITRAQ_115, ITRAQ_116, ITRAQ_117,
+                    TMT_126, TMT_127_L, TMT_127_H, TMT_128_L, TMT_128_H, TMT_129_L, TMT_129_H, TMT_130_L, TMT_130_H,
+                    TMT_131_L, TMT_131_H, TMT_132_L, TMT_132_H, TMT_133_L, TMT_133_H, TMT_134_L, TMT_134_H, TMT_135
+                });
+
+            }
             return listDefaults;
         }
 
         public override MeasuredIon EditItem(Control owner, MeasuredIon item,
             IEnumerable<MeasuredIon> existing, object tag)
         {
-            using (EditMeasuredIonDlg editIon = new EditMeasuredIonDlg(existing ?? this) { MeasuredIon = item })
+            using (EditMeasuredIonDlg editIon = new EditMeasuredIonDlg(existing ?? this))
             {
+                editIon.MeasuredIon = item;
                 if (editIon.ShowDialog(owner) == DialogResult.OK)
                     return editIon.MeasuredIon;
             }
@@ -2593,8 +2664,9 @@ namespace pwiz.Skyline.Properties
         public override IsotopeEnrichments EditItem(Control owner, IsotopeEnrichments item,
             IEnumerable<IsotopeEnrichments> existing, object tag)
         {
-            using (EditIsotopeEnrichmentDlg editEnrichment = new EditIsotopeEnrichmentDlg(existing ?? this) { Enrichments = item })
+            using (EditIsotopeEnrichmentDlg editEnrichment = new EditIsotopeEnrichmentDlg(existing ?? this))
             {
+                editEnrichment.Enrichments = item;
                 if (editEnrichment.ShowDialog(owner) == DialogResult.OK)
                     return editEnrichment.Enrichments;
             }
@@ -2908,8 +2980,9 @@ namespace pwiz.Skyline.Properties
         public override IsolationScheme EditItem(Control owner, IsolationScheme item,
             IEnumerable<IsolationScheme> existing, object tag)
         {
-            using (var editIsolationScheme = new EditIsolationSchemeDlg(existing ?? this) { IsolationScheme = item })
+            using (var editIsolationScheme = new EditIsolationSchemeDlg(existing ?? this))
             {
+                editIsolationScheme.IsolationScheme = item;
                 if (editIsolationScheme.ShowDialog(owner) == DialogResult.OK)
                     return editIsolationScheme.IsolationScheme;
             }

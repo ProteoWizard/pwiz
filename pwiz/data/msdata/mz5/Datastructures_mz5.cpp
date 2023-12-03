@@ -446,7 +446,7 @@ void CVParamMZ5::init(const char* value, const unsigned long& cvrefid,
 {
     if (value)
     {
-        strcpy(this->value, value);
+        strncpy(this->value, value, CVL);
     } else {
         this->value[0] = '\0';
     }

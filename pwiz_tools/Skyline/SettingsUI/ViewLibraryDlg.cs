@@ -404,8 +404,9 @@ namespace pwiz.Skyline.SettingsUI
                 if (selectedLibrarySpec == null)
                     return;
 
-                using (var longWait = new LongWaitDlg { Text = Resources.ViewLibraryDlg_LoadLibrary_Loading_Library })
+                using (var longWait = new LongWaitDlg())
                 {
+                    longWait.Text = Resources.ViewLibraryDlg_LoadLibrary_Loading_Library;
                     try
                     {
                         var status = longWait.PerformWork(this, 800, monitor =>
@@ -713,8 +714,7 @@ namespace pwiz.Skyline.SettingsUI
 
                 if (-1 != index)
                 {
-                    SpectrumPeaksInfo loadedSpectrum;
-                    if (_selectedLibrary.TryLoadSpectrum(_peptides[index].Key, out loadedSpectrum))
+                    if (_selectedLibrary.TryLoadSpectrum(_peptides[index].Key, out _))
                     {
                         SrmSettings settings = Program.ActiveDocumentUI.Settings;
 
@@ -1228,21 +1228,7 @@ namespace pwiz.Skyline.SettingsUI
                 var propertyName = _peptides.comboFilterCategoryDict
                     .FirstOrDefault(x => x.Value == selectedCategory).Key;
 
-                var propertyValue = ViewLibraryPepInfoList.GetStringValue(propertyName, pepInfo);
-
-                // Shorten precursor m/z values to be uniform and match the tool tip
-                if (selectedCategory.Equals(Resources.PeptideTipProvider_RenderTip_Precursor_m_z))
-                {
-                    propertyValue = FormatPrecursorMz(double.TryParse(propertyValue, out var mz) ? mz : 0);
-                }
-                else if(selectedCategory.Equals(Resources.PeptideTipProvider_RenderTip_CCS))
-                {
-                    propertyValue = FormatCCS(double.Parse(propertyValue));
-                }
-                else if(selectedCategory.Equals(Resources.PeptideTipProvider_RenderTip_Ion_Mobility))
-                {
-                    propertyValue = FormatIonMobility(double.Parse(propertyValue), pepInfo.IonMobilityUnits);
-                }
+                var propertyValue = ViewLibraryPepInfoList.GetFormattedPropertyValue(propertyName, pepInfo);
                 categoryText = CreateTextSequence(propertyValue, false);
             }
             else
@@ -1854,17 +1840,17 @@ namespace pwiz.Skyline.SettingsUI
             }*/
         }
 
-        private static string FormatPrecursorMz(double precursorMz)
+        internal static string FormatPrecursorMz(double precursorMz)
         {
             return string.Format(@"{0:F04}", precursorMz);
         }
 
-        private static string FormatIonMobility(double mobility, string units)
+        internal static string FormatIonMobility(double mobility, string units)
         {
             return string.Format(@"{0:F04} {1}", mobility, units);
         }
 
-        private static string FormatCCS(double CCS)
+        internal static string FormatCCS(double CCS)
         {
             return string.Format(@"{0:F04}", CCS);
         }
@@ -2034,12 +2020,10 @@ namespace pwiz.Skyline.SettingsUI
 
             SrmDocument newDocument;
             var hasSmallMolecules = HasSmallMolecules;
-            using (var longWaitDlg = new LongWaitDlg
-                {
-                    Text = hasSmallMolecules ? Resources.ViewLibraryDlg_AddAllPeptides_Matching_Molecules : Resources.ViewLibraryDlg_AddAllPeptides_Matching_Peptides,
-                    Message = hasSmallMolecules ? Resources.ViewLibraryDlg_AddAllPeptides_Matching_molecules_to_the_current_document_settings : Resources.ViewLibraryDlg_AddAllPeptides_Matching_peptides_to_the_current_document_settings
-                })
+            using (var longWaitDlg = new LongWaitDlg())
             {
+                longWaitDlg.Text = hasSmallMolecules ? Resources.ViewLibraryDlg_AddAllPeptides_Matching_Molecules : Resources.ViewLibraryDlg_AddAllPeptides_Matching_Peptides;
+                longWaitDlg.Message = hasSmallMolecules ? Resources.ViewLibraryDlg_AddAllPeptides_Matching_molecules_to_the_current_document_settings : Resources.ViewLibraryDlg_AddAllPeptides_Matching_peptides_to_the_current_document_settings;
                 longWaitDlg.PerformWork(this, 1000, broker => pepMatcher.AddAllPeptidesToDocument(broker, entryCreatorList));
                 newDocument = pepMatcher.DocAllPeptides;
                 if (longWaitDlg.IsCanceled || newDocument == null)

@@ -76,6 +76,15 @@ namespace pwiz.Skyline.Util
             return !Equals(GetSourceType(dirInfo), FOLDER_TYPE);
         }
 
+        public static string GetSourceType(string path)
+        {
+            if (File.Exists(path))
+                return GetSourceType(new FileInfo(path));
+            if (Directory.Exists(path))
+                return GetSourceType(new DirectoryInfo(path));
+            return UNKNOWN_TYPE;
+        }
+
         public static string GetSourceType(DirectoryInfo dirInfo)
         {
             try

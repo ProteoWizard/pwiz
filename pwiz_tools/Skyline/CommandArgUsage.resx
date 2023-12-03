@@ -529,8 +529,11 @@ http://localhost:8080</value>
   <data name="_tool_zip_overwrite_annotations" xml:space="preserve">
     <value>Specify whether conflicting custom annotations from the provided ZIP file should overwrite (true) existing annotations or be skipped (false).</value>
   </data>
-  <data name="CommandArgs_GROUP_SETTINGS_Document_Settings" xml:space="preserve">
-    <value>Document Settings</value>
+  <data name="CommandArgs_GROUP_SETTINGS_Transition_Settings" xml:space="preserve">
+    <value>Transition Settings</value>
+  </data>
+  <data name="CommandArgs_GROUP_SETTINGS_Peptide_Settings" xml:space="preserve">
+    <value>Peptide Settings</value>
   </data>
   <data name="CommandArgs_PATH_TO_FILE_path_to_file" xml:space="preserve">
     <value>path/to/file</value>
@@ -681,8 +684,8 @@ first occurrence of any peptide.</value>
 will be removed from the document:
 
 Green = 1.0
-Orange &amp;gt;= 0.5
-Red &amp;lt; 0.5</value>
+Orange &gt;= 0.5
+Red &lt; 0.5</value>
   </data>
   <data name="_refine_max_peptide_peak_rank" xml:space="preserve">
     <value>All transitions with an average area peak ranking
@@ -709,8 +712,8 @@ removed from the document.</value>
 will be removed from the document:
 
 Green = 1.0
-Orange &amp;gt;= 0.5
-Red &amp;lt; 0.5</value>
+Orange &gt;= 0.5
+Red &lt; 0.5</value>
   </data>
   <data name="_refine_min_time_correlation" xml:space="preserve">
     <value>Precursors will be removed from the document
@@ -927,5 +930,65 @@ greater peak area.</value>
   </data>
   <data name="CommandArgs_ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME_path_to_result_file_to_import_the_isolation_scheme" xml:space="preserve">
     <value>path/to/result-file to import the isolation scheme from</value>
+  </data>
+  <data name="CommandArgs_GROUP_OTHER_FILE_TYPES" xml:space="preserve">
+    <value>Exporting other file types</value>
+  </data>
+  <data name="_exp_speclib_file" xml:space="preserve">
+    <value>Export experimental data in the current document to a spectral library file. Peak areas are used as spectrum intensities, peak apex times are used as retention times, and if the document has iRT values they will also be stored in the library.</value>
+  </data>
+  <data name="_exp_mprophet_exclude_feature" xml:space="preserve">
+    <value>Use to exclude a particular feature score by name from the exported file. Names can be found in the user interface. This argument may be used multiple times to exclude multiple features. Requires the --exp-mprophet-features argument.</value>
+  </data>
+  <data name="_exp_mprophet_features" xml:space="preserve">
+    <value>Export all the individual feature scores for each peptide, as well as the composite score, the p value, and the q value into the mProphet format.</value>
+  </data>
+  <data name="_exp_mprophet_best_peaks_only" xml:space="preserve">
+    <value>Include feature scores only for the best scoring peaks. Requires the --exp-mprophet-features argument.</value>
+  </data>
+  <data name="_exp_mprophet_targets_only" xml:space="preserve">
+    <value>Include feature scores only for targets. Requires the --exp-mprophet-features argument.</value>
+  </data>
+  <data name="_exp_annotations" xml:space="preserve">
+    <value>Export all the annotations in the document into a text file with an ElementLocator field in the format required by --import-annotations. Use --exp-annotations-include-properties to include properties as well.</value>
+  </data>
+  <data name="_exp_annotations_remove_blank_rows" xml:space="preserve">
+    <value>Use to remove blank rows from the exported annotations. Requires the --exp-annotations argument.</value>
+  </data>
+  <data name="_exp_annotations_include_object" xml:space="preserve">
+    <value>Use to specify which object types to include in the exported annotations. By default all object types are included. This argument can be used multiple times to specify multiple object types. Requires the --exp-annotations argument.</value>
+  </data>
+  <data name="_exp_annotations_include_properties" xml:space="preserve">
+    <value>Use to include all properties in the exported annotations. By default no properties are included. Requires the --exp-annotations argument.</value>
+  </data>
+  <data name="_pep_exclude_nterminal_aas" xml:space="preserve">
+    <value>Exclude all peptides starting before this amino acid position in each protein.</value>
+  </data>
+  <data name="_pep_exclude_potential_ragged_ends" xml:space="preserve">
+    <value>Exclude peptides resulting from cleavage sites with immediate preceding or following cleavage sites. e.g. RR, KK, RK, KR for trypsin</value>
+  </data>
+  <data name="_pep_max_length" xml:space="preserve">
+    <value>The maximum length of a peptide to add to the document.</value>
+  </data>
+  <data name="_pep_min_length" xml:space="preserve">
+    <value>The minimum length of a peptide to add to the document.</value>
+  </data>
+  <data name="_background_proteome_file" xml:space="preserve">
+    <value>The path to the background proteome (protdb) file to apply to the opened document. The name may be optionally specified by --background-proteome-name, and if not it defaults to the filename.</value>
+  </data>
+  <data name="_background_proteome_name" xml:space="preserve">
+    <value>The name of a background proteome to apply to the opened document. The background proteome specifies the full set of proteins that may be present in the sample matrix to be injected into the mass spectrometer. If the name is not already defined in Skyline, the path to the protdb file must also be set by --background-proteome-file.</value>
+  </data>
+  <data name="_pep_digest_enzyme" xml:space="preserve">
+    <value>The protease enzyme definition used to parse peptide sequences from protein sequences added as targets to the document. Peptide lists added as targets ignore this setting other than counting missed cleavages.</value>
+  </data>
+  <data name="_pep_max_missed_cleavages" xml:space="preserve">
+    <value>The maximum number of missed cleavages allowed in a peptide when considering protein digestion.</value>
+  </data>
+  <data name="_pep_unique_by" xml:space="preserve">
+    <value>"Protein" excludes any peptide that appears in more than one protein in the background proteome.  
+"Gene" excludes any peptide that appears in proteins for more than one gene in the background proteome.  
+"Species" excludes any peptide that appears in proteins for more than one species in the background proteome.
+Useful in sample mixtures including multiple species.</value>
   </data>
 </root>

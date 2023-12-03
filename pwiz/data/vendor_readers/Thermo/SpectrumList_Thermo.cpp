@@ -325,6 +325,12 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
             result->spotID += "x" + scanInfo->trailerExtraValue("Absolute Y Position:");
         }
 
+        long resolvingPower = scanInfo->trailerExtraValueLong("Orbitrap Resolution:");
+        if (resolvingPower <= 0)
+            resolvingPower = scanInfo->trailerExtraValueLong("FT Resolution:");
+        if (resolvingPower > 0)
+            scan.set(MS_mass_resolving_power, resolvingPower);
+
         MassAnalyzerType analyzerType = scanInfo->massAnalyzerType();
         if (ie.controllerType == Controller_MS)
             scan.instrumentConfigurationPtr = findInstrumentConfiguration(msd_, translate(analyzerType));

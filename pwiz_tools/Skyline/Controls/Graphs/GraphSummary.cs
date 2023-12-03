@@ -22,7 +22,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
@@ -531,8 +531,21 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    paneKeys = StateProvider.SelectionDocument.MoleculeTransitionGroups.Select(
-                        group => new PaneKey(@group.TransitionGroup.LabelType)).Distinct().ToArray();
+                    IEnumerable<PeptideGroupDocNode> moleculeGroups = StateProvider.SelectionDocument.MoleculeGroups;
+                    if (AreaGraphController.AreaScope == AreaScope.protein)
+                    {
+                        var peptideGroupDocNode = (StateProvider.SelectedNode as SrmTreeNode)
+                            ?.GetNodeOfType<PeptideGroupTreeNode>()?.DocNode;
+                        if (peptideGroupDocNode != null)
+                        {  
+                            moleculeGroups = new[] { peptideGroupDocNode };
+                        }
+                    }
+
+                    paneKeys = moleculeGroups
+                        .SelectMany(group => group.Peptides.SelectMany(peptide => peptide.TransitionGroups
+                            .Select(tg => tg.LabelType)))
+                        .Distinct().Select(labelType => new PaneKey(labelType)).ToArray();
                 }
             }
             paneKeys = paneKeys ?? new[] { PaneKey.DEFAULT };

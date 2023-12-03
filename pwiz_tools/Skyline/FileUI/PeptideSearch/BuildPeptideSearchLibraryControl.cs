@@ -243,12 +243,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (PerformDDASearch)
             {
                 MsDataFileUri[] dataSources;
-                using (var dlg = new OpenDataSourceDialog(Settings.Default.RemoteAccountList)
-                       {
-                           Text = Resources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search,
-                           InitialDirectory = new MsDataFilePath(Path.GetDirectoryName(DocumentContainer.DocumentFilePath)),
-                       })
+                using (var dlg = new OpenDataSourceDialog(Settings.Default.RemoteAccountList))
                 {
+                    dlg.Text = Resources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search;
+                    dlg.InitialDirectory = new MsDataFilePath(Path.GetDirectoryName(DocumentContainer.DocumentFilePath));
                     // Use saved source type, if there is one.
                     //string sourceType = Settings.Default.SrmResultsSourceType;
                     //if (!string.IsNullOrEmpty(sourceType))
@@ -283,11 +281,40 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             SearchFilenames = BuildLibraryDlg.AddInputFiles(WizardForm, SearchFilenames, fileNames, PerformDDASearch);
         }
 
+        // For test purposes, lets us test error handling
+        public string CutOffScoreText
+        {
+            set { textCutoff.Text = value; } // Can be a null or empty string under some circumstances
+        }
+
+        public bool NeedsCutoffScore => comboInputFileType.SelectedIndex > 0; // Only needed if Skyline is conducting the search
+
+        private double? _cutoffScore; // May be null when Skyline is not doing the search
+
         public double? CutOffScore
         {
             // Only valid when Skyline performs the search
-            get { return comboInputFileType.SelectedIndex > 0 ? double.Parse(textCutoff.Text) : (double?) null; }
-            set { textCutoff.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
+            get { return NeedsCutoffScore ? _cutoffScore : null; }
+            set
+            {
+                _cutoffScore = value;
+                textCutoff.Text = _cutoffScore.HasValue ? _cutoffScore.Value.ToString(CultureInfo.CurrentCulture) : string.Empty;
+            }
+        }
+
+        public bool ValidateCutoffScore()
+        {
+            if (!NeedsCutoffScore)
+            {
+                return true; // Doesn't matter what's in the text box, we won't use it
+            }
+            var helper = new MessageBoxHelper(this.ParentForm);
+            if (helper.ValidateDecimalTextBox(textCutoff, out var cutoffScore))
+            {
+                _cutoffScore = cutoffScore;
+                return true;
+            }
+            return false;
         }
 
         public bool IncludeAmbiguousMatches
@@ -336,12 +363,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             bool retry = false;
             do
             {
-                using (var longWaitDlg = new LongWaitDlg
-                       {
-                           Text = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library,
-                           Message = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_,
-                       })
+                using (var longWaitDlg = new LongWaitDlg())
                 {
+                    longWaitDlg.Text = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library;
+                    longWaitDlg.Message = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_;
                     // Disable the wizard, because the LongWaitDlg does not
                     try
                     {
@@ -447,6 +472,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var docNew = ImportPeptideSearch.AddDocumentSpectralLibrary(DocumentContainer.Document, docLibSpec);
             if (docNew == null)
                 return false;
+            if (docNew.Settings.PeptideSettings.Libraries.LibrarySpecs.Count ==
+                DocumentContainer.Document.Settings.PeptideSettings.Libraries.LibrarySpecs.Count)
+                return false;
 
             var blib = ImportPeptideSearch.DocLib as BiblioSpecLiteLibrary;
             if (blib?.ReadStream is ConnectionId<SQLiteConnection> connection && SqliteOperations.TableExists(connection.Connection, @"IrtLibrary"))
@@ -508,8 +536,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (docLibSpec == null)
                 return false;
 
-            using (var longWait = new LongWaitDlg {Text = Resources.BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library})
+            using (var longWait = new LongWaitDlg())
             {
+                longWait.Text = Resources.BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library;
                 try
                 {
                     var status = longWait.PerformWork(WizardForm, 800, monitor => ImportPeptideSearch.LoadPeptideSearchLibrary(LibraryManager, docLibSpec, monitor));
@@ -643,5 +672,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             UpdatePerformDDASearch();
         }
+
     }
 }

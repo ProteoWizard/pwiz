@@ -175,6 +175,7 @@ namespace pwiz.Skyline.Model
         public const string AGILENT = "Agilent";
         public const string AGILENT_TOF = "Agilent QTOF";
         public const string AGILENT6400 = "Agilent 6400 Series";
+        public const string AGILENT_MASSHUNTER_12 = "Agilent MassHunter 12 and higher";
         public const string BRUKER = "Bruker";
         public const string BRUKER_TOF = "Bruker QTOF";
         public const string BRUKER_TIMSTOF = "Bruker timsTOF";
@@ -209,6 +210,7 @@ namespace pwiz.Skyline.Model
         public static readonly string[] METHOD_TYPES =
             {
                 AGILENT6400,
+                AGILENT_MASSHUNTER_12,
                 BRUKER_TOF,
                 BRUKER_TIMSTOF,
                 ABI_QTRAP,
@@ -263,6 +265,7 @@ namespace pwiz.Skyline.Model
                                        {ABI_7500, EXT_SCIEX_OS},
                                        {ABI_7600, EXT_SCIEX_OS},
                                        {AGILENT6400, EXT_AGILENT},
+                                       {AGILENT_MASSHUNTER_12, EXT_AGILENT},
                                        {BRUKER_TOF, EXT_BRUKER},
                                        {BRUKER_TIMSTOF, EXT_BRUKER_TIMSTOF},
                                        {SHIMADZU, EXT_SHIMADZU},
@@ -347,6 +350,7 @@ namespace pwiz.Skyline.Model
         {
             return Equals(type, AGILENT) ||
                    Equals(type, AGILENT6400) ||
+                   Equals(type, AGILENT_MASSHUNTER_12) ||
                    Equals(type, THERMO) ||
                    Equals(type, ABI_QTRAP) ||
                    Equals(type, ABI)
@@ -463,6 +467,8 @@ namespace pwiz.Skyline.Model
                         return ExportAgilentCsv(doc, path);
                     else
                         return ExportAgilentMethod(doc, path, template);
+                case ExportInstrumentType.AGILENT_MASSHUNTER_12:
+                    return ExportAgilentUltivoMethod(doc, path, template);
                 case ExportInstrumentType.AGILENT_TOF:
                     if (type == ExportFileType.IsolationList)
                         return ExportAgilentIsolationList(doc, path, template);
@@ -632,6 +638,16 @@ namespace pwiz.Skyline.Model
         public AbstractMassListExporter ExportAgilentMethod(SrmDocument document, string fileName, string templateName)
         {
             var exporter = InitExporter(new AgilentMethodExporter(document));
+            if (MethodType == ExportMethodType.Standard)
+                exporter.DwellTime = DwellTime;
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+
+            return exporter;
+        }
+
+        public AbstractMassListExporter ExportAgilentUltivoMethod(SrmDocument document, string fileName, string templateName)
+        {
+            var exporter = InitExporter(new AgilentUltivoMethodExporter(document));
             if (MethodType == ExportMethodType.Standard)
                 exporter.DwellTime = DwellTime;
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
@@ -1647,9 +1663,9 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             // Retention Index
             double retentionIndexKey = rt.GetValueOrDefault();
-            if (_retentionIndices.ContainsKey(retentionIndexKey))
+            if (_retentionIndices.TryGetValue(retentionIndexKey, out var retentionIndex))
             {
-                writer.Write(_retentionIndices[retentionIndexKey]);
+                writer.Write(retentionIndex);
             }
             else
             {
@@ -3083,7 +3099,9 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write(@"Unit");   // MS1 Res
             writer.Write(FieldSeparator);
-            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo));
+            // For Agilent we do not call GetProductMz because we want all of the Q3 m/z values to be the same
+            // for all of the optimization step chromatograms
+            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), 0).ToString(CultureInfo));
             writer.Write(FieldSeparator);
             writer.Write(@"Unit");   // MS2 Res
             writer.Write(FieldSeparator);
@@ -3195,7 +3213,7 @@ namespace pwiz.Skyline.Model
 
     public class AgilentMethodExporter : AgilentMassListExporter
     {
-        public const string EXE_BUILD_AGILENT_METHOD = @"Method\Agilent\BuildAgilentMethod";
+        public const string EXE_BUILD_AGILENT_METHOD = @"Method\Agilent\6400\BuildAgilentMethod";
 
         public AgilentMethodExporter(SrmDocument document)
             : base(document)
@@ -3214,6 +3232,30 @@ namespace pwiz.Skyline.Model
         public static bool IsAgilentMethodPath(string methodPath)
         {
             return methodPath.EndsWith(ExportInstrumentType.EXT_AGILENT) && File.Exists(Path.Combine(methodPath, @"qqqacqmeth.xsd"));
+        }
+    }
+
+    public class AgilentUltivoMethodExporter : AgilentMassListExporter
+    {
+        public const string EXE_BUILD_AGILENT_METHOD = @"Method\Agilent\MH12\BuildAgilentMH12Method";
+
+        public AgilentUltivoMethodExporter(SrmDocument document)
+            : base(document)
+        {
+        }
+
+        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
+        {
+            if (!InitExport(fileName, progressMonitor))
+                return;
+
+            MethodExporter.ExportMethod(EXE_BUILD_AGILENT_METHOD,
+                new List<string>(), fileName, templateName, MemoryOutput, progressMonitor);
+        }
+
+        public static bool IsMethodPath(string methodPath)
+        {
+            return methodPath.EndsWith(ExportInstrumentType.EXT_AGILENT);
         }
     }
 
@@ -3882,7 +3924,7 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            public PointPairList Get(SchedulingMetrics metricType) { return _metrics.ContainsKey(metricType) ? _metrics[metricType] : new PointPairList(); }
+            public PointPairList Get(SchedulingMetrics metricType) { return _metrics.TryGetValue(metricType, out var metric) ? metric : new PointPairList(); }
         }
     }
 
@@ -4681,8 +4723,7 @@ namespace pwiz.Skyline.Model
 
             try
             {
-                uint type;
-                if (RegQueryValueEx(hKeyQuery, valueName, 0, out type, sb, ref size) != 0)
+                if (RegQueryValueEx(hKeyQuery, valueName, 0, out _, sb, ref size) != 0)
                     return null;
             }
             finally

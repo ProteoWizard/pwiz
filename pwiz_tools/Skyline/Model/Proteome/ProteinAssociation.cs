@@ -41,9 +41,11 @@ namespace pwiz.Skyline.Model.Proteome
         private Dictionary<PeptideDocNode, List<IProteinRecord>> _peptideToProteins, _peptideToProteinGroups;
         private MappingResultsInternal _results, _finalResults, _proteinGroupResults;
         private IDictionary<IProteinRecord, PeptideAssociationGroup> _proteinGroupAssociations;
+        private HashSet<PeptideDocNode> _peptidesRemovedByFilters;
 
         public IDictionary<IProteinRecord, PeptideAssociationGroup> AssociatedProteins { get; private set; }
         public IDictionary<IProteinRecord, PeptideAssociationGroup> ParsimoniousProteins { get; private set; }
+        public int PeptidesRemovedByFiltersCount => _peptideToProteins?.Count ?? 0;
 
         public IMappingResults Results
         {
@@ -77,10 +79,14 @@ namespace pwiz.Skyline.Model.Proteome
             _finalResults = null;
             _peptideToProteinGroups = null;
             _peptideToProteins = null;
+            _peptidesRemovedByFilters = null;
         }
 
         public void UseFastaFile(string file, Func<FastaSequence, IEnumerable<Peptide>> digestProteinToPeptides, ILongWaitBroker broker)
         {
+            if (!File.Exists(file))
+                return;
+
             ResetMapping();
             using var stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read);
             var fastaSource = new FastaSource(stream);
@@ -175,10 +181,12 @@ namespace pwiz.Skyline.Model.Proteome
             
             Assume.IsTrue(localResults.ProteinsMapped + localResults.ProteinsUnmapped > 0);
 
+            var distinctPeptideDocNodes = _peptideToPath.SelectMany(kvp => kvp.Value);
+            int distinctTargetPeptideCount = distinctPeptideDocNodes.Where(p => !p.IsDecoy).Select(p => p.Peptide.Target).Distinct().Count();
             _peptideToProteins = peptideToProteins;
             _results = localResults;
-            _results.PeptidesMapped = peptideToProteins.Count;
-            _results.PeptidesUnmapped = _peptideToPath.Sum(o => o.Value.Count) - _results.PeptidesMapped;
+            _results.PeptidesMapped = peptideToProteins.Keys.Select(p => p.Peptide.Target).Distinct().Count();
+            _results.PeptidesUnmapped = distinctTargetPeptideCount - _results.PeptidesMapped;
             _results.FinalProteinCount = proteinAssociations.Count;
 
             return proteinAssociations;
@@ -408,6 +416,8 @@ namespace pwiz.Skyline.Model.Proteome
 
             broker.Message = Resources.AssociateProteinsDlg_UpdateParsimonyResults_Applying_parsimony_options;
 
+            _peptidesRemovedByFilters = new HashSet<PeptideDocNode>();
+
             if (groupProteins)
             {
                 if (_proteinGroupAssociations == null)
@@ -456,7 +466,10 @@ namespace pwiz.Skyline.Model.Proteome
                 foreach (var kvp in peptideToProteinGroups)
                 {
                     if (sharedPeptides == SharedPeptides.Removed && kvp.Value.Count > 1)
+                    {
+                        _peptidesRemovedByFilters.Add(kvp.Key);
                         continue;
+                    }
                     if (broker.IsCanceled)
                         return;
 
@@ -523,6 +536,9 @@ namespace pwiz.Skyline.Model.Proteome
 
             if (minPeptidesPerProtein > 1)
             {
+                foreach (var kvp in ParsimoniousProteins.Where(p => p.Value.Peptides.Count < minPeptidesPerProtein))
+                foreach (var peptide in kvp.Value.Peptides)
+                    _peptidesRemovedByFilters.Add(peptide);
                 ParsimoniousProteins = ParsimoniousProteins.Where(p => p.Value.Peptides.Count >= minPeptidesPerProtein).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
                 _finalResults = _finalResults.Clone();
                 _finalResults.FinalProteinCount = ParsimoniousProteins.Count;
@@ -805,24 +821,65 @@ namespace pwiz.Skyline.Model.Proteome
             var proteinAssociationsList = ParsimoniousProteins.OrderBy(kvp => kvp.Key.RecordIndex).ToList();
 
             var newPeptideGroups = new List<PeptideGroupDocNode>(); // all groups that will be added in the new document
-            //var assignedPeptides = proteinAssocationsList.SelectMany(kvp => kvp.Value).ToHashSet();
+            var appendPeptideLists = new List<PeptideGroupDocNode>();
+
+            // Move unmapped peptides from FastaSequence node to "Unmapped Peptides" list
+            var unmappedPeptideNodes = _peptideToPath.SelectMany(kvp => kvp.Value).Where(p => !p.IsDecoy).ToHashSet();
+            unmappedPeptideNodes.ExceptWith(ParsimoniousProteins.Values.SelectMany(pag => pag.Peptides));
+            unmappedPeptideNodes.ExceptWith(_peptidesRemovedByFilters);
 
             // Modifies and adds old groups that still contain unmatched peptides to newPeptideGroups
             foreach (var nodePepGroup in current.MoleculeGroups)
             {
+                var peptideDocNodes = nodePepGroup.Children.Where(node => node is PeptideDocNode).Cast<PeptideDocNode>().ToList();
+
+                // Drop empty peptide lists
+                if (peptideDocNodes.Count == 0)
+                    continue;
+
+                // Drop old Unmapped Peptides group
+                if (nodePepGroup.Name == Resources.ProteinAssociation_CreateDocTree_Unmapped_Peptides)
+                    continue;
+
+                // Keep decoy and iRT lists
+                if (nodePepGroup.IsDecoy)
+                {
+                    appendPeptideLists.Add(nodePepGroup);
+                    continue;
+                }
+
+                if (peptideDocNodes.All(node => node.GlobalStandardType == StandardType.IRT))
+                {
+                    newPeptideGroups.Add(nodePepGroup);
+                    unmappedPeptideNodes.ExceptWith(peptideDocNodes); // do not count iRT peptides as unmapped
+                    continue;
+                }
+
+                // Keep peptide lists that contain unmapped peptides
+                if (nodePepGroup.IsProteomic && nodePepGroup.IsPeptideList)
+                {
+                    // If a peptide list peptide is unmapped, leave it in the peptide list but remove it from the global unmapped list
+                    var peptidesByMappedStatus = peptideDocNodes.ToLookup(node => _peptideToProteins.Contains(kvp => kvp.Key.Target == node.Target), node => node);
+                    var unmappedPeptides = peptidesByMappedStatus[false].ToHashSet();
+                    unmappedPeptideNodes.ExceptWith(unmappedPeptides);
+
+                    // If it was mapped, remove it from the peptide list
+                    var mappedPeptides = peptidesByMappedStatus[true];
+                    var mappedPeptideIndexes = mappedPeptides.Select(node => node.Peptide.GlobalIndex);
+                    var newPeptideList = (PeptideGroupDocNode) nodePepGroup.RemoveAll(mappedPeptideIndexes.ToList());
+
+                    // Only keep the list if it still has peptides
+                    if (newPeptideList.Children.Count != 0) 
+                        appendPeptideLists.Add(newPeptideList);
+                    continue;
+                }
+
                 // Get non-peptide children
                 var nonPeptideNodes = nodePepGroup.Children.Where(node => (node as PeptideDocNode)?.Peptide.Target.IsProteomic == false).ToList();
 
                 // Ignore old groups with no non-peptide children
                 if (nonPeptideNodes.Count == 0)
                     continue;
-
-                // Adds all pre-existing proteins to list of groups that will be added in the new document
-                /*if (nodePepGroup.PeptideGroup is FastaSequence) 
-                {
-                    newPeptideGroups.Add(nodePepGroup);
-                    continue;
-                }*/
 
                 // Not a protein
                 var newNodePepGroup = nonPeptideNodes;
@@ -840,7 +897,15 @@ namespace pwiz.Skyline.Model.Proteome
                 }
             }
 
-            int totalPeptideGroups = newPeptideGroups.Count + proteinAssociationsList.Count;
+            if (unmappedPeptideNodes.Count > 0)
+            {
+                var unmappedNakedPeptides = unmappedPeptideNodes.Select(node => node.RemoveFastaSequence());
+                var unmappedPeptideList = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY,
+                    Resources.ProteinAssociation_CreateDocTree_Unmapped_Peptides, string.Empty, unmappedNakedPeptides.ToArray());
+                appendPeptideLists.Add(unmappedPeptideList);
+            }
+
+            int totalPeptideGroups = newPeptideGroups.Count + appendPeptideLists.Count + proteinAssociationsList.Count;
 
             // Adds all new groups/proteins to newPeptideGroups
             foreach (var keyValuePair in proteinAssociationsList)
@@ -849,7 +914,9 @@ namespace pwiz.Skyline.Model.Proteome
                 var children = new List<PeptideDocNode>();
                 foreach (PeptideDocNode peptideDocNode in keyValuePair.Value.Peptides)
                 {
-                    children.Add(peptideDocNode.ChangeFastaSequence(protein));
+                    // do not reassociate iRT list peptides to proteins
+                    if (!children.Contains(p => p.ModifiedTarget.Equals(peptideDocNode.ModifiedTarget)))
+                        children.Add(peptideDocNode.ChangeFastaSequence(protein));
                 }
 
                 var proteinOrGroupMetadata = protein is FastaSequenceGroup
@@ -862,6 +929,8 @@ namespace pwiz.Skyline.Model.Proteome
                     return null;
                 monitor.UpdateProgress(status.ChangePercentComplete(newPeptideGroups.Count * 100 / totalPeptideGroups));
             }
+
+            newPeptideGroups.AddRange(appendPeptideLists);
 
             var newPeptideSettings = current.Settings.PeptideSettings.ChangeParsimonySettings(FinalResults.ParsimonySettings);
             if (!Equals(newPeptideSettings, current.Settings.PeptideSettings))

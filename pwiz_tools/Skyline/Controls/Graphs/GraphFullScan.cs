@@ -889,7 +889,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 //create and initialize a map of transition,accumulator pairs
                 var meanErrorsMap =
-                    new Dictionary<Identity, IntensityAccumulator>(_msDataFileScanHelper.ScanProvider.Transitions.Length, new IdentityEqualityComparer<Identity>());
+                    new Dictionary<ReferenceValue<Identity>, IntensityAccumulator>(_msDataFileScanHelper.ScanProvider.Transitions.Length);
                 _msDataFileScanHelper.ScanProvider.Transitions
                     .ForEach(t => meanErrorsMap.Add(t.Id,
                         new IntensityAccumulator(true, ChromExtractor.summed, t.ProductMz)));
@@ -1132,6 +1132,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 return graphControlExtension.PropertiesVisible;
             }
         }
+
+        public bool HasChromatogramData => false;
 
         private void ZoomYAxis()
         {
@@ -1444,8 +1446,7 @@ namespace pwiz.Skyline.Controls.Graphs
             using (Graphics g = CreateGraphics())
             {
                 object nearestObject;
-                int index;
-                if (GraphPane.FindNearestObject(mousePoint, g, out nearestObject, out index))
+                if (GraphPane.FindNearestObject(mousePoint, g, out nearestObject, out _))
                 {
                     var textObj = nearestObject as TextObj;
                     if (textObj != null)
