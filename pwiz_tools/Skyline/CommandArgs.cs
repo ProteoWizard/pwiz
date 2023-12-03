@@ -32,6 +32,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
+using pwiz.ProteomeDatabase.API;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -65,6 +66,7 @@ namespace pwiz.Skyline
         public static readonly Func<string> PATH_TO_CSV = () => GetPathToFile(TextUtil.EXT_CSV);
         public static readonly Func<string> PATH_TO_TSV = () => GetPathToFile(TextUtil.EXT_TSV);
         public static readonly Func<string> PATH_TO_IRTDB = () => GetPathToFile(IrtDb.EXT);
+        public static readonly Func<string> PATH_TO_PROTDB = () => GetPathToFile(ProteomeDb.EXT_PROTDB);
         public static readonly Func<string> PATH_TO_BLIB = () => GetPathToFile(BiblioSpecLiteSpec.EXT);
         public static readonly Func<string> PATH_TO_XML = () => GetPathToFile(DataSourceUtil.EXT_XML);
         public static readonly Func<string> PATH_TO_IMSDB = () => GetPathToFile(IonMobilityDb.EXT);
@@ -108,7 +110,7 @@ namespace pwiz.Skyline
         public static readonly HashSet<Func<string>> PATH_TYPE_VALUES = new HashSet<Func<string>>
         {
             PATH_TO_DOCUMENT, PATH_TO_FILE, PATH_TO_FOLDER, PATH_TO_ZIP, PATH_TO_REPORT, PATH_TO_TSV, PATH_TO_IMSDB,
-            PATH_TO_INSTALL, PATH_TO_CSV, PATH_TO_IRTDB, PATH_TO_BLIB, PATH_TO_XML
+            PATH_TO_INSTALL, PATH_TO_CSV, PATH_TO_IRTDB, PATH_TO_BLIB, PATH_TO_XML, PATH_TO_PROTDB
         };
 
         public static readonly HashSet<Func<string>> STRING_TYPE_VALUES = new HashSet<Func<string>>(new[]
@@ -1510,6 +1512,20 @@ namespace pwiz.Skyline
             (c, p) => c.PeptideFilterExcludePotentialRaggedEnds = p.IsNameOnly || bool.Parse(p.Value))
             { OptionalValue = true };
 
+        public static readonly Argument ARG_PEPTIDE_ENZYME_NAME = new DocArgument(@"pep-digest-enzyme", () => Settings.Default.EnzymeList.Select(e => e.Name).ToArray(),
+            (c, p) => c.PeptideDigestEnzymeName = p.Value)
+            { WrapValue = true };
+        public static readonly Argument ARG_PEPTIDE_MAX_MISSED_CLEAVAGES = new DocArgument(@"pep-max-missed-cleavages", INT_VALUE,
+            (c, p) => c.PeptideDigestMaxMissedCleavages = p.GetValueInt(DigestSettings.MIN_MISSED_CLEAVAGES, DigestSettings.MAX_MISSED_CLEAVAGES));
+        public static readonly Argument ARG_PEPTIDE_UNIQUE_BY = DocArgument.FromEnumType<PeptideFilter.PeptideUniquenessConstraint>(@"pep-unique-by",
+            (c, p) => c.PeptideDigestUniquenessConstraint = p);
+        public static readonly Argument ARG_BGPROTEOME_NAME = new DocArgument(@"background-proteome-name",
+                () => Argument.ValuesToExample(Settings.Default.BackgroundProteomeList.Select(p => p.Name)
+                    .Append(Resources.CommandArgs_ARG_BGPROTEOME_NAME_name_to_give_protdb_imported_by___background_proteome_file)),
+                (c, p) => c.BackgroundProteomeName = p.Value)
+            { WrapValue = true };
+        public static readonly Argument ARG_BGPROTEOME_PATH = new DocArgument(@"background-proteome-file", PATH_TO_PROTDB, (c, p) => c.BackgroundProteomePath = p.Value);
+
         public static readonly Argument ARG_IMS_LIBRARY_RES = new DocArgument(@"ims-library-res", RP_VALUE,
                 (c, p) => c.IonMobilityLibraryRes = p.ValueDouble);
 
@@ -1530,7 +1546,7 @@ namespace pwiz.Skyline
                 (c, p) => c.InstrumentIsTriggeredChromatogramAcquisition = p.IsNameOnly || bool.Parse(p.Value))
             { OptionalValue = true };
 
-        private static readonly ArgumentGroup GROUP_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_SETTINGS_Document_Settings, false,
+        private static readonly ArgumentGroup GROUP_TRANSITION_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_SETTINGS_Transition_Settings, false,
             ARG_TRAN_PRECURSOR_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_TYPES,
             ARG_TRAN_PRODUCT_START_ION, ARG_TRAN_PRODUCT_END_ION, ARG_TRAN_PRODUCT_SPECIAL_IONS_CLEAR, ARG_TRAN_PRODUCT_SPECIAL_IONS_ADD,
             ARG_TRAN_PREDICT_CE, ARG_TRAN_PREDICT_DP, ARG_TRAN_PREDICT_COV, ARG_TRAN_PREDICT_OPTDB,
@@ -1542,7 +1558,6 @@ namespace pwiz.Skyline
             ARG_FULL_SCAN_ACQUISITION_METHOD, ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME,
             ARG_FULL_SCAN_PRODUCT_ANALYZER, ARG_FULL_SCAN_PRODUCT_RES, ARG_FULL_SCAN_PRODUCT_RES_MZ,
             ARG_FULL_SCAN_RT_FILTER, ARG_FULL_SCAN_RT_FILTER_TOLERANCE, ARG_IMS_LIBRARY_RES,
-            ARG_PEPTIDE_MIN_LENGTH, ARG_PEPTIDE_MAX_LENGTH, ARG_PEPTIDE_EXCLUDE_NTERMINAL_AAS, ARG_PEPTIDE_EXCLUDE_POTENTIAL_RAGGED_ENDS,
             ARG_INST_MIN_MZ, ARG_INST_MAX_MZ, ARG_INST_DYNAMIC_MIN_MZ,
             ARG_INST_METHOD_TOLERANCE, ARG_INST_MIN_TIME, ARG_INST_MAX_TIME,
             ARG_INST_TRIGGERED_CHROMATOGRAMS)
@@ -1563,6 +1578,27 @@ namespace pwiz.Skyline
                 {
                     c.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_,
                         c.FullScanProductIsolationScheme, ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME.ArgumentText, ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME.ValueExample());
+                    return false;
+                }
+
+                return true;
+            }
+        };
+
+        private static readonly ArgumentGroup GROUP_PEPTIDE_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_SETTINGS_Peptide_Settings, false,
+            ARG_PEPTIDE_ENZYME_NAME, ARG_PEPTIDE_MAX_MISSED_CLEAVAGES, ARG_PEPTIDE_UNIQUE_BY, ARG_BGPROTEOME_NAME, ARG_BGPROTEOME_PATH,
+            ARG_PEPTIDE_MIN_LENGTH, ARG_PEPTIDE_MAX_LENGTH, ARG_PEPTIDE_EXCLUDE_NTERMINAL_AAS, ARG_PEPTIDE_EXCLUDE_POTENTIAL_RAGGED_ENDS)
+        {
+            LeftColumnWidth = 40,
+            Validate = c =>
+            {
+                // if BackgroundProteomePath is not set, BackgroundProteomeName must be one of the existing BackgroundProteomeList
+                if (c.BackgroundProteomePath == null &&
+                    c.BackgroundProteomeName != null &&
+                    !Settings.Default.BackgroundProteomeList.Contains(p => p.Name == c.BackgroundProteomeName))
+                {
+                    c.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_,
+                        c.BackgroundProteomeName, ARG_BGPROTEOME_NAME.ArgumentText, string.Join(@", ", Settings.Default.BackgroundProteomeList.Select(p => p.Name)));
                     return false;
                 }
 
@@ -1718,6 +1754,18 @@ namespace pwiz.Skyline
                                              PeptideFilterExcludePotentialRaggedEnds.HasValue ||
                                              PeptideFilterMaxLength.HasValue ||
                                              PeptideFilterMinLength.HasValue;
+
+        public string PeptideDigestEnzymeName { get; private set; }
+        public int? PeptideDigestMaxMissedCleavages { get; private set; }
+        public string BackgroundProteomeName { get; private set; }
+        public string BackgroundProteomePath { get; private set; }
+        public PeptideFilter.PeptideUniquenessConstraint? PeptideDigestUniquenessConstraint { get; private set; }
+
+        public bool PeptideDigestSettings => PeptideDigestEnzymeName != null ||
+                                             PeptideDigestMaxMissedCleavages.HasValue ||
+                                             BackgroundProteomeName != null ||
+                                             BackgroundProteomePath != null ||
+                                             PeptideDigestUniquenessConstraint.HasValue;
 
         public double? IonMobilityLibraryRes { get; private set; }
 
@@ -2238,7 +2286,8 @@ namespace pwiz.Skyline
                     GROUP_EXP_INSTRUMENT,
                     GROUP_PANORAMA,
                     GROUP_ADD_ANNOTATIONS,
-                    GROUP_SETTINGS,
+                    GROUP_PEPTIDE_SETTINGS,
+                    GROUP_TRANSITION_SETTINGS,
                     GROUP_TOOLS
                 };
             }
@@ -2654,11 +2703,11 @@ namespace pwiz.Skyline
             {
             }
 
-            public static DocArgument FromEnumType<TEnum>(string name, Action<CommandArgs, TEnum> processValue, bool wrapValue = true)
+            public static DocArgument FromEnumType<TEnum>(string name, Action<CommandArgs, TEnum> processValue, bool wrapValue = true) where TEnum : Enum
             {
                 var enumType = typeof(TEnum);
                 return new DocArgument(name, () => Enum.GetNames(enumType),
-                        (c, p) => processValue(c, (TEnum) Enum.Parse(enumType, p.Value)))
+                        (c, p) => processValue(c, (TEnum) Enum.Parse(enumType, p.Value, true)))
                     { WrapValue = wrapValue };
             }
 

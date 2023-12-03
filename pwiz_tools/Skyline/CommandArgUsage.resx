@@ -529,8 +529,11 @@ http://localhost:8080</value>
   <data name="_tool_zip_overwrite_annotations" xml:space="preserve">
     <value>Specify whether conflicting custom annotations from the provided ZIP file should overwrite (true) existing annotations or be skipped (false).</value>
   </data>
-  <data name="CommandArgs_GROUP_SETTINGS_Document_Settings" xml:space="preserve">
-    <value>Document Settings</value>
+  <data name="CommandArgs_GROUP_SETTINGS_Transition_Settings" xml:space="preserve">
+    <value>Transition Settings</value>
+  </data>
+  <data name="CommandArgs_GROUP_SETTINGS_Peptide_Settings" xml:space="preserve">
+    <value>Peptide Settings</value>
   </data>
   <data name="CommandArgs_PATH_TO_FILE_path_to_file" xml:space="preserve">
     <value>path/to/file</value>
@@ -993,5 +996,23 @@ greater peak area.</value>
   </data>
   <data name="_annotation_file" xml:space="preserve">
     <value>Add an annotation to the document and environment from an XML format file. For an example of an XML format file, view the user.config file specified in the user interface window Tools &gt;Options &gt; Miscellaneous. Existing annotations with the same name will be overwritten.</value>
+  </data>
+  <data name="_background_proteome_file" xml:space="preserve">
+    <value>The path to the background proteome (protdb) file to apply to the opened document. The name may be optionally specified by --background-proteome-name, and if not it defaults to the filename.</value>
+  </data>
+  <data name="_background_proteome_name" xml:space="preserve">
+    <value>The name of a background proteome to apply to the opened document. The background proteome specifies the full set of proteins that may be present in the sample matrix to be injected into the mass spectrometer. If the name is not already defined in Skyline, the path to the protdb file must also be set by --background-proteome-file.</value>
+  </data>
+  <data name="_pep_digest_enzyme" xml:space="preserve">
+    <value>The protease enzyme definition used to parse peptide sequences from protein sequences added as targets to the document. Peptide lists added as targets ignore this setting other than counting missed cleavages.</value>
+  </data>
+  <data name="_pep_max_missed_cleavages" xml:space="preserve">
+    <value>The maximum number of missed cleavages allowed in a peptide when considering protein digestion.</value>
+  </data>
+  <data name="_pep_unique_by" xml:space="preserve">
+    <value>"Protein" excludes any peptide that appears in more than one protein in the background proteome.  
+"Gene" excludes any peptide that appears in proteins for more than one gene in the background proteome.  
+"Species" excludes any peptide that appears in proteins for more than one species in the background proteome.
+Useful in sample mixtures including multiple species.</value>
   </data>
 </root>
