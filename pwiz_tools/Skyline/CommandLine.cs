@@ -313,7 +313,7 @@ namespace pwiz.Skyline
                 }
                 catch (Exception x)
                 {
-                    _out.WriteLine(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, commandArgs.FastaPath,
+                    _out.WriteException(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, commandArgs.FastaPath,
                         x);
                     return false;
                 }
@@ -328,7 +328,7 @@ namespace pwiz.Skyline
                 }
                 catch (Exception x)
                 {
-                    _out.WriteLine(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_,
+                    _out.WriteException(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_,
                         commandArgs.TransitionListPath, x);
                     return false;
                 }
@@ -636,7 +636,7 @@ namespace pwiz.Skyline
             {
                 if (!_out.IsErrorReported)
                 {
-                    _out.WriteLine(Resources.Error___0_, x);
+                    _out.WriteException(Resources.Error___0_, x);
                 }
                 else
                 {
@@ -670,7 +670,7 @@ namespace pwiz.Skyline
             {
                 if (!_out.IsErrorReported)
                 {
-                    _out.WriteLine(Resources.Error___0_, x);
+                    _out.WriteException(Resources.Error___0_, x);
                 }
                 else
                 {
@@ -3002,7 +3002,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.Error___0_, x);
+                _out.WriteException(Resources.Error___0_, x);
                 return false;
             }
             return true;
@@ -4328,11 +4328,11 @@ namespace pwiz.Skyline
             WriteLine(string.Empty);
         }
 
-        public void WriteLine(string stringA, string stringB, Exception x)
+        public void WriteException(string stringA, string stringB, Exception x)
         {
             WriteLine(stringA, stringB, ExceptionString(x));
         }
-        public void WriteLine(string message, Exception x)
+        public void WriteException(string message, Exception x)
         {
             WriteLine(message, ExceptionString(x));
         }
@@ -4344,35 +4344,11 @@ namespace pwiz.Skyline
         /// <summary>
         /// Get a string reporting the exception, with information depending on the verbose exception setting.
         /// </summary>
-        /// <param name="x">Exception to be reporting</param>
+        /// <param name="x">Exception to be reported</param>
         /// <returns>A message reporting the exception</returns>
         private string ExceptionString(Exception x)
         {
-            var message = new List<string> { x.Message };
-            if (IsVerboseExceptions)
-            {
-                if (x.Source != null)
-                {
-                    message.Add(string.Format(Resources.ConsoleVerboseExceptionsTest_ConsoleVerboseErrorsTest_Source___0_, x.Source));
-                }
-
-                if (x.StackTrace != null)
-                {
-                    message.Add(string.Format(Resources.ConsoleVerboseExceptionsTest_ConsoleVerboseErrorsTest_Stack_Trace___0_, x.StackTrace));
-                }
-
-                if (x.TargetSite != null)
-                {
-                    message.Add(string.Format(Resources.ConsoleVerboseExceptionsTest_ConsoleVerboseErrorsTest_Target_Site___0_, x.TargetSite));
-                }
-
-                if (x.HelpLink != null)
-                {
-                    message.Add(string.Format(Resources.ConsoleVerboseExceptionsTest_ConsoleVerboseErrorsTest_Help_Link___0_, x.HelpLink));
-                }
-
-            }
-            return string.Join(Environment.NewLine, message);
+            return IsVerboseExceptions ? x.ToString() : x.Message;
         }
 
         public override void WriteLine(string value)

@@ -2040,11 +2040,11 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Provide additional information to report to Skyline developers in the case of an exception..
+        ///   Looks up a localized string similar to Provide additional information to report to Skyline developers in the case of an error..
         /// </summary>
-        internal static string _verbose_exceptions {
+        internal static string _verbose_errors {
             get {
-                return ResourceManager.GetString("_verbose_exceptions", resourceCulture);
+                return ResourceManager.GetString("_verbose_errors", resourceCulture);
             }
         }
         
