@@ -472,7 +472,7 @@ namespace pwiz.SkylineTestData
                 "--new=" + docPath,
                 "--overwrite",
                 "--pep-digest-enzyme=chymotrypsin",
-                "--pep-unique-by=proTEIN",
+                "--pep-unique-by=proTEiN",
                 "--library-pick-product-ions=FilTER"
             };
 
