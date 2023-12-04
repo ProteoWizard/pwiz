@@ -2246,18 +2246,9 @@ namespace pwiz.Skyline.Model.Results
 
         internal ChromGroupHeaderInfo Header { get { return _groupHeaderInfo; } }
         public SignedMz PrecursorMz { get { return new SignedMz(_groupHeaderInfo.Precursor, _groupHeaderInfo.NegativeCharge); } }
-        public ChromatogramGroupId ChromatogramGroupId
-        {
-            get; private set;
-        }
-
-        public string QcTraceName
-        {
-            get
-            {
-                return ChromatogramGroupId?.QcTraceName;
-            }
-        }
+        [CanBeNull]
+        public ChromatogramGroupId ChromatogramGroupId { get; private set; }
+        public string QcTraceName { get { return ChromatogramGroupId?.QcTraceName; } }
         public double? PrecursorCollisionalCrossSection { get { return _groupHeaderInfo.CollisionalCrossSection; } }
         public ChromCachedFile CachedFile { get { return _allFiles[_groupHeaderInfo.FileIndex]; } }
         public MsDataFileUri FilePath { get { return _allFiles[_groupHeaderInfo.FileIndex].FilePath; } }
