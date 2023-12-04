@@ -284,7 +284,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
         {
             string setMassStr = rawdata_->GetScanStat(ie.function, scanStatIndex, MassLynxScanItem::SET_MASS);
             if (!setMassStr.empty())
-                setMass = lexical_cast<double>(setMassStr);
+                setMass = rawdata_->GetLockMassCorrectedMz(scanStartTimeInMinutes, lexical_cast<double>(setMassStr));
         }
 
         Precursor precursor;

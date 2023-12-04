@@ -397,6 +397,15 @@ struct PWIZ_API_DECL RawData
         }
     }
 
+    double GetLockMassCorrectedMz(float atScanTime, double uncorrectedMz)
+    {
+        if (!LockMassIsApplied())
+            return uncorrectedMz;
+
+        float gain = LockMass.GetLockMassCorrection(atScanTime);
+        return uncorrectedMz * static_cast<double>(gain);
+    }
+
     void EnableProcessing(bool bEnableDDAProcessing)
     {
         ScanProcessor.SetRawData(Reader);

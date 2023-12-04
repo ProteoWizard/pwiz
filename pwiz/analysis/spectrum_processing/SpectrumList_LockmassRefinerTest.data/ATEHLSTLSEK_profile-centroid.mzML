@@ -59,7 +59,7 @@
     <software id="MassLynx" version="4.1">
       <cvParam cvRef="MS" accession="MS:1000534" name="MassLynx" value=""/>
     </software>
-    <software id="current_x0020_pwiz" version="3.0.23320">
+    <software id="current_x0020_pwiz" version="3.0.23335">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -187,11 +187,11 @@
         <precursorList count="1">
           <precursor>
             <isolationWindow>
-              <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="608.321" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="608.319694684744" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
-                <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="608.321" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="608.319694684744" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -241,11 +241,11 @@
         <precursorList count="1">
           <precursor>
             <isolationWindow>
-              <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="608.321" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="608.319694684744" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
-                <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="608.321" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="608.319694684744" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -333,11 +333,11 @@
         <precursorList count="1">
           <precursor>
             <isolationWindow>
-              <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="608.321" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="608.319694684744" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
-                <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="608.321" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="608.319694684744" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -387,11 +387,11 @@
         <precursorList count="1">
           <precursor>
             <isolationWindow>
-              <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="608.321" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="608.319694684744" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
-                <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="608.321" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="608.319694684744" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </selectedIon>
             </selectedIonList>
             <activation>
@@ -441,11 +441,11 @@
         <precursorList count="1">
           <precursor>
             <isolationWindow>
-              <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="608.321" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="608.319694684744" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
             </isolationWindow>
             <selectedIonList count="1">
               <selectedIon>
-                <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="608.321" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000744" name="selected ion m/z" value="608.319694684744" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
               </selectedIon>
             </selectedIonList>
             <activation>
