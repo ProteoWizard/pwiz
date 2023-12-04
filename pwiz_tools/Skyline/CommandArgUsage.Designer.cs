@@ -2214,15 +2214,6 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adding annotations.
-        /// </summary>
-        internal static string CommandArgs_GROUP_ADD_ANNOTATIONS {
-            get {
-                return ResourceManager.GetString("CommandArgs_GROUP_ADD_ANNOTATIONS", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Adding spectral libraries.
         /// </summary>
         internal static string CommandArgs_GROUP_ADD_LIBRARY_Adding_spectral_libraries {
@@ -2264,6 +2255,15 @@ namespace pwiz.Skyline {
         internal static string CommandArgs_GROUP_DECOYS {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_DECOYS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Document settings.
+        /// </summary>
+        internal static string CommandArgs_GROUP_DOCUMENT_SETTINGS {
+            get {
+                return ResourceManager.GetString("CommandArgs_GROUP_DOCUMENT_SETTINGS", resourceCulture);
             }
         }
         

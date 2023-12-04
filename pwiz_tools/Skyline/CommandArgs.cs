@@ -1120,7 +1120,7 @@ namespace pwiz.Skyline
             { WrapValue = true, InternalUse = true};
 
 
-        public static readonly ArgumentGroup GROUP_ADD_ANNOTATIONS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_ADD_ANNOTATIONS, false,
+        public static readonly ArgumentGroup GROUP_DOCUMENT_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_DOCUMENT_SETTINGS, false,
                 ARG_ADD_ANNOTATIONS_NAME, ARG_ADD_ANNOTATIONS_TARGETS, ARG_ADD_ANNOTATIONS_TYPE, ARG_ADD_ANNOTATIONS_VALUES, ARG_ADD_ANNOTATIONS_FILE, ARG_ADD_ANNOTATIONS_CONFLICT_RESOLUTION) 
             { LeftColumnWidth = 30, Validate = c => c.ValidateAddAnnotationsArgs()};
         public string AddAnnotationsFile { get; private set; }
@@ -2285,7 +2285,7 @@ namespace pwiz.Skyline
                     GROUP_EXP_GENERAL,
                     GROUP_EXP_INSTRUMENT,
                     GROUP_PANORAMA,
-                    GROUP_ADD_ANNOTATIONS,
+                    GROUP_DOCUMENT_SETTINGS,
                     GROUP_PEPTIDE_SETTINGS,
                     GROUP_TRANSITION_SETTINGS,
                     GROUP_TOOLS

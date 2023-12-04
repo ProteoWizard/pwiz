@@ -973,8 +973,8 @@ greater peak area.</value>
   <data name="_pep_min_length" xml:space="preserve">
     <value>The minimum length of a peptide to add to the document.</value>
   </data>
-  <data name="CommandArgs_GROUP_ADD_ANNOTATIONS" xml:space="preserve">
-    <value>Adding annotations</value>
+  <data name="CommandArgs_GROUP_DOCUMENT_SETTINGS" xml:space="preserve">
+    <value>Document settings</value>
   </data>
   <data name="_annotation_name" xml:space="preserve">
     <value>Add an annotation to the document with the specified name. Existing annotations with the same name will be overwritten.</value>
