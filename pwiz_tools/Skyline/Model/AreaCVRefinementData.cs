@@ -86,10 +86,8 @@ namespace pwiz.Skyline.Model
                             continue;
                         }
 
-                        var peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(
-                            () => normalizedValueCalculator.GetNormalizationData(), document.Settings, peptideGroup,
-                            peptide);
-                        calibrationCurveFitter = new CalibrationCurveFitter(peptideQuantifier, document.Settings);
+                        calibrationCurveFitter =
+                            CalibrationCurveFitter.GetCalibrationCurveFitter(document, peptideGroup, peptide);
                         transitionGroups = new[] {peptide.TransitionGroups.First()};
                         if (_settings.NormalizeOption == NormalizeOption.CALIBRATED)
                         {

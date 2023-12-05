@@ -3625,6 +3625,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Surrogate External Standard.
+        /// </summary>
+        public static string SurrogateExternalStandard {
+            get {
+                return ResourceManager.GetString("SurrogateExternalStandard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Target Qualitative Ion Ratio.
         /// </summary>
         public static string TargetQualitativeIonRatio {

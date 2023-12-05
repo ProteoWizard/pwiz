@@ -891,6 +891,7 @@
         <xs:attribute name="internal_standard_concentration" type="xs:double" />
         <xs:attribute name="normalization_method" type="xs:string" />
         <xs:attribute name="attribute_group_id" type="xs:string" />
+        <xs:attribute name="surrogate_calibration_curve" type="xs:string" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
