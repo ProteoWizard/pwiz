@@ -4949,6 +4949,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to name to give protdb imported by --background-proteome-file.
+        /// </summary>
+        public static string CommandArgs_ARG_BGPROTEOME_NAME_name_to_give_protdb_imported_by___background_proteome_file {
+            get {
+                return ResourceManager.GetString("CommandArgs_ARG_BGPROTEOME_NAME_name_to_give_protdb_imported_by___background_prot" +
+                        "eome_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The dwell time {0} must be between {1} and {2}..
         /// </summary>
         public static string CommandArgs_DwellTime_The_dwell_time__0__must_be_between__1__and__2__ {
@@ -7201,6 +7211,26 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_" +
                         "library_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Could not find background proteome file {0}.
+        /// </summary>
+        public static string CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_file__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_fi" +
+                        "le__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Failed attempting to change the peptide digestion settings..
+        /// </summary>
+        public static string CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_peptide_digestion_settings_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_pepti" +
+                        "de_digestion_settings_", resourceCulture);
             }
         }
         
