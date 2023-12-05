@@ -517,10 +517,13 @@ namespace BuildSciexMethod
                 var timeProp = Equals(instrument, InstrumentType.QQQ)
                         ? typeof(DwellTimeProperty)
                         : typeof(AccumulationTimeProperty);
+                var groupName = Equals(instrument, InstrumentType.QQQ) ?
+                    typeof(GroupIdProperty) : typeof(GroupNameProperty);
+                ;
 
                 var props = new List<PropertyData>( new[]
                 {
-                    new PropertyData(typeof(GroupNameProperty), t => t.Group),
+                    new PropertyData(groupName, t => t.Group),
                     new PropertyData(typeof(CompoundIdProperty), t => t.Label),
                     new PropertyData(typeof(Q1MassProperty), t => t.PrecursorMz),
                     new PropertyData(typeof(Q3MassProperty), t => t.ProductMz),
