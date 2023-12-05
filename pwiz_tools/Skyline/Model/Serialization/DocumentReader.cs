@@ -999,6 +999,7 @@ namespace pwiz.Skyline.Model.Serialization
                 reader.GetNullableDoubleAttribute(ATTR.internal_standard_concentration);
             string normalizationMethod = reader.GetAttribute(ATTR.normalization_method);
             string attributeGroupId = reader.GetAttribute(ATTR.attribute_group_id);
+            string surrogateCalibrationCurve = reader.GetAttribute(ATTR.surrogate_calibration_curve);
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
             bool isDecoy = reader.GetBoolAttribute(ATTR.decoy);
             var standardType = StandardType.FromName(reader.GetAttribute(ATTR.standard_type));
@@ -1094,7 +1095,8 @@ namespace pwiz.Skyline.Model.Serialization
                 .ChangeConcentrationMultiplier(concentrationMultiplier)
                 .ChangeInternalStandardConcentration(internalStandardConcentration)
                 .ChangeNormalizationMethod(NormalizationMethod.FromName(normalizationMethod))
-                .ChangeAttributeGroupId(attributeGroupId);
+                .ChangeAttributeGroupId(attributeGroupId)
+                .ChangeSurrogateCalibrationCurve(surrogateCalibrationCurve);
 
             return peptideDocNode;
         }

@@ -428,9 +428,12 @@ namespace pwiz.Skyline.Model.Results
             return false;
         }
 
-        public NormalizationData GetNormalizationData()
+        public Lazy<NormalizationData> LazyNormalizationData
         {
-            return _normalizationData.Value;
+            get
+            {
+                return _normalizationData;
+            }
         }
 
         public NormalizationMethod NormalizationMethodForMolecule(PeptideDocNode peptideDocNode, NormalizeOption normalizeOption)

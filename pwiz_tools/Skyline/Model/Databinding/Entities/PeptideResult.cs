@@ -310,8 +310,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     return owner.Peptide.GetCalibrationCurveFitter();
                 }
-                var calibrationCurveFitter =
-                    new CalibrationCurveFitter(owner.Peptide.GetPeptideQuantifier(), owner.SrmDocument.Settings);
+
+                var calibrationCurveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(
+                    owner.DataSchema.LazyNormalizationData, owner.SrmDocument.Settings,
+                    new IdPeptideDocNode(owner.Peptide.Protein.DocNode.PeptideGroup, owner.Peptide.DocNode));
                 calibrationCurveFitter.SingleBatchReplicateIndex = owner.ResultFile.Replicate.ReplicateIndex;
                 return calibrationCurveFitter;
             }

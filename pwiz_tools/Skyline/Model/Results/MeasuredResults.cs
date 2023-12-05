@@ -782,7 +782,7 @@ namespace pwiz.Skyline.Model.Results
                 var qcTraceInfos = Caches.SelectMany(cache=>cache.ChromGroupHeaderInfos
                                                                  .Where(header => header.Flags.HasFlag(ChromGroupHeaderInfo.FlagValues.extracted_qc_trace))
                                                                  .Select(header => cache.LoadChromatogramInfo(header)));
-                var qcTraceNames = qcTraceInfos.Select(info => info.ChromatogramGroupId.QcTraceName).Distinct()
+                var qcTraceNames = qcTraceInfos.Select(info => info.QcTraceName).Distinct()
                     .ToList();
                 qcTraceNames.Sort();
                 return qcTraceNames;
