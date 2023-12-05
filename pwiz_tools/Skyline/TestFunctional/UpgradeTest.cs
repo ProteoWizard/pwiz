@@ -22,7 +22,7 @@ using System.Deployment.Application;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.GraphicalUserInterface;
+using pwiz.Common.GUI;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;

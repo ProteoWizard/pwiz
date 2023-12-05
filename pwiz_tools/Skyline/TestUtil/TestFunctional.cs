@@ -36,7 +36,7 @@ using JetBrains.Annotations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
-using pwiz.Common.GraphicalUserInterface;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Fasta;
 using pwiz.ProteowizardWrapper;

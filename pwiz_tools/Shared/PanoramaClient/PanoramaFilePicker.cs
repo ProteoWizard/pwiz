@@ -8,7 +8,7 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
-using pwiz.Common.GraphicalUserInterface;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient.Properties;
 

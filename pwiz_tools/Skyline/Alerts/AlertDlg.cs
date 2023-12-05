@@ -1,4 +1,4 @@
-﻿using pwiz.Common.GraphicalUserInterface;
+﻿using pwiz.Common.GUI;
 using pwiz.Skyline.Util;
 using System;
 using System.ComponentModel;

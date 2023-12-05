@@ -26,7 +26,7 @@ using System.Windows.Forms;
 using pwiz.Common.CommonResources;
 using pwiz.Common.SystemUtil;
 
-namespace pwiz.Common.GraphicalUserInterface
+namespace pwiz.Common.GUI
 {
     /// <summary>
     /// Use for a <see cref="MessageBox"/> substitute that can be

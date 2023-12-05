@@ -140,15 +140,15 @@
     <Compile Include="Collections\RangeList.cs" />
     <Compile Include="Collections\ReadOnlyList.cs" />
     <Compile Include="Collections\StructSerializer.cs" />
-    <Compile Include="GraphicalUserInterface\GuiMessages.Designer.cs">
+    <Compile Include="GUI\GuiMessages.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>GuiMessages.resx</DependentUpon>
     </Compile>
-    <Compile Include="GraphicalUserInterface\CommonAlertDlg.cs">
+    <Compile Include="GUI\CommonAlertDlg.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="GraphicalUserInterface\CommonAlertDlg.Designer.cs">
+    <Compile Include="GUI\CommonAlertDlg.Designer.cs">
       <DependentUpon>CommonAlertDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="CommonResources\GeneralTerms.Designer.cs">
@@ -230,18 +230,18 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="GraphicalUserInterface\GuiMessages.resx">
+    <EmbeddedResource Include="GUI\GuiMessages.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>GuiMessages.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="GraphicalUserInterface\CommonAlertDlg.ja.resx">
+    <EmbeddedResource Include="GUI\CommonAlertDlg.ja.resx">
       <DependentUpon>CommonAlertDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="GraphicalUserInterface\CommonAlertDlg.resx">
+    <EmbeddedResource Include="GUI\CommonAlertDlg.resx">
       <DependentUpon>CommonAlertDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="GraphicalUserInterface\CommonAlertDlg.zh-CHS.resx">
+    <EmbeddedResource Include="GUI\CommonAlertDlg.zh-CHS.resx">
       <DependentUpon>CommonAlertDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.ja.resx">
@@ -270,6 +270,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="CommonResources\Copy.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="GraphicalUserInterface\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

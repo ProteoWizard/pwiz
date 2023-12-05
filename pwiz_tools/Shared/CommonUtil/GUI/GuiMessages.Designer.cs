@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace pwiz.Common.GraphicalUserInterface {
+namespace pwiz.Common.GUI {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace pwiz.Common.GraphicalUserInterface {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("pwiz.Common.GraphicalUserInterface.GuiMessages", typeof(GuiMessages).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("pwiz.Common.GUI.GuiMessages", typeof(GuiMessages).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
