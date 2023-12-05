@@ -399,6 +399,11 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
             }
         }
+
+        public static Lazy<NormalizationData> LazyNormalizationData(SrmDocument document)
+        {
+            return new Lazy<NormalizationData>(()=> GetNormalizationData(document, false, null));
+        }
     }
 
 }

@@ -1410,6 +1410,9 @@ values.</value>
   <data name="SummaryMessage">
     <value>Description of the change</value>
   </data>
+  <data name="SurrogateExternalStandard">
+    <value>Name of another peptide or molecule whose fitted calibration curve will be used for quantification of this peptide or molecule</value>
+  </data>
   <data name="TargetQualitativeIonRatio">
     <value>The average of the Qualitative Ion Ratio values across all of the external standard replicates that have not been excluded from calibration.</value>
   </data>
