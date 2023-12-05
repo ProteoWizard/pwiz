@@ -4920,6 +4920,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to name to give protdb imported by --background-proteome-file.
+        /// </summary>
+        public static string CommandArgs_ARG_BGPROTEOME_NAME_name_to_give_protdb_imported_by___background_proteome_file {
+            get {
+                return ResourceManager.GetString("CommandArgs_ARG_BGPROTEOME_NAME_name_to_give_protdb_imported_by___background_prot" +
+                        "eome_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The dwell time {0} must be between {1} and {2}..
         /// </summary>
         public static string CommandArgs_DwellTime_The_dwell_time__0__must_be_between__1__and__2__ {
@@ -5186,6 +5196,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Warning__The_method_type__0__is_invalid__It_must_be" +
                         "_one_of_the_following___standard____scheduled__or__triggered__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Attempting to exclude an unknown object name &apos;{0}&apos;. Try one of the following:.
+        /// </summary>
+        public static string CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_name___0____Try_one_of_the_following_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_nam" +
+                        "e___0____Try_one_of_the_following_", resourceCulture);
             }
         }
         
@@ -5544,6 +5564,44 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Annotations file {0} exported successfully..
+        /// </summary>
+        public static string CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Failure attempting to save annotations file {0}..
+        /// </summary>
+        public static string CommandLine_ExportAnnotations_Error__Failure_attempting_to_save_annotations_file__0__ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportAnnotations_Error__Failure_attempting_to_save_annotations_file_" +
+                        "_0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The document must contain annotations in order to export annotations..
+        /// </summary>
+        public static string CommandLine_ExportAnnotations_Error__The_document_must_contain_annotations_in_order_to_export_annotations_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportAnnotations_Error__The_document_must_contain_annotations_in_ord" +
+                        "er_to_export_annotations_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Try one of the following:.
+        /// </summary>
+        public static string CommandLine_ExportAnnotations_Try_one_of_the_following_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportAnnotations_Try_one_of_the_following_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Chromatograms file {0} exported successfully..
         /// </summary>
         public static string CommandLine_ExportChromatograms_Chromatograms_file__0__exported_successfully_ {
@@ -5794,6 +5852,17 @@ namespace pwiz.Skyline.Properties {
         public static string CommandLine_ExportInstrumentFile_No_method_will_be_exported_ {
             get {
                 return ResourceManager.GetString("CommandLine_ExportInstrumentFile_No_method_will_be_exported_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The folder {0} does not appear to contain an Agilent MassHunter 12 method template. The folder is expected to have a .m extension..
+        /// </summary>
+        public static string CommandLine_ExportInstrumentFile_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportInstrumentFile_The_folder__0__does_not_appear_to_contain_an_Agi" +
+                        "lent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extensio" +
+                        "n_", resourceCulture);
             }
         }
         
@@ -7010,191 +7079,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Changing full scan acquisition method to {0}.
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full scan acquisition method to {0} with isolation scheme &apos;{1}&apos;.
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0__with_isolation_scheme___1__ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0__with" +
-                        "_isolation_scheme___1__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full-scan extraction to +/- {0} minutes from MS/MS IDs..
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_MS_MS_IDs_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_" +
-                        "from_MS_MS_IDs_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full-scan extraction to +/- {0} minutes from predicted value..
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_predicted_value_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_" +
-                        "from_predicted_value_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full scan ignore SIM scans to {0}.
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_ignore_SIM_scans_to__0_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_ignore_SIM_scans_to__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full scan precursor isotope enrichment to {0}.
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_enrichment_to__0_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_enrichment_t" +
-                        "o__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full scan precursor isotope peak percentage to {0}.
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peak_percentage_to__0_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peak_percent" +
-                        "age_to__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full scan precursor isotope peaks count to {0}.
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_count_to__0_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_count_" +
-                        "to__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full scan precursor isotope peaks to {0}.
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_to__0_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_to__0_" +
-                        "", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full scan precursor mass accuracy to {0} ppm..
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_accuracy_to__0__ppm_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_accuracy_to__0_" +
-                        "_ppm_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full scan precursor mass analyzer to {0}.
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_analyzer_to__0_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_analyzer_to__0_" +
-                        "", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full-scan precursor resolution to {0}..
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolution_to__0__ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolution_to__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full-scan precursor resolving power to {0}..
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__" +
-                        "0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full-scan precursor resolving power to {0} at {1}..
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__at__1__ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__" +
-                        "0__at__1__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full scan product mass accuracy to {0} ppm..
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__ppm_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__p" +
-                        "pm_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full scan product mass analyzer to {0}.
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_analyzer_to__0_ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_analyzer_to__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full-scan product resolution to {0}..
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_product_resolution_to__0__ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_product_resolution_to__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full-scan product resolving power to {0}..
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0_" +
-                        "_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Changing full-scan product resolving power to {0} at {1}..
-        /// </summary>
-        public static string CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0__at__1__ {
-            get {
-                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_product_resolving_power_to__0_" +
-                        "_at__1__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Error: Failed attempting to change the transiton full-scan settings..
         /// </summary>
         public static string CommandLine_SetFullScanSettings_Error__Failed_attempting_to_change_the_transiton_full_scan_settings_ {
@@ -7298,6 +7182,36 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_" +
                         "library_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Could not find background proteome file {0}.
+        /// </summary>
+        public static string CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_file__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_fi" +
+                        "le__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Failed attempting to change the peptide digestion settings..
+        /// </summary>
+        public static string CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_peptide_digestion_settings_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_pepti" +
+                        "de_digestion_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Failed attempting to change the peptide filter settings..
+        /// </summary>
+        public static string CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_peptide_filter_settings_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_pepti" +
+                        "de_filter_settings_", resourceCulture);
             }
         }
         
@@ -13212,7 +13126,18 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The chosen folder does not appear to contain an Agilent QQQ method template. The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd..
+        ///   Looks up a localized string similar to The chosen folder does not appear to contain an Agilent MassHunter 12 method template. The folder is expected to have a .m extension..
+        /// </summary>
+        public static string ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_cont" +
+                        "ain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__" +
+                        "m_extension_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Agilent 6400 series instrument type methods are expected to have a .m extension, and contain the file qqqacqmethod.xsd. If this is an Agilent TQ method, please choose &quot;Agilent MassHunter 12 or higher&quot; as your instrument type..
         /// </summary>
         public static string ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd {
             get {
@@ -13584,6 +13509,16 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_a_Bruker_TOF_m" +
                         "ethod_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_" +
                         "file_submethods_xml_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The folder {0} does not appear to contain an Agilent MassHunter 12 method template. The folder is expected to have a .m extension..
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_Mas" +
+                        "sHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_", resourceCulture);
             }
         }
         

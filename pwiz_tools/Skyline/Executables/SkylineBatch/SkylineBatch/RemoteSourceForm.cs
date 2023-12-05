@@ -142,7 +142,7 @@ namespace SkylineBatch
             PanoramaServer server;
             if (textUserName.Text != "" && textPassword.Text != "")
             {
-                server = new PanoramaServer(new Uri(textServerName.Text), textUserName.Text,textPassword.Text);
+                server = new PanoramaServer(new Uri(textServerName.Text), textUserName.Text, textPassword.Text);
 
             }
             else

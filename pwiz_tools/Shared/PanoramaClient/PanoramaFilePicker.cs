@@ -659,6 +659,7 @@ namespace pwiz.PanoramaClient
         }
 
         #region Test Support
+
         public PanoramaFilePicker(Uri serverUri, string user, string pass,
             JToken folderJson, JToken fileJson, JToken sizeJson)
         {
@@ -670,7 +671,10 @@ namespace pwiz.PanoramaClient
 
             TestFileJson = fileJson;
             TestSizeJson = sizeJson;
+
             var server = new PanoramaServer(serverUri, user, pass);
+            _servers = new List<PanoramaServer> { server };
+
             FolderBrowser = new TestPanoramaFolderBrowser(server, folderJson);
 
             InitializeDialog();
