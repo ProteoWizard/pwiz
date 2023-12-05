@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using pwiz.Common.GraphicalUserInterface;
+using pwiz.Common.GUI;
 using SharedBatch.Properties;
 
 namespace SharedBatch

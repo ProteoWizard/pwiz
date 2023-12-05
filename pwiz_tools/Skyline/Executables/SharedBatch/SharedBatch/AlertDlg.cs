@@ -19,7 +19,7 @@
 
 using System;
 using System.Windows.Forms;
-using pwiz.Common.GraphicalUserInterface;
+using pwiz.Common.GUI;
 
 
 namespace SharedBatch
