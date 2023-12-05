@@ -106,7 +106,15 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override string Title
         {
-            get { return GetTitle(LibraryName, PeptideDocNode, TransitionGroupNode, SpectrumInfo.LabelType); }
+            get
+            {
+                var title = GetTitle(LibraryName, PeptideDocNode, TransitionGroupNode, SpectrumInfo.LabelType);
+                if (PeaksCount == 0)
+                {
+                    title += Resources.SpectrumGraphItem_library_entry_provides_only_precursor_values;
+                }
+                return title;
+            }
         }
     }
     

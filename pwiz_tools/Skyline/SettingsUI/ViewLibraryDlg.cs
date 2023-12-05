@@ -2609,12 +2609,15 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         return string.Format(Resources.ViewLibSpectrumGraphItem_Title__0__1_, libraryNamePrefix, _key.PrecursorMz.GetValueOrDefault());
                     }
-                    if (_key.IsSmallMoleculeKey)
+                    var title = _key.IsSmallMoleculeKey ?
+                        string.Format(@"{0}{1}{2}", libraryNamePrefix, TransitionGroup.Peptide.CustomMolecule.DisplayName, TransitionGroup.PrecursorAdduct) :
+                        string.Format(Resources.ViewLibSpectrumGraphItem_Title__0__1__Charge__2__, libraryNamePrefix, TransitionGroup.Peptide.Target, TransitionGroup.PrecursorAdduct);
+                    if (this.PeaksCount == 0)
                     {
-                        return string.Format(@"{0}{1}{2}", libraryNamePrefix, TransitionGroup.Peptide.CustomMolecule.DisplayName, TransitionGroup.PrecursorAdduct);
+                        title += Resources.SpectrumGraphItem_library_entry_provides_only_precursor_values;
                     }
-                    return string.Format(Resources.ViewLibSpectrumGraphItem_Title__0__1__Charge__2__, libraryNamePrefix, TransitionGroup.Peptide.Target, TransitionGroup.PrecursorAdduct);
-                }
+                    return title;
+                }   
             }
         }
 

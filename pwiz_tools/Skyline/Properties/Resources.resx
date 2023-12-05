@@ -13911,4 +13911,10 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_file__0_" xml:space="preserve">
     <value>Error: Could not find background proteome file {0}</value>
   </data>
+  <data name="SpectrumGraphItem_library_entry_provides_only_precursor_values" xml:space="preserve">
+    <value>
+
+This library entry only provides precursor
+information, there are no MS2 peaks to show</value>
+  </data>
 </root>

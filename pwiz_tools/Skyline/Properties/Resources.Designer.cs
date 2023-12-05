@@ -32494,6 +32494,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 
+        ///
+        ///
+        ///This library entry only
+        ///provides precursor information,
+        ///there are no MS2 peaks to show.
+        /// </summary>
+        public static string SpectrumGraphItem_library_entry_provides_only_precursor_values {
+            get {
+                return ResourceManager.GetString("SpectrumGraphItem_library_entry_provides_only_precursor_values", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}{1}, Charge {2}.
         /// </summary>
         public static string SpectrumGraphItem_Title__0__1__Charge__2__ {
