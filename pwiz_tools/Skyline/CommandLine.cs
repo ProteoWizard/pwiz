@@ -590,7 +590,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_ImportPeakBoundaries_Error__Failed_importing_peak_boundaries_);
-                _out.WriteLine(x);
+                _out.WriteException(x);
                 return false;
             }
         }
@@ -640,7 +640,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    _out.WriteLine(x);
+                    _out.WriteException(x);
                 }
                 return false;
             }
@@ -674,7 +674,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    _out.WriteLine(x);
+                    _out.WriteException(x);
                 }
                 return false;
             }
@@ -992,7 +992,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transition_prediction_settings_);
-                _out.WriteLine(x);
+                _out.WriteException(x);
                 return false;
             }
         }
@@ -1018,7 +1018,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_library_settings_);
-                _out.WriteLine(x);
+                _out.WriteException(x);
                 return false;
             }
         }
@@ -1050,7 +1050,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_SetInstrumentSettings_Error__Failed_attempting_to_change_the_transition_instrument_settings_);
-                _out.WriteLine(x);
+                _out.WriteException(x);
                 return false;
             }
         }
@@ -1082,7 +1082,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transition_filter_settings_);
-                _out.WriteLine(x);
+                _out.WriteException(x);
                 return false;
             }
         }
@@ -1174,7 +1174,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Error__Failed_attempting_to_change_the_transiton_full_scan_settings_);
-                _out.WriteLine(x);
+                _out.WriteException(x);
                 return false;
             }
         }
@@ -1228,7 +1228,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_peptide_digestion_settings_);
-                _out.WriteLine(x);
+                _out.WriteException(x);
                 return false;
             }
         }
@@ -1273,7 +1273,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_peptide_filter_settings_);
-                _out.WriteLine(x);
+                _out.WriteException(x);
                 return false;
             }
         }
@@ -1307,7 +1307,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_SetImsSettings_Error__Failed_attempting_to_change_the_ion_mobility_settings_);
-                _out.WriteLine(x);
+                _out.WriteException(x);
                 return false;
             }
         }
@@ -2136,7 +2136,7 @@ namespace pwiz.Skyline
             catch (Exception e)
             {
                 _out.WriteLine(Resources.CommandLine_ImportResultsInDir_Error__Could_not_get_last_write_time_for_file__0__, replicateFile);
-                _out.WriteLine(e);
+                _out.WriteException(e);
                 return false;
             }
 
@@ -2251,7 +2251,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_AssociateProteins_Failed_to_associate_proteins);
-                _out.WriteLine(x);
+                _out.WriteException(x);
                 return false;
             }
         }
@@ -2369,7 +2369,7 @@ namespace pwiz.Skyline
                 {
                     _out.WriteLine(
                         Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_);
-                    _out.WriteLine(x);
+                    _out.WriteException(x);
                     return false;
                 }
 
@@ -2675,7 +2675,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_CreateScoringModel_Error__Failed_to_create_scoring_model_);
-                _out.WriteLine(x);
+                _out.WriteException(x);
                 return null;
             }
         }
@@ -2741,7 +2741,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_Reintegrate_Error__Failed_to_reintegrate_peaks_successfully_);
-                _out.WriteLine(x);
+                _out.WriteException(x);
                 return false;
             }
         }
@@ -3067,7 +3067,7 @@ namespace pwiz.Skyline
             catch (Exception e)
             {
                 _out.WriteLine(Resources.CommandLine_SaveFile_Error__The_file_could_not_be_saved_to__0____Check_that_the_directory_exists_and_is_not_read_only_, saveFile);
-                _out.WriteLine(e);
+                _out.WriteException(e);
                 return false;
             }
             _out.WriteLine(Resources.CommandLine_SaveFile_File__0__saved_, Path.GetFileName(saveFile));
@@ -3676,7 +3676,7 @@ namespace pwiz.Skyline
                 catch (Exception e)
                 {
                     _out.WriteLine(Resources.CommandLine_ImportSkyr_, path);
-                    _out.WriteLine(e);
+                    _out.WriteException(e);
                     return false;
                 }
                 if (imported)
@@ -4336,7 +4336,7 @@ namespace pwiz.Skyline
         {
             WriteLine(message, ExceptionString(x));
         }
-        public void WriteLine(Exception x)
+        public void WriteException(Exception x)
         {
             WriteLine(ExceptionString(x));
         }

@@ -23,14 +23,14 @@ namespace pwiz.SkylineTestData
                 var consoleBuffer = new StringBuilder();
                 var writer = new CommandStatusWriter(new StringWriter(consoleBuffer));
                 writer.IsVerboseExceptions = true;
-                writer.WriteLine(x);
+                writer.WriteException(x);
                 var consoleOutput = consoleBuffer.ToString();
                 // The entire exception should be reported if verbose exceptions is true
                 Assert.IsTrue(consoleOutput.Contains(x.ToString()));
                 consoleBuffer = new StringBuilder();
                 writer = new CommandStatusWriter(new StringWriter(consoleBuffer));
                 writer.IsVerboseExceptions = false;
-                writer.WriteLine(x);
+                writer.WriteException(x);
                 consoleOutput = consoleBuffer.ToString();
                 // Only the exception message should be reported if verbose exceptions is false
                 Assert.IsTrue(consoleOutput.Contains(x.Message));
