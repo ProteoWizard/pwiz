@@ -35,27 +35,34 @@ namespace pwiz.PanoramaClient
         public string SelectedPath { get; private set; }
         public bool IsLoaded { get; private set; }
 
+        private readonly List<PanoramaServer> _servers;
+        private readonly bool _showWebDav;
         private string _treeState;
 
-        public PanoramaDirectoryPicker(List<PanoramaServer> servers, string state, bool showWebDavFolders = false, string selectedPath = null)
+        public PanoramaDirectoryPicker(List<PanoramaServer> servers, string stateString, bool showWebDavFolders = false, string selectedPath = null)
         {
             InitializeComponent();
 
-            if (showWebDavFolders)
-            {
-                FolderBrowser = new WebDavBrowser(servers.FirstOrDefault(), state, selectedPath);
-            }
-            else
-            {
-                FolderBrowser = new LKContainerBrowser(servers, state, false, selectedPath);
-            }
-            SelectedPath = selectedPath;
+            _servers = servers;
+            _treeState = stateString;
+            _showWebDav = showWebDavFolders;
 
-            InitializeDialog();
+            SelectedPath = selectedPath;
         }
 
-        private void InitializeDialog()
+        public void InitializeDialog()
         {
+            if (FolderBrowser == null)
+            {
+                if (_showWebDav)
+                {
+                    FolderBrowser = new WebDavBrowser(_servers.FirstOrDefault(), _treeState, SelectedPath);
+                }
+                else
+                {
+                    FolderBrowser = new LKContainerBrowser(_servers, _treeState, false, SelectedPath);
+                }
+            }
             FolderBrowser.Dock = DockStyle.Fill;
             folderPanel.Controls.Add(FolderBrowser);
             FolderBrowser.NodeClick += DirectoryPicker_MouseClick;
@@ -71,6 +78,8 @@ namespace pwiz.PanoramaClient
                 back.Enabled = FolderBrowser.BackEnabled;
                 forward.Enabled = FolderBrowser.ForwardEnabled;
             }
+
+            IsLoaded = true;
         }
 
         private void Open_Click(object sender, EventArgs e)
@@ -162,6 +171,8 @@ namespace pwiz.PanoramaClient
             InitializeComponent();
 
             var server = new PanoramaServer(serverUri, user, pass);
+            _servers = new List<PanoramaServer> { server };
+
             FolderBrowser = new TestPanoramaFolderBrowser(server, folderJson);
 
             InitializeDialog();

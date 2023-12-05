@@ -26,6 +26,7 @@
 using boost::spirit::karma::real_policies;
 using boost::spirit::karma::real_generator;
 using boost::spirit::karma::int_generator;
+using boost::spirit::karma::uint_generator;
 using boost::spirit::karma::generate;
 
 template <typename T>
@@ -130,6 +131,15 @@ std::string pwiz::util::toString(float value, RealConvertPolicy policyFlags)
 std::string pwiz::util::toString(int value)
 {
     static const int_generator<int> intgen = int_generator<int>();
+    char buffer[256];
+    char* p = buffer;
+    generate(p, intgen, value);
+    return std::string(&buffer[0], p);
+}
+
+std::string pwiz::util::toString(size_t value)
+{
+    static const uint_generator<size_t> intgen = uint_generator<size_t>();
     char buffer[256];
     char* p = buffer;
     generate(p, intgen, value);

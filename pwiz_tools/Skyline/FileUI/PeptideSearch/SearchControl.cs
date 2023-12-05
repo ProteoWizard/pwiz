@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
@@ -108,7 +109,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             if (!status.WarningMessage.IsNullOrEmpty() && status.WarningMessage != lastMessage)
             {
-                lastMessage = status.WarningMessage;
+                lastMessage = message = status.WarningMessage;
                 progressBar.CustomText = status.WarningMessage;
             }
 
@@ -125,7 +126,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 progressBar.Style = ProgressBarStyle.Continuous;
             }
 
-            if (_progressTextItems.Count > 0 && status.Message == _progressTextItems[_progressTextItems.Count - 1].Message)
+            // look at the last 10 lines for the same message and if found do not relog the same message
+            if (_progressTextItems.Skip(Math.Max(0, _progressTextItems.Count - 10)).Any(entry => entry.Message == message))
                 return;
 
             var newEntry = new ProgressEntry(DateTime.Now, message);

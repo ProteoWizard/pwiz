@@ -144,6 +144,13 @@ namespace pwiz.Skyline.EditUI
                 if (_hasExistingProteinAssociations)
                     lblDescription.Text += @" " + Resources.AssociateProteinsDlg_OnShown_Existing_protein_associations_will_be_discarded_;
             }
+            else
+            {
+                numMinPeptides.Visible = lblMinPeptides.Visible = false;
+                int minPeptidesHeight = numMinPeptides.Height + lblMinPeptides.Height;
+                gbParsimonyOptions.Height -= minPeptidesHeight;
+                Height -= minPeptidesHeight;
+            }
 
             if (_document.PeptideCount == 0)
             {
@@ -378,8 +385,7 @@ namespace pwiz.Skyline.EditUI
 
         private void tbxFastaTargets_TextChanged(object sender, EventArgs e)
         {
-            if (File.Exists(tbxFastaTargets.Text))
-                UseFastaFile(tbxFastaTargets.Text);
+            UseFastaFile(tbxFastaTargets.Text);
         }
 
         private void comboBackgroundProteome_SelectedIndexChanged(object sender, EventArgs e)
@@ -549,8 +555,8 @@ namespace pwiz.Skyline.EditUI
             var culture = LocalizationHelper.CurrentCulture;
             Func<int, string> resultToString = count => count < separatorThreshold ? count.ToString(culture) : count.ToString(@"N0", culture);
 
-            return string.Format(_statusBarResultFormat, resultToString(FinalResults.FinalProteinCount),
-                resultToString(FinalResults.FinalPeptideCount),
+            return string.Format(_statusBarResultFormat, resultToString(DocumentFinal.PeptideGroupCount),
+                resultToString(DocumentFinal.PeptideCount),
                 resultToString(DocumentFinal.PeptideTransitionGroupCount),
                 resultToString(DocumentFinal.PeptideTransitionCount));
         }
@@ -689,10 +695,11 @@ namespace pwiz.Skyline.EditUI
             NewTargetsFinalSync(out proteins, out peptides, out precursors, out transitions, out _);
         }
 
-        public void NewTargetsFinalSync(out int proteins, out int peptides, out int precursors, out int transitions, out int? emptyProteins)
+        public void NewTargetsFinalSync(out int proteins, out int peptides, out int precursors, out int transitions, out int unmappedOrRemoved)
         {
             var doc = DocumentFinal;
-            emptyProteins = 0;
+            var unmappedPeptideGroup = doc.PeptideGroups.FirstOrDefault(pg => pg.Name == Resources.ProteinAssociation_CreateDocTree_Unmapped_Peptides);
+            unmappedOrRemoved = _proteinAssociation.PeptidesRemovedByFiltersCount + (unmappedPeptideGroup?.PeptideCount ?? 0);
             proteins = doc.PeptideGroupCount;
             peptides = doc.PeptideCount;
             precursors = doc.PeptideTransitionGroupCount;

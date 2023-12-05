@@ -137,6 +137,12 @@ namespace pwiz.Skyline.Model
             return node;
         }
 
+        public PeptideDocNode RemoveFastaSequence()
+        {
+            var newPeptide = new Peptide(Peptide.Target);
+            return ChangePeptide(newPeptide, TransitionGroups.Select(tg => tg.ChangePeptide(newPeptide)));
+        }
+
         [TrackChildren(ignoreName:true, defaultValues: typeof(DefaultValuesNull))]
         public CustomMolecule CustomMolecule { get { return Peptide.CustomMolecule; } }
 
@@ -931,7 +937,7 @@ namespace pwiz.Skyline.Model
                 IEqualityComparer<TransitionGroup> transitionGroupEqualityComparer = null;
                 if (!IsProteomic)
                 {
-                    transitionGroupEqualityComparer = new IdentityEqualityComparer<TransitionGroup>();
+                    transitionGroupEqualityComparer = ReferenceValue.EQUALITY_COMPARER;
                 }
 
                 ILookup<TransitionGroup, TransitionGroupDocNode> mapIdToChild =

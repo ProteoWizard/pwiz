@@ -92,7 +92,6 @@ namespace TestPerf
             public string IrtFilterText;
             public int? MinPeptidesPerProtein;
             public bool RemoveDuplicates;
-            public int[] TargetCounts;
             public int[] FinalTargetCounts;
             public string ScoringModelCoefficients;
             public PointF ChromatogramClickPoint;
@@ -124,17 +123,16 @@ namespace TestPerf
             {
                 KeepPrecursors = false,
                 ChromatogramClickPoint = new PointF(23.02F, 150.0F),
-                LibraryPeptideCount = 18125,
-                IrtSlope = 3.005,
-                IrtIntercept = -67.215,
+                LibraryPeptideCount = 20377,
+                IrtSlope = 3.017,
+                IrtIntercept = -67.652,
 
-                TargetCounts = new[] { 14, 213, 277, 1661 },
                 FinalTargetCounts = new[] { 11, 215, 279, 1673 },
-                ScoringModelCoefficients = "0.0967|-0.2729|5.0779|0.0591|-0.5293|0.8507|0.1077|-0.0567",
+                ScoringModelCoefficients = "-0.1511|-0.5825|5.5995|-0.5757|-0.4500|0.7592|0.4174|-0.0851",
                 MassErrorStats = new[]
                 {
-                    new[] {3.4, 3.7},
-                    new[] {3.2, 3.3},
+                    new[] {3.3, 3.7},
+                    new[] {3.2, 3.4},
                     new[] {3.5, 4.1},
                 },
             };
@@ -156,22 +154,21 @@ namespace TestPerf
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
                 ChromatogramClickPoint = new PointF(23.02F, 150.0F),
-                LibraryPeptideCount = 28370,
-                IrtSlope = 3.006,
-                IrtIntercept = -67.212,
+                LibraryPeptideCount = 33997,
+                IrtSlope = 3.023,
+                IrtIntercept = -67.902,
 
-                TargetCounts = new[] { 6945, 41874, 46365, 278190 },
-                FinalTargetCounts = new[] { 2642, 27840, 31188, 187128 },
-                ScoringModelCoefficients = "0.1951|-0.6248|4.0530|0.1456|-0.1801|0.5896|0.1466|-0.0445",
+                FinalTargetCounts = new[] { 2855, 29310, 32713, 196278 },
+                ScoringModelCoefficients = "0.1985|-0.6148|4.3467|-0.0062|-0.1611|0.5597|0.0893|-0.0411",
                 MassErrorStats = new[]
                 {
-                    new[] {2.7, 5.1},
-                    new[] {2.6, 4.7},
-                    new[] {3.5, 5.0},
-                    new[] {4.9, 4.7},
-                    new[] {4.0, 5.1},
-                    new[] {-0.1, 4.5},
-                    new[] {1.1, 4.8},
+                    new[] {2.6, 5.2},
+                    new[] {2.5, 4.8},
+                    new[] {3.4, 5.1},
+                    new[] {4.7, 4.8},
+                    new[] {3.9, 5.2},
+                    new[] {-0.2, 4.5},
+                    new[] {1.0, 4.9},
                 },
             };
 
@@ -213,18 +210,17 @@ namespace TestPerf
                 KeepPrecursors = false,
                 IrtFilterText = "standard",
                 ChromatogramClickPoint = new PointF(18.13f, 5.51e5f),
-                LibraryPeptideCount = 9698,
-                IrtSlope = 2.606,
-                IrtIntercept = -45.948,
+                LibraryPeptideCount = 10048,
+                IrtSlope = 2.605,
+                IrtIntercept = -45.890,
 
-                TargetCounts = new[] { 14, 173, 203, 1217 },
-                FinalTargetCounts = new[] { 11, 175, 205, 1229 },
-                ScoringModelCoefficients = "0.2010|-0.8474|1.6058|1.7597|-0.0760|0.7606|0.2393|-0.0863",
+                FinalTargetCounts = new[] { 11, 177, 209, 1253 },
+                ScoringModelCoefficients = "0.2358|-0.6932|3.1396|0.6093|-0.0724|0.7662|0.2178|-0.0990",
                 MassErrorStats = new[]
                 {
-                    new[] {1.9, 3.8},
-                    new[] {1.4, 3.7},
-                    new[] {2.3, 3.9},
+                    new[] {1.9, 3.9},
+                    new[] {1.5, 3.8},
+                    new[] {2.4, 3.9},
                 },
             };
 
@@ -247,20 +243,19 @@ namespace TestPerf
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
                 ChromatogramClickPoint = new PointF(18.13f, 5.51e5f),
-                LibraryPeptideCount = 14541,
-                IrtSlope = 2.599,
-                IrtIntercept = -45.630,
+                LibraryPeptideCount = 15770,
+                IrtSlope = 2.598,
+                IrtIntercept = -45.600,
 
-                TargetCounts = new[] { 4424, 25010, 27129, 162774 },
-                FinalTargetCounts = new[] { 1529, 15328, 16793, 100758 },
-                ScoringModelCoefficients = "0.2747|-0.8328|2.9651|1.2701|-0.0728|0.7011|0.0815|-0.0658",
+                FinalTargetCounts = new[] { 1642, 16242, 17798, 106788 },
+                ScoringModelCoefficients = "0.2335|-0.7919|2.8837|1.3237|-0.0724|0.7121|0.0970|-0.0746",
                 MassErrorStats = new[]
                 {
                     new[] {1.6, 4.6},
-                    new[] {1.2, 4.4},
+                    new[] {1.1, 4.4},
                     new[] {1.6, 4.8},
-                    new[] {1.8, 4.3},
-                    new[] {1.8, 4.8},
+                    new[] {1.8, 4.4},
+                    new[] {1.7, 4.8},
                     new[] {1.8, 4.4},
                     new[] {1.5, 4.8},
                 },
@@ -578,8 +573,16 @@ namespace TestPerf
             });
 
             PauseForScreenShot("Import Peptide Search - DDA search progress page", 14);
-            WaitForConditionUI(120 * 600000, () => searchSucceeded.HasValue, () => importPeptideSearchDlg.SearchControl.LogText);
-            RunUI(() => Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
+
+            try
+            {
+                WaitForConditionUI(120 * 600000, () => searchSucceeded.HasValue, () => importPeptideSearchDlg.SearchControl.LogText);
+                RunUI(() => Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
+            }
+            finally
+            {
+                File.WriteAllText("SearchControlLog.txt", importPeptideSearchDlg.SearchControl.LogText);
+            }
 
             var addIrtDlg = ShowDialog<AddIrtPeptidesDlg>(() => importPeptideSearchDlg.ClickNextButton(), 30 * 60000);//peptidesPerProteinDlg.OkDialog());
             RunUI(() =>
@@ -797,8 +800,6 @@ namespace TestPerf
             interestingParameters.Add(searchSettings.PrecursorTolerance.Value.ToString(CultureInfo.InvariantCulture));
             interestingParameters.Add(searchSettings.FragmentTolerance.Value.ToString(CultureInfo.InvariantCulture));
             interestingParameters.Add(analysisValues.LibraryPeptideCount.ToString());
-            for (int i = 0; i < 4; ++i)
-                interestingParameters.Add(analysisValues.TargetCounts[i].ToString());
             for (int i = 0; i < 4; ++i)
                 interestingParameters.Add(analysisValues.FinalTargetCounts[i].ToString());
             Console.WriteLine(string.Join("\t", interestingParameters));

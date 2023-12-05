@@ -1357,7 +1357,7 @@
     <value>200, 22</value>
   </data>
   <data name="openPanoramaMenuItem.Text" xml:space="preserve">
-    <value>Open From Panorama...</value>
+    <value>Open From Panora&amp;ma...</value>
   </data>
   <data name="openContainingFolderMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>197, 22</value>
@@ -1429,7 +1429,7 @@
     <value>194, 22</value>
   </data>
   <data name="encyclopeDiaSearchMenuItem.Text" xml:space="preserve">
-    <value>EncyclopeDIA Search...</value>
+    <value>&amp;EncyclopeDIA Search...</value>
   </data>
   <data name="toolStripSeparator52.Size" type="System.Drawing.Size, System.Drawing">
     <value>167, 6</value>
@@ -2128,7 +2128,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.2.1.341, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;cutContextMenuItem.Name" xml:space="preserve">
     <value>cutContextMenuItem</value>
@@ -3916,7 +3916,7 @@
     <value>SkylineWindow</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=22.2.1.341, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
 

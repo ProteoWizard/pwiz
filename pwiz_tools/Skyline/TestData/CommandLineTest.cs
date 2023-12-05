@@ -26,7 +26,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json.Linq;
 using pwiz.PanoramaClient;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -38,6 +37,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
@@ -67,6 +67,7 @@ namespace pwiz.SkylineTestData
 
         private const string ZIP_FILE = @"TestData\Results\FullScan.zip";
         private const string COMMAND_FILE = @"TestData\CommandLineTest.zip";
+        private const string PROTDB_FILE = @"TestFunctional\AssociateProteinsTest.zip";
 
         private new static string RunCommand(params string[] args)
         {
@@ -303,9 +304,15 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleNewDocumentTest()
         {
-            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
-            string fastaPath = TestFilesDir.GetTestPath("sample.fasta");
+            TestFilesDirs = new []
+            {
+                new TestFilesDir(TestContext, ZIP_FILE),
+                new TestFilesDir(TestContext, PROTDB_FILE)
+            };
+
+            string docPath = TestFilesDirs[0].GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            string fastaPath = TestFilesDirs[0].GetTestPath("sample.fasta");
+            string protdbPath = TestFilesDirs[1].GetTestPath("AssociateProteinMatches.protdb");
 
             // arguments that would normally be quoted on the command-line shouldn't be quoted here
             var settings = new[]
@@ -327,6 +334,15 @@ namespace pwiz.SkylineTestData
                 "--tran-product-end-ion=" + TransitionFilter.EndFragmentFinder.LAST_ION_MINUS_1.Label,
                 "--tran-product-clear-special-ions",
                 "--tran-use-dia-window-exclusion",
+                "--pep-digest-enzyme=Chymotrypsin",
+                "--pep-max-missed-cleavages=9",
+                "--pep-unique-by=Protein",
+                "--pep-min-length=4",
+                "--pep-max-length=42",
+                "--pep-exclude-nterminal-aas=2",
+                "--pep-exclude-potential-ragged-ends",
+                "--background-proteome-file=" + protdbPath,
+                "--save-settings", // save the protdb to Settings.Default so we can test --background-proteome-name later
                 "--library-product-ions=6",
                 "--library-min-product-ions=6",
                 "--library-match-tolerance=" + 0.05 + "mz",
@@ -359,7 +375,17 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(TransitionFilter.StartFragmentFinder.ION_1.Label, doc.Settings.TransitionSettings.Filter.StartFragmentFinderLabel.Label);
             Assert.AreEqual(TransitionFilter.EndFragmentFinder.LAST_ION_MINUS_1.Label, doc.Settings.TransitionSettings.Filter.EndFragmentFinderLabel.Label);
             Assert.AreEqual(0, doc.Settings.TransitionSettings.Filter.MeasuredIons.Count);
+            Assert.AreEqual(9, doc.Settings.PeptideSettings.DigestSettings.MaxMissedCleavages);
+            Assert.AreEqual("Chymotrypsin", doc.Settings.PeptideSettings.Enzyme.Name);
+            Assert.AreEqual(PeptideFilter.PeptideUniquenessConstraint.protein, doc.Settings.PeptideSettings.Filter.PeptideUniqueness);
+            Assert.AreEqual(true, doc.Settings.HasBackgroundProteome);
+            Assert.AreEqual(protdbPath, doc.Settings.PeptideSettings.BackgroundProteome.DatabasePath);
+            Assert.AreEqual(Path.GetFileNameWithoutExtension(protdbPath), doc.Settings.PeptideSettings.BackgroundProteome.Name);
             Assert.AreEqual(true, doc.Settings.TransitionSettings.Filter.ExclusionUseDIAWindow);
+            Assert.AreEqual(4, doc.Settings.PeptideSettings.Filter.MinPeptideLength);
+            Assert.AreEqual(42, doc.Settings.PeptideSettings.Filter.MaxPeptideLength);
+            Assert.AreEqual(2, doc.Settings.PeptideSettings.Filter.ExcludeNTermAAs);
+            Assert.AreEqual(true, doc.Settings.PeptideSettings.DigestSettings.ExcludeRaggedEnds);
             Assert.AreEqual(6, doc.Settings.TransitionSettings.Libraries.IonCount);
             Assert.AreEqual(6, doc.Settings.TransitionSettings.Libraries.MinIonCount);
             Assert.AreEqual(new MzTolerance(0.05), doc.Settings.TransitionSettings.Libraries.IonMatchMzTolerance);
@@ -440,45 +466,128 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(FullScanMassAnalyzerType.centroided, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
             Assert.AreEqual(5, doc.Settings.TransitionSettings.FullScan.PrecursorRes);
 
-            File.Delete(docPath);
-
-            // test parameter validation: analyzer specified with isotopes=none
+            // test case insensitive enum parsing
             settings = new[]
             {
                 "--new=" + docPath,
+                "--overwrite",
+                "--pep-digest-enzyme=chymotrypsin",
+                "--pep-unique-by=proTEiN",
+                "--library-pick-product-ions=FilTER"
+            };
+
+            RunCommand(settings);
+            doc = ResultsUtil.DeserializeDocument(docPath);
+            Assert.AreEqual("Chymotrypsin", doc.Settings.PeptideSettings.Enzyme.Name);
+            Assert.AreEqual(PeptideFilter.PeptideUniquenessConstraint.protein, doc.Settings.PeptideSettings.Filter.PeptideUniqueness);
+            Assert.AreEqual(TransitionLibraryPick.filter, doc.Settings.TransitionSettings.Libraries.Pick);
+
+            // test using existing background proteome name
+            settings = new[]
+            {
+                "--new=" + docPath,
+                "--overwrite",
+                "--background-proteome-name=" + Path.GetFileNameWithoutExtension(protdbPath)
+            };
+
+            RunCommand(settings);
+            doc = ResultsUtil.DeserializeDocument(docPath);
+            Assert.AreEqual(true, doc.Settings.HasBackgroundProteome);
+            Assert.AreEqual(protdbPath, doc.Settings.PeptideSettings.BackgroundProteome.DatabasePath);
+            Assert.AreEqual(Path.GetFileNameWithoutExtension(protdbPath), doc.Settings.PeptideSettings.BackgroundProteome.Name);
+
+            // test new background proteome with explicit name
+            settings = new[]
+            {
+                "--new=" + docPath,
+                "--overwrite",
+                "--background-proteome-file=" + protdbPath,
+                "--background-proteome-name=protdb"
+            };
+
+            RunCommand(settings);
+            doc = ResultsUtil.DeserializeDocument(docPath);
+            Assert.AreEqual(true, doc.Settings.HasBackgroundProteome);
+            Assert.AreEqual(protdbPath, doc.Settings.PeptideSettings.BackgroundProteome.DatabasePath);
+            Assert.AreEqual("protdb", doc.Settings.PeptideSettings.BackgroundProteome.Name);
+
+            File.Delete(docPath);
+
+            // run command that should cause an error and validate the output contains the expected output
+            void RunCommandAndValidateError(string[] extraSettings, string expectedOutput)
+            {
+                output = RunCommand(new[] { "--new=" + docPath }.Concat(extraSettings).ToArray());
+                StringAssert.Contains(output, expectedOutput);
+            }
+
+            // parameter validation: analyzer specified with isotopes=none
+            settings = new[]
+            {
                 "--full-scan-precursor-isotopes=None",
                 "--full-scan-precursor-analyzer=centroided",
             };
 
-            output = RunCommand(settings);
-            StringAssert.Contains(output, string.Format(
+            RunCommandAndValidateError(settings, string.Format(
                 Resources.CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_,
                 CommandArgs.ARG_FULL_SCAN_PRECURSOR_ANALYZER.ArgumentText,
                 CommandArgs.ARG_FULL_SCAN_PRECURSOR_RES.ArgumentText));
 
-            // test parameter validation: DDA method with isolation scheme
+            // parameter validation: DDA method with isolation scheme
             settings = new[]
             {
-                "--new=" + docPath,
                 "--full-scan-acquisition-method=DDA",
                 "--full-scan-isolation-scheme=All Ions",
             };
 
-            output = RunCommand(settings);
-            StringAssert.Contains(output, string.Format(
+            RunCommandAndValidateError(settings, string.Format(
                 Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in__0___mode,
                 FullScanAcquisitionMethod.DDA.Label));
 
-            // test parameter validation: DIA method without isolation scheme
-            settings = new[]
-            {
-                "--new=" + docPath,
-                "--full-scan-acquisition-method=DIA",
-            };
+            // parameter validation: DIA method without isolation scheme
+            settings = new[] { "--full-scan-acquisition-method=DIA" };
 
-            output = RunCommand(settings);
-            StringAssert.Contains(output,
-                Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_required_in_DIA_mode);
+            RunCommandAndValidateError(settings, Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_required_in_DIA_mode);
+
+            // parameter validation: int min
+            settings = new[] { "--pep-min-length=" + (PeptideFilter.MIN_MIN_LENGTH - 1) };
+
+            RunCommandAndValidateError(settings, string.Format(
+                Resources.ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__,
+                PeptideFilter.MIN_MIN_LENGTH - 1, CommandArgs.ARG_PEPTIDE_MIN_LENGTH.ArgumentText, PeptideFilter.MIN_MIN_LENGTH, PeptideFilter.MAX_MIN_LENGTH));
+
+            // parameter validation: int max
+            settings = new[] { "--pep-max-length=" + (PeptideFilter.MAX_MAX_LENGTH + 1) };
+
+            RunCommandAndValidateError(settings, string.Format(
+                Resources.ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__,
+                PeptideFilter.MAX_MAX_LENGTH + 1, CommandArgs.ARG_PEPTIDE_MAX_LENGTH.ArgumentText, PeptideFilter.MIN_MAX_LENGTH, PeptideFilter.MAX_MAX_LENGTH));
+
+            // parameter validation: bad bool
+            settings = new[] { "--pep-exclude-potential-ragged-ends=maybe" };
+
+            RunCommandAndValidateError(settings, string.Format(
+                Resources.ValueUnexpectedException_ValueUnexpectedException_The_argument__0__should_not_have_a_value_specified,
+                CommandArgs.ARG_PEPTIDE_EXCLUDE_POTENTIAL_RAGGED_ENDS.ArgumentText));
+
+            // parameter validation: bad enzyme
+            settings = new[] { "--pep-digest-enzyme=nope" };
+
+            RunCommandAndValidateError(settings, string.Format(
+                Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                "nope", CommandArgs.ARG_PEPTIDE_ENZYME_NAME.ArgumentText, string.Join(", ", Settings.Default.EnzymeList.Select(e => e.Name))));
+
+            // parameter validation: unknown background proteome name
+            settings = new[] { "--background-proteome-name=alien" };
+
+            RunCommandAndValidateError(settings, string.Format(
+                Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_,
+                "alien", CommandArgs.ARG_BGPROTEOME_NAME.ArgumentText, string.Join(", ", Settings.Default.BackgroundProteomeList.Select(e => e.Name))));
+
+            // parameter validation: bad background proteome path
+            settings = new[] { "--background-proteome-file=missing" };
+
+            RunCommandAndValidateError(settings, string.Format(
+                Resources.CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_file__0_, "missing"));
         }
 
         [TestMethod]
@@ -630,6 +739,201 @@ namespace pwiz.SkylineTestData
 
             string chromLines = File.ReadAllText(outPath);
             AssertEx.NoDiff(chromLines, programmaticReport);
+        }
+
+        [TestMethod]
+        public void ConsoleExportSpecLibTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleExportSpecLibTest.zip");
+            // A document with no results. Attempting to export a spectral library should
+            // provoke an error
+            var docWithNoResultsPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            // A document with results that should be able to export a spectral library
+            var docWithResults = TestFilesDir.GetTestPath("msstatstest.sky");
+            var exportPath = TestFilesDir.GetTestPath("out_lib.blib"); // filepath to export library to
+            var newDocumentPath = TestFilesDir.GetTestPath("new.sky");
+            // Test error (no peptide precursors)
+            var output = RunCommand("--new=" + newDocumentPath, // Create a new document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--exp-speclib-file=" + exportPath // Export a spectral library
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_at_least_one_precursor_to_export_a_spectral_library_), output);
+            // Test error (no results)
+            output = RunCommand("--in=" + docWithNoResultsPath, // Load a document with no results
+                "--exp-speclib-file=" + exportPath // Export a spectral library
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Error__The_document_must_contain_results_to_export_a_spectral_library_), output);
+            // Test export
+            output = RunCommand("--in=" + docWithResults, // Load a document with results
+                "--exp-speclib-file=" + exportPath // Export a spectral library
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportSpecLib_Spectral_library_file__0__exported_successfully_, exportPath), output);
+            Assert.IsTrue(File.Exists(exportPath)); // Check that the exported file exists
+            var refSpectra = SpectralLibraryTestUtil.GetRefSpectraFromPath(exportPath);
+            CheckRefSpectraAll(refSpectra); // Check the spectra in the exported file
+
+        }
+
+        [TestMethod]
+        public void ConsoleExportMProphetTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleExportMProphetTest.zip");
+            // Path to export mProphet file to
+            var exportPath = TestFilesDir.GetTestPath("out.csv");
+            // A document with no results. Attempting to export mProphet features should
+            // provoke an error
+            var docWithNoResultsPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            // A document with results that should be able to export mProphet features
+            var docWithResults = TestFilesDir.GetTestPath("MProphetGold-trained-reduced.sky");
+            // The expected .csv export
+            var expectedExport = TestFilesDir.GetTestPathLocale("MProphet_expected.csv");
+            // The expected export with targets only and best scoring peaks only options
+            var expectedExportTargetsBestPeaks = TestFilesDir.GetTestPathLocale("MProphet_expected_targets_only_best_peaks_only.csv");
+            // The expected export when excluding the "Intensity" and "Standard signal to noise" features.
+            var expectedExportExcludeFeatures = TestFilesDir.GetTestPathLocale("MProphet_expected_exclude_features.csv");
+            var newDocumentPath = TestFilesDir.GetTestPath("new.sky");
+            // A string that is not a feature name or a mProphet file header
+            const string invalidFeatureName = "-la";
+
+            // Test error (no targets)
+            var output = RunCommand("--new=" + newDocumentPath, // Create a new document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--exp-mprophet-features=" + exportPath // Export mProphet features
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features_), output);
+            // Test error (no results)
+            output = RunCommand("--in=" + docWithNoResultsPath, // Load a document with no results
+                "--exp-mprophet-features=" + exportPath // Export mProphet features
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features_), output);
+            // Test error (invalid feature name)
+            output = RunCommand("--in=" + docWithResults, // Load a document with no results
+                "--exp-mprophet-features=" + exportPath, // Export mProphet features
+                "--exp-mprophet-exclude-feature=" + invalidFeatureName
+            );
+            CheckRunCommandOutputContains(string.Format(Resources
+                .CommandArgs_ParseArgsInternal_Error__Attempting_to_exclude_an_unknown_feature_name___0____Try_one_of_the_following_, invalidFeatureName), output);
+            // Test export
+            output = RunCommand("--in=" + docWithResults, // Load a document with results
+                "--exp-mprophet-features=" + exportPath // Export mProphet features
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
+            AssertEx.FileEquals(expectedExport, exportPath);
+            // Test export with target peptides only and best scoring peaks only
+            output = RunCommand("--in=" + docWithResults, // Load a document with results
+                "--exp-mprophet-features=" + exportPath, // Export mProphet features
+                "--exp-mprophet-targets-only", // Export should not include decoys peptides
+                "--exp-mprophet-best-peaks-only" // Export should contain best scoring peaks
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
+            AssertEx.FileEquals(expectedExportTargetsBestPeaks, exportPath);
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
+            // Test export with some scores excluded
+            output = RunCommand("--in=" + docWithResults, // Load a document with results
+                "--exp-mprophet-features=" + exportPath, // Export mProphet features
+                "--exp-mprophet-exclude-feature=" + "Intensity", // Export should not contain an "Intensity" column
+                "--exp-mprophet-exclude-feature=" + "Standard signal to noise" // Export should not contain a "Standard signal to noise" column
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
+            AssertEx.FileEquals(expectedExportExcludeFeatures, exportPath);
+        }
+
+        [TestMethod]
+        public void ConsoleExportAnnotationsTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleExportAnnotationsTest.zip");
+            var exportPath = TestFilesDir.GetTestPath("out.csv");
+            var documentWithAnnotations = TestFilesDir.GetTestPath("Study9_1_Site56C_Final_CURVE_Annotated_reduced.sky");
+            var expectedIncludeProperties = TestFilesDir.GetTestPath("expected_annotations_include_properties.csv");
+            var expectedIncludeObjects = TestFilesDir.GetTestPath("expected_annotations_include_objects.csv");
+            var expectedAnnotationsNoBlankRows = TestFilesDir.GetTestPath("expected_annotations_no_blank_rows.csv");
+            var newDocumentPath = TestFilesDir.GetTestPath("new.sky");
+            const string invalidName = "-la";
+
+            // Test error (invalid include-object name)
+            var output = RunCommand("--new=" + newDocumentPath, // Create a document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--exp-annotations=" + exportPath, // Export annotations
+                "--exp-annotations-include-object=" + invalidName // Test specifying an invalid object name
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                invalidName,
+                "--exp-annotations-include-object", string.Join(", ", CommandArgs.GetAllHandlerNames())), output);
+            // Test error (no annotations and not including properties)
+            output = RunCommand("--new=" + newDocumentPath, // Create a document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--exp-annotations=" + exportPath // Export annotations
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Error__The_document_must_contain_annotations_in_order_to_export_annotations_), output);
+            // Test export with some object types included (everything else excluded) 
+            output = RunCommand("--in=" + documentWithAnnotations, // Load a document that already contains annotations
+                "--exp-annotations=" + exportPath, // Export annotations
+                "--exp-annotations-include-object=" + "PrecursorResult", // Include "PrecursorResult" object type
+                "--exp-annotations-include-object=" + "TransitionResult" // Include "TransitionResult" object type
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, exportPath), output);
+            AssertEx.FileEquals(expectedIncludeObjects, exportPath);
+            // Test export with properties included
+            output = RunCommand("--in=" + documentWithAnnotations, // Load a document that already contains annotations
+                "--exp-annotations=" + exportPath, // Export annotations
+                "--exp-annotations-include-properties" // Include all properties
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, exportPath), output);
+            AssertEx.FileEquals(expectedIncludeProperties, exportPath);
+            // Test export with blank rows excluded
+            output = RunCommand("--in=" + documentWithAnnotations, // Load a document that already contains annotations
+                "--exp-annotations=" + exportPath, // Export annotations
+                "--exp-annotations-remove-blank-rows" // Remove blank rows
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, exportPath), output);
+            AssertEx.FileEquals(expectedAnnotationsNoBlankRows, exportPath);
+        }
+
+        [TestMethod]
+        public void ConsoleAnnotationsExportToImportTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleAnnotationsExportToImportTest.zip");
+            var documentWithAnnotations = TestFilesDir.GetTestPath("Study 7ii (site 52)_heavily_annotated.sky");
+            var documentWithoutAnnotations = TestFilesDir.GetTestPath("Study 7ii (site 52)_no_annotations.sky");
+            var documentWithImportedAnnotations = TestFilesDir.GetTestPath("Study 7ii (site 52)_imported_annotations.sky");
+            var annotationsPath = TestFilesDir.GetTestPath("original_annotations.csv");
+            var newAnnotationsPath = TestFilesDir.GetTestPath("annotations_from_new_document.csv");
+            // Load a document that already contains annotations and export annotations
+            RunCommand(
+                "--in=" + documentWithAnnotations, 
+                "--exp-annotations=" + annotationsPath 
+            );
+            // Load the same document with empty annotations and import the annotations exported in the last step
+            // Then save the annotations and the document for comparison
+            RunCommand(
+                "--in=" + documentWithoutAnnotations,
+                "--import-annotations=" + annotationsPath,
+                "--exp-annotations=" + newAnnotationsPath, 
+                "--out=" + documentWithImportedAnnotations
+            );
+            // Assert that annotations exported from the document with imported annotations match annotations
+            // exported from the original document
+            AssertEx.FileEquals(annotationsPath, newAnnotationsPath);
+            // Assert that the chromatograms (and their annotations) are identical
+            var originalDocument = ResultsUtil.DeserializeDocument(documentWithAnnotations);
+            var outputDocument = ResultsUtil.DeserializeDocument(documentWithImportedAnnotations);
+            Assert.AreEqual(originalDocument.Settings.MeasuredResults.Chromatograms, 
+                outputDocument.MeasuredResults.Chromatograms);
+
+        }
+
+        private static void CheckRefSpectraAll(IList<DbRefSpectra> refSpectra)
+        {
+
+            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "APVPTGEVYFADSFDR", "APVPTGEVYFADSFDR", 2, 885.920, 4, 24.366);
+            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "APVPTGEVYFADSFDR", "APVPTGEVYFADSFDR[+10.00827]", 2, 890.924, 4, 24.532);
+            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "AVTELNEPLSNEDR", "AVTELNEPLSNEDR", 2, 793.886, 4, 17.095);
+            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "AVTELNEPLSNEDR", "AVTELNEPLSNEDR[+10.00827]", 2, 798.891, 4, 17.095);
+            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "DQGGELLSLR", "DQGGELLSLR", 2, 544.291, 4, 20.355);
+            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "DQGGELLSLR", "DQGGELLSLR[+10.00827]", 2, 549.295, 4, 20.311);
+            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "ELLTTMGDR", "ELLTTMGDR", 2, 518.261, 4, 16.904);
+            SpectralLibraryTestUtil.CheckRefSpectra(refSpectra, "ELLTTMGDR", "ELLTTMGDR[+10.00827]", 2, 523.265, 4, 16.904); 
+            Assert.IsTrue(!refSpectra.Any());
         }
 
         [TestMethod]
@@ -3271,8 +3575,8 @@ namespace pwiz.SkylineTestData
 
             // Error: Unknown server
             var serverUri = PanoramaUtil.ServerNameToUri("unknown.server-state.com");
-            var client = new TestPanoramaClient() { MyServerState = new ServerState(ServerStateEnum.unknown, null, null), ServerUri = serverUri };
-            helper.ValidateServer(client, null, null);
+            var client = new TestPanoramaClient() { MyServerState = ServerStateEnum.unknown, ServerUri = serverUri };
+            helper.ValidateServer(client);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
@@ -3284,8 +3588,8 @@ namespace pwiz.SkylineTestData
 
             // Error: Not a Panorama Server
             serverUri = PanoramaUtil.ServerNameToUri("www.google.com");
-            client = new TestPanoramaClient() {MyUserState = new UserState(UserStateEnum.unknown, null, null), ServerUri = serverUri};
-            helper.ValidateServer(client, null, null);
+            client = new TestPanoramaClient() {MyUserState = UserStateEnum.unknown, ServerUri = serverUri};
+            helper.ValidateServer(client);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
@@ -3297,8 +3601,8 @@ namespace pwiz.SkylineTestData
 
             // Error: Invalid user
             serverUri = PanoramaUtil.ServerNameToUri(PanoramaUtil.PANORAMA_WEB);
-            client = new TestPanoramaClient() { MyUserState = new UserState(UserStateEnum.nonvalid, null, null), ServerUri = serverUri };
-            helper.ValidateServer(client, "invalid", "user");
+            client = new TestPanoramaClient() { MyUserState = UserStateEnum.nonvalid, ServerUri = serverUri, Username = "invalid", Password = "user"};
+            helper.ValidateServer(client);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
@@ -3310,7 +3614,7 @@ namespace pwiz.SkylineTestData
 
             // Error: unknown exception
             client = new TestPanoramaClientThrowsException();
-            helper.ValidateServer(client, null, null);
+            helper.ValidateServer(client);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
@@ -3320,10 +3624,10 @@ namespace pwiz.SkylineTestData
 
             
             // Error: folder does not exist
-            client = new TestPanoramaClient() { MyFolderState = FolderState.notfound, ServerUri = serverUri };
-            var server = helper.ValidateServer(client, "user", "password");
+            client = new TestPanoramaClient() { MyFolderState = FolderState.notfound, ServerUri = serverUri, Username = "user", Password = "password"};
+            helper.ValidateServer(client);
             var folder = "folder/not/found";
-            helper.ValidateFolder(client, server, folder);
+            helper.ValidateFolder(client, folder);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
@@ -3337,13 +3641,13 @@ namespace pwiz.SkylineTestData
             // Error: no permissions on folder
             client = new TestPanoramaClient() { MyFolderState = FolderState.nopermission, ServerUri = serverUri };
             folder = "no/permissions";
-            helper.ValidateFolder(client, server, folder);
+            helper.ValidateFolder(client, folder);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
                         string.Format(
                             PanoramaClient.Properties.Resources.PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_,
-                            "user", folder)));
+                            client.Username, folder)));
             TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
@@ -3351,7 +3655,7 @@ namespace pwiz.SkylineTestData
             // Error: not a Panorama folder
             client = new TestPanoramaClient() { MyFolderState = FolderState.notpanorama, ServerUri = serverUri };
             folder = "not/panorama";
-            helper.ValidateFolder(client, server, folder);
+            helper.ValidateFolder(client, folder);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(string.Format(PanoramaClient.Properties.Resources.PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder,
@@ -3461,62 +3765,49 @@ namespace pwiz.SkylineTestData
                 string.Format("Expected RunCommand result message containing \n\"{0}\",\ngot\n\"{1}\"\ninstead.", expectedMessage, actualMessage));
         }
 
-        private class TestPanoramaClient : IPanoramaClient
+        private class TestPanoramaClient : BaseTestPanoramaClient
         {
-            public Uri ServerUri { get; set; }
-
-            public ServerState MyServerState { get; set; }
-            public UserState MyUserState { get; set; }
+            public ServerStateEnum MyServerState { get; set; }
+            public UserStateEnum MyUserState { get; set; }
             public FolderState MyFolderState { get; set; }
 
             public TestPanoramaClient()
             {
-                MyServerState = ServerState.VALID;
-                MyUserState = UserState.VALID;
+                MyServerState = ServerStateEnum.available;
+                MyUserState = UserStateEnum.valid;
                 MyFolderState = FolderState.valid;
+
+                ServerUri = new Uri("https://panoramaweb.org");
+                Username = "myuser";
+                Password = "mypassword";
             }
 
-            public virtual ServerState GetServerState()
+            public override PanoramaServer ValidateServer()
             {
-                return MyServerState;
+                if (ServerStateEnum.available != MyServerState)
+                {
+                    throw new PanoramaServerException(MyServerState, "Invalid server state", ServerUri);
+                }
+                if (UserStateEnum.valid != MyUserState)
+                {
+                    throw new PanoramaServerException(MyUserState, "Invalid user state", ServerUri);
+                }
+
+                return new PanoramaServer(ServerUri, Username, Password);
             }
 
-            public UserState IsValidUser(string username, string password)
+            public override void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
             {
-                return MyUserState;
+                if (MyFolderState != FolderState.valid)
+                {
+                    throw new PanoramaServerException(MyFolderState, folderPath, null, ServerUri, null, Username);
+                }
             }
-
-            public FolderState IsValidFolder(string folderPath, string username, string password)
-            {
-                return MyFolderState;
-            }
-
-            public FolderOperationStatus CreateFolder(string parentPath, string folderName, string username, string password)
-            {
-                return FolderOperationStatus.OK;
-            }
-
-            public FolderOperationStatus DeleteFolder(string folderPath, string username, string password)
-            {
-                return FolderOperationStatus.OK;
-            }
-
-            public JToken GetInfoForFolders(PanoramaServer server, string folder)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
-                PanoramaServer server, IProgressMonitor pm, IProgressStatus progressStatus)
-            {
-                throw new NotImplementedException();
-            }
-
         }
 
         private class TestPanoramaClientThrowsException : TestPanoramaClient
         {
-            public override ServerState GetServerState()
+            public override PanoramaServer ValidateServer()
             {
                 throw new Exception("GetServerState threw an exception");
             }    

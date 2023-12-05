@@ -27,6 +27,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using pwiz.PanoramaClient;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -65,7 +66,7 @@ namespace pwiz.SkylineTestTutorial
     {
         public const string SERVER_URL = "https://panoramaweb.org/";
         public const string PANORAMA_FOLDER = "SkylineTest";
-        public const string PANORAMA_USER_NAME = "ritach@uw.edu";
+        public const string PANORAMA_USER_NAME = "skyline_tester@proteinms.net";
         public const string PANORAMA_PASSWORD = "lclcmsms";
 
         public string testFolderName = "AuditLogUpload";
@@ -625,16 +626,86 @@ namespace pwiz.SkylineTestTutorial
 
         private void PanoramaSetup()
         {
-            Uri serverUri = new Uri(SERVER_URL);
+            // NOTE: This method is called when IsPauseForScreenShots is set to true. 
+            // Before running the test change the permissions on the Panorama project folder at 
+            // https://panoramaweb.org/SkylineTest/project-begin.view 
+            // Make the test user (PANORAMA_USER_NAME) a folder administrator so that the
+            // user is able to create and delete folders in the "SkylineTest" project.
+            var panoramaClient = PanoramaUtil.CreatePanoramaClient(new Uri(SERVER_URL), PANORAMA_USER_NAME, PANORAMA_PASSWORD);
 
-            IPanoramaClient panoramaClient = PanoramaUtil.CreatePanoramaClient(serverUri);
+            try
+            {
+                DeleteFolderIfExists(panoramaClient, $@"{PANORAMA_FOLDER}/{testFolderName}");
+            }
+            catch (Exception e)
+            {
+                AssertEx.Fail("Cannot delete existing Panorama test folder. {0}", e.Message);
+            }
+            
+            try
+            {
+                CreateFolder(panoramaClient, PANORAMA_FOLDER, testFolderName);
+            }
+            catch (Exception e)
+            {
+                AssertEx.Fail("Error creating Panorama test folder. {0}", e.Message);
+            }
+        }
 
-            var deleteResult = panoramaClient.DeleteFolder($@"{PANORAMA_FOLDER}/{testFolderName}", PANORAMA_USER_NAME,
-                PANORAMA_PASSWORD);
-            if(deleteResult != FolderOperationStatus.OK && deleteResult != FolderOperationStatus.notfound)
-                Assert.Fail($@"Cannot delete existing test folder. Returns {deleteResult}");
-            Assert.AreEqual(FolderOperationStatus.OK, panoramaClient.CreateFolder(PANORAMA_FOLDER, testFolderName,
-                PANORAMA_USER_NAME, PANORAMA_PASSWORD), "Error when creating panorama test folder.");
+        public void CreateFolder(IPanoramaClient panoramaClient, string parentFolderPath, string folderName)
+        {
+            var folderToCreate = $@"{parentFolderPath}/{folderName}";
+
+            if (FolderExists(panoramaClient, folderToCreate))
+            {
+                // Folder exists on the server at the given path. Cannot create a folder with the same name
+                throw new PanoramaServerException(string.Format("Folder already exists: {0}", folderToCreate));
+            }
+
+            panoramaClient.ValidateFolder(parentFolderPath, FolderPermission.admin, false); // Parent folder should exist and have admin permissions.
+
+
+            //Create JSON body for the request
+            Dictionary<string, string> requestData = new Dictionary<string, string>();
+            requestData[@"name"] = folderName;
+            requestData[@"title"] = folderName;
+            requestData[@"description"] = folderName;
+            requestData[@"type"] = @"normal";
+            requestData[@"folderType"] = @"Targeted MS";
+            string createRequest = JsonConvert.SerializeObject(requestData);
+
+            using (var webClient = new WebClientWithCredentials(panoramaClient.ServerUri, panoramaClient.Username, panoramaClient.Password))
+            {
+                var requestUri = PanoramaUtil.CallNewInterface(panoramaClient.ServerUri, @"core", parentFolderPath, @"createContainer", "", true);
+                webClient.Post(requestUri, createRequest);
+            }
+        }
+
+        private static bool FolderExists(IPanoramaClient panoramaClient, string folderPath)
+        {
+            try
+            {
+                panoramaClient.ValidateFolder(folderPath, null);
+                return true;
+            }
+            catch (PanoramaServerException)
+            {
+                // We expect this exception if the folder does not exist
+            }
+
+            return false;
+        }
+
+        public void DeleteFolderIfExists(IPanoramaClient panoramaClient, string folderPath)
+        {
+            if (FolderExists(panoramaClient, folderPath))
+            {
+                using (var webClient = new WebClientWithCredentials(panoramaClient.ServerUri, panoramaClient.Username, panoramaClient.Password))
+                {
+                    var requestUri = PanoramaUtil.CallNewInterface(panoramaClient.ServerUri, @"core", folderPath, @"deleteContainer", "", true);
+                    webClient.Post(requestUri, "");
+                }
+            }
         }
     }
 }

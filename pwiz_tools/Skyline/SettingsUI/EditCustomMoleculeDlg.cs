@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
@@ -749,7 +748,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     SetResult(new CustomMolecule(_formulaBox.NeutralFormula, name), Adduct);
                 }
-                catch (InvalidDataException x)
+                catch(Exception x) when(SmallMoleculeTransitionListReader.IsParserException(x))
                 {
                     _formulaBox.ShowTextBoxErrorFormula(helper, x.Message);
                     return;

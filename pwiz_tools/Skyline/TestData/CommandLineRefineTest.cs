@@ -437,7 +437,8 @@ namespace pwiz.SkylineTestData
             {
                 CommandArgs.ARG_PANORAMA_FOLDER,
                 CommandArgs.ARG_TOOL_INITIAL_DIR,
-                CommandArgs.ARG_TOOL_PROGRAM_PATH
+                CommandArgs.ARG_TOOL_PROGRAM_PATH,
+                CommandArgs.ARG_BGPROTEOME_NAME, // special validation logic tested in ConsoleNewDocumentTest
             };
             var allArgumentsSet = new HashSet<CommandArgs.Argument>(
                 CommandArgs.AllArguments.Where(a => !a.InternalUse && !testedArguments.Contains(a)));

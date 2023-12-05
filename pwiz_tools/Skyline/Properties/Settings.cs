@@ -468,13 +468,25 @@ namespace pwiz.Skyline.Properties
             }
         }
 
-        public Enzyme GetEnzymeByName(string name)
+        public Enzyme GetEnzymeByName(string name, bool withoutRulesSuffix = false, bool ignoreCase = false)
         {
-            Enzyme enzyme;
-            if (!EnzymeList.TryGetValue(name, out enzyme))
+            Enzyme enzyme = null;
+            if (!withoutRulesSuffix && !EnzymeList.TryGetValue(name, out enzyme))
             {
                 enzyme = EnzymeList.Count == 0 ?
                     EnzymeList.GetDefault() : EnzymeList[0];
+            }
+            else if (EnzymeList.Count == 0)
+            {
+                enzyme = EnzymeList.GetDefault();
+            }
+            else if (withoutRulesSuffix || ignoreCase)
+            {
+                enzyme = EnzymeList.FirstOrDefault(e => e.Name.Equals(name,
+                             ignoreCase
+                                 ? StringComparison.InvariantCultureIgnoreCase
+                                 : StringComparison.InvariantCulture)) ??
+                         EnzymeList[0];
             }
             return enzyme;
         }
@@ -1469,14 +1481,40 @@ namespace pwiz.Skyline.Properties
             }
         }
 
+        public Server AddServerWithAccount(Control owner, IEnumerable<Server> existing)
+        {
+            return EditPanoramaServer(owner, null, existing, null, null, true);
+        }
+
+        public Server AddCredentials(Control owner, Server item, IEnumerable<Server> existing)
+        {
+            return EditPanoramaServer(owner, item, existing, null, null, true);
+        }
+
         public Server EditCredentials(Control owner, Server item, IEnumerable<Server> existing, string username, string password)
+        {
+            return EditPanoramaServer(owner, item, existing, username, password);
+        }
+
+        private Server EditPanoramaServer(Control owner, Server item, IEnumerable<Server> existing, string username, string password, bool disableAnonymousCb = false)
         {
             using (var editServerDlg = new EditServerDlg(existing ?? this))
             {
-                editServerDlg.Server = item;
+                if (item != null)
+                {
+                    editServerDlg.Server = item;
+                    editServerDlg.textServerURL.Enabled = false;
+                }
+
                 editServerDlg.Username = username;
                 editServerDlg.Password = password;
-                editServerDlg.textServerURL.Enabled = false;
+
+                if (disableAnonymousCb)
+                {
+                    editServerDlg.AnonymousServer = false;
+                    editServerDlg.cbAnonymous.Enabled = false;
+                }
+
                 return editServerDlg.ShowDialog(owner) == DialogResult.OK ? editServerDlg.Server : null;
             }
         }
@@ -1610,7 +1648,7 @@ namespace pwiz.Skyline.Properties
             new StaticMod(UniModData.DEFAULT.Name, UniModData.DEFAULT.AAs, UniModData.DEFAULT.Terminus, false,
                 UniModData.DEFAULT.Formula, UniModData.DEFAULT.LabelAtoms,
                 RelativeRT.Matching, null, null, UniModData.DEFAULT.Losses, UniModData.DEFAULT.ID,
-                UniModData.DEFAULT.ShortName, null)
+                UniModData.DEFAULT.ShortName)
         };
 
         public static StaticMod[] GetDefaultsOn()
@@ -2527,25 +2565,50 @@ namespace pwiz.Skyline.Properties
         public static readonly MeasuredIon TMT_130_L = CreateMeasuredIon(@"TMT-130L", @"C5C'3H16N'");
         public static readonly MeasuredIon TMT_130_H = CreateMeasuredIon(@"TMT-130H", @"C4C'4H16N");
         public static readonly MeasuredIon TMT_131 = CreateMeasuredIon(@"TMT-131", @"C4C'4H16N'");
+        // TMTpro reporter ion chemical formulas from Phil Remes and the following papers
+        // https://pubs.acs.org/doi/full/10.1021/acs.analchem.9b04474
+        // https://www.nature.com/articles/s41592-020-0781-4
+        public static readonly MeasuredIon TMT_131_L = CreateMeasuredIon(@"TMT-131L", @"C4C'4H16N'");
+        public static readonly MeasuredIon TMT_131_H = CreateMeasuredIon(@"TMT-131H", @"C3C'5H16N");
+        public static readonly MeasuredIon TMT_132_L = CreateMeasuredIon(@"TMT-132L", @"C3C'5H16N'");
+        public static readonly MeasuredIon TMT_132_H = CreateMeasuredIon(@"TMT-132H", @"C2C'6H16N");
+        public static readonly MeasuredIon TMT_133_L = CreateMeasuredIon(@"TMT-133L", @"C2C'6H16N'");
+        public static readonly MeasuredIon TMT_133_H = CreateMeasuredIon(@"TMT-133H", @"C1C'7H16N");
+        public static readonly MeasuredIon TMT_134_L = CreateMeasuredIon(@"TMT-134L", @"C1C'7H16N'");
+        // https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8210943/
+        public static readonly MeasuredIon TMT_134_H = CreateMeasuredIon(@"TMT-134H", @"C'8H16N");
+        public static readonly MeasuredIon TMT_135 = CreateMeasuredIon(@"TMT-135", @"C'8H16N'");
 
         private static MeasuredIon CreateMeasuredIon(string name, string formula)
         {
             return new MeasuredIon(name, formula, null, null, Adduct.M_PLUS);
         }
 
-        public override int RevisionIndexCurrent { get { return 1; } }
+        public override int RevisionIndexCurrent { get { return 2; } }
 
         public override IEnumerable<MeasuredIon> GetDefaults(int revisionIndex)
         {
             var listDefaults = new List<MeasuredIon>(new[] {NTERM_PROLINE, CTERM_GLU_ASP});
             if (revisionIndex < 1)
                 return listDefaults;
-
-            listDefaults.AddRange(new[]
+            if (revisionIndex == 1)
             {
-                ITRAQ_114, ITRAQ_115, ITRAQ_116, ITRAQ_117,
-                TMT_126, TMT_127_L, TMT_127_H, TMT_128_L, TMT_128_H, TMT_129_L, TMT_129_H, TMT_130_L, TMT_130_H, TMT_131
-            });
+                listDefaults.AddRange(new[]
+                {
+                    ITRAQ_114, ITRAQ_115, ITRAQ_116, ITRAQ_117,
+                    TMT_126, TMT_127_L, TMT_127_H, TMT_128_L, TMT_128_H, TMT_129_L, TMT_129_H, TMT_130_L, TMT_130_H, TMT_131
+                });
+            }
+            else
+            {
+                listDefaults.AddRange(new[]
+                {
+                    ITRAQ_114, ITRAQ_115, ITRAQ_116, ITRAQ_117,
+                    TMT_126, TMT_127_L, TMT_127_H, TMT_128_L, TMT_128_H, TMT_129_L, TMT_129_H, TMT_130_L, TMT_130_H,
+                    TMT_131_L, TMT_131_H, TMT_132_L, TMT_132_H, TMT_133_L, TMT_133_H, TMT_134_L, TMT_134_H, TMT_135
+                });
+
+            }
             return listDefaults;
         }
 

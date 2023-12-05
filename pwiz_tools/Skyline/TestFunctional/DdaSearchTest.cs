@@ -28,11 +28,14 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -48,13 +51,15 @@ namespace pwiz.SkylineTestFunctional
             public int peptideCount;
             public int precursorCount;
             public int transitionCount;
+            public int unmappedOrRemovedCount;
 
-            public ExpectedResults(int proteinCount, int peptideCount, int precursorCount, int transitionCount)
+            public ExpectedResults(int proteinCount, int peptideCount, int precursorCount, int transitionCount, int unmappedOrRemovedCount = 0)
             {
                 this.proteinCount = proteinCount;
                 this.peptideCount = peptideCount;
                 this.precursorCount = precursorCount;
                 this.transitionCount = transitionCount;
+                this.unmappedOrRemovedCount = unmappedOrRemovedCount;
             }
         }
 
@@ -101,11 +106,11 @@ namespace pwiz.SkylineTestFunctional
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
                 AdditionalSettings = new List<KeyValuePair<string, string>>(),
-                ExpectedResults = new ExpectedResults(1131, 110, 110, 330),
-                ExpectedResultsFinal = new ExpectedResults(100, 111, 111, 333)
+                ExpectedResultsFinal = new ExpectedResults(133, 332, 394, 1182, 163)
             };
 
             RunFunctionalTest();
+            Assert.IsFalse(IsRecordMode);
         }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), 
@@ -129,11 +134,11 @@ namespace pwiz.SkylineTestFunctional
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
                 AdditionalSettings = new List<KeyValuePair<string, string>>(),
-                ExpectedResults = new ExpectedResults(1131, 79, 79, 237),
-                ExpectedResultsFinal = new ExpectedResults(73, 80, 80, 240)
+                ExpectedResultsFinal = new ExpectedResults(104, 256, 317, 951, 124)
             };
 
             RunFunctionalTest();
+            Assert.IsFalse(IsRecordMode);
         }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
@@ -161,11 +166,11 @@ namespace pwiz.SkylineTestFunctional
                     new KeyValuePair<string, string>("calibrate_mass", "0"),
                     new KeyValuePair<string, string>("train-fdr", Convert.ToString(0.1, CultureInfo.CurrentCulture))
                 },
-                ExpectedResults = new ExpectedResults(1131, 90, 90, 270),
-                ExpectedResultsFinal = new ExpectedResults(82, 91, 91, 273)
+                ExpectedResultsFinal = new ExpectedResults(127, 305, 384, 1152, 150)
             };
 
             RunFunctionalTest();
+            Assert.IsFalse(IsRecordMode);
         }
 
         public bool IsRecordMode => false;
@@ -219,16 +224,24 @@ namespace pwiz.SkylineTestFunctional
             // Add the test xml file to the search files list and try to 
             // build the document library.
 
-            RunUI(() =>
+            var errMsgDlg = ShowDialog<MessageDlg>(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.PerformDDASearch = true;
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).Take(1).ToArray();
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia; // will go back and switch to DDA
+                importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScoreText = @"12%"; // Intentionally bad 
+                importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = IrtStandard.AUTO;
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
+            OkDialog(errMsgDlg, errMsgDlg.OkDialog); // Expect complaint about bad cutoff score
+
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page); // Should not have advanced
                 importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.9;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
-
             // With only 1 source, no add/remove prefix/suffix dialog
 
             // We're on the "Match Modifications" page. Add M+16 mod.
@@ -412,7 +425,10 @@ namespace pwiz.SkylineTestFunctional
                 for (int i = 1; i < importPeptideSearchDlg.MatchModificationsControl.MatchedModifications.Count(); ++i)
                     importPeptideSearchDlg.MatchModificationsControl.ChangeItem(i, true); // check everything else
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3, 4 };
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationMethod = DecoyGeneration.REVERSE_SEQUENCE;
+                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = true;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
@@ -426,12 +442,17 @@ namespace pwiz.SkylineTestFunctional
             {
                 File.WriteAllText("SearchControlLog.txt", importPeptideSearchDlg.SearchControl.LogText);
             }
-
-            var emptyProteinsDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            
+            var addIrtPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            var recalibrateMessage = ShowDialog<MultiButtonMsgDlg>(addIrtPeptidesDlg.OkDialog);
+            RunUI(() => Assert.AreEqual(TextUtil.LineSeparate(Resources.LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_,
+                Resources.LibraryGridViewDriver_AddToLibrary_This_can_improve_retention_time_alignment_under_stable_chromatographic_conditions_), recalibrateMessage.Message));
+            var emptyProteinsDlg = ShowDialog<AssociateProteinsDlg>(recalibrateMessage.OkDialog);
             WaitForConditionUI(() => emptyProteinsDlg.DocumentFinalCalculated);
+
             RunUI(()=>
             {
-                int proteinCount, peptideCount, precursorCount, transitionCount;
+                int proteinCount, peptideCount, precursorCount, transitionCount, unmappedOrRemoved;
                 /*emptyProteinsDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 if (Environment.Is64BitProcess)
                 {
@@ -449,12 +470,12 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(TestSettings.ExpectedResults.transitionCount, transitionCount);
                     }
                 }*/
-                emptyProteinsDlg.NewTargetsFinalSync(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
+                emptyProteinsDlg.NewTargetsFinalSync(out proteinCount, out peptideCount, out precursorCount, out transitionCount, out unmappedOrRemoved);
                 if (Environment.Is64BitProcess)
                 {
                     if (IsRecordMode)
                     {
-                        Console.WriteLine($@"{proteinCount}, {peptideCount}, {precursorCount}, {transitionCount}");
+                        Console.WriteLine($@"ExpectedResultsFinal = new ExpectedResults({proteinCount}, {peptideCount}, {precursorCount}, {transitionCount}, {unmappedOrRemoved})");
                     }
                     else
                     {
@@ -462,11 +483,11 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(TestSettings.ExpectedResultsFinal.peptideCount, peptideCount);
                         Assert.AreEqual(TestSettings.ExpectedResultsFinal.precursorCount, precursorCount);
                         Assert.AreEqual(TestSettings.ExpectedResultsFinal.transitionCount, transitionCount);
+                        Assert.AreEqual(TestSettings.ExpectedResultsFinal.unmappedOrRemovedCount, unmappedOrRemoved);
                     }
                 }
             });
             OkDialog(emptyProteinsDlg, emptyProteinsDlg.OkDialog);
-
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SaveDocument());
         }

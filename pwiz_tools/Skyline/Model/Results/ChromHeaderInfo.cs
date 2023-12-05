@@ -1863,31 +1863,6 @@ namespace pwiz.Skyline.Model.Results
         private double _optionalMaxTime;
         private bool _hasOptionalTimes;
 
-        public ChromKey(byte[] textIdBytes,
-            int textIdIndex,
-            int textIdLen,
-            SignedMz precursor,
-            SignedMz product,
-                        int optimizationStep,
-            double extractionWidth,
-            IonMobilityFilter ionMobility,
-            ChromSource source,
-            ChromExtractor extractor) : this(
-            textIdIndex != -1
-                ? new ChromatogramGroupId(
-                    Target.FromSerializableString(Encoding.UTF8.GetString(textIdBytes, textIdIndex, textIdLen)), default)
-                : null,
-            precursor,
-            ionMobility,
-            product,
-                   optimizationStep,
-            0,
-            extractionWidth,
-            source,
-            extractor)
-        {
-        }
-
         public ChromKey(ChromatogramGroupId chromatogramGroupId,
                         SignedMz precursor,
                         IonMobilityFilter ionMobilityFilter,
@@ -2124,8 +2099,8 @@ namespace pwiz.Skyline.Model.Results
 
         public static ChromKey FromQcTrace(MsDataFileImpl.QcTrace qcTrace)
         {
-            var qcTextBytes = Encoding.UTF8.GetBytes(qcTrace.Name);
-            return new ChromKey(qcTextBytes, 0, qcTextBytes.Length, SignedMz.ZERO, SignedMz.ZERO, 0, 0, null, ChromSource.unknown, ChromExtractor.qc);
+            var chromatogramGroupId = ChromatogramGroupId.ForQcTraceName(qcTrace.Name);
+            return new ChromKey(chromatogramGroupId, SignedMz.ZERO, null, SignedMz.ZERO, 0, 0, 0, ChromSource.unknown, ChromExtractor.qc);
         }
 
         #region object overrides
@@ -2271,18 +2246,9 @@ namespace pwiz.Skyline.Model.Results
 
         internal ChromGroupHeaderInfo Header { get { return _groupHeaderInfo; } }
         public SignedMz PrecursorMz { get { return new SignedMz(_groupHeaderInfo.Precursor, _groupHeaderInfo.NegativeCharge); } }
-        public ChromatogramGroupId ChromatogramGroupId
-        {
-            get; private set;
-        }
-
-        public string TextId
-        {
-            get
-            {
-                return ChromatogramGroupId?.Target.Sequence;
-            }
-        }
+        [CanBeNull]
+        public ChromatogramGroupId ChromatogramGroupId { get; private set; }
+        public string QcTraceName { get { return ChromatogramGroupId?.QcTraceName; } }
         public double? PrecursorCollisionalCrossSection { get { return _groupHeaderInfo.CollisionalCrossSection; } }
         public ChromCachedFile CachedFile { get { return _allFiles[_groupHeaderInfo.FileIndex]; } }
         public MsDataFileUri FilePath { get { return _allFiles[_groupHeaderInfo.FileIndex].FilePath; } }

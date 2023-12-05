@@ -30,8 +30,8 @@ namespace pwiz.Skyline.Model.Results
 {
     public class OnDemandFeatureCalculator
     {
-        private Dictionary<TransitionGroup, ChromatogramGroupInfo> _chromatogramGroupInfos =
-            new Dictionary<TransitionGroup, ChromatogramGroupInfo>(new IdentityEqualityComparer<TransitionGroup>());
+        private Dictionary<ReferenceValue<TransitionGroup>, ChromatogramGroupInfo> _chromatogramGroupInfos =
+            new Dictionary<ReferenceValue<TransitionGroup>, ChromatogramGroupInfo>();
 
         private ScoreQValueMap _scoreQValueMap;
 

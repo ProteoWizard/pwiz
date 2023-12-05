@@ -189,12 +189,9 @@ namespace SkylineBatch
             DateTime modified;
             switch (version)
             {
+                case 23.1M:
                 case 21.12M:
-                    ReadConfigVariables(reader, out name, out enabled, out logTestFormat, out modified);
-                    break;
                 case 21.11M:
-                    ReadConfigVariables(reader, out name, out enabled, out logTestFormat, out modified);
-                    break;
                 case 21.1M:
                     ReadConfigVariables(reader, out name, out enabled, out logTestFormat, out modified);
                     break;
@@ -216,36 +213,29 @@ namespace SkylineBatch
             string exceptionMessage = null;
             try
             {
-                switch (version)
+                if (version > 21.1M)
                 {
-                    case 21.12M:
-                        mainSettings = MainSettings.ReadXml(reader);
-                        fileSettings = FileSettings.ReadXml(reader);
-                        refineSettings = RefineSettings.ReadXml(reader);
-                        reportSettings = ReportSettings.ReadXml(reader);
-                        skylineSettings = SkylineSettings.ReadXml(reader);
-                        break;
-                    case 21.11M:
-                        mainSettings = MainSettings.ReadXml(reader);
-                        fileSettings = FileSettings.ReadXml(reader);
-                        refineSettings = RefineSettings.ReadXml(reader);
-                        reportSettings = ReportSettings.ReadXml(reader);
-                        skylineSettings = SkylineSettings.ReadXml(reader);
-                        break;
-                    case 21.1M:
-                        mainSettings = MainSettings.ReadXmlVersion_21_1(reader);
-                        fileSettings = FileSettings.ReadXml(reader);
-                        refineSettings = RefineSettings.ReadXml(reader);
-                        reportSettings = ReportSettings.ReadXmlVersion_21_1(reader);
-                        skylineSettings = SkylineSettings.ReadXml(reader);
-                        break;
-                    default: // 20.2M
-                        mainSettings = MainSettings.ReadXmlVersion_20_2(reader);
-                        fileSettings = FileSettings.ReadXmlVersion_20_2(reader);
-                        refineSettings = RefineSettings.ReadXmlVersion_20_2(reader);
-                        reportSettings = ReportSettings.ReadXmlVersion_20_2(reader);
-                        skylineSettings = SkylineSettings.ReadXmlVersion_20_2(reader);
-                        break;
+                    mainSettings = MainSettings.ReadXml(reader);
+                    fileSettings = FileSettings.ReadXml(reader);
+                    refineSettings = RefineSettings.ReadXml(reader);
+                    reportSettings = ReportSettings.ReadXml(reader);
+                    skylineSettings = SkylineSettings.ReadXml(reader);
+                }
+                else if (version == 21.1M)
+                {
+                    mainSettings = MainSettings.ReadXmlVersion_21_1(reader);
+                    fileSettings = FileSettings.ReadXml(reader);
+                    refineSettings = RefineSettings.ReadXml(reader);
+                    reportSettings = ReportSettings.ReadXmlVersion_21_1(reader);
+                    skylineSettings = SkylineSettings.ReadXml(reader);
+                }
+                else // version < 21.1M
+                {
+                    mainSettings = MainSettings.ReadXmlVersion_20_2(reader);
+                    fileSettings = FileSettings.ReadXmlVersion_20_2(reader);
+                    refineSettings = RefineSettings.ReadXmlVersion_20_2(reader);
+                    reportSettings = ReportSettings.ReadXmlVersion_20_2(reader);
+                    skylineSettings = SkylineSettings.ReadXmlVersion_20_2(reader);
                 }
             }
             catch (ArgumentException e)

@@ -52,6 +52,12 @@ namespace pwiz.SkylineTestFunctional
         private const int MAX_TEST_ATTEMPTS = 2;
         protected override void DoTest()
         {
+            if (SkipTestToolService) // This test is flaky on certain machines, avoid gumming up the logs
+            {
+                Console.Write(MSG_SKIPPING_TEST_TOOL_SERVICE); // Log this via console for TestRunner
+                return;
+            }
+
             List<Exception> accumulatedExceptions = new List<Exception>();
             for (int attemptNumber = 0; attemptNumber < MAX_TEST_ATTEMPTS; attemptNumber++)
             {
