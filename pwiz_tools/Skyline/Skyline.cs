@@ -297,7 +297,6 @@ namespace pwiz.Skyline
                     string.Format(Resources.SkylineWindow_HasFileToOpen_Unzip_the_file__0__first_and_then_open_the_extracted_file__1__, zipFileName, Path.GetFileName(_fileToOpen))));
                 return false;
             }
-
             return true;
         }
 

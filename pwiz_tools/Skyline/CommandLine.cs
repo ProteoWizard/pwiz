@@ -272,6 +272,11 @@ namespace pwiz.Skyline
                 if (!SetFullScanSettings(commandArgs))
                     return false;
             }
+            if (commandArgs.PeptideDigestSettings)
+            {
+                if (!SetPeptideDigestSettings(commandArgs))
+                    return false;
+            }
             if (commandArgs.PeptideFilterSettings)
             {
                 if (!SetPeptideFilterSettings(commandArgs))
@@ -1169,6 +1174,60 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Error__Failed_attempting_to_change_the_transiton_full_scan_settings_);
+                _out.WriteLine(x.Message);
+                return false;
+            }
+        }
+
+        private bool SetPeptideDigestSettings(CommandArgs commandArgs)
+        {
+            try
+            {
+                ModifyDocumentWithLogging(d => d.ChangeSettings(d.Settings.ChangePeptideSettings(p =>
+                {
+                    var digestSettings = p.DigestSettings;
+
+                    if (commandArgs.PeptideDigestEnzymeName != null)
+                    {
+                        var enzyme = Settings.Default.GetEnzymeByName(commandArgs.PeptideDigestEnzymeName, true, true);
+                        p = p.ChangeEnzyme(enzyme);
+                    }
+
+                    if (commandArgs.PeptideDigestMaxMissedCleavages.HasValue)
+                    {
+                        digestSettings = new DigestSettings(commandArgs.PeptideDigestMaxMissedCleavages.Value, digestSettings.ExcludeRaggedEnds);
+                        p = p.ChangeDigestSettings(digestSettings);
+                    }
+
+                    if (commandArgs.PeptideDigestUniquenessConstraint.HasValue)
+                    {
+                        p = p.ChangeFilter(p.Filter.ChangePeptideUniqueness(commandArgs.PeptideDigestUniquenessConstraint.Value));
+                    }
+
+                    if (commandArgs.BackgroundProteomePath != null)
+                    {
+                        if (!File.Exists(commandArgs.BackgroundProteomePath))
+                            throw new IOException(string.Format(
+                                Resources.CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_file__0_,
+                                Path.GetFileName(commandArgs.BackgroundProteomePath)));
+                        string name = commandArgs.BackgroundProteomeName ?? Path.GetFileNameWithoutExtension(commandArgs.BackgroundProteomePath);
+                        var bgProteome = new BackgroundProteomeSpec(name, commandArgs.BackgroundProteomePath);
+                        p = p.ChangeBackgroundProteome(new BackgroundProteome(bgProteome));
+                        Settings.Default.BackgroundProteomeList.Add(bgProteome);
+                    }
+                    else if (commandArgs.BackgroundProteomeName != null)
+                    {
+                        var bgProteome = Settings.Default.BackgroundProteomeList.GetBackgroundProteomeSpec(commandArgs.BackgroundProteomeName);
+                        p = p.ChangeBackgroundProteome(new BackgroundProteome(bgProteome));
+                    }
+
+                    return p;
+                })), AuditLogEntry.SettingsLogFunction);
+                return true;
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_peptide_digestion_settings_);
                 _out.WriteLine(x.Message);
                 return false;
             }
@@ -3694,7 +3753,7 @@ namespace pwiz.Skyline
                     _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__A_template_file_is_required_to_export_a_method_);
                     return false;
                 }
-                if (Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT6400)
+                if (Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT6400) || Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT_MASSHUNTER_12)
                         ? !Directory.Exists(args.TemplateFile)
                         : !File.Exists(args.TemplateFile))
                 {
@@ -3705,6 +3764,12 @@ namespace pwiz.Skyline
                     !AgilentMethodExporter.IsAgilentMethodPath(args.TemplateFile))
                 {
                     _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_qqqacqmethod_xsd_, args.TemplateFile);
+                    return false;
+                }
+                if (Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT_MASSHUNTER_12) &&
+                    !AgilentUltivoMethodExporter.IsMethodPath(args.TemplateFile))
+                {
+                    _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_, args.TemplateFile);
                     return false;
                 }
             }
