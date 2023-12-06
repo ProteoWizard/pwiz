@@ -322,6 +322,15 @@ namespace TestPerf
             });
 
             WaitForDocumentLoaded();
+
+            // Verify use of library RT in chromatogram extraction
+            var doc = SkylineWindow.Document;
+            var tg = doc.MoleculeTransitions.First(t => t.Transition.Group.IsCustomIon);
+            var r = tg.Results.First().First();
+            AssertEx.AreEqual(36.61, r.RetentionTime, .01);
+            AssertEx.AreEqual(36.34, r.StartRetentionTime, .01);
+            AssertEx.AreEqual(37.51, r.EndRetentionTime, .01);
+
             RunUI(() => SkylineWindow.SaveDocument());
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 12, 368,  369, 1115);
             PauseForScreenShot("complete");
