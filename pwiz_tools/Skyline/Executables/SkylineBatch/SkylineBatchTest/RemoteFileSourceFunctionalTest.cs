@@ -4,7 +4,7 @@ using System.IO;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
-using pwiz.Common.GraphicalUserInterface;
+using pwiz.Common.GUI;
 using pwiz.PanoramaClient;
 using SkylineBatch;
 using SkylineBatch.Properties;
