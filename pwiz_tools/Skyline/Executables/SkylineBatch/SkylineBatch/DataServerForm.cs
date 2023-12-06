@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
-using pwiz.Common.GraphicalUserInterface;
+using pwiz.Common.GUI;
 using SharedBatch;
 using SkylineBatch.Properties;
 

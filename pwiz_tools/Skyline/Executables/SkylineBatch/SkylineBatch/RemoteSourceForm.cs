@@ -4,12 +4,11 @@ using System.Collections.Immutable;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
-using pwiz.Common.GraphicalUserInterface;
+using pwiz.Common.GUI;
 using SharedBatch;
 using SkylineBatch.Properties;
 using pwiz.PanoramaClient;
 using PanoramaServer = pwiz.PanoramaClient.PanoramaServer;
-using AlertDlg = SharedBatch.AlertDlg;
 using PanoramaUtil = pwiz.PanoramaClient.PanoramaUtil;
 
 namespace SkylineBatch
