@@ -89,6 +89,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public PeptideQuantifier GetPeptideQuantifier(CalibrationPoint calibrationPoint)
         {
+            if (calibrationPoint.LabelType != null)
+            {
+                return PeptideQuantifier;
+            }
             return GetPeptideQuantifier(GetSampleType(calibrationPoint));
         }
 
