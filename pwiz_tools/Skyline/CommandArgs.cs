@@ -131,13 +131,16 @@ namespace pwiz.Skyline
             (c, p) => c.HideAllChromatogramsGraph = true) {InternalUse = true};
         public static readonly Argument ARG_TEST_NOACG = new Argument(@"noacg",
             (c, p) => c.NoAllChromatogramsGraph = true) {InternalUse = true};
+        public static readonly Argument ARG_TEST_EXCEPTION = new Argument(@"exception",
+            (c, p) => c.IsTestExceptions = true) { InternalUse = true };
 
         private static readonly ArgumentGroup GROUP_INTERNAL = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_INTERNAL, false,
             ARG_INTERNAL_SCREEN_WIDTH, ARG_INTERNAL_CULTURE, ARG_INTERNAL_IMPORT_FILE_CACHE, ARG_INTERNAL_IMPORT_PROGRESS_PIPE,
-            ARG_TEST_UI, ARG_TEST_HIDEACG, ARG_TEST_NOACG);
+            ARG_TEST_UI, ARG_TEST_HIDEACG, ARG_TEST_NOACG, ARG_TEST_EXCEPTION);
 
         public bool HideAllChromatogramsGraph { get; private set; }
         public bool NoAllChromatogramsGraph { get; private set; }
+        public bool IsTestExceptions { get; private set; }
 
         // Conflict resolution values
         public const string ARG_VALUE_OVERWRITE = "overwrite";

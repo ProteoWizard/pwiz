@@ -1,8 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Text;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestData
@@ -11,30 +7,22 @@ namespace pwiz.SkylineTestData
     public class ConsoleVerboseExceptionsTest : AbstractUnitTestEx
     {
         [TestMethod]
-        public void ConsoleVerboseErrorsTest()
+        public void TestConsoleVerboseExceptions()
         {
-            try
-            {
-                // Throw an exception so we can examine how it is reported
-                throw new NotImplementedException();
-            }
-            catch(Exception x)
-            {
-                var consoleBuffer = new StringBuilder();
-                var writer = new CommandStatusWriter(new StringWriter(consoleBuffer));
-                writer.IsVerboseExceptions = true;
-                writer.WriteException(x);
-                var consoleOutput = consoleBuffer.ToString();
-                // The entire exception should be reported if verbose exceptions is true
-                Assert.IsTrue(consoleOutput.Contains(x.ToString()));
-                consoleBuffer = new StringBuilder();
-                writer = new CommandStatusWriter(new StringWriter(consoleBuffer));
-                writer.IsVerboseExceptions = false;
-                writer.WriteException(x);
-                consoleOutput = consoleBuffer.ToString();
-                // Only the exception message should be reported if verbose exceptions is false
-                Assert.IsTrue(consoleOutput.Contains(x.Message));
-            }
+            const string exceptionLocation =
+                @"at pwiz.Skyline.CommandLine.HandleExceptions(CommandArgs commandArgs, Action func, String errorMsg, Boolean isCompositeFormat, String additionalErrorMsg)";
+            var newDocumentPath = TestContext.GetTestPath("out.sky");
+            // Throw an exception with verbose errors
+            var output = RunCommand("--new=" + newDocumentPath,
+                "--verbose-errors",
+                "--exception");
+            // The stack trace should be reported
+            CommandLineTest.CheckRunCommandOutputContains(exceptionLocation, output);
+            // Throw an exception without verbose errors
+            output = RunCommand("--new=" + newDocumentPath,
+                "--exception");
+            // The stack trace should not be reported
+            Assert.IsFalse(output.Contains(exceptionLocation));
         }
     }
 }
