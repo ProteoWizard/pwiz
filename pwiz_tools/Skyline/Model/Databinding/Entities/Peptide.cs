@@ -343,6 +343,19 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+
+        [DataGridViewColumnType(typeof(SurrogateStandardDataGridViewColumn))]
+        [Importable]
+        public string SurrogateExternalStandard
+        {
+            get { return DocNode.SurrogateCalibrationCurve; }
+            set
+            {
+                ChangeDocNode(EditColumnDescription(nameof(SurrogateExternalStandard), value),
+                    docNode => docNode.ChangeSurrogateCalibrationCurve(value));
+            }
+        }
+
         [ProteomicDisplayName("PeptideNote")]
         [InvariantDisplayName("MoleculeNote")]
         [Importable]
@@ -449,8 +462,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public PeptideQuantifier GetPeptideQuantifier()
         {
-            var quantifier = PeptideQuantifier.GetPeptideQuantifier(()=>DataSchema.GetReplicateSummaries().GetNormalizationData(), 
-                SrmDocument.Settings, Protein.DocNode, DocNode);
+            var quantifier = PeptideQuantifier.GetPeptideQuantifier(DataSchema.LazyNormalizationData, 
+                SrmDocument.Settings, Protein.DocNode.PeptideGroup, DocNode);
             return quantifier;
         }
 
@@ -563,7 +576,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
             protected override CalibrationCurveFitter CalculateValue(Peptide owner)
             {
-                return new CalibrationCurveFitter(owner.GetPeptideQuantifier(), owner.SrmDocument.Settings);
+                return CalibrationCurveFitter.GetCalibrationCurveFitter(owner.DataSchema.LazyNormalizationData,
+                    owner.SrmDocument.Settings,
+                    new IdPeptideDocNode(owner.Protein.DocNode.PeptideGroup, owner.DocNode));
             }
 
             protected override ImmutableList<Precursor> CalculateValue1(Peptide owner)

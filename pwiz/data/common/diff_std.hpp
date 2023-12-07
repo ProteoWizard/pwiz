@@ -283,7 +283,7 @@ void diff_floating(const floating_type& a,
     a_b = 0;
     b_a = 0;
 
-    int sigFigs = std::max(1, (int) abs(log10(config.precision)) - 1); // treat 1e-5 precison as asking for 5 significant figures
+    int sigFigs = std::max(1, (int) abs(log10(config.precision))); // treat 1e-5 precison as asking for 5 significant figures
     floating_type aSig = pwiz::math::sigfig(a, sigFigs);
     floating_type bSig = pwiz::math::sigfig(b, sigFigs);
 

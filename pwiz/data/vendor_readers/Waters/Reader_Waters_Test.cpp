@@ -60,6 +60,7 @@ int main(int argc, char* argv[])
         bool requireUnicodeSupport = false;
 
         pwiz::util::ReaderTestConfig config;
+        config.diffPrecision = 1e-5;
         pwiz::util::TestResult result;
         pwiz::msdata::Reader_Waters reader;
         result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsRawData(), config);
