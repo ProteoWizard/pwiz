@@ -43,6 +43,7 @@
 #include "boost/thread/thread.hpp"
 #include "boost/thread/barrier.hpp"
 #include "boost/locale/encoding_utf.hpp"
+#include "pwiz/data/msdata/Serializer_mzML.hpp"
 
 
 using namespace pwiz::util;
@@ -384,6 +385,59 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         }
 #endif
 
+#ifndef WITHOUT_MZMLB
+        // mzML <-> mzMLb
+        if (findUnicodeBytes(rawpath) == rawpath.end())
+        {
+            if (os_) (*os_) << "mzMLb serialization test of " << config.resultFilename(msd.run.id + ".mzML") << endl;
+            string targetResultFilename_mzMLb = bfs::change_extension(targetResultFilename, ".mzMLb").string();
+            {
+                MSDataFile::WriteConfig config_mzMLb(MSDataFile::Format_mzMLb);
+                config_mzMLb.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
+                {
+                    MSDataFile::write(vendorMsd, targetResultFilename_mzMLb, config_mzMLb);
+                    MSDataFile msd_mzMLb(targetResultFilename_mzMLb);
+                    msd_mzMLb.fileDescription.sourceFilePtrs.erase(msd_mzMLb.fileDescription.sourceFilePtrs.end() - 1);
+
+                    DiffConfig diffConfig_mzMLb(diffConfig);
+                    diffConfig_mzMLb.ignoreDataProcessing = true;
+                    Diff<MSData, DiffConfig> diff_mzMLb(vendorMsd, msd_mzMLb, diffConfig_mzMLb);
+                    if (diff_mzMLb) cerr << headDiff(diff_mzMLb, 5000) << endl;
+                    unit_assert(!diff_mzMLb);
+                }
+
+                config_mzMLb.binaryDataEncoderConfig.numpressSlofErrorTolerance = 1e-6;
+                //config_mzMLb.binaryDataEncoderConfig.numpressFixedPoint = 1e-5;
+                config_mzMLb.binaryDataEncoderConfig.numpressLinearErrorTolerance = 1e-5;
+                config_mzMLb.binaryDataEncoderConfig.numpressLinearAbsMassAcc = 1e-5;
+                for (int i = BinaryDataEncoder::Numpress_Linear; i <= (int) BinaryDataEncoder::Numpress_Slof; ++i)
+                {
+                    config_mzMLb.binaryDataEncoderConfig.numpressOverrides.clear();
+                    auto numpress = static_cast<BinaryDataEncoder::Numpress>(i);
+                    if (numpress == BinaryDataEncoder::Numpress_Pic)
+                        config_mzMLb.binaryDataEncoderConfig.numpressOverrides[MS_intensity_array] = numpress;
+                    else
+                        config_mzMLb.binaryDataEncoderConfig.numpress = numpress;
+
+                    MSDataFile::write(vendorMsd, targetResultFilename_mzMLb, config_mzMLb);
+                    MSDataFile msd_mzMLb(targetResultFilename_mzMLb);
+                    msd_mzMLb.fileDescription.sourceFilePtrs.erase(msd_mzMLb.fileDescription.sourceFilePtrs.end() - 1);
+
+                    DiffConfig diffConfig_mzMLb(diffConfig);
+                    if (numpress == BinaryDataEncoder::Numpress_Pic)
+                        diffConfig_mzMLb.precision = 1.0; // the precision diff is relative: (1 - 0.5)/0.5
+                    else
+                        diffConfig_mzMLb.precision = 0.05;
+                    diffConfig_mzMLb.ignoreDataProcessing = true;
+                    Diff<MSData, DiffConfig> diff_mzMLb(vendorMsd, msd_mzMLb, diffConfig_mzMLb);
+                    if (diff_mzMLb) cerr << headDiff(diff_mzMLb, 5000) << endl;
+                    unit_assert(!diff_mzMLb);
+                }
+            }
+            bfs::remove(targetResultFilename_mzMLb);
+        }
+#endif
+
         // test SpectrumList::min_level_accepted() for vendors
         if (msd.run.spectrumListPtr && msd.run.spectrumListPtr->size() > 0)
         {
@@ -414,6 +468,27 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             bal::contains(fileType, "T2D"))
             diffConfig_non_mzML.ignoreIdentity = true;
 
+        if (msd.run.spectrumListPtr && config.preferOnlyMsLevel != 2)
+        {
+            // mzML <-> MGF
+            vendorMsd.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_MGF_Filter(vendorMsd.run.spectrumListPtr));
+            MSData msd_MGF;
+            Serializer_MGF serializer_MGF;
+            serializer_MGF.write(*stringstreamPtr, vendorMsd);
+            if (os_) *os_ << "MGF:\n" << stringstreamPtr->str() << endl;
+            serializer_MGF.read(serializedStreamPtr, msd_MGF);
+
+            diffConfig_non_mzML.ignoreIdentity = true;
+            Diff<MSData, DiffConfig> diff_MGF(vendorMsd, msd_MGF, diffConfig_non_mzML);
+            if (diff_MGF && !os_) cerr << "MGF:\n" << headStream(*serializedStreamPtr, 5000) << endl;
+            if (diff_MGF) cerr << headDiff(diff_MGF, 5000) << endl;
+            unit_assert(!diff_MGF);
+        }
+
+        stringstreamPtr->str(" ");
+        stringstreamPtr->clear();
+        stringstreamPtr->seekp(0);
+
         if (vendorMsd.run.spectrumListPtr)
         {
             // mzML <-> mzXML
@@ -433,27 +508,6 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             if (diff_mzXML && !os_) cerr << "mzXML:\n" << headStream(*serializedStreamPtr, 5000) << endl;
             if (diff_mzXML) cerr << headDiff(diff_mzXML, 5000) << endl;
             unit_assert(!diff_mzXML);
-        }
-
-        stringstreamPtr->str(" ");
-        stringstreamPtr->clear();
-        stringstreamPtr->seekp(0);
-
-        if (msd.run.spectrumListPtr && config.preferOnlyMsLevel != 2)
-        {
-            // mzML <-> MGF
-            vendorMsd.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_MGF_Filter(vendorMsd.run.spectrumListPtr));
-            MSData msd_MGF;
-            Serializer_MGF serializer_MGF;
-            serializer_MGF.write(*stringstreamPtr, vendorMsd);
-            if (os_) *os_ << "MGF:\n" << stringstreamPtr->str() << endl;
-            serializer_MGF.read(serializedStreamPtr, msd_MGF);
-
-            diffConfig_non_mzML.ignoreIdentity = true;
-            Diff<MSData, DiffConfig> diff_MGF(vendorMsd, msd_MGF, diffConfig_non_mzML);
-            if (diff_MGF && !os_) cerr << "MGF:\n" << headStream(*serializedStreamPtr, 5000) << endl;
-            if (diff_MGF) cerr << headDiff(diff_MGF, 5000) << endl;
-            unit_assert(!diff_MGF);
         }
     }
 

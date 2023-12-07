@@ -3739,6 +3739,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Name of another peptide or molecule whose fitted calibration curve will be used for quantification of this peptide or molecule.
+        /// </summary>
+        public static string SurrogateExternalStandard {
+            get {
+                return ResourceManager.GetString("SurrogateExternalStandard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The average of the Qualitative Ion Ratio values across all of the external standard replicates that have not been excluded from calibration..
         /// </summary>
         public static string TargetQualitativeIonRatio {

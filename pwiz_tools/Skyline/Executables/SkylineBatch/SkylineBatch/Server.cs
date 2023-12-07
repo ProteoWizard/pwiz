@@ -153,13 +153,14 @@ namespace SkylineBatch
         {
             if (remoteFileSource == null)
                 throw new ArgumentException(Resources.Server_ValidateInputs_No_remote_file_source_was_specified__Please_choose_a_remote_file_source_);
+            string url = remoteFileSource.URI.AbsoluteUri + relativeUrl;
             try
             {
-                _ = new Uri(remoteFileSource.URI.AbsoluteUri + relativeUrl);
+                _ = new Uri(url);
             }
             catch (Exception)
             {
-                throw new ArgumentException(Resources.DataServerInfo_ServerFromUi_Error_parsing_the_URL__Please_correct_the_URL_and_try_again_);
+                throw new ArgumentException(TextUtil.LineSeparate(Resources.RemoteFileSource_ValidateInputs_Error_parsing_the_URL_, url, Resources.RemoteFileSource_ValidateInputs_Please_correct_the_URL_and_try_again_));
             }
         }
 
@@ -307,7 +308,7 @@ namespace SkylineBatch
             }
             catch (Exception)
             {
-                throw new ArgumentException(Resources.DataServerInfo_ServerFromUi_Error_parsing_the_URL__Please_correct_the_URL_and_try_again_);
+                throw new ArgumentException(TextUtil.LineSeparate(Resources.RemoteFileSource_ValidateInputs_Error_parsing_the_URL_, url ,Resources.RemoteFileSource_ValidateInputs_Please_correct_the_URL_and_try_again_));
             }
             if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password))
                 return;

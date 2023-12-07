@@ -281,11 +281,40 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             SearchFilenames = BuildLibraryDlg.AddInputFiles(WizardForm, SearchFilenames, fileNames, PerformDDASearch);
         }
 
+        // For test purposes, lets us test error handling
+        public string CutOffScoreText
+        {
+            set { textCutoff.Text = value; } // Can be a null or empty string under some circumstances
+        }
+
+        public bool NeedsCutoffScore => comboInputFileType.SelectedIndex > 0; // Only needed if Skyline is conducting the search
+
+        private double? _cutoffScore; // May be null when Skyline is not doing the search
+
         public double? CutOffScore
         {
             // Only valid when Skyline performs the search
-            get { return comboInputFileType.SelectedIndex > 0 ? double.Parse(textCutoff.Text) : (double?) null; }
-            set { textCutoff.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
+            get { return NeedsCutoffScore ? _cutoffScore : null; }
+            set
+            {
+                _cutoffScore = value;
+                textCutoff.Text = _cutoffScore.HasValue ? _cutoffScore.Value.ToString(CultureInfo.CurrentCulture) : string.Empty;
+            }
+        }
+
+        public bool ValidateCutoffScore()
+        {
+            if (!NeedsCutoffScore)
+            {
+                return true; // Doesn't matter what's in the text box, we won't use it
+            }
+            var helper = new MessageBoxHelper(this.ParentForm);
+            if (helper.ValidateDecimalTextBox(textCutoff, out var cutoffScore))
+            {
+                _cutoffScore = cutoffScore;
+                return true;
+            }
+            return false;
         }
 
         public bool IncludeAmbiguousMatches
@@ -643,5 +672,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             UpdatePerformDDASearch();
         }
+
     }
 }

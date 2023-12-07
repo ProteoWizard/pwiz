@@ -2,7 +2,7 @@
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2018 University of Washington - Seattle, WA
+ * Copyright 2023 University of Washington - Seattle, WA
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,23 +17,21 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using System.Linq;
 
-namespace pwiz.Common.Collections
+namespace pwiz.Skyline.Model.Databinding
 {
     /// <summary>
-    /// Equality comparer which tests object identity
+    /// A combo box column with a list of the surrogate standard molecules in the document.
     /// </summary>
-    public class IdentityEqualityComparer<T> : IEqualityComparer<T>
+    public class SurrogateStandardDataGridViewColumn : BoundComboBoxColumn
     {
-        public bool Equals(T x, T y)
+        protected override object[] GetDropdownItems()
         {
-            return ReferenceEquals(x, y);
-        }
-
-        public int GetHashCode(T obj)
-        {
-            return RuntimeHelpers.GetHashCode(obj);
+            var document = SkylineDataSchema.Document;
+            var items = new List<object> { string.Empty };
+            items.AddRange(document.Settings.GetPeptideStandards(StandardType.SURROGATE_STANDARD).Select(peptide=>peptide.PeptideDocNode.ModifiedTarget.InvariantName).Distinct());
+            return items.ToArray();
         }
     }
 }
