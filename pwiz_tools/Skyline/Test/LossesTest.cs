@@ -144,7 +144,7 @@ namespace pwiz.SkylineTest
             {
                 var docRoundTripped = AssertEx.RoundTripTransitionList(new ThermoMassListExporter(docLosses));
                 Assert.AreEqual(lossCount, GetLossCount(docRoundTripped, 1));
-                docRoundTripped = AssertEx.RoundTripTransitionList(new AgilentMassListExporter(docLosses));
+                docRoundTripped = AssertEx.RoundTripTransitionList(new AgilentMassListExporter.AgilentMH10MassListExporter(docLosses));
                 Assert.AreEqual(lossCount, GetLossCount(docRoundTripped, 1));
             }
 
