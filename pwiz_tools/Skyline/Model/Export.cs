@@ -3146,6 +3146,7 @@ namespace pwiz.Skyline.Model
         {
             public AgilentMH121MassListExporter(SrmDocument document, string instrumentType) : base(document, instrumentType)
             {
+                FieldSeparator = TextUtil.SEPARATOR_TSV;
             }
 
             protected override void WriteHeaders(TextWriter writer)
@@ -3198,7 +3199,6 @@ namespace pwiz.Skyline.Model
                 writer.WriteLine();
             }
         }
-
         public AgilentMassListExporter(SrmDocument document, string instrumentType = ExportInstrumentType.AGILENT)
             : this(document, null, instrumentType)
         {
