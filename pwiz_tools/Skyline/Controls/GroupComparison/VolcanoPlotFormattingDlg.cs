@@ -219,7 +219,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         public bool AnyProteomic { get; set; }
         public bool AnyMolecules { get; set; }
         public bool PerProtein { get; set; }
-        private bool IsProteinExpression { get; set; }
+        public bool IsProteinExpression { get; set; }
         public SrmDocument Document { get; set; }
 
         private void SetExpressionMinimumWidth()

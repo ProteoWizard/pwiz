@@ -19849,6 +19849,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Enter a list of {0} on separate lines..
+        /// </summary>
+        public static string MatchExpressionListDlg_MatchExpressionListDlg_Enter_a_list_of__0__on_separate_lines_ {
+            get {
+                return ResourceManager.GetString("MatchExpressionListDlg_MatchExpressionListDlg_Enter_a_list_of__0__on_separate_lin" +
+                        "es_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} precursors.
         /// </summary>
         public static string MatchingPrecursors_ToString__0__precursors {

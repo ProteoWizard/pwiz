@@ -3,21 +3,22 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
     public partial class MatchExpressionListDlg : FormEx
     {
-        private CreateProteinExpressionMatchExpressionDlg _createProteinExpressionMatchExpressionDlg;
+        private CreateMatchExpressionDlg _createProteinExpressionMatchExpressionDlg;
         private string _oldRegex;
-        public MatchExpressionListDlg(CreateProteinExpressionMatchExpressionDlg createProteinExpressionMatchExpressionDlg)
+        public MatchExpressionListDlg(CreateMatchExpressionDlg createMatchExpressionDlg)
         {
             InitializeComponent();
-            _createProteinExpressionMatchExpressionDlg = createProteinExpressionMatchExpressionDlg;
+            _createProteinExpressionMatchExpressionDlg = createMatchExpressionDlg;
             _oldRegex = _createProteinExpressionMatchExpressionDlg.Expression;
-            label1.Text = string.Format("Enter a line-separated list");
+            label1.Text = string.Format(Resources.MatchExpressionListDlg_MatchExpressionListDlg_Enter_a_list_of__0__on_separate_lines_, _createProteinExpressionMatchExpressionDlg.MatchSelectedItem.DisplayString);
 
         }
         private void proteinsTextBox_textChanged(object sender, EventArgs e)

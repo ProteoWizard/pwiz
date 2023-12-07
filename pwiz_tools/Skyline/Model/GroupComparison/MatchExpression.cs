@@ -334,7 +334,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             return true;
         }
-        public bool Matches(SrmDocument document, Protein protein, ProteinAbundanceBindingSource.ProteinAbundanceResult proteinAbundanceResult)
+        public bool Matches(SrmDocument document, Protein protein)
         {
             foreach (var match in matchOptions)
             {

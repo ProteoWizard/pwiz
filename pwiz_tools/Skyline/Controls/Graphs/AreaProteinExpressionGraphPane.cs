@@ -12,7 +12,7 @@ namespace pwiz.Skyline.Controls.Graphs
             : base(graphSummary, paneKey)
         {
         }
-        protected override GraphData CreateGraphData(SrmDocument document, PeptideGroupDocNode selectedProtein, DisplayTypeChrom displayType, List<ProteinAbundanceBindingSource.ProteinAbundanceRow> rows)
+        protected override GraphData CreateGraphData(SrmDocument document, PeptideGroupDocNode selectedProtein, DisplayTypeChrom displayType, List<ProteinAbundanceResult> rows)
         {
             int? result = null;
             if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 PeptideGroupDocNode selectedProtein,
                 int? result,
                 DisplayTypeChrom displayType,
-                PaneKey paneKey, List<ProteinAbundanceBindingSource.ProteinAbundanceRow> rows)
+                PaneKey paneKey, List<ProteinAbundanceResult> rows)
                 : base(document, selectedProtein, result, displayType, paneKey, rows)
             {
             }

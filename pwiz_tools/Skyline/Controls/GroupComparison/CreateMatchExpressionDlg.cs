@@ -25,6 +25,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Util;
@@ -39,11 +40,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private readonly VolcanoPlotFormattingDlg _formattingDlg;
         private CancellationTokenSource _cancellationTokenSource;
         private IList<StringWrapper> _filteredRows;
-
-        private FoldChangeVolcanoPlot _volcanoPlot
-        {
-            get { return _formattingDlg.VolcanoPlot; }
-        }
 
         public CreateMatchExpressionDlg() // for designer
         {
@@ -65,6 +61,16 @@ namespace pwiz.Skyline.Controls.GroupComparison
             SetSelectedItems(rgbHexColor);
             _allowUpdateGrid = true;
 
+            // When creating match expressions for a protein expression graph,
+            // do not offer p value and fold change filtering options.
+            if (_formattingDlg.IsProteinExpression)
+            {
+                // Hide the filter options
+                groupBox1.Hide();
+                // Expand the data grid
+                dataGridView1.Location = new Point(12, 51);
+                dataGridView1.Size = new Size(465, 252);
+            }
             FilterRows();
         }
 
@@ -347,6 +353,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
         }
 
+        public void SetRegexText(string expression)
+        {
+            expressionTextBox.Text = expression;
+        }
+
         private void comboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             FilterRows();
@@ -415,5 +426,16 @@ namespace pwiz.Skyline.Controls.GroupComparison
         }
 
         #endregion
+
+        private void enterListButton_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new MatchExpressionListDlg(this))
+            {
+                if (dlg.ShowDialog(_formattingDlg) == DialogResult.OK)
+                {
+
+                }
+            }
+        }
     }
 }
