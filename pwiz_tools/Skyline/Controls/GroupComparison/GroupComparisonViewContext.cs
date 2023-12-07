@@ -28,6 +28,7 @@ using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -141,12 +142,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
             roles.Add(Tuple.Create(PropertyPath.Root.Property(nameof(FoldChangeBindingSource.FoldChangeDetailRow.Peptide)),
                 ClusterRole.ROWHEADER));
             roles.Add(Tuple.Create(
-                ppRunAbundances.Property(nameof(FoldChangeBindingSource.ReplicateRow.ReplicateSampleIdentity)),
+                ppRunAbundances.Property(nameof(ReplicateRow.ReplicateSampleIdentity)),
                 ClusterRole.COLUMNHEADER));
             roles.Add(Tuple.Create(
-                ppRunAbundances.Property(nameof(FoldChangeBindingSource.ReplicateRow.ReplicateGroup)),
+                ppRunAbundances.Property(nameof(ReplicateRow.ReplicateGroup)),
                 ClusterRole.COLUMNHEADER));
-            roles.Add(Tuple.Create(ppRunAbundances.Property(nameof(FoldChangeBindingSource.ReplicateRow.Abundance)),
+            roles.Add(Tuple.Create(ppRunAbundances.Property(nameof(ReplicateRow.Abundance)),
                 (ClusterRole) ClusterRole.ZSCORE));
             var viewLayout = new ViewLayout(@"clustered").ChangeClusterSpec(new ClusteringSpec(roles.Select(role =>
                 new ClusteringSpec.ValueSpec(new ClusteringSpec.ColumnRef(role.Item1), role.Item2))));

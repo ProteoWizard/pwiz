@@ -4364,7 +4364,7 @@ namespace pwiz.Skyline
 
         private void areaIntensityMenuItem_Click(object sender, EventArgs e)
         {
-            ShowPeakAreaIntensityGraph();
+            ShowPeakAreaProteinExpressionGraph();
         }
 
         private void areaCVLogScaleToolStripMenuItem_Click(object sender, EventArgs e)
@@ -4427,7 +4427,7 @@ namespace pwiz.Skyline
             SynchronizeSummaryZooming();
         }
 
-        public void ShowPeakAreaIntensityGraph()
+        public void ShowPeakAreaProteinExpressionGraph()
         {
             ShowTotalTransitions();
             Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.protein);

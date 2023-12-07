@@ -23,6 +23,8 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
@@ -33,7 +35,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 {
     public partial class VolcanoPlotFormattingDlg : FormEx, ColorGrid<MatchRgbHexColor>.IColorGridOwner
     {
-        private readonly FoldChangeBindingSource.FoldChangeRow[] _foldChangeRows;
+        private readonly object[] _foldChangeRows;
         private readonly Action<List<MatchRgbHexColor>> _updateGraph;
         private readonly BindingList<MatchRgbHexColor> _bindingList;
 
@@ -44,11 +46,31 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private readonly DataGridViewComboBoxColumn _pointSizeCombo;
 
         public VolcanoPlotFormattingDlg(FoldChangeVolcanoPlot volcanoPlot, IList<MatchRgbHexColor> colorRows,
-            FoldChangeBindingSource.FoldChangeRow[] foldChangeRows, Action<List<MatchRgbHexColor>> updateGraph)
+            FoldChangeBindingSource.FoldChangeRow[] foldChangeRows, Action<List<MatchRgbHexColor>> updateGraph) : 
+            this(false, null, volcanoPlot, colorRows, foldChangeRows, updateGraph, 
+                volcanoPlot.AnyMolecules, volcanoPlot.AnyProteomic, volcanoPlot.PerProtein, volcanoPlot.Document)
+        {
+        }
+
+        public VolcanoPlotFormattingDlg(SummaryProteinExpressionGraphPane proteinExpressionGraph,
+            IList<MatchRgbHexColor> colorRows, object[] proteinAbundances, Action<List<MatchRgbHexColor>> updateGraph) : 
+            this(true, proteinExpressionGraph, null, colorRows, proteinAbundances, updateGraph, 
+                proteinExpressionGraph.AnyMolecules, proteinExpressionGraph.AnyProteomic, true, proteinExpressionGraph.Document)
+        {
+        }
+
+        private VolcanoPlotFormattingDlg(bool isProteinExpression, SummaryProteinExpressionGraphPane proteinExpressionGraph, FoldChangeVolcanoPlot volcanoPlot, IList<MatchRgbHexColor> colorRows,
+            object[] foldChangeRows, Action<List<MatchRgbHexColor>> updateGraph, bool anyMolecules, bool anyProteomic, bool perProtein, SrmDocument document)
         {
             InitializeComponent();
-
+            IsProteinExpression = isProteinExpression;
             VolcanoPlot = volcanoPlot;
+            ProteinExpressionGraph = proteinExpressionGraph;
+            AnyMolecules = anyMolecules;
+            AnyProteomic = anyProteomic;
+            PerProtein = perProtein;
+            Document = document;
+
             _foldChangeRows = foldChangeRows;
             _updateGraph = updateGraph;
 
@@ -179,7 +201,26 @@ namespace pwiz.Skyline.Controls.GroupComparison
             base.OnHandleDestroyed(e);
         }
 
+        public void Select(IdentityPath identityPath)
+        {
+            if (IsProteinExpression)
+            {
+                // TODO implement selection for protein expression graph
+            }
+            else
+            {
+                VolcanoPlot.Select(identityPath);
+            }
+        }
         public FoldChangeVolcanoPlot VolcanoPlot { get; private set; }
+
+        public SummaryProteinExpressionGraphPane ProteinExpressionGraph { get; private set; }
+
+        public bool AnyProteomic { get; set; }
+        public bool AnyMolecules { get; set; }
+        public bool PerProtein { get; set; }
+        private bool IsProteinExpression { get; set; }
+        public SrmDocument Document { get; set; }
 
         private void SetExpressionMinimumWidth()
         {
@@ -262,6 +303,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             DialogResult = DialogResult.Cancel;
         }
 
+        //TODO use reflection here?
         private static MatchOption DisplayModeToMatchOption(ProteinMetadataManager.ProteinDisplayMode displayMode)
         {
             switch (displayMode)
@@ -282,24 +324,24 @@ namespace pwiz.Skyline.Controls.GroupComparison
         public MatchExpression GetDefaultMatchExpression(string regex)
         {
             MatchOption? matchOption = null;
-            if (VolcanoPlot.PerProtein)
+            if (PerProtein)
             {
-                if (VolcanoPlot.AnyProteomic)
+                if (AnyProteomic)
                 {
                     matchOption = DisplayModeToMatchOption(SequenceTree.ProteinsDisplayMode);
                 }
-                else if (VolcanoPlot.AnyMolecules)
+                else if (AnyMolecules)
                 {
                     matchOption = MatchOption.MoleculeGroupName;
                 }
             }
             else
             {
-                if (VolcanoPlot.AnyProteomic)
+                if (AnyProteomic)
                 {
                     matchOption = MatchOption.PeptideSequence;
                 }
-                else if (VolcanoPlot.AnyMolecules)
+                else if (AnyMolecules)
                 {
                     matchOption = MatchOption.MoleculeName;
                 }

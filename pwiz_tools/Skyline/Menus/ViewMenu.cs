@@ -771,7 +771,7 @@ namespace pwiz.Skyline.Menus
         }
         private void areaIntensityMenuItem_Click(object sender, EventArgs e)
         {
-            SkylineWindow.ShowPeakAreaIntensityGraph();
+            SkylineWindow.ShowPeakAreaProteinExpressionGraph();
         }
         private void areaCVHistogramToolStripMenuItem1_Click(object sender, EventArgs e)
         {

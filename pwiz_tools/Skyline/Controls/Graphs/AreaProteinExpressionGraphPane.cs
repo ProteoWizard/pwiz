@@ -16,7 +16,10 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             int? result = null;
             if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
+            {
                 result = GraphSummary.ResultsIndex;
+            }
+            
             return new AreaGraphData(document, selectedProtein, result, displayType, PaneKey, rows);
         }
 

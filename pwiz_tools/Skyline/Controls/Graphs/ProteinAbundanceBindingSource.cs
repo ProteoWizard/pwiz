@@ -13,8 +13,6 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
-using pwiz.Skyline.Model.Hibernate;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -261,7 +259,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (_referenceCount <= 0)
             {
-                throw new ObjectDisposedException(@"FoldChangeBindingSource");
+                throw new ObjectDisposedException(@"ProteinAbundanceBindingSource");
             }
             return _bindingListSource;
         }
@@ -335,39 +333,6 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return ProteinAbundanceResults.Select(kvp =>
                     new ProteinAbundanceRow(Protein, kvp.Key, 0, kvp.Value, ReplicateAbundances));
-            }
-        }
-
-        [InvariantDisplayName("ReplicateAbundance")]
-        public class ReplicateRow : IReplicateValue
-        {
-            public ReplicateRow(Replicate replicate, GroupIdentifier groupIdentifier, String identity, double? abundance)
-            {
-                Replicate = replicate;
-                ReplicateGroup = groupIdentifier;
-                ReplicateSampleIdentity = identity;
-                Abundance = abundance;
-            }
-            public Replicate Replicate { get; private set; }
-            [Format(Formats.CalibrationCurve)]
-            public double? Abundance { get; private set; }
-            public string ReplicateSampleIdentity { get; private set; }
-            public GroupIdentifier ReplicateGroup { get; private set; }
-
-            Replicate IReplicateValue.GetReplicate()
-            {
-                return Replicate;
-            }
-
-            public override string ToString()
-            {
-                var parts = new List<string> { Replicate.ToString() };
-                if (Abundance.HasValue)
-                {
-                    parts.Add(Abundance.Value.ToString(Formats.CalibrationCurve));
-                }
-
-                return TextUtil.SpaceSeparate(parts);
             }
         }
     }

@@ -123,6 +123,9 @@ namespace pwiz.Skyline.Model
 
         public bool IsEmpty { get { return MoleculeCount == 0; }}  // If empty, it's neither proteomic nor non-proteomic
 
+        public int BestResult { get; private set; }
+
+
         public bool IsProteomic
         {
             // Default assumption for an empty PeptideGroupDocNode is that it's proteomic (probably undergoing population from a protein)

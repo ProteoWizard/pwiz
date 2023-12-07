@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -33,7 +34,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 {
     public partial class CreateMatchExpressionDlg : ModeUIInvariantFormEx // Dialog has explicit logic for handling UI modes
     {
-        private readonly FoldChangeBindingSource.FoldChangeRow[] _foldChangeRows;
+        private readonly object[] _foldChangeRows;
         private readonly bool _allowUpdateGrid;
         private readonly VolcanoPlotFormattingDlg _formattingDlg;
         private CancellationTokenSource _cancellationTokenSource;
@@ -49,7 +50,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             InitializeComponent();
         }
 
-        public CreateMatchExpressionDlg(VolcanoPlotFormattingDlg formattingDlg, FoldChangeBindingSource.FoldChangeRow[] foldChangeRows, MatchRgbHexColor rgbHexColor)
+        public CreateMatchExpressionDlg(VolcanoPlotFormattingDlg formattingDlg, object[] foldChangeRows, MatchRgbHexColor rgbHexColor)
         {
             InitializeComponent();
 
@@ -72,7 +73,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             // Match
             AddComboBoxItems(matchComboBox, new MatchOptionStringPair(null, GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_None));
 
-            if (_volcanoPlot.AnyProteomic)
+            if (_formattingDlg.AnyProteomic)
             {
                 AddComboBoxItems(matchComboBox,
                     new MatchOptionStringPair(MatchOption.ProteinName,
@@ -85,9 +86,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
                         GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Protein_Gene));
             }
 
-            if (_volcanoPlot.PerProtein)
+            if (_formattingDlg.PerProtein)
             {
-                if (_volcanoPlot.AnyMolecules)
+                if (_formattingDlg.AnyMolecules)
                 {
                     AddComboBoxItems(matchComboBox,
                         new MatchOptionStringPair(MatchOption.MoleculeGroupName,
@@ -96,14 +97,14 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
             else
             {
-                if (_volcanoPlot.AnyProteomic)
+                if (_formattingDlg.AnyProteomic)
                 {
                     AddComboBoxItems(matchComboBox,
                         new MatchOptionStringPair(MatchOption.PeptideSequence, GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Peptide_Sequence),
                         new MatchOptionStringPair(MatchOption.PeptideModifiedSequence, GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Peptide_Modified_Sequence));
                 }
 
-                if (_volcanoPlot.AnyMolecules)
+                if (_formattingDlg.AnyMolecules)
                 {
                     AddComboBoxItems(matchComboBox,
                         new MatchOptionStringPair(MatchOption.MoleculeName,
@@ -252,10 +253,31 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
         }
 
-        private StringWrapper RowToString(MatchExpression expr, FoldChangeBindingSource.FoldChangeRow row)
+        private StringWrapper RowToString(MatchExpression expr, object obj)
         {
-            return new StringWrapper(expr.GetDisplayString(_volcanoPlot.Document, row.Protein, row.Peptide) ??
-                              TextUtil.EXCEL_NA);
+            return new StringWrapper(expr.GetDisplayString(_formattingDlg.Document, GetProtein(obj), GetPeptide(obj)) ??
+                                     TextUtil.EXCEL_NA);
+        }
+
+        private static Protein GetProtein(object obj)
+        {
+            var myType = obj.GetType();
+            IList<PropertyInfo> props = new List<PropertyInfo>(myType.GetProperties());
+            return props.Select(prop => prop.GetValue(obj, null)).Where(propValue => propValue is Protein).Cast<Protein>().FirstOrDefault();
+        }
+
+        private static Peptide GetPeptide(object obj)
+        {
+            var myType = obj.GetType();
+            IList<PropertyInfo> props = new List<PropertyInfo>(myType.GetProperties());
+            return props.Select(prop => prop.GetValue(obj, null)).Where(propValue => propValue is Peptide).Cast<Peptide>().FirstOrDefault();
+        }
+
+        private static FoldChangeResult GetFoldChangeResult(object obj)
+        {
+            var myType = obj.GetType();
+            IList<PropertyInfo> props = new List<PropertyInfo>(myType.GetProperties());
+            return props.Select(prop => prop.GetValue(obj, null)).Where(propValue => propValue is FoldChangeResult).Cast<FoldChangeResult>().FirstOrDefault();
         }
 
         private void FilterRows()
@@ -290,16 +312,17 @@ namespace pwiz.Skyline.Controls.GroupComparison
             FilterRows();
         }
 
-        private void GetFilteredRows(CancellationToken canellationToken, FoldChangeBindingSource.FoldChangeRow[] rows, MatchExpression expr)
+        // Need to make a seperate expr.Matches for protein expression plot
+        private void GetFilteredRows(CancellationToken canellationToken, Object[] objs, MatchExpression expr)
         {
             IList<StringWrapper> filteredRows = new List<StringWrapper>();
 
-            foreach (var row in rows)
+            foreach (var obj in objs)
             {
-                if (expr.Matches(_volcanoPlot.Document, row.Protein, row.Peptide,
-                    row.FoldChangeResult, FoldChangeVolcanoPlot.CutoffSettings))
+                if (expr.Matches(_formattingDlg.Document, GetProtein(obj), GetPeptide(obj),
+                    GetFoldChangeResult(obj), FoldChangeVolcanoPlot.CutoffSettings))
                 {
-                    filteredRows.Add(RowToString(expr, row));
+                    filteredRows.Add(RowToString(expr, obj));
                 }
 
                 if (canellationToken.IsCancellationRequested)
@@ -339,9 +362,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
             if (e.ColumnIndex == nameColumn.Index && e.RowIndex >= 0)
             {
                 var row = _foldChangeRows[e.RowIndex];
-                _volcanoPlot.Select(_volcanoPlot.PerProtein
-                    ? row.Protein.IdentityPath
-                    : row.Peptide.IdentityPath);
+                _formattingDlg.Select(_formattingDlg.PerProtein
+                    ? GetProtein(row).IdentityPath
+                    : GetPeptide(row).IdentityPath);
             }
         }
 

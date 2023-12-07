@@ -371,6 +371,7 @@
     <Compile Include="Controls\Databinding\IDataboundGridForm.cs" />
     <Compile Include="Controls\Databinding\SkylineViewContext.cs" />
     <Compile Include="Controls\Databinding\SkylineWindowDataSchema.cs" />
+    <Compile Include="Controls\Graphs\AbstractExpressionRow.cs" />
     <Compile Include="Controls\Graphs\AreaProteinExpressionGraphPane.cs" />
     <Compile Include="Controls\Graphs\CreateProteinExpressionMatchExpressionDlg.cs">
       <SubType>Form</SubType>
