@@ -194,8 +194,8 @@ inline std::string get_aas(const std::string &name, vector<SeqMod>& mods)
             int position = max(1, static_cast<int>(j));
             if (!mods.empty() && mods.back().position == position)
                 mods.back().deltaMass += unimod::modification(unimodCvid).deltaMonoisotopicMass();
-            else
-				mods.emplace_back(position, unimod::modification(unimodCvid).deltaMonoisotopicMass());
+            else 
+                mods.emplace_back(position, unimod::modification(unimodCvid).deltaMonoisotopicMass());
             continue;
         }
         ++j;
