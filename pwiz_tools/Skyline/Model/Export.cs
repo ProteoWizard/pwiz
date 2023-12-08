@@ -3286,7 +3286,7 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    public class AgilentMethodExporter : AgilentMassListExporter
+    public class AgilentMethodExporter : AgilentMassListExporter.AgilentMH10MassListExporter
     {
         public const string EXE_BUILD_AGILENT_METHOD = @"Method\Agilent\6400\BuildAgilentMethod";
 
