@@ -4,10 +4,10 @@ using System.IO;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
+using pwiz.Common.GUI;
 using pwiz.PanoramaClient;
 using SkylineBatch;
 using SkylineBatch.Properties;
-using AlertDlg = SharedBatch.AlertDlg;
 using PanoramaServer = pwiz.PanoramaClient.PanoramaServer;
 
 // ReSharper disable UnusedMember.Local
@@ -346,7 +346,7 @@ namespace SkylineBatchTest
                 var remoteSourceForm = ShowDialog<RemoteSourceForm>(() =>
                     templateRemoteFileControl.comboRemoteFileSource.SelectedItem = "<Edit current...>");
                 ChangeRemoteFileSource(remoteSourceForm, BRUDERER_SOURCE_NAME, BRUDERER_FOLDER_LINK, closeForm: false);
-                RunDlg<AlertDlg>(() => remoteSourceForm.btnSave.PerformClick(),
+                RunDlg<CommonAlertDlg>(() => remoteSourceForm.btnSave.PerformClick(),
                     dlg =>
                     {
                         var expectedMessage =
@@ -392,21 +392,21 @@ namespace SkylineBatchTest
             CheckRemoteFileSourceList(dataRemoteFileControl, new HashSet<string> { BRUDERER_SOURCE_NAME });
             {
                 var remoteSourceForm = ShowDialog<RemoteSourceForm>(() =>
-                    dataRemoteFileControl.comboRemoteFileSource.SelectedItem = "<Edit current...>");
-                ChangeRemoteFileSource(remoteSourceForm, BRUDERER_SOURCE_NAME, SELEVSEK_FOLDER_LINK, closeForm: false);
-                RunDlg<AlertDlg>(() => remoteSourceForm.btnSave.PerformClick(),
-                    dlg =>
-                    {
-                        var expectedMessage =
-                            Resources
-                                .SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Changing_this_file_source_will_impact_the_following_configurations_ +
-                            Environment.NewLine + Environment.NewLine +
-                            "Bruderer" + Environment.NewLine + "Bruderer (MSstats)" + Environment.NewLine +
-                            Environment.NewLine +
-                            Resources.SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Do_you_want_to_continue_;
-                        Assert.AreEqual(expectedMessage, dlg.Message);
-                        dlg.ClickOk();
-                    });
+                dataRemoteFileControl.comboRemoteFileSource.SelectedItem = "<Edit current...>");
+            ChangeRemoteFileSource(remoteSourceForm, BRUDERER_SOURCE_NAME, SELEVSEK_FOLDER_LINK, closeForm: false);
+            RunDlg<CommonAlertDlg>(() => remoteSourceForm.btnSave.PerformClick(),
+                dlg =>
+                {
+                    var expectedMessage =
+                        Resources
+                            .SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Changing_this_file_source_will_impact_the_following_configurations_ +
+                        Environment.NewLine + Environment.NewLine +
+                        "Bruderer" + Environment.NewLine + "Bruderer (MSstats)" + Environment.NewLine +
+                        Environment.NewLine +
+                        Resources.SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Do_you_want_to_continue_;
+                    Assert.AreEqual(expectedMessage, dlg.Message);
+                    dlg.ClickOk();
+                });
             }
             RunUI(() => dataRemoteFileControl.textRelativePath.Text = string.Empty);
             CloseFormsInOrder(true, dataRemoteFileForm);
@@ -418,17 +418,17 @@ namespace SkylineBatchTest
             var reportRemoteFileControl = rScriptRemoteFileForm.RemoteFileControl;
             {
                 var remoteSourceForm = ShowDialog<RemoteSourceForm>(() =>
-                    reportRemoteFileControl.comboRemoteFileSource.SelectedItem = "<Edit current...>");
-                CheckRemoteFileSource(remoteSourceForm, BRUDERER_SOURCE_NAME, SELEVSEK_FOLDER_LINK);
-                CloseFormsInOrder(false, rScriptRemoteFileForm, rScriptForm, editReportForm, configForm);
+                reportRemoteFileControl.comboRemoteFileSource.SelectedItem = "<Edit current...>");
+            CheckRemoteFileSource(remoteSourceForm, BRUDERER_SOURCE_NAME, SELEVSEK_FOLDER_LINK);
+            CloseFormsInOrder(false, rScriptRemoteFileForm, rScriptForm, editReportForm, configForm);
 
-                RunUI(() => mainForm.ClickConfig(0));
-                configForm = ShowDialog<SkylineBatchConfigForm>(() => mainForm.ClickEdit());
-                var annotationsRemoteFileForm =
-                    ShowDialog<RemoteFileForm>(() => configForm.annotationsControl.btnDownload.PerformClick());
+            RunUI(() => mainForm.ClickConfig(0));
+            configForm = ShowDialog<SkylineBatchConfigForm>(() => mainForm.ClickEdit());
+            var annotationsRemoteFileForm =
+                ShowDialog<RemoteFileForm>(() => configForm.annotationsControl.btnDownload.PerformClick());
                 // var annotationsRemoteFileControl = annotationsRemoteFileForm.RemoteFileControl;
-                CheckRemoteFileSource(remoteSourceForm, BRUDERER_SOURCE_NAME, SELEVSEK_FOLDER_LINK);
-                CloseFormsInOrder(false, annotationsRemoteFileForm, configForm);
+            CheckRemoteFileSource(remoteSourceForm, BRUDERER_SOURCE_NAME, SELEVSEK_FOLDER_LINK);
+            CloseFormsInOrder(false, annotationsRemoteFileForm, configForm);
             }
 
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
