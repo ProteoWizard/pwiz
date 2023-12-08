@@ -143,7 +143,7 @@ namespace SkylineBatch
             {
                 var newText = textPath.Text;
                 textPath.Text = ServerPath();
-                if (DialogResult.OK == AlertDlg.ShowOkCancel(this, Program.AppName(),
+                if (DialogResult.OK == AlertDlg.ShowOkCancel(this,
                     string.Format(Resources.DownloadingFileControl_textPath_TextChanged_Changing_the__0__will_prevent_it_from_being_downloaded_through_Panorama__Are_you_sure_you_want_to_continue_, _variableDescription.ToLower(CultureInfo.CurrentCulture)))
                 )
                 {

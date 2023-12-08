@@ -62,12 +62,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AlertDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="AlertDlg.Designer.cs">
-      <DependentUpon>AlertDlg.cs</DependentUpon>
-    </Compile>
+    <Compile Include="AlertDlg.cs" />
     <Compile Include="ChildProcessTracker.cs" />
     <Compile Include="ConfigManager.cs" />
     <Compile Include="FileOpenedForm.cs">
@@ -134,10 +129,6 @@
     <Compile Include="XMLUtil.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="AlertDlg.resx">
-      <DependentUpon>AlertDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="FileOpenedForm.resx">
       <DependentUpon>FileOpenedForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -169,6 +160,12 @@
       <Generator>PublicSettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Shared\CommonUtil\CommonUtil.csproj">
+      <Project>{13bf2ffb-50a1-4ab1-83a4-5733e36905ce}</Project>
+      <Name>CommonUtil</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
