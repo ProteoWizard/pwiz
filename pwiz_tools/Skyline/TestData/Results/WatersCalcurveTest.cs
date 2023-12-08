@@ -173,7 +173,7 @@ namespace pwiz.SkylineTestData.Results
                         var chromInfoGroup = nodeGroup.Results[len - 1][0];
                         Assert.IsTrue(chromInfoGroup.PeakCountRatio >= 0.5);
                         Assert.IsTrue(chromInfoGroup.RetentionTime.HasValue);
-                        Assert.IsTrue(chromInfoGroup.AreaScorable.HasValue && chromInfoGroup.AreaScorable > 290);
+                        Assert.IsTrue(chromInfoGroup.Area.HasValue && chromInfoGroup.Area > 290);
 
                         Assert.AreEqual(chromInfo.RetentionTime, chromInfoGroup.RetentionTime);
                         Assert.AreEqual(chromInfo.PeakCountRatio, chromInfoGroup.PeakCountRatio);

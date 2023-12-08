@@ -46,7 +46,7 @@ namespace TestPerf
             var peptide = SkylineWindow.Document.Molecules.First();
             var precursor = peptide.TransitionGroups.First();
             var transitionGroupChromInfo = precursor.Results[0].First();
-            Assert.IsTrue(transitionGroupChromInfo.AreaScorable > 0);
+            Assert.IsTrue(transitionGroupChromInfo.Area > 0);
         }
     }
 }

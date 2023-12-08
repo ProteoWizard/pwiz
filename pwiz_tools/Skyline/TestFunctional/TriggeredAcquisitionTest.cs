@@ -103,7 +103,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreNotEqual(0, untriggeredChromInfo.BackgroundArea);
                     Assert.AreEqual(0, triggeredChromInfo.BackgroundArea);
 
-                    var untriggeredTotalArea = untriggeredChromInfo.Area + untriggeredChromInfo.BackgroundArea.Value;
+                    var untriggeredTotalArea = untriggeredChromInfo.Area.Value + untriggeredChromInfo.BackgroundArea.Value;
                     // The triggered and untriggered area need to be within a factor of 2 of each other.
                     AssertEx.AreEqual(1.0, triggeredChromInfo.Area / untriggeredTotalArea, .5);
                 }

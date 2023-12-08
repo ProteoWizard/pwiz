@@ -79,7 +79,7 @@ namespace TestPerf
                 return null;
             }
 
-            return transitionGroupDocNode.Results.SelectMany(r => r).OrderByDescending(chromInfo => chromInfo.AreaScorable)
+            return transitionGroupDocNode.Results.SelectMany(r => r).OrderByDescending(chromInfo => chromInfo.Area)
                 .First().OptimizationStep;
         }
     }
