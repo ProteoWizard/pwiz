@@ -373,14 +373,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected abstract GraphData CreateGraphData(PeptideGroupDocNode selectedProtein, List<ProteinAbundanceResult> results);
 
+
         protected virtual void UpdateAxes()
         {
-            UpdateAxes(true);
-        }
-
-        protected void UpdateAxes(bool allowLogScale)
-        {
-            if (Settings.Default.AreaLogScale && allowLogScale)
+            if (Settings.Default.AreaLogScale )
             {
                 YAxis.Title.Text = TextUtil.SpaceSeparate(Resources.SummaryPeptideGraphPane_UpdateAxes_Log, YAxis.Title.Text);
                 YAxis.Type = AxisType.Log;
