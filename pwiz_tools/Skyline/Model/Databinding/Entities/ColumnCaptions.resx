@@ -1305,6 +1305,9 @@
   <data name="SummaryMessage">
     <value>Summary Message</value>
   </data>
+  <data name="SurrogateExternalStandard">
+    <value>Surrogate External Standard</value>
+  </data>
   <data name="TargetQualitativeIonRatio">
     <value>Target Qualitative Ion Ratio</value>
   </data>
