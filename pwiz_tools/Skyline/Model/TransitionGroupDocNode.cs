@@ -473,7 +473,7 @@ namespace pwiz.Skyline.Model
             {
                 return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep != 0
                                                               ? null
-                                                              : chromInfo.Area);
+                                                              : chromInfo.AreaScorable);
             }
         }
 
@@ -486,7 +486,7 @@ namespace pwiz.Skyline.Model
             var result = GetSafeChromInfo(i);
             if (result.IsEmpty)
                 return null;
-            return result.GetAverageValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.Area.HasValue
+            return result.GetAverageValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.AreaScorable.HasValue
                                                               ? chromInfo.IsotopeDotProduct
                                                               : null);
         }
@@ -495,7 +495,7 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.Area.HasValue
+                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.AreaScorable.HasValue
                                                               ? chromInfo.IsotopeDotProduct
                                                               : null);
             }
@@ -510,7 +510,7 @@ namespace pwiz.Skyline.Model
             var result = GetSafeChromInfo(i);
             if (result.IsEmpty)
                 return null;
-            return result.GetAverageValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.Area.HasValue
+            return result.GetAverageValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.AreaScorable.HasValue
                                                               ? chromInfo.LibraryDotProduct
                                                               : null);
         }
@@ -519,7 +519,7 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.Area.HasValue
+                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.AreaScorable.HasValue
                                                               ? chromInfo.LibraryDotProduct
                                                               : null);
             }
@@ -1757,6 +1757,10 @@ namespace pwiz.Skyline.Model
             ChromPeak.FlagValues flags = 0;
             if (settingsNew.MeasuredResults.IsTimeNormalArea)
                 flags = ChromPeak.FlagValues.time_normalized;
+            if (!info.ChromTransition.ParticipatesInScoring)
+            {
+                flags |= ChromPeak.FlagValues.non_scoring;
+            }
             var peak = info.CalcPeak(peakGroupIntegrator, chromGroupInfoMatch.StartRetentionTime.Value, chromGroupInfoMatch.EndRetentionTime.Value, flags);
             userSet = UserSet.MATCHED;
             var userSetBest = UserSet.FALSE;
@@ -2262,7 +2266,7 @@ namespace pwiz.Skyline.Model
 
             private static float GetSafeRankArea(TransitionChromInfo info)
             {
-                return (info != null ? info.Area : -1.0f);
+                return (info is { ParticipatesInScoring: true } ? info.Area : -1.0f);
             }
 
             private static float GetSafeLibIntensity(TransitionDocNode nodeTran)
@@ -2547,7 +2551,8 @@ namespace pwiz.Skyline.Model
             private RetentionTimeValues NonQuantitativeRetentionTimes { get; set; }
             private TransitionGroupIonMobilityInfo IonMobilityInfo { get; set; }
             private float? Fwhm { get; set; }
-            private float? Area { get; set; }
+            private float? Area { get; set; } // Area of all peaks, including non-scoring peaks that don't influence RT determination
+            private float? AreaScorable { get; set; } // Total less the area of non-scoring peaks (e.g. reporter ions like TMT)
             private float? AreaMs1 { get; set; }
             private float? AreaFragment { get; set; }
             private float? BackgroundArea { get; set; }
@@ -2593,15 +2598,19 @@ namespace pwiz.Skyline.Model
                 {
                     if (info.IsGoodPeak(Settings.TransitionSettings.Integration.IsIntegrateAll))
                         PeakCount++;
-                    var retentionTimeValues = RetentionTimeValues.FromTransitionChromInfo(info);
+                    var retentionTimeValues = info.ParticipatesInScoring ? RetentionTimeValues.FromTransitionChromInfo(info) : null;
                     if (nodeTran.IsQuantitative(Settings))
                     {
                         Area = (Area ?? 0) + info.Area;
+                        if (info.ParticipatesInScoring)
+                        {
+                            AreaScorable = (AreaScorable ?? 0) + info.Area;
+                        }
                         BackgroundArea = (BackgroundArea ?? 0) + info.BackgroundArea;
                         if (info.MassError.HasValue)
                         {
                             double massError = MassError ?? 0;
-                            massError += (info.MassError.Value - massError) * info.Area / Area.Value;
+                            massError += (info.MassError.Value - massError) * info.Area / AreaScorable.Value;
                             MassError = (float)massError;
                         }
 
@@ -2697,7 +2706,7 @@ namespace pwiz.Skyline.Model
                                                     (float?) retentionTimeValues?.EndRetentionTime,
                                                     IonMobilityInfo,
                                                     Fwhm,
-                                                    Area, AreaMs1, AreaFragment,
+                                                    Area, AreaScorable,AreaMs1, AreaFragment,
                                                     BackgroundArea, BackgroundAreaMs1, BackgroundAreaFragment,
                                                     (float?) BestRetentionTimes?.Height,
                                                     MassError,

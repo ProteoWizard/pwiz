@@ -23,7 +23,8 @@ namespace pwiz.Common.PeakFinding
 {
     public interface IPeakFinder : IDisposable
     {
-        void SetChromatogram(IList<float> times, IList<float> intensities);
+        void SetChromatogram(IList<float> times, IList<float> intensities,
+                             bool participatesInScoring); // Some ion types don't participate in retention time calculation, e.e. reporter ions like TMT
         IFoundPeak GetPeak(int startIndex, int endIndex);
         IList<IFoundPeak> CalcPeaks(int max, int[] idIndices);
         IList<float> Intensities1d { get; }

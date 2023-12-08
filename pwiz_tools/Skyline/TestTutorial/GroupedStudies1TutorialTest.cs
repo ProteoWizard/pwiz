@@ -1313,9 +1313,9 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreSame(nodeGroupRemove.Id, nodeGroupAfter.Id);
 
                 Assert.IsNotNull(nodeGroupRemove.Results[resultsIndex]);
-                Assert.IsTrue(nodeGroupRemove.Results[resultsIndex][0].Area.HasValue);
+                Assert.IsTrue(nodeGroupRemove.Results[resultsIndex][0].AreaScorable.HasValue);
                 Assert.IsNotNull(nodeGroupAfter.Results[resultsIndex]);
-                Assert.IsFalse(nodeGroupAfter.Results[resultsIndex][0].Area.HasValue);
+                Assert.IsFalse(nodeGroupAfter.Results[resultsIndex][0].AreaScorable.HasValue);
             });
         }
 

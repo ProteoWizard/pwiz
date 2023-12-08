@@ -178,7 +178,6 @@ namespace pwiz.SkylineTestFunctional
                 new UserSetCount(UserSet.FALSE, 1192),
                 new UserSetCount(UserSet.REINTEGRATED, 56),
             };
-
             VerifyUserSets(documentRescore, matchedUserSetGroups, matchedUserSetTrans, true);
             VerifyMatchingPeakBoundaries(documentRescore, true);
 

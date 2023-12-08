@@ -360,7 +360,7 @@ namespace pwiz.Skyline.Model.Results
                     var chromKey = new ChromKey(
                         new ChromatogramGroupId(PeptideDocNode.ChromatogramTarget, transitionGroup.SpectrumClassFilter),
                         transitionGroup.PrecursorMz, null,
-                        transition.Mz, 0, 0, 0, transition.IsMs1 ? ChromSource.ms1 : ChromSource.fragment,
+                        transition.Mz, 0, transition.ParticipatesInScoring, 0, 0, transition.IsMs1 ? ChromSource.ms1 : ChromSource.fragment,
                         ChromExtractor.summed);
                     chromDatas.Add(new ChromData(chromKey, transition, rawTimeIntensities, rawTimeIntensities));
                 }

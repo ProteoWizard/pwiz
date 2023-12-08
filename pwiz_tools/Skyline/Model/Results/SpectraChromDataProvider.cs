@@ -494,6 +494,7 @@ namespace pwiz.Skyline.Model.Results
                         collector.IonMobility,
                         pairProduct.Key.TargetMz,
                         0,
+                        pairProduct.Key.ParticipatesInScoring,
                         0,
                         pairProduct.Key.FilterWidth,
                         chromMap.ChromSource,
@@ -542,7 +543,7 @@ namespace pwiz.Skyline.Model.Results
             float[] intensityFloats = new float[intensities.Length];
             for (int i = 0; i < intensities.Length; i++)
                 intensityFloats[i] = (float) intensities[i];
-            var productFilters = mzs.Select(mz => new SpectrumProductFilter(new SignedMz(mz, precursorMz.IsNegative), 0, 0)).ToArray();
+            var productFilters = mzs.Select(mz => new SpectrumProductFilter(new SignedMz(mz, precursorMz.IsNegative), 0, 0, true)).ToArray();
             var spectrum = new ExtractedSpectrum(chromatogramGroupId, peptideColor, precursorMz,
             IonMobilityFilter.EMPTY, // ion mobility unknown
                 ChromExtractor.summed, filterIndex, productFilters, intensityFloats, null);

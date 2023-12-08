@@ -697,6 +697,11 @@ namespace pwiz.Skyline.Model.Serialization
             Transition transition = nodeTransition.Transition;
             writer.WriteAttribute(ATTR.fragment_type, transition.IonType);
             writer.WriteAttribute(ATTR.quantitative, nodeTransition.ExplicitQuantitative, true);
+            if (!nodeTransition.ParticipatesInScoring)
+            {
+                writer.WriteAttribute(ATTR.non_scoring, true); // Some transitions don't participate in RT calculation, e.g. reporter ions like TMT
+            }
+
             WriteExplicitTransitionValuesAttributes(writer, nodeTransition.ExplicitValues);
             if (transition.IsCustom())
             {
@@ -920,6 +925,10 @@ namespace pwiz.Skyline.Model.Serialization
             }
             writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);
             writer.WriteAttribute(ATTR.forced_integration, chromInfo.IsForcedIntegration, false);
+            if (!chromInfo.ParticipatesInScoring)
+            {
+                writer.WriteAttribute(ATTR.non_scoring, true);
+            }
             WriteAnnotations(writer, chromInfo.Annotations);
         }
 

@@ -755,12 +755,13 @@ namespace pwiz.Skyline.Model.Results
             sim = 0x03,
 
             missing_mass_errors = 0x04,
+            non_scoring = 0x08 // Some ion types don't factor in to retention time calculation, e.g. reporter ions like TMT
         }
 
         const FlagValues MASK_SOURCE = (FlagValues) 0x03;
 
         public ChromTransition(double product, float extractionWidth, float ionMobilityValue,
-            float ionMobilityExtractionWidth, ChromSource source, short optimizationStep) : this()
+            float ionMobilityExtractionWidth, ChromSource source, short optimizationStep, bool participatesInScoring) : this()
         {
             _product = product;
             _extractionWidth = extractionWidth;
@@ -768,6 +769,7 @@ namespace pwiz.Skyline.Model.Results
             _ionMobilityExtractionWidth = ionMobilityExtractionWidth;
             Source = source;
             _optimizationStep = optimizationStep;
+            ParticipatesInScoring = participatesInScoring;
         }
 
         public ChromTransition(ChromTransition5 chromTransition5) : this(chromTransition5.Product,
@@ -776,12 +778,12 @@ namespace pwiz.Skyline.Model.Results
             // the next version of this struct in the May, 2014. So considering the source unknown
             // for these older files seems safest, since we are moving to paying attention to the
             // source for chromatogram to transition matching.
-            chromTransition5.ExtractionWidth, 0, 0, ChromSource.unknown, 0)
+            chromTransition5.ExtractionWidth, 0, 0, ChromSource.unknown, 0, true)
         {            
         }
 
         public ChromTransition(ChromTransition4 chromTransition4)
-            : this(chromTransition4.Product, 0, 0, 0, ChromSource.unknown, 0)
+            : this(chromTransition4.Product, 0, 0, 0, ChromSource.unknown, 0, true)
         {
         }
 
@@ -823,6 +825,12 @@ namespace pwiz.Skyline.Model.Results
         {
             get { return (Flags & FlagValues.missing_mass_errors) != 0; }
             set { Flags = (Flags & ~FlagValues.missing_mass_errors) | (value ? FlagValues.missing_mass_errors : 0); }
+        }
+
+        public bool ParticipatesInScoring
+        {
+            get { return (Flags & FlagValues.non_scoring) == 0; }
+            set { Flags = (Flags & ~FlagValues.non_scoring) | (value ? 0 : FlagValues.non_scoring); }
         }
 
         public static FlagValues GetSourceFlags(ChromSource source)
@@ -968,6 +976,7 @@ namespace pwiz.Skyline.Model.Results
             contains_id =           0x0020,
             used_id_alignment =     0x0040,
             has_peak_shape = 0x0080,
+            non_scoring = 0x0100, // This chromatogram should not be used in determining best peak, e.g. a reporter ion like TMT
 
             // This is the last available flag
             mass_error_known =      0x8000,
@@ -1220,6 +1229,10 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public static bool GetParticipatesInScoring(FlagValues flags) => (flags & FlagValues.non_scoring) == 0;
+
+        public bool ParticipatesInScoring => GetParticipatesInScoring(Flags); // Some transitions (e.g. reporter ions) don't contribute to "best peak" determination
+
         public float? MassError
         {
             get
@@ -1253,6 +1266,20 @@ namespace pwiz.Skyline.Model.Results
             var copy = this;
             copy._flagValues = Flags & ~FlagValues.mass_error_known;
             copy._massError = 0;
+            return copy;
+        }
+
+        public ChromPeak ChangeParticipatesInScoring(bool participatesInScoring)
+        {
+            if (ParticipatesInScoring == participatesInScoring)
+            {
+                return this;
+            }
+            var copy = this;
+            if (participatesInScoring)
+                copy._flagValues &= ~FlagValues.non_scoring;
+            else
+                copy._flagValues |= FlagValues.non_scoring;
             return copy;
         }
 
@@ -1857,7 +1884,7 @@ namespace pwiz.Skyline.Model.Results
     public class ChromKey : Immutable, IComparable<ChromKey>
     {
         public static readonly ChromKey EMPTY = new ChromKey(null, SignedMz.ZERO, null,
-            SignedMz.ZERO, 0, 0, 0, ChromSource.unknown, ChromExtractor.summed);
+            SignedMz.ZERO, 0, false, 0, 0, ChromSource.unknown, ChromExtractor.summed);
 
         private double _optionalMinTime;
         private double _optionalMaxTime;
@@ -1868,6 +1895,7 @@ namespace pwiz.Skyline.Model.Results
                         IonMobilityFilter ionMobilityFilter,
                         SignedMz product,
                         int optimizationStep,
+                        bool participatesInScoring,
                         double ceValue,
                         double extractionWidth,
                         ChromSource source,
@@ -1880,6 +1908,7 @@ namespace pwiz.Skyline.Model.Results
             OptimizationStep = optimizationStep;
             CollisionEnergy = (float) ceValue;
             ExtractionWidth = (float) extractionWidth;
+            ParticipatesInScoring = participatesInScoring;
             Source = source;
             Extractor = extractor;
             // Calculating these values on the fly shows up in a profiler in the CompareTo function
@@ -1898,6 +1927,7 @@ namespace pwiz.Skyline.Model.Results
         public IonMobilityFilter IonMobilityFilter { get; private set; }
         public SignedMz Product { get; private set; }
         public int OptimizationStep { get; private set; }
+        public bool ParticipatesInScoring { get; private set; } // Some ion types don't factor in to retention time determination e.g. reporter ions like TMT
         public float CollisionEnergy { get; private set; }
         public float ExtractionWidth { get; private set; }
         public ChromSource Source { get; private set; }
@@ -1939,9 +1969,10 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public override string ToString()
         {
+            var ns = ParticipatesInScoring ? string.Empty : @" ns"; // Note non-scoring, e.g. reporter ions like TMT
             if (ChromatogramGroupId != null)
-                return string.Format(@"{0:F04}, {1:F04} {4} - {2} - {3}", Precursor.RawValue, Product.RawValue, Source, ChromatogramGroupId, IonMobilityFilter);
-            return string.Format(@"{0:F04}, {1:F04} {3} - {2}", Precursor.RawValue, Product.RawValue, Source, IonMobilityFilter);
+                return string.Format(@"{0:F04}, {1:F04} {4} - {2} - {3}{5}", Precursor.RawValue, Product.RawValue, Source, ChromatogramGroupId, IonMobilityFilter, ns);
+            return string.Format(@"{0:F04}, {1:F04} {3} - {2}{4}", Precursor.RawValue, Product.RawValue, Source, IonMobilityFilter, ns);
         }
 
         public int CompareTo(ChromKey key)
@@ -1970,8 +2001,16 @@ namespace pwiz.Skyline.Model.Results
             c = CollisionEnergy.CompareTo(key.CollisionEnergy);
             if (c != 0)
                 return c;
-            return ExtractionWidth.CompareTo(key.ExtractionWidth);
+            c = ExtractionWidth.CompareTo(key.ExtractionWidth);
+            if (c != 0)
+                return c;
 
+            if (ParticipatesInScoring != key.ParticipatesInScoring)
+            {
+                return ParticipatesInScoring ? -1 : 1; // Place non-scoring (e.g. reporter ions) last for retention time purposes
+            }
+
+            return 0;
             // CONSIDER(bspratt) - we're currently ignoring ion mobility for comparison
         }
 
@@ -2089,7 +2128,7 @@ namespace pwiz.Skyline.Model.Results
                         ceValue = Math.Abs(ceParsed);
                     }
                 }
-                return new ChromKey(null, new SignedMz(precursor, isNegativeCharge), null, new SignedMz(product, isNegativeCharge), 0, ceValue, 0, source, extractor);
+                return new ChromKey(null, new SignedMz(precursor, isNegativeCharge), null, new SignedMz(product, isNegativeCharge), 0, true, ceValue, 0, source, extractor);
             }
             catch (FormatException)
             {
@@ -2100,7 +2139,7 @@ namespace pwiz.Skyline.Model.Results
         public static ChromKey FromQcTrace(MsDataFileImpl.QcTrace qcTrace)
         {
             var chromatogramGroupId = ChromatogramGroupId.ForQcTraceName(qcTrace.Name);
-            return new ChromKey(chromatogramGroupId, SignedMz.ZERO, null, SignedMz.ZERO, 0, 0, 0, ChromSource.unknown, ChromExtractor.qc);
+            return new ChromKey(chromatogramGroupId, SignedMz.ZERO, null, SignedMz.ZERO, 0, true, 0, 0, ChromSource.unknown, ChromExtractor.qc);
         }
 
         #region object overrides
@@ -2113,6 +2152,7 @@ namespace pwiz.Skyline.Model.Results
                 Product.Equals(other.Product) &&
                 CollisionEnergy.Equals(other.CollisionEnergy) &&
                 ExtractionWidth.Equals(other.ExtractionWidth) &&
+                ParticipatesInScoring.Equals(other.ParticipatesInScoring) &&
                 Source == other.Source &&
                 Extractor == other.Extractor &&
                 HasCalculatedMzs.Equals(other.HasCalculatedMzs) &&
@@ -2136,6 +2176,7 @@ namespace pwiz.Skyline.Model.Results
                 hashCode = (hashCode*397) ^ Product.GetHashCode();
                 hashCode = (hashCode*397) ^ CollisionEnergy.GetHashCode();
                 hashCode = (hashCode*397) ^ ExtractionWidth.GetHashCode();
+                hashCode = (hashCode*397) ^ ParticipatesInScoring.GetHashCode();
                 hashCode = (hashCode*397) ^ (int) Source;
                 hashCode = (hashCode*397) ^ (int) Extractor;
                 hashCode = (hashCode*397) ^ HasCalculatedMzs.GetHashCode();
@@ -2686,7 +2727,7 @@ namespace pwiz.Skyline.Model.Results
             return extractionWidth;
         }
 
-        private ChromTransition ChromTransition
+        public ChromTransition ChromTransition
         {
             get { return _groupInfo.GetChromTransitionLocal(_transitionIndex); }
         }
@@ -2762,13 +2803,13 @@ namespace pwiz.Skyline.Model.Results
                 case TransformChrom.craw1d:
                 {
                     var peakFinder = Crawdads.NewCrawdadPeakFinder();
-                    peakFinder.SetChromatogram(interpolatedTimeIntensities.Times, interpolatedTimeIntensities.Intensities);
+                    peakFinder.SetChromatogram(interpolatedTimeIntensities.Times, interpolatedTimeIntensities.Intensities, false);
                     return interpolatedTimeIntensities.ChangeIntensities(peakFinder.Intensities1d.ToArray());
                 }
                 case TransformChrom.craw2d:
                 {
                     var peakFinder = Crawdads.NewCrawdadPeakFinder();
-                    peakFinder.SetChromatogram(interpolatedTimeIntensities.Times, interpolatedTimeIntensities.Intensities);
+                    peakFinder.SetChromatogram(interpolatedTimeIntensities.Times, interpolatedTimeIntensities.Intensities, false);
                     return interpolatedTimeIntensities.ChangeIntensities(peakFinder.Intensities2d.ToArray());
                 }
                 case TransformChrom.savitzky_golay:
@@ -2810,7 +2851,7 @@ namespace pwiz.Skyline.Model.Results
                     string.Format(Resources.ChromatogramInfo_ChromatogramInfo_The_index__0__must_be_between_0_and__1__,
                                   peakIndex, NumPeaks));
             }
-            return _groupInfo.GetTransitionPeak(_transitionIndex, peakIndex);
+            return _groupInfo.GetTransitionPeak(_transitionIndex, peakIndex).ChangeParticipatesInScoring(ChromTransition.ParticipatesInScoring);
         }
 
         public ChromPeak CalcPeak(PeakGroupIntegrator peakGroupIntegrator, float startTime, float endTime, ChromPeak.FlagValues flags)

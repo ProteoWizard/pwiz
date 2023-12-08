@@ -866,7 +866,7 @@ namespace pwiz.SkylineTestFunctional
                     // Verify results go from step -3 to 3.
                     Assert.IsTrue(Enumerable.Range(-3, 7).SequenceEqual(result.Select(r => (int)r.OptimizationStep)));
                     // Verify best step.
-                    Assert.AreEqual(expect.BestStep, result.OrderByDescending(r => r.Area).First().OptimizationStep);
+                    Assert.AreEqual(expect.BestStep, result.OrderByDescending(r => r.AreaScorable).First().OptimizationStep);
                 }
             }
 

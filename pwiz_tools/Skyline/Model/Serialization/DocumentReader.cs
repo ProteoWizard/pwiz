@@ -161,7 +161,9 @@ namespace pwiz.Skyline.Model.Serialization
                 endTime,
                 transitionGroupIonMobilityInfo,
                 fwhm,
-                area, null, null, // Ms1 and Fragment values calculated later
+                area, 
+                null, // Update areaScorable later as we discover reporter ions
+                null, null, // Ms1 and Fragment values calculated later
                 backgroundArea, null, null, // Ms1 and Fragment values calculated later
                 height,
                 massError,
@@ -263,9 +265,10 @@ namespace pwiz.Skyline.Model.Serialization
             public Results<TransitionChromInfo> Results { get; private set; }
             public MeasuredIon MeasuredIon { get; private set; }
             public bool Quantitative { get; private set; }
+            public bool ParticipatesInScoring { get; private set; }
             public ExplicitTransitionValues ExplicitValues { get; private set; }
 
-        public void ReadXml(XmlReader reader, DocumentFormat formatVersion, out double? declaredMz, ExplicitTransitionValues pre422ExplicitTransitionValues)
+            public void ReadXml(XmlReader reader, DocumentFormat formatVersion, out double? declaredMz, ExplicitTransitionValues pre422ExplicitTransitionValues)
             {
                 ReadXmlAttributes(reader, formatVersion, pre422ExplicitTransitionValues);
                 ReadXmlElements(reader, out declaredMz);
@@ -509,6 +512,8 @@ namespace pwiz.Skyline.Model.Serialization
                     peakShapeValues = new PeakShapeValues(stdDev.Value, skewness.Value, kurtosis.Value, shapeCorrelation??1);
                 }
 
+                var participatesInScoring = !(reader.GetNullableBoolAttribute(ATTR.non_scoring) ?? false); // Things like reporter ions (e.g. TMT etc) don't factor into "best peak" calculations
+
                 return new TransitionChromInfo(fileInfo.FileId,
                     optimizationStep,
                     massError,
@@ -529,7 +534,8 @@ namespace pwiz.Skyline.Model.Serialization
                     annotations,
                     userSet,
                     forcedIntegration,
-                    peakShapeValues);
+                    peakShapeValues,
+                    participatesInScoring);
             }
         }
 
@@ -1545,7 +1551,12 @@ namespace pwiz.Skyline.Model.Serialization
                 transitionData.MergeFrom(data);
                 foreach (var transitionProto in transitionData.Transitions)
                 {
-                    list.Add(TransitionDocNode.FromTransitionProto(_annotationScrubber, Settings, group, mods, isotopeDist, pre422ExplicitTransitionValues, crosslinkBuilder, transitionProto));
+                    var transitionDocNode = TransitionDocNode.FromTransitionProto(_annotationScrubber, Settings, group, mods, isotopeDist, pre422ExplicitTransitionValues, crosslinkBuilder, transitionProto);
+                    if (DocumentFormat >= DocumentFormat.NON_SCORING_ION_TYPES)
+                    {
+                        Assume.AreEqual(transitionDocNode.ParticipatesInScoring, !transitionProto.NotScorable); // Older docs didn't know to leave reporter ions out of RT calculations
+                    }
+                    list.Add(transitionDocNode);
                 }
             }
             else

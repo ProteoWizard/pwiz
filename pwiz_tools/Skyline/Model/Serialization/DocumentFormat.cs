@@ -115,6 +115,7 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_22_25 = new DocumentFormat(22.25); // spectrum class filters and peptide_integration minOccurs
         public static readonly DocumentFormat VERSION_23_1 = new DocumentFormat(23.1); // Release format
         public static readonly DocumentFormat VERSION_23_11 = new DocumentFormat(23.11); // Surrogate calibration curve
+        public static readonly DocumentFormat NON_SCORING_ION_TYPES = VERSION_23_11; // Things like reporter ions (e.g. TMT etc) don't factor into best peak calculation for RT determination
         public static readonly DocumentFormat CURRENT = VERSION_23_11;
 
         private readonly double _versionNumber;

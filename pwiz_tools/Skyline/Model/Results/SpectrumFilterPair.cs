@@ -73,7 +73,7 @@ namespace pwiz.Skyline.Model.Results
 
             if (Q1 == 0)
             {
-                Ms1ProductFilters = new[] {new SpectrumProductFilter(SignedMz.ZERO, 0, 0)};
+                Ms1ProductFilters = new[] {new SpectrumProductFilter(SignedMz.ZERO, 0, 0, true)};
                 SimProductFilters = Ms1ProductFilters;  // We want TIC and BPC for all scans, even if they have narrow machine settings and look like SIM
             }
         }
@@ -113,10 +113,10 @@ namespace pwiz.Skyline.Model.Results
         public int AddQ1FilterValues(IEnumerable<SignedMz> filterValues, Func<double, double> getFilterWindow)
         {
 
-            int filterCount = AddFilterValues(MergeFilters(Ms1ProductFilters, filterValues.Select(mz => new SpectrumFilterValues(mz, 0))).Distinct(),
+            int filterCount = AddFilterValues(MergeFilters(Ms1ProductFilters, filterValues.Select(mz => new SpectrumFilterValues(mz, 0, true))).Distinct(),
                 getFilterWindow, filters => Ms1ProductFilters = filters);
             // Make complete copies for SIM scans. Some day these may be different.
-            SimProductFilters = Ms1ProductFilters.Select(f => new SpectrumProductFilter(f.TargetMz, f.FilterWidth, 0)).ToArray();
+            SimProductFilters = Ms1ProductFilters.Select(f => new SpectrumProductFilter(f.TargetMz, f.FilterWidth, 0, f.ParticipatesInScoring)).ToArray();
             return filterCount * 2;
         }
 
@@ -130,7 +130,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (existing == null)
                 return added;
-            return existing.Select(f => new SpectrumFilterValues(f.TargetMz, f.HighEnergyIonMobilityValueOffset)).Union(added);
+            return existing.Select(f => new SpectrumFilterValues(f.TargetMz, f.HighEnergyIonMobilityValueOffset, f.ParticipatesInScoring)).Union(added);
         }
 
         private int AddFilterValues(IEnumerable<SpectrumFilterValues> filterValues,
@@ -138,7 +138,7 @@ namespace pwiz.Skyline.Model.Results
                                             Action<SpectrumProductFilter[]> setFilters)
         {
             var arrayFilters = filterValues.OrderBy(mz => mz)
-                .Select(mz => new SpectrumProductFilter(mz.mz, getFilterWindow(mz.mz), mz.ionMobilityHighEnergyOffset))
+                .Select(mz => new SpectrumProductFilter(mz.mz, getFilterWindow(mz.mz), mz.ionMobilityHighEnergyOffset, mz.participatesInScoring))
                 .ToArray();
             setFilters(arrayFilters);
             return arrayFilters.Length;
@@ -391,6 +391,7 @@ namespace pwiz.Skyline.Model.Results
                             ? spectrumProductFilter.HighEnergyIonMobilityValueOffset : 0),
                         spectrumProductFilter.TargetMz,
                         OptStep ?? 0,
+                        spectrumProductFilter.ParticipatesInScoring, // Some ion types don't factor into retention time calc, e.g. reporter ions like TMT
                         0,  // CE value (Shimadzu SRM only)
                         spectrumProductFilter.FilterWidth,
                         source,
@@ -608,21 +609,23 @@ namespace pwiz.Skyline.Model.Results
 
     public class SpectrumProductFilter
     {
-        public SpectrumProductFilter(double targetMz, double filterWidth, double highEnergyIonMobilityValueOffset) :
-            this(new SignedMz(targetMz), filterWidth, highEnergyIonMobilityValueOffset)
+        public SpectrumProductFilter(double targetMz, double filterWidth, double highEnergyIonMobilityValueOffset, bool participatesInScoring) :
+            this(new SignedMz(targetMz), filterWidth, highEnergyIonMobilityValueOffset, participatesInScoring)
         {
         }
 
-        public SpectrumProductFilter(SignedMz targetMz, double filterWidth, double highEnergyIonMobilityValueOffset)
+        public SpectrumProductFilter(SignedMz targetMz, double filterWidth, double highEnergyIonMobilityValueOffset, bool participatesInScoring)
         {
             TargetMz = targetMz;
             FilterWidth = filterWidth;
             HighEnergyIonMobilityValueOffset = highEnergyIonMobilityValueOffset;
+            ParticipatesInScoring = participatesInScoring;
         }
 
         public SignedMz TargetMz { get; private set; }
         public double FilterWidth { get; private set; }
         public int FilterId { get; set; }
+        public bool ParticipatesInScoring { get; private set; }
         public double HighEnergyIonMobilityValueOffset { get; private set; }
 
 
@@ -632,6 +635,7 @@ namespace pwiz.Skyline.Model.Results
         {
             return TargetMz.Equals(other.TargetMz) && FilterWidth.Equals(other.FilterWidth) &&
                    FilterId == other.FilterId && 
+                   ParticipatesInScoring.Equals(other.ParticipatesInScoring) &&
                    Equals(HighEnergyIonMobilityValueOffset, other.HighEnergyIonMobilityValueOffset);
         }
 
@@ -650,6 +654,7 @@ namespace pwiz.Skyline.Model.Results
                 var hashCode = TargetMz.GetHashCode();
                 hashCode = (hashCode*397) ^ FilterWidth.GetHashCode();
                 hashCode = (hashCode*397) ^ FilterId;
+                hashCode = (hashCode*397) ^ ParticipatesInScoring.GetHashCode();
                 hashCode = (hashCode * 397) ^ HighEnergyIonMobilityValueOffset.GetHashCode();
                 return hashCode;
             }
@@ -657,7 +662,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString() // For debug convenience
         {
-            return $@"mz={TargetMz} w={FilterWidth} id={FilterId} heo={HighEnergyIonMobilityValueOffset}";
+            return $@"mz={TargetMz} w={FilterWidth} id={FilterId} heo={HighEnergyIonMobilityValueOffset}{(ParticipatesInScoring?string.Empty:@" ns")}";
         }
 
         #endregion
@@ -667,11 +672,13 @@ namespace pwiz.Skyline.Model.Results
     {
         public SignedMz mz;
         public double ionMobilityHighEnergyOffset;
+        public bool participatesInScoring;
 
-        public SpectrumFilterValues(SignedMz mz, double ionMobilityHighEnergyOffset)
+        public SpectrumFilterValues(SignedMz mz, double ionMobilityHighEnergyOffset, bool participatesInScoring)
         {
             this.mz = mz;
             this.ionMobilityHighEnergyOffset = ionMobilityHighEnergyOffset;
+            this.participatesInScoring = participatesInScoring;
         }
 
         public override bool Equals(object obj)
@@ -683,6 +690,7 @@ namespace pwiz.Skyline.Model.Results
         {
             return other != null &&
                    mz.Equals(other.mz) &&
+                   participatesInScoring == other.participatesInScoring &&
                    ionMobilityHighEnergyOffset == other.ionMobilityHighEnergyOffset;
         }
 
@@ -690,24 +698,32 @@ namespace pwiz.Skyline.Model.Results
         {
             var hashCode = 1155459730;
             hashCode = hashCode * -1521134295 + EqualityComparer<SignedMz>.Default.GetHashCode(mz);
+            hashCode = hashCode * -1521134295 + participatesInScoring.GetHashCode();
             hashCode = hashCode * -1521134295 + ionMobilityHighEnergyOffset.GetHashCode();
             return hashCode;
+        }
+
+        public override string ToString()
+        {
+            return $@"mz={mz} heo={ionMobilityHighEnergyOffset}{(participatesInScoring?string.Empty:@" ns")}"; // For debug convenience, not user facing
         }
 
         public int CompareTo(SpectrumFilterValues other)
         {
             if (ReferenceEquals(this, other)) return 0;
             if (ReferenceEquals(null, other)) return 1;
-            var mzComparison = mz.CompareTo(other.mz);
+            var mzComparison = mz.CompareTo(other.mz); // Low mz before high mz
             if (mzComparison != 0) return mzComparison;
-            return ionMobilityHighEnergyOffset.CompareTo(other.ionMobilityHighEnergyOffset);
+            var imhoComparison =  ionMobilityHighEnergyOffset.CompareTo(other.ionMobilityHighEnergyOffset);
+            if (imhoComparison != 0) return imhoComparison;
+            return other.participatesInScoring.CompareTo(participatesInScoring); // Scoring before non-scoring
         }
 
         public int CompareTo(object obj)
         {
             if (ReferenceEquals(null, obj)) return 1;
             if (ReferenceEquals(this, obj)) return 0;
-            if (!(obj is SpectrumFilterValues)) throw new ArgumentException(@"Object must be of type MzAndIonMobilityHighEnergyOffset");
+            if (!(obj is SpectrumFilterValues)) throw new ArgumentException(@"Object must be of type SpectrumFilterValues");
             return CompareTo((SpectrumFilterValues)obj);
         }
     }

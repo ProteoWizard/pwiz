@@ -366,8 +366,8 @@ namespace pwiz.Skyline.Model.GroupComparison
                         {
                             if (ReferenceEquals(fileId, groupChromInfo.FileId) &&
                                     groupChromInfo.OptimizationStep == 0 &&
-                                    groupChromInfo.Area.HasValue)
-                                globalStandardArea += groupChromInfo.Area.Value;
+                                    groupChromInfo.AreaScorable.HasValue)
+                                globalStandardArea += groupChromInfo.AreaScorable.Value; // Omitting transitions that do not contribute to "Best Peak" determination, e.g. report ions
                         }
                     }
                 }

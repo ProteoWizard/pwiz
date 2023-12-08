@@ -299,7 +299,7 @@ namespace pwiz.SkylineTestFunctional
                     var normalizationMethod = peptideDocNode.NormalizationMethod;
                     double expectedNormalizedArea = double.NaN;
                     double totalArea = peptideDocNode.TransitionGroups.Sum(tg =>
-                        FindChromInfo(tg.Results, chromFileInfo.FileId)?.Area ?? 0);
+                        FindChromInfo(tg.Results, chromFileInfo.FileId)?.AreaScorable ?? 0);
                     if (normalizationMethod == null)
                     {
                         expectedNormalizedArea = totalArea;
@@ -458,7 +458,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
                 var precursorChromInfo = FindChromInfo(transitionGroup.Results, chromFileInfoId);
-                AssertValuesEqual(precursorTotalArea, precursorChromInfo?.Area??0);
+                AssertValuesEqual(precursorTotalArea, precursorChromInfo?.Area ??0);
                 AssertValuesEqual(precursorTotalBackground, precursorChromInfo?.BackgroundArea??0);
             }
         }

@@ -29,14 +29,16 @@ namespace pwiz.Common.PeakFinding
         // ReSharper restore NotAccessedField.Local
         private IList<float> _intensities;
         private float _baselineIntensity;
+        private bool _participatesInScoring; // Some ion types don't participate in retention time calculation, e.e. reporter ions like TMT
         void IDisposable.Dispose()
         {
         }
 
-        public void SetChromatogram(IList<float> times, IList<float> intensities)
+        public void SetChromatogram(IList<float> times, IList<float> intensities, bool participatesInScoring)
         {
             _times = times;
             _intensities = intensities;
+            _participatesInScoring = participatesInScoring;
             if (_intensities.Count > 0)
             {
                 _baselineIntensity = _intensities.Min();
@@ -49,7 +51,7 @@ namespace pwiz.Common.PeakFinding
 
         public IFoundPeak GetPeak(int startIndex, int endIndex)
         {
-            return new FoundPeak(0, _intensities, _baselineIntensity, startIndex, endIndex);
+            return new FoundPeak(0, _intensities, _baselineIntensity, startIndex, endIndex, _participatesInScoring);
         }
 
         public IList<IFoundPeak> CalcPeaks(int max, int[] idIndices)
@@ -60,7 +62,7 @@ namespace pwiz.Common.PeakFinding
             {
                 if (startEnd.Key < _intensities.Count - 1 && startEnd.Value > 0)
                 {
-                    var peak = new FoundPeak(peakAndValleyFinder._widthDataWings, _intensities, _baselineIntensity, startEnd.Key, startEnd.Value);
+                    var peak = new FoundPeak(peakAndValleyFinder._widthDataWings, _intensities, _baselineIntensity, startEnd.Key, startEnd.Value, _participatesInScoring);
                     double rheight = peak.Height / peak.RawHeight;
                     double rarea = peak.Area / peak.RawArea;
                     if (rheight > 0.02 && rarea > 0.02)

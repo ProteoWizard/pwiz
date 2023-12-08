@@ -463,7 +463,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                          : PeakIdentification.FALSE;
 
                     var e = new ChangedPeakBoundsEventArgs(_groupPaths[iGroup],
-                                                           nodeTran != null ? nodeTran.Transition : null,
+                                                           nodeTran,
                                                            _nameChromatogramSet,
                                                            // All active groups should have the same file
                                                            filePath,
@@ -715,8 +715,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                var graphItem = GetGraphItems(graphControl.GraphPane).First(g => g.BestPeakTime > 0);
-                return graphItem.BestPeakTime;
+                var graphItem = GetGraphItems(graphControl.GraphPane).FirstOrDefault(g => g.BestPeakTime > 0);
+                return graphItem?.BestPeakTime;
             }
         }
 
@@ -1131,6 +1131,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (CurveCount == 0)
                 {
                     string message = null;
+                    if (nodeGroups is { Length: 1 } && nodeGroups[0].Children
+                            .All(n => !((TransitionDocNode)n).ParticipatesInScoring))
+                    {
+                        message = Resources.GraphChromatogram_UpdateUI_no_scoreable_product_ions;
+                    }
                     if (nodePeps == null)
                         message = Resources.GraphChromatogram_UpdateUI_Select_a_peptide__precursor_or_transition_to_view_its_chromatograms;
                     else switch (DisplayType)
@@ -1139,7 +1144,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             message = Resources.GraphChromatogram_UpdateUI_No_precursor_ion_chromatograms_found;
                             break;
                         case DisplayTypeChrom.products:
-                            message = Resources.GraphChromatogram_UpdateUI_No_product_ion_chromatograms_found;
+                            message = message ?? Resources.GraphChromatogram_UpdateUI_No_product_ion_chromatograms_found;
                             break;
                         case DisplayTypeChrom.base_peak:
                             message = Resources.GraphChromatogram_UpdateUI_No_base_peak_chromatogram_found;
@@ -1381,6 +1386,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             bool anyQuantitative = displayTrans.Any(IsQuantitative);
+            var anyParticipatesInScoring = displayTrans.Any(t => t.ParticipatesInScoring);
             int bestPeakTran = -1;
             TransitionChromInfo tranPeakInfo = null;
             float maxPeakHeight = float.MinValue;
@@ -1414,7 +1420,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (transitionChromInfo == null)
                     continue;
                 bool quantitative = IsQuantitative(nodeTran);
-                if (quantitative || !anyQuantitative)
+                if ((quantitative || !anyQuantitative) && (nodeTran.ParticipatesInScoring || !anyParticipatesInScoring))
                 {
                     if (maxPeakHeight < transitionChromInfo.Height)
                     {
@@ -1594,6 +1600,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
 
                 DashStyle dashStyle = IsQuantitative(nodeTran) ? DashStyle.Solid : DashStyle.Dot;
+                // CONSIDER(bspratt) dashStyle for !nodeTran.ParticipatesInScoring?
                 var graphItem = new ChromGraphItem(nodeGroup,
                     nodeTran,
                     info,
@@ -2161,12 +2168,12 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
 
                         // Keep track of which chromatogram owns the tallest member of
-                        // the peak on the document tree.
+                        // the peak on the document tree. Don't include non-scoring (e.g. reporter ions like TMT) items.
                         var transitionChromInfo = GetTransitionChromInfo(nodeTran, _chromIndex, fileId, 0);
                         if (transitionChromInfo == null)
                             continue;
 
-                        if (transitionChromInfo.Height > maxPeakHeight)
+                        if (transitionChromInfo.ParticipatesInScoring && transitionChromInfo.Height > maxPeakHeight)
                         {
                             maxPeakHeight = transitionChromInfo.Height;
                             bestPeakInfo = transitionChromInfo;
@@ -2860,8 +2867,14 @@ namespace pwiz.Skyline.Controls.Graphs
             double maxInten = 0;
             ChromGraphItem maxItem = null;
 
-            foreach (ChromGraphItem graphItemCurr in GetGraphItems(graphPane))
+            var items = GetGraphItems(graphPane).ToArray();
+
+            foreach (ChromGraphItem graphItemCurr in items)
             {
+                if (graphItemCurr.ParticipatesInScoring)
+                {
+                    continue; // Some ions don't participate in RT determination, e.g. reporter ions like TMT
+                }
                 double inten = graphItemCurr.GetMaxIntensity(startTime.MeasuredTime, endTime.MeasuredTime);
                 if (inten > maxInten)
                 {
@@ -2917,12 +2930,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 double time;
                 graphPane.ReverseTransform(pt, out time, out _);
 
-                foreach (var graphItemNext in GetGraphItems(graphPane))
+                var graphItems = GetGraphItems(graphPane).Where(gi => gi.TransitionChromInfo != null).ToArray();
+
+                foreach (var graphItemNext in graphItems)
                 {
                     var transitionChromInfo = graphItemNext.TransitionChromInfo;
-                    if (transitionChromInfo == null)
+                    if (!transitionChromInfo.ParticipatesInScoring)
                     {
-                        continue;
+                        continue; // Some ions don't participate in RT calculation, e.g. reporter ions like TMT
                     }
                     var timeMatch = graphItemNext.GetNearestBestPeakBoundary(time);
                     if (!timeMatch.IsZero)
@@ -3767,7 +3782,7 @@ namespace pwiz.Skyline.Controls.Graphs
     public sealed class ChangedPeakBoundsEventArgs : PeakEventArgs
     {
         public ChangedPeakBoundsEventArgs(IdentityPath groupPath,
-                                          Transition transition,
+                                          TransitionDocNode transitionDocNode,
                                           string nameSet,
                                           MsDataFileUri filePath,
                                           ScaledRetentionTime startTime,
@@ -3776,14 +3791,15 @@ namespace pwiz.Skyline.Controls.Graphs
                                           PeakBoundsChangeType changeType)
             : base(groupPath, nameSet, filePath)
         {
-            Transition = transition;
+            TransitionDocNode = transitionDocNode;
             StartTime = startTime;
             EndTime = endTime;
             Identified = identified;
             ChangeType = changeType;
         }
 
-        public Transition Transition { get; private set; }
+        public TransitionDocNode TransitionDocNode { get; private set; }
+        public Transition Transition => TransitionDocNode?.Transition;
         public ScaledRetentionTime StartTime { get; private set; }
         public ScaledRetentionTime EndTime { get; private set; }
         public PeakIdentification? Identified { get; private set; }

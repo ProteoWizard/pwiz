@@ -1691,7 +1691,6 @@ namespace pwiz.Skyline.Model
             {
                 _nodePep = nodePep;
 
-                // Get transition group areas by charge state
                 var chargeGroups =
                     from nodeGroup in nodePep.TransitionGroups
                     where !internalStandardTypes.Contains(nodeGroup.TransitionGroup.LabelType)

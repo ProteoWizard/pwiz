@@ -202,6 +202,7 @@ namespace pwiz.Skyline.Model.Results
                                         TransitionGroupIonMobilityInfo ionMobilityInfo,
                                         float? fwhm,
                                         float? area,
+                                        float? areaScorable,
                                         float? areaMs1,
                                         float? areaFragment,
                                         float? backgroundArea,
@@ -227,6 +228,7 @@ namespace pwiz.Skyline.Model.Results
             IonMobilityInfo = ionMobilityInfo ?? TransitionGroupIonMobilityInfo.EMPTY;
             Fwhm = fwhm;
             Area = area;
+            AreaScorable = areaScorable; // Total area exclusive of reporter ions etc that do not impact "best" peak selection
             AreaMs1 = areaMs1;
             AreaFragment = areaFragment;
             BackgroundArea = backgroundArea;
@@ -282,6 +284,13 @@ namespace pwiz.Skyline.Model.Results
         {
             get { return GetOptional(_area, Flags.HasArea);}
             private set { _area = SetOptional(value, Flags.HasArea); }
+        }
+
+        private float? _areaScorable;
+        public float? AreaScorable // Total area exclusive of reporter ions etc that do not contribute to determination of "Best" peak
+        {
+            get { return _areaScorable ?? Area; } // Backward compatibility
+            private set { _areaScorable = value; }
         }
 
         private float _areaMs1;
@@ -449,6 +458,7 @@ namespace pwiz.Skyline.Model.Results
                    Equals(other.IonMobilityInfo, IonMobilityInfo) &&
                    other.Fwhm.Equals(Fwhm) &&
                    other.Area.Equals(Area) &&
+                   other.AreaScorable.Equals(AreaScorable) &&
                    other.AreaMs1.Equals(AreaMs1) &&
                    other.AreaFragment.Equals(AreaFragment) &&
                    other.BackgroundArea.Equals(BackgroundArea) &&
@@ -487,6 +497,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ IonMobilityInfo.GetHashCode();
                 result = (result*397) ^ (Fwhm.HasValue ? Fwhm.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Area.HasValue ? Area.Value.GetHashCode() : 0);
+                result = (result*397) ^ (AreaScorable.HasValue ? AreaScorable.Value.GetHashCode() : 0);
                 result = (result*397) ^ (AreaMs1.HasValue ? AreaMs1.Value.GetHashCode() : 0);
                 result = (result*397) ^ (AreaFragment.HasValue ? AreaFragment.Value.GetHashCode() : 0);
                 result = (result*397) ^ (BackgroundArea.HasValue ? BackgroundArea.Value.GetHashCode() : 0);
@@ -527,6 +538,7 @@ namespace pwiz.Skyline.Model.Results
             Identified = 64,
             IdentifiedByAlignment = 128,
             HasPeakShape = 256,
+            NonScoring = 512, // When set, this transition is not used in best peak selection, e.g. reporter ions like TMT
         }
 
         private Flags _flags;
@@ -546,7 +558,8 @@ namespace pwiz.Skyline.Model.Results
                    peak.PointsAcross, 
                    peak.Identified, 0, 0,
                    annotations, userSet, peak.IsForcedIntegration, 
-                   peak.PeakShapeValues)
+                   peak.PeakShapeValues,
+                   peak.ParticipatesInScoring)
         {
         }
 
@@ -557,7 +570,7 @@ namespace pwiz.Skyline.Model.Results
                                    float fwhm, bool fwhmDegenerate, bool? truncated, short? pointsAcrossPeak,
                                    PeakIdentification identified, short rank, short rankByLevel,
                                    Annotations annotations, UserSet userSet, bool isForcedIntegration, 
-                                   PeakShapeValues? peakShapeValues)
+                                   PeakShapeValues? peakShapeValues, bool participatesInScoring)
             : base(fileId)
         {
             OptimizationStep = Convert.ToInt16(optimizationStep);
@@ -583,6 +596,7 @@ namespace pwiz.Skyline.Model.Results
             PointsAcrossPeak = pointsAcrossPeak;
             IsForcedIntegration = isForcedIntegration;
             PeakShapeValues = peakShapeValues;
+            ParticipatesInScoring = participatesInScoring; // Some ion types (e.g. Reporter ions like TMT) don't influence "best" peak selection for RT calc
         }
 
         /// <summary>
@@ -646,6 +660,18 @@ namespace pwiz.Skyline.Model.Results
             {
                 SetFlag(Flags.TruncatedKnown, value.HasValue);
                 SetFlag(Flags.Truncated, value ?? false);
+            }
+        }
+
+        public bool ParticipatesInScoring // Declare whether or not transition has an effect on "Best" peak selection - reporter ions like TMT do not, for example
+        {
+            get
+            {
+                return !GetFlag(Flags.NonScoring);
+            }
+            private set
+            {
+                SetFlag(Flags.NonScoring, !value);
             }
         }
 
@@ -758,6 +784,7 @@ namespace pwiz.Skyline.Model.Results
                    step == OptimizationStep &&
                    Equals(IonMobility, ionMobilityFilter) &&    // Unlikely to change, but still confirm
                    Equals(peak.MassError, MassError) &&
+                   peak.ParticipatesInScoring == ParticipatesInScoring &&
                    peak.RetentionTime == RetentionTime &&
                    peak.StartTime == StartRetentionTime &&
                    peak.EndTime == EndRetentionTime &&
@@ -1008,7 +1035,8 @@ namespace pwiz.Skyline.Model.Results
                 annotationScrubber.ScrubAnnotations(Annotations.FromProtoAnnotations(transitionPeak.Annotations), AnnotationDef.AnnotationTarget.transition_result), 
                 DataValues.FromUserSet(transitionPeak.UserSet),
                 transitionPeak.ForcedIntegration,
-                peakShapeValues
+                peakShapeValues,
+                !transitionPeak.NotScorable
             );
         }
 

@@ -878,12 +878,12 @@ namespace pwiz.Skyline.Model.Results
         private static IEnumerable<KeyValuePair<PeptidePrecursorMz, ChromDataSet>> GetMatchingGroups(
             SrmDocument document, ChromDataProvider provider, List<PeptidePrecursorMz> listMzPrecursors)
         {
-            return GetChromDataSets(document, provider).SelectMany(chromDataset => GetMatchingGroups(chromDataset, listMzPrecursors,
+            return GetChromDataSets(document, provider).SelectMany(chromDataset => GetMatchingGroups(document, chromDataset, listMzPrecursors,
                 provider.IsSingleMzMatch,
                 document.Settings.TransitionSettings.Instrument.MzMatchTolerance));
         }
 
-        private static IEnumerable<KeyValuePair<PeptidePrecursorMz, ChromDataSet>> GetMatchingGroups(
+        private static IEnumerable<KeyValuePair<PeptidePrecursorMz, ChromDataSet>> GetMatchingGroups(SrmDocument document,
             ChromDataSet chromDataSet, List<PeptidePrecursorMz> listMzPrecursors, bool singleMatch, double tolerance)
         {
             SignedMz maxMzMatch;
@@ -1053,7 +1053,8 @@ namespace pwiz.Skyline.Model.Results
             // Only return a match, if at least two product ions match, or the precursor
             // has only a single product ion, and it matches
             // Ignore reporter ions for matching purposes, they don't participate in scoring
-            int countMatching = listMatchingData.Select(m => m.Trans).Count(t => t.ParticipatesInScoring);
+            int countMatching = listMatchingData.Count(m => m.Trans == null || // MS1 without a DocNode
+                                                            m.Trans.ParticipatesInScoring); // MS1 or  MS2 that isn't a reporter ion
             int countChildren = nodeGroup.Transitions.Count(t => t.ParticipatesInScoring);
             if (countChildren == 0 || countMatching < Math.Min(2, countChildren))
                 return null;

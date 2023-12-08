@@ -154,10 +154,10 @@ namespace pwiz.SkylineTestFunctional
             var document = SkylineWindow.Document;
             var selectedPath = SkylineWindow.SelectedPath;
             var groupPath = selectedPath.GetPathTo((int) SrmDocument.Level.TransitionGroups);
-            Transition transition = null;
+            TransitionDocNode transition = null;
             if (GraphChromatogram.IsSingleTransitionDisplay && selectedPath.Length > (int) SrmDocument.Level.TransitionGroups)
             {
-                transition = (Transition) document.FindNode(selectedPath).Id;
+                transition = (TransitionDocNode)document.FindNode(selectedPath);
             }
 
             var firstGraphItem = graphChromatogram.GraphItems.First();

@@ -1344,6 +1344,7 @@
           </xs:annotation>
         </xs:attribute>
         <xs:attribute name="quantitative" type="xs:boolean" />
+        <xs:attribute name="non_scoring" type="xs:boolean" /> <!-- some ion types (e.g. reporter ions like TMT) do not participate in peak scoring for RT determination -->
         <!-- values that may be found in an imported transition list, or otherwise specified, and which override any library or calculated values -->
         <!-- these attributes were formerly at the precursor level (4.21 and earlier) but are really per-transition -->
         <xs:attribute name="explicit_collision_energy" type="xs:double"/> <!-- as of 20.13 there is also a precursor-level value for this, but this overrides -->
@@ -1959,6 +1960,7 @@
         <xs:attribute name="kurtosis" type="xs:double" />
         <xs:attribute name="std_dev" type="xs:double" />
         <xs:attribute name="shape_correlation" type="xs:double" />
+        <xs:attribute name="non_scoring" type="xs:boolean" /> <!-- some ion types (e.g. reporter ions like TMT) do not participate in peak scoring for RT determination -->
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

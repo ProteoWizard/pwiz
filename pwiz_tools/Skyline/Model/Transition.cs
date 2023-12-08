@@ -634,6 +634,8 @@ namespace pwiz.Skyline.Model
             return IsCustom(IonType, Group);
         }
 
+        public bool ParticipatesInScoring => !IsReporterIon(); // Don't include things like TMT in retention time calcs
+
         public bool IsNonPrecursorNonReporterCustomIon()
         {
             return !IsPrecursor() && IsNonReporterCustomIon();

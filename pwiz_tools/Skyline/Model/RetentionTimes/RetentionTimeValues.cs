@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -31,19 +32,21 @@ namespace pwiz.Skyline.Model.RetentionTimes
     /// </summary>
     public class RetentionTimeValues : Immutable
     {
-        public RetentionTimeValues(double retentionTime, double startRetentionTime, double endRetentionTime, double height, double? fwhm)
+        public RetentionTimeValues(double retentionTime, double startRetentionTime, double endRetentionTime, double height, double? fwhm, bool participatesInScoring)
         {
             RetentionTime = retentionTime;
             StartRetentionTime = startRetentionTime;
             EndRetentionTime = endRetentionTime;
             Height = height;
             Fwhm = fwhm;
+            ParticipatesInScoring = participatesInScoring;
         }
         public double RetentionTime { get; private set; }
         public double StartRetentionTime { get; private set; }
         public double EndRetentionTime { get; private set; }
         public double Height { get; private set; }
         public double Fwb { get { return EndRetentionTime - StartRetentionTime; } }
+        public bool ParticipatesInScoring { get; private set; } // Some ion types don't factor into retention time determination, e.g. reporter ions like TMT
 
         public double? Fwhm { get; private set; }
 
@@ -98,7 +101,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
             return new RetentionTimeValues(apexTime,
                 transitionChromInfo.StartRetentionTime, transitionChromInfo.EndRetentionTime,
-                transitionChromInfo.Height, transitionChromInfo.Fwhm);
+                transitionChromInfo.Height, transitionChromInfo.Fwhm, transitionChromInfo.ParticipatesInScoring);
         }
 
         public static RetentionTimeValues FromTransitionGroupChromInfo(TransitionGroupChromInfo transitionGroupChromInfo)
@@ -113,23 +116,34 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
             return new RetentionTimeValues(transitionGroupChromInfo.RetentionTime.Value,
                 transitionGroupChromInfo.StartRetentionTime.Value, transitionGroupChromInfo.EndRetentionTime.Value,
-                transitionGroupChromInfo.Height ?? 0, transitionGroupChromInfo.Fwhm);
+                transitionGroupChromInfo.Height ?? 0, transitionGroupChromInfo.Fwhm, true);
         }
 
         /// <summary>
         /// Returns a RetentionTimeValues which is the result of merging the passed in set of values.
         /// The returned merge things will have a start and end time which encompasses all of the values.
         /// The RetentionTime and Fwhm will be set from the RetentionTimeValues with the greatest Height.
+        ///
+        /// Some ion types don't factor into retention time determination, e.g. reporter ions like TMT, so
+        /// those won't be considered for height or bounds
+        /// 
         /// </summary>
         public static RetentionTimeValues Merge(params RetentionTimeValues[] values)
         {
             RetentionTimeValues best = null;
+
+            var anyParticipateInScoring = values.Any(v => v is { ParticipatesInScoring: true });
 
             foreach (var value in values)
             {
                 if (value == null)
                 {
                     continue;
+                }
+
+                if (anyParticipateInScoring && !value.ParticipatesInScoring)
+                {
+                    continue; // Some ion types don't factor into retention time determination, e.g. reporter ions like TMT
                 }
 
                 if (best == null || value.Height > best.Height)
@@ -144,6 +158,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     {
                         im.StartRetentionTime = Math.Min(best.StartRetentionTime, value.StartRetentionTime);
                         im.EndRetentionTime = Math.Max(best.EndRetentionTime, value.EndRetentionTime);
+                        im.ParticipatesInScoring = anyParticipateInScoring;
                     });
                 }
             }

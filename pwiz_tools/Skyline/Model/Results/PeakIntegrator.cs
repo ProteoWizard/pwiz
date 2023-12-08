@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Model.Results
             }
             if (PeakFinder == null)
             {
-                PeakFinder = CreatePeakFinder(InterpolatedTimeIntensities);
+                PeakFinder = CreatePeakFinder(InterpolatedTimeIntensities, ChromPeak.GetParticipatesInScoring(flags));
             }
 
             int startIndex = InterpolatedTimeIntensities.IndexOfNearestTime(startTime);
@@ -149,10 +149,10 @@ namespace pwiz.Skyline.Model.Results
             return true;
         }
 
-        public static IPeakFinder CreatePeakFinder(TimeIntensities interpolatedTimeIntensities)
+        public static IPeakFinder CreatePeakFinder(TimeIntensities interpolatedTimeIntensities, bool participatesInScoring)
         {
             var peakFinder = PeakFinders.NewDefaultPeakFinder();
-            peakFinder.SetChromatogram(interpolatedTimeIntensities.Times, interpolatedTimeIntensities.Intensities);
+            peakFinder.SetChromatogram(interpolatedTimeIntensities.Times, interpolatedTimeIntensities.Intensities, participatesInScoring);
             return peakFinder;
         }
 

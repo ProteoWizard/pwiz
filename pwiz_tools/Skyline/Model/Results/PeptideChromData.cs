@@ -1056,7 +1056,7 @@ namespace pwiz.Skyline.Model.Results
                 else
                 {
                     Ms1TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && t.NodeTran.IsMs1).ToArray();
-                    Ms2TranstionDotpData = TransitionPeakData.Where(t => t.NodeTran != null && !t.NodeTran.IsMs1).ToArray();
+                    Ms2TranstionDotpData = TransitionPeakData.Where(t => t.NodeTran != null && !t.NodeTran.IsMs1 && t.NodeTran.ParticipatesInScoring).ToArray(); // Don't use reporter ions in peak picking
                     if (Data.FullScanAcquisitionMethod == FullScanAcquisitionMethod.DDA)
                     {
                         Ms2TranstionPeakData = ChromDataPeakList.EMPTY;
