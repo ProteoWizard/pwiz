@@ -93,6 +93,7 @@ void BuildParser::setSpecFileName(
     curSpecFileName_.clear();
 
     auto localDirectories = directories;
+    bal::replace_all(specfileroot, "\\", "/"); // attempt to make Windows paths parseable on POSIX
 
     // if specfileroot has a parent path, try that directory first
     bfs::path specfilepath(specfileroot);
