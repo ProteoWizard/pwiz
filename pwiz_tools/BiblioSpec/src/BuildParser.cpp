@@ -92,15 +92,22 @@ void BuildParser::setSpecFileName(
 
     curSpecFileName_.clear();
 
-    string fileroot = specfileroot;
+    auto localDirectories = directories;
+
+    // if specfileroot has a parent path, try that directory first
+    bfs::path specfilepath(specfileroot);
+    if (specfilepath.has_parent_path())
+        localDirectories.insert(localDirectories.begin(), specfilepath.parent_path().string());
+
+    string fileroot = specfilepath.filename().string();
     Verbosity::debug("checking for basename: %s", fileroot);
     do {
         // try the location of the result file, then all dirs in the list
-        for(int i=-1; i<(int)directories.size(); i++) {
+        for(int i=-1; i<(int)localDirectories.size(); i++) {
 
             string path = filepath_.c_str();
             if( i >= 0 ) {
-                path += directories.at(i);
+                path += localDirectories.at(i);
             }
             if (path.empty())
                 path = ".";
@@ -151,7 +158,7 @@ void BuildParser::setSpecFileName(
 
     if( curSpecFileName_.empty() ) {
         string extString = fileNotFoundMessage(specfileroot,
-                                               extensions, directories);
+                                               extensions, localDirectories);
         throw BlibException(true, extString.c_str());
     }// else we found a file and set the name
 

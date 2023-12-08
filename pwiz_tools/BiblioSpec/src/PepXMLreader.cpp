@@ -146,14 +146,6 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
    } else if(isElement("msms_run_summary",name)) {
       fileroot_ = getRequiredAttrValue("base_name",attr);
       Verbosity::comment(V_DEBUG, "PepXML base_name is %s", fileroot_.c_str());
-      // Because Mascot2XML uses the full path for the base_name,
-      // only the part beyond the last "\" or "/" is taken.
-      size_t slash = fileroot_.rfind('/');
-      size_t bslash = fileroot_.rfind('\\');
-      if (slash == string::npos || (bslash != string::npos && bslash > slash))
-          slash = bslash;
-      if (slash != string::npos)
-          fileroot_.erase(0, slash + 1);
 
       // Check if this pepXML file is from Proteome Discoverer
       string rawType = getAttrValue("raw_data_type", attr);
