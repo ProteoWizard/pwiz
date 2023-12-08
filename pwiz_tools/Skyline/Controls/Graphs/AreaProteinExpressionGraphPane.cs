@@ -12,7 +12,7 @@ namespace pwiz.Skyline.Controls.Graphs
             : base(graphSummary, paneKey)
         {
         }
-        protected override GraphData CreateGraphData(SrmDocument document, PeptideGroupDocNode selectedProtein, DisplayTypeChrom displayType, List<ProteinAbundanceResult> rows)
+        protected override GraphData CreateGraphData(PeptideGroupDocNode selectedProtein, List<ProteinAbundanceResult> results)
         {
             int? result = null;
             if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
@@ -20,7 +20,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 result = GraphSummary.ResultsIndex;
             }
             
-            return new AreaGraphData(document, selectedProtein, result, displayType, PaneKey, rows);
+            return new AreaGraphData(selectedProtein, result, results);
         }
 
         protected override void UpdateAxes()
@@ -36,12 +36,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         internal class AreaGraphData : GraphData
         {
-            public AreaGraphData(SrmDocument document,
+            public AreaGraphData(
                 PeptideGroupDocNode selectedProtein,
-                int? result,
-                DisplayTypeChrom displayType,
-                PaneKey paneKey, List<ProteinAbundanceResult> rows)
-                : base(document, selectedProtein, result, displayType, paneKey, rows)
+                int? result, List<ProteinAbundanceResult> results)
+                : base(selectedProtein, result, results)
             {
             }
 

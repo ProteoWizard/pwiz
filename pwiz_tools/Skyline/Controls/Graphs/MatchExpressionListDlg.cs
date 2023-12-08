@@ -9,7 +9,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public partial class MatchExpressionListDlg : FormEx
+    public partial class MatchExpressionListDlg : ModeUIInvariantFormEx // Dialog has explicit logic for handling UI modes
     {
         private CreateMatchExpressionDlg _createProteinExpressionMatchExpressionDlg;
         private string _oldRegex;
@@ -19,6 +19,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _createProteinExpressionMatchExpressionDlg = createMatchExpressionDlg;
             _oldRegex = _createProteinExpressionMatchExpressionDlg.Expression;
             label1.Text = string.Format(Resources.MatchExpressionListDlg_MatchExpressionListDlg_Enter_a_list_of__0__on_separate_lines_, _createProteinExpressionMatchExpressionDlg.MatchSelectedItem.DisplayString);
+            Icon = Resources.Skyline;
 
         }
         private void proteinsTextBox_textChanged(object sender, EventArgs e)

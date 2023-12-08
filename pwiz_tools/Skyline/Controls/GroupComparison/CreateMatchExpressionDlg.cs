@@ -378,6 +378,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     : GetPeptide(row).IdentityPath);
             }
         }
+        private void enterListButton_Click(object sender, EventArgs e)
+        {
+            var dlg = new MatchExpressionListDlg(this);
+            dlg.Show(_formattingDlg);
+        }
 
         #region Function Test Support
 
@@ -427,15 +432,5 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         #endregion
 
-        private void enterListButton_Click(object sender, EventArgs e)
-        {
-            using (var dlg = new MatchExpressionListDlg(this))
-            {
-                if (dlg.ShowDialog(_formattingDlg) == DialogResult.OK)
-                {
-
-                }
-            }
-        }
     }
 }
