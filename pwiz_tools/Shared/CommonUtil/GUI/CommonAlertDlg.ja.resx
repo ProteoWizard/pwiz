@@ -132,7 +132,7 @@
     <value>23, 20</value>
   </data>
   <data name="toolStripButtonCopy.Text" xml:space="preserve">
-    <value>Copy Message</value>
+    <value>メッセージをコピー</value>
   </data>
   <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 7</value>
@@ -178,7 +178,7 @@
     <value>7</value>
   </data>
   <data name="btnMoreInfo.Text" xml:space="preserve">
-    <value>More Info</value>
+    <value>詳細</value>
   </data>
   <data name="&gt;&gt;btnMoreInfo.Name" xml:space="preserve">
     <value>btnMoreInfo</value>
@@ -274,7 +274,7 @@
     <value>0</value>
   </data>
   <data name="labelMessage.Text" xml:space="preserve">
-    <value>Message</value>
+    <value>メッセージ</value>
   </data>
   <data name="&gt;&gt;labelMessage.Name" xml:space="preserve">
     <value>labelMessage</value>
@@ -406,7 +406,7 @@
     <value>398, 126</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterParent</value>
+    <value>CenterScreen</value>
   </data>
   <data name="&gt;&gt;toolStripButtonCopy.Name" xml:space="preserve">
     <value>toolStripButtonCopy</value>
@@ -415,9 +415,9 @@
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>AlertDlg</value>
+    <value>CommonAlertDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Common.Controls.CommonFormEx, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

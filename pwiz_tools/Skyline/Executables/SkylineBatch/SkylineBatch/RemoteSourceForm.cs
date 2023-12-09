@@ -4,11 +4,11 @@ using System.Collections.Immutable;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.GUI;
 using SharedBatch;
 using SkylineBatch.Properties;
 using pwiz.PanoramaClient;
 using PanoramaServer = pwiz.PanoramaClient.PanoramaServer;
-using AlertDlg = SharedBatch.AlertDlg;
 using PanoramaUtil = pwiz.PanoramaClient.PanoramaUtil;
 
 namespace SkylineBatch
@@ -80,7 +80,7 @@ namespace SkylineBatch
 
             if (_remoteFileSources.ContainsKey(textName.Text) && !textName.Text.Equals(_editingSourceName))
             {
-                AlertDlg.ShowError(this, Program.AppName(),
+                AlertDlg.ShowError(this,
                     string.Format(
                         Resources
                             .RemoteSourceForm_btnSave_Click_Another_remote_file_location_with_the_name__0__already_exists__Please_choose_a_unique_name_,
@@ -103,7 +103,7 @@ namespace SkylineBatch
             }
             catch (ArgumentException ex)
             {
-                AlertDlg.ShowError(this, Program.AppName(), ex.Message);
+                CommonAlertDlg.ShowException(this, ex);
             }
         }
 
@@ -178,7 +178,7 @@ namespace SkylineBatch
             }
             catch (Exception e)
             {
-                AlertDlg.ShowError(this, Program.AppName(), e.Message);
+                CommonAlertDlg.ShowException(this, e);
             }
 
             Settings.Default.Save();
