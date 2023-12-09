@@ -493,6 +493,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property("NormalizationMethod"));
                     columnsToRemove.Add(PropertyPath.Root.Property(nameof(Model.Databinding.Entities.Peptide.AutoSelectPrecursors)));
                     columnsToRemove.Add(PropertyPath.Root.Property(nameof(Model.Databinding.Entities.Peptide.AttributeGroupId)));
+                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Model.Databinding.Entities.Peptide.SurrogateExternalStandard)));
                     foreach (var prop in MoleculeAccessionNumbers.PREFERRED_ACCESSION_TYPE_ORDER)
                         columnsToRemove.Add(PropertyPath.Root.Property(prop)); // By default don't show CAS, InChI etc
                     if (docHasOnlyCustomIons)

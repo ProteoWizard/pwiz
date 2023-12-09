@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model.GroupComparison
     {
         private readonly IList<KeyValuePair<int, ReplicateDetails>> _replicateIndexes;
         private QrFactorizationCache _qrFactorizationCache;
-        private NormalizationData _normalizationData;
+        private Lazy<NormalizationData> _normalizationData;
         private ImmutableList<int> _msLevels;
         public GroupComparer(GroupComparisonDef comparisonDef, SrmDocument document, QrFactorizationCache qrFactorizationCache)
         {
@@ -105,6 +105,10 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 _msLevels = ImmutableList.ValueOf(new[] { 1, 2 });
             }
+
+            _normalizationData = new Lazy<NormalizationData>(() =>
+                NormalizationData.GetNormalizationData(SrmDocument, ComparisonDef.UseZeroForMissingPeaks,
+                    ComparisonDef.QValueCutoff));
         }
         public GroupComparisonDef ComparisonDef { get; private set; }
 
@@ -501,15 +505,16 @@ namespace pwiz.Skyline.Model.GroupComparison
                     QuantificationSettings quantificationSettings = SrmDocument.Settings.PeptideSettings.Quantification
                         .ChangeNormalizationMethod(normalizationMethod)
                         .ChangeMsLevel(selector.MsLevel);
-                    var peptideQuantifier = new PeptideQuantifier(GetNormalizationData, selector.Protein, peptide,
+                    var peptideQuantifier = new PeptideQuantifier(_normalizationData, selector.Protein, peptide,
                         quantificationSettings)
                     {
                         QValueCutoff = ComparisonDef.QValueCutoff
                     };
                     if (useCalibrationCurve)
                     {
-                        var calibrationCurveFitter =
-                            new CalibrationCurveFitter(peptideQuantifier, SrmDocument.Settings);
+                        var calibrationCurveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(
+                            _normalizationData, SrmDocument.Settings,
+                            new IdPeptideDocNode(selector.Protein.PeptideGroup, peptide));
                         calibrationCurveFitter.SingleBatchReplicateIndex = replicateEntry.Key;
                         var calculatedConcentration =
                             calibrationCurveFitter.GetCalculatedConcentration(
@@ -549,15 +554,6 @@ namespace pwiz.Skyline.Model.GroupComparison
                     }
                 }
             }
-        }
-
-        public NormalizationData GetNormalizationData()
-        {
-            if (_normalizationData == null)
-            {
-                _normalizationData = NormalizationData.GetNormalizationData(SrmDocument, ComparisonDef.UseZeroForMissingPeaks, ComparisonDef.QValueCutoff);
-            }
-            return _normalizationData;
         }
 
         public struct RunAbundance
