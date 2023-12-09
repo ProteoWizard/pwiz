@@ -3076,7 +3076,7 @@ namespace pwiz.Skyline.Model
             return Math.Round(c.parent.GetCollisionEnergy(c.nodePep, c.nodeTranGroup, c.nodeTran, c.step), 1)
                 .ToString(c.parent.CultureInfo);
         });
-        public TransitionField CAV_FIELD = new TransitionField(c => 5.ToString(c.parent.CultureInfo));
+        public TransitionField CAV_FIELD = new TransitionField(c => 4.ToString(c.parent.CultureInfo));
         public TransitionField POLARITY_FIELD = new TransitionField(c => c.nodeTranGroup.PrecursorCharge > 0 ? @"Positive" : @"Negative");
         public TransitionField TRIGGER_ENTRANCE_FIELD = new TransitionField(c => 0.ToString(c.parent.CultureInfo));
         public TransitionField TRIGGER_DELAY_FIELD = new TransitionField(c => 0.ToString(c.parent.CultureInfo));
