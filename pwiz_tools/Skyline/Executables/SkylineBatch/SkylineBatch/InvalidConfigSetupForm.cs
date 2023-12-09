@@ -225,7 +225,7 @@ namespace SkylineBatch
                 await clickNextButton.Task;
                 valid = control.IsValid(out errorMessage);
                 if (!valid)
-                    AlertDlg.ShowError(this, Program.AppName(), errorMessage);
+                    AlertDlg.ShowMessage(this, errorMessage);
             }
             // remove the control and return the valid variable
             if (removeControl) RemoveControl((UserControl)control);

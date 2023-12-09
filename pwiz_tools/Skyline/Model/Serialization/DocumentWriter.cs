@@ -261,6 +261,7 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteAttribute(ATTR.normalization_method, node.NormalizationMethod.Name);
             }
             writer.WriteAttributeIfString(ATTR.attribute_group_id, node.AttributeGroupId);
+            writer.WriteAttributeIfString(ATTR.surrogate_calibration_curve, node.SurrogateCalibrationCurve);
 
             if (isCustomIon)
             {

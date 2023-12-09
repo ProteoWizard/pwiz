@@ -71,12 +71,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AlertDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="AlertDlg.designer.cs">
-      <DependentUpon>AlertDlg.cs</DependentUpon>
-    </Compile>
     <Compile Include="PanoramaDirectoryPicker.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -98,15 +92,6 @@
       <DependentUpon>PanoramaFilePicker.cs</DependentUpon>
     </Compile>
     <Compile Include="TextUtil.cs" />
-    <EmbeddedResource Include="AlertDlg.ja.resx">
-      <DependentUpon>AlertDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="AlertDlg.resx">
-      <DependentUpon>AlertDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="AlertDlg.zh-CHS.resx">
-      <DependentUpon>AlertDlg.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="PanoramaDirectoryPicker.resx">
       <DependentUpon>PanoramaDirectoryPicker.cs</DependentUpon>
     </EmbeddedResource>

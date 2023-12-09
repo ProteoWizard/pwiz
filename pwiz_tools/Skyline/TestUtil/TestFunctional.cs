@@ -36,6 +36,7 @@ using JetBrains.Annotations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Fasta;
 using pwiz.ProteowizardWrapper;
@@ -252,7 +253,7 @@ namespace pwiz.SkylineTestUtil
             var existingDialog = FindOpenForm<TDlg>();
             if (existingDialog != null)
             {
-                var messageDlg = existingDialog as AlertDlg;
+                var messageDlg = existingDialog as CommonAlertDlg;
                 if (messageDlg == null)
                     AssertEx.IsNull(existingDialog, typeof(TDlg) + " is already open");
                 else
@@ -985,7 +986,7 @@ namespace pwiz.SkylineTestUtil
         {
             WaitForConditionUI(millis, () =>
             {
-                var alertDlg = FindOpenForm<AlertDlg>();
+                var alertDlg = FindOpenForm<CommonAlertDlg>();
                 if (alertDlg != null)
                 {
                     AssertEx.Fail("Unexpected alert found: {0}{1}Open forms: {2}",
@@ -1508,7 +1509,6 @@ namespace pwiz.SkylineTestUtil
             threadTest.Join();
 
             // Were all windows disposed?
-            FormEx.CheckAllFormsDisposed();
             CommonFormEx.CheckAllFormsDisposed();
         }
 
@@ -1976,7 +1976,7 @@ namespace pwiz.SkylineTestUtil
                 CloseOpenForm(ownedForm, openForms);
             }
 
-            var messageDlg = formToClose as AlertDlg;
+            var messageDlg = formToClose as CommonAlertDlg;
             // ReSharper disable LocalizableElement
             if (messageDlg == null)
                 Console.WriteLine("\n\nClosing open form of type {0}\n", formToClose.GetType()); // Not L10N
@@ -2446,7 +2446,7 @@ namespace pwiz.SkylineTestUtil
             {
                 var dlg = WaitForOpenForm<MessageDlg>();
                 Assert.IsTrue(dlg.DetailMessage.Contains(expectedErrorMessage));
-                dlg.CancelDialog();
+                dlg.CancelButton.PerformClick();
             }
             else
             {

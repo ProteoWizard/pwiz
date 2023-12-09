@@ -1,6 +1,6 @@
-﻿namespace pwiz.PanoramaClient
+﻿namespace pwiz.Common.GUI
 {
-    partial class AlertDlg
+    partial class CommonAlertDlg
     {
         /// <summary>
         /// Required designer variable.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AlertDlg));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CommonAlertDlg));
             this.lowerPanel = new System.Windows.Forms.Panel();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripButtonCopy = new System.Windows.Forms.ToolStripButton();
@@ -71,7 +71,7 @@
             // 
             this.toolStripButtonCopy.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.toolStripButtonCopy.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.toolStripButtonCopy.Image = global::pwiz.PanoramaClient.Properties.Resources.Copy;
+            this.toolStripButtonCopy.Image = global::pwiz.Common.CommonResources.Images.Copy;
             resources.ApplyResources(this.toolStripButtonCopy, "toolStripButtonCopy");
             this.toolStripButtonCopy.Name = "toolStripButtonCopy";
             this.toolStripButtonCopy.Click += new System.EventHandler(this.toolStripButtonCopy_Click);
@@ -133,7 +133,7 @@
             this.KeyPreview = true;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "AlertDlg";
+            this.Name = "CommonAlertDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MessageDlg_KeyDown);
