@@ -51,10 +51,7 @@ namespace BuildSciexMethod
                 using (var builder = new Builder())
                 {
                     builder.ParseCommandArgs(args);
-                    if (builder.ExtractDeviceName)
-                        Console.Out.WriteLine(builder.ExtractInstrumentName());
-                    else 
-                        builder.BuildMethod();
+                    builder.BuildMethod();
                 }
                 Environment.ExitCode = 0;
             }
@@ -80,7 +77,6 @@ namespace BuildSciexMethod
                 "   Takes template method file and a Skyline generated \n" +
                 "   transition list as inputs, to generate a new method file\n" +
                 "   as output.\n" +
-                "   -n               Extract device name from the template \n" + 
                 "   -d               Standard (unscheduled) method\n" +
                 "   -t               SCIEX ZenoTOF 7600\n" +
                 "   -o <output file> New method is written to the specified output file\n" +
@@ -115,8 +111,6 @@ namespace BuildSciexMethod
         private bool IsConnected { get; set; }
         private bool IsLoggedIn { get; set; }
         private bool WriteSciexOsQuantMethod { get; set; }
-
-        public bool ExtractDeviceName { get; private set; }
 
         public Builder()
         {
@@ -154,9 +148,6 @@ namespace BuildSciexMethod
                         break;
                     case 'q':
                         WriteSciexOsQuantMethod = true;
-                        break;
-                    case 'n':
-                        ExtractDeviceName = true;
                         break;
                     default:
                         throw new Program.UsageException();
@@ -290,20 +281,6 @@ namespace BuildSciexMethod
                 msgs.AddRange(validationResponse.ValidationErrors.Select(error => $"Validation error: {error}"));
 
             throw new Exception(string.Join(Environment.NewLine, msgs));
-        }
-
-        public string ExtractInstrumentName()
-        {
-            // Connect and login
-            Check(_api.Connect(new ConnectByUriRequest(ServiceUri)));
-            IsConnected = true;
-            Check(_api.Login(new LoginCurrentUserRequest()));
-            IsLoggedIn = true;
-            // Load template
-            var loadResponse = ExecuteAndCheck(new MsMethodLoadRequest(TemplateMethod));
-            var deviceName = loadResponse.MsMethod.DeviceModelName;
-            _api.Logout(new LogoutRequest());
-            return deviceName;
         }
 
         public void BuildMethod()
