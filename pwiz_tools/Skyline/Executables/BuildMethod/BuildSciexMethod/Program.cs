@@ -80,7 +80,7 @@ namespace BuildSciexMethod
                 "   Takes template method file and a Skyline generated \n" +
                 "   transition list as inputs, to generate a new method file\n" +
                 "   as output.\n" +
-                "   -n               Extract device name from the template" + 
+                "   -n               Extract device name from the template \n" + 
                 "   -d               Standard (unscheduled) method\n" +
                 "   -t               SCIEX ZenoTOF 7600\n" +
                 "   -o <output file> New method is written to the specified output file\n" +
@@ -99,7 +99,7 @@ namespace BuildSciexMethod
         }
     }
 
-        public class Builder : IDisposable
+    public class Builder : IDisposable
     {
         private const string ServiceUri = "net.tcp://localhost:63333/SciexControlApiService";
         private readonly ISciexControlApi _api = SciexControlApiFactory.Create();
