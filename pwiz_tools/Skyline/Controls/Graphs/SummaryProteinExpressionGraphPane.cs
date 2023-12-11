@@ -13,7 +13,6 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Proteome;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -60,11 +59,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected override IdentityPath GetIdentityPath(CurveItem curveItem, int barIndex)
         {
-            if (0 <= barIndex && barIndex < _graphData.XScalePaths.Length)
-            {
-                return _graphData.XScalePaths[barIndex];
-            }
-            return null;
+            var result = (ProteinAbundanceResult)curveItem[barIndex].Tag;
+            return result.Protein.IdentityPath;
         }
 
         protected void ShowFormattingDialog()
@@ -78,7 +74,7 @@ namespace pwiz.Skyline.Controls.Graphs
                        rows  =>
                        {
                            ColorRows = rows;
-                           UpdateGraph(false);
+                           GraphSummary.UpdateUI();
                        }))
             {
                 if (dlg.ShowDialog(window) == DialogResult.OK)
@@ -194,7 +190,6 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return false;
             }
-
             ChangeSelection(iNearest, identityPath, ctrl);
             return true;
         }
@@ -461,7 +456,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 foreach (var dataPoint in listPoints)
                 {
-                    var iGroup = labels.Count;
+                    // 1-index the proteins
+                    var iGroup = labels.Count + 1;
 
                     var label = iGroup.ToString();
                     labels.Add(label);
@@ -533,11 +529,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 minY = Math.Min(minY, pointPair.Y);
                 return pointPair;
             }
-
-
-            protected abstract double? GetValue(TransitionGroupChromInfo chromInfo);
-
-            protected abstract double GetValue(TransitionChromInfo info);
         }
 
         private class GraphPointData
@@ -545,16 +536,12 @@ namespace pwiz.Skyline.Controls.Graphs
             public GraphPointData(ProteinAbundanceResult result)
             {
                 
-                NodePepGroup = result.Protein.DocNode;
-                NodePep = (PeptideDocNode)NodePepGroup.Children.First(); // TODO get rid of this variable
-                NodeGroup = (TransitionGroupDocNode)NodePep.Children.First();
+                NodePepGroup = result.Protein.DocNode; 
                 IdentityPath = new IdentityPath(IdentityPath.ROOT, NodePepGroup.PeptideGroup);
                 AreaGroup = result.CalculatedAbundance;
                 Result = result;
             }
             public PeptideGroupDocNode NodePepGroup { get; private set; }
-            public PeptideDocNode NodePep { get; private set; }
-            public TransitionGroupDocNode NodeGroup { get; private set; }
             public IdentityPath IdentityPath { get; private set; }
             public double AreaGroup { get; private set; }
             public ProteinAbundanceResult Result { get; private set; }
