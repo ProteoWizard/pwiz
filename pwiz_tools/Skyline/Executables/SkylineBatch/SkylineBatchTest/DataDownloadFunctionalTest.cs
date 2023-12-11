@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.GUI;
 using SharedBatch;
 using SkylineBatch;
 
@@ -89,7 +90,7 @@ namespace SkylineBatchTest
             FileUtil.SimulatedDriveSpace = 100 * FileUtil.ONE_GB;
             var longWaitDialog = ShowDialog<LongWaitDlg>(() => mainForm.ClickRun(1));
             WaitForClosedForm(longWaitDialog);
-            var spaceErrorDlg = WaitForOpenForm<AlertDlg>();
+            var spaceErrorDlg = WaitForOpenForm<CommonAlertDlg>();
             FileUtil.SimulatedDriveSpace = null;
             RunUI(() =>
             {

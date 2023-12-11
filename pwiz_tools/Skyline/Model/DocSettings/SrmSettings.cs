@@ -1119,9 +1119,6 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double[] GetBestRetentionTimes(PeptideDocNode nodePep, MsDataFileUri filePath)
         {
-            if (!nodePep.IsProteomic)
-                return new double[0]; // No retention time prediction for small molecules
-
             var lookupSequence = nodePep.SourceUnmodifiedTarget;
             var lookupMods = nodePep.SourceExplicitMods;
             if (filePath != null)
