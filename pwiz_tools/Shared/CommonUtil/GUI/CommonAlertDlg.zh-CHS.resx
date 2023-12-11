@@ -132,7 +132,7 @@
     <value>23, 20</value>
   </data>
   <data name="toolStripButtonCopy.Text" xml:space="preserve">
-    <value>メッセージをコピー</value>
+    <value>复制消息</value>
   </data>
   <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 7</value>
@@ -178,7 +178,7 @@
     <value>7</value>
   </data>
   <data name="btnMoreInfo.Text" xml:space="preserve">
-    <value>詳細</value>
+    <value>更多信息</value>
   </data>
   <data name="&gt;&gt;btnMoreInfo.Name" xml:space="preserve">
     <value>btnMoreInfo</value>
@@ -274,7 +274,7 @@
     <value>0</value>
   </data>
   <data name="labelMessage.Text" xml:space="preserve">
-    <value>メッセージ</value>
+    <value>消息</value>
   </data>
   <data name="&gt;&gt;labelMessage.Name" xml:space="preserve">
     <value>labelMessage</value>
@@ -415,7 +415,7 @@
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>AlertDlg</value>
+    <value>CommonAlertDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
