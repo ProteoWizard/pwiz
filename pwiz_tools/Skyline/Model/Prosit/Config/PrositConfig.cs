@@ -20,6 +20,7 @@
 using System;
 using System.Xml.Serialization;
 using Grpc.Core;
+using pwiz.Skyline.Model.Prosit.Communication;
 
 namespace pwiz.Skyline.Model.Prosit.Config
 {
@@ -67,6 +68,20 @@ namespace pwiz.Skyline.Model.Prosit.Config
                 }
                 var xmlSerializer = new XmlSerializer(typeof(PrositConfig));
                 return (PrositConfig) xmlSerializer.Deserialize(stream);
+            }
+        }
+
+        public void CallWithClient(Action<PrositPredictionClient> action)
+        {
+            var channel = CreateChannel();
+            try
+            {
+                var client = new PrositPredictionClient(channel, Server);
+                action(client);
+            }
+            finally
+            {
+                channel.ShutdownAsync().Wait();
             }
         }
     }

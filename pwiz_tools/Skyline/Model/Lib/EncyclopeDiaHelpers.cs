@@ -17,15 +17,20 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
 using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -140,7 +145,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private static bool IsGoodEncyclopeDiaOutput(string stdOut, int exitCode)
         {
-            return !stdOut.Contains(@"Fatal Error") && exitCode == 0;
+            return exitCode == 0 && !stdOut.Contains(@"Fatal Error") && !stdOut.Contains(@"FileSystemException");
         }
 
         public static void ConvertFastaToPrositInputCsv(string fastaFilepath, string prositCsvFilepath,
@@ -202,79 +207,370 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public static void GenerateChromatogramLibrary(string encyclopeDiaDlibInputFilepath,
-            string encyclopeDiaElibOutputFilepath, string fastaFilepath, IEnumerable<MsDataFileUri> diaDataFiles,
+            string encyclopeDiaElibOutputFilepath, string fastaFilepath, MsDataFileUri diaDataFile,
             IProgressMonitor progressMonitor, ref IProgressStatus status, EncyclopeDiaConfig config)
         {
-            GenerateLibrary(encyclopeDiaDlibInputFilepath, encyclopeDiaElibOutputFilepath, fastaFilepath, diaDataFiles, progressMonitor, ref status, config, false);
+            GenerateLibraryWithErrorHandling(encyclopeDiaDlibInputFilepath, encyclopeDiaElibOutputFilepath, fastaFilepath, diaDataFile, progressMonitor, ref status, config, false);
         }
 
         public static void GenerateQuantLibrary(string encyclopeDiaElibInputFilepath,
-            string encyclopeDiaQuantLibOutputFilepath, string fastaFilepath, IEnumerable<MsDataFileUri> diaDataFiles,
+            string encyclopeDiaQuantLibOutputFilepath, string fastaFilepath, MsDataFileUri diaDataFile,
             IProgressMonitor progressMonitor, ref IProgressStatus status, EncyclopeDiaConfig config)
         {
-            GenerateLibrary(encyclopeDiaElibInputFilepath, encyclopeDiaQuantLibOutputFilepath, fastaFilepath, diaDataFiles, progressMonitor, ref status, config, true);
+            GenerateLibraryWithErrorHandling(encyclopeDiaElibInputFilepath, encyclopeDiaQuantLibOutputFilepath, fastaFilepath, diaDataFile, progressMonitor, ref status, config, true);
         }
 
-        private const string DEMUX_SUBDIRECTORY = "demux";
+        public class ParallelRunner
+        {
+            private readonly string _encyclopeDiaDlibInputFilepath;
+            private readonly string _encyclopeDiaElibOutputFilepath;
+            private readonly string _encyclopeDiaQuantElibOutputFilepath;
+            private readonly string _fastaFilepath;
+            private readonly EncyclopeDiaConfig _config;
+            private readonly CancellationToken _cancelToken;
+            private IProgressMonitor _encyclopediaProgressMonitor { get; }
+            private IProgressMonitor _conversionProgressMonitor { get; }
+
+            public IList<MsDataFileUri> NarrowWindowDiaDataFiles { get; }
+            public IList<MsDataFileUri> WideWindowDiaDataFiles { get; }
+
+            public ParallelRunner(string encyclopeDiaDlibInputFilepath, string encyclopeDiaElibOutputFilepath,
+                string encyclopeDiaQuantElibOutputFilepath, string fastaFilepath, EncyclopeDiaConfig config,
+                IEnumerable<MsDataFileUri> narrowWindowDiaDataFiles,
+                IEnumerable<MsDataFileUri> wideWindowDiaDataFiles,
+                IProgressMonitor encyclopediaProgressMonitor,
+                IProgressMonitor conversionProgressMonitor,
+                CancellationToken cancelToken)
+            {
+                _encyclopeDiaDlibInputFilepath = encyclopeDiaDlibInputFilepath;
+                _encyclopeDiaElibOutputFilepath = encyclopeDiaElibOutputFilepath;
+                _encyclopeDiaQuantElibOutputFilepath = encyclopeDiaQuantElibOutputFilepath;
+                _fastaFilepath = fastaFilepath;
+                _config = config;
+                _cancelToken = cancelToken;
+                NarrowWindowDiaDataFiles = narrowWindowDiaDataFiles.ToList();
+                WideWindowDiaDataFiles = wideWindowDiaDataFiles.ToList();
+                _encyclopediaProgressMonitor = encyclopediaProgressMonitor;
+                _conversionProgressMonitor = conversionProgressMonitor;
+            }
+
+            private bool IsCanceled => _encyclopediaProgressMonitor.IsCanceled || _conversionProgressMonitor.IsCanceled;
+
+            public void Generate(IProgressStatus status)
+            {
+                var progressMonitor = _encyclopediaProgressMonitor;
+                var queueStatus = status;
+                int totalFileCount = NarrowWindowDiaDataFiles.Count + WideWindowDiaDataFiles.Count + 2; // 2 merged elibs
+
+                var narrowFileQueue = new ConcurrentQueue<MsDataFileUri>(NarrowWindowDiaDataFiles);
+                var wideFileQueue = new ConcurrentQueue<MsDataFileUri>(WideWindowDiaDataFiles);
+                var isolationSchemeByFile = new ConcurrentDictionary<MsDataFileUri, IsolationScheme>();
+
+                // QueueWorkers convert/demultiplex input DIA result files (in parallel) to feed them to an EncyclopeDIA job (run serially)
+
+                int convertedNarrowFiles = 0;
+                var allNarrowFilesConverted = new ManualResetEventSlim(false);
+                void ConsumeNarrowWindowFile(MsDataFileUri diaFile, int i)
+                {
+                    bool inputIsDemuxed = diaFile.GetFileName().Contains(DEMUX_SUFFIX);
+                    var isolationScheme = isolationSchemeByFile[diaFile];
+                    string originalFilename = diaFile.GetFileName().Replace(DEMUX_SUFFIX, string.Empty);
+                    var progressMonitorForFile = new ProgressMonitorForFile(originalFilename, false, isolationScheme.PrespecifiedIsolationWindows.Count, _conversionProgressMonitor);
+                    IProgressStatus statusForFile = new ProgressStatus();
+                    if (inputIsDemuxed)
+                        statusForFile = statusForFile.ChangeSegments(1, 2);
+
+                    GenerateChromatogramLibrary(_encyclopeDiaDlibInputFilepath, _encyclopeDiaElibOutputFilepath, _fastaFilepath, diaFile, progressMonitorForFile, ref statusForFile, _config);
+
+                    lock (narrowFileQueue)
+                    {
+                        ++convertedNarrowFiles;
+                        queueStatus = queueStatus.ChangePercentComplete(convertedNarrowFiles * 100 / totalFileCount);
+                        if (convertedNarrowFiles == NarrowWindowDiaDataFiles.Count)
+                            allNarrowFilesConverted.Set();
+                    }
+                    progressMonitor.UpdateProgress(queueStatus);
+                }
+
+                MsDataFileUri ProduceNarrowWindowFile(int i)
+                {
+                    if (!narrowFileQueue.TryDequeue(out var diaFile))
+                    {
+                        allNarrowFilesConverted.Wait(_cancelToken);
+                        return null;
+                    }
+                    var result = ConvertDiaDataFileAsync(diaFile, out var isolationScheme, true);
+                    isolationSchemeByFile[result] = isolationScheme;
+                    return result;
+                }
+
+                int demuxThreads = ParallelEx.GetThreadCount() - 1;
+                int encyclopeDiaThreads = 2;
+
+                var narrowWindowDiaConverter = new QueueWorker<MsDataFileUri>(ProduceNarrowWindowFile, ConsumeNarrowWindowFile);
+                narrowWindowDiaConverter.RunAsync(encyclopeDiaThreads, @"EncyclopeDiaNarrowWindowRunner", demuxThreads, @"EncylopeDiaNarrowWindowConverterDemultiplexer");
+
+                int convertedWideFiles = 0;
+                var chromLibraryCreated = new ManualResetEventSlim(false);
+                var allWideFilesConverted = new ManualResetEventSlim(false);
+                void ConsumeWideWindowFile(MsDataFileUri diaFile, int i)
+                {
+                    bool inputIsDemuxed = diaFile.GetFileName().Contains(DEMUX_SUFFIX);
+                    var isolationScheme = isolationSchemeByFile[diaFile];
+                    string originalFilename = diaFile.GetFileName().Replace(DEMUX_SUFFIX, string.Empty);
+                    var progressMonitorForFile = new ProgressMonitorForFile(originalFilename, false, isolationScheme.PrespecifiedIsolationWindows.Count, _conversionProgressMonitor);
+                    IProgressStatus statusForFile = new ProgressStatus(Resources.EncyclopeDiaHelpers_Generate_Waiting_for_chromatogram_library);
+                    if (inputIsDemuxed)
+                        statusForFile = statusForFile.ChangeSegments(1, 2);
+                    progressMonitorForFile.UpdateProgress(statusForFile);
+                    chromLibraryCreated.Wait(_cancelToken); // wait until the chromatogram library has been merged
+                    GenerateQuantLibrary(_encyclopeDiaElibOutputFilepath, _encyclopeDiaQuantElibOutputFilepath, _fastaFilepath, diaFile, progressMonitorForFile, ref statusForFile, _config);
+
+                    lock (wideFileQueue)
+                    {
+                        ++convertedWideFiles;
+                        queueStatus = queueStatus.ChangePercentComplete((convertedNarrowFiles + convertedWideFiles + 1) * 100 / totalFileCount);
+                        if (convertedWideFiles == WideWindowDiaDataFiles.Count)
+                            allWideFilesConverted.Set();
+                    }
+                    progressMonitor.UpdateProgress(queueStatus);
+                }
+
+                MsDataFileUri ProduceWideWindowFile(int i)
+                {
+                    if (!wideFileQueue.TryDequeue(out var diaFile))
+                    {
+                        allWideFilesConverted.Wait(_cancelToken);
+                        return null;
+                    }
+                    var result = ConvertDiaDataFileAsync(diaFile, out var isolationScheme);
+                    isolationSchemeByFile[result] = isolationScheme;
+                    return result;
+                }
+
+                var wideWindowDiaConverter = new QueueWorker<MsDataFileUri>(ProduceWideWindowFile, ConsumeWideWindowFile);
+
+                // start producing (converting/demultiplexing) wide window result files without waiting for narrow window jobs to finish
+                wideWindowDiaConverter.RunAsync(encyclopeDiaThreads, @"EncyclopeDiaWideWindowRunner", demuxThreads, @"EncylopeDiaWideWindowConverterDemultiplexer");
+
+                // wait for all narrow window EncyclopeDIA jobs to finish
+                while (!allNarrowFilesConverted.Wait(1000, _cancelToken) && !IsCanceled)
+                {
+                    lock (narrowWindowDiaConverter)
+                    {
+                        var exception = narrowWindowDiaConverter.Exception;
+                        if (exception != null)
+                            throw new OperationCanceledException(Resources.ParallelRunner_Generate_An_EncyclopeDIA_task_failed_, exception);
+                    }
+                }
+
+                if (IsCanceled)
+                    return;
+
+                status = status.ChangeMessage(string.Format(Resources.EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2,
+                    convertedNarrowFiles + 1, totalFileCount, Path.GetFileName(_encyclopeDiaElibOutputFilepath)));
+                if (progressMonitor.UpdateProgress(status) == UpdateProgressResponse.cancel)
+                    return;
+
+                // merge the chromatogram library for the narrow window results
+                MergeLibrary(_encyclopeDiaDlibInputFilepath, _encyclopeDiaElibOutputFilepath, _fastaFilepath, NarrowWindowDiaDataFiles[0], progressMonitor, ref status, _config, false);
+                
+                status = status.ChangePercentComplete((convertedNarrowFiles + 1) * 100 / totalFileCount);
+                progressMonitor.UpdateProgress(status);
+
+                // allow wide window EncyclopeDIA jobs to start
+                chromLibraryCreated.Set();
+
+                // wait for all wide window EncyclopeDIA jobs to finish
+                while (!allWideFilesConverted.Wait(1000, _cancelToken) && !IsCanceled)
+                {
+                    lock (wideWindowDiaConverter)
+                    {
+                        var exception = wideWindowDiaConverter.Exception;
+                        if (exception != null)
+                            throw new OperationCanceledException(Resources.ParallelRunner_Generate_An_EncyclopeDIA_task_failed_, exception);
+                    }
+                }
+
+                if (IsCanceled)
+                    return;
+
+                status = status.ChangeMessage(string.Format(Resources.EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2,
+                    totalFileCount, totalFileCount, Path.GetFileName(_encyclopeDiaElibOutputFilepath)));
+                if (progressMonitor.UpdateProgress(status) == UpdateProgressResponse.cancel)
+                    return;
+
+                // merge the quant library for the wide window results
+                MergeLibrary(_encyclopeDiaElibOutputFilepath, _encyclopeDiaQuantElibOutputFilepath, _fastaFilepath, WideWindowDiaDataFiles[0], progressMonitor, ref status, _config, true);
+
+                progressMonitor.UpdateProgress(status.ChangePercentComplete(100));
+            }
+
+            private static string MsconvertOutputExtension => @".mzML";
+            private const string DEMUX_SUFFIX = "-demuxed";
+
+            private static string GetConvertedFileOutputPath(MsDataFileUri diaDataFile, bool demultiplex)
+            {
+                string suffix = demultiplex ? DEMUX_SUFFIX : string.Empty;
+                return Path.Combine(Path.GetDirectoryName(diaDataFile.GetFilePath()) ?? string.Empty,
+                    diaDataFile.GetFileNameWithoutExtension() + suffix + MsconvertOutputExtension);
+            }
+
+            private MsDataFileUri ConvertDiaDataFileAsync(MsDataFileUri diaDataFile, out IsolationScheme isolationScheme, bool removeNonOverlappingEdges = false)
+            {
+                var progressMonitorForFile = new ProgressMonitorForFile(diaDataFile.GetFileName(), true, 1, _conversionProgressMonitor);
+                var reader = new IsolationSchemeReader(new[] { diaDataFile });
+                string isolationSchemeName = Path.GetFileNameWithoutExtension(diaDataFile.GetFileNameWithoutExtension());
+                isolationScheme = reader.Import(isolationSchemeName, new SilentProgressMonitor());
+                bool needsDemultiplexing = isolationScheme.SpecialHandling == IsolationScheme.SpecialHandlingType.OVERLAP ||
+                                           isolationScheme.SpecialHandling == IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED;
+                string removeNonOverlappingEdgesOption = removeNonOverlappingEdges ? @"removeNonOverlappingEdges=true" : string.Empty;
+                string outputFilepath = GetConvertedFileOutputPath(diaDataFile, needsDemultiplexing);
+
+                IProgressStatus status = new ProgressStatus();
+
+                if (!needsDemultiplexing && string.Compare(outputFilepath, diaDataFile.GetFilePath(), StringComparison.OrdinalIgnoreCase) == 0)
+                    return diaDataFile;
+
+                if (File.Exists(outputFilepath) &&
+                    File.GetLastWriteTime(outputFilepath) > File.GetLastWriteTime(diaDataFile.GetFilePath()) &&
+                    MsDataFileImpl.IsValidFile(outputFilepath))
+                {
+                    status = status.ChangeMessage(string.Format(
+                        Resources.MsconvertDdaConverter_Run_Re_using_existing_converted__0__file_for__1__,
+                        MsconvertOutputExtension, diaDataFile.GetSampleOrFileName()));
+                    status = status.ChangeSegments(1, 2);
+                    progressMonitorForFile.UpdateProgress(status.ChangePercentComplete(100));
+                    return new MsDataFilePath(outputFilepath);
+                }
+
+                status = status.ChangeSegments(0, 2);
+
+                const string MSCONVERT_EXE = "msconvert";
+
+                status = status.ChangeMessage(Resources.EncyclopeDiaHelpers_GetConvertedDiaDataFile_Converting_DIA_data_to_mzML);
+                progressMonitorForFile.UpdateProgress(status);
+
+                var pr = new ProcessRunner();
+                var psi = new ProcessStartInfo(MSCONVERT_EXE)
+                {
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    Arguments =
+                        "-v -z --mzML " +
+                        $"-o {Path.GetDirectoryName(outputFilepath).Quote()} " +
+                        $"--outfile {Path.GetFileName(outputFilepath).Quote()} " +
+                        " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +
+                        " --filter \"peakPicking true 1-\" " +
+                        (needsDemultiplexing ? @$" --filter ""demultiplex {removeNonOverlappingEdgesOption}""" : "") +
+                        " --runIndex " + Math.Max(0, diaDataFile.GetSampleIndex()) + " " +
+                        diaDataFile.GetFilePath().Quote()
+                };
+
+                //try
+                //{
+                    status = status.ChangeMessage(String.Format(Resources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
+                        psi.FileName, psi.Arguments));
+                    progressMonitorForFile.UpdateProgress(status);
+                    pr.Run(psi, null, progressMonitorForFile, ref status, null, ProcessPriorityClass.BelowNormal, false, IsGoodEncyclopeDiaOutput, false);
+                //}
+                //catch (IOException e)
+                //{
+                //    _progressMonitor.UpdateProgress(status.ChangeMessage(e.Message));
+                //}
+
+                if (progressMonitorForFile.IsCanceled)
+                {
+                    FileEx.SafeDelete(outputFilepath, true);
+                    return null;
+                }
+
+                var outputFile = new MsDataFilePath(outputFilepath);
+                reader = new IsolationSchemeReader(new[] { outputFile });
+                isolationScheme = reader.Import(isolationSchemeName, new SilentProgressMonitor());
+
+                return outputFile;
+            }
+
+            public class ProgressMonitorForFile : IProgressMonitor
+            {
+                private readonly string _filename;
+                private readonly bool _processAllMessages; // for msconvert show all messages; for EncyclopeDIA only show the interesting parts
+                private readonly int _isolationWindowCount;
+                private readonly IProgressMonitor _multiProgressMonitor;
+                private int _maxPercentComplete;
+                private int _processedWindows;
+                private StringBuilder _logText = new StringBuilder();
+
+                public string LogText => _logText.ToString();
+
+                public ProgressMonitorForFile(string filename, bool processAllMessages, int isolationWindowCount, IProgressMonitor multiProgressMonitor)
+                {
+                    _filename = filename;
+                    _processAllMessages = processAllMessages;
+                    _isolationWindowCount = isolationWindowCount;
+                    _multiProgressMonitor = multiProgressMonitor;
+                }
+
+                public bool IsCanceled => _multiProgressMonitor.IsCanceled;
+
+                public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+                {
+                    var message = status.Message;
+                    _logText.AppendLine(message);
+
+                    var match = Regex.Match(status.Message, @"writing spectra: (\d+)/(\d+)");
+                    if (match.Success && match.Groups.Count == 3)
+                    {
+                        _maxPercentComplete = Math.Max(_maxPercentComplete,
+                            Convert.ToInt32(match.Groups[1].Value) * 100 /
+                            Convert.ToInt32(match.Groups[2].Value));
+                        // substitute progress message for localization and to make it clear what work is being done
+                        message = string.Format(Resources.ProgressMonitorForFile_UpdateProgress_Demultiplexing_spectra___0___1_, match.Groups[1].Value, match.Groups[2].Value);
+                    }
+                    else if (status.Message == Resources.EncyclopeDiaHelpers_Generate_Waiting_for_chromatogram_library ||
+                             status.Message.Contains(@"Processing") ||
+                             status.Message.Contains(@"Iteration") ||
+                             status.Message.Contains(@"Finished analysis"))
+                    {
+                        message = status.Message;
+                        if (status.Message.Contains(@"Processing"))
+                        {
+                            ++_processedWindows;
+                            _maxPercentComplete = Math.Max(_maxPercentComplete,
+                                _processedWindows * 100 / (_isolationWindowCount + 1));
+                        }
+                        else if (status.Message.Contains(@"Finished analysis"))
+                            _maxPercentComplete = 100;
+                    }
+                    else if (status.ErrorException != null)
+                    {
+                        status = status.ChangePercentComplete(100);
+                        _multiProgressMonitor.UpdateProgress(status.ChangeMessage(_filename + @"::" + message));
+                        return UpdateProgressResponse.cancel;
+                    }
+                    else if (!_processAllMessages)
+                    {
+                        return UpdateProgressResponse.normal;
+                    }
+
+                    status = status.ChangePercentComplete(_maxPercentComplete);
+
+                    return _multiProgressMonitor.UpdateProgress(status.ChangeMessage(_filename + @"::" + message));
+                }
+
+                public bool HasUI => _multiProgressMonitor.HasUI;
+            }
+        }
+
         private static string GetConvertedDiaDataFile(MsDataFileUri diaDataFile, string outputPath, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
-            string outputFilepath = Path.Combine(outputPath, diaDataFile.GetFileNameWithoutExtension() + DataSourceUtil.EXT_MZML);
-
-            /*var reader = new IsolationSchemeReader(new [] { diaDataFile });
-            string isolationSchemeName = Path.GetFileNameWithoutExtension(diaDataFile.GetFileNameWithoutExtension());
-            var isolationScheme = reader.Import(isolationSchemeName, progressMonitor);
-            bool needsDemultiplexing = isolationScheme.SpecialHandling == IsolationScheme.SpecialHandlingType.OVERLAP ||
-                                       isolationScheme.SpecialHandling == IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED;*/
-            
-            if (diaDataFile.GetExtension().ToLowerInvariant() == DataSourceUtil.EXT_MZML)
-            {
-                outputFilepath = Path.Combine(outputPath, diaDataFile.GetFileName());
-                if (!File.Exists(outputFilepath))
-                    FileEx.HardLinkOrCopyFile(diaDataFile.GetFilePath(), outputFilepath);
-                return outputFilepath;
-            }
-
-            const string MSCONVERT_EXE = "msconvert";
-            
-            status = status.ChangeMessage(Resources.EncyclopeDiaHelpers_GetConvertedDiaDataFile_Converting_DIA_data_to_mzML);
-            progressMonitor.UpdateProgress(status);
-
-            var pr = new ProcessRunner();
-            var psi = new ProcessStartInfo(MSCONVERT_EXE)
-            {
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                Arguments =
-                    "-v -z --mzML " +
-                    $"-o {outputPath.Quote()} " +
-                    $"--outfile {Path.GetFileName(outputFilepath).Quote()} " +
-                    " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +
-                    " --filter \"peakPicking true 1-\" " +
-                    //(needsDemultiplexing ? @" --filter ""demultiplex""" : "") +
-                    " --runIndex " + Math.Max(0, diaDataFile.GetSampleIndex()) + " " +
-                    diaDataFile.GetFilePath().Quote()
-            };
-
-            try
-            {
-                status = status.ChangeMessage(String.Format(Resources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
-                    psi.FileName, psi.Arguments));
-                progressMonitor.UpdateProgress(status);
-                pr.Run(psi, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, false, IsGoodEncyclopeDiaOutput, false);
-            }
-            catch (IOException e)
-            {
-                progressMonitor.UpdateProgress(status.ChangeMessage(e.Message));
-            }
-
-            if (progressMonitor.IsCanceled)
-            {
-                FileEx.SafeDelete(outputFilepath, true);
-                return null;
-            }
-
+            string outputFilepath = Path.Combine(outputPath, diaDataFile.GetFileName());
+            if (!File.Exists(outputFilepath))
+                FileEx.HardLinkOrCopyFile(diaDataFile.GetFilePath(), outputFilepath);
             return outputFilepath;
         }
+
 
         public class EncyclopeDiaConfig
         {
@@ -555,8 +851,27 @@ namespace pwiz.Skyline.Model.Lib
 
         private static string JAVA_TMPDIR => $@"-Djava.io.tmpdir={JAVA_TMPDIR_PATH}";
 
+        private static void GenerateLibraryWithErrorHandling(string encyclopeDiaLibInputFilepath,
+            string encyclopeDiaElibOutputFilepath, string fastaFilepath, MsDataFileUri diaDataFile,
+            IProgressMonitor progressMonitor, ref IProgressStatus status, EncyclopeDiaConfig config, bool quantLibrary)
+        {
+            try
+            {
+                GenerateLibrary(encyclopeDiaLibInputFilepath, encyclopeDiaElibOutputFilepath, fastaFilepath, diaDataFile, progressMonitor, ref status, config, quantLibrary);
+            }
+            catch (Exception ex)
+            {
+                var fatalError = Regex.Match(ex.Message, @"Fatal Error: (.*)");
+                if (fatalError.Success && fatalError.Groups[1].Success)
+                    status = status.ChangeMessage(fatalError.Groups[1].Value).ChangeErrorException(ex);
+                status = status.ChangePercentComplete(100);
+                progressMonitor.UpdateProgress(status);
+                throw;
+            }
+        }
+
         private static void GenerateLibrary(string encyclopeDiaLibInputFilepath,
-            string encyclopeDiaElibOutputFilepath, string fastaFilepath, IEnumerable<MsDataFileUri> diaDataFiles,
+            string encyclopeDiaElibOutputFilepath, string fastaFilepath, MsDataFileUri diaDataFile,
             IProgressMonitor progressMonitor, ref IProgressStatus status, EncyclopeDiaConfig config, bool quantLibrary)
         {
             if (!EnsureRequiredFilesDownloaded(FilesToDownload, progressMonitor))
@@ -565,53 +880,54 @@ namespace pwiz.Skyline.Model.Lib
             using var tmpTmp = new TemporaryEnvironmentVariable(@"TMP", JAVA_TMPDIR_PATH);
 
             long javaMaxHeapMB = Math.Min(12 * 1024L * 1024 * 1024, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
-            string diaDataPath = null;// = Path.GetDirectoryName(encyclopeDiaElibOutputFilepath);
             string extraParams = config.ToString();
             string subdir = quantLibrary ? @"elib_quant" : @"elib_chrom";
 
-            var diaFiles = diaDataFiles.ToList();
-            int stepCount = diaFiles.Count + 1;
-            int step = 0;
-            foreach (var diaDataFile in diaFiles)
-            {
-                status = status.ChangePercentComplete(100 * step / stepCount);
+            // EncyclopeDia requires all DIA files to be in the same directory;
+            // we use the first file's directory to make a subdirectory which will contain links or copies of all the files
+            string diaDataPath = Path.Combine(Path.GetDirectoryName(diaDataFile.GetFilePath()) ?? string.Empty, subdir);
+            string diaDataFilepath = GetConvertedDiaDataFile(diaDataFile, diaDataPath, progressMonitor, ref status);
 
-                // EncyclopeDia requires all DIA files to be in the same directory;
-                // we use the first file's directory to make a subdirectory which will contain links or copies of all the files
-                diaDataPath ??= Path.Combine(Path.GetDirectoryName(diaDataFile.GetFilePath()) ?? string.Empty, subdir);
-                string diaDataFilepath = GetConvertedDiaDataFile(diaDataFile, diaDataPath, progressMonitor, ref status);
-
-                status = status.ChangeMessage(String.Format(quantLibrary
-                        ? Resources.EncyclopeDiaHelpers_GenerateLibrary_Generating_quantification_library_0_of_1_2
-                        : Resources.EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2,
-                    step + 1, stepCount, Path.GetFileName(diaDataFilepath)));
-                status = status.ChangeWarningMessage(status.Message);
-                if (progressMonitor.UpdateProgress(status) == UpdateProgressResponse.cancel)
-                    return;
-                ++step;
-                var pr = new ProcessRunner();
-                var psi = new ProcessStartInfo(JavaBinary,
-                    $" -Xmx{javaMaxHeapMB}M -jar {EncyclopeDiaBinary.Quote()} {LOCALIZATION_PARAMS} {JAVA_TMPDIR} {extraParams} -i {diaDataFilepath.Quote()} -f {fastaFilepath.Quote()} -l {encyclopeDiaLibInputFilepath.Quote()}")
-                {
-                    CreateNoWindow = true,
-                    UseShellExecute = false
-                };
-                status = status.ChangeMessage(String.Format(Resources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
-                    psi.FileName, psi.Arguments));
-                progressMonitor.UpdateProgress(status);
-                pr.Run(psi, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, true, IsGoodEncyclopeDiaOutput, false);
-            }
-
-            status = status.ChangePercentComplete(100 * step / stepCount);
-            status = status.ChangeMessage(String.Format(quantLibrary
+            /*status = status.ChangeMessage(String.Format(quantLibrary
                     ? Resources.EncyclopeDiaHelpers_GenerateLibrary_Generating_quantification_library_0_of_1_2
                     : Resources.EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2,
-                step + 1, stepCount, Path.GetFileName(encyclopeDiaElibOutputFilepath)));
-            status = status.ChangeWarningMessage(status.Message);
+                0, 0, Path.GetFileName(diaDataFilepath)));*/
             if (progressMonitor.UpdateProgress(status) == UpdateProgressResponse.cancel)
                 return;
-            ++step;
 
+            var pr = new ProcessRunner();
+            var psi = new ProcessStartInfo(JavaBinary,
+                $" -Xmx{javaMaxHeapMB}M -jar {EncyclopeDiaBinary.Quote()} {LOCALIZATION_PARAMS} {JAVA_TMPDIR} {extraParams} -i {diaDataFilepath.Quote()} -f {fastaFilepath.Quote()} -l {encyclopeDiaLibInputFilepath.Quote()}")
+            {
+                CreateNoWindow = true,
+                UseShellExecute = false
+            };
+            status = status.ChangeMessage(String.Format(Resources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
+                psi.FileName, psi.Arguments));
+            if (progressMonitor.UpdateProgress(status) == UpdateProgressResponse.cancel)
+                return;
+            pr.Run(psi, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, true, IsGoodEncyclopeDiaOutput, false);
+
+            foreach (var file in Directory.EnumerateFiles(diaDataPath, @"*.pdf"))
+                FileEx.SafeDelete(file);
+        }
+
+        private static void MergeLibrary(string encyclopeDiaLibInputFilepath,
+            string encyclopeDiaElibOutputFilepath, string fastaFilepath, MsDataFileUri diaDataFile,
+            IProgressMonitor progressMonitor, ref IProgressStatus status, EncyclopeDiaConfig config, bool quantLibrary)
+        {
+            if (!EnsureRequiredFilesDownloaded(FilesToDownload, progressMonitor))
+                throw new InvalidOperationException(Resources.EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_could_not_find_EncyclopeDia);
+
+            using var tmpTmp = new TemporaryEnvironmentVariable(@"TMP", JAVA_TMPDIR_PATH);
+
+            long javaMaxHeapMB = Math.Min(12 * 1024L * 1024 * 1024, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
+            string extraParams = config.ToString();
+            string subdir = quantLibrary ? @"elib_quant" : @"elib_chrom";
+
+            // EncyclopeDia requires all DIA files to be in the same directory;
+            // we use the first file's directory to make a subdirectory which will contain links or copies of all the files
+            string diaDataPath = Path.Combine(Path.GetDirectoryName(diaDataFile.GetFilePath()) ?? string.Empty, subdir);
             string aParam = quantLibrary ? @"-a" : @"";
 
             var prMerge = new ProcessRunner();
@@ -626,8 +942,20 @@ namespace pwiz.Skyline.Model.Lib
             progressMonitor.UpdateProgress(status);
             prMerge.Run(psiMerge, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, true, IsGoodEncyclopeDiaOutput, false);
 
-            status = status.ChangePercentComplete(100);
-            progressMonitor.UpdateProgress(status);
+        }
+
+        public static void Generate(string encyclopeDiaDlibInputFilepath, string encyclopeDiaElibOutputFilepath,
+            string encyclopeDiaQuantElibOutputFilepath, string fastaFilepath, EncyclopeDiaConfig config,
+            IEnumerable<MsDataFileUri> narrowWindowResultUris, IEnumerable<MsDataFileUri> wideWindowResultUris,
+            IProgressMonitor encyclopediaProgressMonitor, IProgressMonitor conversionProgressMonitor,
+            CancellationToken cancelToken, IProgressStatus status)
+        {
+            // parallel converter that starts all files converting
+            var runner = new ParallelRunner(encyclopeDiaDlibInputFilepath, encyclopeDiaElibOutputFilepath,
+                encyclopeDiaQuantElibOutputFilepath, fastaFilepath, config, narrowWindowResultUris,
+                wideWindowResultUris, encyclopediaProgressMonitor, conversionProgressMonitor, cancelToken);
+
+            runner.Generate(status);
         }
     }
 }

@@ -96,7 +96,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private readonly Stack<SrmDocument> _documents;
 
-        public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager)
+        public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager, bool useExistingLibrary = false)
         {
             SkylineWindow = skylineWindow;
             _documents = new Stack<SrmDocument>();
@@ -139,12 +139,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             AddPageControl(ImportResultsDDAControl, getChromatogramsPage, 2, 60);
             ImportResultsControl = ImportResultsDDAControl;
 
-            ConverterSettingsControl = new ConverterSettingsControl(this, ImportPeptideSearch, 
-                () => FullScanSettingsControl);
+            ConverterSettingsControl = new ConverterSettingsControl(this, ImportPeptideSearch, () => FullScanSettingsControl);
             AddPageControl(ConverterSettingsControl, converterSettingsPage, 18, 50);
 
-            SearchSettingsControl = new SearchSettingsControl(this, ImportPeptideSearch);
-            AddPageControl(SearchSettingsControl, ddaSearchSettingsPage, 18, 50);
+            if (!useExistingLibrary)
+            {
+                SearchSettingsControl = new SearchSettingsControl(this, ImportPeptideSearch);
+                AddPageControl(SearchSettingsControl, ddaSearchSettingsPage, 18, 50);
+            }
 
             SearchControl = new DDASearchControl(ImportPeptideSearch);
             AddPageControl(SearchControl, ddaSearch, 18, 50);
@@ -348,7 +350,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager, Workflow workflowType,
             IList<ImportPeptideSearch.FoundResultsFile> resultFiles, ImportFastaControl.ImportFastaSettings fastaSettings,
             IEnumerable<string> existingLibraryFilepaths)
-            : this(skylineWindow, libraryManager)
+            : this(skylineWindow, libraryManager, true)
         {
             BuildPepSearchLibControl.ForceWorkflow(workflowType);
 
@@ -483,6 +485,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     {
                         _pagesToSkip.Clear();
 
+                        if (!BuildPepSearchLibControl.ValidateCutoffScore())
+                        {
+                            return;
+                        }
                         ImportPeptideSearch.IsDDASearch = BuildPepSearchLibControl.PerformDDASearch;
                         ImportFastaControl.IsDDASearch = BuildPepSearchLibControl.PerformDDASearch;
                         if (!BuildPepSearchLibControl.UseExistingLibrary)

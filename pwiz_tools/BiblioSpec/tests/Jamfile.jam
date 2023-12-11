@@ -263,6 +263,8 @@ blib-test-build tiny-v2-filtered-pdResult : -o : output/tiny-v2-filtered-pdResul
 blib-test-build md_special_filtered-pdResult : --unicode -o : output/md_special_filtered-pdResult.blib : md_special_filtered-pdResult.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/md_special_filtered.pdResult ;
 blib-test-build example-pdResult-confidence3 : -o -c@0.99 : output/example-pdResult-confidence3.blib : example-pdResult-confidence3.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/example.pdResult ;
 blib-test-build example-pdResult-numeric : -o -c@0.96 : output/example-pdResult-numeric.blib : example-pdResult-numeric.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/example.pdResult ;
+blib-test-build-basic pd-3_1 : -o -c@0.5 : $(TEST_INPUTS_PATH)/230807_P1_Neo_ES904_TMTProPrecision_1ug_DIA1Th_HCD30_Survey.pdResult ;
+
 blib-test-build pilot : --unicode -o : output/pilot.blib : pilot.check : $(TEST_INPUTS_PATH)/MB1_98_03.group.xml ;
 blib-test-build pilot-mzid : --unicode -o : output/pilot-mzid.blib : pilot-mzid.check : $(TEST_INPUTS_PATH)/ProtPilotTest.mzid ;
 
@@ -318,7 +320,9 @@ blib-test-build metamorpheus-mzid : --unicode -o : output/metamorpheus.blib : me
 # Test DiaNN specLib format
 blib-test-build diann-speclib : -o : output/diann-speclib.blib : diann-speclib.check : $(TEST_INPUTS_PATH)/diann-swath.speclib ;
 blib-test-build diann-speclib-diapasef : -o : output/diann-hela-diapasef.blib : diann-hela-diapasef.check : $(TEST_INPUTS_PATH)/diann-hela-diapasef-lib.speclib ;
+blib-test-build-basic diann-mod-test : -o : $(TEST_INPUTS_PATH)/diann-mod-test.tsv.speclib ;
 blib-test-build-basic msfragger-diann : -o : $(TEST_INPUTS_PATH)/library.tsv.speclib ;
+blib-test-build-basic msfragger-diann-predicted : -o : $(TEST_INPUTS_PATH)/diann-predicted/lib.predicted.speclib ;
 
 # Test Bruker Paser TSV format
 blib-test-build-basic paser-hela-dia : -o : $(TEST_INPUTS_PATH)/paser/hela_dia_normalizationOFF_results.tsv ;

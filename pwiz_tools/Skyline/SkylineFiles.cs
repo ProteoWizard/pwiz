@@ -62,7 +62,6 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using AlertDlg = pwiz.Skyline.Alerts.AlertDlg;
 using DatabaseOpeningException = pwiz.Skyline.Model.Irt.DatabaseOpeningException;
 
 namespace pwiz.Skyline

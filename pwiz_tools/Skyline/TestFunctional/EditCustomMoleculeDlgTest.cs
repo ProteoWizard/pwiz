@@ -60,6 +60,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            TestEditBogusMolecule();
             TestEditWithIsotopeDistribution();
             AsMasses();
             AsFormulas();
@@ -202,6 +203,44 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(testRTWindow, newdoc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTimeWindow.Value, massPrecisionTolerance);
 
         }
+        private static void TestEditBogusMolecule()
+        {
+            // Add a legit molecule, then try to modify it with garbage
+            RunUI(() => SkylineWindow.NewDocument(true));
+            var origDoc = SkylineWindow.Document;
+            RunUI(() =>
+                SkylineWindow.ModifyDocument("", mdoc =>
+                {
+                    return mdoc.AddPeptideGroups(new[]
+                    {
+                        new PeptideGroupDocNode(new PeptideGroup(), mdoc.Annotations, "Molecule Group", "",
+                            new PeptideDocNode[0])
+                    }, true, IdentityPath.ROOT, out _, out _);
+                }));
+            var doc = WaitForDocumentChange(origDoc);
+            RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(SkylineWindow.Document.MoleculeGroups.ElementAt(0).Id));
+            var editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.AddSmallMolecule);
+            RunUI(() =>
+            {
+                editMoleculeDlg.FormulaBox.Formula = "C3H7NO2[M+H]";
+            });
+            OkDialog(editMoleculeDlg, editMoleculeDlg.OkDialog);
+            doc = WaitForDocumentChange(doc);
+            RunUI(() =>
+            {
+                SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].FirstNode;
+            });
+            editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifyPeptide);
+            RunUI(() =>
+            {
+                editMoleculeDlg.FormulaBox.Formula = "[13C]3H7[15N]O2"; // CONSIDER: we should really support this nomenclature but we don't (yet?)
+            });
+            var errorDlg = ShowDialog<MessageDlg>(editMoleculeDlg.OkDialog); // This shouldn't actually close the dialog since the formula is in error and highlighted red
+            OkDialog(errorDlg, errorDlg.OkDialog);
+            OkDialog(editMoleculeDlg, editMoleculeDlg.CancelDialog);
+            RunUI(() => SkylineWindow.NewDocument(true));
+        }
+
         private static void TestEditingSmallMoleculeAsMasses()
         {
             RunUI(() =>

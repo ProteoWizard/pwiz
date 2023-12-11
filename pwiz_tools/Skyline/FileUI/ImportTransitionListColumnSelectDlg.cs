@@ -1345,14 +1345,7 @@ namespace pwiz.Skyline.FileUI
                 }
                 catch (Exception exception)
                 {
-                    if (ExceptionUtil.IsProgrammingDefect(exception))
-                    {
-                        Program.ReportException(exception);
-                    }
-                    else
-                    {
-                        MessageDlg.ShowWithException(this, exception.Message, exception);
-                    }
+                    ExceptionUtil.DisplayOrReportException(this, exception);
                     Assume.IsTrue(errorCheckCanceled);
                 }
             }

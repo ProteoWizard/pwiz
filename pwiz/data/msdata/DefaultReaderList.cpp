@@ -41,6 +41,10 @@
 #include "References.hpp"
 #include "ChromatogramListBase.hpp"
 #include "pwiz/data/msdata/Version.hpp"
+#ifndef WITHOUT_MZMLB
+#include "mzmlb/Connection_mzMLb.hpp"
+using namespace pwiz::msdata::mzmlb;
+#endif
 #ifndef WITHOUT_MZ5
 #include "mz5/Connection_mz5.hpp"
 #endif
@@ -488,6 +492,87 @@ PWIZ_API_DECL void Reader_mz5::read(const std::string& filename,
     read(filename, head, *results.back());
 }
 
+//
+// Reader_mzMLb
+//
+
+// This version only checks whether the file is a HDF5 file.
+namespace {
+
+    const char mzMLbHeader[] = { '\x89', '\x48', '\x44', '\x46', '\x0d', '\x0a', '\x1a', '\x0a' };
+    const size_t mzMLbHeaderSize = sizeof(mzMLbHeader) / sizeof(char);
+
+} // namespace
+
+PWIZ_API_DECL std::string Reader_mzMLb::identify(const string& filename, const string& head) const
+{
+    if (head.length() < mzMLbHeaderSize)
+        return "";
+
+    for (size_t i = 0; i < mzMLbHeaderSize; ++i)
+        if (head[i] != mzMLbHeader[i])
+            return "";
+
+    try
+    {
+#ifndef WITHOUT_MZMLB
+        Connection_mzMLb con(filename, true);
+#endif
+        return getType();
+    }
+    catch (std::runtime_error&)
+    {
+        return "";
+    }
+
+    return "";
+}
+
+
+PWIZ_API_DECL void Reader_mzMLb::read(const std::string& filename,
+    const std::string& head,
+    MSData& result,
+    int runIndex,
+    const Config& config) const
+{
+#ifdef WITHOUT_MZMLB
+    throw ReaderFail("[Reader_mzMLb::read] library was not built with mzMLb support.");
+#else
+    if (runIndex != 0)
+        throw ReaderFail("[Reader_mzML::read] multiple runs not supported");
+
+    Connection_mzMLb con(filename);
+    shared_ptr<istream> is(new boost::iostreams::stream<Connection_mzMLb>(con));
+    if (!is.get() || !*is)
+        throw runtime_error(("[Reader_mzML::read] Unable to open file " + filename).c_str());
+
+    string rootElement = xml_root_element(*is);
+    if (rootElement == "mzML")
+    {
+        Serializer_mzML::Config config;
+        config.indexed = false;
+        Serializer_mzML serializer(config);
+        serializer.read(is, result);
+    }
+    else if (rootElement == "indexedmzML")
+    {
+        Serializer_mzML serializer;
+        serializer.read(is, result);
+    }
+
+    fillInCommonMetadata(filename, result);
+#endif
+}
+
+PWIZ_API_DECL void Reader_mzMLb::read(const std::string& filename,
+    const std::string& head,
+    std::vector<MSDataPtr>& results,
+    const Config& config) const
+{
+    results.push_back(MSDataPtr(new MSData));
+    read(filename, head, *results.back(), 0, config);
+}
+
 
 /// default Reader list
 PWIZ_API_DECL DefaultReaderList::DefaultReaderList()
@@ -498,6 +583,7 @@ PWIZ_API_DECL DefaultReaderList::DefaultReaderList()
     emplace_back(new Reader_MS1);
     emplace_back(new Reader_MS2);
     emplace_back(new Reader_BTDX);
+    emplace_back(new Reader_mzMLb);
     emplace_back(new Reader_mz5);
 }
 

@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient.Properties;
 
@@ -374,8 +375,7 @@ namespace pwiz.PanoramaClient
                     || ex is IOException
                     || ex is UnauthorizedAccessException)
                 {
-                    var alert = new AlertDlg(ex.Message, MessageBoxButtons.OK);
-                    alert.ShowDialog();
+                    CommonAlertDlg.ShowException(FormUtil.FindTopLevelOwner(this), ex);
                 }
             }
         }
@@ -431,9 +431,8 @@ namespace pwiz.PanoramaClient
             }
             else
             {
-                var alert = new AlertDlg(Resources.PanoramaFilePicker_Open_Click_You_must_select_a_file_first_,
-                    MessageBoxButtons.OK);
-                alert.ShowDialog();
+                using var alert = new CommonAlertDlg(Resources.PanoramaFilePicker_Open_Click_You_must_select_a_file_first_, MessageBoxButtons.OK);
+                alert.ShowDialog(FormUtil.FindTopLevelOwner(this));
             }
         }
 
@@ -660,6 +659,7 @@ namespace pwiz.PanoramaClient
         }
 
         #region Test Support
+
         public PanoramaFilePicker(Uri serverUri, string user, string pass,
             JToken folderJson, JToken fileJson, JToken sizeJson)
         {
@@ -671,7 +671,10 @@ namespace pwiz.PanoramaClient
 
             TestFileJson = fileJson;
             TestSizeJson = sizeJson;
+
             var server = new PanoramaServer(serverUri, user, pass);
+            _servers = new List<PanoramaServer> { server };
+
             FolderBrowser = new TestPanoramaFolderBrowser(server, folderJson);
 
             InitializeDialog();

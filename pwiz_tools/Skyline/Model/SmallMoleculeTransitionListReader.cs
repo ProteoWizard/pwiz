@@ -372,6 +372,15 @@ namespace pwiz.Skyline.Model
             return false;
         }
 
+        // Check for the various kinds of exceptions that may be thrown in the course of
+        // parsing sometimes-wonky user data
+        public static bool IsParserException(Exception exception)
+        {
+            return exception is InvalidOperationException
+                   || exception is InvalidDataException
+                   || exception is ArgumentException;
+        }
+
         // Returns true on error
         private bool ErrorFindingTransitionGroupForPrecursor(ref SrmDocument document, ParsedIonInfo precursor, Row row,
             PeptideGroupDocNode pepGroup, Adduct adduct, double precursorMonoMz, double precursorAverageMz,
@@ -414,13 +423,9 @@ namespace pwiz.Skyline.Model
                                     _firstAddedPathPepGroup = _firstAddedPathPepGroup ?? pathGroup;
                                 }
                             }
-                            catch (InvalidDataException x)
+                            catch (Exception exception) when (IsParserException(exception))
                             {
-                                errmsg = x.Message;
-                            }
-                            catch (InvalidOperationException x) // Adduct handling code can throw these
-                            {
-                                errmsg = x.Message;
+                                errmsg = exception.Message;
                             }
 
                             if (errmsg != null)
@@ -1549,7 +1554,7 @@ namespace pwiz.Skyline.Model
                             adduct = DetermineAdductFromFormulaChargeAndMz(formula, charge.Value, mz);
                         }
                     }
-                    catch (Exception e)
+                    catch (Exception e) when (IsParserException(e))
                     {
                         ShowTransitionError(new PasteError
                         {
@@ -1711,13 +1716,9 @@ namespace pwiz.Skyline.Model
                             }
                         }
                     }
-                    catch (InvalidDataException x)
+                    catch (Exception exception) when (IsParserException(exception))
                     {
-                        massErrMsg = x.Message;
-                    }
-                    catch (InvalidOperationException x)  // Adduct handling code can throw these
-                    {
-                        massErrMsg = x.Message;
+                        massErrMsg = exception.Message;
                     }
                     if (massErrMsg != null)
                     {
@@ -1904,7 +1905,7 @@ namespace pwiz.Skyline.Model
                 adduct = Adduct.FromStringAssumeChargeOnly(adductText);
                 IonInfo.ApplyAdductToFormula(formula ?? string.Empty, adduct); // Just to see if it throws
             }
-            catch (Exception x) when ((x is InvalidOperationException) || (x is ArgumentException))
+            catch (Exception x) when (IsParserException(x))
             {
                 ShowTransitionError(new PasteError
                 {
@@ -2032,7 +2033,7 @@ namespace pwiz.Skyline.Model
                     molecule = new CustomMolecule(parsedIonInfo.MonoMass, parsedIonInfo.AverageMass, shortName, parsedIonInfo.MoleculeID.AccessionNumbers);
                 }
             }
-            catch (ArgumentException e)
+            catch (Exception e) when (IsParserException(e))
             {
                 ShowTransitionError(new PasteError
                 {
@@ -2050,7 +2051,7 @@ namespace pwiz.Skyline.Model
                     return null;
                 return new PeptideDocNode(pep, document.Settings, null, null, parsedIonInfo.ExplicitRetentionTime, new[] { tranGroup }, false);
             }
-            catch (InvalidOperationException e)
+            catch (Exception e) when (IsParserException(e))
             {
                 ShowTransitionError(new PasteError
                 {
@@ -2109,11 +2110,7 @@ namespace pwiz.Skyline.Model
                 return new TransitionGroupDocNode(group, document.Annotations, document.Settings, null,
                     null, moleculeInfo.ExplicitTransitionGroupValues, null, new[] { tran }, false);
             }
-            catch (InvalidDataException x)
-            {
-                errmsg = x.Message;
-            }
-            catch (InvalidOperationException x) // Adduct handling code can throw these
+            catch (Exception x) when (IsParserException(x))
             {
                 errmsg = x.Message;
             }
