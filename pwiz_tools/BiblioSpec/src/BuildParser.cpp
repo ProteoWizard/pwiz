@@ -97,7 +97,7 @@ void BuildParser::setSpecFileName(
 
     // if specfileroot has a parent path, try that directory first
     bfs::path specfilepath(specfileroot);
-    if (specfilepath.has_parent_path())
+    if (specfilepath.has_parent_path() && bfs::exists(filepath_ / specfilepath.parent_path()))
         localDirectories.insert(localDirectories.begin(), specfilepath.parent_path().string());
 
     string fileroot = specfilepath.filename().string();
