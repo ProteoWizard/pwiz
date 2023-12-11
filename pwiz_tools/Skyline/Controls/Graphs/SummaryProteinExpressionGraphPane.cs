@@ -301,7 +301,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (matchedPoints.Any())
                 {
                     AddPoints(new PointPairList(matchedPoints), colorRow.Color, DotPlotUtil.PointSizeToFloat(colorRow.PointSize), colorRow.Labeled, colorRow.PointSymbol);
-                    pointList = new PointPairList(pointList.Except(matchedPoints).Except(selectedPoints).ToArray());
                 }
             }
             AddPoints(new PointPairList(pointList), Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
@@ -343,7 +342,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     GraphObjList.Add(label);
                 }
             }
-
             CurveList.Add(lineItem);
         }
 
@@ -394,7 +392,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 else
                 {
                     YAxis.Scale.MinAuto = false;
-                    FixedYMin = YAxis.Scale.Min = 0;
+                    FixedYMin = YAxis.Scale.Min = 0; // TODO should this auto scale?
                     YAxis.Scale.Max = _graphData.MaxY * 1.05;
                 }
             }
@@ -447,18 +445,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
 
                 // Build the list of points to show.
-                var listPoints = new List<GraphPointData>();
-                foreach (var result in results)
-                {
-                    var nodeGroupPep = result.Protein.DocNode;
-                    if (AreaGraphController.AreaScope == AreaScope.protein)
-                    {
-                        if (!ReferenceEquals(nodeGroupPep, selectedProtein))
-                            continue;
-                    }
-                    var graphPointData = new GraphPointData(result);
-                    listPoints.Add(graphPointData);
-                }
+                var listPoints = results.Select(result => new GraphPointData(result)).ToList();
 
                 // Sort into correct order
                 listPoints.Sort(CompareGroupAreas);
@@ -474,7 +461,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 foreach (var dataPoint in listPoints)
                 {
-                    int iGroup = labels.Count;
+                    var iGroup = labels.Count;
 
                     var label = iGroup.ToString();
                     labels.Add(label);
@@ -484,6 +471,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     double groupMaxY = 0;
                     double groupMinY = double.MaxValue;
                     // ReSharper disable DoNotCallOverridableMethodsInConstructor
+                    // TODO offer to add a mean error bar item if showing average of replicates
                     var pointPair = CreatePointPair(iGroup, dataPoint.Result, ref groupMaxY, ref groupMinY, iResult);
                     // ReSharper restore DoNotCallOverridableMethodsInConstructor
                     pointPairList.Add(pointPair);
@@ -535,11 +523,6 @@ namespace pwiz.Skyline.Controls.Graphs
             private static int CompareGroupAreas(GraphPointData p1, GraphPointData p2)
             {
                 return Comparer.Default.Compare(p2.AreaGroup, p1.AreaGroup);
-            }
-
-            protected static PointPair PointPairMissing(int iGroup)
-            {
-                return MeanErrorBarItem.MakePointPair(iGroup, PointPairBase.Missing, PointPairBase.Missing);
             }
 
             protected virtual PointPair CreatePointPair(int iGroup, ProteinAbundanceResult result, ref double maxY, ref double minY, int? resultIndex)

@@ -67,11 +67,17 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             // Upon cancellation, reset the REGEX to whatever was there before opening this dialog
             SetRegexText(_oldRegex);
+            Close();
         }
 
         private void SetRegexText(string regex)
         {
             _createProteinExpressionMatchExpressionDlg.SetRegexText(regex);
+        }
+
+        private void buttonOk_Click(object sender, EventArgs e)
+        {
+            Close();
         }
     }
 }
