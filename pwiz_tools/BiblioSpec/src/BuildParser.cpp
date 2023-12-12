@@ -97,18 +97,21 @@ void BuildParser::setSpecFileName(
 
     // if specfileroot has a parent path, try that directory first
     bfs::path specfilepath(specfileroot);
-    if (specfilepath.has_parent_path() && bfs::exists(filepath_ / specfilepath.parent_path()))
+    if (specfilepath.has_parent_path() && bfs::exists(bfs::complete(specfilepath.parent_path(), filepath_)))
         localDirectories.insert(localDirectories.begin(), specfilepath.parent_path().string());
 
     string fileroot = specfilepath.filename().string();
-    Verbosity::debug("checking for basename: %s", fileroot);
+    Verbosity::debug("checking for basename: %s", fileroot.c_str());
     do {
         // try the location of the result file, then all dirs in the list
         for(int i=-1; i<(int)localDirectories.size(); i++) {
 
             string path = filepath_.c_str();
             if( i >= 0 ) {
-                path += localDirectories.at(i);
+                if (bfs::path(localDirectories[i]).is_absolute())
+                    path = localDirectories[i];
+                else
+					path += localDirectories[i];
             }
             if (path.empty())
                 path = ".";
@@ -231,7 +234,7 @@ string BuildParser::filesNotFoundMessage(
     messageString += "\n\nIn any of the following directories:\n" + bfs::canonical(deepestPath).make_preferred().string();
     set<string> parentPaths;
     for (const auto& dir : directories)
-        parentPaths.insert(bfs::canonical(deepestPath / dir).make_preferred().string());
+        parentPaths.insert((bfs::path(dir).is_absolute() ? dir : bfs::canonical(deepestPath / dir)).make_preferred().string());
     for (const auto& dir : boost::make_iterator_range(parentPaths.rbegin(), parentPaths.rend()))
         messageString += "\n" + dir;
 
