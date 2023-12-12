@@ -120,7 +120,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void FinishedAddingChromatograms(double bestPeakStartTime, double bestPeakEndTime, bool forceZoom)
         {
-            var retentionTimeValues = new RetentionTimeValues((bestPeakStartTime + bestPeakEndTime) / 2, bestPeakStartTime, bestPeakEndTime, 0, null, false);
+            var retentionTimeValues = new RetentionTimeValues((bestPeakStartTime + bestPeakEndTime) / 2, bestPeakStartTime, bestPeakEndTime, 0, null);
             FinishedAddingChromatograms(new[] { retentionTimeValues }, forceZoom);
         }
 
@@ -358,7 +358,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public void ZoomToPeak(double startRetentionTime, double endRetentionTime)
         {
             var retentionTimeValues = new RetentionTimeValues((startRetentionTime + endRetentionTime) / 2,
-                startRetentionTime, endRetentionTime, 0, null, false);
+                startRetentionTime, endRetentionTime, 0, null);
             ZoomToPeaks(retentionTimeValues, retentionTimeValues);
         }
 

@@ -31,7 +31,6 @@ namespace pwiz.Common.PeakFinding
         float Fwhm { get; }
         bool FwhmDegenerate { get; }
         bool Identified { get; }
-        bool ParticipatesInScoring { get; } // Some ion types don't participate in retention time determination e.g. reporter ions
         int Length { get; }
 
         /// <summary>

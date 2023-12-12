@@ -925,10 +925,6 @@ namespace pwiz.Skyline.Model.Serialization
             }
             writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);
             writer.WriteAttribute(ATTR.forced_integration, chromInfo.IsForcedIntegration, false);
-            if (!chromInfo.ParticipatesInScoring)
-            {
-                writer.WriteAttribute(ATTR.non_scoring, true);
-            }
             WriteAnnotations(writer, chromInfo.Annotations);
         }
 

@@ -2173,7 +2173,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (transitionChromInfo == null)
                             continue;
 
-                        if (transitionChromInfo.ParticipatesInScoring && transitionChromInfo.Height > maxPeakHeight)
+                        if (nodeTran.ParticipatesInScoring && transitionChromInfo.Height > maxPeakHeight)
                         {
                             maxPeakHeight = transitionChromInfo.Height;
                             bestPeakInfo = transitionChromInfo;
@@ -2934,8 +2934,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 foreach (var graphItemNext in graphItems)
                 {
-                    var transitionChromInfo = graphItemNext.TransitionChromInfo;
-                    if (!transitionChromInfo.ParticipatesInScoring)
+                    var transitionNode = graphItemNext.TransitionNode;
+                    if (!transitionNode.ParticipatesInScoring)
                     {
                         continue; // Some ions don't participate in RT calculation, e.g. reporter ions like TMT
                     }

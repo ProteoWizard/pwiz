@@ -573,7 +573,7 @@ namespace pwiz.Skyline.Model
                         for (int iChromInfo = 0; iChromInfo < resultCount; iChromInfo++)
                         {
                             var chromInfo = result[iChromInfo];
-                            if (chromInfo.ParticipatesInScoring && chromInfo.Area > 0) // Don't use reporter ions in determining peak fit
+                            if (nodeTran.ParticipatesInScoring && chromInfo.Area > 0) // Don't use reporter ions in determining peak fit
                             {
                                 tranArea += chromInfo.Area;
                                 tranMeasured++;

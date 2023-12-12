@@ -878,12 +878,12 @@ namespace pwiz.Skyline.Model.Results
         private static IEnumerable<KeyValuePair<PeptidePrecursorMz, ChromDataSet>> GetMatchingGroups(
             SrmDocument document, ChromDataProvider provider, List<PeptidePrecursorMz> listMzPrecursors)
         {
-            return GetChromDataSets(document, provider).SelectMany(chromDataset => GetMatchingGroups(document, chromDataset, listMzPrecursors,
+            return GetChromDataSets(document, provider).SelectMany(chromDataset => GetMatchingGroups(chromDataset, listMzPrecursors,
                 provider.IsSingleMzMatch,
                 document.Settings.TransitionSettings.Instrument.MzMatchTolerance));
         }
 
-        private static IEnumerable<KeyValuePair<PeptidePrecursorMz, ChromDataSet>> GetMatchingGroups(SrmDocument document,
+        private static IEnumerable<KeyValuePair<PeptidePrecursorMz, ChromDataSet>> GetMatchingGroups(
             ChromDataSet chromDataSet, List<PeptidePrecursorMz> listMzPrecursors, bool singleMatch, double tolerance)
         {
             SignedMz maxMzMatch;

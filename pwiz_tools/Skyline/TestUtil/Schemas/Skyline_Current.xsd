@@ -1960,7 +1960,6 @@
         <xs:attribute name="kurtosis" type="xs:double" />
         <xs:attribute name="std_dev" type="xs:double" />
         <xs:attribute name="shape_correlation" type="xs:double" />
-        <xs:attribute name="non_scoring" type="xs:boolean" /> <!-- some ion types (e.g. reporter ions like TMT) do not participate in peak scoring for RT determination -->
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

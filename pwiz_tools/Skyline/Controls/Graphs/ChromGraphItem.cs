@@ -100,8 +100,6 @@ namespace pwiz.Skyline.Controls.Graphs
             Chromatogram = chromatogram;
             TransitionChromInfo = tranPeakInfo;
             TimeRegressionFunction = timeRegressionFunction;
-            ParticipatesInScoring = transition == null || transition is { ParticipatesInScoring: true }; // Some ions don't participate in RT calculation, e.g. reporter ions like TMT
-            
             Color = color;
             FullScanInfo = fullScanInfo;
 
@@ -167,7 +165,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public TransitionChromInfo TransitionChromInfo { get; private set; }
         public RegressionLine TimeRegressionFunction { get; private set; }
         public TransformChrom? TransformChrom { get; set; }
-        public bool ParticipatesInScoring { get; private set; } // Some ions don't contribute to RT calculation, e.g. report ions like TMT
+        public bool ParticipatesInScoring => TransitionNode == null || TransitionNode is { ParticipatesInScoring: true }; // Some ions don't participate in RT calculation, e.g. reporter ions like TMT
 
         public ScaledRetentionTime ScaleRetentionTime(double measuredTime)
         {
@@ -217,12 +215,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 else
                 {
                     // No best peak index
-                    _bestPeakTimeIndex = -1;
-                    return;
-                }
-                if (tranPeakInfo is { ParticipatesInScoring: false })
-                {
-                    // No best peak index - some ion types don't influence RT calculation (e.g. reporter ions like TMT)
                     _bestPeakTimeIndex = -1;
                     return;
                 }

@@ -265,7 +265,6 @@ namespace pwiz.Skyline.Model.Serialization
             public Results<TransitionChromInfo> Results { get; private set; }
             public MeasuredIon MeasuredIon { get; private set; }
             public bool Quantitative { get; private set; }
-            public bool ParticipatesInScoring { get; private set; }
             public ExplicitTransitionValues ExplicitValues { get; private set; }
 
             public void ReadXml(XmlReader reader, DocumentFormat formatVersion, out double? declaredMz, ExplicitTransitionValues pre422ExplicitTransitionValues)
@@ -512,8 +511,6 @@ namespace pwiz.Skyline.Model.Serialization
                     peakShapeValues = new PeakShapeValues(stdDev.Value, skewness.Value, kurtosis.Value, shapeCorrelation??1);
                 }
 
-                var participatesInScoring = !(reader.GetNullableBoolAttribute(ATTR.non_scoring) ?? false); // Things like reporter ions (e.g. TMT etc) don't factor into "best peak" calculations
-
                 return new TransitionChromInfo(fileInfo.FileId,
                     optimizationStep,
                     massError,
@@ -534,8 +531,7 @@ namespace pwiz.Skyline.Model.Serialization
                     annotations,
                     userSet,
                     forcedIntegration,
-                    peakShapeValues,
-                    participatesInScoring);
+                    peakShapeValues);
             }
         }
 
@@ -1551,12 +1547,7 @@ namespace pwiz.Skyline.Model.Serialization
                 transitionData.MergeFrom(data);
                 foreach (var transitionProto in transitionData.Transitions)
                 {
-                    var transitionDocNode = TransitionDocNode.FromTransitionProto(_annotationScrubber, Settings, group, mods, isotopeDist, pre422ExplicitTransitionValues, crosslinkBuilder, transitionProto);
-                    if (DocumentFormat >= DocumentFormat.NON_SCORING_ION_TYPES)
-                    {
-                        Assume.AreEqual(transitionDocNode.ParticipatesInScoring, !transitionProto.NotScorable); // Older docs didn't know to leave reporter ions out of RT calculations
-                    }
-                    list.Add(transitionDocNode);
+                    list.Add(TransitionDocNode.FromTransitionProto(_annotationScrubber, Settings, group, mods, isotopeDist, pre422ExplicitTransitionValues, crosslinkBuilder, transitionProto));
                 }
             }
             else

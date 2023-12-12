@@ -538,7 +538,6 @@ namespace pwiz.Skyline.Model.Results
             Identified = 64,
             IdentifiedByAlignment = 128,
             HasPeakShape = 256,
-            NonScoring = 512, // When set, this transition is not used in best peak selection, e.g. reporter ions like TMT
         }
 
         private Flags _flags;
@@ -558,8 +557,7 @@ namespace pwiz.Skyline.Model.Results
                    peak.PointsAcross, 
                    peak.Identified, 0, 0,
                    annotations, userSet, peak.IsForcedIntegration, 
-                   peak.PeakShapeValues,
-                   peak.ParticipatesInScoring)
+                   peak.PeakShapeValues)
         {
         }
 
@@ -570,7 +568,7 @@ namespace pwiz.Skyline.Model.Results
                                    float fwhm, bool fwhmDegenerate, bool? truncated, short? pointsAcrossPeak,
                                    PeakIdentification identified, short rank, short rankByLevel,
                                    Annotations annotations, UserSet userSet, bool isForcedIntegration, 
-                                   PeakShapeValues? peakShapeValues, bool participatesInScoring)
+                                   PeakShapeValues? peakShapeValues)
             : base(fileId)
         {
             OptimizationStep = Convert.ToInt16(optimizationStep);
@@ -596,7 +594,6 @@ namespace pwiz.Skyline.Model.Results
             PointsAcrossPeak = pointsAcrossPeak;
             IsForcedIntegration = isForcedIntegration;
             PeakShapeValues = peakShapeValues;
-            ParticipatesInScoring = participatesInScoring; // Some ion types (e.g. Reporter ions like TMT) don't influence "best" peak selection for RT calc
         }
 
         /// <summary>
@@ -660,18 +657,6 @@ namespace pwiz.Skyline.Model.Results
             {
                 SetFlag(Flags.TruncatedKnown, value.HasValue);
                 SetFlag(Flags.Truncated, value ?? false);
-            }
-        }
-
-        public bool ParticipatesInScoring // Declare whether or not transition has an effect on "Best" peak selection - reporter ions like TMT do not, for example
-        {
-            get
-            {
-                return !GetFlag(Flags.NonScoring);
-            }
-            private set
-            {
-                SetFlag(Flags.NonScoring, !value);
             }
         }
 
@@ -784,7 +769,6 @@ namespace pwiz.Skyline.Model.Results
                    step == OptimizationStep &&
                    Equals(IonMobility, ionMobilityFilter) &&    // Unlikely to change, but still confirm
                    Equals(peak.MassError, MassError) &&
-                   peak.ParticipatesInScoring == ParticipatesInScoring &&
                    peak.RetentionTime == RetentionTime &&
                    peak.StartTime == StartRetentionTime &&
                    peak.EndTime == EndRetentionTime &&
@@ -1035,8 +1019,7 @@ namespace pwiz.Skyline.Model.Results
                 annotationScrubber.ScrubAnnotations(Annotations.FromProtoAnnotations(transitionPeak.Annotations), AnnotationDef.AnnotationTarget.transition_result), 
                 DataValues.FromUserSet(transitionPeak.UserSet),
                 transitionPeak.ForcedIntegration,
-                peakShapeValues,
-                !transitionPeak.NotScorable
+                peakShapeValues
             );
         }
 

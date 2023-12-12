@@ -63,7 +63,6 @@ namespace pwiz.Skyline.Model.Results
             DocNode = transitionDocNode;
             RawTimeIntensities = rawTimeIntensities;
             TimeIntensities = timeIntensities;
-            Assume.AreEqual(ParticipatesInScoring, DocNode?.ParticipatesInScoring ?? chromKey.ParticipatesInScoring);
         }
 
         /// <summary>
@@ -141,7 +140,7 @@ namespace pwiz.Skyline.Model.Results
         public void FindPeaks(double[] retentionTimes, TimeIntervals timeIntervals, ExplicitRetentionTimeInfo explicitRT)
         {
             Finder = Crawdads.NewCrawdadPeakFinder();
-            Finder.SetChromatogram(Times, Intensities, ParticipatesInScoring); // Reporter ions don't participate in retention time calculation
+            Finder.SetChromatogram(Times, Intensities);
             if (timeIntervals == null)
             {
                 RawPeaks = Finder.CalcPeaks(MAX_PEAKS, TimesToIndices(retentionTimes));
@@ -193,7 +192,7 @@ namespace pwiz.Skyline.Model.Results
             var intensities = Intensities.Skip(startIndex).Take(endIndex - startIndex + 1).ToArray();
             var subIdentifiedIndices = identifiedIndices.Select(index => index - startIndex).ToArray();
             var subFinder = Crawdads.NewCrawdadPeakFinder();
-            subFinder.SetChromatogram(times, intensities, ParticipatesInScoring); // Reporter ions don't participate in retention time calculation);
+            subFinder.SetChromatogram(times, intensities);
             foreach (var peak in subFinder.CalcPeaks(MAX_PEAKS, subIdentifiedIndices))
             {
                 yield return Finder.GetPeak(peak.StartIndex + startIndex, peak.EndIndex + startIndex);
@@ -203,14 +202,14 @@ namespace pwiz.Skyline.Model.Results
         public void SkipFindingPeaks(double[] retentionTimes)
         {
             Finder = Crawdads.NewCrawdadPeakFinder();
-            Finder.SetChromatogram(Times, Intensities, ParticipatesInScoring); // Reporter ions don't participate in retention time calculation);
+            Finder.SetChromatogram(Times, Intensities);
             RawPeaks = new IFoundPeak[0];
         }
 
         public void SetExplicitPeakBounds(PeakBounds peakBounds)
         {
             Finder = Crawdads.NewCrawdadPeakFinder();
-            Finder.SetChromatogram(Times, Intensities, ParticipatesInScoring);
+            Finder.SetChromatogram(Times, Intensities);
             if (peakBounds == null)
             {
                 RawPeaks = new IFoundPeak[0];
@@ -252,7 +251,6 @@ namespace pwiz.Skyline.Model.Results
         public ChromKey Key { get; private set; }
         public ChromExtra Extra { get; private set; }
         public TransitionDocNode DocNode { get; set; }
-        public bool ParticipatesInScoring => Key.ParticipatesInScoring;
         public int ProviderId { get; private set; }
         public TimeIntensities RawTimeIntensities { get; private set; }
         public TimeIntensities TimeIntensities { get; private set; }
@@ -261,6 +259,8 @@ namespace pwiz.Skyline.Model.Results
         public IList<float> RawMassErrors { get { return RawTimeIntensities == null ? null : RawTimeIntensities.MassErrors; } }
         public IList<int> RawScanIds { get { return RawTimeIntensities == null ? null : RawTimeIntensities.ScanIds; } }
         public IEnumerable<IFoundPeak> RawPeaks { get; private set; }
+
+        public bool ParticipatesInScoring => DocNode == null || DocNode.ParticipatesInScoring;
 
         public float RawCenterTime
         {
@@ -406,8 +406,7 @@ namespace pwiz.Skyline.Model.Results
                 (float) (Key.IonMobilityFilter.IonMobility.Mobility ?? 0),
                 (float) (Key.IonMobilityFilter.IonMobilityExtractionWindowWidth ?? 0),
                 Key.Source,
-                (short) OptimizationStep,
-                ParticipatesInScoring);
+                (short) OptimizationStep);
         }
     }
 
@@ -430,7 +429,7 @@ namespace pwiz.Skyline.Model.Results
         public TransitionDocNode NodeTran { get { return Data.DocNode; } }
         public IDetailedPeakData PeakData { get { return this; } }
 
-        public bool ParticipatesInScoring => Peak?.ParticipatesInScoring ?? DataPeak.ParticipatesInScoring; // Some ion types don't participate in retention time determination e.g. reporter ions
+        public bool ParticipatesInScoring => NodeTran?.ParticipatesInScoring ?? true; // Some ion types don't participate in retention time determination e.g. reporter ions
 
         public override string ToString()
         {
@@ -858,18 +857,19 @@ namespace pwiz.Skyline.Model.Results
                 //    MaxHeight = Math.Max(MaxHeight, dataPeak.Peak.Height);
                 //}
                 double area = dataPeak.Peak.Area;
+                var participatesInScoring = dataPeak.ParticipatesInScoring;
                 if (IsMs1(dataPeak.Data.Key.Source))
                     MS1Area += area;
                 else
                 {
                     MS2Area += area;
-                    if (dataPeak.Peak.ParticipatesInScoring) // Some ion types don't participate in retention time determination e.g. reporter ions like TMT
+                    if (participatesInScoring) // Some ion types don't participate in retention time determination e.g. reporter ions like TMT
                     {
                         ScorableMS2Area += area;
                     }
                 }
                 PeakCount++;
-                if (dataPeak.Peak.ParticipatesInScoring)
+                if (participatesInScoring)
                 {
                     _scorablePeakCount++;
                 }
@@ -884,7 +884,8 @@ namespace pwiz.Skyline.Model.Results
             {
                 double area = dataPeak.Peak.Area;
                 PeakCount--;
-                if (dataPeak.Peak.ParticipatesInScoring)
+                var participatesInScoring = dataPeak.ParticipatesInScoring;
+                if (participatesInScoring)
                 {
                     _scorablePeakCount--;
                 }
@@ -893,7 +894,7 @@ namespace pwiz.Skyline.Model.Results
                 else
                 {
                     MS2Area = (PeakCount == 0) ? 0 : MS2Area - area;
-                    if (dataPeak.Peak.ParticipatesInScoring) // Some ion types don't participate in retention time determination e.g. reporter ions
+                    if (participatesInScoring) // Some ion types don't participate in retention time determination e.g. reporter ions
                     {
                         ScorableMS2Area = (PeakCount == 0) ? 0 : ScorableMS2Area - area;
                     }

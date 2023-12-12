@@ -80,7 +80,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 {
                     var isReporter = transitionDocNode.Transition.FragmentIonName.Contains(@"TMT");
                     AssertEx.AreEqual(isReporter, !transitionDocNode.ParticipatesInScoring);
-                    AssertEx.AreEqual(isReporter, !transitionDocNode.Results.First().First().ParticipatesInScoring);
                 }
             }
         }
@@ -105,7 +104,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 {
                     var isReporter = transitionDocNode.Transition.FragmentIonName.Contains(@"TMT");
                     AssertEx.AreEqual(isReporter, !transitionDocNode.ParticipatesInScoring);
-                    AssertEx.AreEqual(isReporter, !transitionDocNode.Results.First().First().ParticipatesInScoring);
                 }
             }
         }

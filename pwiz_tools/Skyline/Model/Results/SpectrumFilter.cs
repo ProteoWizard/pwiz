@@ -303,14 +303,12 @@ namespace pwiz.Skyline.Model.Results
 
                             if (EnabledMsMs)
                             {
-                                var transitions = (EnabledMs
-
+                                var transitions = EnabledMs
                                     ? nodeGroup.Transitions.Where(nodeTran => !nodeTran.IsMs1)
-                                    : nodeGroup.Transitions).ToArray();
+                                    : nodeGroup.Transitions;
 
                                 var values = transitions.Select(nodeTran => new SpectrumFilterValues(nodeTran.Mz,
-                                    nodeTran.ExplicitValues.IonMobilityHighEnergyOffset ?? ionMobilityFilter.HighEnergyIonMobilityOffset ?? 0,
-                                    nodeTran.ParticipatesInScoring)); // Some ion types don't factor into retention time determination, e.e. reporter ions like TMT
+                                    nodeTran.ExplicitValues.IonMobilityHighEnergyOffset ?? ionMobilityFilter.HighEnergyIonMobilityOffset ?? 0));
 
                                 filterCount += filter.AddQ3FilterValues(values, calcWindowsQ3);
                             }

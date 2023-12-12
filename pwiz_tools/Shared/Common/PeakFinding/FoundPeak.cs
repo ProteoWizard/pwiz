@@ -37,13 +37,11 @@ namespace pwiz.Common.PeakFinding
         /// <param name="baselineIntensity"></param>
         /// <param name="startIndex"></param>
         /// <param name="endIndex"></param>
-        /// <param name="participatesInScoring">Some ion types don't factor into retention time calculation, e.g. reporter ions like TMT</param>
-        public FoundPeak(int widthDataWings, IList<float> intensities, float baselineIntensity, int startIndex, int endIndex, bool participatesInScoring)
+        public FoundPeak(int widthDataWings, IList<float> intensities, float baselineIntensity, int startIndex, int endIndex)
         {
             _allIntensities = intensities;
             _baselineIntensity = baselineIntensity;
             _widthDataWings = widthDataWings;
-            ParticipatesInScoring = participatesInScoring;
             SetBoundaries(startIndex, endIndex);
         }
         public int StartIndex { get; private set; }
@@ -71,8 +69,6 @@ namespace pwiz.Common.PeakFinding
         public bool FwhmDegenerate { get; private set; }
 
         public bool Identified { get; internal set; }
-
-        public bool ParticipatesInScoring { get; private set; } // Reporter ions do not influence retention time calculations
 
         public int Length
         {

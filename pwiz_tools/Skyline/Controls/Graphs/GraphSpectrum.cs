@@ -1661,7 +1661,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var timeIntensities = new TimeIntensities(chromGroup.Times, chromData.Intensities, null, null);
             var crawPeakFinder = Crawdads.NewCrawdadPeakFinder();
-            crawPeakFinder.SetChromatogram(chromGroup.Times, chromData.Intensities, true);
+            crawPeakFinder.SetChromatogram(chromGroup.Times, chromData.Intensities);
             var crawdadPeak =
                 crawPeakFinder.GetPeak(
                     FindNearestIndex(chromGroup.Times, (float) chromGroup.StartTime),
@@ -1692,7 +1692,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     new ChromTransition(chromData.Mz, 0,
                         (float) (ionMobilityFilter.IonMobilityAndCCS.IonMobility.Mobility ?? 0),
                         (float) (ionMobilityFilter.IonMobilityExtractionWindowWidth ?? 0),
-                        ChromSource.unknown, transitionChromInfo.OptimizationStep, transitionChromInfo.ParticipatesInScoring),
+                        ChromSource.unknown, transitionChromInfo.OptimizationStep),
                 }, peaks, TimeIntensitiesGroup.Singleton(timeIntensities));
             chromatogramInfo = new ChromatogramInfo(groupInfo, 0);
         }

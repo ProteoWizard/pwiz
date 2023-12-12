@@ -76,7 +76,6 @@ message SkylineDocumentProto {
 			float kurtosis = 3;
 			float shapeCorrelation = 4;
 		}
-		bool notScorable = 28; // If true, associated transition does not factor into "best peak" determination, e.g. reporter ions
 	}
 	message TransitionResults {
 		repeated TransitionPeak peaks = 1;
@@ -117,7 +116,6 @@ message SkylineDocumentProto {
 		google.protobuf.DoubleValue explicitDeclusteringPotential = 36;
 		bool orphanedCrosslinkIon = 37;
 		repeated LinkedIon linkedIons = 38;
-		bool notScorable = 39; // If true, associated transition does not factor into "best peak" determination, e.g. reporter ions
 	}
 
 	// Note that this is different from google.protobuf.IntValue because this

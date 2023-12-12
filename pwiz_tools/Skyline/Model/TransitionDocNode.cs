@@ -73,6 +73,7 @@ namespace pwiz.Skyline.Model
             Results = results;
             ExplicitQuantitative = transitionQuantInfo.Quantititative;
             ExplicitValues = explicitTransitionValues ?? ExplicitTransitionValues.EMPTY;
+
         }
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget { get { return AnnotationDef.AnnotationTarget.transition; } }
@@ -454,8 +455,7 @@ namespace pwiz.Skyline.Model
             {
                 FragmentType = DataValues.ToIonType(Transition.IonType),
                 NotQuantitative = !ExplicitQuantitative,
-                OrphanedCrosslinkIon = ComplexFragmentIon.IsOrphan,
-                NotScorable = !ParticipatesInScoring
+                OrphanedCrosslinkIon = ComplexFragmentIon.IsOrphan
             };
             if (Transition.IsCustom() && !Transition.IsPrecursor())
             {
@@ -779,6 +779,7 @@ namespace pwiz.Skyline.Model
                 var mass = settings.GetFragmentMass(group, mods, transition, isotopeDist);
                 transitionDocNode = new TransitionDocNode(transition, annotations, losses, mass, transitionQuantInfo, explicitTransitionValues, results);
             }
+
             return transitionDocNode;
         }
 
@@ -816,7 +817,6 @@ namespace pwiz.Skyline.Model
                     transitionPeak.IonMobility = transitionChromInfo.IonMobility.IonMobility.Mobility;
                     transitionPeak.IonMobilityWindow = transitionChromInfo.IonMobility.IonMobilityExtractionWindowWidth;
                     transitionPeak.IonMobilityCollisionCrossSection = transitionChromInfo.IonMobility.CollisionalCrossSectionSqA;
-                    transitionPeak.NotScorable = !transitionChromInfo.ParticipatesInScoring; // Reporter ions don't participate in "Best Peak" selection
                     transitionPeak.Area = transitionChromInfo.Area;
                     transitionPeak.BackgroundArea = transitionChromInfo.BackgroundArea;
                     transitionPeak.Height = transitionChromInfo.Height;
@@ -1041,7 +1041,6 @@ namespace pwiz.Skyline.Model
                    Equals(obj.IsotopeDistInfo, IsotopeDistInfo) &&
                    Equals(obj.LibInfo, LibInfo) &&
                    Equals(obj.Results, Results) &&
-                   Equals(obj.ParticipatesInScoring, ParticipatesInScoring) &&
                    Equals(obj.ExplicitQuantitative, ExplicitQuantitative);
             return equal;  // For debugging convenience
         }
@@ -1062,7 +1061,6 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ (IsotopeDistInfo != null ? IsotopeDistInfo.GetHashCode() : 0);
                 result = (result*397) ^ (LibInfo != null ? LibInfo.GetHashCode() : 0);
                 result = (result*397) ^ (Results != null ? Results.GetHashCode() : 0);
-                result = (result*397) ^ ParticipatesInScoring.GetHashCode();
                 result = (result*397) ^ ExplicitQuantitative.GetHashCode();
                 return result;
             }
