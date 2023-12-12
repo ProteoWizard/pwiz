@@ -194,7 +194,7 @@ namespace pwiz.SkylineTestUtil
             {
                 var dlg = WaitForOpenForm<MessageDlg>();
                 Assert.IsTrue(dlg.DetailMessage.Contains(expectedErrorMessage));
-                dlg.CancelDialog();
+                dlg.CancelButton.PerformClick();
             }
             else if (lockMassParameters == null)
             {
