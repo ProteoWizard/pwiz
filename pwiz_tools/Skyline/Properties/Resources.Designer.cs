@@ -19784,12 +19784,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Enter a list of {0} on separate lines..
+        ///   Looks up a localized string similar to Enter a list of identifiers on separate lines..
         /// </summary>
-        public static string MatchExpressionListDlg_MatchExpressionListDlg_Enter_a_list_of__0__on_separate_lines_ {
+        public static string MatchExpressionListDlg_MatchExpressionListDlg_Enter_a_list_of_identifiers_on_separate_lines_ {
             get {
-                return ResourceManager.GetString("MatchExpressionListDlg_MatchExpressionListDlg_Enter_a_list_of__0__on_separate_lin" +
-                        "es_", resourceCulture);
+                return ResourceManager.GetString("MatchExpressionListDlg_MatchExpressionListDlg_Enter_a_list_of_identifiers_on_sepa" +
+                        "rate_lines_", resourceCulture);
             }
         }
         

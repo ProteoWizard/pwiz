@@ -196,13 +196,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void ChangeSelection(int selectedIndex, IdentityPath identityPath, bool ctrl)
         {
-            if (!ctrl)
+            if (ctrl)
             {
-                ChangeSelection(selectedIndex, identityPath);
+                MultiSelect(identityPath);
             }
             else
             {
-                MultiSelect(identityPath);
+                ChangeSelection(selectedIndex, identityPath);
             }
         }
 
@@ -210,7 +210,9 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var skylineWindow = GraphSummary.Window;
             if (skylineWindow == null)
+            {
                 return;
+            }
 
             var list = skylineWindow.SequenceTree.SelectedPaths;
             if (GetSelectedPath(identityPath) == null)
@@ -218,7 +220,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 list.Insert(0, identityPath);
                 skylineWindow.SequenceTree.SelectedPaths = list;
                 if (!IsPathSelected(skylineWindow.SelectedPath, identityPath))
+                {
                     skylineWindow.SequenceTree.SelectPath(identityPath);
+                }
             }
             skylineWindow.UpdateGraphPanes();
         }

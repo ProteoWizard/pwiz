@@ -131,6 +131,7 @@ namespace pwiz.Skyline.Menus
 
             CollectionUtil.ForEach(FormUtil.OpenForms.OfType<FoldChangeBarGraph>(), b => b.QueueUpdateGraph());
             CollectionUtil.ForEach(FormUtil.OpenForms.OfType<FoldChangeVolcanoPlot>(), v => v.QueueUpdateGraph());
+            SkylineWindow.UpdatePeakAreaGraph();
         }
 
         private void showTargetsByNameToolStripMenuItem_Click(object sender, EventArgs e)

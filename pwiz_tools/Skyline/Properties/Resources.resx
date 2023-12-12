@@ -13836,9 +13836,6 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="Extensions_CustomToString_Protein_Expression" xml:space="preserve">
     <value>Protein Expression</value>
   </data>
-  <data name="MatchExpressionListDlg_MatchExpressionListDlg_Enter_a_list_of__0__on_separate_lines_" xml:space="preserve">
-    <value>Enter a list of {0} on separate lines.</value>
-  </data>
   <data name="CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_" xml:space="preserve">
     <value>Annotations file {0} exported successfully.</value>
   </data>
@@ -13874,5 +13871,8 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   </data>
   <data name="CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_file__0_" xml:space="preserve">
     <value>Error: Could not find background proteome file {0}</value>
+  </data>
+  <data name="MatchExpressionListDlg_MatchExpressionListDlg_Enter_a_list_of_identifiers_on_separate_lines_" xml:space="preserve">
+	  <value>Enter a list of identifiers on separate lines.</value>
   </data>
 </root>

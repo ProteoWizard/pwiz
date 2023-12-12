@@ -9,16 +9,16 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public partial class MatchExpressionListDlg : ModeUIInvariantFormEx // Dialog has explicit logic for handling UI modes
+    public partial class MatchExpressionListDlg : ModeUIInvariantFormEx
     {
-        private CreateMatchExpressionDlg _createProteinExpressionMatchExpressionDlg;
-        private string _oldRegex;
+        private readonly CreateMatchExpressionDlg _createProteinExpressionMatchExpressionDlg;
+        private readonly string _oldRegex;
         public MatchExpressionListDlg(CreateMatchExpressionDlg createMatchExpressionDlg)
         {
             InitializeComponent();
             _createProteinExpressionMatchExpressionDlg = createMatchExpressionDlg;
             _oldRegex = _createProteinExpressionMatchExpressionDlg.Expression;
-            label1.Text = string.Format(Resources.MatchExpressionListDlg_MatchExpressionListDlg_Enter_a_list_of__0__on_separate_lines_, _createProteinExpressionMatchExpressionDlg.MatchSelectedItem.DisplayString);
+            label1.Text = Resources.MatchExpressionListDlg_MatchExpressionListDlg_Enter_a_list_of_identifiers_on_separate_lines_;
             Icon = Resources.Skyline;
 
         }
