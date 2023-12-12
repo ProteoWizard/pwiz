@@ -224,17 +224,24 @@ namespace pwiz.SkylineTestFunctional
             // Add the test xml file to the search files list and try to 
             // build the document library.
 
-            RunUI(() =>
+            var errMsgDlg = ShowDialog<MessageDlg>(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.PerformDDASearch = true;
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).Take(1).ToArray();
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia; // will go back and switch to DDA
-                importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.9;
+                importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScoreText = @"12%"; // Intentionally bad 
                 importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = IrtStandard.AUTO;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
+            OkDialog(errMsgDlg, errMsgDlg.OkDialog); // Expect complaint about bad cutoff score
 
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page); // Should not have advanced
+                importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.9;
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
             // With only 1 source, no add/remove prefix/suffix dialog
 
             // We're on the "Match Modifications" page. Add M+16 mod.

@@ -601,6 +601,8 @@ namespace pwiz.Skyline.Model
 
         public NormalizationMethod NormalizationMethod { get; private set; }
 
+        public string SurrogateCalibrationCurve { get; private set; }
+
         public string AttributeGroupId { get; private set; }
 
         #region Property change methods
@@ -725,6 +727,11 @@ namespace pwiz.Skyline.Model
         public PeptideDocNode ChangeNormalizationMethod(NormalizationMethod normalizationMethod)
         {
             return ChangeProp(ImClone(this), im => im.NormalizationMethod = normalizationMethod);
+        }
+
+        public PeptideDocNode ChangeSurrogateCalibrationCurve(string surrogateCalibrationCurve)
+        {
+            return ChangeProp(ImClone(this), im => im.SurrogateCalibrationCurve = surrogateCalibrationCurve);
         }
 
         public PeptideDocNode ChangeAttributeGroupId(string attributeGroupId)
@@ -937,7 +944,7 @@ namespace pwiz.Skyline.Model
                 IEqualityComparer<TransitionGroup> transitionGroupEqualityComparer = null;
                 if (!IsProteomic)
                 {
-                    transitionGroupEqualityComparer = new IdentityEqualityComparer<TransitionGroup>();
+                    transitionGroupEqualityComparer = ReferenceValue.EQUALITY_COMPARER;
                 }
 
                 ILookup<TransitionGroup, TransitionGroupDocNode> mapIdToChild =
@@ -1991,7 +1998,8 @@ namespace pwiz.Skyline.Model
                 Equals(other.ConcentrationMultiplier, ConcentrationMultiplier) &&
                 Equals(other.NormalizationMethod, NormalizationMethod) &&
                 Equals(other.AttributeGroupId, AttributeGroupId) &&
-                Equals(other.GlobalStandardType, GlobalStandardType);
+                Equals(other.GlobalStandardType, GlobalStandardType) &&
+                Equals(other.SurrogateCalibrationCurve, SurrogateCalibrationCurve);
             return equal; // For debugging convenience
         }
 
@@ -2018,6 +2026,7 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ (NormalizationMethod == null ? 0 : NormalizationMethod.GetHashCode());
                 result = (result*397) ^ (AttributeGroupId == null ? 0 : AttributeGroupId.GetHashCode());
                 result = (result*397) ^ (GlobalStandardType == null ? 0 : GlobalStandardType.GetHashCode());
+                result = (result*397) ^ (SurrogateCalibrationCurve == null ? 0 : SurrogateCalibrationCurve.GetHashCode());
                 return result;
             }
         }

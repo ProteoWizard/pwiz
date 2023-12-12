@@ -26,9 +26,18 @@ namespace pwiz.Common.SystemUtil
 {
     public class CommonFormEx : Form, IFormView
     {
-        public static bool TestMode { get; set; }
-        public static bool Offscreen { get; set; }
-        public static bool ShowFormNames { get; set; }
+        public static bool TestMode
+        {
+            get { return CommonApplicationSettings.FunctionalTest; }
+        }
+        public static bool Offscreen
+        {
+            get { return CommonApplicationSettings.Offscreen; }
+        }
+        public static bool ShowFormNames
+        {
+            get { return CommonApplicationSettings.ShowFormNames; }
+        }
 
         private static readonly List<CommonFormEx> _undisposedForms = new List<CommonFormEx>();
 
@@ -88,6 +97,25 @@ namespace pwiz.Common.SystemUtil
                 offscreenPoint.Y = Math.Min(offscreenPoint.Y, screen.Bounds.Bottom);
             }
             return offscreenPoint - Screen.PrimaryScreen.Bounds.Size;    // position one screen away to top left
+        }
+        public void CheckDisposed()
+        {
+            if (IsDisposed)
+            {
+                throw new ObjectDisposedException(@"Form disposed");
+            }
+        }
+
+        public virtual string DetailedMessage { get { return null; } }
+
+        public DialogResult ShowParentlessDialog()
+        {
+            // Parentless dialogs should always be shown in the taskbar because:
+            // 1. If not shown in the taskbar it will be a leak in Windows 10
+            // 2. It is difficult to switch to Skyline if there is a modal dialog which is not in the tasbar
+            ShowInTaskbar = true;
+
+            return ShowDialog();
         }
     }
 }

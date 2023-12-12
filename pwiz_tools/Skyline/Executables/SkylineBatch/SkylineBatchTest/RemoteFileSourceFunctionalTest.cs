@@ -4,31 +4,33 @@ using System.IO;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
+using pwiz.Common.GUI;
 using pwiz.PanoramaClient;
 using SkylineBatch;
 using SkylineBatch.Properties;
-using AlertDlg = SharedBatch.AlertDlg;
 using PanoramaServer = pwiz.PanoramaClient.PanoramaServer;
+
+// ReSharper disable UnusedMember.Local
 
 namespace SkylineBatchTest
 {
     [TestClass]
     public class RemoteFileSourceFunctionalTest : AbstractSkylineBatchFunctionalTest
     {
-        public static string TEST_FOLDER;
+        private string TestFolder { get; set; }
 
-        public static string BRUDERER_SOURCE_NAME = "Bruderer Panorama Folder";
+        private const string BRUDERER_SOURCE_NAME = "Bruderer Panorama Folder";
 
-        public static string BRUDERER_FOLDER_LINK =
-            @"https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Bruderer/%40files/";
+        private const string BRUDERER_FOLDER_LINK =
+            @"https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Bruderer/@files/";
 
-        public static string SELEVSEK_SOURCE_NAME = "Selevsek Panorama Folder";
+        private const string SELEVSEK_SOURCE_NAME = "Selevsek Panorama Folder";
 
-        public static string SELEVSEK_FOLDER_LINK =
-            @"https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/";
+        private const string SELEVSEK_FOLDER_LINK =
+            @"https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/@files/";
 
-        public static string TARGETED_SOURCE_NAME = "TargetedMS Panorama Folder";
-        public static string TARGETED_FOLDER_LINK = "https://panoramaweb.org/_webdav/TargetedMS_folder/";
+        private const string TARGETED_SOURCE_NAME = "TargetedMS Panorama Folder";
+        private const string TARGETED_FOLDER_LINK = "https://panoramaweb.org/_webdav/TargetedMS_folder/";
 
 
         private const string VALID_USER_NAME = "skyline_tester@proteinms.net";
@@ -51,7 +53,7 @@ namespace SkylineBatchTest
 
         protected override void DoTest()
         {
-            TEST_FOLDER = TestFilesDirs[0].FullPath;
+            TestFolder = TestFilesDirs[0].FullPath;
 
             var mainWindow = MainFormWindow();
             var mainForm = mainWindow as MainForm;
@@ -141,6 +143,7 @@ namespace SkylineBatchTest
             var testClient = new TestClientJson();
             var folderJson = testClient.GetInfoForFolders(new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD),
                 TARGETED);
+            // TODO: Redesign this to set the TestClient on the remoteSourceForm and then call OpenFromPanorama on it
             var remoteDlg = ShowDialog<PanoramaDirectoryPicker>(() => OpenFromPanorama(VALID_SERVER, VALID_USER_NAME, VALID_PASSWORD, folderJson));
             WaitForConditionUI(9000, () => remoteDlg.IsLoaded);
             RunUI(() =>
@@ -152,8 +155,10 @@ namespace SkylineBatchTest
             WaitForClosedForm(remoteDlg);
             RunUI(() =>
             {
-                remoteSourceForm.textFolderUrl.Text = remoteDlg.SelectedPath;
-                Assert.AreEqual(remoteSourceForm.textFolderUrl.Text, TARGETED_FOLDER_LINK);
+                // TODO: Redesign this test to use more of the normal code path and avoid this copy-paste
+                var url = PanoramaFolderBrowser.GetSelectedUri(remoteDlg.FolderBrowser, true);
+                remoteSourceForm.textFolderUrl.Text = url;
+                Assert.AreEqual(TARGETED_FOLDER_LINK, remoteSourceForm.textFolderUrl.Text);
             });
             if (closeForm) CloseFormsInOrder(true,remoteSourceForm);
             WaitForClosedForm(remoteSourceForm);
@@ -279,7 +284,7 @@ namespace SkylineBatchTest
 
         public void TestImportRemoteFileSource(MainForm mainForm)
         {
-            var brudererBcfgSeperateSources = Path.Combine(TEST_FOLDER, "Bruderer_SeperateFileSources.bcfg");
+            var brudererBcfgSeperateSources = Path.Combine(TestFolder, "Bruderer_SeperateFileSources.bcfg");
             RunUI(() =>
             {
                 mainForm.DoImport(brudererBcfgSeperateSources);
@@ -299,7 +304,7 @@ namespace SkylineBatchTest
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             mainForm.ClearRemoteFileSources();
 
-            var brudererBcfgOneSource = Path.Combine(TEST_FOLDER, "Bruderer_OneFileSource.bcfg");
+            var brudererBcfgOneSource = Path.Combine(TestFolder, "Bruderer_OneFileSource.bcfg");
             RunUI(() =>
             {
                 mainForm.DoImport(brudererBcfgOneSource);
@@ -319,7 +324,7 @@ namespace SkylineBatchTest
 
         public void TestReplaceRemoteFileSources(MainForm mainForm)
         {
-            var brudererBcfgSeperateSources = Path.Combine(TEST_FOLDER, "Bruderer_SeperateFileSources.bcfg");
+            var brudererBcfgSeperateSources = Path.Combine(TestFolder, "Bruderer_SeperateFileSources.bcfg");
             RunUI(() =>
             {
                 mainForm.DoImport(brudererBcfgSeperateSources);
@@ -337,21 +342,23 @@ namespace SkylineBatchTest
             });
             RunUI(() => templateRemoteFileControl.comboRemoteFileSource.SelectedItem =
                 "panoramaweb.org Bruderer.sky.zip");
-            var remoteSourceForm = ShowDialog<RemoteSourceForm>(() =>
-                templateRemoteFileControl.comboRemoteFileSource.SelectedItem = "<Edit current...>");
-            ChangeRemoteFileSource(remoteSourceForm, BRUDERER_SOURCE_NAME, BRUDERER_FOLDER_LINK, closeForm: false);
-            RunDlg<AlertDlg>(() => remoteSourceForm.btnSave.PerformClick(),
-                dlg =>
-                {
-                    var expectedMessage =
-                        Resources
-                            .SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Changing_this_file_source_will_impact_the_following_configurations_ +
-                        Environment.NewLine + Environment.NewLine +
-                        "Bruderer 1" + Environment.NewLine + "Bruderer 2" + Environment.NewLine + Environment.NewLine +
-                        Resources.SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Do_you_want_to_continue_;
-                    Assert.AreEqual(expectedMessage, dlg.Message);
-                    dlg.ClickOk();
-                });
+            {
+                var remoteSourceForm = ShowDialog<RemoteSourceForm>(() =>
+                    templateRemoteFileControl.comboRemoteFileSource.SelectedItem = "<Edit current...>");
+                ChangeRemoteFileSource(remoteSourceForm, BRUDERER_SOURCE_NAME, BRUDERER_FOLDER_LINK, closeForm: false);
+                RunDlg<CommonAlertDlg>(() => remoteSourceForm.btnSave.PerformClick(),
+                    dlg =>
+                    {
+                        var expectedMessage =
+                            Resources
+                                .SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Changing_this_file_source_will_impact_the_following_configurations_ +
+                            Environment.NewLine + Environment.NewLine +
+                            "Bruderer 1" + Environment.NewLine + "Bruderer 2" + Environment.NewLine + Environment.NewLine +
+                            Resources.SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Do_you_want_to_continue_;
+                        Assert.AreEqual(expectedMessage, dlg.Message);
+                        dlg.ClickOk();
+                    });
+            }
             CheckRemoteFileSourceList(templateRemoteFileControl, new HashSet<string>
             {
                 "panoramaweb.org RawFiles",
@@ -371,7 +378,7 @@ namespace SkylineBatchTest
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             mainForm.ClearRemoteFileSources();
 
-            var brudererBcfgOneSource = Path.Combine(TEST_FOLDER, "Bruderer_OneFileSource.bcfg");
+            var brudererBcfgOneSource = Path.Combine(TestFolder, "Bruderer_OneFileSource.bcfg");
             RunUI(() =>
             {
                 mainForm.DoImport(brudererBcfgOneSource);
@@ -383,10 +390,11 @@ namespace SkylineBatchTest
                 ShowDialog<DataServerForm>(() => configForm.dataControl.btnDownload.PerformClick());
             var dataRemoteFileControl = dataRemoteFileForm.remoteFileControl;
             CheckRemoteFileSourceList(dataRemoteFileControl, new HashSet<string> { BRUDERER_SOURCE_NAME });
-            remoteSourceForm = ShowDialog<RemoteSourceForm>(() =>
+            {
+                var remoteSourceForm = ShowDialog<RemoteSourceForm>(() =>
                 dataRemoteFileControl.comboRemoteFileSource.SelectedItem = "<Edit current...>");
             ChangeRemoteFileSource(remoteSourceForm, BRUDERER_SOURCE_NAME, SELEVSEK_FOLDER_LINK, closeForm: false);
-            RunDlg<AlertDlg>(() => remoteSourceForm.btnSave.PerformClick(),
+            RunDlg<CommonAlertDlg>(() => remoteSourceForm.btnSave.PerformClick(),
                 dlg =>
                 {
                     var expectedMessage =
@@ -399,6 +407,7 @@ namespace SkylineBatchTest
                     Assert.AreEqual(expectedMessage, dlg.Message);
                     dlg.ClickOk();
                 });
+            }
             RunUI(() => dataRemoteFileControl.textRelativePath.Text = string.Empty);
             CloseFormsInOrder(true, dataRemoteFileForm);
             RunUI(() => { configForm.tabsConfig.SelectedIndex = 3; });
@@ -407,7 +416,8 @@ namespace SkylineBatchTest
             var rScriptRemoteFileForm =
                 ShowDialog<RemoteFileForm>(() => rScriptForm.fileControl.btnDownload.PerformClick());
             var reportRemoteFileControl = rScriptRemoteFileForm.RemoteFileControl;
-            remoteSourceForm = ShowDialog<RemoteSourceForm>(() =>
+            {
+                var remoteSourceForm = ShowDialog<RemoteSourceForm>(() =>
                 reportRemoteFileControl.comboRemoteFileSource.SelectedItem = "<Edit current...>");
             CheckRemoteFileSource(remoteSourceForm, BRUDERER_SOURCE_NAME, SELEVSEK_FOLDER_LINK);
             CloseFormsInOrder(false, rScriptRemoteFileForm, rScriptForm, editReportForm, configForm);
@@ -416,9 +426,10 @@ namespace SkylineBatchTest
             configForm = ShowDialog<SkylineBatchConfigForm>(() => mainForm.ClickEdit());
             var annotationsRemoteFileForm =
                 ShowDialog<RemoteFileForm>(() => configForm.annotationsControl.btnDownload.PerformClick());
-            var annotationsRemoteFileControl = annotationsRemoteFileForm.RemoteFileControl;
+                // var annotationsRemoteFileControl = annotationsRemoteFileForm.RemoteFileControl;
             CheckRemoteFileSource(remoteSourceForm, BRUDERER_SOURCE_NAME, SELEVSEK_FOLDER_LINK);
             CloseFormsInOrder(false, annotationsRemoteFileForm, configForm);
+            }
 
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             mainForm.ClearRemoteFileSources();
@@ -426,7 +437,6 @@ namespace SkylineBatchTest
 
         private class TestClientJson
         {
-
             public JToken CreateFiles()
             {
                 var root = new JObject();
@@ -534,7 +544,9 @@ namespace SkylineBatchTest
             }
 
             //Only generating 3 nodes in the tree
-            public JToken GetInfoForFolders(PanoramaServer server, string folder)
+            // ReSharper disable UnusedParameter.Local
+            public JToken GetInfoForFolders(PanoramaServer server, string folder) 
+            // ReSharper restore UnusedParameter.Local
             {
                 var testFolders = CreateFolder(TARGETED, true, true);
                 testFolders["children"] = new JArray(

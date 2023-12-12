@@ -121,7 +121,7 @@ namespace AutoQC
                 await btnNext;
                 valid = control.IsValid(out errorMessage);
                 if (!valid)
-                    AlertDlg.ShowError(this, Program.AppName, errorMessage);
+                    AlertDlg.ShowError(this, errorMessage);
             }
             // remove the control and return the valid variable
             if (removeControl) RemoveControl((UserControl)control);
@@ -154,7 +154,7 @@ namespace AutoQC
             // the first time a path is changed, ask if user wants all path roots replaced
             if (!_askedAboutRootReplacement && oldRoot.Length > 0 && !Directory.Exists(oldRoot))
             {
-                var replaceRoot = AlertDlg.ShowQuestion(this, Program.AppName, string.Format(Resources.InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___, oldRoot, newRoot)) == DialogResult.Yes;
+                var replaceRoot = AlertDlg.ShowQuestion(this, string.Format(Resources.InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___, oldRoot, newRoot)) == DialogResult.Yes;
                 _askedAboutRootReplacement = true;
                 if (replaceRoot)
                 {

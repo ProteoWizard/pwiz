@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using pwiz.Common.GUI;
 using SharedBatch.Properties;
 
 namespace SharedBatch
@@ -41,7 +42,7 @@ namespace SharedBatch
             }
             catch (ArgumentException ex)
             {
-                AlertDlg.ShowError(this, Text, ex.Message);
+                CommonAlertDlg.ShowException(this, ex);
                 return;
             }
             Settings.Default.SkylineCustomCmdPath = skylineSettings.CmdPath;

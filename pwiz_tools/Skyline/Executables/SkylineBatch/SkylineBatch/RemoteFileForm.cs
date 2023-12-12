@@ -43,7 +43,7 @@ namespace SkylineBatch
             // Remove this when FTP sources supported
             if (RemoteFileControl.ServerFromUi().FileSource.FtpSource)
             {
-                AlertDlg.ShowError(this, Program.AppName(), 
+                AlertDlg.ShowError(this, 
                     Resources.RemoteFileForm_btnSave_Click_This_file_type_does_not_support_downloads_from_an_FTP_file_source__Please_download_this_file_from_Panorama_);
                 return;
             }
@@ -61,7 +61,7 @@ namespace SkylineBatch
             if (cancelled || error != null)
             {
                 if (error != null)
-                    RunUi(() => { AlertDlg.ShowError(this, Program.AppName(), error.Message); });
+                    RunUi(() => { AlertDlg.ShowError(this, error.Message); });
                 RunUi(() =>
                 {
                     btnSave.Enabled = true;
