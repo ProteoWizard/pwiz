@@ -463,7 +463,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                          : PeakIdentification.FALSE;
 
                     var e = new ChangedPeakBoundsEventArgs(_groupPaths[iGroup],
-                                                           nodeTran,
+                                                           nodeTran != null ? nodeTran.Transition : null,
                                                            _nameChromatogramSet,
                                                            // All active groups should have the same file
                                                            filePath,
@@ -3782,7 +3782,7 @@ namespace pwiz.Skyline.Controls.Graphs
     public sealed class ChangedPeakBoundsEventArgs : PeakEventArgs
     {
         public ChangedPeakBoundsEventArgs(IdentityPath groupPath,
-                                          TransitionDocNode transitionDocNode,
+                                          Transition transition,
                                           string nameSet,
                                           MsDataFileUri filePath,
                                           ScaledRetentionTime startTime,
@@ -3791,15 +3791,14 @@ namespace pwiz.Skyline.Controls.Graphs
                                           PeakBoundsChangeType changeType)
             : base(groupPath, nameSet, filePath)
         {
-            TransitionDocNode = transitionDocNode;
+            Transition = transition;
             StartTime = startTime;
             EndTime = endTime;
             Identified = identified;
             ChangeType = changeType;
         }
 
-        public TransitionDocNode TransitionDocNode { get; private set; }
-        public Transition Transition => TransitionDocNode?.Transition;
+        public Transition Transition { get; private set; }
         public ScaledRetentionTime StartTime { get; private set; }
         public ScaledRetentionTime EndTime { get; private set; }
         public PeakIdentification? Identified { get; private set; }
