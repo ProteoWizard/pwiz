@@ -2258,7 +2258,7 @@ namespace pwiz.Skyline.Model
 
             private static float GetSafeRankArea(IndexedTypedInfo info)
             {
-                return (info is { ParticipatesInScoring: true } ? info.Info.Area : -1.0f);
+                return (info is { ParticipatesInScoring: true } ? GetSafeArea(info.Info) : -1.0f);
             }
 
             private static float GetSafeLibIntensity(TransitionDocNode nodeTran)
