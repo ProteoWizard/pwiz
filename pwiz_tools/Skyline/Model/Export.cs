@@ -168,10 +168,10 @@ namespace pwiz.Skyline.Model
     public static class ExportInstrumentType
     {
         public const string ABI = "SCIEX";
-        public const string ABI_QTRAP = "SCIEX QTRAP";
-        public const string ABI_TOF = "SCIEX QTOF";
-        public const string ABI_7500 = "SCIEX OS 7500";
-        public const string ABI_7600 = "SCIEX OS 7600";
+        public const string ABI_QTRAP = "SCIEX QQQ/QTRAP - Analyst";
+        public const string ABI_TOF = "SCIEX QTOF - Analyst";
+        public const string ABI_7500 = "SCIEX QQQ/QTRAP - SCIEX OS";
+        public const string ABI_7600 = "SCIEX QTOF - SCIEX OS";
         public const string AGILENT = "Agilent";
         public const string AGILENT_TOF = "Agilent QTOF";
         public const string AGILENT6400 = "Agilent 6400 Series";
@@ -402,6 +402,7 @@ namespace pwiz.Skyline.Model
         public virtual int PrimaryTransitionCount { get; set; }
         public virtual int DwellTime { get; set; }
         public virtual double AccumulationTime { get; set; }
+        public virtual double XICWidth { get; set; }
         public virtual bool UseSlens { get; set; }
         public virtual bool WriteCompensationVoltages { get; set; }
         public virtual bool AddEnergyRamp { get; set; }
@@ -417,6 +418,7 @@ namespace pwiz.Skyline.Model
 
         public virtual bool ExportMultiQuant { get; set; }
         public virtual bool ExportSureQuant { get; set; }
+        public virtual bool ExportSciexOSQuant { get; set; }
 
         public virtual double? IntensityThresholdPercent { get; set; }
         public virtual double? IntensityThresholdValue { get; set; }
@@ -612,6 +614,10 @@ namespace pwiz.Skyline.Model
         public AbstractMassListExporter ExportSciexOsMethod(SrmDocument document, string fileName, string templateName, string instrumentType)
         {
             var exporter = InitExporter(new SciexOsMethodExporter(document, instrumentType));
+            exporter.ExportSciexOSQuant = ExportSciexOSQuant;
+            if (ExportSciexOSQuant)
+                exporter.XICWidth = XICWidth;
+
             if (MethodType == ExportMethodType.Standard)
             {
                 switch (instrumentType)
@@ -624,6 +630,10 @@ namespace pwiz.Skyline.Model
                         break;
                 }
             }
+            else if (MethodType == ExportMethodType.Scheduled || instrumentType == ExportInstrumentType.ABI_7600)
+                exporter.AccumulationTime = AccumulationTime;
+
+
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
             return exporter;
         }
@@ -1869,7 +1879,7 @@ namespace pwiz.Skyline.Model
             if (!surequant)
             {
                 IsPrecursorLimited = true;
-                IsolationList = true;
+                IsolationList = IsolationStrategy.precursor;
             }
             _instrumentType = instrumentType;
             _surequant = surequant;
@@ -2164,6 +2174,9 @@ namespace pwiz.Skyline.Model
 
     public class AbiMassListExporter : AbstractMassListExporter
     {
+        public const double XIC_WIDTH_MIN = 0;
+        public const double XIC_WIDTH_MAX = 1;
+
         public AbiMassListExporter(SrmDocument document)
             : this(document, null)
         {
@@ -2176,6 +2189,7 @@ namespace pwiz.Skyline.Model
 
         public double? DwellTime { get; set; }
         public double? AccumulationTime { get; set; }
+        public double? XICWidth { get; set; }
         protected PeptidePrediction.WindowRT RTWindow { get; private set; }
 
         private int OptimizeStepIndex { get; set; }
@@ -2273,7 +2287,7 @@ namespace pwiz.Skyline.Model
             string q1 = SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
             string q3 = nodeTran != null ? GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo) : string.Empty;
 
-            GetTransitionTimeValues(nodePep, nodeTranGroup, out var predictedRT, out var dwellOrRt);
+            GetTransitionTimeValues(nodePep, nodeTranGroup, out var predictedRT, out var dwellOrRt, out var xic, out var rt);
             GetPeptideAndGroupNames(nodePepGroup, nodePep, nodeTranGroup, nodeTran, step, out var extPeptideId, out var extGroupId);
 
             double ceValue = GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step);
@@ -2337,7 +2351,9 @@ namespace pwiz.Skyline.Model
                     extGroupId,
                     averagePeakAreaText,
                     rtWindowText,
-                    primaryOrSecondary),
+                    primaryOrSecondary,
+                    xic,
+                    rt),
                 compensationVoltage);
 
             writer.Write(oneLine.Replace(',', FieldSeparator));
@@ -2351,7 +2367,9 @@ namespace pwiz.Skyline.Model
                                           string extGroupId,
                                           string averagePeakAreaText,
                                           string variableRtWindowText,
-                                          string primaryOrSecondary)
+                                          string primaryOrSecondary,
+                                          string xic,
+                                          string rt)
         {
             if (MethodType == ExportMethodType.Triggered) // CSV for triggered
             {
@@ -2457,23 +2475,22 @@ namespace pwiz.Skyline.Model
             return string.Empty;
         }
 
-        private void GetTransitionTimeValues(PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup, out double? predictedRT, out string dwellOrRt)
+        private void GetTransitionTimeValues(PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup, out double? predictedRT, out string dwellOrRt, out string xic, out string rt)
         {
-            if (MethodType == ExportMethodType.Standard)
-            {
-                predictedRT = new PeptidePrediction.WindowRT(0, false);
-                dwellOrRt = AccumulationTime.HasValue
-                    ? Math.Round(AccumulationTime.Value, 4).ToString(CultureInfo)
-                    : Math.Round(DwellTime.GetValueOrDefault(), 2).ToString(CultureInfo);
-                return;
-            }
-
             var prediction = Document.Settings.PeptideSettings.Prediction;
             predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
                 SchedulingReplicateIndex, SchedulingAlgorithm, Document.Settings.HasResults, out var rtWindow);
+            if(MethodType != ExportMethodType.Standard)
+                RTWindow = rtWindow; // Store for later use
 
-            dwellOrRt = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo);
-            RTWindow = rtWindow; // Store for later use
+            xic = XICWidth.HasValue
+                ? Math.Round(XICWidth.Value, 4).ToString(CultureInfo)
+                : 0.02.ToString(CultureInfo);
+            rt = predictedRT.HasValue ? Math.Round(predictedRT.Value, 2).ToString(CultureInfo) : @"0";
+
+            dwellOrRt = AccumulationTime.HasValue
+                ? Math.Round(AccumulationTime.Value, 4).ToString(CultureInfo)
+                : Math.Round(DwellTime.GetValueOrDefault(), 2).ToString(CultureInfo);
         }
 
         private void GetValuesFromResults(TransitionDocNode nodeTran, double? predictedRT, out float? averagePeakArea,
@@ -2704,10 +2721,10 @@ namespace pwiz.Skyline.Model
                                                      string extGroupId,
                                                      string averagePeakAreaText,
                                                      string variableRtWindowText,
-                                                     string primaryOrSecondary)
+                                                     string primaryOrSecondary, string xic, string rt)
         {
             // Provide all columns for method export
-            return string.Format(@",{0},{1},{2},{3},{4},{5},{6},{7},{8}",
+            return string.Format(@",{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10}",
                                  dp,
                                  ce,
                                  precursorWindow,
@@ -2716,7 +2733,9 @@ namespace pwiz.Skyline.Model
                                  averagePeakAreaText,
                                  variableRtWindowText,
                                  string.Empty,  // Threshold for triggering secondary
-                                 primaryOrSecondary);
+                                 primaryOrSecondary,
+                                 xic,
+                                 rt);
         }
     }
     public class AbiQtrapMethodExporter : AbiMethodExporter
@@ -2805,7 +2824,7 @@ namespace pwiz.Skyline.Model
         public AbiTofIsolationListExporter(SrmDocument document)
             : base(document, null)
         {
-            IsolationList = true;
+            IsolationList = IsolationStrategy.precursor;
         }
 
         public void ExportIsolationList(string fileName)
@@ -2863,6 +2882,18 @@ namespace pwiz.Skyline.Model
         private const string EXE_NAME = @"Method\AbSciex\SciexOS\BuildSciexMethod";
 
         private readonly string _instrument;
+        private bool _exportQuantMethod;
+
+        public bool ExportSciexOSQuant
+        {
+            get { return _exportQuantMethod;}
+            set
+            {
+                _exportQuantMethod = value;
+                if (_exportQuantMethod)
+                    IsolationList = IsolationStrategy.all;
+            }
+        }
 
         public SciexOsMethodExporter(SrmDocument document, string instrumentType) : base(document)
         {
@@ -2872,7 +2903,7 @@ namespace pwiz.Skyline.Model
                 case ExportInstrumentType.ABI_7500:
                     break;
                 case ExportInstrumentType.ABI_7600:
-                    IsolationList = true;
+                    IsolationList = IsolationStrategy.precursor;
                     break;
                 default:
                     throw new Exception(Resources.SciexOsMethodExporter_SciexOsMethodExporter_Invalid_instrument_type_for_SCIEX_OS_method_export_);
@@ -2898,6 +2929,8 @@ namespace pwiz.Skyline.Model
 
             if (Equals(_instrument, ExportInstrumentType.ABI_7600))
                 args.Add(@"-t");
+            if(ExportSciexOSQuant)
+                args.Add(@"-q");
 
             MethodExporter.ExportMethod(EXE_NAME, args, fileName, templateName, MemoryOutput, progressMonitor);
         }
@@ -2956,10 +2989,12 @@ namespace pwiz.Skyline.Model
             string extGroupId,
             string averagePeakAreaText,
             string variableRtWindowText,
-            string primaryOrSecondary)
+            string primaryOrSecondary, 
+            string xic,
+            string rt)
         {
             // Provide all columns for method export
-            return string.Format(@",{0},{1},{2},{3},{4},{5},{6},{7},{8}",
+            return string.Format(@",{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10}",
                 dp,
                 ce,
                 precursorWindow,
@@ -2968,7 +3003,9 @@ namespace pwiz.Skyline.Model
                 averagePeakAreaText,
                 variableRtWindowText,
                 string.Empty,  // Threshold for triggering secondary
-                primaryOrSecondary);
+                primaryOrSecondary,
+                xic,
+                rt);
         }
     }
 
@@ -3338,7 +3375,7 @@ namespace pwiz.Skyline.Model
             : base(document)
         {
             IsPrecursorLimited = true;
-            IsolationList = true;
+            IsolationList = IsolationStrategy.precursor;
         }
 
         private bool IsDda { get { return !Document.Settings.TransitionSettings.FullScan.IsEnabledMsMs; } }
@@ -3423,7 +3460,7 @@ namespace pwiz.Skyline.Model
             : base(document, null)
         {
             IsPrecursorLimited = true;
-            IsolationList = true;
+            IsolationList = IsolationStrategy.precursor;
         }
 
         public double RunLength { get; set; }
@@ -3588,7 +3625,7 @@ namespace pwiz.Skyline.Model
         public BrukerTimsTofIsolationListExporter(SrmDocument document) : base(document, null)
         {
             IsPrecursorLimited = true;
-            IsolationList = true;
+            IsolationList = IsolationStrategy.precursor;
             _missingIonMobility = new HashSet<LibKey>();
             _ionMobilityOutsideLimits = new Dictionary<LibKey, Tuple<double, double>>();
             _id = 0;
@@ -4010,7 +4047,7 @@ namespace pwiz.Skyline.Model
             : base(document)
         {
             IsPrecursorLimited = true;
-            IsolationList = true;
+            IsolationList = IsolationStrategy.precursor;
         }
 
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
@@ -4107,14 +4144,14 @@ namespace pwiz.Skyline.Model
         public const double WIDE_NCE = 30.0;
 
         public bool Tune3 { get; set; }
-        public bool Tune3Columns { get { return IsolationList && Tune3; } }
+        public bool Tune3Columns { get { return IsolationList == IsolationStrategy.precursor && Tune3; } }
 
         public bool WriteFaimsCv { get; set; }
 
         public ThermoFusionMassListExporter(SrmDocument document)
             : base(document)
         {
-            IsolationList = true;
+            IsolationList = IsolationStrategy.precursor;
             IsPrecursorLimited = true;
         }
 
@@ -4432,7 +4469,7 @@ namespace pwiz.Skyline.Model
             : base(document, null)
         {
             _instrumentType = instrumentType;
-            IsolationList = true;
+            IsolationList = IsolationStrategy.precursor;
             IsPrecursorLimited = true;
 
             /* From Waters:

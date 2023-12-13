@@ -97,6 +97,14 @@ namespace BuildAnalystMethod
                 i++;
 
                 if (i < values.Length)
+                    Xic = string.IsNullOrEmpty(values[i]) ? (double?)null : double.Parse(values[i], CultureInfo.InvariantCulture);
+                i++;
+
+                if (i < values.Length)
+                    Rt = string.IsNullOrEmpty(values[i]) ? (double?)null : double.Parse(values[i], CultureInfo.InvariantCulture);
+                i++;
+
+                if (i < values.Length)
                     CoV = string.IsNullOrEmpty(values[i]) ? 1 : double.Parse(values[i], CultureInfo.InvariantCulture);
             }
             catch (FormatException)
@@ -119,6 +127,9 @@ namespace BuildAnalystMethod
         public float? AveragePeakArea { get; private set; }
         public double? VariableRtWindow { get; private set; }
         public double? CoV { get; private set; }
+        public double? Xic { get; private set; }
+        public double? Rt { get; private set; }
+
 
         public int ExperimentIndex { get; set; }
     }

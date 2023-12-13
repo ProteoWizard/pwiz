@@ -97,7 +97,9 @@ namespace pwiz.Skyline.Model
         public ExportMethodType MethodType { get; set; }
         public bool IsPrecursorLimited { get; set; }
         public bool FullScans { get; set; }
-        public bool IsolationList { get; set; }
+
+        public enum IsolationStrategy{ transition, precursor, all}
+        public IsolationStrategy IsolationList { get; set; }
         public int? MaxTransitions { get; set; }
         public int MinTransitions { get; set; }
         public int PrimaryTransitionCount { get; set; }
@@ -337,7 +339,7 @@ namespace pwiz.Skyline.Model
                         if (DocNode is TransitionGroupDocNode && !ReferenceEquals(group, DocNode))
                             continue;
 
-                        var groupPrimary = !IsolationList && PrimaryTransitionCount > 0
+                        var groupPrimary = IsolationList != IsolationStrategy.precursor && PrimaryTransitionCount > 0
                             ? peptide.GetPrimaryResultsGroup(group)
                             : null;
 
@@ -565,9 +567,20 @@ namespace pwiz.Skyline.Model
         private void WriteTransitions(FileIterator fileIterator, PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, TransitionGroupDocNode nodeGroupPrimary)
         {
             // Allow derived classes a chance to reorder the transitions.  Currently only used by AB SCIEX.
-            var transitions = !IsolationList
-                ? GetTransitionsInBestOrder(nodeGroup, nodeGroupPrimary).Where(PassesPolarityFilter)
-                : new TransitionDocNode[] { null };
+            var transitions = new List<TransitionDocNode>();
+            switch (IsolationList)
+            {
+                case IsolationStrategy.precursor:
+                    transitions.Add(null);
+                    break;
+                case IsolationStrategy.transition:
+                    transitions.AddRange(GetTransitionsInBestOrder(nodeGroup, nodeGroupPrimary).Where(PassesPolarityFilter));
+                    break;
+                case IsolationStrategy.all:
+                    transitions.Add(null);
+                    transitions.AddRange(GetTransitionsInBestOrder(nodeGroup, nodeGroupPrimary).Where(PassesPolarityFilter));
+                    break;
+            }
 
             // When exporting CoV optimization methods, only write top ranked transitions.
             var onlyTopRankedTransitions =
@@ -994,7 +1007,7 @@ namespace pwiz.Skyline.Model
             {
                 foreach (var storedList in _storedTransitions.Values)
                 {
-                    var storedEnumerable = storedList.First().Exporter.IsolationList
+                    var storedEnumerable = storedList.First().Exporter.IsolationList == IsolationStrategy.precursor
                         ? storedList.AsEnumerable()
                         : storedList.OrderBy(stored => stored.Exporter.GetProductMz(stored.Transition.Mz, stored.Step));
                     foreach (var stored in storedEnumerable)
@@ -1127,10 +1140,11 @@ namespace pwiz.Skyline.Model
 
                     foreach (var group in peptide.TransitionGroups.Where(exporter.PassesPolarityFilter))
                     {
-                        if (exporter.IsolationList)
+                        if (exporter.IsolationList != IsolationStrategy.transition)
                         {
                             WriteTransition(exporter, seq, peptide, group, null, null, 0, sortByMz);
-                            continue;
+                            if(exporter.IsolationList == IsolationStrategy.precursor)
+                                continue;
                         }
 
                         foreach (var transition in group.Transitions.Where(exporter.PassesPolarityFilter))
