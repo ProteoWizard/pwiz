@@ -241,7 +241,6 @@ namespace pwiz.Skyline.Model
                 AGILENT_MASSHUNTER_12,
                 AGILENT_MASSHUNTER_12_ULTIVO,
                 AGILENT_MASSHUNTER_12_6495D,
-                AGILENT_MASSHUNTER_12_6495C,
                 BRUKER,
                 ABI,
                 SHIMADZU,
@@ -476,7 +475,6 @@ namespace pwiz.Skyline.Model
                 case ExportInstrumentType.AGILENT_MASSHUNTER_12:
                 case ExportInstrumentType.AGILENT_MASSHUNTER_12_ULTIVO:
                 case ExportInstrumentType.AGILENT_MASSHUNTER_12_6495D:
-                case ExportInstrumentType.AGILENT_MASSHUNTER_12_6495C:
                     return ExportAgilentCsv(doc, path, instrumentType);
                 case ExportInstrumentType.AGILENT6400:
                     return ExportAgilentMethod(doc, path, template);
