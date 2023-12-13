@@ -30,6 +30,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
+using pwiz.Common;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -71,10 +72,29 @@ namespace pwiz.Skyline
         // Parameters for testing.
         public static bool StressTest { get; set; }                 // Set true when doing stress testing (i.e. TestRunner).
         public static bool UnitTest { get; set; }                   // Set to true by AbstractUnitTest and AbstractFunctionalTest
-        public static bool FunctionalTest { get; set; }             // Set to true by AbstractFunctionalTest
+        public static bool FunctionalTest
+        {
+            get { return CommonApplicationSettings.FunctionalTest;}
+            set
+            {
+                CommonApplicationSettings.FunctionalTest = value;
+            }
+        }
         public static string TestName { get; set; }                 // Set during unit and functional tests
         public static string DefaultUiMode { get; set; }            // Set to avoid seeing NoModeUiDlg at the start of a test
-        public static bool SkylineOffscreen { get; set; }           // Set true to move Skyline windows offscreen.
+
+        public static bool SkylineOffscreen
+        {
+            get
+            {
+                return CommonApplicationSettings.Offscreen;
+            }
+            set
+            {
+                CommonApplicationSettings.Offscreen = value;
+            }
+        } // Set true to move Skyline windows offscreen.
+
         public static bool DemoMode { get; set; }                   // Set to true in demo mode (main window is full screen and pauses at screenshots)
         public static bool NoVendorReaders { get; set; }            // Set true to avoid calling vendor readers.
         public static bool UseOriginalURLs { get; set; }            // Set true to use original URLs for downloading tools instead of our S3 copies
@@ -122,10 +142,6 @@ namespace pwiz.Skyline
             }
 
             SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections
-
-            CommonFormEx.TestMode = FunctionalTest;
-            CommonFormEx.Offscreen = SkylineOffscreen;
-            CommonFormEx.ShowFormNames = FormEx.ShowFormNames = ShowFormNames;
 
             // For testing and debugging Skyline command-line interface
             bool openDoc = args != null && args.Length > 0 && args[0] == OPEN_DOCUMENT_ARG;

@@ -189,7 +189,7 @@ namespace SkylineBatch
             checkBoxCultureInvariant.CheckedChanged -= checkBoxCultureInvariant_CheckedChanged;
             if (!checkBoxCultureInvariant.Checked)
             {
-                var continueChecked = DialogResult.Cancel != AlertDlg.ShowOkCancel(this, Program.AppName(),
+                var continueChecked = DialogResult.Cancel != AlertDlg.ShowOkCancel(this, 
                     Resources.ReportsAddForm_checkBoxCultureSpecific_CheckedChanged_A_culture_invariant_report_ensures_a_CSV_file_with_period_decimal_points_and_full_precision_numbers_ + Environment.NewLine + 
                     Resources.ReportsAddForm_checkBoxCultureSpecific_CheckedChanged_Do_you_want_to_continue_);
                 if (!continueChecked)

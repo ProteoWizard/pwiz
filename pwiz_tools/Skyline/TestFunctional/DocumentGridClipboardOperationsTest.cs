@@ -103,8 +103,10 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => documentGrid.DataboundGridControl.FillDown());
             foreach (var molecule in SkylineWindow.Document.Molecules)
             {
-                Assert.IsNull(molecule.Note);
-                Assert.AreEqual(explicitRetentionTime, molecule.ExplicitRetentionTime.RetentionTime);    
+                string message = string.Format("Molecule: {0}", molecule);
+                Assert.IsNull(molecule.Note, message);
+                Assert.IsNotNull(molecule.ExplicitRetentionTime, message);
+                Assert.AreEqual(explicitRetentionTime, molecule.ExplicitRetentionTime.RetentionTime, message);
             }
             RunUI(() =>
             {
