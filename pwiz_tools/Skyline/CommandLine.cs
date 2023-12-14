@@ -457,7 +457,7 @@ namespace pwiz.Skyline
                        if (_doc != null)
                            optimize = _doc.Settings.TransitionSettings.Prediction.GetOptimizeFunction(commandArgs.ImportOptimizeType);
                    }, Resources.CommandLine_Run_Error__Failed_to_get_optimization_function__0____1_,
-                   commandArgs.ImportOptimizeType))
+                   commandArgs.ImportOptimizeType, true))
             {
                 return false;
             }
@@ -602,7 +602,7 @@ namespace pwiz.Skyline
             {
                 ModifyDocumentWithLogging(doc => commandArgs.Refinement.Refine(doc),
                     commandArgs.Refinement.EntryCreator.Create);
-            }, Resources.Error___0_);   // TODO: Not really standard to just report the exception alone
+            }, Resources.Error___0_, true);   // TODO: Not really standard to just report the exception alone
         }
 
         private bool CreateImsDb(CommandArgs commandArgs)
@@ -624,7 +624,7 @@ namespace pwiz.Skyline
 
                     return ionMobilityFiltering.ChangeLibrary(lib);
                 })), AuditLogEntry.SettingsLogFunction);
-            }, Resources.Error___0_);   // TODO: Not really standard to just report the exception alone
+            }, Resources.Error___0_, true);   // TODO: Not really standard to just report the exception alone
         }
 
         private IsotopeLabelType GetLabelTypeHelper(string label)
@@ -1147,13 +1147,13 @@ namespace pwiz.Skyline
             });
         }
 
-        private bool HandleExceptions(CommandArgs commandArgs, Action func, string message = null)
+        private bool HandleExceptions(CommandArgs commandArgs, Action func, string message = null, bool formatIncludesException = false)
         {
             return HandleExceptions(commandArgs, () =>
             {
                 func();
                 return true;
-            }, x => _out.WriteException(message, x));
+            }, x => _out.WriteException(message, x, !formatIncludesException));
         }
 
         private T HandleExceptions<T>(CommandArgs commandArgs, Func<T> func, Action<Exception> outputFunc)
@@ -2930,7 +2930,7 @@ namespace pwiz.Skyline
             return HandleExceptions(commandArgs, ()=> 
             {
                 ImportAssayLibraryHelper.CreateIrtDatabase(irtDatabasePath);
-            }, Resources.Error___0_);
+            }, Resources.Error___0_, true);
         }
 
         public bool SetLibrary(string name, string path, bool append = true)

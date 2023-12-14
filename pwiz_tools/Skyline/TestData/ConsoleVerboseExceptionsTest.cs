@@ -10,7 +10,7 @@ namespace pwiz.SkylineTestData
         public void TestConsoleVerboseExceptions()
         {
             const string exceptionLocation =
-                @"at pwiz.Skyline.CommandLine.HandleExceptions(CommandArgs commandArgs, Action func, String errorMsg, Boolean isCompositeFormat, String additionalErrorMsg)";
+                @"at pwiz.Skyline.CommandLine.HandleExceptions[T](CommandArgs commandArgs, Func`1 func, Action`1 outputFunc)";
             var newDocumentPath = TestContext.GetTestPath("out.sky");
             // Throw an exception with verbose errors
             var output = RunCommand("--new=" + newDocumentPath,
