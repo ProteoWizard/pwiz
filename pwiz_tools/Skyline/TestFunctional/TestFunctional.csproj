@@ -205,6 +205,7 @@
     <Compile Include="PeakAreaPeptideGraphTest.cs" />
     <Compile Include="QcTraceChromatogramTest.cs" />
     <Compile Include="QcTraceNameTest.cs" />
+    <Compile Include="RemoveAnnotationTest.cs" />
     <Compile Include="RemoveHeavyModificationTest.cs" />
     <Compile Include="RemoveNeutralLossModificationTest.cs" />
     <Compile Include="ResultFileMetadataBackCompatTest.cs" />

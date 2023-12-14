@@ -44,6 +44,11 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool IsValid { get; private set; }
         public int ReplicateCount { get; private set; }
 
+        public bool TryGetTargetData(DetectionsGraphController.TargetType target, out DataSet dataSet) // For test support
+        {
+            return _data.TryGetValue(target, out dataSet);
+        }
+
         public DataSet GetTargetData(DetectionsGraphController.TargetType target)
         {
             return _data[target];

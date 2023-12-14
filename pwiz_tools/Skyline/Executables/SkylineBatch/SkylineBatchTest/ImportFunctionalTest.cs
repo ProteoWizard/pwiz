@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.GUI;
 using SharedBatch;
 using SharedBatch.Properties;
 using SkylineBatch;
@@ -82,7 +83,7 @@ namespace SkylineBatchTest
 
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var invalidConfigFile1 = Path.Combine(TEST_FOLDER, "InvalidConfigurationsVersion1.bcfg");
-            RunDlg<AlertDlg>(() => mainForm.DoImport(invalidConfigFile1),
+            RunDlg<CommonAlertDlg>(() => mainForm.DoImport(invalidConfigFile1),
                 dlg =>
                 {
                     Assert.AreEqual(string.Format(
@@ -121,7 +122,7 @@ namespace SkylineBatchTest
                 FunctionalTestUtil.CheckConfigs(3, 0, mainForm);
             });
 
-            RunDlg<AlertDlg>(() => mainForm.DoImport(validConfigFile),
+            RunDlg<CommonAlertDlg>(() => mainForm.DoImport(validConfigFile),
                 dlg =>
                 {
                     Assert.AreEqual(Resources.ConfigManager_ImportFrom_The_following_configurations_already_exist_ + Environment.NewLine +
@@ -177,7 +178,7 @@ namespace SkylineBatchTest
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var invalidConfigFile = Path.Combine(TEST_FOLDER, "InvalidRConfigurations.bcfg");
 
-            RunDlg<AlertDlg>(() => mainForm.DoImport(invalidConfigFile),
+            RunDlg<CommonAlertDlg>(() => mainForm.DoImport(invalidConfigFile),
                 dlg =>
                 {
                     Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.RDirectorySelector_AddIfNecassary_The_following_R_installations_were_not_found_by__0__, Program.AppName()) + Environment.NewLine +
@@ -201,7 +202,7 @@ namespace SkylineBatchTest
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             var invalidConfigFile = Path.Combine(TEST_FOLDER, "InvalidDependentConfigurations.bcfg");
-            RunDlg<AlertDlg>(() => mainForm.DoImport(invalidConfigFile),
+            RunDlg<CommonAlertDlg>(() => mainForm.DoImport(invalidConfigFile),
                 dlg =>
                 {
                     Assert.AreEqual(SkylineBatch.Properties.Resources.SkylineBatchConfigManager_AssignDependencies_The_following_configurations_use_refined_template_files_from_other_configurations_that_do_not_exist_ + Environment.NewLine +
@@ -227,7 +228,7 @@ namespace SkylineBatchTest
             });
             var invalidConfigForm = ShowDialog<InvalidConfigSetupForm>(() => {mainForm.ClickEdit();});
             RunUI(() => invalidConfigForm.CurrentControl.SetInput(TestUtils.GetSkylineDir()) );
-            RunDlg<AlertDlg>(() => invalidConfigForm.btnNext.PerformClick(),
+            RunDlg<CommonAlertDlg>(() => invalidConfigForm.btnNext.PerformClick(),
                 dlg =>
                 {
                     Assert.AreEqual(SkylineBatch.Properties.Resources.MainForm_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_for_all_configurations_,
@@ -260,7 +261,7 @@ namespace SkylineBatchTest
                 editConfigFormTwo.tabsConfig.SelectedIndex = 4;
                 editConfigFormTwo.SkylineTypeControl.SetInput(TestUtils.GetSkylineDir());
             });
-            RunDlg<AlertDlg>(() => editConfigFormTwo.btnSaveConfig.PerformClick(),
+            RunDlg<CommonAlertDlg>(() => editConfigFormTwo.btnSaveConfig.PerformClick(),
                 dlg => { dlg.ClickYes(); });
             WaitForClosedForm(editConfigFormTwo);
             RunUI(() => FunctionalTestUtil.CheckConfigs(3, 0, mainForm));
@@ -286,7 +287,7 @@ namespace SkylineBatchTest
                     Path.Combine(CONFIG_FOLDER, "emptyTemplate.sky"));
             });
             // Click next to bring up the alert asking if you want to do path replacement. Click yes.
-             RunDlg<AlertDlg>(() => invalidConfigForm.btnNext.PerformClick(),
+             RunDlg<CommonAlertDlg>(() => invalidConfigForm.btnNext.PerformClick(),
                  dlg =>
                  {
                      Assert.AreEqual(string.Format(
@@ -330,7 +331,7 @@ namespace SkylineBatchTest
                     Path.Combine(CONFIG_FOLDER, "emptyTemplate.sky"));
             });
 
-            RunDlg<AlertDlg>(() => invalidConfigForm.btnNext.PerformClick(),
+            RunDlg<CommonAlertDlg>(() => invalidConfigForm.btnNext.PerformClick(),
                 dlg =>
                 {
                     Assert.AreEqual(string.Format(

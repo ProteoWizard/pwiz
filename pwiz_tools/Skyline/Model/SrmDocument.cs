@@ -1003,138 +1003,147 @@ namespace pwiz.Skyline.Model
                 diff.Monitor = progressMonitor;
             }
 
+            bool annotationChange =
+                !Equals(settingsNew.DataSettings.AnnotationDefs, Settings.DataSettings.AnnotationDefs);
             // If there were no changes that require DocNode tree updates
-            if (DeferSettingsChanges || !diff.RequiresDocNodeUpdate)
-                return ChangeSettingsNoDiff(settingsNew);
-            else
+            if (DeferSettingsChanges || !(diff.RequiresDocNodeUpdate || annotationChange))
             {
-                IList<DocNode> childrenNew;
-                if (diff.DiffPeptides)
+                return ChangeSettingsNoDiff(settingsNew);
+            }
+            IList<DocNode> childrenNew;
+            if (diff.DiffPeptides)
+            {
+                // Changes on peptides need to be done on the peptide groups, which
+                // may not achieve that great parallelism, if there is a very large
+                // peptide group, like Decoys
+                var childrenParallel = new DocNode[Children.Count];
+                var settingsParallel = settingsNew;
+                int currentPeptide = 0;
+                int totalPeptides = Children.Count;
+
+                // If we are looking at peptide uniqueness against a background proteome,
+                // it's faster to do those checks with a comprehensive list of peptides of 
+                // potential interest rather than taking them one by one.
+                // So we'll precalculate the peptides using any other filter settings
+                // before we go on to apply the uniqueness check.
+                var uniquenessPrecheckChildren = new List<PeptideDocNode>[Children.Count];
+                Dictionary<Target, bool> uniquenessDict = null;
+                if (settingsNew.PeptideSettings.Filter.PeptideUniqueness != PeptideFilter.PeptideUniquenessConstraint.none &&
+                    !settingsNew.PeptideSettings.NeedsBackgroundProteomeUniquenessCheckProcessing)
                 {
-                    // Changes on peptides need to be done on the peptide groups, which
-                    // may not achieve that great parallelism, if there is a very large
-                    // peptide group, like Decoys
-                    var childrenParallel = new DocNode[Children.Count];
-                    var settingsParallel = settingsNew;
-                    int currentPeptide = 0;
-                    int totalPeptides = Children.Count;
-
-                    // If we are looking at peptide uniqueness against a background proteome,
-                    // it's faster to do those checks with a comprehensive list of peptides of 
-                    // potential interest rather than taking them one by one.
-                    // So we'll precalculate the peptides using any other filter settings
-                    // before we go on to apply the uniqueness check.
-                    var uniquenessPrecheckChildren = new List<PeptideDocNode>[Children.Count];
-                    Dictionary<Target, bool> uniquenessDict = null;
-                    if (settingsNew.PeptideSettings.Filter.PeptideUniqueness != PeptideFilter.PeptideUniquenessConstraint.none &&
-                        !settingsNew.PeptideSettings.NeedsBackgroundProteomeUniquenessCheckProcessing)
-                    {
-                        // Generate the peptide docnodes with no uniqueness filter
-                        var settingsNoUniquenessFilter =
-                            settingsNew.ChangePeptideSettings(
-                                settingsNew.PeptideSettings.ChangeFilter(
-                                    settingsNew.PeptideSettings.Filter.ChangePeptideUniqueness(
-                                        PeptideFilter.PeptideUniquenessConstraint.none)));
-                        uniquenessPrecheckChildren = new List<PeptideDocNode>[Children.Count];
-                        totalPeptides *= 2; // We have to run the list twice
-                        ParallelEx.For(0, Children.Count, i =>
-                        {
-                            if (progressMonitor != null)
-                            {
-                                var percentComplete = ProgressStatus.ThreadsafeIncementPercent(ref currentPeptide, totalPeptides);
-                                if (percentComplete.HasValue && percentComplete.Value < 100)
-                                    progressMonitor.ChangeProgress(status => status.ChangePercentComplete(percentComplete.Value));
-                            }
-                            var nodeGroup = (PeptideGroupDocNode)Children[i];
-                            uniquenessPrecheckChildren[i] = nodeGroup.GetPeptideNodes(settingsNoUniquenessFilter, true).ToList();
-                        });
-                        var uniquenessPrecheckPeptidesOfInterest = new List<Target>(uniquenessPrecheckChildren.SelectMany(u => u.Select(p => p.Peptide.Target)));
-                        // Update cache for uniqueness checks against the background proteome while we have worker threads available
-                        uniquenessDict = settingsNew.PeptideSettings.Filter.CheckPeptideUniqueness(settingsNew, uniquenessPrecheckPeptidesOfInterest, progressMonitor);
-                    }
-
-                    // Now perform or complete the peptide selection
+                    // Generate the peptide docnodes with no uniqueness filter
+                    var settingsNoUniquenessFilter =
+                        settingsNew.ChangePeptideSettings(
+                            settingsNew.PeptideSettings.ChangeFilter(
+                                settingsNew.PeptideSettings.Filter.ChangePeptideUniqueness(
+                                    PeptideFilter.PeptideUniquenessConstraint.none)));
+                    uniquenessPrecheckChildren = new List<PeptideDocNode>[Children.Count];
+                    totalPeptides *= 2; // We have to run the list twice
                     ParallelEx.For(0, Children.Count, i =>
                     {
                         if (progressMonitor != null)
                         {
-                            if (progressMonitor.IsCanceled())
-                                throw new OperationCanceledException();
                             var percentComplete = ProgressStatus.ThreadsafeIncementPercent(ref currentPeptide, totalPeptides);
                             if (percentComplete.HasValue && percentComplete.Value < 100)
                                 progressMonitor.ChangeProgress(status => status.ChangePercentComplete(percentComplete.Value));
                         }
                         var nodeGroup = (PeptideGroupDocNode)Children[i];
-                        childrenParallel[i] = nodeGroup.ChangeSettings(settingsParallel, diff,
-                           new DocumentSettingsContext(uniquenessPrecheckChildren[i], uniquenessDict)); 
+                        uniquenessPrecheckChildren[i] = nodeGroup.GetPeptideNodes(settingsNoUniquenessFilter, true).ToList();
                     });
-                    childrenNew = childrenParallel;
+                    var uniquenessPrecheckPeptidesOfInterest = new List<Target>(uniquenessPrecheckChildren.SelectMany(u => u.Select(p => p.Peptide.Target)));
+                    // Update cache for uniqueness checks against the background proteome while we have worker threads available
+                    uniquenessDict = settingsNew.PeptideSettings.Filter.CheckPeptideUniqueness(settingsNew, uniquenessPrecheckPeptidesOfInterest, progressMonitor);
                 }
-                else
+
+                // Now perform or complete the peptide selection
+                ParallelEx.For(0, Children.Count, i =>
                 {
-                    // Changes that do not change the peptides can be done quicker with
-                    // parallel enumeration of the peptides
-                    var moleculeGroupPairs = GetMoleculeGroupPairs(Children);
-                    var resultsHandler = settingsNew.PeptideSettings.Integration.ResultsHandler;
-                    if (resultsHandler != null && resultsHandler.FreeImmutableMemory)
+                    if (progressMonitor != null)
                     {
-                        // Break immutability (command-line only!) and release the peptides (children of the children)
-                        // so that their memory is freed after they have been processed
-                        foreach (DocNodeParent child in Children)
-                            child.ReleaseChildren();
+                        if (progressMonitor.IsCanceled())
+                            throw new OperationCanceledException();
+                        var percentComplete = ProgressStatus.ThreadsafeIncementPercent(ref currentPeptide, totalPeptides);
+                        if (percentComplete.HasValue && percentComplete.Value < 100)
+                            progressMonitor.ChangeProgress(status => status.ChangePercentComplete(percentComplete.Value));
                     }
-                    var moleculeNodes = new PeptideDocNode[moleculeGroupPairs.Length];
-                    var settingsParallel = settingsNew;
-                    int currentMoleculeGroupPair = 0;
-                    ParallelEx.For(0, moleculeGroupPairs.Length, i =>
-                    {
-                        if (progressMonitor != null)
-                        {
-                            if (progressMonitor.IsCanceled())
-                                throw new OperationCanceledException();
-                            var percentComplete =
-                                ProgressStatus.ThreadsafeIncementPercent(ref currentMoleculeGroupPair,
-                                    moleculeGroupPairs.Length);
-                            if (percentComplete.HasValue && percentComplete.Value < 100)
-                                progressMonitor.ChangeProgress(status =>
-                                    status.ChangePercentComplete(percentComplete.Value));
-                        }
-
-                        var nodePep = moleculeGroupPairs[i].ReleaseMolecule();
-                        moleculeNodes[i] = nodePep.ChangeSettings(settingsParallel, diff);
-                    });
-
-                    childrenNew = RegroupMolecules(Children, moleculeNodes,
-                        (nodeGroup, children) => nodeGroup.RankChildren(settingsParallel, children));
-                }
-
-                // Results handler changes for re-integration last only long enough
-                // to change the children
-                if (settingsNew.PeptideSettings.Integration.ResultsHandler != null)
-                {
-                    settingsNew = settingsNew.ChangePeptideIntegration(i =>
-                        i.ChangeResultsHandler(null)
-                            .ChangeScoreQValueMap(
-                                ScoreQValueMap.FromMoleculeGroups(childrenNew.Cast<PeptideGroupDocNode>())));
-                }
-
-                if (settingsNew.MeasuredResults != null)
-                {
-                    var updatedImportTimes = settingsNew.MeasuredResults.UpdateImportTimes();
-                    if (!ReferenceEquals(updatedImportTimes, settingsNew.MeasuredResults))
-                    {
-                        settingsNew = settingsNew.ChangeMeasuredResults(updatedImportTimes);
-                    }
-                }
-                
-                // Don't change the children, if the resulting list contains
-                // only reference equal children of the same length and in the
-                // same order.
-                if (ArrayUtil.ReferencesEqual(childrenNew, Children))
-                    return ChangeSettingsNoDiff(settingsNew);
-
-                return (SrmDocument)new SrmDocument(this, settingsNew).ChangeChildren(childrenNew);
+                    var nodeGroup = (PeptideGroupDocNode)Children[i];
+                    childrenParallel[i] = nodeGroup.ChangeSettings(settingsParallel, diff,
+                       new DocumentSettingsContext(uniquenessPrecheckChildren[i], uniquenessDict)); 
+                });
+                childrenNew = childrenParallel;
             }
+            else
+            {
+                // Changes that do not change the peptides can be done quicker with
+                // parallel enumeration of the peptides
+                var moleculeGroupPairs = GetMoleculeGroupPairs(Children);
+                var resultsHandler = settingsNew.PeptideSettings.Integration.ResultsHandler;
+                if (resultsHandler != null && resultsHandler.FreeImmutableMemory)
+                {
+                    // Break immutability (command-line only!) and release the peptides (children of the children)
+                    // so that their memory is freed after they have been processed
+                    foreach (DocNodeParent child in Children)
+                        child.ReleaseChildren();
+                }
+                var moleculeNodes = new PeptideDocNode[moleculeGroupPairs.Length];
+                var settingsParallel = settingsNew;
+                int currentMoleculeGroupPair = 0;
+                ParallelEx.For(0, moleculeGroupPairs.Length, i =>
+                {
+                    if (progressMonitor != null)
+                    {
+                        if (progressMonitor.IsCanceled())
+                            throw new OperationCanceledException();
+                        var percentComplete =
+                            ProgressStatus.ThreadsafeIncementPercent(ref currentMoleculeGroupPair,
+                                moleculeGroupPairs.Length);
+                        if (percentComplete.HasValue && percentComplete.Value < 100)
+                            progressMonitor.ChangeProgress(status =>
+                                status.ChangePercentComplete(percentComplete.Value));
+                    }
+
+                    var nodePep = moleculeGroupPairs[i].ReleaseMolecule();
+                    moleculeNodes[i] = nodePep.ChangeSettings(settingsParallel, diff);
+                });
+
+                childrenNew = RegroupMolecules(Children, moleculeNodes,
+                    (nodeGroup, children) => nodeGroup.RankChildren(settingsParallel, children));
+            }
+
+            if (annotationChange)
+            {
+                var newAnnotationNames = settingsNew.DataSettings.AnnotationDefs
+                    .Where(annotationDef => null == annotationDef.Expression)
+                    .Select(annotationDef => annotationDef.Name).ToHashSet();
+                childrenNew = childrenNew.Select(child => child.StripAnnotationValues(newAnnotationNames)).ToList();
+            }
+
+            // Results handler changes for re-integration last only long enough
+            // to change the children
+            if (settingsNew.PeptideSettings.Integration.ResultsHandler != null)
+            {
+                settingsNew = settingsNew.ChangePeptideIntegration(i =>
+                    i.ChangeResultsHandler(null)
+                        .ChangeScoreQValueMap(
+                            ScoreQValueMap.FromMoleculeGroups(childrenNew.Cast<PeptideGroupDocNode>())));
+            }
+
+            if (settingsNew.MeasuredResults != null)
+            {
+                var updatedImportTimes = settingsNew.MeasuredResults.UpdateImportTimes();
+                if (!ReferenceEquals(updatedImportTimes, settingsNew.MeasuredResults))
+                {
+                    settingsNew = settingsNew.ChangeMeasuredResults(updatedImportTimes);
+                }
+            }
+            
+            // Don't change the children, if the resulting list contains
+            // only reference equal children of the same length and in the
+            // same order.
+            if (ArrayUtil.ReferencesEqual(childrenNew, Children))
+                return ChangeSettingsNoDiff(settingsNew);
+
+            return (SrmDocument)new SrmDocument(this, settingsNew).ChangeChildren(childrenNew);
         }
 
         private SrmSettings UpdateHasHeavyModifications(SrmSettings settings)
