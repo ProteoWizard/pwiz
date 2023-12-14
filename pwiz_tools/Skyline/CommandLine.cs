@@ -747,8 +747,7 @@ namespace pwiz.Skyline
         {
             if (commandArgs.ExportingReport)
             {
-                if (!ExportReport(commandArgs.ReportName, commandArgs.ReportFile,
-                    commandArgs.ReportColumnSeparator, commandArgs.IsReportInvariant))
+                if (!ExportReport(commandArgs))
                 {
                     return false;
                 }
@@ -846,7 +845,7 @@ namespace pwiz.Skyline
                     sharedFileName = FileEx.GetTimeStampedFileName(_skylineFile);
                 }
                 var sharedFilePath = Path.Combine(sharedFileDir, sharedFileName);
-                if (!ShareDocument(_doc, _skylineFile, sharedFilePath, commandArgs.SharedFileType, _out))
+                if (!ShareDocument(_doc, _skylineFile, sharedFilePath, commandArgs.SharedFileType, _out, commandArgs))
                 {
                     return false;
                 }
@@ -859,8 +858,7 @@ namespace pwiz.Skyline
                 {
                     // Publish document to the given folder on the Panorama Server
                     var panoramaHelper = new PanoramaPublishHelper(_out);
-                    return panoramaHelper.PublishToPanorama(commandArgs.PanoramaServer, _doc, _skylineFile,
-                        commandArgs.PanoramaFolder, commandArgs.SharedFileType);
+                    return panoramaHelper.PublishToPanorama(commandArgs, _doc, _skylineFile);
                 }
                 else
                 {
@@ -1156,7 +1154,7 @@ namespace pwiz.Skyline
             }, x => _out.WriteException(message, x, !formatIncludesException));
         }
 
-        private T HandleExceptions<T>(CommandArgs commandArgs, Func<T> func, Action<Exception> outputFunc)
+        private static T HandleExceptions<T>(CommandArgs commandArgs, Func<T> func, Action<Exception> outputFunc)
         {
             try
             {
@@ -1863,7 +1861,7 @@ namespace pwiz.Skyline
             catch(IOException e)
             {
                 _out.WriteLine(Resources.CommandLine_GetDataSources_Error__Failure_reading_file_information_from_directory__0__, sourceDir);
-                _out.WriteLine(e.Message);
+                _out.WriteException(e);
                 return null;
             }
             if (!listNamedPaths.Any())
@@ -2639,14 +2637,16 @@ namespace pwiz.Skyline
 
         private bool Reintegrate(ModelAndFeatures modelAndFeatures, CommandArgs commandArgs)
         {
-            try
+            var success = false;
+            var exceptionThrown = HandleExceptions(commandArgs, () =>
             {
-                var resultsHandler = new MProphetResultsHandler(_doc, modelAndFeatures.ScoringModel, modelAndFeatures.Features)
-                {
-                    OverrideManual = commandArgs.IsOverwritePeaks,
-                    FreeImmutableMemory = true
-                };
-                
+                var resultsHandler =
+                    new MProphetResultsHandler(_doc, modelAndFeatures.ScoringModel, modelAndFeatures.Features)
+                    {
+                        OverrideManual = commandArgs.IsOverwritePeaks,
+                        FreeImmutableMemory = true
+                    };
+
                 // If logging training, give the modeling code a place to write
                 if (commandArgs.IsLogTraining)
                     resultsHandler.DocumentPath = DocContainer.DocumentFilePath;
@@ -2658,19 +2658,16 @@ namespace pwiz.Skyline
                 resultsHandler.ScoreFeatures(progressMonitor, true, _out);
                 if (resultsHandler.IsMissingScores())
                 {
-                    _out.WriteLine(Resources.CommandLine_Reintegrate_Error__The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document__Please_train_a_new_model_);
-                    return false;
+                    _out.WriteLine(Resources
+                        .CommandLine_Reintegrate_Error__The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document__Please_train_a_new_model_);
+                    success = false;
+                    return;
                 }
                 ModifyDocument(d => resultsHandler.ChangePeaks(progressMonitor));
 
-                return true;
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(Resources.CommandLine_Reintegrate_Error__Failed_to_reintegrate_peaks_successfully_);
-                _out.WriteException(x);
-                return false;
-            }
+                success = true;
+            }, Resources.CommandLine_Reintegrate_Error__Failed_to_reintegrate_peaks_successfully_);
+            return !exceptionThrown && success;
         }
 
         public void ImportFasta(string path, bool keepEmptyProteins)
@@ -2996,42 +2993,45 @@ namespace pwiz.Skyline
                     saveFile));
         }
 
-        public bool ExportReport(string reportName, string reportFile, char reportColSeparator, bool reportInvariant)
+        public bool ExportReport(CommandArgs commandArgs)
         {
 
-            if (string.IsNullOrEmpty(reportFile))
+            if (string.IsNullOrEmpty(commandArgs.ReportFile))
             {
                 _out.WriteLine(Resources.CommandLine_ExportReport_);
                 return false;
             }
 
-            return ExportLiveReport(reportName, reportFile, reportColSeparator, reportInvariant);
+            return ExportLiveReport(commandArgs);
         }
 
-        private bool ExportLiveReport(string reportName, string reportFile, char reportColSeparator, bool reportInvariant)
+        private bool ExportLiveReport(CommandArgs commandArgs)
         {
-            var viewContext = DocumentGridViewContext.CreateDocumentGridViewContext(_doc, reportInvariant
+            char reportColSeparator = commandArgs.ReportColumnSeparator;
+            var viewContext = DocumentGridViewContext.CreateDocumentGridViewContext(_doc, commandArgs.IsReportInvariant
                 ? DataSchemaLocalizer.INVARIANT
                 : SkylineDataSchema.GetLocalizedSchemaLocalizer());
             // Make sure invariant report format uses a true comma if a tab separator was not specified.
-            if (reportInvariant && reportColSeparator != TextUtil.SEPARATOR_TSV)
+            if (commandArgs.IsReportInvariant && commandArgs.ReportColumnSeparator != TextUtil.SEPARATOR_TSV)
                 reportColSeparator = TextUtil.SEPARATOR_CSV;
-            var viewInfo = viewContext.GetViewInfo(PersistedViews.MainGroup.Id.ViewName(reportName));
+            var viewInfo = viewContext.GetViewInfo(PersistedViews.MainGroup.Id.ViewName(commandArgs.ReportName));
             if (null == viewInfo)
             {
-                _out.WriteLine(Resources.CommandLine_ExportLiveReport_Error__The_report__0__does_not_exist__If_it_has_spaces_in_its_name__use__double_quotes__around_the_entire_list_of_command_parameters_, reportName);
+                _out.WriteLine(Resources.CommandLine_ExportLiveReport_Error__The_report__0__does_not_exist__If_it_has_spaces_in_its_name__use__double_quotes__around_the_entire_list_of_command_parameters_, commandArgs.ReportName);
                 return false;
             }
-            _out.WriteLine(Resources.CommandLine_ExportLiveReport_Exporting_report__0____, reportName);
-            try
+            _out.WriteLine(Resources.CommandLine_ExportLiveReport_Exporting_report__0____, commandArgs.ReportName);
+            var success = true;
+            var exceptionThrown = HandleExceptions(commandArgs, () => 
             {
-                using (var saver = new FileSaver(reportFile))
+                using (var saver = new FileSaver(commandArgs.ReportFile))
                 {
                     if (!saver.CanSave())
                     {
-                        _out.WriteLine(Resources.CommandLine_ExportLiveReport_Error__The_report__0__could_not_be_saved_to__1__, reportName, reportFile);
+                        _out.WriteLine(Resources.CommandLine_ExportLiveReport_Error__The_report__0__could_not_be_saved_to__1__, commandArgs.ReportName, commandArgs.ReportFile);
                         _out.WriteLine(Resources.CommandLine_ExportLiveReport_Check_to_make_sure_it_is_not_read_only_);
-                        return false;
+                        success = false;
+                        return;
                     }
 
                     IProgressStatus status = new ProgressStatus(string.Empty);
@@ -3045,16 +3045,10 @@ namespace pwiz.Skyline
 
                     broker.UpdateProgress(status.Complete());
                     saver.Commit();
-                    _out.WriteLine(Resources.CommandLine_ExportLiveReport_Report__0__exported_successfully_to__1__, reportName, reportFile);
+                    _out.WriteLine(Resources.CommandLine_ExportLiveReport_Report__0__exported_successfully_to__1__, commandArgs.ReportName, commandArgs.ReportFile);
                 }
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(Resources.CommandLine_ExportLiveReport_Error__Failure_attempting_to_save__0__report_to__1__, reportName, reportFile);
-                _out.WriteException(x);
-                return false;
-            }
-            return true;
+            }, string.Format(Resources.CommandLine_ExportLiveReport_Error__Failure_attempting_to_save__0__report_to__1__, commandArgs.ReportName, commandArgs.ReportFile));
+            return !exceptionThrown && success;
         }
 
         public bool ExportChromatograms(CommandArgs commandArgs)
@@ -3559,7 +3553,7 @@ namespace pwiz.Skyline
                 bool? imported = null;
                 if (!HandleExceptions(commandArgs,
                         () => { imported = ReportSharing.ImportSkyrFile(path, helper.ResolveImportConflicts); },
-                        string.Format(Resources.CommandLine_ImportSkyr_, path)))
+                        Resources.CommandLine_ImportSkyr_, path))
                 {
                     return false;
                 }
@@ -4064,23 +4058,23 @@ namespace pwiz.Skyline
             return true;
         }
 
-        private static bool ShareDocument(SrmDocument document, string documentPath, string fileDest, ShareType shareType, CommandStatusWriter statusWriter)
+        private static bool ShareDocument(SrmDocument document, string documentPath, string fileDest, ShareType shareType, CommandStatusWriter statusWriter, CommandArgs commandArgs)
         {
             var waitBroker = new CommandProgressMonitor(statusWriter,
                 new ProgressStatus(Resources.SkylineWindow_ShareDocument_Compressing_Files));
             var sharing = new SrmDocumentSharing(document, documentPath, fileDest, shareType);
-            try
+            var success = HandleExceptions(commandArgs, () =>
             {
                 sharing.Share(waitBroker);
                 return true;
-            }
-            catch (Exception x)
+            }, x =>
             {
                 statusWriter.WriteLine(Resources.Error___0_,
-                    string.Format(Resources.SkylineWindow_ShareDocument_Failed_attempting_to_create_sharing_file__0__, fileDest));
+                    string.Format(Resources.SkylineWindow_ShareDocument_Failed_attempting_to_create_sharing_file__0__,
+                        fileDest));
                 statusWriter.WriteException(x);
-            }
-            return false;
+            });
+            return success;
         }
 
         public void Dispose()
@@ -4097,26 +4091,31 @@ namespace pwiz.Skyline
                 _statusWriter = statusWriter;
             }
 
-            public bool PublishToPanorama(PanoramaServer panoramaServer, SrmDocument document, string documentPath, string panoramaFolder, ShareType selectedShareType)
+            public bool PublishToPanorama(CommandArgs commandArgs, SrmDocument document, string documentPath)
             {
-                try
+                var selectedShareType = commandArgs.SharedFileType;
+                var success = HandleExceptions(commandArgs, () =>
                 {
                     WebPanoramaPublishClient publishClient = new WebPanoramaPublishClient();
                     // If the Panorama server does not support the skyd version of the document, change the Skyline version to the 
                     // max version supported by the server.
-                    selectedShareType = publishClient.DecideShareTypeVersion(new FolderInformation(panoramaServer, true),
+                    selectedShareType = publishClient.DecideShareTypeVersion(
+                        new FolderInformation(commandArgs.PanoramaServer, true),
                         document, selectedShareType);
-                }
-                catch (PanoramaServerException panoramaServerException)
+                    return true;
+                }, x =>
                 {
-                    _statusWriter.WriteLine(Resources.Error___0_, panoramaServerException.Message);
+                    _statusWriter.WriteException(Resources.Error___0_, x);
+                });
+                if(!success)
+                {
                     return false;
                 }
                 var zipFilePath = FileEx.GetTimeStampedFileName(documentPath);
                 var published = false;
-                if (ShareDocument(document, documentPath, zipFilePath, selectedShareType, _statusWriter))
+                if (ShareDocument(document, documentPath, zipFilePath, selectedShareType, _statusWriter, commandArgs))
                 {
-                    published = PublishDocToPanorama(panoramaServer, zipFilePath, panoramaFolder);
+                    published = PublishDocToPanorama(commandArgs.PanoramaServer, zipFilePath, commandArgs.PanoramaFolder);
                 }
                 // Delete the zip file after it has been published to Panorama.
                 FileEx.SafeDelete(zipFilePath, true);
