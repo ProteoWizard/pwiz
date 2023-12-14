@@ -172,7 +172,7 @@ namespace pwiz.Skyline.Model
         public const string ABI_TOF = "SCIEX QTOF - Analyst";
         public const string ABI_7500 = "SCIEX QQQ/QTRAP - SCIEX OS";
         public const string ABI_7600 = "SCIEX QTOF - SCIEX OS";
-        public const string AGILENT = "Agilent";
+        public const string AGILENT = "Agilent MH 10.1 and lower";
         public const string AGILENT_TOF = "Agilent QTOF";
         public const string AGILENT6400 = "Agilent 6400 Series";
         public const string AGILENT_MASSHUNTER_12_METHOD = "Agilent MassHunter 12 and higher";
@@ -292,9 +292,17 @@ namespace pwiz.Skyline.Model
 
         public static string TransitionListExtension(string instrument)
         {
-            return Equals(instrument, SHIMADZU)
-                ? ShimadzuMassListExporter.EXT_SHIMADZU_TRANSITION_LIST
-                : TextUtil.EXT_CSV;
+            switch (instrument)
+            {
+                case AGILENT_MASSHUNTER_12:
+                case AGILENT_MASSHUNTER_12_6495D:
+                case AGILENT_MASSHUNTER_12_ULTIVO:
+                    return AgilentUltivoMethodExporter.EXT_AGILENT_MH12_TRANSITION_LIST;
+                case SHIMADZU:
+                    return ShimadzuMassListExporter.EXT_SHIMADZU_TRANSITION_LIST;
+                default:
+                    return TextUtil.EXT_CSV;
+            }
         }
 
         public static string IsolationListExtension(string instrument)
@@ -3345,9 +3353,10 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    public class AgilentUltivoMethodExporter : AgilentMassListExporter
+    public class AgilentUltivoMethodExporter : AgilentMassListExporter.AgilentMH10MassListExporter
     {
         public const string EXE_BUILD_AGILENT_METHOD = @"Method\Agilent\MH12\BuildAgilentMH12Method";
+        public const string EXT_AGILENT_MH12_TRANSITION_LIST= ".txt";
 
         public AgilentUltivoMethodExporter(SrmDocument document)
             : base(document)
