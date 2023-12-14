@@ -630,16 +630,20 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// Cached standard types
         /// </summary>
-        private ImmutableDictionary<StandardType, ImmutableList<PeptideDocNode>> _cachedPeptideStandards;
-        private static readonly PeptideDocNode[] EMPTY_STANDARDS = new PeptideDocNode[0];
+        private ImmutableDictionary<StandardType, ImmutableList<IdPeptideDocNode>> _cachedPeptideStandards;
 
-        public IEnumerable<PeptideDocNode> GetPeptideStandards(StandardType standardType)
+        public ImmutableList<IdPeptideDocNode> GetPeptideStandards(StandardType standardType)
         {
-            ImmutableList<PeptideDocNode> standardPeptides;
+            ImmutableList<IdPeptideDocNode> standardPeptides;
             if (_cachedPeptideStandards == null || !_cachedPeptideStandards.TryGetValue(standardType, out standardPeptides))
-                return EMPTY_STANDARDS; // So that emptiness is reference equal
+                return ImmutableList<IdPeptideDocNode>.EMPTY;
 
             return standardPeptides;
+        }
+
+        public IEnumerable<IdPeptideDocNode> GetSurrogateStandards(string name)
+        {
+            return GetPeptideStandards(StandardType.SURROGATE_STANDARD).Where(idPep=>idPep.PeptideDocNode.ModifiedTarget.InvariantName == name);
         }
 
         public SrmSettings CachePeptideStandards(IList<DocNode> peptideGroupDocNodesOrig,
@@ -650,7 +654,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 return this;
 
             // Build an initial mutable dictionay and lists
-            var cachedPeptideStandards = new Dictionary<StandardType, IList<PeptideDocNode>>();
+            var cachedPeptideStandards = new Dictionary<StandardType, List<IdPeptideDocNode>>();
             foreach (PeptideGroupDocNode nodePepGroup in peptideGroupDocNodes)
             {
                 foreach (var nodePep in nodePepGroup.Molecules)
@@ -658,37 +662,37 @@ namespace pwiz.Skyline.Model.DocSettings
                     var standardType = nodePep.GlobalStandardType;
                     if (standardType == null)
                         continue;
-                    IList<PeptideDocNode> listPeptideAndGroup;
+                    List<IdPeptideDocNode> listPeptideAndGroup;
                     if (!cachedPeptideStandards.TryGetValue(standardType, out listPeptideAndGroup))
                     {
-                        listPeptideAndGroup = new List<PeptideDocNode>();
+                        listPeptideAndGroup = new List<IdPeptideDocNode>();
                         cachedPeptideStandards.Add(standardType, listPeptideAndGroup);
                     }
                     // Update the PeptideChromInfo before adding it to the list
                     var nodeWithUpdatedResults = nodePep.ChangeSettings(this, new SrmSettingsDiff(this, true));
                     if (nodePep.Equals(nodeWithUpdatedResults))
                     {
-                        listPeptideAndGroup.Add(nodePep);
+                        listPeptideAndGroup.Add(new IdPeptideDocNode(nodePepGroup.PeptideGroup, nodePep));
                     }
                     else
                     {
-                        listPeptideAndGroup.Add(nodeWithUpdatedResults);
+                        listPeptideAndGroup.Add(new IdPeptideDocNode(nodePepGroup.PeptideGroup, nodeWithUpdatedResults));
                     }
                 }
             }
             // Create new read-only lists, if necessary
             bool createdNewList = false;
-            var cachedPeptideStandardsRo = new Dictionary<StandardType, ImmutableList<PeptideDocNode>>();
+            var cachedPeptideStandardsRo = new Dictionary<StandardType, ImmutableList<IdPeptideDocNode>>();
             foreach (var pair in cachedPeptideStandards)
             {
                 var standardType = pair.Key;
                 var peptidesNew = pair.Value;
-                ImmutableList<PeptideDocNode> peptides;
+                ImmutableList<IdPeptideDocNode> peptides;
                 if (_cachedPeptideStandards == null ||
                     !_cachedPeptideStandards.TryGetValue(standardType, out peptides) ||
                     !ArrayUtil.EqualsDeep(peptides, peptidesNew))
                 {
-                    peptides = MakeReadOnly(peptidesNew);
+                    peptides = ImmutableList.ValueOf(peptidesNew);
                     createdNewList = true;
                 }
                 cachedPeptideStandardsRo.Add(standardType, peptides);
@@ -699,7 +703,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (_cachedPeptideStandards == null || _cachedPeptideStandards.Count == cachedPeptideStandardsRo.Count)
                     return this;
             }
-            var prop = new ImmutableDictionary<StandardType, ImmutableList<PeptideDocNode>>(cachedPeptideStandardsRo);
+            var prop = new ImmutableDictionary<StandardType, ImmutableList<IdPeptideDocNode>>(cachedPeptideStandardsRo);
             return ChangeProp(ImClone(this), im => im._cachedPeptideStandards = prop);
         }
 
@@ -846,7 +850,7 @@ namespace pwiz.Skyline.Model.DocSettings
             var peptideStandards = GetPeptideStandards(StandardType.GLOBAL_STANDARD);
             if (peptideStandards != null)
             {
-                foreach (var nodeGroup in peptideStandards.SelectMany(nodePep => nodePep.TransitionGroups))
+                foreach (var nodeGroup in peptideStandards.SelectMany(nodePep => nodePep.PeptideDocNode.TransitionGroups))
                 {
                     var chromInfos = nodeGroup.GetSafeChromInfo(resultsIndex);
                     foreach (var groupChromInfo in chromInfos)
@@ -859,16 +863,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
             return globalStandardArea;
-        }
-
-        public IEnumerable<PeptideDocNode> GetInternalStandards(string internalStandardName)
-        {
-            if (null == internalStandardName)
-            {
-                return GetPeptideStandards(StandardType.GLOBAL_STANDARD);
-            }
-            return GetPeptideStandards(StandardType.SURROGATE_STANDARD)
-                .Where(pep => pep.ModifiedTarget.Sequence == internalStandardName);
         }
 
         public bool LibrariesContainMeasurablePeptide(Peptide peptide, IList<Adduct> precursorCharges, ExplicitMods mods)
@@ -1125,9 +1119,6 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double[] GetBestRetentionTimes(PeptideDocNode nodePep, MsDataFileUri filePath)
         {
-            if (!nodePep.IsProteomic)
-                return new double[0]; // No retention time prediction for small molecules
-
             var lookupSequence = nodePep.SourceUnmodifiedTarget;
             var lookupMods = nodePep.SourceExplicitMods;
             if (filePath != null)

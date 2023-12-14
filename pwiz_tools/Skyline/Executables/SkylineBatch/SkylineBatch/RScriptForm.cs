@@ -86,7 +86,7 @@ namespace SkylineBatch
             }
             catch (ArgumentException ex)
             {
-                AlertDlg.ShowError(this, Program.AppName(), ex.Message);
+                AlertDlg.ShowError(this, ex.Message);
                 return;
             }
             DialogResult = DialogResult.OK;
