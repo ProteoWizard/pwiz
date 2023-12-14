@@ -82,7 +82,7 @@ rule init ( version ? : location : options * )
             cd $(>[1]:P)
             "$(>[1]:P)/H5make_libsettings" > "$(<)"
         }
-        make H5lib_settings.c : H5make_libsettings : @make_libsettings ;
+        make H5lib_settings.c : H5make_libsettings : @make_libsettings : <dependency>libhdf5.settings/<extension>hdf5 ;
 
         make init_once_workaround.cpp : : @init_once_workaround_cpp ;
 
