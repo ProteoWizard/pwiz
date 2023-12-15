@@ -3170,7 +3170,7 @@ namespace pwiz.Skyline.Model
                 AddField(writer, @"Fragmentor", FRAGMENTOR_FIELD);
                 AddField(writer, @"Collision Energy", CE_FIELD);
                 AddField(writer, @"Cell Accelerator Voltage", CAV_FIELD);
-                AddField(writer, @"Polarity", POLARITY_FIELD);
+                AddField(writer, @"Polarity", POLARITY_FIELD, (MethodType == ExportMethodType.Standard));
                 if (MethodType != ExportMethodType.Standard)
                 {
                     AddField(writer, @"Trigger Entrance Delay (cycles)", TRIGGER_ENTRANCE_FIELD);
