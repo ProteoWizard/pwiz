@@ -3,7 +3,7 @@
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2009 University of Washington - Seattle, WA
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,21 +16,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using pwiz.Common.CommonResources;
 using pwiz.Common.SystemUtil;
 
-namespace pwiz.PanoramaClient
+namespace pwiz.Common.GUI
 {
     /// <summary>
     /// Use for a <see cref="MessageBox"/> substitute that can be
     /// detected and closed by automated functional tests.
     /// </summary>
-    partial class AlertDlg : CommonFormEx
+    public partial class CommonAlertDlg : CommonFormEx
     {
         private const int MAX_HEIGHT = 500;
         private readonly int _originalFormHeight;
@@ -39,11 +41,12 @@ namespace pwiz.PanoramaClient
         private string _message;
         private string _detailMessage;
 
-        public AlertDlg() : this(@"Alert dialog for Forms designer")
+        public CommonAlertDlg() : this(@"Alert dialog for Forms designer")
         {
         }
 
-        public AlertDlg(string message)
+        [SuppressMessage("ReSharper", "VirtualMemberCallInConstructor")]
+        protected CommonAlertDlg(string message)
         {
             InitializeComponent();
             _originalFormHeight = Height;
@@ -51,21 +54,15 @@ namespace pwiz.PanoramaClient
             _labelPadding = messageScrollPanel.Width - labelMessage.MaximumSize.Width;
             Message = message;
             btnMoreInfo.Parent.Controls.Remove(btnMoreInfo);
-            Text = @"Skyline";
+            Text = CommonApplicationSettings.ProgramName;
             toolStrip1.Renderer = new NoBorderSystemRenderer();
         }
 
-        public sealed override string Text
-        {
-            get { return base.Text; }
-            set { base.Text = value; }
-        }
-
-        public AlertDlg(string message, MessageBoxButtons messageBoxButtons) : this(message, messageBoxButtons, DialogResult.None)
+        public CommonAlertDlg(string message, MessageBoxButtons messageBoxButtons) : this(message, messageBoxButtons, DialogResult.None)
         {
         }
 
-        public AlertDlg(string message, MessageBoxButtons messageBoxButtons, DialogResult defaultButton) : this(message)
+        public CommonAlertDlg(string message, MessageBoxButtons messageBoxButtons, DialogResult defaultButton) : this(message)
         {
             AddMessageBoxButtons(messageBoxButtons, defaultButton);
         }
@@ -122,9 +119,16 @@ namespace pwiz.PanoramaClient
                 }
                 else
                 {
-                    DetailMessage = value.ToString();
+                    DetailMessage = FormatExceptionDetailMessage(value);
                 }
             }
+        }
+
+        public static string FormatExceptionDetailMessage(Exception value)
+        {
+            return CommonApplicationSettings.ProgramNameAndVersion +
+                   Environment.NewLine + Environment.NewLine + 
+                   value;
         }
 
         public void OkDialog()
@@ -140,25 +144,17 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        public void CopyMessage()
+        public virtual void CopyMessage()
         {
-            try
-            {
-                Clipboard.Clear();
-                Clipboard.SetText(GetTitleAndMessageDetail());
-            }
-            catch (ExternalException)
-            {
-                
-            }
+            Clipboard.SetText(GetTitleAndMessageDetail());
         }
 
-        public string DetailedMessage
+        public override string DetailedMessage
         {
             get { return GetTitleAndMessageDetail();  }
         }
 
-        private string GetTitleAndMessageDetail()
+        protected string GetTitleAndMessageDetail()
         {
             const string separator = "---------------------------";
             List<string> lines = new List<String>();
@@ -167,7 +163,7 @@ namespace pwiz.PanoramaClient
             lines.Add(separator);
             lines.Add(Message);
             lines.Add(separator);
-            lines.Add(TextUtil.SpaceSeparate(VisibleButtons.Select(btn => btn.Text)));
+            lines.Add(CommonTextUtil.SpaceSeparate(VisibleButtons.Select(btn => btn.Text)));
             if (null != DetailMessage)
             {
                 lines.Add(separator);
@@ -175,7 +171,7 @@ namespace pwiz.PanoramaClient
             }
             lines.Add(separator);
             lines.Add(string.Empty);
-            return TextUtil.LineSeparate(lines);
+            return CommonTextUtil.LineSeparate(lines);
         }
 
         private void btnMoreInfo_Click(object sender, EventArgs e)
@@ -269,7 +265,7 @@ namespace pwiz.PanoramaClient
             {
                 throw new NotSupportedException();
             }
-            CheckAllFormsDisposed();
+            CheckDisposed();
             button.PerformClick();
         }
 
@@ -310,7 +306,7 @@ namespace pwiz.PanoramaClient
                 case MessageBoxButtons.YesNoCancel:
                     return new[] {DialogResult.Yes, DialogResult.No, DialogResult.Cancel};
             }
-            return Array.Empty<DialogResult>();
+            return new DialogResult[0];
         }
 
         public static string GetDefaultButtonText(DialogResult dialogResult)
@@ -318,19 +314,19 @@ namespace pwiz.PanoramaClient
             switch (dialogResult)
             {
                 case DialogResult.OK:
-                    return "OK";
+                    return GeneralTerms.OK;
                 case DialogResult.Cancel:
-                    return string.Empty;
+                    return GeneralTerms.Cancel;
                 case DialogResult.Yes:
-                    return string.Empty;
+                    return GeneralTerms.Yes;
                 case DialogResult.No:
-                    return string.Empty;
+                    return GeneralTerms.No;
                 case DialogResult.Abort:
-                    return string.Empty;
+                    return GeneralTerms.Abort;
                 case DialogResult.Retry:
-                    return string.Empty;
+                    return GeneralTerms.Retry;
                 case DialogResult.Ignore:
-                    return string.Empty;
+                    return GeneralTerms.Ignore;
                 default:
                     throw new ArgumentException();
             }
@@ -359,8 +355,8 @@ namespace pwiz.PanoramaClient
             {
                 return message;
             }
-            return TextUtil.LineSeparate(message.Substring(0, MAX_MESSAGE_LENGTH),
-                string.Empty);
+            return CommonTextUtil.LineSeparate(message.Substring(0, MAX_MESSAGE_LENGTH),
+                GuiMessages.AbstractAlertDlg_Message_truncated);
         }
 
         private void toolStripButtonCopy_Click(object sender, EventArgs e)
@@ -373,6 +369,18 @@ namespace pwiz.PanoramaClient
             protected override void OnRenderToolStripBorder(ToolStripRenderEventArgs e)
             {
             }
+        }
+
+        public void CancelDialog()
+        {
+            CancelButton.PerformClick();
+        }
+
+        public static void ShowException(IWin32Window parent, Exception exception)
+        {
+            using var dlg = new CommonAlertDlg(exception.Message);
+            dlg.Exception = exception;
+            dlg.ShowDialog(parent);
         }
     }
 }
