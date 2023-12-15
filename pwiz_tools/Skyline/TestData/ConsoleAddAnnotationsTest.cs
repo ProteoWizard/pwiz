@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
@@ -44,14 +43,15 @@ namespace pwiz.SkylineTestData
             CommandLineTest.CheckRunCommandOutputContains(string.Format(
                     expectedText, ANNOTATION_NAME),
                 output);
+            var doc = ResultsUtil.DeserializeDocument(newDocumentPath);
             // Assert that the document has the correct number of annotations
-            AssertDocumentAnnotationCount(newDocumentPath, 1);
+            Assert.AreEqual(1, doc.Settings.DataSettings.AnnotationDefs.Count);
             // Assert that the definition matches the one we defined
-            AssertAnnotationInDocumentAndSettings(newDocumentPath,
-                ANNOTATION_NAME,
+            var peptideQualityAnnotation = new AnnotationDef(ANNOTATION_NAME,
                 AnnotationDef.AnnotationTargetSet.OfValues(AnnotationDef.AnnotationTarget.peptide, AnnotationDef.AnnotationTarget.replicate),
-                AnnotationDef.AnnotationType.value_list,
-                annotationValuesArray);
+                AnnotationDef.AnnotationType.value_list, annotationValuesArray);
+            CollectionAssert.Contains(doc.Settings.DataSettings.AnnotationDefs.ToList(), peptideQualityAnnotation);
+            CollectionAssert.Contains(Settings.Default.AnnotationDefList, peptideQualityAnnotation);
             // Test default behavior of resolving environment conflicts through overwriting
             output = RunCommand("--new=" + newDocumentPath, // Create a new document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
@@ -101,14 +101,12 @@ namespace pwiz.SkylineTestData
                 string.Format(
                     expectedText, ANNOTATION_NAME),
                 output);
+            doc = ResultsUtil.DeserializeDocument(newDocumentPath);
             // Assert that the document has the correct number of annotations
-            AssertDocumentAnnotationCount(newDocumentPath, 1);
+            Assert.AreEqual(1, doc.Settings.DataSettings.AnnotationDefs.Count);
             // Assert that the definition matches the one we defined
-            AssertAnnotationInDocumentAndSettings(newDocumentPath,
-                ANNOTATION_NAME,
-                AnnotationDef.AnnotationTargetSet.OfValues(AnnotationDef.AnnotationTarget.peptide, AnnotationDef.AnnotationTarget.replicate),
-                AnnotationDef.AnnotationType.value_list,
-                annotationValuesArray);
+            CollectionAssert.Contains(doc.Settings.DataSettings.AnnotationDefs.ToList(), peptideQualityAnnotation);
+            CollectionAssert.Contains(Settings.Default.AnnotationDefList, peptideQualityAnnotation);
         }
 
         [TestMethod]
@@ -186,19 +184,20 @@ namespace pwiz.SkylineTestData
             CommandLineTest.CheckRunCommandOutputContains(string.Format(
                     Resources.CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0__, annotationsXml)
                 , output);
+            var doc = ResultsUtil.DeserializeDocument(newDocumentPath);
             // Assert that the document has the correct number of annotations
-            AssertDocumentAnnotationCount(newDocumentPath, 2);
+            Assert.AreEqual(2, doc.Settings.DataSettings.AnnotationDefs.Count);
             // Assert that the annotations in the .xml file appear in the document
-            AssertAnnotationInDocumentAndSettings(newDocumentPath,
-                "Peptide Quality",
-                AnnotationDef.AnnotationTargetSet.OfValues(AnnotationDef.AnnotationTarget.peptide),
-                AnnotationDef.AnnotationType.value_list,
-                annotationValuesArray);
-            AssertAnnotationInDocumentAndSettings(newDocumentPath,
-                "BioReplicate",
-                AnnotationDef.AnnotationTargetSet.OfValues(AnnotationDef.AnnotationTarget.replicate),
-                AnnotationDef.AnnotationType.number,
-                Array.Empty<string>());
+            var peptideQualityAnnotation = new AnnotationDef("Peptide Quality",
+                AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.peptide),
+                AnnotationDef.AnnotationType.value_list, annotationValuesArray);
+            CollectionAssert.Contains(doc.Settings.DataSettings.AnnotationDefs.ToList(), peptideQualityAnnotation);
+            CollectionAssert.Contains(Settings.Default.AnnotationDefList, peptideQualityAnnotation);
+            var bioReplicateAnnotation = new AnnotationDef("BioReplicate",
+                AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate),
+                AnnotationDef.AnnotationType.number, null);
+            CollectionAssert.Contains(doc.Settings.DataSettings.AnnotationDefs.ToList(), bioReplicateAnnotation);
+            CollectionAssert.Contains(Settings.Default.AnnotationDefList, bioReplicateAnnotation);
             // Test error (.xml file with incorrect formatting)
             output = RunCommand("--new=" + newDocumentPath, // Create a document (without annotations)
                 "--overwrite", // Overwrite, as the file may already exist in the bin
@@ -223,33 +222,6 @@ namespace pwiz.SkylineTestData
             CommandLineTest.CheckRunCommandOutputContains(string.Format(
                 Resources.CommandLine_AddAnnotationFromEnvironment_Error__Cannot_add_new_annotation___0___without_providing_at_least_one_target_through__1__,
                 INVALID_VALUE, CommandArgs.ARG_ADD_ANNOTATIONS_TARGETS.ArgumentText), output);
-        }
-
-        private static void AssertAnnotationInDocumentAndSettings(string documentPath, string annotationName,
-            AnnotationDef.AnnotationTargetSet annotationTargets, AnnotationDef.AnnotationType annotationType, string[] annotationValues)
-        {
-            var doc = ResultsUtil.DeserializeDocument(documentPath);
-            var annotationDefs = doc.Settings.DataSettings.AnnotationDefs;
-            var annotationInDocument = annotationDefs.Any(def =>
-                def.Name.Equals(annotationName) &&
-                def.AnnotationTargets.Equals(annotationTargets) &&
-                def.Type.Equals(annotationType) &&
-                def.Items.SequenceEqual(annotationValues));
-
-            Assert.IsTrue(annotationInDocument);
-
-            var annotationInSettings = Settings.Default.AnnotationDefList.Any(def =>
-                def.Name.Equals(annotationName) &&
-                def.AnnotationTargets.Equals(annotationTargets) &&
-                def.Type.Equals(annotationType) &&
-                def.Items.SequenceEqual(annotationValues));
-
-            Assert.IsTrue(annotationInSettings);
-        }
-
-        private static void AssertDocumentAnnotationCount(string documentPath, int annotationCount)
-        {
-            Assert.AreEqual(annotationCount, ResultsUtil.DeserializeDocument(documentPath).Settings.DataSettings.AnnotationDefs.Count);
         }
     }
 
