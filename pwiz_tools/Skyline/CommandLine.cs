@@ -469,6 +469,10 @@ namespace pwiz.Skyline
                 MsDataFileUri[] files= HandleExceptions(commandArgs, 
                     () => commandArgs.ReplicateFile.SelectMany(DataSourceUtil.ListSubPaths).ToArray(), 
                     x => _out.WriteException(Resources.Error___0_, x));
+                if (files == null)
+                {
+                    return false;
+                }
                 
                 if (!string.IsNullOrEmpty(commandArgs.ReplicateName))
                 { 
@@ -2638,7 +2642,7 @@ namespace pwiz.Skyline
         private bool Reintegrate(ModelAndFeatures modelAndFeatures, CommandArgs commandArgs)
         {
             var success = false;
-            var exceptionThrown = HandleExceptions(commandArgs, () =>
+            var exceptionThrown= !HandleExceptions(commandArgs, () =>
             {
                 var resultsHandler =
                     new MProphetResultsHandler(_doc, modelAndFeatures.ScoringModel, modelAndFeatures.Features)
@@ -3022,7 +3026,7 @@ namespace pwiz.Skyline
             }
             _out.WriteLine(Resources.CommandLine_ExportLiveReport_Exporting_report__0____, commandArgs.ReportName);
             var success = true;
-            var exceptionThrown = HandleExceptions(commandArgs, () => 
+            var exceptionThrown = !HandleExceptions(commandArgs, () => 
             {
                 using (var saver = new FileSaver(commandArgs.ReportFile))
                 {
