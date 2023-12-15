@@ -443,7 +443,8 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
 #endif
 
         // test SpectrumList::min_level_accepted() for vendors
-        if (msd.run.spectrumListPtr && msd.run.spectrumListPtr->size() > 0)
+        if (msd.run.spectrumListPtr && !msd.run.spectrumListPtr->empty() &&
+            (msd.fileDescription.fileContent.empty() || msd.fileDescription.fileContent.hasCVParamChild(MS_mass_spectrum)))
         {
             DetailLevel msLevelDetailLevel = msd.run.spectrumListPtr->min_level_accepted([](const Spectrum& s)
             {

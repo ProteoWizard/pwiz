@@ -245,12 +245,25 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
         }
         break;
 
-        case MS_chromatogram:
+	    case MS_electromagnetic_radiation_chromatogram:
+	    case MS_pressure_chromatogram:
+        case MS_chromatogram_type:
         {
             if (detailLevel < DetailLevel_FullMetadata)
                 return result;
 
-            result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, MS_number_of_detector_counts);
+            string unitsName = rawdata_->AnalogChannelUnits()[ie.offset];
+            CVID units = MS_number_of_detector_counts;
+            if (ie.chromatogramType == MS_pressure_chromatogram && bal::iequals(unitsName, "psi"))
+                units = UO_pounds_per_square_inch;
+            else if (ie.chromatogramType == MS_chromatogram_type && bal::iends_with(unitsName, "C"))
+                units = UO_degree_Celsius;
+            else if (unitsName == "%")
+                units = UO_percent;
+            else
+                result->userParams.emplace_back("units", unitsName, "xsd:string");
+
+            result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, units);
 
             vector<float> times;
             vector<float> intensities;
@@ -265,9 +278,6 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
                 result->getTimeArray()->data.assign(times.begin(), times.end());
                 result->getIntensityArray()->data.assign(intensities.begin(), intensities.end());
             }
-
-            result->userParams.push_back(UserParam("ChannelType",
-                "analog"));
         }
         break;
     }
@@ -355,7 +365,7 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
         }
     }
 
-    long analogChannels = rawdata_ -> AnalogIntensitiesByChannel().size();
+    int analogChannels = (int) rawdata_ -> AnalogIntensitiesByChannel().size();
 
     for(int ch=0; ch < analogChannels; ch++)
     {
@@ -366,12 +376,23 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
         ie.offset = ch;
         ie.Q1 = 0;
 
-        std::string temp = rawdata_->AnalogChannelNames()[ch];
+        std::string name = rawdata_->AnalogChannelNames()[ch];
+        std::string units = rawdata_->AnalogChannelUnits()[ch];
+        bal::replace_all(name, "%", "");
+        bal::replace_all(units, "\u00b0", ""); // remove degree sign
+        bal::trim(name);
+        bal::trim(units);
 
-        boost::algorithm::trim(temp);
-        boost::algorithm::replace_all(temp, "%", "");
-        ie.id = temp;
-        ie.chromatogramType = MS_chromatogram;
+        if (bal::icontains(name, "temp") && bal::iequals(units, "C"))
+            ie.chromatogramType = MS_chromatogram_type; // TODO: add temperature chromatogram to CV?
+        else if (bal::iequals(units, "LSU"))
+            ie.chromatogramType = MS_electromagnetic_radiation_chromatogram; // TODO: is this correct?
+        else if (bal::icontains(name, "pressure"))
+            ie.chromatogramType = MS_pressure_chromatogram;
+        else
+            ie.chromatogramType = MS_electromagnetic_radiation_chromatogram;
+
+        ie.id = name;
         idToIndexMap_[ie.id] = ie.index;
     }
 
