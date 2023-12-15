@@ -151,7 +151,7 @@ namespace pwiz.SkylineTest
                     Level.Error, // Any failure is treated as an error, and overall test fails
                     null, // There are no parts of the codebase that should skip this check
                     cue, // If the file contains this, then check for forbidden pattern
-                    @"using.*(pwiz\.Skyline\.(Alerts|Controls|.*UI)|System\.Windows\.Forms)", 
+                    @"using.*(pwiz\.Skyline\.(Alerts|Controls|.*UI)|System\.Windows\.Forms|pwiz\.Common\.GUI)", 
                     true, // Pattern is a regular expression
                     why, // Explanation for prohibition, appears in report
                     null, // No explicit exceptions to this rule

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.GUI;
 using SharedBatch;
 using SkylineBatch;
 
@@ -70,7 +71,7 @@ namespace SkylineBatchTest
                 "Config did not start");
             FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, false, oneMinute, 1000,
                 "Config ran past timeout");
-            var alertDlg = FindOpenForm<AlertDlg>();
+            var alertDlg = FindOpenForm<CommonAlertDlg>();
             if (alertDlg != null)
             {
                 alertDlg.ClickOk();
@@ -114,7 +115,7 @@ namespace SkylineBatchTest
                 FunctionalTestUtil.PopulateConfigForm(newConfigForm, string.Empty, CONFIG_FOLDER, this);
             });
 
-            RunDlg<AlertDlg>(() => newConfigForm.btnSaveConfig.PerformClick(),
+            RunDlg<CommonAlertDlg>(() => newConfigForm.btnSaveConfig.PerformClick(),
                 dlg =>
                 {
                     Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.SkylineBatchConfig_SkylineBatchConfig___0___is_not_a_valid_name_for_the_configuration_, string.Empty) + Environment.NewLine +
@@ -130,7 +131,7 @@ namespace SkylineBatchTest
                 newConfigForm.templateControl.SetPath(nonexistentTemplate);
             });
 
-            RunDlg<AlertDlg>(() => newConfigForm.btnSaveConfig.PerformClick(),
+            RunDlg<CommonAlertDlg>(() => newConfigForm.btnSaveConfig.PerformClick(),
                 dlg =>
                 {
                     Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.MainSettings_ValidateSkylineFile_The_Skyline_template_file__0__does_not_exist_, nonexistentTemplate) + Environment.NewLine +
@@ -146,7 +147,7 @@ namespace SkylineBatchTest
                 newConfigForm.dataControl.SetPath(Path.Combine(CONFIG_FOLDER, "nonexistentData"));
             });
 
-            RunDlg<AlertDlg>(() => newConfigForm.btnSaveConfig.PerformClick(),
+            RunDlg<CommonAlertDlg>(() => newConfigForm.btnSaveConfig.PerformClick(),
                 dlg =>
                 {
                     Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.MainSettings_ValidateDataFolder_The_data_folder__0__does_not_exist_, nonexistentData) + Environment.NewLine +
@@ -162,7 +163,7 @@ namespace SkylineBatchTest
                 newConfigForm.textAnalysisPath.Text = nonexistentAnalysis;
             });
 
-            RunDlg<AlertDlg>(() => newConfigForm.btnSaveConfig.PerformClick(),
+            RunDlg<CommonAlertDlg>(() => newConfigForm.btnSaveConfig.PerformClick(),
                 dlg =>
                 {
                     Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.MainSettings_ValidateAnalysisFolder_The__parent_directory_of_the_analysis_folder__0__does_not_exist_, Path.GetDirectoryName(nonexistentAnalysis)) + Environment.NewLine +
@@ -179,7 +180,7 @@ namespace SkylineBatchTest
                 newConfigForm.checkBoxRemoveDecoys.Checked = false;
             });
 
-            RunDlg<AlertDlg>(() => newConfigForm.btnSaveConfig.PerformClick(),
+            RunDlg<CommonAlertDlg>(() => newConfigForm.btnSaveConfig.PerformClick(),
                 dlg =>
                 {
                     Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.RefineSettings_Validate_No_refine_commands_have_been_selected_, Path.GetDirectoryName(nonexistentAnalysis)) + Environment.NewLine +

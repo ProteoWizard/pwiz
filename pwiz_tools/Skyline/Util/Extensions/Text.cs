@@ -368,14 +368,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// <returns>A single string containing the original set separated by new lines</returns>
         public static string LineSeparate(IEnumerable<string> lines)
         {
-            var sb = new StringBuilder();
-            foreach (string line in lines)
-            {
-                if (sb.Length > 0)
-                    sb.AppendLine();
-                sb.Append(line);
-            }
-            return sb.ToString();
+            return CommonTextUtil.LineSeparate(lines);
         }
 
         /// <summary>
@@ -395,14 +388,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// <returns>A single string containing the original set separated by spaces</returns>
         public static string SpaceSeparate(IEnumerable<string> values)
         {
-            var sb = new StringBuilder();
-            foreach (string value in values)
-            {
-                if (sb.Length > 0)
-                    sb.Append(SEPARATOR_SPACE);
-                sb.Append(value);
-            }
-            return sb.ToString();
+            return CommonTextUtil.SpaceSeparate(values);
         }
 
         /// <summary>
