@@ -367,24 +367,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
         }
         // ReSharper restore PossibleMultipleEnumeration
 
-        private static TextObj CreateLabel(PointPair point, Color color, float size)
-        {
-            var row = point.Tag as FoldChangeBindingSource.FoldChangeRow;
-            if (row == null)
-                return null;
-
-            var text = MatchExpression.GetRowDisplayText(row.Protein, row.Peptide);
-
-            var textObj = new TextObj(text, point.X, point.Y, CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
-            {
-                IsClippedToChartRect = true,
-                FontSpec = DotPlotUtil.CreateFontSpec(color, size, true),
-                ZOrder = ZOrder.A_InFront
-            };
-
-            return textObj;
-        }
-
 
         private void AddPoints(PointPairList points, Color color, float size, bool labeled, PointSymbol pointSymbol, bool selected = false)
         {
@@ -412,7 +394,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 foreach (var point in points)
                 {
-                    var label = CreateLabel(point, color, size);
+                    var row = (FoldChangeBindingSource.FoldChangeRow)point.Tag;
+                    if (row == null)
+                    {
+                        continue;
+                    }
+                    var label = DotPlotUtil.CreateLabel(point, row.Protein, row.Peptide, color, size);
                     _labeledPoints.Add(new DotPlotUtil.LabeledPoint(point, label, selected));
                     zedGraphControl.GraphPane.GraphObjList.Add(label);
                 }
@@ -506,7 +493,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             if (skylineWindow == null)
                 return;
 
-            var alreadySelected = IsPathSelected(skylineWindow.SelectedPath, identityPath);
+            var alreadySelected = DotPlotUtil.IsPathSelected(skylineWindow.SelectedPath, identityPath);
             if (alreadySelected)
                 skylineWindow.SequenceTree.SelectedNode = null;
 
@@ -525,7 +512,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 list.Insert(0, identityPath);
                 skylineWindow.SequenceTree.SelectedPaths = list;
-                if (!IsPathSelected(skylineWindow.SelectedPath, identityPath))
+                if (!DotPlotUtil.IsPathSelected(skylineWindow.SelectedPath, identityPath))
                     skylineWindow.SequenceTree.SelectPath(identityPath);
             }
             skylineWindow.UpdateGraphPanes();
@@ -588,15 +575,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         public IdentityPath GetSelectedPath(IdentityPath identityPath)
         {
             var skylineWindow = _skylineWindow;
-            return skylineWindow != null ? skylineWindow.SequenceTree.SelectedPaths.FirstOrDefault(p => IsPathSelected(p, identityPath)) : null;
-        }
-
-        public bool IsPathSelected(IdentityPath selectedPath, IdentityPath identityPath)
-        {
-            return selectedPath != null && identityPath != null &&
-                selectedPath.Depth <= (int)SrmDocument.Level.Molecules && identityPath.Depth <= (int)SrmDocument.Level.Molecules &&
-                (selectedPath.Depth >= identityPath.Depth && Equals(selectedPath.GetPathTo(identityPath.Depth), identityPath) ||
-                selectedPath.Depth <= identityPath.Depth && Equals(identityPath.GetPathTo(selectedPath.Depth), selectedPath));
+            return skylineWindow != null ? skylineWindow.SequenceTree.SelectedPaths.FirstOrDefault(p => DotPlotUtil.IsPathSelected(p, identityPath)) : null;
         }
 
         private bool zedGraphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)

@@ -19,6 +19,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _createProteinExpressionMatchExpressionDlg = createMatchExpressionDlg;
             _oldRegex = _createProteinExpressionMatchExpressionDlg.Expression;
             label1.Text = Resources.MatchExpressionListDlg_MatchExpressionListDlg_Enter_a_list_of_identifiers_on_separate_lines_;
+            Text = Resources.MatchExpressionListDlg_MatchExpressionListDlg_Enter_list;
             Icon = Resources.Skyline;
 
         }

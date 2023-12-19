@@ -156,7 +156,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
             UpdateAdvancedColumns();
 
             regexColorRowGrid1.Owner = this;
-
+            if (isProteinExpression)
+            {
+                Text = Resources.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting;
+            }
             SetExpressionMinimumWidth();
         }
 

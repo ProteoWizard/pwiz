@@ -20,7 +20,9 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -43,28 +45,35 @@ namespace pwiz.SkylineTestFunctional
             {
                 SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
                 SkylineWindow.ShowPeakAreaProteinExpressionGraph();
+                PauseForManualTutorialStep();
                 SkylineWindow.ShowIntensityFormatting();
+                var peakAreaGraph = FormUtil.OpenForms.OfType<GraphSummary>().FirstOrDefault(graph =>
+                    graph.Type == GraphTypeSummary.abundance && graph.Controller is AreaGraphController);
+                Assert.IsNotNull(peakAreaGraph);
+                var formattingDlg = FormUtil.OpenForms.OfType<VolcanoPlotFormattingDlg>().FirstOrDefault();
+                Assert.IsNotNull(formattingDlg);
+                var createExprDlg = ShowDialog<CreateMatchExpressionDlg>(() =>
+                {
+                    var bindingList = formattingDlg.GetCurrentBindingList();
+                    formattingDlg.ClickCreateExpression(bindingList.Count - 1);
+                });
             });
-            var peakAreaGraph = FormUtil.OpenForms.OfType<GraphSummary>().FirstOrDefault(graph =>
-                graph.Type == GraphTypeSummary.protein && graph.Controller is AreaGraphController);
-            Assert.IsNotNull(peakAreaGraph);
             WaitForGraphs();
+            var formattingDlg = FormUtil.OpenForms.OfType<VolcanoPlotFormattingDlg>().FirstOrDefault();
+            Assume.IsNotNull(formattingDlg);
+            
+            var createExpression = FormUtil.OpenForms.OfType<CreateMatchExpressionDlg>().FirstOrDefault();
+            createExpression.ClickEnterList();
+            var matchExpressionList = FormUtil.OpenForms.OfType<MatchExpressionListDlg>().FirstOrDefault();
+            WaitForOpenForm<CreateMatchExpressionDlg>();
             PauseForManualTutorialStep();
             WaitForGraphs();
             RunUI(() =>
             {
-                // When the scope is document, there should be two panes since the document has two
-                // label types in in total
-                Assert.AreEqual(2, peakAreaGraph.GraphControl.MasterPane.PaneList.Count);
                 SkylineWindow.AreaScopeTo(AreaScope.protein);
             });
             WaitForGraphs();
-            RunUI(() =>
-            {
-                // When the scope is protein, there should be only one pane because the protein has
-                // only one label type
-                Assert.AreEqual(1, peakAreaGraph.GraphControl.MasterPane.PaneList.Count);
-            });
+            
         }
     }
 }

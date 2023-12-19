@@ -169,6 +169,9 @@ namespace pwiz.Skyline
             this.showDotProductToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideLogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideCvsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.abundanceTargetsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.abundanceTargetsProteinsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.abundanceTargetsPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator28 = new System.Windows.Forms.ToolStripSeparator();
             this.areaPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupReplicatesByContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1124,6 +1127,7 @@ namespace pwiz.Skyline
             this.replicateOrderContextMenuItem,
             this.areaNormalizeContextMenuItem,
             this.scopeContextMenuItem,
+            this.abundanceTargetsMenuItem,
             this.showPeakAreaLegendContextMenuItem,
             this.showLibraryPeakAreaContextMenuItem,
             this.showDotProductToolStripMenuItem,
@@ -1318,6 +1322,25 @@ namespace pwiz.Skyline
             this.peptideCvsContextMenuItem.Name = "peptideCvsContextMenuItem";
             resources.ApplyResources(this.peptideCvsContextMenuItem, "peptideCvsContextMenuItem");
             this.peptideCvsContextMenuItem.Click += new System.EventHandler(this.peptideCvsContextMenuItem_Click);
+            // 
+            // abundanceTargetsProteinsMenuItem
+            // 
+            this.abundanceTargetsProteinsMenuItem.CheckOnClick = true;
+            this.abundanceTargetsProteinsMenuItem.Name = "abundanceTargetsProteinsMenuItem";
+            resources.ApplyResources(this.abundanceTargetsProteinsMenuItem, "abundanceTargetsProteinsMenuItem");
+            this.abundanceTargetsProteinsMenuItem.Click += new System.EventHandler(this.abundanceTargetsProteinsMenuItem_Click);
+            // 
+            // abundanceTargetsPeptidesMenuItem
+            // 
+            this.abundanceTargetsPeptidesMenuItem.CheckOnClick = true;
+            this.abundanceTargetsPeptidesMenuItem.Name = "abundanceTargetsPeptidesMenuItem";
+            resources.ApplyResources(this.abundanceTargetsPeptidesMenuItem, "abundanceTargetsPeptidesMenuItem");
+            this.abundanceTargetsPeptidesMenuItem.Click += new System.EventHandler(this.abundanceTargetsPeptidesMenuItem_Click);
+            // 
+            // abundanceTargetsMenuItem
+            // 
+            this.abundanceTargetsMenuItem.Name = "abundanceTargetsMenuItem";
+            resources.ApplyResources(this.abundanceTargetsMenuItem, "abundanceTargetsMenuItem");
             // 
             // toolStripSeparator28
             // 
@@ -2699,6 +2722,9 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem peptideOrderRTContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem peptideOrderAreaContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem peptideCvsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem abundanceTargetsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem abundanceTargetsProteinsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem abundanceTargetsPeptidesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem documentSettingsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem refineToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem selectionContextMenuItem;

@@ -79,6 +79,13 @@ namespace ZedGraph
 		internal double	_minGrace,
 								_maxGrace;
 
+		/// <summary>
+		/// Private field for the <see cref="Axis" "grace settings.
+		/// This value determines if the grace can extend the axis below zero when all values are positive,
+		/// or over zero when all values are negative.
+		/// Use the public properties <see cref = "AllowGraceToCrossZero"/>
+		/// </summary>
+        internal bool _allowGraceToCrossZero;
 
 		/// <summary> Private field for the <see cref="Axis"/> scale value display.
 		/// Use the public property <see cref="Mag"/> for access to this value.
@@ -244,6 +251,11 @@ namespace ZedGraph
 			/// <seealso cref="MinGrace"/>
 			/// <seealso cref="MaxGrace"/>
 			public static double MaxGrace = 0.1;
+			/// <summary>
+			/// This value determines if the grace can extend the axis below zero when all values are positive
+            /// or over zero when all values are negative.
+			/// </summary>
+			public static bool AllowGraceToCrossZero = false;
 			/// <summary>
 			/// The maximum number of text labels (major tics) that will be allowed on the plot by
 			/// the automatic scaling logic.  This value applies only to <see cref="AxisType.Text"/>
@@ -655,7 +667,7 @@ namespace ZedGraph
 
 			_minGrace = Default.MinGrace;
 			_maxGrace = Default.MaxGrace;
-
+            _allowGraceToCrossZero = Default.AllowGraceToCrossZero;
 			_minAuto = true;
 			_maxAuto = true;
 			_majorStepAuto = true;
@@ -1423,7 +1435,15 @@ namespace ZedGraph
 			get { return _maxGrace; }
 			set { _maxGrace = value; }
 		}
-
+		/// <summary> Gets or sets the value determining if the grace can extend the
+		/// axis below zero when all values are positive or over zero when all values
+		/// are negative.
+		/// </summary>
+		public bool AllowGraceToCrossZero
+        {
+            get { return _allowGraceToCrossZero; }
+            set { _allowGraceToCrossZero = value; }
+        }
 		/// <summary> Controls the alignment of the <see cref="Axis"/> tic labels.
 		/// </summary>
 		/// <remarks>
@@ -2434,14 +2454,14 @@ namespace ZedGraph
 			{
 				_min = minVal;
 				// Do not let the grace value extend the axis below zero when all the values were positive
-				if ( numType && ( _min < 0 || minVal - _minGrace * range >= 0.0 ) )
+				if ( (numType && ( _min < 0 || minVal - _minGrace * range >= 0.0 ) ) || _allowGraceToCrossZero)
 					_min = minVal - _minGrace * range;
 			}
 			if ( _maxAuto )
 			{
 				_max = maxVal;
 				// Do not let the grace value extend the axis above zero when all the values were negative
-				if ( numType && ( _max > 0 || maxVal + _maxGrace * range <= 0.0 ) )
+				if ( numType && ( _max > 0 || maxVal + _maxGrace * range <= 0.0 ) || _allowGraceToCrossZero )
 					_max = maxVal + _maxGrace * range;
 			}
 

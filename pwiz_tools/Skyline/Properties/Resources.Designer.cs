@@ -1788,6 +1788,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peptide Rank.
+        /// </summary>
+        public static string AreaPeptideGraphPane_UpdateAxes_Peptide_Rank {
+            get {
+                return ResourceManager.GetString("AreaPeptideGraphPane_UpdateAxes_Peptide_Rank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} cutoff - {1:F2}.
         /// </summary>
         public static string AreaReplicateGraphPane_Dotp_Cutoff_Line_Label {
@@ -19794,6 +19803,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Enter list.
+        /// </summary>
+        public static string MatchExpressionListDlg_MatchExpressionListDlg_Enter_list {
+            get {
+                return ResourceManager.GetString("MatchExpressionListDlg_MatchExpressionListDlg_Enter_list", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} precursors.
         /// </summary>
         public static string MatchingPrecursors_ToString__0__precursors {
@@ -36921,6 +36939,15 @@ namespace pwiz.Skyline.Properties {
         public static string ViewLibSpectrumGraphItem_Title__0__1__Charge__2__ {
             get {
                 return ResourceManager.GetString("ViewLibSpectrumGraphItem_Title__0__1__Charge__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein Expression Formatting.
+        /// </summary>
+        public static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting", resourceCulture);
             }
         }
         

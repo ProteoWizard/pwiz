@@ -991,7 +991,22 @@ namespace pwiz.Skyline.Properties {
                 this["AreaLogScale"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool AreaProteinTargets
+        {
+            get
+            {
+                return ((bool)(this["AreaProteinTargets"]));
+            }
+            set
+            {
+                this["AreaProteinTargets"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("document")]

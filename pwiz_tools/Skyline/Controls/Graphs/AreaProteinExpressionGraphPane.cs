@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using pwiz.Skyline.Model;
+﻿using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -11,15 +11,9 @@ namespace pwiz.Skyline.Controls.Graphs
             : base(graphSummary, paneKey)
         {
         }
-        protected override GraphData CreateGraphData(PeptideGroupDocNode selectedProtein, List<ProteinAbundanceResult> results)
+        protected override GraphData CreateGraphData(PeptideGroupDocNode selectedProtein, SkylineDataSchema dataSchema)
         {
-            int? result = null;
-            if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
-            {
-                result = GraphSummary.ResultsIndex;
-            }
-            
-            return new AreaGraphData(selectedProtein, result, results);
+            return new AreaGraphData(Document, dataSchema, selectedProtein, GraphSummary.ResultsIndex);
         }
 
         protected override void UpdateAxes()
@@ -35,10 +29,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         internal class AreaGraphData : GraphData
         {
-            public AreaGraphData(
+            public AreaGraphData(SrmDocument document, SkylineDataSchema schema,
                 PeptideGroupDocNode selectedProtein,
-                int? result, List<ProteinAbundanceResult> results)
-                : base(selectedProtein, result, results)
+                int result)
+                : base(document, schema, selectedProtein, result)
             {
             }
 

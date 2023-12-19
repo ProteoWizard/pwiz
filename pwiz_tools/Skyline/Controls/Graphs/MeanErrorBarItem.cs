@@ -37,12 +37,6 @@ namespace pwiz.Skyline.Controls.Graphs
                        {Tag = new ErrorTag(errorValue)};
         }
 
-        public static PointPair MakePointPair(double xValue, double yValue, SummaryProteinExpressionGraphPane.ProteinAbundanceResult result)
-        {
-            return new PointPair(xValue, yValue)
-                { Tag = result};
-        }
-
         public static PointPairList MakePointPairList(double[] xValues, double[] yValues, double[] errorValues)
         {
             PointPairList pointPairList = new PointPairList(xValues, yValues);

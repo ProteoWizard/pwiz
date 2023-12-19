@@ -221,7 +221,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 case GraphTypeSummary.peptide:
                     GraphSummary.DoUpdateGraph(this, GraphSummary.Type);
                     break;
-                case GraphTypeSummary.protein:
+                case GraphTypeSummary.abundance:
                     GraphSummary.DoUpdateGraph(this, GraphSummary.Type);
                     break;
                 case GraphTypeSummary.histogram:

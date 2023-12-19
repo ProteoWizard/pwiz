@@ -380,10 +380,14 @@ namespace pwiz.Skyline.Controls.GroupComparison
         }
         private void enterListButton_Click(object sender, EventArgs e)
         {
-            var dlg = new MatchExpressionListDlg(this);
-            dlg.Show(_formattingDlg);
+            ClickEnterList();
         }
 
+        public void ClickEnterList()
+        {
+            var dlg = new MatchExpressionListDlg(this);
+            dlg.Show(this);
+        }
         #region Function Test Support
 
         public string Expression

@@ -319,7 +319,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else if (peptideOrder == SummaryPeptideOrder.area)
                 {
-                    listPoints.Sort(CompareGroupAreas);
+                    listPoints.Sort(PeakAreaPointData.CompareGroupAreas);
                 }
                 else if (peptideOrder == SummaryPeptideOrder.mass_error)
                 {
@@ -497,11 +497,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 */
 
-            private static int CompareGroupAreas(GraphPointData p1, GraphPointData p2)
-            {
-                return Comparer.Default.Compare(p2.AreaGroup, p1.AreaGroup);
-            }
-
             private static int CompareGroupMassErrors(GraphPointData p1, GraphPointData p2)
             {
                 return Comparer.Default.Compare(p1.MassErrorGroup, p2.MassErrorGroup);
@@ -611,74 +606,13 @@ namespace pwiz.Skyline.Controls.Graphs
             protected virtual bool AddBlankPointsForGraphPanes { get { return false; } }
         }
 
-        private class GraphPointData
+        private class GraphPointData : PeakAreaPointData
         {
-            public GraphPointData(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, IdentityPath identityPath)
+            public GraphPointData(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, IdentityPath identityPath) 
+                : base(nodePep, nodeGroup, identityPath)
             {
-                NodePep = nodePep;
-                NodeGroup = nodeGroup;
-                IdentityPath = identityPath;
-
-                CalcStats(nodePep, nodeGroup);
             }
 
-            public PeptideDocNode NodePep { get; private set; }
-            public TransitionGroupDocNode NodeGroup { get; private set; }
-            public IdentityPath IdentityPath { get; private set; }
-            public double AreaGroup { get; private set; }
-//            public double AreaPepCharge { get; private set; }
-            public double TimeGroup { get; private set; }
-            public double MassErrorGroup { get; private set; }
-            public double TimePepCharge { get; private set; }
-
-// ReSharper disable SuggestBaseTypeForParameter
-            private void CalcStats(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
-// ReSharper restore SuggestBaseTypeForParameter
-            {
-                var times = new List<double>();
-                foreach (TransitionGroupDocNode nodePepChild in nodePep.Children)
-                {
-                    double? meanArea, meanTime, meanMassError;
-                    CalcStats(nodePepChild, out meanArea, out meanTime,out meanMassError);
-                    if (!Equals(nodeGroup.TransitionGroup.PrecursorAdduct, nodePepChild.TransitionGroup.PrecursorAdduct))
-                        continue;
-                    if (meanTime.HasValue)
-                        times.Add(meanTime.Value);
-                    if (ReferenceEquals(nodeGroup, nodePepChild))
-                    {
-                        AreaGroup = meanArea ?? 0;
-                        TimeGroup = meanTime ?? 0;
-                        MassErrorGroup = meanMassError ?? 0;
-                    }
-                }
-//                AreaPepCharge = (areas.Count > 0 ? new Statistics(areas).Mean() : 0);
-                TimePepCharge = (times.Count > 0 ? new Statistics(times).Mean() : 0);
-            }
-
-            private static void CalcStats(TransitionGroupDocNode nodeGroup, out double? meanArea, out double? meanTime, out double? meanMassError)
-            {
-                var areas = new List<double>();
-                var times = new List<double>();
-                var massErrors = new List<double>();
-                foreach (var chromInfo in nodeGroup.ChromInfos)
-                {
-                    if (chromInfo.Area.HasValue)
-                        areas.Add(chromInfo.Area.Value);
-                    if (chromInfo.RetentionTime.HasValue)
-                        times.Add(chromInfo.RetentionTime.Value);
-                    if(chromInfo.MassError.HasValue)
-                        massErrors.Add(chromInfo.MassError.Value);
-                }
-                meanArea = null;
-                if (areas.Count > 0)
-                    meanArea = new Statistics(areas).Mean();
-                meanTime = null;
-                if (times.Count > 0)
-                    meanTime = new Statistics(times).Mean();
-                meanMassError = null;
-                if (massErrors.Count > 0)
-                    meanMassError = new Statistics(massErrors).Mean();
-            }
         }
     }
 }
