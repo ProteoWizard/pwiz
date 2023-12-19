@@ -2573,12 +2573,16 @@ namespace pwiz.Skyline.Model.Lib
                     baseIM = string.Format(@"{0:F2} {1}", IonMobilityInfo.IonMobility.Mobility, IonMobilityInfo.IonMobility.UnitsString);
             }
 
+            var isMolecule = pepInfo.Target != null && !pepInfo.Target.IsProteomic;
+
             var res = new SpectrumProperties()
             {
                 LibraryName = Name,
                 PrecursorMz = precursorInfo.PrecursorMz.Value.ToString(Formats.Mz),
                 Score = SpectrumHeaderInfo?.Score,
                 Charge = pepInfo.Charge,
+                Formula = isMolecule ? pepInfo.Formula : null,
+                Adduct = isMolecule ? pepInfo.AdductAsFormula : null,
                 RetentionTime = baseRT,
                 CCS = baseCCS,
                 IonMobility = baseIM,
