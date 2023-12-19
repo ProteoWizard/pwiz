@@ -70,8 +70,8 @@ namespace pwiz.Skyline.Model.DdaSearch
             @"c,z",
         };
 
-        public static string MSFRAGGER_VERSION = @"3.4";
-        public static string MSFRAGGER_FILENAME = @"MSFragger-3.4";
+        public static string MSFRAGGER_VERSION = @"3.8";
+        public static string MSFRAGGER_FILENAME = @"MSFragger-3.8";
         public static string MsFraggerDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), MSFRAGGER_FILENAME);
         public static string MsFraggerBinary => Path.Combine(MsFraggerDirectory, MSFRAGGER_FILENAME, MSFRAGGER_FILENAME + @".jar");
         public static FileDownloadInfo MsFraggerDownloadInfo => new FileDownloadInfo { Filename = MSFRAGGER_FILENAME, InstallPath = MsFraggerDirectory, OverwriteExisting = true, Unzip = true };
@@ -361,7 +361,6 @@ namespace pwiz.Skyline.Model.DdaSearch
         // - bug in MSFragger PIN output (or bug in Crux Percolator PIN input): it doesn't like the underscore after charge_
         // - bug in Crux pepXML writer where it doesn't ignore the N-terminal mod annotation (n[123]); the writer doesn't handle terminal mods anyway, so just remove the n and move the mod over to be an AA mod
         // - change in MSFragger 3.4 PIN output: it no longer has charge features which Crux Percolator requires for putting charge in pepXML
-        // - bug in MSFragger output where scan numbers always start from 1 instead of matching the native_id
         private void FixMSFraggerPin(string cruxInputFilepath, string cruxFixedInputFilepath, string msfraggerPepxmlFilepath, out Dictionary<int, string> nativeIdByScanNumber)
         {
             nativeIdByScanNumber = new Dictionary<int, string>();
@@ -373,12 +372,12 @@ namespace pwiz.Skyline.Model.DdaSearch
                 {
                     if (line.Contains(@"<spectrum_query"))
                     {
-                        if (!int.TryParse(Regex.Replace(line, ".* native_id=\"controllerType=0 controllerNumber=1 scan=(\\d+)\" .*", "$1"), out int scanNumber))
+                        if (!int.TryParse(Regex.Replace(line, ".* spectrumNativeID=\"controllerType=0 controllerNumber=1 scan=(\\d+)\" .*", "$1"), out int scanNumber))
                             scanNumber = int.Parse(Regex.Replace(line, ".* start_scan=\"(\\d+)\" .*", "$1"));
 
                         scanNumbers.Add(scanNumber);
 
-                        string nativeId = Regex.Replace(line, ".* native_id=\"([^\"]+)\" .*", "$1");
+                        string nativeId = Regex.Replace(line, ".* spectrumNativeID=\"([^\"]+)\" .*", "$1");
                         if (nativeId.Length < line.Length)
                             nativeIdByScanNumber[scanNumber] = nativeId;
                     }
@@ -399,6 +398,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         if (line.Contains(@"charge_"))
                         {
                             line = line.Replace(@"charge_", @"Charge");
+                            line = line.Replace(@"_or_more", ""); // MSFragger 3.8
                         }
                         else
                         {
