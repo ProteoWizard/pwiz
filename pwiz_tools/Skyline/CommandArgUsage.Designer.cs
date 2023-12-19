@@ -2040,7 +2040,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Provide additional information to report to Skyline developers in the case of an error..
+        ///   Looks up a localized string similar to Adds additional information to the program output in the case of an error, that may be helpful to Skyline developers..
         /// </summary>
         internal static string _verbose_errors {
             get {

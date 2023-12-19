@@ -992,6 +992,6 @@ greater peak area.</value>
 Useful in sample mixtures including multiple species.</value>
   </data>
   <data name="_verbose_errors" xml:space="preserve">
-    <value>Provide additional information to report to Skyline developers in the case of an error.</value>
+    <value>Adds additional information to the program output in the case of an error, that may be helpful to Skyline developers.</value>
   </data>
 </root>

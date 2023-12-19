@@ -181,7 +181,7 @@ namespace pwiz.Skyline
             }
             if (commandArgs.ImportingSkyr)
             {
-                if (!ImportSkyr(commandArgs.SkyrPath, commandArgs.ResolveSkyrConflictsBySkipping, commandArgs))
+                if (!ImportSkyr(commandArgs))
                     return Program.EXIT_CODE_RAN_WITH_ERRORS;
                 anyAction = true;
             }
@@ -606,7 +606,7 @@ namespace pwiz.Skyline
             {
                 ModifyDocumentWithLogging(doc => commandArgs.Refinement.Refine(doc),
                     commandArgs.Refinement.EntryCreator.Create);
-            }, Resources.Error___0_, true);   // TODO: Not really standard to just report the exception alone
+            }, Resources.Error___0_, true);   // CONSIDER: Not really standard to just report the exception alone
         }
 
         private bool CreateImsDb(CommandArgs commandArgs)
@@ -628,7 +628,7 @@ namespace pwiz.Skyline
 
                     return ionMobilityFiltering.ChangeLibrary(lib);
                 })), AuditLogEntry.SettingsLogFunction);
-            }, Resources.Error___0_, true);   // TODO: Not really standard to just report the exception alone
+            }, Resources.Error___0_, true);   // CONSIDER: Not really standard to just report the exception alone
         }
 
         private IsotopeLabelType GetLabelTypeHelper(string label)
@@ -3544,20 +3544,20 @@ namespace pwiz.Skyline
             return commandLineArguments.ToString();
         }
 
-        public bool ImportSkyr(string path, bool? resolveSkyrConflictsBySkipping, CommandArgs commandArgs)
+        public bool ImportSkyr(CommandArgs commandArgs)
         {          
-            if (!File.Exists(path))
+            if (!File.Exists(commandArgs.SkyrPath))
             {
-                _out.WriteLine(Resources.CommandLine_ImportSkyr_Error___0__does_not_exist____report_add_command_failed_, path);
+                _out.WriteLine(Resources.CommandLine_ImportSkyr_Error___0__does_not_exist____report_add_command_failed_, commandArgs.SkyrPath);
                 return false;
             }
             else
             {           
-                ImportSkyrHelper helper = new ImportSkyrHelper(_out, resolveSkyrConflictsBySkipping);
+                ImportSkyrHelper helper = new ImportSkyrHelper(_out, commandArgs.ResolveSkyrConflictsBySkipping);
                 bool? imported = null;
                 if (!HandleExceptions(commandArgs,
-                        () => { imported = ReportSharing.ImportSkyrFile(path, helper.ResolveImportConflicts); },
-                        Resources.CommandLine_ImportSkyr_, path))
+                        () => { imported = ReportSharing.ImportSkyrFile(commandArgs.SkyrPath, helper.ResolveImportConflicts); },
+                        Resources.CommandLine_ImportSkyr_, commandArgs.SkyrPath))
                 {
                     return false;
                 }
@@ -3566,14 +3566,14 @@ namespace pwiz.Skyline
                 {
                     if (!SaveSettings(commandArgs))
                         return false;
-                    _out.WriteLine(Resources.CommandLine_ImportSkyr_Success__Imported_Reports_from__0_, Path.GetFileName(path));
+                    _out.WriteLine(Resources.CommandLine_ImportSkyr_Success__Imported_Reports_from__0_, Path.GetFileName(commandArgs.SkyrPath));
                 }
                 else
                 {
                     if (!_out.IsErrorReported)
                     {
                         // Unclear when this would happen, but to be safe, make sure an error is reported
-                        _out.WriteLine(Resources.CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_, path);
+                        _out.WriteLine(Resources.CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_, commandArgs.SkyrPath);
                     }
                     return false;
                 }
