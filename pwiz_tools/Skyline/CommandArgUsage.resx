@@ -992,7 +992,7 @@ greater peak area.</value>
     <value>"&lt;value&gt;, &lt;value&gt;, &lt;value&gt;..."</value>
   </data>
   <data name="_annotation_conflict_resolution" xml:space="preserve">
-    <value>Specifies how to resolve annotation name conflicts, by either overwriting or skipping them, when using --annotation-add, --annotation-file, or --annotation-add-from-environment (default is to output an error message for conflicts).</value>
+    <value>Specifies how to resolve annotation name conflicts, by either overwriting or skipping them, when using --annotation-name, --annotation-file, or --annotation-add-from-environment (default is to output an error message for conflicts).</value>
   </data>
   <data name="_annotation_file" xml:space="preserve">
     <value>Add an annotation to the document and environment from an XML format file. For an example of an XML format file, view the user.config file specified in the user interface window Tools &gt;Options &gt; Miscellaneous. Existing annotations with the same name will be overwritten.</value>

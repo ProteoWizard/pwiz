@@ -3142,7 +3142,7 @@ namespace pwiz.Skyline
             // Add the new annotations to the environment
             foreach (var def in newAnnotationDefs.ToList())
             {
-                if (SettingsContainsAnnotation(def))
+                if (Settings.Default.AnnotationDefList.Any(settingDef => settingDef.Name == def.Name))
                 {
                     // Name conflict
                     if (resolveConflictsBySkipping == null)
@@ -3199,11 +3199,6 @@ namespace pwiz.Skyline
                 return doc;
             }, AuditLogEntry.SettingsLogFunction);
             return true;
-        }
-
-        private static bool SettingsContainsAnnotation(AnnotationDef def)
-        {
-            return Settings.Default.AnnotationDefList.Any(settingDef => settingDef.Name == def.Name);
         }
 
         public bool SetLibrary(string name, string path, bool append = true)
