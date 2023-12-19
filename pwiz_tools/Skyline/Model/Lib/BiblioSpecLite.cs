@@ -1290,7 +1290,10 @@ namespace pwiz.Skyline.Model.Lib
             if (spectrumLiteKey != null)
             {
                 if (!spectrumLiteKey.IsBest)
-                    return new SpectrumPeaksInfo(ReadRedundantSpectrum(spectrumLiteKey.RedundantId));
+                {
+                    var redundantSpectrum = ReadRedundantSpectrum(spectrumLiteKey.RedundantId);
+                    return redundantSpectrum == null ? SpectrumPeaksInfo.EMPTY : new SpectrumPeaksInfo(redundantSpectrum);
+                }
 
                 // Always get the best spectrum from the non-redundant library
                 spectrumKey = spectrumLiteKey.NonRedundantId;
