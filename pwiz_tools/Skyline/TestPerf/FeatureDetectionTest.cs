@@ -132,23 +132,45 @@ namespace TestPerf
 
         protected override void DoTest()
         {
+            PerformSearchTest(false);
+            PerformSearchTest(true);
+        }
+
+        private void PerformSearchTest(bool emptyDoc)
+        {
+
             // IsPauseForScreenShots = true; // enable for quick demo
 
-            // Make sure we're testing the mzML conversion
-            foreach (var file in SearchFiles)
+            if (!emptyDoc)
             {
-                AssertEx.IsTrue(File.Exists(file));
-                var convertedFile = Path.Combine(Path.GetDirectoryName(file) ?? string.Empty,
-                    MsconvertDdaConverter.OUTPUT_SUBDIRECTORY, (Path.GetFileNameWithoutExtension(file)+ @".mzML"));
-                if (File.Exists(convertedFile))
+                // Make sure we're testing the mzML conversion
+                foreach (var file in SearchFiles)
                 {
-                    File.Delete(convertedFile);
+                    AssertEx.IsTrue(File.Exists(file));
+                    var convertedFile = Path.Combine(Path.GetDirectoryName(file) ?? string.Empty,
+                        MsconvertDdaConverter.OUTPUT_SUBDIRECTORY, (Path.GetFileNameWithoutExtension(file)+ @".mzML"));
+                    if (File.Exists(convertedFile))
+                    {
+                        File.Delete(convertedFile);
+                    }
                 }
             }
 
-            // Load the document that we have at the end of the MS1 fullscan tutorial
-            RunUI(() => SkylineWindow.OpenFile(GetTestPath("Ms1FilteringTutorial-2min.sky")));
-            WaitForDocumentLoaded();
+            if (emptyDoc)
+            {
+                // IsPauseForScreenShots = true;
+                RunUI(() =>
+                {
+                    SkylineWindow.NewDocument(true);
+                    SkylineWindow.SaveDocument(GetTestPath("StartingWithEmptyDoc.sky"));
+                });
+            }
+            else
+            {
+                // Load the document that we have at the end of the MS1 fullscan tutorial
+                RunUI(() => SkylineWindow.OpenFile(GetTestPath("Ms1FilteringTutorial-2min.sky")));
+                WaitForDocumentLoaded();
+            }
 
             PauseForScreenShot("Ready to start Wizard (File > Import > Feature Detection...)");
             // Launch the wizard
@@ -259,6 +281,11 @@ namespace TestPerf
             PauseForScreenShot("expected dialog for name reduction ");
             OkDialog(removeSuffix, () => removeSuffix2.YesDialog());
 
+            RunUI(() =>
+            {
+                importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof;  // Per MS1 filtering tutorial
+                importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 10000; // Per MS1 filtering tutorial
+            });
 
             PauseForScreenShot("Full scan settings - not set Centroided (this data set isn't compatible with that), so instrument settings on next page should not be operable");
             RunUI(() =>
@@ -271,7 +298,6 @@ namespace TestPerf
                 // We're on the "Search Settings" page. These values should not be settable since we did not set "Centroided" in Full Scan.
                 AssertEx.IsFalse(importPeptideSearchDlg.SearchSettingsControl.HardklorInstrumentSettingsAreEditable);
             });
-            PauseForScreenShot("Search settings - set Centroided, so instrument settings are operable.");
             // Now check some value ranges
             ExpectError(() => importPeptideSearchDlg.SearchSettingsControl.HardklorCorrelationThreshold = -1);
             ExpectError(() => importPeptideSearchDlg.SearchSettingsControl.HardklorCorrelationThreshold = 1.1);
@@ -335,7 +361,10 @@ namespace TestPerf
             AssertEx.AreEqual(37.51, r.EndRetentionTime, .01);
 
             RunUI(() => SkylineWindow.SaveDocument());
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 12, 1041,  1042, 3134);
+            if (emptyDoc)
+                AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 684, 684, 2052);
+            else
+                AssertEx.IsDocumentState(SkylineWindow.Document, null, 12, 1041, 1042, 3134);
 
             VerifyAuditLog();
         }
