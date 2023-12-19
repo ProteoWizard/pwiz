@@ -135,7 +135,7 @@ namespace pwiz.Skyline.Model
                 FieldSeparatorReplacement = @"_";  // For use in formats where quoting the value does not suffice, as reportedly in xcalibur
             }
         }
-        public char FieldSeparator { get; private set; }
+        public char FieldSeparator { get; set; }
         public string FieldSeparatorReplacement { get; private set; }
 
         public Dictionary<string, StringBuilder> MemoryOutput { get; private set; }
