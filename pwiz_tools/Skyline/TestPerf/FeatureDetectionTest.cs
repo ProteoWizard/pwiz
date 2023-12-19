@@ -132,16 +132,16 @@ namespace TestPerf
 
         protected override void DoTest()
         {
-            PerformSearchTest(false);
-            PerformSearchTest(true);
-        }
+            for (int pass = 0; pass < 2;)
+                PerformSearchTest(pass++);
+}
 
-        private void PerformSearchTest(bool emptyDoc)
+        private void PerformSearchTest(int pass)
         {
 
             // IsPauseForScreenShots = true; // enable for quick demo
 
-            if (!emptyDoc)
+            if (pass == 0)
             {
                 // Make sure we're testing the mzML conversion
                 foreach (var file in SearchFiles)
@@ -156,20 +156,20 @@ namespace TestPerf
                 }
             }
 
-            if (emptyDoc)
+            if (pass == 0) 
             {
-                // IsPauseForScreenShots = true;
+                // Load the document that we have at the end of the MS1 fullscan tutorial
+                RunUI(() => SkylineWindow.OpenFile(GetTestPath("Ms1FilteringTutorial-2min.sky")));
+                WaitForDocumentLoaded();
+            }
+            else
+            {
+                // Start with an empty document this time
                 RunUI(() =>
                 {
                     SkylineWindow.NewDocument(true);
                     SkylineWindow.SaveDocument(GetTestPath("StartingWithEmptyDoc.sky"));
                 });
-            }
-            else
-            {
-                // Load the document that we have at the end of the MS1 fullscan tutorial
-                RunUI(() => SkylineWindow.OpenFile(GetTestPath("Ms1FilteringTutorial-2min.sky")));
-                WaitForDocumentLoaded();
             }
 
             PauseForScreenShot("Ready to start Wizard (File > Import > Feature Detection...)");
@@ -361,12 +361,16 @@ namespace TestPerf
             AssertEx.AreEqual(37.51, r.EndRetentionTime, .01);
 
             RunUI(() => SkylineWindow.SaveDocument());
-            if (emptyDoc)
+            if (pass==1)
+            {
                 AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 684, 684, 2052);
+                VerifyAuditLog();
+            }
             else
+            {
                 AssertEx.IsDocumentState(SkylineWindow.Document, null, 12, 1041, 1042, 3134);
+            }
 
-            VerifyAuditLog();
         }
 
         private void VerifyAuditLog()
