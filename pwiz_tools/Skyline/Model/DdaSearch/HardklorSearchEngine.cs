@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             SpectrumFileNames = searchFilenames;
             _paramsFilename = null;
-            _searchSettings.RemainingStepsInSearch = searchFilenames.Length + 1; // One step for Hardklor, and one Bullseye per file
+            _searchSettings.RemainingStepsInSearch = searchFilenames.Length + 2; // One step for Hardklor, and one Bullseye per file, then unify the bullseye results
         }
         public HardklorSearchEngine(ImportPeptideSearch searchSettings)
         {
@@ -82,53 +82,64 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             try
             {
-                // Hardklor is not L10N ready, so take care to run its process under InvariantCulture
-                Func<string> RunHardklor = () =>
+                if (_searchSettings.RemainingStepsInSearch == 2)
                 {
-                    string exeName;
-                    string args;
-                    if (string.IsNullOrEmpty(_paramsFilename))
+                    // Final step - try to unify similar features across the various Bullseye result files
+                    _searchSettings.RemainingStepsInSearch--; // More to do after this?
+                    FindSimilarPrecursors();
+                }
+                else
+                {
+                    // Hardklor is not L10N ready, so take care to run its process under InvariantCulture
+                    Func<string> RunHardklor = () =>
                     {
-                        // First pass - run Hardklor
-                        var paramsFileText = GenerateHardklorConfigFile(skylineWorkingDirectory);
+                        string exeName;
+                        string args;
+                        if (string.IsNullOrEmpty(_paramsFilename))
+                        {
+                            // First pass - run Hardklor
+                            var paramsFileText = GenerateHardklorConfigFile(skylineWorkingDirectory);
 
-                        _paramsFilename = string.IsNullOrEmpty(skylineWorkingDirectory)
-                            ? Path.GetTempFileName()
-                            : Path.Combine(skylineWorkingDirectory, @"Hardklor.conf");
-                        File.WriteAllText(_paramsFilename, paramsFileText.ToString());
-                        exeName = @"Hardklor";
-                        args = $@"""{_paramsFilename}""";
-                    }
-                    else
-                    {
-                        // Refine the Hardklor results with Bullseye
-                        _searchSettings.RemainingStepsInSearch--; // More to do after this?
-                        var pair = _inputsAndOutputs.ElementAt(_searchSettings.RemainingStepsInSearch-1);
-                        var mzFile = pair.Key;
-                        var hkFile = pair.Value;
-                        var matchFile = GetBullseyeMatchFilename(hkFile);
-                        var noMatchFile = GetBullseyeNoMatchFilename(hkFile);
-                        exeName = @"BullseyeSharp";
-                        args = $@"-c 0 " + // Don't eliminate long elutions
-                               $@"""{hkFile}"" ""{mzFile}"" ""{matchFile}"" ""{noMatchFile}""";
-                    }
-                    _progressStatus = status.ChangePercentComplete(0);
-                    var pr = new ProcessRunner();
-                    var psi = new ProcessStartInfo(exeName, args)
-                    {
-                        CreateNoWindow = true,
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        RedirectStandardInput = false,
-                        StandardOutputEncoding = Encoding.UTF8,
-                        StandardErrorEncoding = Encoding.UTF8
+                            _paramsFilename = string.IsNullOrEmpty(skylineWorkingDirectory)
+                                ? Path.GetTempFileName()
+                                : Path.Combine(skylineWorkingDirectory, @"Hardklor.conf");
+                            File.WriteAllText(_paramsFilename, paramsFileText.ToString());
+                            exeName = @"Hardklor";
+                            args = $@"""{_paramsFilename}""";
+                        }
+                        else
+                        {
+                            // Refine the Hardklor results with Bullseye
+                            _searchSettings.RemainingStepsInSearch--; // More to do after this?
+                            var pair = _inputsAndOutputs.ElementAt(_searchSettings.RemainingStepsInSearch - 2); // Last 2 steps are Bullseye then cleanup for blibbuild
+                            var mzFile = pair.Key;
+                            var hkFile = pair.Value;
+                            var matchFile = GetBullseyeMatchFilename(hkFile);
+                            var noMatchFile = GetBullseyeNoMatchFilename(hkFile);
+                            exeName = @"BullseyeSharp";
+                            var ppm = GetPPM();
+                            args = $@"-c 0 " + // Don't eliminate long elutions
+                                   $@"-r {ppm.ToString(CultureInfo.InvariantCulture)} " +
+                                   $@"""{hkFile}"" ""{mzFile}"" ""{matchFile}"" ""{noMatchFile}""";
+                        }
+                        _progressStatus = status.ChangePercentComplete(0);
+                        var pr = new ProcessRunner();
+                        var psi = new ProcessStartInfo(exeName, args)
+                        {
+                            CreateNoWindow = true,
+                            UseShellExecute = false,
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            RedirectStandardInput = false,
+                            StandardOutputEncoding = Encoding.UTF8,
+                            StandardErrorEncoding = Encoding.UTF8
+                        };
+                        pr.ShowCommandAndArgs = true; // Show the commandline
+                        pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal);
+                        return _paramsFilename;
                     };
-                    pr.ShowCommandAndArgs = true; // Show the commandline
-                    pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal);
-                    return _paramsFilename;
-                };
-                LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture, RunHardklor);
+                    LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture, RunHardklor);
+                }
                 _progressStatus = _progressStatus.NextSegment();
             }
             catch (Exception ex)
@@ -159,6 +170,130 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             return _success;
         }
+
+        private double GetPPM()
+        {
+            var resolution = GetResolution();
+            var ppm = resolution == 0 ? 10 : ((1.0 / resolution) * 1E6); // 10 is the Bullseye default
+            return ppm;
+        }
+
+        private class hkPrecursorDetail
+        {
+            public double mass; // Declared mono mass
+            public string massString; // Original text representation of mono mass
+            public string avergineAndOffset; // The value declared in the avergine column e.g. "H104C54N15O16[+4.761216]"
+            public double intensity; // "Summed Intensity" column
+            public double rt; // "Best RTime" column
+            public int fileIndex; // Which file it's from
+            public int lineIndex; // Which line in that file
+            public bool updated; // Does it need to be written back to the file?
+        }
+        private void FindSimilarPrecursors()
+        {
+            // Final step - try to unify similar features in the various Bullseye result files
+            var bfiles = SpectrumFileNames.Select(GetSearchResultFilepath).ToArray();
+            if (bfiles.Length > 1)
+            {
+                var precursors = new Dictionary<string, List<hkPrecursorDetail>>();
+                var contents = new List<string[]>();
+                var updates = new List<hkPrecursorDetail>();
+                for (var f = 0; f < bfiles.Length; f++)
+                {
+                    var file = bfiles[f];
+                    var lines = File.ReadAllLines(file);
+                    contents.Add(lines);
+                    int l = 1;
+                    foreach (var line in lines.Skip(1))
+                    {
+                        var col = line.Split('\t');
+                        var avergine = col[15].Split('[')[0];
+                        var detail = new hkPrecursorDetail()
+                        {
+                            mass = double.Parse(col[5], CultureInfo.InvariantCulture),
+                            massString = col[5],
+                            avergineAndOffset = col[15],
+                            intensity = double.Parse(col[8], CultureInfo.InvariantCulture),
+                            rt = double.Parse(col[11], CultureInfo.InvariantCulture),
+                            fileIndex = f,
+                            lineIndex = l,
+                            updated = false
+                        };
+                        if (!precursors.TryGetValue(avergine, out var details))
+                        {
+                            precursors.Add(avergine, new List<hkPrecursorDetail>() { detail });
+                        }
+                        else
+                        {
+                            details.Add(detail);
+                        }
+
+                        l++;
+                    }
+                }
+
+                // We have a dictionary of all known isotope distributions (that is, the avergine formulas)
+                // and all known mass offset and intensities
+                var ppm = GetPPM();
+                var rtToler = this._searchSettings.SettingsHardklor.IDRetentionTimeTolerance ?? double.MaxValue;
+                foreach (var precursor in precursors)
+                {
+                    // Starting with the strongest signal, see if any other entries from at similar RT are similar mass.
+                    // If they are, update the mass information to match the more solid ID.
+                    var ordered = precursor.Value.OrderByDescending(v => v.intensity).ToArray();
+                    for (var i = 0; i < ordered.Length; i++)
+                    {
+                        var hkPrecursorDetailI = ordered[i];
+                        if (hkPrecursorDetailI.updated)
+                        {
+                            continue;
+                        }
+                        var mass = hkPrecursorDetailI.mass;
+                        if (mass == 0)
+                        {
+                            continue;
+                        }
+                        for (var j = i + 1; j < ordered.Length; j++)
+                        {
+                            var hkPrecursorDetailJ = ordered[j];
+                            if (hkPrecursorDetailJ.updated)
+                            {
+                                continue; // Already processed
+                            }
+                            if (Math.Abs(hkPrecursorDetailI.rt - hkPrecursorDetailJ.rt) > rtToler)
+                            {
+                                continue; // Not an RT match
+                            }
+                            var diff = Math.Abs((hkPrecursorDetailJ.mass - mass) / mass) * 1.0E6;
+                            if (diff <= ppm)
+                            {
+                                hkPrecursorDetailJ.mass = mass;
+                                hkPrecursorDetailJ.massString = hkPrecursorDetailI.massString;
+                                hkPrecursorDetailJ.avergineAndOffset = hkPrecursorDetailI.avergineAndOffset;
+                                hkPrecursorDetailJ.updated = true; // No need to compare to others in this list
+                                updates.Add(hkPrecursorDetailJ);  // We will write these values back to the file
+                            }
+                        }
+                    }
+                }
+
+                // Now write back any adjustments before we hand off the files to BlibBuild
+                var updatedFiles = new HashSet<int>();
+                foreach (var update in updates.Where(u => u.updated))
+                {
+                    var col = contents[update.fileIndex][update.lineIndex].Split('\t');
+                    col[15] = update.avergineAndOffset;
+                    col[5] = update.massString; // N.B no need to update the m/z, BlibBuild ignores that
+                    contents[update.fileIndex][update.lineIndex] = string.Join(TextUtil.SEPARATOR_TSV_STR, col);
+                    updatedFiles.Add(update.fileIndex);
+                }
+                foreach (var f in updatedFiles)
+                {
+                    File.WriteAllLines(bfiles[f], contents[f]);  // Update the current file
+                }
+            }
+        }
+
 
         private static string GetBullseyeKronikFilename(string hkFile)
         {
@@ -293,7 +428,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 if (!isCentroided.HasValue)
                 {
                     // Hardklor wants to know if the data is centroided, we should
-                    // find a clue within the first few hundred lines of mnML.
+                    // find a clue within the first few hundred lines of mzML.
                     using var reader = new StreamReader(input.GetFilePath());
                     for (var lineNum = 0; lineNum < 500; lineNum++)
                     {
@@ -320,11 +455,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             InitializeIsotopes();
 
             var instrument = _searchSettings.SettingsHardklor.Instrument;
-            var resolution = _searchSettings.SettingsHardklor.Resolution;
-            if (Equals(instrument, FullScanMassAnalyzerType.qit))
-            {
-                resolution = resolution / 5000.0; // per Hardklor source code CHardklor2::CalcFWHM(double mz, double res, int iType)
-            }
+            var resolution = GetResolution();
 
             return TextUtil.LineSeparate(
                 $@"# comments in ALL CAPS are from a discussion with Danielle Faivre about Skyline integration",
@@ -396,6 +527,17 @@ namespace pwiz.Skyline.Model.DdaSearch
                 $@"",
                 TextUtil.LineSeparate(_inputsAndOutputs.Select(kvp => ($@"""{kvp.Key}""	""{kvp.Value}""")))
             );
+        }
+
+        private double GetResolution()
+        {
+            var resolution = _searchSettings.SettingsHardklor.Resolution;
+            if (Equals(_searchSettings.SettingsHardklor.Instrument, FullScanMassAnalyzerType.qit))
+            {
+                resolution =
+                    resolution / 5000.0; // per Hardklor source code CHardklor2::CalcFWHM(double mz, double res, int iType)
+            }
+            return resolution;
         }
     }
 }

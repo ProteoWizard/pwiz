@@ -308,13 +308,6 @@ namespace TestPerf
                 File.WriteAllText("SearchControlLog.txt", importPeptideSearchDlg.SearchControl.LogText);
             }
 
-            // We've had some strange hard-to-reproduce failures, see if Hardklor outout is stable
-            var expectedHardklorFiles = @"expected_hardklor_files";
-            foreach (var hkFile in Directory.EnumerateFiles(GetTestPath(expectedHardklorFiles)))
-            {
-                AssertEx.FileEquals(hkFile, hkFile.Replace(expectedHardklorFiles, Path.Combine(expectedHardklorFiles,@"..")), null, true);
-            }
-
             RunUI(() =>
             {
                 // Click the "Finish" button.
@@ -322,6 +315,16 @@ namespace TestPerf
             });
 
             WaitForDocumentLoaded();
+
+            // IsPauseForScreenShots = true; // enable for quick demo
+            PauseForScreenShot("complete");
+
+            // See if Hardklor outout is stable
+            var expectedHardklorFiles = @"expected_hardklor_files";
+            foreach (var hkFile in Directory.EnumerateFiles(GetTestPath(expectedHardklorFiles)))
+            {
+                AssertEx.FileEquals(hkFile, hkFile.Replace(expectedHardklorFiles, Path.Combine(expectedHardklorFiles, @"..")), null, true);
+            }
 
             // Verify use of library RT in chromatogram extraction
             var doc = SkylineWindow.Document;
@@ -332,8 +335,7 @@ namespace TestPerf
             AssertEx.AreEqual(37.51, r.EndRetentionTime, .01);
 
             RunUI(() => SkylineWindow.SaveDocument());
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 12, 368,  369, 1115);
-            PauseForScreenShot("complete");
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 12, 1041,  1042, 3134);
 
             VerifyAuditLog();
         }

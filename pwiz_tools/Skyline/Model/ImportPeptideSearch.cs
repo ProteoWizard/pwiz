@@ -74,13 +74,15 @@ namespace pwiz.Skyline.Model
         public class HardklorSettings
         {
             public HardklorSettings(FullScanMassAnalyzerType instrument, double resolution,
-                double correlationThreshold, double signalToNoise, IEnumerable<int> charges)
+                double correlationThreshold, double signalToNoise, IEnumerable<int> charges,
+                double? idRetentionTimeTolerance)
             {
                 Instrument = instrument;
                 Resolution = resolution;
                 CorrelationThreshold = correlationThreshold;
                 SignalToNoise = signalToNoise;
                 Charges = charges.ToList();
+                IDRetentionTimeTolerance = idRetentionTimeTolerance;
             }
 
             [Track]
@@ -94,6 +96,8 @@ namespace pwiz.Skyline.Model
             [Track]
             public List<int> Charges { get; set; } // A list of desired charges for BlibBuild
 
+            public double? IDRetentionTimeTolerance { get; private set; } // Tolerance for unifying similar IDs across input files
+
         }
 
 
@@ -102,7 +106,7 @@ namespace pwiz.Skyline.Model
             if (isFeatureDetection)
             {
                 // Avoid confusion with any document library
-                // Change filename hint from foo\bar\baz.sky to foo\bar\baz detected features.sky so we get library name baz detected features.blib
+                // Change filename hint from "foo\bar\baz.sky" to "foo\bar\baz detected features.sky" so we get library name "baz detected features.blib"
                 var docfile_ext = Path.GetExtension(docFilePath);
                 docFilePath = docFilePath.Substring(0, docFilePath.Length-docfile_ext.Length) + @" " + Resources.ImportPeptideSearch_GetLibBuilder_detected_features + docfile_ext; 
             }
