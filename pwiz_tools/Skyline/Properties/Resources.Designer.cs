@@ -32486,10 +32486,8 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized string similar to 
         ///
-        ///
-        ///This library entry only
-        ///provides precursor information,
-        ///there are no MS2 peaks to show.
+        ///This library entry only provides precursor
+        ///information, there is no spectrum to show.
         /// </summary>
         public static string SpectrumGraphItem_library_entry_provides_only_precursor_values {
             get {
