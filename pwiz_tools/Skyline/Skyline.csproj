@@ -52,8 +52,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>261</ApplicationRevision>
-    <ApplicationVersion>23.1.1.261</ApplicationVersion>
+    <ApplicationRevision>347</ApplicationRevision>
+    <ApplicationVersion>23.1.1.347</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -288,12 +288,6 @@
     <Compile Include="Alerts\ShareTypeDlg.Designer.cs">
       <DependentUpon>ShareTypeDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="Alerts\AlertDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Alerts\AlertDlg.Designer.cs">
-      <DependentUpon>AlertDlg.cs</DependentUpon>
-    </Compile>
     <Compile Include="Alerts\PasteFilteredPeptidesDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -313,6 +307,9 @@
       <DependentUpon>DetailedReportErrorDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Alerts\SimpleFileDownloaderDlg.cs" />
+    <Compile Include="Alerts\AlertDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Alerts\SpectrumLibraryInfoDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2140,12 +2137,6 @@
     <EmbeddedResource Include="Alerts\AboutDlg.zh-CHS.resx">
       <DependentUpon>AboutDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\AlertDlg.ja.resx">
-      <DependentUpon>AlertDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\AlertDlg.zh-CHS.resx">
-      <DependentUpon>AlertDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\AlertLinkDlg.ja.resx">
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
@@ -5442,10 +5433,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ShareTypeDlg.resx">
       <DependentUpon>ShareTypeDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\AlertDlg.resx">
-      <DependentUpon>AlertDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\PasteFilteredPeptidesDlg.resx">

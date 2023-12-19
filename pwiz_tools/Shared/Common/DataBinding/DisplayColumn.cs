@@ -146,5 +146,30 @@ namespace pwiz.Common.DataBinding
             var mergedAttributes = AttributeCollection.FromExisting(new AttributeCollection(ColumnDescriptor.GetAttributes().ToArray()), overrideAttributes.ToArray());
             return mergedAttributes.Cast<Attribute>();
         }
+
+        protected bool Equals(DisplayColumn other)
+        {
+            return Equals(ColumnSpec, other.ColumnSpec) && Equals(ColumnDescriptor, other.ColumnDescriptor) &&
+                   Equals(CollectionColumn, other.CollectionColumn);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((DisplayColumn)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = ColumnSpec != null ? ColumnSpec.GetHashCode() : 0;
+                hashCode = (hashCode * 397) ^ (ColumnDescriptor != null ? ColumnDescriptor.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (CollectionColumn != null ? CollectionColumn.GetHashCode() : 0);
+                return hashCode;
+            }
+        }
     }
 }

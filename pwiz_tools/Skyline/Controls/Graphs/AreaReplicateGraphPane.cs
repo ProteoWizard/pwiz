@@ -675,7 +675,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     Symbol = new Symbol() { Type = SymbolType.Diamond, Size = 9f, Fill = new Fill(Color.Red), Border = new Border(Color.Red, 1) }
                 };
                 cutoffHighlightLine.Label.IsVisible = false;
-                CurveList.Insert(1, cutoffHighlightLine);                     // Add below cutoff highlight markers
+                CurveList.Insert(Math.Min(CurveList.Count, 1), cutoffHighlightLine); // Add below cutoff highlight markers
                 ToolTip.TargetCurves.Add(cutoffHighlightLine);
 
 
