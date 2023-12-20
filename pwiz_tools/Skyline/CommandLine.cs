@@ -158,10 +158,7 @@ namespace pwiz.Skyline
             bool anyAction = false;
             if (commandArgs.InstallingToolsFromZip)
             {
-                if (!ImportToolsFromZip(commandArgs.ZippedToolsPath, commandArgs.ResolveZipToolConflictsBySkipping,
-                    commandArgs.ResolveZipToolAnotationConflictsBySkipping,
-                    commandArgs.ZippedToolsProgramPathContainer, commandArgs.ZippedToolsProgramPathValue,
-                    commandArgs.ZippedToolsPackagesHandled))
+                if (!ImportToolsFromZip(commandArgs))
                 {
                     return Program.EXIT_CODE_RAN_WITH_ERRORS;
                 }
@@ -169,9 +166,7 @@ namespace pwiz.Skyline
             }
             if (commandArgs.ImportingTool)
             {
-                if (!ImportTool(commandArgs.ToolName, commandArgs.ToolCommand, commandArgs.ToolArguments,
-                    commandArgs.ToolInitialDirectory, commandArgs.ToolReportTitle,
-                    commandArgs.ToolOutputToImmediateWindow, commandArgs.ResolveToolConflictsBySkipping))
+                if (!ImportTool(commandArgs))
                 {
                     return Program.EXIT_CODE_RAN_WITH_ERRORS;
                 }
@@ -186,7 +181,7 @@ namespace pwiz.Skyline
             }
             if (commandArgs.ImportingSkyr)
             {
-                if (!ImportSkyr(commandArgs.SkyrPath, commandArgs.ResolveSkyrConflictsBySkipping))
+                if (!ImportSkyr(commandArgs))
                     return Program.EXIT_CODE_RAN_WITH_ERRORS;
                 anyAction = true;
             }
@@ -232,7 +227,7 @@ namespace pwiz.Skyline
 
                     // Save any settings list changes made by opening the document
                     if (commandArgs.SaveSettings)
-                        SaveSettings();
+                        SaveSettings(commandArgs);
 
                     if (!successProcessing || !successExporting)
                         return Program.EXIT_CODE_RAN_WITH_ERRORS;
@@ -307,29 +302,28 @@ namespace pwiz.Skyline
 
             if (commandArgs.ImportingFasta && !commandArgs.ImportingSearch)
             {
-                try
+                if (!HandleExceptions(commandArgs,
+                        () => { ImportFasta(commandArgs.FastaPath, commandArgs.KeepEmptyProteins); },
+                        Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, 
+                        commandArgs.FastaPath, true))
                 {
-                    ImportFasta(commandArgs.FastaPath, commandArgs.KeepEmptyProteins);
-                }
-                catch (Exception x)
-                {
-                    _out.WriteLine(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, commandArgs.FastaPath,
-                        x.Message);
                     return false;
                 }
             }
 
             if (commandArgs.ImportingTransitionList)
             {
-                try
+                bool failure = false;
+                failure = !HandleExceptions(commandArgs, () =>
                 {
                     if (!ImportTransitionList(commandArgs))
-                        return false;
-                }
-                catch (Exception x)
+                    {
+                        failure = true;
+                    }
+                }, Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_,
+                    commandArgs.TransitionListPath, true) || failure;
+                if (failure)
                 {
-                    _out.WriteLine(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_,
-                        commandArgs.TransitionListPath, x.Message);
                     return false;
                 }
             }
@@ -434,7 +428,7 @@ namespace pwiz.Skyline
                 }
 
                 var saveFile = commandArgs.SaveFile ?? _skylineFile;
-                if (!SaveFile(saveFile))
+                if (!SaveFile(saveFile, commandArgs))
                     return false;
 
                 _skylineFile = saveFile;
@@ -458,15 +452,13 @@ namespace pwiz.Skyline
             DocContainer.ChromatogramManager.LoadingThreads = commandArgs.ImportThreads;
 
             OptimizableRegression optimize = null;
-            try
+            if(!HandleExceptions(commandArgs, ()=>
+                   {
+                       if (_doc != null)
+                           optimize = _doc.Settings.TransitionSettings.Prediction.GetOptimizeFunction(commandArgs.ImportOptimizeType);
+                   }, Resources.CommandLine_Run_Error__Failed_to_get_optimization_function__0____1_,
+                   commandArgs.ImportOptimizeType, true))
             {
-                if (_doc != null)
-                    optimize = _doc.Settings.TransitionSettings.Prediction.GetOptimizeFunction(commandArgs.ImportOptimizeType);
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(Resources.CommandLine_Run_Error__Failed_to_get_optimization_function__0____1_,
-                    commandArgs.ImportOptimizeType, x.Message);
                 return false;
             }
 
@@ -474,14 +466,11 @@ namespace pwiz.Skyline
             {
                 IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths = new List<KeyValuePair<string, MsDataFileUri[]>>();
 
-                MsDataFileUri[] files;
-                try
+                MsDataFileUri[] files= HandleExceptions(commandArgs, 
+                    () => commandArgs.ReplicateFile.SelectMany(DataSourceUtil.ListSubPaths).ToArray(), 
+                    x => _out.WriteException(Resources.Error___0_, x));
+                if (files == null)
                 {
-                    files = commandArgs.ReplicateFile.SelectMany(DataSourceUtil.ListSubPaths).ToArray();
-                }
-                catch (Exception e)
-                {
-                    _out.WriteLine(Resources.Error___0_, e.Message);
                     return false;
                 }
                 
@@ -559,40 +548,27 @@ namespace pwiz.Skyline
             {
                 return true;
             }
-            try
+            return HandleExceptions(commandArgs, ()=>
             {
                 var documentAnnotations = new DocumentAnnotations(_doc);
                 using (var streamReader = new StreamReader(commandArgs.ImportAnnotations))
                 {
                     ModifyDocument(d => documentAnnotations.ReadAnnotationsFromFile(CancellationToken.None, commandArgs.ImportAnnotations));
                 }
-                return true;
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(Resources.CommandLine_ImportAnnotations_Error__Failed_while_reading_annotations_);
-                _out.WriteLine(x.Message);
-                return false;
-            }
+            }, Resources.CommandLine_ImportAnnotations_Error__Failed_while_reading_annotations_);
         }
 
         private bool ImportPeakBoundaries (CommandArgs commandArgs)
         {
-            try
+            return HandleExceptions(commandArgs, ()=>
+                
             {
                 _out.WriteLine(Resources.CommandLine_ImportPeakBoundaries_Importing_peak_boundaries_from__0_, Path.GetFileName(commandArgs.ImportPeakBoundariesPath));
                 long lineCount = Helpers.CountLinesInFile(commandArgs.ImportPeakBoundariesPath);
                 PeakBoundaryImporter importer = new PeakBoundaryImporter(_doc);
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
                 ModifyDocument(d => importer.Import(commandArgs.ImportPeakBoundariesPath, progressMonitor, lineCount));
-                return true;
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(Resources.CommandLine_ImportPeakBoundaries_Error__Failed_importing_peak_boundaries_);
-                _out.WriteLine(x.Message);
-                return false;
-            }
+            }, Resources.CommandLine_ImportPeakBoundaries_Error__Failed_importing_peak_boundaries_);
         }
 
         private bool RefineDocument(CommandArgs commandArgs)
@@ -626,24 +602,11 @@ namespace pwiz.Skyline
             }
 
             _out.WriteLine(Resources.CommandLine_RefineDocument_Refining_document___);
-            try
+            return HandleExceptions(commandArgs, ()=>
             {
                 ModifyDocumentWithLogging(doc => commandArgs.Refinement.Refine(doc),
                     commandArgs.Refinement.EntryCreator.Create);
-                return true;
-            }
-            catch (Exception x)
-            {
-                if (!_out.IsErrorReported)
-                {
-                    _out.WriteLine(Resources.Error___0_, x.Message);
-                }
-                else
-                {
-                    _out.WriteLine(x.Message);
-                }
-                return false;
-            }
+            }, Resources.Error___0_, true);   // CONSIDER: Not really standard to just report the exception alone
         }
 
         private bool CreateImsDb(CommandArgs commandArgs)
@@ -653,7 +616,8 @@ namespace pwiz.Skyline
                 Resources.CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____, libName,
                 commandArgs.ImsDbFile);
             _out.WriteLine(Resources.CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____, libName, commandArgs.ImsDbFile);
-            try
+
+            return HandleExceptions(commandArgs, ()=>
             {
                 ModifyDocumentWithLogging(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionIonMobilityFiltering(ionMobilityFiltering =>
                 {
@@ -664,20 +628,7 @@ namespace pwiz.Skyline
 
                     return ionMobilityFiltering.ChangeLibrary(lib);
                 })), AuditLogEntry.SettingsLogFunction);
-                return true;
-            }
-            catch (Exception x)
-            {
-                if (!_out.IsErrorReported)
-                {
-                    _out.WriteLine(Resources.Error___0_, x.Message);
-                }
-                else
-                {
-                    _out.WriteLine(x.Message);
-                }
-                return false;
-            }
+            }, Resources.Error___0_, true);   // CONSIDER: Not really standard to just report the exception alone
         }
 
         private IsotopeLabelType GetLabelTypeHelper(string label)
@@ -800,8 +751,7 @@ namespace pwiz.Skyline
         {
             if (commandArgs.ExportingReport)
             {
-                if (!ExportReport(commandArgs.ReportName, commandArgs.ReportFile,
-                    commandArgs.ReportColumnSeparator, commandArgs.IsReportInvariant))
+                if (!ExportReport(commandArgs))
                 {
                     return false;
                 }
@@ -809,9 +759,7 @@ namespace pwiz.Skyline
 
             if (commandArgs.ExportingChromatograms)
             {
-                if (!ExportChromatograms(commandArgs.ChromatogramsFile, commandArgs.ChromatogramsPrecursors,
-                    commandArgs.ChromatogramsProducts,
-                    commandArgs.ChromatogramsBasePeaks, commandArgs.ChromatogramsTics))
+                if (!ExportChromatograms(commandArgs))
                 {
                     return false;
                 }
@@ -820,7 +768,7 @@ namespace pwiz.Skyline
 
             if (commandArgs.ExportingSpecLib)
             {
-                if (!ExportSpecLib(commandArgs.SpecLibFile))
+                if (!ExportSpecLib(commandArgs))
                 {
                     return false;
                 }
@@ -828,9 +776,7 @@ namespace pwiz.Skyline
 
             if (commandArgs.ExportingMProphetFeatures)
             {
-                if (!ExportMProphetFeatures(commandArgs.MProphetFeaturesFile, commandArgs.MProphetTargetsOnly,
-                        commandArgs.MProphetUseBestScoringPeaks, 
-                        new FeatureCalculators(commandArgs.MProphetExcludeScores)))
+                if (!ExportMProphetFeatures(commandArgs))
                 {
                     return false;
                 }
@@ -838,10 +784,7 @@ namespace pwiz.Skyline
 
             if (commandArgs.ExportingAnnotations)
             {
-                if (!ExportAnnotations(commandArgs.AnnotationsFile, 
-                        commandArgs.AnnotationsIncludeObjects,
-                        commandArgs.AnnotationsIncludeProperties, 
-                        commandArgs.AnnotationsRemoveBlankRows))
+                if (!ExportAnnotations(commandArgs))
                 {
                     return false;
                 }
@@ -906,7 +849,7 @@ namespace pwiz.Skyline
                     sharedFileName = FileEx.GetTimeStampedFileName(_skylineFile);
                 }
                 var sharedFilePath = Path.Combine(sharedFileDir, sharedFileName);
-                if (!ShareDocument(_doc, _skylineFile, sharedFilePath, commandArgs.SharedFileType, _out))
+                if (!ShareDocument(_doc, _skylineFile, sharedFilePath, commandArgs.SharedFileType, _out, commandArgs))
                 {
                     return false;
                 }
@@ -919,8 +862,7 @@ namespace pwiz.Skyline
                 {
                     // Publish document to the given folder on the Panorama Server
                     var panoramaHelper = new PanoramaPublishHelper(_out);
-                    return panoramaHelper.PublishToPanorama(commandArgs.PanoramaServer, _doc, _skylineFile,
-                        commandArgs.PanoramaFolder, commandArgs.SharedFileType);
+                    return panoramaHelper.PublishToPanorama(commandArgs, _doc, _skylineFile);
                 }
                 else
                 {
@@ -973,7 +915,7 @@ namespace pwiz.Skyline
 
         private bool SetPredictTranSettings(CommandArgs commandArgs)
         {
-            try
+            return HandleExceptions(commandArgs, ()=>
             {
                 ModifyDocumentWithLogging(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionPrediction(p =>
                 {
@@ -987,19 +929,12 @@ namespace pwiz.Skyline
                         p = p.ChangeOptimizationLibrary(Settings.Default.GetOptimizationLibraryByName(commandArgs.PredictOpimizationLibraryName));
                     return p;
                 })), AuditLogEntry.SettingsLogFunction);
-                return true;
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(Resources.CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transition_prediction_settings_);
-                _out.WriteLine(x.Message);
-                return false;
-            }
+            }, Resources.CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transition_prediction_settings_);
         }
 
         private bool SetLibrarySettings(CommandArgs commandArgs)
         {
-            try
+            return HandleExceptions(commandArgs, () =>
             {
                 ModifyDocumentWithLogging(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionLibraries(f =>
                 {
@@ -1013,19 +948,12 @@ namespace pwiz.Skyline
                         f = f.ChangePick(commandArgs.LibraryPickIons.Value);
                     return f;
                 })), AuditLogEntry.SettingsLogFunction);
-                return true;
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(Resources.CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_library_settings_);
-                _out.WriteLine(x.Message);
-                return false;
-            }
+            }, Resources.CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_library_settings_);
         }
 
         private bool SetInstrumentSettings(CommandArgs commandArgs)
         {
-            try
+            return HandleExceptions(commandArgs, ()=>
             {
                 ModifyDocumentWithLogging(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionInstrument(f =>
                 {
@@ -1045,19 +973,12 @@ namespace pwiz.Skyline
                         f = f.ChangeTriggeredAcquisition(commandArgs.InstrumentIsTriggeredChromatogramAcquisition.Value);
                     return f;
                 })), AuditLogEntry.SettingsLogFunction);
-                return true;
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(Resources.CommandLine_SetInstrumentSettings_Error__Failed_attempting_to_change_the_transition_instrument_settings_);
-                _out.WriteLine(x.Message);
-                return false;
-            }
+            }, Resources.CommandLine_SetInstrumentSettings_Error__Failed_attempting_to_change_the_transition_instrument_settings_);
         }
 
         private bool SetFilterSettings(CommandArgs commandArgs)
         {
-            try
+            return HandleExceptions(commandArgs, ()=>
             {
                 ModifyDocumentWithLogging(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFilter(f =>
                 {
@@ -1077,19 +998,12 @@ namespace pwiz.Skyline
                         f = f.ChangeExclusionUseDIAWindow(commandArgs.FilterUseDIAWindowExclusion.Value);
                     return f;
                 })), AuditLogEntry.SettingsLogFunction);
-                return true;
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(Resources.CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transition_filter_settings_);
-                _out.WriteLine(x.Message);
-                return false;
-            }
+            }, Resources.CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transition_filter_settings_);
         }
 
         private bool SetFullScanSettings(CommandArgs commandArgs)
         {
-            try
+            return HandleExceptions(commandArgs, ()=>
             {
                 TransitionFullScan newSettings = _doc.Settings.TransitionSettings.FullScan;
 
@@ -1128,8 +1042,9 @@ namespace pwiz.Skyline
 
                     if (!string.IsNullOrEmpty(isolationSchemeName))
                     {
+                        var name = isolationSchemeName;
                         isolationScheme = Settings.Default.IsolationSchemeList.FirstOrDefault(scheme =>
-                            Equals(scheme.Name, isolationSchemeName));
+                            Equals(scheme.Name, name));
                         if (isolationScheme == null && MsDataFileImpl.IsValidFile(isolationSchemeName))
                         {
                             string isolationSchemeImportFilepath = isolationSchemeName;
@@ -1169,19 +1084,12 @@ namespace pwiz.Skyline
                 }
 
                 ModifyDocumentWithLogging(d => d.ChangeSettings(d.Settings.ChangeTransitionFullScan(f => newSettings)), AuditLogEntry.SettingsLogFunction);
-                return true;
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Error__Failed_attempting_to_change_the_transiton_full_scan_settings_);
-                _out.WriteLine(x.Message);
-                return false;
-            }
+            }, Resources.CommandLine_SetFullScanSettings_Error__Failed_attempting_to_change_the_transiton_full_scan_settings_);
         }
 
         private bool SetPeptideDigestSettings(CommandArgs commandArgs)
         {
-            try
+            return HandleExceptions(commandArgs, () =>
             {
                 ModifyDocumentWithLogging(d => d.ChangeSettings(d.Settings.ChangePeptideSettings(p =>
                 {
@@ -1223,64 +1131,99 @@ namespace pwiz.Skyline
 
                     return p;
                 })), AuditLogEntry.SettingsLogFunction);
+            }, Resources.CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_peptide_digestion_settings_);
+        }
+
+        private bool HandleExceptions(CommandArgs commandArgs, Action func, string formatMessage, string string0, bool formatIncludesException = false)
+        {
+            return HandleExceptions(commandArgs, () =>
+            {
+                func();
                 return true;
+            }, x =>
+            {
+                if (formatIncludesException)
+                    _out.WriteException(formatMessage, string0, x);
+                else
+                    _out.WriteException(string.Format(formatMessage, string0), x, true);
+            });
+        }
+
+        private bool HandleExceptions(CommandArgs commandArgs, Action func, string message = null, bool formatIncludesException = false)
+        {
+            return HandleExceptions(commandArgs, () =>
+            {
+                func();
+                return true;
+            }, x => _out.WriteException(message, x, !formatIncludesException));
+        }
+
+        private static T HandleExceptions<T>(CommandArgs commandArgs, Func<T> func, Action<Exception> outputFunc)
+        {
+            try
+            {
+                if (commandArgs.IsTestExceptions)
+                {
+                    throw new Exception();
+                }
+
+                return func();
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_peptide_digestion_settings_);
-                _out.WriteLine(x.Message);
-                return false;
+                outputFunc(x);
+                return default;
             }
         }
 
         private bool SetPeptideFilterSettings(CommandArgs commandArgs)
         {
-            try
-            {
-                ModifyDocumentWithLogging(d => d.ChangeSettings(d.Settings.ChangePeptideSettings(p =>
+            return HandleExceptions(commandArgs, () =>
                 {
-                    var filterSettings = p.Filter;
-
-                    if (commandArgs.PeptideFilterMinLength.HasValue)
+                    ModifyDocumentWithLogging(d => d.ChangeSettings(d.Settings.ChangePeptideSettings(p =>
                     {
-                        filterSettings = filterSettings.ChangeMinPeptideLength(commandArgs.PeptideFilterMinLength.Value);
-                        p = p.ChangeFilter(filterSettings);
-                    }
+                        var filterSettings = p.Filter;
 
-                    if (commandArgs.PeptideFilterMaxLength.HasValue)
-                    {
-                        filterSettings = filterSettings.ChangeMaxPeptideLength(commandArgs.PeptideFilterMaxLength.Value);
-                        p = p.ChangeFilter(filterSettings);
-                    }
+                        if (commandArgs.PeptideFilterMinLength.HasValue)
+                        {
+                            filterSettings =
+                                filterSettings.ChangeMinPeptideLength(commandArgs.PeptideFilterMinLength.Value);
+                            p = p.ChangeFilter(filterSettings);
+                        }
 
-                    if (commandArgs.PeptideFilterExcludeNTerminalAAs.HasValue)
-                    {
-                        filterSettings = filterSettings.ChangeExcludeNTermAAs(commandArgs.PeptideFilterExcludeNTerminalAAs.Value);
-                        p = p.ChangeFilter(filterSettings);
-                    }
+                        if (commandArgs.PeptideFilterMaxLength.HasValue)
+                        {
+                            filterSettings =
+                                filterSettings.ChangeMaxPeptideLength(commandArgs.PeptideFilterMaxLength.Value);
+                            p = p.ChangeFilter(filterSettings);
+                        }
 
-                    if (commandArgs.PeptideFilterExcludePotentialRaggedEnds.HasValue)
-                    {
-                        var digestSettings = p.DigestSettings;
-                        digestSettings = new DigestSettings(digestSettings.MaxMissedCleavages, commandArgs.PeptideFilterExcludePotentialRaggedEnds.Value);
-                        p = p.ChangeDigestSettings(digestSettings);
-                    }
+                        if (commandArgs.PeptideFilterExcludeNTerminalAAs.HasValue)
+                        {
+                            filterSettings =
+                                filterSettings.ChangeExcludeNTermAAs(commandArgs.PeptideFilterExcludeNTerminalAAs
+                                    .Value);
+                            p = p.ChangeFilter(filterSettings);
+                        }
 
-                    return p;
-                })), AuditLogEntry.SettingsLogFunction);
-                return true;
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(Resources.CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_peptide_filter_settings_);
-                _out.WriteLine(x.Message);
-                return false;
-            }
+                        if (commandArgs.PeptideFilterExcludePotentialRaggedEnds.HasValue)
+                        {
+                            var digestSettings = p.DigestSettings;
+                            digestSettings = new DigestSettings(digestSettings.MaxMissedCleavages,
+                                commandArgs.PeptideFilterExcludePotentialRaggedEnds.Value);
+                            p = p.ChangeDigestSettings(digestSettings);
+                        }
+
+                        return p;
+                    })), AuditLogEntry.SettingsLogFunction);
+                },
+                Resources
+                    .CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_peptide_filter_settings_);
         }
 
         private bool SetImsSettings(CommandArgs commandArgs)
         {
-            try
+            return HandleExceptions(commandArgs, ()=>
             {
                 if (commandArgs.IonMobilityLibraryRes.HasValue)
                 {
@@ -1302,14 +1245,7 @@ namespace pwiz.Skyline
                         })),
                         AuditLogEntry.SettingsLogFunction);
                 }
-                return true;
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(Resources.CommandLine_SetImsSettings_Error__Failed_attempting_to_change_the_ion_mobility_settings_);
-                _out.WriteLine(x.Message);
-                return false;
-            }
+            }, Resources.CommandLine_SetImsSettings_Error__Failed_attempting_to_change_the_ion_mobility_settings_);
         }
 
         public bool NewSkyFile(string skylineFile, bool overwrite)
@@ -1929,7 +1865,7 @@ namespace pwiz.Skyline
             catch(IOException e)
             {
                 _out.WriteLine(Resources.CommandLine_GetDataSources_Error__Failure_reading_file_information_from_directory__0__, sourceDir);
-                _out.WriteLine(e.Message);
+                _out.WriteException(e);
                 return null;
             }
             if (!listNamedPaths.Any())
@@ -2136,7 +2072,7 @@ namespace pwiz.Skyline
             catch (Exception e)
             {
                 _out.WriteLine(Resources.CommandLine_ImportResultsInDir_Error__Could_not_get_last_write_time_for_file__0__, replicateFile);
-                _out.WriteLine(e);
+                _out.WriteException(e);
                 return false;
             }
 
@@ -2228,7 +2164,7 @@ namespace pwiz.Skyline
 
         private bool AssociateProteins(CommandArgs commandArgs)
         {
-            try
+            return HandleExceptions(commandArgs, () => 
             {
                 var fastaPath = commandArgs.FastaPath ?? Settings.Default.LastProteinAssociationFastaFilepath;
                 if (fastaPath == null)
@@ -2246,14 +2182,8 @@ namespace pwiz.Skyline
                 Settings.Default.LastProteinAssociationFastaFilepath = fastaPath;
                 Settings.Default.Save();
                 ModifyDocument(doc => proteinAssociation.CreateDocTree(doc, progressMonitor), AuditLogEntry.SettingsLogFunction);
-                return true;
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(Resources.CommandLine_AssociateProteins_Failed_to_associate_proteins);
-                _out.WriteLine(x.Message);
-                return false;
-            }
+                
+            }, Resources.CommandLine_AssociateProteins_Failed_to_associate_proteins);
         }
 
         private bool ImportSearch(CommandArgs commandArgs)
@@ -2355,24 +2285,24 @@ namespace pwiz.Skyline
                     }
                 }
 
-                ProcessedIrtAverages processed;
-                try
+                ProcessedIrtAverages processed = null;
+                if (!HandleExceptions(commandArgs, () =>
+                        {
+                            processed = ImportPeptideSearch.ProcessRetentionTimes(numCirt, irtProviders,
+                                import.IrtStandard.Peptides.ToArray(),
+                                cirtPeptides, IrtRegressionType.DEFAULT, progressMonitor, out var newStandardPeptides);
+                            if (newStandardPeptides != null)
+                            {
+                                import.IrtStandard = new IrtStandard(XmlNamedElement.NAME_INTERNAL, null, null,
+                                    newStandardPeptides);
+                            }
+                        },
+                        Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_))
                 {
-                    processed = ImportPeptideSearch.ProcessRetentionTimes(numCirt, irtProviders, import.IrtStandard.Peptides.ToArray(),
-                        cirtPeptides, IrtRegressionType.DEFAULT, progressMonitor, out var newStandardPeptides);
-                    if (newStandardPeptides != null)
-                    {
-                        import.IrtStandard = new IrtStandard(XmlNamedElement.NAME_INTERNAL, null, null, newStandardPeptides);
-                    }
-                }
-                catch (Exception x)
-                {
-                    _out.WriteLine(TextUtil.LineSeparate(
-                        Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_,
-                        x.Message));
                     return false;
                 }
 
+                Assume.IsNotNull(processed);
                 var processedDbIrtPeptides = processed.DbIrtPeptides.ToArray();
                 if (processedDbIrtPeptides.Any())
                 {
@@ -2441,7 +2371,7 @@ namespace pwiz.Skyline
                 }
                 catch (Exception x)
                 {
-                    _out.WriteLine(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, commandArgs.FastaPath, x.Message);
+                    _out.WriteException(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, commandArgs.FastaPath, x);
                     SetDocument(doc);
                     return true;  // So that document will be saved with the new library
                 }
@@ -2588,7 +2518,7 @@ namespace pwiz.Skyline
                     modelAndFeatures = new ModelAndFeatures(scoringModel, null);
                 }
 
-                if (!Reintegrate(modelAndFeatures, commandArgs.IsOverwritePeaks, commandArgs.IsLogTraining))
+                if (!Reintegrate(modelAndFeatures, commandArgs))
                     return false;
             }
             return true;
@@ -2674,8 +2604,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_CreateScoringModel_Error__Failed_to_create_scoring_model_);
-                _out.WriteLine(x);
+                _out.WriteException(Resources.CommandLine_CreateScoringModel_Error__Failed_to_create_scoring_model_, x, true);
                 return null;
             }
         }
@@ -2710,18 +2639,20 @@ namespace pwiz.Skyline
             return new MProphetPeakScoringModel(modelName, (LinearModelParams) null, calcs, decoys, secondBest);
         }
 
-        private bool Reintegrate(ModelAndFeatures modelAndFeatures, bool isOverwritePeaks, bool logTraining)
+        private bool Reintegrate(ModelAndFeatures modelAndFeatures, CommandArgs commandArgs)
         {
-            try
+            var success = false;
+            var exceptionThrown= !HandleExceptions(commandArgs, () =>
             {
-                var resultsHandler = new MProphetResultsHandler(_doc, modelAndFeatures.ScoringModel, modelAndFeatures.Features)
-                {
-                    OverrideManual = isOverwritePeaks,
-                    FreeImmutableMemory = true
-                };
-                
+                var resultsHandler =
+                    new MProphetResultsHandler(_doc, modelAndFeatures.ScoringModel, modelAndFeatures.Features)
+                    {
+                        OverrideManual = commandArgs.IsOverwritePeaks,
+                        FreeImmutableMemory = true
+                    };
+
                 // If logging training, give the modeling code a place to write
-                if (logTraining)
+                if (commandArgs.IsLogTraining)
                     resultsHandler.DocumentPath = DocContainer.DocumentFilePath;
 
                 modelAndFeatures.ReleaseMemory();   // Avoid holding memory through peak adjustment
@@ -2731,19 +2662,16 @@ namespace pwiz.Skyline
                 resultsHandler.ScoreFeatures(progressMonitor, true, _out);
                 if (resultsHandler.IsMissingScores())
                 {
-                    _out.WriteLine(Resources.CommandLine_Reintegrate_Error__The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document__Please_train_a_new_model_);
-                    return false;
+                    _out.WriteLine(Resources
+                        .CommandLine_Reintegrate_Error__The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document__Please_train_a_new_model_);
+                    success = false;
+                    return;
                 }
                 ModifyDocument(d => resultsHandler.ChangePeaks(progressMonitor));
 
-                return true;
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(Resources.CommandLine_Reintegrate_Error__Failed_to_reintegrate_peaks_successfully_);
-                _out.WriteLine(x);
-                return false;
-            }
+                success = true;
+            }, Resources.CommandLine_Reintegrate_Error__Failed_to_reintegrate_peaks_successfully_);
+            return !exceptionThrown && success;
         }
 
         public void ImportFasta(string path, bool keepEmptyProteins)
@@ -2843,22 +2771,26 @@ namespace pwiz.Skyline
                     {
                         _out.WriteLine(Resources.CommandLine_ImportTransitionList_Importing_iRT_transition_list__0_, commandArgs.IrtStandardsPath);
                         var irtInputs = new MassListInputs(commandArgs.IrtStandardsPath);
-                        try
+                        // ReSharper disable AccessToModifiedClosure
+                        if (!HandleExceptions(commandArgs, () =>
+                                {
+                                    List<SpectrumMzInfo> irtLibrarySpectra;
+                                    docNew = docNew.ImportMassList(irtInputs, null, out _, out irtPeptides,
+                                        out irtLibrarySpectra, out errorList);
+                                    if (errorList.Any())
+                                    {
+                                        throw new InvalidDataException(errorList[0].ErrorMessage);
+                                    }
+
+                                    librarySpectra.AddRange(irtLibrarySpectra);
+                                    dbIrtPeptidesFilter.AddRange(irtPeptides.Select(rt =>
+                                        new DbIrtPeptide(rt.PeptideSequence, rt.RetentionTime, true, TimeSource.scan)));
+                                }, Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_,
+                                commandArgs.IrtStandardsPath, true))
                         {
-                            List<SpectrumMzInfo> irtLibrarySpectra;
-                            docNew = docNew.ImportMassList(irtInputs, null, out _, out irtPeptides, out irtLibrarySpectra, out errorList);
-                            if (errorList.Any())
-                            {
-                                throw new InvalidDataException(errorList[0].ErrorMessage);
-                            }
-                            librarySpectra.AddRange(irtLibrarySpectra);
-                            dbIrtPeptidesFilter.AddRange(irtPeptides.Select(rt => new DbIrtPeptide(rt.PeptideSequence, rt.RetentionTime, true, TimeSource.scan)));
-                        }
-                        catch (Exception x)
-                        {
-                            _out.WriteLine(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, commandArgs.IrtStandardsPath, x.Message);
                             return false;
                         }
+                        // ReSharper restore AccessToModifiedClosure
                         if (!CreateIrtDatabase(irtDatabasePath, commandArgs))
                             return false;
                     }
@@ -2996,16 +2928,10 @@ namespace pwiz.Skyline
                 }
                 return false;
             }
-            try
+            return HandleExceptions(commandArgs, ()=> 
             {
                 ImportAssayLibraryHelper.CreateIrtDatabase(irtDatabasePath);
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(Resources.Error___0_, x);
-                return false;
-            }
-            return true;
+            }, Resources.Error___0_, true);
         }
 
         public bool SetLibrary(string name, string path, bool append = true)
@@ -3057,60 +2983,59 @@ namespace pwiz.Skyline
             return true;
         }
 
-        public bool SaveFile(string saveFile)
+        public bool SaveFile(string saveFile, CommandArgs commandArgs)
         {
             _out.WriteLine(Resources.CommandLine_SaveFile_Saving_file___);
-            try
-            {
-                SaveDocument(_doc, saveFile, _out);
-            }
-            catch (Exception e)
-            {
-                _out.WriteLine(Resources.CommandLine_SaveFile_Error__The_file_could_not_be_saved_to__0____Check_that_the_directory_exists_and_is_not_read_only_, saveFile);
-                _out.WriteLine(e);
-                return false;
-            }
-            _out.WriteLine(Resources.CommandLine_SaveFile_File__0__saved_, Path.GetFileName(saveFile));
-            return true;
+            return HandleExceptions(commandArgs, () =>
+                {
+                    SaveDocument(_doc, saveFile, _out);
+                    _out.WriteLine(Resources.CommandLine_SaveFile_File__0__saved_, Path.GetFileName(saveFile));
+                },
+                string.Format(
+                    Resources
+                        .CommandLine_SaveFile_Error__The_file_could_not_be_saved_to__0____Check_that_the_directory_exists_and_is_not_read_only_,
+                    saveFile));
         }
 
-        public bool ExportReport(string reportName, string reportFile, char reportColSeparator, bool reportInvariant)
+        public bool ExportReport(CommandArgs commandArgs)
         {
 
-            if (string.IsNullOrEmpty(reportFile))
+            if (string.IsNullOrEmpty(commandArgs.ReportFile))
             {
                 _out.WriteLine(Resources.CommandLine_ExportReport_);
                 return false;
             }
 
-            return ExportLiveReport(reportName, reportFile, reportColSeparator, reportInvariant);
+            return ExportLiveReport(commandArgs);
         }
 
-        private bool ExportLiveReport(string reportName, string reportFile, char reportColSeparator, bool reportInvariant)
+        private bool ExportLiveReport(CommandArgs commandArgs)
         {
-            var viewContext = DocumentGridViewContext.CreateDocumentGridViewContext(_doc, reportInvariant
+            char reportColSeparator = commandArgs.ReportColumnSeparator;
+            var viewContext = DocumentGridViewContext.CreateDocumentGridViewContext(_doc, commandArgs.IsReportInvariant
                 ? DataSchemaLocalizer.INVARIANT
                 : SkylineDataSchema.GetLocalizedSchemaLocalizer());
             // Make sure invariant report format uses a true comma if a tab separator was not specified.
-            if (reportInvariant && reportColSeparator != TextUtil.SEPARATOR_TSV)
+            if (commandArgs.IsReportInvariant && commandArgs.ReportColumnSeparator != TextUtil.SEPARATOR_TSV)
                 reportColSeparator = TextUtil.SEPARATOR_CSV;
-            var viewInfo = viewContext.GetViewInfo(PersistedViews.MainGroup.Id.ViewName(reportName));
+            var viewInfo = viewContext.GetViewInfo(PersistedViews.MainGroup.Id.ViewName(commandArgs.ReportName));
             if (null == viewInfo)
             {
-                _out.WriteLine(Resources.CommandLine_ExportLiveReport_Error__The_report__0__does_not_exist__If_it_has_spaces_in_its_name__use__double_quotes__around_the_entire_list_of_command_parameters_, reportName);
+                _out.WriteLine(Resources.CommandLine_ExportLiveReport_Error__The_report__0__does_not_exist__If_it_has_spaces_in_its_name__use__double_quotes__around_the_entire_list_of_command_parameters_, commandArgs.ReportName);
                 return false;
             }
-            _out.WriteLine(Resources.CommandLine_ExportLiveReport_Exporting_report__0____, reportName);
-
-            try
+            _out.WriteLine(Resources.CommandLine_ExportLiveReport_Exporting_report__0____, commandArgs.ReportName);
+            var success = true;
+            var exceptionThrown = !HandleExceptions(commandArgs, () => 
             {
-                using (var saver = new FileSaver(reportFile))
+                using (var saver = new FileSaver(commandArgs.ReportFile))
                 {
                     if (!saver.CanSave())
                     {
-                        _out.WriteLine(Resources.CommandLine_ExportLiveReport_Error__The_report__0__could_not_be_saved_to__1__, reportName, reportFile);
+                        _out.WriteLine(Resources.CommandLine_ExportLiveReport_Error__The_report__0__could_not_be_saved_to__1__, commandArgs.ReportName, commandArgs.ReportFile);
                         _out.WriteLine(Resources.CommandLine_ExportLiveReport_Check_to_make_sure_it_is_not_read_only_);
-                        return false;
+                        success = false;
+                        return;
                     }
 
                     IProgressStatus status = new ProgressStatus(string.Empty);
@@ -3124,32 +3049,28 @@ namespace pwiz.Skyline
 
                     broker.UpdateProgress(status.Complete());
                     saver.Commit();
-                    _out.WriteLine(Resources.CommandLine_ExportLiveReport_Report__0__exported_successfully_to__1__, reportName, reportFile);
+                    _out.WriteLine(Resources.CommandLine_ExportLiveReport_Report__0__exported_successfully_to__1__, commandArgs.ReportName, commandArgs.ReportFile);
                 }
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(Resources.CommandLine_ExportLiveReport_Error__Failure_attempting_to_save__0__report_to__1__, reportName, reportFile);
-                _out.WriteLine(x.Message);
-                return false;
-            }
-            return true;
+            }, string.Format(Resources.CommandLine_ExportLiveReport_Error__Failure_attempting_to_save__0__report_to__1__, commandArgs.ReportName, commandArgs.ReportFile));
+            return !exceptionThrown && success;
         }
 
-        public bool ExportChromatograms(string chromatogramsFile, bool precursors, bool products, bool basePeaks, bool tics)
+        public bool ExportChromatograms(CommandArgs commandArgs)
         {
+            var chromatogramsFile = commandArgs.ChromatogramsFile;
+
             _out.WriteLine(Resources.CommandLine_ExportChromatograms_Exporting_chromatograms_file__0____, chromatogramsFile);
 
             var chromExtractors = new List<ChromExtractor>();
-            if (tics)
+            if (commandArgs.ChromatogramsTics)
                 chromExtractors.Add(ChromExtractor.summed);
-            if (basePeaks)
+            if (commandArgs.ChromatogramsBasePeaks)
                 chromExtractors.Add(ChromExtractor.base_peak);
 
             var chromSources = new List<ChromSource>();
-            if (precursors)
+            if (commandArgs.ChromatogramsPrecursors)
                 chromSources.Add(ChromSource.ms1);
-            if (products)
+            if (commandArgs.ChromatogramsProducts)
                 chromSources.Add(ChromSource.fragment);
 
             if (chromExtractors.Count == 0 && chromSources.Count == 0)
@@ -3167,38 +3088,35 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            try
-            {
-                var chromExporter = new ChromatogramExporter(Document);
-                using (var saver = new FileSaver(chromatogramsFile))
-                using (var writer = new StreamWriter(saver.SafeName))
+            return HandleExceptions(commandArgs, () =>
                 {
-                    var status = new ProgressStatus(string.Empty);
-                    IProgressMonitor broker = new CommandProgressMonitor(_out, status);
-                    chromExporter.Export(writer, broker, filesToExport, LocalizationHelper.CurrentCulture, chromExtractors, chromSources);
-                    writer.Close();
-                    broker.UpdateProgress(status.Complete());
-                    saver.Commit();
-                    _out.WriteLine(Resources.CommandLine_ExportChromatograms_Chromatograms_file__0__exported_successfully_, chromatogramsFile);
-                }
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(Resources.CommandLine_ExportChromatograms_Error__Failure_attempting_to_save_chromatograms_file__0_, chromatogramsFile);
-                _out.WriteLine(x.Message);
-                return false;
-            }
-
-            return true;
+                    var chromExporter = new ChromatogramExporter(Document);
+                    using (var saver = new FileSaver(chromatogramsFile))
+                    using (var writer = new StreamWriter(saver.SafeName))
+                    {
+                        var status = new ProgressStatus(string.Empty);
+                        IProgressMonitor broker = new CommandProgressMonitor(_out, status);
+                        chromExporter.Export(writer, broker, filesToExport, LocalizationHelper.CurrentCulture,
+                            chromExtractors, chromSources);
+                        writer.Close();
+                        broker.UpdateProgress(status.Complete());
+                        saver.Commit();
+                        _out.WriteLine(
+                            Resources.CommandLine_ExportChromatograms_Chromatograms_file__0__exported_successfully_,
+                            chromatogramsFile);
+                    }
+                }, Resources.CommandLine_ExportChromatograms_Error__Failure_attempting_to_save_chromatograms_file__0_,
+                chromatogramsFile);
         }
 
         /// <summary>
         /// Export a spectral library (.blib) file from the document
         /// </summary>
-        /// <param name="specLibFile">File path to export the spectral library to</param>
+        /// <param name="commandArgs">Command-line arguments</param>
         /// <returns>True if the file is successfully exported and false if there is an error</returns>
-        public bool ExportSpecLib(string specLibFile)
+        public bool ExportSpecLib(CommandArgs commandArgs)
         {
+            var specLibFile = commandArgs.SpecLibFile;
             _out.WriteLine(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____, specLibFile);
             if (Document.MoleculeTransitionGroupCount == 0) // The document needs at least one precursor
             {
@@ -3211,34 +3129,28 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            try
-            {
-                var libraryExporter = new SpectralLibraryExporter(Document, DocContainer.DocumentFilePath);
-                var status = new ProgressStatus(string.Empty);
-                IProgressMonitor broker = new CommandProgressMonitor(_out, status);
-                libraryExporter.ExportSpectralLibrary(specLibFile, broker);
-                broker.UpdateProgress(status.Complete());
-                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Spectral_library_file__0__exported_successfully_, specLibFile);
-            }
-            catch(Exception x)
-            {
-                _out.WriteLine(Resources.CommandLine_ExportSpecLib_Error__Failure_attempting_to_save_spectral_library_file__0__, specLibFile);
-                _out.WriteLine(x.Message);
-                return false;
-            }
-            return true;
+            return HandleExceptions(commandArgs, () =>
+                {
+                    var libraryExporter = new SpectralLibraryExporter(Document, DocContainer.DocumentFilePath);
+                    var status = new ProgressStatus(string.Empty);
+                    IProgressMonitor broker = new CommandProgressMonitor(_out, status);
+                    libraryExporter.ExportSpectralLibrary(specLibFile, broker);
+                    broker.UpdateProgress(status.Complete());
+                    _out.WriteLine(Resources.CommandLine_ExportSpecLib_Spectral_library_file__0__exported_successfully_,
+                        specLibFile);
+                }, Resources.CommandLine_ExportSpecLib_Error__Failure_attempting_to_save_spectral_library_file__0__,
+                specLibFile);
         }
 
         /// <summary>
         /// Export mProphet features as a .csv file
         /// </summary>
-        /// <param name="mProphetFile">File path to export the mProphet file to</param>
-        /// <param name="targetPeptidesOnly">Do not include decoys, only targets</param>
-        /// <param name="bestOnly">Export best scoring peaks only</param>
-        /// <param name="excludeScores">A list of features to exclude from the exported file</param>
+        /// <param name="commandArgs">Command-line arguments</param>
         /// <returns>True upon successful import, false upon error</returns>
-        public bool ExportMProphetFeatures(string mProphetFile, bool targetPeptidesOnly, bool bestOnly, FeatureCalculators excludeScores)
+        public bool ExportMProphetFeatures(CommandArgs commandArgs)
         {
+            var excludeScores = new FeatureCalculators(commandArgs.MProphetExcludeScores);
+            var mProphetFile = commandArgs.MProphetFeaturesFile;
             if (Document.MoleculeCount == 0) // The document must contain targets
             {
                 _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features_);
@@ -3251,7 +3163,7 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            try
+            return HandleExceptions(commandArgs, ()=>
             {
                 var scoringModel = Document.Settings.PeptideSettings.Integration.PeakScoringModel;
                 var mProphetScoringModel = scoringModel as MProphetPeakScoringModel;
@@ -3265,79 +3177,62 @@ namespace pwiz.Skyline
                     handler.ScoreFeatures(progressMonitor);
                     // Excluding any scores requested by the caller
                     var calcs = new FeatureCalculators(PeakFeatureCalculator.Calculators.Where(c => excludeScores.IndexOf(c) < 0));
-                    handler.WriteScores(writer, cultureInfo, calcs, bestOnly, !targetPeptidesOnly, progressMonitor);
+                    handler.WriteScores(writer, cultureInfo, calcs, commandArgs.MProphetUseBestScoringPeaks, !commandArgs.MProphetTargetsOnly, progressMonitor);
                     writer.Close();
                     fs.Commit();
                 }
                 _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, mProphetFile);
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(Resources.CommandLine_ExportMProphetFeatures_Error__Failure_attempting_to_save_mProphet_features_file__0__, mProphetFile);
-                _out.WriteLine(x.Message);
-                return false;
-            }
-            return true;
+            }, Resources.CommandLine_ExportMProphetFeatures_Error__Failure_attempting_to_save_mProphet_features_file__0__, mProphetFile);
         }
 
         /// <summary>
         /// Export annotations to a .csv file
         /// </summary>
-        /// <param name="annotationsFile">File path to export the annotations to</param>
-        /// <param name="includeHandlerNames">Names of element handlers to exclude from the export,
-        /// specified by the user.</param>
-        /// <param name="includeProperties">Properties to exclude from the export</param>
-        /// <param name="removeBlankRows">Do not include blank rows in the export</param>
+        /// <param name="commandArgs">Command-line arguments</param>
         /// <returns>True upon successful import, false upon error</returns>
-        public bool ExportAnnotations(string annotationsFile, List<string> includeHandlerNames, bool includeProperties, bool removeBlankRows)
+        public bool ExportAnnotations(CommandArgs commandArgs)
         {
-            try
+            var annotationsFile = commandArgs.AnnotationsFile;
+            // If the user specifies handlers, include only those handlers
+            // Parse the string names here (instead of CommandArgs.cs) in order to access the
+            // valid element handlers in the document.
+            var handlers = ParseIncludeObject(commandArgs.AnnotationsIncludeObjects);
+            if (handlers == null)
             {
-                // If the user specifies handlers, include only those handlers
-                // Parse the string names here (instead of CommandArgs.cs) in order to access the
-                // valid element handlers in the document.
-                var handlers = ParseIncludeObject(includeHandlerNames);
-                if (handlers  == null)
-                {
-                    // At least one name not recognized, error
-                    return false;
-                }
-                // By default do not include properties. If the user asks, include all applicable properties.
-                var properties = Enumerable.Empty<string>();
-                if (includeProperties)
-                {
-                    // Only include properties applicable to the selected element handlers
-                    properties = handlers
-                        .SelectMany(handler => handler.Properties.Select(pd => pd.Name))
-                        .Distinct().OrderBy(pd => pd);
-                }
-                // Find all available annotation names
-                var allAnnotationNames =
-                    ExportAnnotationSettings.GetAllAnnotationNames(Document.Settings.DataSettings.AnnotationDefs, handlers);
-                
-                // If there are no annotation names and we are not including properties, there is nothing to export
-                if (!allAnnotationNames.Any() && !includeProperties)
-                {
-                    _out.WriteLine(Resources.CommandLine_ExportAnnotations_Error__The_document_must_contain_annotations_in_order_to_export_annotations_);
-                    return false;
-                }
-                var settings = ExportAnnotationSettings.GetExportAnnotationSettings(handlers, allAnnotationNames, properties, removeBlankRows);
-                var documentAnnotations = new DocumentAnnotations(Document);
-                using (var fileSaver = new FileSaver(annotationsFile))
-                {
-                    documentAnnotations.WriteAnnotationsToFile(CancellationToken.None, settings, fileSaver.SafeName);
-                    fileSaver.Commit();
-                }
-                _out.WriteLine(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, annotationsFile);
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(Resources.CommandLine_ExportAnnotations_Error__Failure_attempting_to_save_annotations_file__0__, annotationsFile);
-                _out.WriteLine(x.Message);
+                // At least one name not recognized, error
                 return false;
             }
-            
-            return true;
+            // By default do not include properties. If the user asks, include all applicable properties.
+            var properties = Enumerable.Empty<string>();
+            if (commandArgs.AnnotationsIncludeProperties)
+            {
+                // Only include properties applicable to the selected element handlers
+                properties = handlers
+                    .SelectMany(handler => handler.Properties.Select(pd => pd.Name))
+                    .Distinct().OrderBy(pd => pd);
+            }
+            // Find all available annotation names
+            var allAnnotationNames =
+                ExportAnnotationSettings.GetAllAnnotationNames(Document.Settings.DataSettings.AnnotationDefs, handlers);
+
+            // If there are no annotation names and we are not including properties, there is nothing to export
+            if (!allAnnotationNames.Any() && !commandArgs.AnnotationsIncludeProperties)
+            {
+                _out.WriteLine(Resources.CommandLine_ExportAnnotations_Error__The_document_must_contain_annotations_in_order_to_export_annotations_);
+                return false;
+            }
+            return HandleExceptions(commandArgs, () => 
+                {
+                    var settings = ExportAnnotationSettings.GetExportAnnotationSettings(handlers, allAnnotationNames, properties, commandArgs.AnnotationsRemoveBlankRows);
+                    var documentAnnotations = new DocumentAnnotations(Document);
+                    using (var fileSaver = new FileSaver(annotationsFile))
+                    {
+                        documentAnnotations.WriteAnnotationsToFile(CancellationToken.None, settings, fileSaver.SafeName);
+                        fileSaver.Commit();
+                    }
+                    _out.WriteLine(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, annotationsFile);
+                }, Resources.CommandLine_ExportAnnotations_Error__Failure_attempting_to_save_annotations_file__0__, 
+                annotationsFile);
         }
 
         /// <summary>
@@ -3387,8 +3282,9 @@ namespace pwiz.Skyline
             in_parallel
         }
 
-        public bool ImportToolsFromZip(string path, ResolveZipToolConflicts? resolveConflicts, bool? overwriteAnnotations, ProgramPathContainer ppc, string programPath, bool arePackagesHandled)
+        public bool ImportToolsFromZip(CommandArgs commandArgs)
         {
+            var path = commandArgs.ZippedToolsPath;
             if (string.IsNullOrEmpty(path))
             {
                 _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Error__to_import_tools_from_a_zip_you_must_specify_a_path___tool_add_zip_must_be_followed_by_an_existing_path_);
@@ -3407,15 +3303,12 @@ namespace pwiz.Skyline
             string filename = Path.GetFileName(path);
             _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Installing_tools_from__0_, filename);
             ToolInstaller.UnzipToolReturnAccumulator result = null;
-            try
-            {
-                result = ToolInstaller.UnpackZipTool(path, new AddZipToolHelper(resolveConflicts, overwriteAnnotations, _out, filename, ppc,
-                                                                               programPath, arePackagesHandled));
-            }
-            catch (ToolExecutionException x)
-            {
-                _out.WriteLine(x.Message);
-            }
+            result = HandleExceptions(commandArgs, () => ToolInstaller.UnpackZipTool(path, new AddZipToolHelper(
+                commandArgs.ResolveZipToolConflictsBySkipping,
+                commandArgs.ResolveZipToolAnotationConflictsBySkipping, _out, filename,
+                commandArgs.ZippedToolsProgramPathContainer,
+                commandArgs.ZippedToolsProgramPathValue, commandArgs.ZippedToolsPackagesHandled)), 
+                x => _out.WriteException(x));   // TODO: Contextual failure message might help
             if (result != null)
             {
                 foreach (var message in result.MessagesThrown)
@@ -3427,7 +3320,7 @@ namespace pwiz.Skyline
                     _out.WriteLine(Resources.CommandLine_ImportToolsFromZip_Installed_tool__0_, tool.Title);
                 }
 
-                SaveSettings();
+                SaveSettings(commandArgs);
                 return true;
             }
             else
@@ -3437,50 +3330,43 @@ namespace pwiz.Skyline
             }
         }
 
-        private bool SaveSettings()
+        private bool SaveSettings(CommandArgs commandArgs)
         {
-            try
+            return HandleExceptions(commandArgs, () =>
             {
                 Settings.Default.Save();
-                return true;
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(Resources.CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_);
-                _out.WriteLine(x.Message);
-            }
-            return false;
+            }, Resources.CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_);
         }
 
         // A function for adding tools to the Tools Menu.
-        public bool ImportTool (string title, string command, string arguments, string initialDirectory, string reportTitle, bool outputToImmediateWindow, bool? resolveToolConflictsBySkipping)
+        public bool ImportTool (CommandArgs commandArgs)
         {
-            if (title == null | command == null)
+            if (commandArgs.ToolName == null || commandArgs.ToolCommand == null)
             {
                 _out.WriteLine(Resources.CommandLine_ImportTool_Error__to_import_a_tool_it_must_have_a_name_and_a_command___Use___tool_add_to_specify_a_name_and_use___tool_command_to_specify_a_command___The_tool_was_not_imported___);
                 return false;
             }
             // Check if the command is of a supported type and not a URL
-            else if (!ToolDescription.CheckExtension(command) && !ToolDescription.IsWebPageCommand(command))
+            else if (!ToolDescription.CheckExtension(commandArgs.ToolCommand) && !ToolDescription.IsWebPageCommand(commandArgs.ToolCommand))
             {
                 string supportedTypes = string.Join(@"; ", ToolDescription.EXTENSIONS);
                 supportedTypes = supportedTypes.Replace(@".", @"*.");
-                _out.WriteLine(Resources.CommandLine_ImportTool_Error__the_provided_command_for_the_tool__0__is_not_of_a_supported_type___Supported_Types_are___1_, title, supportedTypes);
+                _out.WriteLine(Resources.CommandLine_ImportTool_Error__the_provided_command_for_the_tool__0__is_not_of_a_supported_type___Supported_Types_are___1_, commandArgs.ToolName, supportedTypes);
                 _out.WriteLine(Resources.CommandLine_ImportTool_The_tool_was_not_imported___);
                 return false;
             }
-            if (arguments != null && arguments.Contains(ToolMacros.INPUT_REPORT_TEMP_PATH))
+            if (commandArgs.ToolArguments != null && commandArgs.ToolArguments.Contains(ToolMacros.INPUT_REPORT_TEMP_PATH))
             {
-                if (string.IsNullOrEmpty(reportTitle))
+                if (string.IsNullOrEmpty(commandArgs.ToolReportTitle))
                 {
                     _out.WriteLine(Resources.CommandLine_ImportTool_Error__If__0__is_and_argument_the_tool_must_have_a_Report_Title__Use_the___tool_report_parameter_to_specify_a_report_, ToolMacros.INPUT_REPORT_TEMP_PATH);
                     _out.WriteLine(Resources.CommandLine_ImportTool_The_tool_was_not_imported___);
                     return false;
                 }
 
-                if (!ReportSharing.GetExistingReports().ContainsKey(PersistedViews.ExternalToolsGroup.Id.ViewName(reportTitle))) 
+                if (!ReportSharing.GetExistingReports().ContainsKey(PersistedViews.ExternalToolsGroup.Id.ViewName(commandArgs.ToolReportTitle))) 
                 {
-                    _out.WriteLine(Resources.CommandLine_ImportTool_Error__Please_import_the_report_format_for__0____Use_the___report_add_parameter_to_add_the_missing_custom_report_, reportTitle);
+                    _out.WriteLine(Resources.CommandLine_ImportTool_Error__Please_import_the_report_format_for__0____Use_the___report_add_parameter_to_add_the_missing_custom_report_, commandArgs.ToolReportTitle);
                     _out.WriteLine(Resources.CommandLine_ImportTool_The_tool_was_not_imported___);
                     return false;                    
                 }
@@ -3490,17 +3376,17 @@ namespace pwiz.Skyline
             ToolDescription toolToRemove = null;
             foreach (var tool  in Settings.Default.ToolList)
             {                
-                if (tool.Title == title)
+                if (tool.Title == commandArgs.ToolName)
                 {
                     // Conflict. 
-                    if (resolveToolConflictsBySkipping == null)
+                    if (commandArgs.ResolveToolConflictsBySkipping == null)
                     {
                         // Complain. No resolution specified.
                         _out.WriteLine(Resources.CommandLine_ImportTool_, tool.Title);
                         return false; // Dont add.
                     }
                     // Skip conflicts
-                    else if (resolveToolConflictsBySkipping == true)
+                    else if (commandArgs.ResolveToolConflictsBySkipping == true)
                     {
                         _out.WriteLine(Resources.CommandLine_ImportTool_Warning__skipping_tool__0__due_to_a_name_conflict_, tool.Title);
 //                        _out.WriteLine("         tool {0} was not modified.", tool.Title);
@@ -3522,15 +3408,15 @@ namespace pwiz.Skyline
             // If no tool was overwritten then its a new tool. Show this message. 
             if (toolToRemove == null)
             {
-                _out.WriteLine(Resources.CommandLine_ImportTool__0__was_added_to_the_Tools_Menu_, title);
+                _out.WriteLine(Resources.CommandLine_ImportTool__0__was_added_to_the_Tools_Menu_, commandArgs.ToolName);
             }
             // Conflicts have been dealt with now add the tool.                       
             // Adding the tool. ToolArguments and ToolInitialDirectory are optional. 
             // If arguments or initialDirectory is null set it to be an empty string.
-            arguments = arguments ?? string.Empty; 
-            initialDirectory = initialDirectory ?? string.Empty; 
-            Settings.Default.ToolList.Add(new ToolDescription(title, command, arguments, initialDirectory, outputToImmediateWindow, reportTitle));
-            SaveSettings();
+            var arguments = commandArgs.ToolArguments ?? string.Empty; 
+            var initialDirectory = commandArgs.ToolInitialDirectory ?? string.Empty; 
+            Settings.Default.ToolList.Add(new ToolDescription(commandArgs.ToolName, commandArgs.ToolCommand, arguments, initialDirectory, commandArgs.ToolOutputToImmediateWindow, commandArgs.ToolReportTitle));
+            SaveSettings(commandArgs);
 
             return true;
         }
@@ -3658,39 +3544,36 @@ namespace pwiz.Skyline
             return commandLineArguments.ToString();
         }
 
-        public bool ImportSkyr(string path, bool? resolveSkyrConflictsBySkipping)
+        public bool ImportSkyr(CommandArgs commandArgs)
         {          
-            if (!File.Exists(path))
+            if (!File.Exists(commandArgs.SkyrPath))
             {
-                _out.WriteLine(Resources.CommandLine_ImportSkyr_Error___0__does_not_exist____report_add_command_failed_, path);
+                _out.WriteLine(Resources.CommandLine_ImportSkyr_Error___0__does_not_exist____report_add_command_failed_, commandArgs.SkyrPath);
                 return false;
             }
             else
             {           
-                ImportSkyrHelper helper = new ImportSkyrHelper(_out, resolveSkyrConflictsBySkipping);
-                bool imported;
-                try
+                ImportSkyrHelper helper = new ImportSkyrHelper(_out, commandArgs.ResolveSkyrConflictsBySkipping);
+                bool? imported = null;
+                if (!HandleExceptions(commandArgs,
+                        () => { imported = ReportSharing.ImportSkyrFile(commandArgs.SkyrPath, helper.ResolveImportConflicts); },
+                        Resources.CommandLine_ImportSkyr_, commandArgs.SkyrPath))
                 {
-                    imported = ReportSharing.ImportSkyrFile(path, helper.ResolveImportConflicts);
-                }
-                catch (Exception e)
-                {
-                    _out.WriteLine(Resources.CommandLine_ImportSkyr_, path);
-                    _out.WriteLine(e);
                     return false;
                 }
-                if (imported)
+                Assume.IsNotNull(imported);
+                if ((bool)imported)
                 {
-                    if (!SaveSettings())
+                    if (!SaveSettings(commandArgs))
                         return false;
-                    _out.WriteLine(Resources.CommandLine_ImportSkyr_Success__Imported_Reports_from__0_, Path.GetFileName(path));
+                    _out.WriteLine(Resources.CommandLine_ImportSkyr_Success__Imported_Reports_from__0_, Path.GetFileName(commandArgs.SkyrPath));
                 }
                 else
                 {
                     if (!_out.IsErrorReported)
                     {
                         // Unclear when this would happen, but to be safe, make sure an error is reported
-                        _out.WriteLine(Resources.CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_, path);
+                        _out.WriteLine(Resources.CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_, commandArgs.SkyrPath);
                     }
                     return false;
                 }
@@ -3994,14 +3877,12 @@ namespace pwiz.Skyline
                 }
             }
             _exportProperties.PolarityFilter = args.ExportPolarityFilter;
-            try
+            if(!HandleExceptions(args, () =>
+                   {
+                       _exportProperties.ExportFile(instrument, type, args.ExportPath, _doc, args.TemplateFile);
+                   }, Resources.CommandLine_ExportInstrumentFile_Error__The_file__0__could_not_be_saved___Check_that_the_specified_file_directory_exists_and_is_writeable_, 
+                   args.ExportPath))
             {
-                _exportProperties.ExportFile(instrument, type, args.ExportPath, _doc, args.TemplateFile);
-            }
-            catch (IOException x)
-            {
-                _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__The_file__0__could_not_be_saved___Check_that_the_specified_file_directory_exists_and_is_writeable_, args.ExportPath);
-                _out.WriteLine(x.Message);
                 return false;
             }
 
@@ -4181,23 +4062,23 @@ namespace pwiz.Skyline
             return true;
         }
 
-        private static bool ShareDocument(SrmDocument document, string documentPath, string fileDest, ShareType shareType, CommandStatusWriter statusWriter)
+        private static bool ShareDocument(SrmDocument document, string documentPath, string fileDest, ShareType shareType, CommandStatusWriter statusWriter, CommandArgs commandArgs)
         {
             var waitBroker = new CommandProgressMonitor(statusWriter,
                 new ProgressStatus(Resources.SkylineWindow_ShareDocument_Compressing_Files));
             var sharing = new SrmDocumentSharing(document, documentPath, fileDest, shareType);
-            try
+            var success = HandleExceptions(commandArgs, () =>
             {
                 sharing.Share(waitBroker);
                 return true;
-            }
-            catch (Exception x)
+            }, x =>
             {
                 statusWriter.WriteLine(Resources.Error___0_,
-                    string.Format(Resources.SkylineWindow_ShareDocument_Failed_attempting_to_create_sharing_file__0__, fileDest));
-                statusWriter.WriteLine(x.Message);
-            }
-            return false;
+                    string.Format(Resources.SkylineWindow_ShareDocument_Failed_attempting_to_create_sharing_file__0__,
+                        fileDest));
+                statusWriter.WriteException(x);
+            });
+            return success;
         }
 
         public void Dispose()
@@ -4214,26 +4095,31 @@ namespace pwiz.Skyline
                 _statusWriter = statusWriter;
             }
 
-            public bool PublishToPanorama(PanoramaServer panoramaServer, SrmDocument document, string documentPath, string panoramaFolder, ShareType selectedShareType)
+            public bool PublishToPanorama(CommandArgs commandArgs, SrmDocument document, string documentPath)
             {
-                try
+                var selectedShareType = commandArgs.SharedFileType;
+                var success = HandleExceptions(commandArgs, () =>
                 {
                     WebPanoramaPublishClient publishClient = new WebPanoramaPublishClient();
                     // If the Panorama server does not support the skyd version of the document, change the Skyline version to the 
                     // max version supported by the server.
-                    selectedShareType = publishClient.DecideShareTypeVersion(new FolderInformation(panoramaServer, true),
+                    selectedShareType = publishClient.DecideShareTypeVersion(
+                        new FolderInformation(commandArgs.PanoramaServer, true),
                         document, selectedShareType);
-                }
-                catch (PanoramaServerException panoramaServerException)
+                    return true;
+                }, x =>
                 {
-                    _statusWriter.WriteLine(Resources.Error___0_, panoramaServerException.Message);
+                    _statusWriter.WriteException(Resources.Error___0_, x);
+                });
+                if(!success)
+                {
                     return false;
                 }
                 var zipFilePath = FileEx.GetTimeStampedFileName(documentPath);
                 var published = false;
-                if (ShareDocument(document, documentPath, zipFilePath, selectedShareType, _statusWriter))
+                if (ShareDocument(document, documentPath, zipFilePath, selectedShareType, _statusWriter, commandArgs))
                 {
-                    published = PublishDocToPanorama(panoramaServer, zipFilePath, panoramaFolder);
+                    published = PublishDocToPanorama(commandArgs.PanoramaServer, zipFilePath, commandArgs.PanoramaFolder);
                 }
                 // Delete the zip file after it has been published to Panorama.
                 FileEx.SafeDelete(zipFilePath, true);
@@ -4256,7 +4142,7 @@ namespace pwiz.Skyline
                     var panoramaEx = x.InnerException as PanoramaImportErrorException ?? x as PanoramaImportErrorException;
                     if (panoramaEx == null)
                     {
-                        _statusWriter.WriteLine(Resources.PanoramaPublishHelper_PublishDocToPanorama_, x.Message);
+                        _statusWriter.WriteException(Resources.PanoramaPublishHelper_PublishDocToPanorama_, x);
                     }
                     else
                     {
@@ -4297,6 +4183,8 @@ namespace pwiz.Skyline
 
         public bool IsErrorReported { get; private set; }
 
+        public bool IsVerboseExceptions { get; set; }
+
         public override Encoding Encoding
         {
             get { return _writer.Encoding; }
@@ -4324,6 +4212,37 @@ namespace pwiz.Skyline
         public override void WriteLine()
         {
             WriteLine(string.Empty);
+        }
+
+        public void WriteException(string formatMessage, string string0, Exception x1)
+        {
+            WriteLine(formatMessage, string0, ExceptionString(x1));
+        }
+        public void WriteException(string formatMessage, Exception x, bool lineSeparate = false)
+        {
+            if (string.IsNullOrEmpty(formatMessage))
+                WriteException(x);
+            else if (!lineSeparate)
+                WriteLine(formatMessage, ExceptionString(x));
+            else
+            {
+                WriteLine(formatMessage);
+                WriteException(x);
+            }
+        }
+        public void WriteException(Exception x)
+        {
+            WriteLine(ExceptionString(x));
+        }
+
+        /// <summary>
+        /// Get a string reporting the exception, with information depending on the verbose exception setting.
+        /// </summary>
+        /// <param name="x">Exception to be reported</param>
+        /// <returns>A message reporting the exception</returns>
+        private string ExceptionString(Exception x)
+        {
+            return IsVerboseExceptions ? x.ToString() : x.Message;
         }
 
         public override void WriteLine(string value)
