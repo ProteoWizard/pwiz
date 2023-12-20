@@ -252,7 +252,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return pane is AreaPeptideGraphPane;
         }
 
-        public bool IsIntensityPane(SummaryGraphPane pane)
+        public bool IsAbundancePane(SummaryGraphPane pane)
         {
             return pane is AreaRelativeAbundanceGraphPane;
         }
@@ -266,7 +266,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return new AreaPeptideGraphPane(GraphSummary, key);
         }
 
-        public SummaryGraphPane CreateIntensityPane(PaneKey key)
+        public SummaryGraphPane CreateAbundancePane(PaneKey key)
         {
             return new AreaRelativeAbundanceGraphPane(GraphSummary, key);
         }

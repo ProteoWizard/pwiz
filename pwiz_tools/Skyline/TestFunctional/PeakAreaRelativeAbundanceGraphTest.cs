@@ -1,8 +1,8 @@
 ﻿/*
- * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ * Original author: Henry Sanford <henrytsanford .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2023 University of Washington - Seattle, WA
+ * Copyright 2020 University of Washington - Seattle, WA
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

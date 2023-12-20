@@ -240,7 +240,7 @@ namespace pwiz.Skyline.Controls.Graphs
             throw new NotImplementedException();
         }
 
-        SummaryGraphPane GraphSummary.IControllerSplit.CreateIntensityPane(PaneKey key)
+        SummaryGraphPane GraphSummary.IControllerSplit.CreateAbundancePane(PaneKey key)
         {
             throw new NotImplementedException();
         }
@@ -256,7 +256,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         bool GraphSummary.IControllerSplit.IsReplicatePane(SummaryGraphPane pane) => false;
 
-        bool GraphSummary.IControllerSplit.IsIntensityPane(SummaryGraphPane pane) => false;
+        bool GraphSummary.IControllerSplit.IsAbundancePane(SummaryGraphPane pane) => false;
 
         void GraphSummary.IController.OnActiveLibraryChanged()
         {

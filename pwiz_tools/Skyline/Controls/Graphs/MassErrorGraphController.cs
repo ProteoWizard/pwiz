@@ -132,7 +132,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return pane is MassErrorPeptideGraphPane;
         }
 
-        public bool IsIntensityPane(SummaryGraphPane pane) => false;
+        public bool IsAbundancePane(SummaryGraphPane pane) => false;
 
         public SummaryGraphPane CreateReplicatePane(PaneKey key)
         {
@@ -145,7 +145,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         // We don't implement this pane for mass errors yet
-        public SummaryGraphPane CreateIntensityPane(PaneKey key)
+        public SummaryGraphPane CreateAbundancePane(PaneKey key)
         {
             throw new NotImplementedException();
         }
