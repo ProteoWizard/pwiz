@@ -158,6 +158,7 @@
     <Compile Include="CommandLineImportTest.cs" />
     <Compile Include="CommandLineWiffTest.cs" />
     <Compile Include="ConsoleAddAnnotationsTest.cs" />
+    <Compile Include="ConsoleVerboseExceptionsTest.cs" />
     <Compile Include="ExportMethodShimadzuTest.cs" />
     <Compile Include="FullScanAcquisitionMethodTest.cs" />
     <Compile Include="InstrumentInfoUtilTest.cs" />
