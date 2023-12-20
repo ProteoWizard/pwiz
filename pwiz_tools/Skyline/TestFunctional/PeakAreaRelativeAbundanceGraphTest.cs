@@ -28,12 +28,12 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class PeakAreaProteinExpressionGraphTest : AbstractFunctionalTest
+    public class PeakAreaRelativeAbundanceGraphTest : AbstractFunctionalTest
     {
         [TestMethod]
-        public void TestPeakAreaProteinExpressionGraph()
+        public void TestPeakAreaRelativeAbundanceGraph()
         {
-            TestFilesZip = @"TestFunctional\PeakAreaProteinExpressionGraphTest.zip";
+            TestFilesZip = @"TestFunctional\PeakAreaRelativeAbundanceGraphTest.zip";
             RunFunctionalTest();
         }
 
@@ -44,9 +44,9 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
-                SkylineWindow.ShowPeakAreaProteinExpressionGraph();
+                SkylineWindow.ShowPeakAreaRelativeAbundanceGraph();
                 PauseForManualTutorialStep();
-                SkylineWindow.ShowIntensityFormatting();
+                SkylineWindow.ShowRelativeAbundanceFormatting();
                 var peakAreaGraph = FormUtil.OpenForms.OfType<GraphSummary>().FirstOrDefault(graph =>
                     graph.Type == GraphTypeSummary.abundance && graph.Controller is AreaGraphController);
                 Assert.IsNotNull(peakAreaGraph);

@@ -14275,11 +14275,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Protein Expression.
+        ///   Looks up a localized string similar to Relative Abundance.
         /// </summary>
-        public static string Extensions_CustomToString_Protein_Expression {
+        public static string Extensions_CustomToString_Relative_Abundance {
             get {
-                return ResourceManager.GetString("Extensions_CustomToString_Protein_Expression", resourceCulture);
+                return ResourceManager.GetString("Extensions_CustomToString_Relative_Abundance", resourceCulture);
             }
         }
         

@@ -5,9 +5,9 @@ using pwiz.Skyline.Properties;
 namespace pwiz.Skyline.Controls.Graphs
 {
     // TODO make private
-    public class AreaProteinExpressionGraphPane : SummaryProteinExpressionGraphPane
+    public class AreaRelativeAbundanceGraphPane : SummaryRelativeAbundanceGraphPane
     {
-        public AreaProteinExpressionGraphPane(GraphSummary graphSummary, PaneKey paneKey)
+        public AreaRelativeAbundanceGraphPane(GraphSummary graphSummary, PaneKey paneKey)
             : base(graphSummary, paneKey)
         {
         }

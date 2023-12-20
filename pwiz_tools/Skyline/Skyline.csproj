@@ -368,7 +368,7 @@
     <Compile Include="Controls\Databinding\IDataboundGridForm.cs" />
     <Compile Include="Controls\Databinding\SkylineViewContext.cs" />
     <Compile Include="Controls\Databinding\SkylineWindowDataSchema.cs" />
-    <Compile Include="Controls\Graphs\AreaProteinExpressionGraphPane.cs" />
+    <Compile Include="Controls\Graphs\AreaRelativeAbundanceGraphPane.cs" />
     <Compile Include="Controls\Graphs\DotPlotUtil.cs" />
     <Compile Include="Controls\Graphs\ExportMethodScheduleGraph.cs">
       <SubType>Form</SubType>
@@ -403,7 +403,7 @@
     <Compile Include="Controls\Graphs\PaneProgressBar.cs" />
     <Compile Include="Controls\Graphs\ReplicateGroupOp.cs" />
     <Compile Include="Controls\Graphs\ReplicateValue.cs" />
-    <Compile Include="Controls\Graphs\SummaryProteinExpressionGraphPane.cs" />
+    <Compile Include="Controls\Graphs\SummaryRelativeAbundanceGraphPane.cs" />
     <Compile Include="Controls\ImageListBox.cs">
       <SubType>Component</SubType>
     </Compile>

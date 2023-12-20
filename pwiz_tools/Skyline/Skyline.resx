@@ -786,7 +786,7 @@
 	  <value>190, 22</value>
   </data>
   <data name="areaIntensityContextMenuItem.Text" xml:space="preserve">
-    <value>Protein Expression</value>
+    <value>Relative Abundance</value>
   </data>
   <data name="areaCVHistogramContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>

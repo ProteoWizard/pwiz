@@ -1574,10 +1574,9 @@ namespace pwiz.Skyline
             ChromatogramContextMenu.BuildChromatogramMenu(zedGraphControl, paneKey, menuStrip, chromFileInfoId);
         }
 
-        // TODO rename?
-        private void AddProteinExpressionFormattingForm(ToolStrip menuStrip, int iInsert)
+        private void AddRelativeAbundanceFormattingForm(ToolStrip menuStrip, int iInsert)
         {
-            ChromatogramContextMenu.AddIntensityFormattingMenu(menuStrip, iInsert);
+            ChromatogramContextMenu.AddRelativeAbundanceFormattingMenu(menuStrip, iInsert);
         }
         private void AddTransitionContextMenu(ToolStrip menuStrip, int iInsert)
         {
@@ -1718,7 +1717,7 @@ namespace pwiz.Skyline
             SetDisplayTypeChrom(DisplayTypeChrom.products);
         }
 
-        public void ShowIntensityFormatting()
+        public void ShowRelativeAbundanceFormatting()
         {
             foreach (var summary in _listGraphPeakArea.Where(summary => summary.Type == GraphTypeSummary.abundance))
             {
@@ -3059,13 +3058,14 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert, excludeTargetsMenuItem);
             if (excludeTargetsMenuItem.DropDownItems.Count == 0)
             {
-                excludeTargetsMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                excludeTargetsMenuItem.DropDownItems.Add(excludeTargetsStandardsMenuItem);
+                if (!IsSmallMoleculeOrMixedUI)
                 {
-                    excludeTargetsPeptideListMenuItem,
-                    excludeTargetsStandardsMenuItem
-                });
+                    excludeTargetsMenuItem.DropDownItems.Add(excludeTargetsPeptideListMenuItem);
+                }
             }
         }
+
         private void timeGraphMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             var types = Settings.Default.RTGraphTypes;
@@ -3713,7 +3713,7 @@ namespace pwiz.Skyline
                 {
                     areaReplicateComparisonContextMenuItem,
                     areaPeptideComparisonContextMenuItem,
-                    areaIntensityContextMenuItem,
+                    areaRelativeAbundanceContextMenuItem,
                     areaCVHistogramContextMenuItem,
                     areaCVHistogram2DContextMenuItem
                 });
@@ -3748,7 +3748,7 @@ namespace pwiz.Skyline
 
             if (graphType == GraphTypeSummary.abundance)
             {
-                AddProteinExpressionFormattingForm(menuStrip, iInsert++);
+                AddRelativeAbundanceFormattingForm(menuStrip, iInsert++);
                 // Protein level comparisons are likely not meaningful for small molecule documents,
                 // so only offer peptide level comparison.
                 // TODO support protein level in mixed cases?
@@ -4318,7 +4318,7 @@ namespace pwiz.Skyline
             var list = _listGraphPeakArea;
             areaReplicateComparisonContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.replicate);
             areaPeptideComparisonContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.peptide);
-            areaIntensityContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.abundance);
+            areaRelativeAbundanceContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.abundance);
             areaCVHistogramContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.histogram);
             areaCVHistogram2DContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.histogram2d);
         }
@@ -4395,9 +4395,9 @@ namespace pwiz.Skyline
             ShowPeakAreaPeptideGraph();
         }
 
-        private void areaIntensityMenuItem_Click(object sender, EventArgs e)
+        private void areaRelativeAbundanceMenuItem_Click(object sender, EventArgs e)
         {
-            ShowPeakAreaProteinExpressionGraph();
+            ShowPeakAreaRelativeAbundanceGraph();
         }
 
         private void areaCVLogScaleToolStripMenuItem_Click(object sender, EventArgs e)
@@ -4460,7 +4460,7 @@ namespace pwiz.Skyline
             SynchronizeSummaryZooming();
         }
 
-        public void ShowPeakAreaProteinExpressionGraph()
+        public void ShowPeakAreaRelativeAbundanceGraph()
         {
             ShowTotalTransitions();
             Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.abundance);

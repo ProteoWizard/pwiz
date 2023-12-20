@@ -11,13 +11,13 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public partial class MatchExpressionListDlg : ModeUIInvariantFormEx
     {
-        private readonly CreateMatchExpressionDlg _createProteinExpressionMatchExpressionDlg;
+        private readonly CreateMatchExpressionDlg _createMatchExpressionDlg;
         private readonly string _oldRegex;
-        public MatchExpressionListDlg(CreateMatchExpressionDlg createMatchExpressionDlg)
+        public MatchExpressionListDlg(CreateMatchExpressionDlg createDlg)
         {
             InitializeComponent();
-            _createProteinExpressionMatchExpressionDlg = createMatchExpressionDlg;
-            _oldRegex = _createProteinExpressionMatchExpressionDlg.Expression;
+            _createMatchExpressionDlg = createDlg;
+            _oldRegex = _createMatchExpressionDlg.Expression;
             label1.Text = Resources.MatchExpressionListDlg_MatchExpressionListDlg_Enter_a_list_of_identifiers_on_separate_lines_;
             Text = Resources.MatchExpressionListDlg_MatchExpressionListDlg_Enter_list;
             Icon = Resources.Skyline;
@@ -73,7 +73,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void SetRegexText(string regex)
         {
-            _createProteinExpressionMatchExpressionDlg.SetRegexText(regex);
+            _createMatchExpressionDlg.SetRegexText(regex);
         }
 
         private void buttonOk_Click(object sender, EventArgs e)

@@ -254,7 +254,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public bool IsIntensityPane(SummaryGraphPane pane)
         {
-            return pane is AreaProteinExpressionGraphPane;
+            return pane is AreaRelativeAbundanceGraphPane;
         }
         public SummaryGraphPane CreateReplicatePane(PaneKey key)
         {
@@ -268,7 +268,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public SummaryGraphPane CreateIntensityPane(PaneKey key)
         {
-            return new AreaProteinExpressionGraphPane(GraphSummary, key);
+            return new AreaRelativeAbundanceGraphPane(GraphSummary, key);
         }
         public bool HandleKeyDownEvent(object sender, KeyEventArgs e)
         {

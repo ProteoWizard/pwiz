@@ -63,7 +63,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             // When creating match expressions for a protein expression graph,
             // do not offer p value and fold change filtering options.
-            if (_formattingDlg.IsProteinExpression)
+            if (_formattingDlg.IsRelativeAbundance)
             {
                 // Hide the filter options
                 groupBox1.Hide();

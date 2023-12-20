@@ -52,20 +52,20 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
         }
 
-        public VolcanoPlotFormattingDlg(SummaryProteinExpressionGraphPane proteinExpressionGraph,
+        public VolcanoPlotFormattingDlg(SummaryRelativeAbundanceGraphPane relativeAbundanceGraph,
             IList<MatchRgbHexColor> colorRows, object[] proteinAbundances, Action<List<MatchRgbHexColor>> updateGraph) : 
-            this(true, proteinExpressionGraph, null, colorRows, proteinAbundances, updateGraph, 
-                proteinExpressionGraph.AnyMolecules, proteinExpressionGraph.AnyProteomic, true, proteinExpressionGraph.Document)
+            this(true, relativeAbundanceGraph, null, colorRows, proteinAbundances, updateGraph, 
+                relativeAbundanceGraph.AnyMolecules, relativeAbundanceGraph.AnyProteomic, true, relativeAbundanceGraph.Document)
         {
         }
 
-        private VolcanoPlotFormattingDlg(bool isProteinExpression, SummaryProteinExpressionGraphPane proteinExpressionGraph, FoldChangeVolcanoPlot volcanoPlot, IList<MatchRgbHexColor> colorRows,
+        private VolcanoPlotFormattingDlg(bool isRelativeAbundance, SummaryRelativeAbundanceGraphPane relativeAbundanceGraph, FoldChangeVolcanoPlot volcanoPlot, IList<MatchRgbHexColor> colorRows,
             object[] foldChangeRows, Action<List<MatchRgbHexColor>> updateGraph, bool anyMolecules, bool anyProteomic, bool perProtein, SrmDocument document)
         {
             InitializeComponent();
-            IsProteinExpression = isProteinExpression;
+            IsRelativeAbundance = isRelativeAbundance;
             VolcanoPlot = volcanoPlot;
-            ProteinExpressionGraph = proteinExpressionGraph;
+            RelativeAbundanceGraph = relativeAbundanceGraph;
             AnyMolecules = anyMolecules;
             AnyProteomic = anyProteomic;
             PerProtein = perProtein;
@@ -156,7 +156,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             UpdateAdvancedColumns();
 
             regexColorRowGrid1.Owner = this;
-            if (isProteinExpression)
+            if (isRelativeAbundance)
             {
                 Text = Resources.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting;
             }
@@ -206,7 +206,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public void Select(IdentityPath identityPath)
         {
-            if (IsProteinExpression)
+            if (IsRelativeAbundance)
             {
                 // TODO implement selection for protein expression graph
             }
@@ -217,12 +217,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
         }
         public FoldChangeVolcanoPlot VolcanoPlot { get; private set; }
 
-        public SummaryProteinExpressionGraphPane ProteinExpressionGraph { get; private set; }
+        public SummaryRelativeAbundanceGraphPane RelativeAbundanceGraph { get; private set; }
 
         public bool AnyProteomic { get; set; }
         public bool AnyMolecules { get; set; }
         public bool PerProtein { get; set; }
-        public bool IsProteinExpression { get; set; }
+        public bool IsRelativeAbundance { get; set; }
         public SrmDocument Document { get; set; }
 
         private void SetExpressionMinimumWidth()

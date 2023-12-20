@@ -320,7 +320,7 @@ namespace pwiz.Skyline.Menus
             }
         }
 
-        public void AddIntensityFormattingMenu(ToolStrip menuStrip, int iInsert)
+        public void AddRelativeAbundanceFormattingMenu(ToolStrip menuStrip, int iInsert)
         {
             menuStrip.Items.Insert(iInsert, intensityFormattingMenuItem);
         }
@@ -629,7 +629,7 @@ namespace pwiz.Skyline.Menus
 
         private void intensityFormattingMenuItem_Click(object sender, EventArgs e)
         {
-            SkylineWindow.ShowIntensityFormatting();
+            SkylineWindow.ShowRelativeAbundanceFormatting();
         }
         private void allTranMenuItem_Click(object sender, EventArgs e)
         {

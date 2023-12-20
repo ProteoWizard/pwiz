@@ -20,7 +20,7 @@ using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 namespace pwiz.Skyline.Controls.Graphs
 {
 
-    public abstract class SummaryProteinExpressionGraphPane : SummaryBarGraphPaneBase
+    public abstract class SummaryRelativeAbundanceGraphPane : SummaryBarGraphPaneBase
     {
 
         protected GraphData _graphData;
@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool ShowingFormattingDlg { get; set; }
         public IList<MatchRgbHexColor> ColorRows { get; set; }
 
-        protected SummaryProteinExpressionGraphPane(GraphSummary graphSummary, PaneKey paneKey)
+        protected SummaryRelativeAbundanceGraphPane(GraphSummary graphSummary, PaneKey paneKey)
             : base(graphSummary)
         {
             PaneKey = paneKey;
@@ -370,7 +370,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var listPoints = new List<GraphPointData>();
                 foreach (var nodeGroupPep in document.MoleculeGroups)
                 {
-                    if (nodeGroupPep.IsPeptideList && Settings.Default.ExcludePeptideListsFromAbundanceGraph)
+                    if (nodeGroupPep.IsPeptideList && Settings.Default.ExcludePeptideListsFromAbundanceGraph && !anyMolecules)
                     {
                         continue;
                     }
@@ -379,7 +379,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         continue;
                     }
-                    if (Settings.Default.AreaProteinTargets && anyMolecules)
+
+                    if (Settings.Default.AreaProteinTargets && !anyMolecules)
                     {
                         var path = new IdentityPath(IdentityPath.ROOT, nodeGroupPep.PeptideGroup);
                         var protein = new Protein(schema, path);

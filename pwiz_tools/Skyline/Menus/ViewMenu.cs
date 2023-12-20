@@ -758,7 +758,7 @@ namespace pwiz.Skyline.Menus
             var list = SkylineWindow.ListGraphPeakArea;
             areaReplicateComparisonMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.replicate);
             areaPeptideComparisonMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.peptide);
-            areaIntensityMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.abundance);
+            areaRelativeAbundanceMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.abundance);
             areaCVHistogramMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.histogram);
             areaCVHistogram2DMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.histogram2d);
         }
@@ -772,7 +772,7 @@ namespace pwiz.Skyline.Menus
         }
         private void areaIntensityMenuItem_Click(object sender, EventArgs e)
         {
-            SkylineWindow.ShowPeakAreaProteinExpressionGraph();
+            SkylineWindow.ShowPeakAreaRelativeAbundanceGraph();
         }
         private void areaCVHistogramToolStripMenuItem1_Click(object sender, EventArgs e)
         {
@@ -971,7 +971,7 @@ namespace pwiz.Skyline.Menus
                 peakAreasMenuItem.Enabled = enable;
                 areaReplicateComparisonMenuItem.Enabled = enable;
                 areaPeptideComparisonMenuItem.Enabled = enable;
-                areaIntensityMenuItem.Enabled = enable;
+                areaRelativeAbundanceMenuItem.Enabled = enable;
                 areaCVHistogramMenuItem.Enabled = enable;
                 areaCVHistogram2DMenuItem.Enabled = enable;
 
