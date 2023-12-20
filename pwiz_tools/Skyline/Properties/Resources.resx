@@ -13873,7 +13873,7 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
     <value>Enter a list of identifiers on separate lines.</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting" xml:space="preserve">
-    <value>Protein Expression Formatting</value>
+    <value>Relative Abundance Formatting</value>
   </data>
   <data name="MatchExpressionListDlg_MatchExpressionListDlg_Enter_list" xml:space="preserve">
     <value>Enter list</value>

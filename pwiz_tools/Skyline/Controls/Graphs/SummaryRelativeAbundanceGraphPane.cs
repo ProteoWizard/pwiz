@@ -2,7 +2,7 @@
  * Original author: Henry Sanford <henrytsanford .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2020 University of Washington - Seattle, WA
+ * Copyright 2023 University of Washington - Seattle, WA
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,9 +46,10 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool AnyProteomic;
         public bool AnyMolecules;
         public SrmDocument Document;
-        private bool AreaProteinTargets;
-        private bool ExcludePeptideLists;
-        private bool ExcludeStandards;
+        private bool _areaProteinTargets;
+        private bool _excludePeptideLists;
+        private bool _excludeStandards;
+        private ReplicateDisplay _replicateDisplay;
         public bool ShowingFormattingDlg { get; set; }
         public IList<MatchRgbHexColor> ColorRows { get; set; }
         protected SummaryRelativeAbundanceGraphPane(GraphSummary graphSummary, PaneKey paneKey)
@@ -64,9 +65,10 @@ namespace pwiz.Skyline.Controls.Graphs
             XAxis.Scale.Max = Document.MoleculeGroups.Count();
             AnyMolecules = Document.HasSmallMolecules;
             AnyProteomic = Document.HasPeptides;
-            AreaProteinTargets = Settings.Default.AreaProteinTargets;
-            ExcludePeptideLists = Settings.Default.ExcludePeptideListsFromAbundanceGraph;
-            ExcludeStandards = Settings.Default.ExcludeStandardsFromAbundanceGraph;
+            _areaProteinTargets = Settings.Default.AreaProteinTargets;
+            _excludePeptideLists = Settings.Default.ExcludePeptideListsFromAbundanceGraph;
+            _excludeStandards = Settings.Default.ExcludeStandardsFromAbundanceGraph;
+            _replicateDisplay = RTLinearRegressionGraphPane.ShowReplicate;
             ColorRows = new List<MatchRgbHexColor>();
             var container = new MemoryDocumentContainer();
             container.SetDocument(Document, null);
@@ -98,19 +100,24 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool IsAbundanceGraphSettingsChanged()
         {
             var settingsChanged = false;
-            if (Settings.Default.AreaProteinTargets != AreaProteinTargets)
+            if (Settings.Default.AreaProteinTargets != _areaProteinTargets)
             {
-                AreaProteinTargets = Settings.Default.AreaProteinTargets;
+                _areaProteinTargets = Settings.Default.AreaProteinTargets;
                 settingsChanged = true;
             }
-            if (Settings.Default.ExcludePeptideListsFromAbundanceGraph != ExcludePeptideLists)
+            if (Settings.Default.ExcludePeptideListsFromAbundanceGraph != _excludePeptideLists)
             {
-                ExcludePeptideLists = Settings.Default.ExcludePeptideListsFromAbundanceGraph;
+                _excludePeptideLists = Settings.Default.ExcludePeptideListsFromAbundanceGraph;
                 settingsChanged = true;
             }
-            if (Settings.Default.ExcludeStandardsFromAbundanceGraph != ExcludeStandards)
+            if (Settings.Default.ExcludeStandardsFromAbundanceGraph != _excludeStandards)
             {
-                ExcludeStandards = Settings.Default.ExcludeStandardsFromAbundanceGraph;
+                _excludeStandards = Settings.Default.ExcludeStandardsFromAbundanceGraph;
+                settingsChanged = true;
+            }
+            if (RTLinearRegressionGraphPane.ShowReplicate != _replicateDisplay || RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
+            {
+                _replicateDisplay = RTLinearRegressionGraphPane.ShowReplicate;
                 settingsChanged = true;
             }
             return settingsChanged;
@@ -344,7 +351,7 @@ namespace pwiz.Skyline.Controls.Graphs
         protected virtual void UpdateAxes()
         {
             XAxis.Title.Text = Settings.Default.AreaProteinTargets ? Resources.SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank :Resources.AreaPeptideGraphPane_UpdateAxes_Peptide_Rank;
-            const double xAxisGrace = 0.05;
+            const double xAxisGrace = 0;
             XAxis.Scale.MaxGrace = xAxisGrace;
             XAxis.Scale.MinGrace = xAxisGrace;
             YAxis.Scale.MinGrace = xAxisGrace;
@@ -356,7 +363,7 @@ namespace pwiz.Skyline.Controls.Graphs
             YAxis.Scale.AllowGraceToCrossZero = true;
             XAxis.Scale.AllowGraceToCrossZero = true;
             // XAxis.Scale.MajorStepAuto = false;
-            // XAxis.Scale.MajorStep = 1;
+            // XAxis.Scale.MajorStep = Math.Pow(10, Math.Round(Math.Log10(_graphData.PointPairList.Count)) - 2); 
             if (Settings.Default.AreaLogScale )
             {
                 YAxis.Title.Text = TextUtil.SpaceSeparate(Resources.SummaryPeptideGraphPane_UpdateAxes_Log, YAxis.Title.Text);

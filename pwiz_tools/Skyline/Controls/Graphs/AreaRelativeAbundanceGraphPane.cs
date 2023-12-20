@@ -21,9 +21,6 @@ namespace pwiz.Skyline.Controls.Graphs
             YAxis.Title.Text = Resources.AreaPeptideGraphPane_UpdateAxes_Peak_Area;
 
             base.UpdateAxes();
-            // reformat YAxis for labels
-            var maxY = GraphHelper.GetMaxY(CurveList, this);
-            GraphHelper.ReformatYAxis(this, maxY);
 
         }
 

@@ -36933,7 +36933,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Protein Expression Formatting.
+        ///   Looks up a localized string similar to Relative Abundance Formatting.
         /// </summary>
         public static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting {
             get {

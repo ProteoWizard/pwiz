@@ -1331,12 +1331,14 @@ namespace pwiz.Skyline
             // 
             this.abundanceTargetsProteinsMenuItem.CheckOnClick = true;
             this.abundanceTargetsProteinsMenuItem.Name = "abundanceTargetsProteinsMenuItem";
+            this.abundanceTargetsPeptidesMenuItem.Checked = Settings.Default.AreaProteinTargets;
             resources.ApplyResources(this.abundanceTargetsProteinsMenuItem, "abundanceTargetsProteinsMenuItem");
             this.abundanceTargetsProteinsMenuItem.Click += new System.EventHandler(this.abundanceTargetsProteinsMenuItem_Click);
             // 
             // abundanceTargetsPeptidesMenuItem
             // 
             this.abundanceTargetsPeptidesMenuItem.CheckOnClick = true;
+            this.abundanceTargetsPeptidesMenuItem.Checked = !Settings.Default.AreaProteinTargets;
             this.abundanceTargetsPeptidesMenuItem.Name = "abundanceTargetsPeptidesMenuItem";
             resources.ApplyResources(this.abundanceTargetsPeptidesMenuItem, "abundanceTargetsPeptidesMenuItem");
             this.abundanceTargetsPeptidesMenuItem.Click += new System.EventHandler(this.abundanceTargetsPeptidesMenuItem_Click);
