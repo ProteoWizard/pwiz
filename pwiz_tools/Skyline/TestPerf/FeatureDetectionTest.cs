@@ -133,8 +133,11 @@ namespace TestPerf
         protected override void DoTest()
         {
             for (int pass = 0; pass < 2;)
+            {
                 PerformSearchTest(pass++);
-}
+            }
+            VerifyAuditLog();
+        }
 
         private void PerformSearchTest(int pass)
         {
@@ -361,14 +364,20 @@ namespace TestPerf
             AssertEx.AreEqual(37.51, r.EndRetentionTime, .01);
 
             RunUI(() => SkylineWindow.SaveDocument());
+            var expectedFeatures = 676;
+            var expectedFeaturesTransitions = 2028;
             if (pass==1)
             {
-                AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 684, 684, 2052);
-                VerifyAuditLog();
+                AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, expectedFeatures, expectedFeatures, expectedFeaturesTransitions);
             }
             else
             {
-                AssertEx.IsDocumentState(SkylineWindow.Document, null, 12, 1041, 1042, 3134);
+                var expectedPeptideGroups = 11;
+                var expectedPeptides = 356;
+                var expectedPeptideTransitionGroups = 357;
+                var expectedPeptideTransitions = 1079;
+                AssertEx.IsDocumentState(SkylineWindow.Document, null, expectedPeptideGroups + 1, expectedPeptides + expectedFeatures, 
+                    expectedPeptideTransitionGroups + expectedFeatures, expectedPeptideTransitions + expectedFeaturesTransitions);
             }
 
         }

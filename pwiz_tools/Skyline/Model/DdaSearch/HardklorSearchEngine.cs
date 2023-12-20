@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 {
                     // Final step - try to unify similar features across the various Bullseye result files
                     _searchSettings.RemainingStepsInSearch--; // More to do after this?
-                    FindSimilarPrecursors();
+                    FindSimilarFeatures();
                 }
                 else
                 {
@@ -178,112 +178,127 @@ namespace pwiz.Skyline.Model.DdaSearch
             return ppm;
         }
 
-        private class hkPrecursorDetail
+        private class hkFeatureDetail
         {
             public double mass; // Declared mono mass
             public string massString; // Original text representation of mono mass
             public string avergineAndOffset; // The value declared in the avergine column e.g. "H104C54N15O16[+4.761216]"
             public double intensity; // "Summed Intensity" column
             public double rt; // "Best RTime" column
+            public int charge; // Declared z
             public int fileIndex; // Which file it's from
             public int lineIndex; // Which line in that file
             public bool updated; // Does it need to be written back to the file?
         }
-        private void FindSimilarPrecursors()
+        private void FindSimilarFeatures()
         {
             // Final step - try to unify similar features in the various Bullseye result files
             var bfiles = SpectrumFileNames.Select(GetSearchResultFilepath).ToArray();
             if (bfiles.Length > 1)
             {
-                var precursors = new Dictionary<string, List<hkPrecursorDetail>>();
+                // The shape of the isotope distribution is pretty much determined by everything but
+                // hydrogen, so create a lookup based on avergine formulas with H removed
+                var featuresByCNOS = new Dictionary<string, List<hkFeatureDetail>>();
                 var contents = new List<string[]>();
-                var updates = new List<hkPrecursorDetail>();
-                for (var f = 0; f < bfiles.Length; f++)
+                var updatedFiles = new HashSet<int>();
+                var updates = new List<hkFeatureDetail>();
+                for (var fileIndex = 0; fileIndex < bfiles.Length; fileIndex++)
                 {
-                    var file = bfiles[f];
+                    var file = bfiles[fileIndex];
                     var lines = File.ReadAllLines(file);
                     contents.Add(lines);
                     int l = 1;
                     foreach (var line in lines.Skip(1))
                     {
                         var col = line.Split('\t');
-                        var avergine = col[15].Split('[')[0];
-                        var detail = new hkPrecursorDetail()
+                        var averagine_no_H = col[15].Split('[')[0].Split('C')[1];
+                        var feature = new hkFeatureDetail()
                         {
+                            charge = int.Parse(col[4], CultureInfo.InvariantCulture),
                             mass = double.Parse(col[5], CultureInfo.InvariantCulture),
                             massString = col[5],
                             avergineAndOffset = col[15],
                             intensity = double.Parse(col[8], CultureInfo.InvariantCulture),
                             rt = double.Parse(col[11], CultureInfo.InvariantCulture),
-                            fileIndex = f,
+                            fileIndex = fileIndex,
                             lineIndex = l,
                             updated = false
                         };
-                        if (!precursors.TryGetValue(avergine, out var details))
+                        var mzCalc = Adduct.FromChargeProtonated(feature.charge).MzFromNeutralMass(feature.mass, MassType.Monoisotopic);
+                        var mzDeclared = double.Parse(col[6], CultureInfo.InvariantCulture); // 'Base Isotope Peak'
+                        if (Math.Abs(mzCalc - mzDeclared) > .001)
                         {
-                            precursors.Add(avergine, new List<hkPrecursorDetail>() { detail });
+                            // We're interested in the m/z of the mono peak, which may not be the biggest in the envelope
+                            col[6] = mzCalc.ToString(@"F4", CultureInfo.InvariantCulture);
+                            lines[l] = string.Join(TextUtil.SEPARATOR_TSV_STR, col);
+                            updatedFiles.Add(fileIndex); // We'll want to write that back to the file
+                        }
+
+                        if (!featuresByCNOS.TryGetValue(averagine_no_H, out var featureList))
+                        {
+                            featuresByCNOS.Add(averagine_no_H, new List<hkFeatureDetail>() { feature });
                         }
                         else
                         {
-                            details.Add(detail);
+                            featureList.Add(feature);
                         }
 
                         l++;
                     }
                 }
 
-                // We have a dictionary of all known isotope distributions (that is, the avergine formulas)
-                // and all known mass offset and intensities
+                // We have a dictionary of all known isotope distributions (that is, the averagine formulas with H)
+                // and all known masses and intensities
                 var ppm = GetPPM();
-                var rtToler = this._searchSettings.SettingsHardklor.IDRetentionTimeTolerance ?? double.MaxValue;
-                foreach (var precursor in precursors)
+                var rtToler = this._searchSettings.SettingsHardklor.FeatureRetentionTimeTolerance ?? double.MaxValue;
+                foreach (var featureByCNOS in featuresByCNOS)
                 {
-                    // Starting with the strongest signal, see if any other entries from at similar RT are similar mass.
+                    // Starting with the strongest signal, see if any other entries from similar RT are similar mass.
                     // If they are, update the mass information to match the more solid ID.
-                    var ordered = precursor.Value.OrderByDescending(v => v.intensity).ToArray();
+                    var ordered = featureByCNOS.Value.OrderByDescending(v => v.intensity).ToArray();
                     for (var i = 0; i < ordered.Length; i++)
                     {
-                        var hkPrecursorDetailI = ordered[i];
-                        if (hkPrecursorDetailI.updated)
+                        var hkFeatureDetail = ordered[i];
+                        if (hkFeatureDetail.updated)
                         {
                             continue;
                         }
-                        var mass = hkPrecursorDetailI.mass;
+                        var mass = hkFeatureDetail.mass;
                         if (mass == 0)
                         {
                             continue;
                         }
                         for (var j = i + 1; j < ordered.Length; j++)
                         {
-                            var hkPrecursorDetailJ = ordered[j];
-                            if (hkPrecursorDetailJ.updated)
+                            var hkFeaturerDetailJ = ordered[j];
+                            if (hkFeaturerDetailJ.updated)
                             {
                                 continue; // Already processed
                             }
-                            if (Math.Abs(hkPrecursorDetailI.rt - hkPrecursorDetailJ.rt) > rtToler)
+                            if (Math.Abs(hkFeatureDetail.rt - hkFeaturerDetailJ.rt) > rtToler)
                             {
                                 continue; // Not an RT match
                             }
-                            var diff = Math.Abs((hkPrecursorDetailJ.mass - mass) / mass) * 1.0E6;
+                            var diff = Math.Abs((hkFeaturerDetailJ.mass - mass) / mass) * 1.0E6;
                             if (diff <= ppm)
                             {
-                                hkPrecursorDetailJ.mass = mass;
-                                hkPrecursorDetailJ.massString = hkPrecursorDetailI.massString;
-                                hkPrecursorDetailJ.avergineAndOffset = hkPrecursorDetailI.avergineAndOffset;
-                                hkPrecursorDetailJ.updated = true; // No need to compare to others in this list
-                                updates.Add(hkPrecursorDetailJ);  // We will write these values back to the file
+                                hkFeaturerDetailJ.mass = mass;
+                                hkFeaturerDetailJ.massString = hkFeatureDetail.massString;
+                                hkFeaturerDetailJ.avergineAndOffset = hkFeatureDetail.avergineAndOffset;
+                                hkFeaturerDetailJ.updated = true; // No need to compare to others in this list
+                                updates.Add(hkFeaturerDetailJ);  // We will write these values back to the file
                             }
                         }
                     }
                 }
 
                 // Now write back any adjustments before we hand off the files to BlibBuild
-                var updatedFiles = new HashSet<int>();
                 foreach (var update in updates.Where(u => u.updated))
                 {
                     var col = contents[update.fileIndex][update.lineIndex].Split('\t');
                     col[15] = update.avergineAndOffset;
-                    col[5] = update.massString; // N.B no need to update the m/z, BlibBuild ignores that
+                    col[5] = update.massString; 
+                    col[6] = Adduct.FromChargeProtonated(update.charge).MzFromNeutralMass(update.mass, MassType.Monoisotopic).ToString(@"F4", CultureInfo.InvariantCulture);
                     contents[update.fileIndex][update.lineIndex] = string.Join(TextUtil.SEPARATOR_TSV_STR, col);
                     updatedFiles.Add(update.fileIndex);
                 }
