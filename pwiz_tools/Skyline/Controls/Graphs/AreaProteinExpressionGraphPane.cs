@@ -13,7 +13,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
         protected override GraphData CreateGraphData(PeptideGroupDocNode selectedProtein, SkylineDataSchema dataSchema)
         {
-            return new AreaGraphData(Document, dataSchema, selectedProtein, GraphSummary.ResultsIndex);
+            return new AreaGraphData(Document, dataSchema, selectedProtein, GraphSummary.ResultsIndex, AnyMolecules);
         }
 
         protected override void UpdateAxes()
@@ -31,8 +31,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             public AreaGraphData(SrmDocument document, SkylineDataSchema schema,
                 PeptideGroupDocNode selectedProtein,
-                int result)
-                : base(document, schema, selectedProtein, result)
+                int result, bool anyMolecules)
+                : base(document, schema, selectedProtein, result, anyMolecules)
             {
             }
 

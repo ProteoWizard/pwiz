@@ -172,6 +172,9 @@ namespace pwiz.Skyline
             this.abundanceTargetsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.abundanceTargetsProteinsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.abundanceTargetsPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.excludeTargetsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.excludeTargetsPeptideListMenuItem= new System.Windows.Forms.ToolStripMenuItem();
+            this.excludeTargetsStandardsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator28 = new System.Windows.Forms.ToolStripSeparator();
             this.areaPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupReplicatesByContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1128,6 +1131,7 @@ namespace pwiz.Skyline
             this.areaNormalizeContextMenuItem,
             this.scopeContextMenuItem,
             this.abundanceTargetsMenuItem,
+            this.excludeTargetsMenuItem,
             this.showPeakAreaLegendContextMenuItem,
             this.showLibraryPeakAreaContextMenuItem,
             this.showDotProductToolStripMenuItem,
@@ -1341,6 +1345,27 @@ namespace pwiz.Skyline
             // 
             this.abundanceTargetsMenuItem.Name = "abundanceTargetsMenuItem";
             resources.ApplyResources(this.abundanceTargetsMenuItem, "abundanceTargetsMenuItem");
+            // 
+            // excludeTargetsMenuItem
+            // 
+            this.excludeTargetsMenuItem.Name = "excludeTargetsMenuItem";
+            resources.ApplyResources(this.excludeTargetsMenuItem, "excludeTargetsMenuItem");
+            // 
+            // excludeTargetsPeptideListMenuItem
+            // 
+            this.excludeTargetsPeptideListMenuItem.CheckOnClick = true;
+            this.excludeTargetsPeptideListMenuItem.Checked = Settings.Default.ExcludePeptideListsFromAbundanceGraph;
+            this.excludeTargetsPeptideListMenuItem.Name = "excludeTargetsPeptideListMenuItem";
+            resources.ApplyResources(this.excludeTargetsPeptideListMenuItem, "excludeTargetsPeptideListMenuItem");
+            this.excludeTargetsPeptideListMenuItem.Click += new System.EventHandler(this.excludeTargetsPeptideListMenuItem_Click);
+            // 
+            // excludeTargetsStandardsMenuItem
+            // 
+            this.excludeTargetsStandardsMenuItem.CheckOnClick = true;
+            this.excludeTargetsStandardsMenuItem.Checked = Settings.Default.ExcludeStandardsFromAbundanceGraph;
+            this.excludeTargetsStandardsMenuItem.Name = "excludeTargetsStandardsMenuItem";
+            resources.ApplyResources(this.excludeTargetsStandardsMenuItem, "excludeTargetsStandardsMenuItem");
+            this.excludeTargetsStandardsMenuItem.Click += new System.EventHandler(this.excludeTargetsStandardsMenuItem_Click);
             // 
             // toolStripSeparator28
             // 
@@ -2725,6 +2750,9 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem abundanceTargetsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem abundanceTargetsProteinsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem abundanceTargetsPeptidesMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem excludeTargetsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem excludeTargetsPeptideListMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem excludeTargetsStandardsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem documentSettingsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem refineToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem selectionContextMenuItem;

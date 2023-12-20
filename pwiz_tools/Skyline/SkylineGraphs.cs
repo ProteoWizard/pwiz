@@ -3053,6 +3053,19 @@ namespace pwiz.Skyline
                 });
             }
         }
+
+        private void AddExcludeTargetsContextMenu(ToolStrip menuStrip, int iInsert)
+        {
+            menuStrip.Items.Insert(iInsert, excludeTargetsMenuItem);
+            if (excludeTargetsMenuItem.DropDownItems.Count == 0)
+            {
+                excludeTargetsMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                {
+                    excludeTargetsPeptideListMenuItem,
+                    excludeTargetsStandardsMenuItem
+                });
+            }
+        }
         private void timeGraphMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             var types = Settings.Default.RTGraphTypes;
@@ -3743,6 +3756,7 @@ namespace pwiz.Skyline
                 {
                     AddTargetsContextMenu(menuStrip, iInsert++);
                 }
+                AddExcludeTargetsContextMenu(menuStrip, iInsert++);
             }
             if (graphType == GraphTypeSummary.replicate)
             {
@@ -4621,6 +4635,17 @@ namespace pwiz.Skyline
         {
             abundanceTargetsProteinsMenuItem.Checked = false;
             Settings.Default.AreaProteinTargets = false;
+            UpdateSummaryGraphs();
+        }
+        private void excludeTargetsPeptideListMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ExcludePeptideListsFromAbundanceGraph = !Settings.Default.ExcludePeptideListsFromAbundanceGraph;
+            UpdateSummaryGraphs();
+        }
+
+        private void excludeTargetsStandardsMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ExcludeStandardsFromAbundanceGraph = !Settings.Default.ExcludeStandardsFromAbundanceGraph;
             UpdateSummaryGraphs();
         }
 

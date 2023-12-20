@@ -96,18 +96,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }
             }
-            if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.best)
-            {
-                return statValues.Max();
-            }
-            // Show all replicates
-            return statValues.Mean();
+            return RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.best ? statValues.Max() :
+                statValues.Mean();
         }
 
         public override bool HandleMouseDownEvent(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
         {
             var ctrl = Control.ModifierKeys.HasFlag(Keys.Control); //TODO allow overide of modifier keys?
-            CurveItem nearestCurve;
             int iNearest;
             var axis = GetNearestXAxis(sender, mouseEventArgs);
             if (axis != null)
@@ -120,11 +115,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 ChangeSelection(iNearest, GraphSummary.StateProvider.SelectedPath, ctrl);
                 return true;
             }
-            if (!FindNearestPoint(new PointF(mouseEventArgs.X, mouseEventArgs.Y), out nearestCurve, out iNearest))
+            if (!FindNearestPoint(new PointF(mouseEventArgs.X, mouseEventArgs.Y), out var nearestCurve, out iNearest))
             {
                 return false;
             }
-            IdentityPath identityPath = GetIdentityPath(nearestCurve, iNearest);
+            var identityPath = GetIdentityPath(nearestCurve, iNearest);
             if (identityPath == null)
             {
                 return false;
@@ -301,7 +296,6 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 YAxis.Title.Text = TextUtil.SpaceSeparate(Resources.SummaryPeptideGraphPane_UpdateAxes_Log, YAxis.Title.Text);
                 YAxis.Type = AxisType.Log;
-                //YAxis.Scale.MinAuto = true;
             }
             else
             {
@@ -355,18 +349,37 @@ namespace pwiz.Skyline.Controls.Graphs
             AxisChange();
         }
 
+        private static bool ContainsStandards(PeptideGroupDocNode nodeGroupPep)
+        {
+            return nodeGroupPep.Children.Cast<PeptideDocNode>().Any(IsStandard);
+        }
+
+        private static bool IsStandard(PeptideDocNode pepDocNode)
+        {
+            return pepDocNode.GlobalStandardType != null;
+        }
+
         public abstract class GraphData : Immutable
         {
             // ReSharper disable PossibleMultipleEnumeration
             protected GraphData(SrmDocument document, SkylineDataSchema schema, PeptideGroupDocNode selectedProtein,
-                int iResult)
+                int iResult, bool anyMolecules)
             {
 
                 // Build the list of points to show.
                 var listPoints = new List<GraphPointData>();
                 foreach (var nodeGroupPep in document.MoleculeGroups)
                 {
-                    if (Settings.Default.AreaProteinTargets)
+                    if (nodeGroupPep.IsPeptideList && Settings.Default.ExcludePeptideListsFromAbundanceGraph)
+                    {
+                        continue;
+                    }
+
+                    if (Settings.Default.ExcludeStandardsFromAbundanceGraph && ContainsStandards(nodeGroupPep))
+                    {
+                        continue;
+                    }
+                    if (Settings.Default.AreaProteinTargets && anyMolecules)
                     {
                         var path = new IdentityPath(IdentityPath.ROOT, nodeGroupPep.PeptideGroup);
                         var protein = new Protein(schema, path);
@@ -392,7 +405,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 listPoints.Sort(PeakAreaPointData.CompareGroupAreas);
 
                 // Init calculated values
-                var labels = new List<string>();
                 var xscalePaths = new List<IdentityPath>();
                 double maxY = 0;
                 double minY = double.MaxValue;
@@ -400,16 +412,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 var pointPairList = new PointPairList(); 
 
-                foreach (var dataPoint in listPoints)
+                for (var i = 0; i < listPoints.Count; i++)
                 {
                     // 1-index the proteins
-                    var iGroup = labels.Count + 1;
-
-                    var label = iGroup.ToString();
-                    labels.Add(label); //TODO is this list necessary?
+                    var iGroup = i + 1;
+                    var dataPoint = listPoints[i];
                     xscalePaths.Add(dataPoint.IdentityPath);
                     
-
                     double groupMaxY = 0;
                     double groupMinY = double.MaxValue;
                     // ReSharper disable DoNotCallOverridableMethodsInConstructor
@@ -421,7 +430,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     // Save the selected index and its y extent
                     if (ReferenceEquals(selectedProtein, dataPoint.NodePepGroup))
                     {
-                        selectedIndex = labels.Count - 1;
+                        selectedIndex = i;
                     }
                     maxY = Math.Max(maxY, groupMaxY);
                     minY = Math.Min(minY, groupMinY);

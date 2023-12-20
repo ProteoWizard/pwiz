@@ -944,6 +944,24 @@
   <data name="abundanceTargetsPeptidesMenuItem.Text" xml:space="preserve">
     <value>Peptides</value>
   </data>
+  <data name="excludeTargetsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+	  <value>209, 22</value>
+  </data>
+  <data name="excludeTargetsMenuItem.Text" xml:space="preserve">
+    <value>Exclude</value>
+  </data>
+  <data name="excludeTargetsPeptideListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+	  <value>209, 22</value>
+  </data>
+  <data name="excludeTargetsPeptideListMenuItem.Text" xml:space="preserve">
+    <value>Peptide Lists</value>
+  </data>
+  <data name="excludeTargetsStandardsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+	  <value>209, 22</value>
+  </data>
+  <data name="excludeTargetsStandardsMenuItem.Text" xml:space="preserve">
+    <value>Standards</value>
+  </data>
   <data name="toolStripSeparator28.Size" type="System.Drawing.Size, System.Drawing">
     <value>206, 6</value>
   </data>
