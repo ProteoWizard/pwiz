@@ -28,9 +28,11 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool AnyProteomic;
         public bool AnyMolecules;
         public SrmDocument Document;
+        private bool AreaProteinTargets;
+        private bool ExcludePeptideLists;
+        private bool ExcludeStandards;
         public bool ShowingFormattingDlg { get; set; }
         public IList<MatchRgbHexColor> ColorRows { get; set; }
-
         protected SummaryRelativeAbundanceGraphPane(GraphSummary graphSummary, PaneKey paneKey)
             : base(graphSummary)
         {
@@ -44,6 +46,9 @@ namespace pwiz.Skyline.Controls.Graphs
             XAxis.Scale.Max = Document.MoleculeGroups.Count();
             AnyMolecules = Document.HasSmallMolecules;
             AnyProteomic = Document.HasPeptides;
+            AreaProteinTargets = Settings.Default.AreaProteinTargets;
+            ExcludePeptideLists = Settings.Default.ExcludePeptideListsFromAbundanceGraph;
+            ExcludeStandards = Settings.Default.ExcludeStandardsFromAbundanceGraph;
             ColorRows = new List<MatchRgbHexColor>();
             var container = new MemoryDocumentContainer();
             container.SetDocument(Document, null);
@@ -59,6 +64,38 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var pointData = (GraphPointData)curveItem[barIndex].Tag;
             return pointData.Peptide != null ? pointData.Peptide.IdentityPath : pointData.Protein.IdentityPath;
+        }
+
+        private bool IsDocumentChanged(SrmDocument docNew)
+        {
+            var retVal = Document != null && !ReferenceEquals(docNew, Document);
+            if (retVal)
+            {
+                Document = docNew;
+            }
+
+            return retVal;
+        }
+
+        private bool IsAbundanceGraphSettingsChanged()
+        {
+            var retVal = false;
+            if (Settings.Default.AreaProteinTargets != AreaProteinTargets)
+            {
+                AreaProteinTargets = Settings.Default.AreaProteinTargets;
+                retVal = true;
+            }
+            if (Settings.Default.ExcludePeptideListsFromAbundanceGraph != ExcludePeptideLists)
+            {
+                ExcludePeptideLists = Settings.Default.ExcludePeptideListsFromAbundanceGraph;
+                retVal = true;
+            }
+            if (Settings.Default.ExcludeStandardsFromAbundanceGraph != ExcludeStandards)
+            {
+                ExcludeStandards = Settings.Default.ExcludeStandardsFromAbundanceGraph;
+                retVal = true;
+            }
+            return retVal;
         }
 
         protected void ShowFormattingDialog()
@@ -185,10 +222,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void UpdateGraph(bool selectionChanged)
         {
+            PeptideGroupDocNode selectedProtein = null;
             GraphSummary.Window ??= Program.MainWindow;
             Clear();
-
-            PeptideGroupDocNode selectedProtein = null;
             var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
             if (selectedTreeNode != null)
             {
@@ -199,7 +235,19 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            _graphData = CreateGraphData(selectedProtein, _schema);
+            var isDocumentChanged = false;
+            var isSettingsChanged = false;
+            if (Program.MainWindow != null)
+            {
+                isDocumentChanged = IsDocumentChanged(Program.MainWindow.Document);
+                isSettingsChanged = IsAbundanceGraphSettingsChanged();
+            }
+            // Only calculate graph data the first time we update, if the document changed,
+            // or if the settings have changed
+            if (_graphData == null || isDocumentChanged || isSettingsChanged)
+            {
+                _graphData = CreateGraphData(selectedProtein, _schema);
+            }
 
             // For proper z-order, add the selected points, then the matched points, then the unmatched points
             var selectedPoints = new PointPairList();
@@ -275,11 +323,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected abstract GraphData CreateGraphData(PeptideGroupDocNode selectedProtein, SkylineDataSchema schema);
 
-
         protected virtual void UpdateAxes()
         {
             XAxis.Title.Text = Settings.Default.AreaProteinTargets ? Resources.SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank :Resources.AreaPeptideGraphPane_UpdateAxes_Peptide_Rank;
-            const double xAxisGrace = 0;
+            const double xAxisGrace = 0.05;
             XAxis.Scale.MaxGrace = xAxisGrace;
             XAxis.Scale.MinGrace = xAxisGrace;
             YAxis.Scale.MinGrace = xAxisGrace;
@@ -460,7 +507,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected virtual PointPair CreatePointPair(int iGroup, GraphPointData pointData, ref double maxY, ref double minY, int? resultIndex)
             {
-                var yValue = Settings.Default.ShowPeptideCV ? pointData.Cv : pointData.AreaGroup;
+                var yValue = Settings.Default.ShowPeptideCV ? pointData.AreaCv : pointData.AreaGroup;
                 var pointPair = new PointPair(iGroup, yValue)
                     { Tag = pointData };
                 maxY = Math.Max(maxY, pointPair.Y);
@@ -476,7 +523,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 NodePepGroup = protein.DocNode; 
                 IdentityPath = new IdentityPath(IdentityPath.ROOT, NodePepGroup.PeptideGroup);
                 AreaGroup = CalculateAbundance(iResult, protein.GetProteinAbundances(), out var cv);
-                Cv = cv;
+                AreaCv = cv;
                 Protein = protein;
             }
 
@@ -487,7 +534,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 Protein = peptide.Protein;
             }
             public PeptideGroupDocNode NodePepGroup { get; private set; }
-            public double Cv { get; private set; }
             public Protein Protein { get; private set; }
             public Peptide Peptide { get; private set; }
         }

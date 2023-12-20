@@ -27,6 +27,7 @@ namespace pwiz.Skyline
         public double TimeGroup { get; private set; }
         public double MassErrorGroup { get; private set; }
         public double TimePepCharge { get; private set; }
+        public double AreaCv { get; set; }
 
         // ReSharper disable SuggestBaseTypeForParameter
         public void CalcStats(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
@@ -35,8 +36,8 @@ namespace pwiz.Skyline
             var times = new List<double>();
             foreach (TransitionGroupDocNode nodePepChild in nodePep.Children)
             {
-                double? meanArea, meanTime, meanMassError;
-                CalcStats(nodePepChild, out meanArea, out meanTime, out meanMassError);
+                double? meanArea, meanTime, meanMassError, areaCv;
+                CalcStats(nodePepChild, out meanArea, out meanTime, out meanMassError, out areaCv);
                 if (!Equals(nodeGroup.TransitionGroup.PrecursorAdduct, nodePepChild.TransitionGroup.PrecursorAdduct))
                     continue;
                 if (meanTime.HasValue)
@@ -46,13 +47,14 @@ namespace pwiz.Skyline
                     AreaGroup = meanArea ?? 0;
                     TimeGroup = meanTime ?? 0;
                     MassErrorGroup = meanMassError ?? 0;
+                    AreaCv = areaCv ?? 0;
                 }
             }
             //                AreaPepCharge = (areas.Count > 0 ? new Statistics(areas).Mean() : 0);
             TimePepCharge = (times.Count > 0 ? new Statistics(times).Mean() : 0);
         }
 
-        private static void CalcStats(TransitionGroupDocNode nodeGroup, out double? meanArea, out double? meanTime, out double? meanMassError)
+        private static void CalcStats(TransitionGroupDocNode nodeGroup, out double? meanArea, out double? meanTime, out double? meanMassError, out double? areaCv)
         {
             var areas = new List<double>();
             var times = new List<double>();
@@ -67,8 +69,13 @@ namespace pwiz.Skyline
                     massErrors.Add(chromInfo.MassError.Value);
             }
             meanArea = null;
+            areaCv = null;
             if (areas.Count > 0)
-                meanArea = new Statistics(areas).Mean();
+            {
+                var statAreas = new Statistics(areas);
+                meanArea = statAreas.Mean();
+                areaCv = statAreas.StdDev() / meanArea;
+            }
             meanTime = null;
             if (times.Count > 0)
                 meanTime = new Statistics(times).Mean();
