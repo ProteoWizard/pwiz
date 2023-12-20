@@ -991,4 +991,7 @@ greater peak area.</value>
 "Species" excludes any peptide that appears in proteins for more than one species in the background proteome.
 Useful in sample mixtures including multiple species.</value>
   </data>
+  <data name="_verbose_errors" xml:space="preserve">
+    <value>Adds additional information to the program output in the case of an error, that may be helpful to Skyline developers.</value>
+  </data>
 </root>
