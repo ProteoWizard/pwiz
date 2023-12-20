@@ -27,6 +27,10 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     path-constant BIBLIO_SPEC_PATH :  $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/BiblioSpec ;
     path-constant PFX_PATH : "$(SKYLINE_PATH)/University of Washington (MacCoss Lab).pfx" ;
     path-constant NUGET_PATH : "C:/Program Files/Microsoft Visual Studio/2022/Community/dotnet/runtime/dotnet.exe" ;
+    if ! [ path.exists $(NUGET_PATH) ]
+    {
+        path-constant NUGET_PATH : "C:/Program Files/Microsoft Visual Studio/2022/Community/dotnet/net8.0/runtime/dotnet.exe" ;
+    }
 
     local ymd = [ MATCH "([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])" : [ modules.peek : JAMDATE ] ] ;
     local year_2digit = [ MATCH "[0-9][0-9]([0-9][0-9])" : $(ymd) ] ;

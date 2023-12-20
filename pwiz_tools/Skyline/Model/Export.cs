@@ -172,10 +172,15 @@ namespace pwiz.Skyline.Model
         public const string ABI_TOF = "SCIEX QTOF - Analyst";
         public const string ABI_7500 = "SCIEX QQQ/QTRAP - SCIEX OS";
         public const string ABI_7600 = "SCIEX QTOF - SCIEX OS";
-        public const string AGILENT = "Agilent";
+        public const string AGILENT = "Agilent MH 10.1 and lower";
         public const string AGILENT_TOF = "Agilent QTOF";
         public const string AGILENT6400 = "Agilent 6400 Series";
-        public const string AGILENT_MASSHUNTER_12 = "Agilent MassHunter 12 and higher";
+        public const string AGILENT_MASSHUNTER_12_METHOD = "Agilent MassHunter 12 and higher";
+        public const string AGILENT_MASSHUNTER_12 = "Agilent MassHunter 12";
+        public const string AGILENT_MASSHUNTER_12_ULTIVO = "Agilent MassHunter 12 Ultivo";
+        public const string AGILENT_MASSHUNTER_12_6495D = "Agilent MassHunter 12 6495D";
+        public const string AGILENT_MASSHUNTER_12_6495C = "Agilent MassHunter 12 6495C";
+
         public const string BRUKER = "Bruker";
         public const string BRUKER_TOF = "Bruker QTOF";
         public const string BRUKER_TIMSTOF = "Bruker timsTOF";
@@ -210,7 +215,7 @@ namespace pwiz.Skyline.Model
         public static readonly string[] METHOD_TYPES =
             {
                 AGILENT6400,
-                AGILENT_MASSHUNTER_12,
+                AGILENT_MASSHUNTER_12_METHOD,
                 BRUKER_TOF,
                 BRUKER_TIMSTOF,
                 ABI_QTRAP,
@@ -233,6 +238,9 @@ namespace pwiz.Skyline.Model
         public static readonly string[] TRANSITION_LIST_TYPES =
             {
                 AGILENT,
+                AGILENT_MASSHUNTER_12,
+                AGILENT_MASSHUNTER_12_ULTIVO,
+                AGILENT_MASSHUNTER_12_6495D,
                 BRUKER,
                 ABI,
                 SHIMADZU,
@@ -265,7 +273,7 @@ namespace pwiz.Skyline.Model
                                        {ABI_7500, EXT_SCIEX_OS},
                                        {ABI_7600, EXT_SCIEX_OS},
                                        {AGILENT6400, EXT_AGILENT},
-                                       {AGILENT_MASSHUNTER_12, EXT_AGILENT},
+                                       {AGILENT_MASSHUNTER_12_METHOD, EXT_AGILENT},
                                        {BRUKER_TOF, EXT_BRUKER},
                                        {BRUKER_TIMSTOF, EXT_BRUKER_TIMSTOF},
                                        {SHIMADZU, EXT_SHIMADZU},
@@ -284,9 +292,17 @@ namespace pwiz.Skyline.Model
 
         public static string TransitionListExtension(string instrument)
         {
-            return Equals(instrument, SHIMADZU)
-                ? ShimadzuMassListExporter.EXT_SHIMADZU_TRANSITION_LIST
-                : TextUtil.EXT_CSV;
+            switch (instrument)
+            {
+                case AGILENT_MASSHUNTER_12:
+                case AGILENT_MASSHUNTER_12_6495D:
+                case AGILENT_MASSHUNTER_12_ULTIVO:
+                    return AgilentUltivoMethodExporter.EXT_AGILENT_MH12_TRANSITION_LIST;
+                case SHIMADZU:
+                    return ShimadzuMassListExporter.EXT_SHIMADZU_TRANSITION_LIST;
+                default:
+                    return TextUtil.EXT_CSV;
+            }
         }
 
         public static string IsolationListExtension(string instrument)
@@ -351,6 +367,10 @@ namespace pwiz.Skyline.Model
             return Equals(type, AGILENT) ||
                    Equals(type, AGILENT6400) ||
                    Equals(type, AGILENT_MASSHUNTER_12) ||
+                   Equals(type, AGILENT_MASSHUNTER_12_METHOD) ||
+                   Equals(type, AGILENT_MASSHUNTER_12_ULTIVO) ||
+                   Equals(type, AGILENT_MASSHUNTER_12_6495D) ||
+                   Equals(type, AGILENT_MASSHUNTER_12_6495C) ||
                    Equals(type, THERMO) ||
                    Equals(type, ABI_QTRAP) ||
                    Equals(type, ABI)
@@ -462,12 +482,13 @@ namespace pwiz.Skyline.Model
                 case ExportInstrumentType.ABI_7600:
                     return ExportSciexOsMethod(doc, path, template, instrumentType);
                 case ExportInstrumentType.AGILENT:
-                case ExportInstrumentType.AGILENT6400:
-                    if (type == ExportFileType.List)
-                        return ExportAgilentCsv(doc, path);
-                    else
-                        return ExportAgilentMethod(doc, path, template);
                 case ExportInstrumentType.AGILENT_MASSHUNTER_12:
+                case ExportInstrumentType.AGILENT_MASSHUNTER_12_ULTIVO:
+                case ExportInstrumentType.AGILENT_MASSHUNTER_12_6495D:
+                    return ExportAgilentCsv(doc, path, instrumentType);
+                case ExportInstrumentType.AGILENT6400:
+                    return ExportAgilentMethod(doc, path, template);
+                case ExportInstrumentType.AGILENT_MASSHUNTER_12_METHOD:
                     return ExportAgilentUltivoMethod(doc, path, template);
                 case ExportInstrumentType.AGILENT_TOF:
                     if (type == ExportFileType.IsolationList)
@@ -625,9 +646,19 @@ namespace pwiz.Skyline.Model
             return exporter;
         }
 
-        public AbstractMassListExporter ExportAgilentCsv(SrmDocument document, string fileName)
+        public AbstractMassListExporter ExportAgilentCsv(SrmDocument document, string fileName, string instrument)
         {
-            var exporter = InitExporter(new AgilentMassListExporter(document));
+            AgilentMassListExporter exporter;
+            switch (instrument)
+            {
+                case ExportInstrumentType.AGILENT:
+                    exporter = InitExporter(new AgilentMassListExporter.AgilentMH10MassListExporter(document, instrument));
+                    break;
+                default:
+                    exporter = InitExporter(new AgilentMassListExporter.AgilentMH121MassListExporter(document, instrument));
+                    break;
+            }
+            
             if (MethodType == ExportMethodType.Standard)
                 exporter.DwellTime = DwellTime;
             exporter.Export(fileName);
@@ -2986,94 +3017,261 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    public class AgilentMassListExporter : AbstractMassListExporter
+    public abstract class AgilentMassListExporter : AbstractMassListExporter
     {
-        public AgilentMassListExporter(SrmDocument document)
-            : this(document, null)
+
+        public class TransitionContext
+        {
+            public AgilentMassListExporter parent;
+
+            public PeptideGroupDocNode nodePepGroup;
+            public PeptideDocNode nodePep;
+            public TransitionGroupDocNode nodeTranGroup;
+            public TransitionGroupDocNode nodeTranGroupPrimary;
+            public TransitionDocNode nodeTran;
+            public int step;
+        }
+
+        public class TransitionField
+        {
+            public Func<TransitionContext, string> ValueRetriever;
+
+            public TransitionField(Func<TransitionContext, string> retriever)
+            {
+                ValueRetriever = retriever;
+            }
+        }
+
+        List<TransitionField> _fields = new List<TransitionField>();
+
+        public void AddField(TextWriter writer, string header, TransitionField field, bool isLast = false)
+        {
+            writer.Write(header);
+            if (!isLast)
+                writer.Write(FieldSeparator);
+            _fields.Add(field);
+        }
+
+        #region Field Definitions
+
+        public TransitionField COMPOUND_GROUP_FIELD = new TransitionField(c => c.nodePepGroup.Name);
+
+        public TransitionField COMPOUND_NAME_FIELD = new TransitionField(c =>
+        {
+            string compound = c.parent.GetCompound(c.nodePep, c.nodeTranGroup);
+            return string.Format(@"{0}.{1}", compound, c.nodeTranGroup.TransitionGroup.LabelType);
+        });
+
+        public TransitionField ISTD_FIELD = new TransitionField(c =>
+        {
+            var istdTypes = c.parent.Document.Settings.PeptideSettings.Modifications.InternalStandardTypes;
+            return BoolToString(istdTypes.Contains(c.nodeTranGroup.TransitionGroup.LabelType));
+        });
+        public TransitionField PRECURSOR_FIELD = new TransitionField(c => SequenceMassCalc.PersistentMZ(c.nodeTranGroup.PrecursorMz).ToString(c.parent.CultureInfo));
+
+        public TransitionField MS1_RES_FIELD = new TransitionField(c => @"Unit");
+
+        public TransitionField PRODUCT_FIELD = new TransitionField(c =>
+            c.parent.GetProductMz(SequenceMassCalc.PersistentMZ(c.nodeTran.Mz), 0).ToString(c.parent.CultureInfo));
+
+        public TransitionField MS2_RES_FIELD = new TransitionField(c => @"Unit");
+
+        public TransitionField DWELL_FIELD =
+            new TransitionField(c => Math.Round(c.parent.DwellTime, 2).ToString(c.parent.CultureInfo));
+
+        public TransitionField PRIMARY_FIELD = new TransitionField(c =>
+        {
+            int? rank = c.parent.GetRank(c.nodeTranGroup, c.nodeTranGroupPrimary, c.nodeTran);
+            return BoolToString(rank.HasValue && rank.Value <= c.parent.PrimaryTransitionCount);
+        });
+
+        public TransitionField TRIGGER_FIELD = new TransitionField(c =>
+        {
+            var istdTypes = c.parent.Document.Settings.PeptideSettings.Modifications.InternalStandardTypes;
+            int? rank = c.parent.GetRank(c.nodeTranGroup, c.nodeTranGroupPrimary, c.nodeTran);
+            var trigger = false;
+            if (IsTriggerType(c.nodePep, c.nodeTranGroup, istdTypes) && rank.HasValue && rank.Value == 1)
+            {
+                int minCharge = c.nodePep.TransitionGroups.Select(g => Math.Abs(g.PrecursorCharge)).Min();
+                if (Math.Abs(c.nodeTranGroup.PrecursorCharge) == minCharge)
+                    trigger = true;
+            }
+
+            return BoolToString(trigger);
+        });
+
+        public TransitionField TRIGGER_THRESHOLD_FIELD = new TransitionField(c => 0.ToString(c.parent.CultureInfo));
+        // This one returns both RT and RT window in one go to avoid calling PredictRetentionTime multiple times
+        public TransitionField RT_FIELD = new TransitionField(c =>
+        {
+            var prediction = c.parent.Document.Settings.PeptideSettings.Prediction;
+            double? predictedRT = prediction.PredictRetentionTime(c.parent.Document, c.nodePep, c.nodeTranGroup,
+                c.parent.SchedulingReplicateIndex, c.parent.SchedulingAlgorithm, false, out var windowRT);
+
+            return predictedRT.HasValue
+                ? (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(c.parent.CultureInfo) +
+                  c.parent.FieldSeparator + Math.Round(windowRT, 1).ToString(c.parent.CultureInfo)
+                : c.parent.FieldSeparator.ToString();
+        });
+        public TransitionField FRAGMENTOR_FIELD = new TransitionField(c => c.parent.Fragmentor.ToString(c.parent.CultureInfo));
+        public TransitionField CE_FIELD = new TransitionField(c =>
+        {
+            return Math.Round(c.parent.GetCollisionEnergy(c.nodePep, c.nodeTranGroup, c.nodeTran, c.step), 1)
+                .ToString(c.parent.CultureInfo);
+        });
+        public TransitionField CAV_FIELD = new TransitionField(c => 4.ToString(c.parent.CultureInfo));
+        public TransitionField POLARITY_FIELD = new TransitionField(c => c.nodeTranGroup.PrecursorCharge > 0 ? @"Positive" : @"Negative");
+        public TransitionField TRIGGER_ENTRANCE_FIELD = new TransitionField(c => 0.ToString(c.parent.CultureInfo));
+        public TransitionField TRIGGER_DELAY_FIELD = new TransitionField(c => 0.ToString(c.parent.CultureInfo));
+        public TransitionField TRIGGER_WINDOW_FIELD = new TransitionField(c => 0.ToString(c.parent.CultureInfo));
+        public TransitionField TRIGGER_LOGIC_ENABLED_FIELD = new TransitionField(c => BoolToString(false));
+        public TransitionField TRIGGER_LOGIC_FLAG_FIELD = new TransitionField(c => @"AND");
+        public TransitionField TRIGGER_RATIO_FIELD = new TransitionField(c => 1.ToString(c.parent.CultureInfo));
+        public TransitionField TRIGGER_RATIO_WINDOW_FIELD = new TransitionField(c => 1.ToString(c.parent.CultureInfo));
+        public TransitionField TRIGGER_IGNORE_MRM_FIELD = new TransitionField(c => BoolToString(false));
+        public TransitionField FUNNEL_MODE_FIELD = new TransitionField(c => @"Standard");
+        public TransitionField AVERAGE_DWELL_FIELD = new TransitionField(c => c.parent.AverageDwell.ToString(c.parent.CultureInfo));
+
+        public TransitionField EMPTY_FIELD = new TransitionField(c => string.Empty);
+        #endregion
+
+        public class AgilentMH10MassListExporter : AgilentMassListExporter
+        {
+            public AgilentMH10MassListExporter(SrmDocument document, string instrumentType = ExportInstrumentType.AGILENT) : base(document, null, instrumentType)
+            {
+            }
+
+            protected override void WriteHeaders(TextWriter writer)
+            {
+                _fields.Clear();
+                AddField(writer, @"Compound Group", COMPOUND_GROUP_FIELD);
+                AddField(writer, @"Compound Name", COMPOUND_NAME_FIELD);
+                AddField(writer, @"ISTD?", ISTD_FIELD);
+                AddField(writer, @"Precursor Ion", PRECURSOR_FIELD);
+                AddField(writer, @"MS1 Res", MS1_RES_FIELD);
+                AddField(writer, @"Product Ion", PRODUCT_FIELD);
+                AddField(writer, @"MS2 Res", MS2_RES_FIELD);
+
+                if (MethodType == ExportMethodType.Standard)
+                {
+                    AddField(writer, @"Dwell", DWELL_FIELD);
+                }
+                else
+                {
+                    AddField(writer, @"Primary", PRIMARY_FIELD);
+                    if (MethodType == ExportMethodType.Triggered)
+                    {
+                        AddField(writer, @"Trigger", TRIGGER_FIELD);
+                    }
+                    AddField(writer, @"Threshold", TRIGGER_THRESHOLD_FIELD);
+
+                    AddField(writer, @"Ret Time (min)" + FieldSeparator + @"Delta Ret Time", RT_FIELD);
+                }
+                AddField(writer, @"Fragmentor", FRAGMENTOR_FIELD);
+                AddField(writer, @"Collision Energy", CE_FIELD);
+                AddField(writer, @"Cell Accelerator Voltage", CAV_FIELD);
+                AddField(writer, @"Polarity", POLARITY_FIELD, (MethodType == ExportMethodType.Standard));
+                if (MethodType != ExportMethodType.Standard)
+                {
+                    AddField(writer, @"Trigger Entrance Delay (cycles)", TRIGGER_ENTRANCE_FIELD);
+                    AddField(writer, @"Trigger Delay (cycles)", TRIGGER_DELAY_FIELD);
+                    AddField(writer, @"Trigger Window", TRIGGER_WINDOW_FIELD);
+                    AddField(writer, @"IsLogicEnabled", TRIGGER_LOGIC_ENABLED_FIELD);
+                    AddField(writer, @"Trigger Logic Flag", TRIGGER_LOGIC_FLAG_FIELD);
+                    AddField(writer, @"Trigger Ratio", TRIGGER_RATIO_FIELD);
+                    AddField(writer, @"Trigger Ratio Window", TRIGGER_RATIO_WINDOW_FIELD);
+                    AddField(writer, @"Ignore MRM", TRIGGER_IGNORE_MRM_FIELD, true);
+                }
+                writer.WriteLine();
+            }
+        }
+        public class AgilentMH121MassListExporter : AgilentMassListExporter
+        {
+            public AgilentMH121MassListExporter(SrmDocument document, string instrumentType) : base(document, instrumentType)
+            {
+                FieldSeparator = TextUtil.SEPARATOR_TSV;
+            }
+
+            protected override void WriteHeaders(TextWriter writer)
+            {
+                _fields.Clear();
+                AddField(writer, @"Compound Group", COMPOUND_GROUP_FIELD);
+                AddField(writer, @"Compound Name", COMPOUND_NAME_FIELD);
+                AddField(writer, @"Compound formula", EMPTY_FIELD);
+                AddField(writer, @"Ion species", EMPTY_FIELD);
+                AddField(writer, @"CAS", EMPTY_FIELD);
+                if(MethodType != ExportMethodType.Standard)
+                    AddField(writer, @"ISTD?", ISTD_FIELD);
+                AddField(writer, @"z", EMPTY_FIELD);
+                AddField(writer, @"Monoisotopic mass", EMPTY_FIELD);
+                if (MethodType == ExportMethodType.Standard)
+                    AddField(writer, @"ISTD?", ISTD_FIELD);
+
+                AddField(writer, @"Precursor m/z", PRECURSOR_FIELD);
+                AddField(writer, @"MS1 Res", MS1_RES_FIELD);
+                AddField(writer, @"Product m/z", PRODUCT_FIELD);
+                AddField(writer, @"MS2 Res", MS2_RES_FIELD);
+
+                if (MethodType == ExportMethodType.Standard)
+                {
+                    AddField(writer, @"Dwell (ms)", DWELL_FIELD);
+                }
+                else
+                {
+                    AddField(writer, @"RT (min)" + FieldSeparator + @"RT Window (min)", RT_FIELD);
+                    if (MethodType == ExportMethodType.Triggered)
+                    {
+                        AddField(writer, @"Primary", PRIMARY_FIELD);
+                        AddField(writer, @"Trigger", TRIGGER_FIELD);
+                        AddField(writer, @"Trigger threshold", TRIGGER_THRESHOLD_FIELD);
+                        AddField(writer, @"Trigger entrance", TRIGGER_ENTRANCE_FIELD);
+                        AddField(writer, @"Trigger delay", TRIGGER_DELAY_FIELD);
+                        AddField(writer, @"Trigger window", TRIGGER_WINDOW_FIELD);
+                    }
+                }
+                AddField(writer, @"Fragmentor (V)", FRAGMENTOR_FIELD);
+                if(InstrumentType != ExportInstrumentType.AGILENT_MASSHUNTER_12_ULTIVO)
+                    AddField(writer, @"CAV (V)", CAV_FIELD);
+                AddField(writer, @"CE (V)", CE_FIELD);
+                if(InstrumentType == ExportInstrumentType.AGILENT_MASSHUNTER_12_6495D)
+                    AddField(writer, @"iFunnel mode", FUNNEL_MODE_FIELD);
+                if(MethodType != ExportMethodType.Standard)
+                    AddField(writer, @"Average dwell (ms)", AVERAGE_DWELL_FIELD);
+
+                AddField(writer, @"Polarity", POLARITY_FIELD);
+                writer.WriteLine();
+            }
+        }
+        public AgilentMassListExporter(SrmDocument document, string instrumentType = ExportInstrumentType.AGILENT)
+            : this(document, null, instrumentType)
         {
         }
 
-        public AgilentMassListExporter(SrmDocument document, DocNode node)
+        public AgilentMassListExporter(SrmDocument document, DocNode node, string instrumentType)
             : base(document, node)
         {
-            Fragmentor = 130;
+            if (instrumentType == ExportInstrumentType.AGILENT_MASSHUNTER_12_6495D ||
+                instrumentType == ExportInstrumentType.AGILENT_MASSHUNTER_12_6495C)
+                Fragmentor = 166;
+            else 
+                Fragmentor = 130;
+            if (instrumentType == ExportInstrumentType.AGILENT_MASSHUNTER_12_6495C)
+                AverageDwell = 497.83;
+            AverageDwell = 499.2;
+            _instrumentType = instrumentType;
         }
 
         public double DwellTime { get; set; }
         public double Fragmentor { get; set; }
+        public double AverageDwell { get; set; }
 
+        private string _instrumentType;
         protected override string InstrumentType
         {
-            get { return ExportInstrumentType.AGILENT; }
+            get => _instrumentType;
         }
 
         public override bool HasHeaders { get { return true; } }
-
-        protected override void WriteHeaders(TextWriter writer)
-        {
-            writer.Write(@"Compound Group");
-            writer.Write(FieldSeparator);
-            writer.Write(@"Compound Name");
-            writer.Write(FieldSeparator);
-            writer.Write(@"ISTD?");
-            writer.Write(FieldSeparator);
-            writer.Write(@"Precursor Ion");
-            writer.Write(FieldSeparator);
-            writer.Write(@"MS1 Res");
-            writer.Write(FieldSeparator);
-            writer.Write(@"Product Ion");
-            writer.Write(FieldSeparator);
-            writer.Write(@"MS2 Res");
-            if (MethodType == ExportMethodType.Standard)
-            {
-                writer.Write(FieldSeparator);
-                writer.Write(@"Dwell");
-            }
-            else
-            {
-                writer.Write(FieldSeparator);
-                writer.Write(@"Primary");
-                if (MethodType == ExportMethodType.Triggered)
-                {
-                    writer.Write(FieldSeparator);
-                    writer.Write(@"Trigger");
-                }
-                writer.Write(FieldSeparator);
-                writer.Write(@"Threshold");
-                writer.Write(FieldSeparator);
-                writer.Write(@"Ret Time (min)");
-                writer.Write(FieldSeparator);
-                writer.Write(@"Delta Ret Time");
-            }
-            writer.Write(FieldSeparator);
-            writer.Write(@"Fragmentor");
-            writer.Write(FieldSeparator);
-            writer.Write(@"Collision Energy");
-            writer.Write(FieldSeparator);
-            writer.Write(@"Cell Accelerator Voltage");
-            writer.Write(FieldSeparator);
-            writer.Write(@"Polarity");
-            if (MethodType != ExportMethodType.Standard)
-            {
-                writer.Write(FieldSeparator);
-                writer.Write(@"Trigger Entrance Delay (cycles)");
-                writer.Write(FieldSeparator);
-                writer.Write(@"Trigger Delay (cycles)");
-                writer.Write(FieldSeparator);
-                writer.Write(@"Trigger Window");
-                writer.Write(FieldSeparator);
-                writer.Write(@"IsLogicEnabled");
-                writer.Write(FieldSeparator);
-                writer.Write(@"Trigger Logic Flag");
-                writer.Write(FieldSeparator);
-                writer.Write(@"Trigger Ratio");
-                writer.Write(FieldSeparator);
-                writer.Write(@"Trigger Ratio Window");
-                writer.Write(FieldSeparator);
-                writer.Write(@"Ignore MRM");
-            }
-            writer.WriteLine();
-        }
 
         protected override void WriteTransition(TextWriter writer,
                                                 int fileNumber,
@@ -3084,99 +3282,19 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
-            writer.WriteDsvField(nodePepGroup.Name, FieldSeparator, FieldSeparatorReplacement);
-            writer.Write(FieldSeparator);
-            // Write modified sequence for the light peptide molecule
-            string compound = GetCompound(nodePep, nodeTranGroup);
-            string compoundName = string.Format(@"{0}.{1}", compound, nodeTranGroup.TransitionGroup.LabelType);
-            writer.WriteDsvField(compoundName, FieldSeparator, FieldSeparatorReplacement);
-
-            writer.Write(FieldSeparator);
-            var istdTypes = Document.Settings.PeptideSettings.Modifications.InternalStandardTypes;
-            writer.Write(BoolToString(istdTypes.Contains(nodeTranGroup.TransitionGroup.LabelType))); // ISTD?
-            writer.Write(FieldSeparator);
-            writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
-            writer.Write(FieldSeparator);
-            writer.Write(@"Unit");   // MS1 Res
-            writer.Write(FieldSeparator);
-            // For Agilent we do not call GetProductMz because we want all of the Q3 m/z values to be the same
-            // for all of the optimization step chromatograms
-            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), 0).ToString(CultureInfo));
-            writer.Write(FieldSeparator);
-            writer.Write(@"Unit");   // MS2 Res
-            writer.Write(FieldSeparator);
-
-            if (MethodType == ExportMethodType.Standard)
+            var context = new TransitionContext()
             {
-                writer.Write(Math.Round(DwellTime, 2).ToString(CultureInfo));
-            }
-            else
+                parent = this, nodePep = nodePep, nodePepGroup = nodePepGroup, nodeTran = nodeTran,
+                nodeTranGroup = nodeTranGroup, nodeTranGroupPrimary = nodeTranGroupPrimary, step = step
+            };
+
+            var values = _fields.SelectMany(f => f.ValueRetriever(context).Split(FieldSeparator)).ToList();
+            for (var i = 0; i < values.Count; i++)
             {
-                int? rank = GetRank(nodeTranGroup, nodeTranGroupPrimary, nodeTran);
-                writer.Write(BoolToString(rank.HasValue && rank.Value <= PrimaryTransitionCount)); // Primary
-                if (MethodType == ExportMethodType.Triggered)
-                {
+                writer.WriteDsvField(values[i], FieldSeparator, FieldSeparatorReplacement);
+                if(i < (values.Count - 1))
                     writer.Write(FieldSeparator);
-                    // Trigger must be rank 1 transition, of analyte type and minimum precursor charge
-                    var trigger = false;
-                    if (IsTriggerType(nodePep, nodeTranGroup, istdTypes) && rank.HasValue && rank.Value == 1)
-                    {
-                        int minCharge = nodePep.TransitionGroups.Select(g => Math.Abs(g.PrecursorCharge)).Min();
-                        if (Math.Abs(nodeTranGroup.PrecursorCharge) == minCharge)
-                            trigger = true;
-                    }
-                    writer.Write(BoolToString(trigger));
-                }
-                writer.Write(FieldSeparator);
-                writer.Write(0.ToString(CultureInfo)); // Threshold
-                writer.Write(FieldSeparator);
-
-                // Scheduling information
-                var prediction = Document.Settings.PeptideSettings.Prediction;
-                double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
-                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out var windowRT);
-
-                if (predictedRT.HasValue)
-                {
-                    writer.Write((RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo));
-                    writer.Write(FieldSeparator);
-                    writer.Write(Math.Round(windowRT, 1).ToString(CultureInfo));
-                }
-                else
-                {
-                    writer.Write(FieldSeparator);
-                }
             }
-
-            writer.Write(FieldSeparator);
-            writer.Write(Fragmentor.ToString(CultureInfo));
-            writer.Write(FieldSeparator);
-            writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
-            writer.Write(FieldSeparator);
-            writer.Write(4);    // Cell Accelerator Voltage
-            writer.Write(FieldSeparator);
-            writer.Write(nodeTranGroup.PrecursorCharge > 0 ? @"Positive" : @"Negative"); // Polarity
-
-            if (MethodType != ExportMethodType.Standard)
-            {
-                writer.Write(FieldSeparator);
-                writer.Write(0.ToString(CultureInfo)); // Trigger Entrance Delay
-                writer.Write(FieldSeparator);
-                writer.Write(0.ToString(CultureInfo)); // Trigger Delay
-                writer.Write(FieldSeparator);
-                writer.Write(0.ToString(CultureInfo)); // Trigger Window
-                writer.Write(FieldSeparator);
-                writer.Write(BoolToString(false)); // IsLogicEnabled
-                writer.Write(FieldSeparator);
-                writer.Write(@"AND"); // Trigger Logic Flag
-                writer.Write(FieldSeparator);
-                writer.Write(1.ToString(CultureInfo)); // Trigger Ratio
-                writer.Write(FieldSeparator);
-                writer.Write(1.ToString(CultureInfo)); // Trigger Ratio Window
-                writer.Write(FieldSeparator);
-                writer.Write(BoolToString(false)); // Ignore MRM
-            }
-
             writer.WriteLine();
         }
 
@@ -3211,7 +3329,7 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    public class AgilentMethodExporter : AgilentMassListExporter
+    public class AgilentMethodExporter : AgilentMassListExporter.AgilentMH10MassListExporter
     {
         public const string EXE_BUILD_AGILENT_METHOD = @"Method\Agilent\6400\BuildAgilentMethod";
 
@@ -3235,9 +3353,10 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    public class AgilentUltivoMethodExporter : AgilentMassListExporter
+    public class AgilentUltivoMethodExporter : AgilentMassListExporter.AgilentMH10MassListExporter
     {
         public const string EXE_BUILD_AGILENT_METHOD = @"Method\Agilent\MH12\BuildAgilentMH12Method";
+        public const string EXT_AGILENT_MH12_TRANSITION_LIST= ".txt";
 
         public AgilentUltivoMethodExporter(SrmDocument document)
             : base(document)
