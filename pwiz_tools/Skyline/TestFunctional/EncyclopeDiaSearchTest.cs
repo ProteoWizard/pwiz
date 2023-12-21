@@ -38,7 +38,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class EncyclopeDiaSearchTest : AbstractFunctionalTestEx
     {
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestEncyclopeDiaSearch()
         {
             TestFilesZip = @"Test\EncyclopeDiaHelpersTest.zip";

@@ -172,4 +172,10 @@
   <data name="MsconvertDdaConverter_Run_Starting_msconvert_conversion_" xml:space="preserve">
     <value>Starting msconvert conversion.</value>
   </data>
+  <data name="HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_" xml:space="preserve">
+      <value>Performing retention time alignment {0} vs {1}</value>
+  </data>
+  <data name="HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_runs" xml:space="preserve">
+      <value>Looking for features occurring in multiple runs</value>
+  </data>
 </root>

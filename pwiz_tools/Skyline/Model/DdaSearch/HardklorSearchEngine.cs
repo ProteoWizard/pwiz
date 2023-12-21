@@ -33,7 +33,7 @@ using System.Linq;
 using System.Threading;
 using pwiz.Skyline.Util.Extensions;
 using System.Text;
-using pwiz.Common.Collections;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Results.Spectra.Alignment;
 using pwiz.Skyline.Model.RetentionTimes;
 using Enzyme = pwiz.Skyline.Model.DocSettings.Enzyme;
@@ -198,13 +198,18 @@ namespace pwiz.Skyline.Model.DdaSearch
             public int lineIndex; // Which line in that file
             public bool updated; // Does it need to be written back to the file?
         }
+
         private void FindSimilarFeatures()
         {
             // Final step - try to unify similar features in the various Bullseye result files
             var bfiles = SpectrumFileNames.Select(GetSearchResultFilepath).ToArray();
             if (bfiles.Length > 1)
             {
+                _progressStatus = _progressStatus.ChangeMessage(string.Empty);
+                _progressStatus = _progressStatus.ChangePercentComplete(0).ChangeMessage(DdaSearchResources.HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_runs);
+
                 PerformAllAlignments();
+
                 // The shape of the isotope distribution is pretty much determined by everything but
                 // hydrogen, so create a lookup based on avergine formulas with H removed
                 var featuresByCNOS = new Dictionary<string, List<hkFeatureDetail>>();
@@ -285,10 +290,10 @@ namespace pwiz.Skyline.Model.DdaSearch
                                 continue; // Already processed
                             }
 
-                            var fileI = SpectrumFileNames[hkPrecursorDetailI.fileIndex];
-                            var fileJ = SpectrumFileNames[hkPrecursorDetailJ.fileIndex];
-                            var rtI = hkPrecursorDetailI.rt;
-                            var rtJ = hkPrecursorDetailJ.rt;
+                            var fileI = SpectrumFileNames[hkFeatureDetailI.fileIndex];
+                            var fileJ = SpectrumFileNames[hkFeatureDetailJ.fileIndex];
+                            var rtI = hkFeatureDetailI.rt;
+                            var rtJ = hkFeatureDetailJ.rt;
                             if (_alignments.TryGetValue(Tuple.Create(fileI, fileJ), out var alignment))
                             {
                                 rtI = alignment.GetValue(rtJ);
@@ -576,7 +581,19 @@ namespace pwiz.Skyline.Model.DdaSearch
         public static SpectrumSummaryList LoadSpectrumSummaries(MsDataFileUri msDataFileUri)
         {
             var summaries = new List<SpectrumSummary>();
-            using (var dataFile = msDataFileUri.OpenMsDataFile(false, false, false, false, false))
+            MsDataFileImpl dataFile;
+            try
+            {
+                // Only need MS1 for our purposes, and centroided data if possible
+                dataFile = msDataFileUri.OpenMsDataFile(false, true, true, true, false);
+                dataFile.GetSpectrum(0);
+            }
+            catch (Exception)
+            {
+                // Retry on the chance that the failure was inability to do centroiding
+                dataFile = msDataFileUri.OpenMsDataFile(false, true, false, false, false);
+            }
+            using (dataFile)
             {
                 foreach (var spectrumIndex in Enumerable.Range(0, dataFile.SpectrumCount))
                 {
@@ -590,7 +607,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public KdeAligner PerformAlignment(SpectrumSummaryList spectra1, SpectrumSummaryList spectra2)
         {
-            var similarityMatrix = spectra1.GetSimilarityMatrix(null, null, spectra2);
+            var similarityMatrix = spectra1.GetSimilarityMatrix(this, this._progressStatus, spectra2);
             var kdeAligner = new KdeAligner();
             var pointsToBeAligned = similarityMatrix.FindBestPath(false).ToList();
             kdeAligner.Train(pointsToBeAligned.Select(pt=>pt.X).ToArray(), pointsToBeAligned.Select(pt=>pt.Y).ToArray(), CancellationToken.None);
@@ -612,6 +629,9 @@ namespace pwiz.Skyline.Model.DdaSearch
                     {
                         continue;
                     }
+
+                    _progressStatus = _progressStatus.ChangeMessage(
+                        string.Format(DdaSearchResources.HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_, entry1.Key.GetFileName(), entry2.Key.GetFileName()));
 
                     try
                     {

@@ -181,7 +181,9 @@
     <Compile Include="DataBinding\CollectionInfo.cs" />
     <Compile Include="DataBinding\ColumnFormats.cs" />
     <Compile Include="DataBinding\ColumnSelector.cs" />
-    <Compile Include="DataBinding\Controls\ClusteringEditor.cs" />
+    <Compile Include="DataBinding\Controls\ClusteringEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="DataBinding\Controls\ClusteringEditor.Designer.cs">
       <DependentUpon>ClusteringEditor.cs</DependentUpon>
     </Compile>
@@ -200,27 +202,39 @@
     <Compile Include="DataBinding\Controls\Editor\ChooseViewsControl.Designer.cs">
       <DependentUpon>ChooseViewsControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="DataBinding\Controls\Editor\FindColumnDlg.cs" />
+    <Compile Include="DataBinding\Controls\Editor\FindColumnDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="DataBinding\Controls\Editor\FindColumnDlg.Designer.cs">
       <DependentUpon>FindColumnDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="DataBinding\Controls\Editor\DocumentationViewer.cs" />
+    <Compile Include="DataBinding\Controls\Editor\DocumentationViewer.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="DataBinding\Controls\Editor\DocumentationViewer.Designer.cs">
       <DependentUpon>DocumentationViewer.cs</DependentUpon>
     </Compile>
-    <Compile Include="DataBinding\Controls\ManageLayoutsForm.cs" />
+    <Compile Include="DataBinding\Controls\ManageLayoutsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="DataBinding\Controls\ManageLayoutsForm.Designer.cs">
       <DependentUpon>ManageLayoutsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="DataBinding\Controls\NameLayoutForm.cs" />
+    <Compile Include="DataBinding\Controls\NameLayoutForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="DataBinding\Controls\NameLayoutForm.Designer.cs">
       <DependentUpon>NameLayoutForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="DataBinding\Controls\PivotEditor.cs" />
+    <Compile Include="DataBinding\Controls\PivotEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="DataBinding\Controls\PivotEditor.Designer.cs">
       <DependentUpon>PivotEditor.cs</DependentUpon>
     </Compile>
-    <Compile Include="DataBinding\Controls\QuickFilterForm.cs" />
+    <Compile Include="DataBinding\Controls\QuickFilterForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="DataBinding\Controls\QuickFilterForm.Designer.cs">
       <DependentUpon>QuickFilterForm.cs</DependentUpon>
     </Compile>
@@ -249,7 +263,9 @@
     <Compile Include="DataBinding\Controls\Editor\ChooseColumnsTab.Designer.cs">
       <DependentUpon>ChooseColumnsTab.cs</DependentUpon>
     </Compile>
-    <Compile Include="DataBinding\Controls\Editor\ViewEditor.cs" />
+    <Compile Include="DataBinding\Controls\Editor\ViewEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="DataBinding\Controls\Editor\ViewEditor.Designer.cs">
       <DependentUpon>ViewEditor.cs</DependentUpon>
     </Compile>
@@ -260,7 +276,9 @@
       <DependentUpon>FilterTab.cs</DependentUpon>
     </Compile>
     <Compile Include="DataBinding\Controls\Editor\ListViewHelper.cs" />
-    <Compile Include="DataBinding\Controls\Editor\ManageViewsForm.cs" />
+    <Compile Include="DataBinding\Controls\Editor\ManageViewsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="DataBinding\Controls\Editor\ManageViewsForm.Designer.cs">
       <DependentUpon>ManageViewsForm.cs</DependentUpon>
     </Compile>

@@ -130,9 +130,10 @@ namespace TestPerf
             }
         }
 
+        private const int SMALL_MOL_ONLY_PASS = 1;
         protected override void DoTest()
         {
-            for (int pass = 0; pass < 2;)
+            for (int pass = 0; pass <= SMALL_MOL_ONLY_PASS;)
             {
                 PerformSearchTest(pass++);
             }
@@ -159,11 +160,10 @@ namespace TestPerf
                 }
             }
 
-            if (pass == 0) 
+            if (pass < SMALL_MOL_ONLY_PASS) 
             {
                 // Load the document that we have at the end of the MS1 fullscan tutorial
                 RunUI(() => SkylineWindow.OpenFile(GetTestPath("Ms1FilteringTutorial-2min.sky")));
-                WaitForDocumentLoaded();
             }
             else
             {
@@ -171,9 +171,14 @@ namespace TestPerf
                 RunUI(() =>
                 {
                     SkylineWindow.NewDocument(true);
-                    SkylineWindow.SaveDocument(GetTestPath("StartingWithEmptyDoc.sky"));
                 });
             }
+
+            RunUI(() =>
+            {
+                SkylineWindow.SaveDocument(GetTestPath($"Pass{pass}.sky"));
+                WaitForDocumentLoaded();
+            });
 
             PauseForScreenShot("Ready to start Wizard (File > Import > Feature Detection...)");
             // Launch the wizard
@@ -286,10 +291,11 @@ namespace TestPerf
 
             RunUI(() =>
             {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3 };
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof;  // Per MS1 filtering tutorial
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 10000; // Per MS1 filtering tutorial
             });
-
             PauseForScreenShot("Full scan settings - not set Centroided (this data set isn't compatible with that), so instrument settings on next page should not be operable");
             RunUI(() =>
             {
@@ -344,6 +350,7 @@ namespace TestPerf
             });
 
             WaitForDocumentLoaded();
+            RunUI(() => SkylineWindow.SaveDocument());
 
             // IsPauseForScreenShots = true; // enable for quick demo
             PauseForScreenShot("complete");
@@ -359,23 +366,22 @@ namespace TestPerf
             var doc = SkylineWindow.Document;
             var tg = doc.MoleculeTransitions.First(t => t.Transition.Group.IsCustomIon);
             var r = tg.Results.First().First();
-            AssertEx.AreEqual(36.61, r.RetentionTime, .01);
-            AssertEx.AreEqual(36.34, r.StartRetentionTime, .01);
-            AssertEx.AreEqual(37.51, r.EndRetentionTime, .01);
+            AssertEx.AreEqual(33.79, r.RetentionTime, .01);
+            AssertEx.AreEqual(33.61, r.StartRetentionTime, .01);
+            AssertEx.AreEqual(34.26, r.EndRetentionTime, .01);
 
-            RunUI(() => SkylineWindow.SaveDocument());
-            var expectedFeatures = 676;
-            var expectedFeaturesTransitions = 2028;
-            if (pass==1)
+            var expectedFeatures = 866;
+            var expectedFeaturesTransitions = 2598;
+            if (pass == SMALL_MOL_ONLY_PASS)
             {
                 AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, expectedFeatures, expectedFeatures, expectedFeaturesTransitions);
             }
             else
             {
                 var expectedPeptideGroups = 11;
-                var expectedPeptides = 356;
-                var expectedPeptideTransitionGroups = 357;
-                var expectedPeptideTransitions = 1079;
+                var expectedPeptides = 45;
+                var expectedPeptideTransitionGroups = 46;
+                var expectedPeptideTransitions = 141;
                 AssertEx.IsDocumentState(SkylineWindow.Document, null, expectedPeptideGroups + 1, expectedPeptides + expectedFeatures, 
                     expectedPeptideTransitionGroups + expectedFeatures, expectedPeptideTransitions + expectedFeaturesTransitions);
             }
