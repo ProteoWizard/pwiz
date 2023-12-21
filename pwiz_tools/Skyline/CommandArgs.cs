@@ -1127,7 +1127,7 @@ namespace pwiz.Skyline
 
         public static readonly ArgumentGroup GROUP_DOCUMENT_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_DOCUMENT_SETTINGS, false,
                 ARG_ADD_ANNOTATIONS_NAME, ARG_ADD_ANNOTATIONS_TARGETS, ARG_ADD_ANNOTATIONS_TYPE, ARG_ADD_ANNOTATIONS_VALUES, ARG_ADD_ANNOTATIONS_FILE, ARG_ADD_ANNOTATIONS_CONFLICT_RESOLUTION) 
-            { LeftColumnWidth = 30, Validate = c => c.ValidateAddAnnotationsArgs()};
+            { LeftColumnWidth = 36, Validate = c => c.ValidateAddAnnotationsArgs()};
         public string AddAnnotationsFile { get; private set; }
         public bool AddingAnnotationsFile { get { return !string.IsNullOrEmpty(AddAnnotationsFile) || !string.IsNullOrEmpty(AddAnnotationsName); } }
         public string AddAnnotationsName { get; private set; }
