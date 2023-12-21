@@ -33,6 +33,10 @@ using System.Linq;
 using System.Threading;
 using pwiz.Skyline.Util.Extensions;
 using System.Text;
+using pwiz.Common.Collections;
+using pwiz.Skyline.Model.Results.Spectra.Alignment;
+using pwiz.Skyline.Model.RetentionTimes;
+using Enzyme = pwiz.Skyline.Model.DocSettings.Enzyme;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {
@@ -45,6 +49,10 @@ namespace pwiz.Skyline.Model.DdaSearch
         private SortedDictionary<MsDataFileUri, string> _inputsAndOutputs; // .hk.bs.kro results files
         private string _isotopesFilename;
         private string _paramsFilename;
+        private Dictionary<MsDataFileUri, SpectrumSummaryList> _spectrumSummaryLists = new Dictionary<MsDataFileUri, SpectrumSummaryList>();
+
+        private Dictionary<Tuple<MsDataFileUri, MsDataFileUri>, KdeAligner> _alignments =
+            new Dictionary<Tuple<MsDataFileUri, MsDataFileUri>, KdeAligner>();
         public static int MaxCharge = 7; // Look for charge states up to and including this
         public override void SetSpectrumFiles(MsDataFileUri[] searchFilenames)
         {
@@ -196,6 +204,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             var bfiles = SpectrumFileNames.Select(GetSearchResultFilepath).ToArray();
             if (bfiles.Length > 1)
             {
+                PerformAllAlignments();
                 // The shape of the isotope distribution is pretty much determined by everything but
                 // hydrogen, so create a lookup based on avergine formulas with H removed
                 var featuresByCNOS = new Dictionary<string, List<hkFeatureDetail>>();
@@ -275,7 +284,16 @@ namespace pwiz.Skyline.Model.DdaSearch
                             {
                                 continue; // Already processed
                             }
-                            if (Math.Abs(hkFeatureDetailI.rt - hkFeatureDetailJ.rt) > rtToler)
+
+                            var fileI = SpectrumFileNames[hkPrecursorDetailI.fileIndex];
+                            var fileJ = SpectrumFileNames[hkPrecursorDetailJ.fileIndex];
+                            var rtI = hkPrecursorDetailI.rt;
+                            var rtJ = hkPrecursorDetailJ.rt;
+                            if (_alignments.TryGetValue(Tuple.Create(fileI, fileJ), out var alignment))
+                            {
+                                rtI = alignment.GetValue(rtJ);
+                            }
+                            if (Math.Abs(rtI - rtJ) > rtToler)
                             {
                                 continue; // Not an RT match
                             }
@@ -553,6 +571,59 @@ namespace pwiz.Skyline.Model.DdaSearch
                     resolution / 5000.0; // per Hardklor source code CHardklor2::CalcFWHM(double mz, double res, int iType)
             }
             return resolution;
+        }
+
+        public static SpectrumSummaryList LoadSpectrumSummaries(MsDataFileUri msDataFileUri)
+        {
+            var summaries = new List<SpectrumSummary>();
+            using (var dataFile = msDataFileUri.OpenMsDataFile(false, false, false, false, false))
+            {
+                foreach (var spectrumIndex in Enumerable.Range(0, dataFile.SpectrumCount))
+                {
+                    var spectrum = dataFile.GetSpectrum(spectrumIndex);
+                    summaries.Add(SpectrumSummary.FromSpectrum(spectrum));
+                }
+            }
+
+            return new SpectrumSummaryList(summaries);
+        }
+
+        public KdeAligner PerformAlignment(SpectrumSummaryList spectra1, SpectrumSummaryList spectra2)
+        {
+            var similarityMatrix = spectra1.GetSimilarityMatrix(null, null, spectra2);
+            var kdeAligner = new KdeAligner();
+            var pointsToBeAligned = similarityMatrix.FindBestPath(false).ToList();
+            kdeAligner.Train(pointsToBeAligned.Select(pt=>pt.X).ToArray(), pointsToBeAligned.Select(pt=>pt.Y).ToArray(), CancellationToken.None);
+            return kdeAligner;
+        }
+
+        public void PerformAllAlignments()
+        {
+            foreach (var path in SpectrumFileNames)
+            {
+                _spectrumSummaryLists[path] = LoadSpectrumSummaries(path);
+            }
+
+            foreach (var entry1 in _spectrumSummaryLists)
+            {
+                foreach (var entry2 in _spectrumSummaryLists)
+                {
+                    if (Equals(entry1.Key, entry2.Key))
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        _alignments[Tuple.Create(entry1.Key, entry2.Key)] =
+                            PerformAlignment(entry1.Value, entry2.Value);
+                    }
+                    catch (Exception x)
+                    {
+                        Trace.TraceWarning(@"Error performing alignment between {0} and {1}: {2}", entry1.Key, entry2.Key, x);
+                    }
+                }
+            }
         }
     }
 }
