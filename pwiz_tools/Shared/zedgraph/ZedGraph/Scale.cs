@@ -655,6 +655,7 @@ namespace ZedGraph
 
 			_minGrace = Default.MinGrace;
 			_maxGrace = Default.MaxGrace;
+
 			_minAuto = true;
 			_maxAuto = true;
 			_majorStepAuto = true;
@@ -1422,6 +1423,7 @@ namespace ZedGraph
 			get { return _maxGrace; }
 			set { _maxGrace = value; }
 		}
+
 		/// <summary> Controls the alignment of the <see cref="Axis"/> tic labels.
 		/// </summary>
 		/// <remarks>
