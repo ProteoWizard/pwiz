@@ -371,10 +371,6 @@ namespace pwiz.Skyline.Controls.Graphs
             YAxis.Scale.MinAuto = true;
             XAxis.Scale.MaxAuto = true;
             XAxis.Scale.MinAuto = true;
-            YAxis.Scale.AllowGraceToCrossZero = true;
-            XAxis.Scale.AllowGraceToCrossZero = true;
-            // XAxis.Scale.MajorStepAuto = false;
-            // XAxis.Scale.MajorStep = Math.Pow(10, Math.Round(Math.Log10(_graphData.PointPairList.Count)) - 2); 
             if (Settings.Default.AreaLogScale )
             {
                 YAxis.Title.Text = TextUtil.SpaceSeparate(Resources.SummaryPeptideGraphPane_UpdateAxes_Log, YAxis.Title.Text);
