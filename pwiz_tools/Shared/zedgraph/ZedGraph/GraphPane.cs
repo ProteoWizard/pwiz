@@ -2227,7 +2227,7 @@ namespace ZedGraph
 		private double LogScaleNumericToPixel(double a, double b, double total)
 		{
 			var yFraction = (Math.Log(a) - Math.Log(b)) / Math.Log(total);
-		return yFraction * total;
+			return yFraction * total;
 		}
 		/// <summary>
 		/// Search through the <see cref="GraphObjList" /> and <see cref="CurveList" /> for
