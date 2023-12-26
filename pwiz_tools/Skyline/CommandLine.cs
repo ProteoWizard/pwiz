@@ -38,6 +38,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
@@ -289,6 +290,20 @@ namespace pwiz.Skyline
                 if (!SetLibrary(commandArgs.LibraryName, commandArgs.LibraryPath))
                 {
                     _out.WriteLine(Resources.CommandLine_Run_Not_setting_library_);
+                    return false;
+                }
+            }
+
+            if (commandArgs.AddingAnnotationsFile)
+            {
+                if (!AddAnnotations(commandArgs.AddAnnotationsName, 
+                        commandArgs.AddAnnotationsFile, 
+                        commandArgs.AddAnnotationsTargets, 
+                        commandArgs.AddAnnotationsType,
+                        commandArgs.AddAnnotationsValues,
+                        commandArgs.AddAnnotationsResolveConflictsBySkipping))
+                {
+                    
                     return false;
                 }
             }
@@ -2932,6 +2947,184 @@ namespace pwiz.Skyline
             {
                 ImportAssayLibraryHelper.CreateIrtDatabase(irtDatabasePath);
             }, Resources.Error___0_, true);
+        }
+
+        /// <summary>
+        /// Add annotation definitions specified from the command line. 
+        /// </summary>
+        /// <param name="name">Name of the annotation</param>
+        /// <param name="path">Path to an XML file containing annotations</param>
+        /// <param name="targets">Data types to apply the annotation to</param>
+        /// <param name="type">Type of annotation</param>
+        /// <param name="values">An array of at least one value. Only used for the type
+        /// value_list</param>
+        /// <param name="resolveConflictsBySkipping">True to skip conflicting annotations,
+        /// false to overwrite, and null to error</param>
+        /// <returns>True upon successful definition</returns>
+        public bool AddAnnotations(string name, string path,
+            AnnotationDef.AnnotationTargetSet targets,
+            ListPropertyType type,
+            string[] values,
+            bool? resolveConflictsBySkipping)
+        {
+            if (path != null)
+            {
+                // If the user specifies a .xml path, do not consider other arguments
+                return AddAnnotationsFromXml(path, resolveConflictsBySkipping);
+            }
+
+            if (name != null && targets.IsNullOrEmpty())
+            {
+                // If the user specifies the name alone, look for an existing annotation with that name in 
+                // the environment and then add it to the document
+                return AddAnnotationFromEnvironment(name);
+            }
+            // Add a new annotation created from the arguments
+            return AddAnnotationsFromArguments(name, targets, type, values, resolveConflictsBySkipping);
+        }
+
+        /// <summary>
+        /// Add an existing annotation definition from the environment to the document.
+        /// </summary>
+        /// <param name="annotationFromEnvironment">Name of an annotation existing in
+        /// the environment</param>
+        /// <returns>True if the annotation exists and is added successfully</returns>
+        private bool AddAnnotationFromEnvironment(string annotationFromEnvironment)
+        {
+            foreach (var def in Settings.Default.AnnotationDefList)
+            {
+                if (def.Name == annotationFromEnvironment)
+                {
+                    var list = new AnnotationDefList { def };
+                    var success = AddAnnotationsToDocument(list);
+
+                    return success;
+                }
+            }
+            // Error, annotation not in environment
+            _out.WriteLine(
+                Resources.CommandLine_AddAnnotationFromEnvironment_Error__Cannot_add_new_annotation___0___without_providing_at_least_one_target_through__1__, 
+                annotationFromEnvironment, CommandArgs.ARG_ADD_ANNOTATIONS_TARGETS.ArgumentText);
+            return false;
+        }
+
+        /// <summary>
+        /// Add annotations to the document and environment from an XML file
+        /// </summary>
+        /// <param name="path">Path to the XMl file containing annotations</param>
+        /// <param name="resolveConflictsBySkipping">True to skip conflicting annotations,
+        /// false to overwrite, and null to error</param>
+        /// <returns>True if at least one annotation is defined from the XML file</returns>
+        private bool AddAnnotationsFromXml(string path, bool? resolveConflictsBySkipping)
+        {
+            // Read XML file
+            var annotationDefList = new AnnotationDefList();
+            try
+            {
+                using (var stream = File.OpenRead(path))
+                {
+                    var reader = new XmlTextReader(stream);
+                    annotationDefList.ReadXml(reader);
+                    AddAnnotationsToEnvAndDocument(annotationDefList, resolveConflictsBySkipping);
+                }
+            }
+            catch (Exception x)
+            {
+                if (x.InnerException != null)
+                {
+                    _out.WriteLine(Resources.Error___0_, x.InnerException.Message);
+                }
+            }
+            var success = annotationDefList.Count > 0;
+            _out.WriteLine(
+                success
+                    ? Resources.CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0__
+                    : Resources.CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0__, path);
+
+            return success;
+        }
+
+        /// <summary>
+        /// Add an annotation definition to the document and environment
+        /// </summary>
+        /// <param name="name">Name of the annotation</param>
+        /// <param name="targets">Data types to apply the annotation to</param>
+        /// <param name="type">Type of the annotation (text, number, true_false, or value_list)</param>
+        /// <param name="values">A list of values, only used in a value_list annotation</param>
+        /// <param name="resolveConflictsBySkipping">True to skip conflicting annotations,
+        /// false to overwrite, and null to error</param>
+        /// <returns>True upon successful addition of the annotation to the document,
+        /// false upon failure</returns>
+        private bool AddAnnotationsFromArguments(string name, AnnotationDef.AnnotationTargetSet targets,
+            ListPropertyType type, IList<string> values, bool? resolveConflictsBySkipping)
+        {
+            var annotationDef = new AnnotationDef(name, targets, type, values);
+            var defList = new AnnotationDefList { annotationDef };
+            return AddAnnotationsToEnvAndDocument(defList, resolveConflictsBySkipping);
+        }
+
+        private bool AddAnnotationsToEnvAndDocument(AnnotationDefList newAnnotationDefs, bool? resolveConflictsBySkipping)
+        {
+            // Add the new annotations to the environment
+            foreach (var def in newAnnotationDefs.ToList())
+            {
+                if (Settings.Default.AnnotationDefList.Any(settingDef => settingDef.Name == def.Name))
+                {
+                    // Name conflict
+                    if (resolveConflictsBySkipping == null)
+                    {
+                        // Error
+                        _out.WriteLine(Resources.CommandLine_SetAnnotations_, def.Name);
+                        return false;
+                    } else if (resolveConflictsBySkipping == true)
+                    {
+                        // Warn that we are skipping
+                        _out.WriteLine(
+                            Resources.CommandLine_SetAnnotations_Warning__Skipping_annotation___0___due_to_a_name_conflict_,
+                            def.Name);
+                        newAnnotationDefs.Remove(def);
+                        foreach (var settingsDef in Settings.Default.AnnotationDefList.ToList().
+                                     Where(settingsDef => Equals(settingsDef.Name, def.Name)))
+                        {
+                            newAnnotationDefs.Add(settingsDef);
+                        }
+                    }
+                    else
+                    {
+                        // Warn that we are overwriting
+                        _out.WriteLine(
+                            Resources.CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_, def.Name);
+                        foreach (var settingsDef in Settings.Default.AnnotationDefList.ToList().
+                                     Where(settingsDef => Equals(settingsDef.Name, def.Name)))
+                        {
+                            Settings.Default.AnnotationDefList.Remove(settingsDef);
+                        }
+                        Settings.Default.AnnotationDefList.Add(def);
+                    }
+                }
+                else
+                {
+                    Settings.Default.AnnotationDefList.Add(def);
+                }
+            }
+
+            return AddAnnotationsToDocument(newAnnotationDefs);
+        }
+
+        private bool AddAnnotationsToDocument(AnnotationDefList newAnnotationDefs)
+        {
+            var docAnnotationDefs = Document.Settings.DataSettings.AnnotationDefs.ToList();
+            docAnnotationDefs.AddRange(newAnnotationDefs);
+            ModifyDocumentWithLogging(doc =>
+            {
+                var dataSettingsNew = Document.Settings.DataSettings.ChangeAnnotationDefs(docAnnotationDefs.ToList());
+                if (Equals(dataSettingsNew, doc.Settings.DataSettings))
+                    return doc;
+                doc = doc.ChangeSettings(doc.Settings.ChangeDataSettings(dataSettingsNew));
+                doc = MetadataExtractor.ApplyRules(doc, null, out _);
+                return doc;
+            }, AuditLogEntry.SettingsLogFunction);
+            return true;
         }
 
         public bool SetLibrary(string name, string path, bool append = true)

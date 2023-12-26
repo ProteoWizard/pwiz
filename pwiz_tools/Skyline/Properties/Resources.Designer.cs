@@ -5018,6 +5018,36 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Attempting to specify an unknown annotation target &apos;{0}&apos;. Try one of the following:.
+        /// </summary>
+        public static string CommandArgs_ParseAnnotationTarget_Error__Attempting_to_specify_an_unknown_annotation_target___0____Try_one_of_the_following_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_ParseAnnotationTarget_Error__Attempting_to_specify_an_unknown_annotat" +
+                        "ion_target___0____Try_one_of_the_following_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Attempting to exclude an unknown annotation type &apos;{0}&apos;. Try one of the following:.
+        /// </summary>
+        public static string CommandArgs_ParseAnnotationTypes_Error__Attempting_to_exclude_an_unknown_annotation_type__0___Try_one_of_the_following_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_ParseAnnotationTypes_Error__Attempting_to_exclude_an_unknown_annotati" +
+                        "on_type__0___Try_one_of_the_following_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Attempting to specify an unknown annotation type &apos;{0}&apos;. Try one of the following:.
+        /// </summary>
+        public static string CommandArgs_ParseAnnotationTypes_Error__Attempting_to_specify_an_unknown_annotation_type___0____Try_one_of_the_following_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_ParseAnnotationTypes_Error__Attempting_to_specify_an_unknown_annotati" +
+                        "on_type___0____Try_one_of_the_following_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to     {0} or &apos;{1}&apos;.
         /// </summary>
         public static string CommandArgs_ParseArgsInternal______0__or___1__ {
@@ -5304,6 +5334,44 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argum" +
                         "ent__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Cannot add new annotation &apos;{0}&apos; without providing at least one target through {1}..
+        /// </summary>
+        public static string CommandLine_AddAnnotationFromEnvironment_Error__Cannot_add_new_annotation___0___without_providing_at_least_one_target_through__1__ {
+            get {
+                return ResourceManager.GetString("CommandLine_AddAnnotationFromEnvironment_Error__Cannot_add_new_annotation___0___w" +
+                        "ithout_providing_at_least_one_target_through__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Annotations successfully defined from file {0}..
+        /// </summary>
+        public static string CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0__ {
+            get {
+                return ResourceManager.GetString("CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Unable to read annotations from file {0}..
+        /// </summary>
+        public static string CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0__ {
+            get {
+                return ResourceManager.GetString("CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Cannot add a {0} type annotation without providing a list of values through {1}..
+        /// </summary>
+        public static string CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1__ {
+            get {
+                return ResourceManager.GetString("CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_w" +
+                        "ithout_providing_a_list_values_of_through__1__", resourceCulture);
             }
         }
         
@@ -7074,6 +7142,34 @@ namespace pwiz.Skyline.Properties {
         public static string CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_ {
             get {
                 return ResourceManager.GetString("CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: An annotation titled &apos;{0}&apos; already exists.  Please use --annotation-conflict-resolution= &lt;overwrite | skip&gt;.  Annotation titled &apos;{0}&apos; was not added..
+        /// </summary>
+        public static string CommandLine_SetAnnotations_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetAnnotations_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: Skipping annotation &apos;{0}&apos; due to a name conflict with an existing annotation..
+        /// </summary>
+        public static string CommandLine_SetAnnotations_Warning__Skipping_annotation___0___due_to_a_name_conflict_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetAnnotations_Warning__Skipping_annotation___0___due_to_a_name_confl" +
+                        "ict_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: Overwriting existing annotation &apos;{0}&apos; due to a name conflict..
+        /// </summary>
+        public static string CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_", resourceCulture);
             }
         }
         
@@ -36136,6 +36232,17 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ValidatingIonMobilityPeptide_ValidateSequence_The_sequence__0__is_not_a_valid_mod" +
                         "ified_peptide_sequence_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The value &apos;{0}&apos; is not valid for the argument {1} which requires a comma-separated list of annotation targets {2}..
+        /// </summary>
+        public static string ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___ {
+            get {
+                return ResourceManager.GetString("ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListExcepti" +
+                        "on_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_sep" +
+                        "arated_list_of_annotation_targets___2___", resourceCulture);
             }
         }
         

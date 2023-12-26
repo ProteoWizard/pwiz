@@ -35,7 +35,7 @@ namespace pwiz.SkylineTestData
                     "--verbose-errors",
                     "--exception");
             const string exceptionLocation =
-                @"at pwiz.Skyline.CommandLine.HandleExceptions[T](CommandArgs commandArgs, Func`1 func, Action`1 outputFunc)";
+                @"pwiz.Skyline.CommandLine.HandleExceptions[T](CommandArgs commandArgs, Func`1 func, Action`1 outputFunc)";
             // The stack trace should be reported
             CheckRunCommandOutputContains(exceptionLocation, output);
             // Throw an exception without verbose errors

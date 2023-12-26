@@ -13833,6 +13833,39 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="Extensions_CustomToString_Relative_Abundance" xml:space="preserve">
     <value>Relative Abundance</value>
   </data>
+  <data name="CommandArgs_ParseAnnotationTypes_Error__Attempting_to_exclude_an_unknown_annotation_type__0___Try_one_of_the_following_" xml:space="preserve">
+    <value>Error: Attempting to exclude an unknown annotation type '{0}'. Try one of the following:</value>
+  </data>
+  <data name="CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0__" xml:space="preserve">
+    <value>Annotations successfully defined from file {0}.</value>
+  </data>
+  <data name="CommandLine_AddAnnotations_Error__Unable_to_read_annotations_from_file__0__" xml:space="preserve">
+    <value>Error: Unable to read annotations from file {0}.</value>
+  </data>
+  <data name="CommandArgs_ParseAnnotationTypes_Error__Attempting_to_specify_an_unknown_annotation_type___0____Try_one_of_the_following_" xml:space="preserve">
+    <value>Error: Attempting to specify an unknown annotation type '{0}'. Try one of the following:</value>
+  </data>
+  <data name="CommandArgs_ParseAnnotationTarget_Error__Attempting_to_specify_an_unknown_annotation_target___0____Try_one_of_the_following_" xml:space="preserve">
+    <value>Error: Attempting to specify an unknown annotation target '{0}'. Try one of the following:</value>
+  </data>
+  <data name="ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___" xml:space="preserve">
+    <value>The value '{0}' is not valid for the argument {1} which requires a comma-separated list of annotation targets {2}.</value>
+  </data>
+  <data name="CommandLine_SetAnnotations_" xml:space="preserve">
+    <value>Error: An annotation titled '{0}' already exists.  Please use --annotation-conflict-resolution= &lt;overwrite | skip&gt;.  Annotation titled '{0}' was not added.</value>
+  </data>
+  <data name="CommandLine_SetAnnotations_Warning__Skipping_annotation___0___due_to_a_name_conflict_" xml:space="preserve">
+    <value>Warning: Skipping annotation '{0}' due to a name conflict with an existing annotation.</value>
+  </data>
+  <data name="CommandLine_SetAnnotations_Warning__The_annotation___0___was_overwritten_" xml:space="preserve">
+    <value>Warning: Overwriting existing annotation '{0}' due to a name conflict.</value>
+  </data>
+  <data name="CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1__" xml:space="preserve">
+    <value>Error: Cannot add a {0} type annotation without providing a list of values through {1}.</value>
+  </data>
+  <data name="CommandLine_AddAnnotationFromEnvironment_Error__Cannot_add_new_annotation___0___without_providing_at_least_one_target_through__1__" xml:space="preserve">
+    <value>Error: Cannot add new annotation '{0}' without providing at least one target through {1}.</value>
+  </data>
   <data name="CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_" xml:space="preserve">
     <value>Annotations file {0} exported successfully.</value>
   </data>
