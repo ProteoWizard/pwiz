@@ -2175,9 +2175,9 @@ namespace ZedGraph
 										valueHandler.GetValues( curve, iPt, out xVal, out _, out yVal );
 									}
 									// Pixel distance needs to be calculated differently for log scale graphs
-									distY = YAxis.Type == AxisType.Log ? LogScaleNumericToPixel(yVal, yAct, _chart._rect.Height) : 
+									distY = YAxis.Type == AxisType.Log ? LogScalePixelDistance(yVal, yAct, _chart._rect.Height) : 
 										(yVal - yAct) * yPixPerUnitAct;
-									distX = XAxis.Type == AxisType.Log ? LogScaleNumericToPixel(xVal, xAct, _chart._rect.Width) : 
+									distX = XAxis.Type == AxisType.Log ? LogScalePixelDistance(xVal, xAct, _chart._rect.Width) : 
 										( xVal - xAct ) * xPixPerUnit;
 									dist = distX * distX + distY * distY;
 
@@ -2224,10 +2224,10 @@ namespace ZedGraph
 				return false;
 		}
 
-		private double LogScaleNumericToPixel(double a, double b, double total)
+		private double LogScalePixelDistance(double positionA, double positionB, double totalDistance)
 		{
-			var yFraction = (Math.Log(a) - Math.Log(b)) / Math.Log(total);
-			return yFraction * total;
+			var fractionOfDistance = (Math.Log(positionA) - Math.Log(positionB)) / Math.Log(totalDistance);
+			return fractionOfDistance * totalDistance;
 		}
 		/// <summary>
 		/// Search through the <see cref="GraphObjList" /> and <see cref="CurveList" /> for
