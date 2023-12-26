@@ -510,10 +510,6 @@ namespace pwiz.Skyline.Model
 
         public int BestResult { get; private set; }
 
-        public double BestZScore { get; private set; }
-
-        public double BestAreaScore { get; private set; }
-
         /// <summary>
         /// Returns the index of the "best" result for a peptide.  This is currently
         /// base solely on total peak area, could be enhanced in the future to be
@@ -597,9 +593,6 @@ namespace pwiz.Skyline.Model
                     bestArea = maxScore;
                 }
             }
-
-            BestZScore = bestZScore ?? 0;
-            BestAreaScore = bestArea;
             return iBest;            
         }
 

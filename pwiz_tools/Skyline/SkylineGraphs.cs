@@ -3747,13 +3747,12 @@ namespace pwiz.Skyline
             {
                 AddTransitionContextMenu(menuStrip, iInsert++);
             }
-
-            if (graphType == GraphTypeSummary.abundance)
+            else
             {
                 AddRelativeAbundanceFormattingForm(menuStrip, iInsert++);
                 // Protein level comparisons are likely not meaningful for small molecule documents,
                 // so only offer peptide level comparison.
-                // TODO support protein level in mixed cases?
+                // CONSIDER support protein level in mixed cases?
                 if (!IsSmallMoleculeOrMixedUI)
                 {
                     AddTargetsContextMenu(menuStrip, iInsert++);

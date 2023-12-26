@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Controls.Graphs
             : base(graphSummary)
         {
             PaneKey = paneKey;
-            string xAxisTitle =
+            var xAxisTitle =
                 Helpers.PeptideToMoleculeTextMapper.Translate(Resources.SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank,
                     graphSummary.DocumentUIContainer.DocumentUI.DocumentType);
             XAxis.Title.Text = xAxisTitle;
@@ -171,7 +171,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override bool HandleMouseDownEvent(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
         {
-            var ctrl = Control.ModifierKeys.HasFlag(Keys.Control); //TODO allow overide of modifier keys?
+            var ctrl = Control.ModifierKeys.HasFlag(Keys.Control); //CONSIDER allow override of modifier keys?
             int iNearest;
             var axis = GetNearestXAxis(sender, mouseEventArgs);
             if (axis != null)
@@ -237,8 +237,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 GraphSummary.StateProvider.SelectedPath = identityPath;
             }
         }
-            
-        // TODO can we centralize checking selection with the volcano plots logic?
+
+        public void Select(IdentityPath identityPath)
+        {
+            GraphSummary.StateProvider.SelectedPath = identityPath;
+        }
+        
         private bool IsSelected(GraphPointData pointData)
         {
             var docNode = pointData.Peptide ?? (SkylineDocNode)pointData.Protein;
@@ -298,7 +302,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var matchedPoints = pointList.Where(p =>
                 {
                     var pointData = (GraphPointData)p.Tag;
-                    return colorRow.MatchExpression.Matches(Document, pointData.Protein) && !selectedPoints.Contains(p);
+                    return colorRow.MatchExpression.Matches(Document, pointData.Protein, pointData.Peptide, null, null) && !selectedPoints.Contains(p);
                 }).ToArray();
 
                 if (matchedPoints.Any())
@@ -387,7 +391,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 else
                 {
                     YAxis.Scale.MinAuto = false;
-                    FixedYMin = YAxis.Scale.Min = 0; // TODO should this auto scale?
+                    FixedYMin = YAxis.Scale.Min = 0;
                     YAxis.Scale.Max = _graphData.MaxY * 1.05;
                 }
             }

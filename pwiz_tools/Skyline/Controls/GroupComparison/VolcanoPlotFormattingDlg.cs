@@ -208,7 +208,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             if (IsRelativeAbundance)
             {
-                // TODO implement selection for protein expression graph
+                RelativeAbundanceGraph.Select(identityPath);
             }
             else
             {
@@ -306,7 +306,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
             DialogResult = DialogResult.Cancel;
         }
 
-        //TODO use reflection here?
         private static MatchOption DisplayModeToMatchOption(ProteinMetadataManager.ProteinDisplayMode displayMode)
         {
             switch (displayMode)

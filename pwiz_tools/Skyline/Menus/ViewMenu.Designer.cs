@@ -716,11 +716,11 @@
             resources.ApplyResources(this.areaPeptideComparisonMenuItem, "areaPeptideComparisonMenuItem");
             this.areaPeptideComparisonMenuItem.Click += new System.EventHandler(this.areaPeptideComparisonMenuItem_Click);
             // 
-            // areaIntensityMenuItem
+            // areaRelativeAbundanceMenuItem
             // 
             this.areaRelativeAbundanceMenuItem.Name = "areaRelativeAbundanceMenuItem";
             resources.ApplyResources(this.areaRelativeAbundanceMenuItem, "areaRelativeAbundanceMenuItem");
-            this.areaRelativeAbundanceMenuItem.Click += new System.EventHandler(this.areaIntensityMenuItem_Click);
+            this.areaRelativeAbundanceMenuItem.Click += new System.EventHandler(this.areaRelativeAbundanceMenuItem_Click);
             // 
             // areaCVHistogramMenuItem
             // 

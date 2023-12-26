@@ -20,9 +20,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional

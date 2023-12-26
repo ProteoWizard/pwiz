@@ -33,7 +33,8 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.GroupComparison
 {
-    public partial class CreateMatchExpressionDlg : ModeUIInvariantFormEx // Dialog has explicit logic for handling UI modes
+    public partial class 
+        CreateMatchExpressionDlg : ModeUIInvariantFormEx // Dialog has explicit logic for handling UI modes
     {
         private readonly object[] _foldChangeRows;
         private readonly bool _allowUpdateGrid;
@@ -318,8 +319,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             FilterRows();
         }
 
-        // Need to make a seperate expr.Matches for protein expression plot
-        private void GetFilteredRows(CancellationToken canellationToken, Object[] objs, MatchExpression expr)
+        private void GetFilteredRows(CancellationToken canellationToken, IEnumerable<object> objs, MatchExpression expr)
         {
             IList<StringWrapper> filteredRows = new List<StringWrapper>();
 
@@ -435,6 +435,5 @@ namespace pwiz.Skyline.Controls.GroupComparison
         }
 
         #endregion
-
     }
 }

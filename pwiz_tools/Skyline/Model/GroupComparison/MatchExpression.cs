@@ -199,20 +199,10 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public static string GetProteinText(Protein protein, MatchOption matchOption)
         {
-            return GetProteinText(protein, MatchOptionToDisplayMode(matchOption));
-        }
-
-        public static string GetProteinText(Protein protein, ProteinMetadataManager.ProteinDisplayMode displayMode)
-        {
             return protein != null
                 ? ProteinMetadataManager.ProteinModalDisplayText(protein.DocNode.ProteinMetadata,
-                    displayMode)
+                    MatchOptionToDisplayMode(matchOption))
                 : null;
-        }
-
-        public string GetDisplayString(SrmDocument document, Protein protein)
-        {
-            return GetRowString(document, protein, null, false);
         }
 
         public string GetDisplayString(SrmDocument document, Protein protein, Databinding.Entities.Peptide peptide)
@@ -281,7 +271,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             return GetRowString(document, protein, peptide, false);
         }
 
-        public bool Matches(SrmDocument document, Protein protein, Databinding.Entities.Peptide peptide, FoldChangeResult foldChangeResult, ICutoffSettings cutoffSettings)
+        public bool Matches(SrmDocument document, Protein protein, Databinding.Entities.Peptide peptide, FoldChangeResult? foldChangeResult, ICutoffSettings cutoffSettings)
         {
             foreach (var match in matchOptions)
             {
@@ -304,61 +294,45 @@ namespace pwiz.Skyline.Model.GroupComparison
                             return false;
                         break;
                     }
-                    case MatchOption.BelowLeftCutoff:
-                    {
-                        if (!cutoffSettings.FoldChangeCutoffValid || foldChangeResult.Log2FoldChange >= -cutoffSettings.Log2FoldChangeCutoff)
-                            return false;
-                        break;
-                    }
-                    case MatchOption.AboveRightCutoff:
-                    {
-                        if (!cutoffSettings.FoldChangeCutoffValid || foldChangeResult.Log2FoldChange <= cutoffSettings.Log2FoldChangeCutoff)
-                            return false;
-                        break;
-                    }
-                    case MatchOption.BelowPValueCutoff:
-                    {
-                        if (!cutoffSettings.PValueCutoffValid || foldChangeResult.AdjustedPValue <= Math.Pow(10, -cutoffSettings.PValueCutoff))
-                            return false;
-                        break;
-                    }
-                    case MatchOption.AbovePValueCutoff:
-                    {
-                        if (!cutoffSettings.PValueCutoffValid || foldChangeResult.AdjustedPValue >= Math.Pow(10, -cutoffSettings.PValueCutoff))
-                            return false;
-                        break;
-                    }
+                }
+                if (foldChangeResult != null)
+                {
+                    return CutoffMatches(match, (FoldChangeResult)foldChangeResult, cutoffSettings);
                 }
             }
 
             return true;
         }
-        public bool Matches(SrmDocument document, Protein protein)
+
+        private bool CutoffMatches(MatchOption match, FoldChangeResult foldChangeResult, ICutoffSettings cutoffSettings)
         {
-            foreach (var match in matchOptions)
+            switch (match)
             {
-                switch (match)
+                case MatchOption.BelowLeftCutoff:
                 {
-                    case MatchOption.ProteinName:
-                    case MatchOption.ProteinAccession:
-                    case MatchOption.ProteinPreferredName:
-                    case MatchOption.ProteinGene:
-                    case MatchOption.PeptideSequence:
-                    case MatchOption.PeptideModifiedSequence:
-                    case MatchOption.MoleculeGroupName:
-                    case MatchOption.MoleculeName:
-                    case MatchOption.CAS:
-                    case MatchOption.HMDB:
-                    case MatchOption.InChiKey:
-                    {
-                        var matchString = GetMatchString(document, protein);
-                        if (matchString == null || !IsRegexValid() || !Regex.IsMatch(matchString, RegExpr))
-                            return false;
-                        break;
-                    }
+                    if (!cutoffSettings.FoldChangeCutoffValid || foldChangeResult.Log2FoldChange >= -cutoffSettings.Log2FoldChangeCutoff)
+                        return false;
+                    break;
+                }
+                case MatchOption.AboveRightCutoff:
+                {
+                    if (!cutoffSettings.FoldChangeCutoffValid || foldChangeResult.Log2FoldChange <= cutoffSettings.Log2FoldChangeCutoff)
+                        return false;
+                    break;
+                }
+                case MatchOption.BelowPValueCutoff:
+                {
+                    if (!cutoffSettings.PValueCutoffValid || foldChangeResult.AdjustedPValue <= Math.Pow(10, -cutoffSettings.PValueCutoff))
+                        return false;
+                    break;
+                }
+                case MatchOption.AbovePValueCutoff:
+                {
+                    if (!cutoffSettings.PValueCutoffValid || foldChangeResult.AdjustedPValue >= Math.Pow(10, -cutoffSettings.PValueCutoff))
+                        return false;
+                    break;
                 }
             }
-
             return true;
         }
         protected bool Equals(MatchExpression other)

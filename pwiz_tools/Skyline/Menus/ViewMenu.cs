@@ -770,7 +770,7 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.ShowPeakAreaPeptideGraph();
         }
-        private void areaIntensityMenuItem_Click(object sender, EventArgs e)
+        private void areaRelativeAbundanceMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.ShowPeakAreaRelativeAbundanceGraph();
         }
