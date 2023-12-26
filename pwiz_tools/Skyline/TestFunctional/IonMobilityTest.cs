@@ -458,6 +458,7 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.AreEqual(deadeelsDT-0.1, centerIonMobility.IonMobilityAndCCS.GetHighEnergyIonMobility() ?? -1, .000001); // High energy value should now be same as low energy value
             AssertEx.AreEqual(fixedWidth, centerIonMobility.IonMobilityExtractionWindowWidth??0, .0001);
 
+            // Test creating IMSDB on data set with IM values in existing spectral library
             TestMeasuredDriftTimes();
         }
 
@@ -811,14 +812,18 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.AreEqual(2, result.Count);
             var key3 = new LibKey("GLAGVENVTELKK", Adduct.TRIPLY_PROTONATED);
             var key2 = new LibKey("GLAGVENVTELKK", Adduct.DOUBLY_PROTONATED);
-            const double expectedDT3= 4.0709;
-            const double expectedOffset3 = -0.758987;
-            AssertEx.AreEqual(expectedDT3, result.GetIonMobilityInfo(key3).First().IonMobility.Mobility.Value, .001);
-            AssertEx.AreEqual(expectedOffset3, result.GetIonMobilityInfo(key3).First().HighEnergyIonMobilityValueOffset.Value, .001); // High energy offset
-            const double expectedDT2 = 5.5889;
-            const double expectedOffset2 = -1.1039;
-            AssertEx.AreEqual(expectedDT2, result.GetIonMobilityInfo(key2).First().IonMobility.Mobility.Value, .001);
-            AssertEx.AreEqual(expectedOffset2, result.GetIonMobilityInfo(key2).First().HighEnergyIonMobilityValueOffset.Value, .001);  // High energy offset
+            const double expectedDT3 = 3.2429; // Was 4.0709 before we started looking for isotope envelope match
+            const double expectedOffset3 = 0;
+            var actualDT3 = result.GetIonMobilityInfo(key3).First().IonMobility.Mobility.Value;
+            var actualOffset3 = result.GetIonMobilityInfo(key3).First().HighEnergyIonMobilityValueOffset.Value;
+            const double expectedDT2 = 5.7269; // Was 5.5889 before we started looking for isotope envelope match
+            const double expectedOffset2 = -1.242;
+            var actualDT2 = result.GetIonMobilityInfo(key2).First().IonMobility.Mobility.Value;
+            var actualOffset2 = result.GetIonMobilityInfo(key2).First().HighEnergyIonMobilityValueOffset.Value;
+            AssertEx.AreEqual(expectedDT3, actualDT3, .001);
+            AssertEx.AreEqual(expectedOffset3, actualOffset3, .001); // High energy offset
+            AssertEx.AreEqual(expectedDT2, actualDT2, .001);
+            AssertEx.AreEqual(expectedOffset2, actualOffset2, .001);  // High energy offset
             var doc2 = WaitForDocumentLoaded();
 
             // Reimport with these new settings, then export a spectral library and verify it got IMS data
