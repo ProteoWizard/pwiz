@@ -3050,6 +3050,8 @@ namespace pwiz.Skyline
                     abundanceTargetsPeptidesMenuItem,
                     abundanceTargetsProteinsMenuItem
                 });
+                abundanceTargetsPeptidesMenuItem.Checked = !Settings.Default.AreaProteinTargets;
+                abundanceTargetsProteinsMenuItem.Checked = Settings.Default.AreaProteinTargets;
             }
         }
 
@@ -3819,7 +3821,10 @@ namespace pwiz.Skyline
             }
             if (graphType == GraphTypeSummary.abundance || graphType == GraphTypeSummary.peptide)
             {
-                iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
+                if (!(graphType == GraphTypeSummary.abundance && abundanceTargetsPeptidesMenuItem.Checked))
+                {
+                    iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
+                }
             }
 
             if (isHistogram)
@@ -4627,6 +4632,7 @@ namespace pwiz.Skyline
         private void abundanceTargetsProteinsMenuItem_Click(object sender, EventArgs e)
         {
             abundanceTargetsPeptidesMenuItem.Checked = false;
+            abundanceTargetsProteinsMenuItem.Checked = true;
             Settings.Default.AreaProteinTargets = true;
             UpdateSummaryGraphs();
         }
@@ -4634,6 +4640,7 @@ namespace pwiz.Skyline
         private void abundanceTargetsPeptidesMenuItem_Click(object sender, EventArgs e)
         {
             abundanceTargetsProteinsMenuItem.Checked = false;
+            abundanceTargetsPeptidesMenuItem.Checked = true;
             Settings.Default.AreaProteinTargets = false;
             UpdateSummaryGraphs();
         }

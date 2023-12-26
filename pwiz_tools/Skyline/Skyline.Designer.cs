@@ -1329,7 +1329,6 @@ namespace pwiz.Skyline
             // 
             // abundanceTargetsProteinsMenuItem
             // 
-            this.abundanceTargetsProteinsMenuItem.CheckOnClick = true;
             this.abundanceTargetsProteinsMenuItem.Name = "abundanceTargetsProteinsMenuItem";
             this.abundanceTargetsPeptidesMenuItem.Checked = Settings.Default.AreaProteinTargets;
             resources.ApplyResources(this.abundanceTargetsProteinsMenuItem, "abundanceTargetsProteinsMenuItem");
@@ -1337,7 +1336,6 @@ namespace pwiz.Skyline
             // 
             // abundanceTargetsPeptidesMenuItem
             // 
-            this.abundanceTargetsPeptidesMenuItem.CheckOnClick = true;
             this.abundanceTargetsPeptidesMenuItem.Checked = !Settings.Default.AreaProteinTargets;
             this.abundanceTargetsPeptidesMenuItem.Name = "abundanceTargetsPeptidesMenuItem";
             resources.ApplyResources(this.abundanceTargetsPeptidesMenuItem, "abundanceTargetsPeptidesMenuItem");

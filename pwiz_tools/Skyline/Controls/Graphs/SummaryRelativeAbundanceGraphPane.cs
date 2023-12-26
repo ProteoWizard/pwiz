@@ -50,6 +50,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool _excludePeptideLists;
         private bool _excludeStandards;
         private ReplicateDisplay _replicateDisplay;
+        private bool _showCv;
         public bool ShowingFormattingDlg { get; set; }
         public IList<MatchRgbHexColor> ColorRows { get; set; }
         protected SummaryRelativeAbundanceGraphPane(GraphSummary graphSummary, PaneKey paneKey)
@@ -69,6 +70,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _excludePeptideLists = Settings.Default.ExcludePeptideListsFromAbundanceGraph;
             _excludeStandards = Settings.Default.ExcludeStandardsFromAbundanceGraph;
             _replicateDisplay = RTLinearRegressionGraphPane.ShowReplicate;
+            _showCv = Settings.Default.ShowPeptideCV;
             ColorRows = new List<MatchRgbHexColor>();
             var container = new MemoryDocumentContainer();
             container.SetDocument(Document, null);
@@ -120,12 +122,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 _replicateDisplay = RTLinearRegressionGraphPane.ShowReplicate;
                 settingsChanged = true;
             }
+            if (Settings.Default.ShowPeptideCV != _showCv)
+            {
+                _showCv = Settings.Default.ShowPeptideCV;
+                settingsChanged = true;
+            }
             return settingsChanged;
         }
 
-        protected void ShowFormattingDialog()
+        public void ShowFormattingDialog()
         {
-            var copy = ColorRows.Select(r => (MatchRgbHexColor)r.Clone()).ToList(); //TODO is this necessary
+            var copy = ColorRows.Select(r => (MatchRgbHexColor)r.Clone()).ToList(); 
             var window = GraphSummary.Window;
             ShowingFormattingDlg = true;
             using (var dlg = new VolcanoPlotFormattingDlg(this, copy, 

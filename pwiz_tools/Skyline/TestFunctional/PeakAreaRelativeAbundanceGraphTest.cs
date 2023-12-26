@@ -45,35 +45,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
                 SkylineWindow.ShowPeakAreaRelativeAbundanceGraph();
-                PauseForManualTutorialStep();
-                SkylineWindow.ShowRelativeAbundanceFormatting();
                 var peakAreaGraph = FormUtil.OpenForms.OfType<GraphSummary>().FirstOrDefault(graph =>
                     graph.Type == GraphTypeSummary.abundance && graph.Controller is AreaGraphController);
                 Assert.IsNotNull(peakAreaGraph);
-                var formattingDlg = FormUtil.OpenForms.OfType<VolcanoPlotFormattingDlg>().FirstOrDefault();
-                Assert.IsNotNull(formattingDlg);
-                var createExprDlg = ShowDialog<CreateMatchExpressionDlg>(() =>
-                {
-                    var bindingList = formattingDlg.GetCurrentBindingList();
-                    formattingDlg.ClickCreateExpression(bindingList.Count - 1);
-                });
             });
             WaitForGraphs();
-            var formattingDlg = FormUtil.OpenForms.OfType<VolcanoPlotFormattingDlg>().FirstOrDefault();
-            Assume.IsNotNull(formattingDlg);
-            
-            var createExpression = FormUtil.OpenForms.OfType<CreateMatchExpressionDlg>().FirstOrDefault();
-            createExpression.ClickEnterList();
-            var matchExpressionList = FormUtil.OpenForms.OfType<MatchExpressionListDlg>().FirstOrDefault();
-            WaitForOpenForm<CreateMatchExpressionDlg>();
-            PauseForManualTutorialStep();
-            WaitForGraphs();
-            RunUI(() =>
-            {
-                SkylineWindow.AreaScopeTo(AreaScope.protein);
-            });
-            WaitForGraphs();
-            
         }
     }
 }

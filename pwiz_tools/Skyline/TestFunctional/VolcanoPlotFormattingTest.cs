@@ -233,6 +233,7 @@ namespace pwiz.SkylineTestFunctional
                     
                 VerifyMatchExpressions(volcanoPlot, matchExprInfo, 0, i % 2 == 0 ? RemoveMode.Cancel : RemoveMode.Undo); // Alternate remove mode
             }
+            TestMatchExpressionListDlg(volcanoPlot);
         }
 
         private void SetVolcanoPlotPerProtein(Control owner, bool perProtein)
@@ -415,6 +416,27 @@ namespace pwiz.SkylineTestFunctional
             });
         }
 
+        private void TestMatchExpressionListDlg(FoldChangeVolcanoPlot volcanoPlot)
+        {
+
+            var formattingDlg = ShowDialog<VolcanoPlotFormattingDlg>(volcanoPlot.ShowFormattingDialog);
+            var createExprDlg = ShowDialog<CreateMatchExpressionDlg>(() =>
+            {
+                var bindingList = formattingDlg.GetCurrentBindingList();
+                var exprInfo = MATCH_EXPR_INFOS[0][0];
+                bindingList.Add(new MatchRgbHexColor(string.Empty, exprInfo.ExpectedPointsInfo.Labeled,
+                    exprInfo.ExpectedPointsInfo.Color, exprInfo.ExpectedPointsInfo.PointSymbol,
+                    exprInfo.ExpectedPointsInfo.PointSize));
+                formattingDlg.ClickCreateExpression(bindingList.Count - 1);
+            });
+            var matchExprListDlg = ShowDialog<MatchExpressionListDlg>(createExprDlg.ClickEnterList);
+            RunUI(() =>
+            {
+                // Verify that typing into the list is parsed to a REGEX
+                matchExprListDlg.proteinsTextBox.Text = @"Cas9" + '\n' + @"Hsp70";
+                Assert.AreEqual(createExprDlg.Expression, "^Cas9$|^Hsp70$");
+            });
+        }
         public class ParseInfo
         {
             public ParseInfo(MatchExpression expected, string expression, Type exceptionType = null)

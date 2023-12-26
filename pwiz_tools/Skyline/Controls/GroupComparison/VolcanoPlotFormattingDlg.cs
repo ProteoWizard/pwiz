@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         public VolcanoPlotFormattingDlg(SummaryRelativeAbundanceGraphPane relativeAbundanceGraph,
             IList<MatchRgbHexColor> colorRows, object[] proteinAbundances, Action<List<MatchRgbHexColor>> updateGraph) : 
             this(true, relativeAbundanceGraph, null, colorRows, proteinAbundances, updateGraph, 
-                relativeAbundanceGraph.AnyMolecules, relativeAbundanceGraph.AnyProteomic, true, relativeAbundanceGraph.Document)
+                relativeAbundanceGraph.AnyMolecules, relativeAbundanceGraph.AnyProteomic, Settings.Default.AreaProteinTargets, relativeAbundanceGraph.Document)
         {
         }
 

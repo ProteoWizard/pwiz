@@ -78,7 +78,7 @@
 
         #endregion
         private System.Windows.Forms.Label label1;
-        private Common.Controls.AutoScrollTextBox proteinsTextBox;
+        public Common.Controls.AutoScrollTextBox proteinsTextBox;
         private System.Windows.Forms.Button buttonOk;
         private System.Windows.Forms.Button buttonCancel;
     }
