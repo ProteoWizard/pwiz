@@ -706,14 +706,22 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public void CheckDocumentResultsGridFieldByName(DocumentGridForm documentGrid, string name, int row, string expected, string msg = null)
+        public void CheckDocumentResultsGridFieldByName(DocumentGridForm documentGrid, string name, int row, string expected, string msg = null, bool recordValues = false)
         {
             var col = FindDocumentGridColumn(documentGrid, "Results!*.Value." + name);
+            string actual = null;
             RunUI(() =>
             {
-                var val = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as string;
-                AssertEx.AreEqual(expected, val, name + (msg ?? string.Empty));
+                actual = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as string;
             });
+            if (recordValues)
+            {
+                Console.Write($@",{actual}");
+            }
+            else
+            {
+                AssertEx.AreEqual(expected, actual, name + (msg ?? string.Empty));
+            }
         }
 
         protected const string MIXED_TRANSITION_LIST_REPORT_NAME = "Mixed Transition List";
