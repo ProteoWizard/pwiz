@@ -93,9 +93,6 @@ namespace pwiz.Skyline.Controls.Graphs
             double adjustedY;
             if (scale.Type == AxisType.Log)
             {
-                var scaleRange = Math.Log(scale.Max) - Math.Log(scale.Min);
-                var yLinear = Math.Log(point.Y);
-                var linearOffset = LABEL_POINT_DISTANCE * scaleRange;
                 var exponent = Math.Log(point.Y) + fontSpec.Size / 2.0f /
                     height * (Math.Log(scale.Max) - Math.Log(scale.Min));
                 adjustedY = Math.Exp(exponent);

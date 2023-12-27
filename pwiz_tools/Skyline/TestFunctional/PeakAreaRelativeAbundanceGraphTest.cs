@@ -59,6 +59,8 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.setExcludePeptideListsFromAbundanceGraph(true);
                 curveList = peakAreaGraph.GraphControl.GraphPane.CurveList[1];
                 Assert.AreEqual(curveList.Points.Count, 45);
+
+                //CONSIDER add quantitative checks for relative abundance results
             });
 
         }
