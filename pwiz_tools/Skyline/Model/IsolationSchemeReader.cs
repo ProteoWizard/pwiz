@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Model
             for (int i = 0; i < _dataSources.Length; i++)
             {
                 var dataSource = _dataSources[i];
-                progressMonitor.UpdateProgress(status = status.ChangeMessage(string.Format(Resources.IsolationSchemeReader_ReadIsolationRangesFromFiles_Reading_isolation_scheme_from__0_, dataSource)).ChangePercentComplete(i*100/_dataSources.Length));
+                progressMonitor.UpdateProgress(status = status.ChangeMessage(string.Format(ModelResources.IsolationSchemeReader_ReadIsolationRangesFromFiles_Reading_isolation_scheme_from__0_, dataSource)).ChangePercentComplete(i*100/_dataSources.Length));
 
                 isolationRangesResult = ReadIsolationRanges(dataSource, isolationRangesResult);
             }

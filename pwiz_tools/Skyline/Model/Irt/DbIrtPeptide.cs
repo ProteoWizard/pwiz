@@ -22,7 +22,7 @@ using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.BlibData;
-using pwiz.Skyline.Properties;
+
 // ReSharper disable VirtualMemberCallInConstructor
 
 namespace pwiz.Skyline.Model.Irt
@@ -155,7 +155,7 @@ namespace pwiz.Skyline.Model.Irt
             out IList<Conflict> conflicts)
         {
             var progressPercent = 0;
-            IProgressStatus status = new ProgressStatus(Resources.DbIrtPeptide_FindNonConflicts_Adding_iRT_values_for_imported_peptides);
+            IProgressStatus status = new ProgressStatus(IrtResources.DbIrtPeptide_FindNonConflicts_Adding_iRT_values_for_imported_peptides);
             progressMonitor?.UpdateProgress(status);
             var peptidesNoConflict = new List<DbIrtPeptide>();
             conflicts = new List<Conflict>();

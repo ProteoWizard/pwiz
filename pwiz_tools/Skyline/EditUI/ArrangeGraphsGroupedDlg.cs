@@ -141,9 +141,9 @@ namespace pwiz.Skyline.EditUI
             {
                 return new[]
                 {
-                    Resources.GroupGraphsOrderExtension_LOCALIZED_VALUES_Position,
-                    Resources.GroupGraphsOrderExtension_LOCALIZED_VALUES_Document,
-                    Resources.GroupGraphsOrderExtension_LOCALIZED_VALUES_Acquired_Time
+                    EditUIResources.GroupGraphsOrderExtension_LOCALIZED_VALUES_Position,
+                    EditUIResources.GroupGraphsOrderExtension_LOCALIZED_VALUES_Document,
+                    EditUIResources.GroupGraphsOrderExtension_LOCALIZED_VALUES_Acquired_Time
                 };
             }
         }
@@ -171,9 +171,9 @@ namespace pwiz.Skyline.EditUI
             {
                 return new[]
                 {
-                    Resources.DisplayGraphsTypeExtension_LOCALIZED_VALUES_Tiled,
-                    Resources.DisplayGraphsTypeExtension_LOCALIZED_VALUES_Row,
-                    Resources.DisplayGraphsTypeExtension_LOCALIZED_VALUES_Column
+                    EditUIResources.DisplayGraphsTypeExtension_LOCALIZED_VALUES_Tiled,
+                    EditUIResources.DisplayGraphsTypeExtension_LOCALIZED_VALUES_Row,
+                    EditUIResources.DisplayGraphsTypeExtension_LOCALIZED_VALUES_Column
                 };
             }
         }

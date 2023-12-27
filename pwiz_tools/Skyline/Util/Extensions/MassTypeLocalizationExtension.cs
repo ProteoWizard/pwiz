@@ -3,7 +3,7 @@
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2023 University of Washington - Seattle, WA
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,8 +17,6 @@
  * limitations under the License.
  */
 
-using pwiz.Skyline.Properties;
-
 namespace pwiz.Skyline.Util.Extensions
 {
     public static class MassTypeLocalizationExtension
@@ -29,8 +27,8 @@ namespace pwiz.Skyline.Util.Extensions
             {
                 return new[]
                 {
-                    Resources.ExportStrategyExtension_LOCALIZED_VALUES_Monoisotopic,
-                    Resources.ExportStrategyExtension_LOCALIZED_VALUES_Average
+                    ExtensionsResources.ExportStrategyExtension_LOCALIZED_VALUES_Monoisotopic,
+                    ExtensionsResources.ExportStrategyExtension_LOCALIZED_VALUES_Average
                 };
             }
         }

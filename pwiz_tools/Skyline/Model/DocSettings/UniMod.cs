@@ -256,7 +256,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public void Add(char aa, StaticMod mod, bool structural, bool allowDuplicates)
         {
             if (_completed)
-                throw new InvalidOperationException(Resources.ModMassLookup_Add_Invalid_attempt_to_add_data_to_completed_MassLookup);
+                throw new InvalidOperationException(DocSettingsResources.ModMassLookup_Add_Invalid_attempt_to_add_data_to_completed_MassLookup);
             // If structural, store in lowercase AA.
             _aaMassLookups[structural ? ToStructuralIndex(aa) : ToIsotopeIndex(aa)]
                 .Add(CALC.GetModMass(aa, mod), mod, allowDuplicates);
@@ -266,7 +266,7 @@ namespace pwiz.Skyline.Model.DocSettings
             ModTerminus? terminus, bool specific)
         {
             if (!_completed)
-                throw new InvalidOperationException(Resources.ModMassLookup_MatchModificationMass_Invalid_attempt_to_access_incomplete_MassLookup);
+                throw new InvalidOperationException(DocSettingsResources.ModMassLookup_MatchModificationMass_Invalid_attempt_to_access_incomplete_MassLookup);
             var massLookup = _aaMassLookups[structural ? ToStructuralIndex(aa) : ToIsotopeIndex(aa)];
             return massLookup != null ? massLookup.ClosestMatch(new MassModification(mass, roundTo), terminus, specific) : null;
         }

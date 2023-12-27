@@ -1528,7 +1528,7 @@ namespace pwiz.Skyline.Util
         {
             if (string.IsNullOrEmpty(name))
                 throw new InvalidOperationException(
-                    Resources.Helpers_MakeXmlId_Failure_creating_XML_ID_Input_string_may_not_be_empty);
+                    UtilResources.Helpers_MakeXmlId_Failure_creating_XML_ID_Input_string_may_not_be_empty);
             if (REGEX_XML_ID.IsMatch(name))
                 return name;
 

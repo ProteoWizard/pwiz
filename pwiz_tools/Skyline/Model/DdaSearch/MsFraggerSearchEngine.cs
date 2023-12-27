@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
  *
  * Copyright 2021 University of Washington - Seattle, WA
@@ -214,7 +214,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
             catch (Exception ex)
             {
-                _progressStatus = _progressStatus.ChangeErrorException(ex).ChangeMessage(string.Format(Resources.DdaSearch_Search_failed__0, ex.Message));
+                _progressStatus = _progressStatus.ChangeErrorException(ex).ChangeMessage(string.Format(DdaSearchResources.DdaSearch_Search_failed__0, ex.Message));
                 _success = false;
             }
 
@@ -463,7 +463,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             _fastaFilepath ??= string.Empty;    // For ReSharper
             Assume.IsFalse(string.IsNullOrEmpty(_fastaFilepath));
 
-            _progressStatus = _progressStatus.ChangeMessage(string.Format(Resources.EnsureFastaHasDecoys_Detecting_decoy_prefix_in__0__, Path.GetFileName(_fastaFilepath)));
+            _progressStatus = _progressStatus.ChangeMessage(string.Format(DdaSearchResources.EnsureFastaHasDecoys_Detecting_decoy_prefix_in__0__, Path.GetFileName(_fastaFilepath)));
             UpdateProgress(_progressStatus);
 
             // ReSharper disable LocalizableElement 
@@ -500,7 +500,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     .ToDictionary(kvp => kvp.Key, kvp => (double)kvp.Value / entryCount)
                     .OrderByDescending(kvp => kvp.Value)
                     .ToList();
-                decoyPrefixDetectionMessages.AppendLine(Resources.EnsureFastaHasDecoys_Some_common_prefixes_were_found_);
+                decoyPrefixDetectionMessages.AppendLine(DdaSearchResources.EnsureFastaHasDecoys_Some_common_prefixes_were_found_);
                 foreach (var kvp in prefixPercentages)
                     decoyPrefixDetectionMessages.AppendFormat($@"{kvp.Key}: {kvp.Value:P1}{Environment.NewLine}");
                 decoyPrefixDetectionMessages.AppendLine();
@@ -508,14 +508,14 @@ namespace pwiz.Skyline.Model.DdaSearch
                 if (prefixPercentages.First().Value > 0.4)
                 {
                     _decoyPrefix = prefixPercentages.Select(kvp => kvp.Key).First();
-                    decoyPrefixDetectionMessages.AppendLine(string.Format(Resources.EnsureFastaHasDecoys_Using__0__as_the_most_likely_decoy_prefix_, _decoyPrefix));
+                    decoyPrefixDetectionMessages.AppendLine(string.Format(DdaSearchResources.EnsureFastaHasDecoys_Using__0__as_the_most_likely_decoy_prefix_, _decoyPrefix));
                 }
                 else
-                    decoyPrefixDetectionMessages.AppendLine(Resources.EnsureFastaHasDecoys_No_prefixes_were_frequent_enough_to_be_a_decoy_prefix__present_in_at_least_40__of_entries__);
+                    decoyPrefixDetectionMessages.AppendLine(DdaSearchResources.EnsureFastaHasDecoys_No_prefixes_were_frequent_enough_to_be_a_decoy_prefix__present_in_at_least_40__of_entries__);
             }
             else
             {
-                decoyPrefixDetectionMessages.AppendLine(Resources.EnsureFastaHasDecoys_No_common_prefixes_were_found_);
+                decoyPrefixDetectionMessages.AppendLine(DdaSearchResources.EnsureFastaHasDecoys_No_common_prefixes_were_found_);
                 decoyPrefixDetectionMessages.AppendLine();
 
                 if (suffixCounts.Any(kvp => kvp.Value > 0))
@@ -524,18 +524,18 @@ namespace pwiz.Skyline.Model.DdaSearch
                         .ToDictionary(kvp => kvp.Key, kvp => (double)kvp.Value / entryCount)
                         .OrderByDescending(kvp => kvp.Value)
                         .ToList();
-                    decoyPrefixDetectionMessages.AppendLine(Resources.EnsureFastaHasDecoys_Some_common_suffixes_were_found_but_these_are_not_supported_);
+                    decoyPrefixDetectionMessages.AppendLine(DdaSearchResources.EnsureFastaHasDecoys_Some_common_suffixes_were_found_but_these_are_not_supported_);
                     foreach (var kvp in suffixPercentages)
                         decoyPrefixDetectionMessages.AppendFormat($@"{kvp.Key}: {kvp.Value:P1}{Environment.NewLine}");
                     decoyPrefixDetectionMessages.AppendLine();
 
                     if (suffixPercentages.First().Value > 0.4 && suffixPercentages.First().Value < 0.6)
                     {
-                        decoyPrefixDetectionMessages.AppendLine(string.Format(Resources.EnsureFastaHasDecoys_The_suffix__0__was_likely_intended_as_a_decoy_suffix__but_Skyline_s_DDA_search_tools_do_not_support_decoy_suffixes, suffixPercentages.First().Key));
+                        decoyPrefixDetectionMessages.AppendLine(string.Format(DdaSearchResources.EnsureFastaHasDecoys_The_suffix__0__was_likely_intended_as_a_decoy_suffix__but_Skyline_s_DDA_search_tools_do_not_support_decoy_suffixes, suffixPercentages.First().Key));
                     }
                 }
                 else
-                    decoyPrefixDetectionMessages.AppendLine(Resources.EnsureFastaHasDecoys_No_common_suffixes_were_found_);
+                    decoyPrefixDetectionMessages.AppendLine(DdaSearchResources.EnsureFastaHasDecoys_No_common_suffixes_were_found_);
             }
             _progressStatus = _progressStatus.ChangeMessage(decoyPrefixDetectionMessages.ToString());
             UpdateProgress(_progressStatus);
@@ -545,7 +545,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 string decoyFastaFilepath = Path.Combine(Path.GetDirectoryName(_fastaFilepath) ?? "", @"decoy_" + Path.GetFileName(_fastaFilepath));
                 if (File.Exists(decoyFastaFilepath))
                 {
-                    _progressStatus = _progressStatus.ChangeMessage(string.Format(Resources.EnsureFastaHasDecoys_No_decoy_prefix_detected__but_an_existing_decoy_database_seems_to_exist_at__0__, Path.GetFileName(decoyFastaFilepath)));
+                    _progressStatus = _progressStatus.ChangeMessage(string.Format(DdaSearchResources.EnsureFastaHasDecoys_No_decoy_prefix_detected__but_an_existing_decoy_database_seems_to_exist_at__0__, Path.GetFileName(decoyFastaFilepath)));
                     UpdateProgress(_progressStatus);
                     _fastaFilepath = decoyFastaFilepath;
                     EnsureFastaHasDecoys();
@@ -553,7 +553,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 }
 
                 _decoyPrefix = @"DECOY_";
-                _progressStatus = _progressStatus.ChangeMessage(string.Format(Resources.EnsureFastaHasDecoys_No_decoy_prefix_detected__A_new_FASTA_will_be_generated_using_reverse_sequences_as_decoys__with_prefix___0____, _decoyPrefix));
+                _progressStatus = _progressStatus.ChangeMessage(string.Format(DdaSearchResources.EnsureFastaHasDecoys_No_decoy_prefix_detected__A_new_FASTA_will_be_generated_using_reverse_sequences_as_decoys__with_prefix___0____, _decoyPrefix));
                 UpdateProgress(_progressStatus);
 
                 File.Copy(_fastaFilepath, decoyFastaFilepath);
@@ -570,7 +570,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         fastaWriter.WriteLine();
                     }
                 }
-                _progressStatus = _progressStatus.ChangeMessage(string.Format(Resources.EnsureFastaHasDecoys_Using_decoy_database_at__0___1_, Path.GetFileName(decoyFastaFilepath), Environment.NewLine));
+                _progressStatus = _progressStatus.ChangeMessage(string.Format(DdaSearchResources.EnsureFastaHasDecoys_Using_decoy_database_at__0___1_, Path.GetFileName(decoyFastaFilepath), Environment.NewLine));
                 UpdateProgress(_progressStatus);
                 _fastaFilepath = decoyFastaFilepath;
             }

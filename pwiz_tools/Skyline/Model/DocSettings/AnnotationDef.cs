@@ -143,9 +143,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 switch (Type)
                 {
                     default:
-                        return Resources.AnnotationDef_ValidationErrorMessage_Invalid_value;
+                        return DocSettingsResources.AnnotationDef_ValidationErrorMessage_Invalid_value;
                     case AnnotationType.number:
-                        return Resources.AnnotationDef_ValidationErrorMessage_Value_must_be_a_number;
+                        return DocSettingsResources.AnnotationDef_ValidationErrorMessage_Value_must_be_a_number;
                 }
             }
         }
@@ -347,11 +347,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 case AnnotationTarget.transition:
                     return Resources.AnnotationDef_AnnotationTarget_Transitions;
                 case AnnotationTarget.replicate:
-                    return Resources.AnnotationDef_AnnotationTarget_Replicates;
+                    return DocSettingsResources.AnnotationDef_AnnotationTarget_Replicates;
                 case AnnotationTarget.precursor_result:
-                    return Resources.AnnotationDef_AnnotationTarget_PrecursorResults;
+                    return DocSettingsResources.AnnotationDef_AnnotationTarget_PrecursorResults;
                 case AnnotationTarget.transition_result:
-                    return Resources.AnnotationDef_AnnotationTarget_TransitionResults;
+                    return DocSettingsResources.AnnotationDef_AnnotationTarget_TransitionResults;
                 default:
                     throw new ArgumentException(string.Format(@"Invalid annotation target: {0}", annotationTarget), nameof(annotationTarget)); // CONSIDER: localize?
             }

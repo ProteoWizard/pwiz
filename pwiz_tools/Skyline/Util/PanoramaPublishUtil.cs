@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Util
 
         public string GetKey()
         {
-            return URI + (HasUserAccount() ? string.Empty : Resources.Server_GetKey___anonymous_);
+            return URI + (HasUserAccount() ? string.Empty : UtilResources.Server_GetKey___anonymous_);
         }
 
 
@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Util
             string uriText = reader.GetAttribute(ATTR.uri);
             if (string.IsNullOrEmpty(uriText))
             {
-                throw new InvalidDataException(Resources.Server_ReadXml_A_Panorama_server_must_be_specified);
+                throw new InvalidDataException(UtilResources.Server_ReadXml_A_Panorama_server_must_be_specified);
             }
             try
             {
@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Util
             }
             catch (UriFormatException)
             {
-                throw new InvalidDataException(Resources.Server_ReadXml_Server_URL_is_corrupt);
+                throw new InvalidDataException(UtilResources.Server_ReadXml_Server_URL_is_corrupt);
             }
             // Consume tag
             reader.Read();
@@ -317,7 +317,7 @@ namespace pwiz.Skyline.Util
                 var isCanceled = false;
                 using (var waitDlg = new LongWaitDlg())
                 {
-                    waitDlg.Text = Resources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File;
+                    waitDlg.Text = UtilResources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File;
                     waitDlg.PerformWork(parent, 1000, longWaitBroker =>
                     {
                         result = SendZipFile(server, folderPath,
@@ -329,7 +329,7 @@ namespace pwiz.Skyline.Util
                 if (!isCanceled) // if user not canceled 
                 {
                     _uploadedDocumentUri = result;
-                    String message = Resources.AbstractPanoramaPublishClient_UploadSharedZipFile_Upload_succeeded__would_you_like_to_view_the_file_in_Panorama_;
+                    String message = UtilResources.AbstractPanoramaPublishClient_UploadSharedZipFile_Upload_succeeded__would_you_like_to_view_the_file_in_Panorama_;
                     if (MultiButtonMsgDlg.Show(parent, message, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false)
                         == DialogResult.Yes)
                         Process.Start(result.ToString());
@@ -341,8 +341,8 @@ namespace pwiz.Skyline.Util
                 if (panoramaEx != null)
                 {
                     var message = panoramaEx.JobCancelled
-                        ? Resources.AbstractPanoramaPublishClient_UploadSharedZipFile_Document_import_was_cancelled_on_the_server__Would_you_like_to_go_to_Panorama_
-                        : Resources
+                        ? UtilResources.AbstractPanoramaPublishClient_UploadSharedZipFile_Document_import_was_cancelled_on_the_server__Would_you_like_to_go_to_Panorama_
+                        : UtilResources
                             .AbstractPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_uploading_to_Panorama__would_you_like_to_go_to_Panorama_;
 
                     if (MultiButtonMsgDlg.Show(parent, message, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false)
@@ -423,7 +423,7 @@ namespace pwiz.Skyline.Util
                     progressMonitor.UpdateProgress(
                         _progressStatus =
                             _progressStatus.ChangeMessage(
-                                Resources.WebPanoramaPublishClient_SendZipFile_Deleting_temporary_file_on_server));
+                                UtilResources.WebPanoramaPublishClient_SendZipFile_Deleting_temporary_file_on_server));
                     DeleteTempZipFile(tmpUploadUri, server.AuthHeader);
                     return null;
                 }
@@ -435,12 +435,12 @@ namespace pwiz.Skyline.Util
 
                 // Rename the temporary file
                 _progressStatus = _progressStatus.ChangeMessage(
-                    Resources.WebPanoramaPublishClient_SendZipFile_Renaming_temporary_file_on_server);
+                    UtilResources.WebPanoramaPublishClient_SendZipFile_Renaming_temporary_file_on_server);
                 progressMonitor.UpdateProgress(_progressStatus);
 
                 RenameTempZipFile(tmpUploadUri, uploadUri, server.AuthHeader);
 
-                _progressStatus = _progressStatus.ChangeMessage(Resources.WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___);
+                _progressStatus = _progressStatus.ChangeMessage(UtilResources.WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___);
                 progressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangePercentComplete(-1));
 
                 // Data must be completely uploaded before we can import.
@@ -520,7 +520,7 @@ namespace pwiz.Skyline.Util
                 if (int.TryParse(match.Groups[1].Value, out var progress))
                 {
                     progress = Math.Max(progress, currentProgress);
-                    _progressStatus = _progressStatus.ChangeMessage(string.Format(Resources.WebPanoramaPublishClient_updateProgressAndWait_Importing_data___0___complete_, progress));
+                    _progressStatus = _progressStatus.ChangeMessage(string.Format(UtilResources.WebPanoramaPublishClient_updateProgressAndWait_Importing_data___0___complete_, progress));
                     _progressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangePercentComplete(progress));
 
                     var delta = progress - currentProgress;
@@ -545,15 +545,15 @@ namespace pwiz.Skyline.Util
                 // Display the status since we don't recognize it.  This could be, for example, an "Import Waiting" status if another 
                 // Skyline document is currently being imported on the server. 
                 _progressMonitor.UpdateProgress(_progressStatus = _progressStatus =
-                    _progressStatus.ChangeMessage(string.Format(Resources.WebPanoramaPublishClient_SendZipFile_Status_on_server_is___0_, jobStatus.StatusString)));
+                    _progressStatus.ChangeMessage(string.Format(UtilResources.WebPanoramaPublishClient_SendZipFile_Status_on_server_is___0_, jobStatus.StatusString)));
             }
 
-            else if (!_progressStatus.Message.Equals(Resources
+            else if (!_progressStatus.Message.Equals(UtilResources
                 .WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___))
             {
                 // Import is running now. Reset the progress message in case it had been set to something else (e.g. "Import Waiting") in a previous iteration.  
                 progressMonitor.UpdateProgress(_progressStatus =
-                    _progressStatus.ChangeMessage(Resources
+                    _progressStatus.ChangeMessage(UtilResources
                         .WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___));
             }
 
@@ -630,7 +630,7 @@ namespace pwiz.Skyline.Util
             DoRequest(request,
                 @"MOVE",
                 authHeader,
-                Resources.WebPanoramaPublishClient_RenameTempZipFile_Error_renaming_temporary_zip_file__,
+                UtilResources.WebPanoramaPublishClient_RenameTempZipFile_Error_renaming_temporary_zip_file__,
                 5 // Try up to 5 times.
                 );
         }
@@ -671,7 +671,7 @@ namespace pwiz.Skyline.Util
             DoRequest(request,
                 @"DELETE",
                 authHeader,
-                Resources.WebPanoramaPublishClient_DeleteTempZipFile_Error_deleting_temporary_zip_file__);
+                UtilResources.WebPanoramaPublishClient_DeleteTempZipFile_Error_deleting_temporary_zip_file__);
         }
 
         private void ConfirmFileOnServer(Uri sourceUri, string authHeader)
@@ -682,14 +682,14 @@ namespace pwiz.Skyline.Util
             DoRequest(request,
                 @"HEAD",
                 authHeader,
-                Resources.WebPanoramaPublishClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_
+                UtilResources.WebPanoramaPublishClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_
                 );
         }
 
         public void webClient_UploadProgressChanged(object sender, UploadProgressChangedEventArgs e)
         {
             var message = string.Format(FileSize.FormatProvider,
-                Resources.WebPanoramaPublishClient_webClient_UploadProgressChanged_Uploaded__0_fs__of__1_fs_,
+                UtilResources.WebPanoramaPublishClient_webClient_UploadProgressChanged_Uploaded__0_fs__of__1_fs_,
                 e.BytesSent, e.TotalBytesToSend);
             _progressStatus = _progressStatus.ChangeMessage(message).ChangePercentComplete(e.ProgressPercentage);
             _progressMonitor.UpdateProgress(_progressStatus);
