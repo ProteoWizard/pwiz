@@ -29,6 +29,9 @@ using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
+    /// <summary>
+    /// Shared formatting methods for dot plots
+    /// </summary>
     public abstract class DotPlotUtil
     {
         private const int LABEL_BACKGROUND_OPACITY = 150; // 0 is transparent, 250 is opaque
@@ -101,23 +104,23 @@ namespace pwiz.Skyline.Controls.Graphs
             return textObj;
         }
 
+        /// <summary>
+        /// Adjust the locations of the labels so that they are slightly above the points
+        /// </summary>
         public static void AdjustLabelLocations(List<LabeledPoint> labeledPoints, Scale scale, double height)
         {
-            foreach(LabeledPoint point in labeledPoints)
+            foreach (var point in labeledPoints.Where(point => point.Label != null))
             {
-                if (point.Label != null)
+                if (scale.Type == AxisType.Log)
                 {
-                    if (scale.Type == AxisType.Log)
-                    {
-                        var exponent = Math.Log(point.Point.Y) + point.Label.FontSpec.Size / LABEL_POINT_DISTANCE /
-                            height * (Math.Log(scale.Max) - Math.Log(scale.Min));
-                        point.Label.Location.Y = Math.Exp(exponent);
-                    }
-                    else
-                    {
-                        point.Label.Location.Y  = point.Point.Y + point.Label.FontSpec.Size / LABEL_POINT_DISTANCE /
-                            height * (scale.Max - scale.Min);
-                    }
+                    var exponent = Math.Log(point.Point.Y) + point.Label.FontSpec.Size / LABEL_POINT_DISTANCE /
+                        height * (Math.Log(scale.Max) - Math.Log(scale.Min));
+                    point.Label.Location.Y = Math.Exp(exponent);
+                }
+                else
+                {
+                    point.Label.Location.Y  = point.Point.Y + point.Label.FontSpec.Size / LABEL_POINT_DISTANCE /
+                        height * (scale.Max - scale.Min);
                 }
             }
         }
@@ -144,11 +147,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     selectedPath.Depth <= identityPath.Depth && Equals(identityPath.GetPathTo(selectedPath.Depth), selectedPath));
         }
 
-        public static void Select(SkylineWindow window, IdentityPath identityPath)
+        public static void Select(SkylineWindow skylineWindow, IdentityPath identityPath)
         {
-            var skylineWindow = window;
             if (skylineWindow == null)
+            {
                 return;
+            }
 
             var alreadySelected = IsPathSelected(skylineWindow.SelectedPath, identityPath);
             if (alreadySelected)
@@ -178,7 +182,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public static IdentityPath GetSelectedPath(SkylineWindow skylineWindow, IdentityPath identityPath)
         {
-            return skylineWindow != null ? skylineWindow.SequenceTree.SelectedPaths.FirstOrDefault(p => IsPathSelected(p, identityPath)) : null;
+            return skylineWindow != null ? 
+                skylineWindow.SequenceTree.SelectedPaths.FirstOrDefault(p => IsPathSelected(p, identityPath)) : null;
         }
 
         public static bool IsTargetSelected(SkylineWindow skylineWindow, Peptide peptide, Protein protein)

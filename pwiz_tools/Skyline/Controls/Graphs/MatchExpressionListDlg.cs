@@ -46,6 +46,11 @@ namespace pwiz.Skyline.Controls.Graphs
             ParseToRegex();
         }
 
+        /// <summary>
+        /// Parse the contents of the text box into a regex where
+        /// each line is one possible exact match
+        /// e.g. "Cas9\nHsp70" to "^Cas9$|^Hsp70$"
+        /// </summary>
         private void ParseToRegex()
         {
             var userText = proteinsTextBox.Text;
@@ -84,7 +89,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void buttonCancel_Click(object sender, EventArgs e)
         {
-            // Upon cancellation, reset the REGEX to whatever was there before opening this dialog
+            // Upon cancellation, reset the regex to whatever was there before opening this dialog
             SetRegexText(_oldRegex);
             Close();
         }

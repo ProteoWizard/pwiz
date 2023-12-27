@@ -98,6 +98,10 @@ namespace pwiz.Skyline.Controls.Graphs
             return documentChanged;
         }
 
+        /// <summary>
+        /// Have any of the settings relevant to this graph pane changed since the last update?
+        /// </summary>
+        /// <returns>True if relevant settings have changed, false if not</returns>
         private bool IsAbundanceGraphSettingsChanged()
         {
             var settingsChanged = false;
@@ -207,6 +211,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 isDocumentChanged = IsDocumentChanged(GraphSummary.Window.Document);
             }
+
             // Only create graph data (and recalculate abundances)
             // if settings have changed, the document has changed, or if it
             // is not yet created
@@ -216,7 +221,8 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 _graphData = CreateGraphData(_schema);
             }
-            // Calculate y values and order which can change based on replicate display setting or the show cv setting
+            // Calculate y values and order which can change based on the
+            // replicate display option or the show CV option
             _graphData.CalcDataPositions(GraphSummary.ResultsIndex, selectedProtein);
 
             // For proper z-order, add the selected points, then the matched points, then the unmatched points
