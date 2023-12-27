@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -49,8 +50,6 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool _areaProteinTargets;
         private bool _excludePeptideLists;
         private bool _excludeStandards;
-        private ReplicateDisplay _replicateDisplay;
-        private bool _showCv;
         public bool ShowingFormattingDlg { get; set; }
         public IList<MatchRgbHexColor> ColorRows { get; set; }
         protected SummaryRelativeAbundanceGraphPane(GraphSummary graphSummary, PaneKey paneKey)
@@ -69,8 +68,6 @@ namespace pwiz.Skyline.Controls.Graphs
             _areaProteinTargets = Settings.Default.AreaProteinTargets;
             _excludePeptideLists = Settings.Default.ExcludePeptideListsFromAbundanceGraph;
             _excludeStandards = Settings.Default.ExcludeStandardsFromAbundanceGraph;
-            _replicateDisplay = RTLinearRegressionGraphPane.ShowReplicate;
-            _showCv = Settings.Default.ShowPeptideCV;
             ColorRows = new List<MatchRgbHexColor>();
             var container = new MemoryDocumentContainer();
             container.SetDocument(Document, null);
@@ -115,16 +112,6 @@ namespace pwiz.Skyline.Controls.Graphs
             if (Settings.Default.ExcludeStandardsFromAbundanceGraph != _excludeStandards)
             {
                 _excludeStandards = Settings.Default.ExcludeStandardsFromAbundanceGraph;
-                settingsChanged = true;
-            }
-            if (RTLinearRegressionGraphPane.ShowReplicate != _replicateDisplay || RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
-            {
-                _replicateDisplay = RTLinearRegressionGraphPane.ShowReplicate;
-                settingsChanged = true;
-            }
-            if (Settings.Default.ShowPeptideCV != _showCv)
-            {
-                _showCv = Settings.Default.ShowPeptideCV;
                 settingsChanged = true;
             }
             return settingsChanged;
@@ -214,18 +201,21 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             var isDocumentChanged = false;
-            var isSettingsChanged = false;
-            if (Program.MainWindow != null)
+            if (GraphSummary.Window != null)
             {
-                isDocumentChanged = IsDocumentChanged(Program.MainWindow.Document);
-                isSettingsChanged = IsAbundanceGraphSettingsChanged();
+                isDocumentChanged = IsDocumentChanged(GraphSummary.Window.Document);
             }
-            // Only calculate graph data the first time we update, if the document changed,
-            // or if the settings have changed
-            if (_graphData == null || isDocumentChanged || isSettingsChanged)
+            // Only create graph data (and recalculate abundances)
+            // if settings have changed, the document has changed, or if it
+            // is not yet created
+            if (_graphData == null || 
+                isDocumentChanged ||
+                IsAbundanceGraphSettingsChanged())
             {
-                _graphData = CreateGraphData(selectedProtein, _schema);
+                _graphData = CreateGraphData(_schema);
             }
+            // Calculate y values and order which can change based on replicate display setting or the show cv setting
+            _graphData.CalcDataPositions(GraphSummary.ResultsIndex, selectedProtein);
 
             // For proper z-order, add the selected points, then the matched points, then the unmatched points
             var selectedPoints = new PointPairList();
@@ -233,7 +223,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 foreach (var point in from point in _graphData.PointPairList let 
                              pointData = (GraphPointData)point.Tag where 
-                             DotPlotUtil.IsSelected(GraphSummary.Window, pointData.Peptide, pointData.Protein) select 
+                             DotPlotUtil.IsTargetSelected(GraphSummary.Window, pointData.Peptide, pointData.Protein) select 
                              point)
                 {
                     selectedPoints.Add(point);
@@ -296,14 +286,14 @@ namespace pwiz.Skyline.Controls.Graphs
                         continue;
                     }
                     var label = DotPlotUtil.CreateLabel(point, pointData.Protein, pointData.Peptide, color, size, 
-                        GraphSummary.GraphControl.GraphPane.YAxis.Scale);
+                        GraphSummary.GraphControl.GraphPane.YAxis.Scale, GraphSummary.GraphControl.GraphPane.Rect.Height);
                     GraphObjList.Add(label);
                 }
             }
             CurveList.Add(lineItem);
         }
 
-        protected abstract GraphData CreateGraphData(PeptideGroupDocNode selectedProtein, SkylineDataSchema schema);
+        protected abstract GraphData CreateGraphData(SkylineDataSchema schema);
 
         protected virtual void UpdateAxes()
         {
@@ -394,15 +384,14 @@ namespace pwiz.Skyline.Controls.Graphs
         public abstract class GraphData : Immutable
         {
             // ReSharper disable PossibleMultipleEnumeration
-            protected GraphData(SrmDocument document, SkylineDataSchema schema, PeptideGroupDocNode selectedProtein,
-                int iResult, bool anyMolecules)
+            protected GraphData(SrmDocument document, SkylineDataSchema schema, bool anyMolecules)
             {
-
                 // Build the list of points to show.
                 var listPoints = new List<GraphPointData>();
                 foreach (var nodeGroupPep in document.MoleculeGroups)
                 {
-                    if (nodeGroupPep.IsPeptideList && Settings.Default.ExcludePeptideListsFromAbundanceGraph && !anyMolecules)
+                    if (nodeGroupPep.IsPeptideList && Settings.Default.ExcludePeptideListsFromAbundanceGraph &&
+                        !anyMolecules)
                     {
                         continue;
                     }
@@ -416,7 +405,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         var path = new IdentityPath(IdentityPath.ROOT, nodeGroupPep.PeptideGroup);
                         var protein = new Protein(schema, path);
-                        listPoints.Add(new GraphPointData(iResult, protein));
+                        listPoints.Add(new GraphPointData(protein));
                     }
                     else
                     {
@@ -433,53 +422,62 @@ namespace pwiz.Skyline.Controls.Graphs
                             }
                         }
                     }
-                }
-                // Sort into correct order
-                listPoints.Sort(PeakAreaPointData.CompareGroupAreas);
 
+                    GraphPointList = listPoints;
+                }
+            }
+            // ReSharper restore PossibleMultipleEnumeration
+
+            public void CalcDataPositions(int iResult, PeptideGroupDocNode selectedProtein)
+            {
                 // Init calculated values
                 var xscalePaths = new List<IdentityPath>();
                 double maxY = 0;
-                double minY = double.MaxValue;
-                int selectedIndex = -1;
+                var minY = double.MaxValue;
+                var selectedIndex = -1;
 
-                var pointPairList = new PointPairList(); 
+                var pointPairList = new PointPairList();
 
-                for (var i = 0; i < listPoints.Count; i++)
+                foreach (var dataPoint in GraphPointList)
                 {
-                    // 1-index the proteins
-                    var iGroup = i + 1;
-                    var dataPoint = listPoints[i];
-                    xscalePaths.Add(dataPoint.IdentityPath);
-                    
                     double groupMaxY = 0;
-                    double groupMinY = double.MaxValue;
+                    var groupMinY = double.MaxValue;
                     // ReSharper disable DoNotCallOverridableMethodsInConstructor
-                    // TODO offer to add a mean error bar item if showing average of replicates
-                    var pointPair = CreatePointPair(iGroup, dataPoint, ref groupMaxY, ref groupMinY, iResult);
+                    var pointPair = CreatePointPair(dataPoint, ref groupMaxY, ref groupMinY, iResult);
                     // ReSharper restore DoNotCallOverridableMethodsInConstructor
                     pointPairList.Add(pointPair);
-
-                    // Save the selected index and its y extent
-                    if (ReferenceEquals(selectedProtein, dataPoint.NodePepGroup))
-                    {
-                        selectedIndex = i;
-                    }
                     maxY = Math.Max(maxY, groupMaxY);
                     minY = Math.Min(minY, groupMinY);
                 }
 
+                pointPairList.Sort(CompareYValues);
+                for (var i = 0; i < pointPairList.Count; i++)
+                {
+                    // Save the selected index and its y extent
+                    var dataPoint = (GraphPointData)pointPairList[i].Tag;
+                    if (ReferenceEquals(selectedProtein, dataPoint.NodePepGroup))
+                    {
+                        selectedIndex = i;
+                    }
+                    // 1-index the proteins
+                    pointPairList[i].X = i + 1;
+                    xscalePaths.Add(dataPoint.IdentityPath);
+                }
                 PointPairList = pointPairList;
                 XScalePaths = xscalePaths.ToArray();
-                SelectedIndex = selectedIndex - 1; //TODO find a better fix
+                SelectedIndex = selectedIndex - 1;
                 MaxY = maxY;
                 if (minY != double.MaxValue)
                 {
                     MinY = minY;
                 }
             }
-            // ReSharper restore PossibleMultipleEnumeration
 
+            private static int CompareYValues(PointPair p1, PointPair p2)
+            {
+                return Comparer.Default.Compare(p2.Y, p1.Y);
+            }
+            private List<GraphPointData> GraphPointList;
             public PointPairList PointPairList { get; private set; }
             public IdentityPath[] XScalePaths { get; private set; }
             public double MaxY { get; private set; }
@@ -490,39 +488,67 @@ namespace pwiz.Skyline.Controls.Graphs
             public virtual double MinValueSetting { get { return 0; } }
             public virtual double MaxCvSetting { get { return 0; } }
 
-            protected virtual PointPair CreatePointPair(int iGroup, GraphPointData pointData, ref double maxY, ref double minY, int? resultIndex)
+            protected virtual PointPair CreatePointPair(GraphPointData pointData, ref double maxY, ref double minY, int? resultIndex)
             {
-                var yValue = Settings.Default.ShowPeptideCV ? pointData.AreaCv : pointData.AreaGroup;
-                var pointPair = new PointPair(iGroup, yValue)
+                var yValue = GetY(pointData, resultIndex);
+                var pointPair = new PointPair(0, yValue)
                     { Tag = pointData };
                 maxY = Math.Max(maxY, pointPair.Y);
                 minY = Math.Min(minY, pointPair.Y);
                 return pointPair;
             }
+
+            private static double GetY(GraphPointData pointData, int? resultIndex)
+            {
+                if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
+                {
+                    if (resultIndex != null && pointData.Areas.Count > resultIndex)
+                    {
+                        var replicate = pointData.Areas[resultIndex.Value];
+                        if (replicate != null)
+                        {
+                            return replicate.Value;
+                        }
+                    }
+                }
+                var listValues = pointData.Areas.Where(a => a != null).Select(d => d.Value);
+                var statValues = new Statistics(listValues);
+                var cv = statValues.StdDev() / statValues.Mean();
+                if (Settings.Default.ShowPeptideCV)
+                {
+                    return cv;
+                }
+                return RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.best ? statValues.Max() :
+                    statValues.Mean();
+            }
         }
 
-        public class GraphPointData : PeakAreaPointData
+        public class GraphPointData 
         {
-            public GraphPointData(int iResult, Protein protein)
+            public GraphPointData(Protein protein)
             {
+                Areas = new List<double?>();
                 NodePepGroup = protein.DocNode; 
                 IdentityPath = new IdentityPath(IdentityPath.ROOT, NodePepGroup.PeptideGroup);
-                AreaGroup = CalculateAbundance(iResult, protein.GetProteinAbundances(), out var cv);
-                AreaCv = cv;
+                SetAreas(protein.GetProteinAbundances());
                 Protein = protein;
             }
 
             public GraphPointData(Peptide peptide, TransitionGroupDocNode nodeGroup, IdentityPath identityPath)
-                : base(peptide.DocNode, nodeGroup, identityPath)
             {
+                Areas = new List<double?>();
                 Peptide = peptide;
                 Protein = peptide.Protein;
+                SetAreas(nodeGroup);
             }
             public PeptideGroupDocNode NodePepGroup { get; private set; }
             public Protein Protein { get; private set; }
             public Peptide Peptide { get; private set; }
-            public double CalculateAbundance(int replicateNumber, IDictionary<int, Protein.AbundanceValue> abundanceValues, out double cv)
+            public List<double?> Areas { get; set; }
+            public IdentityPath IdentityPath { get; set; }
+            private void SetAreas(IDictionary<int, Protein.AbundanceValue> abundanceValues)
             {
+                // TODO cover case where dict is not sorted
                 foreach (var abundanceValue in abundanceValues)
                 {
                     double? abundance = null;
@@ -532,21 +558,14 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     Areas.Add(abundance);
                 }
-                var listValues = abundanceValues.Values.Where(v => !v.Incomplete).Select(v => v.Abundance);
-                var statValues = new Statistics(listValues);
-                cv = statValues.StdDev() / statValues.Mean();
-                if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
+            }
+
+            private void SetAreas(TransitionGroupDocNode nodeGroup)
+            {
+                foreach (var chromInfo in nodeGroup.ChromInfos)
                 {
-                    if (abundanceValues.TryGetValue(replicateNumber, out var replicate))
-                    {
-                        if (replicate.Incomplete == false)
-                        {
-                            return replicate.Abundance;
-                        }
-                    }
+                    Areas.Add(chromInfo.Area);
                 }
-                return RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.best ? statValues.Max() :
-                    statValues.Mean();
             }
         }
     }

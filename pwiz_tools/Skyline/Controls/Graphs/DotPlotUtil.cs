@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Controls.Graphs
     public abstract class DotPlotUtil
     {
         private const int LABEL_BACKGROUND_OPACITY = 150; // 0 is transparent, 250 is opaque
-        private const double LABEL_POINT_DISTANCE = 0.001; // Fraction of the Y Axis to separate the point and label by
+        private const double LABEL_POINT_DISTANCE = 0.05; // Fraction of the Y Axis to separate the point and label by
         public static FontSpec CreateFontSpec(Color color, float size, bool label = false)
         {
             if (label)
@@ -86,26 +86,29 @@ namespace pwiz.Skyline.Controls.Graphs
             return ((GraphFontSize[])GraphFontSize.FontSizes)[(int)pointSize].PointSize;
         }
 
-        public static TextObj CreateLabel(PointPair point, Protein protein, Peptide peptide, Color color, float size, Scale scale)
+        public static TextObj CreateLabel(PointPair point, Protein protein, Peptide peptide, Color color, float size, Scale scale, float height)
         {
+            var fontSpec = CreateFontSpec(color, size, true);
             var text = MatchExpression.GetRowDisplayText(protein, peptide);
-            float adjustedY;
+            double adjustedY;
             if (scale.Type == AxisType.Log)
             {
-                var scaleRange = Math.Log10(scale.Max) - Math.Log10(scale.Min);
-                var yLinear = Math.Log10(point.Y);
-                var exponent = scaleRange * LABEL_POINT_DISTANCE + yLinear;
-                adjustedY = (float)Math.Pow(10, exponent);
+                var scaleRange = Math.Log(scale.Max) - Math.Log(scale.Min);
+                var yLinear = Math.Log(point.Y);
+                var linearOffset = LABEL_POINT_DISTANCE * scaleRange;
+                var exponent = Math.Log(point.Y) + fontSpec.Size / 2.0f /
+                    height * (Math.Log(scale.Max) - Math.Log(scale.Min));
+                adjustedY = Math.Exp(exponent);
             }
             else
             {
-                var scaleRange = scale.Max - scale.Min;
-                adjustedY = (float)(point.Y + scaleRange * LABEL_POINT_DISTANCE);
+                adjustedY = point.Y + fontSpec.Size / 2.0f /
+                    height * (scale.Max - scale.Min);
             }
             var textObj = new TextObj(text, point.X, adjustedY, CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
             {
                 IsClippedToChartRect = true,
-                FontSpec = CreateFontSpec(color, size, true),
+                FontSpec = fontSpec,
                 ZOrder = ZOrder.A_InFront
             };
 
@@ -172,7 +175,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return skylineWindow != null ? skylineWindow.SequenceTree.SelectedPaths.FirstOrDefault(p => IsPathSelected(p, identityPath)) : null;
         }
 
-        public static bool IsSelected(SkylineWindow skylineWindow, Peptide peptide, Protein protein)
+        public static bool IsTargetSelected(SkylineWindow skylineWindow, Peptide peptide, Protein protein)
         {
             var docNode = peptide ?? (SkylineDocNode)protein;
             return skylineWindow != null && GetSelectedPath(skylineWindow, docNode.IdentityPath) != null;

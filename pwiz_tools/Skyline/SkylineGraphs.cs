@@ -3820,10 +3820,7 @@ namespace pwiz.Skyline
             }
             if (graphType == GraphTypeSummary.abundance || graphType == GraphTypeSummary.peptide)
             {
-                if (!(graphType == GraphTypeSummary.abundance && abundanceTargetsPeptidesMenuItem.Checked))
-                {
-                    iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
-                }
+                iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
             }
 
             if (isHistogram)

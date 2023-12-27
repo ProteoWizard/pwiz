@@ -136,11 +136,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 _minPValueLine[0].X = pane.XAxis.Scale.Min;
                 _minPValueLine[1].X = pane.XAxis.Scale.Max;
             }
-
-            foreach (var labeledPoint in _labeledPoints)
-                if (labeledPoint.Label != null)
-                    labeledPoint.Label.Location.Y = labeledPoint.Point.Y + labeledPoint.Label.FontSpec.Size / 2.0f /
-                                                    pane.Rect.Height * (pane.YAxis.Scale.Max - pane.YAxis.Scale.Min);
         }
 
         private void GraphPane_AxisChangeEvent(GraphPane pane)
@@ -311,7 +306,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 var pvalue = -Math.Log10(Math.Max(MIN_PVALUE, row.FoldChangeResult.AdjustedPValue));
 
                 var point = new PointPair(foldChange, pvalue) { Tag = row };
-                if (Settings.Default.GroupComparisonShowSelection && count < MAX_SELECTED && DotPlotUtil.IsSelected(_skylineWindow, row.Peptide, row.Protein))
+                if (Settings.Default.GroupComparisonShowSelection && count < MAX_SELECTED && DotPlotUtil.IsTargetSelected(_skylineWindow, row.Peptide, row.Protein))
                 {
                     selectedPoints.Add(point);
                     ++count;
@@ -399,7 +394,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     {
                         continue;
                     }
-                    var label = DotPlotUtil.CreateLabel(point, row.Protein, row.Peptide, color, size, zedGraphControl.GraphPane.YAxis.Scale);
+                    var label = DotPlotUtil.CreateLabel(point, row.Protein, row.Peptide, color, size, zedGraphControl.GraphPane.YAxis.Scale, zedGraphControl.GraphPane.Rect.Height);
                     _labeledPoints.Add(new DotPlotUtil.LabeledPoint(point, label, selected));
                     zedGraphControl.GraphPane.GraphObjList.Add(label);
                 }
@@ -558,7 +553,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             if (docNode == null || ModifierKeys.HasFlag(Keys.Shift))
                 return false;
 
-            var isSelected = DotPlotUtil.IsSelected(_skylineWindow, _selectedRow.Peptide, _selectedRow.Protein);
+            var isSelected = DotPlotUtil.IsTargetSelected(_skylineWindow, _selectedRow.Peptide, _selectedRow.Protein);
             var ctrl = ModifierKeys.HasFlag(Keys.Control);
 
             if (!ctrl)
