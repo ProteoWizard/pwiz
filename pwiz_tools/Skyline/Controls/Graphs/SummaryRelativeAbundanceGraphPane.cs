@@ -126,6 +126,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var copy = ColorRows.Select(r => (MatchRgbHexColor)r.Clone()).ToList();
             ShowingFormattingDlg = true;
+            GraphSummary.ShowFormattingDlg = false;
             using (var dlg = new VolcanoPlotFormattingDlg(this, copy, 
                        _graphData.PointPairList.Select(pointPair => (GraphPointData)pointPair.Tag).ToArray(), 
                        rows  =>

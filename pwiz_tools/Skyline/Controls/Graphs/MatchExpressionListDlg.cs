@@ -76,6 +76,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             var sb = new StringBuilder();
             var proteinList = proteins.ToList();
+            sb.Append(@"(?i)");
             sb.Append('^');
             for (var i = 0; i < proteinList.Count - 1; i++)
             {
