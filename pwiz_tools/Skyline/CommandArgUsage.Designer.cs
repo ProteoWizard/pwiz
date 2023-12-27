@@ -79,6 +79,60 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Specifies how to resolve annotation name conflicts, by either overwriting or skipping them, when using --annotation-name, --annotation-file, or --annotation-add-from-environment (default is to output an error message for conflicts)..
+        /// </summary>
+        internal static string _annotation_conflict_resolution {
+            get {
+                return ResourceManager.GetString("_annotation_conflict_resolution", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add an annotation to the document and environment from an XML format file. For an example of an XML format file, view the user.config file specified in the user interface window Tools &gt;Options &gt; Miscellaneous. Existing annotations with the same name will be overwritten..
+        /// </summary>
+        internal static string _annotation_file {
+            get {
+                return ResourceManager.GetString("_annotation_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add an annotation to the document with the specified name. Existing annotations with the same name will be overwritten..
+        /// </summary>
+        internal static string _annotation_name {
+            get {
+                return ResourceManager.GetString("_annotation_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A comma-separated list of target types to apply the annotation to in an --annotation-name operation..
+        /// </summary>
+        internal static string _annotation_targets {
+            get {
+                return ResourceManager.GetString("_annotation_targets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Define the data type of the annotation in an --annotation-name operation. Defaults to text..
+        /// </summary>
+        internal static string _annotation_type {
+            get {
+                return ResourceManager.GetString("_annotation_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A comma-separated list of values for a value_list type annotation in an --annotation-name operation. Required only in an --annotation-type=value_list operation..
+        /// </summary>
+        internal static string _annotation_values {
+            get {
+                return ResourceManager.GetString("_annotation_values", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Proteins that match the same set of peptides will be combined into a single target in the document..
         /// </summary>
         internal static string _associate_proteins_group_proteins {
@@ -2085,6 +2139,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &quot;&lt;value&gt;, &lt;value&gt;, &lt;value&gt;...&quot;.
+        /// </summary>
+        internal static string CommandArgs_ANNOTATION_VALUES_VALUE {
+            get {
+                return ResourceManager.GetString("CommandArgs_ANNOTATION_VALUES_VALUE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Agilent
         ///SCIEX.
         /// </summary>
@@ -2201,6 +2264,15 @@ namespace pwiz.Skyline {
         internal static string CommandArgs_GROUP_DECOYS {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_DECOYS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Document settings.
+        /// </summary>
+        internal static string CommandArgs_GROUP_DOCUMENT_SETTINGS {
+            get {
+                return ResourceManager.GetString("CommandArgs_GROUP_DOCUMENT_SETTINGS", resourceCulture);
             }
         }
         
