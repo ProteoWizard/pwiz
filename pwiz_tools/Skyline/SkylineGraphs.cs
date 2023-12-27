@@ -3749,7 +3749,6 @@ namespace pwiz.Skyline
             }
             else
             {
-                AddRelativeAbundanceFormattingForm(menuStrip, iInsert++);
                 // Protein level comparisons are likely not meaningful for small molecule documents,
                 // so only offer peptide level comparison.
                 // CONSIDER support protein level in mixed cases?
@@ -3930,6 +3929,7 @@ namespace pwiz.Skyline
 
             menuStrip.Items.Insert(iInsert++, toolStripSeparator24);
             menuStrip.Items.Insert(iInsert++, areaPropsContextMenuItem);
+            AddRelativeAbundanceFormattingForm(menuStrip, iInsert++);
             menuStrip.Items.Insert(iInsert, toolStripSeparator28);
 
             if (!isHistogram)
