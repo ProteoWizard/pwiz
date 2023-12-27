@@ -208,7 +208,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // Only create graph data (and recalculate abundances)
             // if settings have changed, the document has changed, or if it
             // is not yet created
-            if (_graphData == null || 
+            if (_graphData?.GraphPointList == null ||
                 isDocumentChanged ||
                 IsAbundanceGraphSettingsChanged())
             {
@@ -422,9 +422,8 @@ namespace pwiz.Skyline.Controls.Graphs
                             }
                         }
                     }
-
-                    GraphPointList = listPoints;
                 }
+                GraphPointList = listPoints;
             }
             // ReSharper restore PossibleMultipleEnumeration
 
@@ -477,7 +476,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return Comparer.Default.Compare(p2.Y, p1.Y);
             }
-            private List<GraphPointData> GraphPointList;
+            public List<GraphPointData> GraphPointList;
             public PointPairList PointPairList { get; private set; }
             public IdentityPath[] XScalePaths { get; private set; }
             public double MaxY { get; private set; }
