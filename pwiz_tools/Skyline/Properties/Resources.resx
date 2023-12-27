@@ -13914,4 +13914,7 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="AreaPeptideGraphPane_UpdateAxes_Peptide_Rank" xml:space="preserve">
     <value>Peptide Rank</value>
   </data>
+  <data name="SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank" xml:space="preserve">
+    <value>Molecule Rank</value>
+  </data>
 </root>

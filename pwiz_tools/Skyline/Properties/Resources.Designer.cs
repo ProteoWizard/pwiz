@@ -33398,6 +33398,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Molecule Rank.
+        /// </summary>
+        public static string SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank {
+            get {
+                return ResourceManager.GetString("SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Replicate.
         /// </summary>
         public static string SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate {

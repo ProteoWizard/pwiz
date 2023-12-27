@@ -62,9 +62,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
             SetSelectedItems(rgbHexColor);
             _allowUpdateGrid = true;
 
-            // When creating match expressions for a protein expression graph,
+            // When creating match expressions for results without fold change values,
             // do not offer p value and fold change filtering options.
-            if (_formattingDlg.IsRelativeAbundance)
+            if (!_formattingDlg.HasFoldChangeResults)
             {
                 // Hide the filter options
                 groupBox1.Hide();

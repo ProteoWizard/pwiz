@@ -46,6 +46,7 @@ namespace pwiz.Skyline
         public double MassErrorGroup { get; private set; }
         public double TimePepCharge { get; private set; }
         public double AreaCv { get; set; }
+        public List<double?>Areas { get; set; }
 
         // ReSharper disable SuggestBaseTypeForParameter
         public void CalcStats(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
@@ -72,13 +73,14 @@ namespace pwiz.Skyline
             TimePepCharge = (times.Count > 0 ? new Statistics(times).Mean() : 0);
         }
 
-        private static void CalcStats(TransitionGroupDocNode nodeGroup, out double? meanArea, out double? meanTime, out double? meanMassError, out double? areaCv)
+        private void CalcStats(TransitionGroupDocNode nodeGroup, out double? meanArea, out double? meanTime, out double? meanMassError, out double? areaCv)
         {
             var areas = new List<double>();
             var times = new List<double>();
             var massErrors = new List<double>();
             foreach (var chromInfo in nodeGroup.ChromInfos)
             {
+                Areas.Add(chromInfo.Area);
                 if (chromInfo.Area.HasValue)
                     areas.Add(chromInfo.Area.Value);
                 if (chromInfo.RetentionTime.HasValue)

@@ -47,25 +47,23 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public VolcanoPlotFormattingDlg(FoldChangeVolcanoPlot volcanoPlot, IList<MatchRgbHexColor> colorRows,
             FoldChangeBindingSource.FoldChangeRow[] foldChangeRows, Action<List<MatchRgbHexColor>> updateGraph) : 
-            this(false, null, volcanoPlot, colorRows, foldChangeRows, updateGraph, 
+            this(true, colorRows, foldChangeRows, updateGraph, 
                 volcanoPlot.AnyMolecules, volcanoPlot.AnyProteomic, volcanoPlot.PerProtein, volcanoPlot.Document)
         {
         }
 
         public VolcanoPlotFormattingDlg(SummaryRelativeAbundanceGraphPane relativeAbundanceGraph,
             IList<MatchRgbHexColor> colorRows, object[] proteinAbundances, Action<List<MatchRgbHexColor>> updateGraph) : 
-            this(true, relativeAbundanceGraph, null, colorRows, proteinAbundances, updateGraph, 
+            this(false, colorRows, proteinAbundances, updateGraph, 
                 relativeAbundanceGraph.AnyMolecules, relativeAbundanceGraph.AnyProteomic, Settings.Default.AreaProteinTargets, relativeAbundanceGraph.Document)
         {
         }
 
-        private VolcanoPlotFormattingDlg(bool isRelativeAbundance, SummaryRelativeAbundanceGraphPane relativeAbundanceGraph, FoldChangeVolcanoPlot volcanoPlot, IList<MatchRgbHexColor> colorRows,
+        private VolcanoPlotFormattingDlg(bool hasFoldChangeResults, IList<MatchRgbHexColor> colorRows,
             object[] foldChangeRows, Action<List<MatchRgbHexColor>> updateGraph, bool anyMolecules, bool anyProteomic, bool perProtein, SrmDocument document)
         {
             InitializeComponent();
-            IsRelativeAbundance = isRelativeAbundance;
-            VolcanoPlot = volcanoPlot;
-            RelativeAbundanceGraph = relativeAbundanceGraph;
+            HasFoldChangeResults = hasFoldChangeResults;
             AnyMolecules = anyMolecules;
             AnyProteomic = anyProteomic;
             PerProtein = perProtein;
@@ -156,7 +154,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             UpdateAdvancedColumns();
 
             regexColorRowGrid1.Owner = this;
-            if (isRelativeAbundance)
+            if (hasFoldChangeResults)
             {
                 Text = Resources.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting;
             }
@@ -206,14 +204,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public void Select(IdentityPath identityPath)
         {
-            if (IsRelativeAbundance)
-            {
-                RelativeAbundanceGraph.Select(identityPath);
-            }
-            else
-            {
-                VolcanoPlot.Select(identityPath);
-            }
+            DotPlotUtil.Select(Program.MainWindow, identityPath);
         }
         public FoldChangeVolcanoPlot VolcanoPlot { get; private set; }
 
@@ -222,7 +213,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         public bool AnyProteomic { get; set; }
         public bool AnyMolecules { get; set; }
         public bool PerProtein { get; set; }
-        public bool IsRelativeAbundance { get; set; }
+        public bool HasFoldChangeResults { get; set; }
         public SrmDocument Document { get; set; }
 
         private void SetExpressionMinimumWidth()

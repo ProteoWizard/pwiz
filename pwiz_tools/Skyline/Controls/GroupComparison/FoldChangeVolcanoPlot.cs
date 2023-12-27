@@ -311,7 +311,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 var pvalue = -Math.Log10(Math.Max(MIN_PVALUE, row.FoldChangeResult.AdjustedPValue));
 
                 var point = new PointPair(foldChange, pvalue) { Tag = row };
-                if (Settings.Default.GroupComparisonShowSelection && count < MAX_SELECTED && IsSelected(row))
+                if (Settings.Default.GroupComparisonShowSelection && count < MAX_SELECTED && DotPlotUtil.IsSelected(_skylineWindow, row.Peptide, row.Protein))
                 {
                     selectedPoints.Add(point);
                     ++count;
@@ -399,7 +399,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     {
                         continue;
                     }
-                    var label = DotPlotUtil.CreateLabel(point, row.Protein, row.Peptide, color, size);
+                    var label = DotPlotUtil.CreateLabel(point, row.Protein, row.Peptide, color, size, zedGraphControl.GraphPane.YAxis.Scale);
                     _labeledPoints.Add(new DotPlotUtil.LabeledPoint(point, label, selected));
                     zedGraphControl.GraphPane.GraphObjList.Add(label);
                 }
@@ -487,37 +487,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return false;
         }
 
-        public void Select(IdentityPath identityPath)
-        {
-            var skylineWindow = _skylineWindow;
-            if (skylineWindow == null)
-                return;
-
-            var alreadySelected = DotPlotUtil.IsPathSelected(skylineWindow.SelectedPath, identityPath);
-            if (alreadySelected)
-                skylineWindow.SequenceTree.SelectedNode = null;
-
-            skylineWindow.SelectedPath = identityPath;
-            skylineWindow.UpdateGraphPanes();
-        }
-
-        public void MultiSelect(IdentityPath identityPath)
-        {
-            var skylineWindow = _skylineWindow;
-            if (skylineWindow == null)
-                return;
-
-            var list = skylineWindow.SequenceTree.SelectedPaths;
-            if (GetSelectedPath(identityPath) == null)
-            {
-                list.Insert(0, identityPath);
-                skylineWindow.SequenceTree.SelectedPaths = list;
-                if (!DotPlotUtil.IsPathSelected(skylineWindow.SelectedPath, identityPath))
-                    skylineWindow.SequenceTree.SelectPath(identityPath);
-            }
-            skylineWindow.UpdateGraphPanes();
-        }
-
         public void Deselect(IdentityPath identityPath)
         {
             var skylineWindow = _skylineWindow;
@@ -525,7 +494,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 return;
 
             var list = skylineWindow.SequenceTree.SelectedPaths.ToList();
-            var selectedPath = GetSelectedPath(identityPath);
+            var selectedPath = DotPlotUtil.GetSelectedPath(_skylineWindow, identityPath);
             if (selectedPath != null)
             {
                 if (selectedPath.Depth < identityPath.Depth)
@@ -566,18 +535,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
             skylineWindow.UpdateGraphPanes();
         }
 
-        private bool IsSelected(FoldChangeBindingSource.FoldChangeRow row)
-        {
-            var docNode = row.Peptide ?? (SkylineDocNode)row.Protein;
-            return _skylineWindow != null && GetSelectedPath(docNode.IdentityPath) != null;
-        }
-
-        public IdentityPath GetSelectedPath(IdentityPath identityPath)
-        {
-            var skylineWindow = _skylineWindow;
-            return skylineWindow != null ? skylineWindow.SequenceTree.SelectedPaths.FirstOrDefault(p => DotPlotUtil.IsPathSelected(p, identityPath)) : null;
-        }
-
         private bool zedGraphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             return e.Button.HasFlag(MouseButtons.Left) && ClickSelectedRow();
@@ -601,18 +558,18 @@ namespace pwiz.Skyline.Controls.GroupComparison
             if (docNode == null || ModifierKeys.HasFlag(Keys.Shift))
                 return false;
 
-            var isSelected = IsSelected(_selectedRow);
+            var isSelected = DotPlotUtil.IsSelected(_skylineWindow, _selectedRow.Peptide, _selectedRow.Protein);
             var ctrl = ModifierKeys.HasFlag(Keys.Control);
 
             if (!ctrl)
             {
-                Select(docNode.IdentityPath);
+                DotPlotUtil.Select(_skylineWindow, docNode.IdentityPath);
                 return true; // No need to call UpdateGraph
             }
             else if (isSelected)
                 Deselect(docNode.IdentityPath);
             else
-                MultiSelect(docNode.IdentityPath);
+                DotPlotUtil.MultiSelect(_skylineWindow, docNode.IdentityPath);
 
             FormUtil.OpenForms.OfType<FoldChangeVolcanoPlot>().ForEach(v => v.QueueUpdateGraph()); // Update all volcano plots
             return true;

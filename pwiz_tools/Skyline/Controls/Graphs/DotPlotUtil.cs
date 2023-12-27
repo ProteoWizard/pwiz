@@ -16,7 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Drawing;
+using System.Linq;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
@@ -28,6 +31,7 @@ namespace pwiz.Skyline.Controls.Graphs
     public abstract class DotPlotUtil
     {
         private const int LABEL_BACKGROUND_OPACITY = 150; // 0 is transparent, 250 is opaque
+        private const double LABEL_POINT_DISTANCE = 0.001; // Fraction of the Y Axis to separate the point and label by
         public static FontSpec CreateFontSpec(Color color, float size, bool label = false)
         {
             if (label)
@@ -82,11 +86,23 @@ namespace pwiz.Skyline.Controls.Graphs
             return ((GraphFontSize[])GraphFontSize.FontSizes)[(int)pointSize].PointSize;
         }
 
-        public static TextObj CreateLabel(PointPair point, Protein protein, Peptide peptide, Color color, float size)
+        public static TextObj CreateLabel(PointPair point, Protein protein, Peptide peptide, Color color, float size, Scale scale)
         {
             var text = MatchExpression.GetRowDisplayText(protein, peptide);
-
-            var textObj = new TextObj(text, point.X, point.Y, CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
+            float adjustedY;
+            if (scale.Type == AxisType.Log)
+            {
+                var scaleRange = Math.Log10(scale.Max) - Math.Log10(scale.Min);
+                var yLinear = Math.Log10(point.Y);
+                var exponent = scaleRange * LABEL_POINT_DISTANCE + yLinear;
+                adjustedY = (float)Math.Pow(10, exponent);
+            }
+            else
+            {
+                var scaleRange = scale.Max - scale.Min;
+                adjustedY = (float)(point.Y + scaleRange * LABEL_POINT_DISTANCE);
+            }
+            var textObj = new TextObj(text, point.X, adjustedY, CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
             {
                 IsClippedToChartRect = true,
                 FontSpec = CreateFontSpec(color, size, true),
@@ -117,6 +133,49 @@ namespace pwiz.Skyline.Controls.Graphs
                    selectedPath.Depth <= (int)SrmDocument.Level.Molecules && identityPath.Depth <= (int)SrmDocument.Level.Molecules &&
                    (selectedPath.Depth >= identityPath.Depth && Equals(selectedPath.GetPathTo(identityPath.Depth), identityPath) ||
                     selectedPath.Depth <= identityPath.Depth && Equals(identityPath.GetPathTo(selectedPath.Depth), selectedPath));
+        }
+
+        public static void Select(SkylineWindow window, IdentityPath identityPath)
+        {
+            var skylineWindow = window;
+            if (skylineWindow == null)
+                return;
+
+            var alreadySelected = IsPathSelected(skylineWindow.SelectedPath, identityPath);
+            if (alreadySelected)
+                skylineWindow.SequenceTree.SelectedNode = null;
+
+            skylineWindow.SelectedPath = identityPath;
+            skylineWindow.UpdateGraphPanes();
+        }
+
+        public static void MultiSelect(SkylineWindow skylineWindow, IdentityPath identityPath)
+        {
+            if (skylineWindow == null)
+            {
+                return;
+            }
+
+            var list = skylineWindow.SequenceTree.SelectedPaths;
+            if (GetSelectedPath(skylineWindow, identityPath) == null)
+            {
+                list.Insert(0, identityPath);
+                skylineWindow.SequenceTree.SelectedPaths = list;
+                if (!IsPathSelected(skylineWindow.SelectedPath, identityPath))
+                    skylineWindow.SequenceTree.SelectPath(identityPath);
+            }
+            skylineWindow.UpdateGraphPanes();
+        }
+
+        public static IdentityPath GetSelectedPath(SkylineWindow skylineWindow, IdentityPath identityPath)
+        {
+            return skylineWindow != null ? skylineWindow.SequenceTree.SelectedPaths.FirstOrDefault(p => IsPathSelected(p, identityPath)) : null;
+        }
+
+        public static bool IsSelected(SkylineWindow skylineWindow, Peptide peptide, Protein protein)
+        {
+            var docNode = peptide ?? (SkylineDocNode)protein;
+            return skylineWindow != null && GetSelectedPath(skylineWindow, docNode.IdentityPath) != null;
         }
     }
 }

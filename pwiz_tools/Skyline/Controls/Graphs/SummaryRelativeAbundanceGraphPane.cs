@@ -132,8 +132,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void ShowFormattingDialog()
         {
-            var copy = ColorRows.Select(r => (MatchRgbHexColor)r.Clone()).ToList(); 
-            var window = GraphSummary.Window;
+            var copy = ColorRows.Select(r => (MatchRgbHexColor)r.Clone()).ToList();
             ShowingFormattingDlg = true;
             using (var dlg = new VolcanoPlotFormattingDlg(this, copy, 
                        _graphData.PointPairList.Select(pointPair => (GraphPointData)pointPair.Tag).ToArray(), 
@@ -143,30 +142,11 @@ namespace pwiz.Skyline.Controls.Graphs
                            GraphSummary.UpdateUI();
                        }))
             {
-                if (dlg.ShowDialog(window) == DialogResult.OK)
+                if (dlg.ShowDialog(Program.MainWindow) == DialogResult.OK)
                     UpdateGraph(false);
             }
 
             ShowingFormattingDlg = false;
-        }
-
-        public static double CalculateAbundance(int replicateNumber, IDictionary<int, Protein.AbundanceValue> abundanceValues, out double cv)
-        {
-            var listValues = abundanceValues.Values.Where(v => !v.Incomplete).Select(v => v.Abundance);
-            var statValues = new Statistics(listValues);
-            cv = statValues.StdDev() / statValues.Mean();
-            if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
-            {
-                if (abundanceValues.TryGetValue(replicateNumber, out var replicate))
-                {
-                    if (replicate.Incomplete == false)
-                    {
-                        return replicate.Abundance;
-                    }
-                }
-            }
-            return RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.best ? statValues.Max() :
-                statValues.Mean();
         }
 
         public override bool HandleMouseDownEvent(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
@@ -201,7 +181,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (ctrl)
             {
-                MultiSelect(identityPath);
+                DotPlotUtil.MultiSelect(GraphSummary.Window, identityPath);
             }
             else
             {
@@ -209,26 +189,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void MultiSelect(IdentityPath identityPath)
-        {
-            var skylineWindow = GraphSummary.Window;
-            if (skylineWindow == null)
-            {
-                return;
-            }
-
-            var list = skylineWindow.SequenceTree.SelectedPaths;
-            if (GetSelectedPath(identityPath) == null)
-            {
-                list.Insert(0, identityPath);
-                skylineWindow.SequenceTree.SelectedPaths = list;
-                if (!DotPlotUtil.IsPathSelected(skylineWindow.SelectedPath, identityPath))
-                {
-                    skylineWindow.SequenceTree.SelectPath(identityPath);
-                }
-            }
-            skylineWindow.UpdateGraphPanes();
-        }
         protected override void ChangeSelection(int selectedIndex, IdentityPath identityPath)
         {
             
@@ -236,24 +196,6 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 GraphSummary.StateProvider.SelectedPath = identityPath;
             }
-        }
-
-        public void Select(IdentityPath identityPath)
-        {
-            GraphSummary.StateProvider.SelectedPath = identityPath;
-        }
-        
-        private bool IsSelected(GraphPointData pointData)
-        {
-            var docNode = pointData.Peptide ?? (SkylineDocNode)pointData.Protein;
-            var window = GraphSummary.Window;
-            return window != null && GetSelectedPath(docNode.IdentityPath) != null;
-        }
-
-        private IdentityPath GetSelectedPath(IdentityPath identityPath)
-        {
-            var skylineWindow = GraphSummary.Window;
-            return skylineWindow != null ? skylineWindow.SequenceTree.SelectedPaths.FirstOrDefault(p => DotPlotUtil.IsPathSelected(p, identityPath)) : null;
         }
 
         public override void UpdateGraph(bool selectionChanged)
@@ -289,7 +231,10 @@ namespace pwiz.Skyline.Controls.Graphs
             var selectedPoints = new PointPairList();
             if (ShowSelection)
             {
-                foreach (var point in from point in _graphData.PointPairList let pointData = (GraphPointData)point.Tag where IsSelected(pointData) select point)
+                foreach (var point in from point in _graphData.PointPairList let 
+                             pointData = (GraphPointData)point.Tag where 
+                             DotPlotUtil.IsSelected(GraphSummary.Window, pointData.Peptide, pointData.Protein) select 
+                             point)
                 {
                     selectedPoints.Add(point);
                 }
@@ -350,7 +295,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         continue;
                     }
-                    var label = DotPlotUtil.CreateLabel(point, pointData.Protein, pointData.Peptide, color, size);
+                    var label = DotPlotUtil.CreateLabel(point, pointData.Protein, pointData.Peptide, color, size, 
+                        GraphSummary.GraphControl.GraphPane.YAxis.Scale);
                     GraphObjList.Add(label);
                 }
             }
@@ -361,7 +307,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected virtual void UpdateAxes()
         {
-            XAxis.Title.Text = Settings.Default.AreaProteinTargets ? Resources.SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank :Resources.AreaPeptideGraphPane_UpdateAxes_Peptide_Rank;
+            if (AnyMolecules)
+            {
+                XAxis.Title.Text = Resources.SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank;
+            }
+            else
+            {
+                XAxis.Title.Text = Settings.Default.AreaProteinTargets ? Resources.SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank : Resources.AreaPeptideGraphPane_UpdateAxes_Peptide_Rank;
+            }
             const double xAxisGrace = 0;
             XAxis.Scale.MaxGrace = xAxisGrace;
             XAxis.Scale.MinGrace = xAxisGrace;
@@ -568,6 +521,33 @@ namespace pwiz.Skyline.Controls.Graphs
             public PeptideGroupDocNode NodePepGroup { get; private set; }
             public Protein Protein { get; private set; }
             public Peptide Peptide { get; private set; }
+            public double CalculateAbundance(int replicateNumber, IDictionary<int, Protein.AbundanceValue> abundanceValues, out double cv)
+            {
+                foreach (var abundanceValue in abundanceValues)
+                {
+                    double? abundance = null;
+                    if (!abundanceValue.Value.Incomplete)
+                    {
+                        abundance = abundanceValue.Value.Abundance;
+                    }
+                    Areas.Add(abundance);
+                }
+                var listValues = abundanceValues.Values.Where(v => !v.Incomplete).Select(v => v.Abundance);
+                var statValues = new Statistics(listValues);
+                cv = statValues.StdDev() / statValues.Mean();
+                if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
+                {
+                    if (abundanceValues.TryGetValue(replicateNumber, out var replicate))
+                    {
+                        if (replicate.Incomplete == false)
+                        {
+                            return replicate.Abundance;
+                        }
+                    }
+                }
+                return RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.best ? statValues.Max() :
+                    statValues.Mean();
+            }
         }
     }
 }
