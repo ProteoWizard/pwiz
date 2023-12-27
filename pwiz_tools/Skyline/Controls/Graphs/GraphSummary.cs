@@ -70,10 +70,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             bool IsReplicatePane(SummaryGraphPane pane);
             bool IsPeptidePane(SummaryGraphPane pane);
-            bool IsAbundancePane(SummaryGraphPane pane);
             SummaryGraphPane CreateReplicatePane(PaneKey key);
             SummaryGraphPane CreatePeptidePane(PaneKey key);
-            SummaryGraphPane CreateAbundancePane(PaneKey key);
         }
 
         public class RTGraphView : IFormView {}
@@ -463,9 +461,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     case GraphTypeSummary.peptide:
                         panesValid = GraphPanes.All(graphController.IsPeptidePane);
                         break;
-                    case GraphTypeSummary.abundance:
-                        panesValid = GraphPanes.All(graphController.IsAbundancePane);
-                        break;
                 }
             }
             if (panesValid)
@@ -480,9 +475,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     break;
                 case GraphTypeSummary.peptide:
                     GraphPanes = paneKeys.Select(graphController.CreatePeptidePane);
-                    break;
-                case GraphTypeSummary.abundance:
-                    GraphPanes = paneKeys.Select(graphController.CreateAbundancePane);
                     break;
             }
         }

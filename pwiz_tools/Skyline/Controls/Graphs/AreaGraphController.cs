@@ -222,7 +222,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     GraphSummary.DoUpdateGraph(this, GraphSummary.Type);
                     break;
                 case GraphTypeSummary.abundance:
-                    GraphSummary.DoUpdateGraph(this, GraphSummary.Type);
+                    GraphSummary.GraphPanes = new[] { new AreaRelativeAbundanceGraphPane(GraphSummary) };
                     break;
                 case GraphTypeSummary.histogram:
                     if (!(pane is AreaCVHistogramGraphPane))
@@ -252,10 +252,6 @@ namespace pwiz.Skyline.Controls.Graphs
             return pane is AreaPeptideGraphPane;
         }
 
-        public bool IsAbundancePane(SummaryGraphPane pane)
-        {
-            return pane is AreaRelativeAbundanceGraphPane;
-        }
         public SummaryGraphPane CreateReplicatePane(PaneKey key)
         {
             return new AreaReplicateGraphPane(GraphSummary, key);
@@ -266,10 +262,6 @@ namespace pwiz.Skyline.Controls.Graphs
             return new AreaPeptideGraphPane(GraphSummary, key);
         }
 
-        public SummaryGraphPane CreateAbundancePane(PaneKey key)
-        {
-            return new AreaRelativeAbundanceGraphPane(GraphSummary, key);
-        }
         public bool HandleKeyDownEvent(object sender, KeyEventArgs e)
         {
             switch (e.KeyCode)

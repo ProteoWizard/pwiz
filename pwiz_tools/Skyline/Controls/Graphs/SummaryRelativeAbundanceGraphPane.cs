@@ -53,10 +53,9 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly List<DotPlotUtil.LabeledPoint> _labeledPoints;
         public bool ShowingFormattingDlg { get; set; }
         public IList<MatchRgbHexColor> ColorRows { get; set; }
-        protected SummaryRelativeAbundanceGraphPane(GraphSummary graphSummary, PaneKey paneKey)
+        protected SummaryRelativeAbundanceGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
-            PaneKey = paneKey;
             var xAxisTitle =
                 Helpers.PeptideToMoleculeTextMapper.Translate(Resources.SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank,
                     graphSummary.DocumentUIContainer.DocumentUI.DocumentType);

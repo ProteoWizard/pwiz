@@ -240,12 +240,6 @@ namespace pwiz.Skyline.Controls.Graphs
             throw new NotImplementedException();
         }
 
-        // We don't implement this pane for detections yet
-        SummaryGraphPane GraphSummary.IControllerSplit.CreateAbundancePane(PaneKey key)
-        {
-            throw new NotImplementedException();
-        }
-
         bool GraphSummary.IController.HandleKeyDownEvent(object sender, KeyEventArgs e)
         {
             if(e.KeyCode == Keys.Escape)
@@ -256,8 +250,6 @@ namespace pwiz.Skyline.Controls.Graphs
         bool GraphSummary.IControllerSplit.IsPeptidePane(SummaryGraphPane pane) => false;
 
         bool GraphSummary.IControllerSplit.IsReplicatePane(SummaryGraphPane pane) => false;
-
-        bool GraphSummary.IControllerSplit.IsAbundancePane(SummaryGraphPane pane) => false;
 
         void GraphSummary.IController.OnActiveLibraryChanged()
         {

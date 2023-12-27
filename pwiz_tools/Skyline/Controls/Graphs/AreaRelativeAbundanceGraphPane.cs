@@ -24,8 +24,8 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     internal class AreaRelativeAbundanceGraphPane : SummaryRelativeAbundanceGraphPane
     {
-        public AreaRelativeAbundanceGraphPane(GraphSummary graphSummary, PaneKey paneKey)
-            : base(graphSummary, paneKey)
+        public AreaRelativeAbundanceGraphPane(GraphSummary graphSummary)
+            : base(graphSummary)
         {
         }
         protected override GraphData CreateGraphData(SkylineDataSchema dataSchema)
