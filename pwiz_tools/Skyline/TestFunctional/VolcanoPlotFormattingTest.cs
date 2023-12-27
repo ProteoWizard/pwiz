@@ -433,8 +433,16 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 // Verify that typing into the list is parsed to a REGEX
-                matchExprListDlg.proteinsTextBox.Text = @"Cas9" + '\n' + @"Hsp70";
-                Assert.AreEqual(createExprDlg.Expression, "^Cas9$|^Hsp70$");
+                var proteinList = @"Cas9" + '\n' + @"Hsp70";
+                matchExprListDlg.proteinsTextBox.Text = proteinList;
+                Assert.AreEqual(createExprDlg.Expression, "(?i)^Cas9$|^Hsp70$");
+                // Two proteins should match
+                Assert.AreEqual(createExprDlg.MatchingRows.Count(), 2);
+                // Test case insensitivity
+                matchExprListDlg.proteinsTextBox.Text = proteinList.ToUpperInvariant();
+                // Two proteins should match
+                Assert.AreEqual(createExprDlg.MatchingRows.Count(), 2);
+
             });
         }
         public class ParseInfo

@@ -45,8 +45,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         /// <summary>
         /// Parse the contents of the text box into a regex where
-        /// each line is one possible exact match
-        /// e.g. "Cas9\nHsp70" to "^Cas9$|^Hsp70$"
+        /// each line is one possible case-insensitive match
+        /// e.g. "Cas9\nHsp70" to "(?i)^Cas9$|^Hsp70$"
         /// </summary>
         private void ParseToRegex()
         {
