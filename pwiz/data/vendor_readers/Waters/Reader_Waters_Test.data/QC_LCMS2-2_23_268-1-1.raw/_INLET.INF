@@ -1,0 +1,254 @@
+
+ACE Experimental Record
+
+
+Inlet Method File: e:\masslynx projects\oa_uplc_2-2.pro\acqudb\oa_standard
+
+---------------------   Run method parameters   ----------------
+
+-- PUMP --
+
+Waters Acquity SDS
+
+-- END PUMP --
+
+-- DETECTOR -- 
+
+Waters Acquity CM
+
+ Target Column Temperature: 60.0 °C
+ Temperature Alarm Band: 2.0 °C
+ Shutdown all columns: No 
+ Column Valve Position: Column 1 
+ Equilibration Time: 0.1 min
+ Active Preheater: Use Console Configuration 
+ External Valve 1: No Change 
+ External Valve 2: No Change 
+ External Valve 3: No Change 
+ Comment: AQUITY UPLC HSS T3 1.8ym 
+ Column Temperature Data Channel: Yes 
+ Preheater Temperature Data Channel: No 
+
+
+-- END DETECTOR -- 
+
+-- DETECTOR -- 
+
+Waters Acquity PDA
+
+ Run Time: 1.50 min
+ PDA Detector Type: UPLC LG 500 nm 
+ Lamp: On 
+ Sampling Rate: 20 points/sec
+ Filter Time Constant: 0.1000 sec
+ Exposure Time: Auto msec
+ Interpolate 2nd order filter Region: No 
+ Use UV Blocking Filter: No 
+3D Channel...
+ Range: 210  - 400  
+ Resolution: 1.2 nm
+Analog 1...
+ 2D Channel: 8 
+ Full Scale Range: 2.000 units
+ Full Scale Voltage: 2000 mV
+ Voltage Offset: 0 mV
+Analog 2...
+ 2D Channel: 8 
+ Full Scale Range: 2.000 units
+ Full Scale Voltage: 2000 mV
+ Voltage Offset: 0 mV
+ Initial Switch 1: No Change 
+ Initial Switch 2: No Change 
+
+
+-- END DETECTOR -- 
+
+-- DETECTOR -- 
+
+Waters Acquity ELSD
+
+ Run Time: 1.50 min
+ Comment:  
+ Lamp On: On 
+ Gas Pressure: 50.0 psi
+ Gas Pressure Data Channel: Off 
+ Data Rate: 10 Points/Sec
+ Gain: 100.0 
+ Time Constant: 0.200 sec
+ Signal Output Full-Scale LSU: 2000 LSU
+ Output Full-Scale: 2000 mV
+ Signal Output Offset: 0.000 mV
+ Auxiliary Output Offset: 0 mV
+ Auxiliary Output Source: Nebulizer Temperature 
+ Analog Output Mode: On 
+ Signal MBF Data Channel: Off 
+ Signal Data Channel: On 
+ Nebulizer Heater-Cooler Set Point: 100 %
+ Nebulizer Data Channel: Off 
+ Nebulizer Mode: Heating 
+ Drift Tube Temperature Set Point: 65.0 °C
+ Drift Tube Temperature Limit: 25.0 °C
+ Drift Tube Data Channel: Off 
+ Column Heater Set Point: Off °C
+ Column Heater Temperature Limit: 5.0 °C
+ Column Heater Data Channel: Off 
+ Auxiliary Switch: Off 
+ Autozero On Inject: Yes 
+ Autozero On Gain Change: Disable 
+ Pulse Width: 0.1 sec
+ Rect Wave Period: 0.2 sec
+ Threshold Level: 1.0 
+ Threshold Event: Off 
+ Threshold Parameter: Pulse 
+ Threshold Parameter: Pulse 
+
+
+-- END DETECTOR -- 
+
+-- AUTOSAMPLER --
+
+CTC PAL Method Parameters
+DescriptionLine
+001: 25 ul syringe, Gradient Performance test
+
+MacroValues = OA(10,1,1,10,LC Vlv1,5,500,500,2,2,0,1800)
+
+SyringeSize = 25ul
+
+MacroLine
+001: Sample Loop Volume (µl);10;1;1000
+002: Air Volume (µl);0;0;SYR.Max Volume
+003: Pre Clean with Solvent ();0;0;99
+004: Filling Speed (µl/s);SYR.Fill Speed;SYR.Min Speed;SYR.Max Speed
+005: Inject to;INJECTOR
+006: Injection Speed (µl/s);SYR.Inject Speed;SYR.Min Speed;SYR.Max Speed
+007: Pre Inject Delay (ms);500;0;99000
+008: Post Inject Delay (ms);500;0;99000
+009: Post Clean with Solvent ();1;0;99
+010: Valve Clean with Solvent ();1;0;99
+011: Pre Clean with Sample ();0;0;99
+012: Valve Park Time (s);1800;10;7200
+
+ATOM
+001: CLEANUP(Wash1,Off,Off,On,Off,On,Off,Off,)
+002: SWITCH_EVENT(Vlv-MV1,Pos8,,)
+003: TIMETABLE(Clear,)
+004: WAIT_SYNC_SIG(Start,)
+005: CLEAN_SYR(Wash1,Pre Clean with Solvent,,,2,300,5,,)
+006: GET_SAMPLE(SL.Tray,SL.Index,SL.Volume,Air Volume,,,Filling Speed,300,Injection Speed,0,Off,,,)
+007: INJ_SAMPLE(Inject to,Inject,Injected,,,Pre Inject Delay,Injection Speed,Post Inject Delay,,)
+008: TIMETABLE(Start,)
+009: SET_TIMETABLE(Valve Park Time,SerVlv1,Pos6,,Absolute,)
+010: CLEAN_SYR(Wash1,Post Clean with Solvent,,,5,300,,,)
+011: CLEAN_INJ(Wash1,Inject to,,,,5,300,,,,,)
+012: CLEAN_INJ(Wash2,Inject to,,,,5,300,,,,,)
+013: CLEANUP(Wash1,Off,Off,Off,On,Off,Off,On,)
+
+
+Sample Run Injection Parameter
+
+Injection Volume (ul)   -   2.00
+-- END AUTOSAMPLER --
+
+----------------------------  oOo  -----------------------------
+
+
+End of experimental record.
+
+------------------- Generic Instrument Postrun Report  ---------------
+
+
+ Software Version: 1.70.2074 
+ Firmware Version: 1.65.6227 (May 07 2015) 
+ Checksum: 0xf7835e17 
+ Serial Number: H09UPD128A 
+ Lamp On/Off Event: No 
+ Lamp Life: 6687.00 hours
+ Lamp Serial Number: 000398625 
+ Exposure Time: 50.000 msec
+ Lambda1: 186.893 
+ Lambda512: 502.321 
+
+----------------------------  oOo  -----------------------------
+
+---------------Failed to get IECordHost2 Interface ---------
+
+
+
+
+
+------------------- Waters Acquity SDS Postrun Report  ---------------
+
+
+
+ Software Version: 1.73.3499 
+ Firmware Version: 1.72.415 (Aug 27 2018) 
+ Checksum: 0x19251b64 
+ Serial Number: L11UPB567A 
+ Minimum System Pressure: 151.4 
+ Maximum System Pressure: 4763.5 
+ Average System Pressure: 3654.6 
+ Minimum Degasser Pressure: 0.4 
+ Maximum Degasser Pressure: 0.5 
+ Average Degasser Pressure: 0.4 
+
+----------------------------  oOo  -----------------------------
+
+
+
+------------------- Waters Acquity CM Postrun Report  ---------------
+
+
+
+ Software Version: 1.73.3359 
+ Firmware Version: 1.40.74 (Oct 27 2011) 
+ Checksum: 0x8e9d1dc0 
+ Serial Number: G09UPM199G 
+ Valve Position: 1 
+ ColumnType: ACQUITY UPLC® HSS T3 1.8µm 
+ Column Serial Number: 02673206818382 
+ Column Part Number: 186003944 
+ Total Injections on Column: 3506 
+ Minimum Column Temperature: 60.0 °C
+ Maximum Column Temperature: 60.0 °C
+ Average Column Temperature: 60.0 °C
+
+----------------------------  oOo  -----------------------------
+
+------------------- Active eCord Data ---------------
+
+
+Valve Current Position: 1
+Column Name: ACQUITY UPLC® HSS T3 1.8µm
+Part Number: 186003944
+Serial Number: 02673206818382
+Injection Count: 3506
+Injection Count Threshold: 0
+Date of First Injection: 12/13/2022  5:48:6 PM
+Date of Last Injection: 9/10/2023  5:0:19 AM
+Sample Count: 3506
+Sample Set Count: 1733
+Maximum Pressure: 5787 psi
+Date of Maximum Pressure: 3/17/2023  4:6:40 PM
+Maximum Temperature: 60.6 °C
+Date of Maximum Temperature: 3/17/2023  3:15:28 PM
+
+----------------------------  oOo  -----------------------------
+
+
+
+------------------- Generic Instrument Postrun Report  ---------------
+
+
+
+ Firmware Revision: 1.40.3827 (Oct 24 2008) 
+ Component Revision: 1.69.2098 
+ Checksum: 0x216f9370 
+ Serial Number: H14UPE562M 
+ Lamp Life: 0 hours
+ Lamp Changed: false 
+
+----------------------------  oOo  -----------------------------
+
+---------------Failed to get IECordHost2 Interface ---------
+

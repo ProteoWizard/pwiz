@@ -160,11 +160,5 @@ namespace pwiz.SkylineTestData
                 }
             }
         }
-
-        private static void CheckRunCommandOutputContains(string expectedMessage, string actualMessage)
-        {
-            Assert.IsTrue(actualMessage.Contains(expectedMessage),
-                string.Format("Expected RunCommand result message that contains \n\"{0}\",\ngot\n\"{1}\"\ninstead.", expectedMessage, actualMessage));
-        }
     }
 }

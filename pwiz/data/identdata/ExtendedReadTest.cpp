@@ -24,6 +24,7 @@
 #include "DefaultReaderList.hpp"
 #include "IO.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 
 using namespace pwiz::identdata;
 

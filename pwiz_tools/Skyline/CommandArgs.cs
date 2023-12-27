@@ -28,9 +28,11 @@ using System.Threading;
 using System.Web;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
+using pwiz.ProteomeDatabase.API;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -64,7 +66,9 @@ namespace pwiz.Skyline
         public static readonly Func<string> PATH_TO_CSV = () => GetPathToFile(TextUtil.EXT_CSV);
         public static readonly Func<string> PATH_TO_TSV = () => GetPathToFile(TextUtil.EXT_TSV);
         public static readonly Func<string> PATH_TO_IRTDB = () => GetPathToFile(IrtDb.EXT);
+        public static readonly Func<string> PATH_TO_PROTDB = () => GetPathToFile(ProteomeDb.EXT_PROTDB);
         public static readonly Func<string> PATH_TO_BLIB = () => GetPathToFile(BiblioSpecLiteSpec.EXT);
+        public static readonly Func<string> PATH_TO_XML = () => GetPathToFile(DataSourceUtil.EXT_XML);
         public static readonly Func<string> PATH_TO_IMSDB = () => GetPathToFile(IonMobilityDb.EXT);
         public static readonly Func<string> PATH_TO_REPORT = () => GetPathToFile(ReportSpecList.EXT_REPORTS);
         public static readonly Func<string> PATH_TO_INSTALL = () => GetPathToFile(ToolDescription.EXT_INSTALL);
@@ -73,6 +77,7 @@ namespace pwiz.Skyline
         public static readonly Func<string> NUM_VALUE = () => CommandArgUsage.CommandArgs_NUM_VALUE;
         public static readonly Func<string> NUM_LIST_VALUE = () => CommandArgUsage.CommandArgs_NUM_LIST_VALUE;
         public static readonly Func<string> NAME_VALUE = () => CommandArgUsage.CommandArgs_NAME_VALUE;
+        public static readonly Func<string> ANNOTATION_VALUES_VALUE = () => CommandArgUsage.CommandArgs_ANNOTATION_VALUES_VALUE;
         public static readonly Func<string> FEATURE_NAME_VALUE = () => CommandArgUsage.CommandArgs_FEATURE_NAME_VALUE;
         public static readonly Func<string> REPORT_NAME_VALUE = () => CommandArgUsage.CommandArgs_REPORT_NAME_VALUE;
         public static readonly Func<string> PIPE_NAME_VALUE = () => CommandArgUsage.CommandArgs_PIPE_NAME_VALUE;
@@ -91,6 +96,7 @@ namespace pwiz.Skyline
         // ReSharper disable LocalizableElement
         public static readonly Func<string> INT_LIST_VALUE = () => "\"1, 2, 3...\"";  // Not L10N
         public static readonly Func<string> ION_TYPE_LIST_VALUE = () => "\"a, b, c, x, y, z, p\"";    // Not L10N
+        public static readonly Func<string> ANNOTATION_TARGET_LIST_VALUE = () => "\"protein, molecule_list, peptide, molecule, precursor, transition, replicate, precursor_result, transition_result\""; // Not L10N
 
         public static readonly Func<string> MZTOLERANCE_VALUE = () => "\"" + 0.5 + "mz or 15ppm\"";
         // ReSharper restore LocalizableElement
@@ -104,14 +110,21 @@ namespace pwiz.Skyline
         public static readonly HashSet<Func<string>> PATH_TYPE_VALUES = new HashSet<Func<string>>
         {
             PATH_TO_DOCUMENT, PATH_TO_FILE, PATH_TO_FOLDER, PATH_TO_ZIP, PATH_TO_REPORT, PATH_TO_TSV, PATH_TO_IMSDB,
-            PATH_TO_INSTALL, PATH_TO_CSV, PATH_TO_IRTDB, PATH_TO_BLIB
+            PATH_TO_INSTALL, PATH_TO_CSV, PATH_TO_IRTDB, PATH_TO_BLIB, PATH_TO_XML, PATH_TO_PROTDB
         };
 
         public static readonly HashSet<Func<string>> STRING_TYPE_VALUES = new HashSet<Func<string>>(new[]
         {
             FEATURE_NAME_VALUE, REPORT_NAME_VALUE, PIPE_NAME_VALUE, REGEX_VALUE, SERVER_URL_VALUE, USERNAME_VALUE,
-            PASSWORD_VALUE, COMMAND_VALUE, COMMAND_ARGUMENTS_VALUE, PROGRAM_MACRO_VALUE, LABEL_VALUE, NAME_VALUE
+            PASSWORD_VALUE, COMMAND_VALUE, COMMAND_ARGUMENTS_VALUE, PROGRAM_MACRO_VALUE, LABEL_VALUE, NAME_VALUE,
+            ANNOTATION_TARGET_LIST_VALUE, ANNOTATION_VALUES_VALUE
         }.Concat(PATH_TYPE_VALUES));
+
+        // For value examples that should wrap but do not contain '|' characters
+        public static readonly HashSet<Func<string>> WRAPPABLE_LIST_TYPE_VALUES = new HashSet<Func<string>>(new[]
+        {
+            ANNOTATION_TARGET_LIST_VALUE
+        });
 
         private static void SetCulture(string cultureName)
         {
@@ -129,13 +142,16 @@ namespace pwiz.Skyline
             (c, p) => c.HideAllChromatogramsGraph = true) {InternalUse = true};
         public static readonly Argument ARG_TEST_NOACG = new Argument(@"noacg",
             (c, p) => c.NoAllChromatogramsGraph = true) {InternalUse = true};
+        public static readonly Argument ARG_TEST_EXCEPTION = new Argument(@"exception",
+            (c, p) => c.IsTestExceptions = true) { InternalUse = true };
 
         private static readonly ArgumentGroup GROUP_INTERNAL = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_INTERNAL, false,
             ARG_INTERNAL_SCREEN_WIDTH, ARG_INTERNAL_CULTURE, ARG_INTERNAL_IMPORT_FILE_CACHE, ARG_INTERNAL_IMPORT_PROGRESS_PIPE,
-            ARG_TEST_UI, ARG_TEST_HIDEACG, ARG_TEST_NOACG);
+            ARG_TEST_UI, ARG_TEST_HIDEACG, ARG_TEST_NOACG, ARG_TEST_EXCEPTION);
 
         public bool HideAllChromatogramsGraph { get; private set; }
         public bool NoAllChromatogramsGraph { get; private set; }
+        public bool IsTestExceptions { get; private set; }
 
         // Conflict resolution values
         public const string ARG_VALUE_OVERWRITE = "overwrite";
@@ -197,10 +213,12 @@ namespace pwiz.Skyline
         public const string ARG_VALUE_ASCII = "ascii";
         public const string ARG_VALUE_NO_BORDERS = "no-borders";
         public static readonly Argument ARG_VERSION = new Argument(@"version", (c, p) => c.Version());
+        public static readonly Argument ARG_VERBOSE_ERRORS =
+            new Argument(@"verbose-errors", (c, p) => c._out.IsVerboseExceptions = true);
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
             ARG_IN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_NEW, ARG_OVERWRITE, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
-            ARG_LOG_FILE, ARG_HELP, ARG_VERSION)
+            ARG_LOG_FILE, ARG_HELP, ARG_VERSION, ARG_VERBOSE_ERRORS)
         {
             Validate = c => c.ValidateGeneralArgs()
         };
@@ -789,6 +807,16 @@ namespace pwiz.Skyline
             }
         }
 
+        /// <summary>
+        /// Retrieve an array of all possible element handler names to be displayed to the user
+        /// </summary>
+        /// <returns>An array of all possible element handler names </returns>
+        public static string[] GetAllHandlerNames()
+        {
+            var document = new SrmDocument(SrmSettingsList.GetDefault());
+            return CommandLine.GetAllHandlers(document).Select(handler => handler.Name).ToArray();
+        }
+
         private bool ParseExcludeFeature(NameValuePair pair, ICollection<IPeakFeatureCalculator> featureList)
         {
             var featureName = pair.Value;
@@ -1038,7 +1066,7 @@ namespace pwiz.Skyline
         // For exporting other file types
         public static readonly Argument ARG_SPECTRAL_LIBRARY_FILE = new DocArgument(@"exp-speclib-file", PATH_TO_BLIB,
             (c, p) => c.SpecLibFile= p.ValueFullPath);
-        public static readonly Argument ARG_MPROPHET_FEATURES_FILE = new DocArgument(@"exp-mprophet-file", PATH_TO_CSV,
+        public static readonly Argument ARG_MPROPHET_FEATURES_FILE = new DocArgument(@"exp-mprophet-features", PATH_TO_CSV,
             (c, p) => c.MProphetFeaturesFile = p.ValueFullPath);
         public static readonly Argument ARG_MPROPHET_FEATURES_BEST_SCORING_PEAKS =
             new DocArgument(@"exp-mprophet-best-peaks-only", (c, p) => c.MProphetUseBestScoringPeaks = true);
@@ -1046,12 +1074,23 @@ namespace pwiz.Skyline
             new DocArgument(@"exp-mprophet-targets-only", (c, p) => c.MProphetTargetsOnly = true);
         public static readonly Argument ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES = 
             new DocArgument(@"exp-mprophet-exclude-feature", FEATURE_NAME_VALUE, 
-                (c, p) => c.ParseExcludeFeature(p, c.MProphetExcludeScores)){WrapValue = true};
+                (c, p) => c.ParseExcludeFeature(p, c.MProphetExcludeScores)) {WrapValue = true};
+        public static readonly Argument ARG_ANNOTATIONS_FILE = new DocArgument(@"exp-annotations", PATH_TO_CSV,
+            (c, p) => c.AnnotationsFile = p.ValueFullPath);
+        public static readonly Argument ARG_ANNOTATIONS_INCLUDE_OBJECTS =
+            new DocArgument(@"exp-annotations-include-object", GetAllHandlerNames(),
+                (c, p) => c.AnnotationsIncludeObjects.Add(p.Value)){WrapValue = true};
+        public static readonly Argument ARG_ANNOTATIONS_EXCLUDE_PROPERTIES =
+            new DocArgument(@"exp-annotations-include-properties",
+                (c, p) => c.AnnotationsIncludeProperties = true){WrapValue = true};
+        public static readonly Argument ARG_ANNOTATIONS_REMOVE_BLANK_ROWS =
+            new DocArgument(@"exp-annotations-remove-blank-rows", (c, p) => c.AnnotationsRemoveBlankRows = true);
 
         private static readonly ArgumentGroup GROUP_OTHER_FILE_TYPES = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_OTHER_FILE_TYPES, false, 
             ARG_SPECTRAL_LIBRARY_FILE, ARG_MPROPHET_FEATURES_FILE, ARG_MPROPHET_FEATURES_BEST_SCORING_PEAKS, ARG_MPROPHET_FEATURES_TARGETS_ONLY, 
-            ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES
-        );
+            ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES, ARG_ANNOTATIONS_FILE, ARG_ANNOTATIONS_INCLUDE_OBJECTS, 
+            ARG_ANNOTATIONS_EXCLUDE_PROPERTIES, ARG_ANNOTATIONS_REMOVE_BLANK_ROWS
+        ) { LeftColumnWidth = 40 };
 
         public string SpecLibFile { get; private set; }
 
@@ -1066,6 +1105,90 @@ namespace pwiz.Skyline
         public bool MProphetTargetsOnly { get; private set; }
 
         public List<IPeakFeatureCalculator> MProphetExcludeScores { get; private set; }
+
+        // For adding annotations
+        public static readonly Argument ARG_ADD_ANNOTATIONS_FILE = new DocArgument(@"annotation-file",
+            PATH_TO_XML,
+            (c, p) => c.AddAnnotationsFile = p.ValueFullPath) {InternalUse = true};
+        public static readonly Argument ARG_ADD_ANNOTATIONS_NAME = new DocArgument(@"annotation-name", NAME_VALUE,
+            (c, p) => c.AddAnnotationsName = p.Value);
+        public static readonly Argument ARG_ADD_ANNOTATIONS_TARGETS = new DocArgument(@"annotation-targets",
+            ANNOTATION_TARGET_LIST_VALUE,
+            (c, p) => c.ParseAnnotationTargets(p.Value)){WrapValue = true};
+        public static readonly Argument ARG_ADD_ANNOTATIONS_TYPE = DocArgument.FromEnumType<AnnotationDef.AnnotationType>(@"annotation-type",
+            (c, p) => c.AddAnnotationsType = new ListPropertyType(p, null), false);
+        public static readonly Argument ARG_ADD_ANNOTATIONS_VALUES = new DocArgument(@"annotation-values", ANNOTATION_VALUES_VALUE,
+            (c, p) => c.ParseAnnotationValues(p.Value));
+        public static readonly Argument ARG_ADD_ANNOTATIONS_CONFLICT_RESOLUTION = new Argument(@"annotation-conflict-resolution",
+                new[] { ARG_VALUE_OVERWRITE, ARG_VALUE_SKIP },
+                (c, p) => c.AddAnnotationsResolveConflictsBySkipping = p.IsValue(ARG_VALUE_SKIP))
+            { WrapValue = true, InternalUse = true};
+
+
+        public static readonly ArgumentGroup GROUP_DOCUMENT_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_DOCUMENT_SETTINGS, false,
+                ARG_ADD_ANNOTATIONS_NAME, ARG_ADD_ANNOTATIONS_TARGETS, ARG_ADD_ANNOTATIONS_TYPE, ARG_ADD_ANNOTATIONS_VALUES, ARG_ADD_ANNOTATIONS_FILE, ARG_ADD_ANNOTATIONS_CONFLICT_RESOLUTION) 
+            { LeftColumnWidth = 36, Validate = c => c.ValidateAddAnnotationsArgs()};
+        public string AddAnnotationsFile { get; private set; }
+        public bool AddingAnnotationsFile { get { return !string.IsNullOrEmpty(AddAnnotationsFile) || !string.IsNullOrEmpty(AddAnnotationsName); } }
+        public string AddAnnotationsName { get; private set; }
+        public AnnotationDef.AnnotationTargetSet AddAnnotationsTargets { get; private set; }
+        public ListPropertyType AddAnnotationsType { get; private set; }
+        public string[] AddAnnotationsValues { get; private set; }
+        public bool ?AddAnnotationsResolveConflictsBySkipping { get; private set; }
+
+        private bool ValidateAddAnnotationsArgs()
+        {
+            // The user must specify a list of values if they are trying to define a value_list type annotation
+            var valueListName = AnnotationDef.AnnotationType.value_list.ToString();
+            if (Equals(valueListName, AddAnnotationsType.AnnotationType.ToString()) && AddAnnotationsValues.IsNullOrEmpty())
+            {
+                _out.WriteLine(
+                    Resources.CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1__,
+                    valueListName, ARG_ADD_ANNOTATIONS_VALUES.ArgumentText);
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Parse a comma-separated list of values to be associated with a value_list
+        /// type annotation.
+        /// </summary>
+        /// <param name="commaSeparatedValues">A comma-separated of annotation values</param>
+        private void ParseAnnotationValues(string commaSeparatedValues)
+        {
+            AddAnnotationsValues =
+                ArrayUtil.Parse(commaSeparatedValues, Convert.ToString, TextUtil.SEPARATOR_CSV, null);
+        }
+
+        /// <summary>
+        /// Parse a comma-separated list of target types to apply an annotation to. Case-insensitive.
+        /// </summary>
+        /// <param name="annotationTargets">A comma-separated list of annotation targets specified by the user</param>
+        /// <exception cref="ValueInvalidAnnotationTargetListException">Thrown if no targets are
+        /// parsed from the list</exception>
+        private void ParseAnnotationTargets(string annotationTargets)
+        {
+            try
+            {
+                AddAnnotationsTargets = AnnotationDef.AnnotationTargetSet.Parse(annotationTargets.ToLowerInvariant());
+            }
+            catch (Exception)
+            {
+                throw new ValueInvalidAnnotationTargetListException(
+                    ARG_ADD_ANNOTATIONS_TARGETS, annotationTargets, ANNOTATION_TARGET_LIST_VALUE.Invoke());
+            }
+        }
+      
+        public string AnnotationsFile { get; private set; }
+
+        public bool ExportingAnnotations { get { return !string.IsNullOrEmpty(AnnotationsFile); } }
+
+        public List<string> AnnotationsIncludeObjects { get; private set; }
+
+        public bool AnnotationsIncludeProperties { get; private set; }
+
+        public bool AnnotationsRemoveBlankRows { get; private set; }
 
         // For publishing the document to Panorama
         public static readonly Argument ARG_PANORAMA_SERVER = new DocArgument(@"panorama-server", SERVER_URL_VALUE,
@@ -1383,6 +1506,31 @@ namespace pwiz.Skyline
             (c, p) => c.FullScanRetentionTimeFilter = p);
         public static readonly Argument ARG_FULL_SCAN_RT_FILTER_TOLERANCE = new DocArgument(@"full-scan-rt-filter-tolerance", MINUTES_VALUE,
             (c, p) => c.FullScanRetentionTimeFilterLength = p.ValueDouble) { WrapValue = true };
+
+        public static readonly Argument ARG_PEPTIDE_MIN_LENGTH = new DocArgument(@"pep-min-length", INT_VALUE,
+            (c, p) => c.PeptideFilterMinLength = p.GetValueInt(PeptideFilter.MIN_MIN_LENGTH, PeptideFilter.MAX_MIN_LENGTH));
+        public static readonly Argument ARG_PEPTIDE_MAX_LENGTH = new DocArgument(@"pep-max-length", INT_VALUE,
+            (c, p) => c.PeptideFilterMaxLength = p.GetValueInt(PeptideFilter.MIN_MAX_LENGTH, PeptideFilter.MAX_MAX_LENGTH));
+        public static readonly Argument ARG_PEPTIDE_EXCLUDE_NTERMINAL_AAS = new DocArgument(@"pep-exclude-nterminal-aas", INT_VALUE,
+            (c, p) => c.PeptideFilterExcludeNTerminalAAs = p.GetValueInt(PeptideFilter.MIN_EXCLUDE_NTERM_AA, PeptideFilter.MAX_EXCLUDE_NTERM_AA));
+        public static readonly Argument ARG_PEPTIDE_EXCLUDE_POTENTIAL_RAGGED_ENDS = new DocArgument(@"pep-exclude-potential-ragged-ends",
+            (c, p) => c.PeptideFilterExcludePotentialRaggedEnds = p.IsNameOnly || bool.Parse(p.Value))
+            { OptionalValue = true };
+
+        public static readonly Argument ARG_PEPTIDE_ENZYME_NAME = new DocArgument(@"pep-digest-enzyme", () => Settings.Default.EnzymeList.Select(e => e.Name).ToArray(),
+            (c, p) => c.PeptideDigestEnzymeName = p.Value)
+            { WrapValue = true };
+        public static readonly Argument ARG_PEPTIDE_MAX_MISSED_CLEAVAGES = new DocArgument(@"pep-max-missed-cleavages", INT_VALUE,
+            (c, p) => c.PeptideDigestMaxMissedCleavages = p.GetValueInt(DigestSettings.MIN_MISSED_CLEAVAGES, DigestSettings.MAX_MISSED_CLEAVAGES));
+        public static readonly Argument ARG_PEPTIDE_UNIQUE_BY = DocArgument.FromEnumType<PeptideFilter.PeptideUniquenessConstraint>(@"pep-unique-by",
+            (c, p) => c.PeptideDigestUniquenessConstraint = p);
+        public static readonly Argument ARG_BGPROTEOME_NAME = new DocArgument(@"background-proteome-name",
+                () => Argument.ValuesToExample(Settings.Default.BackgroundProteomeList.Select(p => p.Name)
+                    .Append(Resources.CommandArgs_ARG_BGPROTEOME_NAME_name_to_give_protdb_imported_by___background_proteome_file)),
+                (c, p) => c.BackgroundProteomeName = p.Value)
+            { WrapValue = true };
+        public static readonly Argument ARG_BGPROTEOME_PATH = new DocArgument(@"background-proteome-file", PATH_TO_PROTDB, (c, p) => c.BackgroundProteomePath = p.Value);
+
         public static readonly Argument ARG_IMS_LIBRARY_RES = new DocArgument(@"ims-library-res", RP_VALUE,
                 (c, p) => c.IonMobilityLibraryRes = p.ValueDouble);
 
@@ -1403,7 +1551,7 @@ namespace pwiz.Skyline
                 (c, p) => c.InstrumentIsTriggeredChromatogramAcquisition = p.IsNameOnly || bool.Parse(p.Value))
             { OptionalValue = true };
 
-        private static readonly ArgumentGroup GROUP_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_SETTINGS_Document_Settings, false,
+        private static readonly ArgumentGroup GROUP_TRANSITION_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_SETTINGS_Transition_Settings, false,
             ARG_TRAN_PRECURSOR_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_TYPES,
             ARG_TRAN_PRODUCT_START_ION, ARG_TRAN_PRODUCT_END_ION, ARG_TRAN_PRODUCT_SPECIAL_IONS_CLEAR, ARG_TRAN_PRODUCT_SPECIAL_IONS_ADD,
             ARG_TRAN_PREDICT_CE, ARG_TRAN_PREDICT_DP, ARG_TRAN_PREDICT_COV, ARG_TRAN_PREDICT_OPTDB,
@@ -1435,6 +1583,27 @@ namespace pwiz.Skyline
                 {
                     c.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_,
                         c.FullScanProductIsolationScheme, ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME.ArgumentText, ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME.ValueExample());
+                    return false;
+                }
+
+                return true;
+            }
+        };
+
+        private static readonly ArgumentGroup GROUP_PEPTIDE_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_SETTINGS_Peptide_Settings, false,
+            ARG_PEPTIDE_ENZYME_NAME, ARG_PEPTIDE_MAX_MISSED_CLEAVAGES, ARG_PEPTIDE_UNIQUE_BY, ARG_BGPROTEOME_NAME, ARG_BGPROTEOME_PATH,
+            ARG_PEPTIDE_MIN_LENGTH, ARG_PEPTIDE_MAX_LENGTH, ARG_PEPTIDE_EXCLUDE_NTERMINAL_AAS, ARG_PEPTIDE_EXCLUDE_POTENTIAL_RAGGED_ENDS)
+        {
+            LeftColumnWidth = 40,
+            Validate = c =>
+            {
+                // if BackgroundProteomePath is not set, BackgroundProteomeName must be one of the existing BackgroundProteomeList
+                if (c.BackgroundProteomePath == null &&
+                    c.BackgroundProteomeName != null &&
+                    !Settings.Default.BackgroundProteomeList.Contains(p => p.Name == c.BackgroundProteomeName))
+                {
+                    c.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_,
+                        c.BackgroundProteomeName, ARG_BGPROTEOME_NAME.ArgumentText, string.Join(@", ", Settings.Default.BackgroundProteomeList.Select(p => p.Name)));
                     return false;
                 }
 
@@ -1580,6 +1749,28 @@ namespace pwiz.Skyline
                            ?? FullScanRetentionTimeFilterLength).HasValue;
             }
         }
+
+        public int? PeptideFilterMinLength { get; private set; }
+        public int? PeptideFilterMaxLength { get; private set; }
+        public int? PeptideFilterExcludeNTerminalAAs { get; private set; }
+        public bool? PeptideFilterExcludePotentialRaggedEnds { get; private set; }
+
+        public bool PeptideFilterSettings => PeptideFilterExcludeNTerminalAAs.HasValue ||
+                                             PeptideFilterExcludePotentialRaggedEnds.HasValue ||
+                                             PeptideFilterMaxLength.HasValue ||
+                                             PeptideFilterMinLength.HasValue;
+
+        public string PeptideDigestEnzymeName { get; private set; }
+        public int? PeptideDigestMaxMissedCleavages { get; private set; }
+        public string BackgroundProteomeName { get; private set; }
+        public string BackgroundProteomePath { get; private set; }
+        public PeptideFilter.PeptideUniquenessConstraint? PeptideDigestUniquenessConstraint { get; private set; }
+
+        public bool PeptideDigestSettings => PeptideDigestEnzymeName != null ||
+                                             PeptideDigestMaxMissedCleavages.HasValue ||
+                                             BackgroundProteomeName != null ||
+                                             BackgroundProteomePath != null ||
+                                             PeptideDigestUniquenessConstraint.HasValue;
 
         public double? IonMobilityLibraryRes { get; private set; }
 
@@ -2099,7 +2290,9 @@ namespace pwiz.Skyline
                     GROUP_EXP_GENERAL,
                     GROUP_EXP_INSTRUMENT,
                     GROUP_PANORAMA,
-                    GROUP_SETTINGS,
+                    GROUP_DOCUMENT_SETTINGS,
+                    GROUP_PEPTIDE_SETTINGS,
+                    GROUP_TRANSITION_SETTINGS,
                     GROUP_TOOLS
                 };
             }
@@ -2178,6 +2371,11 @@ namespace pwiz.Skyline
             SharedFileType = ShareType.DEFAULT;
 
             MProphetExcludeScores = new List<IPeakFeatureCalculator>();
+            AnnotationsIncludeObjects = new List<string>();
+
+            AddAnnotationsTargets = new AnnotationDef.AnnotationTargetSet();
+            AddAnnotationsResolveConflictsBySkipping = false;
+            AddAnnotationsType = ListPropertyType.TEXT;
 
             ImportBeforeDate = null;
             ImportOnOrAfterDate = null;
@@ -2510,12 +2708,12 @@ namespace pwiz.Skyline
             {
             }
 
-            public static DocArgument FromEnumType<TEnum>(string name, Action<CommandArgs, TEnum> processValue)
+            public static DocArgument FromEnumType<TEnum>(string name, Action<CommandArgs, TEnum> processValue, bool wrapValue = true) where TEnum : Enum
             {
                 var enumType = typeof(TEnum);
                 return new DocArgument(name, () => Enum.GetNames(enumType),
-                        (c, p) => processValue(c, (TEnum) Enum.Parse(enumType, p.Value)))
-                    { WrapValue = true };
+                        (c, p) => processValue(c, (TEnum) Enum.Parse(enumType, p.Value, true)))
+                    { WrapValue = wrapValue };
             }
 
             private static bool ProcessValueOverride(CommandArgs c, NameValuePair p, Func<CommandArgs, NameValuePair, bool> processValue)
@@ -2865,7 +3063,7 @@ namespace pwiz.Skyline
                     if (hasAppliesTo)
                         sb.Append("<td>").Append(commandArg.AppliesTo != null ? HtmlEncode(commandArg.AppliesTo) : "&nbsp;").Append("</td>");
                     string argDescription = HtmlEncode(commandArg.ArgumentDescription);
-                    if (!argDescription.Contains('|'))
+                    if (!argDescription.Contains('|') && !WRAPPABLE_LIST_TYPE_VALUES.Contains(commandArg.ValueExample))
                         argDescription = argDescription.Replace(" ", "&nbsp;");
                     argDescription = argDescription.Replace(Environment.NewLine, "<br/>");
                     sb.Append("<td>").Append(argDescription).Append("</td>");
@@ -2986,6 +3184,14 @@ namespace pwiz.Skyline
         {
             public ValueInvalidIonTypeListException(Argument arg, string value)
                 : base(string.Format(Resources.ValueInvalidIonTypeListException_ValueInvalidIonTypeListException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_fragment_ion_types__a__b__c__x__y__z__p__, value, arg.ArgumentText))
+            {
+            }
+        }
+
+        public class ValueInvalidAnnotationTargetListException : UsageException
+        {
+            public ValueInvalidAnnotationTargetListException(Argument arg, string value, string annotationTargets)
+                : base(string.Format(Resources.ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___, value, arg.ArgumentText, annotationTargets))
             {
             }
         }

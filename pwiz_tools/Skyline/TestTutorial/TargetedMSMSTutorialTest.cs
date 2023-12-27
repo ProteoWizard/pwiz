@@ -93,7 +93,7 @@ namespace pwiz.SkylineTestTutorial
                 return;
             }
 
-            ForceMzml = true;   // 2-3x faster than raw files for this test.
+            ForceMzml = true;   // 2-3x faster than raw files for this test - and audit log expects it.
 
             AsSmallMoleculesTestMode = smallMoleculesTestMode;
 
@@ -468,9 +468,8 @@ namespace pwiz.SkylineTestTutorial
 
             const int expectedMoleculeCount = 9;
             const int expectedTransitionGroupCount = 10; // Expect this many with results
-            var expected20TransitionCount = AsSmallMolecules || UseRawFiles ? 87 : 88; // Expect this many with results
-            var expected80TransitionCount = AsSmallMolecules ? 88 : UseRawFiles ? 86 : 87;
-
+            var expected20TransitionCount = AsSmallMoleculeMasses  ? 87 : 88; // Expect this many with results (note no library match possible for "as masses" version)
+            var expected80TransitionCount = AsSmallMoleculeMasses ? 88 : 87;
             AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes20FileName, expectedMoleculeCount, expectedTransitionGroupCount, 0, expected20TransitionCount, 0);
             AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes80FileName, expectedMoleculeCount, expectedTransitionGroupCount, 0, expected80TransitionCount, 0);
 
