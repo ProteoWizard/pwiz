@@ -1,4 +1,23 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2023 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.CodeDom;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
@@ -12,9 +31,16 @@ using Microsoft.CSharp;
 
 namespace AssortResources
 {
+    /// <summary>
+    /// Looks through a big resource file and a project file and figures out which source files
+    /// are using which resources.
+    /// All resources that are only being used by source files in a particular folder are
+    /// moved into a smaller resource file.
+    /// </summary>
     public class ResourceAssorter
     {
-        private Dictionary<string, HashSet<string>> _referencedResourcesByFolder = new Dictionary<string, HashSet<string>>();
+        private readonly Dictionary<string, HashSet<string>> _referencedResourcesByFolder =
+            new Dictionary<string, HashSet<string>>();
 
         public ResourceAssorter(string csProjPath, string resourceFilePath, params string[] otherProjectPaths)
         {
@@ -27,11 +53,19 @@ namespace AssortResources
             }
         }
 
-
-        public CsProjFile CsProjFile { get; }
-        public List<CsProjFile> OtherProjectFiles { get; }
-
+        /// <summary>
+        /// Big resource file to look for resources in.
+        /// </summary>
         public ResourceFile ResourceFile { get; }
+        /// <summary>
+        /// Project file in which to look for source files that use resources from the big resource file
+        /// </summary>
+        public CsProjFile CsProjFile { get; }
+        /// <summary>
+        /// Other project files which might also use resources from the big resource file.
+        /// Resources will not be moved if they are being used by any of these other projects.
+        /// </summary>
+        public List<CsProjFile> OtherProjectFiles { get; }
 
         public IEnumerable<string> GetReferencedResourcesInFolder(IEnumerable<string> files)
         {
