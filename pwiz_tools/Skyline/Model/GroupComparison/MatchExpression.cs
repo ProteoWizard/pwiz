@@ -261,11 +261,6 @@ namespace pwiz.Skyline.Model.GroupComparison
             return GetRowDisplayText(protein, peptide);
         }
 
-        public string GetMatchString(SrmDocument document, Protein protein)
-        {
-            return GetRowString(document, protein, null, false);
-        }
-
         public string GetMatchString(SrmDocument document, Protein protein, Databinding.Entities.Peptide peptide)
         {
             return GetRowString(document, protein, peptide, false);

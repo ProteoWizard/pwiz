@@ -46,8 +46,21 @@ namespace pwiz.SkylineTestFunctional
                 var peakAreaGraph = FormUtil.OpenForms.OfType<GraphSummary>().FirstOrDefault(graph =>
                     graph.Type == GraphTypeSummary.abundance && graph.Controller is AreaGraphController);
                 Assert.IsNotNull(peakAreaGraph);
+
+                // Verify that setting the targets to Proteins or Peptides produces the correct number of points
+                SkylineWindow.setAreaProteinTargets(true);
+                var curveList = peakAreaGraph.GraphControl.GraphPane.CurveList[1];
+                Assert.AreEqual(curveList.Points.Count, 48);
+                SkylineWindow.setAreaProteinTargets(false);
+                curveList = peakAreaGraph.GraphControl.GraphPane.CurveList[1];
+                Assert.AreEqual(curveList.Points.Count, 125);
+
+                // Verify that excluding peptide lists reduces the number of points
+                SkylineWindow.setExcludePeptideListsFromAbundanceGraph(true);
+                curveList = peakAreaGraph.GraphControl.GraphPane.CurveList[1];
+                Assert.AreEqual(curveList.Points.Count, 45);
             });
-            WaitForGraphs();
+
         }
     }
 }

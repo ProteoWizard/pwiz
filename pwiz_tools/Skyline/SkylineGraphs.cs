@@ -4629,20 +4629,29 @@ namespace pwiz.Skyline
         {
             abundanceTargetsPeptidesMenuItem.Checked = false;
             abundanceTargetsProteinsMenuItem.Checked = true;
-            Settings.Default.AreaProteinTargets = true;
-            UpdateSummaryGraphs();
+            setAreaProteinTargets(true);
         }
 
         private void abundanceTargetsPeptidesMenuItem_Click(object sender, EventArgs e)
         {
             abundanceTargetsProteinsMenuItem.Checked = false;
             abundanceTargetsPeptidesMenuItem.Checked = true;
-            Settings.Default.AreaProteinTargets = false;
+            setAreaProteinTargets(false);
+        }
+
+        public void setAreaProteinTargets(bool areaProteinTargets)
+        {
+            Settings.Default.AreaProteinTargets = areaProteinTargets;
             UpdateSummaryGraphs();
         }
         private void excludeTargetsPeptideListMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ExcludePeptideListsFromAbundanceGraph = !Settings.Default.ExcludePeptideListsFromAbundanceGraph;
+            setExcludePeptideListsFromAbundanceGraph(!Settings.Default.ExcludePeptideListsFromAbundanceGraph);
+        }
+
+        public void setExcludePeptideListsFromAbundanceGraph(bool excludePeptideLists)
+        {
+            Settings.Default.ExcludePeptideListsFromAbundanceGraph = excludePeptideLists;
             UpdateSummaryGraphs();
         }
 
