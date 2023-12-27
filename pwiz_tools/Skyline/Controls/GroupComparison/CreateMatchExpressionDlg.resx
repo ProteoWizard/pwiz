@@ -457,7 +457,7 @@
     <value>9</value>
   </data>
   <data name="enterListButton.Text" xml:space="preserve">
-    <value>Enter list</value>
+    <value>&amp;Enter List...</value>
   </data>
   <data name="&gt;&gt;enterListButton.Name" xml:space="preserve">
     <value>enterListButton</value>

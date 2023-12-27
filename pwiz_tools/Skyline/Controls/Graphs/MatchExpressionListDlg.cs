@@ -21,8 +21,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Controls.GroupComparison;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -36,9 +36,6 @@ namespace pwiz.Skyline.Controls.Graphs
             InitializeComponent();
             _createMatchExpressionDlg = createDlg;
             _oldRegex = _createMatchExpressionDlg.Expression;
-            label1.Text = Resources.MatchExpressionListDlg_MatchExpressionListDlg_Enter_a_list_of_identifiers_on_separate_lines_;
-            Text = Resources.MatchExpressionListDlg_MatchExpressionListDlg_Enter_list;
-            Icon = Resources.Skyline;
 
         }
         private void proteinsTextBox_textChanged(object sender, EventArgs e)
@@ -56,6 +53,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var userText = proteinsTextBox.Text;
             if (string.IsNullOrEmpty(userText))
             {
+                SetRegexText(string.Empty);
                 return;
             }
             var reader = new StringReader(userText);
@@ -69,6 +67,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     continue;
                 }
                 proteins.Add(line);
+            }
+
+            if (proteins.IsNullOrEmpty())
+            {
+                SetRegexText(string.Empty);
+                return;
             }
             var sb = new StringBuilder();
             var proteinList = proteins.ToList();

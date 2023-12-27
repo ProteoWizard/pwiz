@@ -136,7 +136,7 @@
     <value>432, 381</value>
   </data>
   <data name="proteinsTextBox.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;proteinsTextBox.Name" xml:space="preserve">
     <value>proteinsTextBox</value>
@@ -157,10 +157,13 @@
     <value>13, 12</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>0, 13</value>
+    <value>201, 13</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>0</value>
+  </data>
+  <data name="label1.Text" xml:space="preserve">
+    <value>Enter a list of identifiers on separate lines.</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -175,7 +178,7 @@
     <value>2</value>
   </data>
   <data name="buttonOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Right</value>
+    <value>Bottom, Right</value>
   </data>
   <data name="buttonOk.Location" type="System.Drawing.Point, System.Drawing">
     <value>288, 418</value>
@@ -184,7 +187,7 @@
     <value>75, 23</value>
   </data>
   <data name="buttonOk.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>2</value>
   </data>
   <data name="buttonOk.Text" xml:space="preserve">
     <value>OK</value>
@@ -202,7 +205,7 @@
     <value>1</value>
   </data>
   <data name="buttonCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Right</value>
+    <value>Bottom, Right</value>
   </data>
   <data name="buttonCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>369, 418</value>
@@ -232,7 +235,7 @@
     <value>True</value>
   </metadata>
   <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>122</value>
+    <value>66</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
@@ -241,7 +244,7 @@
     <value>456, 450</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>MatchExpressionListDlg</value>
+    <value>Enter List</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>

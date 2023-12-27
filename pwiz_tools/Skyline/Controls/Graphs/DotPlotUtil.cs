@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Controls.Graphs
     /// <summary>
     /// Shared formatting methods for dot plots
     /// </summary>
-    public abstract class DotPlotUtil
+    public static class DotPlotUtil
     {
         private const int LABEL_BACKGROUND_OPACITY = 150; // 0 is transparent, 250 is opaque
         public const float LABEL_POINT_DISTANCE = 2.0f;
