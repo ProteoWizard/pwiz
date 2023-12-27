@@ -258,35 +258,35 @@ namespace pwiz.Skyline.Model.DdaSearch
                     var ordered = featureByCNOS.Value.OrderByDescending(v => v.intensity).ToArray();
                     for (var i = 0; i < ordered.Length; i++)
                     {
-                        var hkFeatureDetail = ordered[i];
-                        if (hkFeatureDetail.updated)
+                        var hkFeatureDetailI = ordered[i];
+                        if (hkFeatureDetailI.updated)
                         {
                             continue;
                         }
-                        var mass = hkFeatureDetail.mass;
+                        var mass = hkFeatureDetailI.mass;
                         if (mass == 0)
                         {
                             continue;
                         }
                         for (var j = i + 1; j < ordered.Length; j++)
                         {
-                            var hkFeaturerDetailJ = ordered[j];
-                            if (hkFeaturerDetailJ.updated)
+                            var hkFeatureDetailJ = ordered[j];
+                            if (hkFeatureDetailJ.updated)
                             {
                                 continue; // Already processed
                             }
-                            if (Math.Abs(hkFeatureDetail.rt - hkFeaturerDetailJ.rt) > rtToler)
+                            if (Math.Abs(hkFeatureDetailI.rt - hkFeatureDetailJ.rt) > rtToler)
                             {
                                 continue; // Not an RT match
                             }
-                            var diff = Math.Abs((hkFeaturerDetailJ.mass - mass) / mass) * 1.0E6;
+                            var diff = Math.Abs((hkFeatureDetailJ.mass - mass) / mass) * 1.0E6;
                             if (diff <= ppm)
                             {
-                                hkFeaturerDetailJ.mass = mass;
-                                hkFeaturerDetailJ.massString = hkFeatureDetail.massString;
-                                hkFeaturerDetailJ.avergineAndOffset = hkFeatureDetail.avergineAndOffset;
-                                hkFeaturerDetailJ.updated = true; // No need to compare to others in this list
-                                updates.Add(hkFeaturerDetailJ);  // We will write these values back to the file
+                                hkFeatureDetailJ.mass = mass;
+                                hkFeatureDetailJ.massString = hkFeatureDetailI.massString;
+                                hkFeatureDetailJ.avergineAndOffset = hkFeatureDetailI.avergineAndOffset;
+                                hkFeatureDetailJ.updated = true; // No need to compare to others in this list
+                                updates.Add(hkFeatureDetailJ);  // We will write these values back to the file
                             }
                         }
                     }
