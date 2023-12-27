@@ -48,15 +48,15 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsNotNull(peakAreaGraph);
 
                 // Verify that setting the targets to Proteins or Peptides produces the correct number of points
-                SkylineWindow.setAreaProteinTargets(true);
+                SkylineWindow.SetAreaProteinTargets(true);
                 var curveList = peakAreaGraph.GraphControl.GraphPane.CurveList[1];
                 Assert.AreEqual(curveList.Points.Count, 48);
-                SkylineWindow.setAreaProteinTargets(false);
+                SkylineWindow.SetAreaProteinTargets(false);
                 curveList = peakAreaGraph.GraphControl.GraphPane.CurveList[1];
                 Assert.AreEqual(curveList.Points.Count, 125);
 
                 // Verify that excluding peptide lists reduces the number of points
-                SkylineWindow.setExcludePeptideListsFromAbundanceGraph(true);
+                SkylineWindow.SetExcludePeptideListsFromAbundanceGraph(true);
                 curveList = peakAreaGraph.GraphControl.GraphPane.CurveList[1];
                 Assert.AreEqual(curveList.Points.Count, 45);
 
