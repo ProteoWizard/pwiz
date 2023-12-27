@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using pwiz.Skyline.Model;
@@ -31,7 +32,7 @@ namespace pwiz.Skyline.Controls.Graphs
     public abstract class DotPlotUtil
     {
         private const int LABEL_BACKGROUND_OPACITY = 150; // 0 is transparent, 250 is opaque
-        private const double LABEL_POINT_DISTANCE = 0.05; // Fraction of the Y Axis to separate the point and label by
+        public const float LABEL_POINT_DISTANCE = 2.0f;
         public static FontSpec CreateFontSpec(Color color, float size, bool label = false)
         {
             if (label)
@@ -86,23 +87,11 @@ namespace pwiz.Skyline.Controls.Graphs
             return ((GraphFontSize[])GraphFontSize.FontSizes)[(int)pointSize].PointSize;
         }
 
-        public static TextObj CreateLabel(PointPair point, Protein protein, Peptide peptide, Color color, float size, Scale scale, float height)
+        public static TextObj CreateLabel(PointPair point, Protein protein, Peptide peptide, Color color, float size)
         {
             var fontSpec = CreateFontSpec(color, size, true);
             var text = MatchExpression.GetRowDisplayText(protein, peptide);
-            double adjustedY;
-            if (scale.Type == AxisType.Log)
-            {
-                var exponent = Math.Log(point.Y) + fontSpec.Size / 2.0f /
-                    height * (Math.Log(scale.Max) - Math.Log(scale.Min));
-                adjustedY = Math.Exp(exponent);
-            }
-            else
-            {
-                adjustedY = point.Y + fontSpec.Size / 2.0f /
-                    height * (scale.Max - scale.Min);
-            }
-            var textObj = new TextObj(text, point.X, adjustedY, CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
+            var textObj = new TextObj(text, point.X, point.Y, CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
             {
                 IsClippedToChartRect = true,
                 FontSpec = fontSpec,
@@ -112,6 +101,26 @@ namespace pwiz.Skyline.Controls.Graphs
             return textObj;
         }
 
+        public static void AdjustLabelLocations(List<LabeledPoint> labeledPoints, Scale scale, double height)
+        {
+            foreach(LabeledPoint point in labeledPoints)
+            {
+                if (point.Label != null)
+                {
+                    if (scale.Type == AxisType.Log)
+                    {
+                        var exponent = Math.Log(point.Point.Y) + point.Label.FontSpec.Size / LABEL_POINT_DISTANCE /
+                            height * (Math.Log(scale.Max) - Math.Log(scale.Min));
+                        point.Label.Location.Y = Math.Exp(exponent);
+                    }
+                    else
+                    {
+                        point.Label.Location.Y  = point.Point.Y + point.Label.FontSpec.Size / LABEL_POINT_DISTANCE /
+                            height * (scale.Max - scale.Min);
+                    }
+                }
+            }
+        }
         public class LabeledPoint
         {
             public LabeledPoint(PointPair point, TextObj label, bool isSelected)

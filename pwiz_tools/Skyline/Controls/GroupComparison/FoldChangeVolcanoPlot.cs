@@ -136,6 +136,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 _minPValueLine[0].X = pane.XAxis.Scale.Min;
                 _minPValueLine[1].X = pane.XAxis.Scale.Max;
             }
+
+            DotPlotUtil.AdjustLabelLocations(_labeledPoints, pane.YAxis.Scale, pane.Rect.Height);
         }
 
         private void GraphPane_AxisChangeEvent(GraphPane pane)
@@ -394,7 +396,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     {
                         continue;
                     }
-                    var label = DotPlotUtil.CreateLabel(point, row.Protein, row.Peptide, color, size, zedGraphControl.GraphPane.YAxis.Scale, zedGraphControl.GraphPane.Rect.Height);
+                    var label = DotPlotUtil.CreateLabel(point, row.Protein, row.Peptide, color, size);
                     _labeledPoints.Add(new DotPlotUtil.LabeledPoint(point, label, selected));
                     zedGraphControl.GraphPane.GraphObjList.Add(label);
                 }

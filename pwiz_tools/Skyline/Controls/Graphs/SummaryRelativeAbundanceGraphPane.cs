@@ -50,6 +50,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool _areaProteinTargets;
         private bool _excludePeptideLists;
         private bool _excludeStandards;
+        private readonly List<DotPlotUtil.LabeledPoint> _labeledPoints;
         public bool ShowingFormattingDlg { get; set; }
         public IList<MatchRgbHexColor> ColorRows { get; set; }
         protected SummaryRelativeAbundanceGraphPane(GraphSummary graphSummary, PaneKey paneKey)
@@ -72,6 +73,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var container = new MemoryDocumentContainer();
             container.SetDocument(Document, null);
             _schema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
+            _labeledPoints = new List<DotPlotUtil.LabeledPoint>();
         }
 
         protected override int SelectedIndex
@@ -228,7 +230,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     selectedPoints.Add(point);
                 }
-                AddPoints(new PointPairList(selectedPoints), GraphSummary.ColorSelected, DotPlotUtil.PointSizeToFloat(PointSize.large), true, PointSymbol.Circle);
+                AddPoints(new PointPairList(selectedPoints), GraphSummary.ColorSelected, DotPlotUtil.PointSizeToFloat(PointSize.large), true, PointSymbol.Circle, true);
             }
             var pointList = _graphData.PointPairList;
             // For each valid match expression specified by the user
@@ -246,15 +248,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
             AddPoints(new PointPairList(pointList), Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
-
             UpdateAxes();
+            DotPlotUtil.AdjustLabelLocations(_labeledPoints, GraphSummary.GraphControl.GraphPane.YAxis.Scale, GraphSummary.GraphControl.GraphPane.Rect.Height);
             if (GraphSummary.ShowFormattingDlg && !ShowingFormattingDlg)
             {
                 ShowFormattingDialog();
             }
         }
 
-        private void AddPoints(PointPairList points, Color color, float size, bool labeled, PointSymbol pointSymbol)
+        private void AddPoints(PointPairList points, Color color, float size, bool labeled, PointSymbol pointSymbol, bool selected = false)
         {
             var symbolType = DotPlotUtil.PointSymbolToSymbolType(pointSymbol);
 
@@ -285,8 +287,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         continue;
                     }
-                    var label = DotPlotUtil.CreateLabel(point, pointData.Protein, pointData.Peptide, color, size, 
-                        GraphSummary.GraphControl.GraphPane.YAxis.Scale, GraphSummary.GraphControl.GraphPane.Rect.Height);
+                    var label = DotPlotUtil.CreateLabel(point, pointData.Protein, pointData.Peptide, color, size);
+                    _labeledPoints.Add(new DotPlotUtil.LabeledPoint(point, label, selected));
                     GraphObjList.Add(label);
                 }
             }
