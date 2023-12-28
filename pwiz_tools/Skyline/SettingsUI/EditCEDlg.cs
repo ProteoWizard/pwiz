@@ -27,7 +27,6 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
@@ -96,7 +95,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (_existing.Contains(r => !ReferenceEquals(_regression, r) && Equals(name, r.Name)))
             {
-                helper.ShowTextBoxError(textName, Resources.EditCEDlg_OkDialog_The_collision_energy_regression__0__already_exists, name);
+                helper.ShowTextBoxError(textName, SettingsUIResources.EditCEDlg_OkDialog_The_collision_energy_regression__0__already_exists, name);
                 return;
             }
 
@@ -125,7 +124,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (conversions.Count == 0)
             {
-                MessageDlg.Show(this, Resources.EditCEDlg_OkDialog_Collision_energy_regressions_require_at_least_one_regression_function);
+                MessageDlg.Show(this, SettingsUIResources.EditCEDlg_OkDialog_Collision_energy_regressions_require_at_least_one_regression_function);
                 return;
             }
 
@@ -156,7 +155,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (0 >= charge || charge > 5)
             {
-                InvalidCell(cell, Resources.EditCEDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge_Precursor_charges_must_be_between_1_and_5, charge);
+                InvalidCell(cell, SettingsUIResources.EditCEDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge_Precursor_charges_must_be_between_1_and_5, charge);
                 return false;
             }
 
@@ -189,7 +188,7 @@ namespace pwiz.Skyline.SettingsUI
             valueT = default(TVal);
             if (cell.Value == null)
             {
-                InvalidCell(cell, Resources.EditCEDlg_ValidateCell_A_value_is_required);
+                InvalidCell(cell, SettingsUIResources.EditCEDlg_ValidateCell_A_value_is_required);
                 return false;
             }
             string value = cell.Value.ToString();
@@ -199,7 +198,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             catch (Exception)
             {
-                InvalidCell(cell, Resources.EditCEDlg_ValidateCell_The_entry__0__is_not_valid, value);
+                InvalidCell(cell, SettingsUIResources.EditCEDlg_ValidateCell_The_entry__0__is_not_valid, value);
                 return false;
             }
 
@@ -241,20 +240,20 @@ namespace pwiz.Skyline.SettingsUI
 
             // Parse charge
             if (!int.TryParse(values[0].Trim(), out _))
-                message = string.Format(Resources.EditCEDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_charge_Charges_must_be_integer_values_between_1_and_5, values[0]);
+                message = string.Format(SettingsUIResources.EditCEDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_charge_Charges_must_be_integer_values_between_1_and_5, values[0]);
 
             // Parse slope
             else if (!double.TryParse(values[1].Trim(), out _))
-                message = string.Format(Resources.EditCEDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_slope, values[1]);
+                message = string.Format(SettingsUIResources.EditCEDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_slope, values[1]);
 
             // Parse intercept
             else if (!double.TryParse(values[2].Trim(), out _))
-                message = string.Format(Resources.EditCEDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_intercept, values[2]);
+                message = string.Format(SettingsUIResources.EditCEDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_intercept, values[2]);
 
             else
                 return true;
 
-            MessageDlg.Show(parent, string.Format(Resources.EditCEDlg_ValidateRegressionCellValues_On_line__0__1__, lineNumber, message));
+            MessageDlg.Show(parent, string.Format(SettingsUIResources.EditCEDlg_ValidateRegressionCellValues_On_line__0__1__, lineNumber, message));
             return false;
         }
 
@@ -282,7 +281,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (!hasRegressionLines)
             {
-                MessageDlg.Show(this, Resources.EditCEDlg_UseCurrentData_Insufficient_data_found_to_calculate_a_new_regression);
+                MessageDlg.Show(this, SettingsUIResources.EditCEDlg_UseCurrentData_Insufficient_data_found_to_calculate_a_new_regression);
                 return;
             }
 
@@ -321,9 +320,9 @@ namespace pwiz.Skyline.SettingsUI
                     continue;
                 listGraphData.Add(new RegressionGraphData
                                       {
-                                          Title = string.Format(Resources.EditCEDlg_ShowGraph_Collision_Energy_Regression_Charge__0__, charge),
-                                          LabelX = Resources.EditCEDlg_ShowGraph_Precursor_m_z,
-                                          LabelY = Resources.EditCEDlg_ShowGraph_Collision_Energy,
+                                          Title = string.Format(SettingsUIResources.EditCEDlg_ShowGraph_Collision_Energy_Regression_Charge__0__, charge),
+                                          LabelX = SettingsUIResources.EditCEDlg_ShowGraph_Precursor_m_z,
+                                          LabelY = SettingsUIResources.EditCEDlg_ShowGraph_Collision_Energy,
                                           XValues = regressionData.PrecursorMzValues,
                                           YValues = regressionData.BestValues,
                                           RegressionLine = regressionData.RegressionLine,
@@ -344,7 +343,7 @@ namespace pwiz.Skyline.SettingsUI
                 return null;
             if (!document.Settings.MeasuredResults.IsLoaded)
             {
-                MessageDlg.Show(this, Resources.EditCEDlg_GetRegressionDatas_Measured_results_must_be_completely_loaded_before_they_can_be_used_to_create_a_collision_energy_regression);
+                MessageDlg.Show(this, SettingsUIResources.EditCEDlg_GetRegressionDatas_Measured_results_must_be_completely_loaded_before_they_can_be_used_to_create_a_collision_energy_regression);
                 return null;
             }
 

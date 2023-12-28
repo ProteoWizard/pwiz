@@ -27,7 +27,6 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -185,7 +184,7 @@ namespace pwiz.Skyline.Model
                 RequiredPeptides = GetRequiredPeptides();
                 if (MaxTransitions.HasValue && RequiredPeptides.TransitionCount > MaxTransitions)
                 {
-                    throw new IOException(string.Format(Resources.AbstractMassListExporter_Export_The_number_of_required_transitions__0__exceeds_the_maximum__1__,
+                    throw new IOException(string.Format(ModelResources.AbstractMassListExporter_Export_The_number_of_required_transitions__0__exceeds_the_maximum__1__,
                                                         RequiredPeptides.TransitionCount, MaxTransitions));
                 }
             }
@@ -371,7 +370,7 @@ namespace pwiz.Skyline.Model
         private void ExportScheduledBuckets(FileIterator fileIterator)
         {
             if (!MaxTransitions.HasValue)
-                throw new InvalidOperationException(Resources.AbstractMassListExporter_ExportScheduledBuckets_Maximum_transitions_per_file_required);
+                throw new InvalidOperationException(ModelResources.AbstractMassListExporter_ExportScheduledBuckets_Maximum_transitions_per_file_required);
 
             bool singleWindow = ExportInstrumentType.IsSingleWindowInstrumentType(InstrumentType);
 
@@ -411,7 +410,7 @@ namespace pwiz.Skyline.Model
                     {
                         if (!peptideSchedule.CanSchedule)
                         {
-                            throw new IOException(string.Format(Resources.AbstractMassListExporter_ExportScheduledBuckets_The_required_peptide__0__cannot_be_scheduled,
+                            throw new IOException(string.Format(ModelResources.AbstractMassListExporter_ExportScheduledBuckets_The_required_peptide__0__cannot_be_scheduled,
                                                                 Document.Settings.GetDisplayName(nodePep)));
                         }
                         listRequired.Add(peptideSchedule);
@@ -438,8 +437,8 @@ namespace pwiz.Skyline.Model
                 if (listScheduleNext.TransitionCount == RequiredPeptides.TransitionCount)
                 {
                     string itemName = IsPrecursorLimited
-                                          ? Resources.AbstractMassListExporter_ExportScheduledBuckets_precursors
-                                          : Resources.AbstractMassListExporter_ExportScheduledBuckets_transitions;
+                                          ? ModelResources.AbstractMassListExporter_ExportScheduledBuckets_precursors
+                                          : ModelResources.AbstractMassListExporter_ExportScheduledBuckets_transitions;
                     var sb = new StringBuilder();
                     foreach (var peptideSchedule in listSchedules)
                     {
@@ -452,15 +451,15 @@ namespace pwiz.Skyline.Model
                         }
                     }
 
-                    var message = new StringBuilder(Resources.AbstractMassListExporter_ExportScheduledBuckets_Failed_to_schedule_the_following_peptides_with_the_current_settings);
+                    var message = new StringBuilder(ModelResources.AbstractMassListExporter_ExportScheduledBuckets_Failed_to_schedule_the_following_peptides_with_the_current_settings);
                     message.AppendLine().AppendLine().AppendLine(sb.ToString());
                     if (OptimizeStepCount == 0)
                     {
-                        message.AppendLine().AppendLine(string.Format(Resources.AbstractMassListExporter_ExportScheduledBuckets_Check_max_concurrent__0__count, itemName));
+                        message.AppendLine().AppendLine(string.Format(ModelResources.AbstractMassListExporter_ExportScheduledBuckets_Check_max_concurrent__0__count, itemName));
                     }
                     else
                     {
-                        message.Append(string.Format(Resources.AbstractMassListExporter_ExportScheduledBuckets_Check_max_concurrent__0__count_and_optimization_step_count, itemName));
+                        message.Append(string.Format(ModelResources.AbstractMassListExporter_ExportScheduledBuckets_Check_max_concurrent__0__count_and_optimization_step_count, itemName));
                     }
                     throw new IOException(message.ToString());
                 }
@@ -507,7 +506,7 @@ namespace pwiz.Skyline.Model
         private void BorrowTransitions(PeptideScheduleBucket bucketUnder, PeptideScheduleBucket bucketOver, int balanceCount)
         {
             if (!MaxTransitions.HasValue)
-                throw new InvalidOperationException(Resources.AbstractMassListExporter_ExportScheduledBuckets_Maximum_transitions_per_file_required);
+                throw new InvalidOperationException(ModelResources.AbstractMassListExporter_ExportScheduledBuckets_Maximum_transitions_per_file_required);
 
             foreach (var schedule in bucketOver.ToArray().RandomOrder(ArrayUtil.RANDOM_SEED))
             {
@@ -989,7 +988,7 @@ namespace pwiz.Skyline.Model
                     {
                         _saver = new FileSaver(FileName);
                         if (!_saver.CanSave())
-                            throw new IOException(string.Format(Resources.FileIterator_Init_Cannot_save_to__0__, FileName));
+                            throw new IOException(string.Format(ModelResources.FileIterator_Init_Cannot_save_to__0__, FileName));
 
                         _writer = new StreamWriter(_saver.SafeName);
                     }
@@ -1104,7 +1103,7 @@ namespace pwiz.Skyline.Model
                                         bool sortByMz)
             {
                 if (!HasFile)
-                    throw new IOException(Resources.FileIterator_WriteTransition_Unexpected_failure_writing_transitions);
+                    throw new IOException(ModelResources.FileIterator_WriteTransition_Unexpected_failure_writing_transitions);
 
                 if (!sortByMz)
                 {

@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Model.Results
     internal class NoSrmDataException : MissingDataException
     {
         public NoSrmDataException(MsDataFileUri importPath)
-            : base(Resources.NoSrmDataException_NoSrmDataException_No_SRM_MRM_data_found_in__0__, importPath)
+            : base(ResultsResources.NoSrmDataException_NoSrmDataException_No_SRM_MRM_data_found_in__0__, importPath)
         {
         }
     }
@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Model.Results
     internal class NoFullScanDataException : MissingDataException
     {
         public NoFullScanDataException(MsDataFileUri importPath)
-            : base(Resources.NoFullScanDataException_NoFullScanDataException_No_scans_in__0__match_the_current_filter_settings_, importPath)
+            : base(ResultsResources.NoFullScanDataException_NoFullScanDataException_No_scans_in__0__match_the_current_filter_settings_, importPath)
         {
         }
     }
@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model.Results
     internal class LoadCanceledException : IOException
     {
         public LoadCanceledException(IProgressStatus status)
-            : base(Resources.LoadCanceledException_LoadCanceledException_Data_import_canceled)
+            : base(ResultsResources.LoadCanceledException_LoadCanceledException_Data_import_canceled)
         {
             Status = status;
         }
@@ -90,8 +90,8 @@ namespace pwiz.Skyline.Model.Results
         private static string GetMessage(MsDataFileUri importPath, Exception x)
         {
             string message = importPath.GetSampleName() == null
-                ? string.Format(Resources.ChromCacheBuildException_GetMessage_Failed_importing_results_file___0___, importPath.GetFilePath())
-                : string.Format(Resources.ChromCacheBuildException_GetMessage_Failed_importing_results_file___0____sample__1__,
+                ? string.Format(ResultsResources.ChromCacheBuildException_GetMessage_Failed_importing_results_file___0___, importPath.GetFilePath())
+                : string.Format(ResultsResources.ChromCacheBuildException_GetMessage_Failed_importing_results_file___0____sample__1__,
                     importPath.GetFilePath(), importPath.GetSampleName());
             return TextUtil.LineSeparate(message, x.Message);
         }

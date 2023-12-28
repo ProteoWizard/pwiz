@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 // Feature calculators as specified in the mQuest/mProphet paper
@@ -161,7 +160,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.MQuestRetentionTimePredictionCalc_MQuestRetentionTimePredictionCalc_Retention_time_difference; }
+            get { return ScoringResources.MQuestRetentionTimePredictionCalc_MQuestRetentionTimePredictionCalc_Retention_time_difference; }
         }
 
         public override double RtScoreFunction(double rtValue)
@@ -176,7 +175,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.MQuestRetentionTimeSquaredPredictionCalc_MQuestRetentionTimeSquaredPredictionCalc_Retention_time_difference_squared; }
+            get { return ScoringResources.MQuestRetentionTimeSquaredPredictionCalc_MQuestRetentionTimeSquaredPredictionCalc_Retention_time_difference_squared; }
         }
 
         public override double RtScoreFunction(double rtValue)
@@ -360,7 +359,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.MQuestIntensityCalc_MQuestIntensityCalc_Intensity; }
+            get { return ScoringResources.MQuestIntensityCalc_MQuestIntensityCalc_Intensity; }
         }
 
         protected override IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(IPeptidePeakData<TData> peptidePeakData)
@@ -375,7 +374,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.MQuestStandardIntensityCalc_Name_Standard_Intensity; }
+            get { return ScoringResources.MQuestStandardIntensityCalc_Name_Standard_Intensity; }
         }
 
         protected override IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
@@ -396,7 +395,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.MQuestDefaultIntensityCalc_Name_Default_Intensity; }
+            get { return ScoringResources.MQuestDefaultIntensityCalc_Name_Default_Intensity; }
         }
 
         protected override IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
@@ -474,7 +473,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.MQuestIntensityCorrelationCalc_Name_Library_intensity_dot_product; }
+            get { return ScoringResources.MQuestIntensityCorrelationCalc_Name_Library_intensity_dot_product; }
         }
 
         protected override IList<ITransitionPeakData<TData>> GetIonTypes<TData>(IList<ITransitionGroupPeakData<TData>> tranGroupPeakDatas)
@@ -496,7 +495,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.MQuestIntensityStandardCorrelationCalc_Name_Standard_library_dot_product; }
+            get { return ScoringResources.MQuestIntensityStandardCorrelationCalc_Name_Standard_library_dot_product; }
         }
 
         protected override IList<ITransitionPeakData<TData>> GetIonTypes<TData>(IList<ITransitionGroupPeakData<TData>> tranGroupPeakDatas)
@@ -522,7 +521,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.MQuestDefaultIntensityCorrelationCalc_Name_Default_dotp_or_idotp; }
+            get { return ScoringResources.MQuestDefaultIntensityCorrelationCalc_Name_Default_dotp_or_idotp; }
         }
 
         protected override float Calculate(PeakScoringContext context,
@@ -614,7 +613,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.MQuestReferenceCorrelationCalc_MQuestReferenceCorrelationCalc_mQuest_reference_correlation; }
+            get { return ScoringResources.MQuestReferenceCorrelationCalc_MQuestReferenceCorrelationCalc_mQuest_reference_correlation; }
         }
 
         protected override bool IsIonType(TransitionDocNode nodeTran)
@@ -828,7 +827,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.MQuestWeightedShapeCalc_MQuestWeightedShapeCalc_mQuest_weighted_shape; }
+            get { return ScoringResources.MQuestWeightedShapeCalc_MQuestWeightedShapeCalc_mQuest_weighted_shape; }
         }
 
         protected override IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
@@ -844,7 +843,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.MQuestStandardWeightedShapeCalc_Name_Standard_shape__weighted_; }
+            get { return ScoringResources.MQuestStandardWeightedShapeCalc_Name_Standard_shape__weighted_; }
         }
 
         protected override IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
@@ -865,7 +864,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.MQuestDefaultWeightedShapeCalc_Name_Default_shape__weighted_; }
+            get { return ScoringResources.MQuestDefaultWeightedShapeCalc_Name_Default_shape__weighted_; }
         }
 
         protected override IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
@@ -886,7 +885,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.MQuestShapeCalc_MQuestShapeCalc_Shape; }
+            get { return ScoringResources.MQuestShapeCalc_MQuestShapeCalc_Shape; }
         }
 
         protected override double GetWeight(MQuestCrossCorrelation xcorr)
@@ -971,7 +970,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.MQuestWeightedCoElutionCalc_MQuestWeightedCoElutionCalc_mQuest_weighted_coelution; }
+            get { return ScoringResources.MQuestWeightedCoElutionCalc_MQuestWeightedCoElutionCalc_mQuest_weighted_coelution; }
         }
 
         protected override IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
@@ -987,7 +986,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.MQuestStandardWeightedCoElutionCalc_Name_Standard_co_elution__weighted_; }
+            get { return ScoringResources.MQuestStandardWeightedCoElutionCalc_Name_Standard_co_elution__weighted_; }
         }
 
         protected override IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
@@ -1008,7 +1007,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.MQuestDefaultWeightedCoElutionCalc_Name_Default_co_elution__weighted_; }
+            get { return ScoringResources.MQuestDefaultWeightedCoElutionCalc_Name_Default_co_elution__weighted_; }
         }
 
         protected override IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
@@ -1029,7 +1028,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.MQuestCoElutionCalc_MQuestCoElutionCalc_Coelution; }
+            get { return ScoringResources.MQuestCoElutionCalc_MQuestCoElutionCalc_Coelution; }
         }
 
         protected override double GetWeight(MQuestCrossCorrelation xcorr)
@@ -1208,7 +1207,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mProphet_weighted_reference_shape; }
+            get { return ScoringResources.MQuestWeightedReferenceShapeCalc_MQuestWeightedReferenceShapeCalc_mProphet_weighted_reference_shape; }
         }
 
         protected override float Calculate(PeakScoringContext context, Statistics statValues, Statistics statWeigths)
@@ -1236,7 +1235,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_Reference_shape; }
+            get { return ScoringResources.MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_Reference_shape; }
         }
 
         protected override double GetWeight(MQuestCrossCorrelation xcorr)
@@ -1256,7 +1255,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.MQuestWeightedReferenceCoElutionCalc_MQuestWeightedReferenceCoElutionCalc_mQuest_weighted_reference_coelution; }
+            get { return ScoringResources.MQuestWeightedReferenceCoElutionCalc_MQuestWeightedReferenceCoElutionCalc_mQuest_weighted_reference_coelution; }
         }
 
         protected override float Calculate(PeakScoringContext context, Statistics statValues, Statistics statWeigths)
@@ -1295,7 +1294,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override string Name
         {
-            get { return Resources.MQuestReferenceCoElutionCalc_MQuestReferenceCoElutionCalc_Reference_coelution; }
+            get { return ScoringResources.MQuestReferenceCoElutionCalc_MQuestReferenceCoElutionCalc_Reference_coelution; }
         }
 
         protected override double GetWeight(MQuestCrossCorrelation xcorr)

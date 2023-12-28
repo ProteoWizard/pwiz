@@ -27,7 +27,6 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -42,7 +41,7 @@ namespace pwiz.Skyline.Model.IonMobility
 
         public static string FILTER_IONMOBILITYLIBRARY
         {
-            get { return TextUtil.FileDialogFilter(Resources.IonMobilityDb_FILTER_IONMOBILITYLIBRARY_Ion_Mobility_Library_Files, EXT); }
+            get { return TextUtil.FileDialogFilter(IonMobilityResources.IonMobilityDb_FILTER_IONMOBILITYLIBRARY_Ion_Mobility_Library_Files, EXT); }
         }
 
         public IonMobilityLibrarySpec(string name, string path) : base(name)

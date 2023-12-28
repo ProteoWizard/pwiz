@@ -1132,23 +1132,23 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     string message = null;
                     if (nodePeps == null)
-                        message = Resources.GraphChromatogram_UpdateUI_Select_a_peptide__precursor_or_transition_to_view_its_chromatograms;
+                        message = GraphsResources.GraphChromatogram_UpdateUI_Select_a_peptide__precursor_or_transition_to_view_its_chromatograms;
                     else switch (DisplayType)
                     {
                         case DisplayTypeChrom.precursors:
-                            message = Resources.GraphChromatogram_UpdateUI_No_precursor_ion_chromatograms_found;
+                            message = GraphsResources.GraphChromatogram_UpdateUI_No_precursor_ion_chromatograms_found;
                             break;
                         case DisplayTypeChrom.products:
-                            message = Resources.GraphChromatogram_UpdateUI_No_product_ion_chromatograms_found;
+                            message = GraphsResources.GraphChromatogram_UpdateUI_No_product_ion_chromatograms_found;
                             break;
                         case DisplayTypeChrom.base_peak:
-                            message = Resources.GraphChromatogram_UpdateUI_No_base_peak_chromatogram_found;
+                            message = GraphsResources.GraphChromatogram_UpdateUI_No_base_peak_chromatogram_found;
                             break;
                         case DisplayTypeChrom.tic:
-                            message = Resources.GraphChromatogram_UpdateUI_No_TIC_chromatogram_found;
+                            message = GraphsResources.GraphChromatogram_UpdateUI_No_TIC_chromatogram_found;
                             break;
                         case DisplayTypeChrom.qc:
-                            message = Resources.GraphChromatogram_UpdateUI_No_QC_chromatogram_found;
+                            message = GraphsResources.GraphChromatogram_UpdateUI_No_QC_chromatogram_found;
                             break;
                     }
                     SetErrorGraphItem(new UnavailableChromGraphItem(Helpers.PeptideToMoleculeTextMapper.Translate(message, DocumentUI.DocumentType)));
@@ -1160,10 +1160,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 switch (DisplayType)
                 {
                     case DisplayTypeChrom.base_peak:
-                        message = Resources.GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_base_peak_chromatogram;
+                        message = GraphsResources.GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_base_peak_chromatogram;
                         break;
                     case DisplayTypeChrom.tic:
-                        message = Resources.GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_TIC_chromatogram;
+                        message = GraphsResources.GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_TIC_chromatogram;
                         break;
                 }
                 SetErrorGraphItem(new UnavailableChromGraphItem(Helpers.PeptideToMoleculeTextMapper.Translate(message, DocumentUI.DocumentType)));
@@ -2459,7 +2459,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Check to see if the list of files has changed.
                 var listNames = new List<string>();
                 if (_hasMergedChromInfo)
-                    listNames.Add(Resources.GraphChromatogram_UpdateToolbar_All);
+                    listNames.Add(GraphsResources.GraphChromatogram_UpdateToolbar_All);
                 for (int i = _hasMergedChromInfo ? 1 : 0; i < arrayChromInfo.Count; i++)
                 {
                     var arrayInfo = arrayChromInfo[i];

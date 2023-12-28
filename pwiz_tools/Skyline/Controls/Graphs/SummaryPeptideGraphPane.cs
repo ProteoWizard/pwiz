@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             PaneKey = paneKey;
             string xAxisTitle = 
-                Helpers.PeptideToMoleculeTextMapper.Translate(Resources.SummaryPeptideGraphPane_SummaryPeptideGraphPane_Peptide, 
+                Helpers.PeptideToMoleculeTextMapper.Translate(GraphsResources.SummaryPeptideGraphPane_SummaryPeptideGraphPane_Peptide, 
                     graphSummary.DocumentUIContainer.DocumentUI.DocumentType);
             if (null != paneKey.IsotopeLabelType && !paneKey.IsotopeLabelType.IsLight)
             {
@@ -169,7 +169,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (Settings.Default.AreaLogScale && allowLogScale)
             {
-                YAxis.Title.Text = TextUtil.SpaceSeparate(Resources.SummaryPeptideGraphPane_UpdateAxes_Log, YAxis.Title.Text);
+                YAxis.Title.Text = TextUtil.SpaceSeparate(GraphsResources.SummaryPeptideGraphPane_UpdateAxes_Log, YAxis.Title.Text);
                 YAxis.Type = AxisType.Log;
                 YAxis.Scale.MinAuto = false;
                 FixedYMin = YAxis.Scale.Min = 1;

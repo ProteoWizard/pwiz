@@ -393,7 +393,7 @@ namespace pwiz.Skyline.Model
             if (timeText == null || timeText.Equals(TextUtil.EXCEL_NA))
                 return null;
 
-            throw new IOException(string.Format(Resources.PeakBoundsMatch_PeakBoundsMatch_Unable_to_read_apex_retention_time_value_for_peptide__0__of_file__1__, ModifiedSequence, FileName));
+            throw new IOException(string.Format(ModelResources.PeakBoundsMatch_PeakBoundsMatch_Unable_to_read_apex_retention_time_value_for_peptide__0__of_file__1__, ModifiedSequence, FileName));
         }
 
         public static double? GetScoreValue(TransitionGroupChromInfo groupChromInfo, string annotationName, Func<TransitionGroupChromInfo, double?> getNativeValue)

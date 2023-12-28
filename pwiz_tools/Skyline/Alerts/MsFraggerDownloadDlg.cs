@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
  *
  * Copyright 2021 University of Washington - Seattle, WA
@@ -26,7 +26,6 @@ using System.Windows.Forms;
 using Ionic.Zip;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DdaSearch;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -105,7 +104,7 @@ namespace pwiz.Skyline.Alerts
         {
             using (var downloadProgressDlg = new LongWaitDlg())
             {
-                downloadProgressDlg.Message = string.Format(Resources.MsFraggerDownloadDlg_Download_Downloading_MSFragger__0_, MsFraggerSearchEngine.MSFRAGGER_VERSION);
+                downloadProgressDlg.Message = string.Format(AlertsResources.MsFraggerDownloadDlg_Download_Downloading_MSFragger__0_, MsFraggerSearchEngine.MSFRAGGER_VERSION);
                 if (Program.FunctionalTest && !Program.UseOriginalURLs)
                 {
                     var msFraggerDownloadInfo = MsFraggerSearchEngine.MsFraggerDownloadInfo;

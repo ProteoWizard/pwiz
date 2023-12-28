@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Alerts
                                               Resources.LocateFileDlg_LocateFileDlg_Please_verify_and_update_if_incorrect),
                                               programName, programVersion)
                                           : string.Format(TextUtil.LineSeparate(
-                                              Resources.LocateFileDlg_LocateFileDlg_This_tool_requires_0,
+                                              AlertsResources.LocateFileDlg_LocateFileDlg_This_tool_requires_0,
                                               Resources.LocateFileDlg_LocateFileDlg_Below_is_the_saved_value_for_the_path_to_the_executable,
                                               Resources.LocateFileDlg_LocateFileDlg_Please_verify_and_update_if_incorrect),
                                               programName);
@@ -59,9 +59,9 @@ namespace pwiz.Skyline.Alerts
                                               Resources.LocateFileDlg_LocateFileDlg_then_run_the_tool_again),
                                               programName, programVersion)
                                           : string.Format(TextUtil.LineSeparate(
-                                              Resources.LocateFileDlg_LocateFileDlg_This_tool_requires_0,
+                                              AlertsResources.LocateFileDlg_LocateFileDlg_This_tool_requires_0,
                                               Resources.LocateFileDlg_LocateFileDlg_If_you_have_it_installed_please_provide_the_path_below,
-                                              Resources.LocateFileDlg_LocateFileDlg_Otherwise__please_cancel_and_install__0__first,
+                                              AlertsResources.LocateFileDlg_LocateFileDlg_Otherwise__please_cancel_and_install__0__first,
                                               Resources.LocateFileDlg_LocateFileDlg_then_run_the_tool_again),
                                               programName);                
             }
