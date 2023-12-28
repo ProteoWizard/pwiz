@@ -71,8 +71,16 @@ namespace pwiz.SkylineTestUtil
         /// <param name="documentPath">File path of document</param>
         public void OpenDocument(string documentPath)
         {
-            var documentFile = TestFilesDir.GetTestPath(documentPath);
-            WaitForCondition(() => File.Exists(documentFile));
+            string documentFile = null;
+            foreach (var testFileDir in TestFilesDirs)
+            {
+                documentFile = testFileDir.GetTestPath(documentPath);
+                if (File.Exists(documentFile))
+                {
+                    break;
+                }
+            }
+
             if (documentPath.EndsWith(@".zip", true, CultureInfo.InvariantCulture))
             {
                 RunUI(() => SkylineWindow.OpenSharedFile(documentFile));
@@ -186,7 +194,7 @@ namespace pwiz.SkylineTestUtil
             {
                 var dlg = WaitForOpenForm<MessageDlg>();
                 Assert.IsTrue(dlg.DetailMessage.Contains(expectedErrorMessage));
-                dlg.CancelDialog();
+                dlg.CancelButton.PerformClick();
             }
             else if (lockMassParameters == null)
             {

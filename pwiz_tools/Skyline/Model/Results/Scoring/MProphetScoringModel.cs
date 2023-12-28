@@ -24,7 +24,6 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Scoring
@@ -204,7 +203,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return ChangeProp(ImClone(this), im =>
             {
                 // This may take a long time between progress updates, but just measure progress by cycles through the training
-                IProgressStatus status = new ProgressStatus(Resources.MProphetPeakScoringModel_Train_Training_peak_scoring_model);
+                IProgressStatus status = new ProgressStatus(ScoringResources.MProphetPeakScoringModel_Train_Training_peak_scoring_model);
                 progressMonitor?.UpdateProgress(status);
 
                 try
@@ -296,8 +295,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
                     // Calculate progress, but wait to make sure convergence has not occurred before setting it
                     string formatText = qValueCutoff > 0.02
-                        ? Resources.MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1__
-                        : Resources.MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1_____2______peaks_at__3_0_____FDR_;
+                        ? ScoringResources.MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1__
+                        : ScoringResources.MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1_____2______peaks_at__3_0_____FDR_;
                     percentComplete = (i + 1) * 100 / (iterationCount + 1);
                     status = status.ChangeMessage(string.Format(formatText, i + 1, iterationCount, truePeaksCountNew, qValueCutoff))
                         .ChangePercentComplete(percentComplete);
@@ -329,7 +328,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     else
                     {
                         progressMonitor?.UpdateProgress(status =
-                            status.ChangeMessage(string.Format(Resources.MProphetPeakScoringModel_Train_Scoring_model_converged__iteration__0_____1______peaks_at__2_0_____FDR_, i + 1, truePeaksCount, qValueCutoff))
+                            status.ChangeMessage(string.Format(ScoringResources.MProphetPeakScoringModel_Train_Scoring_model_converged__iteration__0_____1______peaks_at__2_0_____FDR_, i + 1, truePeaksCount, qValueCutoff))
                                 .ChangePercentComplete(Math.Max(95, percentComplete)));
                         calcWeights = lastWeights;
                         break;
@@ -427,9 +426,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
             // Better to let a really poor model through for the user to see than to give an error message here
             if (((double)truePeaks.Count)*10*1000 < decoyPeaks.Count) // Targets must be at least 0.01% of decoys (still rejects zero)
-                throw new InvalidDataException(string.Format(Resources.MProphetPeakScoringModel_CalculateWeights_Insufficient_target_peaks___0__with__1__decoys__detected_at__2___FDR_to_continue_training_, truePeaks.Count, decoyPeaks.Count, qValueCutoff*100));
+                throw new InvalidDataException(string.Format(ScoringResources.MProphetPeakScoringModel_CalculateWeights_Insufficient_target_peaks___0__with__1__decoys__detected_at__2___FDR_to_continue_training_, truePeaks.Count, decoyPeaks.Count, qValueCutoff*100));
             if (((double)decoyPeaks.Count)*1000 < truePeaks.Count) // Decoys must be at least 0.1% of targets
-                throw new InvalidDataException(string.Format(Resources.MProphetPeakScoringModel_CalculateWeights_Insufficient_decoy_peaks___0__with__1__targets__to_continue_training_, decoyPeaks.Count, truePeaks.Count));
+                throw new InvalidDataException(string.Format(ScoringResources.MProphetPeakScoringModel_CalculateWeights_Insufficient_decoy_peaks___0__with__1__targets__to_continue_training_, decoyPeaks.Count, truePeaks.Count));
 
             var featureCount = weights.Count(w => !double.IsNaN(w));
 
@@ -645,7 +644,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         private void DoValidate()
         {
             if (Parameters != null && Parameters.Weights != null && Parameters.Weights.Count < 1 || PeakFeatureCalculators.Count < 1)
-                throw new InvalidDataException(Resources.MProphetPeakScoringModel_DoValidate_MProphetPeakScoringModel_requires_at_least_one_peak_feature_calculator_with_a_weight_value);
+                throw new InvalidDataException(ScoringResources.MProphetPeakScoringModel_DoValidate_MProphetPeakScoringModel_requires_at_least_one_peak_feature_calculator_with_a_weight_value);
         }
         #endregion
     }

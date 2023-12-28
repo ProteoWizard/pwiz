@@ -113,7 +113,9 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_22_23 = new DocumentFormat(22.23); // ion match tolerance units
         public static readonly DocumentFormat VERSION_22_24 = new DocumentFormat(22.24); // Group Comparison MS level
         public static readonly DocumentFormat VERSION_22_25 = new DocumentFormat(22.25); // spectrum class filters and peptide_integration minOccurs
-        public static readonly DocumentFormat CURRENT = VERSION_22_25;
+        public static readonly DocumentFormat VERSION_23_1 = new DocumentFormat(23.1); // Release format
+        public static readonly DocumentFormat VERSION_23_11 = new DocumentFormat(23.11); // Surrogate calibration curve
+        public static readonly DocumentFormat CURRENT = VERSION_23_11;
 
         private readonly double _versionNumber;
         public DocumentFormat(double versionNumber)

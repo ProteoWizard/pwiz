@@ -45,7 +45,7 @@ run-if-exists SpectrumList_3D_Test.cpp
     : [ path.native $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d ] # args
     : # input-files
     : <conditional>@unit-test-requirements <vendor-api-support>off:<build>no # requirements# requirements
-      <optimization>speed:<build>no <optimization>space:<build>no # I have no idea why it fails in .NET with optimization on
+      <optimization>space:<build>no # I have no idea why it fails in .NET with space optimization on
     : SpectrumList_3D_Test # target name
     : # default-build
     ;

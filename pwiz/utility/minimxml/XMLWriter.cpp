@@ -87,6 +87,7 @@ class XMLWriter::Impl
     void characters(const string& text, bool autoEscape);
     bio::stream_offset position() const;
     bio::stream_offset positionNext() const;
+    ostream& getOutputStream() const;
 
     private:
     ostream& os_;
@@ -288,6 +289,12 @@ XMLWriter::stream_offset XMLWriter::Impl::positionNext() const
 }
 
 
+ostream& XMLWriter::Impl::getOutputStream() const
+{
+    return os_;
+}
+
+
 //
 // XMLWriter forwarding functions 
 //
@@ -321,6 +328,7 @@ PWIZ_API_DECL XMLWriter::stream_offset XMLWriter::position() const {return impl_
 
 PWIZ_API_DECL XMLWriter::stream_offset XMLWriter::positionNext() const {return impl_->positionNext();}
 
+PWIZ_API_DECL ostream& XMLWriter::getOutputStream() const {return impl_->getOutputStream();}
 
 namespace {
 

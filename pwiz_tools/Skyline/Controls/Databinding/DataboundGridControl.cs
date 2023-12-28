@@ -35,7 +35,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Clustering;
 using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -56,9 +55,9 @@ namespace pwiz.Skyline.Controls.Databinding
             InitializeComponent();
             _dataGridViewPasteHandler = DataGridViewPasteHandler.Attach(DataGridView);
             NavBar.ClusterSplitButton.Visible = true;
-            NavBar.ClusterSplitButton.DropDownItems.Add(new ToolStripMenuItem(Resources.DataboundGridControl_DataboundGridControl_Show_Heat_Map, null,
+            NavBar.ClusterSplitButton.DropDownItems.Add(new ToolStripMenuItem(DatabindingResources.DataboundGridControl_DataboundGridControl_Show_Heat_Map, null,
                 heatMapContextMenuItem_Click));
-            NavBar.ClusterSplitButton.DropDownItems.Add(new ToolStripMenuItem(Resources.DataboundGridControl_DataboundGridControl_Show_PCA_Plot, null,
+            NavBar.ClusterSplitButton.DropDownItems.Add(new ToolStripMenuItem(DatabindingResources.DataboundGridControl_DataboundGridControl_Show_PCA_Plot, null,
                 pCAToolStripMenuItem_Click));
         }
 
@@ -440,7 +439,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 return false;
             }
 
-            _dataGridViewPasteHandler.PerformUndoableOperation(Resources.DataboundGridControl_FillDown_Fill_Down,
+            _dataGridViewPasteHandler.PerformUndoableOperation(DatabindingResources.DataboundGridControl_FillDown_Fill_Down,
                 longWaitBroker => DoFillDown(longWaitBroker, propertyDescriptors, firstRowIndex, lastRowIndex),
                 new DataGridViewPasteHandler.BatchModifyInfo(DataGridViewPasteHandler.BatchModifyAction.FillDown,
                     BindingListSource.ViewInfo.Name, BindingListSource.RowFilter));
@@ -459,7 +458,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     return anyChanges;
                 }
                 longWaitBroker.ProgressValue = 100*(iRow - firstRowIndex)/totalRows;
-                longWaitBroker.Message = string.Format(Resources.DataboundGridControl_DoFillDown_Filling__0___1__rows, iRow - firstRowIndex, totalRows);
+                longWaitBroker.Message = string.Format(DatabindingResources.DataboundGridControl_DoFillDown_Filling__0___1__rows, iRow - firstRowIndex, totalRows);
                 var row = BindingListSource[iRow];
                 for (int icol = 0; icol < propertyDescriptors.Length; icol++)
                 {
@@ -471,7 +470,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     }
                     catch (Exception e)
                     {
-                        MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.DataboundGridControl_DoFillDown_Error_setting_value_, 
+                        MessageDlg.ShowWithException(this, TextUtil.LineSeparate(DatabindingResources.DataboundGridControl_DoFillDown_Error_setting_value_, 
                             e.Message), e);
                         var column = DataGridView.Columns.OfType<DataGridViewColumn>()
                             .FirstOrDefault(col => col.DataPropertyName == propertyDescriptor.Name);
@@ -592,9 +591,9 @@ namespace pwiz.Skyline.Controls.Databinding
                     return;
                 }
                 string message = TextUtil.LineSeparate(
-                    Resources.DataboundGridControl_DisplayError_An_error_occured_while_displaying_the_data_rows_,
+                    DatabindingResources.DataboundGridControl_DisplayError_An_error_occured_while_displaying_the_data_rows_,
                     e.Exception.Message,
-                    Resources.DataboundGridControl_DisplayError_Do_you_want_to_continue_to_see_these_error_messages_
+                    DatabindingResources.DataboundGridControl_DisplayError_Do_you_want_to_continue_to_see_these_error_messages_
                     );
 
                 var alertDlg = new AlertDlg(message, MessageBoxButtons.YesNo) {Exception = e.Exception};

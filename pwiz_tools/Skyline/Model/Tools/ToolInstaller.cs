@@ -253,7 +253,7 @@ namespace pwiz.Skyline.Model.Tools
             string name = Path.GetFileNameWithoutExtension(pathToZip);
             if (name == null)
             {                
-                throw new ToolExecutionException(Resources.ConfigureToolsDlg_unpackZipTool_Invalid_file_selected__No_tools_added_);
+                throw new ToolExecutionException(ToolsResources.ConfigureToolsDlg_unpackZipTool_Invalid_file_selected__No_tools_added_);
             }
             // This helps with zipfiles that have spaces in the titles. 
             // Consider: We may want to add quotes around usages of the $(ToolDir) macro incase the Tool directory has spaces in one of its directory names.
@@ -262,7 +262,7 @@ namespace pwiz.Skyline.Model.Tools
             string outerToolsFolderPath = ToolDescriptionHelpers.GetToolsDirectory();
             if (string.IsNullOrEmpty(outerToolsFolderPath))
             {
-                throw new ToolExecutionException(Resources.ConfigureToolsDlg_unpackZipTool_Error_unpacking_zipped_tools);
+                throw new ToolExecutionException(ToolsResources.ConfigureToolsDlg_unpackZipTool_Error_unpacking_zipped_tools);
             }
             string tempFolderPath = Path.Combine(outerToolsFolderPath, @"Temp");
 
@@ -290,7 +290,7 @@ namespace pwiz.Skyline.Model.Tools
                     }
                     catch (Exception ex)
                     {
-                        throw new ToolExecutionException(Resources.ConfigureToolsDlg_unpackZipTool_Error_unpacking_zipped_tools, ex);
+                        throw new ToolExecutionException(ToolsResources.ConfigureToolsDlg_unpackZipTool_Error_unpacking_zipped_tools, ex);
                     }
                 }
 
@@ -303,8 +303,8 @@ namespace pwiz.Skyline.Model.Tools
                 if (!toolInfDir.Exists)
                 {
                     throw new ToolExecutionException(TextUtil.LineSeparate(
-                            Resources.ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_an_installable_tool_,
-                            string.Format(Resources.ToolInstaller_UnpackZipTool_Error__It_does_not_contain_the_required__0__directory_, TOOL_INF)));
+                            ToolsResources.ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_an_installable_tool_,
+                            string.Format(ToolsResources.ToolInstaller_UnpackZipTool_Error__It_does_not_contain_the_required__0__directory_, TOOL_INF)));
                 }
 
                 // Handle info.properties
@@ -383,9 +383,9 @@ namespace pwiz.Skyline.Model.Tools
                             pathToPackageInstallScript = Path.Combine(tempToolPath, TOOL_INF, INSTALL_R_PACKAGES);
                             if (!File.Exists(pathToPackageInstallScript))
                             {
-                                throw new ToolExecutionException(TextUtil.LineSeparate(string.Format(Resources.ToolInstaller_UnpackZipTool_Error__There_is_a_file_missing_the__0__zip, name),
+                                throw new ToolExecutionException(TextUtil.LineSeparate(string.Format(ToolsResources.ToolInstaller_UnpackZipTool_Error__There_is_a_file_missing_the__0__zip, name),
                                                                         string.Empty,
-                                                                        string.Format(Resources.ToolInstaller_UnpackZipTool_Tool_Uses_R_and_specifies_Packages_without_an__0__file_in_the_tool_inf_directory_, INSTALL_R_PACKAGES)));
+                                                                        string.Format(ToolsResources.ToolInstaller_UnpackZipTool_Tool_Uses_R_and_specifies_Packages_without_an__0__file_in_the_tool_inf_directory_, INSTALL_R_PACKAGES)));
                             }
                         }
 
@@ -429,7 +429,7 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 else if (retval.MessagesThrown.Count == 0)
                 {
-                    retval.MessagesThrown.Add(Resources.ToolInstaller_UnpackZipTool_The_selected_zip_file_did_not_specify_any_items_to_add_to_the_Tools_menu_);
+                    retval.MessagesThrown.Add(ToolsResources.ToolInstaller_UnpackZipTool_The_selected_zip_file_did_not_specify_any_items_to_add_to_the_Tools_menu_);
                 }
             }
             return retval;
@@ -530,7 +530,7 @@ namespace pwiz.Skyline.Model.Tools
                 catch (Exception)
                 {
                     // Failed to read the .properties file
-                    throw new ToolExecutionException(string.Format(Resources.ToolInstaller_GetToolInfo_Failed_to_process_the__0__file, INFO_PROPERTIES));
+                    throw new ToolExecutionException(string.Format(ToolsResources.ToolInstaller_GetToolInfo_Failed_to_process_the__0__file, INFO_PROPERTIES));
                 }
 
                 toolInfo.SetPackageVersion(readin.Version);
@@ -549,7 +549,7 @@ namespace pwiz.Skyline.Model.Tools
             {
                 throw new ToolExecutionException(TextUtil.LineSeparate(
                     Resources.ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_a_valid_installable_tool_,
-                    string.Format(Resources.ToolInstaller_GetToolInfo_Error__It_does_not_contain_the_required__0__in_the__1__directory_,
+                    string.Format(ToolsResources.ToolInstaller_GetToolInfo_Error__It_does_not_contain_the_required__0__in_the__1__directory_,
                                   INFO_PROPERTIES, TOOL_INF)));
             }
             return toolInfo;
@@ -820,7 +820,7 @@ namespace pwiz.Skyline.Model.Tools
             catch (Exception)
             {
                 //Failed to read the .properties file
-                accumulator.AddMessage(string.Format(Resources.ConfigureToolsDlg_unpackZipTool_Failed_to_process_file_0_The_tool_described_failed_to_import,
+                accumulator.AddMessage(string.Format(ToolsResources.ConfigureToolsDlg_unpackZipTool_Failed_to_process_file_0_The_tool_described_failed_to_import,
                                                      file.Name));
                 return;
             }
@@ -869,7 +869,7 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 if (!File.Exists(Path.Combine(tempToolPath, dllPath)))
                 {
-                    accumulator.AddMessage(string.Format(Resources.ToolInstaller_AddToolFromProperties_Missing_the_file__0___Tool__1__import_failed, dllPath,
+                    accumulator.AddMessage(string.Format(ToolsResources.ToolInstaller_AddToolFromProperties_Missing_the_file__0___Tool__1__import_failed, dllPath,
                                                          readin.Title));
                     return;
                 }
@@ -909,7 +909,7 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 if (!File.Exists(Path.Combine(tempToolPath, command)))
                 {
-                    accumulator.AddMessage(string.Format(Resources.ToolInstaller_AddToolFromProperties_Missing_the_file__0___Tool__1__import_failed, command, readin.Title));
+                    accumulator.AddMessage(string.Format(ToolsResources.ToolInstaller_AddToolFromProperties_Missing_the_file__0___Tool__1__import_failed, command, readin.Title));
                     return null;
                 }
                 command = Path.Combine(ToolMacros.TOOL_DIR, command);

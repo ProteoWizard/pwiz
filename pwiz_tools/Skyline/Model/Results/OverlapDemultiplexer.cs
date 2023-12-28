@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -158,7 +157,7 @@ namespace pwiz.Skyline.Model.Results
                     scansOfWindow.Add(currentScan);
                     if (!ScanTimes[currentScan].HasValue)
                     {
-                        throw new InvalidDataException(string.Format(Resources.OverlapDeconvSolverHandler_BuildDeconvBlock_Missing_scan_time_value_on_scan__0___Scan_times_are_required_for_overlap_based_demultiplexing_, ScanNumbers[currentScan]));
+                        throw new InvalidDataException(string.Format(ResultsResources.OverlapDeconvSolverHandler_BuildDeconvBlock_Missing_scan_time_value_on_scan__0___Scan_times_are_required_for_overlap_based_demultiplexing_, ScanNumbers[currentScan]));
                     }
                     scanTimes.Add(ScanTimes[currentScan].Value);
                     currentScan = currentScan + _cycleLength;
@@ -174,7 +173,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                     if (!ScanTimes[CurrentScan].HasValue)
                     {
-                        throw new InvalidDataException(string.Format(Resources.OverlapDeconvSolverHandler_BuildDeconvBlock_Missing_scan_time_value_on_scan__0___Scan_times_are_required_for_overlap_based_demultiplexing_, ScanNumbers[currentScan]));
+                        throw new InvalidDataException(string.Format(ResultsResources.OverlapDeconvSolverHandler_BuildDeconvBlock_Missing_scan_time_value_on_scan__0___Scan_times_are_required_for_overlap_based_demultiplexing_, ScanNumbers[currentScan]));
                     }
                     // ReSharper disable PossibleInvalidOperationException
                     double interpolatedValue = interpolator.Interpolate(ScanTimes[CurrentScan].Value);
@@ -186,7 +185,7 @@ namespace pwiz.Skyline.Model.Results
             }
             if (_deconvBlock.Masks.Matrix.Rank() < _overlapRegionsInApprox)
             {
-                throw new InvalidDataException(string.Format(Resources.OverlapDeconvSolverHandler_BuildDeconvBlock_Overlap_deconvolution_window_scheme_is_rank_deficient_at_scan__2___Rank_is__0__while_matrix_has_dimension__1____A_non_degenerate_overlapping_window_scheme_is_required_,
+                throw new InvalidDataException(string.Format(ResultsResources.OverlapDeconvSolverHandler_BuildDeconvBlock_Overlap_deconvolution_window_scheme_is_rank_deficient_at_scan__2___Rank_is__0__while_matrix_has_dimension__1____A_non_degenerate_overlapping_window_scheme_is_required_,
                                                _deconvBlock.Masks.Matrix.Rank(),  _overlapRegionsInApprox, ScanNumbers[NumScans/2]));
             }
         }

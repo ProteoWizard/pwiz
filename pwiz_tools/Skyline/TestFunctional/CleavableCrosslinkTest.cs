@@ -113,7 +113,7 @@ namespace pwiz.SkylineTestFunctional
             peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunUI(() => peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Modifications);
             editModListDlg = ShowEditStaticModsDlg(peptideSettingsUi);
-            editModListDlg.SelectItem(CROSSLINKER_NAME);
+            RunUI(() => editModListDlg.SelectItem(CROSSLINKER_NAME));
             editStaticModDlg = ShowDialog<EditStaticModDlg>(editModListDlg.EditItem);
 
             RunDlg<EditFragmentLossDlg>(editStaticModDlg.AddLoss, dlg =>

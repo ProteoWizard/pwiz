@@ -311,9 +311,10 @@ namespace pwiz.SkylineTest
             sequenceMassCalc.AddStaticModifications(new[] { labelLaK });
             Assert.AreEqual(294.033, sequenceMassCalc.GetPrecursorMass("K"), .1);
             Assert.AreEqual("C'6H14LaN'2O2", sequenceMassCalc.GetMolecularFormula("K").ToString());
-            
+
             // Check our ability to handle strangely constructed chemical formulas, and preserve nonstandard order
             Assert.AreEqual("C12H9S2", ParsedMolecule.Create("C12H9S2P0").ToString()); // P0 is weird, drop it
+            Assert.AreEqual("C12H9S2", ParsedMolecule.Create("C\u2081\u2082H\u2089S\u2082P\u2080").ToString()); // Same thing, unicode subscripts
             Assert.AreEqual("C12H9S2P1", ParsedMolecule.Create("C12H9S2P1").ToString()); // P1 is weird, but preserve it
             Assert.AreEqual("H9C12P", ParsedMolecule.Create("H9C12S0P").ToString()); // S0 is weird, and not at end
         }

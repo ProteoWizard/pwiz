@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _graphControl = graphControl;
             _dataCalculator = new SchedulingDataCalculator(this, graphControl);
 
-            XAxis.Title.Text = Resources.RTScheduleGraphPane_RTScheduleGraphPane_Scheduled_Time;
+            XAxis.Title.Text = GraphsResources.RTScheduleGraphPane_RTScheduleGraphPane_Scheduled_Time;
             YAxis.Scale.MinAuto = false;
             YAxis.Scale.Min = 0;
         }
@@ -106,39 +106,39 @@ namespace pwiz.Skyline.Controls.Graphs
             // TODO: Make it possible to see transition scheduling when full-scan enabled.
             if (string.IsNullOrEmpty(brukerTemplate))
             {
-                XAxis.Title.Text = Resources.RTScheduleGraphPane_RTScheduleGraphPane_Scheduled_Time;
+                XAxis.Title.Text = GraphsResources.RTScheduleGraphPane_RTScheduleGraphPane_Scheduled_Time;
                 YAxis.Title.Text = document.Settings.TransitionSettings.FullScan.IsEnabledMsMs
-                    ? Resources.RTScheduleGraphPane_UpdateGraph_Concurrent_Precursors
-                    : Resources.RTScheduleGraphPane_UpdateGraph_Concurrent_Transitions;
+                    ? GraphsResources.RTScheduleGraphPane_UpdateGraph_Concurrent_Precursors
+                    : GraphsResources.RTScheduleGraphPane_UpdateGraph_Concurrent_Transitions;
             }
             else if (inputData.BrukerMetrics == null)
             {
-                XAxis.Title.Text = Resources.RTScheduleGraphPane_RTScheduleGraphPane_Scheduled_Time;
-                YAxis.Title.Text = Resources.RTScheduleGraphPane_UpdateGraph_Concurrent_Accumulations;
+                XAxis.Title.Text = GraphsResources.RTScheduleGraphPane_RTScheduleGraphPane_Scheduled_Time;
+                YAxis.Title.Text = GraphsResources.RTScheduleGraphPane_UpdateGraph_Concurrent_Accumulations;
             }
             else
             {
                 switch (inputData.BrukerMetricType)
                 {
                     case SchedulingMetrics.CONCURRENT_FRAMES:
-                        XAxis.Title.Text = Resources.RTScheduleGraphPane_RTScheduleGraphPane_Scheduled_Time;
-                        YAxis.Title.Text = Resources.RTScheduleGraphPane_UpdateGraph_Concurrent_frames;
+                        XAxis.Title.Text = GraphsResources.RTScheduleGraphPane_RTScheduleGraphPane_Scheduled_Time;
+                        YAxis.Title.Text = GraphsResources.RTScheduleGraphPane_UpdateGraph_Concurrent_frames;
                         break;
                     case SchedulingMetrics.MAX_SAMPLING_TIMES:
-                        XAxis.Title.Text = Resources.RTScheduleGraphPane_UpdateGraph_Target;
-                        YAxis.Title.Text = Resources.RTScheduleGraphPane_UpdateGraph_Max_sampling_times;
+                        XAxis.Title.Text = GraphsResources.RTScheduleGraphPane_UpdateGraph_Target;
+                        YAxis.Title.Text = GraphsResources.RTScheduleGraphPane_UpdateGraph_Max_sampling_times;
                         break;
                     case SchedulingMetrics.MEAN_SAMPLING_TIMES:
-                        XAxis.Title.Text = Resources.RTScheduleGraphPane_UpdateGraph_Target;
-                        YAxis.Title.Text = Resources.RTScheduleGraphPane_UpdateGraph_Mean_sampling_times;
+                        XAxis.Title.Text = GraphsResources.RTScheduleGraphPane_UpdateGraph_Target;
+                        YAxis.Title.Text = GraphsResources.RTScheduleGraphPane_UpdateGraph_Mean_sampling_times;
                         break;
                     case SchedulingMetrics.REDUNDANCY_OF_TARGETS:
-                        XAxis.Title.Text = Resources.RTScheduleGraphPane_RTScheduleGraphPane_Scheduled_Time;
-                        YAxis.Title.Text = Resources.RTScheduleGraphPane_UpdateGraph_Redundancy_of_targets;
+                        XAxis.Title.Text = GraphsResources.RTScheduleGraphPane_RTScheduleGraphPane_Scheduled_Time;
+                        YAxis.Title.Text = GraphsResources.RTScheduleGraphPane_UpdateGraph_Redundancy_of_targets;
                         break;
                     case SchedulingMetrics.TARGETS_PER_FRAME:
-                        XAxis.Title.Text = Resources.RTScheduleGraphPane_RTScheduleGraphPane_Scheduled_Time;
-                        YAxis.Title.Text = Resources.RTScheduleGraphPane_UpdateGraph_Targets_per_frame;
+                        XAxis.Title.Text = GraphsResources.RTScheduleGraphPane_RTScheduleGraphPane_Scheduled_Time;
+                        YAxis.Title.Text = GraphsResources.RTScheduleGraphPane_UpdateGraph_Targets_per_frame;
                         break;
                 }
             }
@@ -398,7 +398,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public static string GetCurveTitle(SrmDocument document)
         {
-            return string.Format(Resources.RTScheduleGraphPane_AddCurve__0__Minute_Window, GetSchedulingWindow(document));
+            return string.Format(GraphsResources.RTScheduleGraphPane_AddCurve__0__Minute_Window, GetSchedulingWindow(document));
         }
     }
 }

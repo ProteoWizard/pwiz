@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using System.Linq;
 
@@ -195,7 +194,7 @@ namespace pwiz.Skyline.Model
                             else if (!Equals(@"?", massString))
                             {
                                 // Get more information on a failure that was posted to the exception web page
-                                throw new FormatException(string.Format(Resources.LibKeyModificationMatcher_EnumerateSequenceInfos_The_number___0___is_not_in_the_correct_format_, massString));
+                                throw new FormatException(string.Format(ModelResources.LibKeyModificationMatcher_EnumerateSequenceInfos_The_number___0___is_not_in_the_correct_format_, massString));
                             }
                         }
                     }

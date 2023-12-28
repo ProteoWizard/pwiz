@@ -40,12 +40,12 @@ namespace pwiz.Skyline.Util.Extensions
 
         public static string FILTER_CSV
         {
-            get { return FileDialogFilter(Resources.TextUtil_DESCRIPTION_CSV_CSV__Comma_delimited_, EXT_CSV); }
+            get { return FileDialogFilter(ExtensionsResources.TextUtil_DESCRIPTION_CSV_CSV__Comma_delimited_, EXT_CSV); }
         }
 
         public static string FILTER_TSV
         {
-            get { return FileDialogFilter(Resources.TextUtil_DESCRIPTION_TSV_TSV__Tab_delimited_, EXT_TSV); }
+            get { return FileDialogFilter(ExtensionsResources.TextUtil_DESCRIPTION_TSV_TSV__Tab_delimited_, EXT_TSV); }
         }
 
         public const char SEPARATOR_CSV = ',';
@@ -368,14 +368,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// <returns>A single string containing the original set separated by new lines</returns>
         public static string LineSeparate(IEnumerable<string> lines)
         {
-            var sb = new StringBuilder();
-            foreach (string line in lines)
-            {
-                if (sb.Length > 0)
-                    sb.AppendLine();
-                sb.Append(line);
-            }
-            return sb.ToString();
+            return CommonTextUtil.LineSeparate(lines);
         }
 
         /// <summary>
@@ -395,14 +388,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// <returns>A single string containing the original set separated by spaces</returns>
         public static string SpaceSeparate(IEnumerable<string> values)
         {
-            var sb = new StringBuilder();
-            foreach (string value in values)
-            {
-                if (sb.Length > 0)
-                    sb.Append(SEPARATOR_SPACE);
-                sb.Append(value);
-            }
-            return sb.ToString();
+            return CommonTextUtil.SpaceSeparate(values);
         }
 
         /// <summary>
@@ -460,7 +446,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// </summary>
         public static string AppendColon(string left)
         {
-            return left + Resources.ColonEndOfLine;
+            return left + ExtensionsResources.ColonEndOfLine;
         }
 
         /// <summary>
@@ -468,7 +454,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// </summary>
         public static string ColonSeparate(string left, string right)
         {
-            return string.Format(Resources.ColonSeparator, left, right);
+            return string.Format(ExtensionsResources.ColonSeparator, left, right);
         }
 
         /// <summary>
@@ -616,7 +602,7 @@ namespace pwiz.Skyline.Util.Extensions
         public static string FileDialogFiltersAll(params string[] filters)
         {
             var listFilters = filters.ToList();
-            listFilters.Add(FileDialogFilter(Resources.TextUtil_FileDialogFiltersAll_All_Files, @".*"));
+            listFilters.Add(FileDialogFilter(ExtensionsResources.TextUtil_FileDialogFiltersAll_All_Files, @".*"));
             return string.Join(@"|", listFilters);
         }
 
@@ -966,9 +952,9 @@ namespace pwiz.Skyline.Util.Extensions
         private static string FormatMessage(string message, long lineNum, int colIndex)
         {
             if (colIndex == -1)
-                return string.Format(Resources.LineColNumberedIoException_FormatMessage__0___line__1__, message, lineNum);
+                return string.Format(ExtensionsResources.LineColNumberedIoException_FormatMessage__0___line__1__, message, lineNum);
             else
-                return string.Format(Resources.LineColNumberedIoException_FormatMessage__0___line__1___col__2__, message, lineNum, colIndex + 1);
+                return string.Format(ExtensionsResources.LineColNumberedIoException_FormatMessage__0___line__1___col__2__, message, lineNum, colIndex + 1);
         }
 
         public string PlainMessage { get; private set; }

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Tahmina Jahan <tabaker .at. u.washington.edu>,
  *                  UWPR, Department of Genome Sciences, UW
  *
@@ -96,7 +96,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private readonly Stack<SrmDocument> _documents;
 
-        public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager)
+        public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager, bool useExistingLibrary = false)
         {
             SkylineWindow = skylineWindow;
             _documents = new Stack<SrmDocument>();
@@ -111,7 +111,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             btnEarlyFinish.Location = btnBack.Location;
 
             CurrentPage = Pages.spectra_page;
-            btnNext.Text = Resources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next;
+            btnNext.Text = PeptideSearchResources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next;
             AcceptButton = btnNext;
             btnNext.Enabled = HasUnmatchedLibraryRuns(Document);
 
@@ -139,12 +139,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             AddPageControl(ImportResultsDDAControl, getChromatogramsPage, 2, 60);
             ImportResultsControl = ImportResultsDDAControl;
 
-            ConverterSettingsControl = new ConverterSettingsControl(this, ImportPeptideSearch, 
-                () => FullScanSettingsControl);
+            ConverterSettingsControl = new ConverterSettingsControl(this, ImportPeptideSearch, () => FullScanSettingsControl);
             AddPageControl(ConverterSettingsControl, converterSettingsPage, 18, 50);
 
-            SearchSettingsControl = new SearchSettingsControl(this, ImportPeptideSearch);
-            AddPageControl(SearchSettingsControl, ddaSearchSettingsPage, 18, 50);
+            if (!useExistingLibrary)
+            {
+                SearchSettingsControl = new SearchSettingsControl(this, ImportPeptideSearch);
+                AddPageControl(SearchSettingsControl, ddaSearchSettingsPage, 18, 50);
+            }
 
             SearchControl = new DDASearchControl(ImportPeptideSearch);
             AddPageControl(SearchControl, ddaSearch, 18, 50);
@@ -348,7 +350,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager, Workflow workflowType,
             IList<ImportPeptideSearch.FoundResultsFile> resultFiles, ImportFastaControl.ImportFastaSettings fastaSettings,
             IEnumerable<string> existingLibraryFilepaths)
-            : this(skylineWindow, libraryManager)
+            : this(skylineWindow, libraryManager, true)
         {
             BuildPepSearchLibControl.ForceWorkflow(workflowType);
 
@@ -483,6 +485,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     {
                         _pagesToSkip.Clear();
 
+                        if (!BuildPepSearchLibControl.ValidateCutoffScore())
+                        {
+                            return;
+                        }
                         ImportPeptideSearch.IsDDASearch = BuildPepSearchLibControl.PerformDDASearch;
                         ImportFastaControl.IsDDASearch = BuildPepSearchLibControl.PerformDDASearch;
                         if (!BuildPepSearchLibControl.UseExistingLibrary)
@@ -492,7 +498,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                 HasPeakBoundaries = BuildPepSearchLibControl.SearchFilenames.All(f => f.EndsWith(BiblioSpecLiteBuilder.EXT_TSV));
                                 if (BuildPepSearchLibControl.SearchFilenames.Any(f => f.EndsWith(BiblioSpecLiteBuilder.EXT_TSV)) && !HasPeakBoundaries)
                                 {
-                                    MessageDlg.Show(this, Resources.ImportPeptideSearchDlg_NextPage_Cannot_build_library_from_OpenSWATH_results_mixed_with_results_from_other_tools_);
+                                    MessageDlg.Show(this, PeptideSearchResources.ImportPeptideSearchDlg_NextPage_Cannot_build_library_from_OpenSWATH_results_mixed_with_results_from_other_tools_);
                                     return;
                                 }
                             }
@@ -517,8 +523,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             _pagesToSkip.Add(Pages.chromatograms_page);
 
                         lblFasta.Text = FastaOptional
-                            ? Resources.ImportPeptideSearchDlg_NextPage_Import_FASTA__optional_
-                            : Resources.ImportPeptideSearchDlg_NextPage_Import_FASTA__required_;
+                            ? PeptideSearchResources.ImportPeptideSearchDlg_NextPage_Import_FASTA__optional_
+                            : PeptideSearchResources.ImportPeptideSearchDlg_NextPage_Import_FASTA__required_;
 
                         // The next page is going to be the chromatograms page.
                         var oldImportResultsControl = (Control) ImportResultsControl;
@@ -621,7 +627,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         if (!anyResults)
                         {
                             using (var dlg = new MultiButtonMsgDlg(
-                                Resources.ImportPeptideSearchDlg_NextPage_No_results_files_were_specified__Are_you_sure_you_want_to_continue__Continuing_will_create_a_template_document_with_no_imported_results_,
+                                PeptideSearchResources.ImportPeptideSearchDlg_NextPage_No_results_files_were_specified__Are_you_sure_you_want_to_continue__Continuing_will_create_a_template_document_with_no_imported_results_,
                                 MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
                             {
                                 if (dlg.ShowDialog(this) == DialogResult.No)
@@ -633,7 +639,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         else if (ImportResultsControl.ResultsFilesMissing)
                         {
                             using (var dlg = new MultiButtonMsgDlg(
-                                Resources.ImportPeptideSearchDlg_NextPage_Some_results_files_are_still_missing__Are_you_sure_you_want_to_continue_,
+                                PeptideSearchResources.ImportPeptideSearchDlg_NextPage_Some_results_files_are_still_missing__Are_you_sure_you_want_to_continue_,
                                 MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
                             {
                                 if (dlg.ShowDialog(this) == DialogResult.No)
@@ -699,7 +705,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                         if (!File.Exists(ImportFastaControl.FastaFile)) 
                         {
-                            MessageDlg.Show(this, Resources.ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch);
+                            MessageDlg.Show(this, PeptideSearchResources.ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch);
                             return;
                         }
 
@@ -720,7 +726,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     {
                         if (FullScanSettingsControl.IsolationScheme.PrespecifiedIsolationWindows.Count == 0)
                         {
-                            MessageDlg.Show(this, Resources.ImportPeptideSearchDlg_NextPage_No_isolation_windows_are_configured__);
+                            MessageDlg.Show(this, PeptideSearchResources.ImportPeptideSearchDlg_NextPage_No_isolation_windows_are_configured__);
 
                             return;
                         }
@@ -913,8 +919,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
 
             btnNext.Text = CurrentPage != LastPage
-                ? Resources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next
-                : Resources.ImportPeptideSearchDlg_NextPage_Finish;
+                ? PeptideSearchResources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next
+                : PeptideSearchResources.ImportPeptideSearchDlg_NextPage_Finish;
         }
 
         private bool UpdateModificationSettings()
@@ -962,12 +968,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 if (WorkflowType == Workflow.dda)
                 {
-                    MessageDlg.Show(this, Resources.ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_filtering_must_be_enabled_in_order_to_import_a_peptide_search_);
+                    MessageDlg.Show(this, PeptideSearchResources.ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_filtering_must_be_enabled_in_order_to_import_a_peptide_search_);
                     return false;
                 }
                 else if (FullScanSettingsControl.AcquisitionMethod == FullScanAcquisitionMethod.None)
                 {
-                    MessageDlg.Show(this, Resources.ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_or_MS_MS_filtering_must_be_enabled_in_order_to_import_a_peptide_search_);
+                    MessageDlg.Show(this, PeptideSearchResources.ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_or_MS_MS_filtering_must_be_enabled_in_order_to_import_a_peptide_search_);
                     return false;
                 }
             }
@@ -1102,7 +1108,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             else
             {
                 SkylineWindow.ModifyDocument(
-                    Resources.ImportResultsControl_GetPeptideSearchChromatograms_Import_results,
+                    PeptideSearchResources.ImportResultsControl_GetPeptideSearchChromatograms_Import_results,
                     doc => SkylineWindow.ImportResults(Document, namedResults, ExportOptimize.NONE), FormSettings.EntryCreator.Create);
                 
                 CloseWizard(DialogResult.OK);
@@ -1124,7 +1130,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     logFunc = BuildPepSearchLibControl.BuildLibrarySettings.EntryCreator.Create;
                 }
                 SkylineWindow.ModifyDocument(
-                    Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library,
+                    PeptideSearchResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library,
                     doc => Document, logFunc);
                 SetDocument(SkylineWindow.Document, _documents.Peek());
             }

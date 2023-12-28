@@ -492,7 +492,7 @@ namespace pwiz.Skyline.Model.IonMobility
         // Throws DatabaseOpeningException
         public static IonMobilityDb GetIonMobilityDb(string path, IProgressMonitor loadMonitor)
         {
-            var status = new ProgressStatus(string.Format(Resources.IonMobilityDb_GetIonMobilityDb_Loading_ion_mobility_library__0_, path));
+            var status = new ProgressStatus(string.Format(IonMobilityResources.IonMobilityDb_GetIonMobilityDb_Loading_ion_mobility_library__0_, path));
             if (loadMonitor != null)
                 loadMonitor.UpdateProgress(status);
 
@@ -522,12 +522,12 @@ namespace pwiz.Skyline.Model.IonMobility
                 }
                 catch (UnauthorizedAccessException x)
                 {
-                    message = string.Format(Resources.IonMobilityDb_GetIonMobilityDb_You_do_not_have_privileges_to_access_the_ion_mobility_library_file__0_, path);
+                    message = string.Format(IonMobilityResources.IonMobilityDb_GetIonMobilityDb_You_do_not_have_privileges_to_access_the_ion_mobility_library_file__0_, path);
                     xInner = x;
                 }
                 catch (DirectoryNotFoundException x)
                 {
-                    message = string.Format(Resources.IonMobilityDb_GetIonMobilityDb_The_path_containing_ion_mobility_library__0__does_not_exist_, path);
+                    message = string.Format(IonMobilityResources.IonMobilityDb_GetIonMobilityDb_The_path_containing_ion_mobility_library__0__does_not_exist_, path);
                     xInner = x;
                 }
                 catch (FileNotFoundException x)

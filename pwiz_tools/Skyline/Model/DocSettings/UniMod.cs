@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             var newMod = new StaticMod(data.Name, data.AAs, data.Terminus, false, data.Formula, data.LabelAtoms,
                                        RelativeRT.Matching, null, null, data.Losses, data.ID,
-                                       data.ShortName, data.PrecisionRequired);
+                                       data.ShortName);
             if (data.ID.HasValue && data.ShortName != null)
             {
                 int id;
@@ -216,7 +216,6 @@ namespace pwiz.Skyline.Model.DocSettings
         public int? ID { get; set; }
         public bool Structural { get; set; }
         public bool Hidden { get; set; }
-        public int? PrecisionRequired { get; set; }
         public string ShortName { get; set; }
     }
 
@@ -257,7 +256,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public void Add(char aa, StaticMod mod, bool structural, bool allowDuplicates)
         {
             if (_completed)
-                throw new InvalidOperationException(Resources.ModMassLookup_Add_Invalid_attempt_to_add_data_to_completed_MassLookup);
+                throw new InvalidOperationException(DocSettingsResources.ModMassLookup_Add_Invalid_attempt_to_add_data_to_completed_MassLookup);
             // If structural, store in lowercase AA.
             _aaMassLookups[structural ? ToStructuralIndex(aa) : ToIsotopeIndex(aa)]
                 .Add(CALC.GetModMass(aa, mod), mod, allowDuplicates);
@@ -267,7 +266,7 @@ namespace pwiz.Skyline.Model.DocSettings
             ModTerminus? terminus, bool specific)
         {
             if (!_completed)
-                throw new InvalidOperationException(Resources.ModMassLookup_MatchModificationMass_Invalid_attempt_to_access_incomplete_MassLookup);
+                throw new InvalidOperationException(DocSettingsResources.ModMassLookup_MatchModificationMass_Invalid_attempt_to_access_incomplete_MassLookup);
             var massLookup = _aaMassLookups[structural ? ToStructuralIndex(aa) : ToIsotopeIndex(aa)];
             return massLookup != null ? massLookup.ClosestMatch(new MassModification(mass, roundTo), terminus, specific) : null;
         }

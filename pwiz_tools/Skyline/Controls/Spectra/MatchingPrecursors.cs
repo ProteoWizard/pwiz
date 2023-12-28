@@ -5,7 +5,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls.Spectra
 {
@@ -71,7 +70,7 @@ namespace pwiz.Skyline.Controls.Spectra
             {
                 return Precursors[0].ToString();
             }
-            return string.Format(Resources.MatchingPrecursors_ToString__0__precursors, Precursors.Count);
+            return string.Format(SpectraResources.MatchingPrecursors_ToString__0__precursors, Precursors.Count);
         }
     }
 }

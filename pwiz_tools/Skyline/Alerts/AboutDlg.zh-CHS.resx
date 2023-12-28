@@ -464,13 +464,12 @@ https://www.zlib.net</value>
     <value>10</value>
   </data>
   <data name="linkLabel1.Text" xml:space="preserve">
-    <value>版权所有 ©2008-2023 华盛顿大学，保留所有权利
+    <value>版权所有 © 2008-2023 华盛顿大学，保留所有权利
 
-MacCoss 实验室, 基因组科学系, 华盛顿大学
+华盛顿大学，基因组科学系，MacCoss 实验室
 
-此软件由 MacCoss 实验室通过使用联邦和
-私人筹资渠道创建。如需了解完整详情，请访问 
-Skyline 网站。</value>
+此软件由 MacCoss 实验室使用联邦和私人资金来源创建。
+欲知详情，请浏览 Skyline 网站。</value>
   </data>
   <data name="&gt;&gt;linkLabel1.Name" xml:space="preserve">
     <value>linkLabel1</value>

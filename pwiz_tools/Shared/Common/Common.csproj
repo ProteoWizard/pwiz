@@ -103,8 +103,15 @@
     <Compile Include="Controls\CustomTextProgressBar.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Controls\DataGridViewProgressBar.cs" />
     <Compile Include="Controls\LiteDropDownList.cs">
       <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\MultiProgressControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\MultiProgressControl.Designer.cs">
+      <DependentUpon>MultiProgressControl.cs</DependentUpon>
     </Compile>
     <Compile Include="DataAnalysis\Clustering\ClusterResults.cs" />
     <Compile Include="DataAnalysis\Clustering\DendrogramData.cs" />
@@ -372,6 +379,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Controls\MultiProgressControl.resx">
+      <DependentUpon>MultiProgressControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\ClusteringEditor.ja.resx">
       <DependentUpon>ClusteringEditor.cs</DependentUpon>
     </EmbeddedResource>

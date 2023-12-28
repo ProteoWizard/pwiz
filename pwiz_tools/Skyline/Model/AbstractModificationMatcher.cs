@@ -438,7 +438,7 @@ namespace pwiz.Skyline.Model
             get
             {
 
-                return TextUtil.LineSeparate(Resources.AbstractModificationMatcher_UninterpretedMods_The_following_modifications_could_not_be_interpreted,
+                return TextUtil.LineSeparate(ModelResources.AbstractModificationMatcher_UninterpretedMods_The_following_modifications_could_not_be_interpreted,
                                      string.Empty,
                                      TextUtil.SpaceSeparate(UnmatchedSequences.OrderBy(s => s)));
             }
