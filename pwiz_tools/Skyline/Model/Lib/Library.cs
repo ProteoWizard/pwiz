@@ -902,7 +902,7 @@ namespace pwiz.Skyline.Model.Lib
         protected static void ReadComplete(Stream stream, byte[] buffer, int size)
         {
             if (stream.Read(buffer, 0, size) != size)
-                throw new InvalidDataException(Resources.Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted);
+                throw new InvalidDataException(LibResources.Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted);
         }
 
         protected static void SafeReadComplete(Stream stream, ref byte[] buffer, int size)
@@ -910,7 +910,7 @@ namespace pwiz.Skyline.Model.Lib
             if (size > buffer.Length)
                 buffer = new byte[size];
             if (stream.Read(buffer, 0, size) != size)
-                throw new InvalidDataException(Resources.Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted);
+                throw new InvalidDataException(LibResources.Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted);
         }
 
         #endregion
@@ -1117,7 +1117,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             var spectrumPeaks = ReadSpectrum(_libraryEntries[(int)spectrumKey]);
             if (spectrumPeaks == null)
-                throw new IOException(string.Format(Resources.CachedLibrary_LoadSpectrum_Library_entry_not_found__0__, spectrumKey));
+                throw new IOException(string.Format(LibResources.CachedLibrary_LoadSpectrum_Library_entry_not_found__0__, spectrumKey));
 
             return new SpectrumPeaksInfo(spectrumPeaks);
         }
@@ -1498,11 +1498,11 @@ namespace pwiz.Skyline.Model.Lib
     public abstract class LibrarySpec : XmlNamedElement, IHasItemDescription
     {
         public static readonly PeptideRankId PEP_RANK_COPIES =
-            new PeptideRankId(@"Spectrum count", () => Resources.LibrarySpec_PEP_RANK_COPIES_Spectrum_count);
+            new PeptideRankId(@"Spectrum count", () => LibResources.LibrarySpec_PEP_RANK_COPIES_Spectrum_count);
         public static readonly PeptideRankId PEP_RANK_TOTAL_INTENSITY =
-            new PeptideRankId(@"Total intensity", () => Resources.LibrarySpec_PEP_RANK_TOTAL_INTENSITY_Total_intensity);
+            new PeptideRankId(@"Total intensity", () => LibResources.LibrarySpec_PEP_RANK_TOTAL_INTENSITY_Total_intensity);
         public static readonly PeptideRankId PEP_RANK_PICKED_INTENSITY =
-            new PeptideRankId(@"Picked intensity", () => Resources.LibrarySpec_PEP_RANK_PICKED_INTENSITY_Picked_intensity);
+            new PeptideRankId(@"Picked intensity", () => LibResources.LibrarySpec_PEP_RANK_PICKED_INTENSITY_Picked_intensity);
 
         public static LibrarySpec CreateFromPath(string name, string path)
         {
@@ -1573,7 +1573,7 @@ namespace pwiz.Skyline.Model.Lib
                 lines.Add(TextUtil.ColonSeparate(PropertyNames.LibrarySpec_FilePathAuditLog, FilePath));
                 if (!UseExplicitPeakBounds)
                 {
-                    lines.Add(Resources.LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries);
+                    lines.Add(LibResources.LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries);
                 }
 
                 return new ItemDescription(FilePath).ChangeTitle(Name).ChangeDetailLines(lines);
@@ -1633,10 +1633,10 @@ namespace pwiz.Skyline.Model.Lib
         public override void WriteXml(XmlWriter writer)
         {
             if (IsDocumentLocal)
-                throw new InvalidOperationException(Resources.LibrarySpec_WriteXml_Document_local_library_specs_cannot_be_persisted_to_XML);
+                throw new InvalidOperationException(LibResources.LibrarySpec_WriteXml_Document_local_library_specs_cannot_be_persisted_to_XML);
 
             if (IsDocumentLibrary)
-                throw new InvalidOperationException(Resources.LibrarySpec_WriteXml_Document_library_specs_cannot_be_persisted_to_XML_);
+                throw new InvalidOperationException(LibResources.LibrarySpec_WriteXml_Document_library_specs_cannot_be_persisted_to_XML_);
 
             // Write tag attributes
             base.WriteXml(writer);
@@ -2192,7 +2192,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             return ParsedMolecule.IsNullOrEmpty(ChemicalFormulaOrMasses) ||
                     (string.IsNullOrEmpty(MoleculeName) && string.IsNullOrEmpty(InChiKey) && string.IsNullOrEmpty(OtherKeys))
-                ? Resources.SmallMoleculeLibraryAttributes_Validate_A_small_molecule_is_defined_by_a_chemical_formula_and_at_least_one_of_Name__InChiKey__or_other_keys__HMDB_etc_
+                ? LibResources.SmallMoleculeLibraryAttributes_Validate_A_small_molecule_is_defined_by_a_chemical_formula_and_at_least_one_of_Name__InChiKey__or_other_keys__HMDB_etc_
                 : null;
         }
 
@@ -2218,12 +2218,12 @@ namespace pwiz.Skyline.Model.Lib
                 var massMono = BioMassCalc.MONOISOTOPIC.CalculateMass(ChemicalFormulaOrMasses);
                 if (massMono != 0)
                 {
-                    smallMolLines.Add(new KeyValuePair<string, string>(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Monoisotopic_mass, massMono.ToString()));
+                    smallMolLines.Add(new KeyValuePair<string, string>(LibResources.SmallMoleculeLibraryAttributes_KeyValuePairs_Monoisotopic_mass, massMono.ToString()));
                 }
                 var massAverage = BioMassCalc.AVERAGE.CalculateMass(ChemicalFormulaOrMasses);
                 if (massAverage != 0)
                 {
-                    smallMolLines.Add(new KeyValuePair<string, string>(Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass, chemicalFormula));
+                    smallMolLines.Add(new KeyValuePair<string, string>(LibResources.SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass, chemicalFormula));
                 }
                 if (!string.IsNullOrEmpty(InChiKey))
                 {
@@ -2368,7 +2368,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 for (int i = 0; i < infoOther.SpectrumPeaks.Peaks.Length; ++i)
                 {
-                    spectrumErrors.Add(new TransitionImportErrorInfo(string.Format(Resources.SpectrumMzInfo_CombineSpectrumInfo_Two_incompatible_transition_groups_for_sequence__0___precursor_m_z__1__, 
+                    spectrumErrors.Add(new TransitionImportErrorInfo(string.Format(LibResources.SpectrumMzInfo_CombineSpectrumInfo_Two_incompatible_transition_groups_for_sequence__0___precursor_m_z__1__, 
                                                                                    Key.Target,
                             Key.Target,
                             PrecursorMz),
@@ -2420,7 +2420,7 @@ namespace pwiz.Skyline.Model.Lib
                 var info = library.GetSpectra(key, null, LibraryRedundancy.best).FirstOrDefault();
                 if (info == null)
                 {
-                    throw new IOException(string.Format(Resources.SpectrumMzInfo_GetInfoFromLibrary_Library_spectrum_for_sequence__0__is_missing_, key.Target));
+                    throw new IOException(string.Format(LibResources.SpectrumMzInfo_GetInfoFromLibrary_Library_spectrum_for_sequence__0__is_missing_, key.Target));
                 }
                 spectrumMzInfos.Add(new SpectrumMzInfo
                 {
@@ -2745,7 +2745,6 @@ namespace pwiz.Skyline.Model.Lib
     {
         public static readonly LibraryLink PEPTIDEATLAS = new LibraryLink(@"PeptideAtlas", @"http://www.peptideatlas.org/speclib/");
         public static readonly LibraryLink NIST = new LibraryLink(@"NIST", @"http://peptide.nist.gov/");
-        public static readonly LibraryLink GPM = new LibraryLink(@"GPM", @"ftp://ftp.thegpm.org/projects/xhunter/libs/");
 
         private LibraryLink(string name, string href)
         {

@@ -22,7 +22,6 @@ using System.Linq;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
 using MathNet.Numerics.LinearAlgebra.Factorization;
-using pwiz.Skyline.Properties;
 using LinProvider = MathNet.Numerics.Providers.LinearAlgebra.ManagedLinearAlgebraProvider;
 
 namespace pwiz.Skyline.Model.Results
@@ -160,7 +159,7 @@ namespace pwiz.Skyline.Model.Results
         public void Add(int value)
         {
             if (!CheckBoundary(value))
-                throw new IndexOutOfRangeException(Resources.SizedSet_Add_SizedSet_index_value_is_out_of_range);
+                throw new IndexOutOfRangeException(ResultsResources.SizedSet_Add_SizedSet_index_value_is_out_of_range);
             if (_data[value]) return;
             _data[value] = true;
             ++Count;

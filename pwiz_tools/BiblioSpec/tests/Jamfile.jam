@@ -183,10 +183,12 @@ rule blib-test-search ( name : args * : output-name : reference-names + : inputs
 if NT = $(.os)
 {
     .percent = "%%" ;
+    .slash = "\\" ;
 }
 else
 {
     .percent = "%" ;
+    .slash = "/" ;
 }
 
 # Add --unicode to optional arguments section to test that a format supports Unicode input paths
@@ -242,6 +244,8 @@ blib-test-build msfragger-tims : -o : output/msfragger-tims.blib : msfragger-tim
 blib-test-build msfragger-thermo : -o : output/msfragger-thermo.blib : msfragger-thermo.check  : $(TEST_INPUTS_PATH)/BSA_min_21.pepXML ;
 blib-test-build peptideprophet-msfragger-thermo-mzml : -o : output/peptideprophet-msfragger-thermo-mzml.blib : peptideprophet-msfragger-thermo-mzml.check  : $(TEST_INPUTS_PATH)/peptideprophet-msfragger-thermo-mzml.pep.xml ;
 blib-test-build peptideprophet-msfragger-bruker-mgf : -o : output/peptideprophet-msfragger-bruker-mgf.blib : peptideprophet-msfragger-bruker-mgf.check  : $(TEST_INPUTS_PATH)/peptideprophet-msfragger-bruker-mgf.pep.xml ;
+blib-test-build-basic msfragger-check-parent-path-first : -o : $(TEST_INPUTS_PATH)/msfragger-check-parent-path-first.pepXML ;
+blib-test-build-basic msfragger-check-parent-path-first-with-missing-file : -o -e@inputs$(.slash)msfragger-check-parent-path-first : $(TEST_INPUTS_PATH)/msfragger-check-parent-path-first-with-missing-file.pepXML ;
 
 # Test other xml formats (idpicker, xtandem)
 
@@ -263,6 +267,8 @@ blib-test-build tiny-v2-filtered-pdResult : -o : output/tiny-v2-filtered-pdResul
 blib-test-build md_special_filtered-pdResult : --unicode -o : output/md_special_filtered-pdResult.blib : md_special_filtered-pdResult.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/md_special_filtered.pdResult ;
 blib-test-build example-pdResult-confidence3 : -o -c@0.99 : output/example-pdResult-confidence3.blib : example-pdResult-confidence3.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/example.pdResult ;
 blib-test-build example-pdResult-numeric : -o -c@0.96 : output/example-pdResult-numeric.blib : example-pdResult-numeric.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/example.pdResult ;
+blib-test-build-basic pd-3_1 : -o -c@0.5 : $(TEST_INPUTS_PATH)/230807_P1_Neo_ES904_TMTProPrecision_1ug_DIA1Th_HCD30_Survey.pdResult ;
+
 blib-test-build pilot : --unicode -o : output/pilot.blib : pilot.check : $(TEST_INPUTS_PATH)/MB1_98_03.group.xml ;
 blib-test-build pilot-mzid : --unicode -o : output/pilot-mzid.blib : pilot-mzid.check : $(TEST_INPUTS_PATH)/ProtPilotTest.mzid ;
 
@@ -318,7 +324,9 @@ blib-test-build metamorpheus-mzid : --unicode -o : output/metamorpheus.blib : me
 # Test DiaNN specLib format
 blib-test-build diann-speclib : -o : output/diann-speclib.blib : diann-speclib.check : $(TEST_INPUTS_PATH)/diann-swath.speclib ;
 blib-test-build diann-speclib-diapasef : -o : output/diann-hela-diapasef.blib : diann-hela-diapasef.check : $(TEST_INPUTS_PATH)/diann-hela-diapasef-lib.speclib ;
+blib-test-build-basic diann-mod-test : -o : $(TEST_INPUTS_PATH)/diann-mod-test.tsv.speclib ;
 blib-test-build-basic msfragger-diann : -o : $(TEST_INPUTS_PATH)/library.tsv.speclib ;
+blib-test-build-basic msfragger-diann-predicted : -o : $(TEST_INPUTS_PATH)/diann-predicted/lib.predicted.speclib ;
 
 # Test Bruker Paser TSV format
 blib-test-build-basic paser-hela-dia : -o : $(TEST_INPUTS_PATH)/paser/hela_dia_normalizationOFF_results.tsv ;

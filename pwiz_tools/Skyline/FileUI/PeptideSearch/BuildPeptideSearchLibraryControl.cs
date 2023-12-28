@@ -245,7 +245,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 MsDataFileUri[] dataSources;
                 using (var dlg = new OpenDataSourceDialog(Settings.Default.RemoteAccountList))
                 {
-                    dlg.Text = Resources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search;
+                    dlg.Text = PeptideSearchResources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search;
                     dlg.InitialDirectory = new MsDataFilePath(Path.GetDirectoryName(DocumentContainer.DocumentFilePath));
                     // Use saved source type, if there is one.
                     //string sourceType = Settings.Default.SrmResultsSourceType;
@@ -281,11 +281,40 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             SearchFilenames = BuildLibraryDlg.AddInputFiles(WizardForm, SearchFilenames, fileNames, PerformDDASearch);
         }
 
+        // For test purposes, lets us test error handling
+        public string CutOffScoreText
+        {
+            set { textCutoff.Text = value; } // Can be a null or empty string under some circumstances
+        }
+
+        public bool NeedsCutoffScore => comboInputFileType.SelectedIndex > 0; // Only needed if Skyline is conducting the search
+
+        private double? _cutoffScore; // May be null when Skyline is not doing the search
+
         public double? CutOffScore
         {
             // Only valid when Skyline performs the search
-            get { return comboInputFileType.SelectedIndex > 0 ? double.Parse(textCutoff.Text) : (double?) null; }
-            set { textCutoff.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
+            get { return NeedsCutoffScore ? _cutoffScore : null; }
+            set
+            {
+                _cutoffScore = value;
+                textCutoff.Text = _cutoffScore.HasValue ? _cutoffScore.Value.ToString(CultureInfo.CurrentCulture) : string.Empty;
+            }
+        }
+
+        public bool ValidateCutoffScore()
+        {
+            if (!NeedsCutoffScore)
+            {
+                return true; // Doesn't matter what's in the text box, we won't use it
+            }
+            var helper = new MessageBoxHelper(this.ParentForm);
+            if (helper.ValidateDecimalTextBox(textCutoff, out var cutoffScore))
+            {
+                _cutoffScore = cutoffScore;
+                return true;
+            }
+            return false;
         }
 
         public bool IncludeAmbiguousMatches
@@ -336,8 +365,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 using (var longWaitDlg = new LongWaitDlg())
                 {
-                    longWaitDlg.Text = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library;
-                    longWaitDlg.Message = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_;
+                    longWaitDlg.Text = PeptideSearchResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library;
+                    longWaitDlg.Message = PeptideSearchResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_;
                     // Disable the wizard, because the LongWaitDlg does not
                     try
                     {
@@ -369,7 +398,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     }
                     catch (Exception x)
                     {
-                        MessageDlg.ShowWithException(WizardForm, TextUtil.LineSeparate(string.Format(Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__,
+                        MessageDlg.ShowWithException(WizardForm, TextUtil.LineSeparate(string.Format(PeptideSearchResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__,
                             Path.GetFileName(BiblioSpecLiteSpec.GetLibraryFileName(DocumentContainer.DocumentFilePath))), x.Message), x);
                         return false;
                     }
@@ -451,7 +480,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (blib?.ReadStream is ConnectionId<SQLiteConnection> connection && SqliteOperations.TableExists(connection.Connection, @"IrtLibrary"))
             {
                 using (var dlg = new MultiButtonMsgDlg(
-                           Resources.BuildPeptideSearchLibraryControl_AddExistingLibrary_This_library_contains_iRT_values__Do_you_want_to_create_a_retention_time_predictor_with_these_values_,
+                           PeptideSearchResources.BuildPeptideSearchLibraryControl_AddExistingLibrary_This_library_contains_iRT_values__Do_you_want_to_create_a_retention_time_predictor_with_these_values_,
                            MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
                 {
                     if (dlg.ShowDialog(WizardForm) == DialogResult.Yes)
@@ -476,7 +505,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!BiblioSpecLiteBuilder.IsLibraryMissingExternalSpectraError(errorException, out IList<string> spectrumFilenames, out IList<string> directoriesSearched, out string resultsFilepath))
                 throw new InvalidOperationException(@"IsLibraryMissingExternalSpectraError returned false");
 
-            string extraHelp = Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptions;
+            string extraHelp = PeptideSearchResources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptions;
 
             string messageFormat = spectrumFilenames.Count > 1
                 ? Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectrumFilesError
@@ -488,8 +517,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     resultsFilepath, string.Join(Environment.NewLine, spectrumFilenames),
                     string.Join(Environment.NewLine, directoriesSearched),
                     BiblioSpecLiteBuilder.BiblioSpecSupportedFileExtensions) + extraHelp,
-                Resources.BiblioSpecLiteBuilder_Embedded,
-                Resources.AlertDlg_GetDefaultButtonText__Retry, true);
+                PeptideSearchResources.BiblioSpecLiteBuilder_Embedded,
+                PeptideSearchResources.AlertDlg_GetDefaultButtonText__Retry, true);
 
             switch (dialogResult)
             {
@@ -509,7 +538,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             using (var longWait = new LongWaitDlg())
             {
-                longWait.Text = Resources.BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library;
+                longWait.Text = PeptideSearchResources.BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library;
                 try
                 {
                     var status = longWait.PerformWork(WizardForm, 800, monitor => ImportPeptideSearch.LoadPeptideSearchLibrary(LibraryManager, docLibSpec, monitor));
@@ -521,7 +550,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 catch (Exception x)
                 {
                     MessageDlg.ShowWithException(WizardForm,
-                        TextUtil.LineSeparate(string.Format(Resources.BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_,
+                        TextUtil.LineSeparate(string.Format(PeptideSearchResources.BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_,
                             docLibSpec.Name), x.Message), x);
                 }
             }
@@ -593,8 +622,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             //panelChooseFile.Visible = !PerformDDASearch;
             lblFileCaption.Text = PerformDDASearch
-                ? Resources.BuildPeptideSearchLibraryControl_Files_to_search_
-                : Resources.BuildPeptideSearchLibraryControl_Result_files_;
+                ? PeptideSearchResources.BuildPeptideSearchLibraryControl_Files_to_search_
+                : PeptideSearchResources.BuildPeptideSearchLibraryControl_Result_files_;
             //peptideSearchSplitContainer.Visible = PerformDDASearch;
 
             Grid.FilesChanged -= OnGridChange;
@@ -643,5 +672,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             UpdatePerformDDASearch();
         }
+
     }
 }

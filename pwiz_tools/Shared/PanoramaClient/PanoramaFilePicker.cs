@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient.Properties;
 
@@ -20,6 +21,7 @@ namespace pwiz.PanoramaClient
         private static JToken _sizeInfoJson;
         private readonly Dictionary<long, long> _sizeDictionary = new Dictionary<long, long>(); // Stores the Id of a mass spec run and its size in a dictionary
         private readonly Dictionary<long, string> _nameDictionary = new Dictionary<long, string>(); // Stores the Id of a mass spec run and its name in a dictionary
+        private readonly List<PanoramaServer> _servers;
         private string _treeState;
         private bool _restoring;
         private readonly bool _showWebDav;
@@ -40,10 +42,13 @@ namespace pwiz.PanoramaClient
         public JToken TestSizeJson;
         public string SelectedPath { get; private set; }
 
+        public bool ShowLatestVersion => versionOptions.Text.Equals(RECENT_VER);
+
         public PanoramaFilePicker(List<PanoramaServer> servers, string stateString, bool showWebDav = false, string selectedPath = null)
         {
             InitializeComponent();
 
+            _servers = servers;
             _treeState = stateString;
             _showWebDav = showWebDav;
             _restoring = true;
@@ -51,21 +56,22 @@ namespace pwiz.PanoramaClient
             _restoring = false;
             SelectedPath = selectedPath;
             noFiles.Visible = false;
-
-            if (_showWebDav)
-            {
-                FolderBrowser = new WebDavBrowser(servers.FirstOrDefault(), _treeState, SelectedPath);
-            }
-            else
-            {
-                FolderBrowser = new LKContainerBrowser(servers, _treeState, false, SelectedPath);
-            }
-
-            InitializeDialog();
         }
 
-        private void InitializeDialog()
+        public void InitializeDialog()
         {
+            if (FolderBrowser == null)
+            {
+                if (_showWebDav)
+                {
+                    FolderBrowser = new WebDavBrowser(_servers.FirstOrDefault(), _treeState, SelectedPath);
+                }
+                else
+                {
+                    FolderBrowser = new LKContainerBrowser(_servers, _treeState, false, SelectedPath);
+                }
+            }
+
             FolderBrowser.Dock = DockStyle.Fill;
             FolderBrowser.AddFiles += AddFiles;
             FolderBrowser.NodeClick += FilePicker_MouseClick;
@@ -317,7 +323,7 @@ namespace pwiz.PanoramaClient
                 _restoring = true;
                 urlLink.Text = FolderBrowser.GetSelectedUri();
                 ShowFiles(true);
-                versionOptions.Text = RECENT_VER;
+                // versionOptions.Text = RECENT_VER;
                 var path = FolderBrowser.GetFolderPath();
                 listView.Items.Clear();
                 _restoring = false;
@@ -345,9 +351,9 @@ namespace pwiz.PanoramaClient
                             }
 
                             var versions = HasVersions(_runsInfoJson);
-                            ModifyListViewCols(versions, true);
+                            ModifyListViewCols(versions, ShowLatestVersion);
                             GetRunsDict();
-                            AddSkyFiles(versions, true);
+                            AddSkyFiles(versions, ShowLatestVersion);
                         }
                     }
                     else
@@ -369,8 +375,7 @@ namespace pwiz.PanoramaClient
                     || ex is IOException
                     || ex is UnauthorizedAccessException)
                 {
-                    var alert = new AlertDlg(ex.Message, MessageBoxButtons.OK);
-                    alert.ShowDialog();
+                    CommonAlertDlg.ShowException(FormUtil.FindTopLevelOwner(this), ex);
                 }
             }
         }
@@ -384,7 +389,7 @@ namespace pwiz.PanoramaClient
             if (!_restoring)
             {
                 listView.Items.Clear();
-                AddSkyFiles(true, versionOptions.Text.Equals(RECENT_VER));
+                AddSkyFiles(true, ShowLatestVersion);
             }
         }
 
@@ -426,9 +431,8 @@ namespace pwiz.PanoramaClient
             }
             else
             {
-                var alert = new AlertDlg(Resources.PanoramaFilePicker_Open_Click_You_must_select_a_file_first_,
-                    MessageBoxButtons.OK);
-                alert.ShowDialog();
+                using var alert = new CommonAlertDlg(Resources.PanoramaFilePicker_Open_Click_You_must_select_a_file_first_, MessageBoxButtons.OK);
+                alert.ShowDialog(FormUtil.FindTopLevelOwner(this));
             }
         }
 
@@ -655,6 +659,7 @@ namespace pwiz.PanoramaClient
         }
 
         #region Test Support
+
         public PanoramaFilePicker(Uri serverUri, string user, string pass,
             JToken folderJson, JToken fileJson, JToken sizeJson)
         {
@@ -666,7 +671,10 @@ namespace pwiz.PanoramaClient
 
             TestFileJson = fileJson;
             TestSizeJson = sizeJson;
+
             var server = new PanoramaServer(serverUri, user, pass);
+            _servers = new List<PanoramaServer> { server };
+
             FolderBrowser = new TestPanoramaFolderBrowser(server, folderJson);
 
             InitializeDialog();

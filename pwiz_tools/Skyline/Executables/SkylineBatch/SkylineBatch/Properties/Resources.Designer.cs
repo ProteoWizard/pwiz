@@ -531,16 +531,6 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error parsing the URL. Please correct the URL and try again..
-        /// </summary>
-        public static string DataServerInfo_ServerFromUi_Error_parsing_the_URL__Please_correct_the_URL_and_try_again_ {
-            get {
-                return ResourceManager.GetString("DataServerInfo_ServerFromUi_Error_parsing_the_URL__Please_correct_the_URL_and_try" +
-                        "_again_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The URL cannot be empty. Please enter a URL..
         /// </summary>
         public static string DataServerInfo_ServerFromUi_The_URL_cannot_be_empty__Please_enter_a_URL_ {
@@ -1555,6 +1545,24 @@ namespace SkylineBatch.Properties {
             get {
                 return ResourceManager.GetString("RemoteFileForm_btnSave_Click_This_file_type_does_not_support_downloads_from_an_FT" +
                         "P_file_source__Please_download_this_file_from_Panorama_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error parsing the URL..
+        /// </summary>
+        public static string RemoteFileSource_ValidateInputs_Error_parsing_the_URL_ {
+            get {
+                return ResourceManager.GetString("RemoteFileSource_ValidateInputs_Error_parsing_the_URL_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please correct the URL and try again..
+        /// </summary>
+        public static string RemoteFileSource_ValidateInputs_Please_correct_the_URL_and_try_again_ {
+            get {
+                return ResourceManager.GetString("RemoteFileSource_ValidateInputs_Please_correct_the_URL_and_try_again_", resourceCulture);
             }
         }
         

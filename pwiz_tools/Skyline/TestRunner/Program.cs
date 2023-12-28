@@ -650,10 +650,12 @@ namespace TestRunner
                 var pwizRoot = Path.GetDirectoryName(Path.GetDirectoryName(GetSkylineDirectory().FullName));
                 string workerName = $"docker_check{GetTestRunTimeStamp()}";
                 string testRunnerExe = GetTestRunnerExe();
-                string dockerArgs = $"run --name {workerName} -it --rm -v \"{pwizRoot}\":c:\\pwiz --entrypoint cmd {RunTests.DOCKER_IMAGE_NAME} \"/c {testRunnerExe} help\"";
+                string dockerArgs = $"run --name {workerName} -it --rm -v \"{pwizRoot}\":c:\\pwiz {RunTests.DOCKER_IMAGE_NAME} \"{testRunnerExe} help\"";
+                Console.WriteLine("Checking that Docker always_up_runner container can run.");
                 string checkOutput = RunTests.RunCommand("docker", dockerArgs, "Error checking whether always_up_runner can start");
                 if (checkOutput.Contains("StartService FAILED"))
                 {
+                    Console.WriteLine("Check failed. Deleting and rebuilding always_up_runner image.");
                     // rebuild image
                     RunTests.RunCommand("docker", $"rmi {RunTests.DOCKER_IMAGE_NAME}", "Error deleting always_up_runner");
                     hasImage = false;

@@ -31,6 +31,7 @@ using log4net;
 using log4net.Appender;
 using log4net.Config;
 using log4net.Repository.Hierarchy;
+using pwiz.Common;
 using SharedBatch;
 using Resources = AutoQC.Properties.Resources;
 using Settings = AutoQC.Properties.Settings;
@@ -49,6 +50,8 @@ namespace AutoQC
         public static void Main(string[] args)
         {
             ProgramLog.Init("AutoQC");
+            CommonApplicationSettings.ProgramName = "AutoQC Loader";
+            CommonApplicationSettings.ProgramNameAndVersion = Version();
             Application.EnableVisualStyles();
 
             AddFileTypesToRegistry();
@@ -408,7 +411,7 @@ namespace AutoQC
             return $"{AppName} {_version}";
         }
 
-        public static string AppName => "AutoQC Loader";
+        public static string AppName => CommonApplicationSettings.ProgramName;
 
         public static Icon Icon()
         {

@@ -603,7 +603,7 @@ namespace SkylineBatch
             }
             catch (ArgumentException e)
             {
-                AlertDlg.ShowError(this, Program.AppName(), e.Message);
+                AlertDlg.ShowError(this, e.Message);
                 return;
             }
 

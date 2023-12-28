@@ -112,6 +112,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommonApplicationSettings.cs" />
     <Compile Include="Chemistry\AminoAcidFormulas.cs" />
     <Compile Include="Chemistry\Formula.cs" />
     <Compile Include="Chemistry\IonMobilityValue.cs" />
@@ -125,7 +126,7 @@
     <Compile Include="Collections\AbstractReadOnlyDictionary.cs" />
     <Compile Include="Collections\AbstractReadOnlyList.cs" />
     <Compile Include="Collections\BindingLists.cs" />
-    <Compile Include="Collections\IdentityEqualityComparer.cs" />
+    <Compile Include="Collections\ReferenceValue.cs" />
     <Compile Include="Collections\IndexedList.cs" />
     <Compile Include="Collections\LinqExtensions.cs" />
     <Compile Include="Collections\NaturalComparer.cs" />
@@ -139,9 +140,31 @@
     <Compile Include="Collections\RangeList.cs" />
     <Compile Include="Collections\ReadOnlyList.cs" />
     <Compile Include="Collections\StructSerializer.cs" />
+    <Compile Include="GUI\GuiMessages.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>GuiMessages.resx</DependentUpon>
+    </Compile>
+    <Compile Include="GUI\CommonAlertDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GUI\CommonAlertDlg.Designer.cs">
+      <DependentUpon>CommonAlertDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CommonResources\GeneralTerms.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>GeneralTerms.resx</DependentUpon>
+    </Compile>
+    <Compile Include="CommonResources\Images.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Images.resx</DependentUpon>
+    </Compile>
     <Compile Include="SystemUtil\CommonFormEx.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="SystemUtil\CommonTextUtil.cs" />
     <Compile Include="SystemUtil\FileSize.cs" />
     <Compile Include="SystemUtil\FileSizeFormatProvider.cs" />
     <Compile Include="SystemUtil\IFormView.cs" />
@@ -207,6 +230,20 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="GUI\GuiMessages.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>GuiMessages.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\CommonAlertDlg.ja.resx">
+      <DependentUpon>CommonAlertDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\CommonAlertDlg.resx">
+      <DependentUpon>CommonAlertDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\CommonAlertDlg.zh-CHS.resx">
+      <DependentUpon>CommonAlertDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.ja.resx">
       <DependentUpon>Resources.resx</DependentUpon>
       <SubType>Designer</SubType>
@@ -220,8 +257,23 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="CommonResources\GeneralTerms.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>GeneralTerms.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CommonResources\Images.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Images.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="CommonResources\Copy.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="GraphicalUserInterface\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

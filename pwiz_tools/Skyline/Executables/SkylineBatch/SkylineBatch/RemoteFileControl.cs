@@ -4,12 +4,13 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.GUI;
 using pwiz.PanoramaClient;
 using SkylineBatch.Properties;
-using AlertDlg = SharedBatch.AlertDlg;
 using PanoramaClientServer = pwiz.PanoramaClient.PanoramaServer;
+using PanoramaServerException = pwiz.PanoramaClient.PanoramaServerException;
 using PanoramaUtil = pwiz.PanoramaClient.PanoramaUtil;
-using UserState = pwiz.PanoramaClient.UserState;
+using WebPanoramaClient = pwiz.PanoramaClient.WebPanoramaClient;
 
 namespace SkylineBatch
 {
@@ -72,10 +73,17 @@ namespace SkylineBatch
                 return;
             }
 
-            Uri uri = source.URI;
-            UserState state = PanoramaUtil.ValidateServerAndUser(ref uri,source.Username,source.Password);
-            ShowPanoramaBtn(state.IsValid());
 
+            var panoramaClient = new WebPanoramaClient(source.URI, source.Username, source.Password);
+            try
+            {
+                panoramaClient.ValidateServer();
+                ShowPanoramaBtn(true);
+            }
+            catch (PanoramaServerException)
+            {
+                ShowPanoramaBtn(false);
+            }
         }
 
         private void ShowPanoramaBtn(bool show)
@@ -250,14 +258,12 @@ namespace SkylineBatch
 
             try
             {
-
-
                 if (_fileRequired) // If file is required use PanoramaFilePicker
                 {
-
                     bool showWebdav = !_templateFile;
-                    using (PanoramaFilePicker dlg = new PanoramaFilePicker(panoramaServers, state, showWebdav, selectedPath))
+                    using (var dlg = new PanoramaFilePicker(panoramaServers, state, showWebdav, selectedPath))
                     {
+                        dlg.InitializeDialog(); // TODO: Should use a LongOperationRunner to show busy-wait UI
                         dlg.OkButtonText = "Select";
                         if (dlg.ShowDialog() != DialogResult.Cancel)
                         {
@@ -269,9 +275,9 @@ namespace SkylineBatch
                 }
                 else // if file not required use PanoramaDirectoryPicker
                 {
-                    using (PanoramaDirectoryPicker dlg = new PanoramaDirectoryPicker(panoramaServers, state, showWebDavFolders:true,selectedPath: selectedPath))
+                    using (var dlg = new PanoramaDirectoryPicker(panoramaServers, state, true, selectedPath))
                     {
-
+                        dlg.InitializeDialog(); // TODO: Should use a LongOperationRunner to show busy-wait UI
                         dlg.OkButtonText = "Select";
                         if (dlg.ShowDialog() != DialogResult.Cancel)
 
@@ -287,7 +293,7 @@ namespace SkylineBatch
             }
             catch (Exception e)
             {
-                AlertDlg.ShowError(this, Program.AppName(), e.Message);
+                CommonAlertDlg.ShowException(this, e);
             }
 
             Settings.Default.Save();

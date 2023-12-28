@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -285,7 +285,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public string Text
         {
-            get { return Resources.SkylineWindow_CreateGraphPeakArea_Peak_Areas; }
+            get { return GraphsResources.SkylineWindow_CreateGraphPeakArea_Peak_Areas; }
         }
     }
 }

@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             try
             {
-                UpdateProgress(status => status.ChangeMessage(Resources.MsconvertDdaConverter_Run_Starting_msconvert_conversion_));
+                UpdateProgress(status => status.ChangeMessage(DdaSearchResources.MsconvertDdaConverter_Run_Starting_msconvert_conversion_));
 
                 int sourceIndex = 0;
                 foreach (var spectrumSource in OriginalSpectrumSources)

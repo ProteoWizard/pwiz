@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Model
 
             try
             {
-                progressMonitor?.UpdateProgress(_progressStatus.ChangeMessage(Resources.DiaUmpireDdaConverter_Run_Starting_DIA_Umpire_conversion));
+                progressMonitor?.UpdateProgress(_progressStatus.ChangeMessage(ModelResources.DiaUmpireDdaConverter_Run_Starting_DIA_Umpire_conversion));
 
                 int sourceIndex = 0;
                 foreach (var spectrumSource in OriginalSpectrumSources)
@@ -130,7 +130,7 @@ namespace pwiz.Skyline.Model
                             if (equivalentConfig)
                             {
                                 progressMonitor?.UpdateProgress(status.ChangeMessage(
-                                    string.Format(Resources.DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_settings__for__0_,
+                                    string.Format(ModelResources.DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_settings__for__0_,
                                         spectrumSource.GetSampleOrFileName())));
                                 continue;
                             }
@@ -141,7 +141,7 @@ namespace pwiz.Skyline.Model
                         FileEx.SafeDelete(outputFilepath);
 
                     string tmpFilepath = Path.Combine(Path.GetTempPath(), PathEx.GetRandomFileName() + MsConvertOutputExtension); // N.B. FileEx.GetRandomFileName adds unusual characters in test mode
-                    string tmpParams = Path.Combine(Path.GetTempPath(), PathEx.GetRandomFileName() + @".params");
+                    string tmpParams = Path.Combine(Path.GetDirectoryName(outputFilepath) ?? string.Empty, @$"diaumpire-{DateTime.Now.ToString(@"yyyyMMddhhmm")}.params");
                     //_diaUmpireConfig.Parameters["Thread"] = 1; // needed to compare DIAUMPIRE_DEBUG output
                     _diaUmpireConfig.WriteConfigToFile(tmpParams);
 
@@ -162,6 +162,8 @@ namespace pwiz.Skyline.Model
 
                     try
                     {
+                        status = status.ChangeMessage(String.Format(Resources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
+                            psi.FileName, psi.Arguments));
                         pr.Run(psi, null, this, ref _progressStatus, ProcessPriorityClass.BelowNormal);
                     }
                     catch (IOException e)

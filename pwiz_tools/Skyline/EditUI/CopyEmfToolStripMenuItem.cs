@@ -84,7 +84,7 @@ namespace pwiz.Skyline.EditUI
                 if (zedGraphControl.IsShowCopyMessage)
                 {
                     MessageDlg.Show(zedGraphControl,
-                        Resources.CopyEmfToolStripMenuItem_CopyEmf_Metafile_image_copied_to_clipboard);
+                        EditUIResources.CopyEmfToolStripMenuItem_CopyEmf_Metafile_image_copied_to_clipboard);
                 }
             }
         }

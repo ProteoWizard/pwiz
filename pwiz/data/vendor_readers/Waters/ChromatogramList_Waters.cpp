@@ -244,6 +244,42 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
             }
         }
         break;
+
+	    case MS_electromagnetic_radiation_chromatogram:
+	    case MS_pressure_chromatogram:
+        case MS_chromatogram_type:
+        {
+            if (detailLevel < DetailLevel_FullMetadata)
+                return result;
+
+            string unitsName = rawdata_->AnalogChannelUnits()[ie.offset];
+            CVID units = MS_number_of_detector_counts;
+            if (ie.chromatogramType == MS_pressure_chromatogram && bal::iequals(unitsName, "psi"))
+                units = UO_pounds_per_square_inch;
+            else if (ie.chromatogramType == MS_chromatogram_type && bal::iends_with(unitsName, "C"))
+                units = UO_degree_Celsius;
+            else if (unitsName == "%")
+                units = UO_percent;
+            else
+                result->userParams.emplace_back("units", unitsName, "xsd:string");
+
+            result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, units);
+
+            vector<float> times;
+            vector<float> intensities;
+
+            times = rawdata_->AnalogTimesByChannel()[ie.offset];
+            result->defaultArrayLength = times.size();
+
+            intensities = rawdata_->AnalogIntensitiesByChannel()[ie.offset];
+
+            if (getBinaryData)
+            {
+                result->getTimeArray()->data.assign(times.begin(), times.end());
+                result->getIntensityArray()->data.assign(intensities.begin(), intensities.end());
+            }
+        }
+        break;
     }
 
     return result;
@@ -329,9 +365,39 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
         }
     }
 
+    int analogChannels = (int) rawdata_ -> AnalogIntensitiesByChannel().size();
+
+    for(int ch=0; ch < analogChannels; ch++)
+    {
+        index_.push_back(IndexEntry());
+        IndexEntry& ie = index_.back();
+        ie.index = index_.size() - 1;
+        ie.function = -1;
+        ie.offset = ch;
+        ie.Q1 = 0;
+
+        std::string name = rawdata_->AnalogChannelNames()[ch];
+        std::string units = rawdata_->AnalogChannelUnits()[ch];
+        bal::replace_all(name, "%", "");
+        bal::replace_all(units, "\u00b0", ""); // remove degree sign
+        bal::trim(name);
+        bal::trim(units);
+
+        if (bal::icontains(name, "temp") && bal::iequals(units, "C"))
+            ie.chromatogramType = MS_chromatogram_type; // TODO: add temperature chromatogram to CV?
+        else if (bal::iequals(units, "LSU"))
+            ie.chromatogramType = MS_electromagnetic_radiation_chromatogram; // TODO: is this correct?
+        else if (bal::icontains(name, "pressure"))
+            ie.chromatogramType = MS_pressure_chromatogram;
+        else
+            ie.chromatogramType = MS_electromagnetic_radiation_chromatogram;
+
+        ie.id = name;
+        idToIndexMap_[ie.id] = ie.index;
+    }
+
     size_ = index_.size();
 }
-
 
 } // detail
 } // msdata

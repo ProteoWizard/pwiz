@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -31,7 +31,6 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Model.RetentionTimes;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -2401,7 +2400,7 @@ namespace pwiz.Skyline.Model
                     ChromFileInfoId fileId = chromInfo.FileId;
                     int fileOrder = IndexOfFileInSettings(fileId);
                     if (fileOrder == -1)
-                        throw new InvalidDataException(Resources.TransitionGroupChromInfoListCalculator_AddChromInfoList_Attempt_to_add_integration_information_for_missing_file);
+                        throw new InvalidDataException(ModelResources.TransitionGroupChromInfoListCalculator_AddChromInfoList_Attempt_to_add_integration_information_for_missing_file);
                     int step = chromInfo.OptimizationStep;
                     int i = IndexOfCalc(fileOrder, step);
                     if (i >= 0)
@@ -2582,7 +2581,7 @@ namespace pwiz.Skyline.Model
                 {
                     Assume.IsTrue(ReferenceEquals(info.FileId, FileId),
                                  string.Format(
-                                     Resources
+                                     ModelResources
                                          .TransitionGroupChromInfoCalculator_AddChromInfo_Grouping_transitions_from_file__0__with_file__1__,
                                      info.FileIndex, FileId.GlobalIndex));
                 }
@@ -2778,7 +2777,7 @@ namespace pwiz.Skyline.Model
         {
             var groupChromInfo = ChromInfos.FirstOrDefault(info => ReferenceEquals(info.FileId, fileId));
             if (groupChromInfo == null)
-                throw new InvalidDataException(string.Format(Resources.TransitionGroupDocNode_ChangePrecursorAnnotations_File_Id__0__does_not_match_any_file_in_document_,
+                throw new InvalidDataException(string.Format(ModelResources.TransitionGroupDocNode_ChangePrecursorAnnotations_File_Id__0__does_not_match_any_file_in_document_,
                                                fileId.GlobalIndex));
             groupChromInfo = groupChromInfo.ChangeAnnotations(annotations);
             return ChangeResults(Results<TransitionGroupChromInfo>.ChangeChromInfo(Results,
@@ -2790,7 +2789,7 @@ namespace pwiz.Skyline.Model
         {
             var groupChromInfo = ChromInfos.FirstOrDefault(info => ReferenceEquals(info.FileId, fileId));
             if (groupChromInfo == null)
-                throw new InvalidDataException(string.Format(Resources.TransitionGroupDocNode_ChangePrecursorAnnotations_File_Id__0__does_not_match_any_file_in_document_, 
+                throw new InvalidDataException(string.Format(ModelResources.TransitionGroupDocNode_ChangePrecursorAnnotations_File_Id__0__does_not_match_any_file_in_document_, 
                                                fileId.GlobalIndex));
             var groupAnnotations = groupChromInfo.Annotations;
             foreach (var annotation in annotations)
@@ -2833,7 +2832,7 @@ namespace pwiz.Skyline.Model
                 }
             }
             if (indexPeakBest == -1)
-                throw new ArgumentOutOfRangeException(string.Format(Resources.TransitionGroupDocNode_ChangePeak_No_peak_found_at__0__, retentionTime));
+                throw new ArgumentOutOfRangeException(string.Format(ModelResources.TransitionGroupDocNode_ChangePeak_No_peak_found_at__0__, retentionTime));
             // Calculate extents of the peaks being added
             double startMin = double.MaxValue, endMax = double.MinValue;
             foreach (TransitionDocNode nodeTran in Children)
@@ -2890,9 +2889,9 @@ namespace pwiz.Skyline.Model
         {
             // Error if only one of startTime and endTime is null
             if (startTime == null && endTime != null)
-                throw new ArgumentException(string.Format(Resources.TransitionGroupDocNode_ChangePeak_Missing_Start_Time_in_Change_Peak));
+                throw new ArgumentException(string.Format(ModelResources.TransitionGroupDocNode_ChangePeak_Missing_Start_Time_in_Change_Peak));
             if (startTime != null && endTime == null)
-                throw new ArgumentException(string.Format(Resources.TransitionGroupDocNode_ChangePeak_Missing_End_Time_In_Change_Peak));
+                throw new ArgumentException(string.Format(ModelResources.TransitionGroupDocNode_ChangePeak_Missing_End_Time_In_Change_Peak));
             int ratioCount = settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count;
 
             // Recalculate peaks based on new boundaries

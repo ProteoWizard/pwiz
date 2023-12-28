@@ -26,7 +26,6 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Hibernate;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.Hibernate.Query;
 
@@ -128,7 +127,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     table = GetTable(tableTypeName);
                     // If the element type does not exist, report an error on the original XML name string.
                     if (table == null)
-                        throw new InvalidDataException(String.Format(Resources.ReportSpec_ReadXml_The_name__0__is_not_a_valid_table_name, tableName));
+                        throw new InvalidDataException(String.Format(DocSettingsResources.ReportSpec_ReadXml_The_name__0__is_not_a_valid_table_name, tableName));
 
                     dictAliasTable.Add(TABLE_ALIAS_ELEMENT, table);
                 }
@@ -141,7 +140,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     string tableAlias = reader.GetAttribute(ATTR.name);
                     if (String.IsNullOrEmpty(tableAlias))
-                        throw  new InvalidDataException(Resources.ReportSpec_ReadXml_Missing_table_name);
+                        throw  new InvalidDataException(DocSettingsResources.ReportSpec_ReadXml_Missing_table_name);
 
                     dictAliasTable.Add(tableAlias, GetTable(reader.ReadString()));
                     reader.ReadEndElement();
@@ -179,7 +178,7 @@ namespace pwiz.Skyline.Model.DocSettings
           
             if (!_tableTypes.TryGetValue(tableTypeName, out table))
             {
-                throw new InvalidDataException(string.Format(Resources.ReportSpec_GetTable_The_name__0__is_not_a_valid_table_name,
+                throw new InvalidDataException(string.Format(DocSettingsResources.ReportSpec_GetTable_The_name__0__is_not_a_valid_table_name,
                     tableTypeName));
             }
 
@@ -317,7 +316,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
                 Type table;
                 if (!dictAliasTable.TryGetValue(alias, out table))
-                    throw new InvalidDataException(String.Format(Resources.ReportSpec_ReadColumns_Failed_to_find_the_table_for_the_column__0__, columnString));
+                    throw new InvalidDataException(String.Format(DocSettingsResources.ReportSpec_ReadColumns_Failed_to_find_the_table_for_the_column__0__, columnString));
 
                 identifiers.Add(new ReportColumn(table, colId));
                 reader.ReadEndElement();
