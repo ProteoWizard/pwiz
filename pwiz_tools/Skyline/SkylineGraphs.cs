@@ -1719,7 +1719,8 @@ namespace pwiz.Skyline
 
         public void ShowRelativeAbundanceFormatting()
         {
-            foreach (var summary in _listGraphPeakArea.Where(summary => summary.Type == GraphTypeSummary.abundance))
+            var summary = _listGraphPeakArea.FirstOrDefault(graph => graph.Type == GraphTypeSummary.abundance);
+            if (summary != null)
             {
                 summary.ShowFormattingDlg = true;
                 UpdatePeakAreaGraph();
@@ -4474,7 +4475,6 @@ namespace pwiz.Skyline
                 }
             }
             UpdatePeakAreaGraph();
-            SynchronizeSummaryZooming();
         }
 
         private void areaCVHistogramToolStripMenuItem1_Click(object sender, EventArgs e)

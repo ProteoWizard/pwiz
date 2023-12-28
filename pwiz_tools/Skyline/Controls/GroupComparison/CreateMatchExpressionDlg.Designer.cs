@@ -202,7 +202,7 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ComboBox foldChangeComboBox;
-        private System.Windows.Forms.ComboBox matchComboBox;
+        public System.Windows.Forms.ComboBox matchComboBox;
         private System.Windows.Forms.LinkLabel linkRegex;
         private System.Windows.Forms.BindingSource bindingSource1;
         private System.Windows.Forms.DataGridViewLinkColumn nameColumn;

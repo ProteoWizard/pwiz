@@ -418,12 +418,11 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestMatchExpressionListDlg(FoldChangeVolcanoPlot volcanoPlot)
         {
-
+            var exprInfo = MATCH_EXPR_INFOS[0][0];
             var formattingDlg = ShowDialog<VolcanoPlotFormattingDlg>(volcanoPlot.ShowFormattingDialog);
             var createExprDlg = ShowDialog<CreateMatchExpressionDlg>(() =>
             {
                 var bindingList = formattingDlg.GetCurrentBindingList();
-                var exprInfo = MATCH_EXPR_INFOS[0][0];
                 bindingList.Add(new MatchRgbHexColor(string.Empty, exprInfo.ExpectedPointsInfo.Labeled,
                     exprInfo.ExpectedPointsInfo.Color, exprInfo.ExpectedPointsInfo.PointSymbol,
                     exprInfo.ExpectedPointsInfo.PointSize));
@@ -432,18 +431,31 @@ namespace pwiz.SkylineTestFunctional
             var matchExprListDlg = ShowDialog<MatchExpressionListDlg>(createExprDlg.ClickEnterList);
             RunUI(() =>
             {
+                // Set the match option to "Protein Gene"
+                createExprDlg.matchComboBox.SelectedIndex = 4;
+            });
+            var proteinList = "Aldoc" + '\n' + "Serpinc1";
+            RunUI(() =>
+            {
                 // Verify that typing into the list is parsed to a REGEX
-                var proteinList = @"Cas9" + '\n' + @"Hsp70";
                 matchExprListDlg.proteinsTextBox.Text = proteinList;
-                Assert.AreEqual(createExprDlg.Expression, "(?i)^Cas9$|^Hsp70$");
-                // Two proteins should match
-                Assert.AreEqual(createExprDlg.MatchingRows.Count(), 2);
+                Assert.AreEqual(createExprDlg.Expression, "(?i)^Aldoc$|^Serpinc1$");
+            });
+            // Two proteins should match
+            WaitForCreateRowsChange(createExprDlg, 2);
+            RunUI(() =>
+            {
                 // Test case insensitivity
+                matchExprListDlg.proteinsTextBox.Clear();
                 matchExprListDlg.proteinsTextBox.Text = proteinList.ToUpperInvariant();
                 // Two proteins should match
-                Assert.AreEqual(createExprDlg.MatchingRows.Count(), 2);
-
+                WaitForCreateRowsChange(createExprDlg, 2); ;
             });
+        }
+        private void WaitForCreateRowsChange(CreateMatchExpressionDlg createDlg, int expectedRows)
+        {
+            WaitForConditionUI(() => createDlg.MatchingRows.Count() == expectedRows,
+                string.Format("Expecting {0} rows", expectedRows));
         }
         public class ParseInfo
         {
