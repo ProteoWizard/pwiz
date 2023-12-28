@@ -331,12 +331,12 @@ namespace pwiz.Skyline.Model.DocSettings
         private void Validate()
         {
             if (string.IsNullOrEmpty(CleavageC) && string.IsNullOrEmpty(CleavageN))
-                throw new InvalidDataException(Resources.Enzyme_Validate_Enzymes_must_have_at_least_one_cleavage_point);
+                throw new InvalidDataException(DocSettingsResources.Enzyme_Validate_Enzymes_must_have_at_least_one_cleavage_point);
             var cleavageAll = String.Empty;
             if (string.IsNullOrEmpty(CleavageC))
             {
                 if (!string.IsNullOrEmpty(RestrictC))
-                    throw new InvalidDataException(Resources.Enzyme_Validate_Enzyme_must_have_C_terminal_cleavage_to_have_C_terminal_restrictions_);
+                    throw new InvalidDataException(DocSettingsResources.Enzyme_Validate_Enzyme_must_have_C_terminal_cleavage_to_have_C_terminal_restrictions_);
                 CleavageC = RestrictC = null;
                 _cleavageC = null;
                 _restrictC = null;
@@ -353,7 +353,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (string.IsNullOrEmpty(CleavageN))
             {
                 if (!string.IsNullOrEmpty(RestrictN))
-                    throw new InvalidDataException(Resources.Enzyme_Validate_Enzyme_must_have_N_terminal_cleavage_to_have_N_terminal_restrictions_);
+                    throw new InvalidDataException(DocSettingsResources.Enzyme_Validate_Enzyme_must_have_N_terminal_cleavage_to_have_N_terminal_restrictions_);
                 CleavageN = RestrictN = null;
                 _cleavageN = null;
                 _restrictN = null;
@@ -669,7 +669,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private void Validate()
         {
             if (string.IsNullOrEmpty(Regex))
-                throw new InvalidDataException(Resources.PeptideExcludeRegex_Validate_Peptide_exclusion_must_have_a_regular_expression);
+                throw new InvalidDataException(DocSettingsResources.PeptideExcludeRegex_Validate_Peptide_exclusion_must_have_a_regular_expression);
         }
 
         public static PeptideExcludeRegex Deserialize(XmlReader reader)

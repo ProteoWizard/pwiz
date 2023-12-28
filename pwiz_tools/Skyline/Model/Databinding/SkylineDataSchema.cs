@@ -329,7 +329,7 @@ namespace pwiz.Skyline.Model.Databinding
         {
             if (typeof(ListItem).IsAssignableFrom(type))
             {
-                return string.Format(Resources.SkylineDataSchema_GetTypeDescription_Item_in_list___0__, ListItemTypes.INSTANCE.GetListName(type));
+                return string.Format(DatabindingResources.SkylineDataSchema_GetTypeDescription_Item_in_list___0__, ListItemTypes.INSTANCE.GetListName(type));
             }
             return base.GetTypeDescription(uiMode, type);
         }

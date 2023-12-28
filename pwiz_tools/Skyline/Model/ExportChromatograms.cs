@@ -24,7 +24,6 @@ using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
@@ -96,7 +95,7 @@ namespace pwiz.Skyline.Model
                     int percentComplete = currentReplicates++ * 100 / totalReplicates;
                     if (percentComplete < 100)
                     {
-                        longWaitBroker.UpdateProgress(status = status.ChangeMessage(string.Format(Resources.ChromatogramExporter_Export_Exporting_Chromatograms_for__0_,
+                        longWaitBroker.UpdateProgress(status = status.ChangeMessage(string.Format(ModelResources.ChromatogramExporter_Export_Exporting_Chromatograms_for__0_,
                                                                                     chromatograms.Name)).ChangePercentComplete(percentComplete));
                     }
                 }
@@ -183,7 +182,7 @@ namespace pwiz.Skyline.Model
             }
             if (arrayChromInfo.Length != chromatograms.FileCount)
             {
-                throw new InvalidDataException(string.Format(Resources.ChromatogramExporter_ExportGroupNode_One_or_more_missing_chromatograms_at_charge_state__0__of__1_,
+                throw new InvalidDataException(string.Format(ModelResources.ChromatogramExporter_ExportGroupNode_One_or_more_missing_chromatograms_at_charge_state__0__of__1_,
                                                precursorCharge, peptideModifiedSequence));
             }
             foreach (var chromGroupInfo in arrayChromInfo)
@@ -211,7 +210,7 @@ namespace pwiz.Skyline.Model
                     IList<float> intensities = chromInfo.Intensities;
                     if (times.Count != intensities.Count || intensities.Count == 0)
                     {
-                        throw new InvalidDataException(string.Format(Resources.ChromatogramExporter_Export_Bad_chromatogram_data_for_charge__0__state_of_peptide__1_,
+                        throw new InvalidDataException(string.Format(ModelResources.ChromatogramExporter_Export_Bad_chromatogram_data_for_charge__0__state_of_peptide__1_,
                                                        precursorCharge, peptideModifiedSequence));
                     }
                     float tic = CalculateTic(times, intensities);
@@ -293,7 +292,7 @@ namespace pwiz.Skyline.Model
                 case ChromExtractor.qc:
                     return @"QC";
                 default:
-                    throw new InvalidDataException(Resources.ChromatogramExporter_GetExtractorName_Invalid_extractor_name_);
+                    throw new InvalidDataException(ModelResources.ChromatogramExporter_GetExtractorName_Invalid_extractor_name_);
             }
         }
     }

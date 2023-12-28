@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.GUI;
 using SharedBatch;
 using SkylineBatch.Properties;
 
@@ -65,7 +66,7 @@ namespace SkylineBatch
                 }
                 serverConnector.GetFiles(Server, out Exception error);
                 if (error != null)
-                    AlertDlg.ShowError(this, Program.AppName(), error.Message);
+                    CommonAlertDlg.ShowException(this, error);
                 else
                     DialogResult = DialogResult.OK;
             }
@@ -145,7 +146,7 @@ namespace SkylineBatch
         {
             Invoke(new Action(() =>
             {
-                if (e != null) AlertDlg.ShowError(this, Program.AppName(), e.Message);
+                if (e != null) CommonAlertDlg.ShowException(this, e);
 
             }));
             _cancelValidate = null;
@@ -160,7 +161,7 @@ namespace SkylineBatch
             }
             catch (ArgumentException e)
             {
-                AlertDlg.ShowError(this, Program.AppName(), e.Message);
+                CommonAlertDlg.ShowException(this, e);
                 return null;
             }
 

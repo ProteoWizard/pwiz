@@ -520,7 +520,7 @@ namespace pwiz.Skyline.Model
             modMatcher.CreateMatches(doc.Settings, standard.Peptides.Select(pep => pep.ModifiedTarget.ToString()),
                 Settings.Default.StaticModList, Settings.Default.HeavyModList);
             var settingsWithNoMinIon = doc.Settings.ChangeTransitionSettings(t => t.ChangeLibraries(t.Libraries.ChangeMinIonCount(0)));
-            var group = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, Resources.ImportFastaControl_ImportFasta_iRT_standards, null,
+            var group = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, ModelResources.ImportFastaControl_ImportFasta_iRT_standards, null,
                 standard.Peptides.Select(pep => modMatcher.GetModifiedNode(pep.ModifiedTarget.ToString()).ChangeSettings(settingsWithNoMinIon, SrmSettingsDiff.ALL).ChangeStandardType(StandardType.IRT)
                 ).ToArray(), false);
             //var transitions = group.Peptides.SelectMany(p => p.TransitionGroups.SelectMany(t => t.Transitions.Select(t2 => t2.Id)));

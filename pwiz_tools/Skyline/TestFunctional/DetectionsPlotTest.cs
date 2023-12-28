@@ -169,6 +169,8 @@ namespace pwiz.SkylineTestFunctional
         {
             WaitForConditionUI(() => pane.CurrentData != null 
                                            && pane.CurrentData.QValueCutoff == qValue
+                                           && pane.CurrentData.TryGetTargetData(DetectionsGraphController.TargetType.PEPTIDE, out _)
+                                           && pane.CurrentData.TryGetTargetData(DetectionsGraphController.TargetType.PRECURSOR, out _)
                                            && DetectionPlotData.GetDataCache().Status == DetectionPlotData.DetectionDataCache.CacheStatus.idle,
                 () => $"Retrieving data for qValue {qValue}, refIndex {refIndex} took too long.");
             WaitForGraphs();

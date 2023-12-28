@@ -23,7 +23,6 @@ using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Find
 {
@@ -146,7 +145,7 @@ namespace pwiz.Skyline.Model.Find
                 {
                     return null;
                 }
-                progressStatus = progressStatus.ChangeMessage(string.Format(Resources.FindPredicate_FindAll_Searching_for__0__, finder.DisplayName));
+                progressStatus = progressStatus.ChangeMessage(string.Format(FindResources.FindPredicate_FindAll_Searching_for__0__, finder.DisplayName));
                 progressMonitor.UpdateProgress(progressStatus);
                 var nextMatch = finder.NextMatch(start, progressMonitor, ref progressStatus);
                 progressStatus = progressStatus.NextSegment();
@@ -165,7 +164,7 @@ namespace pwiz.Skyline.Model.Find
                 long updateFrequency = start.GetProgressUpdateFrequency();
                 var bookmarkEnumerator = new BookmarkEnumerator(start);
                 progressStatus =
-                    progressStatus.ChangeMessage(Resources.FindPredicate_FindNext_Searching_for_next_result);
+                    progressStatus.ChangeMessage(FindResources.FindPredicate_FindNext_Searching_for_next_result);
                 do
                 {
                     if (progressMonitor.IsCanceled)
@@ -214,7 +213,7 @@ namespace pwiz.Skyline.Model.Find
                 }
                 var customFinder = FindOptions.CustomFinders[iFinder];
                 progressStatus = progressStatus.ChangeMessage(string.Format(
-                    Resources.FindPredicate_FindAll_Searching_for__0__,
+                    FindResources.FindPredicate_FindAll_Searching_for__0__,
                     customFinder.DisplayName));
                 progressMonitor.UpdateProgress(progressStatus);
 
@@ -274,15 +273,15 @@ namespace pwiz.Skyline.Model.Find
         {
             if (matchCount == 0)
             {
-                return Resources.FindPredicate_FindAll_Found_0_matches;
+                return FindResources.FindPredicate_FindAll_Found_0_matches;
             }
 
             if (matchCount == 1)
             {
-                return Resources.FindPredicate_FindAll_Found_1_match;
+                return FindResources.FindPredicate_FindAll_Found_1_match;
             }
 
-            return string.Format(Resources.FindPredicate_FindAll_Found__0__matches, matchCount);
+            return string.Format(FindResources.FindPredicate_FindAll_Found__0__matches, matchCount);
         }
 
         static Annotations GetAnnotations(ChromInfo chromInfo)

@@ -193,7 +193,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 }
                 if (StandardType == StandardType.IRT || value == StandardType.IRT)
                 {
-                    throw new InvalidOperationException(Resources.Peptide_StandardType_iRT_standards_can_only_be_changed_by_modifying_the_iRT_calculator);
+                    throw new InvalidOperationException(EntitiesResources.Peptide_StandardType_iRT_standards_can_only_be_changed_by_modifying_the_iRT_calculator);
                 }
                 ModifyDocument(EditColumnDescription(nameof(StandardType), value).ChangeElementRef(GetElementRef()),
                     doc => doc.ChangeStandardType(value, new[]{IdentityPath}));
@@ -477,13 +477,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             if (nodeCount == 1)
             {
                 return string.Format(DataSchema.ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic
-                    ? Resources.Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_peptide___0___
-                    : Resources.Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_molecule___0___, this);
+                    ? EntitiesResources.Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_peptide___0___
+                    : EntitiesResources.Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_molecule___0___, this);
             }
             return string.Format(
                 DataSchema.ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic
                 ? Resources.Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__peptides_
-                : Resources.Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__molecules_, nodeCount);
+                : EntitiesResources.Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__molecules_, nodeCount);
         }
 
         // Small molecule IDs (in PREFERRED_ACCESSION_TYPE_ORDER) - keep these at end

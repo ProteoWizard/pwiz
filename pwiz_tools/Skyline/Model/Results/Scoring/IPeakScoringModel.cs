@@ -27,7 +27,6 @@ using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Scoring
@@ -270,7 +269,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             if (features.Count != weights.Count)
             {
-                throw new InvalidDataException(string.Format(Resources.LinearModelParams_Score_Attempted_to_score_a_peak_with__0__features_using_a_model_with__1__trained_scores_,
+                throw new InvalidDataException(string.Format(ScoringResources.LinearModelParams_Score_Attempted_to_score_a_peak_with__0__features_using_a_model_with__1__trained_scores_,
                                                features.Count, weights.Count));
             }
             double score = bias;
@@ -303,7 +302,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             if (features.Count != weights.Count)
             {
-                throw new InvalidDataException(string.Format(Resources.LinearModelParams_Score_Attempted_to_score_a_peak_with__0__features_using_a_model_with__1__trained_scores_,
+                throw new InvalidDataException(string.Format(ScoringResources.LinearModelParams_Score_Attempted_to_score_a_peak_with__0__features_using_a_model_with__1__trained_scores_,
                                                features.Count, weights.Count));
             }
             var scoreText = new StringBuilder();
@@ -349,7 +348,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             if (double.IsNaN(mean) || double.IsNaN(standardDev) || standardDev == 0)
             {
-                throw new InvalidDataException(string.Format(Resources.LinearModelParams_RescaleParameters_Every_calculator_in_the_model_either_has_an_unknown_value__or_takes_on_only_one_value_));
+                throw new InvalidDataException(string.Format(ScoringResources.LinearModelParams_RescaleParameters_Every_calculator_in_the_model_either_has_an_unknown_value__or_takes_on_only_one_value_));
             }
             return ChangeProp(ImClone(this), im =>
                 {

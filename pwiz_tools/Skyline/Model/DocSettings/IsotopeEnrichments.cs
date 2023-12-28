@@ -217,11 +217,11 @@ namespace pwiz.Skyline.Model.DocSettings
         private void DoValidate()
         {
             if (!BioMassCalc.IsSkylineHeavySymbol(IsotopeSymbol)) // e.g. accept H' but not D
-                throw new InvalidDataException(string.Format(Resources.IsotopeEnrichmentItem_DoValidate_Isotope_enrichment_is_not_supported_for_the_symbol__0__, IsotopeSymbol));
+                throw new InvalidDataException(string.Format(DocSettingsResources.IsotopeEnrichmentItem_DoValidate_Isotope_enrichment_is_not_supported_for_the_symbol__0__, IsotopeSymbol));
             if (MIN_ATOM_PERCENT_ENRICHMENT > AtomPercentEnrichment ||
                     AtomPercentEnrichment > MAX_ATOM_PERCENT_ENRICHMENT)
             {
-                throw new InvalidDataException(string.Format(Resources.IsotopeEnrichmentItem_DoValidate_Atom_percent_enrichment__0__must_be_between__1__and__2__,
+                throw new InvalidDataException(string.Format(DocSettingsResources.IsotopeEnrichmentItem_DoValidate_Atom_percent_enrichment__0__must_be_between__1__and__2__,
                     AtomPercentEnrichment, MIN_ATOM_PERCENT_ENRICHMENT, MAX_ATOM_PERCENT_ENRICHMENT));
             }
         }
@@ -287,7 +287,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public override string ToString()
         {
-            return string.Format(Resources.IsotopeEnrichmentItem_ToString__0__1__Percent, IsotopeSymbol, AtomPercentEnrichment*100);
+            return string.Format(DocSettingsResources.IsotopeEnrichmentItem_ToString__0__1__Percent, IsotopeSymbol, AtomPercentEnrichment*100);
         }
 
         #endregion

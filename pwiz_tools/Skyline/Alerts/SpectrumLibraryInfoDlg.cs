@@ -96,8 +96,8 @@ namespace pwiz.Skyline.Alerts
             if(libraryDetails.LibLinks.Any())
             {
                 string labelStr = libraryDetails.LibLinks.Count() == 1
-                                      ? Resources.SpectrumLibraryInfoDlg_SetLibraryLinks_Library_source
-                                      : Resources.SpectrumLibraryInfoDlg_SetLibraryLinks_Library_sources;
+                                      ? AlertsResources.SpectrumLibraryInfoDlg_SetLibraryLinks_Library_source
+                                      : AlertsResources.SpectrumLibraryInfoDlg_SetLibraryLinks_Library_sources;
 
                 foreach(LibraryLink link in libraryDetails.LibLinks)
                 {
@@ -116,14 +116,14 @@ namespace pwiz.Skyline.Alerts
 
             var detailsText = new StringBuilder();
 
-            detailsText.AppendLine(string.Format(Resources.SpectrumLibraryInfoDlg_SetDetailsText__0__library, libraryDetails.Format));
+            detailsText.AppendLine(string.Format(AlertsResources.SpectrumLibraryInfoDlg_SetDetailsText__0__library, libraryDetails.Format));
             if(!string.IsNullOrEmpty(libraryDetails.Id))
             {
-                detailsText.AppendLine(string.Format(Resources.SpectrumLibraryInfoDlg_SetDetailsText_ID__0__, libraryDetails.Id));
+                detailsText.AppendLine(string.Format(AlertsResources.SpectrumLibraryInfoDlg_SetDetailsText_ID__0__, libraryDetails.Id));
             }
             if (!string.IsNullOrEmpty(libraryDetails.Revision))
             {
-                detailsText.AppendLine(string.Format(Resources.SpectrumLibraryInfoDlg_SetDetailsText_Revision__0__, libraryDetails.Revision));
+                detailsText.AppendLine(string.Format(AlertsResources.SpectrumLibraryInfoDlg_SetDetailsText_Revision__0__, libraryDetails.Revision));
             }
             if (!string.IsNullOrEmpty(libraryDetails.Version))
             {
@@ -131,20 +131,20 @@ namespace pwiz.Skyline.Alerts
             }
             if (libraryDetails.UniquePeptideCount > 0)
             {
-                detailsText.AppendLine(string.Format(Resources.SpectrumLibraryInfoDlg_SetDetailsText_Unique_peptides__0__, libraryDetails.UniquePeptideCount.ToString(numFormat)));
+                detailsText.AppendLine(string.Format(AlertsResources.SpectrumLibraryInfoDlg_SetDetailsText_Unique_peptides__0__, libraryDetails.UniquePeptideCount.ToString(numFormat)));
             }
-            detailsText.AppendLine(string.Format(Resources.SpectrumLibraryInfoDlg_SetDetailsText_Unique_Precursors___0_,
+            detailsText.AppendLine(string.Format(AlertsResources.SpectrumLibraryInfoDlg_SetDetailsText_Unique_Precursors___0_,
                                                  libraryDetails.SpectrumCount.ToString(numFormat)));
 
             if (libraryDetails.TotalPsmCount > 0)
             {
                 detailsText.AppendLine(
-                    string.Format(Resources.SpectrumLibraryInfoDlg_SetDetailsText_Matched_spectra__0__,
+                    string.Format(AlertsResources.SpectrumLibraryInfoDlg_SetDetailsText_Matched_spectra__0__,
                                   libraryDetails.TotalPsmCount.ToString(numFormat)));
             }
             if (libraryDetails.DataFiles.Any())
             {
-                detailsText.AppendLine(string.Format(Resources.SpectrumLibraryInfoDlg_SetDetailsText_Data_files___0_,
+                detailsText.AppendLine(string.Format(AlertsResources.SpectrumLibraryInfoDlg_SetDetailsText_Data_files___0_,
                                                      libraryDetails.DataFiles.Count()));
             }
             labelLibInfo.Text = detailsText.ToString();

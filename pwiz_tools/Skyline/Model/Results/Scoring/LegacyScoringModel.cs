@@ -22,7 +22,6 @@ using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Scoring
@@ -30,7 +29,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     [XmlRoot(@"legacy_peak_scoring_model")]
     public class LegacyScoringModel : PeakScoringModelSpec
     {
-        public static string DEFAULT_NAME { get { return Resources.LegacyScoringModel_DEFAULT_NAME_Default; } } 
+        public static string DEFAULT_NAME { get { return ScoringResources.LegacyScoringModel_DEFAULT_NAME_Default; } } 
 
         public static readonly double[] DEFAULT_WEIGHTS = {W0, W1, W2, W3, W4, W5, W6};
 
@@ -204,7 +203,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 for (int i = 0; i < calculators.Count; i++)
                 {
                     if (calculators[i].Type != PeakFeatureCalculators[i].GetType())
-                        throw new InvalidDataException(Resources.LegacyScoringModel_ReadXml_Invalid_legacy_model_);
+                        throw new InvalidDataException(ScoringResources.LegacyScoringModel_ReadXml_Invalid_legacy_model_);
                     weights[i] = calculators[i].Weight;
                 }
                 Parameters = new LinearModelParams(weights, bias);
@@ -242,9 +241,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
         private void DoValidate()
         {
             if (!string.Equals(Name, DEFAULT_NAME) && Parameters == null)
-                throw new InvalidDataException(Resources.LegacyScoringModel_DoValidate_Legacy_scoring_model_is_not_trained_);
+                throw new InvalidDataException(ScoringResources.LegacyScoringModel_DoValidate_Legacy_scoring_model_is_not_trained_);
             if (Parameters != null && Parameters.Weights != null && Parameters.Weights.Count < 1)
-                throw new InvalidDataException(Resources.MProphetPeakScoringModel_DoValidate_MProphetPeakScoringModel_requires_at_least_one_peak_feature_calculator_with_a_weight_value);
+                throw new InvalidDataException(ScoringResources.MProphetPeakScoringModel_DoValidate_MProphetPeakScoringModel_requires_at_least_one_peak_feature_calculator_with_a_weight_value);
         }
 
         #endregion

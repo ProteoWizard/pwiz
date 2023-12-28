@@ -19,7 +19,6 @@
 using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Serialization;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -32,10 +31,10 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
 
         public static string FILTER_CLIB
         {
-            get { return TextUtil.FileDialogFilter(Resources.ChromatogramLibrary_FILTER_CLIB_Chromatogram_Libraries, EXT); }
+            get { return TextUtil.FileDialogFilter(ChromLibResources.ChromatogramLibrary_FILTER_CLIB_Chromatogram_Libraries, EXT); }
         }
 
-        public static readonly PeptideRankId PEPTIDE_RANK_PEAK_AREA = new PeptideRankId(@"Peak area", () => Resources.ChromatogramLibrarySpec_PEPTIDE_RANK_PEAK_AREA_Peak_Area);
+        public static readonly PeptideRankId PEPTIDE_RANK_PEAK_AREA = new PeptideRankId(@"Peak area", () => ChromLibResources.ChromatogramLibrarySpec_PEPTIDE_RANK_PEAK_AREA_Peak_Area);
         public ChromatogramLibrarySpec(string name, string path) : base(name, path)
         {
             
@@ -58,7 +57,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
 
         public override string GetLibraryTypeName()
         {
-            return Resources.ChromatogramLibrary_FILTER_CLIB_Chromatogram_Libraries;
+            return ChromLibResources.ChromatogramLibrary_FILTER_CLIB_Chromatogram_Libraries;
         }
 
         #region Implementation of IXmlSerializable
