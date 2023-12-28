@@ -555,7 +555,6 @@ namespace pwiz.Skyline.Controls.Graphs
             public IdentityPath IdentityPath { get; set; }
             private void SetAreas(IDictionary<int, Protein.AbundanceValue> abundanceValues)
             {
-                // TODO cover case where dict is not sorted
                 foreach (var abundanceValue in abundanceValues)
                 {
                     double? abundance = null;
