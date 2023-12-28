@@ -448,9 +448,16 @@ namespace pwiz.SkylineTestFunctional
                 // Test case insensitivity
                 matchExprListDlg.proteinsTextBox.Clear();
                 matchExprListDlg.proteinsTextBox.Text = proteinList.ToUpperInvariant();
-                // Two proteins should match
-                WaitForCreateRowsChange(createExprDlg, 2); ;
             });
+            // Two proteins should match
+            WaitForCreateRowsChange(createExprDlg, 2);
+            RunUI(() =>
+            {
+                // Test empty text: which will match everything
+                matchExprListDlg.proteinsTextBox.Text = string.Empty;
+            });
+            // All proteins should match
+            WaitForCreateRowsChange(createExprDlg, 48);
         }
         private void WaitForCreateRowsChange(CreateMatchExpressionDlg createDlg, int expectedRows)
         {
