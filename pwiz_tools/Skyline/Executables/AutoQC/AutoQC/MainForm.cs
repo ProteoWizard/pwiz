@@ -805,37 +805,37 @@ namespace AutoQC
 
         public void DisplayError(string message)
         {
-            RunUi(() => { AlertDlg.ShowError(this, Program.AppName, message); });
+            RunUi(() => { AlertDlg.ShowError(this, message); });
         }
 
         public void DisplayError(string message, params object[] args)
         {
-            RunUi(() => { AlertDlg.ShowError(this, Program.AppName, string.Format(message, args)); });
+            RunUi(() => { AlertDlg.ShowError(this, string.Format(message, args)); });
         }
 
         public void DisplayWarning(string message)
         {
-            RunUi(() => { AlertDlg.ShowWarning(this, Program.AppName, message); });
+            RunUi(() => { AlertDlg.ShowWarning(this, message); });
         }
 
         public void DisplayInfo(string message)
         {
-            RunUi(() => { AlertDlg.ShowInfo(this, Program.AppName, message); });
+            RunUi(() => { AlertDlg.ShowInfo(this, message); });
         }
 
         public void DisplayErrorWithException(string message, Exception exception)
         {
-            RunUi(() => { AlertDlg.ShowErrorWithException(this, Program.AppName, message, exception); });
+            RunUi(() => { AlertDlg.ShowErrorWithException(this, message, exception); });
         }
 
         public DialogResult DisplayQuestion(string message)
         {
-            return AlertDlg.ShowQuestion(this, Program.AppName, message);
+            return AlertDlg.ShowQuestion(this, message);
         }
 
         public DialogResult DisplayLargeOkCancel(string message)
         {
-            return AlertDlg.ShowLargeOkCancel(this, Program.AppName, message);
+            return AlertDlg.ShowLargeOkCancel(this, message);
         }
 
         public void UpdateRunningButtons(bool canStart, bool canStop)

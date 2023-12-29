@@ -310,7 +310,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             if (!File.Exists(ImportFastaControl.FastaFile))
             {
-                MessageDlg.Show(this, Resources.EncyclopeDiaSearchDlg_NextPage_A_FASTA_file_is_required_for_an_EncyclopeDia_Prosit_search_);
+                MessageDlg.Show(this, PeptideSearchResources.EncyclopeDiaSearchDlg_NextPage_A_FASTA_file_is_required_for_an_EncyclopeDia_Prosit_search_);
                 return;
             }
 
@@ -340,7 +340,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     break;
 
                 case Pages.search_settings:
-                    btnNext.Text = Resources.EncyclopeDiaSearchDlg_NextPage_Run;
+                    btnNext.Text = PeptideSearchResources.EncyclopeDiaSearchDlg_NextPage_Run;
                     break;
 
                 case Pages.run_page:
@@ -409,7 +409,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
 
             // add audit log entry for EncyclopeDIA search
-            SkylineWindow.ModifyDocument(Resources.EncyclopeDiaSearchDlg_ImportEncyclopediaLibrary_Ran_EncyclopeDIA_Search,
+            SkylineWindow.ModifyDocument(PeptideSearchResources.EncyclopeDiaSearchDlg_ImportEncyclopediaLibrary_Ran_EncyclopeDIA_Search,
                 doc => doc.ChangeSettings(doc.Settings.ChangePeptideSettings(
                     doc.Settings.PeptideSettings.ChangeLibraries(
                         doc.Settings.PeptideSettings.Libraries.ChangeLibrarySpecs(librarySpecs).ChangeLibraries(libraries)))),
@@ -447,7 +447,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     break;
 
                 case Pages.run_page:
-                    btnNext.Text = Resources.EncyclopeDiaSearchDlg_NextPage_Run;
+                    btnNext.Text = PeptideSearchResources.EncyclopeDiaSearchDlg_NextPage_Run;
                     break;
 
                 default:
@@ -544,7 +544,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void btnAdditionalSettings_Click(object sender, EventArgs e)
         {
-            KeyValueGridDlg.Show(Resources.SearchSettingsControl_Additional_Settings,
+            KeyValueGridDlg.Show(PeptideSearchResources.SearchSettingsControl_Additional_Settings,
                 EncyclopeDiaConfig.Parameters,
                 setting => setting.Value.ToString(),
                 (value, setting) => setting.Value = value,
@@ -697,7 +697,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 else
                 {
                     UpdateProgress(status.ChangeMessage(string.Format(
-                        Resources.EncyclopeDiaSearchControl_Search_Reusing_Prosit_predictions_from___0_,
+                        PeptideSearchResources.EncyclopeDiaSearchControl_Search_Reusing_Prosit_predictions_from___0_,
                         blibFilepath)));
                     status = status.NextSegment(); // after generating prosit input rows
                     status = status.NextSegment(); // after intensity model
@@ -764,13 +764,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             if (!_cancelToken.IsCancellationRequested)
             {
-                Invoke(new MethodInvoker(() => UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_SearchProgress_Starting_search))));
+                Invoke(new MethodInvoker(() => UpdateSearchEngineProgress(status.ChangeMessage(PeptideSearchResources.DDASearchControl_SearchProgress_Starting_search))));
 
                 success = Search(Settings, _cancelToken, status);
 
                 Invoke(new MethodInvoker(() => UpdateSearchEngineProgressMilestone(status, success, status.SegmentCount,
                     Resources.DDASearchControl_SearchProgress_Search_canceled,
-                    Resources.DDASearchControl_SearchProgress_Search_failed,
+                    PeptideSearchResources.DDASearchControl_SearchProgress_Search_failed,
                     Resources.DDASearchControl_SearchProgress_Search_done)));
             }
 
@@ -794,7 +794,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 try
                 {
                     SimpleFileDownloaderDlg.Show(null,
-                        string.Format(Resources.SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_,
+                        string.Format(PeptideSearchResources.SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_,
                             @"EncyclopeDia"), filesNotAlreadyDownloaded);
                 }
                 catch (Exception x)

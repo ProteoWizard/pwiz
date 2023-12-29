@@ -200,15 +200,15 @@ namespace pwiz.Skyline.EditUI
         {
             using (var longWaitDlg = new LongWaitDlg())
             {
-                longWaitDlg.Text = Resources.UniquePeptidesDlg_LaunchPeptideProteinsQuery_Querying_Background_Proteome_Database;
-                longWaitDlg.Message = Resources.UniquePeptidesDlg_LaunchPeptideProteinsQuery_Looking_for_proteins_with_matching_peptide_sequences;
+                longWaitDlg.Text = EditUIResources.UniquePeptidesDlg_LaunchPeptideProteinsQuery_Querying_Background_Proteome_Database;
+                longWaitDlg.Message = EditUIResources.UniquePeptidesDlg_LaunchPeptideProteinsQuery_Looking_for_proteins_with_matching_peptide_sequences;
                 try
                 {
                     longWaitDlg.PerformWork(this, 1000, QueryPeptideProteins);
                 }
                 catch (Exception x)
                 {
-                    var message = TextUtil.LineSeparate(string.Format(Resources.UniquePeptidesDlg_LaunchPeptideProteinsQuery_Failed_querying_background_proteome__0__,
+                    var message = TextUtil.LineSeparate(string.Format(EditUIResources.UniquePeptidesDlg_LaunchPeptideProteinsQuery_Failed_querying_background_proteome__0__,
                                                 BackgroundProteome.Name), x.Message);
                     MessageDlg.ShowWithException(this, message, x);
                 }
@@ -232,7 +232,7 @@ namespace pwiz.Skyline.EditUI
 
         private bool AddProteinRowsToGrid(ILongWaitBroker longWaitBroker)
         {
-            longWaitBroker.Message = Resources.UniquePeptidesDlg_AddProteinRowsToGrid_Adding_rows_to_grid_;
+            longWaitBroker.Message = EditUIResources.UniquePeptidesDlg_AddProteinRowsToGrid_Adding_rows_to_grid_;
             HashSet<Protein> proteinSet = new HashSet<Protein>();
             foreach (var proteins in _peptideProteins)
             {
@@ -522,7 +522,7 @@ namespace pwiz.Skyline.EditUI
                 var dubiousValues = TextUtil.LineSeparate(uniqueBy == UniquenessType.gene ? 
                     Resources.UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_Some_background_proteome_proteins_did_not_have_gene_information__this_selection_may_be_suspect_ :
                     Resources.UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_Some_background_proteome_proteins_did_not_have_species_information__this_selection_may_be_suspect_,
-                    Resources.UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_These_proteins_include_,
+                    EditUIResources.UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_These_proteins_include_,
                     TextUtil.LineSeparate(dubious));
                 MessageDlg.Show(this, dubiousValues);
             }
@@ -555,7 +555,7 @@ namespace pwiz.Skyline.EditUI
 
         public void OkDialog()
         {
-            Program.MainWindow.ModifyDocument(Resources.UniquePeptidesDlg_OkDialog_Exclude_peptides, ExcludePeptidesFromDocument, FormSettings.EntryCreator.Create);
+            Program.MainWindow.ModifyDocument(EditUIResources.UniquePeptidesDlg_OkDialog_Exclude_peptides, ExcludePeptidesFromDocument, FormSettings.EntryCreator.Create);
             Close();
         }
 

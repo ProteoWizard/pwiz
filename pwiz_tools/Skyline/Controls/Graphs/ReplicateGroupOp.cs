@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (GroupByValue == null)
                 {
-                    return Resources.ReplicateGroupOp_ReplicateAxisTitle;
+                    return GraphsResources.ReplicateGroupOp_ReplicateAxisTitle;
                 }
 
                 return GroupByValue.Title;

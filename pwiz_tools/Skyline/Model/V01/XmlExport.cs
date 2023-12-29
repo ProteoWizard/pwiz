@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -110,7 +109,7 @@ namespace pwiz.Skyline.Model.V01
                                 NextFile(baseNameBucket, suffix, ref writer, ref fileCount, ref transitionCount);
 
                             if (writer == null)
-                                throw new IOException(Resources.XmlMassListExporter_Export_Unexpected_failure_writing_transitions);
+                                throw new IOException(V01Resources.XmlMassListExporter_Export_Unexpected_failure_writing_transitions);
 
                             // If this is for scheduled SRM, skip transitions lacking a
                             // predicted retention time.
@@ -204,7 +203,7 @@ namespace pwiz.Skyline.Model.V01
             if (MethodType == ExportMethodType.Scheduled)
             {
                 if (!transition.StartRT.HasValue || !transition.StopRT.HasValue)
-                    throw new InvalidOperationException(Resources.XmlThermoMassListExporter_WriteTransition_Attempt_to_write_scheduling_parameters_failed);
+                    throw new InvalidOperationException(V01Resources.XmlThermoMassListExporter_WriteTransition_Attempt_to_write_scheduling_parameters_failed);
                 writer.Write(transition.StartRT.Value.ToString(_cultureInfo));
                 writer.Write(separator);
                 writer.Write(transition.StopRT.Value.ToString(_cultureInfo));
@@ -243,7 +242,7 @@ namespace pwiz.Skyline.Model.V01
             else
             {
                 if (!peptide.PredictedRetentionTime.HasValue)
-                    throw new InvalidOperationException(Resources.XmlThermoMassListExporter_WriteTransition_Attempt_to_write_scheduling_parameters_failed);
+                    throw new InvalidOperationException(V01Resources.XmlThermoMassListExporter_WriteTransition_Attempt_to_write_scheduling_parameters_failed);
                 writer.Write(peptide.PredictedRetentionTime.Value.ToString(_cultureInfo));
             }
             writer.Write(separator);

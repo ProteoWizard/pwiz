@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Controls.Spectra
             _bindingList = new BindingList<SpectrumClassRow>(_spectrumClasses);
             var viewContext = new SkylineViewContext(_dataSchema, MakeRowSourceInfos());
             BindingListSource.SetViewContext(viewContext);
-            Text = TabText = Resources.SpectraGridForm_SpectraGridForm_Spectrum_Grid;
+            Text = TabText = SpectraResources.SpectraGridForm_SpectraGridForm_Spectrum_Grid;
             DataboundGridControl.Parent.Controls.Remove(DataboundGridControl);
             splitContainer1.Panel2.Controls.Add(DataboundGridControl);
             DataboundGridControl.Dock = DockStyle.Fill;
@@ -164,7 +164,7 @@ namespace pwiz.Skyline.Controls.Spectra
                 columns.Add(new ColumnSpec(ppSpectrumClass.Concat(classColumn.PropertyPath)));
             }
             columns.Add(new ColumnSpec(PropertyPath.Root.Property(nameof(SpectrumClassRow.Files)).DictionaryValues()));
-            return new ViewSpec().SetName(Resources.SpectraGridForm_GetDefaultViewSpec_Default).SetColumns(columns);
+            return new ViewSpec().SetName(SpectraResources.SpectraGridForm_GetDefaultViewSpec_Default).SetColumns(columns);
         }
 
         private bool HasMultipleValues(SpectrumMetadataList spectra, SpectrumClassColumn column, double tolerance)
@@ -600,7 +600,7 @@ namespace pwiz.Skyline.Controls.Spectra
 
             private bool ReadSpectraFromFile(MsDataFileUri file)
             {
-                string message = string.Format(Resources.SpectrumReader_ReadSpectraFromFile_Reading_spectra_from__0_, file.GetFileName());
+                string message = string.Format(SpectraResources.SpectrumReader_ReadSpectraFromFile_Reading_spectra_from__0_, file.GetFileName());
                 CommonActionUtil.SafeBeginInvoke(_form, () => _form.UpdateProgress(message, 0, file));
                 using (var msDataFile = file.OpenMsDataFile(true, false, false, false, true))
                 {
@@ -728,7 +728,7 @@ namespace pwiz.Skyline.Controls.Spectra
             var activeClassColumns = GetActiveClassColumns().ToList();
             using (var longWaitDlg = new LongWaitDlg())
             {
-                longWaitDlg.Message = Resources.SpectraGridForm_AddSpectrumFilters_Examining_filters;
+                longWaitDlg.Message = SpectraResources.SpectraGridForm_AddSpectrumFilters_Examining_filters;
                 var document = SkylineWindow.DocumentUI;
                 longWaitDlg.PerformWork(this, 1000, broker =>
                 {
@@ -769,11 +769,11 @@ namespace pwiz.Skyline.Controls.Spectra
             {
                 if (spectrumClassRows.Count == 0)
                 {
-                    MessageDlg.Show(this, Resources.SpectraGridForm_AddSpectrumFilters_The_selected_row_does_not_have_any_filters);
+                    MessageDlg.Show(this, SpectraResources.SpectraGridForm_AddSpectrumFilters_The_selected_row_does_not_have_any_filters);
                 }
                 else
                 {
-                    MessageDlg.Show(this, Resources.SpectraGridForm_AddSpectrumFilters_The_selected_rows_do_not_have_any_filters);
+                    MessageDlg.Show(this, SpectraResources.SpectraGridForm_AddSpectrumFilters_The_selected_rows_do_not_have_any_filters);
                 }
 
                 return;
@@ -781,14 +781,14 @@ namespace pwiz.Skyline.Controls.Spectra
 
             if (transitionGroupIdentityPathLists.All(list => list.Count == 0))
             {
-                MessageDlg.Show(this, Resources.SpectraGridForm_AddSpectrumFilters_There_were_no_matching_precursors_to_add_any_filters_to_);
+                MessageDlg.Show(this, SpectraResources.SpectraGridForm_AddSpectrumFilters_There_were_no_matching_precursors_to_add_any_filters_to_);
                 return;
             }
 
             int addedFilterCount = 0;
             lock (SkylineWindow.GetDocumentChangeLock())
             {
-                SkylineWindow.ModifyDocument(Resources.SpectraGridForm_AddSpectrumFilters_Change_spectrum_filter,
+                SkylineWindow.ModifyDocument(SpectraResources.SpectraGridForm_AddSpectrumFilters_Change_spectrum_filter,
                     doc =>
                     {
                         var newDoc = AddFilters(doc, filters, transitionGroupIdentityPathLists, out addedFilterCount);
@@ -804,7 +804,7 @@ namespace pwiz.Skyline.Controls.Spectra
                             return doc;
                         }
                         string message = addedFilterCount == 1
-                            ? Resources.SpectraGridForm_AddSpectrumFilters_One_spectrum_filter_will_be_added_to_the_document_
+                            ? SpectraResources.SpectraGridForm_AddSpectrumFilters_One_spectrum_filter_will_be_added_to_the_document_
                             : string.Format(Resources.SpectraGridForm_AddSpectrumFilters__0__spectrum_filters_will_be_added_to_the_document_, addedFilterCount);
                         if (MultiButtonMsgDlg.Show(this, message, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                         {
@@ -819,7 +819,7 @@ namespace pwiz.Skyline.Controls.Spectra
 
             if (addedFilterCount == 0)
             {
-                MessageDlg.Show(this, Resources.SpectraGridForm_AddSpectrumFilters_No_spectrum_filters_were_added_to_the_document_);
+                MessageDlg.Show(this, SpectraResources.SpectraGridForm_AddSpectrumFilters_No_spectrum_filters_were_added_to_the_document_);
             }
         }
 
@@ -945,19 +945,19 @@ namespace pwiz.Skyline.Controls.Spectra
             var precursorMzs = transitionGroups?.Select(tg => tg.PrecursorMz).Distinct().OrderBy(mz=>mz.RawValue).ToList();
             if (precursorMzs == null || precursorMzs.Count == 0)
             {
-                return Resources.SpectraGridForm_GetSummaryMessage_Showing_all_spectra;
+                return SpectraResources.SpectraGridForm_GetSummaryMessage_Showing_all_spectra;
             }
             if (precursorMzs.Count == 1)
             {
-                return string.Format(Resources.SpectraGridForm_GetSummaryMessage_Showing_spectra_near_precursor_m_z__0_, precursorMzs[0].RawValue.ToString(Formats.Mz));
+                return string.Format(SpectraResources.SpectraGridForm_GetSummaryMessage_Showing_spectra_near_precursor_m_z__0_, precursorMzs[0].RawValue.ToString(Formats.Mz));
             }
 
             if (precursorMzs.Count == 2)
             {
-                return string.Format(Resources.SpectraGridForm_GetSummaryMessage_Showing_spectra_near_precursor_m_z__0__and__1_, 
+                return string.Format(SpectraResources.SpectraGridForm_GetSummaryMessage_Showing_spectra_near_precursor_m_z__0__and__1_, 
                     precursorMzs[0].RawValue.ToString(Formats.Mz), precursorMzs[1].RawValue.ToString(Formats.Mz));
             }
-            return string.Format(Resources.SpectraGridForm_GetSummaryMessage_Showing_spectra_near__0__precursors_between__1__and__2_, precursorMzs.Count, precursorMzs[0].RawValue.ToString(Formats.Mz), precursorMzs.Last().RawValue.ToString(Formats.Mz));
+            return string.Format(SpectraResources.SpectraGridForm_GetSummaryMessage_Showing_spectra_near__0__precursors_between__1__and__2_, precursorMzs.Count, precursorMzs[0].RawValue.ToString(Formats.Mz), precursorMzs.Last().RawValue.ToString(Formats.Mz));
         }
 
         public void SetSpectrumClassColumnCheckState(SpectrumClassColumn column, CheckState checkState)

@@ -27,7 +27,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
@@ -75,7 +74,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 if (SrmDocument.Settings.MeasuredResults.Chromatograms.Any(
                     chromatogramSet => newName == chromatogramSet.Name))
                 {
-                    throw new ArgumentException(string.Format(Resources.Replicate_Name_There_is_already_a_replicate_named___0___, newName));
+                    throw new ArgumentException(string.Format(EntitiesResources.Replicate_Name_There_is_already_a_replicate_named___0___, newName));
                 }
                 ChangeChromatogramSet(EditColumnDescription(nameof(Name), newName),
                     (ChromatogramSet) ChromatogramSet.ChangeName(newName));

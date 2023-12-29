@@ -86,7 +86,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (Equals(name, mod.Name))
                     {
-                        helper.ShowTextBoxError(textName, Resources.EditLibraryDlg_OkDialog_The_library__0__already_exists, name);
+                        helper.ShowTextBoxError(textName, SettingsUIResources.EditLibraryDlg_OkDialog_The_library__0__already_exists, name);
                         return;
                     }
                 }
@@ -111,7 +111,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 using (var longWait = new LongWaitDlg())
                 {
-                    longWait.Text = Resources.EditLibraryDlg_OkDialog_Loading_chromatogram_library;
+                    longWait.Text = SettingsUIResources.EditLibraryDlg_OkDialog_Loading_chromatogram_library;
                     Library lib = null;
                     try
                     {
@@ -173,12 +173,12 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (!File.Exists(path))
             {
-                MessageDlg.Show(owner, string.Format(Resources.EditLibraryDlg_OkDialog_The_file__0__does_not_exist, path));
+                MessageDlg.Show(owner, string.Format(SettingsUIResources.EditLibraryDlg_OkDialog_The_file__0__does_not_exist, path));
                 return false;
             }
             if (FileEx.IsDirectory(path))
             {
-                MessageDlg.Show(owner, string.Format(Resources.EditLibraryDlg_OkDialog_The_path__0__is_a_directory, path));
+                MessageDlg.Show(owner, string.Format(SettingsUIResources.EditLibraryDlg_OkDialog_The_path__0__is_a_directory, path));
                 return false;
             }
 
@@ -186,8 +186,8 @@ namespace pwiz.Skyline.SettingsUI
             // and the library has the text "redundant" in the file name.
             if (path.EndsWith(BiblioSpecLiteSpec.EXT_REDUNDANT))
             {
-                var message = TextUtil.LineSeparate(string.Format(Resources.EditLibraryDlg_OkDialog_The_file__0__appears_to_be_a_redundant_library, path),
-                    Resources.EditLibraryDlg_OkDialog_Please_choose_a_non_redundant_library);
+                var message = TextUtil.LineSeparate(string.Format(SettingsUIResources.EditLibraryDlg_OkDialog_The_file__0__appears_to_be_a_redundant_library, path),
+                    SettingsUIResources.EditLibraryDlg_OkDialog_Please_choose_a_non_redundant_library);
                 MessageDlg.Show(owner, string.Format(message, path));
                 return false;
             }
@@ -224,9 +224,9 @@ namespace pwiz.Skyline.SettingsUI
                 dlg.CheckPathExists = true;
                 dlg.SupportMultiDottedExtensions = true;
                 dlg.DefaultExt = BiblioSpecLibSpec.EXT;
-                dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(Resources.EditLibraryDlg_GetLibraryPath_Spectral_Libraries,
+                dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(SettingsUIResources.EditLibraryDlg_GetLibraryPath_Spectral_Libraries,
                         BiblioSpecLiteSpec.EXT, ChromatogramLibrarySpec.EXT, XHunterLibSpec.EXT, NistLibSpec.EXT, SpectrastSpec.EXT, MidasLibSpec.EXT, EncyclopeDiaSpec.EXT),
-                    TextUtil.FileDialogFilter(Resources.EditLibraryDlg_GetLibraryPath_Legacy_Libraries, BiblioSpecLibSpec.EXT));
+                    TextUtil.FileDialogFilter(SettingsUIResources.EditLibraryDlg_GetLibraryPath_Legacy_Libraries, BiblioSpecLibSpec.EXT));
                 if (fileName != null)
                     dlg.FileName = fileName;
 

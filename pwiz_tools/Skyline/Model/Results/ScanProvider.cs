@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -25,7 +25,6 @@ using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -266,7 +265,7 @@ namespace pwiz.Skyline.Model.Results
                     var lockMassParameters = DataFilePath.GetLockMassParameters();
                     if (dataFilePath == null)
                         throw new FileNotFoundException(string.Format(
-                            Resources
+                            ResultsResources
                                 .ScanProvider_GetScans_The_data_file__0__could_not_be_found__either_at_its_original_location_or_in_the_document_or_document_parent_folder_,
                             DataFilePath));
                     int sampleIndex = SampleHelp.GetPathSampleIndexPart(dataFilePath);
