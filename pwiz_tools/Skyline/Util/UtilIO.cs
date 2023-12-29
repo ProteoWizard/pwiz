@@ -35,7 +35,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
@@ -416,7 +415,7 @@ namespace pwiz.Skyline.Util
             // Check to see if the file was modified, during the time
             // it was closed.
             if (IsModified)
-                throw new FileModifiedException(string.Format(Resources.PooledFileStream_Connect_The_file__0__has_been_modified_since_it_was_first_opened, FilePath));
+                throw new FileModifiedException(string.Format(UtilResources.PooledFileStream_Connect_The_file__0__has_been_modified_since_it_was_first_opened, FilePath));
             // Create the stream
             return StreamManager.CreateStream(FilePath, FileMode.Open, Buffered);
         }
@@ -582,7 +581,7 @@ namespace pwiz.Skyline.Util
             {
                 // Make sure exceptions thrown from this method are only IOExceptions
                 if (!(x is IOException))
-                    throw new IOException(string.Format(Resources.FileStreamManager_CreateStream_Unexpected_error_opening__0__, path), x);
+                    throw new IOException(string.Format(UtilResources.FileStreamManager_CreateStream_Unexpected_error_opening__0__, path), x);
                 throw;
             }
 
@@ -622,7 +621,7 @@ namespace pwiz.Skyline.Util
             {
                 // Make sure exceptions thrown from this method are only IOExceptions
                 if ((x is IOException))
-                    throw new IOException(string.Format(Resources.FileStreamManager_CreateStream_Unexpected_error_opening__0__, path), x);
+                    throw new IOException(string.Format(UtilResources.FileStreamManager_CreateStream_Unexpected_error_opening__0__, path), x);
                 throw;
             }
         }
@@ -779,12 +778,12 @@ namespace pwiz.Skyline.Util
                 var lastWin32Error = Marshal.GetLastWin32Error();
                 if (lastWin32Error == 5)
                 {
-                    throw new IOException(string.Format(Resources.FileStreamManager_GetTempFileName_Access_Denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_permissions_or_retry_the_operation_after_moving_or_copying_files_to_a_different_folder_, basePath));
+                    throw new IOException(string.Format(UtilResources.FileStreamManager_GetTempFileName_Access_Denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_permissions_or_retry_the_operation_after_moving_or_copying_files_to_a_different_folder_, basePath));
                 }
                 else
                 {
-                    throw new IOException(TextUtil.LineSeparate(string.Format(Resources.FileStreamManager_GetTempFileName_Failed_attempting_to_create_a_temporary_file_in_the_folder__0__with_the_following_error_, basePath),
-                        string.Format(Resources.FileStreamManager_GetTempFileName_Win32_Error__0__, lastWin32Error)));
+                    throw new IOException(TextUtil.LineSeparate(string.Format(UtilResources.FileStreamManager_GetTempFileName_Failed_attempting_to_create_a_temporary_file_in_the_folder__0__with_the_following_error_, basePath),
+                        string.Format(UtilResources.FileStreamManager_GetTempFileName_Win32_Error__0__, lastWin32Error)));
                 }
             }
 
@@ -878,33 +877,33 @@ namespace pwiz.Skyline.Util
             catch (ArgumentException e)
             {
                 if (path == null || string.IsNullOrEmpty(path.Trim()))
-                    throw new DeleteException(Resources.FileEx_SafeDelete_Path_is_empty, e);
-                throw new DeleteException(string.Format(Resources.FileEx_SafeDelete_Path_contains_invalid_characters___0_, path), e);
+                    throw new DeleteException(UtilResources.FileEx_SafeDelete_Path_is_empty, e);
+                throw new DeleteException(string.Format(UtilResources.FileEx_SafeDelete_Path_contains_invalid_characters___0_, path), e);
             }
             catch (DirectoryNotFoundException e)
             {
-                throw new DeleteException(string.Format(Resources.FileEx_SafeDelete_Directory_could_not_be_found___0_, path), e);
+                throw new DeleteException(string.Format(UtilResources.FileEx_SafeDelete_Directory_could_not_be_found___0_, path), e);
             }
             catch (NotSupportedException e)
             {
-                throw new DeleteException(string.Format(Resources.FileEx_SafeDelete_File_path_is_invalid___0_, path), e);
+                throw new DeleteException(string.Format(UtilResources.FileEx_SafeDelete_File_path_is_invalid___0_, path), e);
             }
             catch (PathTooLongException e)
             {
-                throw new DeleteException(string.Format(Resources.FileEx_SafeDelete_File_path_is_too_long___0_, path), e);
+                throw new DeleteException(string.Format(UtilResources.FileEx_SafeDelete_File_path_is_too_long___0_, path), e);
             }
             catch (IOException e)
             {
-                throw new DeleteException(string.Format(Resources.FileEx_SafeDelete_Unable_to_delete_file_which_is_in_use___0_, path), e);
+                throw new DeleteException(string.Format(UtilResources.FileEx_SafeDelete_Unable_to_delete_file_which_is_in_use___0_, path), e);
             }
             catch (UnauthorizedAccessException e)
             {
                 var fileInfo = new FileInfo(path);
                 if (fileInfo.IsReadOnly)
-                    throw new DeleteException(string.Format(Resources.FileEx_SafeDelete_Unable_to_delete_read_only_file___0_, path), e);
+                    throw new DeleteException(string.Format(UtilResources.FileEx_SafeDelete_Unable_to_delete_read_only_file___0_, path), e);
                 if (Directory.Exists(path))
-                    throw new DeleteException(string.Format(Resources.FileEx_SafeDelete_Unable_to_delete_directory___0_, path), e);
-                throw new DeleteException(string.Format(Resources.FileEx_SafeDelete_Insufficient_permission_to_delete_file___0_, path), e);
+                    throw new DeleteException(string.Format(UtilResources.FileEx_SafeDelete_Unable_to_delete_directory___0_, path), e);
+                throw new DeleteException(string.Format(UtilResources.FileEx_SafeDelete_Insufficient_permission_to_delete_file___0_, path), e);
             }
         }
 
@@ -1000,7 +999,7 @@ namespace pwiz.Skyline.Util
             if (!dir.Exists)
             {
                 throw new DirectoryNotFoundException(
-                    Resources.DirectoryEx_DirectoryCopy_Source_directory_does_not_exist_or_could_not_be_found__
+                    UtilResources.DirectoryEx_DirectoryCopy_Source_directory_does_not_exist_or_could_not_be_found__
                     + sourceDirName);
             }
             DirectoryInfo[] dirs = dir.GetDirectories();
@@ -1241,7 +1240,7 @@ namespace pwiz.Skyline.Util
             if (SafeName == null)
             {
                 throw new DirectoryNotFoundException(
-                    string.Format(Resources.FileSaver_CanSave_Cannot_save_to__0__Check_the_path_to_make_sure_the_directory_exists, RealName));
+                    string.Format(UtilResources.FileSaver_CanSave_Cannot_save_to__0__Check_the_path_to_make_sure_the_directory_exists, RealName));
             }
 
             if (_streamManager.Exists(RealName))
@@ -1251,7 +1250,7 @@ namespace pwiz.Skyline.Util
                     if ((_streamManager.GetAttributes(RealName) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
                     {
                         throw new UnauthorizedAccessException(
-                            string.Format(Resources.FileSaver_CanSave_Cannot_save_to__0__The_file_is_read_only, RealName));
+                            string.Format(UtilResources.FileSaver_CanSave_Cannot_save_to__0__The_file_is_read_only, RealName));
                     }
                 }
                 catch (FileNotFoundException)

@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Find
 {
@@ -35,20 +34,20 @@ namespace pwiz.Skyline.Model.Find
         }
         public override string DisplayName
         {
-            get { return Resources.ManuallyIntegratedPeakFinder_DisplayName_Manually_integrated_peaks; }
+            get { return FindResources.ManuallyIntegratedPeakFinder_DisplayName_Manually_integrated_peaks; }
         }
 
         protected override FindMatch MatchTransition(Bookmark bookmark, TransitionChromInfo transitionChromInfo)
         {
             return transitionChromInfo.IsUserSetManual
-                       ? new FindMatch(bookmark, Resources.ManuallyIntegratedPeakFinder_MatchTransition_Manually_integrated_peak)
+                       ? new FindMatch(bookmark, FindResources.ManuallyIntegratedPeakFinder_MatchTransition_Manually_integrated_peak)
                        : null;
         }
 
         protected override FindMatch MatchTransitionGroup(Bookmark bookmark, TransitionGroupChromInfo transitionGroupChromInfo)
         {
             return transitionGroupChromInfo.IsUserSetManual
-                       ? new FindMatch(bookmark, Resources.ManuallyIntegratedPeakFinder_DisplayName_Manually_integrated_peaks)
+                       ? new FindMatch(bookmark, FindResources.ManuallyIntegratedPeakFinder_DisplayName_Manually_integrated_peaks)
                        : null;
         }
     }

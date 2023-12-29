@@ -275,7 +275,7 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument Import(TextReader reader, IProgressMonitor progressMonitor, long lineCount, bool isMinutes, bool removeMissing = false, bool changePeaks = true)
         {
-            IProgressStatus status = new ProgressStatus(Resources.PeakBoundaryImporter_Import_Importing_Peak_Boundaries);
+            IProgressStatus status = new ProgressStatus(ModelResources.PeakBoundaryImporter_Import_Importing_Peak_Boundaries);
             double timeConversionFactor = isMinutes ? 1.0 : 60.0;
             int linesRead = 0;
             int progressPercent = 0;
@@ -358,7 +358,7 @@ namespace pwiz.Skyline.Model
                             var nodeForModPep = modMatcher.GetModifiedNode(modifiedPeptideString);
                             if (nodeForModPep == null)
                             {
-                                throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Peptide_has_unrecognized_modifications__0__at_line__1_, modifiedPeptideString, linesRead));
+                                throw new IOException(string.Format(ModelResources.PeakBoundaryImporter_Import_Peptide_has_unrecognized_modifications__0__at_line__1_, modifiedPeptideString, linesRead));
                             }
                             nodeForModPep = nodeForModPep.ChangeSettings(Document.Settings, SrmSettingsDiff.ALL);
                             // Convert the modified peptide string into a standardized form that 

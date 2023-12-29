@@ -25,7 +25,6 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -228,7 +227,7 @@ namespace pwiz.Skyline.EditUI
         {
             var radioButton = new RadioButton
             {
-                Text = page.Caption ?? string.Format(Resources.EditSpectrumFilterDlg_MakePageButton_Case__0_, index + 1),
+                Text = page.Caption ?? string.Format(EditUIResources.EditSpectrumFilterDlg_MakePageButton_Case__0_, index + 1),
                 AutoCheck = false
             };
             radioButton.Click += (sender, args)=>SelectPage(index);

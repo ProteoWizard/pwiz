@@ -135,7 +135,7 @@ namespace pwiz.Skyline
 
                 using (var longWaitUpdate = new LongWaitDlg())
                 {
-                    longWaitUpdate.Text = string.Format(Resources.UpgradeManager_updateCheck_Complete_Upgrading__0_, Program.Name);
+                    longWaitUpdate.Text = string.Format(SkylineResources.UpgradeManager_updateCheck_Complete_Upgrading__0_, Program.Name);
                     longWaitUpdate.Message = GetProgressMessage(0, _updateInfo.UpdateSizeBytes ?? 0);
                     longWaitUpdate.ProgressValue = 0;
                     AutoResetEvent endUpdateEvent = null;
@@ -240,7 +240,7 @@ namespace pwiz.Skyline
 
         private string GetProgressMessage(long bytesCompleted, long totalBytes)
         {
-            return string.Format(Resources.UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__, _updateInfo.AvailableVersion,
+            return string.Format(SkylineResources.UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__, _updateInfo.AvailableVersion,
                 new FileSize(bytesCompleted), new FileSize(totalBytes));
         }
 

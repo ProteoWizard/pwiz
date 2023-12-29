@@ -132,6 +132,8 @@ enum PWIZ_API_DECL InstrumentModelType
     InstrumentModelType_Orbitrap_Exploris_240,
     InstrumentModelType_Orbitrap_Exploris_480,
     InstrumentModelType_Orbitrap_Eclipse,
+    InstrumentModelType_Orbitrap_GC,
+    InstrumentModelType_Orbitrap_Astral,
 
     InstrumentModelType_Count,
 };
@@ -241,7 +243,9 @@ const InstrumentNameToModelMapping nameToModelMapping[] =
     {"ORBITRAP EXPLORIS 120", InstrumentModelType_Orbitrap_Exploris_120, Exact},
     {"ORBITRAP EXPLORIS 240", InstrumentModelType_Orbitrap_Exploris_240, Exact},
     {"ORBITRAP EXPLORIS 480", InstrumentModelType_Orbitrap_Exploris_480, Exact},
+    {"ORBITRAP GC", InstrumentModelType_Orbitrap_GC, Contains},
     {"ECLIPSE", InstrumentModelType_Orbitrap_Eclipse, Contains},
+    {"ASTRAL", InstrumentModelType_Orbitrap_Astral, Contains},
     {"FUSION ETD", InstrumentModelType_Orbitrap_Fusion_ETD, Contains},
     {"FUSION LUMOS", InstrumentModelType_Orbitrap_Fusion_Lumos, Contains},
     {"FUSION", InstrumentModelType_Orbitrap_Fusion, Contains},
@@ -336,6 +340,7 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_Orbitrap_Fusion_ETD:
         case InstrumentModelType_Orbitrap_Ascend:
         case InstrumentModelType_Orbitrap_ID_X:
+        case InstrumentModelType_Orbitrap_Astral:
         case InstrumentModelType_TSQ:
         case InstrumentModelType_TSQ_Quantum:
         case InstrumentModelType_TSQ_Quantum_Access:
@@ -363,6 +368,7 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_DSQ_II:
         case InstrumentModelType_ISQ:
         case InstrumentModelType_GC_IsoLink:
+        case InstrumentModelType_Orbitrap_GC:
             ionSources.push_back(IonizationType_EI);
             break;
 
@@ -426,6 +432,7 @@ enum PWIZ_API_DECL MassAnalyzerType
     MassAnalyzerType_Orbitrap,
     MassAnalyzerType_FTICR,
     MassAnalyzerType_Magnetic_Sector,
+    MassAnalyzerType_Astral, // ASymmetric TRack Lossless
     MassAnalyzerType_Count
 };
 
@@ -462,6 +469,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_Orbitrap_Ascend:
         case InstrumentModelType_Orbitrap_ID_X:
         case InstrumentModelType_Orbitrap_Eclipse:
+        case InstrumentModelType_Orbitrap_GC:
         {
             switch (scanFilterType)
             {
@@ -472,6 +480,14 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
                     return MassAnalyzerType_Linear_Ion_Trap;
             }
         }
+
+		case InstrumentModelType_Orbitrap_Astral:
+            switch (scanFilterType)
+            {
+                case ScanFilterMassAnalyzerType_FTMS: return MassAnalyzerType_Orbitrap;
+                default:
+                    return MassAnalyzerType_Astral; // Astral filters apparently don't have a scan filter mass analyzer type: if missing, assume Astral
+            }
 
         case InstrumentModelType_LTQ_FT:
         case InstrumentModelType_LTQ_FT_Ultra:
@@ -583,6 +599,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_480:
+		case InstrumentModelType_Orbitrap_GC:
             massAnalyzers.push_back(MassAnalyzerType_Orbitrap);
             break;
 
@@ -602,6 +619,11 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_Orbitrap_Eclipse:
             massAnalyzers.push_back(MassAnalyzerType_Orbitrap);
             massAnalyzers.push_back(MassAnalyzerType_Linear_Ion_Trap);
+            break;
+
+        case InstrumentModelType_Orbitrap_Astral:
+            massAnalyzers.push_back(MassAnalyzerType_Orbitrap);
+            massAnalyzers.push_back(MassAnalyzerType_Astral);
             break;
 
         case InstrumentModelType_LTQ_FT:
@@ -723,6 +745,7 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_480:
+		case InstrumentModelType_Orbitrap_GC:
             detectors.push_back(DetectorType_Inductive);
             break;
 
@@ -743,6 +766,7 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_Orbitrap_Ascend:
         case InstrumentModelType_Orbitrap_ID_X:
         case InstrumentModelType_Orbitrap_Eclipse:
+		case InstrumentModelType_Orbitrap_Astral:
             detectors.push_back(DetectorType_Inductive);
             detectors.push_back(DetectorType_Electron_Multiplier);
             break;

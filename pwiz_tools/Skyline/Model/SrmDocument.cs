@@ -233,7 +233,7 @@ namespace pwiz.Skyline.Model
 
         public static string FILTER_DOC
         {
-            get { return TextUtil.FileDialogFilter(Resources.SrmDocument_FILTER_DOC_Skyline_Documents, EXT); }
+            get { return TextUtil.FileDialogFilter(ModelResources.SrmDocument_FILTER_DOC_Skyline_Documents, EXT); }
         }
 
         public static string FILTER_DOC_AND_SKY_ZIP
@@ -241,7 +241,7 @@ namespace pwiz.Skyline.Model
             // Used only in the open file dialog.
             get
             {
-                return TextUtil.FileDialogFilter(Resources.SrmDocument_FILTER_DOC_AND_SKY_ZIP_Skyline_Files, EXT,
+                return TextUtil.FileDialogFilter(ModelResources.SrmDocument_FILTER_DOC_AND_SKY_ZIP_Skyline_Files, EXT,
                                                  SrmDocumentSharing.EXT_SKY_ZIP, SkypFile.EXT);
             }    
         }
@@ -704,14 +704,14 @@ namespace pwiz.Skyline.Model
 
         public string GetSmallMoleculeGroupId()
         {
-            return GetMoleculeGroupId(Resources.SrmDocument_GetSmallMoleculeGroupId_molecules);
+            return GetMoleculeGroupId(ModelResources.SrmDocument_GetSmallMoleculeGroupId_molecules);
         }
 
         public string GetPeptideGroupId(bool peptideList)
         {
             string baseId = peptideList
-                ? Resources.SrmDocument_GetPeptideGroupId_peptides 
-                : Resources.SrmDocument_GetPeptideGroupId_sequence;
+                ? ModelResources.SrmDocument_GetPeptideGroupId_peptides 
+                : ModelResources.SrmDocument_GetPeptideGroupId_sequence;
             return GetMoleculeGroupId(baseId);
         }
 
@@ -1297,7 +1297,7 @@ namespace pwiz.Skyline.Model
                         if (!probeString.Contains(@"<srm_settings"))
                         {
                             explained = string.Format(
-                                Resources.SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_,
+                                ModelResources.SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_,
                                 path, EXT, SrmDocumentSharing.EXT_SKY_ZIP);
                         }
                     }
@@ -1351,7 +1351,7 @@ namespace pwiz.Skyline.Model
                 if (dictPeptidesModified.ContainsKey(key))
                 {
                     throw new InvalidDataException(
-                        string.Format(Resources.SrmDocument_MergeMatchingPeptidesUserInfo_The_peptide__0__was_found_multiple_times_with_user_modifications,
+                        string.Format(ModelResources.SrmDocument_MergeMatchingPeptidesUserInfo_The_peptide__0__was_found_multiple_times_with_user_modifications,
                                       nodePep.RawTextIdDisplay));
                 }
                 dictPeptidesModified.Add(key, nodePep);
@@ -1567,7 +1567,7 @@ namespace pwiz.Skyline.Model
             var regression = Settings.PeptideSettings.Prediction.RetentionTime;
             if (!(regression?.Calculator is RCalcIrt calculator))
             {
-                throw new InvalidDataException(Resources.SrmDocument_AddIrtPeptides_Must_have_an_active_iRT_calculator_to_add_iRT_peptides);
+                throw new InvalidDataException(ModelResources.SrmDocument_AddIrtPeptides_Must_have_an_active_iRT_calculator_to_add_iRT_peptides);
             }
             var dbPath = calculator.DatabasePath;
             var db = File.Exists(dbPath) ? IrtDb.GetIrtDb(dbPath, null) : IrtDb.CreateIrtDb(dbPath);
@@ -1751,9 +1751,9 @@ namespace pwiz.Skyline.Model
             else if (lastFrom == (int)Level.Molecules)
             {
                 if (from.GetIdentity((int)Level.MoleculeGroups) is FastaSequence)
-                    throw new InvalidOperationException(Resources.SrmDocument_MoveNode_Invalid_move_source);
+                    throw new InvalidOperationException(ModelResources.SrmDocument_MoveNode_Invalid_move_source);
                 if (to == null || to.GetIdentity((int)Level.MoleculeGroups) is FastaSequence)
-                    throw new InvalidOperationException(Resources.SrmDocument_MoveNode_Invalid_move_target);
+                    throw new InvalidOperationException(ModelResources.SrmDocument_MoveNode_Invalid_move_target);
 
                 SrmDocument document = (SrmDocument)RemoveChild(from.Parent, nodeFrom);
                 // If dropped over a group, add to the end
@@ -1768,7 +1768,7 @@ namespace pwiz.Skyline.Model
                 newLocation = new IdentityPath(to.GetPathTo((int)Level.MoleculeGroups), nodeFrom.Id);
                 return document;
             }
-            throw new InvalidOperationException(Resources.SrmDocument_MoveNode_Invalid_move_source);
+            throw new InvalidOperationException(ModelResources.SrmDocument_MoveNode_Invalid_move_source);
         }
 
         public SrmDocument AddPrecursorResultsAnnotations(IdentityPath groupPath, ChromFileInfoId fileId,
@@ -1844,23 +1844,23 @@ namespace pwiz.Skyline.Model
             if (find.IndexSet == -1)
             {
                 throw new ArgumentOutOfRangeException(
-                    string.Format(Resources.SrmDocument_ChangePeak_No_replicate_named__0__was_found, nameSet));
+                    string.Format(ModelResources.SrmDocument_ChangePeak_No_replicate_named__0__was_found, nameSet));
             }
             else if (find.FileId == null)
             {
                 throw new ArgumentOutOfRangeException(
-                    string.Format(Resources.SrmDocument_ChangePeak_The_file__0__was_not_found_in_the_replicate__1__, filePath, nameSet));
+                    string.Format(ModelResources.SrmDocument_ChangePeak_The_file__0__was_not_found_in_the_replicate__1__, filePath, nameSet));
             }
             else if (find.ChromInfos == null)
             {
                 throw new ArgumentOutOfRangeException(string.Format(
-                    Resources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_replicate__1__,
+                    ModelResources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_replicate__1__,
                     TransitionGroupTreeNode.GetLabel(find.TransitionGroup, find.PrecursorMz, string.Empty), nameSet));
             }
             else if (find.IndexInfo == -1)
             {
                 throw new ArgumentOutOfRangeException(string.Format(
-                    Resources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_file__1__,
+                    ModelResources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_file__1__,
                     TransitionGroupTreeNode.GetLabel(find.TransitionGroup, find.PrecursorMz, string.Empty), filePath));
             }
 
@@ -2292,7 +2292,7 @@ namespace pwiz.Skyline.Model
             if (!settings.HasResults)
             {
                 if (results != null)
-                    throw new InvalidDataException(Resources.SrmDocumentValidateChromInfoResults_found_in_document_with_no_replicates);
+                    throw new InvalidDataException(ModelResources.SrmDocumentValidateChromInfoResults_found_in_document_with_no_replicates);
                 return;
             }
             // This check was a little too agressive.

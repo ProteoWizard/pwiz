@@ -109,7 +109,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         public static readonly NormalizationMethod GLOBAL_STANDARDS
             = new SingletonNormalizationMethod(@"global_standards",
                 () => GroupComparisonStrings.NormalizationMethod_GLOBAL_STANDARDS_Ratio_to_Global_Standards,
-                () => Resources.AreaCVToolbar_UpdateUI_Global_standards,
+                () => GroupComparisonResources.AreaCVToolbar_UpdateUI_Global_standards,
                 value=>string.Format(GroupComparisonStrings.NormalizationMethod_GLOBAL_STANDARDS__0__Ratio_to_Global_Standards, value));
         public static readonly NormalizationMethod TIC
             = new SingletonNormalizationMethod(@"tic",
@@ -265,7 +265,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 {
                     if (_isotopeLabelType == null)
                     {
-                        return string.Format(Resources.RatioToSurrogate_ToString_Ratio_to_surrogate__0_, _surrogateName);
+                        return string.Format(GroupComparisonResources.RatioToSurrogate_ToString_Ratio_to_surrogate__0_, _surrogateName);
                     }
                     return string.Format(Resources.RatioToSurrogate_ToString_Ratio_to_surrogate__0____1__, _surrogateName, _isotopeLabelType.Title);
                 }

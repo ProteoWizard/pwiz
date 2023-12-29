@@ -1846,7 +1846,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     var librarySpec = libraries.LibrarySpecs[i];
                     if (librarySpec == null)
-                        throw new InvalidDataException(Resources.SrmSettings_ConnectLibrarySpecs_Settings_missing_library_spec);
+                        throw new InvalidDataException(DocSettingsResources.SrmSettings_ConnectLibrarySpecs_Settings_missing_library_spec);
                     librarySpecs[iSpec] = librarySpec;
                     if (!File.Exists(librarySpec.FilePath))
                     {
@@ -1935,7 +1935,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         if (defSet.StaticModList.Any(existingMod => Equals(existingMod.Name, modName)))
                         {
                             throw new InvalidDataException(
-                                string.Format(Resources.SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition,
+                                string.Format(DocSettingsResources.SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition,
                                     modName));
                         }
                     }
@@ -1955,7 +1955,7 @@ namespace pwiz.Skyline.Model.DocSettings
                             if (defSet.HeavyModList.Any(existingMod => Equals(existingMod.Name, modName)))
                             {
                                 throw new InvalidDataException(
-                                    string.Format(Resources.SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition,
+                                    string.Format(DocSettingsResources.SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition,
                                         modName));
                             }
                         }

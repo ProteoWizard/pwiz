@@ -120,7 +120,7 @@ namespace pwiz.Skyline.Model.Proteome
 
             var proteinAssociations = new Dictionary<IProteinRecord, PeptideAssociationGroup>();
             int maxProgressValue = 0;
-            broker.Message = Resources.AssociateProteinsDlg_FindProteinMatchesWithFasta_Finding_peptides_in_FASTA_file;
+            broker.Message = ProteomeResources.AssociateProteinsDlg_FindProteinMatchesWithFasta_Finding_peptides_in_FASTA_file;
 
             ParallelEx.ForEach(proteinSource.Proteins, fastaRecord =>
             {
@@ -414,7 +414,7 @@ namespace pwiz.Skyline.Model.Proteome
         {
             Dictionary<PeptideDocNode, List<IProteinRecord>> peptideToProteinGroups = _peptideToProteins;
 
-            broker.Message = Resources.AssociateProteinsDlg_UpdateParsimonyResults_Applying_parsimony_options;
+            broker.Message = ProteomeResources.AssociateProteinsDlg_UpdateParsimonyResults_Applying_parsimony_options;
 
             _peptidesRemovedByFilters = new HashSet<PeptideDocNode>();
 
@@ -574,7 +574,7 @@ namespace pwiz.Skyline.Model.Proteome
             results.FinalPeptideCount = 0;
             results.FinalProteinCount = _peptideGroupToProteins.Count;
 
-            broker.Message = Resources.ProteinAssociation_CalculateProteinGroups_Calculating_protein_groups;
+            broker.Message = ProteomeResources.ProteinAssociation_CalculateProteinGroups_Calculating_protein_groups;
             var proteinGroupAssociations = new Dictionary<IProteinRecord, PeptideAssociationGroup>();
 
             _peptideToProteinGroups = new Dictionary<PeptideDocNode, List<IProteinRecord>>();
@@ -629,7 +629,7 @@ namespace pwiz.Skyline.Model.Proteome
 
             int proteinsProcessed = 0;
 
-            broker.Message = Resources.ProteinAssociation_Calculating_protein_clusters;
+            broker.Message = ProteomeResources.ProteinAssociation_Calculating_protein_clusters;
             broker.ProgressValue = 0;
 
             foreach (var kvp in ParsimoniousProteins.OrderBy(kvp => kvp.Key.Sequence.Name))
@@ -671,7 +671,7 @@ namespace pwiz.Skyline.Model.Proteome
         {
             var proteinsByCluster = CalculateClusters(peptideToProteinGroups, broker);
 
-            broker.Message = Resources.ProteinAssociation_Finding_minimal_protein_list;
+            broker.Message = ProteomeResources.ProteinAssociation_Finding_minimal_protein_list;
             broker.ProgressValue = 0;
             int clustersProcessed = 0;
 
@@ -709,7 +709,7 @@ namespace pwiz.Skyline.Model.Proteome
         {
             var proteinsByCluster = CalculateClusters(peptideToProteinGroups, broker);
 
-            broker.Message = Resources.ProteinAssociation_Removing_subset_proteins;
+            broker.Message = ProteomeResources.ProteinAssociation_Removing_subset_proteins;
             broker.ProgressValue = 0;
             int proteinsProcessed = 0;
 
@@ -763,7 +763,7 @@ namespace pwiz.Skyline.Model.Proteome
             if (_peptideTrie != null)
                 return;
 
-            broker.Message = Resources.ProteinAssociation_ListPeptidesForMatching_Building_peptide_prefix_tree;
+            broker.Message = ProteomeResources.ProteinAssociation_ListPeptidesForMatching_Building_peptide_prefix_tree;
 
             if (_peptideToPath == null)
             {
@@ -814,7 +814,7 @@ namespace pwiz.Skyline.Model.Proteome
         // FastaSequence nodes.  The peptides that were matched to a FastaSequence are removed from their old group.
         public SrmDocument CreateDocTree(SrmDocument current, IProgressMonitor monitor)
         {
-            var status = new ProgressStatus(Resources.ProteinAssociation_CreateDocTree_Creating_protein_targets_and_assigning_their_peptides);
+            var status = new ProgressStatus(ProteomeResources.ProteinAssociation_CreateDocTree_Creating_protein_targets_and_assigning_their_peptides);
             monitor.UpdateProgress(status);
 
             // Protein associations may be out of order because of multi-threading, so put them back in order.

@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public DetectionsHistogramPane(GraphSummary graphSummary) : base(graphSummary )
         {
             XAxis.Type = AxisType.Ordinal;
-            XAxis.Title.Text = Resources.DetectionHistogramPane_XAxis_Name;
+            XAxis.Title.Text = GraphsResources.DetectionHistogramPane_XAxis_Name;
         }
 
         public override ImmutableList<float> GetToolTipDataSeries()
@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (_detectionData.IsValid)
             {
-                YAxis.Title.Text = Resources.DetectionHistogramPane_YAxis_Name;
+                YAxis.Title.Text = GraphsResources.DetectionHistogramPane_YAxis_Name;
             }
             base.AddLabels();
         }

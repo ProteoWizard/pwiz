@@ -100,8 +100,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     : string.Format(@"{0}{1}{2} ({3})", libraryNamePrefix, sequence, charge, labelType);
             }
             return labelType.IsLight
-                ? string.Format(Resources.SpectrumGraphItem_Title__0__1__Charge__2__, libraryNamePrefix, sequence, charge)
-                : string.Format(Resources.SpectrumGraphItem_Title__0__1__Charge__2__3__, libraryNamePrefix, sequence, charge, labelType);
+                ? string.Format(GraphsResources.SpectrumGraphItem_Title__0__1__Charge__2__, libraryNamePrefix, sequence, charge)
+                : string.Format(GraphsResources.SpectrumGraphItem_Title__0__1__Charge__2__3__, libraryNamePrefix, sequence, charge, labelType);
         }
 
         public override string Title
@@ -389,7 +389,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public sealed class UnavailableMSGraphItem : NoDataMSGraphItem
     {
-        public UnavailableMSGraphItem() : base(Resources.UnavailableMSGraphItem_UnavailableMSGraphItem_Spectrum_information_unavailable)
+        public UnavailableMSGraphItem() : base(GraphsResources.UnavailableMSGraphItem_UnavailableMSGraphItem_Spectrum_information_unavailable)
         {
         }
     }
@@ -473,12 +473,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void CustomizeYAxis(Axis axis)
         {
-            CustomizeAxis(axis, Resources.AbstractMSGraphItem_CustomizeYAxis_Intensity);
+            CustomizeAxis(axis, GraphsResources.AbstractMSGraphItem_CustomizeYAxis_Intensity);
         }
 
         public void CustomizeXAxis(Axis axis)
         {
-            CustomizeAxis(axis, Resources.AbstractMSGraphItem_CustomizeXAxis_MZ);
+            CustomizeAxis(axis, GraphsResources.AbstractMSGraphItem_CustomizeXAxis_MZ);
         }
 
         private static void CustomizeAxis(Axis axis, string title)

@@ -25,7 +25,6 @@ using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -87,7 +86,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected override string DisambiguationPrefix
             {
-                get { return Resources.Annotation_DisambiguationPrefix_Annotation__; }
+                get { return GraphsResources.Annotation_DisambiguationPrefix_Annotation__; }
             }
 
             protected bool Equals(Annotation other)
@@ -138,7 +137,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected override string DisambiguationPrefix
             {
-                get { return Resources.Property_DisambiguationPrefix_Property__; }
+                get { return GraphsResources.Property_DisambiguationPrefix_Property__; }
             }
 
             protected bool Equals(Property other)
