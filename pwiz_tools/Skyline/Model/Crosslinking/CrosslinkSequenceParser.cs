@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
@@ -80,7 +79,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
                     if (!FastaSequence.IsExSequence(sequence))
                     {
-                        throw CommonException.Create(new ParseExceptionDetail(Resources.CrosslinkSequenceParser_ParseCrosslinkLibraryKey_Invalid_peptide_sequence, ich));
+                        throw CommonException.Create(new ParseExceptionDetail(CrosslinkingResources.CrosslinkSequenceParser_ParseCrosslinkLibraryKey_Invalid_peptide_sequence, ich));
                     }
                     peptideSequences.Add(new PeptideLibraryKey(sequence, 0));
                 }
@@ -129,7 +128,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                         }
                         catch (Exception)
                         {
-                            string message = string.Format(Resources.CrosslinkSequenceParser_ParseCrosslink_Unable_to_parse___0___as_a_number, value);
+                            string message = string.Format(CrosslinkingResources.CrosslinkSequenceParser_ParseCrosslink_Unable_to_parse___0___as_a_number, value);
                             throw CommonException.Create(new ParseExceptionDetail(message, position + ichAt));
                         }
                     }
@@ -141,7 +140,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         private static ParseExceptionDetail Expected(char ch, int position)
         {
-            return new ParseExceptionDetail(string.Format(Resources.CrosslinkSequenceParser_Expected_Expected___0__, ch), position);
+            return new ParseExceptionDetail(string.Format(CrosslinkingResources.CrosslinkSequenceParser_Expected_Expected___0__, ch), position);
         }
 
         private static IEnumerable<string> Tokenize(string str)
@@ -202,7 +201,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 string message = Message;
                 if (Position.HasValue)
                 {
-                    message = string.Format(Resources.ParseExceptionDetail_ToString__at_position__0_, message, Position + 1);
+                    message = string.Format(CrosslinkingResources.ParseExceptionDetail_ToString__at_position__0_, message, Position + 1);
                 }
                 return message;
             }

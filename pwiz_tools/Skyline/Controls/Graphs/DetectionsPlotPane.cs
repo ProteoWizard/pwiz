@@ -23,7 +23,6 @@ using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using ZedGraph;
-using pwiz.Skyline.Properties;
 using Settings = pwiz.Skyline.Controls.Graphs.DetectionsGraphController.Settings;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -147,16 +146,16 @@ namespace pwiz.Skyline.Controls.Graphs
                 switch (status)
                 {
                     case DetectionPlotData.DetectionDataCache.CacheStatus.processing:
-                        Title.Text = Resources.DetectionPlotPane_WaitingForData_Label;
+                        Title.Text = GraphsResources.DetectionPlotPane_WaitingForData_Label;
                         break;
                     case DetectionPlotData.DetectionDataCache.CacheStatus.idle:
-                        Title.Text = Resources.DetectionPlotPane_EmptyPlot_Label;
+                        Title.Text = GraphsResources.DetectionPlotPane_EmptyPlot_Label;
                         break;
                     case DetectionPlotData.DetectionDataCache.CacheStatus.canceled:
-                        Title.Text = Resources.DetectionPlotPane_EmptyPlotCanceled_Label;
+                        Title.Text = GraphsResources.DetectionPlotPane_EmptyPlotCanceled_Label;
                         break;
                     case DetectionPlotData.DetectionDataCache.CacheStatus.error:
-                        Title.Text = Resources.DetectionPlotPane_EmptyPlotError_Label;
+                        Title.Text = GraphsResources.DetectionPlotPane_EmptyPlotError_Label;
                         break;
                 }
                 var scaleFactor = CalcScaleFactor();
@@ -183,7 +182,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 Title.Text = string.Empty;
                 YAxis.Title.Text = string.Format(CultureInfo.CurrentCulture, 
-                    Resources.DetectionPlotPane_YAxis_Name, 
+                    GraphsResources.DetectionPlotPane_YAxis_Name, 
                     string.Format(CultureInfo.CurrentCulture, Settings.YScaleFactor.Label, Settings.TargetType.Label) );
             }
         }

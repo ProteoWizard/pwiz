@@ -103,7 +103,7 @@ namespace pwiz.Skyline.Model.Lib
 
                     if (!EnzymeInfo.SupportedEnzymes.Contains(value))
                         throw new ArgumentOutOfRangeException(string.Format(
-                            Resources.FastaToProsit_Enzyme_unsupported_enzyme___0____allowed_values_are___1_, value,
+                            LibResources.FastaToProsit_Enzyme_unsupported_enzyme___0____allowed_values_are___1_, value,
                             string.Join(@", ", EnzymeInfo.SupportedEnzymes)));
                     _enzyme = value;
                 }
@@ -167,7 +167,7 @@ namespace pwiz.Skyline.Model.Lib
                 UseShellExecute = false
             };
 
-            status = status.ChangeMessage(Resources.EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_Converting_FASTA_to_Prosit_input);
+            status = status.ChangeMessage(LibResources.EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_Converting_FASTA_to_Prosit_input);
             if (progressMonitor.UpdateProgress(status) == UpdateProgressResponse.cancel)
                 return;
 
@@ -196,7 +196,7 @@ namespace pwiz.Skyline.Model.Lib
                 UseShellExecute = false
             };
 
-            status = status.ChangeMessage(Resources.EncyclopeDiaHelpers_ConvertPrositOutputToDlib_Converting_Prosit_output_to_EncyclopeDia_library);
+            status = status.ChangeMessage(LibResources.EncyclopeDiaHelpers_ConvertPrositOutputToDlib_Converting_Prosit_output_to_EncyclopeDia_library);
             if (progressMonitor.UpdateProgress(status) == UpdateProgressResponse.cancel)
                 return;
 
@@ -319,7 +319,7 @@ namespace pwiz.Skyline.Model.Lib
                     var isolationScheme = isolationSchemeByFile[diaFile];
                     string originalFilename = diaFile.GetFileName().Replace(DEMUX_SUFFIX, string.Empty);
                     var progressMonitorForFile = new ProgressMonitorForFile(originalFilename, false, isolationScheme.PrespecifiedIsolationWindows.Count, _conversionProgressMonitor);
-                    IProgressStatus statusForFile = new ProgressStatus(Resources.EncyclopeDiaHelpers_Generate_Waiting_for_chromatogram_library);
+                    IProgressStatus statusForFile = new ProgressStatus(LibResources.EncyclopeDiaHelpers_Generate_Waiting_for_chromatogram_library);
                     if (inputIsDemuxed)
                         statusForFile = statusForFile.ChangeSegments(1, 2);
                     progressMonitorForFile.UpdateProgress(statusForFile);
@@ -360,14 +360,14 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         var exception = narrowWindowDiaConverter.Exception;
                         if (exception != null)
-                            throw new OperationCanceledException(Resources.ParallelRunner_Generate_An_EncyclopeDIA_task_failed_, exception);
+                            throw new OperationCanceledException(LibResources.ParallelRunner_Generate_An_EncyclopeDIA_task_failed_, exception);
                     }
                 }
 
                 if (IsCanceled)
                     return;
 
-                status = status.ChangeMessage(string.Format(Resources.EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2,
+                status = status.ChangeMessage(string.Format(LibResources.EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2,
                     convertedNarrowFiles + 1, totalFileCount, Path.GetFileName(_encyclopeDiaElibOutputFilepath)));
                 if (progressMonitor.UpdateProgress(status) == UpdateProgressResponse.cancel)
                     return;
@@ -388,14 +388,14 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         var exception = wideWindowDiaConverter.Exception;
                         if (exception != null)
-                            throw new OperationCanceledException(Resources.ParallelRunner_Generate_An_EncyclopeDIA_task_failed_, exception);
+                            throw new OperationCanceledException(LibResources.ParallelRunner_Generate_An_EncyclopeDIA_task_failed_, exception);
                     }
                 }
 
                 if (IsCanceled)
                     return;
 
-                status = status.ChangeMessage(string.Format(Resources.EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2,
+                status = status.ChangeMessage(string.Format(LibResources.EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2,
                     totalFileCount, totalFileCount, Path.GetFileName(_encyclopeDiaElibOutputFilepath)));
                 if (progressMonitor.UpdateProgress(status) == UpdateProgressResponse.cancel)
                     return;
@@ -448,7 +448,7 @@ namespace pwiz.Skyline.Model.Lib
 
                 const string MSCONVERT_EXE = "msconvert";
 
-                status = status.ChangeMessage(Resources.EncyclopeDiaHelpers_GetConvertedDiaDataFile_Converting_DIA_data_to_mzML);
+                status = status.ChangeMessage(LibResources.EncyclopeDiaHelpers_GetConvertedDiaDataFile_Converting_DIA_data_to_mzML);
                 progressMonitorForFile.UpdateProgress(status);
 
                 var pr = new ProcessRunner();
@@ -526,9 +526,9 @@ namespace pwiz.Skyline.Model.Lib
                             Convert.ToInt32(match.Groups[1].Value) * 100 /
                             Convert.ToInt32(match.Groups[2].Value));
                         // substitute progress message for localization and to make it clear what work is being done
-                        message = string.Format(Resources.ProgressMonitorForFile_UpdateProgress_Demultiplexing_spectra___0___1_, match.Groups[1].Value, match.Groups[2].Value);
+                        message = string.Format(LibResources.ProgressMonitorForFile_UpdateProgress_Demultiplexing_spectra___0___1_, match.Groups[1].Value, match.Groups[2].Value);
                     }
-                    else if (status.Message == Resources.EncyclopeDiaHelpers_Generate_Waiting_for_chromatogram_library ||
+                    else if (status.Message == LibResources.EncyclopeDiaHelpers_Generate_Waiting_for_chromatogram_library ||
                              status.Message.Contains(@"Processing") ||
                              status.Message.Contains(@"Iteration") ||
                              status.Message.Contains(@"Finished analysis"))
@@ -889,8 +889,8 @@ namespace pwiz.Skyline.Model.Lib
             string diaDataFilepath = GetConvertedDiaDataFile(diaDataFile, diaDataPath, progressMonitor, ref status);
 
             /*status = status.ChangeMessage(String.Format(quantLibrary
-                    ? Resources.EncyclopeDiaHelpers_GenerateLibrary_Generating_quantification_library_0_of_1_2
-                    : Resources.EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2,
+                    ? LibResources.EncyclopeDiaHelpers_GenerateLibrary_Generating_quantification_library_0_of_1_2
+                    : LibResources.EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2,
                 0, 0, Path.GetFileName(diaDataFilepath)));*/
             if (progressMonitor.UpdateProgress(status) == UpdateProgressResponse.cancel)
                 return;

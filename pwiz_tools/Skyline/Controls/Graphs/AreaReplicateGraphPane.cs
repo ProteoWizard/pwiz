@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
         public static void SetDotpValueCutoff(this AreaExpectedValue expectedValue, Settings set, float val)
         {
-            Assume.IsTrue(val >= 0 || val <= 1, string.Format(CultureInfo.CurrentCulture, Resources.AreaChartPropertyDlg_ValidateDotpRange__0__must_be_betwen_0_and_1, expectedValue.GetDotpLabel()));
+            Assume.IsTrue(val >= 0 || val <= 1, string.Format(CultureInfo.CurrentCulture, GraphsResources.AreaChartPropertyDlg_ValidateDotpRange__0__must_be_betwen_0_and_1, expectedValue.GetDotpLabel()));
 
             switch (expectedValue)
             {
@@ -108,11 +108,11 @@ namespace pwiz.Skyline.Controls.Graphs
             switch (option)
             {
                 case DotProductDisplayOption.label:
-                    return Resources.DotpDisplayOption_label;
+                    return GraphsResources.DotpDisplayOption_label;
                 case DotProductDisplayOption.line:
-                    return Resources.DotpDisplayOption_line;
+                    return GraphsResources.DotpDisplayOption_line;
                 case DotProductDisplayOption.none:
-                    return Resources.DotpDisplayOption_None;
+                    return GraphsResources.DotpDisplayOption_None;
                 default:
                     return "";
             }
@@ -120,9 +120,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public static DotProductDisplayOption ParseLocalizedString(string optionString)
         {
-            if(Resources.DotpDisplayOption_label.Equals(optionString))
+            if(GraphsResources.DotpDisplayOption_label.Equals(optionString))
                 return DotProductDisplayOption.label;
-            else if(Resources.DotpDisplayOption_line.Equals(optionString))
+            else if(GraphsResources.DotpDisplayOption_line.Equals(optionString))
                 return DotProductDisplayOption.line;
             else 
                 return DotProductDisplayOption.none;
@@ -167,7 +167,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 string[] labels = OriginalXAxisLabels;
                 string[] withLibLabel = new string[labels.Length + 1];
                 withLibLabel[0] = ExpectedVisible == AreaExpectedValue.library ? 
-                    Resources.AreaReplicateGraphPane_InitFromData_Library : 
+                    GraphsResources.AreaReplicateGraphPane_InitFromData_Library : 
                     Resources.AreaReplicateGraphPane_InitFromData_Expected;
 
                 Array.Copy(labels, 0, withLibLabel, 1, labels.Length);
@@ -265,7 +265,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (!resultsAvailable)
             {
-                Title.Text = Resources.AreaReplicateGraphPane_UpdateGraph_No_results_available;
+                Title.Text = GraphsResources.AreaReplicateGraphPane_UpdateGraph_No_results_available;
                 EmptyGraph(document);
                 return;
             }
@@ -285,7 +285,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             if (selectedTreeNode == null || document.FindNode(selectedTreeNode.Path) == null)
             {
-                Title.Text = Helpers.PeptideToMoleculeTextMapper.Translate(Resources.AreaReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_peak_area_graph, document.DocumentType);
+                Title.Text = Helpers.PeptideToMoleculeTextMapper.Translate(GraphsResources.AreaReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_peak_area_graph, document.DocumentType);
                 EmptyGraph(document);
                 return;
             }
@@ -360,7 +360,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else if (!(selectedTreeNode is TransitionGroupTreeNode || selectedTreeNode is PeptideGroupTreeNode))
             {
-                Title.Text = Helpers.PeptideToMoleculeTextMapper.Translate(Resources.AreaReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_peak_area_graph, document.DocumentType);
+                Title.Text = Helpers.PeptideToMoleculeTextMapper.Translate(GraphsResources.AreaReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_peak_area_graph, document.DocumentType);
                 EmptyGraph(document);
                 CanShowPeakAreaLegend = false;
                 CanShowDotProduct = false;
@@ -567,7 +567,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     string label = graphData.DocNodeLabels[i];
                     if (step != 0)
-                        label = string.Format(Resources.AreaReplicateGraphPane_UpdateGraph_Step__0_, step);
+                        label = string.Format(GraphsResources.AreaReplicateGraphPane_UpdateGraph_Step__0_, step);
                     CurveItem curveItem;
 
                     // Only use a MeanErrorBarItem if bars are not going to be stacked.
@@ -680,7 +680,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
 
                 var belowCutoffCount = _dotpData.Count(dotp => dotp <= cutoff);
-                var labelText = string.Format(Resources.AreaReplicateGraphPane_Replicates_Count_Above_Below_Cutoff,
+                var labelText = string.Format(GraphsResources.AreaReplicateGraphPane_Replicates_Count_Above_Below_Cutoff,
                     _dotpData.Count - belowCutoffCount, belowCutoffCount, DotpLabelText);
                 var labelObject = new TextObj(labelText, 1, 0, CoordType.ChartFraction, AlignH.Right, AlignV.Top)
                 {
@@ -699,7 +699,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 GraphObjList.Add(cutoffLine);                          // Add  cutoff line
                 //This is a placeholder to make sure the line shows in the legend.
                 CurveList.Insert(0, new LineItem(string.Format(CultureInfo.CurrentCulture,
-                    Resources.AreaReplicateGraphPane_Dotp_Cutoff_Line_Label, DotpLabelText, cutoff))
+                    GraphsResources.AreaReplicateGraphPane_Dotp_Cutoff_Line_Label, DotpLabelText, cutoff))
                 {
                     Points = new PointPairList(new[] { new PointPair(0, 0) }),
                     Symbol = new Symbol(SymbolType.None, Color.Transparent)
@@ -714,8 +714,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public override void PopulateTooltip(int index)
         {
             ToolTip.ClearData();
-            ToolTip.AddLine(Resources.AreaReplicateGraphPane_Tooltip_Replicate, XAxis.Scale.TextLabels[index]);
-            ToolTip.AddLine(string.Format(CultureInfo.CurrentCulture, Resources.AreaReplicateGraphPane_Tooltip_Dotp, DotpLabelText), 
+            ToolTip.AddLine(GraphsResources.AreaReplicateGraphPane_Tooltip_Replicate, XAxis.Scale.TextLabels[index]);
+            ToolTip.AddLine(string.Format(CultureInfo.CurrentCulture, GraphsResources.AreaReplicateGraphPane_Tooltip_Dotp, DotpLabelText), 
                 string.Format(CultureInfo.CurrentCulture, @"{0:F02}", _dotpData[index]));
         }
 
@@ -809,7 +809,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 YAxis.Scale.Max = 100;
                 YAxis.Scale.MaxAuto = false;
-                YAxis.Title.Text = aggregateOp.AnnotateTitle(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Percentage);
+                YAxis.Title.Text = aggregateOp.AnnotateTitle(GraphsResources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Percentage);
                 YAxis.Type = AxisType.Linear;
                 YAxis.Scale.MinAuto = false;
                 FixedYMin = YAxis.Scale.Min = 0;
@@ -822,7 +822,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (YAxis.Type == AxisType.Log || YAxis.Scale.Max == 1)
                         YAxis.Scale.MaxAuto = true;
 
-                    YAxis.Title.Text = aggregateOp.AnnotateTitle(Resources.AreaReplicateGraphPane_UpdateGraph_Percent_of_Regression_Peak_Area);
+                    YAxis.Title.Text = aggregateOp.AnnotateTitle(GraphsResources.AreaReplicateGraphPane_UpdateGraph_Percent_of_Regression_Peak_Area);
                     YAxis.Type = AxisType.Linear;
                     YAxis.Scale.MinAuto = false;
                     FixedYMin = YAxis.Scale.Min = 0;
@@ -834,7 +834,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         // Make YAxis Scale Max a little higher to accommodate for the dot products
                         YAxis.Scale.Max = 1.1;
                     YAxis.Scale.MaxAuto = false;
-                    YAxis.Title.Text = aggregateOp.AnnotateTitle(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Normalized);
+                    YAxis.Title.Text = aggregateOp.AnnotateTitle(GraphsResources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Normalized);
                     YAxis.Type = AxisType.Linear;
                     YAxis.Scale.MinAuto = false;
                     FixedYMin = YAxis.Scale.Min = 0;

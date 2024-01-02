@@ -32,7 +32,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
@@ -49,7 +48,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private readonly DataGridViewColumn _colFile = new DataGridViewTextBoxColumn
         {
             DataPropertyName = @"FilePath",
-            HeaderText = Resources.BuildLibraryGridView__colFile_File,
+            HeaderText = PeptideSearchResources.BuildLibraryGridView__colFile_File,
             ReadOnly = true,
             AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
         };
@@ -57,7 +56,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private readonly DataGridViewColumn _colScoreType = new DataGridViewTextBoxColumn
         {
             DataPropertyName = @"ScoreType",
-            HeaderText = Resources.BuildLibraryGridView__colScoreType_Score_Type,
+            HeaderText = PeptideSearchResources.BuildLibraryGridView__colScoreType_Score_Type,
             ReadOnly = true,
             AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells
         };
@@ -65,7 +64,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private readonly DataGridViewColumn _colThreshold = new DataGridViewTextBoxColumn
         {
             DataPropertyName = @"ScoreThreshold",
-            HeaderText = Resources.BuildLibraryGridView__colThreshold_Score_Threshold,
+            HeaderText = PeptideSearchResources.BuildLibraryGridView__colThreshold_Score_Threshold,
             ReadOnly = true,
             AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells
         };
@@ -188,7 +187,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public bool Validate(IWin32Window parent, CancelEventArgs e, bool showWarnings, out Dictionary<string, double> thresholdsByFile)
         {
             if (!ScoreTypesLoaded)
-                throw new Exception(Resources.BuildLibraryGridView_GetThresholds_Score_types_not_loaded_);
+                throw new Exception(PeptideSearchResources.BuildLibraryGridView_GetThresholds_Score_types_not_loaded_);
 
             var thresholdsByScoreType = new Dictionary<ScoreType, double>();
             thresholdsByFile = new Dictionary<string, double>();
@@ -237,19 +236,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     if ((probCorrect && thresholdIsMax) || (probIncorrect && thresholdIsMin))
                     {
                         warning = string.Format(
-                            Resources.BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__will_only_include_identifications_with_perfect_scores_,
+                            PeptideSearchResources.BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__will_only_include_identifications_with_perfect_scores_,
                             threshold, scoreType);
                     }
                     else if ((probCorrect && thresholdIsMin) || (probIncorrect && thresholdIsMax))
                     {
                         warning = string.Format(
-                            Resources.BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__will_include_all_identifications_,
+                            PeptideSearchResources.BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__will_include_all_identifications_,
                             threshold, scoreType);
                     }
                     else if (threshold < scoreType.SuggestedRange.Min || threshold > scoreType.SuggestedRange.Max)
                     {
                         warning = string.Format(
-                            Resources.BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__is_unusually_permissive_,
+                            PeptideSearchResources.BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__is_unusually_permissive_,
                             threshold, scoreType);
                     }
 
@@ -257,19 +256,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     {
                         if (probCorrect)
                             warning = TextUtil.SpaceSeparate(warning, string.Format(
-                                Resources.BuildLibraryGridView_GetThresholds__0__scores_indicate_the_probability_that_an_identification_is__1__,
-                                scoreType, Resources.BuildLibraryGridView_GetThresholds_correct));
+                                PeptideSearchResources.BuildLibraryGridView_GetThresholds__0__scores_indicate_the_probability_that_an_identification_is__1__,
+                                scoreType, PeptideSearchResources.BuildLibraryGridView_GetThresholds_correct));
                         else if (probIncorrect)
                             warning = TextUtil.SpaceSeparate(warning, string.Format(
-                                Resources.BuildLibraryGridView_GetThresholds__0__scores_indicate_the_probability_that_an_identification_is__1__,
-                                scoreType, Resources.BuildLibraryGridView_GetThresholds_incorrect));
+                                PeptideSearchResources.BuildLibraryGridView_GetThresholds__0__scores_indicate_the_probability_that_an_identification_is__1__,
+                                scoreType, PeptideSearchResources.BuildLibraryGridView_GetThresholds_incorrect));
                         warnings.Add(warning);
                     }
                 }
 
                 if (warnings.Any())
                 {
-                    warnings.AddRange(new[] { string.Empty, Resources.BuildLibraryGridView_Validate_Are_you_sure_you_want_to_continue_ });
+                    warnings.AddRange(new[] { string.Empty, PeptideSearchResources.BuildLibraryGridView_Validate_Are_you_sure_you_want_to_continue_ });
                     if (MultiButtonMsgDlg.Show(parent, TextUtil.LineSeparate(warnings), MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                     {
                         if (e != null)
@@ -319,7 +318,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
                 else if (scoreTypes == null || !scoreTypes.TryGetValue(file.FilePath, out scoreTypesThis))
                 {
-                    file.ScoreTypeError = Resources.BuildLibraryGridView_GridUpdateScoreInfo_Score_type_not_found_;
+                    file.ScoreTypeError = PeptideSearchResources.BuildLibraryGridView_GridUpdateScoreInfo_Score_type_not_found_;
                 }
                 else if (scoreTypesThis.HasError)
                 {
@@ -435,7 +434,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             row.ErrorText = !file.HasScoreTypeError
                 ? null
-                : TextUtil.LineSeparate(Resources.BuildLibraryGridView_OnRowPrepaint_Error_getting_score_type_for_this_file_,
+                : TextUtil.LineSeparate(PeptideSearchResources.BuildLibraryGridView_OnRowPrepaint_Error_getting_score_type_for_this_file_,
                     string.Empty,
                     file.ScoreTypeError);
         }
@@ -458,7 +457,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 cell.ErrorText = scoreType == null || (threshold.HasValue && scoreType.ValidRange.Min <= threshold && threshold <= scoreType.ValidRange.Max)
                     ? null
                     : string.Format(
-                        Resources.BuildLibraryGridView_OnCellPainting_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___,
+                        PeptideSearchResources.BuildLibraryGridView_OnCellPainting_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___,
                         threshold.ToString(), scoreType.ValidRange.Min, scoreType.ValidRange.Max);
                 cell.ToolTipText = scoreType?.ThresholdDescription;
             }

@@ -127,7 +127,7 @@ namespace pwiz.Skyline.Model.Lib
         public bool BuildLibrary(IProgressMonitor progress)
         {
             _ambiguousMatches = null;
-            IProgressStatus status = new ProgressStatus(Resources.BiblioSpecLiteBuilder_BuildLibrary_Preparing_to_build_library);
+            IProgressStatus status = new ProgressStatus(LibResources.BiblioSpecLiteBuilder_BuildLibrary_Preparing_to_build_library);
             progress.UpdateProgress(status);
             if (InputFiles.Any(f => f.EndsWith(EXT_PILOT)))
             {
@@ -144,7 +144,7 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
 
-            string message = string.Format(Resources.BiblioSpecLiteBuilder_BuildLibrary_Building__0__library,
+            string message = string.Format(LibResources.BiblioSpecLiteBuilder_BuildLibrary_Building__0__library,
                                            Path.GetFileName(OutputPath));
             progress.UpdateProgress(status = status.ChangeMessage(message));
             string redundantLibrary = BiblioSpecLiteSpec.GetRedundantName(OutputPath);
@@ -201,7 +201,7 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     Console.WriteLine(x.Message);
                     progress.UpdateProgress(status.ChangeErrorException(
-                        new Exception(string.Format(Resources.BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_redundant_library__0__,
+                        new Exception(string.Format(LibResources.BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_redundant_library__0__,
                                                     redundantLibrary), x)));
                     return false;
                 }
@@ -231,7 +231,7 @@ namespace pwiz.Skyline.Model.Lib
             catch
             {
                 progress.UpdateProgress(status.ChangeErrorException(
-                    new Exception(string.Format(Resources.BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_library__0__,
+                    new Exception(string.Format(LibResources.BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_library__0__,
                                                 OutputPath))));
                 return false;
             }

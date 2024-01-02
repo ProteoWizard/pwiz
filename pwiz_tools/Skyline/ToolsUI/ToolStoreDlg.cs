@@ -102,29 +102,29 @@ namespace pwiz.Skyline.ToolsUI
             textBoxDescription.Text = FormatDescriptionText(toolStoreItem.Description);
 
             if (toolStoreItem.Installed && toolStoreItem.IsMostRecentVersion)
-                buttonInstallUpdate.Text = Resources.ToolStoreDlg_UpdateDisplayedTool_Reinstall;
+                buttonInstallUpdate.Text = ToolsUIResources.ToolStoreDlg_UpdateDisplayedTool_Reinstall;
             else if (toolStoreItem.Installed)
-                buttonInstallUpdate.Text = Resources.ToolStoreDlg_UpdateDisplayedTool_Update;
+                buttonInstallUpdate.Text = ToolsUIResources.ToolStoreDlg_UpdateDisplayedTool_Update;
             else
-                buttonInstallUpdate.Text = Resources.ToolStoreDlg_UpdateDisplayedTool_Install;
+                buttonInstallUpdate.Text = ToolsUIResources.ToolStoreDlg_UpdateDisplayedTool_Install;
         }
 
         private static string FormatVersionText(ToolStoreItem tool)
         {
             if (!tool.Installed && !tool.IsMostRecentVersion)
             {
-                return string.Format(Resources.ToolStoreDlg_FormatVersionText_Not_currently_installed__Version___0__is_available, tool.Version);
+                return string.Format(ToolsUIResources.ToolStoreDlg_FormatVersionText_Not_currently_installed__Version___0__is_available, tool.Version);
             } 
             else if (!tool.IsMostRecentVersion)
             {
                 return
                     string.Format(
-                        Resources.ToolStoreDlg_FormatVersionText_Version__0__currently_installed__Version__1__is_available_,
+                        ToolsUIResources.ToolStoreDlg_FormatVersionText_Version__0__currently_installed__Version__1__is_available_,
                         ToolStoreUtil.GetCurrentVersion(tool.Identifier), tool.Version);
             }
             else
             {
-                return string.Format(Resources.ToolStoreDlg_FormatVersionText_Currently_installed_and_fully_updated__Version___0___,
+                return string.Format(ToolsUIResources.ToolStoreDlg_FormatVersionText_Currently_installed_and_fully_updated__Version___0___,
                                  ToolStoreUtil.GetCurrentVersion(tool.Identifier));
             }
         }
@@ -165,7 +165,7 @@ namespace pwiz.Skyline.ToolsUI
                 using (var dlg = new LongWaitDlg())
                 {
                     dlg.ProgressValue = 0;
-                    dlg.Message = string.Format(Resources.ToolStoreDlg_DownloadSelectedTool_Downloading__0_, _tools[listBoxTools.SelectedIndex].Name);
+                    dlg.Message = string.Format(ToolsUIResources.ToolStoreDlg_DownloadSelectedTool_Downloading__0_, _tools[listBoxTools.SelectedIndex].Name);
                     dlg.PerformWork(this, 500, progressMonitor => DownloadPath = _toolStoreClient.GetToolZipFile(progressMonitor, identifier, Path.GetTempPath()));
                     if (!dlg.IsCanceled)
                         DialogResult = DialogResult.OK;
@@ -339,7 +339,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
             }
 
-            throw new ToolExecutionException(Resources.TestToolStoreClient_GetToolZipFile_Cannot_find_a_file_with_that_identifier_);
+            throw new ToolExecutionException(ToolsUIResources.TestToolStoreClient_GetToolZipFile_Cannot_find_a_file_with_that_identifier_);
         }
 
         public bool IsToolUpdateAvailable(string identifier, Version version)

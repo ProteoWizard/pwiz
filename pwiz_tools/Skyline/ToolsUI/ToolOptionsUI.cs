@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Shannon Joyner <saj9191 .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -81,7 +81,7 @@ namespace pwiz.Skyline.ToolsUI
             //tabControl.TabPages.Remove(tabMisc);
 
             // Populate the languages list with the languages that Skyline has been localized to
-            string defaultDisplayName = string.Format(Resources.ToolOptionsUI_ToolOptionsUI_Default___0__,
+            string defaultDisplayName = string.Format(ToolsUIResources.ToolOptionsUI_ToolOptionsUI_Default___0__,
                 CultureUtil.GetDisplayLanguage(CultureInfo.InstalledUICulture).DisplayName);
             listBoxLanguages.Items.Add(new DisplayLanguageItem(string.Empty, defaultDisplayName));
             foreach (var culture in CultureUtil.AvailableDisplayLanguages())
@@ -440,7 +440,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             if (MultiButtonMsgDlg.Show(this,
                     string.Format(
-                        Resources
+                        ToolsUIResources
                             .ToolOptionsUI_btnResetSettings_Click_Are_you_sure_you_want_to_clear_all_saved_settings__This_will_immediately_return__0__to_its_original_configuration_and_cannot_be_undone_,
                         Program.Name), MultiButtonMsgDlg.BUTTON_OK) == DialogResult.OK)
             {

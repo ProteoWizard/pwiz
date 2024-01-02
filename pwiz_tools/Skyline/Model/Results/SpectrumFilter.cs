@@ -28,7 +28,6 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -1272,7 +1271,7 @@ namespace pwiz.Skyline.Model.Results
                 // No defined isolation scheme?
             else
             {
-                throw new InvalidDataException(string.Format(Resources.SpectrumFilter_CalcDiaIsolationValues_Unable_to_determine_isolation_width_for_the_scan_targeted_at__0_, isolationTargetMz));
+                throw new InvalidDataException(string.Format(ResultsResources.SpectrumFilter_CalcDiaIsolationValues_Unable_to_determine_isolation_width_for_the_scan_targeted_at__0_, isolationTargetMz));
             }
             isolationWidth = isolationWidthValue;
         }

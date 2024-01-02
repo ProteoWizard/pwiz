@@ -113,8 +113,8 @@ namespace pwiz.Skyline.EditUI
                 comboNormalizeTo.Items.AddRange(_normalizationMethods.Select(option=>option.Caption).ToArray());
                 comboNormalizeTo.SelectedIndex = comboNormalizeTo.Items.Count - 1;
 
-                comboTransitions.Items.Add(Resources.RefineDlg_RefineDlg_all);
-                comboTransitions.Items.Add(Resources.RefineDlg_RefineDlg_best);
+                comboTransitions.Items.Add(EditUIResources.RefineDlg_RefineDlg_all);
+                comboTransitions.Items.Add(EditUIResources.RefineDlg_RefineDlg_best);
                 comboTransitions.SelectedIndex = 0;
 
                 var maxTrans = _document.MoleculeTransitionGroups.Select(g => g.TransitionCount).DefaultIfEmpty().Max();
@@ -156,13 +156,13 @@ namespace pwiz.Skyline.EditUI
 
             if (_document.PeptideTransitions.Any(t => t.IsMs1))
             {
-                comboMSGroupComparisons.Items.Add(Resources.RefineDlg_MSLevel_1);
+                comboMSGroupComparisons.Items.Add(EditUIResources.RefineDlg_MSLevel_1);
                 comboMSGroupComparisons.SelectedIndex = comboMSGroupComparisons.Items.Count - 1;
             }
 
             if (_document.PeptideTransitions.Any(t => !t.IsMs1))
             {
-                comboMSGroupComparisons.Items.Add(Resources.RefineDlg_MSLevel_2);
+                comboMSGroupComparisons.Items.Add(EditUIResources.RefineDlg_MSLevel_2);
                 comboMSGroupComparisons.SelectedIndex = comboMSGroupComparisons.Items.Count - 1;
             }
 
@@ -394,7 +394,7 @@ namespace pwiz.Skyline.EditUI
             // If adding, make sure there is something to add
             if (addLabelType && refineLabelType != null && !CanAddLabelType(refineLabelType))
             {
-                MessageDlg.Show(this, string.Format(Resources.RefineDlg_OkDialog_The_label_type__0__cannot_be_added_There_are_no_modifications_for_this_type,
+                MessageDlg.Show(this, string.Format(EditUIResources.RefineDlg_OkDialog_The_label_type__0__cannot_be_added_There_are_no_modifications_for_this_type,
                                                     refineLabelType.Name));
                 tabControl1.SelectedIndex = 0;
                 comboRefineLabelType.Focus();
@@ -420,7 +420,7 @@ namespace pwiz.Skyline.EditUI
                     minPeakFoundRatio.Value > maxPeakFoundRatio.Value)
             {
                 helper.ShowTextBoxError(textMaxPeakFoundRatio,
-                                        Resources.RefineDlg_OkDialog__0__must_be_less_than_min_peak_found_ratio);
+                                        EditUIResources.RefineDlg_OkDialog__0__must_be_less_than_min_peak_found_ratio);
                 return;
             }
 
@@ -624,10 +624,10 @@ namespace pwiz.Skyline.EditUI
         private void cbAdd_CheckedChanged(object sender, EventArgs e)
         {
             labelLabelType.Text = cbAdd.Checked
-                                      ? Resources.RefineDlg_cbAdd_CheckedChanged_Add_label_type
+                                      ? EditUIResources.RefineDlg_cbAdd_CheckedChanged_Add_label_type
                                       : _removeLabelText;
             helpTip.SetToolTip(comboRefineLabelType, cbAdd.Checked
-                    ? Resources.RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_be_added_if_they_are_missing
+                    ? EditUIResources.RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_be_added_if_they_are_missing
                     : _removeTipText);
         }
 

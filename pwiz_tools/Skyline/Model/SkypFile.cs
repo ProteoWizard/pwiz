@@ -16,7 +16,7 @@ namespace pwiz.Skyline.Model
     {
         public const string EXT = ".skyp";
 
-        public static string FILTER_SKYP => TextUtil.FileDialogFilter(Resources.SkypFile_FILTER_SKYP_Skyline_Document_Pointer, EXT);
+        public static string FILTER_SKYP => TextUtil.FileDialogFilter(ModelResources.SkypFile_FILTER_SKYP_Skyline_Document_Pointer, EXT);
 
         public string SkypPath { get; private set; }
         public Uri SkylineDocUri { get; private set; }
@@ -154,7 +154,7 @@ namespace pwiz.Skyline.Model
         {
             if (string.IsNullOrEmpty(sharedSkyFile))
             {
-                throw new ArgumentException(Resources
+                throw new ArgumentException(ModelResources
                     .SkypFile_GetNonExistentPath_Name_of_shared_Skyline_archive_cannot_be_null_or_empty_);
             }
 

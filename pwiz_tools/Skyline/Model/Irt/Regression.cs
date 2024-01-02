@@ -31,9 +31,9 @@ namespace pwiz.Skyline.Model.Irt
 {
     public class IrtRegressionType : LabeledValues<string>
     {
-        public static readonly IrtRegressionType LINEAR = new IrtRegressionType(@"linear", () => Resources.IrtRegressionType_Linear);
-        public static readonly IrtRegressionType LOGARITHMIC = new IrtRegressionType(@"logarithmic", () => Resources.IrtRegressionType_Logarithmic);
-        public static readonly IrtRegressionType LOWESS = new IrtRegressionType(@"lowess", () => Resources.IrtRegressionType_Lowess);
+        public static readonly IrtRegressionType LINEAR = new IrtRegressionType(@"linear", () => IrtResources.IrtRegressionType_Linear);
+        public static readonly IrtRegressionType LOGARITHMIC = new IrtRegressionType(@"logarithmic", () => IrtResources.IrtRegressionType_Logarithmic);
+        public static readonly IrtRegressionType LOWESS = new IrtRegressionType(@"lowess", () => IrtResources.IrtRegressionType_Lowess);
 
         public static readonly IrtRegressionType DEFAULT = LINEAR;
         public static IEnumerable<IrtRegressionType> ALL => new[] {LINEAR, LOGARITHMIC, LOWESS};
