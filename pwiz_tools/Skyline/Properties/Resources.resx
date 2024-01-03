@@ -4357,16 +4357,4 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_file__0_" xml:space="preserve">
     <value>Error: Could not find background proteome file {0}</value>
   </data>
-  <data name="ProteinAssociation_CalculateProteinOrGeneGroups_Calculating_gene_groups" xml:space="preserve">
-    <value>Calculating gene groups</value>
-  </data>
-  <data name="AssociateProteinsDlg_Find_minimal_gene_group_list_that_explains_all_peptides" xml:space="preserve">
-    <value>Find &amp;minimal gene group list that explains all peptides</value>
-  </data>
-  <data name="AssociateProteinsDlg_Remove_subset_genes" xml:space="preserve">
-    <value>&amp;Remove subset genes</value>
-  </data>
-  <data name="AssociateProteinsDlg_Min_peptides_per_gene" xml:space="preserve">
-    <value>Mi&amp;n peptides per gene</value>
-  </data>
 </root>

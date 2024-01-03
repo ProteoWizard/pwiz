@@ -669,7 +669,7 @@ namespace pwiz.Skyline.Model.Proteome
             results.FinalProteinCount = _peptideGroupToProteins.Count;
 
             if (geneLevel)
-                broker.Message = Resources.ProteinAssociation_CalculateProteinOrGeneGroups_Calculating_gene_groups;
+                broker.Message = ProteomeResources.ProteinAssociation_CalculateProteinOrGeneGroups_Calculating_gene_groups;
             else
                 broker.Message = ProteomeResources.ProteinAssociation_CalculateProteinGroups_Calculating_protein_groups;
             var proteinGroupAssociations = new Dictionary<IProteinRecord, PeptideAssociationGroup>(geneLevel ? new GeneLevelEqualityComparer() : EqualityComparer<IProteinRecord>.Default);

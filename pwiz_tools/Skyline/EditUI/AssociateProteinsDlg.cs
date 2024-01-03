@@ -341,16 +341,16 @@ namespace pwiz.Skyline.EditUI
             {
                 cbGroupProteins.Checked = true;
                 cbGroupProteins.Enabled = false;
-                lblMinimalProteinList.Text = Resources.AssociateProteinsDlg_Find_minimal_gene_group_list_that_explains_all_peptides;
-                lblRemoveSubsetProteins.Text = Resources.AssociateProteinsDlg_Remove_subset_genes;
-                lblMinPeptides.Text = Resources.AssociateProteinsDlg_Min_peptides_per_gene;
+                lblMinimalProteinList.Text = EditUIResources.AssociateProteinsDlg_Find_minimal_gene_group_list_that_explains_all_peptides;
+                lblRemoveSubsetProteins.Text = EditUIResources.AssociateProteinsDlg_Remove_subset_genes;
+                lblMinPeptides.Text = EditUIResources.AssociateProteinsDlg_Min_peptides_per_gene;
             }
             else
             {
                 cbGroupProteins.Enabled = true;
-                lblMinimalProteinList.Text = Resources.AssociateProteinsDlg_Find_minimal_protein_group_list_that_explains_all_peptides;
-                lblRemoveSubsetProteins.Text = Resources.AssociateProteinsDlg_Remove_subset_protein_groups;
-                lblMinPeptides.Text = Resources.AssociateProteinsDlg_Min_peptides_per_protein_group;
+                lblMinimalProteinList.Text = EditUIResources.AssociateProteinsDlg_Find_minimal_protein_group_list_that_explains_all_peptides;
+                lblRemoveSubsetProteins.Text = EditUIResources.AssociateProteinsDlg_Remove_subset_protein_groups;
+                lblMinPeptides.Text = EditUIResources.AssociateProteinsDlg_Min_peptides_per_protein_group;
             }
 
             UpdateParsimonyResults();
