@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brian Pratt <bspratt .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -43,14 +43,14 @@ namespace pwiz.Skyline.Model.Results
         {
             ScanProvider = new BackgroundScanProvider(successAction, failureAction, ignoreZeroIntensityPoints);
             SourceNames = new string[Helpers.CountEnumValues<ChromSource>()];
-            SourceNames[(int) ChromSource.ms1] = Resources.GraphFullScan_GraphFullScan_MS1;
-            SourceNames[(int) ChromSource.fragment] = Resources.GraphFullScan_GraphFullScan_MS_MS;
-            SourceNames[(int) ChromSource.sim] = Resources.GraphFullScan_GraphFullScan_SIM;
+            SourceNames[(int) ChromSource.ms1] = ResultsResources.GraphFullScan_GraphFullScan_MS1;
+            SourceNames[(int) ChromSource.fragment] = ResultsResources.GraphFullScan_GraphFullScan_MS_MS;
+            SourceNames[(int) ChromSource.sim] = ResultsResources.GraphFullScan_GraphFullScan_SIM;
 
             PeakTypeNames = new string[Helpers.CountEnumValues<PeakType>()];
-            PeakTypeNames[(int) PeakType.chromDefault] = Resources.GraphFullScan_PeakType_ChromDefault;
-            PeakTypeNames[(int)PeakType.centroided] = Resources.GraphFullScan_PeakType_Centroided;
-            PeakTypeNames[(int)PeakType.profile] = Resources.GraphFullScan_PeakType_Profile;
+            PeakTypeNames[(int) PeakType.chromDefault] = ResultsResources.GraphFullScan_PeakType_ChromDefault;
+            PeakTypeNames[(int)PeakType.centroided] = ResultsResources.GraphFullScan_PeakType_Centroided;
+            PeakTypeNames[(int)PeakType.profile] = ResultsResources.GraphFullScan_PeakType_Profile;
         }
 
         public BackgroundScanProvider ScanProvider { get; private set; }

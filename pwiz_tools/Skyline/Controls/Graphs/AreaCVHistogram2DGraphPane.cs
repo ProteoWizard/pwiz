@@ -146,13 +146,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (!gotData)
             {
-                Title.Text = Resources.AreaCVHistogram2DGraphPane_UpdateGraph_Calculating____;
+                Title.Text = GraphsResources.AreaCVHistogram2DGraphPane_UpdateGraph_Calculating____;
                 return;
             }
 
             if (!_areaCVGraphData.IsValid)
             {
-                Title.Text = Resources.AreaCVHistogram2DGraphPane_Draw_Not_enough_data;
+                Title.Text = GraphsResources.AreaCVHistogram2DGraphPane_Draw_Not_enough_data;
                 return;
             }
 
@@ -160,8 +160,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
             Title.Text = string.Empty;
 
-            YAxis.Title.Text = Resources.AreaCVHistogram2DGraphPane_UpdateGraph_CV + (_percentage ? @" (%)" : string.Empty);
-            XAxis.Title.Text = Resources.AreaCvHistogram2DGraphPane_UpdateGraph_Log10_Mean_Area;
+            YAxis.Title.Text = GraphsResources.AreaCVHistogram2DGraphPane_UpdateGraph_CV + (_percentage ? @" (%)" : string.Empty);
+            XAxis.Title.Text = GraphsResources.AreaCvHistogram2DGraphPane_UpdateGraph_Log10_Mean_Area;
 
             XAxis.Scale.MinAuto = XAxis.Scale.MinAuto = XAxis.Scale.MaxAuto = YAxis.Scale.MaxAuto = false;
             XAxis.Scale.Min = Math.Max(0, double.IsNaN(Settings.Default.AreaCVMinLog10Area) ? _areaCVGraphData.MinMeanArea : Settings.Default.AreaCVMinLog10Area);
@@ -182,14 +182,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (Settings.Default.AreaCVShowMedianCV)
             {
-                string text = string.Format(Resources.AreaCVHistogram2DGraphPane_UpdateGraph_Median___0_, HistogramHelper.FormatDouble(_areaCVGraphData.MedianCV * factor, _decimals) + unit);
+                string text = string.Format(GraphsResources.AreaCVHistogram2DGraphPane_UpdateGraph_Median___0_, HistogramHelper.FormatDouble(_areaCVGraphData.MedianCV * factor, _decimals) + unit);
                 _lineItems[0] = AddLineItem(text, XAxis.Scale.Min, XAxis.Scale.Max, _areaCVGraphData.MedianCV * factor, _areaCVGraphData.MedianCV * factor, Color.Blue);
                 CurveList.Insert(0, _lineItems[0]);
             }
 
             if (Settings.Default.AreaCVShowCVCutoff)
             {
-                string text = string.Format(Resources.AreaCVHistogramGraphPane_UpdateGraph_Below__0____1_, Settings.Default.AreaCVCVCutoff + unit,
+                string text = string.Format(GraphsResources.AreaCVHistogramGraphPane_UpdateGraph_Below__0____1_, Settings.Default.AreaCVCVCutoff + unit,
                               HistogramHelper.FormatDouble(_areaCVGraphData.BelowCVCutoff * factor, _decimals) +
                               unit);
                 _lineItems[1] = AddLineItem(text,XAxis.Scale.Min, XAxis.Scale.Max,Settings.Default.AreaCVCVCutoff, Settings.Default.AreaCVCVCutoff, Color.Red);

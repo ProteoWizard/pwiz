@@ -264,11 +264,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 MsDataFileUri[] dataSources;
                 using (var dlg = new OpenDataSourceDialog(Settings.Default.RemoteAccountList))
                 {
-                    dlg.Text = _isFeatureDetectionWorkflow ? 
-                        Resources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Select_Files_to_Search :
-                        Resources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search;
-                    dlg.InitialDirectory = new MsDataFilePath(Path.GetDirectoryName(DocumentContainer.DocumentFilePath));
-                    dlg.Text = Resources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search;
+                    dlg.Text = _isFeatureDetectionWorkflow ?
+                        PeptideSearchResources.BuildPeptideSearchLibraryControl_btnAddFile_Click_Select_Files_to_Search :
+                        PeptideSearchResources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search;
                     dlg.InitialDirectory = new MsDataFilePath(Path.GetDirectoryName(DocumentContainer.DocumentFilePath));
                     // Use saved source type, if there is one.
                     //string sourceType = Settings.Default.SrmResultsSourceType;
@@ -390,12 +388,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 {
                     longWaitDlg.Text = isFeatureDetection ?
                         Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library :
-                        Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library;
+                        PeptideSearchResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library;
                     longWaitDlg.Message = isFeatureDetection ?
                         Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library :
-                        Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_;
-                    longWaitDlg.Text = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library;
-                    longWaitDlg.Message = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_;
+                        PeptideSearchResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_;
                     // Disable the wizard, because the LongWaitDlg does not
                     try
                     {
@@ -427,7 +423,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     }
                     catch (Exception x)
                     {
-                        MessageDlg.ShowWithException(WizardForm, TextUtil.LineSeparate(string.Format(Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__,
+                        MessageDlg.ShowWithException(WizardForm, TextUtil.LineSeparate(string.Format(PeptideSearchResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__,
                             Path.GetFileName(BiblioSpecLiteSpec.GetLibraryFileName(DocumentContainer.DocumentFilePath))), x.Message), x);
                         return false;
                     }
@@ -522,7 +518,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (blib?.ReadStream is ConnectionId<SQLiteConnection> connection && SqliteOperations.TableExists(connection.Connection, @"IrtLibrary"))
             {
                 using (var dlg = new MultiButtonMsgDlg(
-                           Resources.BuildPeptideSearchLibraryControl_AddExistingLibrary_This_library_contains_iRT_values__Do_you_want_to_create_a_retention_time_predictor_with_these_values_,
+                           PeptideSearchResources.BuildPeptideSearchLibraryControl_AddExistingLibrary_This_library_contains_iRT_values__Do_you_want_to_create_a_retention_time_predictor_with_these_values_,
                            MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
                 {
                     if (dlg.ShowDialog(WizardForm) == DialogResult.Yes)
@@ -547,7 +543,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!BiblioSpecLiteBuilder.IsLibraryMissingExternalSpectraError(errorException, out IList<string> spectrumFilenames, out IList<string> directoriesSearched, out string resultsFilepath))
                 throw new InvalidOperationException(@"IsLibraryMissingExternalSpectraError returned false");
 
-            string extraHelp = Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptions;
+            string extraHelp = PeptideSearchResources.VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptions;
 
             string messageFormat = spectrumFilenames.Count > 1
                 ? Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectrumFilesError
@@ -559,8 +555,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     resultsFilepath, string.Join(Environment.NewLine, spectrumFilenames),
                     string.Join(Environment.NewLine, directoriesSearched),
                     BiblioSpecLiteBuilder.BiblioSpecSupportedFileExtensions) + extraHelp,
-                Resources.BiblioSpecLiteBuilder_Embedded,
-                Resources.AlertDlg_GetDefaultButtonText__Retry, true);
+                PeptideSearchResources.BiblioSpecLiteBuilder_Embedded,
+                PeptideSearchResources.AlertDlg_GetDefaultButtonText__Retry, true);
 
             switch (dialogResult)
             {
@@ -580,7 +576,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             using (var longWait = new LongWaitDlg())
             {
-                longWait.Text = Resources.BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library;
+                longWait.Text = PeptideSearchResources.BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library;
                 try
                 {
                     var status = longWait.PerformWork(WizardForm, 800, monitor => ImportPeptideSearch.LoadPeptideSearchLibrary(LibraryManager, docLibSpec, monitor));
@@ -592,7 +588,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 catch (Exception x)
                 {
                     MessageDlg.ShowWithException(WizardForm,
-                        TextUtil.LineSeparate(string.Format(Resources.BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_,
+                        TextUtil.LineSeparate(string.Format(PeptideSearchResources.BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_,
                             docLibSpec.Name), x.Message), x);
                 }
             }
@@ -689,8 +685,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             //panelChooseFile.Visible = !PerformDDASearch;
             lblFileCaption.Text = PerformDDASearch
-                ? Resources.BuildPeptideSearchLibraryControl_Files_to_search_
-                : Resources.BuildPeptideSearchLibraryControl_Result_files_;
+                ? PeptideSearchResources.BuildPeptideSearchLibraryControl_Files_to_search_
+                : PeptideSearchResources.BuildPeptideSearchLibraryControl_Result_files_;
             //peptideSearchSplitContainer.Visible = PerformDDASearch;
 
             Grid.FilesChanged -= OnGridChange;

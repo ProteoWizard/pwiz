@@ -33,9 +33,9 @@ namespace pwiz.Skyline.Properties
             yield break;
         }
 
-        public override string Title { get { return Resources.RemoteAccountList_Title_Edit_Remote_Accounts; } }
+        public override string Title { get { return PropertiesResources.RemoteAccountList_Title_Edit_Remote_Accounts; } }
 
-        public override string Label { get { return Resources.RemoteAccountList_Label_Remote_Accounts; } }
+        public override string Label { get { return PropertiesResources.RemoteAccountList_Label_Remote_Accounts; } }
 
         public override RemoteAccount EditItem(Control owner, RemoteAccount item, IEnumerable<RemoteAccount> existing, object tag)
         {

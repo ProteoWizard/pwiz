@@ -34,7 +34,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
@@ -284,7 +283,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (name != _originalName && _existing.Any(existingRuleSet=>existingRuleSet.Name == name))
             {
-                helper.ShowTextBoxError(tbxName, string.Format(Resources.MetadataRuleEditor_OkDialog_There_is_already_a_metadata_rule_named___0___, name));
+                helper.ShowTextBoxError(tbxName, string.Format(SettingsUIResources.MetadataRuleEditor_OkDialog_There_is_already_a_metadata_rule_named___0___, name));
                 return;
             }
 
@@ -294,7 +293,7 @@ namespace pwiz.Skyline.SettingsUI
                 var rule = ruleSet.Rules[rowIndex];
                 if (rule.Source == null)
                 {
-                    MessageDlg.Show(this, string.Format(Resources.MetadataRuleEditor_OkDialog__0__cannot_be_blank, colSource.HeaderText));
+                    MessageDlg.Show(this, string.Format(SettingsUIResources.MetadataRuleEditor_OkDialog__0__cannot_be_blank, colSource.HeaderText));
                     SelectCell(dataGridViewRules, colSource, rowIndex);
                     return;
                 }
@@ -307,7 +306,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     catch (Exception exception)
                     {
-                        MessageDlg.ShowWithException(this, Resources.MetadataRuleEditor_OkDialog_This_is_not_a_valid_regular_expression_, exception);
+                        MessageDlg.ShowWithException(this, SettingsUIResources.MetadataRuleEditor_OkDialog_This_is_not_a_valid_regular_expression_, exception);
                         SelectCell(dataGridViewRules, colPattern, rowIndex);
                         return;
                     }
@@ -315,7 +314,7 @@ namespace pwiz.Skyline.SettingsUI
 
                 if (rule.Target == null)
                 {
-                    MessageDlg.Show(this, string.Format(Resources.MetadataRuleEditor_OkDialog__0__cannot_be_blank, colTarget.HeaderText));
+                    MessageDlg.Show(this, string.Format(SettingsUIResources.MetadataRuleEditor_OkDialog__0__cannot_be_blank, colTarget.HeaderText));
                     SelectCell(dataGridViewRules, colTarget, rowIndex);
                     return;
                 }

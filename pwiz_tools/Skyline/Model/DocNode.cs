@@ -24,7 +24,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -657,7 +656,7 @@ namespace pwiz.Skyline.Model
             // Make sure the index does not exceed the expected count at the desired level
             int expected = GetCount(depth);
             if (expected <= index)
-                throw new IndexOutOfRangeException(string.Format(Resources.DocNodeParent_GetPathTo_Index__0__exceeds_length__1__, index, expected));
+                throw new IndexOutOfRangeException(string.Format(ModelResources.DocNodeParent_GetPathTo_Index__0__exceeds_length__1__, index, expected));
 
             // Descend into the child containing the desired node.
             depth--;
@@ -675,7 +674,7 @@ namespace pwiz.Skyline.Model
 
             // This means the node count stack at this level is inconsistent with
             // its children.
-            throw new IndexOutOfRangeException(string.Format(Resources.DocNodeParent_GetPathTo_Node_reported__0__descendants_at_depth__1__but_found_only__2__,
+            throw new IndexOutOfRangeException(string.Format(ModelResources.DocNodeParent_GetPathTo_Node_reported__0__descendants_at_depth__1__but_found_only__2__,
                                                              expected, depth, count));
         }
 

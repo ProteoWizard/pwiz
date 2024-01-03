@@ -41,15 +41,15 @@ namespace pwiz.Skyline.FileUI
 {
     public sealed partial class ExportMethodDlg : CreateHandleDebugBase, IMultipleViewProvider
     {
-        public static string TRANS_PER_SAMPLE_INJ_TXT { get { return Resources.ExportMethodDlg_TRANS_PER_SAMPLE_INJ_TXT; } }
-        public static string CONCUR_TRANS_TXT { get { return Resources.ExportMethodDlg_CONCUR_TRANS_TXT; } }
-        public static string PREC_PER_SAMPLE_INJ_TXT { get { return Resources.ExportMethodDlg_PREC_PER_SAMPLE_INJ_TXT; } }
-        public static string CONCUR_PREC_TXT { get { return Resources.ExportMethodDlg_CONCUR_PREC_TXT; } }
-        public static string RUN_DURATION_TXT { get { return Resources.ExportMethodDlg_RUN_DURATION_TXT; } }
-        public static string DWELL_TIME_TXT { get { return Resources.ExportMethodDlg_DWELL_TIME_TXT; } }
-        public static string ACCUMULATION_TIME_TXT { get { return Resources.ExportMethodDlg_ACCUMULATION_TIME_TXT; } }
+        public static string TRANS_PER_SAMPLE_INJ_TXT { get { return FileUIResources.ExportMethodDlg_TRANS_PER_SAMPLE_INJ_TXT; } }
+        public static string CONCUR_TRANS_TXT { get { return FileUIResources.ExportMethodDlg_CONCUR_TRANS_TXT; } }
+        public static string PREC_PER_SAMPLE_INJ_TXT { get { return FileUIResources.ExportMethodDlg_PREC_PER_SAMPLE_INJ_TXT; } }
+        public static string CONCUR_PREC_TXT { get { return FileUIResources.ExportMethodDlg_CONCUR_PREC_TXT; } }
+        public static string RUN_DURATION_TXT { get { return FileUIResources.ExportMethodDlg_RUN_DURATION_TXT; } }
+        public static string DWELL_TIME_TXT { get { return FileUIResources.ExportMethodDlg_DWELL_TIME_TXT; } }
+        public static string ACCUMULATION_TIME_TXT { get { return FileUIResources.ExportMethodDlg_ACCUMULATION_TIME_TXT; } }
 
-        public static string SCHED_NOT_SUPPORTED_ERR_TXT { get { return Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_Sched_Not_Supported_Err_Text; } }
+        public static string SCHED_NOT_SUPPORTED_ERR_TXT { get { return FileUIResources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_Sched_Not_Supported_Err_Text; } }
 
         private readonly SrmDocument _document;
         private readonly ExportFileType _fileType;
@@ -76,12 +76,12 @@ namespace pwiz.Skyline.FileUI
             {
                 if (_fileType == ExportFileType.List)
                 {
-                    Text = Resources.ExportMethodDlg_ExportMethodDlg_Export_Transition_List;
+                    Text = FileUIResources.ExportMethodDlg_ExportMethodDlg_Export_Transition_List;
                     listTypes = ExportInstrumentType.TRANSITION_LIST_TYPES;
                 }
                 else
                 {
-                    Text = Resources.ExportMethodDlg_ExportMethodDlg_Export_Isolation_List;
+                    Text = FileUIResources.ExportMethodDlg_ExportMethodDlg_Export_Isolation_List;
                     listTypes = ExportInstrumentType.ISOLATION_LIST_TYPES;
                     _exportProperties.MultiplexIsolationListCalculationTime = 20;   // Default 20 seconds to search for good multiplexed window ordering.
                 }
@@ -681,7 +681,7 @@ namespace pwiz.Skyline.FileUI
                     lblIntensityThresholdType.Show();
                     textIntensityThreshold.Width = textPrimaryCount.Width;
                     textIntensityThreshold.Text = Settings.Default.IntensityThresholdPercent.ToString(CultureInfo.CurrentCulture);
-                    helpTip.SetToolTip(textIntensityThreshold, Resources.ExportMethodDlg_UpdateThermoSureQuantControls_Percentage_of_peak_max_height_to_use_as_intensity_threshold_);
+                    helpTip.SetToolTip(textIntensityThreshold, FileUIResources.ExportMethodDlg_UpdateThermoSureQuantControls_Percentage_of_peak_max_height_to_use_as_intensity_threshold_);
                     lblIntensityThresholdMin.Show();
                     textIntensityThresholdMin.Show();
                     textIntensityThresholdMin.Text = Settings.Default.IntensityThresholdMin.ToString(CultureInfo.CurrentCulture);
@@ -694,7 +694,7 @@ namespace pwiz.Skyline.FileUI
                     lblIntensityThresholdType.Hide();
                     textIntensityThreshold.Width = textIntensityThresholdMin.Width;
                     textIntensityThreshold.Text = Settings.Default.IntensityThresholdValue.ToString(CultureInfo.CurrentCulture);
-                    helpTip.SetToolTip(textIntensityThreshold, Resources.ExportMethodDlg_UpdateThermoSureQuantControls_Absolute_relative_intensity_threshold_value_);
+                    helpTip.SetToolTip(textIntensityThreshold, FileUIResources.ExportMethodDlg_UpdateThermoSureQuantControls_Absolute_relative_intensity_threshold_value_);
                     lblIntensityThresholdMin.Hide();
                     textIntensityThresholdMin.Hide();
                 }
@@ -835,35 +835,35 @@ namespace pwiz.Skyline.FileUI
                 templateName = textTemplateFile.Text;
                 if (string.IsNullOrEmpty(templateName))
                 {
-                    helper.ShowTextBoxError(textTemplateFile, Resources.ExportMethodDlg_OkDialog_A_template_file_is_required_to_export_a_method);
+                    helper.ShowTextBoxError(textTemplateFile, FileUIResources.ExportMethodDlg_OkDialog_A_template_file_is_required_to_export_a_method);
                     return;
                 }
                 if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) || Equals(InstrumentType, ExportInstrumentType.AGILENT_MASSHUNTER_12_METHOD) ||
                     Equals(InstrumentType, ExportInstrumentType.BRUKER_TOF)
                     ? !Directory.Exists(templateName) : !File.Exists(templateName))
                 {
-                    helper.ShowTextBoxError(textTemplateFile, Resources.ExportMethodDlg_OkDialog_The_template_file__0__does_not_exist, templateName);
+                    helper.ShowTextBoxError(textTemplateFile, FileUIResources.ExportMethodDlg_OkDialog_The_template_file__0__does_not_exist, templateName);
                     return;
                 }
                 if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) &&
                     !AgilentMethodExporter.IsAgilentMethodPath(templateName))
                 {
                     helper.ShowTextBoxError(textTemplateFile,
-                                            Resources.ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd,
+                                            FileUIResources.ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd,
                                             templateName);
                     return;
                 }
                 if (Equals(InstrumentType, ExportInstrumentType.AGILENT_MASSHUNTER_12_METHOD) &&
                     !AgilentUltivoMethodExporter.IsMethodPath(templateName))
                 {
-                    helper.ShowTextBoxError(textTemplateFile, Resources.ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_, templateName);
+                    helper.ShowTextBoxError(textTemplateFile, FileUIResources.ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_, templateName);
                     return;
                 }
                 if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TOF) &&
                     !BrukerMethodExporter.IsBrukerMethodPath(templateName))
                 {
                     helper.ShowTextBoxError(textTemplateFile,
-                                            Resources.ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_,
+                                            FileUIResources.ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_,
                                             templateName);
                     return;
                 }
@@ -878,14 +878,14 @@ namespace pwiz.Skyline.FileUI
                                    documentExport.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer,
                                    FullScanMassAnalyzerType.tof))
                 {
-                    MessageDlg.Show(this, string.Format(Resources.ExportMethodDlg_OkDialog_The_precursor_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab, Resources.ExportMethodDlg_OkDialog_TOF));
+                    MessageDlg.Show(this, string.Format(Resources.ExportMethodDlg_OkDialog_The_precursor_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab, FileUIResources.ExportMethodDlg_OkDialog_TOF));
                     return;
                 }
                 if (!CheckAnalyzer(documentExport.Settings.TransitionSettings.FullScan.IsEnabledMsMs,
                                    documentExport.Settings.TransitionSettings.FullScan.ProductMassAnalyzer,
                                    FullScanMassAnalyzerType.tof))
                 {
-                    MessageDlg.Show(this, string.Format(Resources.ExportMethodDlg_OkDialog_The_product_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab, Resources.ExportMethodDlg_OkDialog_TOF));
+                    MessageDlg.Show(this, string.Format(FileUIResources.ExportMethodDlg_OkDialog_The_product_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab, FileUIResources.ExportMethodDlg_OkDialog_TOF));
                     return;
                 }
             }
@@ -897,14 +897,14 @@ namespace pwiz.Skyline.FileUI
                                    documentExport.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer,
                                    FullScanMassAnalyzerType.orbitrap))
                 {
-                    MessageDlg.Show(this, string.Format(Resources.ExportMethodDlg_OkDialog_The_precursor_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab, Resources.ExportMethodDlg_OkDialog_Orbitrap));
+                    MessageDlg.Show(this, string.Format(Resources.ExportMethodDlg_OkDialog_The_precursor_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab, FileUIResources.ExportMethodDlg_OkDialog_Orbitrap));
                     return;
                 }
                 if (!CheckAnalyzer(documentExport.Settings.TransitionSettings.FullScan.IsEnabledMsMs,
                                    documentExport.Settings.TransitionSettings.FullScan.ProductMassAnalyzer,
                                    FullScanMassAnalyzerType.orbitrap))
                 {
-                    MessageDlg.Show(this, string.Format(Resources.ExportMethodDlg_OkDialog_The_product_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab, Resources.ExportMethodDlg_OkDialog_Orbitrap));
+                    MessageDlg.Show(this, string.Format(FileUIResources.ExportMethodDlg_OkDialog_The_product_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab, FileUIResources.ExportMethodDlg_OkDialog_Orbitrap));
                     return;
                 }
             }
@@ -919,10 +919,10 @@ namespace pwiz.Skyline.FileUI
                 DialogResult.Cancel == MultiButtonMsgDlg.Show(
                     this,
                     TextUtil.LineSeparate(
-                        Resources.ExportMethodDlg_OkDialog_The_document_does_not_contain_all_of_the_retention_time_standard_peptides,
-                        Resources.ExportMethodDlg_OkDialog_You_will_not_be_able_to_use_retention_time_prediction_with_acquired_results,
-                        Resources.ExportMethodDlg_OkDialog_Are_you_sure_you_want_to_continue),
-                    Resources.ExportMethodDlg_OkDialog_OK))
+                        FileUIResources.ExportMethodDlg_OkDialog_The_document_does_not_contain_all_of_the_retention_time_standard_peptides,
+                        FileUIResources.ExportMethodDlg_OkDialog_You_will_not_be_able_to_use_retention_time_prediction_with_acquired_results,
+                        FileUIResources.ExportMethodDlg_OkDialog_Are_you_sure_you_want_to_continue),
+                    FileUIResources.ExportMethodDlg_OkDialog_OK))
             {
                 return;
             }
@@ -949,8 +949,8 @@ namespace pwiz.Skyline.FileUI
             {
                 switch (MultiButtonMsgDlg.Show(this,
                             TextUtil.LineSeparate(
-                                Resources.ExportMethodDlg_OkDialog_The_transition_prediction_settings_for_this_document_are_set_to_use_optimized_values_by_transition_,
-                                Resources.ExportMethodDlg_OkDialog_Using_optimized_values_by_transition_is_invalid_for_this_instrument_type__Would_you_like_to_use_optimized_values_by_precursor_instead_),
+                                FileUIResources.ExportMethodDlg_OkDialog_The_transition_prediction_settings_for_this_document_are_set_to_use_optimized_values_by_transition_,
+                                FileUIResources.ExportMethodDlg_OkDialog_Using_optimized_values_by_transition_is_invalid_for_this_instrument_type__Would_you_like_to_use_optimized_values_by_precursor_instead_),
                             MessageBoxButtons.OKCancel))
                 {
                     case DialogResult.OK:
@@ -990,17 +990,17 @@ namespace pwiz.Skyline.FileUI
                 if ((!ceInSynch && Settings.Default.CollisionEnergyList.Keys.Any(name => name.StartsWith(ceNameDefault))) ||
                     (!dpInSynch && Settings.Default.DeclusterPotentialList.Keys.Any(name => name.StartsWith(dpNameDefault!))))
                 {
-                    var sb = new StringBuilder(string.Format(Resources.ExportMethodDlg_OkDialog_The_settings_for_this_document_do_not_match_the_instrument_type__0__,
+                    var sb = new StringBuilder(string.Format(FileUIResources.ExportMethodDlg_OkDialog_The_settings_for_this_document_do_not_match_the_instrument_type__0__,
                                                              _instrumentType));
                     sb.AppendLine().AppendLine();
                     if (!ceInSynch)
-                        sb.Append(Resources.ExportMethodDlg_OkDialog_Collision_Energy).Append(TextUtil.SEPARATOR_SPACE).AppendLine(ceName);
+                        sb.Append(FileUIResources.ExportMethodDlg_OkDialog_Collision_Energy).Append(TextUtil.SEPARATOR_SPACE).AppendLine(ceName);
                     if (!dpInSynch)
                     {
-                        sb.Append(Resources.ExportMethodDlg_OkDialog_Declustering_Potential).Append(TextUtil.SEPARATOR_SPACE)
-                          .AppendLine(dpName ?? Resources.ExportMethodDlg_OkDialog_None);
+                        sb.Append(FileUIResources.ExportMethodDlg_OkDialog_Declustering_Potential).Append(TextUtil.SEPARATOR_SPACE)
+                          .AppendLine(dpName ?? FileUIResources.ExportMethodDlg_OkDialog_None);
                     }
-                    sb.AppendLine().Append(Resources.ExportMethodDlg_OkDialog_Would_you_like_to_use_the_defaults_instead);
+                    sb.AppendLine().Append(FileUIResources.ExportMethodDlg_OkDialog_Would_you_like_to_use_the_defaults_instead);
                     var result = MultiButtonMsgDlg.Show(this, sb.ToString(), MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true);
                     if (result == DialogResult.Yes)
                     {
@@ -1043,7 +1043,7 @@ namespace pwiz.Skyline.FileUI
                                 if (missing.Any())
                                 {
                                     message = TextUtil.LineSeparate(message,
-                                        Resources.ExportMethodDlg_OkDialog_You_are_missing_medium_tune_optimized_compensation_voltages_for_the_following_,
+                                        FileUIResources.ExportMethodDlg_OkDialog_You_are_missing_medium_tune_optimized_compensation_voltages_for_the_following_,
                                         TextUtil.LineSeparate(missing));
                                 }
                                 break;
@@ -1055,7 +1055,7 @@ namespace pwiz.Skyline.FileUI
                                 if (missing.Any())
                                 {
                                     message = TextUtil.LineSeparate(message,
-                                        Resources.ExportMethodDlg_OkDialog_You_are_missing_any_optimized_compensation_voltages_for_the_following_,
+                                        FileUIResources.ExportMethodDlg_OkDialog_You_are_missing_any_optimized_compensation_voltages_for_the_following_,
                                         TextUtil.LineSeparate(missing));
                                 }
                                 break;
@@ -1073,16 +1073,16 @@ namespace pwiz.Skyline.FileUI
                     if (missing.Any())
                     {
                         message = TextUtil.LineSeparate(
-                            Resources.ExportMethodDlg_OkDialog_You_are_missing_compensation_voltages_for_the_following_,
+                            FileUIResources.ExportMethodDlg_OkDialog_You_are_missing_compensation_voltages_for_the_following_,
                             TextUtil.LineSeparate(missing),
-                            Resources.ExportMethodDlg_OkDialog_You_can_set_explicit_compensation_voltages_for_these__or_add_their_values_to_a_document_optimization_library_in_Transition_Settings_under_the_Prediction_tab_);
+                            FileUIResources.ExportMethodDlg_OkDialog_You_can_set_explicit_compensation_voltages_for_these__or_add_their_values_to_a_document_optimization_library_in_Transition_Settings_under_the_Prediction_tab_);
                     }
                 }
 
                 if (message != null)
                 {
-                    message = TextUtil.LineSeparate(message, Resources.ExportMethodDlg_OkDialog_Are_you_sure_you_want_to_continue_);
-                    if (DialogResult.Cancel == MultiButtonMsgDlg.Show(this, message, Resources.ExportMethodDlg_OkDialog_OK))
+                    message = TextUtil.LineSeparate(message, FileUIResources.ExportMethodDlg_OkDialog_Are_you_sure_you_want_to_continue_);
+                    if (DialogResult.Cancel == MultiButtonMsgDlg.Show(this, message, FileUIResources.ExportMethodDlg_OkDialog_OK))
                     {
                         return;
                     }
@@ -1093,22 +1093,22 @@ namespace pwiz.Skyline.FileUI
             {
                 string title = Text;
                 string ext = TextUtil.EXT_CSV;
-                string filter = Resources.ExportMethodDlg_OkDialog_Method_File;
+                string filter = FileUIResources.ExportMethodDlg_OkDialog_Method_File;
 
                 switch (_fileType)
                 {
                     case ExportFileType.List:
-                        filter = Resources.ExportMethodDlg_OkDialog_Transition_List;
+                        filter = FileUIResources.ExportMethodDlg_OkDialog_Transition_List;
                         ext = ExportInstrumentType.TransitionListExtension(_instrumentType);
                         break;
 
                     case ExportFileType.IsolationList:
-                        filter = Resources.ExportMethodDlg_OkDialog_Isolation_List;
+                        filter = FileUIResources.ExportMethodDlg_OkDialog_Isolation_List;
                         ext = ExportInstrumentType.IsolationListExtension(_instrumentType);
                         break;
 
                     case ExportFileType.Method:
-                        title = string.Format(Resources.ExportMethodDlg_OkDialog_Export__0__Method, _instrumentType);
+                        title = string.Format(FileUIResources.ExportMethodDlg_OkDialog_Export__0__Method, _instrumentType);
                         ext = ExportInstrumentType.MethodExtension(_instrumentType);
                         break;
                 }
@@ -1342,7 +1342,7 @@ namespace pwiz.Skyline.FileUI
             {
                 if (_exportProperties.ExportStrategy == ExportStrategy.Buckets)
                 {
-                    helper.ShowTextBoxError(textMaxTransitions, Resources.ExportMethodDlg_ValidateSettings__0__must_contain_a_value);
+                    helper.ShowTextBoxError(textMaxTransitions, FileUIResources.ExportMethodDlg_ValidateSettings__0__must_contain_a_value);
                     return false;
                 }
                 _exportProperties.MaxTransitions = null;
@@ -1483,8 +1483,8 @@ namespace pwiz.Skyline.FileUI
                         if (DialogResult.Cancel == MultiButtonMsgDlg.Show(this, TextUtil.LineSeparate(
                             Resources.ExportMethodDlg_OkDialog_Compensation_voltage_optimization_should_be_run_on_one_transition_per_peptide__and_the_best_transition_cannot_be_determined_for_the_following_precursors_,
                             TextUtil.LineSeparate(precursorsMissingRanks),
-                            Resources.ExportMethodDlg_OkDialog_Provide_transition_ranking_information_through_imported_results__a_spectral_library__or_choose_only_one_target_transition_per_precursor_),
-                            Resources.ExportMethodDlg_OkDialog_OK))
+                            FileUIResources.ExportMethodDlg_OkDialog_Provide_transition_ranking_information_through_imported_results__a_spectral_library__or_choose_only_one_target_transition_per_precursor_),
+                            FileUIResources.ExportMethodDlg_OkDialog_OK))
                         {
                             return false;
                         }
@@ -1531,8 +1531,8 @@ namespace pwiz.Skyline.FileUI
                     if (showMessages)
                     {
                         string messageFormat = (OptimizeType == null ?
-                            Resources.ExportMethodDlg_ValidatePrecursorFit_The_precursor__0__for__1__has__2__transitions__which_exceeds_the_current_maximum__3__ :
-                            Resources.ExportMethodDlg_ValidatePrecursorFit_The_precursor__0__for__1__requires__2__transitions_to_optimize__which_exceeds_the_current_maximum__3__);
+                            FileUIResources.ExportMethodDlg_ValidatePrecursorFit_The_precursor__0__for__1__has__2__transitions__which_exceeds_the_current_maximum__3__ :
+                            FileUIResources.ExportMethodDlg_ValidatePrecursorFit_The_precursor__0__for__1__requires__2__transitions_to_optimize__which_exceeds_the_current_maximum__3__);
                         string targetName = nodeGroup.TransitionGroup.Peptide.TextId;
 
                         MessageDlg.Show(this, string.Format(messageFormat,
@@ -1628,12 +1628,12 @@ namespace pwiz.Skyline.FileUI
         {
             if (IsDia && !radioSingle.Checked)
             {
-                MessageDlg.Show(this, Resources.ExportMethodDlg_StrategyCheckChanged_Only_one_method_can_be_exported_in_DIA_mode);
+                MessageDlg.Show(this, FileUIResources.ExportMethodDlg_StrategyCheckChanged_Only_one_method_can_be_exported_in_DIA_mode);
                 radioSingle.Checked = true;
             }
             else if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF) && radioBuckets.Checked)
             {
-                MessageDlg.Show(this, string.Format(Resources.ExportMethodDlg_StrategyCheckChanged_Multiple_methods_is_not_yet_supported_for__0__, InstrumentType));
+                MessageDlg.Show(this, string.Format(FileUIResources.ExportMethodDlg_StrategyCheckChanged_Multiple_methods_is_not_yet_supported_for__0__, InstrumentType));
                 radioSingle.Checked = true;
             }
 
@@ -1665,7 +1665,7 @@ namespace pwiz.Skyline.FileUI
             // Temporary code until we support Agilent export of DIA isolation lists.
             if (Equals(_instrumentType, ExportInstrumentType.AGILENT_TOF) && IsDia)
             {
-                MessageDlg.Show(this, string.Format(Resources.ExportMethodDlg_comboInstrument_SelectedIndexChanged_Export_of_DIA_isolation_lists_is_not_yet_supported_for__0__,
+                MessageDlg.Show(this, string.Format(FileUIResources.ExportMethodDlg_comboInstrument_SelectedIndexChanged_Export_of_DIA_isolation_lists_is_not_yet_supported_for__0__,
                                                     _instrumentType));
                 comboInstrument.SelectedItem = ExportInstrumentType.THERMO_Q_EXACTIVE;
                 return;
@@ -1796,7 +1796,7 @@ namespace pwiz.Skyline.FileUI
                         MessageDlg.Show(this, TextUtil.LineSeparate(string.Format(Resources.ExportMethodDlg_VerifySchedulingAllowed_The__0__instrument_lacks_support_for_direct_method_export_for_triggered_acquisition_, InstrumentType),
                                                                     string.Format(Resources.ExportMethodDlg_VerifySchedulingAllowed_You_must_export_a__0__transition_list_and_manually_import_it_into_a_method_file_using_vendor_software_, ExportInstrumentType.THERMO)));
                     else
-                        MessageDlg.Show(this, string.Format(Resources.ExportMethodDlg_VerifySchedulingAllowed_The_instrument_type__0__does_not_support_triggered_acquisition_, InstrumentType));
+                        MessageDlg.Show(this, string.Format(FileUIResources.ExportMethodDlg_VerifySchedulingAllowed_The_instrument_type__0__does_not_support_triggered_acquisition_, InstrumentType));
                     return false;
                 }
                 if (!_document.Settings.HasResults && !_document.Settings.HasLibraries)
@@ -1827,23 +1827,23 @@ namespace pwiz.Skyline.FileUI
                     if (prediction.UseMeasuredRTs)
                         MessageDlg.Show(this, Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_To_export_a_scheduled_list_you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings_Prediction_or_import_results_for_all_peptides_in_the_document);
                     else
-                        MessageDlg.Show(this, Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_To_export_a_scheduled_list_you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings_Prediction);
+                        MessageDlg.Show(this, FileUIResources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_To_export_a_scheduled_list_you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings_Prediction);
                 }
                 else if (!prediction.RetentionTime.Calculator.IsUsable)
                 {
                     MessageDlg.Show(this, TextUtil.LineSeparate(
-                        Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_Retention_time_prediction_calculator_is_unable_to_score,
-                        Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_Check_the_calculator_settings));
+                        FileUIResources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_Retention_time_prediction_calculator_is_unable_to_score,
+                        FileUIResources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_Check_the_calculator_settings));
                 }
                 else if (!prediction.RetentionTime.IsUsable)
                 {
                     MessageDlg.Show(this, TextUtil.LineSeparate(
-                        Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_Retention_time_predictor_is_unable_to_auto_calculate_a_regression,
-                        Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_Check_to_make_sure_the_document_contains_times_for_all_of_the_required_standard_peptides));
+                        FileUIResources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_Retention_time_predictor_is_unable_to_auto_calculate_a_regression,
+                        FileUIResources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_Check_to_make_sure_the_document_contains_times_for_all_of_the_required_standard_peptides));
                 }
                 else
                 {
-                    MessageDlg.Show(this, Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_To_export_a_scheduled_list_you_must_first_import_results_for_all_peptides_in_the_document);
+                    MessageDlg.Show(this, FileUIResources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_To_export_a_scheduled_list_you_must_first_import_results_for_all_peptides_in_the_document);
                 }
                 return false;
             }
@@ -2026,19 +2026,19 @@ namespace pwiz.Skyline.FileUI
                         if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) &&
                             !AgilentMethodExporter.IsAgilentMethodPath(templateName))
                         {
-                            MessageDlg.Show(this, Resources.ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd);
+                            MessageDlg.Show(this, FileUIResources.ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd);
                             return;
                         }
                         else if (Equals(InstrumentType, ExportInstrumentType.AGILENT_MASSHUNTER_12_METHOD) &&
                                  !AgilentUltivoMethodExporter.IsMethodPath(templateName))
                         {
-                            MessageDlg.Show(this, Resources.ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_);
+                            MessageDlg.Show(this, FileUIResources.ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_);
                             return;
                         }
                         else if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TOF) &&
                                  !BrukerMethodExporter.IsBrukerMethodPath(templateName))
                         {
-                            MessageDlg.Show(this, Resources.ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_);
+                            MessageDlg.Show(this, FileUIResources.ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_a_Bruker_TOF_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_submethods_xml_);
                             return;
                         }
                         textTemplateFile.Text = templateName;
@@ -2128,7 +2128,7 @@ namespace pwiz.Skyline.FileUI
             UpdateThermoFaimsCvControl();
 
             // Set the tooltip
-            var tooltip = Resources.ExportMethodDlg_comboOptimizing_SelectedIndexChanged_Export_a_method_with_extra_transitions_for_finding_an_optimal_value_;
+            var tooltip = FileUIResources.ExportMethodDlg_comboOptimizing_SelectedIndexChanged_Export_a_method_with_extra_transitions_for_finding_an_optimal_value_;
             int? stepCount = null;
             if (comboOptimizing.SelectedItem.ToString().Equals(ExportOptimize.CE))
             {
@@ -2147,7 +2147,7 @@ namespace pwiz.Skyline.FileUI
             {
                 tooltip = TextUtil.LineSeparate(tooltip,
                     string.Format(
-                        Resources.ExportMethodDlg_comboOptimizing_SelectedIndexChanged_Optimizing_for__0__will_produce_an_additional__1__transitions_per_transition_,
+                        FileUIResources.ExportMethodDlg_comboOptimizing_SelectedIndexChanged_Optimizing_for__0__will_produce_an_additional__1__transitions_per_transition_,
                         comboOptimizing.SelectedItem, stepCount * 2));
             }
             helpTip.SetToolTip(comboOptimizing, tooltip);
@@ -2158,7 +2158,7 @@ namespace pwiz.Skyline.FileUI
             if (!cbIgnoreProteins.Checked && radioBuckets.Checked && !Equals(comboTargetType.SelectedItem, ExportMethodType.Standard.GetLocalizedString()))
             {
                 cbIgnoreProteins.Checked = true;
-                MessageDlg.Show(this, Resources.ExportMethodDlg_cbIgnoreProteins_CheckedChanged_Grouping_peptides_by_protein_has_not_yet_been_implemented_for_scheduled_methods_);
+                MessageDlg.Show(this, FileUIResources.ExportMethodDlg_cbIgnoreProteins_CheckedChanged_Grouping_peptides_by_protein_has_not_yet_been_implemented_for_scheduled_methods_);
             }
         }
 
@@ -2184,7 +2184,7 @@ namespace pwiz.Skyline.FileUI
                 if (!File.Exists(brukerTemplate))
                 {
                     MessageDlg.Show(this,
-                        string.Format(Resources.ExportMethodDlg_OkDialog_The_template_file__0__does_not_exist,
+                        string.Format(FileUIResources.ExportMethodDlg_OkDialog_The_template_file__0__does_not_exist,
                             brukerTemplate));
                     return;
                 }
@@ -2211,7 +2211,7 @@ namespace pwiz.Skyline.FileUI
             {
                 if (dlg.Exception != null)
                 {
-                    MessageDlg.ShowWithException(this, Resources.ExportMethodDlg_btnGraph_Click_An_error_occurred_, dlg.Exception);
+                    MessageDlg.ShowWithException(this, FileUIResources.ExportMethodDlg_btnGraph_Click_An_error_occurred_, dlg.Exception);
                     return;
                 }
                 dlg.ShowDialog(this);
@@ -2258,8 +2258,8 @@ namespace pwiz.Skyline.FileUI
         public void SetMethodType(ExportMethodType type)
         {
             comboTargetType.SelectedItem = type == ExportMethodType.Standard
-                                               ? Resources.ExportMethodDlg_SetMethodType_Standard
-                                               : Resources.ExportMethodDlg_SetMethodType_Scheduled;
+                                               ? FileUIResources.ExportMethodDlg_SetMethodType_Standard
+                                               : FileUIResources.ExportMethodDlg_SetMethodType_Scheduled;
         }
 
         public bool IsTargetTypeEnabled
@@ -2346,7 +2346,7 @@ namespace pwiz.Skyline.FileUI
 
             using (var longWait = new LongWaitDlg())
             {
-                longWait.Text = Resources.ExportDlgProperties_PerformLongExport_Exporting_Methods;
+                longWait.Text = FileUIResources.ExportDlgProperties_PerformLongExport_Exporting_Methods;
                 try
                 {
                     var status = longWait.PerformWork(_dialog, 800, performExport);
@@ -2355,7 +2355,7 @@ namespace pwiz.Skyline.FileUI
                 }
                 catch (Exception x)
                 {
-                    MessageDlg.ShowWithException(_dialog, TextUtil.LineSeparate(Resources.ExportDlgProperties_PerformLongExport_An_error_occurred_attempting_to_export,
+                    MessageDlg.ShowWithException(_dialog, TextUtil.LineSeparate(FileUIResources.ExportDlgProperties_PerformLongExport_An_error_occurred_attempting_to_export,
                                                                    x.Message), x);
                 }
             }

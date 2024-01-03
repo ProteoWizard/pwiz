@@ -22,7 +22,6 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
@@ -82,14 +81,14 @@ namespace pwiz.Skyline.SettingsUI
 
             if (_existing.Contains(exc => !ReferenceEquals(_exclusion, exc) && Equals(name, exc.Name)))
             {
-                helper.ShowTextBoxError(textName, Resources.EditExclusionDlg_OkDialog_The_peptide_exclusion__0__already_exists, name);
+                helper.ShowTextBoxError(textName, SettingsUIResources.EditExclusionDlg_OkDialog_The_peptide_exclusion__0__already_exists, name);
                 return;
             }
 
             string exRegex = textExclusionRegex.Text.Trim();
             if (string.IsNullOrEmpty(exRegex))
             {
-                helper.ShowTextBoxError(textExclusionRegex, Resources.EditExclusionDlg_OkDialog__0__must_contain_a_valid_regular_expression_);
+                helper.ShowTextBoxError(textExclusionRegex, SettingsUIResources.EditExclusionDlg_OkDialog__0__must_contain_a_valid_regular_expression_);
                 return;
             }
             try
@@ -100,7 +99,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             catch (Exception)
             {
-                helper.ShowTextBoxError(textExclusionRegex, Resources.EditExclusionDlg_OkDialog_The_text__0__is_not_a_valid_regular_expression, exRegex);
+                helper.ShowTextBoxError(textExclusionRegex, SettingsUIResources.EditExclusionDlg_OkDialog_The_text__0__is_not_a_valid_regular_expression, exRegex);
                 return;
             }
             bool includeMatch = radioNotMatching.Checked;

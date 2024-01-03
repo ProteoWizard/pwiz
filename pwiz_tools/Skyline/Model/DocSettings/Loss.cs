@@ -49,9 +49,9 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 return new[]
                 {
-                    Resources.LossInclusionExtension_LOCALIZED_VALUES_Matching_Library,
-                    Resources.LossInclusionExtension_LOCALIZED_VALUES_Never,
-                    Resources.LossInclusionExtension_LOCALIZED_VALUES_Always,
+                    DocSettingsResources.LossInclusionExtension_LOCALIZED_VALUES_Matching_Library,
+                    DocSettingsResources.LossInclusionExtension_LOCALIZED_VALUES_Never,
+                    DocSettingsResources.LossInclusionExtension_LOCALIZED_VALUES_Always,
                 };
             }
         }
@@ -113,7 +113,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public string FormulaNoNull
         {
-            get { return ParsedMolecule.IsNullOrEmpty(_formula) ? Resources.Loss_FormulaUnknown : _formula.ToString(); }
+            get { return ParsedMolecule.IsNullOrEmpty(_formula) ? DocSettingsResources.Loss_FormulaUnknown : _formula.ToString(); }
         }
 
         [Track]
@@ -161,16 +161,16 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     case LossInclusion.Always:
                         itemDescription = itemDescription.AppendDetailLines(TextUtil.ColonSeparate(
-                            Resources.FragmentLoss_ItemDescription_Include_by_default, EnumNames.LossInclusion_Always));
+                            DocSettingsResources.FragmentLoss_ItemDescription_Include_by_default, EnumNames.LossInclusion_Always));
                         break;
                     case LossInclusion.Library:
                         itemDescription = itemDescription.AppendDetailLines(TextUtil.ColonSeparate(
-                            Resources.FragmentLoss_ItemDescription_Include_by_default,
+                            DocSettingsResources.FragmentLoss_ItemDescription_Include_by_default,
                             EnumNames.LossInclusion_Library));
                         break;
                     case LossInclusion.Never:
                         itemDescription = itemDescription.AppendDetailLines(TextUtil.ColonSeparate(
-                            Resources.FragmentLoss_ItemDescription_Include_by_default, EnumNames.LossInclusion_Never));
+                            DocSettingsResources.FragmentLoss_ItemDescription_Include_by_default, EnumNames.LossInclusion_Never));
                         break;
                 }
 
@@ -213,11 +213,11 @@ namespace pwiz.Skyline.Model.DocSettings
         private void Validate()
         {
             if (MonoisotopicMass == 0 || AverageMass == 0)
-                throw new InvalidDataException(Resources.FragmentLoss_Validate_Neutral_losses_must_specify_a_formula_or_valid_monoisotopic_and_average_masses);
+                throw new InvalidDataException(DocSettingsResources.FragmentLoss_Validate_Neutral_losses_must_specify_a_formula_or_valid_monoisotopic_and_average_masses);
             if (MonoisotopicMass < MIN_LOSS_MASS || AverageMass < MIN_LOSS_MASS)
-                throw new InvalidDataException(string.Format(Resources.FragmentLoss_Validate_Neutral_losses_must_be_greater_than_or_equal_to__0__,MIN_LOSS_MASS));
+                throw new InvalidDataException(string.Format(DocSettingsResources.FragmentLoss_Validate_Neutral_losses_must_be_greater_than_or_equal_to__0__,MIN_LOSS_MASS));
             if (MonoisotopicMass > MAX_LOSS_MASS || AverageMass > MAX_LOSS_MASS)
-                throw new InvalidDataException(string.Format(Resources.FragmentLoss_Validate_Neutral_losses_must_be_less_than_or_equal_to__0__, MAX_LOSS_MASS));
+                throw new InvalidDataException(string.Format(DocSettingsResources.FragmentLoss_Validate_Neutral_losses_must_be_less_than_or_equal_to__0__, MAX_LOSS_MASS));
         }
 
         public static FragmentLoss Deserialize(XmlReader reader)
@@ -498,7 +498,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 int lossIndex = PrecursorMod.Losses.IndexOf(Loss);
                 if (lossIndex == -1)
                 {
-                    throw new InvalidDataException(string.Format(Resources.TransitionLoss_LossIndex_Expected_loss__0__not_found_in_the_modification__1_,
+                    throw new InvalidDataException(string.Format(DocSettingsResources.TransitionLoss_LossIndex_Expected_loss__0__not_found_in_the_modification__1_,
                                                                  this, PrecursorMod.Name));
                 }
                 return lossIndex;

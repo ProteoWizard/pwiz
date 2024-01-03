@@ -1341,7 +1341,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                     string.Format(PrositResources.GraphSpectrum_UpdateUI__0__vs___1_,
                                         GraphItem.LibraryName, mirrorSpectrum.Name),
                                     SpectrumGraphItem.RemoveLibraryPrefix(GraphItem.Title, GraphItem.LibraryName),
-                                    string.Format(Resources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, dotp))
+                                    string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, dotp))
                                 : TextUtil.LineSeparate(
                                     mirrorSpectrum.Name,
                                     mirrorGraphItem.Title,
@@ -1410,7 +1410,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 ClearGraphPane();
                 //_graphHelper.SetErrorGraphItem(new NoDataMSGraphItem(ex.Message));
                 _graphHelper.SetErrorGraphItem(new NoDataMSGraphItem(
-                    Resources.GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted));
+                    GraphsResources.GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted));
                 msGraphExtension.SetPropertiesObject(null);
                 return;
             }

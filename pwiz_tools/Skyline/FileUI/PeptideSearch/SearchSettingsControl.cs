@@ -28,7 +28,6 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 
@@ -164,7 +163,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             try
             {
                 SimpleFileDownloaderDlg.Show(TopLevelControl,
-                    string.Format(Resources.SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_,
+                    string.Format(PeptideSearchResources.SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_,
                         searchEngineComboBox.SelectedItem), filesNotAlreadyDownloaded);
             }
             catch (Exception exception)
@@ -400,7 +399,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!helper.ValidateDecimalTextBox(txtMS1Tolerance, 0, 100, out _))
             {
                 helper.ShowTextBoxError(txtMS1Tolerance, 
-                    Resources.DdaSearch_SearchSettingsControl_MS1_Tolerance_incorrect);
+                    PeptideSearchResources.DdaSearch_SearchSettingsControl_MS1_Tolerance_incorrect);
                 return false;
             }
             ImportPeptideSearch.SearchEngine.SetPrecursorMassTolerance(PrecursorTolerance);
@@ -408,7 +407,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!helper.ValidateDecimalTextBox(txtMS2Tolerance, 0, 100, out _))
             {
                 helper.ShowTextBoxError(txtMS2Tolerance, 
-                    Resources.DdaSearch_SearchSettingsControl_MS2_Tolerance_incorrect);
+                    PeptideSearchResources.DdaSearch_SearchSettingsControl_MS2_Tolerance_incorrect);
                 return false;
             }
             ImportPeptideSearch.SearchEngine.SetFragmentIonMassTolerance(FragmentTolerance);
@@ -417,7 +416,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!ValidateCombobox(cbFragmentIons, out fragmentIons))
             {
                 helper.ShowTextBoxError(cbFragmentIons, 
-                    Resources.DdaSearch_SearchSettingsControl_Fragment_ions_must_be_selected);
+                    PeptideSearchResources.DdaSearch_SearchSettingsControl_Fragment_ions_must_be_selected);
                 return false;
             }
             ImportPeptideSearch.SearchEngine.SetFragmentIons(fragmentIons);
@@ -426,7 +425,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!ValidateCombobox(cbMs2Analyzer, out ms2Analyzer))
             {
                 helper.ShowTextBoxError(cbMs2Analyzer,
-                    Resources.DdaSearch_SearchSettingsControl_MS2_analyzer_must_be_selected);
+                    PeptideSearchResources.DdaSearch_SearchSettingsControl_MS2_analyzer_must_be_selected);
                 return false;
             }
             ImportPeptideSearch.SearchEngine.SetMs2Analyzer(ms2Analyzer);
@@ -547,7 +546,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             Assume.IsNotNull(ImportPeptideSearch.SearchEngine.AdditionalSettings);
 
-            KeyValueGridDlg.Show(Resources.SearchSettingsControl_Additional_Settings,
+            KeyValueGridDlg.Show(PeptideSearchResources.SearchSettingsControl_Additional_Settings,
                 ImportPeptideSearch.SearchEngine.AdditionalSettings,
                 (setting) => setting.Value.ToString(),
                 (value, setting) => setting.Value = value,

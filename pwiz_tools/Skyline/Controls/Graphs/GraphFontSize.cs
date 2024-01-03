@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -37,11 +36,11 @@ namespace pwiz.Skyline.Controls.Graphs
             return Label;
         }
 
-        public static readonly GraphFontSize XSMALL = new GraphFontSize(8, () => Resources.FontSize_XSMALL_x_small);
-        public static readonly GraphFontSize SMALL = new GraphFontSize(10, () => Resources.FontSize_SMALL_small);
-        public static readonly GraphFontSize NORMAL = new GraphFontSize(12, () => Resources.FontSize_NORMAL_normal);
-        public static readonly GraphFontSize LARGE = new GraphFontSize(14, () => Resources.FontSize_LARGE_large);
-        public static readonly GraphFontSize XLARGE = new GraphFontSize(16, () => Resources.FontSize_XLARGE_x_large);
+        public static readonly GraphFontSize XSMALL = new GraphFontSize(8, () => GraphsResources.FontSize_XSMALL_x_small);
+        public static readonly GraphFontSize SMALL = new GraphFontSize(10, () => GraphsResources.FontSize_SMALL_small);
+        public static readonly GraphFontSize NORMAL = new GraphFontSize(12, () => GraphsResources.FontSize_NORMAL_normal);
+        public static readonly GraphFontSize LARGE = new GraphFontSize(14, () => GraphsResources.FontSize_LARGE_large);
+        public static readonly GraphFontSize XLARGE = new GraphFontSize(16, () => GraphsResources.FontSize_XLARGE_x_large);
 
         public static IEnumerable<GraphFontSize> FontSizes
         {

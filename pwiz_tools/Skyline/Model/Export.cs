@@ -56,9 +56,9 @@ namespace pwiz.Skyline.Model
             {
                 return new[]
                 {
-                    Resources.ExportStrategyExtension_LOCALIZED_VALUES_Single,
-                    Resources.ExportStrategyExtension_LOCALIZED_VALUES_Protein,
-                    Resources.ExportStrategyExtension_LOCALIZED_VALUES_Buckets
+                    ModelResources.ExportStrategyExtension_LOCALIZED_VALUES_Single,
+                    ModelResources.ExportStrategyExtension_LOCALIZED_VALUES_Protein,
+                    ModelResources.ExportStrategyExtension_LOCALIZED_VALUES_Buckets
                 };
             }
         }
@@ -87,9 +87,9 @@ namespace pwiz.Skyline.Model
             {
                 return new[]
                 {
-                    Resources.ExportMethodTypeExtension_LOCALIZED_VALUES_Standard,
-                    Resources.ExportMethodTypeExtension_LOCALIZED_VALUES_Scheduled,
-                    Resources.ExportMethodTypeExtension_LOCALIZED_VALUES_Triggered
+                    ModelResources.ExportMethodTypeExtension_LOCALIZED_VALUES_Standard,
+                    ModelResources.ExportMethodTypeExtension_LOCALIZED_VALUES_Scheduled,
+                    ModelResources.ExportMethodTypeExtension_LOCALIZED_VALUES_Triggered
                 };
             }
         }
@@ -121,9 +121,9 @@ namespace pwiz.Skyline.Model
             {
                 return new[]
                 {
-                    Resources.ExportSchedulingAlgorithmExtension_LOCALIZED_VALUES_Average,
-                    Resources.ExportSchedulingAlgorithmExtension_LOCALIZED_VALUES_Trends,
-                    Resources.ExportSchedulingAlgorithmExtension_LOCALIZED_VALUES_Single
+                    ModelResources.ExportSchedulingAlgorithmExtension_LOCALIZED_VALUES_Average,
+                    ModelResources.ExportSchedulingAlgorithmExtension_LOCALIZED_VALUES_Trends,
+                    ModelResources.ExportSchedulingAlgorithmExtension_LOCALIZED_VALUES_Single
                 };
             }
         }
@@ -147,9 +147,9 @@ namespace pwiz.Skyline.Model
             {
                 return new[]
                 {
-                    Resources.ExportFileTypeExtension_LOCALIZED_VALUES_List,
-                    Resources.ExportFileTypeExtension_LOCALIZED_VALUES_Method,
-                    Resources.ExportFileTypeExtension_LOCALIZED_VALUES_IsolationList
+                    ModelResources.ExportFileTypeExtension_LOCALIZED_VALUES_List,
+                    ModelResources.ExportFileTypeExtension_LOCALIZED_VALUES_Method,
+                    ModelResources.ExportFileTypeExtension_LOCALIZED_VALUES_IsolationList
                 };
             }
         }
@@ -494,7 +494,7 @@ namespace pwiz.Skyline.Model
                     if (type == ExportFileType.IsolationList)
                         return ExportAgilentIsolationList(doc, path, template);
                     else
-                        throw new InvalidOperationException(string.Format(Resources.ExportProperties_ExportFile_Unrecognized_instrument_type__0__, instrumentType));
+                        throw new InvalidOperationException(string.Format(ModelResources.ExportProperties_ExportFile_Unrecognized_instrument_type__0__, instrumentType));
                 case ExportInstrumentType.BRUKER_TOF:
                     if (doc.Settings.TransitionSettings.FullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA)
                     {
@@ -575,7 +575,7 @@ namespace pwiz.Skyline.Model
                 case ExportInstrumentType.WATERS_QUATTRO_PREMIER:
                     return ExportWatersQMethod(doc, path, template);
                 default:
-                    throw new InvalidOperationException(string.Format(Resources.ExportProperties_ExportFile_Unrecognized_instrument_type__0__, instrumentType));
+                    throw new InvalidOperationException(string.Format(ModelResources.ExportProperties_ExportFile_Unrecognized_instrument_type__0__, instrumentType));
             }
         }
 
@@ -935,16 +935,16 @@ namespace pwiz.Skyline.Model
 
     public static class ExportOptimize
     {
-        public static string NONE { get { return Resources.ExportOptimize_NONE_None; }}
-        public static string CE { get { return Resources.ExportOptimize_CE_Collision_Energy; }}
-        public static string DP { get { return Resources.ExportOptimize_DP_Declustering_Potential; }}
-        public static string COV { get { return Resources.ExportOptimize_COV_Compensation_Voltage; } }
+        public static string NONE { get { return ModelResources.ExportOptimize_NONE_None; }}
+        public static string CE { get { return ModelResources.ExportOptimize_CE_Collision_Energy; }}
+        public static string DP { get { return ModelResources.ExportOptimize_DP_Declustering_Potential; }}
+        public static string COV { get { return ModelResources.ExportOptimize_COV_Compensation_Voltage; } }
 
         public static string[] OptimizeTypes { get { return new[] { NONE, CE, DP, COV }; } }
 
-        public static string COV_ROUGH { get { return Resources.ExportOptimize_COV_ROUGH_Rough_Tune; } }
-        public static string COV_MEDIUM { get { return Resources.ExportOptimize_COV_MEDIUM_Medium_Tune; } }
-        public static string COV_FINE { get { return Resources.ExportOptimize_COV_FINE_Fine_Tune; } }
+        public static string COV_ROUGH { get { return ModelResources.ExportOptimize_COV_ROUGH_Rough_Tune; } }
+        public static string COV_MEDIUM { get { return ModelResources.ExportOptimize_COV_MEDIUM_Medium_Tune; } }
+        public static string COV_FINE { get { return ModelResources.ExportOptimize_COV_FINE_Fine_Tune; } }
 
         public static string[] CompensationVoltageTuneTypes { get { return new[] { COV_ROUGH, COV_MEDIUM, COV_FINE }; } }
     }
@@ -1138,7 +1138,7 @@ namespace pwiz.Skyline.Model
         {
             string skylinePath = Assembly.GetExecutingAssembly().Location;
             if (string.IsNullOrEmpty(skylinePath))
-                throw new IOException(Resources.ThermoMassListExporter_EnsureLibraries_Thermo_method_creation_software_may_not_be_installed_correctly_);
+                throw new IOException(ModelResources.ThermoMassListExporter_EnsureLibraries_Thermo_method_creation_software_may_not_be_installed_correctly_);
 
             // ReSharper disable ConstantNullCoalescingCondition
             string buildSubdir = Path.GetDirectoryName(EXE_BUILD_METHOD) ?? string.Empty;
@@ -1150,7 +1150,7 @@ namespace pwiz.Skyline.Model
                 foreach (var libraryName in DEPENDENCY_LIBRARIES)
                 {
                     if (!File.Exists(Path.Combine(exeDir, libraryName)))
-                        throw new IOException(Resources.ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_);
+                        throw new IOException(ModelResources.ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_);
                 }
                 return;
             }
@@ -1162,7 +1162,7 @@ namespace pwiz.Skyline.Model
                 if (!File.Exists(srcFile))
                 {
                     throw new IOException(
-                        string.Format(Resources.ThermoMassListExporter_EnsureLibraries_Thermo_instrument_software_may_not_be_installed_correctly__The_library__0__could_not_be_found_,
+                        string.Format(ModelResources.ThermoMassListExporter_EnsureLibraries_Thermo_instrument_software_may_not_be_installed_correctly__The_library__0__could_not_be_found_,
                                       srcFile));
                 }
                 // If destination file does not exist or has a different modification time from
@@ -2655,7 +2655,7 @@ namespace pwiz.Skyline.Model
 
             if (analystDir == null)
             {
-                throw new IOException(Resources.AbiMethodExporter_EnsureAnalyst_Failed_to_find_a_valid_Analyst_installation);
+                throw new IOException(ModelResources.AbiMethodExporter_EnsureAnalyst_Failed_to_find_a_valid_Analyst_installation);
             }
 
 
@@ -2666,7 +2666,7 @@ namespace pwiz.Skyline.Model
             {
                 if (status == null)
                 {
-                    status = new ProgressStatus(Resources.AbiMethodExporter_EnsureAnalyst_Waiting_for_Analyst_to_start).ChangePercentComplete(-1);
+                    status = new ProgressStatus(ModelResources.AbiMethodExporter_EnsureAnalyst_Waiting_for_Analyst_to_start).ChangePercentComplete(-1);
                     progressMonitor.UpdateProgress(status);
                 }
                 Thread.Sleep(500);
@@ -2677,7 +2677,7 @@ namespace pwiz.Skyline.Model
                 // Wait an extra 1.5 seconds, if the Analyst window was not already present
                 // to make sure it is really completely started.
                 Thread.Sleep(1500);
-                progressMonitor.UpdateProgress(status.ChangeMessage(Resources.AbiMethodExporter_EnsureAnalyst_Working));
+                progressMonitor.UpdateProgress(status.ChangeMessage(ModelResources.AbiMethodExporter_EnsureAnalyst_Working));
             }    
         }
 
@@ -2914,7 +2914,7 @@ namespace pwiz.Skyline.Model
                     IsolationList = IsolationStrategy.precursor;
                     break;
                 default:
-                    throw new Exception(Resources.SciexOsMethodExporter_SciexOsMethodExporter_Invalid_instrument_type_for_SCIEX_OS_method_export_);
+                    throw new Exception(ModelResources.SciexOsMethodExporter_SciexOsMethodExporter_Invalid_instrument_type_for_SCIEX_OS_method_export_);
             }
         }
 
@@ -2947,7 +2947,7 @@ namespace pwiz.Skyline.Model
         {
             var sciexOsDir = AdvApi.RegQueryKeyValue(AdvApi.HKEY_LOCAL_MACHINE, @"SOFTWARE\SCIEX\SCIEX OS", @"InstallationDirectory");
             if (sciexOsDir == null)
-                throw new IOException(Resources.SciexOsMethodExporter_EnsureSciexOs_Failed_to_find_a_valid_SCIEX_OS_installation_);
+                throw new IOException(ModelResources.SciexOsMethodExporter_EnsureSciexOs_Failed_to_find_a_valid_SCIEX_OS_installation_);
 
             var sciexOsProc = SciexOsProcess ?? Process.Start(Path.Combine(sciexOsDir, SCIEX_OS_EXE));
             // Wait for main window to be present.
@@ -2956,7 +2956,7 @@ namespace pwiz.Skyline.Model
             {
                 if (status == null)
                 {
-                    status = new ProgressStatus(Resources.SciexOsMethodExporter_EnsureSciexOs_Waiting_for_SCIEX_OS_to_start).ChangePercentComplete(-1);
+                    status = new ProgressStatus(ModelResources.SciexOsMethodExporter_EnsureSciexOs_Waiting_for_SCIEX_OS_to_start).ChangePercentComplete(-1);
                     progressMonitor.UpdateProgress(status);
                 }
                 Thread.Sleep(500);
@@ -2966,7 +2966,7 @@ namespace pwiz.Skyline.Model
             {
                 // Wait an extra 1.5 seconds, if the SCIEX OS window was not already present to make sure it is really completely started.
                 Thread.Sleep(1500);
-                progressMonitor.UpdateProgress(status.ChangeMessage(Resources.SciexOsMethodExporter_EnsureSciexOs_Working___));
+                progressMonitor.UpdateProgress(status.ChangeMessage(ModelResources.SciexOsMethodExporter_EnsureSciexOs_Working___));
             }
         }
 
@@ -3789,7 +3789,7 @@ namespace pwiz.Skyline.Model
             if (missing.Length > 0)
             {
                 errorLines.Add(
-                    Resources.ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_library_or_spectral_library__The_following_ion_mobility_values_are_missing_);
+                    ModelResources.ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_library_or_spectral_library__The_following_ion_mobility_values_are_missing_);
                 errorLines.Add(string.Empty);
                 errorLines.AddRange(missing.Select(k => k.ToString()));
             }
@@ -3803,12 +3803,12 @@ namespace pwiz.Skyline.Model
 
                 errorLines.Add(
                     string.Format(
-                        Resources.BrukerTimsTofIsolationListExporter_CheckIonMobilities_All_targets_must_have_an_ion_mobility_between__0__and__1__as_specified_in_the_template_method__Either_use_a_different_template_method__or_change_the_ion_mobility_values_for_the_following_targets_,
+                        ModelResources.BrukerTimsTofIsolationListExporter_CheckIonMobilities_All_targets_must_have_an_ion_mobility_between__0__and__1__as_specified_in_the_template_method__Either_use_a_different_template_method__or_change_the_ion_mobility_values_for_the_following_targets_,
                         exporter._oneOverK0LowerLimit.GetValueOrDefault().ToString(Formats.IonMobility),
                         exporter._oneOverK0UpperLimit.ToString(Formats.IonMobility)));
                 errorLines.Add(string.Empty);
                 errorLines.AddRange(outOfRange.Select(k =>
-                    string.Format(Resources.BrukerTimsTofIsolationListExporter_CheckIonMobilities__0____1_____2__, k.Item1,
+                    string.Format(ModelResources.BrukerTimsTofIsolationListExporter_CheckIonMobilities__0____1_____2__, k.Item1,
                         k.Item2.ToString(Formats.IonMobility), k.Item3.ToString(Formats.IonMobility))));
             }
 
@@ -3871,7 +3871,7 @@ namespace pwiz.Skyline.Model
             bool getMetrics)
         {
             if (templateName == null)
-                throw new IOException(Resources.BrukerTimsTofMethodExporter_ExportMethod_Template_is_required_for_method_export_);
+                throw new IOException(ModelResources.BrukerTimsTofMethodExporter_ExportMethod_Template_is_required_for_method_export_);
 
             ReadIonMobilityLimitsFromTemplate(templateName);
 
@@ -3895,7 +3895,7 @@ namespace pwiz.Skyline.Model
                     s.AddInputTarget(_targets[i].Item1, id, description);
                 }
 
-                var progress = new ProgressStatus(Resources.BrukerTimsTofMethodExporter_ExportMethod_Getting_scheduling___);
+                var progress = new ProgressStatus(ModelResources.BrukerTimsTofMethodExporter_ExportMethod_Getting_scheduling___);
 
                 timeSegments = new TimeSegmentList();
                 schedulingEntries = new SchedulingEntryList();
@@ -3914,7 +3914,7 @@ namespace pwiz.Skyline.Model
                 s.GetScheduling(timeSegments, schedulingEntries, ProgressCallback);
                 if (timeSegments.Count == 0 || schedulingEntries.Count == 0)
                 {
-                    throw new Exception(Resources.BrukerTimsTofMethodExporter_ExportMethod_Scheduling_failure__no_targets__);
+                    throw new Exception(ModelResources.BrukerTimsTofMethodExporter_ExportMethod_Scheduling_failure__no_targets__);
                 }
 
                 if (!string.IsNullOrEmpty(fileName) && (progressMonitor == null || !progressMonitor.IsCanceled))
@@ -3987,14 +3987,14 @@ namespace pwiz.Skyline.Model
             private readonly Dictionary<SchedulingMetrics, PointPairList> _metrics;
             public DataTable Table { get; }
 
-            public static string ColTarget => Resources.Metrics_ColTarget_Target;
-            public static string ColMeanSamplingTime = Resources.Metrics_ColMeanSamplingTime_Mean_sampling_time__seconds_;
-            public static string ColMaxSamplingTime = Resources.Metrics_ColMaxSamplingTime_Max_sampling_time__seconds_;
-            public static string ColMz = Resources.Metrics_ColMz_m_z;
-            public static string Col1K0LowerLimit = Resources.Metrics_Col1K0LowerLimit__1_K0_lower_limit;
-            public static string Col1K0UpperLimit = Resources.Metrics_Col1K0UpperLimit__1_K0_upper_limit;
-            public static string ColRtBegin = Resources.Metrics_ColRtBegin_RT_begin;
-            public static string ColRtEnd = Resources.Metrics_ColRtEnd_RT_end;
+            public static string ColTarget => ModelResources.Metrics_ColTarget_Target;
+            public static string ColMeanSamplingTime = ModelResources.Metrics_ColMeanSamplingTime_Mean_sampling_time__seconds_;
+            public static string ColMaxSamplingTime = ModelResources.Metrics_ColMaxSamplingTime_Max_sampling_time__seconds_;
+            public static string ColMz = ModelResources.Metrics_ColMz_m_z;
+            public static string Col1K0LowerLimit = ModelResources.Metrics_Col1K0LowerLimit__1_K0_lower_limit;
+            public static string Col1K0UpperLimit = ModelResources.Metrics_Col1K0UpperLimit__1_K0_upper_limit;
+            public static string ColRtBegin = ModelResources.Metrics_ColRtBegin_RT_begin;
+            public static string ColRtEnd = ModelResources.Metrics_ColRtEnd_RT_end;
 
             public Metrics(Scheduler s, IList<Tuple<InputTarget, string>> targets)
             {
@@ -4740,7 +4740,7 @@ namespace pwiz.Skyline.Model
         {
             string skylinePath = Assembly.GetExecutingAssembly().Location;
             if (string.IsNullOrEmpty(skylinePath))
-                throw new IOException(Resources.WatersMethodExporter_EnsureLibraries_Waters_method_creation_software_may_not_be_installed_correctly);
+                throw new IOException(ModelResources.WatersMethodExporter_EnsureLibraries_Waters_method_creation_software_may_not_be_installed_correctly);
 
             // ReSharper disable ConstantNullCoalescingCondition
             string buildSubdir = Path.GetDirectoryName(EXE_BUILD_WATERS_METHOD) ?? string.Empty;
@@ -4756,7 +4756,7 @@ namespace pwiz.Skyline.Model
                     foreach (var libraryName in DEPENDENCY_LIBRARIES)
                     {
                         if (!File.Exists(Path.Combine(exeDir, libraryName)))
-                            throw new IOException(Resources.WatersMethodExporter_EnsureLibraries_Failed_to_find_a_valid_MassLynx_installation);
+                            throw new IOException(ModelResources.WatersMethodExporter_EnsureLibraries_Failed_to_find_a_valid_MassLynx_installation);
                     }
                     return;
                 }
@@ -4772,7 +4772,7 @@ namespace pwiz.Skyline.Model
                 if (!File.Exists(srcFile))
                 {
                     throw new IOException(
-                        string.Format(Resources.WatersMethodExporter_EnsureLibraries_MassLynx_may_not_be_installed_correctly_The_library__0__could_not_be_found,
+                        string.Format(ModelResources.WatersMethodExporter_EnsureLibraries_MassLynx_may_not_be_installed_correctly_The_library__0__could_not_be_found,
                                       library));
                 }
                 // If destination file does not exist or has a different modification time from
@@ -4915,10 +4915,10 @@ namespace pwiz.Skyline.Model
 
                     IProgressStatus status;
                     if (dictTranLists.Count == 1)
-                        status = new ProgressStatus(string.Format(Resources.MethodExporter_ExportMethod_Exporting_method__0__, methodName));
+                        status = new ProgressStatus(string.Format(ModelResources.MethodExporter_ExportMethod_Exporting_method__0__, methodName));
                     else
                     {
-                        status = new ProgressStatus(Resources.MethodExporter_ExportMethod_Exporting_methods);
+                        status = new ProgressStatus(ModelResources.MethodExporter_ExportMethod_Exporting_methods);
                         status = status.ChangeSegments(0, dictTranLists.Count);
                     }
                     progressMonitor?.UpdateProgress(status);

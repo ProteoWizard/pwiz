@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Shannon Joyner <saj9191 .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -115,7 +115,7 @@ namespace pwiz.Skyline.ToolsUI
                 catch (Exception)
                 {
                     helper.ShowTextBoxError(textServerURL,
-                        Resources.EditServerDlg_OkDialog__0__is_not_a_valid_email_address_, textUsername.Text);
+                        ToolsUIResources.EditServerDlg_OkDialog__0__is_not_a_valid_email_address_, textUsername.Text);
                     return;
                 }
             }
@@ -125,7 +125,7 @@ namespace pwiz.Skyline.ToolsUI
             PanoramaServer validatedServer = null;
             using (var waitDlg = new LongWaitDlg())
             {
-                waitDlg.Text = Resources.EditServerDlg_OkDialog_Verifying_server_information;
+                waitDlg.Text = ToolsUIResources.EditServerDlg_OkDialog_Verifying_server_information;
                 try
                 {
                     waitDlg.PerformWork(this, 1000, () => validatedServer = panoramaClient.ValidateServer());

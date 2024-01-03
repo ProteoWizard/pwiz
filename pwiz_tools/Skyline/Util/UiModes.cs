@@ -58,11 +58,11 @@ namespace pwiz.Skyline.Util
             get
             {
                 yield return new UiModeInfo(PROTEOMIC, () => Resources.UIModeProteomic,
-                    () => Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Proteomics_interface);
+                    () => UtilResources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Proteomics_interface);
                 yield return new UiModeInfo(SMALL_MOLECULES, () => Resources.UIModeSmallMolecules,
-                    () => Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Small_Molecules_interface);
+                    () => UtilResources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Small_Molecules_interface);
                 yield return new UiModeInfo(MIXED, () => Resources.UIModeMixed,
-                    () => Resources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Mixed_interface);
+                    () => UtilResources.ModeUIAwareFormHelper_SetModeUIToolStripButtons_Mixed_interface);
             }
         }
 

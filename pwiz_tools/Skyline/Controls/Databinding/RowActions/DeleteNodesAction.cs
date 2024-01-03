@@ -27,7 +27,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding.Entities;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls.Databinding.RowActions
 {
@@ -72,7 +71,7 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
         {
             public override string GetMenuItemText(SrmDocument.DOCUMENT_TYPE docType)
             {
-                return Resources.DeleteTransitions_MenuItemText_Delete_Transitions___;
+                return RowActionsResources.DeleteTransitions_MenuItemText_Delete_Transitions___;
             }
             public override IEnumerable<SkylineDocNode> GetSelectedNodes(BoundDataGridView dataGridView)
             {
@@ -91,7 +90,7 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
         {
             public override string GetMenuItemText(SrmDocument.DOCUMENT_TYPE docType)
             {
-                return Resources.DeletePrecursors_MenuItemText_Delete_Precursors___;
+                return RowActionsResources.DeletePrecursors_MenuItemText_Delete_Precursors___;
             }
             public override IEnumerable<SkylineDocNode> GetSelectedNodes(BoundDataGridView dataGridView)
             {
@@ -116,8 +115,8 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
             public override string GetMenuItemText(SrmDocument.DOCUMENT_TYPE docType)
             {
                 return docType == SrmDocument.DOCUMENT_TYPE.proteomic
-                    ? Resources.DeletePeptides_MenuItemText_Delete_Peptides___
-                    : Resources.DeletePeptides_GetMenuItemText_Delete_Molecules___;
+                    ? RowActionsResources.DeletePeptides_MenuItemText_Delete_Peptides___
+                    : RowActionsResources.DeletePeptides_GetMenuItemText_Delete_Molecules___;
             }
             public override IEnumerable<SkylineDocNode> GetSelectedNodes(BoundDataGridView dataGridView)
             {
@@ -141,8 +140,8 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
             public override string GetMenuItemText(SrmDocument.DOCUMENT_TYPE docType)
             {
                 return docType == SrmDocument.DOCUMENT_TYPE.proteomic
-                    ? Resources.DeleteProteins_MenuItemText_Delete_Proteins___
-                    : Resources.DeleteProteins_MenuItemText_Delete_Molecule_Lists___;
+                    ? RowActionsResources.DeleteProteins_MenuItemText_Delete_Proteins___
+                    : RowActionsResources.DeleteProteins_MenuItemText_Delete_Molecule_Lists___;
             }
 
             public override IEnumerable<SkylineDocNode> GetSelectedNodes(BoundDataGridView dataGridView)
@@ -190,7 +189,7 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
             if (null != skylineWindow)
             {
                 List<IdentityPath> deletedNodePaths = null;
-                skylineWindow.ModifyDocument(Resources.SkylineViewContext_DeleteDocNodes_Delete_items,
+                skylineWindow.ModifyDocument(RowActionsResources.SkylineViewContext_DeleteDocNodes_Delete_items,
                     doc => DeleteNodes(doc, identityPaths, out deletedNodePaths),
                     docPair => SkylineWindow.CreateDeleteNodesEntry(docPair,
                         deletedNodePaths.Select(i => AuditLogEntry.GetNodeName(docPair.OldDoc, docPair.OldDoc.FindNode(i)).ToString()), deletedNodePaths.Count));
