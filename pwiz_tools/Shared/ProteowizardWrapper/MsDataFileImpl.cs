@@ -1201,23 +1201,30 @@ namespace pwiz.ProteowizardWrapper
                     metadata = metadata.ChangeCompensationVoltage(ionMobilityValue.Mobility);
                 }
             }
-
             double? scanWindowLowerLimit = null;
             double? scanWindowUpperLimit = null;
             foreach (var scan in spectrum.scanList.scans)
             {
                 foreach (var window in scan.scanWindows)
                 {
-                    double windowStart = window.cvParam(CVID.MS_scan_window_lower_limit).value;
-                    double windowEnd = window.cvParam(CVID.MS_scan_window_upper_limit).value;
-                    if (scanWindowLowerLimit == null || windowStart < scanWindowLowerLimit)
+                    var cvParamLowerLimit = window.cvParam(CVID.MS_scan_window_lower_limit);
+                    if (cvParamLowerLimit != null)
                     {
-                        scanWindowLowerLimit = windowStart;
+                        double windowStart = cvParamLowerLimit.value;
+                        if (scanWindowLowerLimit == null || windowStart < scanWindowLowerLimit)
+                        {
+                            scanWindowLowerLimit = windowStart;
+                        }
                     }
 
-                    if (scanWindowUpperLimit == null || windowEnd > scanWindowUpperLimit)
+                    var cvParamUpperLimit = window.cvParam(CVID.MS_scan_window_upper_limit);
+                    if (cvParamUpperLimit != null)
                     {
-                        scanWindowUpperLimit = windowEnd;
+                        double windowEnd = cvParamUpperLimit.value;
+                        if (scanWindowUpperLimit == null || windowEnd > scanWindowUpperLimit)
+                        {
+                            scanWindowUpperLimit = windowEnd;
+                        }
                     }
                 }
             }
@@ -1226,6 +1233,7 @@ namespace pwiz.ProteowizardWrapper
             {
                 metadata = metadata.ChangeScanWindow(scanWindowLowerLimit.Value, scanWindowUpperLimit.Value);
             }
+
             return metadata;
         }
 
