@@ -91,15 +91,15 @@ namespace pwiz.Skyline.SettingsUI
             if (_featureDetectionPhase != ImportPeptideSearch.eFeatureDetectionPhase.none)
             {
                 labelTimeAroundMs2Ids2.Text =
-                    Resources.FullScanSettingsControl_Initialize_minutes_of_detected_features; // Replaces "minutes of MS/MS IDs" in "Use only scans within [textbox] minutes of MS/MS IDs"
+                    SettingsUIResources.FullScanSettingsControl_Initialize_minutes_of_detected_features; // Replaces "minutes of MS/MS IDs" in "Use only scans within [textbox] minutes of MS/MS IDs"
                 groupBoxRetentionTimeToKeep.AutoSize = true; // In case the replaced text is wider than what was there before
                 flowLayoutPanelTimeAroundMs2Ids.AutoSize = true;
                 labelTimeAroundMs2Ids2.AutoSize = true;
                 // Share some helpful tips
-                toolTip.SetToolTip(this.PrecursorChargesTextBox, string.Format(Resources.FullScanSettingsControl_InitializeFeatureDetectionUI_Hardklor_looks_for_isotope_envelopes_representing_charges_1__0___The_library_will_contain_only_ions_with_the_charges_listed_here_, HardklorSearchEngine.MaxCharge));
-                toolTip.SetToolTip(this.lblPrecursorCharges, string.Format(Resources.FullScanSettingsControl_InitializeFeatureDetectionUI_Hardklor_looks_for_isotope_envelopes_representing_charges_1__0___The_library_will_contain_only_ions_with_the_charges_listed_here_, HardklorSearchEngine.MaxCharge));
-                toolTip.SetToolTip(labelPrecursorAt, Resources.FullScanSettingsControl_InitializeFeatureDetectionUI_This_is_the_value_assumed_by_Hardklor__it_cannot_be_adjusted_);
-                toolTip.SetToolTip(this.textPrecursorAt, Resources.FullScanSettingsControl_InitializeFeatureDetectionUI_This_is_the_value_assumed_by_Hardklor__it_cannot_be_adjusted_);
+                toolTip.SetToolTip(this.PrecursorChargesTextBox, string.Format(SettingsUIResources.FullScanSettingsControl_InitializeFeatureDetectionUI_Hardklor_looks_for_isotope_envelopes_representing_charges_1__0___The_library_will_contain_only_ions_with_the_charges_listed_here_, HardklorSearchEngine.MaxCharge));
+                toolTip.SetToolTip(this.lblPrecursorCharges, string.Format(SettingsUIResources.FullScanSettingsControl_InitializeFeatureDetectionUI_Hardklor_looks_for_isotope_envelopes_representing_charges_1__0___The_library_will_contain_only_ions_with_the_charges_listed_here_, HardklorSearchEngine.MaxCharge));
+                toolTip.SetToolTip(labelPrecursorAt, SettingsUIResources.FullScanSettingsControl_InitializeFeatureDetectionUI_This_is_the_value_assumed_by_Hardklor__it_cannot_be_adjusted_);
+                toolTip.SetToolTip(this.textPrecursorAt, SettingsUIResources.FullScanSettingsControl_InitializeFeatureDetectionUI_This_is_the_value_assumed_by_Hardklor__it_cannot_be_adjusted_);
             }
         }
 
@@ -304,7 +304,7 @@ namespace pwiz.Skyline.SettingsUI
                 PrecursorResMz = HARDKLOR_PRECURSOR_RES_MZ;
                 textPrecursorAt.Enabled = false;
                 toolTip.SetToolTip(comboPrecursorAnalyzerType,
-                    Resources.FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_MS_type_for_Hardklor_s_FWHM_calculation);
+                    SettingsUIResources.FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_MS_type_for_Hardklor_s_FWHM_calculation);
             }
         }
 
@@ -988,8 +988,8 @@ namespace pwiz.Skyline.SettingsUI
         public void SetGroupBoxMS1TitleForHardklorUse(bool active)
         {
             groupBoxMS1.Text = active
-                ? Resources.FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values
-                : Resources
+                ? SettingsUIResources.FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values
+                : SettingsUIResources
                     .FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values_from_Full_Scan_Settings;
         }
 

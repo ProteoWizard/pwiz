@@ -2982,9 +2982,6 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="SkylineWindow_ImportMassList_The_iRT_calculator_already_contains__0__of_the_imported_peptides_" xml:space="preserve">
     <value>The iRT calculator already contains {0} of the imported peptides.</value>
   </data>
-  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_spectral_library" xml:space="preserve">
-    <value>Add spectral library</value>
-  </data>
   <data name="ToolUpdatesDlg_btnUpdate_Click_Please_select_at_least_one_tool_to_update_" xml:space="preserve">
     <value>Please select at least one tool to update.</value>
   </data>
@@ -3125,9 +3122,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="IsotopeDistInfo_IsotopeDistInfo_Minimum_abundance__0__too_high" xml:space="preserve">
     <value>Minimum abundance {0} too high</value>
-  </data>
-  <data name="SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_performing_feature_detection_" xml:space="preserve">
-    <value>You must save this document before performing feature detection.</value>
   </data>
   <data name="MoleculeStandard" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\MoleculeStandard.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -3908,9 +3902,6 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="SmallMoleculeTransitionListReader_ProcessNeutralLoss_Cannot_use_product_neutral_loss_chemical_formula_without_a_precursor_chemical_formula" xml:space="preserve">
     <value>Cannot use product neutral loss chemical formula without a precursor chemical formula</value>
   </data>
-  <data name="SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_performing_feature_detection_" xml:space="preserve">
-    <value>The document must be fully loaded before performing feature detection.</value>
-  </data>
   <data name="ValidatingIonMobilityPeptide_ValidateHighEnergyIonMobilityOffset_High_energy_ion_mobility_offsets_should_be_empty__or_express_an_offset_value_for_ion_mobility_in_high_collision_energy_scans_which_may_add_velocity_to_ions_" xml:space="preserve">
     <value>High energy ion mobility offsets should be empty, or express an offset value for ion mobility in high collision energy scans which may add velocity to ions.</value>
   </data>
@@ -4253,15 +4244,6 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="SpectraGridForm_AddSpectrumFilters__0__spectrum_filters_will_be_added_to_the_document_" xml:space="preserve">
     <value>{0} spectrum filters will be added to the document.</value>
   </data>
-  <data name="FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_MS_type_for_Hardklor_s_FWHM_calculation" xml:space="preserve">
-    <value>Sets the MS type for Hardklor's FWHM calculation</value>
-  </data>
-  <data name="FullScanSettingsControl_Initialize_minutes_of_detected_features" xml:space="preserve">
-    <value>minutes of detected features</value>
-  </data>
-  <data name="ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document" xml:space="preserve">
-    <value>Adding detected features to document</value>
-  </data>
   <data name="CommandLine_NewSkyFile_FileAlreadyExists" xml:space="preserve">
     <value>File '{0}' already exists; add --overwrite to allow Skyline to overwrite it.</value>
   </data>
@@ -4305,26 +4287,8 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="EncyclopeDiaSearchDlg_Browse_For_Wide_Window_Results_Files" xml:space="preserve">
     <value>Browse for Wide Window Results Files</value>
   </data>
-  <data name="FullScanSettingsControl_InitializeFeatureDetectionUI_Hardklor_looks_for_isotope_envelopes_representing_charges_1__0___The_library_will_contain_only_ions_with_the_charges_listed_here_" xml:space="preserve">
-    <value>Hardklor looks for isotope envelopes representing charges 1-{0}. The resulting library will contain only ions with the charges listed here.</value>
-  </data>
-  <data name="FullScanSettingsControl_InitializeFeatureDetectionUI_This_is_the_value_assumed_by_Hardklor__it_cannot_be_adjusted_" xml:space="preserve">
-    <value>This is the value assumed by Hardklor, it cannot be adjusted.</value>
-  </data>
   <data name="CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins" xml:space="preserve">
     <value>Error: a FASTA file must be imported before associating proteins</value>
-  </data>
-  <data name="ImportPeptideSearch_GetLibBuilder_detected_features" xml:space="preserve">
-    <value>detected features</value>
-  </data>
-  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library" xml:space="preserve">
-    <value>Building detected features library</value>
-  </data>
-  <data name="FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values" xml:space="preserve">
-    <value>&amp;Instrument values</value>
-  </data>
-  <data name="FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values_from_Full_Scan_Settings" xml:space="preserve">
-    <value>Instrument values (from full-scan settings)</value>
   </data>
   <data name="SpectrumClassFilter_GetAbbreviatedText_OR" xml:space="preserve">
     <value>OR</value>

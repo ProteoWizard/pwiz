@@ -830,7 +830,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         using (var longWaitDlg = new LongWaitDlg())
                         {
                             longWaitDlg.Text = PeptideSearchResources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection;
-                            longWaitDlg.Message = Resources.ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document;
+                            longWaitDlg.Message = PeptideSearchResources.ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document;
                             longWaitDlg.PerformWork(this, 1000, AddDetectedFeaturesToDocument);
                         }
                     }
@@ -863,7 +863,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void AddDetectedFeaturesToDocument(IProgressMonitor progressMonitor)
         {
             // Add the library molecules to the document
-            var status = new ProgressStatus(Resources.ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document);
+            var status = new ProgressStatus(PeptideSearchResources.ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document);
             progressMonitor.UpdateProgress(status);
             Assume.IsTrue(!Equals(Document.Settings.PeptideSettings.Libraries.LibrarySpecs, _existingLibraries.LibrarySpecs));
             var docNew = Document;
@@ -1378,7 +1378,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
                 SkylineWindow.ModifyDocument(!isFeatureDetection ?
                         PeptideSearchResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library:
-                        Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_spectral_library
+                        PeptideSearchResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_spectral_library
                     ,
                     doc => Document, logFunc);
                 SetDocument(SkylineWindow.Document, _documents.Peek());

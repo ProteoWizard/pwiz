@@ -108,7 +108,7 @@ namespace pwiz.Skyline.Model
                 // Avoid confusion with any document library
                 // Change filename hint from "foo\bar\baz.sky" to "foo\bar\baz detected features.sky" so we get library name "baz detected features.blib"
                 var docfile_ext = Path.GetExtension(docFilePath);
-                docFilePath = docFilePath.Substring(0, docFilePath.Length-docfile_ext.Length) + @" " + Resources.ImportPeptideSearch_GetLibBuilder_detected_features + docfile_ext; 
+                docFilePath = docFilePath.Substring(0, docFilePath.Length-docfile_ext.Length) + @" " + ModelResources.ImportPeptideSearch_GetLibBuilder_detected_features + docfile_ext; 
             }
             string outputPath = BiblioSpecLiteSpec.GetLibraryFileName(docFilePath);
 

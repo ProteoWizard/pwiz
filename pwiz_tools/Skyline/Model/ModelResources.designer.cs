@@ -862,6 +862,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to detected features.
+        /// </summary>
+        public static string ImportPeptideSearch_GetLibBuilder_detected_features {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearch_GetLibBuilder_detected_features", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Declustering Potential.
         /// </summary>
         public static string ImportTransitionListColumnSelectDlg_ComboChanged_Declustering_Potential {

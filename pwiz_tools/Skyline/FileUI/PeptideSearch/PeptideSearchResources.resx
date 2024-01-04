@@ -301,7 +301,7 @@
   <data name="BuildPeptideSearchLibraryControl_btnAddFile_Click_Select_Files_to_Search" xml:space="preserve">
       <value>Select Files to Search</value>
    </data>
-   <data name="ImportResultsControl_findResultsFilesButton_Click_Could_not_find_all_the_missing_results_files_" xml:space="preserve">
+  <data name="ImportResultsControl_findResultsFilesButton_Click_Could_not_find_all_the_missing_results_files_" xml:space="preserve">
     <value>Could not find all the missing results files.</value>
   </data>
   <data name="ImportResultsControl_findResultsFilesButton_Click_Results_Directory" xml:space="preserve">
@@ -352,5 +352,14 @@
   <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptions" xml:space="preserve">
     <value>Click 'Embedded' to use embedded spectra.
 Click 'Retry' to try building again after placing the original spectrum files in one of the directories listed above.</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_spectral_library" xml:space="preserve">
+    <value>Add spectral library</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library" xml:space="preserve">
+    <value>Building detected features library</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document" xml:space="preserve">
+    <value>Adding detected features to document</value>
   </data>
 </root>
