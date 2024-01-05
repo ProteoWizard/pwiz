@@ -50,7 +50,7 @@ namespace TestPerf
             //RunPerfTests = true;
             CoverShotName = "DDASearch";
 
-            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DDASearch-20_2.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DDASearch-22_2.pdf";
 
             TestFilesZipPaths = new[]
             {

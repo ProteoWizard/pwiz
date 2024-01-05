@@ -72,7 +72,7 @@ namespace pwiz.ProteomeDatabase.API
             CancellationToken = cancellationToken;
             using (var session = OpenSession())
             {
-                // Is this even a proper protDB file? (https://skyline.gs.washington.edu/labkey/announcements/home/issues/exceptions/thread.view?rowId=14893)
+                // Is this even a proper protDB file? (https://skyline.ms/announcements/home/issues/exceptions/thread.view?rowId=14893)
                 if (!SqliteOperations.TableExists(session.Connection, @"ProteomeDbProteinName"))
                 {
                     throw new FileLoadException(

@@ -64,13 +64,13 @@ namespace pwiz.SkylineTestTutorial
 
             ForceMzml = true;   // Mzml is faster for this test.
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/GroupedStudies1-2_6.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/GroupedStudies-21_2.pdf";
 
             TestFilesZipPaths = new[]
             {
                 UseRawFiles
-                    ? @"https://skyline.gs.washington.edu/tutorials/GroupedStudies1.zip"
-                    : @"https://skyline.gs.washington.edu/tutorials/GroupedStudies1Mzml.zip",
+                    ? @"https://skyline.ms/tutorials/GroupedStudies1.zip"
+                    : @"https://skyline.ms/tutorials/GroupedStudies1Mzml.zip",
                 @"TestTutorial\GroupedStudies1Views.zip"
             };
             RunFunctionalTest();

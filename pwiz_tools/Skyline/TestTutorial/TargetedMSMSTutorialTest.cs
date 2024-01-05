@@ -100,7 +100,7 @@ namespace pwiz.SkylineTestTutorial
             if (smallMoleculesTestMode !=  RefinementSettings.ConvertToSmallMoleculesMode.none)
                 TestDirectoryName = "AsSmMol_" + smallMoleculesTestMode;
 
-            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/PRM-20_1.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/PRM-22_2.pdf";
 
             TestFilesZipPaths = new[]
                 {

@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestTutorial
             CoverShotName = "DIA";
             // PauseStartPage = 36;
 
-            LinkPdf = "https://skyline.ms/tutorials/DIA-20_2.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DIA-22_2.pdf";
 
             TestFilesZipPaths = new[]
                 {
