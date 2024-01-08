@@ -1638,6 +1638,7 @@ namespace pwiz.Skyline
             if (!DocumentUI.Settings.HasResults)
             {
                 MessageDlg.Show(this, Resources.SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_imported_results_);
+                return;
             }
             using (OpenFileDialog dlg = new OpenFileDialog())
             {
@@ -1685,6 +1686,8 @@ namespace pwiz.Skyline
 
 
                 if (docNew == null)
+                    return;
+                if (longWaitDlg.IsCanceled)
                     return;
                 if (!peakBoundaryImporter.UnrecognizedPeptidesCancel(this))
                     return;
