@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.DdaSearch;
@@ -36,7 +37,7 @@ using pwiz.SkylineTestUtil;
 namespace TestPerf
 {
     [TestClass]
-    public class FeatureDetectionTest : AbstractFunctionalTest
+    public class FeatureDetectionTest : AbstractFunctionalTestEx
     {
         public struct ExpectedResults
         {
@@ -133,6 +134,7 @@ namespace TestPerf
         private const int SMALL_MOL_ONLY_PASS = 1;
         protected override void DoTest()
         {
+            // IsPauseForScreenShots = true; // enable for quick demo
             for (int pass = 0; pass <= SMALL_MOL_ONLY_PASS;)
             {
                 PerformSearchTest(pass++);
@@ -143,7 +145,6 @@ namespace TestPerf
         private void PerformSearchTest(int pass)
         {
 
-            // IsPauseForScreenShots = true; // enable for quick demo
 
             if (pass == 0)
             {
@@ -168,6 +169,7 @@ namespace TestPerf
             else
             {
                 // Start with an empty document this time
+                IsPauseForScreenShots = false;
                 RunUI(() =>
                 {
                     SkylineWindow.NewDocument(true);
@@ -384,8 +386,127 @@ namespace TestPerf
                 var expectedPeptideTransitions = 141;
                 AssertEx.IsDocumentState(SkylineWindow.Document, null, expectedPeptideGroups + 1, expectedPeptides + expectedFeatures, 
                     expectedPeptideTransitionGroups + expectedFeatures, expectedPeptideTransitions + expectedFeaturesTransitions);
+
+                // Verify that we found every known peptide
+                var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
+                RunUI(() => documentGrid.ChooseView(pwiz.Skyline.Properties.Resources.ReportSpecList_GetDefaults_Transition_Results));
+                WaitForCondition(() => (documentGrid.RowCount == 2*(expectedPeptideTransitions + expectedFeaturesTransitions))); // Let it initialize
+
+                PauseForScreenShot("document grid");
+
+                var colName = FindDocumentGridColumn(documentGrid, "Precursor.Peptide").Index;
+                var colZ = FindDocumentGridColumn(documentGrid, "Precursor.Charge").Index;
+                var colMZ = FindDocumentGridColumn(documentGrid, "Precursor.Mz").Index;
+                var colRT = FindDocumentGridColumn(documentGrid, "Results!*.Value.RetentionTime").Index;
+                var hits = new HashSet<Hit>();
+                var rowCount = documentGrid.DataGridView.RowCount;
+                for (var row = 0; row < rowCount; row++)
+                {
+                    var line = documentGrid.DataGridView.Rows[row];
+                    hits.Add(new Hit()
+                    {
+                        name = line.Cells[colName].Value.ToString(),
+                        z = (line.Cells[colZ].Value as int?) ?? 0,
+                        mz = (line.Cells[colMZ].Value as double?) ?? 0,
+                        rt = (line.Cells[colRT].Value as double?) ?? 0
+                    });
+                }
+
+                var unmatched = new HashSet<Hit>();
+                foreach (var hitP in hits.Where(h => !h.name.StartsWith("mass")))
+                {
+                    var match = false;
+                    foreach (var hitM in hits.Where(hm => hm.name.StartsWith("mass") && hm.z == hitP.z))
+                    {
+                        if ((Math.Abs(hitP.mz - hitM.mz) < .1) && (Math.Abs(hitM.rt - hitM.rt) < 1))
+                        {
+                            match = true;
+                            break;
+                        }
+                    }
+
+                    if (!match)
+                    {
+                        unmatched.Add(hitP);
+                    }
+                }
+
+                if (unmatched.Any())
+                {
+                    var msg = "No feature detected to match known peptide(s):\n"+
+                              string.Join("\n", unmatched.Select(u => u.ToString()));
+                    PauseForScreenShot(msg);
+                }
+
+                // Hardklor+Bullseye simply misses some peptides that search engine found
+                // CONSIDER:(bspratt) debug Hardklor+Bullseye code?
+                var expectedMisses = new[]
+                {
+                    ("DIDISSPEFK",2),
+                    ("LPSGSGAASPTGSAVDIR",2),
+                    ("ISMQDVDLSLGSPK",2),
+                    ("ISAPNVDFNLEGPK",2),
+                    ("ISAPNVDFNLEGPK",2),
+                    ("GKGGVTGSPEASISGSKGDLK",3),
+                    ("GGVTGSPEASISGSK",2),
+                    ("SSKASLGSLEGEAEAEASSPK",3),
+                    ("ASLGSLEGEAEAEASSPK",2),
+                    ("ASLGSLEGEAEAEASSPKGK",3),
+                    ("AEGEWEDQEALDYFSDKESGK",3),
+                    ("STFREESPLRIK",3),
+                    ("LGGLRPESPESLTSVSR",3),
+                    ("DMESPTKLDVTLAK",3),
+                    ("ETERASPIKMDLAPSK",3),
+                    ("TGSYGALAEITASK",2),
+                    ("VVDYSQFQESDDADEDYGR",3),
+                    ("VVDYSQFQESDDADEDYGRDSGPPTK",3),
+                    ("KETESEAEDNLDDLEK",3)
+                };
+                var unexpectedMisses = unmatched.Where(um => !expectedMisses.Contains((um.name, um.z))).ToArray();
+                AssertEx.IsFalse(unexpectedMisses.Any(),
+                    $"Expected to find features for peptides\n{string.Join("\n", unexpectedMisses.Select(u => u.ToString()))}");
             }
 
+        }
+
+        private class Hit : IEquatable<Hit>
+        {
+            public string name;
+            public int z;
+            public double mz;
+            public double rt;
+
+            public override string ToString()
+            {
+                return $"{name} mz={mz} z={z} RT={rt}";
+            }
+
+            public bool Equals(Hit other)
+            {
+                if (ReferenceEquals(null, other)) return false;
+                if (ReferenceEquals(this, other)) return true;
+                return name == other.name && z == other.z && mz.Equals(other.mz) && rt.Equals(other.rt);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((Hit)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = (name != null ? name.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ z;
+                    hashCode = (hashCode * 397) ^ mz.GetHashCode();
+                    hashCode = (hashCode * 397) ^ rt.GetHashCode();
+                    return hashCode;
+                }
+            }
         }
 
         private void VerifyAuditLog()
