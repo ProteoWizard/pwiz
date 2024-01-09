@@ -1136,7 +1136,7 @@
     <value>スコアタイプが見つかりません。</value>
   </data>
   <data name="BuildLibraryGridView_OnCellPainting_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___" xml:space="preserve">
-    <value>スコアしきい値「{0}」が無効です(10進値は{1}から{2}の間である必要があります)。</value>
+    <value>スコア閾値「{0}」が無効です(10進値は{1}から{2}の間である必要があります)。</value>
   </data>
   <data name="BuildLibraryGridView_OnRowPrepaint_Error_getting_score_type_for_this_file_" xml:space="preserve">
     <value>このファイルのスコアタイプを取得中にエラーが発生しました。</value>
@@ -1839,7 +1839,7 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
     <value>エラー：タンパク質を関連付けする前に、FASTAファイルをインポートする必要があります</value>
   </data>
   <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins" xml:space="preserve">
-    <value>ペプチドをタンパク質と関連付け</value>
+    <value>ペプチドをタンパク質に関連付け</value>
   </data>
   <data name="CommandLine_AssociateProteins_Failed_to_associate_proteins" xml:space="preserve">
     <value>タンパク質の関連付けに失敗しました</value>
@@ -6202,7 +6202,7 @@ Example: Looplink: T [4]
     <value>{0}で認識されていないライブラリタイプ</value>
   </data>
   <data name="LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries" xml:space="preserve">
-    <value>明示的なピーク境界を無視</value>
+    <value>表示されたピーク境界を無視</value>
   </data>
   <data name="LibrarySpec_PEP_RANK_COPIES_Spectrum_count" xml:space="preserve">
     <value>スペクトル数</value>
@@ -8215,7 +8215,7 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
     <value>Prosit CSV入力の読み取り</value>
   </data>
   <data name="PrositIntensityModel_CreatePrositInputRow_UnsupportedCharge" xml:space="preserve">
-    <value>Prositでは電荷{0}に対応していません。対応最大電荷は{1}です。</value>
+    <value>Prositでは電荷{0}に対応していません。Prositが許容する最大電荷は{1}です。</value>
   </data>
   <data name="Protein" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Protein.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -9691,9 +9691,9 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions" xml:space="preserve">
     <value>自動選択を有効にし、ドキュメント設定を使用してこの新しいトランジションを管理しますか？
 
-自動選択を有効にする：{0}プリカーサーおよび{1}断片のトランジションが現在のドキュメントに追加されます。
+自動選択を有効にする：{0}プリカーサーおよび{1}フラグメントのトランジションが現在のドキュメントに追加されます。
 
-自動選択を無効にする：{2}プリカーサーおよび{3}断片のトランジションが現在のドキュメントに追加されます。
+自動選択を無効にする：{2}プリカーサーおよび{3}フラグメントのトランジションが現在のドキュメントに追加されます。
 
 無効化を選択した場合、「最適化 &gt; 詳細」メニュー項目で後から自動選択を有効にできます。</value>
   </data>
@@ -10451,7 +10451,7 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
     <value>フィルタの調査</value>
   </data>
   <data name="SpectraGridForm_AddSpectrumFilters_No_spectrum_filters_were_added_to_the_document_" xml:space="preserve">
-    <value>ドキュメントにはスペクトルフィルタが追加されませんでした。</value>
+    <value>スペクトルフィルタはドキュメントに追加されませんでした。</value>
   </data>
   <data name="SpectraGridForm_AddSpectrumFilters_One_spectrum_filter_will_be_added_to_the_document_" xml:space="preserve">
     <value>1個のスペクトルフィルタがドキュメントに追加されます。</value>
@@ -10511,13 +10511,13 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
     <value>スペクトル列{0}がありません</value>
   </data>
   <data name="SpectrumClassFilter_Ms1FilterPage_Criteria_which_MS1_spectra_must_satisfy_to_be_included_in_extracted_chromatogram" xml:space="preserve">
-    <value>MS1スペクトルを抽出されたクロマトグラムに含むために満たさなければならない基準</value>
+    <value>MS1スペクトルが抽出クロマトグラムに含まれるために満たさなければならない基準</value>
   </data>
   <data name="SpectrumClassFilter_Ms1FilterPage_MS1" xml:space="preserve">
     <value>MS1</value>
   </data>
   <data name="SpectrumClassFilter_Ms2FilterPage_Criteria_which_spectra_with_MS_level_2_or_higher_must_satisfy_to_be_included_in_extracted_chromatogram" xml:space="preserve">
-    <value>MSレベル2以上のスペクトルを抽出されたクロマトグラムに含むために満たさなければならない基準</value>
+    <value>MSレベル2以上のスペクトルが抽出クロマトグラムに含まれるために満たさなければならない基準</value>
   </data>
   <data name="SpectrumClassFilter_Ms2FilterPage_MS2_" xml:space="preserve">
     <value>MS2+</value>
@@ -10951,7 +10951,7 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
     <value>エラー： {0}.zipが欠損しているファイルがあります</value>
   </data>
   <data name="ToolInstaller_UnpackZipTool_The_selected_zip_file_did_not_specify_any_items_to_add_to_the_Tools_menu_" xml:space="preserve">
-    <value>選択されたzipファイルはToolsメニューに追加するアイテムを指定しませんでした。</value>
+    <value>選択されたzipファイルはツールメニューに追加するアイテムを指定しませんでした。</value>
   </data>
   <data name="ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_a_valid_installable_tool_" xml:space="preserve">
     <value>選択したzipファイルは有効なインストール可能なツールではありません。</value>
