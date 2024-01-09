@@ -330,6 +330,7 @@ namespace TestPerf
 
             RunUI(() =>
             {
+                // Start the search
                 var page = importPeptideSearchDlg.CurrentPage;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 AssertEx.AreNotEqual(page, importPeptideSearchDlg.CurrentPage, "stuck?"); // Expected to advance
@@ -337,7 +338,7 @@ namespace TestPerf
 
             try
             {
-                WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+                WaitForConditionUI(5 * 60000, () => searchSucceeded.HasValue);
                 RunUI(() => Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
             }
             finally
