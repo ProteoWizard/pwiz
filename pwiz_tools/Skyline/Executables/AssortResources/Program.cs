@@ -3,6 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using CommandLine;
 
+
+//
+// Script for moving single-use resources out of the traditional and overcrowded Skyline\Properties\Resources.resx file into per-dialog resource files
+//
+// Typical command args "--projectfile Skyline.csproj --resourcefile Properties\Resources.resx" with working directory "pwiz_tools\Skyline"
+//
+
 namespace AssortResources
 {
     internal class Program

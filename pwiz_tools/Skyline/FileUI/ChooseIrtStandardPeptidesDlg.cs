@@ -75,7 +75,7 @@ namespace pwiz.Skyline.FileUI
             else
             {
                 comboProteins.Enabled = radioProtein.Checked = radioProtein.Enabled = false; // No matching iRT standards
-                toolTip1.SetToolTip(radioProtein, Resources.ChooseIrtStandardPeptidesDlg_ChooseIrtStandardPeptidesDlg_Unavailable__no_matching_iRT_standards_found);
+                toolTip1.SetToolTip(radioProtein, FileUIResources.ChooseIrtStandardPeptidesDlg_ChooseIrtStandardPeptidesDlg_Unavailable__no_matching_iRT_standards_found);
                 radioTransitionList.Checked = true;
             }
 

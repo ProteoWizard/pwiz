@@ -203,6 +203,7 @@ namespace AssortResources
             }
             var newResourcesName = folderName + ResourceFile.ResourceIdentifiers.ResourceFileName;
             var resourceFilePath = Path.Combine(folderPath, newResourcesName + ".resx");
+            var resourceFileExists = File.Exists(resourceFilePath);
             AddResources(resourceFilePath, ResourceFile.ResourceIdentifiers, resourceIdentifiers);
             foreach (var languageEntry in ResourceFile.Languages)
             {
@@ -210,7 +211,10 @@ namespace AssortResources
                 AddResources(languageFilePath, languageEntry.Value, resourceIdentifiers);
             }
             RunCustomTool(resourceFilePath);
-            CsProjFile.AddResourceFile(resourceFilePath, ResourceFile.Languages.Keys);
+            if (!resourceFileExists)  // If we didn't create it just now, assume it's already noted in the project file
+            {
+                CsProjFile.AddResourceFile(resourceFilePath, ResourceFile.Languages.Keys);
+            }
             foreach (var sourceFile in files)
             {
                 if (File.Exists(sourceFile))
