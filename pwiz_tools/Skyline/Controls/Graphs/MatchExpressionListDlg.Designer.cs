@@ -66,10 +66,14 @@
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.buttonCancel;
+            this.ControlBox = false;
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonOk);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.proteinsTextBox);
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "MatchExpressionListDlg";
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -78,7 +82,7 @@
 
         #endregion
         private System.Windows.Forms.Label label1;
-        private Common.Controls.AutoScrollTextBox proteinsTextBox;
+        public Common.Controls.AutoScrollTextBox proteinsTextBox;
         private System.Windows.Forms.Button buttonOk;
         private System.Windows.Forms.Button buttonCancel;
     }

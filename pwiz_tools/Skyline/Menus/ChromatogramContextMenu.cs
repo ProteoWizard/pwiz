@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -26,7 +25,6 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -320,9 +318,9 @@ namespace pwiz.Skyline.Menus
             }
         }
 
-        public void AddIntensityFormattingMenu(ToolStrip menuStrip, int iInsert)
+        public void AddRelativeAbundanceFormattingMenu(ToolStrip menuStrip, int iInsert)
         {
-            menuStrip.Items.Insert(iInsert, intensityFormattingMenuItem);
+            menuStrip.Items.Insert(iInsert, relativeAbundanceFormattingMenuItem);
         }
 
         public void AddTransitionContextMenu(ToolStrip menuStrip, int iInsert)
@@ -627,9 +625,9 @@ namespace pwiz.Skyline.Menus
             SkylineWindow.ShowQc(qcTraceItem.Text);
         }
 
-        private void intensityFormattingMenuItem_Click(object sender, EventArgs e)
+        private void relativeAbundanceFormattingMenuItem_Click(object sender, EventArgs e)
         {
-            SkylineWindow.ShowIntensityFormatting();
+            SkylineWindow.ShowRelativeAbundanceFormatting();
         }
         private void allTranMenuItem_Click(object sender, EventArgs e)
         {

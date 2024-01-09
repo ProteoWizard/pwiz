@@ -70,10 +70,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             bool IsReplicatePane(SummaryGraphPane pane);
             bool IsPeptidePane(SummaryGraphPane pane);
-            bool IsIntensityPane(SummaryGraphPane pane);
             SummaryGraphPane CreateReplicatePane(PaneKey key);
             SummaryGraphPane CreatePeptidePane(PaneKey key);
-            SummaryGraphPane CreateIntensityPane(PaneKey key);
         }
 
         public class RTGraphView : IFormView {}
@@ -463,9 +461,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     case GraphTypeSummary.peptide:
                         panesValid = GraphPanes.All(graphController.IsPeptidePane);
                         break;
-                    case GraphTypeSummary.protein:
-                        panesValid = GraphPanes.All(graphController.IsIntensityPane);
-                        break;
                 }
             }
             if (panesValid)
@@ -480,9 +475,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     break;
                 case GraphTypeSummary.peptide:
                     GraphPanes = paneKeys.Select(graphController.CreatePeptidePane);
-                    break;
-                case GraphTypeSummary.protein:
-                    GraphPanes = paneKeys.Select(graphController.CreateIntensityPane);
                     break;
             }
         }
@@ -595,7 +587,7 @@ namespace pwiz.Skyline.Controls.Graphs
         histogram2d = 1 << 6,
         detections = 1 << 7,
         detections_histogram = 1 << 8,
-        protein = 1 << 9
+        abundance = 1 << 9
     }
 
     public static class Extensions
@@ -609,9 +601,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 case GraphTypeSummary.replicate:
                     return GraphsResources.Extensions_CustomToString_Replicate_Comparison;
                 case GraphTypeSummary.peptide:
+<<<<<<< HEAD
                     return GraphsResources.Extensions_CustomToString_Peptide_Comparison;
                 case GraphTypeSummary.protein:
                     return Resources.Extensions_CustomToString_Protein_Expression;
+=======
+                    return Resources.Extensions_CustomToString_Peptide_Comparison;
+                case GraphTypeSummary.abundance:
+                    return Resources.Extensions_CustomToString_Relative_Abundance;
+>>>>>>> f487ebb28e8571815840d9adec710150b18e2fc1
                 case GraphTypeSummary.score_to_run_regression:
                     return GraphsResources.Extensions_CustomToString_Score_To_Run_Regression;
                 case GraphTypeSummary.schedule:

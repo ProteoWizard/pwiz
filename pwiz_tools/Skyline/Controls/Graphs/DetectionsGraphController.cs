@@ -239,11 +239,6 @@ namespace pwiz.Skyline.Controls.Graphs
             throw new NotImplementedException();
         }
 
-        SummaryGraphPane GraphSummary.IControllerSplit.CreateIntensityPane(PaneKey key)
-        {
-            throw new NotImplementedException();
-        }
-
         bool GraphSummary.IController.HandleKeyDownEvent(object sender, KeyEventArgs e)
         {
             if(e.KeyCode == Keys.Escape)
@@ -254,8 +249,6 @@ namespace pwiz.Skyline.Controls.Graphs
         bool GraphSummary.IControllerSplit.IsPeptidePane(SummaryGraphPane pane) => false;
 
         bool GraphSummary.IControllerSplit.IsReplicatePane(SummaryGraphPane pane) => false;
-
-        bool GraphSummary.IControllerSplit.IsIntensityPane(SummaryGraphPane pane) => false;
 
         void GraphSummary.IController.OnActiveLibraryChanged()
         {

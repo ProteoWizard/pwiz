@@ -217,11 +217,11 @@
   <data name="transitionsContextMenuItem.Text" xml:space="preserve">
     <value>Transitions</value>
   </data>
-  <data name="intensityFormattingMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="relativeAbundanceFormattingMenuItem.Size" type="System.Drawing.Size, System.Drawing">
 	  <value>212, 22</value>
   </data>
-  <data name="intensityFormattingMenuItem.Text" xml:space="preserve">
-    <value>Formatting</value>
+  <data name="relativeAbundanceFormattingMenuItem.Text" xml:space="preserve">
+    <value>Formatting...</value>
   </data>
   <data name="transformChromContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>

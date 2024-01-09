@@ -385,6 +385,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     new FoldChangeRow(Protein, Peptide, IsotopeLabelType, MsLevel, kvp.Key, 0, kvp.Value, ReplicateAbundances));
             }
         }
+
         [InvariantDisplayName("ReplicateAbundance")]
         public class ReplicateRow : IReplicateValue
         {
@@ -408,7 +409,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             public override string ToString()
             {
-                var parts = new List<string> { Replicate.ToString() };
+                var parts = new List<string> {Replicate.ToString()};
                 if (Abundance.HasValue)
                 {
                     parts.Add(Abundance.Value.ToString(Formats.CalibrationCurve));
@@ -418,5 +419,4 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
         }
     }
-
 }

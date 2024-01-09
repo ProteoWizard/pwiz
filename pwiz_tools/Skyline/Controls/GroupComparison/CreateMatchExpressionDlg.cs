@@ -33,7 +33,8 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.GroupComparison
 {
-    public partial class CreateMatchExpressionDlg : ModeUIInvariantFormEx // Dialog has explicit logic for handling UI modes
+    public partial class 
+        CreateMatchExpressionDlg : ModeUIInvariantFormEx // Dialog has explicit logic for handling UI modes
     {
         private readonly object[] _foldChangeRows;
         private readonly bool _allowUpdateGrid;
@@ -61,9 +62,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
             SetSelectedItems(rgbHexColor);
             _allowUpdateGrid = true;
 
-            // When creating match expressions for a protein expression graph,
+            // When creating match expressions for results without fold change values,
             // do not offer p value and fold change filtering options.
-            if (_formattingDlg.IsProteinExpression)
+            if (!_formattingDlg.HasFoldChangeResults)
             {
                 // Hide the filter options
                 groupBox1.Hide();
@@ -318,8 +319,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             FilterRows();
         }
 
-        // Need to make a seperate expr.Matches for protein expression plot
-        private void GetFilteredRows(CancellationToken canellationToken, Object[] objs, MatchExpression expr)
+        private void GetFilteredRows(CancellationToken canellationToken, IEnumerable<object> objs, MatchExpression expr)
         {
             IList<StringWrapper> filteredRows = new List<StringWrapper>();
 
@@ -380,10 +380,14 @@ namespace pwiz.Skyline.Controls.GroupComparison
         }
         private void enterListButton_Click(object sender, EventArgs e)
         {
-            var dlg = new MatchExpressionListDlg(this);
-            dlg.Show(_formattingDlg);
+            ClickEnterList();
         }
 
+        public void ClickEnterList()
+        {
+            var dlg = new MatchExpressionListDlg(this);
+            dlg.Show(this);
+        }
         #region Function Test Support
 
         public string Expression
@@ -431,6 +435,5 @@ namespace pwiz.Skyline.Controls.GroupComparison
         }
 
         #endregion
-
     }
 }
