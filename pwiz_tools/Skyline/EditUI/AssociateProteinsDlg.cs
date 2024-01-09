@@ -42,7 +42,7 @@ namespace pwiz.Skyline.EditUI
                   IAuditLogModifier<AssociateProteinsSettings>
     {
         private readonly SrmDocument _document;
-        private bool _isFasta;
+        private bool? _isFasta;
         private ProteinAssociation _proteinAssociation;
         private readonly SettingsListComboDriver<BackgroundProteomeSpec> _driverBackgroundProteome;
         public SrmDocument DocumentFinal { get; private set; }
@@ -54,6 +54,7 @@ namespace pwiz.Skyline.EditUI
         private readonly IrtStandard _irtStandard;
         private readonly string _decoyGenerationMethod;
         private readonly double _decoysPerTarget;
+        private bool _updatingLabels = false;
 
         private string _statusBarResultFormat;
         private static string[] _sharedPeptideOptionNames = Enum.GetNames(typeof(ProteinAssociation.SharedPeptides));
@@ -257,8 +258,14 @@ namespace pwiz.Skyline.EditUI
         private void UpdateParsimonyResults()
         {
             DocumentFinal = null;
-            if (Results == null)
+            if (AssociatedProteins == null)
+            {
+                if (_isFasta == true)
+                    UseFastaFile(FastaFileName);
+                else if (_isFasta == false)
+                    UseBackgroundProteome();
                 return;
+            }
 
             var groupProteins = GroupProteins;
             var geneLevel = GeneLevelParsimony;
@@ -299,14 +306,14 @@ namespace pwiz.Skyline.EditUI
             if (GeneLevelParsimony)
                 return;
 
-            comboSharedPeptides.SelectedIndexChanged -= comboParsimony_SelectedIndexChanged;
+            _updatingLabels = true;
             // adjust labels to reflect whether proteins or protein groups are used
             for (int i = 0; i < _sharedPeptideOptionNames.Length; ++i)
                 comboSharedPeptides.Items[i] = EnumNames.ResourceManager.GetString(
                                                    (GroupProteins ? @"SharedPeptidesGroup_" : @"SharedPeptides_") +
                                                    _sharedPeptideOptionNames[i]) ??
                                                throw new InvalidOperationException(_sharedPeptideOptionNames[i]);
-            comboSharedPeptides.SelectedIndexChanged += comboParsimony_SelectedIndexChanged;
+            _updatingLabels = false;
 
             if (GroupProteins)
             {
@@ -327,14 +334,14 @@ namespace pwiz.Skyline.EditUI
 
         private void cbGeneLevel_CheckedChanged(object sender, EventArgs e)
         {
-            comboSharedPeptides.SelectedIndexChanged -= comboParsimony_SelectedIndexChanged;
+            _updatingLabels = true;
             // adjust labels to reflect whether genes or protein groups are used
             for (int i = 0; i < _sharedPeptideOptionNames.Length; ++i)
                 comboSharedPeptides.Items[i] = EnumNames.ResourceManager.GetString(
                                                    (GeneLevelParsimony ? @"SharedPeptidesGene_" : @"SharedPeptidesGroup_") +
                                                    _sharedPeptideOptionNames[i]) ??
                                                throw new InvalidOperationException(_sharedPeptideOptionNames[i]);
-            comboSharedPeptides.SelectedIndexChanged += comboParsimony_SelectedIndexChanged;
+            _updatingLabels = false;
 
             // gene level parsimony implies grouping, so force the checkbox on and disable it
             if (GeneLevelParsimony)
@@ -358,6 +365,9 @@ namespace pwiz.Skyline.EditUI
 
         private void comboParsimony_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (_updatingLabels)
+                return;
+
             UpdateParsimonyResults();
         }
 
@@ -499,7 +509,8 @@ namespace pwiz.Skyline.EditUI
                 longWaitDlg.PerformWork(this, 1000, monitor =>
                 {
                     result = _proteinAssociation.CreateDocTree(current, monitor);
-                    result = AddIrtAndDecoys(result);
+                    if (result != null)
+                        result = AddIrtAndDecoys(result);
 
                 });
                 if (longWaitDlg.IsCanceled)
@@ -547,7 +558,9 @@ namespace pwiz.Skyline.EditUI
             get
             {
                 var fileName = FastaFileName;
-                return new AssociateProteinsSettings(_proteinAssociation, _isFasta && _overrideFastaPath == null ? fileName : null, _isFasta ? null : fileName);
+                return new AssociateProteinsSettings(_proteinAssociation,
+                    _isFasta == true && _overrideFastaPath == null ? fileName : null,
+                    _isFasta == true ? null : fileName);
             }
         }
 
