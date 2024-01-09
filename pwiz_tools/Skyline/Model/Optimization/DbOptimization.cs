@@ -20,7 +20,6 @@ using System;
 using System.Globalization;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.BlibData;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 // ReSharper disable VirtualMemberCallInConstructor
@@ -84,7 +83,7 @@ namespace pwiz.Skyline.Model.Optimization
             var other = obj as OptimizationKey;
             if (other == null)
             {
-                throw new ArgumentException(Resources.OptimizationKey_CompareTo_Cannot_compare_OptimizationKey_to_an_object_of_a_different_type);
+                throw new ArgumentException(OptimizationResources.OptimizationKey_CompareTo_Cannot_compare_OptimizationKey_to_an_object_of_a_different_type);
             }
             else if (!Equals(OptType, other.OptType))
             {
@@ -221,7 +220,7 @@ namespace pwiz.Skyline.Model.Optimization
         {
             if (!Enum.IsDefined(typeof (OptimizationType), type))
             {
-                throw new ArgumentException(Resources.DbOptimization_DbOptimization_Optimization_type_out_of_range);
+                throw new ArgumentException(OptimizationResources.DbOptimization_DbOptimization_Optimization_type_out_of_range);
             }
         }
 

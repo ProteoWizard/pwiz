@@ -22,7 +22,6 @@ using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
@@ -30,17 +29,17 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         public static readonly FullScanAcquisitionMethod None = default(FullScanAcquisitionMethod);
         public static readonly FullScanAcquisitionMethod DIA = new FullScanAcquisitionMethod(@"DIA",
-            () => EnumNames.FullScanAcquisitionMethod_DIA, () => Resources.FullScanAcquisitionMethod_DIA_TOOLTIP);
+            () => EnumNames.FullScanAcquisitionMethod_DIA, () => DocSettingsResources.FullScanAcquisitionMethod_DIA_TOOLTIP);
         public static readonly FullScanAcquisitionMethod PRM = new FullScanAcquisitionMethod(@"PRM",
-            () => EnumNames.FullScanAcquisitionMethod_PRM, () => Resources.FullScanAcquisitionMethod_PRM_TOOLTIP);
+            () => EnumNames.FullScanAcquisitionMethod_PRM, () => DocSettingsResources.FullScanAcquisitionMethod_PRM_TOOLTIP);
         public static readonly FullScanAcquisitionMethod DDA = new FullScanAcquisitionMethod(@"DDA",
-            () => EnumNames.FullScanAcquisitionMethod_DDA, () => Resources.FullScanAcquisitionMethod_DDA_TOOLTIP);
+            () => EnumNames.FullScanAcquisitionMethod_DDA, () => DocSettingsResources.FullScanAcquisitionMethod_DDA_TOOLTIP);
         public static readonly FullScanAcquisitionMethod SureQuant = new FullScanAcquisitionMethod(@"SureQuant",
             () => EnumNames.FullScanAcquisitionMethod_SureQuant,
-            () => Resources.FullScanAcquisitionMethod_SureQuant_TOOLTIP);
+            () => DocSettingsResources.FullScanAcquisitionMethod_SureQuant_TOOLTIP);
         public static readonly FullScanAcquisitionMethod Targeted = new FullScanAcquisitionMethod(@"Targeted",
             () => EnumNames.FullScanAcquisitionMethod_Targeted,
-            () => Resources.FullScanAcquisitionMethod_Targeted_TOOLTIP);
+            () => DocSettingsResources.FullScanAcquisitionMethod_Targeted_TOOLTIP);
 
         public static readonly ImmutableList<FullScanAcquisitionMethod> ALL =
             ImmutableList.ValueOf(new[] {None, DIA, PRM, DDA, SureQuant, Targeted });
@@ -69,7 +68,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 if (_getLabelFunc == null)
                 {
-                    return Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_None;
+                    return DocSettingsResources.FullScanAcquisitionExtension_LOCALIZED_VALUES_None;
                 }
                 return _getLabelFunc();
             }
@@ -101,7 +100,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     return method;
                 }
             }
-            throw new InvalidDataException(string.Format(Resources.FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method, name));
+            throw new InvalidDataException(string.Format(DocSettingsResources.FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method, name));
         }
 
         public static FullScanAcquisitionMethod? FromLegacyName(string legacyName)    // Skyline 1.2 and earlier

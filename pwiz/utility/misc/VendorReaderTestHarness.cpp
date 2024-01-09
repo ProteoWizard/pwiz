@@ -60,6 +60,11 @@ namespace util {
 
 namespace {
 
+const std::vector<CVID> excludedSpectra =
+{
+    MS_electromagnetic_radiation_spectrum
+};
+
 void testAccept(const Reader& reader, const string& rawpath)
 {
     if (os_) *os_ << "testAccept(): " << rawpath << endl;
@@ -69,7 +74,6 @@ void testAccept(const Reader& reader, const string& rawpath)
 
     unit_assert(accepted);
 }
-
 
 void mangleSourceFileLocations(const string& sourceName, vector<SourceFilePtr>& sourceFiles, const string& newSourceName = "")
 {
@@ -439,14 +443,24 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
 #endif
 
         // test SpectrumList::min_level_accepted() for vendors
-        if (msd.run.spectrumListPtr && msd.run.spectrumListPtr->size() > 0)
+        if (msd.run.spectrumListPtr && !msd.run.spectrumListPtr->empty() &&
+            (msd.fileDescription.fileContent.empty() || msd.fileDescription.fileContent.hasCVParamChild(MS_mass_spectrum)))
         {
-            DetailLevel msLevelDetailLevel = msd.run.spectrumListPtr->min_level_accepted([](const Spectrum& s) { return s.hasCVParam(MS_ms_level); });
+            DetailLevel msLevelDetailLevel = msd.run.spectrumListPtr->min_level_accepted([](const Spectrum& s)
+            {
+	            return s.hasCVParamChild(MS_mass_spectrum) ? s.hasCVParam(MS_ms_level) : boost::tribool(boost::indeterminate);
+            });
+
             unit_assert_operator_equal(DetailLevel_InstantMetadata, msLevelDetailLevel);
 
             if (!bal::iequals(reader.getType(), "UIMF"))
             {
-                DetailLevel polarityDetailLevel = msd.run.spectrumListPtr->min_level_accepted([](const Spectrum& s) { return s.hasCVParamChild(MS_scan_polarity); });
+                DetailLevel polarityDetailLevel = msd.run.spectrumListPtr->min_level_accepted([](const Spectrum& s)
+                {
+	                return s.hasCVParamChild(MS_mass_spectrum)
+		                       ? s.hasCVParamChild(MS_scan_polarity)
+		                       : boost::tribool(boost::indeterminate);
+                });
                 unit_assert(DetailLevel_FastMetadata >= polarityDetailLevel);
             }
         }
@@ -982,7 +996,6 @@ TestResult testReader(const Reader& reader, const vector<string>& args, bool tes
 
     return result;
 }
-
 
 } // namespace util
 } // namespace pwiz

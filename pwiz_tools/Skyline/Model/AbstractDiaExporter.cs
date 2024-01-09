@@ -21,7 +21,6 @@ using System.Globalization;
 using System.IO;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -84,7 +83,7 @@ namespace pwiz.Skyline.Model
             {
                 var saver = new FileSaver(fileName);
                 if (!saver.CanSave())
-                    throw new IOException(string.Format(Resources.AbstractDiaExporter_Export_Cannot_save_to__0__, fileName));
+                    throw new IOException(string.Format(ModelResources.AbstractDiaExporter_Export_Cannot_save_to__0__, fileName));
 
                 var writer = new StreamWriter(saver.SafeName);
                 writer.Write(ExportString);
@@ -119,7 +118,7 @@ namespace pwiz.Skyline.Model
             var startTime = DateTime.UtcNow; // Said to be 117x faster than Now and this is for a delta
             var cycle = new Cycle(windowCount, windowsPerScan);
             int cyclesGenerated = 0;
-            ProgressStatus status = new ProgressStatus(Resources.AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List);
+            ProgressStatus status = new ProgressStatus(ModelResources.AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List);
             progressMonitor.UpdateProgress(status);
 
             // Generate each cycle.
@@ -130,7 +129,7 @@ namespace pwiz.Skyline.Model
                     return;
                 progressMonitor.UpdateProgress(status.ChangePercentComplete(
                     (int) (DateTime.UtcNow - startTime).TotalSeconds*100/CalculationTime).ChangeMessage(
-                        string.Format(Resources.AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List__0__cycles_out_of__1__,
+                        string.Format(ModelResources.AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List__0__cycles_out_of__1__,
                             cycleNumber - 1, cycleCount)));
 
                 double secondsRemaining = CalculationTime - (DateTime.UtcNow - startTime).TotalSeconds;
@@ -171,7 +170,7 @@ namespace pwiz.Skyline.Model
 
             // Show 100% in the wait dialog.
             progressMonitor.UpdateProgress(status.ChangePercentComplete(100).ChangeMessage(
-                string.Format(Resources.AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List__0__cycles_out_of__0__,
+                string.Format(ModelResources.AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List__0__cycles_out_of__0__,
                               cycleCount)));
         }
 

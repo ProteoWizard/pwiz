@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
             if (skylineInput.NodeGroup.PrecursorCharge > PrositConstants.PRECURSOR_CHARGES)
             {
                 exception = new PrositException(string.Format(
-                    Resources.PrositIntensityModel_CreatePrositInputRow_UnsupportedCharge,
+                    ModelsResources.PrositIntensityModel_CreatePrositInputRow_UnsupportedCharge,
                     skylineInput.NodeGroup.PrecursorCharge, PrositConstants.PRECURSOR_CHARGES));
                 return null;
             }

@@ -142,7 +142,7 @@ namespace pwiz.Skyline.Model.Proteome
                 if (progressMonitor.IsCanceled)
                     return null;
 
-                IProgressStatus progressStatus = new ProgressStatus(Resources.ProteinMetadataManager_LookupProteinMetadata_resolving_protein_details);
+                IProgressStatus progressStatus = new ProgressStatus(ProteomeResources.ProteinMetadataManager_LookupProteinMetadata_resolving_protein_details);
                 int nResolved = 0;
                 int nUnresolved = docOrig.PeptideGroups.Select(pg => pg.ProteinMetadata.NeedsSearch()).Count();
 
@@ -385,7 +385,7 @@ namespace pwiz.Skyline.Model.Proteome
 
             // If the desired field is not populated because it's not yet searched, say so
             if (metadata.NeedsSearch())
-                return Resources.ProteinMetadataManager_LookupProteinMetadata_resolving_protein_details;
+                return ProteomeResources.ProteinMetadataManager_LookupProteinMetadata_resolving_protein_details;
 
             // If the desired field is not populated, return something like "<name: YAL01234>"
             var failsafe = String.Format(Resources.PeptideGroupTreeNode_ProteinModalDisplayText__name___0__, metadata.Name);

@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using System.Linq;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Find
 {
@@ -50,7 +49,7 @@ namespace pwiz.Skyline.Model.Find
 
         public override string DisplayName
         {
-            get { return Resources.MissingScoresFinder_DisplayName_missing_scores; }
+            get { return FindResources.MissingScoresFinder_DisplayName_missing_scores; }
         }
 
         public override FindMatch Match(BookmarkEnumerator bookmarkEnumerator)
@@ -62,11 +61,11 @@ namespace pwiz.Skyline.Model.Find
             {
                 _isLastNodeMatch = IsMatch(nodePep);
                 if (_isLastNodeMatch)
-                    return new FindMatch(bookmarkEnumerator.Current, string.Format(Resources.MissingScoresFinder_Match__0__missing_from_peptide, _calculatorName));
+                    return new FindMatch(bookmarkEnumerator.Current, string.Format(FindResources.MissingScoresFinder_Match__0__missing_from_peptide, _calculatorName));
             }
             else if (IsMatch(bookmarkEnumerator.CurrentChromInfo, nodePep) && !_isLastNodeMatch)
             {
-                return new FindMatch(bookmarkEnumerator.Current, string.Format(Resources.MissingScoresFinder_Match__0__missing_from_chromatogram_peak, _calculatorName));
+                return new FindMatch(bookmarkEnumerator.Current, string.Format(FindResources.MissingScoresFinder_Match__0__missing_from_chromatogram_peak, _calculatorName));
             }
             return null;
         }

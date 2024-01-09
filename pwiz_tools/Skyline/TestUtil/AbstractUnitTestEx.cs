@@ -56,6 +56,12 @@ namespace pwiz.SkylineTestUtil
             return consoleOutput;
         }
 
+        protected static void CheckRunCommandOutputContains(string expectedMessage, string actualMessage)
+        {
+            Assert.IsTrue(actualMessage.Contains(expectedMessage),
+                string.Format("Expected RunCommand result message containing \n\"{0}\",\ngot\n\"{1}\"\ninstead.", expectedMessage, actualMessage));
+        }
+
         private static void ValidateRunExitStatus(bool? expectSuccess, int exitStatus, bool errorReported, string consoleOutput)
         {
             string message = null;
