@@ -276,7 +276,7 @@ namespace pwiz.Skyline.Model
                     {
                         if (Equals(annotation.Value, value))
                             continue;
-                        throw new InvalidDataException(string.Format(Resources.Annotations_Merge_Annotation_conflict_for__0__found_attempting_to_merge_annotations,
+                        throw new InvalidDataException(string.Format(ModelResources.Annotations_Merge_Annotation_conflict_for__0__found_attempting_to_merge_annotations,
                                                                      annotation.Key));
                     }
                     annotationsNew.Add(annotation);

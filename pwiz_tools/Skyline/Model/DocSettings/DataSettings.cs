@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -30,7 +30,6 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -133,7 +132,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public DataSettings ChangePanoramaPublishUri(Uri newUri)
         {
             if (!newUri.IsWellFormedOriginalString()) // https://msdn.microsoft.com/en-us/library/system.uri.iswellformedoriginalstring
-                throw new ArgumentException(string.Format(Resources.DataSettings_ChangePanoramaPublishUri_The_URI__0__is_not_well_formed_, newUri));
+                throw new ArgumentException(string.Format(DocSettingsResources.DataSettings_ChangePanoramaPublishUri_The_URI__0__is_not_well_formed_, newUri));
             return ChangeProp(ImClone(this), im => im.PanoramaPublishUri = newUri);
         }
 

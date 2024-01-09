@@ -95,7 +95,7 @@ namespace pwiz.Skyline.Controls.Graphs
             GraphPane.Title.IsVisible = true;
             GraphPane.Legend.IsVisible = false;
             // Make sure to use italics for "m/z"
-            AbstractMSGraphItem.SetAxisText(GraphPane.XAxis, Resources.AbstractMSGraphItem_CustomizeXAxis_MZ);
+            AbstractMSGraphItem.SetAxisText(GraphPane.XAxis, GraphsResources.AbstractMSGraphItem_CustomizeXAxis_MZ);
 
             magnifyBtn.Checked = Settings.Default.AutoZoomFullScanGraph;
             spectrumBtn.Checked = Settings.Default.SumScansFullScan;
@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (spectra[0].Centroided != requestedCentroids)
                 {
                     MessageDlg.Show(this, string.Format(
-                        Resources.GraphFullScan_SetSpectraUI__peak_type_not_available,
+                        GraphsResources.GraphFullScan_SetSpectraUI__peak_type_not_available,
                         _msDataFileScanHelper.GetPeakTypeLocalizedName(requestedCentroids
                             ? PeakType.centroided
                             : PeakType.profile),
@@ -199,7 +199,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void HandleLoadScanExceptionUI(Exception ex)
         {
-            GraphPane.Title.Text = Resources.GraphFullScan_LoadScan_Spectrum_unavailable;
+            GraphPane.Title.Text = GraphsResources.GraphFullScan_LoadScan_Spectrum_unavailable;
             MessageDlg.ShowException(this, ex);
         }
 
@@ -309,7 +309,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     // Need to check again once on the UI thread
                     if (ReferenceEquals(fullScans, _msDataFileScanHelper.MsDataSpectra))
                     {
-                        GraphPane.Title.Text = Resources.GraphFullScan_LoadScan_Loading___;
+                        GraphPane.Title.Text = GraphsResources.GraphFullScan_LoadScan_Loading___;
                         graphControl.Refresh();
                     }
                 }));
@@ -763,7 +763,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         private void  CreateSingleScan(out double[] massErrors)
         {
-            GraphPane.YAxis.Title.Text = Resources.AbstractMSGraphItem_CustomizeYAxis_Intensity;
+            GraphPane.YAxis.Title.Text = GraphsResources.AbstractMSGraphItem_CustomizeYAxis_Intensity;
             graphControl.IsEnableVZoom = graphControl.IsEnableVPan = false;
             massErrors = null;
 
@@ -1204,7 +1204,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     GraphPane.SetScale(CreateGraphics());
                 if (_msDataFileScanHelper.IsWatersSonarData)
                 {
-                    filterBtn.ToolTipText = Resources.GraphFullScan_Filter_Button_Tooltip_Filter_Quadrupole_Scan_Range;
+                    filterBtn.ToolTipText = GraphsResources.GraphFullScan_Filter_Button_Tooltip_Filter_Quadrupole_Scan_Range;
                 }
             }
             else

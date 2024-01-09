@@ -75,18 +75,18 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 if (data.RegressionSuccess)
                 {
                     regressionName = data.Regression == null
-                        ? Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression
-                        : Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Refined;
+                        ? IrtResources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression
+                        : IrtResources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Refined;
                 }
                 else
                 {
-                    regressionName = Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Attempted;
+                    regressionName = IrtResources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Attempted;
                 }
                 var graphData = new RegressionGraphData
                 {
                     Title = data.RetentionTimeProvider.Name,
-                    LabelX = Resources.AddIrtsResultsDlg_dataGridView_CellContentClick_Measured,
-                    LabelY = Resources.AddIrtPeptidesDlg_dataGridView_CellContentClick_iRT,
+                    LabelX = IrtResources.AddIrtsResultsDlg_dataGridView_CellContentClick_Measured,
+                    LabelY = IrtResources.AddIrtPeptidesDlg_dataGridView_CellContentClick_iRT,
                     XValues = data.Peptides.Select(peptide => peptide.RetentionTime.GetValueOrDefault()).ToArray(),
                     YValues = data.Peptides.Select(peptide => peptide.Irt).ToArray(),
                     Tooltips = Enumerable.Range(0, data.Peptides.Count).ToDictionary(i => i, i => data.Peptides[i].Target.ToString()),
@@ -114,7 +114,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     graphData.RegularPoints.Count,
                     data.RegressionRefined != null ? data.RegressionRefined.DisplayEquation : string.Empty,
                     data.RegressionRefined != null ? IrtRegression.R(data.RegressionRefined).ToString(@"F03") : IrtRegression.R(data.Regression).ToString(@"F03"),
-                    data.RegressionSuccess ? Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success : Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Failed);
+                    data.RegressionSuccess ? Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success : IrtResources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Failed);
                 var lastRow = dataGridView.Rows[dataGridView.RowCount - 1];
                 lastRow.DefaultCellStyle = data.RegressionSuccess ? successStyle : failStyle;
                 lastRow.Tag = data;
@@ -130,17 +130,17 @@ namespace pwiz.Skyline.SettingsUI.Irt
             switch (location)
             {
                 default:
-                    locationStr = Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_iRT_database;
+                    locationStr = IrtResources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_iRT_database;
                     break;
                 case AddIrtPeptidesLocation.spectral_library:
-                    locationStr = Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_spectral_library;
+                    locationStr = IrtResources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_spectral_library;
                     break;
             }
 
             if (PeptidesCount == 0)
-                labelPeptidesAdded.Text = string.Format(Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_No_new_peptides_will_be_added_to_the__0__, locationStr);
+                labelPeptidesAdded.Text = string.Format(IrtResources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_No_new_peptides_will_be_added_to_the__0__, locationStr);
             else if (PeptidesCount == 1)
-                labelPeptidesAdded.Text = string.Format(Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_new_peptide_will_be_added_to_the__0__, locationStr);
+                labelPeptidesAdded.Text = string.Format(IrtResources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_new_peptide_will_be_added_to_the__0__, locationStr);
             else
                 labelPeptidesAdded.Text = string.Format(labelPeptidesAdded.Text, PeptidesCount, locationStr);
 
@@ -150,7 +150,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 labelRunsConverted.Text = RunsConvertedCount > 1
                                               ? string.Format(labelRunsConverted.Text, RunsConvertedCount)
-                                              : Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_run_was_successfully_converted;
+                                              : IrtResources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_run_was_successfully_converted;
             }
 
             if (RunsFailedCount == 0)
@@ -159,7 +159,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 labelRunsFailed.Text = RunsFailedCount > 1
                                            ? string.Format(labelRunsFailed.Text, RunsFailedCount)
-                                           : Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_run_was_not_converted_due_to_insufficient_correlation;
+                                           : IrtResources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_run_was_not_converted_due_to_insufficient_correlation;
             }
                 
             listExisting.Items.AddRange(existingPeptides.Cast<object>().ToArray());

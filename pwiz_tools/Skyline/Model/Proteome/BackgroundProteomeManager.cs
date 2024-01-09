@@ -25,7 +25,6 @@ using pwiz.ProteomeDatabase.API;
 using pwiz.ProteomeDatabase.Fasta;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Proteome
@@ -166,7 +165,7 @@ namespace pwiz.Skyline.Model.Proteome
                 // we are here to resolve the protein metadata
                 string name = originalBackgroundProteome.Name;
                 IProgressStatus progressStatus =
-                    new ProgressStatus(string.Format(Resources.BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome, name));
+                    new ProgressStatus(string.Format(ProteomeResources.BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome, name));
                 try
                 {
                     // The transaction commit for writing the digestion info can be very lengthy, avoid lock timeouts
@@ -197,7 +196,7 @@ namespace pwiz.Skyline.Model.Proteome
                                     {
                                         if (docCurrent != null)
                                             EndProcessing(docCurrent);
-                                        throw new IOException(string.Format(Resources.BackgroundProteomeManager_LoadBackground_Unable_to_rename_temporary_file_to__0__,
+                                        throw new IOException(string.Format(ProteomeResources.BackgroundProteomeManager_LoadBackground_Unable_to_rename_temporary_file_to__0__,
                                                 fs.RealName));
                                     }
                                 }
@@ -222,7 +221,7 @@ namespace pwiz.Skyline.Model.Proteome
                 {
                     var message = new StringBuilder();
                     message.AppendLine(
-                        string.Format(Resources.BackgroundProteomeManager_LoadBackground_Failed_updating_background_proteome__0__,
+                        string.Format(ProteomeResources.BackgroundProteomeManager_LoadBackground_Failed_updating_background_proteome__0__,
                             name));
                     message.Append(x.Message);
                     UpdateProgress(progressStatus.ChangeErrorException(new IOException(message.ToString(), x)));
@@ -320,7 +319,7 @@ namespace pwiz.Skyline.Model.Proteome
                 using (var proteomeDb = ProteomeDb.OpenProteomeDb(_pathProteome, _isTemporary))
                 {
                     _progressStatus = progressStatus.ChangeMessage(
-                        string.Format(Resources.BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome,_nameProteome));
+                        string.Format(ProteomeResources.BackgroundProteomeManager_LoadBackground_Resolving_protein_details_for__0__proteome,_nameProteome));
                     bool result = false;
                     // Well formatted Uniprot headers don't require web access, so do an inital pass in hopes of finding those, then a second pass that requires web access
                     for (var useWeb = 0; useWeb <=1; useWeb++)
@@ -330,8 +329,8 @@ namespace pwiz.Skyline.Model.Proteome
                         if (useWeb == 1 && !_manager.FastaImporter.HasWebAccess()) // Do we even have web access?
                         {
                             _progressStatus =
-                                _progressStatus.ChangeMessage(Resources.DigestHelper_LookupProteinMetadata_Unable_to_access_internet_to_resolve_protein_details_)
-                                    .ChangeWarningMessage(Resources.DigestHelper_LookupProteinMetadata_Unable_to_access_internet_to_resolve_protein_details_).Cancel();
+                                _progressStatus.ChangeMessage(ProteomeResources.DigestHelper_LookupProteinMetadata_Unable_to_access_internet_to_resolve_protein_details_)
+                                    .ChangeWarningMessage(ProteomeResources.DigestHelper_LookupProteinMetadata_Unable_to_access_internet_to_resolve_protein_details_).Cancel();
                             result = false;
                         }
                         else

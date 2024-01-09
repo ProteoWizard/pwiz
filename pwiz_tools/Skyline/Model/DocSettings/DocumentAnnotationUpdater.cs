@@ -26,7 +26,6 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -46,7 +45,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             if (progressMonitor != null)
             {
-                progressMonitor.UpdateProgress(status.ChangeMessage(Resources.DocumentAnnotationUpdater_UpdateAnnotations_Updating_calculated_annotations));
+                progressMonitor.UpdateProgress(status.ChangeMessage(DocSettingsResources.DocumentAnnotationUpdater_UpdateAnnotations_Updating_calculated_annotations));
             }
             DocumentAnnotationUpdater updater = new DocumentAnnotationUpdater(document, progressMonitor);
             return updater.UpdateDocument(document);

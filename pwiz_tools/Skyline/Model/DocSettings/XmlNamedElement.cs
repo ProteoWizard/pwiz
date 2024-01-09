@@ -24,7 +24,6 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -89,7 +88,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private void Validate()
         {
             if (string.IsNullOrEmpty(Name))
-                throw new InvalidDataException(Resources.XmlNamedElement_Validate_Name_property_may_not_be_missing_or_empty);
+                throw new InvalidDataException(DocSettingsResources.XmlNamedElement_Validate_Name_property_may_not_be_missing_or_empty);
         }
 
         public XmlSchema GetSchema()

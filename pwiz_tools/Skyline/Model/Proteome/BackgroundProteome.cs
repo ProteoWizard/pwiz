@@ -173,7 +173,7 @@ namespace pwiz.Skyline.Model.Proteome
                 return true;  // It certainly wasn't cancelled
             if (progressMonitor.IsCanceled())
                 return false;
-            var message = Resources.BackgroundProteome_GetUniquenessDict_Examining_background_proteome_for_uniqueness_constraints;
+            var message = ProteomeResources.BackgroundProteome_GetUniquenessDict_Examining_background_proteome_for_uniqueness_constraints;
             progressMonitor.ChangeProgress(s => s.ChangeMessage(message).ChangePercentComplete(pctComplete));
             return true;
         }
