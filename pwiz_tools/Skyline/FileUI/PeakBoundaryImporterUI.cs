@@ -68,8 +68,8 @@ namespace pwiz.Skyline.FileUI
             else
             {
                 return new MissingMessageLines(
-                    string.Format(Resources.SkylineWindow_ImportPeakBoundaries_The_following__0__peptides_in_the_peak_boundaries_file_were_not_recognized__, count),
-                    Resources.SkylineWindow_ImportPeakBoundaries_Continue_peak_boundary_import_ignoring_these_peptides_);
+                    string.Format(FileUIResources.SkylineWindow_ImportPeakBoundaries_The_following__0__peptides_in_the_peak_boundaries_file_were_not_recognized__, count),
+                    FileUIResources.SkylineWindow_ImportPeakBoundaries_Continue_peak_boundary_import_ignoring_these_peptides_);
             }
         }
 
@@ -84,8 +84,8 @@ namespace pwiz.Skyline.FileUI
             else
             {
                 return new MissingMessageLines(
-                    string.Format(Resources.SkylineWindow_ImportPeakBoundaries_The_following__0__file_names_in_the_peak_boundaries_file_were_not_recognized_, count),
-                    Resources.SkylineWindow_ImportPeakBoundaries_Continue_peak_boundary_import_ignoring_these_files_);
+                    string.Format(FileUIResources.SkylineWindow_ImportPeakBoundaries_The_following__0__file_names_in_the_peak_boundaries_file_were_not_recognized_, count),
+                    FileUIResources.SkylineWindow_ImportPeakBoundaries_Continue_peak_boundary_import_ignoring_these_files_);
             }
         }
 
@@ -94,14 +94,14 @@ namespace pwiz.Skyline.FileUI
             if (count == 1)
             {
                 return new MissingMessageLines(
-                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following_peptide__file__and_charge_state_combination_was_not_recognized_,
-                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_these_charge_states_);
+                    FileUIResources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following_peptide__file__and_charge_state_combination_was_not_recognized_,
+                    FileUIResources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_these_charge_states_);
             }
             else
             {
                 return new MissingMessageLines(
-                    string.Format(Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following__0__peptide__file__and_charge_state_combinations_were_not_recognized_, count),
-                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_charge_state_);
+                    string.Format(FileUIResources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following__0__peptide__file__and_charge_state_combinations_were_not_recognized_, count),
+                    FileUIResources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_charge_state_);
             }
         }
 

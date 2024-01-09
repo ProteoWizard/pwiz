@@ -308,8 +308,8 @@ namespace pwiz.Skyline.SettingsUI
 
             bool percentType = (precursorIsotopes == FullScanPrecursorIsotopes.Percent);
             labelPrecursorIsotopeFilter.Text = percentType
-                                                   ? Resources.TransitionSettingsUI_comboPrecursorIsotopes_SelectedIndexChanged_Min_percent_of_base_peak
-                                                   : Resources.TransitionSettingsUI_comboPrecursorIsotopes_SelectedIndexChanged_Peaks;
+                                                   ? SettingsUIResources.TransitionSettingsUI_comboPrecursorIsotopes_SelectedIndexChanged_Min_percent_of_base_peak
+                                                   : SettingsUIResources.TransitionSettingsUI_comboPrecursorIsotopes_SelectedIndexChanged_Peaks;
             labelPrecursorIsotopeFilterPercent.Visible = percentType;
 
             if (precursorIsotopes == FullScanPrecursorIsotopes.None)
@@ -462,7 +462,7 @@ namespace pwiz.Skyline.SettingsUI
                     if (precursorIsotopes != FullScanPrecursorIsotopes.Count || precursorIsotopeFilter != 1)
                     {
                         helper.ShowTextBoxError(textPrecursorIsotopeFilter,
-                                                Resources.
+                                                SettingsUIResources.
                                                     TransitionSettingsUI_OkDialog_For_MS1_filtering_with_a_QIT_mass_analyzer_only_1_isotope_peak_is_supported);
 
 
@@ -775,7 +775,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (!double.TryParse(tbxTimeAroundMs2Ids.Text, out retentionTimeFilterLength) || retentionTimeFilterLength < 0)
                 {
-                    MessageDlg.Show(this, Resources.TransitionSettingsUI_OkDialog_This_is_not_a_valid_number_of_minutes);
+                    MessageDlg.Show(this, SettingsUIResources.TransitionSettingsUI_OkDialog_This_is_not_a_valid_number_of_minutes);
                     tbxTimeAroundMs2Ids.Focus();
                     return false;
                 }
@@ -784,7 +784,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (!double.TryParse(tbxTimeAroundPrediction.Text, out retentionTimeFilterLength) || retentionTimeFilterLength < 0)
                 {
-                    MessageDlg.Show(this, Resources.TransitionSettingsUI_OkDialog_This_is_not_a_valid_number_of_minutes);
+                    MessageDlg.Show(this, SettingsUIResources.TransitionSettingsUI_OkDialog_This_is_not_a_valid_number_of_minutes);
                     tbxTimeAroundPrediction.Focus();
                     return false;
                 }
@@ -841,7 +841,7 @@ namespace pwiz.Skyline.SettingsUI
                                     Label labelTh,
                                     Label labelPPM)
         {
-            string labelText = Resources.TransitionSettingsUI_SetAnalyzerType_Resolution;
+            string labelText = SettingsUIResources.TransitionSettingsUI_SetAnalyzerType_Resolution;
             labelPPM.Visible = false;
             if (analyzerTypeNew == FullScanMassAnalyzerType.none)
             {
@@ -860,7 +860,7 @@ namespace pwiz.Skyline.SettingsUI
                 textRes.Text = resCurrent.HasValue && (analyzerTypeCurrent == analyzerTypeNew)
                                   ? resCurrent.Value.ToString(LocalizationHelper.CurrentCulture)
                                   : TransitionFullScan.DEFAULT_CENTROIDED_PPM.ToString(LocalizationHelper.CurrentCulture);
-                labelText = Resources.FullScanSettingsControl_SetAnalyzerType_Mass__Accuracy_;
+                labelText = SettingsUIResources.FullScanSettingsControl_SetAnalyzerType_Mass__Accuracy_;
                 labelPPM.Visible = true;
                 labelPPM.Left = textRes.Right;
                 labelPPM.Top = textRes.Top;
@@ -876,7 +876,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 else
                 {
-                    labelText = Resources.TransitionSettingsUI_SetAnalyzerType_Resolving_power;
+                    labelText = SettingsUIResources.TransitionSettingsUI_SetAnalyzerType_Resolving_power;
                     if (analyzerTypeNew != FullScanMassAnalyzerType.tof)
                     {
                         variableRes = true;
@@ -1080,7 +1080,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 radioKeepAllTime.ForeColor = Color.Red;
                 toolTip.SetToolTip(radioKeepAllTime,
-                    Resources.FullScanSettingsControl_UpdateRetentionTimeFilterUi_Full_gradient_chromatograms_will_take_longer_to_import__consume_more_disk_space__and_may_make_peak_picking_less_effective_);
+                    SettingsUIResources.FullScanSettingsControl_UpdateRetentionTimeFilterUi_Full_gradient_chromatograms_will_take_longer_to_import__consume_more_disk_space__and_may_make_peak_picking_less_effective_);
             }
             else
             {
@@ -1099,12 +1099,12 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (!document.Settings.HasLibraries)
                     {
-                        strWarning = Resources.FullScanSettingsControl_UpdateRetentionTimeFilterUi_This_document_does_not_contain_any_spectral_libraries_;
+                        strWarning = SettingsUIResources.FullScanSettingsControl_UpdateRetentionTimeFilterUi_This_document_does_not_contain_any_spectral_libraries_;
                     }
                     else if (document.Molecules.All(
                         peptide => document.Settings.GetUnalignedRetentionTimes(peptide.SourceUnmodifiedTarget, peptide.SourceExplicitMods).Length == 0))
                     {
-                        strWarning = Resources.FullScanSettingsControl_UpdateRetentionTimeFilterUi_None_of_the_spectral_libraries_in_this_document_contain_any_retention_times_for_any_of_the_peptides_in_this_document_;
+                        strWarning = SettingsUIResources.FullScanSettingsControl_UpdateRetentionTimeFilterUi_None_of_the_spectral_libraries_in_this_document_contain_any_retention_times_for_any_of_the_peptides_in_this_document_;
                     }
                 }
             }

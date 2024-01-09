@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         /// </summary>
         public static string TITLE
         {
-            get { return Resources.TransitionGroupTreeNode_Title; }
+            get { return SeqNodeResources.TransitionGroupTreeNode_Title; }
         }
 
         public static TransitionGroupTreeNode CreateInstance(SequenceTree tree, DocNode nodeDoc)
@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public override string Heading
         {
-            get { return Resources.TransitionGroupTreeNode_Title; }
+            get { return SeqNodeResources.TransitionGroupTreeNode_Title; }
         }
 
         public override string ChildHeading
@@ -326,7 +326,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             if (nodePep == null)
             {
                 throw new InvalidOperationException(
-                    Resources.TransitionGroupTreeNode_GetChoices_Invalid_attempt_to_get_choices_for_a_node_that_has_not_been_added_to_the_tree_yet);
+                    SeqNodeResources.TransitionGroupTreeNode_GetChoices_Invalid_attempt_to_get_choices_for_a_node_that_has_not_been_added_to_the_tree_yet);
             }
 
             var listChildrenNew = DocNode.GetPrecursorChoices(DocSettings, nodePep.ExplicitMods, useFilter);
@@ -368,7 +368,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                     return null;
                 }
                 return HasSiblingsToSynch(false)
-                           ? Resources.TransitionGroupTreeNode_SynchSiblingsLabel_Synchronize_isotope_label_types
+                           ? SeqNodeResources.TransitionGroupTreeNode_SynchSiblingsLabel_Synchronize_isotope_label_types
                            : null;
             }
         }
@@ -468,14 +468,14 @@ namespace pwiz.Skyline.Controls.SeqNode
                 var customTable = new TableDesc();
                 using (RenderTools rt = new RenderTools())
                 {
-                    customTable.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Molecule, nodeGroup.CustomMolecule.Name, rt);
-                    customTable.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_charge,
+                    customTable.AddDetailRow(SeqNodeResources.TransitionGroupTreeNode_RenderTip_Molecule, nodeGroup.CustomMolecule.Name, rt);
+                    customTable.AddDetailRow(SeqNodeResources.TransitionGroupTreeNode_RenderTip_Precursor_charge,
                         FormatAdductTip(nodeGroup.TransitionGroup.PrecursorAdduct), rt);
-                    customTable.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_mz,
+                    customTable.AddDetailRow(SeqNodeResources.TransitionGroupTreeNode_RenderTip_Precursor_mz,
                         string.Format(@"{0:F04}", nodeGroup.PrecursorMz), rt);
                     if (nodeGroup.CustomMolecule.Formula != null)
                     {
-                        customTable.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Formula,
+                        customTable.AddDetailRow(SeqNodeResources.TransitionTreeNode_RenderTip_Formula,
                             nodeGroup.CustomMolecule.Formula + nodeGroup.TransitionGroup.PrecursorAdduct.AdductFormula.ToString(LocalizationHelper.CurrentCulture), rt);
                     }
                     RenderSpectrumClassFilterTip(customTable, rt, nodeGroup.SpectrumClassFilter);
@@ -526,21 +526,21 @@ namespace pwiz.Skyline.Controls.SeqNode
             {
                 var seqModified = GetModifiedSequence(nodePep, nodeGroup, settings);
                 if (!Equals(seqModified, nodeGroup.TransitionGroup.Peptide.Target))
-                    tableDetails.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Modified, seqModified.Sequence, rt);
+                    tableDetails.AddDetailRow(SeqNodeResources.TransitionGroupTreeNode_RenderTip_Modified, seqModified.Sequence, rt);
 
                 var precursorCharge = nodeGroup.TransitionGroup.PrecursorAdduct;
                 var precursorMz = nodeGroup.PrecursorMz;
-                tableDetails.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_charge,
+                tableDetails.AddDetailRow(SeqNodeResources.TransitionGroupTreeNode_RenderTip_Precursor_charge,
                                           precursorCharge.AdductCharge.ToString(LocalizationHelper.CurrentCulture), rt);
-                tableDetails.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_mz,
+                tableDetails.AddDetailRow(SeqNodeResources.TransitionGroupTreeNode_RenderTip_Precursor_mz,
                                           string.Format(@"{0:F04}", precursorMz), rt);
-                tableDetails.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_mh,
+                tableDetails.AddDetailRow(SeqNodeResources.TransitionGroupTreeNode_RenderTip_Precursor_mh,
                                           string.Format(@"{0:F04}", nodeGroup.GetPrecursorIonMass()),
                                           rt);
                 int? decoyMassShift = nodeGroup.TransitionGroup.DecoyMassShift;
                 if (decoyMassShift.HasValue)
                 {
-                    tableDetails.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Decoy_Mass_Shift,
+                    tableDetails.AddDetailRow(SeqNodeResources.TransitionGroupTreeNode_RenderTip_Decoy_Mass_Shift,
                                               decoyMassShift.Value.ToString(LocalizationHelper.CurrentCulture), rt);
                 }
                 if (nodeGroup.HasLibInfo)
@@ -659,7 +659,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                         pageHeaderParts.Add(Resources.SpectrumClassFilter_GetAbbreviatedText_OR);
                     }
                 }
-                pageHeaderParts.Add(Resources.TransitionGroupTreeNode_RenderSpectrumClassFilterTip_Spectrum_Filter);
+                pageHeaderParts.Add(SeqNodeResources.TransitionGroupTreeNode_RenderSpectrumClassFilterTip_Spectrum_Filter);
                 if (!string.IsNullOrEmpty(filterPage.Caption))
                 {
                     pageHeaderParts.Add(filterPage.Caption);

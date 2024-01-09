@@ -111,7 +111,7 @@ namespace pwiz.Skyline.FileUI
                 ReplicateNum = comboReplicateNames.SelectedIndex;
                 if (!_canTriggerReplicate(ReplicateNum.Value))
                 {
-                    MessageDlg.Show(this, string.Format(Resources.SchedulingOptionsDlg_OkDialog_The_replicate__0__contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_,
+                    MessageDlg.Show(this, string.Format(FileUIResources.SchedulingOptionsDlg_OkDialog_The_replicate__0__contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_,
                                                         comboReplicateNames.SelectedItem));
                     return;
                 }
@@ -153,7 +153,7 @@ namespace pwiz.Skyline.FileUI
         {
             get
             {
-                return string.Format(Resources.SchedulingOptionsDlg_TrendsError_Using_trends_in_scheduling_requires_at_least__0__replicates,
+                return string.Format(FileUIResources.SchedulingOptionsDlg_TrendsError_Using_trends_in_scheduling_requires_at_least__0__replicates,
                                      TransitionGroupDocNode.MIN_TREND_REPLICATES);
             }
         }

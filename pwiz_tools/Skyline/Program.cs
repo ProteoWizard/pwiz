@@ -133,9 +133,9 @@ namespace pwiz.Skyline
             if (Install.Is64Bit && !Environment.Is64BitProcess)
             {
                 string installUrl = Install.Url32;
-                string installLabel = (installUrl == string.Empty) ? string.Empty : string.Format(Resources.Program_Main_Install_32_bit__0__, Name);
+                string installLabel = (installUrl == string.Empty) ? string.Empty : string.Format(SkylineResources.Program_Main_Install_32_bit__0__, Name);
                 AlertLinkDlg.Show(null,
-                    string.Format(Resources.Program_Main_You_are_attempting_to_run_a_64_bit_version_of__0__on_a_32_bit_OS_Please_install_the_32_bit_version, Name),
+                    string.Format(SkylineResources.Program_Main_You_are_attempting_to_run_a_64_bit_version_of__0__on_a_32_bit_OS_Please_install_the_32_bit_version, Name),
                     installLabel,
                     installUrl);
                 return 1;
@@ -251,7 +251,7 @@ namespace pwiz.Skyline
                         using (var longWaitDlg = new LongWaitDlg())
                         {
                             longWaitDlg.Text = Name;
-                            longWaitDlg.Message = Resources.Program_Main_Copying_external_tools_from_a_previous_installation;
+                            longWaitDlg.Message = SkylineResources.Program_Main_Copying_external_tools_from_a_previous_installation;
                             longWaitDlg.ProgressValue = 0;
                             longWaitDlg.PerformWork(null, 1000*3, broker => CopyOldTools(toolsDirectory, broker));
                         }
@@ -496,7 +496,7 @@ namespace pwiz.Skyline
                 DirectoryEx.SafeDelete(tempOuterToolsFolderPath);
                 // Not sure this is necessay, but just to be safe
                 if (Directory.Exists(tempOuterToolsFolderPath))
-                    throw new Exception(Resources.Program_CopyOldTools_Error_copying_external_tools_from_previous_installation);
+                    throw new Exception(SkylineResources.Program_CopyOldTools_Error_copying_external_tools_from_previous_installation);
             }
 
             // Must create the tools directory to avoid ending up here again next time

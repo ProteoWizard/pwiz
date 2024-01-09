@@ -23,7 +23,6 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Optimization;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -89,13 +88,13 @@ namespace pwiz.Skyline.SettingsUI.Optimization
                 string path = textFilePath.Text;
                 string message = null;
                 if (string.IsNullOrEmpty(path))
-                    message = Resources.AddOptimizationDlg_OkDialog_Please_specify_a_path_to_an_existing_optimization_library_;
+                    message = OptimizationResources.AddOptimizationDlg_OkDialog_Please_specify_a_path_to_an_existing_optimization_library_;
                 else if (!path.EndsWith(OptimizationDb.EXT))
-                    message = string.Format(Resources.AddOptimizationDlg_OkDialog_The_file__0__is_not_an_optimization_library_, path);
+                    message = string.Format(OptimizationResources.AddOptimizationDlg_OkDialog_The_file__0__is_not_an_optimization_library_, path);
                 else if (!File.Exists(path))
                 {
-                    message = TextUtil.LineSeparate(string.Format(Resources.AddOptimizationDlg_OkDialog_The_file__0__does_not_exist_, path),
-                                                    Resources.AddOptimizationDlg_OkDialog_Please_specify_a_path_to_an_existing_optimization_library_);
+                    message = TextUtil.LineSeparate(string.Format(OptimizationResources.AddOptimizationDlg_OkDialog_The_file__0__does_not_exist_, path),
+                                                    OptimizationResources.AddOptimizationDlg_OkDialog_Please_specify_a_path_to_an_existing_optimization_library_);
                 }
                 if (message != null)
                 {
@@ -107,7 +106,7 @@ namespace pwiz.Skyline.SettingsUI.Optimization
             var library = Library;
             if (library == null)
             {
-                MessageDlg.Show(this, Resources.AddOptimizationDlg_OkDialog_Please_choose_the_optimization_library_you_would_like_to_add_);
+                MessageDlg.Show(this, OptimizationResources.AddOptimizationDlg_OkDialog_Please_choose_the_optimization_library_you_would_like_to_add_);
                 return;
             }
 

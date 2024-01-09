@@ -24,7 +24,6 @@ using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
@@ -84,7 +83,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     ModifyDocument(
                         EditDescription.Message(_precursorResult.GetElementRef(),
-                            Resources.CandidatePeakGroup_Chosen_Remove_Peak),
+                            EntitiesResources.CandidatePeakGroup_Chosen_Remove_Peak),
                         doc =>
                         {
                             foreach (var precursor in GetComparableGroup())
@@ -99,7 +98,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     ModifyDocument(
                         EditDescription.Message(_precursorResult.GetElementRef(),
-                            Resources.CandidatePeakGroup_Chosen_Choose_peak),
+                            EntitiesResources.CandidatePeakGroup_Chosen_Choose_peak),
                         doc =>
                         {
                             foreach (var precursor in GetComparableGroup())
@@ -171,7 +170,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override string ToString()
         {
-            return string.Format(Resources.CandidatePeakGroup_ToString___0___1__, 
+            return string.Format(EntitiesResources.CandidatePeakGroup_ToString___0___1__, 
                 PeakGroupStartTime.ToString(Formats.RETENTION_TIME),
                 PeakGroupEndTime.ToString(Formats.RETENTION_TIME));
         }
