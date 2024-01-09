@@ -256,7 +256,7 @@
     <value>カンマやタブで区切られたファイルのピーク境界を読み取る</value>
   </data>
   <data name="_import_process_count" xml:space="preserve">
-    <value>単一ファイルのインポートに対し、多数のサブプロセスが実行されます。その後、各単一ファイルからの結果がメインプロセスによって結び付けられます。これによって、条件が正しければ、24コアのNUMAサーバーでは性能利得が10倍に、i7プロセッサでも3から4倍になります。必ずご利用のシステムでテストしてください。</value>
+    <value>単一ファイルのインポートに対して多数のサブプロセスが実行されます。その後、各々のファイルの結果がメインプロセスによって統合されます。これによって、条件が適切であれば、24コアのNUMAサーバーでは性能利得が10倍に、i7プロセッサでも3から4倍になります。必ずご利用のシステムでテストしてください。</value>
   </data>
   <data name="_import_replicate_name" xml:space="preserve">
     <value>–import-file操作で新しい繰り返し測定に与える名前です。</value>
@@ -832,7 +832,7 @@ Waters</value>
     <value>使用しないクロマトグラムをドキュメントからすべて破棄します。</value>
   </data>
   <data name="_chromatograms_limit_noise" xml:space="preserve">
-    <value>クロマトグラムの長さを、±分など、クロマトグラムピークの前後の分数に限定します。</value>
+    <value>クロマトグラムの幅を、クロマトグラムピークの前後の時間（±分）に限定します。</value>
   </data>
   <data name="_full_scan_acquisition_method" xml:space="preserve">
     <value>フルスキャンデータから抽出するための取得メソッド(なし、DIA、DDA、SureQuant)。</value>
@@ -844,16 +844,16 @@ Waters</value>
     <value>プリカーサースペクトル(MS1)の場合は質量アナライザー、またはプロファイル(および分解能)の代わりにセントロイドスペクトル(およびPPMでの質量誤差)を使用する場合には「セントロイド化」。</value>
   </data>
   <data name="_full_scan_precursor_ignore_sim" xml:space="preserve">
-    <value>フルスキャンMS1スペクトルから抽出する場合にはSIMスキャンをスキップします。両者からクロマトグラムが抽出されるのを回避するため、調査MS1およびSIMスキャンの両者が存在する場合に使用します。</value>
+    <value>フルスキャンMS1スペクトルから抽出する場合にはSIMスキャンをスキップします。両者からクロマトグラムが抽出されるのを回避するため、MS1サーベイおよびSIMスキャンの両者が存在する場合に使用します。</value>
   </data>
   <data name="_full_scan_precursor_isotopes" xml:space="preserve">
-    <value>高分解能質量スペクトルからの抽出にプリカーサー同位体トランジションを選択する際に適用されるプリカーサー閾値の意味。数は、モノアイソトピックプリカーサーから始まる定数を示します。パーセントは、ベースピークなど、最も強度の高いプリカーサー種からの最低パーセントを示し、デフォルトの数になります。</value>
+    <value>高分解能質量スペクトルからの抽出でプリカーサー同位体トランジションを選択する際に適用されるプリカーサー閾値の意味。数値は、モノアイソトピックプリカーサーから始まる定数を示します。パーセントは、ベースピークなど、最も強度の高いプリカーサー種からの最低パーセントを示し、デフォルトの数になります。</value>
   </data>
   <data name="_full_scan_precursor_isotope_enrichment" xml:space="preserve">
     <value>フルスキャンデータからの抽出に使用する、事前に定義された同位体濃縮設定名。利用できるものがない場合は、ユーザーインターフェースにあるトランジション設定フォームを使用し、新しい同位体濃縮設定を追加します。</value>
   </data>
   <data name="_full_scan_precursor_threshold" xml:space="preserve">
-    <value>高分解能スペクトルから抽出される同位体の定数(モノアイソトピックプリカーサーで開始)または基本の同位体の割合。</value>
+    <value>高分解能スペクトルから抽出される同位体の定数(モノアイソトピックプリカーサーから始まる)または基本の同位体の割合。</value>
   </data>
   <data name="_full_scan_product_analyzer" xml:space="preserve">
     <value>プロダクトスペクトルの場合には質量アナライザー、またはプロファイル(および分解能)の代わりにセントロイドスペクトル(およびPPMでの質量誤差)を使用する場合には「セントロイド化」。</value>
@@ -877,7 +877,7 @@ Waters</value>
     <value>クロマトグラムの開始時間および停止時間を、予測される保持時間またはMS/MS ID保持時間のいずれかの範囲で制限するかどうかを設定します。</value>
   </data>
   <data name="_library_match_tolerance" xml:space="preserve">
-    <value>予測されるプロダクトイオンのm/z値を測定されたMS/MSスペクトルライブラリピークm/z値に一致させる際に許容される最大デルタ。デルタはm/zまたはPPM単位のいずれかで指定可能。</value>
+    <value>予測されるプロダクトイオンのm/z値を測定されたMS/MSスペクトルライブラリピークm/z値に一致させる際に許容される最大デルタ。デルタはm/zまたはPPM単位のいずれかで指定できます。</value>
   </data>
   <data name="_library_min_product_ions" xml:space="preserve">
     <value>ライブラリスペクトルでこの数以上のプロダクトトランジションがピークと一致するプリカーサーのみを維持します。</value>
@@ -889,7 +889,7 @@ Waters</value>
     <value>同じセットのペプチドと一致するタンパク質は、ドキュメント中で1つのターゲットにまとめられます。</value>
   </data>
   <data name="_associate_proteins_minimal_protein_list" xml:space="preserve">
-    <value>ペプチドすべてを説明するタンパク質の最小セット(わずか)を求めるアルゴリズムを適用します。</value>
+    <value>ペプチドすべてを説明するタンパク質の最小セット(簡素化)を求めるアルゴリズムを適用します。</value>
   </data>
   <data name="_associate_proteins_min_peptides" xml:space="preserve">
     <value>ドキュメントに追加するためにタンパク質に必要な最小ペプチド数。</value>
@@ -904,25 +904,25 @@ Waters</value>
     <value>設定すると、Thermo-ScientificがLTQ装置に提供する特定の式を使用して、プリカーサーm/zから動的にプロダクトイオンの最小m/z値が計算されます。</value>
   </data>
   <data name="_instrument_max_mz" xml:space="preserve">
-    <value>測定できないプリカーサーやトランジションを追加しないよう、ターゲット装置に対して測定可能な最大m/z値。</value>
+    <value>測定できないプリカーサーやトランジションを追加しないようにするための、ターゲット装置に対して測定可能な最大m/z値。</value>
   </data>
   <data name="_instrument_max_time" xml:space="preserve">
-    <value>分析方法を問わず、クロマトグラムにおける最大許容時間。 これを設定すると、データ採取に関与しない部分のグラジエントで使用される可能性のあるメモリやディスク空き容量を節約できます。</value>
+    <value>分析方法を問わず、クロマトグラムで許容される最大時間。 これを設定すると、データ採取に関与しない部分のグラジエントで使用されるメモリやディスク空き容量を節約できます。</value>
   </data>
   <data name="_instrument_method_mz_tolerance" xml:space="preserve">
     <value>装置メソッドトランジションm/z値を予測されるトランジションm/z値に一致させるための最大デルタ。(SRMおよびPRM単離したm/z値にのみ適用。)</value>
   </data>
   <data name="_instrument_min_mz" xml:space="preserve">
-    <value>測定できないプリカーサーやトランジションを追加しないよう、ターゲット装置に対して測定可能な最小m/z値。</value>
+    <value>測定できないプリカーサーやトランジションを追加しないようにするための、ターゲット装置に対して測定可能な最小m/z値。</value>
   </data>
   <data name="_instrument_min_time" xml:space="preserve">
-    <value>分析方法を問わず、クロマトグラムにおける最小許容時間。 これを設定すると、データ採取に関与しない部分のグラジエントで使用される可能性のあるメモリやディスク空き容量を節約できます。</value>
+    <value>分析方法を問わず、クロマトグラムで許容される最小時間。 これを設定すると、データ採取に関与しない部分のグラジエントで使用されるメモリやディスク空き容量を節約できます。</value>
   </data>
   <data name="_instrument_triggered_chromatograms" xml:space="preserve">
-    <value>特定のアナライトに対してスペクトルを取得した場合、保持時間に大きなギャップがある可能性があることを示しています。ピークは、これらのギャップと重ならないように切り詰められ、バックグラウンドは差し引かれません。</value>
+    <value>特定のアナライトに対してスペクトルを取得した時に保持時間に大きなギャップがあり得ることを示しています。ピークは、これらのギャップと重ならないように切り詰められ、バックグラウンドは差し引かれません。</value>
   </data>
   <data name="_library_pick_product_ions" xml:space="preserve">
-    <value>トランジション一致ライブラリスペクトルピークm/z値の選択で考慮されるプロダクトイオンのセット。(all：指定されたすべてのイオン電荷および種類、filter：開始トランジション、終了トランジションおよび特殊イオンに基づくフィルタ、all_plus：2つの他のオプションの和)</value>
+    <value>トランジション一致ライブラリスペクトルからのピークm/z値の選択で考慮されるプロダクトイオンのセット。(all：指定されたすべてのイオン電荷および種類、filter：開始トランジション、終了トランジションおよび特殊イオンに基づくフィルタ、all_plus：2つの他のオプションの和)</value>
   </data>
   <data name="_tran_product_add_special_ion" xml:space="preserve">
     <value>トランジション設定フォームで指定した、名前の付いた事前に定義された特殊イオンを追加します。</value>
