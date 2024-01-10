@@ -204,9 +204,8 @@ namespace pwiz.Skyline.Model.Results
             {
                 var scanIdText = _msDataFileScanIds.GetMsDataFileSpectrumId(internalScanIndex);
                 dataFileSpectrumStartIndex = GetDataFile(ignoreZeroIntensityPoints).GetSpectrumIndex(scanIdText);
-                // TODO(brendanx): Improve this error message post-UI freeze
-//                if (dataFileSpectrumStartIndex == -1)
-//                    throw new ArgumentException(string.Format("The stored scan ID {0} was not found in the file {1}.", scanIdText, DataFilePath));
+                if (dataFileSpectrumStartIndex == -1)
+                    throw new ArgumentException(string.Format(ResultsResources.ScanProvider_GetMsDataFileSpectraWithCommonRetentionTime_The_scan_ID___0___could_not_be_found_in_the_file___1___, scanIdText, DataFilePath.RemoveLegacyParameters()));
             }
 
             MsDataSpectrum currentSpectrum;
