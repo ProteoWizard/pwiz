@@ -28,6 +28,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -787,67 +788,146 @@ namespace pwiz.Skyline.Menus
                 return;
 
             var resultsIndex = SelectedResultsIndex;
-            var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
-            var nodeTranGroup = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>()?.DocNode ?? PeakMatcher.PickTransitionGroup(DocumentUI, nodePepTree, resultsIndex);
-
-            if (DocumentUI.GetSynchronizeIntegrationChromatogramSets().Any())
+            
+            lock (SkylineWindow.GetDocumentChangeLock())
             {
-                // Apply peak with synchronized integration
+                var document = SkylineWindow.Document;
                 var chromSet = DocumentUI.MeasuredResults.Chromatograms[resultsIndex];
+                var resultsFile = SkylineWindow.GetGraphChrom(chromSet.Name).GetChromFileInfoId();
                 var filePath = SkylineWindow.GetGraphChrom(chromSet.Name).FilePath;
-                var chromInfo = SkylineWindow.FindChromInfo(DocumentUI, nodeTranGroup, chromSet.Name, filePath);
+                var peptidePaths = GetPeptidePaths(document,
+                    SkylineWindow.SequenceTree.SelectedPaths.Append(SkylineWindow.SequenceTree.SelectedPath));
+                var changedPaths = new List<PropertyName>();
+                if (peptidePaths.Count == 0)
+                {
+                    return;
+                }
+                var groupBy = group ? ReplicateValue.FromPersistedString(Document.Settings, Settings.Default.GroupApplyToBy) : null;
 
-                nodePepTree.EnsureChildren(); // in case peptide node is not expanded
-                var nodeTranGroupPath = nodePepTree.Nodes.Cast<TransitionGroupTreeNode>().First(node => ReferenceEquals(node.DocNode, nodeTranGroup)).Path;
-
-                var change = new ChangedPeakBoundsEventArgs(
-                    nodeTranGroupPath, null, chromSet.Name, filePath,
-                    new ScaledRetentionTime(chromInfo.StartRetentionTime.GetValueOrDefault()),
-                    new ScaledRetentionTime(chromInfo.EndRetentionTime.GetValueOrDefault()),
-                    null, PeakBoundsChangeType.both);
-
-                var path = PropertyName.ROOT
-                    .SubProperty(((PeptideGroupTreeNode) nodePepTree.SrmParent).DocNode.AuditLogText)
-                    .SubProperty(nodePepTree.DocNode.AuditLogText)
-                    .SubProperty(nodeTranGroup.AuditLogText);
-
-                ModifyDocument(MenusResources.SkylineWindow_PickPeakInChromatograms_Apply_picked_peak,
-                    doc => SkylineWindow.ChangePeakBounds(doc, SkylineWindow.GetSynchronizedPeakBoundChanges(doc, change, false)),
-                    docPair => AuditLogEntry.CreateSimpleEntry(MessageType.applied_peak_all, docPair.NewDocumentType,
-                        path.ToString()));
-                return;
-            }
-
-            using (var longWait = new LongWaitDlg(SkylineWindow))
-            {
+                using var longWait = new LongWaitDlg(SkylineWindow);
                 longWait.Text = MenusResources.SkylineWindow_ApplyPeak_Applying_Peak;
-                SrmDocument doc = null;
-                try
+                var progressStatus = new ProgressStatus(longWait.Message).ChangeSegments(0, peptidePaths.Count);
+
+                longWait.PerformWork(SkylineWindow, 1000, progressMonitor =>
                 {
-                    var chromatogramSet = Document.MeasuredResults.Chromatograms[resultsIndex];
-                    var resultsFile = SkylineWindow.GetGraphChrom(chromatogramSet.Name).GetChromFileInfoId();
-                    var groupBy = group ? ReplicateValue.FromPersistedString(Document.Settings, Settings.Default.GroupApplyToBy) : null;
-                    var groupByValue = groupBy?.GetValue(new AnnotationCalculator(Document), chromatogramSet);
-                    longWait.PerformWork(SkylineWindow, 800, monitor =>
-                        doc = PeakMatcher.ApplyPeak(Document, nodePepTree, nodeTranGroup, resultsIndex, resultsFile, subsequent, groupBy, groupByValue, monitor));
+                    if (longWait.IsCanceled)
+                    {
+                        return;
+                    }
+
+                    progressMonitor.UpdateProgress(progressStatus);
+                    foreach (var peptideEntry in peptidePaths)
+                    {
+                        var peptideGroupDocNode = (PeptideGroupDocNode) document.FindNode(peptideEntry.Key.GetIdentity(0));
+                        var peptideDocNode = (PeptideDocNode) peptideGroupDocNode.FindNode(peptideEntry.Key.GetIdentity(1));
+                        if (peptideDocNode == null)
+                        {
+                            continue;
+                        }
+
+                        var auditLogProperty = PropertyName.ROOT.SubProperty(peptideGroupDocNode.AuditLogText)
+                            .SubProperty(peptideDocNode.AuditLogText);
+                        TransitionGroupDocNode transitionGroupDocNode = null;
+                        if (peptideEntry.Value.Count != 0 && peptideEntry.Value.Count != peptideDocNode.Children.Count)
+                        {
+                            transitionGroupDocNode = (TransitionGroupDocNode)peptideEntry.Value
+                                .Select(peptideDocNode.FindNode).FirstOrDefault();
+                        }
+
+                        if (transitionGroupDocNode != null)
+                        {
+                            auditLogProperty =
+                                auditLogProperty.SubProperty(transitionGroupDocNode.AuditLogText);
+                        }
+                        else
+                        {
+                            transitionGroupDocNode =
+                                PeakMatcher.PickTransitionGroup(document, peptideDocNode, resultsIndex);
+                        }
+
+                        var chromInfo = SkylineWindow.FindChromInfo(document, transitionGroupDocNode, chromSet.Name, filePath);
+                        if (document.GetSynchronizeIntegrationChromatogramSets().Any())
+                        {
+                            // Apply peak with synchronized integration
+
+                            var nodeTranGroupPath = new IdentityPath(peptideEntry.Key, transitionGroupDocNode.TransitionGroup);
+
+                            var change = new ChangedPeakBoundsEventArgs(
+                                nodeTranGroupPath, null, chromSet.Name, filePath,
+                                new ScaledRetentionTime(chromInfo.StartRetentionTime.GetValueOrDefault()),
+                                new ScaledRetentionTime(chromInfo.EndRetentionTime.GetValueOrDefault()),
+                                null, PeakBoundsChangeType.both);
+
+                            document = SkylineWindow.ChangePeakBounds(document, SkylineWindow.GetSynchronizedPeakBoundChanges(document, change, false));
+                        }
+                        else
+                        {
+                            PeptideGroup peptideGroup = (PeptideGroup)peptideEntry.Key.GetIdentity(0);
+                            document = PeakMatcher.ApplyPeak(progressMonitor, progressStatus, document, peptideGroup,
+                                peptideDocNode, transitionGroupDocNode, resultsIndex, resultsFile, subsequent, groupBy, group);
+                        }
+
+                        if (!Equals(peptideDocNode, document.FindNode(peptideEntry.Key)))
+                        {
+                            changedPaths.Add(auditLogProperty);
+                        }
+
+                        progressStatus = progressStatus.NextSegment();
+                    }
+                });
+                if (longWait.IsCanceled || document == null)
+                {
+                    return;
                 }
-                catch (Exception x)
+
+                var messageType = subsequent ? MessageType.applied_peak_subsequent : MessageType.applied_peak_all;
+                var auditLogEntry = AuditLogEntry.CreateCountChangeEntry(messageType, messageType, document.DocumentType, changedPaths.Select(path=>path.ToString()).ToList());
+                ModifyDocument(MenusResources.SkylineWindow_PickPeakInChromatograms_Apply_picked_peak, doc => document,
+                    docPair => auditLogEntry);
+            }
+        }
+
+        /// <summary>
+        /// Returns a dictionary whose keys are the paths to all the peptides that are either
+        /// in the IdentityPath list, or whose parent (i.e. Protein) is in the list, or that have
+        /// a descendant in the list.
+        /// The values are the set of TransitionGroup's that are selected.
+        /// </summary>
+        private Dictionary<IdentityPath, ImmutableList<TransitionGroup>> GetPeptidePaths(SrmDocument document,
+            IEnumerable<IdentityPath> allSelectedPaths)
+        {
+            var groupedByPeptide = ExpandProteinPaths(document, allSelectedPaths)
+                .Where(path => path.Length >= 2)
+                .GroupBy(path => path.GetPathTo((int)SrmDocument.Level.Molecules));
+            var result = new Dictionary<IdentityPath, ImmutableList<TransitionGroup>>();
+            foreach (var peptidePaths in groupedByPeptide)
+            {
+                var selectedTransitionGroups = ImmutableList.ValueOf(peptidePaths.Where(path => path.Length >= 3)
+                    .Select(path => path.GetPathTo((int)SrmDocument.Level.TransitionGroups)).Distinct()
+                    .Select(path => (TransitionGroup)path.Child));
+                result.Add(peptidePaths.Key, selectedTransitionGroups);
+            }
+            return result;
+        }
+
+        private IEnumerable<IdentityPath> ExpandProteinPaths(SrmDocument document, IEnumerable<IdentityPath> identityPaths)
+        {
+            foreach (var identityPath in identityPaths)
+            {
+                if (identityPath.Length == 1)
                 {
-                    MessageDlg.ShowWithException(SkylineWindow, TextUtil.LineSeparate(MenusResources.SkylineWindow_ApplyPeak_Failed_to_apply_peak_, x.Message), x);
+                    var peptideGroupDocNode = (PeptideGroupDocNode) document.FindNode(identityPath.Child);
+                    if (peptideGroupDocNode != null)
+                    {
+                        foreach (var child in peptideGroupDocNode.Molecules)
+                        {
+                            yield return new IdentityPath(identityPath.Child, child.Id);
+                        }
+                    }
                 }
-
-                if (!longWait.IsCanceled && doc != null && !ReferenceEquals(doc, Document))
+                else if (identityPath.Length >= 2)
                 {
-                    // ReSharper disable once PossibleNullReferenceException
-                    var path = PropertyName.ROOT
-                        .SubProperty(((PeptideGroupTreeNode)nodePepTree.SrmParent).DocNode.AuditLogText)
-                        .SubProperty(nodePepTree.DocNode.AuditLogText)
-                        .SubProperty(nodeTranGroup.AuditLogText);
-
-                    var msg = subsequent ? MessageType.applied_peak_subsequent : MessageType.applied_peak_all;
-
-                    ModifyDocument(MenusResources.SkylineWindow_PickPeakInChromatograms_Apply_picked_peak, document => doc,
-                        docPair => AuditLogEntry.CreateSimpleEntry(msg, docPair.NewDocumentType, path.ToString()));
+                    yield return identityPath;
                 }
             }
         }
@@ -996,6 +1076,11 @@ namespace pwiz.Skyline.Menus
             var displayType = GraphChromatogram.GetDisplayType(DocumentUI, selectedTreeNode);
             if (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic || displayType == DisplayTypeChrom.qc)
                 return;
+            if (SequenceTree.SelectedPaths.Count > 1)
+            {
+                canApply = canRemove = true;
+                return;
+            }
             var chromFileInfoId = GetSelectedChromFileId();
 
             var node = selectedTreeNode as TransitionTreeNode;
