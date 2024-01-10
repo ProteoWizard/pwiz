@@ -54,7 +54,7 @@ namespace pwiz.Skyline.EditUI
         private readonly IrtStandard _irtStandard;
         private readonly string _decoyGenerationMethod;
         private readonly double _decoysPerTarget;
-        private bool _updatingLabels = false;
+        private bool _updatingLabels;
 
         private string _statusBarResultFormat;
         private static string[] _sharedPeptideOptionNames = Enum.GetNames(typeof(ProteinAssociation.SharedPeptides));
