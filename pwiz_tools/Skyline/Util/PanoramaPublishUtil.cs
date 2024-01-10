@@ -23,12 +23,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using pwiz.PanoramaClient;
 using pwiz.Common.SystemUtil;
@@ -329,7 +331,7 @@ namespace pwiz.Skyline.Util
                 if (!isCanceled) // if user not canceled 
                 {
                     _uploadedDocumentUri = result;
-                    String message = UtilResources.AbstractPanoramaPublishClient_UploadSharedZipFile_Upload_succeeded__would_you_like_to_view_the_file_in_Panorama_;
+                    var message = UtilResources.AbstractPanoramaPublishClient_UploadSharedZipFile_Upload_succeeded__would_you_like_to_view_the_file_in_Panorama_;
                     if (MultiButtonMsgDlg.Show(parent, message, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false)
                         == DialogResult.Yes)
                         Process.Start(result.ToString());
@@ -351,8 +353,21 @@ namespace pwiz.Skyline.Util
                 }
                 else
                 {
-                    MessageDlg.ShowException(parent, x);
+                    ServerError serverError = null;
+                    if (x is WebException webException)
+                    {
+                        using (var response = webException.Response)
+                        {
+                            // TODO: A WebException is usually thrown if the response status code something other than 200
+                            // Will there be a LabKey error in the response if this is a real server error?
+                            serverError = GetIfErrorInResponse(response);
+                        }
+                    }
+
+                    MessageDlg.ShowWithException(parent, TextUtil.LineSeparate(serverError?.ToString(), x.Message), x);
                 }
+
+                return;
             }
 
             // Change PanoramaUrl setting to the successful url used
@@ -363,6 +378,32 @@ namespace pwiz.Skyline.Util
             {
                 window.ChangeDocPanoramaUri(new Uri(uriString));
             }
+        }
+
+
+        protected static ServerError GetIfErrorInResponse(WebResponse response)
+        {
+            var stream = response.GetResponseStream();
+            if (stream != null)
+            {
+                var responseString = new StreamReader(stream).ReadToEnd();
+                return GetIfErrorInResponse(responseString);
+            }
+            return null;
+        }
+
+        protected static ServerError GetIfErrorInResponse(string responseString)
+        {
+            try
+            {
+                var parsedResponse = JObject.Parse(responseString);
+                return WebClientWithCredentials.GetIfErrorInResponse(parsedResponse);
+            }
+            catch (JsonException)
+            {
+            }
+
+            return null;
         }
     }
 
@@ -375,12 +416,14 @@ namespace pwiz.Skyline.Util
         private readonly Regex _runningStatusRegex = new Regex(@"RUNNING, (\d+)%");
         private int _waitTime = 1;
 
+        private PanoramaServerException _uploadError;
+
         public override JToken GetInfoForFolders(PanoramaServer server, string folder)
         {
             return new WebPanoramaClient(server.URI, server.Username, server.Password).GetInfoForFolders(folder);
         }
 
-        public override Uri  SendZipFile(PanoramaServer server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
+        public override Uri SendZipFile(PanoramaServer server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
         {
             _progressMonitor = progressMonitor;
             _progressStatus = new ProgressStatus(String.Empty);
@@ -399,7 +442,7 @@ namespace pwiz.Skyline.Util
 
                 // Upload Url minus the name of the zip file.
                 var baseUploadUri = new Uri(server.URI, webDavUrl); // webDavUrl will start with the context path (e.g. /labkey/...). We will get the correct URL even if serverUri has a context path.
-                // Use Uri.EscapeDataString instead of Uri.EscapleUriString.  
+                // Use Uri.EscapeDataString instead of Uri.EscapeUriString.  
                 // The latter will not escape characters such as '+' or '#' 
                 var escapedZipFileName = Uri.EscapeDataString(zipFileName);
                 var tmpUploadUri = new Uri(baseUploadUri, escapedZipFileName + @".part");
@@ -411,10 +454,18 @@ namespace pwiz.Skyline.Util
                     // Add a "Temporary" header so that LabKey marks this as a temporary file.
                     // https://www.labkey.org/issues/home/Developer/issues/details.view?issueId=19220
                     _webClient.Headers.Add(@"Temporary", @"T");
-                    _webClient.UploadFileAsync(tmpUploadUri, @"PUT", PathEx.SafePath(zipFilePath));
+                    _webClient.RequestJsonResponse();
+                    _webClient.UploadFileAsync(tmpUploadUri, @"PUT", PathEx.SafePath(zipFilePath)); // TODO: Why not use POST, the default?
 
                     // Wait for the upload to complete
                     Monitor.Wait(this);
+                }
+
+                if (_uploadError != null)
+                {
+                    // There was an error uploading the file.
+                    // _uploadError gets set in webClient_UploadFileCompleted if there was an error in the LabKey JSON response.
+                    throw _uploadError;
                 }
 
                 if (progressMonitor.IsCanceled)
@@ -455,6 +506,7 @@ namespace pwiz.Skyline.Util
                                                 };
                 
                 JToken importResponse = _webClient.Post(importUrl, dataImportInformation);
+                // TODO: what happens if an exception in thrown on Panorama before the pipeline job is submitted.
 
                 // ID to check import status.
                 var details = importResponse[@"UploadedJobDetails"];
@@ -631,7 +683,7 @@ namespace pwiz.Skyline.Util
                 @"MOVE",
                 authHeader,
                 UtilResources.WebPanoramaPublishClient_RenameTempZipFile_Error_renaming_temporary_zip_file__,
-                5 // Try up to 5 times.
+                5 // Try up to 5 times. TODO: This does not work.
                 );
         }
 
@@ -639,28 +691,30 @@ namespace pwiz.Skyline.Util
         {
             request.Method = method;
             request.Headers.Add(HttpRequestHeader.Authorization, authHeader);
+            request.Accept = @"application/json"; // Get LabKey to send JSON instead of HTML
 
             try
             {
-                using (request.GetResponse())
+                using (var response = request.GetResponse())
                 {
+                    // If the JSON response contains an exception message, throw a PanoramaServerException
+                    var serverError = GetIfErrorInResponse(response);
+                    if (serverError != null)
+                    {
+                        throw new PanoramaServerException(serverError.ToString());
+                    }
+                    
                 }
             }
             // An exception will be thrown if the response code is not 200 (Success).
-            catch (WebException x)
+            catch (WebException)
             {
                 if (--maxTryCount > 0)
                 {
-                    DoRequest(request, method, authHeader, errorMessage, maxTryCount);
+                    DoRequest(request, method, authHeader, errorMessage, maxTryCount); // TODO: A new request has to be created to do a retry
                 }
 
-                var msg = x.Message;
-                if (x.InnerException != null)
-                {
-                    msg += @". Inner Exception: " + x.InnerException.Message;
-                }
-                throw new Exception(
-                    TextUtil.LineSeparate(errorMessage, msg), x);
+                throw;
             }
         }
 
@@ -702,6 +756,18 @@ namespace pwiz.Skyline.Util
             lock (this)
             {
                 Monitor.PulseAll(this);
+
+                var serverError = GetIfErrorInResponse(Encoding.UTF8.GetString(e.Result));
+                var errorMessage = serverError?.ToString();
+
+                if (e.Error != null)
+                {
+                    errorMessage = TextUtil.SpaceSeparate(errorMessage, e.Error.Message);
+                }
+                if (errorMessage != null)
+                {
+                    _uploadError = new PanoramaServerException(errorMessage);
+                }
             }
         }
     }

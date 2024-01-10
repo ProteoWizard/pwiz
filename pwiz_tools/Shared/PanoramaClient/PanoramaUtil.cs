@@ -167,8 +167,9 @@ namespace pwiz.PanoramaClient
         public static Uri Call(Uri serverUri, string controller, string folderPath, string method, string query,
             bool isApi = false)
         {
-            string path = controller + @"/" + (folderPath ?? string.Empty) + @"/" +
-                          method + (isApi ? @".api" : @".view");
+            folderPath ??= string.Empty;
+            folderPath = folderPath.Trim().TrimStart('/').TrimEnd('/');
+            var path = controller + @"/" + folderPath + @"/" + method + (isApi ? @".api" : @".view");
 
             if (!string.IsNullOrEmpty(query))
             {
@@ -767,7 +768,7 @@ namespace pwiz.PanoramaClient
     {
         private CookieContainer _cookies = new CookieContainer();
         private string _csrfToken;
-        private Uri _serverUri;
+        private readonly Uri _serverUri;
     
         private static string LABKEY_CSRF = @"X-LABKEY-CSRF";
     
@@ -782,30 +783,39 @@ namespace pwiz.PanoramaClient
         {
             if (string.IsNullOrEmpty(_csrfToken))
             {
-                // After this the client should have the X-LABKEY-CSRF token 
-                DownloadString(new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH));
+                GetCsrfTokenFromServer();
             }
-            if (postData == null)
-            {
-                postData = new NameValueCollection();
-            }
+            postData ??= new NameValueCollection();
+            RequestJsonResponse();
             var responseBytes = UploadValues(uri, PanoramaUtil.FORM_POST, postData);
             var response = Encoding.UTF8.GetString(responseBytes);
-            return JObject.Parse(response);
+            return parseResponse(response);
         }
     
         public JObject Post(Uri uri, string postData)
         {
             if (string.IsNullOrEmpty(_csrfToken))
             {
-                // After this the client should have the X-LABKEY-CSRF token 
-                DownloadString(new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH));
+                GetCsrfTokenFromServer();
             }
             Headers.Add(HttpRequestHeader.ContentType, "application/json");
+            RequestJsonResponse();
             var response = UploadString(uri, PanoramaUtil.FORM_POST, postData);
-            return JObject.Parse(response);
+            return parseResponse(response);
         }
-    
+
+        private JObject parseResponse(string response)
+        {
+            var jsonResponse = JObject.Parse(response);
+            var serverError = GetIfErrorInResponse(jsonResponse);
+            if (serverError != null)
+            {
+                throw new PanoramaServerException(serverError.ToString());
+            }
+
+            return jsonResponse;
+        }
+
         protected override WebRequest GetWebRequest(Uri address)
         {
             var request = base.GetWebRequest(address);
@@ -833,24 +843,100 @@ namespace pwiz.PanoramaClient
             var httpResponse = response as HttpWebResponse;
             if (httpResponse != null)
             {
-                GetCsrfToken(httpResponse);
+                GetCsrfToken(httpResponse, request.RequestUri);
             }
             return response;
         }
     
-        private void GetCsrfToken(HttpWebResponse response)
+        private void GetCsrfToken(HttpWebResponse response, Uri requestUri)
         {
             if (!string.IsNullOrEmpty(_csrfToken))
             {
                 return;
             }
-    
-            var csrf = response.Cookies[LABKEY_CSRF];
+
+            var csrf = GetCsrfCookieFromResponse(response);
+            if (csrf == null)
+            {
+                // If we did not find it in the Response cookies look in the Request cookies.
+                // org.labkey.api.util.CSRFUtil.getExpectedToken() will not add the CSRF cookie to the response if the cookie
+                // is already there in the request.  This can happen if our WebClient is used to make multiple requests
+                // (e.g. WebPanoramaPublishClient.SendZipFile()) and the first request in the series gets redirected. When this
+                // happens CSRFUtil will not add the cookie to the response, because it is already in the redirected request. 
+                csrf = GetCsrfCookieFromRequest(requestUri);
+            }
             if (csrf != null)
             {
                 // The server set a cookie called X-LABKEY-CSRF, get its value
                 _csrfToken = csrf.Value;
             }
+        }
+
+        private Cookie GetCsrfCookieFromResponse(HttpWebResponse response)
+        {
+            return response.Cookies[LABKEY_CSRF];
+        }
+
+        private Cookie GetCsrfCookieFromRequest(Uri requestUri)
+        {
+            return _cookies.GetCookies(requestUri)[LABKEY_CSRF];
+        }
+
+        public void GetCsrfTokenFromServer()
+        {
+            // After making this request the client should have the X-LABKEY-CSRF token 
+            DownloadString(new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH));
+        }
+
+        public void RequestJsonResponse()
+        {
+            // Get LabKey to send JSON instead of HTML.
+            // When we request a JSON response, the HTTP status returned is always 200 even when the request fails on the server
+            // and the returned status would have been 400 otherwise. This is intentional:
+            // Issue 44964: Don't use Bad Request/400 HTTP status codes for valid requests
+            // https://www.labkey.org/home/Developer/issues/issues-details.view?issueId=44964
+            // 1.Malformed HTTP request, which doesn't comply with HTTP spec. 400 is clearly legit here.
+            // 2.Well - formed HTTP requests with parameters that we don't like. This is less clear cut to me.
+            // 3.Well - formed HTTP requests with legit parameters, but which exercise some sort of error scenario. We clearly shouldn't be sending a 400 for these.
+            // This means that we have to look for the status and any exception in the returned JSON rather than expecting WebClient or HttpWebRequest to throw
+            // an exception when the returned status is something other than 200.
+            Headers.Add(HttpRequestHeader.Accept, @"application/json");
+            // Headers.Add(HttpRequestHeader.ContentType, "application/json");
+        }
+
+        public static ServerError GetIfErrorInResponse(JObject jsonResponse)
+        {
+            try
+            {
+                if (jsonResponse[@"exception"] != null)
+                {
+                    return new ServerError(jsonResponse[@"exception"].ToString(), jsonResponse[@"status"]?.ToObject<int>());
+                }
+            }
+            catch (JsonException)
+            {
+            }
+
+            return null;
+        }
+    }
+
+    public class ServerError
+    {
+        public string ErrorMessage { get; }
+        public int? Status { get; }
+
+        public ServerError(string exception, int? status)
+        {
+            ErrorMessage = exception;
+            Status = status;
+        }
+
+        public override string ToString()
+        {
+            var serverError = string.Format("Server error: {0}.", ErrorMessage);
+            if (Status != null) serverError += string.Format(". Status: {0}", Status);
+            return serverError;
         }
     }
 
