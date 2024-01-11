@@ -787,16 +787,25 @@ namespace pwiz.Skyline.Menus
             if (!canApply)
                 return;
 
-            var resultsIndex = SelectedResultsIndex;
             
             lock (SkylineWindow.GetDocumentChangeLock())
             {
+                var resultsIndex = SelectedResultsIndex;
                 var document = SkylineWindow.Document;
                 var chromSet = DocumentUI.MeasuredResults.Chromatograms[resultsIndex];
                 var resultsFile = SkylineWindow.GetGraphChrom(chromSet.Name).GetChromFileInfoId();
                 var filePath = SkylineWindow.GetGraphChrom(chromSet.Name).FilePath;
-                var peptidePaths = GetPeptidePaths(document,
-                    SkylineWindow.SequenceTree.SelectedPaths.Append(SkylineWindow.SequenceTree.SelectedPath));
+                IdentityPath currentTransitionGroupPath = SkylineWindow.SequenceTree.GetNodeOfType<TransitionGroupTreeNode>()?.Path;
+                IdentityPath currentPeptidePath = SkylineWindow.SequenceTree.GetNodeOfType<PeptideTreeNode>()?.Path;
+                
+                if (SkylineWindow.SequenceTree.SelectedPath.Depth >= (int) SrmDocument.Level.TransitionGroups)
+                {
+                    currentTransitionGroupPath =
+                        SkylineWindow.SequenceTree.SelectedPath.GetPathTo((int) SrmDocument.Level.TransitionGroups);
+                }
+                var peptidePaths =
+                    SkylineWindow.SequenceTree.SelectedPaths.SelectMany(path =>
+                        document.EnumeratePathsAtLevel(path, SrmDocument.Level.Molecules)).Distinct().ToList();
                 var changedPaths = new List<PropertyName>();
                 if (peptidePaths.Count == 0)
                 {
@@ -814,12 +823,13 @@ namespace pwiz.Skyline.Menus
                     {
                         return;
                     }
-
-                    progressMonitor.UpdateProgress(progressStatus);
-                    foreach (var peptideEntry in peptidePaths)
+                    for (int iPeptide = 0; iPeptide < peptidePaths.Count; iPeptide++)
                     {
-                        var peptideGroupDocNode = (PeptideGroupDocNode) document.FindNode(peptideEntry.Key.GetIdentity(0));
-                        var peptideDocNode = (PeptideDocNode) peptideGroupDocNode.FindNode(peptideEntry.Key.GetIdentity(1));
+                        var peptidePath = peptidePaths[iPeptide];
+                        progressStatus = progressStatus.ChangeSegments(iPeptide, peptidePaths.Count);
+                        progressMonitor.UpdateProgress(progressStatus);
+                        var peptideGroupDocNode = (PeptideGroupDocNode) document.FindNode(peptidePath.GetIdentity(0));
+                        var peptideDocNode = (PeptideDocNode) peptideGroupDocNode.FindNode(peptidePath.GetIdentity(1));
                         if (peptideDocNode == null)
                         {
                             continue;
@@ -828,10 +838,9 @@ namespace pwiz.Skyline.Menus
                         var auditLogProperty = PropertyName.ROOT.SubProperty(peptideGroupDocNode.AuditLogText)
                             .SubProperty(peptideDocNode.AuditLogText);
                         TransitionGroupDocNode transitionGroupDocNode = null;
-                        if (peptideEntry.Value.Count != 0 && peptideEntry.Value.Count != peptideDocNode.Children.Count)
+                        if (currentTransitionGroupPath != null && Equals(currentPeptidePath, peptidePath))
                         {
-                            transitionGroupDocNode = (TransitionGroupDocNode)peptideEntry.Value
-                                .Select(peptideDocNode.FindNode).FirstOrDefault();
+                            transitionGroupDocNode = (TransitionGroupDocNode) peptideDocNode.FindNode(currentTransitionGroupPath.Child);
                         }
 
                         if (transitionGroupDocNode != null)
@@ -845,12 +854,17 @@ namespace pwiz.Skyline.Menus
                                 PeakMatcher.PickTransitionGroup(document, peptideDocNode, resultsIndex);
                         }
 
+                        if (transitionGroupDocNode == null)
+                        {
+                            continue;
+                        }
+
                         var chromInfo = SkylineWindow.FindChromInfo(document, transitionGroupDocNode, chromSet.Name, filePath);
                         if (document.GetSynchronizeIntegrationChromatogramSets().Any())
                         {
                             // Apply peak with synchronized integration
 
-                            var nodeTranGroupPath = new IdentityPath(peptideEntry.Key, transitionGroupDocNode.TransitionGroup);
+                            var nodeTranGroupPath = new IdentityPath(peptidePath, transitionGroupDocNode.TransitionGroup);
 
                             var change = new ChangedPeakBoundsEventArgs(
                                 nodeTranGroupPath, null, chromSet.Name, filePath,
@@ -862,17 +876,15 @@ namespace pwiz.Skyline.Menus
                         }
                         else
                         {
-                            PeptideGroup peptideGroup = (PeptideGroup)peptideEntry.Key.GetIdentity(0);
+                            PeptideGroup peptideGroup = (PeptideGroup)peptidePath.GetIdentity(0);
                             document = PeakMatcher.ApplyPeak(progressMonitor, progressStatus, document, peptideGroup,
                                 peptideDocNode, transitionGroupDocNode, resultsIndex, resultsFile, subsequent, groupBy, group);
                         }
 
-                        if (!Equals(peptideDocNode, document.FindNode(peptideEntry.Key)))
+                        if (!Equals(peptideDocNode, document.FindNode(peptidePath)))
                         {
                             changedPaths.Add(auditLogProperty);
                         }
-
-                        progressStatus = progressStatus.NextSegment();
                     }
                 });
                 if (longWait.IsCanceled || document == null)
@@ -881,54 +893,18 @@ namespace pwiz.Skyline.Menus
                 }
 
                 var messageType = subsequent ? MessageType.applied_peak_subsequent : MessageType.applied_peak_all;
-                var auditLogEntry = AuditLogEntry.CreateCountChangeEntry(messageType, messageType, document.DocumentType, changedPaths.Select(path=>path.ToString()).ToList());
+                AuditLogEntry auditLogEntry;
+                if (changedPaths.Count == 1)
+                {
+                    auditLogEntry = AuditLogEntry.CreateSimpleEntry(messageType, document.DocumentType, changedPaths[0].ToString());
+                }
+                else
+                {
+                    auditLogEntry = AuditLogEntry.CreateSimpleEntry(messageType, document.DocumentType, MessageArgs.Create(changedPaths.Count).Args);
+
+                }
                 ModifyDocument(MenusResources.SkylineWindow_PickPeakInChromatograms_Apply_picked_peak, doc => document,
                     docPair => auditLogEntry);
-            }
-        }
-
-        /// <summary>
-        /// Returns a dictionary whose keys are the paths to all the peptides that are either
-        /// in the IdentityPath list, or whose parent (i.e. Protein) is in the list, or that have
-        /// a descendant in the list.
-        /// The values are the set of TransitionGroup's that are selected.
-        /// </summary>
-        private Dictionary<IdentityPath, ImmutableList<TransitionGroup>> GetPeptidePaths(SrmDocument document,
-            IEnumerable<IdentityPath> allSelectedPaths)
-        {
-            var groupedByPeptide = ExpandProteinPaths(document, allSelectedPaths)
-                .Where(path => path.Length >= 2)
-                .GroupBy(path => path.GetPathTo((int)SrmDocument.Level.Molecules));
-            var result = new Dictionary<IdentityPath, ImmutableList<TransitionGroup>>();
-            foreach (var peptidePaths in groupedByPeptide)
-            {
-                var selectedTransitionGroups = ImmutableList.ValueOf(peptidePaths.Where(path => path.Length >= 3)
-                    .Select(path => path.GetPathTo((int)SrmDocument.Level.TransitionGroups)).Distinct()
-                    .Select(path => (TransitionGroup)path.Child));
-                result.Add(peptidePaths.Key, selectedTransitionGroups);
-            }
-            return result;
-        }
-
-        private IEnumerable<IdentityPath> ExpandProteinPaths(SrmDocument document, IEnumerable<IdentityPath> identityPaths)
-        {
-            foreach (var identityPath in identityPaths)
-            {
-                if (identityPath.Length == 1)
-                {
-                    var peptideGroupDocNode = (PeptideGroupDocNode) document.FindNode(identityPath.Child);
-                    if (peptideGroupDocNode != null)
-                    {
-                        foreach (var child in peptideGroupDocNode.Molecules)
-                        {
-                            yield return new IdentityPath(identityPath.Child, child.Id);
-                        }
-                    }
-                }
-                else if (identityPath.Length >= 2)
-                {
-                    yield return identityPath;
-                }
             }
         }
 
