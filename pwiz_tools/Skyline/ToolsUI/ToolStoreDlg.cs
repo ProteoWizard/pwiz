@@ -359,10 +359,10 @@ namespace pwiz.Skyline.ToolsUI
 
     public class WebToolStoreClient : IToolStoreClient
     {
-        public static readonly Uri TOOL_STORE_URI = new Uri(@"https://skyline.gs.washington.edu");
-        protected const string GET_TOOLS_URL = "/labkey/skyts/home/getToolsApi.view";
-        protected const string DOWNLOAD_TOOL_URL = "/labkey/skyts/home/downloadTool.view";
-        public const string TOOL_DETAILS_URL = "/labkey/skyts/home/details.view";
+        public static readonly Uri TOOL_STORE_URI = new Uri(@"https://skyline.ms");
+        protected const string GET_TOOLS_URL = "/skyts/home/getToolsApi.view";
+        protected const string DOWNLOAD_TOOL_URL = "/skyts/home/downloadTool.view";
+        public const string TOOL_DETAILS_URL = "/skyts/home/details.view";
 
         protected Dictionary<String, Version> latestVersions_;
 
