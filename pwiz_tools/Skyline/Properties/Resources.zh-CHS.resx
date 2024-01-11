@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -973,7 +973,7 @@
     <value>{0} ({1} - {2})</value>
   </data>
   <data name="BrukerTimsTofIsolationListExporter_CheckIonMobilities_All_targets_must_have_an_ion_mobility_between__0__and__1__as_specified_in_the_template_method__Either_use_a_different_template_method__or_change_the_ion_mobility_values_for_the_following_targets_" xml:space="preserve">
-    <value>所有目标的离子迁移必须介于此模板方法中指定的 {0} 和 {1} 之间。请使用其他模板方法，或更改以下目标的离子迁移值:</value>
+    <value>所有目标的离子迁移值必须介于此模板方法中指定的 {0} 和 {1} 之间。请使用其他模板方法，或更改下列目标的离子迁移值:</value>
   </data>
   <data name="BrukerTimsTofMethodExporter_ExportMethod_Error_copying_template_file_" xml:space="preserve">
     <value>复制模板文件时出错。</value>
@@ -1139,7 +1139,7 @@
     <value>找不到得分类型。</value>
   </data>
   <data name="BuildLibraryGridView_OnCellPainting_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___" xml:space="preserve">
-    <value>得分阈值“{0}”无效(必须为介于 {1} 和 {2} 之间的十进制值)。</value>
+    <value>得分阈值“{0}”无效(须为介于 {1} 和 {2} 之间的小数值)。</value>
   </data>
   <data name="BuildLibraryGridView_OnRowPrepaint_Error_getting_score_type_for_this_file_" xml:space="preserve">
     <value>获取此文件的得分类型时出错。</value>
@@ -1839,7 +1839,7 @@
     <value>样品名“{0}”不符合模式“{1}”。忽视{2}</value>
   </data>
   <data name="CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins" xml:space="preserve">
-    <value>错误：必须先导入 FASTA 文件，然后才能关联蛋白质</value>
+    <value>错误：必须先导入 FASTA 文件才能关联蛋白质</value>
   </data>
   <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins" xml:space="preserve">
     <value>正在关联肽段与蛋白质</value>
@@ -2395,7 +2395,7 @@
     <value>错误：尝试更改离子迁移设置失败。</value>
   </data>
   <data name="CommandLine_SetInstrumentSettings_Error__Failed_attempting_to_change_the_transition_instrument_settings_" xml:space="preserve">
-    <value>错误：尝试更改离子对仪器设置失败。</value>
+    <value>错误：尝试更改离子对的仪器设置失败。</value>
   </data>
   <data name="CommandLine_SetLibrary_Error__Cannot_set_library_name_without_path_" xml:space="preserve">
     <value>错误：无法在没有路径的情况下设定库名称。</value>
@@ -2413,7 +2413,7 @@
     <value>错误：您试图添加的库与文件中已经存在的库发生冲突。</value>
   </data>
   <data name="CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_library_settings_" xml:space="preserve">
-    <value>错误：尝试更改离子对库设置失败。</value>
+    <value>错误：尝试更改离子对的库设置失败。</value>
   </data>
   <data name="CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transition_prediction_settings_" xml:space="preserve">
     <value>错误：尝试更改离子对预测设置失败。</value>
@@ -4474,7 +4474,7 @@ Example: Looplink: T [4]
     <value>模板文件{0}不存在。</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_The_transition_prediction_settings_for_this_document_are_set_to_use_optimized_values_by_transition_" xml:space="preserve">
-    <value>本文档的离子对预测设置设定为通过离子对使用优化值。</value>
+    <value>本文档的离子对预测设置设定为使用离子对的优化值。</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_TOF" xml:space="preserve">
     <value>TOF</value>
@@ -4483,7 +4483,7 @@ Example: Looplink: T [4]
     <value>离子对列表</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_Using_optimized_values_by_transition_is_invalid_for_this_instrument_type__Would_you_like_to_use_optimized_values_by_precursor_instead_" xml:space="preserve">
-    <value>通过离子对使用优化值对此类仪器无效。您想改为通过母离子使用优化值吗?</value>
+    <value>使用离子对的优化值对此类仪器无效。您想改为使用母离子的优化值吗?</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_Would_you_like_to_use_the_defaults_instead" xml:space="preserve">
     <value>您是否愿意使用默认值替代？</value>
@@ -4760,7 +4760,7 @@ Example: Looplink: T [4]
     <value>尝试从未裂解的 FASTA 序列获取肽段列。</value>
   </data>
   <data name="FastaToProsit_Enzyme_unsupported_enzyme___0____allowed_values_are___1_" xml:space="preserve">
-    <value>不受支持的酶“{0}”; 允许的值为: {1}</value>
+    <value>不支持的酶“{0}”; 允许的值为: {1}</value>
   </data>
   <data name="File" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\file.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -4939,7 +4939,7 @@ Example: Looplink: T [4]
     <value>无法找到{0}。</value>
   </data>
   <data name="FindOptions_GetNotFoundMessage_Nothing_could_be_found_matching_any_of_the__0__criteria" xml:space="preserve">
-    <value>找不到与任何 {0} 条件相匹配的内容</value>
+    <value>找不到任何与 {0} 条件相匹配的内容</value>
     <comment>{0} is an integer greater than 1</comment>
   </data>
   <data name="FindOptions_GetNotFoundMessage_The_text__0__could_not_be_found" xml:space="preserve">
@@ -7251,13 +7251,13 @@ Example: Looplink: T [4]
     <value>正在向 Panorama 上传文档</value>
   </data>
   <data name="PanoramaUtil_EnsureLogin_Could_not_authenticate_user__Response_received_from_server___0___1_" xml:space="preserve">
-    <value>无法验证用户身份。从服务器收到的响应:{0} {1}</value>
+    <value>无法验证用户身份。服务器的反馈:{0} {1}</value>
   </data>
   <data name="PanoramaUtil_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_" xml:space="preserve">
     <value>服务器未返回有效的 JSON 响应。{0} 并非 Panorama  服务器。</value>
   </data>
   <data name="PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_" xml:space="preserve">
-    <value>服务器 {0} 的响应异常</value>
+    <value>服务器 {0} 的JSON响应异常</value>
   </data>
   <data name="PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder" xml:space="preserve">
     <value>{0}不是 Panorama 文件夹</value>
@@ -8216,10 +8216,10 @@ Invalid peptide sequence at position 18
     <value>将 Prosit 谱图导出到 BiblioSpec 库</value>
   </data>
   <data name="PrositHelpers_ExportPrositSpectraToBlib_failed_to_write_Prosit_output_to_blib" xml:space="preserve">
-    <value>无法将 Prosit 输出写入 blib</value>
+    <value>无法将 Prosit 输出至 blib</value>
   </data>
   <data name="PrositHelpers_PredictBatchesFromPrositCsv_Reading_Prosit_CSV_input" xml:space="preserve">
-    <value>正在读取  Prosit CSV 输入</value>
+    <value>正在读取  Prosit CSV 的输入</value>
   </data>
   <data name="PrositIntensityModel_CreatePrositInputRow_UnsupportedCharge" xml:space="preserve">
     <value>Prosit 不支持电荷 {0}。支持的最大电荷为 {1}。</value>
@@ -9218,10 +9218,10 @@ Invalid peptide sequence at position 18
     <value>Skyline 设置</value>
   </data>
   <data name="ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_containing_the_missing_files_" xml:space="preserve">
-    <value>请选择缺失文件所属的文件夹。</value>
+    <value>请选择缺失文件的所属文件夹。</value>
   </data>
   <data name="ShareTypeDlg_OkDialog_Including_data_folders_is_not_supported_by_the_currently_selected_version_" xml:space="preserve">
-    <value>当前所选版本不支持包含数据文件夹。</value>
+    <value>当前所选版本不支持包含数据的文件夹。</value>
   </data>
   <data name="ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__" xml:space="preserve">
     <value>当前保存的文件 ({0})</value>
@@ -9702,7 +9702,7 @@ Invalid peptide sequence at position 18
 
 禁用自动选择: {2} 个母离子和 {3} 个碎片离子对将添加到当前文档。
 
-如果选择“禁用”，则可以稍后使用“细化 &gt; 高级”菜单项启用自动选择。</value>
+如果选择“禁用”，则可以稍后使用“细化 &gt; 高级”菜单项来启用自动选择。</value>
   </data>
   <data name="SkylineWindow_ImportMassList_Enable" xml:space="preserve">
     <value>启用(&amp;E)</value>
@@ -10278,13 +10278,13 @@ Invalid peptide sequence at position 18
     <value>无可显示的库。您是否想要添加一个库？</value>
   </data>
   <data name="SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_for_the_user__1___This_user_does_not_have_permissions_to_download_the_file__The_skyp_file_was_downloaded_by__2__" xml:space="preserve">
-    <value>Skyline 中保存的 Panorama 服务器 {0} 的凭据适用于用户 {1}。该用户不具备下载该文件的权限。该 skyp 文件由 {2} 下载。</value>
+    <value>Skyline 中保存的 Panorama 服务器 {0} 的凭据仅适用于用户 {1}。该用户不具备下载该文件的权限。该 skyp 文件由 {2} 下载。</value>
   </data>
   <data name="SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_invalid_" xml:space="preserve">
     <value>Skyline 中保存的 Panorama 服务器 {0} 的凭据无效。</value>
   </data>
   <data name="SkypDownloadException_GetMessage_The_skyp_file_was_downloaded_by_the_user__0___Credentials_saved_in_Skyline_for_this_server_are_for_the_user__1__" xml:space="preserve">
-    <value>该 skyp 文件由用户 {0} 下载。Skyline 中保存的此服务器的凭据适用于用户 {1}。</value>
+    <value>该 skyp 文件由用户 {0} 下载。Skyline 中保存的此服务器凭据仅适用于用户 {1}。</value>
   </data>
   <data name="SkypDownloadException_GetMessage_Would_you_like_to_add__0__as_a_Panorama_server_in_Skyline_" xml:space="preserve">
     <value>您想在 Skyline 中添加 {0} 作为 Panorama 服务器吗?</value>
@@ -10302,7 +10302,7 @@ Invalid peptide sequence at position 18
     <value>{0} 非 Panorama 服务器上有效的 URL。</value>
   </data>
   <data name="SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive_file___0____Found_filename__1__instead_in_the_URL__2__" xml:space="preserve">
-    <value>应提供共享的 Skyline 文档存档文件 ({0}) 的 URL。但在 URL {2} 中找到的文件名为 {1}。</value>
+    <value>应有共享 Skyline 存档文件({0})的 URL。但在 URL {2} 中找到的文件名为 {1}。</value>
   </data>
   <data name="SkypFile_GetSkyFileUrl_File_does_not_contain_the_URL_of_a_shared_Skyline_archive_file___0___on_a_Panorama_server_" xml:space="preserve">
     <value>文件不包括 Panorama 服务器上共享 Skyline 存档文档 ({0}) 的 URL。</value>
@@ -10470,7 +10470,7 @@ Invalid peptide sequence at position 18
     <value>所选行没有任何过滤器</value>
   </data>
   <data name="SpectraGridForm_AddSpectrumFilters_There_were_no_matching_precursors_to_add_any_filters_to_" xml:space="preserve">
-    <value>没有匹配的母离子可添加任何过滤器。</value>
+    <value>没有匹配的母离子来使用任何过滤器。</value>
   </data>
   <data name="SpectraGridForm_GetDefaultViewSpec_Default" xml:space="preserve">
     <value>默认</value>
@@ -10479,7 +10479,7 @@ Invalid peptide sequence at position 18
     <value>显示所有谱图</value>
   </data>
   <data name="SpectraGridForm_GetSummaryMessage_Showing_spectra_near__0__precursors_between__1__and__2_" xml:space="preserve">
-    <value>显示 {1} 和 {2} 之间靠近 {0} 母离子的谱图</value>
+    <value>显示 {1} 和 {2} 之间并靠近 {0} 母离子的谱图</value>
   </data>
   <data name="SpectraGridForm_GetSummaryMessage_Showing_spectra_near_precursor_m_z__0_" xml:space="preserve">
     <value>显示接近母离子质荷比 {0} 的谱图</value>
@@ -10518,13 +10518,13 @@ Invalid peptide sequence at position 18
     <value>无谱图列 {0}</value>
   </data>
   <data name="SpectrumClassFilter_Ms1FilterPage_Criteria_which_MS1_spectra_must_satisfy_to_be_included_in_extracted_chromatogram" xml:space="preserve">
-    <value>MS1 谱图必须满足才能包含在提取的色谱图中的条件</value>
+    <value>MS1 谱图能够被包含在提取的色谱图中的必要条件</value>
   </data>
   <data name="SpectrumClassFilter_Ms1FilterPage_MS1" xml:space="preserve">
     <value>MS1</value>
   </data>
   <data name="SpectrumClassFilter_Ms2FilterPage_Criteria_which_spectra_with_MS_level_2_or_higher_must_satisfy_to_be_included_in_extracted_chromatogram" xml:space="preserve">
-    <value>MS 级别为 2 或以上的谱图必须满足才能包含在所提取的色谱图中的条件</value>
+    <value>MS 级别为 2 或以上的谱图能够被包含在所提取的色谱图中的必要条件</value>
   </data>
   <data name="SpectrumClassFilter_Ms2FilterPage_MS2_" xml:space="preserve">
     <value>MS2+</value>
@@ -10869,7 +10869,7 @@ Invalid peptide sequence at position 18
     <value>TSV （制表符分隔）</value>
   </data>
   <data name="TextUtil_DeterminDsvSeparator_Unable_to_determine_format_of_delimiter_separated_value_file" xml:space="preserve">
-    <value>无法确定分隔符分隔的值文件的格式</value>
+    <value>无法识别分隔符分隔值文件的格式</value>
   </data>
   <data name="TextUtil_FileDialogFiltersAll_All_Files" xml:space="preserve">
     <value>所有文件</value>
@@ -11764,7 +11764,7 @@ Invalid peptide sequence at position 18
     <value>值“{0}”对于参数 {1} 无效，该参数必须是以逗号分隔的碎片离子类型列表(a, b, c, x, y, z, p)。</value>
   </data>
   <data name="ValueInvalidMzToleranceException_ValueInvalidMzToleranceException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_value_and_a_unit__For_example___2__" xml:space="preserve">
-    <value>{0} 值对于参数 {1} 无效，该参数需要的是值和单位。例如: {2}。</value>
+    <value>{0} 值对于参数 {1} 无效，该参数需要的是一个值和一个单位。例如: {2}。</value>
   </data>
   <data name="ValueInvalidNumberListException_ValueInvalidNumberListException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_list_of_decimal_numbers_" xml:space="preserve">
     <value>值 {0} 对于必须是十进制数的参数清单 {1} 无效。</value>
