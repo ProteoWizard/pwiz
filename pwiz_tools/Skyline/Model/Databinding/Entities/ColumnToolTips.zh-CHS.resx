@@ -672,7 +672,7 @@
     <value>色谱图的质量误差。</value>
   </data>
   <data name="MatchingPrecursors">
-    <value>所选母离子的子集，其母离子质荷比与谱图网格中的行表示的任何谱图相匹配。</value>
+    <value>所选母离子的子集，其母离子质荷比与谱图网格中以行表示的任何谱图相匹配。</value>
   </data>
   <data name="Max">
     <value>最大</value>
@@ -868,7 +868,7 @@
     <value>分离的母离子的质荷比值</value>
   </data>
   <data name="Ms2Precursors">
-    <value>对于 MS 级别 3 或更高的谱图，第一级母离子分裂后隔离的母离子的质荷比值</value>
+    <value>对于 MS 级别 3 或更高的谱图，第一级母离子分裂后而隔离的母离子的质荷比值</value>
   </data>
   <data name="MsLevel">
     <value>指明该结果是否仅使用母离子强度（一级质谱）或子离子强度（二级质谱）获得。</value>
@@ -1084,7 +1084,7 @@
 或如果未分配保留时间回归，则为 #N/A。</value>
   </data>
   <data name="PresetScanConfiguration">
-    <value>代表应用于该谱图的设置的数字</value>
+    <value>用于代表该谱图的设置的数字</value>
   </data>
   <data name="PreviousAa">
     <value>上一个 Aa</value>
@@ -1330,13 +1330,13 @@
     <value>通过仪器方法添加到谱图的文本描述</value>
   </data>
   <data name="ScanWindowWidth">
-    <value>谱图可能具有强度值的质荷比值上限和下限之间的差异</value>
+    <value>谱图中可能含有的强度值，其质荷比值上限和下限之间的差异</value>
   </data>
   <data name="Score">
     <value>特定特征的数值。</value>
   </data>
   <data name="ShapeCorrelation">
-    <value>该离子对的色谱峰相较于同一母离子下所有离子对的中位数峰形状的 Pearson 关联。</value>
+    <value>该离子对的色谱峰对比同一母离子下所有离子对的中位数峰形状的 Pearson 关联。</value>
   </data>
   <data name="Skewness">
     <value>色谱峰不对称性的测量值。</value>
@@ -1351,7 +1351,7 @@
     <value>标准化分子标识符</value>
   </data>
   <data name="SpectrumFilter">
-    <value>谱图必须满足才能包含在提取的离子色谱图中的额外条件</value>
+    <value>谱图必须满足被包含在提取的离子色谱图中的额外条件</value>
   </data>
   <data name="SpectrumIds">
     <value>用于色谱图的谱图标识符。</value>
