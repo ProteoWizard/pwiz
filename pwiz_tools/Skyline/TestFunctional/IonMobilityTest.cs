@@ -817,7 +817,7 @@ namespace pwiz.SkylineTestFunctional
             var actualDT3 = result.GetIonMobilityInfo(key3).First().IonMobility.Mobility.Value;
             var actualOffset3 = result.GetIonMobilityInfo(key3).First().HighEnergyIonMobilityValueOffset.Value;
             const double expectedDT2 = 5.7269; // Was 5.5889 before we started looking for isotope envelope match
-            const double expectedOffset2 = -1.242;
+            const double expectedOffset2 = -0.965984;
             var actualDT2 = result.GetIonMobilityInfo(key2).First().IonMobility.Mobility.Value;
             var actualOffset2 = result.GetIonMobilityInfo(key2).First().HighEnergyIonMobilityValueOffset.Value;
             AssertEx.AreEqual(expectedDT3, actualDT3, .001);

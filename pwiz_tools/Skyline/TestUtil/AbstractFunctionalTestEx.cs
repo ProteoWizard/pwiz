@@ -69,7 +69,7 @@ namespace pwiz.SkylineTestUtil
         /// Open a document and wait for loading completion.
         /// </summary>
         /// <param name="documentPath">File path of document</param>
-        public void OpenDocument(string documentPath)
+        public SrmDocument OpenDocument(string documentPath)
         {
             string documentFile = null;
             foreach (var testFileDir in TestFilesDirs)
@@ -89,7 +89,7 @@ namespace pwiz.SkylineTestUtil
             {
                 RunUI(() => SkylineWindow.OpenFile(documentFile));
             }
-            WaitForDocumentLoaded();
+            return WaitForDocumentLoaded();
         }
 
         public void OpenDocumentNoWait(string documentPath)
