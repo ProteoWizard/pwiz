@@ -5413,7 +5413,7 @@ const TermInfo termInfos_[] =
     {IMS_max_count_of_pixels_y, "IMS:1000043", "max count of pixels y", "Maximum number of pixels of the y-axis of the image.", false},
     {IMS_max_dimension_x, "IMS:1000044", "max dimension x", "Maximum length of the image in x-axis.", false},
     {IMS_max_dimension_y, "IMS:1000045", "max dimension y", "Maximum length of the image in y-axis.", false},
-    {IMS_pixel_size__x_, "IMS:1000046", "pixel size (x)", "Describes the length of a pixel in the x dimension. If no pixel size y (IMS:1000047) is explicitly specified, then this also describes the length of a pixel in the y dimension.", false},
+    {IMS_pixel_size__x_, "IMS:1000046", "pixel size x", "Describes the length of a pixel in the x dimension. If no pixel size y (IMS:1000047) is explicitly specified, then this also describes the length of a pixel in the y dimension.", false},
     {IMS_pixel_size_y, "IMS:1000047", "pixel size y", "Describes the length of a pixel in the y dimension.", false},
     {IMS_scan_type, "IMS:1000048", "scan type", "Shows the direction in which the lines were scanned.", false},
     {IMS_line_scan_direction, "IMS:1000049", "line scan direction", "Description in wich direction the lines of the sample were scanned.", false},
