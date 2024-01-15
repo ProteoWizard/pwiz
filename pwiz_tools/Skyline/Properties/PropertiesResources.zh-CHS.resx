@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="AnnotationDefList_Label_Annotations" xml:space="preserve">
+    <value>注释(&amp;A)：</value>
+  </data>
+  <data name="AnnotationDefList_Title_Define_Annotations" xml:space="preserve">
+    <value>定义注释</value>
+  </data>
+  <data name="BackgroundProteomeList_Label_Background_Proteomes" xml:space="preserve">
+    <value>背景蛋白质组(&amp;B)：</value>
+  </data>
+  <data name="BackgroundProteomeList_Title_Edit_Background_Proteomes" xml:space="preserve">
+    <value>编辑背景蛋白质组</value>
+  </data>
+  <data name="CollisionEnergyList_Label_Collision_Energy_Regression" xml:space="preserve">
+    <value>碰撞能量回归(&amp;C)：</value>
+  </data>
+  <data name="CollisionEnergyList_Title_Edit_Collision_Energy_Regressions" xml:space="preserve">
+    <value>编辑碰撞能量回归</value>
+  </data>
+  <data name="ColorSchemeList_DEFAULT_Skyline_classic" xml:space="preserve">
+    <value>Skyline 经典</value>
+  </data>
+  <data name="ColorSchemeList_GetDefaults_Eggplant_lemonade" xml:space="preserve">
+    <value>茄色配柠檬色</value>
+  </data>
+  <data name="ColorSchemeList_GetDefaults_High_contrast" xml:space="preserve">
+    <value>高对比度</value>
+  </data>
+  <data name="CompensationVoltageList_Label_Compensation__Voltage_Parameters_" xml:space="preserve">
+    <value>补偿电压参数(&amp;V)：</value>
+  </data>
+  <data name="CompensationVoltageList_Title_Edit_Compensation_Voltage_Parameter_Sets" xml:space="preserve">
+    <value>编辑补偿电压参数集</value>
+  </data>
+  <data name="DeclusterPotentialList_Label_Declustering_Potential_Regressions" xml:space="preserve">
+    <value>去簇电压回归(&amp;D)：</value>
+  </data>
+  <data name="DeclusterPotentialList_Title_Edit_Declustering_Potential_Regressions" xml:space="preserve">
+    <value>编辑去簇电压回归</value>
+  </data>
+  <data name="EnzymeList_Label_Enzymes" xml:space="preserve">
+    <value>酶(&amp;Z)：</value>
+  </data>
+  <data name="EnzymeList_Title_Edit_Enzymes" xml:space="preserve">
+    <value>编辑酶</value>
+  </data>
+  <data name="HeavyModList_EditItem_Edit_Isotope_Modification" xml:space="preserve">
+    <value>编辑同位素修饰</value>
+  </data>
+  <data name="HeavyModList_Title_Edit_Isotope_Modifications" xml:space="preserve">
+    <value>编辑同位素修饰</value>
+  </data>
+  <data name="IonMobilityLibraryList_Label_Ion_Mobility_Libraries_" xml:space="preserve">
+    <value>离子迁移库：</value>
+  </data>
+  <data name="IonMobilityLibraryList_Title_Edit_Ion_Mobility_Libraries" xml:space="preserve">
+    <value>编辑离子迁移库</value>
+  </data>
+  <data name="IrtStandardList_Label_iRT_Standards" xml:space="preserve">
+    <value>iRT 标准</value>
+  </data>
+  <data name="IrtStandardList_Title_Edit_iRT_Standards" xml:space="preserve">
+    <value>编辑 iRT 标准</value>
+  </data>
+  <data name="IsolationSchemeList_GetDefaults_Results__0_5_margin_" xml:space="preserve">
+    <value>结果（0.5 差异）</value>
+  </data>
+  <data name="IsolationSchemeList_GetDefaults_Results_only" xml:space="preserve">
+    <value>仅有结果</value>
+  </data>
+  <data name="IsolationSchemeList_Label_Isolation_scheme" xml:space="preserve">
+    <value>分离方案(&amp;I)：</value>
+  </data>
+  <data name="IsolationSchemeList_Title_Edit_Isolation_Scheme" xml:space="preserve">
+    <value>编辑分离方案</value>
+  </data>
+  <data name="IsotopeEnrichments_DEFAULT_Default" xml:space="preserve">
+    <value>默认</value>
+  </data>
+  <data name="IsotopeEnrichmentsList_Label_Isotope_labeling_entrichment" xml:space="preserve">
+    <value>同位素标记富集(&amp;I)：</value>
+  </data>
+  <data name="IsotopeEnrichmentsList_Title_Edit_Isotope_Labeling_Enrichments" xml:space="preserve">
+    <value>编辑同位素标记富集</value>
+  </data>
+  <data name="MeasuredIonList_Label_Special_ion" xml:space="preserve">
+    <value>特殊离子(&amp;S)：</value>
+  </data>
+  <data name="MeasuredIonList_Title_Edit_Special_Ions" xml:space="preserve">
+    <value>编辑特殊离子</value>
+  </data>
+  <data name="MetadataRuleSetList_Label_Rule_Set" xml:space="preserve">
+    <value>规则集</value>
+  </data>
+  <data name="MetadataRuleSetList_Title_Rule_Sets" xml:space="preserve">
+    <value>规则集</value>
+  </data>
+  <data name="OptimizationLibraryList_Label_Optimization_Database" xml:space="preserve">
+    <value>最优化数据库：</value>
+  </data>
+  <data name="OptimizationLibraryList_Title_Edit_Optimization_Databases" xml:space="preserve">
+    <value>编辑最优化数据库</value>
+  </data>
+  <data name="PeakScoringModelList_Label_Peak_Scoring_Models" xml:space="preserve">
+    <value>峰得分模型</value>
+  </data>
+  <data name="PeakScoringModelList_Title_Edit_Peak_Scoring_Models" xml:space="preserve">
+    <value>编辑峰得分模型</value>
+  </data>
+  <data name="PeptideExcludeList_Label_Exclusions" xml:space="preserve">
+    <value>排除(&amp;E)：</value>
+  </data>
+  <data name="PeptideExcludeList_Title_Edit_Exclusions" xml:space="preserve">
+    <value>编辑排除</value>
+  </data>
+  <data name="RemoteAccountList_Label_Remote_Accounts" xml:space="preserve">
+    <value>远程账户</value>
+  </data>
+  <data name="RemoteAccountList_Title_Edit_Remote_Accounts" xml:space="preserve">
+    <value>编辑远程账户</value>
+  </data>
+  <data name="RetentionTimeList_Label_Retention_Time_Regression" xml:space="preserve">
+    <value>保留时间回归(&amp;R)：</value>
+  </data>
+  <data name="RetentionTimeList_Title_Edit_Retention_Time_Regressions" xml:space="preserve">
+    <value>编辑保留时间回归</value>
+  </data>
+  <data name="RTScoreCalculatorList_AcceptList_The_regressions" xml:space="preserve">
+    <value>回归：</value>
+  </data>
+  <data name="RTScoreCalculatorList_AcceptList_will_be_deleted_because_the_calculators_they_depend_on_have_changed_Do_you_want_to_continue" xml:space="preserve">
+    <value>将被删除，因为其依靠的计算器已发生改变。您是否想要继续？</value>
+  </data>
+  <data name="RTScoreCalculatorList_Label_Retention_Time_Calculators" xml:space="preserve">
+    <value>保留时间计算器(&amp;R)：</value>
+  </data>
+  <data name="RTScoreCalculatorList_Title_Edit_Retention_Time_Calculators" xml:space="preserve">
+    <value>编辑保留时间计算器</value>
+  </data>
+  <data name="ServerList_Label__Servers" xml:space="preserve">
+    <value>服务器(&amp;S)</value>
+  </data>
+  <data name="ServerList_Title_Edit_Servers" xml:space="preserve">
+    <value>编辑服务器</value>
+  </data>
+  <data name="SpectralLibraryList_Label_Libraries" xml:space="preserve">
+    <value>库(&amp;L)：</value>
+  </data>
+  <data name="SpectralLibraryList_Title_Edit_Libraries" xml:space="preserve">
+    <value>编辑库</value>
+  </data>
+  <data name="SrmSettingsList_DefaultName_Default" xml:space="preserve">
+    <value>默认</value>
+  </data>
+  <data name="SrmSettingsList_Label_Saved_Settings" xml:space="preserve">
+    <value>保存的设置(&amp;S)：</value>
+  </data>
+  <data name="SrmSettingsList_Title_Edit_Settings" xml:space="preserve">
+    <value>编辑设置</value>
+  </data>
+  <data name="StaticModList_Label_Modifications" xml:space="preserve">
+    <value>修饰(&amp;M)：</value>
+  </data>
+  <data name="StaticModList_Title_Edit_Structural_Modifications" xml:space="preserve">
+    <value>编辑结构修饰</value>
+  </data>
+</root>

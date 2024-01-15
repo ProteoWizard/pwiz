@@ -89,7 +89,7 @@ namespace pwiz.Skyline.SettingsUI
             labelFormula.Text = labelFormulaText;
             labelAverage.Text = labelAverageText;
             labelMono.Text = labelMonoText;
-            helpToolStripMenuItem.Text = Resources.FormulaBox_FormulaBox_Help;
+            helpToolStripMenuItem.Text = SettingsUIResources.FormulaBox_FormulaBox_Help;
 
 
             Bitmap bm = Resources.PopupBtn;
@@ -520,9 +520,9 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                var helpText = TextUtil.LineSeparate(Resources.FormulaBox_helpToolStripMenuItem_Click_Formula_Help, 
+                var helpText = TextUtil.LineSeparate(SettingsUIResources.FormulaBox_helpToolStripMenuItem_Click_Formula_Help, 
                     string.Empty,
-                    Resources.FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__);
+                    SettingsUIResources.FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__);
                 if (_editMode != EditMode.formula_only)
                 {
                     helpText = TextUtil.LineSeparate(helpText, string.Empty, Adduct.Tips); // Charge implies ion formula, so help with adduct descriptions as well

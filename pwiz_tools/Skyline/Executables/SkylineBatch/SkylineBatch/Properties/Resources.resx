@@ -400,9 +400,6 @@
   <data name="SkylineBatchConfigForm_btnDownloadAnnotations_Click_Download_Annotations_From_Panorama" xml:space="preserve">
     <value>Download Annotations From Panorama</value>
   </data>
-  <data name="DataServerInfo_ServerFromUi_Error_parsing_the_URL__Please_correct_the_URL_and_try_again_" xml:space="preserve">
-    <value>Error parsing the URL. Please correct the URL and try again.</value>
-  </data>
   <data name="AddServerForm_UpdateFileList__0__files___1_" xml:space="preserve">
     <value>{0} files, {1}</value>
   </data>
@@ -897,5 +894,11 @@
   </data>
   <data name="MainForm_btnOpenTemplate_Click_The_template_file_for__0__has_not_been_downloaded__Please_run__0__and_try_again" xml:space="preserve">
     <value>The template file for {0} has not been downloaded. Please run {0} and try again.</value>
+  </data>
+  <data name="RemoteFileSource_ValidateInputs_Error_parsing_the_URL_" xml:space="preserve">
+      <value>Error parsing the URL.</value>
+  </data>
+  <data name="RemoteFileSource_ValidateInputs_Please_correct_the_URL_and_try_again_" xml:space="preserve">
+      <value>Please correct the URL and try again.</value>
   </data>
 </root>

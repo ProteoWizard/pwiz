@@ -222,12 +222,12 @@ namespace pwiz.Skyline.Model.Lists
 
         public override string Label
         {
-            get { return Resources.ListDefList_Label_Lists; }
+            get { return ListsResources.ListDefList_Label_Lists; }
         }
 
         public override string Title
         {
-            get { return Resources.ListDefList_Title_Define_Lists; }
+            get { return ListsResources.ListDefList_Title_Define_Lists; }
         }
 
         public ICollection<ListData> CreateEmptyList()

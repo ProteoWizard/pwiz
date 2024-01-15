@@ -87,17 +87,17 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 message = Resources.ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_Please_specify_a_path_to_an_existing_spectral_library;
             else if (PathEx.HasExtension(path, BiblioSpecLiteSpec.EXT_REDUNDANT))
             {
-                message = TextUtil.LineSeparate(string.Format(Resources.ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__appears_to_be_a_redundant_library_, path),
+                message = TextUtil.LineSeparate(string.Format(IonMobilityResources.ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__appears_to_be_a_redundant_library_, path),
                                                 Resources.ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_Please_choose_a_non_redundant_library_);
             }
             else if (!PathEx.HasExtension(path, BiblioSpecLiteSpec.EXT))
             {
-                message = TextUtil.LineSeparate(string.Format(Resources.ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__is_not_a_BiblioSpec_library_, path),
+                message = TextUtil.LineSeparate(string.Format(IonMobilityResources.ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__is_not_a_BiblioSpec_library_, path),
                                                 Resources.ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_Only_BiblioSpec_libraries_contain_enough_ion_mobility_information_to_support_this_operation_);
             }
             else if (!File.Exists(path))
             {
-                message = TextUtil.LineSeparate(string.Format(Resources.ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__does_not_exist_, path),
+                message = TextUtil.LineSeparate(string.Format(IonMobilityResources.ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__does_not_exist_, path),
                                                 Resources.ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_Please_specify_a_path_to_an_existing_spectral_library_);
             }
             return message;
@@ -120,7 +120,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             var librarySpec = Library;
             if (librarySpec == null)
             {
-                MessageDlg.Show(this, Resources.ImportIonMobilityFromSpectralLibrary_OkDialog_Please_choose_the_library_you_would_like_to_add_);
+                MessageDlg.Show(this, IonMobilityResources.ImportIonMobilityFromSpectralLibrary_OkDialog_Please_choose_the_library_you_would_like_to_add_);
                 return;
             }
 

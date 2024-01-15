@@ -479,7 +479,7 @@ namespace pwiz.Skyline.Controls
                         setUsedMatches.Add(match.Protein.Name);
                         listItem.ImageIndex = (int) ImageId.peptide;
                         var tooltip = new StringBuilder();
-                        tooltip.AppendLine(Resources.StatementCompletionTextBox_CreateListViewItems_Descriptions)
+                        tooltip.AppendLine(ControlsResources.StatementCompletionTextBox_CreateListViewItems_Descriptions)
                                .Append(match.Protein.ProteinMetadata.TextForMatchTypes(matchTypes));
                         foreach (var name in match.Protein.AlternativeNames)
                         {
@@ -549,7 +549,7 @@ namespace pwiz.Skyline.Controls
                         setUsedMatches.Add(match.Protein.Name);
                         listItem.ImageIndex = (int) ImageId.protein;
                         var tooltip = new StringBuilder();
-                        tooltip.AppendLine(Resources.StatementCompletionTextBox_CreateListViewItems_Descriptions)
+                        tooltip.AppendLine(ControlsResources.StatementCompletionTextBox_CreateListViewItems_Descriptions)
                             .Append(match.Protein.ProteinMetadata.TextForMatchTypes(displayMatchTypes));
                         foreach (var altName in match.Protein.AlternativeNames)
                         {
@@ -604,7 +604,7 @@ namespace pwiz.Skyline.Controls
                     if (match.Protein.AlternativeNames.Count > 0)
                     {
                         alternativeNames.AddRange(match.Protein.AlternativeNames);
-                        StringBuilder tooltip = new StringBuilder(Resources.StatementCompletionTextBox_CreateListViewItems_Alternative_Names);
+                        StringBuilder tooltip = new StringBuilder(ControlsResources.StatementCompletionTextBox_CreateListViewItems_Alternative_Names);
                         foreach (var altName in alternativeNames)
                         {
                             if (altName.Name == mainName.Name)

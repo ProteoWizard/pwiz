@@ -23,7 +23,6 @@ using System.Linq;
 using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding
@@ -64,10 +63,10 @@ namespace pwiz.Skyline.Model.Databinding
 
         // ReSharper disable LocalizableElement
         public static readonly FormatSuggestion FullPrecision = new FormatSuggestion("R", 
-            ()=>TextUtil.SpaceSeparate(Resources.FormatSuggestion_FullPrecision_Full_Precision, Math.PI.ToString("R")));
-        public static readonly FormatSuggestion Scientific = new FormatSuggestion("0.0000E+0", ()=>TextUtil.SpaceSeparate(Resources.FormatSuggestion_Scientific_Scientific, Math.PI.ToString("0.0000E+0")));
-        public static readonly FormatSuggestion Integer = new FormatSuggestion("0", ()=>TextUtil.SpaceSeparate(Resources.FormatSuggestion_Integer_Integer, Math.PI.ToString("0")));
-        public static readonly FormatSuggestion Percent = new FormatSuggestion("0.#%", ()=>TextUtil.SpaceSeparate(Resources.FormatSuggestion_Percent_Percent, Math.PI.ToString("0.#%")));
+            ()=>TextUtil.SpaceSeparate(DatabindingResources.FormatSuggestion_FullPrecision_Full_Precision, Math.PI.ToString("R")));
+        public static readonly FormatSuggestion Scientific = new FormatSuggestion("0.0000E+0", ()=>TextUtil.SpaceSeparate(DatabindingResources.FormatSuggestion_Scientific_Scientific, Math.PI.ToString("0.0000E+0")));
+        public static readonly FormatSuggestion Integer = new FormatSuggestion("0", ()=>TextUtil.SpaceSeparate(DatabindingResources.FormatSuggestion_Integer_Integer, Math.PI.ToString("0")));
+        public static readonly FormatSuggestion Percent = new FormatSuggestion("0.#%", ()=>TextUtil.SpaceSeparate(DatabindingResources.FormatSuggestion_Percent_Percent, Math.PI.ToString("0.#%")));
         // ReSharper restore LocalizableElement
         private static ImmutableList<FormatSuggestion> ALL = ImmutableList.ValueOf(new[]
         {

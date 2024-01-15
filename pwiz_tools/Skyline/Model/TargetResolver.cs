@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Skyline.Model.Irt;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model
 {
@@ -163,7 +162,7 @@ namespace pwiz.Skyline.Model
             }
             if (matches.Length > 1)
             {
-                errorMessage = string.Format(Resources.TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0____could_be_any_of__1_, text, string.Join(@", ",matches.Select(t => t.InvariantName)));
+                errorMessage = string.Format(ModelResources.TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0____could_be_any_of__1_, text, string.Join(@", ",matches.Select(t => t.InvariantName)));
                 return null;
             }
             Target target;
@@ -183,7 +182,7 @@ namespace pwiz.Skyline.Model
 
             if (target == null)
             {
-                errorMessage = string.Format(Resources.TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0___, text);
+                errorMessage = string.Format(ModelResources.TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0___, text);
             }
 
             return target;

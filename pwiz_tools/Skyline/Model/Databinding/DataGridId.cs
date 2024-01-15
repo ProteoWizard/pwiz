@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -28,11 +27,11 @@ namespace pwiz.Skyline.Model.Databinding
     public class DataGridType
     {
         private Func<string> _titleFunc;
-        public static DataGridType DOCUMENT_GRID = new DataGridType(@"DocumentGrid", ()=>Resources.DataGridType_DOCUMENT_GRID_Document_Grid);
-        public static DataGridType RESULTS_GRID = new DataGridType(@"ResultsGrid", ()=>Resources.DataGridType_RESULTS_GRID_Results_Grid);
-        public static DataGridType GROUP_COMPARISON = new DataGridType(@"GroupComparison", ()=>Resources.DataGridType_GROUP_COMPARISON_Group_Comparison);
-        public static DataGridType LIST = new DataGridType(Resources.DataGridType_LIST_List, ()=>Resources.DataGridType_LIST_List);
-        public static DataGridType AUDIT_LOG = new DataGridType(@"AuditLog", ()=>Resources.DataGridType_AUDIT_LOG_Audit_Log);
+        public static DataGridType DOCUMENT_GRID = new DataGridType(@"DocumentGrid", ()=>DatabindingResources.DataGridType_DOCUMENT_GRID_Document_Grid);
+        public static DataGridType RESULTS_GRID = new DataGridType(@"ResultsGrid", ()=>DatabindingResources.DataGridType_RESULTS_GRID_Results_Grid);
+        public static DataGridType GROUP_COMPARISON = new DataGridType(@"GroupComparison", ()=>DatabindingResources.DataGridType_GROUP_COMPARISON_Group_Comparison);
+        public static DataGridType LIST = new DataGridType(DatabindingResources.DataGridType_LIST_List, ()=>DatabindingResources.DataGridType_LIST_List);
+        public static DataGridType AUDIT_LOG = new DataGridType(@"AuditLog", ()=>DatabindingResources.DataGridType_AUDIT_LOG_Audit_Log);
 
         public static IEnumerable<DataGridType> All
         {

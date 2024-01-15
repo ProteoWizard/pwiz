@@ -270,7 +270,7 @@ namespace pwiz.Skyline.ToolsUI
             //Ensure the tool Title is unique.
             if (!IsUniqueTitle(tool.Title))
             {
-                MessageDlg.Show(this, Resources.ConfigureToolsDlg_CheckPassToolInternal_Tool_titles_must_be_unique__please_enter_a_unique_title_for_this_tool_);
+                MessageDlg.Show(this, ToolsUIResources.ConfigureToolsDlg_CheckPassToolInternal_Tool_titles_must_be_unique__please_enter_a_unique_title_for_this_tool_);
                 textTitle.Focus();
                 return false;
             }
@@ -291,7 +291,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 catch (Exception)
                 {
-                    MessageDlg.Show(this, Resources.ConfigureToolsDlg_CheckPassToolInternal_Please_specify_a_valid_URL_);
+                    MessageDlg.Show(this, ToolsUIResources.ConfigureToolsDlg_CheckPassToolInternal_Please_specify_a_valid_URL_);
                     textCommand.Focus();
                     return false;
                 }
@@ -334,7 +334,7 @@ namespace pwiz.Skyline.ToolsUI
                         this,
                         string.Format(TextUtil.LineSeparate(
                             Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__,
-                            Resources.ConfigureToolsDlg_CheckPassTool__Note__if_you_would_like_the_command_to_launch_a_link__make_sure_to_include_http____or_https___),
+                            ToolsUIResources.ConfigureToolsDlg_CheckPassTool__Note__if_you_would_like_the_command_to_launch_a_link__make_sure_to_include_http____or_https___),
                             tool.Title), 
                         MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
                     {
@@ -347,8 +347,8 @@ namespace pwiz.Skyline.ToolsUI
             if (tool.Arguments.Contains(ToolMacros.INPUT_REPORT_TEMP_PATH) && string.IsNullOrEmpty(tool.ReportTitle))
             {
                 MessageDlg.Show(this, TextUtil.LineSeparate(
-                            string.Format(Resources.ConfigureToolsDlg_CheckPassToolInternal_You_have_provided__0__as_an_argument_but_have_not_selected_a_report_, ToolMacros.INPUT_REPORT_TEMP_PATH),
-                            string.Format(Resources.ConfigureToolsDlg_CheckPassToolInternal_Please_select_a_report_or_remove__0__from_arguments_, ToolMacros.INPUT_REPORT_TEMP_PATH)));
+                            string.Format(ToolsUIResources.ConfigureToolsDlg_CheckPassToolInternal_You_have_provided__0__as_an_argument_but_have_not_selected_a_report_, ToolMacros.INPUT_REPORT_TEMP_PATH),
+                            string.Format(ToolsUIResources.ConfigureToolsDlg_CheckPassToolInternal_Please_select_a_report_or_remove__0__from_arguments_, ToolMacros.INPUT_REPORT_TEMP_PATH)));
                 comboReport.Focus();
                 return false;                  
             }
@@ -385,8 +385,8 @@ namespace pwiz.Skyline.ToolsUI
 
                 if (ToolDescription.IsWebPageCommand(textCommand.Text))
                 {
-                    labelCommand.Text = Resources.ConfigureToolsDlg_textCommand_TextChanged_U_RL_;
-                    labelArguments.Text = Resources.ConfigureToolsDlg_textCommand_TextChanged__Query_params_;
+                    labelCommand.Text = ToolsUIResources.ConfigureToolsDlg_textCommand_TextChanged_U_RL_;
+                    labelArguments.Text = ToolsUIResources.ConfigureToolsDlg_textCommand_TextChanged__Query_params_;
                     if (textInitialDirectory.Enabled)
                     {
                         textInitialDirectory.Enabled = false;
@@ -399,8 +399,8 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 else
                 {
-                    labelCommand.Text = Resources.ConfigureToolsDlg_textCommand_TextChanged__Command_;
-                    labelArguments.Text = Resources.ConfigureToolsDlg_textCommand_TextChanged_A_rguments_;
+                    labelCommand.Text = ToolsUIResources.ConfigureToolsDlg_textCommand_TextChanged__Command_;
+                    labelArguments.Text = ToolsUIResources.ConfigureToolsDlg_textCommand_TextChanged_A_rguments_;
                     if (!textInitialDirectory.Enabled)
                     {
                         textInitialDirectory.Enabled = true;
@@ -712,12 +712,12 @@ namespace pwiz.Skyline.ToolsUI
             using (var dlg = new OpenFileDialog())
             {
                 dlg.Filter = TextUtil.FileDialogFiltersAll(
-                    TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_All_Executables, ToolDescription.EXTENSIONS[i++]),
-                    TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Command_Files, ToolDescription.EXTENSIONS[i++]),
-                    TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Information_Files, ToolDescription.EXTENSIONS[i++]),
-                    TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Batch_Files, ToolDescription.EXTENSIONS[i++], ToolDescription.EXTENSIONS[i++]),
-                    TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Python_Scripts, ToolDescription.EXTENSIONS[i++]),
-                    TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Perl_Scripts, ToolDescription.EXTENSIONS[i])
+                    TextUtil.FileDialogFilter(ToolsUIResources.ConfigureToolsDlg_btnFindCommand_Click_All_Executables, ToolDescription.EXTENSIONS[i++]),
+                    TextUtil.FileDialogFilter(ToolsUIResources.ConfigureToolsDlg_btnFindCommand_Click_Command_Files, ToolDescription.EXTENSIONS[i++]),
+                    TextUtil.FileDialogFilter(ToolsUIResources.ConfigureToolsDlg_btnFindCommand_Click_Information_Files, ToolDescription.EXTENSIONS[i++]),
+                    TextUtil.FileDialogFilter(ToolsUIResources.ConfigureToolsDlg_btnFindCommand_Click_Batch_Files, ToolDescription.EXTENSIONS[i++], ToolDescription.EXTENSIONS[i++]),
+                    TextUtil.FileDialogFilter(ToolsUIResources.ConfigureToolsDlg_btnFindCommand_Click_Python_Scripts, ToolDescription.EXTENSIONS[i++]),
+                    TextUtil.FileDialogFilter(ToolsUIResources.ConfigureToolsDlg_btnFindCommand_Click_Perl_Scripts, ToolDescription.EXTENSIONS[i])
                 );
                 dlg.FilterIndex = 1;
                 dlg.Multiselect = false;
@@ -898,7 +898,7 @@ namespace pwiz.Skyline.ToolsUI
                     }
                     else if (menuItem.Text == Resources.ToolMacros__listArguments_Collected_Arguments)
                     {
-                        content = Resources.ConfigureToolsDlg_PopulateMacroDropdown_Arguments_collected_at_run_time;
+                        content = ToolsUIResources.ConfigureToolsDlg_PopulateMacroDropdown_Arguments_collected_at_run_time;
                     }
                     else
                     {
@@ -906,7 +906,7 @@ namespace pwiz.Skyline.ToolsUI
                     }
 
                     if (string.IsNullOrEmpty(content))
-                        content = Resources.ConfigureToolsDlg_PopulateMacroDropdown_N_A;
+                        content = ToolsUIResources.ConfigureToolsDlg_PopulateMacroDropdown_N_A;
 
                     menuItem.ToolTipText = content;
                 }
@@ -977,8 +977,8 @@ namespace pwiz.Skyline.ToolsUI
             {
                 DialogResult toSave = MultiButtonMsgDlg.Show(
                     this,
-                    string.Format(Resources.ConfigureToolsDlg_AddFromFile_You_must_save_changes_before_installing_tools__Would_you_like_to_save_changes_),
-                    MultiButtonMsgDlg.BUTTON_YES, Resources.ConfigureToolsDlg_AddFromFile_Cancel, false);
+                    string.Format(ToolsUIResources.ConfigureToolsDlg_AddFromFile_You_must_save_changes_before_installing_tools__Would_you_like_to_save_changes_),
+                    MultiButtonMsgDlg.BUTTON_YES, ToolsUIResources.ConfigureToolsDlg_AddFromFile_Cancel, false);
                 switch (toSave)
                 {
                     case (DialogResult.Yes):

@@ -30,7 +30,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Spectra;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -556,34 +555,26 @@ namespace pwiz.Skyline.Model.Results
                 var chromIds = new List<ChromKeyProviderIdPair>(_collectors.ChromKeys.Count);
                 for (int i = 0; i < _collectors.ChromKeys.Count; i++)
                     chromIds.Add(new ChromKeyProviderIdPair(_collectors.ChromKeys[i], i));
-
-                // The global chromatograms (TIC, Base Peak)  and QC traces are always at the end of the list
-                // of ChromIds.
-                _globalChromatogramExtractor.IndexOffset =
-                    chromIds.Count - _globalChromatogramExtractor.GlobalChromatogramIndexes.Count -
-                    _globalChromatogramExtractor.QcTraceByIndex.Count;
-
-                // Verify that the TIC and QC chromatograms are at the indexes where they are expected to be
-                for (int chromIndex = _globalChromatogramExtractor.IndexOffset; chromIndex < chromIds.Count; chromIndex++)
-                {
-                    var chromKey = chromIds[chromIndex].Key;
-                    Assume.AreEqual(SignedMz.ZERO, chromKey.Precursor);
-                    var globalChromIndex = chromIndex - _globalChromatogramExtractor.IndexOffset;
-                    if (_globalChromatogramExtractor.QcTraceByIndex.TryGetValue(globalChromIndex, out var qcTrace))
-                    {
-                        Assume.AreEqual(ChromExtractor.qc, chromKey.Extractor);
-                        Assume.AreEqual(qcTrace.Name, chromKey.ChromatogramGroupId?.QcTraceName);
-                    }
-                    else if (globalChromIndex == _globalChromatogramExtractor.TicChromatogramIndex)
-                    {
-                        Assume.AreEqual(ChromExtractor.summed, chromKey.Extractor);
-                    }
-                    else if (globalChromIndex == _globalChromatogramExtractor.BpcChromatogramIndex)
-                    {
-                        Assume.AreEqual(ChromExtractor.base_peak, chromKey.Extractor);
-                    }
-                }
+                VerifyGlobalChromatograms(chromIds);
                 return chromIds;
+            }
+        }
+
+        private void VerifyGlobalChromatograms(IList<ChromKeyProviderIdPair> chromIds)
+        {
+            var globalChromKeys = _globalChromatogramExtractor.ListChromKeys();
+            int indexFirstGlobalChromatogram = chromIds.Count - globalChromKeys.Count;
+            for (int relativeIndex = 0; relativeIndex < globalChromKeys.Count; relativeIndex++)
+            {
+                int absoluteIndex = indexFirstGlobalChromatogram + relativeIndex;
+                var expectedChromKey = globalChromKeys[relativeIndex];
+                var actualChromKey = chromIds[absoluteIndex].Key;
+                if (!Equals(expectedChromKey, actualChromKey))
+                {
+                    var message = string.Format(@"ChromKey mismatch at position {0}. Expected: {1} Actual: {2}",
+                        absoluteIndex, expectedChromKey, actualChromKey);
+                    Assume.Fail(message);
+                }
             }
         }
 
@@ -631,7 +622,10 @@ namespace pwiz.Skyline.Model.Results
             extra = null;
             if (SignedMz.ZERO.Equals(chromKey?.Precursor ?? SignedMz.ZERO))
             {
-                if (_globalChromatogramExtractor.GetChromatogram(id, out float[] times, out float[] intensities))
+                int indexFirstGlobalChromatogram =
+                    _collectors.ChromKeys.Count - _globalChromatogramExtractor.ChromatogramCount;
+                int indexInGlobalChromatogramExtractor = id - indexFirstGlobalChromatogram;
+                if (_globalChromatogramExtractor.GetChromatogramAt(indexInGlobalChromatogramExtractor, out float[] times, out float[] intensities))
                 {
                     timeIntensities = new TimeIntensities(times, intensities, null, null);
                     extra = new ChromExtra(0, 0);
@@ -1051,14 +1045,14 @@ namespace pwiz.Skyline.Model.Results
                             if (!nextSpectrum.RetentionTime.HasValue)
                             {
                                 throw new InvalidDataException(
-                                string.Format(Resources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_scan_time,
+                                string.Format(ResultsResources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_scan_time,
                                     _dataFile.GetSpectrumId(i)));
                             }
                             var precursors = nextSpectrum.Precursors;
                             if (precursors.Count < 1 || !precursors[0].PrecursorMz.HasValue)
                             {
                             throw new InvalidDataException(
-                                string.Format(Resources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_precursor_mz,
+                                string.Format(ResultsResources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_precursor_mz,
                                     _dataFile.GetSpectrumId(i)));
                             }
                             return new SpectrumInfo(i, new[] {nextSpectrum}, (float) nextSpectrum.RetentionTime.Value);

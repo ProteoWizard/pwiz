@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Util
                 }
                 using (var reader = new StringReader(clipboardText))
                 {
-                    e.Handled = PerformUndoableOperation(Resources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Paste,
+                    e.Handled = PerformUndoableOperation(UtilResources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Paste,
                         monitor => Paste(monitor, reader),
                         new BatchModifyInfo(BatchModifyAction.Paste, viewName,
                             rowFilter, clipboardText));
@@ -106,7 +106,7 @@ namespace pwiz.Skyline.Util
             else if (e.KeyCode == Keys.Delete && 0 == e.Modifiers)
             {
                 e.Handled = PerformUndoableOperation(
-                    Resources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Clear_cells, ClearCells,
+                    UtilResources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Clear_cells, ClearCells,
                     new BatchModifyInfo(BatchModifyAction.Clear, viewName, rowFilter));
             }
         }
@@ -202,7 +202,7 @@ namespace pwiz.Skyline.Util
                 {
                     return anyChanges;
                 }
-                longWaitBroker.Message = string.Format(Resources.DataGridViewPasteHandler_Paste_Pasting_row__0_, iRow + 1);
+                longWaitBroker.Message = string.Format(UtilResources.DataGridViewPasteHandler_Paste_Pasting_row__0_, iRow + 1);
                 string line = reader.ReadLine();
                 if (null == line)
                 {
@@ -254,7 +254,7 @@ namespace pwiz.Skyline.Util
                     return anyChanges;
                 }
                 longWaitBroker.ProgressValue = 100 * iGrouping / cellsByRow.Length;
-                longWaitBroker.Message = string.Format(Resources.DataGridViewPasteHandler_ClearCells_Cleared__0___1__rows, iGrouping, cellsByRow.Length);
+                longWaitBroker.Message = string.Format(UtilResources.DataGridViewPasteHandler_ClearCells_Cleared__0___1__rows, iGrouping, cellsByRow.Length);
                 var rowGrouping = cellsByRow[iGrouping];
                 var cells = rowGrouping.ToArray();
                 Array.Sort(cells, (c1, c2) => c1.ColumnIndex.CompareTo(c2.ColumnIndex));
@@ -339,7 +339,7 @@ namespace pwiz.Skyline.Util
             }
             catch (Exception exception)
             {
-                string message = string.Format(Resources.DataGridViewPasteHandler_TryConvertValue_Error_converting___0___to_required_type___1_, strValue,
+                string message = string.Format(UtilResources.DataGridViewPasteHandler_TryConvertValue_Error_converting___0___to_required_type___1_, strValue,
                                                exception.Message);
 
                 // CONSIDER(bspratt): this is probably not the proper parent. See "Issue 775: follow up on possible improper parenting of MessageDlg"

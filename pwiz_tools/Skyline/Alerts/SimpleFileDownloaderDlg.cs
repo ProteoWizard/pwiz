@@ -22,7 +22,6 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
@@ -51,8 +50,8 @@ namespace pwiz.Skyline.Alerts
             }
 
             bool multiple = requiredFilesList.Count > 1;
-            string downloadMessage = multiple ? Resources.SimpleFileDownloaderDlg_Show_The_following_files_are_required__Do_you_want_to_download_them_ :
-                Resources.SimpleFileDownloaderDlg_Show_The_following_file_is_required__Do_you_want_to_download_it_;
+            string downloadMessage = multiple ? AlertsResources.SimpleFileDownloaderDlg_Show_The_following_files_are_required__Do_you_want_to_download_them_ :
+                AlertsResources.SimpleFileDownloaderDlg_Show_The_following_file_is_required__Do_you_want_to_download_it_;
 
             var downloadMessageLabel = new Label
             {
@@ -103,7 +102,7 @@ namespace pwiz.Skyline.Alerts
                 label.Width += 10;
             }
 
-            using (var dlg = new MultiButtonMsgDlg(layout, Resources.AlertDlg_GetDefaultButtonText__Yes, Resources.AlertDlg_GetDefaultButtonText__No, false))
+            using (var dlg = new MultiButtonMsgDlg(layout, AlertsResources.AlertDlg_GetDefaultButtonText__Yes, AlertsResources.AlertDlg_GetDefaultButtonText__No, false))
             {
                 dlg.Text = title;
                 dlg.ClientSize = new Size(defaultWidth, defaultHeight);
@@ -120,7 +119,7 @@ namespace pwiz.Skyline.Alerts
 
             using (var dlg = new LongWaitDlg())
             {
-                dlg.Message = Resources.SimpleFileDownloaderDlg_Show_Downloading_required_files___;
+                dlg.Message = AlertsResources.SimpleFileDownloaderDlg_Show_Downloading_required_files___;
                 dlg.ProgressValue = 0;
                 dlg.PerformWork(parent, 50, pm => SimpleFileDownloader.DownloadRequiredFiles(requiredFilesList, pm));
             }

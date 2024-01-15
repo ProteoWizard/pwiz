@@ -26,13 +26,21 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
-struct IsRawData : public pwiz::util::TestPathPredicate
+struct IsRawDataExcept : public pwiz::util::TestPathPredicate
 {
+    IsRawDataExcept(const std::initializer_list<std::string>& filenamesToExclude = std::initializer_list<std::string>())
+	    : filenamesToExclude(filenamesToExclude.begin(), filenamesToExclude.end())
+    {
+    }
+
     bool operator() (const string& rawpath) const
     {
         return bfs::is_directory(rawpath) &&
-               bal::iends_with(rawpath, ".raw");
+               bal::iends_with(rawpath, ".raw") &&
+               filenamesToExclude.count(bfs::path(rawpath).filename().string()) == 0;
     }
+
+    std::set<std::string> filenamesToExclude;
 };
 
 struct IsIMSData : public pwiz::util::TestPathPredicate
@@ -60,9 +68,10 @@ int main(int argc, char* argv[])
         bool requireUnicodeSupport = false;
 
         pwiz::util::ReaderTestConfig config;
+        config.diffPrecision = 1e-5;
         pwiz::util::TestResult result;
         pwiz::msdata::Reader_Waters reader;
-        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsRawData(), config);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsRawDataExcept({ "QC_LCMS2-2_23_268-1-1.raw" }), config);
 
         // test globalChromatogramsAreMs1Only, but don't need to test spectra here
         {
@@ -70,6 +79,13 @@ int main(int argc, char* argv[])
             newConfig.globalChromatogramsAreMs1Only = true;
             newConfig.indexRange = make_pair(0, 0);
             result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile({ "MSe_Short.raw", "HDMRM_Short_noLM.raw", "HDDDA_Short_noLM.raw" }), newConfig);
+        }
+
+        // test analog channels
+        {
+            auto newConfig = config;
+            newConfig.indexRange = make_pair(0, 9);
+            result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile({ "QC_LCMS2-2_23_268-1-1.raw" }), newConfig);
         }
 
         // test vendor centroiding

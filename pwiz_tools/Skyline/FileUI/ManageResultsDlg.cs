@@ -543,7 +543,7 @@ namespace pwiz.Skyline.FileUI
             CheckDisposed();
             if (!DocumentUIContainer.DocumentUI.Settings.MeasuredResults.IsLoaded)
             {
-                MessageDlg.Show(this, Resources.ManageResultsDlg_ReimportResults_All_results_must_be_completely_imported_before_any_can_be_re_imported);
+                MessageDlg.Show(this, FileUIResources.ManageResultsDlg_ReimportResults_All_results_must_be_completely_imported_before_any_can_be_re_imported);
                 return;
             }
 
@@ -551,7 +551,7 @@ namespace pwiz.Skyline.FileUI
             if (missingFiles.Length > 0)
             {
                 var sb = new StringBuilder();
-                sb.AppendLine(Resources.ManageResultsDlg_ReimportResults_Unable_to_find_the_following_files_either_in_their_original_locations_or_in_the_folder_of_the_current_document)
+                sb.AppendLine(FileUIResources.ManageResultsDlg_ReimportResults_Unable_to_find_the_following_files_either_in_their_original_locations_or_in_the_folder_of_the_current_document)
                     .AppendLine()
                     .Append(TextUtil.LineSeparate(missingFiles));
                 MessageDlg.Show(this, sb.ToString());

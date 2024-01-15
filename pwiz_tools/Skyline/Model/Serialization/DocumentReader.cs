@@ -222,7 +222,7 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 string name = reader.GetAttribute(ATTR.name);
                 if (name == null)
-                    throw new InvalidDataException(Resources.SrmDocument_ReadAnnotations_Annotation_found_without_name);
+                    throw new InvalidDataException(SerializationResources.SrmDocument_ReadAnnotations_Annotation_found_without_name);
                 annotations[name] = reader.ReadElementString();
             }
 
@@ -546,7 +546,7 @@ namespace pwiz.Skyline.Model.Serialization
 
             MeasuredResults results = Settings.MeasuredResults;
             if (results == null)
-                throw new InvalidDataException(Resources.SrmDocument_ReadResults_No_results_information_found_in_the_document_settings);
+                throw new InvalidDataException(SerializationResources.SrmDocument_ReadResults_No_results_information_found_in_the_document_settings);
 
             reader.ReadStartElement();
             var arrayListChromInfos = new List<TItem>[results.Chromatograms.Count];
@@ -558,14 +558,14 @@ namespace pwiz.Skyline.Model.Serialization
                 if (chromatogramSet == null || !Equals(name, chromatogramSet.Name))
                 {
                     if (!results.TryGetChromatogramSet(name, out chromatogramSet, out index))
-                        throw new InvalidDataException(String.Format(Resources.SrmDocument_ReadResults_No_replicate_named__0__found_in_measured_results, name));
+                        throw new InvalidDataException(String.Format(SerializationResources.SrmDocument_ReadResults_No_replicate_named__0__found_in_measured_results, name));
                 }
                 string fileId = reader.GetAttribute(ATTR.file);
                 var fileInfoId = (fileId != null
                     ? chromatogramSet.FindFileById(fileId)
                     : chromatogramSet.MSDataFileInfos[0].FileId);
                 if (fileInfoId == null)
-                    throw new InvalidDataException(String.Format(Resources.SrmDocument_ReadResults_No_file_with_id__0__found_in_the_replicate__1__, fileId, name));
+                    throw new InvalidDataException(String.Format(SerializationResources.SrmDocument_ReadResults_No_file_with_id__0__found_in_the_replicate__1__, fileId, name));
                 var fileInfo = chromatogramSet.GetFileInfo(fileInfoId);
 
                 TItem chromInfo = readInfo(reader, fileInfo);
@@ -612,7 +612,7 @@ namespace pwiz.Skyline.Model.Serialization
                 {
 // Resharper disable ImpureMethodCallOnReadonlyValueField
                     throw new VersionNewerException(
-                        string.Format(Resources.SrmDocument_ReadXml_The_document_format_version__0__is_newer_than_the_version__1__supported_by__2__,
+                        string.Format(SerializationResources.SrmDocument_ReadXml_The_document_format_version__0__is_newer_than_the_version__1__supported_by__2__,
                             formatVersionNumber, DocumentFormat.CURRENT.AsDouble(), Install.ProgramNameAndVersion));
 // ReSharper restore ImpureMethodCallOnReadonlyValueField
                 }
@@ -999,6 +999,7 @@ namespace pwiz.Skyline.Model.Serialization
                 reader.GetNullableDoubleAttribute(ATTR.internal_standard_concentration);
             string normalizationMethod = reader.GetAttribute(ATTR.normalization_method);
             string attributeGroupId = reader.GetAttribute(ATTR.attribute_group_id);
+            string surrogateCalibrationCurve = reader.GetAttribute(ATTR.surrogate_calibration_curve);
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
             bool isDecoy = reader.GetBoolAttribute(ATTR.decoy);
             var standardType = StandardType.FromName(reader.GetAttribute(ATTR.standard_type));
@@ -1094,7 +1095,8 @@ namespace pwiz.Skyline.Model.Serialization
                 .ChangeConcentrationMultiplier(concentrationMultiplier)
                 .ChangeInternalStandardConcentration(internalStandardConcentration)
                 .ChangeNormalizationMethod(NormalizationMethod.FromName(normalizationMethod))
-                .ChangeAttributeGroupId(attributeGroupId);
+                .ChangeAttributeGroupId(attributeGroupId)
+                .ChangeSurrogateCalibrationCurve(surrogateCalibrationCurve);
 
             return peptideDocNode;
         }

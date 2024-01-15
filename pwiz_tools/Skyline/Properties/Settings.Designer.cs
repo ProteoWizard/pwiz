@@ -3419,6 +3419,18 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.02")]
+        public double ExportMethodXICWidth {
+            get {
+                return ((double)(this["ExportMethodXICWidth"]));
+            }
+            set {
+                this["ExportMethodXICWidth"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool FullScanPropertySheetVisible {
             get {

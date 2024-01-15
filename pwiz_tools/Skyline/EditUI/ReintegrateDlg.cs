@@ -110,7 +110,7 @@ namespace pwiz.Skyline.EditUI
                     }
                     if (scoringModel == null || !scoringModel.IsTrained)
                     {
-                        throw new InvalidDataException(Resources.ReintegrateDlg_OkDialog_You_must_train_and_select_a_model_in_order_to_reintegrate_peaks_);
+                        throw new InvalidDataException(EditUIResources.ReintegrateDlg_OkDialog_You_must_train_and_select_a_model_in_order_to_reintegrate_peaks_);
                     }
                     PeakTransitionGroupFeatureSet featureScores = null;
                     if (Equals(_cacheCalculators, scoringModel.PeakFeatureCalculators))

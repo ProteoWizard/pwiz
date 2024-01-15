@@ -330,11 +330,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             string message;
             if (proteomic)
             {
-                message = Resources.TransitionSettingsControl_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_integers_describing_charge_states_between__1__and__2__;
+                message = PeptideSearchResources.TransitionSettingsControl_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_integers_describing_charge_states_between__1__and__2__;
             }
             else
             {
-                message = Resources
+                message = PeptideSearchResources
                     .MessageBoxHelper_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_adducts_or_integers_describing_charge_states_with_absolute_values_from__1__to__2__;
             }
             helper.ShowTextBoxError(control, message, null, minCharge, maxCharge);
@@ -429,7 +429,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             if (minIonMz > maxIonMz)
             {
-                helper.ShowTextBoxError(txtMaxMz, string.Format(Resources.TransitionSettingsControl_GetTransitionSettings_Max_m_z__0__must_not_be_less_than_min_m_z__1__, maxIonMz, minIonMz));
+                helper.ShowTextBoxError(txtMaxMz, string.Format(PeptideSearchResources.TransitionSettingsControl_GetTransitionSettings_Max_m_z__0__must_not_be_less_than_min_m_z__1__, maxIonMz, minIonMz));
                 return null;
             }
 

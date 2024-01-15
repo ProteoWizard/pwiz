@@ -1,0 +1,1137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="AddPathsDlg_OkDialog_The_following_files_are_not_valid_library_input_files_" xml:space="preserve">
+    <value>以下のファイルは有効なライブラリ入力ファイルではありません：</value>
+  </data>
+  <data name="AddPathsDlg_OkDialog_The_following_files_could_not_be_found_" xml:space="preserve">
+    <value>以下のファイルが見つかりませんでした：</value>
+  </data>
+  <data name="AddRetentionTimePredictorDlg_OkDialog_A_retention_time_predictor_with_that_name_already_exists__Please_choose_a_new_name_" xml:space="preserve">
+    <value>その名前の保持時間予測が既に存在しています。新しい名前を選択してください。</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_AddFastaFile_An_error_occurred_attempting_to_add_the_FASTA_file__0__" xml:space="preserve">
+    <value>FASTAファイル{0}を追加しようとした際にエラーが発生しました。</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_btnAddFastaFile_Click_Add_FASTA_File" xml:space="preserve">
+    <value>FASTAファイルを追加</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_btnCreate_Click_An_error_occurred_attempting_to_create_the_proteome_file__0__" xml:space="preserve">
+    <value>プロ手オームファイル{0}を作成しようとした際にエラーが発生しました。</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_btnCreate_Click_Create_Background_Proteome" xml:space="preserve">
+    <value>バックグラウンドプロテオームを作成</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_btnOpen_Click_Open_Background_Protoeme" xml:space="preserve">
+    <value>バックグラウンドプロテオームを開く</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_FILTER_PROTDB_Proteome_File" xml:space="preserve">
+    <value>プロテオームファイル</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_OkDialog_Choose_a_valid_proteome_file__or_click_the__Create__button_to_create_a_new_one_from_FASTA_files" xml:space="preserve">
+    <value>有効なプロテオームファイルを選択するか、「作成」ボタンをクリックしてFASTAファイルから新しいプロテオームファイルを作成してください。</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_OkDialog_Please_specify_a_full_path_to_the_proteome_file" xml:space="preserve">
+    <value>プロテオームファイルに対しフルパスを指定してください。</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_OkDialog_The_background_proteome__0__already_exists" xml:space="preserve">
+    <value>バックグラウンドプロテオーム「{0}」は既に存在しています。</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_OkDialog_The_proteome_file__0__does_not_exist" xml:space="preserve">
+    <value>プロテオームファイル{0}が存在していません。</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_OkDialog_The_proteome_file_is_not_valid" xml:space="preserve">
+    <value>プロテオームファイルが有効ではありません。</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_OkDialog_You_must_specify_a_proteome_file" xml:space="preserve">
+    <value>プロテオームファイルを指定しなければなりません。</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Open_button_to_choose_an_existing_proteome_file_or_click_the_Create_button_to_create_a_new_proteome_file" xml:space="preserve">
+    <value>「開く」ボタンをクリックして既存のプロテオームファイルを選択するか、「作成」ボタンをクリックして新しいプロテオームファイルを作成します。</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_RefreshStatus_Loading_protein_information_from__0__" xml:space="preserve">
+    <value>{0}からタンパク質情報の読み込み中</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_RefreshStatus_Loading_Proteome_File" xml:space="preserve">
+    <value>プロテオームファイルの読み込み中</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_RefreshStatus_The_proteome_file_contains__0__proteins" xml:space="preserve">
+    <value>プロテオームファイルに{0}個のタンパク質が含まれています。</value>
+  </data>
+  <data name="BuildLibraryDlg_AddDirectory_An_error_occurred_reading_files_in_the_directory__0__" xml:space="preserve">
+    <value>ディレクトリ{0}内のファイル読み取り中にエラーが発生しました。</value>
+  </data>
+  <data name="BuildLibraryDlg_AddDirectory_Find_Input_Files" xml:space="preserve">
+    <value>入力ファイルを検索</value>
+  </data>
+  <data name="BuildLibraryDlg_AddInputFiles_The_file__0__is_a_library_file_and_does_not_need_to_be_built__Would_you_like_to_add_this_library_to_the_document_" xml:space="preserve">
+    <value>ファイル{0}はライブラリファイルであり、構築の必要はありません。このライブラリをドキュメントに追加しますか？</value>
+  </data>
+  <data name="BuildLibraryDlg_AddInputFiles_The_file__0__is_not_a_valid_library_input_file" xml:space="preserve">
+    <value>ファイル{0}は有効なライブラリ入力ファイルではありません。</value>
+  </data>
+  <data name="BuildLibraryDlg_AddInputFiles_The_following_files_are_not_valid_library_input_files" xml:space="preserve">
+    <value>以下のファイルは有効なライブラリ入力ファイルではありません：</value>
+  </data>
+  <data name="BuildLibraryDlg_AddInputFiles_These_files_are_library_files_and_do_not_need_to_be_built__Edit_the_list_of_libraries_to_add_them_directly_" xml:space="preserve">
+    <value>これらのファイルはライブラリファイルであり、構築の必要はありません。ライブラリのリストを編集して直接追加してください。</value>
+  </data>
+  <data name="BuildLibraryDlg_btnAddDirectory_Click_Add_Input_Directory" xml:space="preserve">
+    <value>入力ディレクトリを追加</value>
+  </data>
+  <data name="BuildLibraryDlg_btnAddFile_Click_Add_Input_Files" xml:space="preserve">
+    <value>入力ファイルを追加</value>
+  </data>
+  <data name="BuildLibraryDlg_btnAddFile_Click_Matched_Peptides" xml:space="preserve">
+    <value>一致するペプチド（</value>
+  </data>
+  <data name="BuildLibraryDlg_FindInputFiles_Finding_library_input_files_in" xml:space="preserve">
+    <value>以下でライブラリ入力ファイルを検索中</value>
+  </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_Access_violation_attempting_to_write_to__0__" xml:space="preserve">
+    <value>{0}へ書き込もうとしてアクセス違反になりました。</value>
+  </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_Failure_attempting_to_create_a_file_in__0__" xml:space="preserve">
+    <value>{0}でのファイルの作成に失敗しました。</value>
+  </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_Please_check_that_you_have_write_access_to_this_folder_" xml:space="preserve">
+    <value>このフォルダへの書き込みアクセス権限があることを確認してください。</value>
+  </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_The_directory__0__does_not_exist" xml:space="preserve">
+    <value>ディレクトリ{0}が存在していません。</value>
+  </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_The_output_path__0__is_a_directory_You_must_specify_a_file_path" xml:space="preserve">
+    <value>出力パス{0}はディレクトリです。ファイルパスを指定しなければなりません。</value>
+  </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path" xml:space="preserve">
+    <value>出力ファイルパスを指定しなければなりません。</value>
+  </data>
+  <data name="BuildLibraryNotification_BuildLibraryNotification_Library__0__" xml:space="preserve">
+    <value>ライブラリ{0}</value>
+  </data>
+  <data name="CalculateIsolationSchemeDlg_OkDialog_The_number_of_generated_windows_could_not_be_adjusted_to_be_a_multiple_of_the_windows_per_scan_Try_changing_the_windows_per_scan_or_the_End_value" xml:space="preserve">
+    <value>生成されたウィンドウ数をスキャン毎のウィンドウ数の倍数に調整できませんでした。スキャン毎のウィンドウ数または終値を変更してみてください。</value>
+  </data>
+  <data name="CalculateIsolationSchemeDlg_OkDialog_Window_width_must_be_an_integer" xml:space="preserve">
+    <value>ウィンドウの幅は、最適化されたウィンドウの配置が選択されている際、整数でなければなりません。</value>
+  </data>
+  <data name="DeconvolutionMethod_FAST_OVERLAP_Fast_Overlap" xml:space="preserve">
+    <value>高速重複（実験用）</value>
+  </data>
+  <data name="DeconvolutionMethod_MSX_OVERLAP_Overlap_and_MSX" xml:space="preserve">
+    <value>重複とMSX</value>
+  </data>
+  <data name="DefineAnnotationDlg_OkDialog_Choose_a_type_for_this_annotation_to_apply_to_" xml:space="preserve">
+    <value>この注釈に適用するタイプを選択します。</value>
+  </data>
+  <data name="DefineAnnotationDlg_OkDialog_Choose_a_value_for_this_annotation_" xml:space="preserve">
+    <value>この注釈の値を選択します。</value>
+  </data>
+  <data name="DefineAnnotationDlg_OkDialog_Choose_at_least_one_type_for_this_annotation_to_apply_to" xml:space="preserve">
+    <value>この注釈を適用するタイプを1つ以上選択してください。</value>
+  </data>
+  <data name="DefineAnnotationDlg_OkDialog_There_is_already_an_annotation_defined_named__0__" xml:space="preserve">
+    <value>「{0}」という名前の注釈が既に定義されています。</value>
+  </data>
+  <data name="DiaIsolationWindowsGraphForm_checkBox1_CheckedChanged_Extraction_Windows" xml:space="preserve">
+    <value>抽出ウィンドウ</value>
+  </data>
+  <data name="DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_Cycle" xml:space="preserve">
+    <value>サイクル</value>
+  </data>
+  <data name="DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_m_z" xml:space="preserve">
+    <value>m/z</value>
+  </data>
+  <data name="DiaIsolationWindowsGraphForm_DiaIsolationWindowsGraphForm_Measurement_Windows" xml:space="preserve">
+    <value>測定ウィンドウ</value>
+  </data>
+  <data name="DoconvolutionMethod_MSX_Msx" xml:space="preserve">
+    <value>Msx</value>
+  </data>
+  <data name="DoconvolutionMethod_NONE_None" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="DoconvolutionMethod_OVERLAP_Overlap" xml:space="preserve">
+    <value>重複</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_Are_you_sure_you_want_to_delete_those_items_from_those_lists_" xml:space="preserve">
+    <value>それらのアイテムをそれらのリストから本当に削除してもよろしいですか？</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_List___0___with__1__items" xml:space="preserve">
+    <value>{1}個のアイテムがあるリスト「{0}」</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_The_following_lists_have_items_in_them_which_will_be_deleted_when_you_remove_the_lists_from_your_document_" xml:space="preserve">
+    <value>次のリストには、ドキュメントからそのリストを削除すると削除されてしまうアイテムが含まれています：</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_The_list___0___has__1__items_in_it__If_you_remove_that_list_from_your_document__those_items_will_be_deleted__Are_you_sure_you_want_to_delete_those_items_from_that_list_" xml:space="preserve">
+    <value>リスト「{0}」には「{1}」個のアイテムがあります。ドキュメントからそのリストを削除すると、それらのアイテムが削除されます。それらのアイテムをそのリストから本当に削除してもよろしいですか？</value>
+  </data>
+  <data name="DocumentSettingsDlg_ValidateMetadataRules_An_error_occurred_while_applying_the_rule___0____Do_you_want_to_continue_with_the_change_to_the_Document_Settings_" xml:space="preserve">
+    <value>ルールセット「{0}」適用中にエラーが発生しました。ドキュメント設定の変更を続けますか？</value>
+  </data>
+  <data name="EditCEDlg_GetRegressionDatas_Measured_results_must_be_completely_loaded_before_they_can_be_used_to_create_a_collision_energy_regression" xml:space="preserve">
+    <value>衝突エネルギー回帰を作成する前に、測定結果を完全に読み込む必要があります。</value>
+  </data>
+  <data name="EditCEDlg_OkDialog_Collision_energy_regressions_require_at_least_one_regression_function" xml:space="preserve">
+    <value>衝突エネルギー回帰には、最低1つの回帰関数が必要です。</value>
+  </data>
+  <data name="EditCEDlg_OkDialog_The_collision_energy_regression__0__already_exists" xml:space="preserve">
+    <value>衝突エネルギー回帰「{0}」が既に存在しています。</value>
+  </data>
+  <data name="EditCEDlg_ShowGraph_Collision_Energy" xml:space="preserve">
+    <value>衝突エネルギー</value>
+  </data>
+  <data name="EditCEDlg_ShowGraph_Collision_Energy_Regression_Charge__0__" xml:space="preserve">
+    <value>衝突エネルギー回帰電荷{0}</value>
+  </data>
+  <data name="EditCEDlg_ShowGraph_Precursor_m_z" xml:space="preserve">
+    <value>プリカーサーm/z</value>
+  </data>
+  <data name="EditCEDlg_UseCurrentData_Insufficient_data_found_to_calculate_a_new_regression" xml:space="preserve">
+    <value>新しい回帰を計算するのに十分なデータが見つかりませんでした。</value>
+  </data>
+  <data name="EditCEDlg_ValidateCell_A_value_is_required" xml:space="preserve">
+    <value>値が必要です。</value>
+  </data>
+  <data name="EditCEDlg_ValidateCell_The_entry__0__is_not_valid" xml:space="preserve">
+    <value>エントリ{0}が有効ではありません。</value>
+  </data>
+  <data name="EditCEDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge_Precursor_charges_must_be_between_1_and_5" xml:space="preserve">
+    <value>エントリ「{0}」は有効な電荷ではありません。プリカーサー電荷は1と5の間でなければなりません。</value>
+  </data>
+  <data name="EditCEDlg_ValidateRegressionCellValues_On_line__0__1__" xml:space="preserve">
+    <value>{0}行、{1}</value>
+    <comment>Line refers to line number. {1} is a message</comment>
+  </data>
+  <data name="EditCEDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_charge_Charges_must_be_integer_values_between_1_and_5" xml:space="preserve">
+    <value>値{0}は有効な電荷ではありません。電荷は1と5の間の整数でなければなりません。</value>
+  </data>
+  <data name="EditCEDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_intercept" xml:space="preserve">
+    <value>値{0}は有効な切片ではありません。</value>
+  </data>
+  <data name="EditCEDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_slope" xml:space="preserve">
+    <value>値{0}は有効な勾配ではありません。</value>
+  </data>
+  <data name="EditCoVDlg_btnOk_Click_The_compensation_voltage_parameters___0___already_exist_" xml:space="preserve">
+    <value>補償電圧パラメータ'{0}'はすでに存在しています。</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_m_z_" xml:space="preserve">
+    <value>モノアイソトピックm/z(&amp;M)：</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_mass_" xml:space="preserve">
+    <value>モノアイソトピック質量(&amp;M)：</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_m_z_" xml:space="preserve">
+    <value>平均m/z(&amp;V)：</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_mass_" xml:space="preserve">
+    <value>平均質量(&amp;V)：</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_EditCustomMoleculeDlg_Addu_ct_for__0__" xml:space="preserve">
+    <value>{0}の付加イオン(&amp;C)：</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_EditCustomMoleculeDlg_Chemi_cal_formula_" xml:space="preserve">
+    <value>化学式(&amp;C)：</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_OkDialog_A_similar_transition_already_exists_" xml:space="preserve">
+    <value>類似のトランジションがすでに存在します。</value>
+  </data>
+  <data name="EditDPDlg_GetRegressionData_Measured_results_must_be_completely_loaded_before_they_can_be_used_to_create_a_declustering_potential_regression" xml:space="preserve">
+    <value>潜在回帰のクラスター分離を作成する前に測定結果を完全に読み込む必要があります。</value>
+  </data>
+  <data name="EditDPDlg_OkDialog_The_declustering_potential_regression__0__already_exists" xml:space="preserve">
+    <value>潜在回帰のクラスター分離「{0}」が既にあります。</value>
+  </data>
+  <data name="EditDPDlg_ShowGraph_Declustering_Potential" xml:space="preserve">
+    <value>デクラスタリングポテンシャル</value>
+  </data>
+  <data name="EditDPDlg_ShowGraph_Declustering_Potential_Regression" xml:space="preserve">
+    <value>潜在回帰のクラスター分離</value>
+  </data>
+  <data name="EditDPDlg_ShowGraph_Precursor_m_z" xml:space="preserve">
+    <value>プリカーサーm/z</value>
+  </data>
+  <data name="EditDPDlg_UseCurrentData_Insufficient_data_found_to_calculate_a_new_regression" xml:space="preserve">
+    <value>新しい回帰を計算するのに十分なデータが見つかりませんでした。</value>
+  </data>
+  <data name="EditExclusionDlg_OkDialog__0__must_contain_a_valid_regular_expression_" xml:space="preserve">
+    <value>{0}には有効な正規表現が含まれて射なければなりません。</value>
+  </data>
+  <data name="EditExclusionDlg_OkDialog_The_peptide_exclusion__0__already_exists" xml:space="preserve">
+    <value>ペプチド排除「{0}」が既に存在しています。</value>
+  </data>
+  <data name="EditExclusionDlg_OkDialog_The_text__0__is_not_a_valid_regular_expression" xml:space="preserve">
+    <value>テキスト「{0}」は有効な正規表現ではありません。</value>
+  </data>
+  <data name="EditFragmentLossDlg_EditFragmentLossDlg__Monoisotopic_loss_" xml:space="preserve">
+    <value>モノアイソトピックロス(&amp;M)：</value>
+  </data>
+  <data name="EditFragmentLossDlg_EditFragmentLossDlg_A_verage_loss_" xml:space="preserve">
+    <value>平均ロス(&amp;V)：</value>
+  </data>
+  <data name="EditFragmentLossDlg_EditFragmentLossDlg_Loss__chemical_formula_" xml:space="preserve">
+    <value>ロス化学式(&amp;C)：</value>
+  </data>
+  <data name="EditFragmentLossDlg_OkDialog_Neutral_loss_masses_must_be_greater_than_or_equal_to__0__" xml:space="preserve">
+    <value>ニュートラルロス質量は{0}以上でなければなりません。</value>
+  </data>
+  <data name="EditFragmentLossDlg_OkDialog_Neutral_loss_masses_must_be_less_than_or_equal_to__0__" xml:space="preserve">
+    <value>ニュートラルロス質量は{0}以下でなければなりません。</value>
+  </data>
+  <data name="EditFragmentLossDlg_OkDialog_Please_specify_a_formula_or_constant_masses" xml:space="preserve">
+    <value>式または恒量を指定してください。</value>
+  </data>
+  <data name="EditFragmentLossDlg_OkDialog_The_loss__0__already_exists" xml:space="preserve">
+    <value>ロス「{0}」が既に存在しています</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_GetIsolationWindows_Overlap_requires_an_even_number_of_windows_" xml:space="preserve">
+    <value>重複には偶数のウィンドウが必要です。</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_ImportRangesFromFiles_Reading_isolation_scheme___" xml:space="preserve">
+    <value>単離スキームを読み出しています...</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_OpenGraph_Graphing_multiplexing_is_not_supported_" xml:space="preserve">
+    <value>多重化グラフはサポートされていません。</value>
+  </data>
+  <data name="EditIsolationSchemeDlgOkDialogThereAreOverlapsContinue" xml:space="preserve">
+    <value>抽出ウィンドウの単一サイクルに重複があります。本当に続行しますか？</value>
+  </data>
+  <data name="EditIsotopeEnrichmentDlg_OkDialog_The_isotope_enrichments_named__0__already_exist" xml:space="preserve">
+    <value>「{0}」という名前の同位体濃縮が既に存在しています。</value>
+  </data>
+  <data name="EditIsotopeEnrichmentDlg_ValidateCell_The_entry__0__is_not_valid" xml:space="preserve">
+    <value>エントリ{0}が有効ではありません。</value>
+  </data>
+  <data name="EditIsotopeEnrichmentDlg_ValidateEnrichment_The_enrichment__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>濃縮{0}は{1}と{2}の間でなければなりません。</value>
+  </data>
+  <data name="EditLabelTypeListDlg_OkDialog_The_label_name__0__may_not_be_used_more_than_once" xml:space="preserve">
+    <value>標識名「{0}」は一度しか使用できません。</value>
+  </data>
+  <data name="EditLabelTypeListDlg_OkDialog_The_label_names__0__and__1__conflict_Use_more_unique_names" xml:space="preserve">
+    <value>標識名「{0}」と「{1}」が不一致です。より一意の名前を使用します。</value>
+  </data>
+  <data name="EditLabelTypeListDlg_OkDialog_The_name__0__conflicts_with_the_default_light_isotope_label_type" xml:space="preserve">
+    <value>名前「{0}」がデフォルト軽同位体標識タイプと不一致です。</value>
+  </data>
+  <data name="EditLibraryDlg_GetLibraryPath_Legacy_Libraries" xml:space="preserve">
+    <value>レガシーライブラリ</value>
+  </data>
+  <data name="EditLibraryDlg_GetLibraryPath_Spectral_Libraries" xml:space="preserve">
+    <value>スペクトルライブラリ</value>
+  </data>
+  <data name="EditLibraryDlg_OkDialog_Loading_chromatogram_library" xml:space="preserve">
+    <value>クロマトグラムライブラリの読み込み</value>
+  </data>
+  <data name="EditLibraryDlg_OkDialog_Please_choose_a_non_redundant_library" xml:space="preserve">
+    <value>非冗長ライブラリを選択してください。</value>
+  </data>
+  <data name="EditLibraryDlg_OkDialog_The_file__0__appears_to_be_a_redundant_library" xml:space="preserve">
+    <value>ファイル{0}は非冗長ライブラリのようです。</value>
+  </data>
+  <data name="EditLibraryDlg_OkDialog_The_file__0__does_not_exist" xml:space="preserve">
+    <value>ファイル{0}は存在しません。</value>
+  </data>
+  <data name="EditLibraryDlg_OkDialog_The_library__0__already_exists" xml:space="preserve">
+    <value>ライブラリ「{0}」が既に存在しています。</value>
+  </data>
+  <data name="EditLibraryDlg_OkDialog_The_path__0__is_a_directory" xml:space="preserve">
+    <value>パス{0}はディレクトリです。</value>
+  </data>
+  <data name="EditListDlg_btnReset_Click_This_will_reset_the_list_to_its_default_values_Continue" xml:space="preserve">
+    <value>この操作により、リストをデフォルト値にリセットします。続行しますか？</value>
+  </data>
+  <data name="EditMeasuredIonDlg_EditMeasuredIonDlg__Monoisotopic_mass_" xml:space="preserve">
+    <value>モノアイソトピック質量(&amp;M)：</value>
+  </data>
+  <data name="EditMeasuredIonDlg_EditMeasuredIonDlg_A_verage_mass_" xml:space="preserve">
+    <value>平均質量(&amp;V)：</value>
+  </data>
+  <data name="EditMeasuredIonDlg_EditMeasuredIonDlg_Ion__chemical_formula_" xml:space="preserve">
+    <value>イオン化学式(&amp;C)：</value>
+  </data>
+  <data name="EditMeasuredIonDlg_OkDialog_Please_specify_a_formula_or_constant_masses" xml:space="preserve">
+    <value>式または恒量を指定してください。</value>
+  </data>
+  <data name="EditMeasuredIonDlg_OkDialog_Reporter_ion_masses_must_be_less_than_or_equal_to__0__" xml:space="preserve">
+    <value>レポーターイオン質量は{0}以下でなければなりません。</value>
+  </data>
+  <data name="EditMeasuredIonDlg_OkDialog_The_special_ion__0__already_exists" xml:space="preserve">
+    <value>特殊イオン「{0}」が既に存在しています。</value>
+  </data>
+  <data name="EditMeasuredIonDlg_ValidateAATextBox__0__must_contain_at_least_one_amino_acid" xml:space="preserve">
+    <value>{0}には1つ以上のアミノ酸が含まれて射なければなりません。</value>
+  </data>
+  <data name="EditMeasuredIonDlg_ValidateAATextBox_The_character__0__is_not_a_valid_amino_acid" xml:space="preserve">
+    <value>文字「{0}」は有効なアミノ酸ではありません。</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_btnCreate_Click_Are_you_sure_you_want_to_create_a_new_optimization_library_file__Any_changes_to_the_current_library_will_be_lost_" xml:space="preserve">
+    <value>本当に新しい最適化ライブラリファイルを作成しますか？ 現在のライブラリへの変更はすべて失われます。</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_btnCreate_Click_Create_Optimization_Library" xml:space="preserve">
+    <value>最適化ライブラリを作成</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_btnOpen_Click_Are_you_sure_you_want_to_open_a_new_optimization_library_file__Any_changes_to_the_current_library_will_be_lost_" xml:space="preserve">
+    <value>本当に新しい最適化ライブラリファイルを開きますか？ 現在のライブラリへの変更はすべて失われます。</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_btnOpen_Click_Open_Optimization_Library" xml:space="preserve">
+    <value>最適化ライブラリを開く</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_CreateDatabase_The_file__0__could_not_be_created_" xml:space="preserve">
+    <value>ファイル{0}が作成できませんでした。</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_OkDialog_A_library_with_the_name__0__already_exists__Do_you_want_to_overwrite_it_" xml:space="preserve">
+    <value>{0}という名前のライブラリが既に存在しています。上書きしますか？</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_OkDialog_Click_the_Create_button_to_create_a_new_library_or_the_Open_button_to_open_an_existing_library_file_" xml:space="preserve">
+    <value>作成ボタンをクリックして新しいライブラリを作成するか、開くボタンをクリックして既存のライブラリファイルを開きます。</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_OkDialog_Failure_updating_optimizations_in_the_optimization_library__The_database_may_be_out_of_synch_" xml:space="preserve">
+    <value>最適化ライブラリの最適化のアップデートに失敗しました。データベースが同期していない可能性があります。</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_OkDialog_library" xml:space="preserve">
+    <value>ライブラリ</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_OkDialog_Please_choose_a_library_file_for_the_optimization_library_" xml:space="preserve">
+    <value>最適化ライブラリのライブラリファイルを選択してください。</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_OkDialog_Please_enter_a_name_for_the_optimization_library_" xml:space="preserve">
+    <value>最適化ライブラリの名前を入力してください。</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_OkDialog_Please_use_a_full_path_to_a_library_file_for_the_optimization_library_" xml:space="preserve">
+    <value>最適化ライブラリのライブラリファイルに対し完全パスを使用してください。</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Create_button_to_create_a_new_library_or_the_Open_button_to_find_the_missing_file_" xml:space="preserve">
+    <value>ファイル{0}は存在しません。作成ボタンをクリックして新しいライブラリを作成するか、開くボタンをクリックして欠損しているファイルを検索します。</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_collision_energies" xml:space="preserve">
+    <value>{0}最適衝突エネルギー</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_collision_energy" xml:space="preserve">
+    <value>{0}最適衝突エネルギー</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_compensation_voltage" xml:space="preserve">
+    <value>{0}最適補償電圧</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_compensation_voltages" xml:space="preserve">
+    <value>{0}最適補償電圧</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_declustering_potential" xml:space="preserve">
+    <value>{0}最適デクラスタリングポテンシャル</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_declustering_potentials" xml:space="preserve">
+    <value>{0}最適デクラスタリングポテンシャル</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_ValidateOptimizationList_The_optimization_with_sequence__0___charge__1___fragment_ion__2__and_product_charge__3__appears_in_the__4__table_more_than_once_" xml:space="preserve">
+    <value>シークエンス{0}、電荷{1}、断片{2}、プロダクト電荷{3}を持つ最適化は{4}表内に1回以上表示されます。</value>
+  </data>
+  <data name="EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_" xml:space="preserve">
+    <value>値{0}は有効な修飾ペプチドシークエンスではありません。</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_btnTrainModel_Click_Failed_training_the_model_" xml:space="preserve">
+    <value>トレインモデルに失敗しました：</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Composite_Score__Normalized_" xml:space="preserve">
+    <value>複合スコア（正規化）</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_P_Value" xml:space="preserve">
+    <value>P値</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Q_value" xml:space="preserve">
+    <value>Q値</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_composite_score" xml:space="preserve">
+    <value>複合スコアを確認するためトレインモデルを行います</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_P_value_distribution" xml:space="preserve">
+    <value>P値分布が表示されるようにモデルをトレーニング</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_Q_value_distribution" xml:space="preserve">
+    <value>Q値分布が表示されるようにモデルをトレーニング</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_InitGraphPane_Peak_count" xml:space="preserve">
+    <value>ピーク数</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_InitGraphPane_Score" xml:space="preserve">
+    <value>スコア</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_OnDataBindingComplete_Unexpected_Coefficient_Sign" xml:space="preserve">
+    <value>予期しない係数符号</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_TrainModel_Calculating" xml:space="preserve">
+    <value>計算中</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_TrainModel_There_are_no_decoy_peptides_in_the_current_document__Uncheck_the_Use_Decoys_Box_" xml:space="preserve">
+    <value>現在のドキュメントにはデコイペプチドがありません。デコイを使用ボックスのチェックマークを外します。</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_TrainModel_Training" xml:space="preserve">
+    <value>トレーニング</value>
+    <comment>trainng the scoring model</comment>
+  </data>
+  <data name="EditPeakScoringModelDlg_TrainModelClick_Scoring" xml:space="preserve">
+    <value>スコア</value>
+    <comment>scoring peaks</comment>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateCalculatorGraph_unknown" xml:space="preserve">
+    <value>不明</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Combined_normal_distribution" xml:space="preserve">
+    <value>複合正規分布</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Decoy_normal_distribution" xml:space="preserve">
+    <value>デコイ正規分布</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Decoys" xml:space="preserve">
+    <value>デコイ</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_P_values_of_target_peptides" xml:space="preserve">
+    <value>ターゲットペプチドのP値</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Pi_zero__expected_nulls_" xml:space="preserve">
+    <value>Pi 0（予測空値）</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks" xml:space="preserve">
+    <value>2番目に良いピーク</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Second_best_peaks_normal_distribution" xml:space="preserve">
+    <value>2番目に良いピークの正規分布</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Targets" xml:space="preserve">
+    <value>ターゲット</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateModelGraph_Trained_model_is_not_applicable_to_current_dataset_" xml:space="preserve">
+    <value>トレインモデルは現在のデータセットに適用できません。</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_UpdateQValueGraph_Q_values_of_target_peptides" xml:space="preserve">
+    <value>ターゲットペプチドのQ値</value>
+  </data>
+  <data name="EditRTDlg_OkDialog__0__must_be_greater_than_0" xml:space="preserve">
+    <value>{0}は0より大きくなければなりません。</value>
+  </data>
+  <data name="EditRTDlg_OkDialog_Retention_time_prediction_requires_a_calculator_algorithm" xml:space="preserve">
+    <value>保持時間予測にはカルキュレータアルゴリズムが必要です。</value>
+  </data>
+  <data name="EditRTDlg_OkDialog_The_retention_time_regression__0__already_exists" xml:space="preserve">
+    <value>保持時間回帰「{0}」が既に存在しています。</value>
+  </data>
+  <data name="EditRTDlg_RecalcRegression__0__peptides_R__1__" xml:space="preserve">
+    <value>（{0}個のペプチド、R = {1}）</value>
+  </data>
+  <data name="EditRTDlg_ShowGraph_An_error_occurred_attempting_to_initialize_the_calculator__0__" xml:space="preserve">
+    <value>カルキュレータ{0}を初期化しようとした際にエラーが発生しました。</value>
+  </data>
+  <data name="EditRTDlg_ShowGraph_Initializing" xml:space="preserve">
+    <value>初期化中</value>
+  </data>
+  <data name="EditRTDlg_ShowGraph_Initializing__0__calculator" xml:space="preserve">
+    <value>{0}カルキュレータの初期化中</value>
+  </data>
+  <data name="EditRTDlg_ShowGraph_Measured_Time" xml:space="preserve">
+    <value>測定時間</value>
+  </data>
+  <data name="EditRTDlg_ShowGraph_Retention_Times_by_Score" xml:space="preserve">
+    <value>スコア別の保持時間</value>
+  </data>
+  <data name="EditRTDlg_ShowPeptides_Calculate_Left" xml:space="preserve">
+    <value>計算(&amp;C)&lt;&lt;</value>
+  </data>
+  <data name="EditRTDlg_ShowPeptides_Calculate_Right" xml:space="preserve">
+    <value>計算(&amp;C)&gt;&gt;</value>
+  </data>
+  <data name="EditRTDlg_UpdateCalculator_The__0__calculator_cannot_score_any_of_the_peptides" xml:space="preserve">
+    <value>{0}カルキュレータでは、どのペプチドもスコアできません。</value>
+  </data>
+  <data name="EditRTDlg_UpdateCalculator_The_calculator_cannot_be_used_to_score_peptides_Please_check_its_settings" xml:space="preserve">
+    <value>カルキュレータはペプチドのスコアには使用できません。設定を確認してください。</value>
+  </data>
+  <data name="EditStaticModDlg_EditStaticModDlg_Chemical_formula_" xml:space="preserve">
+    <value>化学式(&amp;C)：</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_Click__Custom__to_use_the_name___0___" xml:space="preserve">
+    <value>名前「{0}」を使用するには、「カスタム」をクリックします。</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_Click__Unimod__to_use_the_name___0___" xml:space="preserve">
+    <value>名前「{0}」を使用するには、「Unimod」をクリックします。</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_Continue" xml:space="preserve">
+    <value>続行しますか？</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_Custom" xml:space="preserve">
+    <value>カスタム</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_Labeled_atoms_on_terminal_modification_are_not_valid" xml:space="preserve">
+    <value>末端修飾上の標識原子が有効ではありません。</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_The_modification__0__already_exists" xml:space="preserve">
+    <value>修飾「{0}」が既に存在しています。</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_The_variable_checkbox_only_applies_to_precursor_modification_Product_ion_losses_are_inherently_variable" xml:space="preserve">
+    <value>変数チェックボックスはプリカーサー修飾のみに適用されます。プロダクトイオンロスは、本質的に変数です。</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_There_is_a_Unimod_modification_with_the_same_settings" xml:space="preserve">
+    <value>同じ設定のUnimod修飾があります。</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_There_is_an_existing_modification_with_the_same_settings" xml:space="preserve">
+    <value>同じ設定の既存の修飾があります：</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_This_modification_does_not_match_the_Unimod_specifications_for___0___" xml:space="preserve">
+    <value>この修飾は、「{0}」のUnimod仕様と一致しません。</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_Unimod" xml:space="preserve">
+    <value>Unimod</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_Use_non_standard_settings_for_this_name" xml:space="preserve">
+    <value>この名前に対し非標準設定を使用しますか？</value>
+  </data>
+  <data name="EditStaticModDlg_OkDialog_Variable_modifications_must_specify_amino_acid_or_terminus" xml:space="preserve">
+    <value>変数修飾では、アミノ酸または末端を指定する必要があります。</value>
+  </data>
+  <data name="EditStaticModDlg_SetModification___0___is_not_a_recognized_Unimod_name_" xml:space="preserve">
+    <value>「{0}」は認識されたUnimod名ではありません。</value>
+  </data>
+  <data name="EditStaticModDlg_UpdateListAvailableMods_Show_all" xml:space="preserve">
+    <value>&lt;すべて表示...&gt;</value>
+  </data>
+  <data name="EditStaticModDlg_UpdateListAvailableMods_Show_common" xml:space="preserve">
+    <value>&lt;共通表示...&gt;</value>
+  </data>
+  <data name="FilterMidasLibraryDlg_btnBrowse_Click_Export_Filtered_MIDAS_Library" xml:space="preserve">
+    <value>フィルタされたMIDASライブラリのエクスポート</value>
+  </data>
+  <data name="FilterMidasLibraryDlg_OkDialog_A_library_with_this_name_already_exists_" xml:space="preserve">
+    <value>この名前のライブラリは既に存在します。</value>
+  </data>
+  <data name="FilterMidasLibraryDlg_OkDialog_You_must_enter_a_name_for_the_filtered_library_" xml:space="preserve">
+    <value>フィルタされたライブラリの名前を入力してください。</value>
+  </data>
+  <data name="FilterMidasLibraryDlg_OkDialog_You_must_enter_a_path_for_the_filtered_library_" xml:space="preserve">
+    <value>フィルタされたライブラリのパスを入力してください。</value>
+  </data>
+  <data name="FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__" xml:space="preserve">
+    <value>式は標準の化学表記法（例：「C2H6O」）で書かれています。  重同位体は、プライム（例：C13のC'）か、存在量が低い安定同位体の場合ダブルプライム（例：O17のO"、O18のO'）で表されます。</value>
+  </data>
+  <data name="FormulaBox_helpToolStripMenuItem_Click_Formula_Help" xml:space="preserve">
+    <value>式のヘルプ</value>
+  </data>
+  <data name="FullScanSettingsControl_SetAnalyzerType_Mass__Accuracy_" xml:space="preserve">
+    <value>質量精度(&amp;A)：</value>
+  </data>
+  <data name="FullScanSettingsControl_UpdateRetentionTimeFilterUi_Full_gradient_chromatograms_will_take_longer_to_import__consume_more_disk_space__and_may_make_peak_picking_less_effective_" xml:space="preserve">
+    <value>全グラジエントクロマトグラムのインポートには時間がかかり、ディスク容量を消費する上、ピークの選択が効果的に行えない場合があります。</value>
+  </data>
+  <data name="FullScanSettingsControl_UpdateRetentionTimeFilterUi_None_of_the_spectral_libraries_in_this_document_contain_any_retention_times_for_any_of_the_peptides_in_this_document_" xml:space="preserve">
+    <value>このドキュメントのスペクトルライブラリには、このドキュメント内のペプチドの保持時間情報が含まれていません。</value>
+  </data>
+  <data name="FullScanSettingsControl_UpdateRetentionTimeFilterUi_This_document_does_not_contain_any_spectral_libraries_" xml:space="preserve">
+    <value>このドキュメントにはスペクトルライブラリが含まれていません。</value>
+  </data>
+  <data name="GridViewDriver_GetValue_on_line__0__" xml:space="preserve">
+    <value>{0}行</value>
+  </data>
+  <data name="IsolationWidthType_FIXED_Fixed" xml:space="preserve">
+    <value>固定</value>
+  </data>
+  <data name="IsolationWidthType_RESULTS_Results" xml:space="preserve">
+    <value>結果</value>
+  </data>
+  <data name="IsolationWidthType_RESULTS_WITH_MARGIN_Results_with_margin" xml:space="preserve">
+    <value>マージンを有する結果</value>
+  </data>
+  <data name="LabelTypeComboDriver_LabelTypeComboDriver_LabelType" xml:space="preserve">
+    <value>LabelType</value>
+  </data>
+  <data name="LabelTypeComboDriver_LoadList_Edit_list" xml:space="preserve">
+    <value>&lt;リストを編集...&gt;</value>
+  </data>
+  <data name="LabelTypeComboDriver_LoadList_Internal_standard_type" xml:space="preserve">
+    <value>内部標準タイプ(&amp;N)：</value>
+  </data>
+  <data name="LabelTypeComboDriver_LoadList_Internal_standard_types" xml:space="preserve">
+    <value>内部標準タイプ(&amp;N)：</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddIrts_Adding_iRTs_to_library" xml:space="preserve">
+    <value>iRTをライブラリに追加しています</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddIrts_An_error_occurred_trying_to_add_iRTs_to_the_library_" xml:space="preserve">
+    <value>iRTをライブラリに追加する際にエラーが発生しました。</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddIrts_Loading_library" xml:space="preserve">
+    <value>ライブラリを読み込み中</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddIrts_Loading_retention_time_providers" xml:space="preserve">
+    <value>保持時間のプロバイダーを読み込み中</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddIrts_Processing_retention_times" xml:space="preserve">
+    <value>保持時間のプロセス中</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddRetentionTimePredictor_Add_retention_time_predictor" xml:space="preserve">
+    <value>保持時間予測を追加</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddOptimizationLibrary_Adding_optimization_library" xml:space="preserve">
+    <value>最適化ライブラリの追加中</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddOptimizationLibrary_Adding_optimization_values_from__0_" xml:space="preserve">
+    <value>{0}から最適値の追加中</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddOptimizationLibrary_An_error_occurred_attempting_to_load_the_optimization_library_file__0__" xml:space="preserve">
+    <value>最適化ライブラリファイル{0}を読み込もうとした際にエラーが発生しました。</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddResults_The_active_document_must_contain_results_in_order_to_add_optimized_values_" xml:space="preserve">
+    <value>最適値を追加するには、アクティブドキュメントが結果を含んでいる必要があります。</value>
+  </data>
+  <data name="LibraryGridViewDriver_DoCellValidating_There_is_already_an_optimization_with_sequence___0___and_product_ion___2___in_the_list_" xml:space="preserve">
+    <value>リスト内にシークエンス「{0}」およびプロダクトイオン「{2}」を持つ最適化が既にあります。</value>
+  </data>
+  <data name="LibraryGridViewDriver_ValidateOptimizationRow_Missing_product_ion_on_line__1_" xml:space="preserve">
+    <value>{1}行目のプロダクトイオンが欠損しています。</value>
+  </data>
+  <data name="LibraryGridViewDriver_ValidateOptimizationRow_The_pasted_text_must_contain_the_same_number_of_columns_as_the_table_" xml:space="preserve">
+    <value>貼り付けたテキストの列数は表と同じでなければなりません。</value>
+  </data>
+  <data name="LibraryGridViewDriver_ValidateOptimizedValue_Optimized_values_must_be_greater_than_zero_" xml:space="preserve">
+    <value>最適値は0より大きくなければなりません。</value>
+  </data>
+  <data name="LibraryGridViewDriver_ValidateOptimizedValue_Optimized_values_must_be_valid_decimal_numbers_" xml:space="preserve">
+    <value>最適値は有効な十進数でなければなりません。</value>
+  </data>
+  <data name="LibraryGridViewDriver_ValidateProductIon_Product_ion__0__is_invalid_" xml:space="preserve">
+    <value>プロダクトイオン{0}は無効です。</value>
+  </data>
+  <data name="LibraryGridViewDriver_ValidateProductIon_Product_ion_cannot_be_empty_" xml:space="preserve">
+    <value>プロダクトイオンは空にできません。</value>
+  </data>
+  <data name="LibraryGridViewDriver_ValidateRow_Invalid_product_ion_format__0__on_line__1__" xml:space="preserve">
+    <value>{1}行目の無効なプロダクトイオン形式{0}。</value>
+  </data>
+  <data name="LibraryGridViewDriver_ValidateSequence_Sequence_cannot_be_empty_" xml:space="preserve">
+    <value>シークエンスは空にできません。</value>
+  </data>
+  <data name="MetadataRuleEditor_OkDialog__0__cannot_be_blank" xml:space="preserve">
+    <value>{0}は空白にできません</value>
+  </data>
+  <data name="MetadataRuleEditor_OkDialog_There_is_already_a_metadata_rule_named___0___" xml:space="preserve">
+    <value>「{0}」と言う名前の結果ファイルルールセットがすでに存在します。</value>
+  </data>
+  <data name="MetadataRuleEditor_OkDialog_This_is_not_a_valid_regular_expression_" xml:space="preserve">
+    <value>これは有効な正規表現ではありません。</value>
+  </data>
+  <data name="MetadataRuleStepEditor_OkDialog__0__must_either_be_a_valid_regular_expression_or_blank" xml:space="preserve">
+    <value>テキスト「{0}」は有効な正規表現または空白である必要があります</value>
+  </data>
+  <data name="PeptideGridViewDriver_DoCellValidating_The_sequence__0__is_already_present_in_the_list" xml:space="preserve">
+    <value>シークエンス「{0}」が既にリストに存在しています。</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateRow_Invalid_decimal_number_format__0__on_line__1_" xml:space="preserve">
+    <value>{1}行目の無効な十進数の形式{0}</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateRow_Missing_peptide_sequence_on_line__0_" xml:space="preserve">
+    <value>{0}行目の欠損しているペプチドシークエンス</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateRow_Missing_value_on_line__0_" xml:space="preserve">
+    <value>{0}行目の欠損している値</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateRow_The_pasted_text_must_have_two_columns_" xml:space="preserve">
+    <value>貼り付けたテキストは2列でなければなりません。</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1_" xml:space="preserve">
+    <value>{1}行目のテキスト{0}は有効なペプチドシークエンスではありません</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateRow_The_time__0__must_be_greater_than_zero_on_line__1_" xml:space="preserve">
+    <value>{1}行目の時間{0}は0より大きくなければなりません</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateUniquePeptides_The_added_lists_contains__0__peptides_which_already_appear_in_the__1__list" xml:space="preserve">
+    <value>追加リストには、{1}リストに既に表示されているペプチドが{0}個含まれています。</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateUniquePeptides_The_added_lists_contains__0__peptides_which_appear_multiple_times" xml:space="preserve">
+    <value>追加リストには、複数回追加されているペプチドが{0}個含まれています。</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_already_appear_in_the__0__list" xml:space="preserve">
+    <value>以下のペプチドが既に{0}リストに表示されています：</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_appear_multiple_times_in_the_added_list" xml:space="preserve">
+    <value>以下のペプチドが追加リストに複数回表示されています：</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateUniquePeptides_The_peptide__0__already_appears_in_the__1__list" xml:space="preserve">
+    <value>ペプチドは「{0}」が既に{1}リストに表示されています。</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateUniquePeptides_The_peptide__0__appears_multiple_times_in_the_added_list" xml:space="preserve">
+    <value>ペプチド「{0}」が追加リストに複数回表示されています。</value>
+  </data>
+  <data name="PeptideSettingsUI_comboRank_SelectedIndexChanged_Do_you_want_to_uncheck_the_ones_that_do_not" xml:space="preserve">
+    <value>サポートしないライブラリの選択を解除しますか？</value>
+  </data>
+  <data name="PeptideSettingsUI_comboRank_SelectedIndexChanged_Not_all_libraries_chosen_support_the__0__ranking_for_peptides" xml:space="preserve">
+    <value>選択したすべてのライブラリがペプチドの「{0}」ランクをサポートするわけではありません。</value>
+  </data>
+  <data name="PeptideSettingsUI_OkDialog_Changing_peptide_settings" xml:space="preserve">
+    <value>ペプチド設定を変更中</value>
+  </data>
+  <data name="PeptideSettingsUI_ShowFilterMidasDlg_Failed_loading_MIDAS_library__0__" xml:space="preserve">
+    <value>MIDASライブラリ{0}の読み込みに失敗しました。</value>
+  </data>
+  <data name="PeptideSettingsUI_ShowFilterMidasDlg_Loading__0_" xml:space="preserve">
+    <value>{0}を読み込んでいます</value>
+  </data>
+  <data name="PeptideSettingsUI_ShowFilterMidasDlg_Loading_MIDAS_Library" xml:space="preserve">
+    <value>MIDASライブラリを読み込んでいます</value>
+  </data>
+  <data name="PeptideSettingsUI_ShowFilterMidasDlg_Multiple_MIDAS_libraries_in_document__Select_only_one_before_filtering_" xml:space="preserve">
+    <value>ドキュメント内に複数のMIDASライブラリがあります。1つだけ選択してからフィルタしてください。</value>
+  </data>
+  <data name="PeptideSettingsUI_ShowViewLibraryDlg_Peptide_settings_have_been_changed_Save_changes" xml:space="preserve">
+    <value>ペプチド設定が変更されました。変更を保存しますか？</value>
+  </data>
+  <data name="PeptideSettingsUI_ValidateNewSettings_Failed_to_load_background_proteome__0__" xml:space="preserve">
+    <value>バックグラウンドプロテオーム{0}の読み込みに失敗しました。</value>
+  </data>
+  <data name="PeptideSettingsUI_ValidateNewSettings_In_order_to_use_the__Bilinear_turning_point__method_of_LOD_calculation___Regression_fit__must_be_set_to__Bilinear__" xml:space="preserve">
+    <value>LOD計算の[双線形の転回点]メソッドを使用するには、[回帰適合]が[双線形]に設定されている必要があります。</value>
+  </data>
+  <data name="PeptideSettingsUI_ValidateNewSettings_The_file__0__is_missing_" xml:space="preserve">
+    <value>ファイル{0}が欠損しています。</value>
+  </data>
+  <data name="PeptideSettingsUI_ValidateNewSettings_The_file__0__may_not_be_a_valid_proteome_file" xml:space="preserve">
+    <value>ファイル{0}は有効なプロテオームファイルではない可能性があります。</value>
+  </data>
+  <data name="SaveSettingsDlg_OnClosing_Do_you_want_to_overwrite_the_existing_settings" xml:space="preserve">
+    <value>既存の設定を上書きしますか？</value>
+  </data>
+  <data name="SaveSettingsDlg_OnClosing_The_name__0__already_exists" xml:space="preserve">
+    <value>名前{0}が既に存在しています。</value>
+  </data>
+  <data name="StartPageSettingsUI_btnResetDefaults_Click_The_settings_have_been_reset_to_the_default_values_" xml:space="preserve">
+    <value>設定がデフォルト値にリセットされました。</value>
+  </data>
+  <data name="StartPageSettingsUI_StartPageSettingsUI_Integrate_all__on" xml:space="preserve">
+    <value>すべて積分：オン</value>
+  </data>
+  <data name="TransitionSettingsUI_cbxTriggeredAcquisition_CheckedChanged_The_SureQuant_acquisition_method_requires__Triggered_Chromatogram_Extraction___Unchecking_this_option_will_switch_to_the_PRM_acquisition_method__Do_you_want_to_continue_" xml:space="preserve">
+    <value>SureQuant取得メソッドでは、「トリガークロマトグラム抽出」 が必要です。このオプションのチェックマークをオフにすると、PRM取得メソッドに切り替わります。続けますか？</value>
+  </data>
+  <data name="TransitionSettingsUI_comboPrecursorIsotopes_SelectedIndexChanged_Min_percent_of_base_peak" xml:space="preserve">
+    <value>ベースピークの最小%(&amp;K)：</value>
+  </data>
+  <data name="TransitionSettingsUI_comboPrecursorIsotopes_SelectedIndexChanged_Peaks" xml:space="preserve">
+    <value>ピーク(&amp;K)：</value>
+  </data>
+  <data name="TransitionSettingsUI_OkDialog_Before_performing_a_multiplexed_DIA_scan_the_instrument_s_firmware_inclusion_limit_must_be_specified" xml:space="preserve">
+    <value>多重化DIAスキャンの実行前に装置のファームウェア包含制限を指定する必要があります。</value>
+  </data>
+  <data name="TransitionSettingsUI_OkDialog_Changing_transition_settings" xml:space="preserve">
+    <value>トランジション設定を変更中</value>
+  </data>
+  <data name="TransitionSettingsUI_OkDialog_For_MS1_filtering_with_a_QIT_mass_analyzer_only_1_isotope_peak_is_supported" xml:space="preserve">
+    <value>QIT質量アナライザーによるMS1フィルタリングでサポートされるのは、同位体ピーク1つのみです。</value>
+  </data>
+  <data name="TransitionSettingsUI_OkDialog_High_resolution_MS1_filtering_requires_use_of_monoisotopic_precursor_masses" xml:space="preserve">
+    <value>高分解能MS1フィルタリングでは、モノアイソトピックプリカーサー質量を使用する必要があります。</value>
+  </data>
+  <data name="TransitionSettingsUI_OkDialog_Small_molecule_ion_types_must_contain_a_comma_separated_list_of_ion_types__Valid_types_are__f___for_fragment__and_or__p___for_precursor_" xml:space="preserve">
+    <value>分子のイオンタイプには、イオンタイプをカンマで区切ったリストが含まれている必要があります。有効なタイプには「f」（フラグメント）と「p」（プリカーサー）があります。</value>
+  </data>
+  <data name="TransitionSettingsUI_OkDialog_The_allowable_retention_time_range__0__to__1__must_be_at_least__2__minutes_apart" xml:space="preserve">
+    <value>許容保持時間範囲{0}から{1}までの間隔は{2}分以上でなければなりません。</value>
+  </data>
+  <data name="TransitionSettingsUI_OkDialog_This_is_not_a_valid_number_of_minutes" xml:space="preserve">
+    <value>これは有効な分数ではありません。</value>
+  </data>
+  <data name="TransitionSettingsUI_PopulateAdductMenu_Adducts_minusminusminus" xml:space="preserve">
+    <value>付加イオン---</value>
+  </data>
+  <data name="TransitionSettingsUI_PopulateAdductMenu_Adducts_plusplusplus" xml:space="preserve">
+    <value>付加イオン+++</value>
+  </data>
+  <data name="TransitionSettingsUI_PopulateAdductMenu_More" xml:space="preserve">
+    <value>詳細</value>
+  </data>
+  <data name="TransitionSettingsUI_SetAnalyzerType_Resolution" xml:space="preserve">
+    <value>分解能(&amp;O)：</value>
+  </data>
+  <data name="TransitionSettingsUI_SetAnalyzerType_Resolving_power" xml:space="preserve">
+    <value>分解能(&amp;O)：</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides__0__1__library__2__will_be_ignored" xml:space="preserve">
+    <value>{0}{1}ライブラリ{2}は無視されます。</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides__0__and__1__library__2__will_be_ignored" xml:space="preserve">
+    <value>{0}と{1}ライブラリ{2}は無視されます。</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides__0__existing" xml:space="preserve">
+    <value>{0}既存</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides__0__proteins" xml:space="preserve">
+    <value>{0}個のタンパク質、</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides__0__unmatched" xml:space="preserve">
+    <value>{0}不一致</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_Add_All" xml:space="preserve">
+    <value>すべて追加</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_Add_all_peptides_from__0__library" xml:space="preserve">
+    <value>{0}ライブラリからすべてのペプチドを追加</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_All_library_peptides_already_exist_in_the_current_document" xml:space="preserve">
+    <value>現在のドキュメントには既にすべてのライブラリペプチドが存在しています。</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_entries" xml:space="preserve">
+    <value>エントリ</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_entry" xml:space="preserve">
+    <value>エントリ</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_Matching_Molecules" xml:space="preserve">
+    <value>一致する分子</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_Matching_molecules_to_the_current_document_settings" xml:space="preserve">
+    <value>分子を現在のドキュメント設定に一致させています</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_Matching_Peptides" xml:space="preserve">
+    <value>一致するペプチド</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_Matching_peptides_to_the_current_document_settings" xml:space="preserve">
+    <value>現在のドキュメント設定に一致するペプチド</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_No_peptides_match_the_current_document_settings" xml:space="preserve">
+    <value>現在のドキュメント設定に一致するペプチドがありません。</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_Please_retry_this_operation" xml:space="preserve">
+    <value>この操作を再試行してください。</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_The_document_changed_during_processing" xml:space="preserve">
+    <value>ドキュメントが処理中に変更されました。</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_This_operation_will_add__0__1__molecules__2__precursors_and__3__transitions_to_the_document" xml:space="preserve">
+    <value>この操作により{0} {1}個の分子、{2}個のプリカーサーイオンおよび{3}個のトランジションがドキュメントに追加されます。</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_This_operation_will_add__0__1__peptides__2__precursors_and__3__transitions_to_the_document" xml:space="preserve">
+    <value>この操作により、{0} {1}個のペプチド、{2}個のプリカーサー、{3}個のトランジションがドキュメントに追加されます。</value>
+  </data>
+  <data name="ViewLibraryDlg_AddPeptide_Add_library_peptide__0__" xml:space="preserve">
+    <value>ライブラリペプチド{0}を追加</value>
+  </data>
+  <data name="ViewLibraryDlg_AddPeptide_Modifications_for_this_peptide_do_not_match_current_document_settings" xml:space="preserve">
+    <value>このペプチドの修飾は現在のドキュメント設定に一致しません。</value>
+  </data>
+  <data name="ViewLibraryDlg_AddPeptide_The_peptide__0__already_exists_with_charge__1__in_the_current_document" xml:space="preserve">
+    <value>ペプチド{0}が既に現在のドキュメントに存在{1}しています。</value>
+  </data>
+  <data name="ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_not_measured_by_the_current_DIA_isolation_scheme_" xml:space="preserve">
+    <value>プリカーサーm/z{0:F04}は、現在のDIA単離スキームにより測定されていません。</value>
+  </data>
+  <data name="ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_outside_the_instrument_range__1__to__2__" xml:space="preserve">
+    <value>プリカーサーm/z{0:F04}は、{1}～{2}の装置範囲外です。</value>
+  </data>
+  <data name="ViewLibraryDlg_CheckLibraryInSettings_Add_Library" xml:space="preserve">
+    <value>ライブラリを追加</value>
+  </data>
+  <data name="ViewLibraryDlg_CheckLibraryInSettings_Would_you_like_to_add_it" xml:space="preserve">
+    <value>追加しますか？</value>
+  </data>
+  <data name="ViewLibraryDlg_EnsureBackgroundProteome_A_background_proteome_is_required_to_associate_proteins" xml:space="preserve">
+    <value>タンパク質の関連付けには、バックグラウンドプロテオームが必要です。</value>
+  </data>
+  <data name="ViewLibraryDlg_EnsureDigested_An_error_occurred_while_trying_to_process_the_file__0__" xml:space="preserve">
+    <value>ファイル{0}の処理試行中にエラーが発生しました。</value>
+  </data>
+  <data name="ViewLibraryDlg_EnsureDigested_Copying_database" xml:space="preserve">
+    <value>データベースをコピーしています</value>
+  </data>
+  <data name="ViewLibraryDlg_EnsureDigested_The_background_proteome___0___is_in_an_older_format___In_order_to_be_able_to_efficiently_find_peptide_sequences__the_background_proteome_should_be_upgraded_to_the_latest_version___Do_you_want_to_upgrade_the_background_proteome_now_" xml:space="preserve">
+    <value>バックグラウンドプロテオーム「{0}」が旧形式になっています。効率よくペプチドシークエンスを見つけるには、バックグラウンドプロテオームを最新版にアップグレードしてください。今すぐバックグラウンドプロテオームをアップグレードしますか？</value>
+  </data>
+  <data name="ViewLibraryDlg_MatchModifications_Add_modifications" xml:space="preserve">
+    <value>修飾を追加</value>
+  </data>
+  <data name="ViewLibraryDlg_MatchModifications_No" xml:space="preserve">
+    <value>いいえ</value>
+  </data>
+  <data name="ViewLibraryDlg_MatchModifications_Yes" xml:space="preserve">
+    <value>はい</value>
+  </data>
+  <data name="ViewLibraryDlg_UpdateListPeptide_Updating_list_of_peptides" xml:space="preserve">
+    <value>ペプチドのリストを更新しています</value>
+  </data>
+  <data name="ViewLibraryDlg_UpdateStatusArea_Molecules__0__through__1__of__2__total_" xml:space="preserve">
+    <value>分子{0}から{1}の合計{2}です。</value>
+  </data>
+  <data name="ViewLibraryDlg_UpdateStatusArea_Page__0__of__1__" xml:space="preserve">
+    <value>{1}ページ中{0}ページ</value>
+  </data>
+  <data name="ViewLibraryDlg_UpdateStatusArea_Peptides__0__through__1__of__2__total" xml:space="preserve">
+    <value>{2}合計の{1}を通じた{0}個のペプチド。</value>
+  </data>
+  <data name="ViewLibraryDlg_UpdateUI_CCS__" xml:space="preserve">
+    <value>CCS：</value>
+    <comment>CCS is abbreviation for Collision Cross Section</comment>
+  </data>
+  <data name="ViewLibraryDlg_UpdateUI_Failure_loading_spectrum_Library_may_be_corrupted" xml:space="preserve">
+    <value>スペクトルの読み込みに失敗しました。ライブラリが破損している可能性があります。</value>
+  </data>
+  <data name="ViewLibraryDlg_UpdateUI_File" xml:space="preserve">
+    <value>ファイル： {0}</value>
+  </data>
+  <data name="ViewLibraryDlg_UpdateUI_IM__" xml:space="preserve">
+    <value>IM：</value>
+    <comment>&gt;IM is abbreviation for Ion Mobility</comment>
+  </data>
+  <data name="ViewLibraryDlg_UpdateUI_RT" xml:space="preserve">
+    <value>RT</value>
+  </data>
+  <data name="ViewLibraryDlg_UpdateUI_Unauthorized_access_attempting_to_read_from_library_" xml:space="preserve">
+    <value>ライブラリから読み取ろうとする無許可のアクセス。</value>
+  </data>
+  <data name="ViewLibraryDlg_ViewLibraryDlg_Activated_The_library__0__is_no_longer_available_in_the_Skyline_settings__Reload_the_library_explorer_" xml:space="preserve">
+    <value>Skyline設定内のライブラリ{0}は今後利用することができません。ライブラリエクスプローラーを再読み込みしますか？</value>
+  </data>
+  <data name="ViewLibraryDlg_ViewLibraryDlg_Activated_There_are_no_libraries_in_the_current_settings" xml:space="preserve">
+    <value>現在の設定にはライブラリがありません。</value>
+  </data>
+  <data name="ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Molecules" xml:space="preserve">
+    <value>ライブラリ分子</value>
+  </data>
+  <data name="ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Peptides" xml:space="preserve">
+    <value>ライブラリペプチド</value>
+  </data>
+  <data name="ViewLibraryPepMatching_AddProteomePeptides_Skipping__0__already_present" xml:space="preserve">
+    <value>既に存在する{0}個をスキップ中</value>
+  </data>
+  <data name="ViewLibSpectrumGraphItem_Title__0__1_" xml:space="preserve">
+    <value>{0}{1} m/z</value>
+  </data>
+  <data name="ViewLibSpectrumGraphItem_Title__0__1__Charge__2__" xml:space="preserve">
+    <value>{0}{1}、電荷{2}</value>
+  </data>
+  <data name="WindowMargin_ASYMMETRIC_Asymmetric" xml:space="preserve">
+    <value>非対称</value>
+  </data>
+  <data name="WindowMargin_NONE_None" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="WindowMargin_SYMMETRIC_Symmetric" xml:space="preserve">
+    <value>対称</value>
+  </data>
+  <data name="WindowType_EXTRACTION_Extraction" xml:space="preserve">
+    <value>抽出</value>
+  </data>
+  <data name="WindowType_MEASUREMENT_Measurement" xml:space="preserve">
+    <value>測定</value>
+  </data>
+</root>
