@@ -601,15 +601,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 case GraphTypeSummary.replicate:
                     return GraphsResources.Extensions_CustomToString_Replicate_Comparison;
                 case GraphTypeSummary.peptide:
-<<<<<<< HEAD
                     return GraphsResources.Extensions_CustomToString_Peptide_Comparison;
-                case GraphTypeSummary.protein:
-                    return Resources.Extensions_CustomToString_Protein_Expression;
-=======
-                    return Resources.Extensions_CustomToString_Peptide_Comparison;
                 case GraphTypeSummary.abundance:
                     return Resources.Extensions_CustomToString_Relative_Abundance;
->>>>>>> f487ebb28e8571815840d9adec710150b18e2fc1
                 case GraphTypeSummary.score_to_run_regression:
                     return GraphsResources.Extensions_CustomToString_Score_To_Run_Regression;
                 case GraphTypeSummary.schedule:

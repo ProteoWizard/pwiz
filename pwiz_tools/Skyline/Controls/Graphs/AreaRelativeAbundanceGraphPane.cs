@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected override void UpdateAxes()
         {
-            YAxis.Title.Text = Resources.AreaPeptideGraphPane_UpdateAxes_Peak_Area;
+            YAxis.Title.Text = GraphsResources.AreaPeptideGraphPane_UpdateAxes_Peak_Area;
 
             base.UpdateAxes();
 

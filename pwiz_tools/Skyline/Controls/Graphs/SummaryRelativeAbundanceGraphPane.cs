@@ -324,7 +324,7 @@ namespace pwiz.Skyline.Controls.Graphs
             XAxis.Scale.MinAuto = true;
             if (Settings.Default.AreaLogScale )
             {
-                YAxis.Title.Text = TextUtil.SpaceSeparate(Resources.SummaryPeptideGraphPane_UpdateAxes_Log, YAxis.Title.Text);
+                YAxis.Title.Text = TextUtil.SpaceSeparate(GraphsResources.SummaryPeptideGraphPane_UpdateAxes_Log, YAxis.Title.Text);
                 YAxis.Type = AxisType.Log;
             }
             else
