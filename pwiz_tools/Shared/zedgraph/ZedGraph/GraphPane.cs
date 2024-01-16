@@ -1523,7 +1523,7 @@ namespace ZedGraph
         {
             private GraphPane _graph;
             private int _cellSize;
-			private Random _randGenerator = new Random();
+			private Random _randGenerator = new Random(123);
             private PointF _chartOffset;
             private List<Tuple<PointF, Rectangle>> _labeledPoints = new List<Tuple<PointF, Rectangle>>();
 
@@ -1698,9 +1698,13 @@ namespace ZedGraph
 			/// <returns></returns>
 			private float GoalFuncion(Point pt, PointF targetPoint, SizeF labelSize)
             {
-                var diff = new SizeF(pt.X + labelSize.Width / 3 - targetPoint.X, pt.Y - targetPoint.Y);
-                var dist = diff.Width * diff.Width + diff.Height * diff.Height; 
-                var rect = new RectangleF(pt.X, pt.Y, labelSize.Width, labelSize.Height); 
+                var distPoints = new[] { pt - new Size((int)(labelSize.Width / 2), 0), pt, pt + new Size((int)(labelSize.Width / 2), 0) };
+                var dist = distPoints.Min(p =>
+                {
+                    var diff = new SizeF(p.X - targetPoint.X, p.Y - targetPoint.Y);
+                    return diff.Width * diff.Width + diff.Height * diff.Height;
+                }); 
+                var rect = new RectangleF(pt.X - labelSize.Width/2, pt.Y - labelSize.Height/2, labelSize.Width, labelSize.Height); 
 				var totalOverlap = 0.0;
                 foreach (var cell in GetRectangleCells(rect))
                 {
@@ -1719,9 +1723,9 @@ namespace ZedGraph
                     var labelVector = new PointF(pt.X - labeledPoint.Item2.Location.X,
                         pt.Y - labeledPoint.Item2.Location.Y);
                     if (pointVector.X * labelVector.X + pointVector.Y * labelVector.Y < 0)
-                        penalty += 5000;
+                        penalty += 500;
                 }
-				return (float)((0.1 * dist + totalOverlap) + penalty);
+				return (float)((0.05 * dist + totalOverlap) + penalty);
             }
 
             private IEnumerable<GridCell> GetRectangleCells(Rectangle rect)
@@ -1806,7 +1810,10 @@ namespace ZedGraph
                         || !gridRect.Contains(randomGridPoint))
                         continue;
                     if (points.Contains(randomGridPoint))
+                    {
+                        count++;
                         continue;
+                    }
 					points.Add(randomGridPoint);
                     var goalEstimate = GoalFuncion(CellFromPoint(randomGridPoint)._location, targetPoint, labelRect.Size);
                     if (goalEstimate < goal)
@@ -1817,7 +1824,7 @@ namespace ZedGraph
                     }
 				}
 				watch.Stop();
-				Trace.Write(string.Format("{0}, {1}, {2}", tbox.Text, targetPoint.X, targetPoint.Y));
+				Trace.Write(string.Format("{0}, {1}, {2} ", tbox.Text, targetPoint.X, targetPoint.Y));
 				// output headers: goal cell X, Y, grid search goal, grid search goal count, elapsedTicks, unique points count, fine search goal point X, Y, fine search offset X, Y, final goal, fine search goal gain, fine search count, fine elapsed ticks
 				Trace.Write(string.Format("{0}, {1}, {2}, {3}, {4}, {5}, ", goalCell.X, goalCell.Y, goal, goalCount, watch.Elapsed.Ticks, points.Count));
                 var roughGoal = goal;
@@ -1841,8 +1848,9 @@ namespace ZedGraph
                 watch.Stop();
                 Trace.WriteLine(string.Format("{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}", goalPoint.X, goalPoint.Y, searchOffset.Width, searchOffset.Height, goal, roughGoal - goal, goalCount, watch.Elapsed.Ticks));
 
-				var labelLocation = new PointF(goalPoint.X, goalPoint.Y + labelRect.Height);
+				var labelLocation = new PointF(goalPoint.X, goalPoint.Y + labelRect.Height/2);
 				_graph.ReverseTransform(new PointF(labelLocation.X, labelLocation.Y), out var x, out var y);
+                //_graph.ReverseTransform(targetPoint, out var x, out var y);
 
 				tbox.Location.X = x;
 				tbox.Location.Y = y;
@@ -1907,7 +1915,7 @@ namespace ZedGraph
                 for (var i = 0; i < objects.Count; i++)
                 {
                     _labelLayout.PlaceLabel(objects[i], points[i], g);
-                    AdjustObject(objects[i], g, maxIter);
+                    //AdjustObject(objects[i], g, maxIter);
 					DrawConnector(objects[i], points[i], g);
                 }
             }
