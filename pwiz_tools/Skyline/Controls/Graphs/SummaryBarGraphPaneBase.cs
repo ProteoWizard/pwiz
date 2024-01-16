@@ -331,7 +331,7 @@ namespace pwiz.Skyline.Controls.Graphs
             ToolTip?.Hide();
         }
 
-        private XAxis GetNearestXAxis(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
+        public XAxis GetNearestXAxis(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
         {
             using (Graphics g = sender.CreateGraphics())
             {

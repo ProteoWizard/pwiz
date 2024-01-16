@@ -221,6 +221,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 case GraphTypeSummary.peptide:
                     GraphSummary.DoUpdateGraph(this, GraphSummary.Type);
                     break;
+                case GraphTypeSummary.abundance:
+                    GraphSummary.GraphPanes = new[] { new AreaRelativeAbundanceGraphPane(GraphSummary) };
+                    break;
                 case GraphTypeSummary.histogram:
                     if (!(pane is AreaCVHistogramGraphPane))
                         GraphSummary.GraphPanes = new[] { new AreaCVHistogramGraphPane(GraphSummary) };
