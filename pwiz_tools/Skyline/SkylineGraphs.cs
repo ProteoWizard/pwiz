@@ -3929,11 +3929,13 @@ namespace pwiz.Skyline
             }
 
             menuStrip.Items.Insert(iInsert++, toolStripSeparator24);
-            menuStrip.Items.Insert(iInsert++, areaPropsContextMenuItem);
-            AddRelativeAbundanceFormattingForm(menuStrip, iInsert++);
+            if(graphType != GraphTypeSummary.abundance)
+                menuStrip.Items.Insert(iInsert++, areaPropsContextMenuItem);
+            else
+                AddRelativeAbundanceFormattingForm(menuStrip, iInsert++);
             menuStrip.Items.Insert(iInsert, toolStripSeparator28);
 
-            if (!isHistogram)
+            if (!isHistogram && graphType != GraphTypeSummary.abundance)
             {
                 var isotopeLabelType = graphSummary.GraphPaneFromPoint(mousePt) != null
                     ? graphSummary.GraphPaneFromPoint(mousePt).PaneKey.IsotopeLabelType
