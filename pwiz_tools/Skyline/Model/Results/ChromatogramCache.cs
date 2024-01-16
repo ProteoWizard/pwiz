@@ -338,7 +338,7 @@ namespace pwiz.Skyline.Model.Results
             float tolerance, ChromatogramSet chromatograms)
         {
             var fileIndexesFound = new HashSet<int>();
-            if (nodePep != null && nodePep.IsProteomic && _chromEntryIndex != null)
+            if (nodePep != null && _chromEntryIndex != null)
             {
                 var key = new LibKey(nodePep.ModifiedTarget, Adduct.EMPTY).LibraryKey;
                 foreach (var chromatogramIndex in _chromEntryIndex.ItemsMatching(key, false).SelectMany(list=>list))

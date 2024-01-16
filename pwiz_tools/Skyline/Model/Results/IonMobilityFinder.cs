@@ -43,9 +43,10 @@ namespace pwiz.Skyline.Model.Results
         private MsDataFileScanHelper _msDataFileScanHelper;
         private readonly string _documentFilePath;
         private readonly SrmDocument _document;
+        private readonly IonMobilityWindowWidthCalculator _filterWindowWidthCalculator;
         private TransitionGroupDocNode _currentDisplayedTransitionGroupDocNode;
-        private Dictionary<LibKey, List<IonMobilityFit>> _ms1IonMobilities;
-        private Dictionary<LibKey, List<IonMobilityFit>> _ms2IonMobilities;
+        private Dictionary<LibKey, List<IonMobilityFit>> _ms1IonMobilitiesPerLibKey;
+        private Dictionary<LibKey, List<IonMobilityFit>> _ms2IonMobilitiesPerLibKey;
         private int _totalSteps;
         private int _currentStep;
         private readonly IProgressMonitor _progressMonitor;
@@ -53,31 +54,57 @@ namespace pwiz.Skyline.Model.Results
         private Exception _dataFileScanHelperException;
         private double _maxHighEnergyDriftOffsetMsec;
         private bool _useHighEnergyOffset;
-        private IonMobilityValue _ms1IonMobilityBest;
+        private double? _ms1IonMobilityBest;
+        private eIonMobilityUnits _ionMobilityUnits = eIonMobilityUnits.none;
         private double _ms2IonMobilityFilterLow, _ms2IonMobilityFilterHigh; // For rejecting extreme MS2 high energy offset values
 
-        private readonly struct IonMobilityFit : IComparable<IonMobilityFit>
+        private class IonMobilityFit : IComparable<IonMobilityFit>
         {
-            public IonMobilityFit(double rt, IonMobilityAndCCS ionMobility, double iDotP, double intensity)
+            public IonMobilityFit(int fileIndex, double rt, double im, double? ccs, double iDotP, double intensityM0, double intensityMminus1)
             {
+                FileIndex = fileIndex;
                 RetentionTime = rt;
-                IonMobility = ionMobility;
+                IonMobility = im;
+                CCS = ccs;
                 IdotP = iDotP;
-                Intensity = intensity;
+                IntensityM0 = intensityM0;
+                IntensityMminus1 = intensityMminus1;
             }
 
+            public int FileIndex { get; }
             public double RetentionTime { get; } // RT at which this mobility was measured
-            public IonMobilityAndCCS IonMobility { get; }
+            public double IonMobility { get; } 
+            public double? CCS { get; set; }
             public double IdotP { get; }
-            public double Intensity { get; }
+            public double IntensityM0 { get; } // M0 intensity
+            public double IntensityMminus1 { get; } //M-1 intensity
 
-            // Sort order is best idotp then best intensity
-            // FOr very similar idotp, intensity is the tie breaker
+            private double RatioMm1ToM0 => IntensityM0 == 0 ? double.MaxValue : (IntensityMminus1/IntensityM0);
+
+            // Sort order is best fits first
+            // Return -1 if this is a better fit than other
+            // Return 1 if other is a better fit than this
+            // First by is best idotp then best intensity
+            // For very similar idotp, intensity is the tie breaker
+            // If one has a suspicously strong M-1 signal, prefer the other
+            // N.B. retention time is not part of the sort
             public int CompareTo(IonMobilityFit other)
             {
-                var similar = SimilarIdotP(IdotP, other.IdotP);
+                if (other == null)
+                {
+                    return -1; // Anything beats nothing
+                }
+                const double sketchyRatio = .25; // If M-1/M0 greater than this, we're probably actually in the middle of a different isotope envelope
+                var sketchy = RatioMm1ToM0 > sketchyRatio;
+                var sketchyOther = other.RatioMm1ToM0 > sketchyRatio; 
+                if (sketchyOther != sketchy) 
+                {
+                    return sketchy ? 1 : -1; // Take the one without the suspicious M-1 peak
+                }
 
-                return similar ? Intensity.CompareTo(other.Intensity) : IdotP.CompareTo(other.IdotP);
+                var similarIdotP = SimilarIdotP(IdotP, other.IdotP);
+
+                return similarIdotP ? other.IntensityM0.CompareTo(IntensityM0) : other.IdotP.CompareTo(IdotP);
             }
 
             public static bool SimilarIdotP(double iDotP, double otherIdotP)
@@ -85,6 +112,10 @@ namespace pwiz.Skyline.Model.Results
                 return Math.Abs(iDotP - otherIdotP) <= .02; // iDotP within 2%
             }
 
+            public override string ToString()
+            {
+                return $@"rt {RetentionTime} idotp {IdotP} iM0 {IntensityM0} iM01 {IntensityMminus1} mob {IonMobility}";
+            }
         }
 
         /// <summary>
@@ -92,11 +123,13 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         /// <param name="document">The document to be inspected</param>
         /// <param name="documentFilePath">Aids in locating the raw files</param>
+        /// <param name="filterWindowWidthCalculator">IM filter width calculator - not necessarily same as in document.Settings</param>
         /// <param name="progressMonitor">Optional progress monitor for this potentially long operation</param>
-        public IonMobilityFinder(SrmDocument document, string documentFilePath, IProgressMonitor progressMonitor)
+        public IonMobilityFinder(SrmDocument document, string documentFilePath, IonMobilityWindowWidthCalculator filterWindowWidthCalculator, IProgressMonitor progressMonitor)
         {
             _document = document;
             _documentFilePath = documentFilePath;
+            _filterWindowWidthCalculator = filterWindowWidthCalculator;
             _currentDisplayedTransitionGroupDocNode = null;
             _progressMonitor = progressMonitor;
         }
@@ -111,7 +144,7 @@ namespace pwiz.Skyline.Model.Results
                     _useHighEnergyOffset ? 2 : 0; // CONSIDER(bspratt): user definable? or dynamically set by looking at scan to scan drift delta? Or resolving power?
             }
         }
-
+        
         /// <summary>
         /// Looks through the result and finds ion mobility values.
         /// Note that this method only returns new values that were found in results.
@@ -147,8 +180,8 @@ namespace pwiz.Skyline.Model.Results
                 // Avoid opening and re-opening raw files - make these the outer loop
                 //
 
-                _ms1IonMobilities = new Dictionary<LibKey, List<IonMobilityFit>>();
-                _ms2IonMobilities = new Dictionary<LibKey, List<IonMobilityFit>>();
+                _ms1IonMobilitiesPerLibKey = new Dictionary<LibKey, List<IonMobilityFit>>();
+                _ms2IonMobilitiesPerLibKey = new Dictionary<LibKey, List<IonMobilityFit>>();
                 var twopercent = (int) Math.Ceiling(_totalSteps*0.02);
                 _totalSteps += twopercent;
                 _currentStep = twopercent;
@@ -157,51 +190,62 @@ namespace pwiz.Skyline.Model.Results
                     _progressStatus = new ProgressStatus(fileInfos.First().FilePath.GetFileName());
                     _progressStatus = _progressStatus.UpdatePercentCompleteProgress(_progressMonitor, _currentStep, _totalSteps); // Make that initial lag seem less dismal to the user
                 }
+
                 foreach (var fileInfo in fileInfos)
                 {
+                    if (_ionMobilityUnits == eIonMobilityUnits.none)
+                    {
+                        _ionMobilityUnits = fileInfo.IonMobilityUnits;
+                    }
+                    else if (_ionMobilityUnits != fileInfo.IonMobilityUnits)
+                    {
+                        throw new IOException(TextUtil.LineSeparate(Resources.IonMobilityFinder_ProcessMSLevel_Failed_using_results_to_populate_ion_mobility_library_, Resources.IonMobilityFinder_FindIonMobilityPeaks_mixed_ion_mobility_types_are_not_supported), _dataFileScanHelperException);
+                    }
                     if (!ProcessFile(fileInfo))
                         return null; // User cancelled
                 }
                 // Find ion mobilities based on MS1 data
-                foreach (var dt in _ms1IonMobilities)
+                foreach (var fitMS1 in _ms1IonMobilitiesPerLibKey)
                 {
                     // Choose the ion mobility which gave the best fit to expected isotope envelope
                     // CONSIDER: average IM and CCS values that fall "near" the IM of best fit? Or consider them multiple conformers? (Only if at same RT, though)
-                    var ms1IonMobility = dt.Value.Max().IonMobility;
+                    var ms1IonMobilityFit = fitMS1.Value.Min(); // IonMobilityFit sorts best->worst
                     double highEnergyIonMobilityValueOffset = 0;
                     if (_useHighEnergyOffset)
                     {
                         // Check for MS2 data to use for high energy offset
-                        List<IonMobilityFit> listDt;
-                        var ms2IonMobility = _ms2IonMobilities.TryGetValue(dt.Key, out listDt)
-                            ? listDt.Max().IonMobility
-                            : ms1IonMobility;
-                        highEnergyIonMobilityValueOffset = Math.Round(ms2IonMobility.IonMobility.Mobility.Value - ms1IonMobility.IonMobility.Mobility.Value, 6); // Excessive precision is just distracting noise TODO(bspratt) ask vendors what "excessive" means here
+                        // At same RT in same file
+                        IonMobilityFit ms2IonMobilityFit = null;
+                        _ms2IonMobilitiesPerLibKey.TryGetValue(fitMS1.Key, out var ionMobilityMS2Fits);
+                        if (ionMobilityMS2Fits != null)
+                        {
+                            ms2IonMobilityFit = ionMobilityMS2Fits.Where(f => f.FileIndex == ms1IonMobilityFit.FileIndex).
+                                OrderBy(f => f.RetentionTime).
+                                FirstOrDefault(f => f.RetentionTime >= ms1IonMobilityFit.RetentionTime);
+                        }
+                        highEnergyIonMobilityValueOffset = ms2IonMobilityFit == null ? 0 : Math.Round(ms2IonMobilityFit.IonMobility - ms1IonMobilityFit.IonMobility, 6); // Excessive precision is just distracting noise TODO(bspratt) ask vendors what "excessive" means here
                     }
-                    var value =  IonMobilityAndCCS.GetIonMobilityAndCCS(ms1IonMobility.IonMobility, ms1IonMobility.CollisionalCrossSectionSqA, highEnergyIonMobilityValueOffset);
-                    measured[dt.Key] = value;
+                    var value =  IonMobilityAndCCS.GetIonMobilityAndCCS(ms1IonMobilityFit.IonMobility, _ionMobilityUnits, ms1IonMobilityFit.CCS, highEnergyIonMobilityValueOffset);
+                    measured[fitMS1.Key] = value;
                 }
                 // Check for data for which we have only MS2 to go on
-                foreach (var im in _ms2IonMobilities)
+                foreach (var im in _ms2IonMobilitiesPerLibKey)
                 {
-                    if (!_ms1IonMobilities.ContainsKey(im.Key))
+                    if (!_ms1IonMobilitiesPerLibKey.ContainsKey(im.Key))
                     {
                         // Only MS2 ion mobility values found, use that as a reasonable inference of MS1 ion mobility
-                        var driftTimeIntensityPair = im.Value.OrderByDescending(p => p.Intensity).First();
-                        var value = driftTimeIntensityPair.IonMobility;
-                        // Note collisional cross section
-                        if (_msDataFileScanHelper.ProvidesCollisionalCrossSectionConverter)
+                        var bestFit = im.Value.OrderByDescending(p => p.IntensityM0).FirstOrDefault();
+                        if (bestFit != null)
                         {
-                            var mz = im.Key.PrecursorMz ?? GetMzFromDocument(im.Key);
-                            var ccs = _msDataFileScanHelper.CCSFromIonMobility(value.IonMobility,
-                                mz, im.Key.Charge);
-                            if (ccs.HasValue)
+                            var ccs = bestFit.CCS;
+                            if (!ccs.HasValue && _msDataFileScanHelper.ProvidesCollisionalCrossSectionConverter)
                             {
-                                value =  IonMobilityAndCCS.GetIonMobilityAndCCS(value.IonMobility, ccs, value.HighEnergyIonMobilityValueOffset);
+                                var mz = im.Key.PrecursorMz ?? GetMzFromDocument(im.Key);
+                                ccs = _msDataFileScanHelper.CCSFromIonMobility(bestFit.IonMobility,
+                                    mz, im.Key.Charge);
                             }
+                            measured[im.Key] = IonMobilityAndCCS.GetIonMobilityAndCCS(bestFit.IonMobility, _ionMobilityUnits, ccs, null);
                         }
-
-                        measured[im.Key] = value;
                     }
                 }
             }
@@ -278,11 +322,11 @@ namespace pwiz.Skyline.Model.Results
                 return true;
             Assume.IsTrue(chromGroupInfo.BestPeakIndex != -1);
 
-            // Determine runtimes for trying idotp for DT measurement, preferably using all MS1 M0 peaks - failing that
+            // Determine retention times for trying idotp for DT measurement, preferably using all MS1 M0 peaks - failing that
             // use MS2 and just find max signal
             var apexRTs = GetApexRTs(chromGroupInfo, true) ??
                 GetApexRTs(chromGroupInfo, false);
-            if (!apexRTs.Any())
+            if (apexRTs == null || !apexRTs.Any())
             {
                 return true;
             }
@@ -301,14 +345,13 @@ namespace pwiz.Skyline.Model.Results
                 var nodeGroupIsotopeDist = pair.NodeGroup.IsotopeDist;
                 foreach (var mzp in nodeGroupIsotopeDist.ExpectedPeaks)
                 {
-                    if (mzp.Proportion > 0) // Avoid the M-1 peak
+                    // Find the extracted MS1 chromatogram whose mz most closely matches
+                    var tp = chromGroupInfo.TransitionPointSets.OrderBy(tps => Math.Abs(mzp.Mz - tps.ProductMz)).First();
+                    if (WithinTolerance(mzp.Mz, tp))
                     {
-                        // Find the extracted MS1 chromatogram whose mz most closely matches
-                        var tp = chromGroupInfo.TransitionPointSets.OrderBy(tps => Math.Abs(mzp.Mz - tps.ProductMz)).First();
-                        if (WithinTolerance(mzp.Mz, tp))
-                        {
-                            transitionPointSets.Add(new ChromatogramInfoAndExpectedProportion(tp, mzp.Proportion));
-                        }
+                        // N.B. this might be the M-1 isotope, which is useful  - its expected proportion 0 helps avoid matching
+                        // the middle of another isotope envelope where what we thought was our M0 is actually somebody else's M1
+                        transitionPointSets.Add(new ChromatogramInfoAndExpectedProportion(tp, mzp.Proportion)); 
                     }
                 }
             }
@@ -332,10 +375,29 @@ namespace pwiz.Skyline.Model.Results
         {
             double? apexRT = null;
             List<double> m0RTs = null;
-            float ms1Max = 0;
-            var transPointSets = ms1Trans
+            float ms2Max = 0;
+            var transPointSets = (ms1Trans
                 ? chromGroupInfo.TransitionPointSets.Where(tp => tp.Source == ChromSource.ms1 && tp.PrecursorMz.Equals(tp.ProductMz)) // Get the chromatographic peaks for M0 isotope
-                : chromGroupInfo.TransitionPointSets.Where(tp => tp.Source == ChromSource.fragment);
+                : chromGroupInfo.TransitionPointSets.Where(tp => tp.Source == ChromSource.fragment)).ToArray();
+            if (ms1Trans && !transPointSets.Any())
+            {
+                // No exact precursor/fragment mz match for finding M0 peak
+                var minDiff = double.MaxValue;
+                ChromatogramInfo tpM0 = null;
+                foreach (var tp in chromGroupInfo.TransitionPointSets.Where(tp => tp.Source == ChromSource.ms1))
+                {
+                    var diff = Math.Abs(tp.PrecursorMz - tp.ProductMz);
+                    if (diff < minDiff)
+                    {
+                        minDiff = diff;
+                        tpM0 = tp;
+                    }
+                }
+                if (tpM0 != null)
+                {
+                    transPointSets = new[] { tpM0 };
+                }
+            }
             foreach (var tp in transPointSets)
             {
                 foreach (var peakInfo in tp.Peaks)
@@ -345,10 +407,10 @@ namespace pwiz.Skyline.Model.Results
                         m0RTs ??= new List<double>();
                         m0RTs.Add(peakInfo.RetentionTime); // Time of a chromatographic peak for M0 isotope
                     }
-                    else if (peakInfo.Area > ms1Max)
+                    else if (peakInfo.Area > ms2Max)
                     {
-                        apexRT = peakInfo.RetentionTime;
-                        ms1Max = peakInfo.Area;
+                        apexRT = peakInfo.RetentionTime; // If no MS1 available, just look for max MS2
+                        ms2Max = peakInfo.Area;
                     }
                 }
             }
@@ -390,8 +452,9 @@ namespace pwiz.Skyline.Model.Results
             IScanProvider scanProvider = new ScanProvider(_documentFilePath, filePath,
                 chromSource, times, transitions.ToArray(), _document.Settings.MeasuredResults);
 
-            // Across all spectra at the peak retention time, find the one with best iDotP
+            // Across all IM spectra at each chromatogram peak, find the one with best iDotP
             // for the mz's of interest (ie the isotopic distribution) and note its ion mobility.
+            // Then keep ion mobility of all those candidate peaks.
             // (N.B. Skyline 23.1.x and earlier just looked for max intensity summed across the
             // isotopic peaks, but that was easily mislead by unrelated isotope envelopes in other
             // IM bands)
@@ -422,22 +485,22 @@ namespace pwiz.Skyline.Model.Results
                         UpdatePercentCompleteProgress(_progressMonitor, _currentStep++, _totalSteps);
                     _currentDisplayedTransitionGroupDocNode = nodeGroup;
                 }
-                EvaluateBestIonMobilityValue(msLevel, rt, libKey, mzTolerance, transitions, isotopeDist);
+                EvaluateBestIonMobilityValue(fileInfo.FileIndex, msLevel, rt, libKey, mzTolerance, transitions, isotopeDist);
             }
             return true;
         }
 
-        private void EvaluateBestIonMobilityValue(int msLevel, double rt, LibKey libKey, float mzTolerance, List<TransitionFullScanInfo> transitions, List<double> expectedIsotopeProportions)
+        private void EvaluateBestIonMobilityValue(int fileIndex, int msLevel, double rt, LibKey libKey, float mzTolerance, List<TransitionFullScanInfo> transitions, List<double> expectedIsotopeProportions)
         {
-            var ionMobilityValue = IonMobilityValue.EMPTY;
             var isNegative = transitions[0].ProductMz.IsNegative;
 
             // Avoid picking MS2 ion mobility values wildly different from MS1 values
-            if ((msLevel == 2) && _ms1IonMobilities.TryGetValue(libKey, out var mobility))
+            if ((msLevel == 2) && _ms1IonMobilitiesPerLibKey.TryGetValue(libKey, out var ionMobilityFitsMS1))
             {
-                _ms1IonMobilityBest = mobility.Max().IonMobility.IonMobility;
-                var imMS1 = _ms1IonMobilityBest.Mobility ?? 0;
-                switch (_ms1IonMobilityBest.Units)
+                var bestFitMS1 = ionMobilityFitsMS1.Min(); // IonMobilityFit sorts best->worst
+                _ms1IonMobilityBest = bestFitMS1.IonMobility; 
+                var imMS1 = _ms1IonMobilityBest ?? 0;
+                switch (_ionMobilityUnits)
                 {
                     case eIonMobilityUnits.drift_time_msec:
                         _ms2IonMobilityFilterHigh = imMS1; // Fragments go faster, not slower
@@ -453,8 +516,10 @@ namespace pwiz.Skyline.Model.Results
             }
             else
             {
-                _ms1IonMobilityBest = IonMobilityValue.EMPTY;
+                _ms1IonMobilityBest = null;
             }
+
+            var indexM0 = expectedIsotopeProportions[0] == 0 && expectedIsotopeProportions.Count > 1 ? 1 : 0;
 
             var isotopeIntensitiesPerIM = new Dictionary<double, double[]>();
             foreach (var scan in _msDataFileScanHelper.MsDataSpectra.Where(scan => scan != null))
@@ -525,11 +590,8 @@ namespace pwiz.Skyline.Model.Results
             }
 
             // Now check idotp, use total intensity as a tie breaker
-            double maxCorrelation = 0;
-            double bestMatchCorrelation = 0; // Not necessarily the max correlation, intensity factors into idea of "best" match
-            double? bestMatchIM = null;
-            double bestMatchIntensity = 0;
-            var statExpectedIsotopeProportions = new Statistics(expectedIsotopeProportions);
+            IonMobilityFit bestFit = null;
+            var statExpectedIsotopeProportions = new Statistics(expectedIsotopeProportions.Skip(indexM0));
 
             // Use the same IM window size as in chromatogram extraction
             var windowedIsotopeIntensitiesPerIM = new Dictionary<double, double[]>();
@@ -539,7 +601,12 @@ namespace pwiz.Skyline.Model.Results
             for (var indexIM = 0; indexIM < observedIMs.Length; indexIM++)
             {
                 var observedIM = observedIMs[indexIM];
-                var ionMobilityHalfWindow = _document.Settings.TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(observedIM, imMax)/2;
+                var ionMobilityHalfWindow = _filterWindowWidthCalculator.WidthAt(observedIM, imMax)/2;
+                if (ionMobilityHalfWindow <= 0)
+                {
+                    throw new IOException(TextUtil.LineSeparate(Resources.IonMobilityFinder_ProcessMSLevel_Failed_using_results_to_populate_ion_mobility_library_, 
+                        Resources.IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settings___ion_mobility_filtering___Window_type), null);
+                }
                 var isotopeIntensities = isotopeIntensitiesPerIM[observedIM];
                 var windowedIsotopeIntensities = new double[isotopeIntensities.Length];
                 isotopeIntensities.CopyTo(windowedIsotopeIntensities,0);
@@ -579,55 +646,58 @@ namespace pwiz.Skyline.Model.Results
                     if (!expectedIsotopeProportions.Where((proportion, i) => proportion >= 0.10 &&
                                                                              isotopeIntensitiesThisIM.Value[i] == 0).Any())
                     {
-                        var statDistributionThisIM = new Statistics(isotopeIntensitiesThisIM.Value);
+                        // Now compare fit to isotopic envelope
+                        var statDistributionThisIM = new Statistics(isotopeIntensitiesThisIM.Value.Skip(indexM0));
                         var isotopeDotProduct = statExpectedIsotopeProportions.Angle(statDistributionThisIM.NormalizeUnit()); // statExpectedIsotopeProportions is already normalized to unit vector
                         if (!double.IsNaN(isotopeDotProduct) && isotopeDotProduct >= 0)
                         {
-                            // Now compare fit to isotopic envelope
-                            maxCorrelation = Math.Max(maxCorrelation, isotopeDotProduct);
-                            var similar = IonMobilityFit.SimilarIdotP(isotopeDotProduct,maxCorrelation);
-                            var intensity = similar ? statDistributionThisIM.Sum() : (double?)null;
-                            if (similar ? bestMatchIntensity < intensity : isotopeDotProduct > bestMatchCorrelation)
+                            var fit = new IonMobilityFit(fileIndex, rt, isotopeIntensitiesThisIM.Key, null, // We'll calculate CCS later
+                                isotopeDotProduct, isotopeIntensitiesThisIM.Value[indexM0], indexM0 > 0 ? isotopeIntensitiesThisIM.Value[0] : 0);
+                            if (fit.CompareTo(bestFit) < 0) // IonMobilityFit.Compare sorts best->worst
                             {
-                                bestMatchIM = isotopeIntensitiesThisIM.Key;
-                                bestMatchIntensity = intensity ?? statDistributionThisIM.Sum();
-                                // If intensity was tie breaker, retain former best correlation
-                                bestMatchCorrelation = similar ? Math.Max(bestMatchCorrelation, isotopeDotProduct) : isotopeDotProduct;
+                                bestFit = fit; // This is a better fit than whatever we had, if any
                             }
                         }
                     }
                 }
             }
 
-            if (!bestMatchIM.HasValue)
+            if (bestFit == null)
             {
                 // No isotope envelope matches, fall back to just looking for IM with max total signal
+                double bestMatchIntensityM0 = 0;
+                double? bestMatchIM = null;
                 foreach (var isotopeIntensitiesThisIM in isotopeIntensitiesPerIM)
                 {
-                    var intensity = isotopeIntensitiesThisIM.Value.Sum();
-                    if (intensity > bestMatchIntensity)
+                    var intensityM0 = isotopeIntensitiesThisIM.Value[indexM0];
+                    if (intensityM0 > bestMatchIntensityM0)
                     {
                         bestMatchIM = isotopeIntensitiesThisIM.Key;
-                        bestMatchIntensity = intensity;
+                        bestMatchIntensityM0 = intensityM0;
                     }
+                }
+
+                if (bestMatchIM.HasValue)
+                {
+                    bestFit = new IonMobilityFit(fileIndex, rt, bestMatchIM.Value, null, // CCS calculated later
+                        0, bestMatchIntensityM0, 0);
                 }
             }
 
-            if (bestMatchIM.HasValue)
+            if (bestFit != null)
             {
-                ionMobilityValue = IonMobilityValue.GetIonMobilityValue(bestMatchIM, _msDataFileScanHelper.ScanProvider.IonMobilityUnits);
-                var dict = (msLevel == 1) ? _ms1IonMobilities : _ms2IonMobilities;
-                var ccs = msLevel == 1 && _msDataFileScanHelper.ProvidesCollisionalCrossSectionConverter ? _msDataFileScanHelper.CCSFromIonMobility(ionMobilityValue, transitions.First().PrecursorMz, libKey.Charge) : null;
-                var result = new IonMobilityFit(rt, IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobilityValue, ccs, 0),
-                    bestMatchCorrelation,
-                    bestMatchIntensity);
+                var dict = (msLevel == 1) ? _ms1IonMobilitiesPerLibKey : _ms2IonMobilitiesPerLibKey;
+                if (msLevel == 1 && _msDataFileScanHelper.ProvidesCollisionalCrossSectionConverter)
+                {
+                    bestFit.CCS  = _msDataFileScanHelper.CCSFromIonMobility(bestFit.IonMobility, transitions.First().PrecursorMz, libKey.Charge);
+                }
                 List<IonMobilityFit> listPairs;
                 if (!dict.TryGetValue(libKey, out listPairs))
                 {
                     listPairs = new List<IonMobilityFit>();
                     dict.Add(libKey, listPairs);
                 }
-                listPairs.Add(result);
+                listPairs.Add(bestFit);
             }
         }
 
@@ -646,12 +716,12 @@ namespace pwiz.Skyline.Model.Results
         // Ignore proposed fragment IM values that are too far away from the parent IM
         private bool IsExtremeMs2Value(double im)
         {
-            if ((_ms1IonMobilityBest.Mobility ?? 0) == 0)
+            if ((_ms1IonMobilityBest ?? 0) == 0)
             {
                 return false; // No MS1 to compare with
             }
 
-            if (_ms1IonMobilityBest.Units == eIonMobilityUnits.compensation_V)
+            if (_ionMobilityUnits == eIonMobilityUnits.compensation_V)
             {
                 return false;  // Makes no sense in FAIMS
             }

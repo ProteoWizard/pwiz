@@ -802,7 +802,18 @@ namespace pwiz.SkylineTestUtil
                 expectedRowCount ?? SkylineWindow.Document.MoleculeTransitionCount * (SkylineWindow.Document.MeasuredResults?.Chromatograms.Count ?? 1));
             return documentGrid;
         }
-        
+
+        public static void SetIonMobilityResolvingPowerUI(TransitionSettingsUI transitionSettingsUi, double rp)
+        {
+            RunUI(() =>
+            {
+                transitionSettingsUi.SelectedTab = TransitionSettingsUI.TABS.IonMobility;
+                transitionSettingsUi.IonMobilityControl.WindowWidthType =
+                    IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power;
+                transitionSettingsUi.IonMobilityControl.IonMobilityFilterResolvingPower = rp;
+            });
+        }
+
         protected static void RenameReplicate(ManageResultsDlg manageResultsDlg, int replicateIndex, string newName)
         {
             RunUI(() => manageResultsDlg.SelectedChromatograms = new[]

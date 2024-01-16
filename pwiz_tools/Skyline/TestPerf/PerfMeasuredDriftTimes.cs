@@ -77,9 +77,11 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     });
                     document = WaitForDocumentChange(document);
                 }
+
                 RunUI(() =>
                 {
-                    SkylineWindow.SaveDocument(TestFilesDirs[1].GetTestPath($"local{pass}.sky")); // Avoid "document changed since last edit" message
+                    SkylineWindow.SaveDocument(TestFilesDirs[1]
+                        .GetTestPath($"local{pass}.sky")); // Avoid "document changed since last edit" message
                 });
 
                 // Verify ability to extract predictions from raw data - first pass, use the clean BSA sample
@@ -91,13 +93,17 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 // Simulate user setting ion mobility resolving power then picking Edit New from the Ion Mobility Library combo control
                 RunUI(() =>
                 {
-                    transitionSettingsDlg.IonMobilityControl.WindowWidthType = IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power;
+                    transitionSettingsDlg.IonMobilityControl.WindowWidthType = IonMobilityWindowWidthCalculator
+                        .IonMobilityWindowWidthType.resolving_power;
                     transitionSettingsDlg.IonMobilityControl.IonMobilityFilterResolvingPower = 30;
                 });
-                var ionMobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg.IonMobilityControl.AddIonMobilityLibrary);
+                var ionMobilityLibraryDlg =
+                    ShowDialog<EditIonMobilityLibraryDlg>(
+                        transitionSettingsDlg.IonMobilityControl.AddIonMobilityLibrary);
                 RunUI(() =>
                 {
-                    ionMobilityLibraryDlg.CreateDatabaseFile(TestFilesDirs[1].GetTestPath($"local{pass}{IonMobilityDb.EXT}"));
+                    ionMobilityLibraryDlg.CreateDatabaseFile(TestFilesDirs[1]
+                        .GetTestPath($"local{pass}{IonMobilityDb.EXT}"));
                     ionMobilityLibraryDlg.SetOffsetHighEnergySpectraCheckbox(true);
                     ionMobilityLibraryDlg.GetIonMobilitiesFromResults();
                     measuredMobilities.Add(ionMobilityLibraryDlg.LibraryMobilitiesFlat.ToList());
@@ -109,17 +115,26 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // Now compare the derived mobilities
             var expectedMobilityBSA = new[]
             {
-                26.46691, 25.32328, 28.75418, 28.10067, 23.03602, 27.77392, 24.5064, 29.40768, 22.21914, 
-                25.81341, // NB this one looks like it has a strong conformer at about 24.8
-                23.03602, 23.36277, 
-                27.77392, // NB this one looks like it has a strong conformer at about 26
-                27.9373, 29.40768, 23.68952, 
-                27.610544, 24.99653, 30.38794, 29.2443,
-                23.19939, 27.28379, 27.77392, 29.57106, 26.95704, 28.5908, 
+                26.46691, 25.65003, 28.42742, 28.26405, 22.87264, 27.77392, 24.66978, 29.57106, 22.38251,
+                25.32328, // NB this one looks like it has a strong conformer at about 24.8
+                23.8529, 23.36277,
+                27.44717, // NB this one looks like it has a strong conformer at about 26
+                30.22456, 29.57106, 23.68952,
+                27.12042, 24.66978, 30.22456, 28.91755,
+                23.03602, 27.44717, 28.10067, 29.2443, 27.44717, 28.91755,
                 22.87264, // NB this one looks like it has a strong conformer at about 24.5
-                28.75418, 24.01627, 23.19939,
-                26.14016, 24.99653, 23.8529, 25.65003, 24.01627, 28.42742, 25.97678, 24.66978,
+                28.75418, 24.66978, 23.36277,
+                26.95704, 24.99653, 24.17965, 25.97678, 25.81341, 28.10067, 25.65003, 24.99653,
             };
+
+            var YeastMobility = new Dictionary<string, double>() // A handful of these are legitimately different 
+            { 
+                { "TC[+57.021464]VADESHAGC[+57.021464]EK++", 25.159904 },
+                { "YIC[+57.021464]DNQDTISSK++",28.264048 },
+                { "RHPEYAVSVLLR++", 30.061184 },
+                { "QTALVELLK++", 24.669776 }
+            };
+
             document = SkylineWindow.Document;
             var precursors = new LibKeyIndex(document.MoleculePrecursorPairs.Select(
                 p => p.NodePep.ModifiedTarget.GetLibKey(p.NodeGroup.PrecursorAdduct).LibraryKey));
@@ -129,7 +144,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 var mobilityBSA = measuredMobilities[0][n];
                 if (Math.Abs(mobilityBSA.IonMobility - expectedMobilityBSA[n]) > .01)
                 {
-                    errors.Add($"measured drift time {mobilityBSA.IonMobility} differs from expected {expectedMobilityBSA[n]} for {mobilityBSA.Precursor}");
+                    errors.Add($"BSA measured drift time {mobilityBSA.IonMobility} differs from expected {expectedMobilityBSA[n]} for {mobilityBSA.Precursor}");
                 }
                 var key = mobilityBSA.Precursor;
                 var indexYeastMix = measuredMobilities[1].FindIndex(m => m.Precursor.Equals(key));
@@ -141,16 +156,29 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 }
 
                 var tolerance = 1.0;
-                var expected = mobilityBSA.IonMobility;
-                if (Math.Abs(expected - mobilityYeastMix) > tolerance)
-                    errors.Add( string.Format(
-                        $"{key} measured drift time was {mobilityBSA.IonMobility} is {mobilityYeastMix} #{n}"));
+                if (YeastMobility.TryGetValue(key.ToString(), out var expected))
+                {
+                    if (Math.Abs(expected - mobilityYeastMix) > tolerance)
+                    {
+                        errors.Add(string.Format(
+                            $"{key} measured YeastMix drift time is {expected} but YeastMix measurement is {mobilityYeastMix} #{n}"));
+                    }
+                }
+                else
+                {
+                    expected = mobilityBSA.IonMobility;
+                    if (Math.Abs(expected - mobilityYeastMix) > tolerance)
+                    {
+                        errors.Add( string.Format(
+                            $"{key} measured BSA drift time is {expected} but YeastMix measurement is {mobilityYeastMix} #{n}"));
+                        
+                    }
+                }
                 if (Math.Abs(mobilityBSA.HighEnergyIonMobilityOffset - heoYeastMix) > 2.0)
                     errors.Add($"measured drift time high energy offset {mobilityBSA.HighEnergyIonMobilityOffset} vs {heoYeastMix} differs too much for " + key);
             }
             if (!Equals(document.MoleculeTransitionGroupCount, count))
                 errors.Add("did not find drift times for all precursors"); // Expect to find a value for each precursor
-
             AssertEx.AreEqual(0, errors.Count, string.Join("\n", errors));
 
             // And finally verify ability to reimport with altered drift filter (would formerly fail on an erroneous Assume)

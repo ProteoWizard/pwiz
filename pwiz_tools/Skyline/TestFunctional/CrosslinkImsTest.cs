@@ -19,6 +19,7 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
@@ -30,7 +31,7 @@ namespace pwiz.SkylineTestFunctional
     /// Tests creating an ion mobility library with entries for crosslinked peptides.
     /// </summary>
     [TestClass]
-    public class CrosslinkImsTest : AbstractFunctionalTest
+    public class CrosslinkImsTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestCrosslinkIms()
@@ -49,7 +50,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.ShowTransitionSettingsUI();
                 transitionSettingsClosed = true;
             });
-            RunUI(()=>transitionSettingsUi.SelectedTab = TransitionSettingsUI.TABS.IonMobility);
+            SetIonMobilityResolvingPowerUI(transitionSettingsUi, 50);
             RunDlg<EditIonMobilityLibraryDlg>(() => transitionSettingsUi.IonMobilityControl.AddIonMobilityLibrary(), ionMobilityLibraryDlg=>
             {
                 ionMobilityLibraryDlg.LibraryName = "Test Crosslink IMS Library";

@@ -812,12 +812,12 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.AreEqual(2, result.Count);
             var key3 = new LibKey("GLAGVENVTELKK", Adduct.TRIPLY_PROTONATED);
             var key2 = new LibKey("GLAGVENVTELKK", Adduct.DOUBLY_PROTONATED);
-            const double expectedDT3 = 3.2429; // Was 4.0709 before we started looking for isotope envelope match
-            const double expectedOffset3 = 0;
+            const double expectedDT3 = 4.1399; // Was 4.0709 before we started looking for isotope envelope match
+            const double expectedOffset3 = -0.620989;
             var actualDT3 = result.GetIonMobilityInfo(key3).First().IonMobility.Mobility.Value;
             var actualOffset3 = result.GetIonMobilityInfo(key3).First().HighEnergyIonMobilityValueOffset.Value;
-            const double expectedDT2 = 5.7269; // Was 5.5889 before we started looking for isotope envelope match
-            const double expectedOffset2 = -0.965984;
+            const double expectedDT2 = 6.0718967; // Was 5.5889 before we started looking for isotope envelope match
+            const double expectedOffset2 = -1.310978;
             var actualDT2 = result.GetIonMobilityInfo(key2).First().IonMobility.Mobility.Value;
             var actualOffset2 = result.GetIonMobilityInfo(key2).First().HighEnergyIonMobilityValueOffset.Value;
             AssertEx.AreEqual(expectedDT3, actualDT3, .001);
