@@ -1034,7 +1034,9 @@ namespace TestRunnerLib
         }
 
         [StringFormatMethod("info")]
-        public static void Log(StreamWriter log, string info, object[] args)
+
+        // N.B. not thread safe, use the non-static version (which calls this) from any RunTests object
+        public static void Log(StreamWriter log, string info, object[] args) 
         {
             Console.Write(info, args);
             Console.Out.Flush(); // Get this info to TeamCity or SkylineTester ASAP
