@@ -828,80 +828,72 @@ namespace pwiz.Skyline.Model.Results
         private IList<ChromDataPeak> MergePeaks()
         {
             List<ChromDataPeak> allPeaks = new List<ChromDataPeak>();
-            // ReSharper disable once NotDisposedResourceIsReturned
-            var allEnumerators =
-                ImmutableList.ValueOf(_listChromData.ConvertAll(item => item.RawPeaks.GetEnumerator()));
-            try
+            using var allEnumerators = new DisposableCollection<IEnumerator<IFoundPeak>>();
+            foreach (var chromData in _listChromData)
             {
-                var listEnumerators = allEnumerators.ToList();
-                // Merge with list of chrom data that will match the enumerators
-                // list, as completed enumerators are removed.
-                var listUnmerged = new List<ChromData>(_listChromData);
-                // Initialize an enumerator for each set of raw peaks, or remove
-                // the set, if the list is found to be empty
-                for (int i = listEnumerators.Count - 1; i >= 0; i--)
+                allEnumerators.Add(chromData.RawPeaks.GetEnumerator());
+            }
+            var listEnumerators = allEnumerators.ToList();
+            // Merge with list of chrom data that will match the enumerators
+            // list, as completed enumerators are removed.
+            var listUnmerged = new List<ChromData>(_listChromData);
+            // Initialize an enumerator for each set of raw peaks, or remove
+            // the set, if the list is found to be empty
+            for (int i = listEnumerators.Count - 1; i >= 0; i--)
+            {
+                if (!listEnumerators[i].MoveNext())
                 {
-                    if (!listEnumerators[i].MoveNext())
+                    listEnumerators.RemoveAt(i);
+                    listUnmerged.RemoveAt(i);
+                }
+            }
+
+            while (listEnumerators.Count > 0)
+            {
+                float maxIntensity = 0;
+                int maxId = 0;
+                int iMaxEnumerator = -1;
+
+                for (int i = 0; i < listEnumerators.Count; i++)
+                {
+                    var peak = listEnumerators[i].Current;
+                    if (peak == null)
+                        throw new InvalidOperationException(ResultsResources
+                            .ChromDataSet_MergePeaks_Unexpected_null_peak);
+                    float intensity = peak.Area;
+                    int isId = peak.Identified ? 1 : 0;
+                    if (isId > maxId || (isId == maxId && intensity > maxIntensity))
                     {
-                        listEnumerators.RemoveAt(i);
-                        listUnmerged.RemoveAt(i);
+                        maxId = isId;
+                        maxIntensity = intensity;
+                        iMaxEnumerator = i;
                     }
                 }
 
-                while (listEnumerators.Count > 0)
-                {
-                    float maxIntensity = 0;
-                    int maxId = 0;
-                    int iMaxEnumerator = -1;
+                // If only zero area peaks left, stop looping.
+                if (iMaxEnumerator == -1)
+                    break;
 
-                    for (int i = 0; i < listEnumerators.Count; i++)
-                    {
-                        var peak = listEnumerators[i].Current;
-                        if (peak == null)
-                            throw new InvalidOperationException(ResultsResources
-                                .ChromDataSet_MergePeaks_Unexpected_null_peak);
-                        float intensity = peak.Area;
-                        int isId = peak.Identified ? 1 : 0;
-                        if (isId > maxId || (isId == maxId && intensity > maxIntensity))
-                        {
-                            maxId = isId;
-                            maxIntensity = intensity;
-                            iMaxEnumerator = i;
-                        }
-                    }
-
-                    // If only zero area peaks left, stop looping.
-                    if (iMaxEnumerator == -1)
-                        break;
-
-                    var maxData = listUnmerged[iMaxEnumerator];
-                    var maxEnumerator = listEnumerators[iMaxEnumerator];
-                    var maxPeak = maxEnumerator.Current;
-                    Debug.Assert(maxPeak != null);
-                    // Discard peaks that occur at the edge of their range.
-                    // These are not useful in SRM.
-                    // TODO: Fix Crawdad peak detection to make this unnecessary
+                var maxData = listUnmerged[iMaxEnumerator];
+                var maxEnumerator = listEnumerators[iMaxEnumerator];
+                var maxPeak = maxEnumerator.Current;
+                Debug.Assert(maxPeak != null);
+                // Discard peaks that occur at the edge of their range.
+                // These are not useful in SRM.
+                // TODO: Fix Crawdad peak detection to make this unnecessary
 // ReSharper disable ConditionIsAlwaysTrueOrFalse
-                    if (maxPeak != null && maxPeak.StartIndex != maxPeak.TimeIndex &&
-                        maxPeak.EndIndex != maxPeak.TimeIndex)
+                if (maxPeak != null && maxPeak.StartIndex != maxPeak.TimeIndex &&
+                    maxPeak.EndIndex != maxPeak.TimeIndex)
 // ReSharper restore ConditionIsAlwaysTrueOrFalse
-                        allPeaks.Add(new ChromDataPeak(maxData, maxPeak));
-                    if (!maxEnumerator.MoveNext())
-                    {
-                        listEnumerators.RemoveAt(iMaxEnumerator);
-                        listUnmerged.RemoveAt(iMaxEnumerator);
-                    }
-                }
-
-                return allPeaks;
-            }
-            finally
-            {
-                foreach (var enumerator in allEnumerators)
+                    allPeaks.Add(new ChromDataPeak(maxData, maxPeak));
+                if (!maxEnumerator.MoveNext())
                 {
-                    enumerator.Dispose();
+                    listEnumerators.RemoveAt(iMaxEnumerator);
+                    listUnmerged.RemoveAt(iMaxEnumerator);
                 }
             }
+
+            return allPeaks;
         }
 
         private static void RemoveNonOverlappingPeaks(IList<ChromDataPeakList> listPeakSets, int iRemove)

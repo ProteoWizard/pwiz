@@ -761,69 +761,60 @@ namespace pwiz.Skyline.Model.Results
         {
             var allPeaks = new List<PeptideChromDataPeak>();
             var listUnmerged = new List<ChromDataSet>(dataSets);
-            // ReSharper disable once NotDisposedResourceIsReturned
-            var allEnumerators = ImmutableList.ValueOf(listUnmerged.Select(dataSet => dataSet.PeakSets.GetEnumerator()));
-            try
+            using var allEnumerators = new DisposingCollection<IEnumerator<ChromDataPeakList>>();
+            foreach (var dataSet in listUnmerged)
             {
-                var listEnumerators = allEnumerators.ToList();
-                // Initialize an enumerator for each set of raw peaks, or remove
-                // the set, if the list is found to be empty
-                for (int i = listEnumerators.Count - 1; i >= 0; i--)
-                {
-                    if (!listEnumerators[i].MoveNext())
-                    {
-                        listEnumerators.RemoveAt(i);
-                        listUnmerged.RemoveAt(i);
-                    }
-                }
-
-                while (listEnumerators.Count > 0)
-                {
-                    ChromDataPeakList maxPeak = null;
-                    bool maxStandard = false;
-                    int iMaxEnumerator = -1;
-
-                    // Check each enumerator for the next highest peak score
-                    for (int i = 0; i < listEnumerators.Count; i++)
-                    {
-                        var dataSet = listUnmerged[i];
-                        var dataPeakList = listEnumerators[i].Current;
-                        if (dataPeakList == null)
-                            throw new InvalidOperationException(ResultsResources
-                                .PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list);
-                        if (Compare(dataPeakList, dataSet.IsStandard, maxPeak, maxStandard) > 0)
-                        {
-                            maxPeak = dataPeakList;
-                            maxStandard = dataSet.IsStandard;
-                            iMaxEnumerator = i;
-                        }
-                    }
-
-                    // If no peaks left, stop looping.
-                    if (iMaxEnumerator == -1)
-                        break;
-
-                    var maxData = listUnmerged[iMaxEnumerator];
-                    var maxEnumerator = listEnumerators[iMaxEnumerator];
-                    Assume.IsNotNull(maxPeak);
-
-                    allPeaks.Add(new PeptideChromDataPeak(maxData, maxPeak));
-                    if (!maxEnumerator.MoveNext())
-                    {
-                        listEnumerators.RemoveAt(iMaxEnumerator);
-                        listUnmerged.RemoveAt(iMaxEnumerator);
-                    }
-                }
-
-                return allPeaks;
+                allEnumerators.Add(dataSet.PeakSets.GetEnumerator());
             }
-            finally
+            var listEnumerators = allEnumerators.ToList();
+            // Initialize an enumerator for each set of raw peaks, or remove
+            // the set, if the list is found to be empty
+            for (int i = listEnumerators.Count - 1; i >= 0; i--)
             {
-                foreach (var enumerator in allEnumerators)
+                if (!listEnumerators[i].MoveNext())
                 {
-                    enumerator.Dispose();
+                    listEnumerators.RemoveAt(i);
+                    listUnmerged.RemoveAt(i);
                 }
             }
+
+            while (listEnumerators.Count > 0)
+            {
+                ChromDataPeakList maxPeak = null;
+                bool maxStandard = false;
+                int iMaxEnumerator = -1;
+
+                // Check each enumerator for the next highest peak score
+                for (int i = 0; i < listEnumerators.Count; i++)
+                {
+                    var dataSet = listUnmerged[i];
+                    var dataPeakList = listEnumerators[i].Current;
+                    if (dataPeakList == null)
+                        throw new InvalidOperationException(ResultsResources.PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list);
+                    if (Compare(dataPeakList, dataSet.IsStandard, maxPeak, maxStandard) > 0)
+                    {
+                        maxPeak = dataPeakList;
+                        maxStandard = dataSet.IsStandard;
+                        iMaxEnumerator = i;
+                    }
+                }
+
+                // If no peaks left, stop looping.
+                if (iMaxEnumerator == -1)
+                    break;
+
+                var maxData = listUnmerged[iMaxEnumerator];
+                var maxEnumerator = listEnumerators[iMaxEnumerator];
+                Assume.IsNotNull(maxPeak);
+
+                allPeaks.Add(new PeptideChromDataPeak(maxData, maxPeak));
+                if (!maxEnumerator.MoveNext())
+                {
+                    listEnumerators.RemoveAt(iMaxEnumerator);
+                    listUnmerged.RemoveAt(iMaxEnumerator);
+                }
+            }
+            return allPeaks;
         }
 
         private int Compare(ChromDataPeakList p1, bool s1, ChromDataPeakList p2, bool s2)
