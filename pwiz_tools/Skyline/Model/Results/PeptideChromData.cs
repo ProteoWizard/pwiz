@@ -761,7 +761,7 @@ namespace pwiz.Skyline.Model.Results
         {
             var allPeaks = new List<PeptideChromDataPeak>();
             var listUnmerged = new List<ChromDataSet>(dataSets);
-            using var allEnumerators = new DisposingCollection<IEnumerator<ChromDataPeakList>>();
+            using var allEnumerators = new DisposableCollection<IEnumerator<ChromDataPeakList>>();
             foreach (var dataSet in listUnmerged)
             {
                 allEnumerators.Add(dataSet.PeakSets.GetEnumerator());
