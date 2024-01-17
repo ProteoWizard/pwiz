@@ -51,6 +51,7 @@ using pwiz.Skyline.Util;
 //         problem.
 //using pwiz.SkylineTestUtil;
 using TestRunnerLib;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Rebar;
 
 
 namespace TestRunner
@@ -1270,6 +1271,44 @@ namespace TestRunner
             {
                 testList.RemoveAll(test => test.IsPerfTest);
                 unfilteredTestList.RemoveAll(test => test.IsPerfTest);
+            }
+
+            if (asNightly)
+            {
+                // Check for local ban on certain tests in nightly runs
+                const string EnvVarSkylineNightlyTestExclusions = "SKYLINE_NIGHTLY_TEST_EXCLUSIONS";
+                var localNightlyBans = new HashSet<string>();
+                var exclusions = (Environment.GetEnvironmentVariable(EnvVarSkylineNightlyTestExclusions) ?? string.Empty);
+                foreach (var bannedPatterns in exclusions.Split(','))
+                {
+                    var pattern = new Regex(bannedPatterns.Trim());
+                    foreach (var t in testList)
+                    {
+                        if (pattern.Match(t.TestMethod.Name).Success)
+                        {
+                            localNightlyBans.Add(t.TestMethod.Name);
+                        }
+                    }
+                    foreach (var t in unfilteredTestList)
+                    {
+                        if (pattern.Match(t.TestMethod.Name).Success)
+                        {
+                            localNightlyBans.Add(t.TestMethod.Name);
+                        }
+                    }
+                }
+
+                testList.RemoveAll(t => localNightlyBans.Any(lb => Equals(lb, t.TestMethod.Name)));
+                unfilteredTestList.RemoveAll(t => localNightlyBans.Any(lb => Equals(lb, t.TestMethod.Name)));
+
+                if (localNightlyBans.Any())
+                {
+                    RunTests.Log(log, $"# Local environment variable ${EnvVarSkylineNightlyTestExclusions} is set as \"{exclusions}\", skipping these tests:\n", null);
+                    foreach (var banned in localNightlyBans)
+                    {
+                        RunTests.Log(log, $"# {banned}\n", null);
+                    }
+                }
             }
 
             // Even if we have been told to run perftests, if none are in the list

@@ -1029,13 +1029,19 @@ namespace TestRunnerLib
         {
             lock (_logLock)
             {
-                Console.Write(info, args);
-                Console.Out.Flush(); // Get this info to TeamCity or SkylineTester ASAP
-                if (_log != null)
-                {
-                    _log.Write(info, args);
-                    _log.Flush();
-                }
+                Log(_log, info, args);
+            }
+        }
+
+        [StringFormatMethod("info")]
+        public static void Log(StreamWriter log, string info, object[] args)
+        {
+            Console.Write(info, args);
+            Console.Out.Flush(); // Get this info to TeamCity or SkylineTester ASAP
+            if (log != null)
+            {
+                log.Write(info, args ?? new object[] { });
+                log.Flush();
             }
         }
 
