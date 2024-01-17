@@ -45,7 +45,9 @@ namespace pwiz.Skyline.Model.Proteome
         private Dictionary<ReferenceValue<PeptideDocNode>, List<IProteinRecord>> _peptideToProteins;
         private MappingResultsInternal _results, _finalResults;
         private HashSet<ReferenceValue<PeptideDocNode>> _peptidesRemovedByFilters;
-        public IDictionary<string, ProteinMetadata> _proteinToMetadata { get; private set; }
+
+        private static IEqualityComparer<PeptideDocNode> ReferenceEqualityComparer = ReferenceValue.EQUALITY_COMPARER;
+        private IDictionary<string, ProteinMetadata> _proteinToMetadata { get; set; }
 
         internal class ProteinOrGeneGroupResultCache
         {
@@ -630,6 +632,25 @@ namespace pwiz.Skyline.Model.Proteome
                 return obj.Metadata.Gene.GetHashCode();
             }
         }
+        
+        public static IProteinRecord GenerateConcatenatedSequenceIfNecessary(Dictionary<IProteinRecord, List<PeptideDocNode>> proteinToPeptides)
+        {
+            if (proteinToPeptides.Count == 1)
+                return proteinToPeptides.Keys.First();
+
+            var longestProtein = proteinToPeptides.OrderByDescending(kvp2 => kvp2.Key.Sequence.Sequence.Length).First().Key;
+            var allPeptides = proteinToPeptides.Values.SelectMany(o => o).Distinct(ReferenceEqualityComparer).ToList();
+            if (allPeptides.All(node => longestProtein.Sequence.Sequence.Contains(node.Peptide.Sequence)))
+                return longestProtein;
+
+            // each protein's individual metadata is kept, but all protein sequences are replaced by the concatenated sequence
+            var concatenatedSequence = string.Concat(proteinToPeptides.Keys.Select(p => p.Sequence.Sequence));
+            return new FastaRecord(longestProtein.RecordIndex, 0,
+                new FastaSequenceGroup(longestProtein.Sequence.Name,
+                    proteinToPeptides.Keys.Select(p => new FastaSequence(p.Sequence.Name,
+                        p.Sequence.Description, p.Sequence.Alternatives, concatenatedSequence)).ToList()),
+                new ProteinGroupMetadata(proteinToPeptides.Keys.Select(p => p.Metadata).ToList()));
+        }
 
         private Dictionary<IProteinRecord, PeptideAssociationGroup> CalculateProteinOrGeneGroups(MappingResultsInternal results, bool geneLevel, ILongWaitBroker broker)
         {
@@ -639,33 +660,14 @@ namespace pwiz.Skyline.Model.Proteome
             if (geneLevel)
             {
                 // gene to protein to peptides; the top level dictionary uses the GeneLevelEqualityComparer
+                var proteinsByGene = AssociatedProteins.GroupBy(kvp => kvp.Key, new GeneLevelEqualityComparer());
                 var geneToPeptides = new Dictionary<IProteinRecord, Dictionary<IProteinRecord, List<PeptideDocNode>>>(new GeneLevelEqualityComparer());
-                foreach (var kvp in AssociatedProteins)
-                    if (!geneToPeptides.ContainsKey(kvp.Key))
-                        geneToPeptides.Add(kvp.Key, new Dictionary<IProteinRecord, List<PeptideDocNode>> { { kvp.Key, kvp.Value.Peptides } });
-                    else
-                        geneToPeptides[kvp.Key][kvp.Key] = kvp.Value.Peptides;
+                foreach (var group in proteinsByGene)
+                    geneToPeptides.Add(group.Key, group.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Peptides));
+
                 // now pick the protein with the longest sequence if it contains all the peptides, or a concatenation of all of the sequences if not
-                IProteinRecord GenerateConcatenatedSequenceIfNecessary(Dictionary<IProteinRecord, List<PeptideDocNode>> proteinToPeptides)
-                {
-                    if (proteinToPeptides.Count == 1)
-                        return proteinToPeptides.Keys.First();
-
-                    var longestProtein = proteinToPeptides.OrderByDescending(kvp2 => kvp2.Key.Sequence.Sequence.Length).First().Key;
-                    var allPeptides = proteinToPeptides.Values.SelectMany(o => o).Distinct().ToList();
-                    if (allPeptides.All(node => longestProtein.Sequence.Sequence.Contains(node.Peptide.Sequence)))
-                        return longestProtein;
-
-                    // each protein's individual metadata is kept, but all protein sequences are replaced by the concatenated sequence
-                    var concatenatedSequence = string.Join(string.Empty, proteinToPeptides.Keys.Select(p => p.Sequence.Sequence));
-                    return new FastaRecord(longestProtein.RecordIndex, 0,
-                        new FastaSequenceGroup(longestProtein.Sequence.Name,
-                            proteinToPeptides.Keys.Select(p => new FastaSequence(p.Sequence.Name,
-                                p.Sequence.Description, p.Sequence.Alternatives, concatenatedSequence)).ToList()),
-                        new ProteinGroupMetadata(proteinToPeptides.Keys.Select(p => p.Metadata).ToList()));
-                }
                 proteinOrGeneToPeptideGroup = geneToPeptides.ToDictionary(kvp => GenerateConcatenatedSequenceIfNecessary(kvp.Value),
-                    kvp => new PeptideAssociationGroup(kvp.Value.Values.SelectMany(o => o).Distinct().ToList()));
+                    kvp => new PeptideAssociationGroup(kvp.Value.Values.SelectMany(o => o).Distinct(ReferenceEqualityComparer).ToList()));
             }
 
             foreach(var kvp in proteinOrGeneToPeptideGroup)

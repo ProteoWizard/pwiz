@@ -299,6 +299,21 @@ namespace pwiz.Skyline.EditUI
 
             UpdateParsimonyResults();
         }
+        private void IfNotUpdatingLabels(Action action)
+        {
+            if (!_updatingLabels)
+            {
+                try
+                {
+                    _updatingLabels = true;
+                    action();
+                }
+                finally
+                {
+                    _updatingLabels = false;
+                }
+            }
+        }
 
         private void cbGroupProteins_CheckedChanged(object sender, EventArgs e)
         {
@@ -306,14 +321,15 @@ namespace pwiz.Skyline.EditUI
             if (GeneLevelParsimony)
                 return;
 
-            _updatingLabels = true;
-            // adjust labels to reflect whether proteins or protein groups are used
-            for (int i = 0; i < _sharedPeptideOptionNames.Length; ++i)
-                comboSharedPeptides.Items[i] = EnumNames.ResourceManager.GetString(
-                                                   (GroupProteins ? @"SharedPeptidesGroup_" : @"SharedPeptides_") +
-                                                   _sharedPeptideOptionNames[i]) ??
-                                               throw new InvalidOperationException(_sharedPeptideOptionNames[i]);
-            _updatingLabels = false;
+            IfNotUpdatingLabels(() =>
+            {
+                // adjust labels to reflect whether proteins or protein groups are used
+                for (int i = 0; i < _sharedPeptideOptionNames.Length; ++i)
+                    comboSharedPeptides.Items[i] = EnumNames.ResourceManager.GetString(
+                                                       (GroupProteins ? @"SharedPeptidesGroup_" : @"SharedPeptides_") +
+                                                       _sharedPeptideOptionNames[i]) ??
+                                                   throw new InvalidOperationException(_sharedPeptideOptionNames[i]);
+            });
 
             if (GroupProteins)
             {
@@ -334,14 +350,15 @@ namespace pwiz.Skyline.EditUI
 
         private void cbGeneLevel_CheckedChanged(object sender, EventArgs e)
         {
-            _updatingLabels = true;
-            // adjust labels to reflect whether genes or protein groups are used
-            for (int i = 0; i < _sharedPeptideOptionNames.Length; ++i)
+            IfNotUpdatingLabels(() =>
+            {
+                // adjust labels to reflect whether genes or protein groups are used
+                for (int i = 0; i < _sharedPeptideOptionNames.Length; ++i)
                 comboSharedPeptides.Items[i] = EnumNames.ResourceManager.GetString(
                                                    (GeneLevelParsimony ? @"SharedPeptidesGene_" : @"SharedPeptidesGroup_") +
                                                    _sharedPeptideOptionNames[i]) ??
                                                throw new InvalidOperationException(_sharedPeptideOptionNames[i]);
-            _updatingLabels = false;
+            });
 
             // gene level parsimony implies grouping, so force the checkbox on and disable it
             if (GeneLevelParsimony)
