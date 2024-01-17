@@ -61,6 +61,24 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error parsing response as JSON..
+        /// </summary>
+        public static string BaseWebClient_ParseJsonResponse_Error_parsing_response_as_JSON_ {
+            get {
+                return ResourceManager.GetString("BaseWebClient_ParseJsonResponse_Error_parsing_response_as_JSON_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Response: {0}.
+        /// </summary>
+        public static string BaseWebClient_ParseJsonResponse_Response___0_ {
+            get {
+                return ResourceManager.GetString("BaseWebClient_ParseJsonResponse_Response___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap ChromLib {
@@ -191,7 +209,7 @@ namespace pwiz.PanoramaClient.Properties {
                         "_from_the_following_servers", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Go to Tools - Options - Panorama tab to update the username and password.
         /// </summary>

@@ -19,7 +19,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
@@ -34,6 +40,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -80,39 +87,39 @@ namespace pwiz.SkylineTestFunctional
 
             // Now show the tab we really need for this test
             ToolOptionsDlg = ShowDialog<ToolOptionsUI>(() => SkylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Panorama));
-
+            
             // Incorrect password.
             CheckServerInfoFailure(new TestPanoramaClient(VALID_PANORAMA_SERVER, VALID_USER_NAME, "bad password"),0);
-
+            
             // Non-existent username.
             CheckServerInfoFailure(new TestPanoramaClient(VALID_PANORAMA_SERVER, "fake-user@user.edu", "bad password"),0);
-
+            
             // Successful login.
             CheckServerInfoSuccess(new TestPanoramaClient(VALID_PANORAMA_SERVER, VALID_USER_NAME, VALID_PASSWORD), 1);
-
+            
             // Existing non-Panorama server
             CheckServerInfoFailure(new TestPanoramaClient(VALID_NON_PANORAMA_SERVER, VALID_USER_NAME, VALID_PASSWORD), 1);
-
+            
             // We assume that the first component of the path element is the context path where LabKey Server is deployed.
             // Both VALID_PANORAMA_Server and VALID_PANORAMA_SERVER/libkey will be saved as two different servers.
             CheckServerInfoSuccess(new TestPanoramaClient(VALID_PANORAMA_SERVER + "/libkey", VALID_USER_NAME, VALID_PASSWORD), 2);
-
+            
             // Non-existent server
             CheckServerInfoFailure(new TestPanoramaClient(NON_EXISTENT_SERVER, VALID_USER_NAME, VALID_PASSWORD), 2);
-
+            
             // Unknown state server
             CheckServerInfoFailure(new TestPanoramaClient(UNKNOWN_STATE_SERVER, VALID_USER_NAME, VALID_PASSWORD), 2);
-
+            
             // Bad URI Format
             CheckServerInfoFailure(new TestPanoramaClient(BAD_SERVER_URL, VALID_USER_NAME, VALID_PASSWORD), 2);
-
+            
             // No server given
             CheckServerInfoFailure(new TestPanoramaClient(EMPTY_SERVER_URL, VALID_USER_NAME, VALID_PASSWORD), 2);
-
+            
             OkDialog(ToolOptionsDlg, ToolOptionsDlg.OkDialog);
-
+            
             RunUI(() => SkylineWindow.SaveDocument(TestContext.GetTestResultsPath("test.sky")));
-
+            
             CheckPublishFailure(VALID_PANORAMA_SERVER, Resources.PublishDocumentDlg_OkDialog_Please_select_a_folder);
             CheckPublishFailure(NO_WRITE_TARGETED,
                 Resources
@@ -121,7 +128,7 @@ namespace pwiz.SkylineTestFunctional
                 Resources
                     .PublishDocumentDlg_UploadSharedZipFile_You_do_not_have_permission_to_upload_to_the_given_folder);
             CheckPublishSuccess(WRITE_TARGETED, false);
-
+            
             // Document has no chromatograms, should be published regardless of skyd version supported by server -- Success
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("no_chromatograms.sky")));
             WaitForDocumentLoaded();
@@ -134,14 +141,14 @@ namespace pwiz.SkylineTestFunctional
             var supportedVersions = new List<string> { savedFileVersion };
             supportedVersions.AddRange(SkylineVersion.SupportedForSharing().Select(v => v.ToString()));
             CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions);
-
+            
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("skyd9.sky")));
             WaitForDocumentLoaded();
             // Server supports a version lower than the chromatogram cache in this document -- Fail
             ((TestPanoramaPublishClient)_testPublishClient).ServerSkydVersion = "7";
             CheckPublishFailure(WRITE_TARGETED, string.Format(Resources.PublishDocumentDlg_ServerSupportsSkydVersion_, "9"));
             Assert.AreEqual(SkylineWindow.Document.Settings.DataSettings.PanoramaPublishUri, null);
-
+            
             // Server supports the version of the chromatogram cache in this document -- Success
             ((TestPanoramaPublishClient) _testPublishClient).ServerSkydVersion = "9";
             
@@ -150,7 +157,7 @@ namespace pwiz.SkylineTestFunctional
             // the cache format of the document does not change when it is shared.
             CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions);
             Assert.AreNotEqual(SkylineWindow.Document.Settings.DataSettings.PanoramaPublishUri, null);
-
+            
             // Server supports a higher version than the document. 
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("skyd9.sky")));
             WaitForDocumentLoaded();
@@ -158,7 +165,7 @@ namespace pwiz.SkylineTestFunctional
             // The current saved file format and all the Skyline versions supported for sharing should be available as options.
             CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions);
             Assert.AreNotEqual(SkylineWindow.Document.Settings.DataSettings.PanoramaPublishUri, null);
-
+            
             // Document should be published even if an invalid version is returned by the server -- Success 
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("skyd9.sky")));
             WaitForDocumentLoaded();
@@ -167,7 +174,7 @@ namespace pwiz.SkylineTestFunctional
             // PanoramaPublishClient.GetSupportedSkydVersion() returns CacheFormatVersion.CURRENT. So the available options in the 
             // ShareTypeDlg will include the current saved file format and all versions supported for sharing.
             CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions);
-
+            
             // After a document has been published, it is "dirty" because a "panorama_publish_uri" is added.
             // Attempting to publish it again will save the document. Now the selected "Current file version..." option
             // will be the Skyline version that corresponds to the latest document format.
@@ -177,7 +184,7 @@ namespace pwiz.SkylineTestFunctional
             supportedVersions = new List<string> { savedFileVersion };
             supportedVersions.AddRange(SkylineVersion.SupportedForSharing().Select(v => v.ToString()));
             CheckPublishSuccess(WRITE_TARGETED, true, supportedVersions);
-
+            
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("skyd15.sky")));
             WaitForDocumentLoaded();
             ((TestPanoramaPublishClient)_testPublishClient).ServerSkydVersion = "14";
@@ -187,10 +194,12 @@ namespace pwiz.SkylineTestFunctional
                 .Where(ver => ver.CacheFormatVersion <= CacheFormatVersion.Fourteen)
                 .Select(v => v.ToString()).ToList();
             CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions);
-
+            
             TestPanoramaServerUrls();
-
+            
             TestAnonymousServers();
+
+            TestDisplayLabKeyErrors();
         }
 
         public void CheckPublishSuccess(string nodeSelection, bool expectingSavedUri)
@@ -232,7 +241,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                     shareTypeDlg.OkDialog();
                 });
-                
+
             }
             var goToSite = WaitForOpenForm<MultiButtonMsgDlg>();
             OkDialog(goToSite, goToSite.ClickNo);
@@ -267,12 +276,12 @@ namespace pwiz.SkylineTestFunctional
             var editServerListDlg = ShowDialog<EditListDlg<SettingsListBase<Server>, Server>>(ToolOptionsDlg.EditServers);
             var editServerDlg = ShowDialog<EditServerDlg>(editServerListDlg.AddItem);
             RunUI(() =>
-                      {
-                          editServerDlg.PanoramaClient = testClient;
-                          editServerDlg.URL = testClient.Server;
-                          editServerDlg.Username = testClient.Username;
-                          editServerDlg.Password = testClient.Password;
-                      });
+            {
+                editServerDlg.PanoramaClient = testClient;
+                editServerDlg.URL = testClient.Server;
+                editServerDlg.Username = testClient.Username;
+                editServerDlg.Password = testClient.Password;
+            });
             var messageDlg = ShowDialog<MessageDlg>(editServerDlg.OkDialog);
             var errorMsg = messageDlg.Message;
             if (testClient.ServerUri != null)
@@ -300,12 +309,12 @@ namespace pwiz.SkylineTestFunctional
             var editServerListDlg = ShowDialog<EditListDlg<SettingsListBase<Server>, Server>>(ToolOptionsDlg.EditServers);
             var editServerDlg = ShowDialog<EditServerDlg>(editServerListDlg.AddItem);
             RunUI(() =>
-                      {
-                          editServerDlg.PanoramaClient = testClient;
-                          editServerDlg.URL = testClient.Server;
-                          editServerDlg.Username = testClient.Username;
-                          editServerDlg.Password = testClient.Password;
-                      });
+            {
+                editServerDlg.PanoramaClient = testClient;
+                editServerDlg.URL = testClient.Server;
+                editServerDlg.Username = testClient.Username;
+                editServerDlg.Password = testClient.Password;
+            });
             OkDialog(editServerDlg, editServerDlg.OkDialog);
             OkDialog(editServerListDlg, editServerListDlg.OkDialog);
             TryWaitForConditionUI(() => expectedServerCount == Settings.Default.ServerList.Count);
@@ -324,7 +333,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(pServer.URI.AbsoluteUri, PWEB_FULL);
 
             var tempServer = pServer.RemoveContextPath(); // pServer does not have a context path. Nothing to remove.
-            Assert.IsTrue(ReferenceEquals(pServer, tempServer)); 
+            Assert.IsTrue(ReferenceEquals(pServer, tempServer));
             tempServer = pServer.AddLabKeyContextPath(); // pServer does not have a context path. It should get added to tempServer.
             Assert.IsFalse(ReferenceEquals(pServer, tempServer));
             Assert.AreEqual(tempServer.URI.AbsoluteUri, PWEB_LK_FULL);
@@ -343,7 +352,7 @@ namespace pwiz.SkylineTestFunctional
             pServer = new PanoramaServer(serverUri, string.Empty, string.Empty);
             Assert.AreEqual(pServer.URI, PWEB_LK_FULL);
             // Redirect from https://panoramaweb.org/labkey/ -> "https://panoramaweb.org/
-            tempServer = pServer.Redirect(PWEB_FULL + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH); 
+            tempServer = pServer.Redirect(PWEB_FULL + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH);
             Assert.IsFalse(ReferenceEquals(pServer, tempServer));
             Assert.AreEqual(tempServer.URI, PWEB_FULL);
 
@@ -376,7 +385,7 @@ namespace pwiz.SkylineTestFunctional
             var text = noServersDlg.Message;
             RunUI(() => Assert.IsTrue(noServersDlg.Message.Contains(Resources.SkylineWindow_ShowPublishDlg_Press_Register_to_register_for_a_project_on_PanoramaWeb_)));
             OkDialog(noServersDlg, noServersDlg.CancelDialog);
-            
+
 
             // Add an anonymous server
             AddAnonymousServer(VALID_PANORAMA_SERVER, 1);
@@ -463,6 +472,139 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(ToolOptionsDlg, ToolOptionsDlg.OkDialog);
         }
 
+        public const string PANORAMA_SERVER = "https://localhost:8080/";
+        public const string PANORAMA_FOLDER = "TestUpload";
+
+        public const int PIPELINE_JOB_ID = 42;
+        // public const string PANORAMA_USER_NAME = "skyline_tester@proteinms.net";
+        // public const string PANORAMA_PASSWORD = "lclcmsms";
+
+        private void TestDisplayLabKeyErrors()
+        {
+            // Remove all saved Panorama servers
+            ToolOptionsDlg =
+                ShowDialog<ToolOptionsUI>(() => SkylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Panorama));
+            var editServerListDlg =
+                ShowDialog<EditListDlg<SettingsListBase<Server>, Server>>(ToolOptionsDlg.EditServers);
+            RunUI(editServerListDlg.ResetList);
+            OkDialog(editServerListDlg, editServerListDlg.OkDialog);
+            OkDialog(ToolOptionsDlg, ToolOptionsDlg.OkDialog);
+
+            // Open a Skyline document
+            var BAD_FILE_NAME = "Bad -file_name.sky";
+            RunUI(() =>
+            {
+                SkylineWindow.NewDocument(true);
+                SkylineWindow.SaveDocument(TestContext.GetTestResultsPath(BAD_FILE_NAME));
+            });
+            WaitForDocumentLoaded();
+
+
+            // Add a server
+            AddServer(PANORAMA_SERVER, VALID_USER_NAME, VALID_PASSWORD);
+
+            // Response returned by the server could not be parsed as JSON
+            var publishClient = new TestLabKeyErrorPublishClient();
+            publishClient.SetErrorType(BaseTestWebClientFactory.BAD_JSON);
+            var publishDialog = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(publishClient));
+            WaitForCondition(() => publishDialog.IsLoaded);
+            RunUI(() => { publishDialog.SelectItem(PANORAMA_FOLDER); });
+            var shareTypeDlg = ShowDialog<ShareTypeDlg>(publishDialog.OkDialog);
+            var errorDlg = ShowDialog<MessageDlg>(shareTypeDlg.OkDialog);
+            var expectedError = TextUtil.LineSeparate(
+                PanoramaClient.Properties.Resources.BaseWebClient_ParseJsonResponse_Error_parsing_response_as_JSON_,
+                string.Format(PanoramaClient.Properties.Resources.GenericState_AppendErrorAndUri_Error___0_,
+                    @"Unexpected character encountered while parsing value: <. Path '', line 0, position 0."),
+                string.Format(PanoramaClient.Properties.Resources.GenericState_AppendErrorAndUri_URL___0_,
+                    PanoramaUtil.GetPipelineContainerUrl(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER)),
+                string.Format(PanoramaClient.Properties.Resources.BaseWebClient_ParseJsonResponse_Response___0_,
+                    NoJsonResponseWebClient.NOT_JSON));
+            Assert.AreEqual(expectedError, errorDlg.Message);
+            OkDialog(errorDlg, errorDlg.OkDialog);
+
+            // TODO: Returned JSON does not have the required attribute(s).
+
+            // LabKey returned an error in the JSON response while uploading the file
+            publishClient.SetErrorType(BaseTestWebClientFactory.UPLOAD_ERROR);
+            publishDialog = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(publishClient));
+            WaitForCondition(() => publishDialog.IsLoaded);
+            RunUI(() => { publishDialog.SelectItem(PANORAMA_FOLDER); });
+            shareTypeDlg = ShowDialog<ShareTypeDlg>(publishDialog.OkDialog);
+            errorDlg = ShowDialog<MessageDlg>(shareTypeDlg.OkDialog);
+            expectedError = TextUtil.LineSeparate(
+                Resources
+                    .AbstractPanoramaPublishClient_UploadFileCompleted_There_was_an_error_uploading_the_file_,
+                UploadErrorWebClient.GetLabKeyError(SkylineWindow.DocumentFilePath).ToString());
+            Assert.AreEqual(expectedError, errorDlg.Message);
+            OkDialog(errorDlg, errorDlg.OkDialog);
+
+            RunUI(() =>
+            {
+                SkylineWindow.SaveDocument(TestContext.GetTestResultsPath("Valid-file_name.sky"));
+            });
+            WaitForDocumentLoaded();
+
+
+
+            // No error.  File uploaded and imported successfully.
+            publishClient.SetErrorType(BaseTestWebClientFactory.NO_ERROR);
+            publishDialog = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(publishClient));
+            WaitForCondition(() => publishDialog.IsLoaded);
+            RunUI(() => { publishDialog.SelectItem(PANORAMA_FOLDER); });
+            shareTypeDlg = ShowDialog<ShareTypeDlg>(publishDialog.OkDialog);
+            var docUploadedDlg = ShowDialog<MultiButtonMsgDlg>(shareTypeDlg.OkDialog);
+            OkDialog(docUploadedDlg, docUploadedDlg.ClickNo);
+        }
+
+        private void AddServer(string server, string userEmail, string password)
+        {
+            ToolOptionsDlg =
+                ShowDialog<ToolOptionsUI>(() => SkylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Panorama));
+            var editServerListDlg =
+                ShowDialog<EditListDlg<SettingsListBase<Server>, Server>>(ToolOptionsDlg.EditServers);
+            var client = new TestPanoramaClient(server, userEmail, password);
+            // var client = new WebPanoramaClient(new Uri(server), userEmail, password);
+            var editServerDlg = ShowDialog<EditServerDlg>(editServerListDlg.AddItem);
+            RunUI(() =>
+            {
+                editServerDlg.PanoramaClient = client;
+                editServerDlg.URL = server;
+                editServerDlg.Password = password;
+                editServerDlg.Username = userEmail;
+            });
+
+            OkDialog(editServerDlg, editServerDlg.OkDialog);
+            OkDialog(editServerListDlg, editServerListDlg.OkDialog);
+            TryWaitForConditionUI(() => 1 == Settings.Default.ServerList.Count);
+            RunUI(() => Assert.AreEqual(1, Settings.Default.ServerList.Count));
+            OkDialog(ToolOptionsDlg, ToolOptionsDlg.OkDialog);
+        }
+
+        static JObject CreateFolder(string name, bool write, bool targeted)
+        {
+            JObject obj = new JObject();
+            obj["name"] = name;
+            obj["path"] = "/" + name + "/";
+            obj["userPermissions"] = write ? 3 : 1;
+            if (!write || !targeted)
+            {
+                // Create a writable subfolder if this folder is not writable, i.e. it is
+                // not a targetedMS folder or the user does not have write permissions in this folder.
+                // Otherwise, it will not get added to the folder tree (PublishDocumentDlg.AddChildContainers()).
+                obj["children"] = new JArray(CreateFolder("Subfolder", true, true));
+            }
+            else
+            {
+                obj["children"] = new JArray();
+            }
+
+            obj["folderType"] = targeted ? "Targeted MS" : "Collaboration";
+            obj["activeModules"] = targeted
+                ? new JArray("MS0", "MS1", "TargetedMS", "MS3")
+                : new JArray("MS0", "MS1", "MS3");
+            return obj;
+        }
+
         public class TestPanoramaClient : BaseTestPanoramaClient
         {
             public string Server { get; }
@@ -491,7 +633,7 @@ namespace pwiz.SkylineTestFunctional
                 else if (string.Equals(Server, NON_EXISTENT_SERVER))
                     throw new PanoramaServerException(ServerStateEnum.missing, "Test WebException - NameResolutionFailure", ServerUri, ServerUri);
 
-                else if (Server.Contains(VALID_PANORAMA_SERVER))
+                else if (Server.Contains(VALID_PANORAMA_SERVER) || Server.Contains(PANORAMA_SERVER))
                 {
                     if (string.Equals(Username, VALID_USER_NAME) &&
                         string.Equals(Password, VALID_PASSWORD))
@@ -534,42 +676,16 @@ namespace pwiz.SkylineTestFunctional
                 set { _serverSkydVersion = value; }
             }
 
-            private JObject CreateFolder(string name, bool write, bool targeted)
-            {
-                JObject obj = new JObject();
-                obj["name"] = name;
-                obj["path"] = "/" + name + "/";
-                obj["userPermissions"] = write ? 3 : 1;
-                if (!write || !targeted)
-                {
-                    // Create a writable subfolder if this folder is not writable, i.e. it is
-                    // not a targetedMS folder or the user does not have write permissions in this folder.
-                    // Otherwise, it will not get added to the folder tree (PublishDocumentDlg.AddChildContainers()).
-                    obj["children"] = new JArray(CreateFolder("Subfolder", true, true));    
-                }
-                else
-                {
-                    obj["children"] = new JArray();    
-                }
-                
-                obj["folderType"] = targeted ? "Targeted MS" : "Collaboration";
-                obj["activeModules"] = targeted
-                    ? new JArray("MS0", "MS1", "TargetedMS", "MS3")
-                    : new JArray("MS0", "MS1", "MS3");
-                return obj;
-            }
-
             public override JToken GetInfoForFolders(PanoramaServer server, string folder)
             {
-                JObject testFolders = new JObject();
                 // this addition is hacky but necessary as far as I can tell to get PanoramaSavedUri testing to work
                 // basically adds a WRITE_TARGET type folder in the root because the new code to deal with publishing to a 
                 // saved uri doesn't load a folder tree, but instead the directory structure for a single folder
-                testFolders = CreateFolder(WRITE_TARGETED, true, true);
+                var testFolders = CreateFolder(WRITE_TARGETED, true, true);
                 testFolders["children"] = new JArray(
-                    CreateFolder(NO_WRITE_NO_TARGETED, false, false),
-                    CreateFolder(NO_WRITE_TARGETED, false, true),
-                    CreateFolder(WRITE_TARGETED, true, true),
+                    CreateFolder(NO_WRITE_NO_TARGETED, false, false), 
+                    CreateFolder(NO_WRITE_TARGETED, false, true), 
+                    CreateFolder(WRITE_TARGETED, true, true), 
                     CreateFolder(WRITE_NO_TARGETED, true, false));
                 return testFolders;
             }
@@ -586,6 +702,220 @@ namespace pwiz.SkylineTestFunctional
                 return obj;
             }
 
+            public override IPublishWebClientFactory GetWebClientFactory()
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public class TestLabKeyErrorPublishClient : AbstractPanoramaPublishClient
+        {
+            private int _errorType;
+
+            public void SetErrorType(int errorType)
+            {
+                _errorType = errorType;
+            }
+
+            public override JToken GetInfoForFolders(PanoramaServer server, string folder)
+            {
+                var testFolders = CreateFolder("LabKeyErrorsTest", true, false);
+                testFolders["children"] = new JArray(CreateFolder(PANORAMA_FOLDER, true, true));
+                return testFolders;
+            }
+
+            public override JObject SupportedVersionsJson(PanoramaServer server)
+            {
+                var obj = new JObject();
+                obj["SKYD_version"] = ChromatogramCache.FORMAT_VERSION_CACHE.ToString();
+                return obj;
+            }
+
+            public override IPublishWebClientFactory GetWebClientFactory()
+            {
+                return new BaseTestWebClientFactory(this, _errorType);
+            }
+
+            public void UpdateProgress()
+            {
+                webClient_UploadProgressChanged(this, null);
+            }
+
+            public void UploadComplete(JObject labkeyResponse)
+            {
+                UploadFileCompleted(labkeyResponse != null ? labkeyResponse.ToString() : string.Empty);
+            }
+
+        }
+
+        public class BaseTestWebClientFactory : IPublishWebClientFactory
+        {
+            private TestLabKeyErrorPublishClient _publishClient;
+            public const int NO_ERROR = 0;
+            public const int BAD_JSON = 1;
+            public const int UPLOAD_ERROR = 2;
+            public const int HEAD_REQUEST_ERROR = 3;
+            public const int MOVE_REQUEST_ERROR = 4;
+
+            private readonly int _errorType;
+            public BaseTestWebClientFactory (TestLabKeyErrorPublishClient publishClient, int errorType)
+            {
+                _publishClient = publishClient;
+                _errorType = errorType;
+            }
+            public IPublishWebClient Create(Uri serverUri, string username, string password)
+            {
+                TestPublishWebClient _webClient;
+                switch (_errorType)
+                {
+                    case BAD_JSON: 
+                        _webClient = new NoJsonResponseWebClient(serverUri, username, password);
+                        break;
+                    case UPLOAD_ERROR:
+                        _webClient = new UploadErrorWebClient(serverUri, username, password);
+                        break;
+                    default:
+                        _webClient = new TestPublishWebClient(serverUri, username, password);
+                        break;
+                }
+                // var client = new TestPublishWebClient(serverUri, username, password);
+                _webClient.SetPublishClient(_publishClient);
+                return _webClient;
+            }
+        }
+
+        public class NoJsonResponseWebClient : TestPublishWebClient
+        {
+            public const string NOT_JSON = "<head><body>This is not JSON</body></head>";
+            public NoJsonResponseWebClient(Uri serverUri, string username, string password) : base(serverUri, username, password)
+            {
+            }
+            public override string DoGet(Uri uri)
+            {
+                return NOT_JSON;
+            }
+        }
+
+        public class UploadErrorWebClient : TestPublishWebClient
+        {
+            public UploadErrorWebClient(Uri serverUri, string username, string password) : base(serverUri, username, password)
+            {
+            }
+
+            public static LabKeyError GetLabKeyError(string documentFilePath)
+            {
+                var errResponse = GetLabKeyJsonResponse(Path.GetFileName(documentFilePath));
+                return GetIfErrorInResponse(errResponse);
+            }
+
+            private static JObject GetLabKeyJsonResponse(string filename)
+            {
+                var errResponse = new JObject();
+                // From org.labkey.api.util.FileUtil:
+                // if (Pattern.matches("(.*\\s--[^ ].*)|(.*\\s-[^- ].*)",s))
+                //     return "Filename may not contain space followed by dash.";
+                const string pattern = "(.*\\s--[^ ].*)|(.*\\s-[^- ].*)";
+                var match = Regex.Match(filename, pattern);
+                if (match.Success)
+                {
+                    errResponse[@"exception"] = "Filename may not contain space followed by dash.";
+                    // errResponse[@"status"] = 200;
+                }
+                return errResponse;
+            }
+
+
+            public override void AsyncUploadFile(Uri address, string method, string fileName)
+            {
+                Task.Run(async delegate
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1.0));
+                    // _publishClient.UpdateProgress();
+                    // Thread.Sleep(1000);
+                    _publishClient.UploadComplete(GetLabKeyJsonResponse(fileName));
+                });
+            }
+        }
+
+        public class TestPublishWebClient : PublishDocWebClient
+        {
+            protected TestLabKeyErrorPublishClient _publishClient;
+
+            public TestPublishWebClient(Uri serverUri, string username, string password) : base(serverUri, username, password)
+            {
+            }
+
+            public void SetPublishClient(TestLabKeyErrorPublishClient publishClient)
+            {
+                _publishClient = publishClient;
+            }
+
+            public override string DoGet(Uri uri)
+            {
+                // Depending on the action in the Uri return an appropriate valid JSON response
+                if (uri.Equals(PanoramaUtil.GetPipelineContainerUrl(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER)))
+                {
+                    var json = new JObject();
+                    json[@"webDavURL"] = "/_webdav" + uri.AbsolutePath + "%40files"; // /_webdav/SkylineTest/TestUpload/%40files/
+                    return json.ToString();
+                }
+                else if (uri.Equals(PanoramaUtil.GetPipelineJobStatusUri(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER,
+                             PIPELINE_JOB_ID)))
+                {
+                    var jobStatus = new JObject
+                    {
+                        ["RowId"] = PIPELINE_JOB_ID,
+                        [@"Status"] = "COMPLETE"
+                    };
+                    var rowsArr = new JArray { jobStatus };
+                    var json = new JObject
+                    {
+                        ["rows"] = rowsArr
+                    };
+                    return json.ToString();
+                }
+
+                return new JObject
+                {
+                    ["Unrecognized"] = uri.ToString()
+                }.ToString();
+            }
+
+
+            public override void AsyncUploadFile(Uri address, string method, string fileName)
+            {
+                Task.Run(async delegate
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1.0));
+                    // _publishClient.UpdateProgress();
+                    // Thread.Sleep(1000);
+                    _publishClient.UploadComplete(null);
+                });
+            }
+
+            public override void DoRequest(HttpWebRequest request, string method, string authHeader, string messageOnError)
+            {
+                // TODO: Method can be HEAD, MOVE, DELETE.  Error can be thrown based on the error.
+            }
+
+            public override byte[] DoPost(Uri uri, NameValueCollection postData)
+            {
+                if (uri.Equals(PanoramaUtil.GetImportSkylineDocUri(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER)))
+                {
+                    
+                    var child = new JObject
+                    {
+                        [@"RowId"] = PIPELINE_JOB_ID
+                    };
+                    var array = new JArray { child };
+                    var json = new JObject
+                    {
+                        [@"UploadedJobDetails"] = array
+                    };
+                    return new UTF8Encoding().GetBytes(json.ToString());
+                }
+                else return Array.Empty<byte>();
+            }
         }
     }
 }

@@ -30,7 +30,6 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using pwiz.PanoramaClient;
 using pwiz.Common.SystemUtil;
@@ -192,10 +191,21 @@ namespace pwiz.Skyline.Util
 
     public abstract class AbstractPanoramaPublishClient :IPanoramaPublishClient
     {
+        // private WebClientWithCredentials _webClient;
+        private IPublishWebClient _webClient;
+        private IProgressMonitor _progressMonitor;
+        private IProgressStatus _progressStatus;
+
+        private readonly Regex _runningStatusRegex = new Regex(@"RUNNING, (\d+)%");
+        private int _waitTime = 1;
+
+        private LabKeyError _uploadError; // This is set if LabKey returns an error while uploading the file
+
         public abstract JToken GetInfoForFolders(PanoramaServer server, string folder);
 
-        public abstract Uri SendZipFile(PanoramaServer server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor);
         public abstract JObject SupportedVersionsJson(PanoramaServer server);
+
+        public abstract IPublishWebClientFactory GetWebClientFactory();
 
         private Uri _uploadedDocumentUri;
 
@@ -204,7 +214,7 @@ namespace pwiz.Skyline.Util
             get { return _uploadedDocumentUri; }
         }
 
-        public CacheFormatVersion GetSupportedSkydVersion(FolderInformation folderInfo)
+        private CacheFormatVersion GetSupportedSkydVersion(FolderInformation folderInfo)
         {
             var serverVersionsJson = SupportedVersionsJson(folderInfo.Server);
             if (serverVersionsJson == null)
@@ -353,18 +363,24 @@ namespace pwiz.Skyline.Util
                 }
                 else
                 {
-                    ServerError serverError = null;
+                    LabKeyError labKeyError = null;
                     if (x is WebException webException)
                     {
                         using (var response = webException.Response)
                         {
                             // TODO: A WebException is usually thrown if the response status code something other than 200
                             // Will there be a LabKey error in the response if this is a real server error?
-                            serverError = GetIfErrorInResponse(response);
+                            // The answer is Yes.  For example, a POST request to create a folder that does not include 
+                            // any post data will return a 404, and response contains JSON with the labkey error.
+                            labKeyError = BaseWebClient.GetIfErrorInResponse(response);
                         }
                     }
 
-                    MessageDlg.ShowWithException(parent, TextUtil.LineSeparate(serverError?.ToString(), x.Message), x);
+                    var message = labKeyError != null
+                        ? TextUtil.LineSeparate(x.Message, labKeyError.ToString())
+                        : x.Message;
+                    MessageDlg.ShowWithException(parent, message, x);
+                    // MessageDlg.ShowWithException(parent, x.Message, x);
                 }
 
                 return;
@@ -380,93 +396,26 @@ namespace pwiz.Skyline.Util
             }
         }
 
-
-        protected static ServerError GetIfErrorInResponse(WebResponse response)
-        {
-            var stream = response.GetResponseStream();
-            if (stream != null)
-            {
-                var responseString = new StreamReader(stream).ReadToEnd();
-                return GetIfErrorInResponse(responseString);
-            }
-            return null;
-        }
-
-        protected static ServerError GetIfErrorInResponse(string responseString)
-        {
-            try
-            {
-                var parsedResponse = JObject.Parse(responseString);
-                return WebClientWithCredentials.GetIfErrorInResponse(parsedResponse);
-            }
-            catch (JsonException)
-            {
-            }
-
-            return null;
-        }
-    }
-
-    class WebPanoramaPublishClient : AbstractPanoramaPublishClient
-    {
-        private WebClientWithCredentials _webClient;
-        private IProgressMonitor _progressMonitor;
-        private IProgressStatus _progressStatus;
-
-        private readonly Regex _runningStatusRegex = new Regex(@"RUNNING, (\d+)%");
-        private int _waitTime = 1;
-
-        private PanoramaServerException _uploadError;
-
-        public override JToken GetInfoForFolders(PanoramaServer server, string folder)
-        {
-            return new WebPanoramaClient(server.URI, server.Username, server.Password).GetInfoForFolders(folder);
-        }
-
-        public override Uri SendZipFile(PanoramaServer server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
+        public virtual Uri SendZipFile(PanoramaServer server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
         {
             _progressMonitor = progressMonitor;
             _progressStatus = new ProgressStatus(String.Empty);
             var zipFileName = Path.GetFileName(zipFilePath) ?? string.Empty;
 
             // Upload zip file to pipeline folder.
-            using (_webClient = new NonStreamBufferingWebClient(server.URI, server.Username, server.Password))
+            using (_webClient = GetWebClientFactory().Create(server.URI, server.Username, server.Password))
             {
-                _webClient.UploadProgressChanged += webClient_UploadProgressChanged;
-                _webClient.UploadFileCompleted += webClient_UploadFileCompleted;
-
-                var webDav = PanoramaUtil.Call(server.URI, @"pipeline", folderPath, @"getPipelineContainer", true);
-                JObject jsonWebDavInfo = _webClient.Get(webDav);
-
-                string webDavUrl = (string)jsonWebDavInfo[@"webDavURL"];
+                var webDavUrl = GetWebDavPath(server, folderPath);
 
                 // Upload Url minus the name of the zip file.
                 var baseUploadUri = new Uri(server.URI, webDavUrl); // webDavUrl will start with the context path (e.g. /labkey/...). We will get the correct URL even if serverUri has a context path.
+                
                 // Use Uri.EscapeDataString instead of Uri.EscapeUriString.  
                 // The latter will not escape characters such as '+' or '#' 
                 var escapedZipFileName = Uri.EscapeDataString(zipFileName);
-                var tmpUploadUri = new Uri(baseUploadUri, escapedZipFileName + @".part");
                 var uploadUri = new Uri(baseUploadUri, escapedZipFileName);
 
-                lock (this)
-                {
-                    // Write to a temp file first. This will be renamed after a successful upload or deleted if the upload is canceled.
-                    // Add a "Temporary" header so that LabKey marks this as a temporary file.
-                    // https://www.labkey.org/issues/home/Developer/issues/details.view?issueId=19220
-                    _webClient.Headers.Add(@"Temporary", @"T");
-                    _webClient.RequestJsonResponse();
-                    _webClient.UploadFileAsync(tmpUploadUri, @"PUT", PathEx.SafePath(zipFilePath)); // TODO: Why not use POST, the default?
-
-                    // Wait for the upload to complete
-                    Monitor.Wait(this);
-                }
-
-                if (_uploadError != null)
-                {
-                    // There was an error uploading the file.
-                    // _uploadError gets set in webClient_UploadFileCompleted if there was an error in the LabKey JSON response.
-                    throw _uploadError;
-                }
+                var tmpUploadUri = UploadTempZipFile(zipFilePath, baseUploadUri, escapedZipFileName);
 
                 if (progressMonitor.IsCanceled)
                 {
@@ -475,78 +424,141 @@ namespace pwiz.Skyline.Util
                         _progressStatus =
                             _progressStatus.ChangeMessage(
                                 UtilResources.WebPanoramaPublishClient_SendZipFile_Deleting_temporary_file_on_server));
-                    DeleteTempZipFile(tmpUploadUri, server.AuthHeader);
+                    DeleteTempZipFile(tmpUploadUri, server.AuthHeader, _webClient);
                     return null;
                 }
-                // Remove the "Temporary" header added while uploading the file
-                _webClient.Headers.Remove(@"Temporary");
 
                 // Make sure the temporary file was uploaded to the server
-                ConfirmFileOnServer(tmpUploadUri, server.AuthHeader);
+                ConfirmFileOnServer(tmpUploadUri, server.AuthHeader, _webClient);
 
                 // Rename the temporary file
                 _progressStatus = _progressStatus.ChangeMessage(
                     UtilResources.WebPanoramaPublishClient_SendZipFile_Renaming_temporary_file_on_server);
                 progressMonitor.UpdateProgress(_progressStatus);
 
-                RenameTempZipFile(tmpUploadUri, uploadUri, server.AuthHeader);
+                RenameTempZipFile(tmpUploadUri, uploadUri, server.AuthHeader, _webClient);
 
                 _progressStatus = _progressStatus.ChangeMessage(UtilResources.WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___);
                 progressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangePercentComplete(-1));
 
-                // Data must be completely uploaded before we can import.
-                Uri importUrl = PanoramaUtil.Call(server.URI, @"targetedms", folderPath, @"skylineDocUploadApi");
+                var rowId = QueueDocUploadPipelineJob(server, folderPath, zipFileName);
 
-                // Need to tell server which uploaded file to import.
-                var dataImportInformation = new NameValueCollection
-                                                {
-                                                    // For now, we only have one root that user can upload to
-                                                    {@"path", @"./"},
-                                                    {@"file", zipFileName}
-                                                };
                 
-                JToken importResponse = _webClient.Post(importUrl, dataImportInformation);
-                // TODO: what happens if an exception in thrown on Panorama before the pipeline job is submitted.
-
-                // ID to check import status.
-                var details = importResponse[@"UploadedJobDetails"];
-                int rowId = (int)details[0][@"RowId"];
-                Uri statusUri = PanoramaUtil.Call(server.URI, @"query", folderPath, @"selectRows",
-                    @"query.queryName=job&schemaName=pipeline&query.rowId~eq=" + rowId);
-                // Wait for import to finish before returning.
-                var startTime = DateTime.Now;
-                while (true)
-                {
-                    if (progressMonitor.IsCanceled)
-                        return null;
-
-                    JToken jStatusResponse = _webClient.Get(statusUri);
-                    JToken rows = jStatusResponse[@"rows"];
-                    var row = rows.FirstOrDefault(r => (int)r[@"RowId"] == rowId);
-                    if (row == null)
-                        continue;
-
-                    var status = new ImportStatus((string) row[@"Status"]);
-                    if (status.IsComplete)
-                    {
-                        progressMonitor.UpdateProgress(_progressStatus.Complete());
-                        return new Uri(server.URI, (string)row[@"_labkeyurl_Description"]);
-                    }
-                  
-                    else if (status.IsError || status.IsCancelled)
-                    {
-                        var jobUrl = new Uri(server.URI, (string) row[@"_labkeyurl_RowId"]);
-                        var e = new PanoramaImportErrorException(server.URI, jobUrl, status.IsCancelled);
-                        progressMonitor.UpdateProgress(
-                            _progressStatus = _progressStatus.ChangeErrorException(e));
-                        throw e;
-                    }
-
-                    updateProgressAndWait(status, progressMonitor, _progressStatus, startTime);
-                }
+                return WaitForDocumentImportCompleted(server, folderPath, rowId, progressMonitor);
             }
         }
 
+        private Uri WaitForDocumentImportCompleted(PanoramaServer server, string folderPath, int pipelineJobRowId, IProgressMonitor progressMonitor)
+        {
+            var statusUri = PanoramaUtil.GetPipelineJobStatusUri(server.URI, folderPath, pipelineJobRowId);
+
+            // Wait for import to finish before returning.
+            var startTime = DateTime.Now;
+            while (true)
+            {
+                if (progressMonitor.IsCanceled)
+                    return null;
+
+                JToken jStatusResponse = _webClient.Get(statusUri);
+                JToken rows = jStatusResponse[@"rows"];
+                var row = rows.FirstOrDefault(r => (int)r[@"RowId"] == pipelineJobRowId);
+                if (row == null)
+                    continue;
+
+                var status = new ImportStatus((string)row[@"Status"]);
+                if (status.IsComplete)
+                {
+                    progressMonitor.UpdateProgress(_progressStatus.Complete());
+                    return new Uri(server.URI, (string)row[@"_labkeyurl_Description"]);
+                }
+
+                else if (status.IsError || status.IsCancelled)
+                {
+                    var jobUrl = new Uri(server.URI, (string)row[@"_labkeyurl_RowId"]);
+                    var e = new PanoramaImportErrorException(server.URI, jobUrl, status.IsCancelled);
+                    progressMonitor.UpdateProgress(
+                        _progressStatus = _progressStatus.ChangeErrorException(e));
+                    throw e;
+                }
+
+                updateProgressAndWait(status, progressMonitor, startTime);
+            }
+        }
+
+        private int QueueDocUploadPipelineJob(PanoramaServer server, string folderPath, string zipFileName)
+        {
+            var importUrl = PanoramaUtil.GetImportSkylineDocUri(server.URI, folderPath);
+
+            // Need to tell server which uploaded file to import.
+            var dataImportInformation = new NameValueCollection
+            {
+                // For now, we only have one root that user can upload to
+                { @"path", @"./" },
+                { @"file", zipFileName }
+            };
+
+            JToken importResponse = _webClient.Post(importUrl, dataImportInformation, "There was an error adding the document import job on the server.");
+            
+
+            // ID to check import status.
+            var details = importResponse[@"UploadedJobDetails"];
+            return (int)details[0][@"RowId"];
+        }
+
+        private Uri UploadTempZipFile(string zipFilePath, Uri baseUploadUri, string escapedZipFileName)
+        {
+            _webClient.AddUploadFileCompletedEventHandler(webClient_UploadFileCompleted);
+            _webClient.AddUploadProgressChangedEventHandler(webClient_UploadProgressChanged);
+
+            var tmpUploadUri = new Uri(baseUploadUri, escapedZipFileName + @".part");
+            lock (this)
+            {
+                // Write to a temp file first. This will be renamed after a successful upload or deleted if the upload is canceled.
+                // Add a "Temporary" header so that LabKey marks this as a temporary file.
+                // https://www.labkey.org/issues/home/Developer/issues/details.view?issueId=19220
+                _webClient.AddHeader(@"Temporary", @"T");
+                _webClient.RequestJsonResponse();
+                _webClient.AsyncUploadFile(tmpUploadUri, @"PUT",
+                    PathEx.SafePath(zipFilePath)); // TODO: Why not use POST, the default?
+
+                // Wait for the upload to complete
+                Monitor.Wait(this);
+            }
+
+            if (_uploadError != null)
+            {
+                // There was an error uploading the file.
+                // _uploadError gets set in webClient_UploadFileCompleted if there was an error in the LabKey JSON response.
+                var exception = new PanoramaServerException(TextUtil.LineSeparate(
+                    Resources
+                        .AbstractPanoramaPublishClient_UploadFileCompleted_There_was_an_error_uploading_the_file_,
+                    _uploadError.ToString()));
+                _uploadError = null;
+                throw exception;
+            }
+
+            // Remove the "Temporary" header added while uploading the temporary file
+            // _webClient.Headers.Remove(@"Temporary");
+            _webClient.RemoveHeader(@"Temporary");
+
+            return tmpUploadUri;
+        }
+
+        private string GetWebDavPath(PanoramaServer server, string folderPath)
+        {
+            var getPipelineContainerUri = PanoramaUtil.GetPipelineContainerUrl(server.URI, folderPath);
+
+            var jsonResponse = _webClient.Get(getPipelineContainerUri);
+            var webDavUrl = (string)jsonResponse[@"webDavURL"];
+            if (webDavUrl == null)
+            {
+                throw new PanoramaServerException(TextUtil.LineSeparate(
+                    "Missing webDavURL in response.",
+                    string.Format("URL: {0}", getPipelineContainerUri),
+                    string.Format("Response: {0}", jsonResponse)));
+            }
+            return webDavUrl;
+        }
 
         private class ImportStatus
         {
@@ -562,7 +574,7 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        private void updateProgressAndWait(ImportStatus jobStatus, IProgressMonitor progressMonitor, IProgressStatus status, DateTime startTime)
+        private void updateProgressAndWait(ImportStatus jobStatus, IProgressMonitor progressMonitor, DateTime startTime)
         {
             var match = _runningStatusRegex.Match(jobStatus.StatusString);
             if (match.Success)
@@ -616,6 +628,108 @@ namespace pwiz.Skyline.Util
             Thread.Sleep(sleepTime);
         }
 
+        private void RenameTempZipFile(Uri sourceUri, Uri destUri, string authHeader, IPublishWebClient webClient)
+        {
+            var request = (HttpWebRequest)WebRequest.Create(sourceUri);
+
+            // Destination URI.  
+            // NOTE: Do not use Uri.ToString since it does not return the escaped version.
+            request.Headers.Add(@"Destination", destUri.AbsoluteUri);
+
+            // If a file already exists at the destination URI, it will not be overwritten.  
+            // The server would return a 412 Precondition Failed status code.
+            request.Headers.Add(@"Overwrite", @"F");
+
+            webClient.DoRequest(request,
+                @"MOVE",
+                authHeader,
+                UtilResources.WebPanoramaPublishClient_RenameTempZipFile_Error_renaming_temporary_zip_file__
+                );
+        }
+
+        // private static void DoRequest(HttpWebRequest request, string method, string authHeader, string messageOnError)
+        // {
+        //     request.Method = method;
+        //     request.Headers.Add(HttpRequestHeader.Authorization, authHeader);
+        //     request.Accept = @"application/json"; // Get LabKey to send JSON instead of HTML
+        //
+        //     using (var response = request.GetResponse())
+        //     {
+        //         // If the JSON response contains an exception message, throw a PanoramaServerException
+        //         var serverError = GetIfErrorInResponse(response);
+        //         if (serverError != null)
+        //         {
+        //             throw new PanoramaServerException(TextUtil.LineSeparate(messageOnError, serverError.ToString()));
+        //         }
+        //     }
+        // }
+
+        private void DeleteTempZipFile(Uri sourceUri, string authHeader, IPublishWebClient webClient)
+        {
+            var request = (HttpWebRequest)WebRequest.Create(sourceUri.ToString());
+
+            webClient.DoRequest(request,
+                @"DELETE",
+                authHeader,
+                UtilResources.WebPanoramaPublishClient_DeleteTempZipFile_Error_deleting_temporary_zip_file__);
+        }
+
+        private void ConfirmFileOnServer(Uri sourceUri, string authHeader, IPublishWebClient webClient)
+        {
+            var request = (HttpWebRequest)WebRequest.Create(sourceUri);
+
+            // Do a HEAD request to check if the file exists on the server.
+            webClient.DoRequest(request,
+                @"HEAD",
+                authHeader,
+                UtilResources.WebPanoramaPublishClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_
+                );
+        }
+
+        protected void webClient_UploadProgressChanged(object sender, UploadProgressChangedEventArgs e)
+        {
+            var message = e == null ? "Progress Updated" : string.Format(FileSize.FormatProvider,
+                UtilResources.WebPanoramaPublishClient_webClient_UploadProgressChanged_Uploaded__0_fs__of__1_fs_,
+                e.BytesSent, e.TotalBytesToSend);
+            int percentComplete = e == null ? 20 : e.ProgressPercentage;
+            _progressStatus = _progressStatus.ChangeMessage(message).ChangePercentComplete(percentComplete);
+            _progressMonitor.UpdateProgress(_progressStatus);
+            if (_progressMonitor.IsCanceled)
+                _webClient.CancelAsyncUpload();
+        }
+
+        private void webClient_UploadFileCompleted(object sender, UploadFileCompletedEventArgs e)
+        {
+            UploadFileCompleted(Encoding.UTF8.GetString(e.Result));
+        }
+
+        protected void UploadFileCompleted(string serverResponse)
+        {
+            lock (this)
+            {
+                Monitor.PulseAll(this);
+                _uploadError = serverResponse != null ? BaseWebClient.GetIfErrorInResponse(serverResponse) : null;
+            }
+        }
+    }
+
+    class WebPanoramaPublishClient : AbstractPanoramaPublishClient
+    {
+        // // private WebClientWithCredentials _webClient;
+        // private IWebClient _webClient;
+        // private IProgressMonitor _progressMonitor;
+        // private IProgressStatus _progressStatus;
+
+        // private readonly Regex _runningStatusRegex = new Regex(@"RUNNING, (\d+)%");
+        // private int _waitTime = 1;
+        //
+        // private PanoramaServerException _uploadError;
+
+        public override JToken GetInfoForFolders(PanoramaServer server, string folder)
+        {
+            return new WebPanoramaClient(server.URI, server.Username, server.Password).GetInfoForFolders(folder);
+        }
+
         public override JObject SupportedVersionsJson(PanoramaServer server)
         {
             var uri = PanoramaUtil.Call(server.URI, @"targetedms", null, @"getMaxSupportedVersions");
@@ -646,129 +760,9 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        private class NonStreamBufferingWebClient : WebClientWithCredentials
+        public override IPublishWebClientFactory GetWebClientFactory()
         {
-            public NonStreamBufferingWebClient(Uri serverUri, string username, string password)
-                : base(serverUri, username, password)
-            {
-            }
-
-            protected override WebRequest GetWebRequest(Uri address)
-            {
-                var request = base.GetWebRequest(address);
-
-                var httpWebRequest = request as HttpWebRequest;
-                if (httpWebRequest != null)
-                {
-                    httpWebRequest.Timeout = Timeout.Infinite;
-                    httpWebRequest.AllowWriteStreamBuffering = false;
-                }
-                return request;
-            }
-        }
-
-        private void RenameTempZipFile(Uri sourceUri, Uri destUri, string authHeader)
-        {
-            var request = (HttpWebRequest)WebRequest.Create(sourceUri);
-
-            // Destination URI.  
-            // NOTE: Do not use Uri.ToString since it does not return the escaped version.
-            request.Headers.Add(@"Destination", destUri.AbsoluteUri);
-
-            // If a file already exists at the destination URI, it will not be overwritten.  
-            // The server would return a 412 Precondition Failed status code.
-            request.Headers.Add(@"Overwrite", @"F");
-
-            DoRequest(request,
-                @"MOVE",
-                authHeader,
-                UtilResources.WebPanoramaPublishClient_RenameTempZipFile_Error_renaming_temporary_zip_file__,
-                5 // Try up to 5 times. TODO: This does not work.
-                );
-        }
-
-        private static void DoRequest(HttpWebRequest request, string method, string authHeader, string errorMessage, int maxTryCount = 1)
-        {
-            request.Method = method;
-            request.Headers.Add(HttpRequestHeader.Authorization, authHeader);
-            request.Accept = @"application/json"; // Get LabKey to send JSON instead of HTML
-
-            try
-            {
-                using (var response = request.GetResponse())
-                {
-                    // If the JSON response contains an exception message, throw a PanoramaServerException
-                    var serverError = GetIfErrorInResponse(response);
-                    if (serverError != null)
-                    {
-                        throw new PanoramaServerException(serverError.ToString());
-                    }
-                    
-                }
-            }
-            // An exception will be thrown if the response code is not 200 (Success).
-            catch (WebException)
-            {
-                if (--maxTryCount > 0)
-                {
-                    DoRequest(request, method, authHeader, errorMessage, maxTryCount); // TODO: A new request has to be created to do a retry
-                }
-
-                throw;
-            }
-        }
-
-        private void DeleteTempZipFile(Uri sourceUri, string authHeader)
-        {
-            var request = (HttpWebRequest)WebRequest.Create(sourceUri.ToString());
-
-            DoRequest(request,
-                @"DELETE",
-                authHeader,
-                UtilResources.WebPanoramaPublishClient_DeleteTempZipFile_Error_deleting_temporary_zip_file__);
-        }
-
-        private void ConfirmFileOnServer(Uri sourceUri, string authHeader)
-        {
-            var request = (HttpWebRequest)WebRequest.Create(sourceUri);
-
-            // Do a HEAD request to check if the file exists on the server.
-            DoRequest(request,
-                @"HEAD",
-                authHeader,
-                UtilResources.WebPanoramaPublishClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_
-                );
-        }
-
-        public void webClient_UploadProgressChanged(object sender, UploadProgressChangedEventArgs e)
-        {
-            var message = string.Format(FileSize.FormatProvider,
-                UtilResources.WebPanoramaPublishClient_webClient_UploadProgressChanged_Uploaded__0_fs__of__1_fs_,
-                e.BytesSent, e.TotalBytesToSend);
-            _progressStatus = _progressStatus.ChangeMessage(message).ChangePercentComplete(e.ProgressPercentage);
-            _progressMonitor.UpdateProgress(_progressStatus);
-            if (_progressMonitor.IsCanceled)
-                _webClient.CancelAsync();
-        }
-
-        private void webClient_UploadFileCompleted(object sender, UploadFileCompletedEventArgs e)
-        {
-            lock (this)
-            {
-                Monitor.PulseAll(this);
-
-                var serverError = GetIfErrorInResponse(Encoding.UTF8.GetString(e.Result));
-                var errorMessage = serverError?.ToString();
-
-                if (e.Error != null)
-                {
-                    errorMessage = TextUtil.SpaceSeparate(errorMessage, e.Error.Message);
-                }
-                if (errorMessage != null)
-                {
-                    _uploadError = new PanoramaServerException(errorMessage);
-                }
-            }
+            return new PublishWebClientFactory();
         }
     }
 
@@ -784,5 +778,176 @@ namespace pwiz.Skyline.Util
         public Uri ServerUrl { get; private set; }
         public Uri JobUrl { get; private set; }
         public bool JobCancelled { get; private set; }
+    }
+
+    public class NonStreamBufferingWebClient : WebClientWithCredentials
+    {
+        public NonStreamBufferingWebClient(Uri serverUri, string username, string password)
+            : base(serverUri, username, password)
+        {
+        }
+
+        protected override WebRequest GetWebRequest(Uri address)
+        {
+            var request = base.GetWebRequest(address);
+
+            var httpWebRequest = request as HttpWebRequest;
+            if (httpWebRequest != null)
+            {
+                httpWebRequest.Timeout = Timeout.Infinite;
+                httpWebRequest.AllowWriteStreamBuffering = false;
+            }
+            return request;
+        }
+    }
+
+    public class PublishDocWebClient : NonStreamBufferingWebClient, IPublishWebClient
+    {
+        public PublishDocWebClient(Uri serverUri, string username, string password) : base(serverUri, username, password)
+        {
+        }
+
+        public virtual void AsyncUploadFile(Uri address, string method, string fileName)
+        {
+            UploadFileAsync(address, method, fileName);
+        }
+
+        public void CancelAsyncUpload()
+        {
+            CancelAsync();
+        }
+
+        public void AddUploadFileCompletedEventHandler(UploadFileCompletedEventHandler handler)
+        {
+            UploadFileCompleted += handler;
+        }
+
+        public void AddUploadProgressChangedEventHandler(UploadProgressChangedEventHandler handler)
+        {
+            UploadProgressChanged += handler;
+        }
+
+        public virtual void DoRequest(HttpWebRequest request, string method, string authHeader, string messageOnError)
+        {
+            request.Method = method;
+            request.Headers.Add(HttpRequestHeader.Authorization, authHeader);
+            request.Accept = @"application/json"; // Get LabKey to send JSON instead of HTML
+
+            using (var response = request.GetResponse())
+            {
+                // If the JSON response contains an exception message, throw a PanoramaServerException
+                var serverError = GetIfErrorInResponse(response);
+                if (serverError != null)
+                {
+                    throw new PanoramaServerException(TextUtil.LineSeparate(messageOnError, serverError.ToString()));
+                }
+            }
+        }
+    }
+
+    // public class WebClientWrapper : IPublishWebClient
+    // {
+    //     private WebClientWithCredentials _client;
+    //
+    //     public WebClientWrapper(WebClientWithCredentials client)
+    //     {
+    //         _client = client;
+    //     }
+    //
+    //     // https://stackoverflow.com/questions/9823039/is-it-possible-to-mock-out-a-net-httpwebresponse
+    //     public void Dispose()
+    //     {
+    //         Dispose(true);
+    //         GC.SuppressFinalize(this);
+    //     }
+    //
+    //     private void Dispose(bool disposing)
+    //     {
+    //         if (disposing)
+    //         {
+    //             if (_client != null)
+    //             {
+    //                 ((IDisposable)_client).Dispose();
+    //                 _client = null;
+    //             }
+    //         }
+    //     }
+    //
+    //     public string DownloadString(Uri uri)
+    //     {
+    //         return _client.DownloadString(uri);
+    //     }
+    //
+    //     public JObject Get(Uri uri)
+    //     {
+    //         return _client.Get(uri);
+    //     }
+    //
+    //     public JObject Post(Uri uri, NameValueCollection postData, string messageOnLabkeyError)
+    //     {
+    //         return _client.Post(uri, postData, messageOnLabkeyError);
+    //     }
+    //
+    //     public JObject Post(Uri uri, string postData, string messageOnLabkeyError)
+    //     {
+    //         return _client.Post(uri, postData, messageOnLabkeyError);
+    //     }
+    //
+    //     public void UploadFileAsync(Uri address, string method, string fileName)
+    //     {
+    //         _client.UploadFileAsync(address, method, fileName);
+    //     }
+    //
+    //     public void CancelAsync()
+    //     {
+    //         _client.CancelAsync();
+    //     }
+    //
+    //     public void AddUploadFileCompletedEventHandler(UploadFileCompletedEventHandler handler)
+    //     {
+    //         _client.UploadFileCompleted += handler;
+    //     }
+    //
+    //     public void AddUploadProgressChangedEventHandler(UploadProgressChangedEventHandler handler)
+    //     {
+    //         _client.UploadProgressChanged += handler;
+    //     }
+    //
+    //     public void RequestJsonResponse()
+    //     {
+    //         _client.RequestJsonResponse();
+    //     }
+    //
+    //     public void AddHeader(string name, string value)
+    //     {
+    //         _client.Headers.Add(name, value);
+    //     }
+    //
+    //     public void RemoveHeader(string name)
+    //     {
+    //         _client.Headers.Remove(name);
+    //     }
+    // }
+
+    public interface IPublishWebClient : IWebClient
+    {
+        void AsyncUploadFile(Uri address, string method, string fileName);
+        void CancelAsyncUpload();
+        void AddUploadFileCompletedEventHandler(UploadFileCompletedEventHandler handler);
+        void AddUploadProgressChangedEventHandler(UploadProgressChangedEventHandler handler);
+
+        void DoRequest(HttpWebRequest request, string method, string authHeader, string messageOnError);
+    }
+    public interface IPublishWebClientFactory
+    {
+        IPublishWebClient Create(Uri serverUri, string username, string password);
+    }
+    public class PublishWebClientFactory : IPublishWebClientFactory
+    {
+        public IPublishWebClient Create(Uri serverUri, string username, string password)
+        {
+            return new PublishDocWebClient(serverUri, username, password);
+            // return new WebClientWrapper(new NonStreamBufferingWebClient(serverUri, username, password));
+        }
     }
 }

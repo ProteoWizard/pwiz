@@ -111,10 +111,11 @@ namespace pwiz.PanoramaClient
                 }
              */
             jsonResponse.TryGetValue(@"currentUser", out JToken currentUser);
-            if (currentUser != null)
+            if (currentUser != null) 
             {
+                // TODO: remove this check? Replace with return currentUser != null && currentUser.Value<string>(@"email") != null;
                 var email = currentUser.Value<string>(@"email");
-                return email != null && email.Equals(expectedEmail);
+                return email != null && email.Equals(expectedEmail, StringComparison.OrdinalIgnoreCase);
             }
 
             return false;
@@ -169,7 +170,20 @@ namespace pwiz.PanoramaClient
         {
             folderPath ??= string.Empty;
             folderPath = folderPath.Trim().TrimStart('/').TrimEnd('/');
-            var path = controller + @"/" + folderPath + @"/" + method + (isApi ? @".api" : @".view");
+
+            // Uri constructor does not encode at least '+', '#', '[' and ']'
+            // HttpUtility.UrlPathEncode() does not encode '#'
+            // Uri.EscapeUriString does not encode '[' and ']'
+            // Uri.EscapeDataString encodes everything that requires encoding, including '/'.
+            // So we have to split the path parts and encode them separately.
+            var pathParts = folderPath.Split('/');
+            for (var i = 0; i < pathParts.Length; i++)
+            {
+                pathParts[i] = Uri.EscapeDataString(pathParts[i]); // URL-encode each path part
+            }
+            var encodedFolderPath = string.Join("/", pathParts);
+
+            var path = controller + @"/" + encodedFolderPath + @"/" + method + (isApi ? @".api" : @".view");
 
             if (!string.IsNullOrEmpty(query))
             {
@@ -195,6 +209,22 @@ namespace pwiz.PanoramaClient
             var queryString = string.Format(@"includeSubfolders={0}&moduleProperties=TargetedMS",
                 includeSubfolders ? @"true" : @"false");
             return Call(serverUri, @"project", folder, @"getContainers", queryString);
+        }
+
+        public static Uri GetPipelineContainerUrl(Uri serverUri, string folderPath)
+        {
+            return Call(serverUri, @"pipeline", folderPath, @"getPipelineContainer", true);
+        }
+
+        public static Uri GetImportSkylineDocUri(Uri serverUri, string folderPath)
+        {
+            return Call(serverUri, @"targetedms", folderPath, @"skylineDocUploadApi");
+        }
+
+        public static Uri GetPipelineJobStatusUri(Uri serverUri, string folderPath, int pipelineJobRowId)
+        {
+            return Call(serverUri, @"query", folderPath, @"selectRows",
+                @"query.queryName=job&schemaName=pipeline&query.rowId~eq=" + pipelineJobRowId);
         }
 
         public static IPanoramaClient CreatePanoramaClient(Uri serverUri, string userName, string password)
@@ -596,6 +626,10 @@ namespace pwiz.PanoramaClient
         {
         }
 
+        public PanoramaServerException(string message, Exception e) : base(message, e)
+        {
+        }
+
         public PanoramaServerException(ServerStateEnum state, string error, Uri uri) : this(state, error, uri, null)
         {
         }
@@ -750,17 +784,180 @@ namespace pwiz.PanoramaClient
         }
     }
 
-    public class UTF8WebClient : WebClient
+    public class BaseWebClient : WebClient, IWebClient
     {
-        public UTF8WebClient()
+        public virtual string DoGet(Uri uri)
         {
-            Encoding = Encoding.UTF8;
+            return DownloadString(uri);
         }
 
         public JObject Get(Uri uri)
         {
-            var response = DownloadString(uri);
-            return JObject.Parse(response);
+            var response = DoGet(uri); // DownloadString(uri);
+            return ParseJsonResponse(response, uri);
+        }
+
+        public void AddHeader(string name, string value)
+        {
+            Headers.Add(name, value);
+        }
+
+        public void AddHeader(HttpRequestHeader header, string value)
+        {
+            Headers.Add(header, value);
+        }
+
+        public void RemoveHeader(string name)
+        {
+            Headers.Remove(name);
+        }
+
+        public virtual byte[] DoPost(Uri uri, NameValueCollection postData)
+        {
+            return UploadValues(uri, PanoramaUtil.FORM_POST, postData);
+        }
+
+        public virtual string DoPost(Uri uri, string postData)
+        {
+            AddHeader(HttpRequestHeader.ContentType, "application/json");
+            return UploadString(uri, PanoramaUtil.FORM_POST, postData);
+        }
+
+        public JObject Post(Uri uri, NameValueCollection postData, string messageOnLabkeyError)
+        {
+            postData ??= new NameValueCollection();
+            return Post(uri, postData, null, messageOnLabkeyError);
+        }
+
+        public JObject Post(Uri uri, string postData, string messageOnLabkeyError)
+        {
+            return Post(uri, null, postData, messageOnLabkeyError);
+        }
+
+        protected virtual JObject Post(Uri uri, NameValueCollection postData, string postDataString, string messageOnLabKeyError)
+        {
+            RequestJsonResponse();
+            try
+            {
+                string response;
+                if (postData != null)
+                {
+                    var responseBytes = DoPost(uri, postData); // UploadValues(uri, PanoramaUtil.FORM_POST, postData);
+                    response = Encoding.UTF8.GetString(responseBytes);
+                }
+                else
+                {
+                    response = DoPost(uri, postDataString); // UploadString(uri, PanoramaUtil.FORM_POST, postDataString);
+                }
+                return ParseResponse(response, uri, messageOnLabKeyError);
+            }
+            catch (Exception x)
+            {
+                if (x is WebException webException)
+                {
+                    using (var r = webException.Response)
+                    {
+                        // TODO: A WebException is usually thrown if the response status code something other than 200
+                        // Will there be a LabKey error in the response if this is a real server error?
+                        var labKeyError = GetIfErrorInResponse(r);
+                        if (labKeyError != null)
+                        {
+                            throw new PanoramaServerException(TextUtil.LineSeparate(messageOnLabKeyError, x.Message, labKeyError.ToString()));
+                        }
+                    }
+                }
+                throw;
+            }
+        }
+
+        public void RequestJsonResponse()
+        {
+            // Get LabKey to send JSON instead of HTML.
+            // When we request a JSON response, the HTTP status returned is always 200 even when the request fails on the server
+            // and the returned status would have been 400 otherwise. This is intentional:
+            // Issue 44964: Don't use Bad Request/400 HTTP status codes for valid requests
+            // https://www.labkey.org/home/Developer/issues/issues-details.view?issueId=44964
+            // Notes from Josh:
+            // 1.Malformed HTTP request, which doesn't comply with HTTP spec. 400 is clearly legit here.
+            // 2.Well - formed HTTP requests with parameters that we don't like. This is less clear cut to me.
+            // 3.Well - formed HTTP requests with legit parameters, but which exercise some sort of error scenario. We clearly shouldn't be sending a 400 for these.
+            // This means that we have to look for the status and any exception in the returned JSON rather than expecting WebClient or HttpWebRequest to throw
+            // an exception when the returned status is something other than 200.
+            // Headers.Add(HttpRequestHeader.Accept, @"application/json");
+            AddHeader(HttpRequestHeader.Accept, @"application/json");
+            // Headers.Add(HttpRequestHeader.ContentType, "application/json");
+        }
+
+        protected JObject ParseJsonResponse(string response, Uri uri)
+        {
+            try
+            {
+                return JObject.Parse(response);
+            }
+            catch (JsonReaderException e)
+            {
+                throw new PanoramaServerException(TextUtil.LineSeparate(
+                    Resources.BaseWebClient_ParseJsonResponse_Error_parsing_response_as_JSON_, 
+                    string.Format(Resources.GenericState_AppendErrorAndUri_Error___0_, e.Message),
+                    string.Format(Resources.GenericState_AppendErrorAndUri_URL___0_, uri),
+                    string.Format(Resources.BaseWebClient_ParseJsonResponse_Response___0_, response)), e);
+            }
+        }
+
+        protected JObject ParseResponse(string response, Uri uri, string messageOnLabKeyError)
+        {
+            var jsonResponse = ParseJsonResponse(response, uri);
+            var serverError = GetIfErrorInResponse(jsonResponse);
+            if (serverError != null)
+            {
+                throw new PanoramaServerException(TextUtil.LineSeparate(messageOnLabKeyError, serverError.ToString()));
+            }
+
+            return jsonResponse;
+        }
+
+        public static LabKeyError GetIfErrorInResponse(JObject jsonResponse)
+        {
+            if (jsonResponse[@"exception"] != null)
+            {
+                return new LabKeyError(jsonResponse[@"exception"].ToString(), jsonResponse[@"status"]?.ToObject<int>());
+            }
+            return null;
+        }
+
+        public static LabKeyError GetIfErrorInResponse(WebResponse response)
+        {
+            if (response != null)
+            {
+                var stream = response.GetResponseStream();
+                if (stream != null)
+                {
+                    var responseString = new StreamReader(stream).ReadToEnd();
+                    return GetIfErrorInResponse(responseString);
+                }
+            }
+
+            return null;
+        }
+
+        public static LabKeyError GetIfErrorInResponse(string responseString)
+        {
+            try
+            {
+                return GetIfErrorInResponse(JObject.Parse(responseString));
+            }
+            catch (JsonReaderException)
+            {
+            }
+            return null;
+        }
+    }
+
+    public class UTF8WebClient : BaseWebClient
+    {
+        public UTF8WebClient()
+        {
+            Encoding = Encoding.UTF8;
         }
     }
 
@@ -779,41 +976,34 @@ namespace pwiz.PanoramaClient
             _serverUri = serverUri;
         }
     
-        public JObject Post(Uri uri, NameValueCollection postData)
+        // public JObject Post(Uri uri, NameValueCollection postData)
+        // {
+        //     return Post(uri, postData, null);
+        // }
+
+        // public JObject Post(Uri uri, NameValueCollection postData, string messageOnLabKeyError)
+        // {
+        //     postData ??= new NameValueCollection();
+        //     return Post(uri, postData, null, messageOnLabKeyError);
+        // }
+
+        // public JObject Post(Uri uri, string postData)
+        // {
+        //     return Post(uri, postData, null);
+        // }
+        //
+        // public JObject Post(Uri uri, string postData, string messageOnLabKeyError)
+        // {
+        //     return Post(uri, null, postData, messageOnLabKeyError);
+        // }
+
+        protected override JObject Post(Uri uri, NameValueCollection postData, string postDataString, string messageOnLabKeyError)
         {
             if (string.IsNullOrEmpty(_csrfToken))
             {
                 GetCsrfTokenFromServer();
             }
-            postData ??= new NameValueCollection();
-            RequestJsonResponse();
-            var responseBytes = UploadValues(uri, PanoramaUtil.FORM_POST, postData);
-            var response = Encoding.UTF8.GetString(responseBytes);
-            return parseResponse(response);
-        }
-    
-        public JObject Post(Uri uri, string postData)
-        {
-            if (string.IsNullOrEmpty(_csrfToken))
-            {
-                GetCsrfTokenFromServer();
-            }
-            Headers.Add(HttpRequestHeader.ContentType, "application/json");
-            RequestJsonResponse();
-            var response = UploadString(uri, PanoramaUtil.FORM_POST, postData);
-            return parseResponse(response);
-        }
-
-        private JObject parseResponse(string response)
-        {
-            var jsonResponse = JObject.Parse(response);
-            var serverError = GetIfErrorInResponse(jsonResponse);
-            if (serverError != null)
-            {
-                throw new PanoramaServerException(serverError.ToString());
-            }
-
-            return jsonResponse;
+            return base.Post(uri, postData, postDataString, messageOnLabKeyError);
         }
 
         protected override WebRequest GetWebRequest(Uri address)
@@ -882,51 +1072,20 @@ namespace pwiz.PanoramaClient
             return _cookies.GetCookies(requestUri)[LABKEY_CSRF];
         }
 
-        public void GetCsrfTokenFromServer()
+        private void GetCsrfTokenFromServer()
         {
             // After making this request the client should have the X-LABKEY-CSRF token 
-            DownloadString(new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH));
-        }
-
-        public void RequestJsonResponse()
-        {
-            // Get LabKey to send JSON instead of HTML.
-            // When we request a JSON response, the HTTP status returned is always 200 even when the request fails on the server
-            // and the returned status would have been 400 otherwise. This is intentional:
-            // Issue 44964: Don't use Bad Request/400 HTTP status codes for valid requests
-            // https://www.labkey.org/home/Developer/issues/issues-details.view?issueId=44964
-            // 1.Malformed HTTP request, which doesn't comply with HTTP spec. 400 is clearly legit here.
-            // 2.Well - formed HTTP requests with parameters that we don't like. This is less clear cut to me.
-            // 3.Well - formed HTTP requests with legit parameters, but which exercise some sort of error scenario. We clearly shouldn't be sending a 400 for these.
-            // This means that we have to look for the status and any exception in the returned JSON rather than expecting WebClient or HttpWebRequest to throw
-            // an exception when the returned status is something other than 200.
-            Headers.Add(HttpRequestHeader.Accept, @"application/json");
-            // Headers.Add(HttpRequestHeader.ContentType, "application/json");
-        }
-
-        public static ServerError GetIfErrorInResponse(JObject jsonResponse)
-        {
-            try
-            {
-                if (jsonResponse[@"exception"] != null)
-                {
-                    return new ServerError(jsonResponse[@"exception"].ToString(), jsonResponse[@"status"]?.ToObject<int>());
-                }
-            }
-            catch (JsonException)
-            {
-            }
-
-            return null;
+            // DownloadString(new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH));
+            DoGet(new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH));
         }
     }
 
-    public class ServerError
+    public class LabKeyError
     {
         public string ErrorMessage { get; }
         public int? Status { get; }
 
-        public ServerError(string exception, int? status)
+        public LabKeyError(string exception, int? status)
         {
             ErrorMessage = exception;
             Status = status;
@@ -934,8 +1093,8 @@ namespace pwiz.PanoramaClient
 
         public override string ToString()
         {
-            var serverError = string.Format("Server error: {0}.", ErrorMessage);
-            if (Status != null) serverError += string.Format(". Status: {0}", Status);
+            var serverError = string.Format("Error message: {0}", ErrorMessage);
+            if (Status != null) serverError = TextUtil.LineSeparate(serverError, string.Format("Response status: {0}", Status));
             return serverError;
         }
     }
@@ -1049,5 +1208,27 @@ namespace pwiz.PanoramaClient
             var authHeader = @"Basic " + Convert.ToBase64String(authBytes);
             return authHeader;
         }
+    }
+
+    public interface IWebClient : IDisposable
+    {
+        string DoGet(Uri uri);
+        byte[] DoPost(Uri uri, NameValueCollection postData);
+        string DoPost(Uri uri, string postData);
+        JObject Get(Uri uri);
+        JObject Post(Uri uri, NameValueCollection postData, string messageOnLabkeyError); 
+        JObject Post(Uri uri, string postData, string messageOnLabkeyError);
+        // void UploadFileAsync(Uri address, string method, string fileName);
+        // void CancelAsync();
+        // void AddUploadFileCompletedEventHandler(UploadFileCompletedEventHandler handler);
+        // void AddUploadProgressChangedEventHandler(UploadProgressChangedEventHandler handler);
+        void RequestJsonResponse();
+        void AddHeader(string name, string value);
+        void AddHeader(HttpRequestHeader header, string value);
+        void RemoveHeader(string name);
+
+        // LabKeyError GetIfErrorInResponse(JObject jsonResponse);
+        // LabKeyError GetIfErrorInResponse(WebResponse response);
+        // public LabKeyError GetIfErrorInResponse(string responseString);
     }
 }
