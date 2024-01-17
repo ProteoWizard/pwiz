@@ -221,7 +221,7 @@
     <value>仪器组件</value>
   </data>
   <data name="Description_InstrumentComponents" xml:space="preserve">
-    <value>用于获取该谱图的 MS 仪器组件列表: 源、质量分析器等。</value>
+    <value>用于获取该谱图的 MS 仪器组件列表: 离子源、质量分析器等。</value>
   </data>
   <data name="Ionization" xml:space="preserve">
     <value>离子化</value>

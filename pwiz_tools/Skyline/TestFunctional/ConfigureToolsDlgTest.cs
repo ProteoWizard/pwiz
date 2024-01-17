@@ -348,7 +348,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                     configureToolsDlg.RemoveAllTools();
-                    configureToolsDlg.AddDialog("ExampleWebsiteTool", "https://skyline.gs.washington.edu/labkey/project/home/begin.view?", _empty, _empty, false, _empty); // Not L10N
+                    configureToolsDlg.AddDialog("ExampleWebsiteTool", "https://skyline.ms/project/home/begin.view", _empty, _empty, false, _empty); // Not L10N
                     configureToolsDlg.AddDialog(EXAMPLE1, EXAMPLE1_EXE, _empty, _empty);
                     Assert.IsTrue(configureToolsDlg.btnRemove.Enabled);
                     Assert.AreEqual(2, configureToolsDlg.ToolList.Count);
@@ -381,7 +381,7 @@ namespace pwiz.SkylineTestFunctional
                           Assert.IsTrue(configureToolsDlg.textTitle.Enabled);
                           Assert.AreEqual("ExampleWebsiteTool", configureToolsDlg.textTitle.Text); // Not L10N
                           Assert.IsTrue(configureToolsDlg.textCommand.Enabled);
-                          Assert.AreEqual("https://skyline.gs.washington.edu/labkey/project/home/begin.view?", configureToolsDlg.textCommand.Text); // Not L10N
+                          Assert.AreEqual("https://skyline.ms/project/home/begin.view", configureToolsDlg.textCommand.Text); // Not L10N
                           Assert.IsTrue(configureToolsDlg.textArguments.Enabled);
                           Assert.IsFalse(configureToolsDlg.textInitialDirectory.Enabled);
                           Assert.IsFalse(configureToolsDlg.cbOutputImmediateWindow.Enabled);
