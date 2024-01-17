@@ -58,6 +58,7 @@
             this.idTimesOtherContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator16 = new System.Windows.Forms.ToolStripSeparator();
             this.transitionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.relativeAbundanceFormattingMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.allTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.precursorsTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.productsTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -112,6 +113,7 @@
             this.peptideIDTimesContextMenuItem,
             this.toolStripSeparator16,
             this.transitionsContextMenuItem,
+            this.relativeAbundanceFormattingMenuItem,
             this.transformChromContextMenuItem,
             this.toolStripSeparator17,
             this.autoZoomContextMenuItem,
@@ -317,6 +319,12 @@
             this.transitionsContextMenuItem.Name = "transitionsContextMenuItem";
             resources.ApplyResources(this.transitionsContextMenuItem, "transitionsContextMenuItem");
             this.transitionsContextMenuItem.DropDownOpening += new System.EventHandler(this.transitionsMenuItem_DropDownOpening);
+            // 
+            // relativeAbundanceFormattingMenuItem
+            // 
+            this.relativeAbundanceFormattingMenuItem.Name = "relativeAbundanceFormattingMenuItem";
+            resources.ApplyResources(this.relativeAbundanceFormattingMenuItem, "relativeAbundanceFormattingMenuItem");
+            this.relativeAbundanceFormattingMenuItem.Click += new System.EventHandler(this.relativeAbundanceFormattingMenuItem_Click);
             // 
             // allTranContextMenuItem
             // 
@@ -545,6 +553,7 @@
         private System.Windows.Forms.ToolStripMenuItem idTimesOtherContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator16;
         private System.Windows.Forms.ToolStripMenuItem transitionsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem relativeAbundanceFormattingMenuItem;
         private System.Windows.Forms.ToolStripMenuItem allTranContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem precursorsTranContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem productsTranContextMenuItem;

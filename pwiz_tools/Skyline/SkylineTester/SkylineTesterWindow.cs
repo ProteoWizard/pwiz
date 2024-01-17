@@ -51,7 +51,7 @@ namespace SkylineTester
         public const string SkylineTesterFiles = "SkylineTester Files";
 
         public const string DocumentationLink =
-            "https://skyline.gs.washington.edu/labkey/wiki/home/development/page.view?name=SkylineTesterDoc";
+            "https://skyline.ms/wiki/home/development/page.view?name=SkylineTesterDoc";
 
         public string Git { get; private set; }
         public string Devenv { get; private set; }
