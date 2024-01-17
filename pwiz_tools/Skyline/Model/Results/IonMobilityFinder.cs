@@ -594,7 +594,7 @@ namespace pwiz.Skyline.Model.Results
             var statExpectedIsotopeProportions = new Statistics(expectedIsotopeProportions.Skip(indexM0));
 
             // Use the same IM window size as in chromatogram extraction
-            var windowedIsotopeIntensitiesPerIM = new Dictionary<double, double[]>();
+            var windowedIsotopeIntensitiesPerIM = new List<KeyValuePair<double, double[]>>();
             var observedIMs = isotopeIntensitiesPerIM.Keys.ToArray();
             observedIMs.Sort();
             var imMax = observedIMs.LastOrDefault();
@@ -621,19 +621,31 @@ namespace pwiz.Skyline.Model.Results
                     indexRight++;
                 }
 
+                // Note the IM of the most intense point within the window (these peaks are not symmetrical)
+                // TODO:(bspratt) preserve that asymmetry information
+                var peakIM = observedIM;
+                var intensityAtPeakIM = isotopeIntensities.Skip(indexM0).Sum();
+
                 for (var indexNeighborIM = indexLeft + 1; indexNeighborIM < indexRight; indexNeighborIM++)
                 {
                     if (indexNeighborIM != indexIM)
                     {
-                        var isotopeIntensitiesNeighbor = isotopeIntensitiesPerIM[observedIMs[indexNeighborIM]];
+                        var neighborIM = observedIMs[indexNeighborIM];
+                        var isotopeIntensitiesNeighbor = isotopeIntensitiesPerIM[neighborIM];
                         for (var isotopeIndex = 0; isotopeIndex < isotopeIntensities.Length; isotopeIndex++)
                         {
                             windowedIsotopeIntensities[isotopeIndex] += isotopeIntensitiesNeighbor[isotopeIndex];
                         }
+                        var intensityAtNeighborIM = isotopeIntensitiesNeighbor.Skip(indexM0).Sum();
+                        if (intensityAtNeighborIM > intensityAtPeakIM)
+                        {
+                            intensityAtPeakIM = intensityAtNeighborIM;
+                            peakIM = neighborIM;
+                        }
                     }
                 }
 
-                windowedIsotopeIntensitiesPerIM.Add(observedIM, windowedIsotopeIntensities);
+                windowedIsotopeIntensitiesPerIM.Add(new KeyValuePair<double, double[]>(peakIM, windowedIsotopeIntensities));
             }
 
 

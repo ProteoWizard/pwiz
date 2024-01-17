@@ -115,24 +115,16 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // Now compare the derived mobilities
             var expectedMobilityBSA = new[]
             {
-                26.46691, 25.65003, 28.42742, 28.26405, 22.87264, 27.77392, 24.66978, 29.57106, 22.38251,
-                25.32328, // NB this one looks like it has a strong conformer at about 24.8
-                23.8529, 23.36277,
-                27.44717, // NB this one looks like it has a strong conformer at about 26
-                30.22456, 29.57106, 23.68952,
-                27.12042, 24.66978, 30.22456, 28.91755,
-                23.03602, 27.44717, 28.10067, 29.2443, 27.44717, 28.91755,
-                22.87264, // NB this one looks like it has a strong conformer at about 24.5
-                28.75418, 24.66978, 23.36277,
-                26.95704, 24.99653, 24.17965, 25.97678, 25.81341, 28.10067, 25.65003, 24.99653,
-            };
-
-            var YeastMobility = new Dictionary<string, double>() // A handful of these are legitimately different 
-            { 
-                { "TC[+57.021464]VADESHAGC[+57.021464]EK++", 25.159904 },
-                { "YIC[+57.021464]DNQDTISSK++",28.264048 },
-                { "RHPEYAVSVLLR++", 30.061184 },
-                { "QTALVELLK++", 24.669776 }
+                26.46691, 25.65003, 28.75418, 28.26405, 22.87264, 27.77392, 24.5064, 29.40768, 22.21914,
+                25.81341,  // NB this one looks like it has a strong conformer at about 24.8
+                23.19939, 23.36277,
+                27.77392,  // NB this one looks like it has a strong conformer at about 26
+                29.2443, 29.40768, 24.01627,
+                27.61054, 24.99653, 30.38794, 29.2443,
+                23.19939, 27.28379, 27.77392, 29.57106, 27.44717, 29.08093,
+                22.87264,  // NB this one looks like it has a strong conformer at about 24.5
+                28.75418, 24.01627, 23.19939,
+                26.14016, 24.99653, 23.8529, 25.65003, 24.99653, 28.26405, 25.97678, 24.66978,
             };
 
             document = SkylineWindow.Document;
@@ -156,23 +148,12 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 }
 
                 var tolerance = 1.0;
-                if (YeastMobility.TryGetValue(key.ToString(), out var expected))
+                var expected = mobilityBSA.IonMobility;
+                if (Math.Abs(expected - mobilityYeastMix) > tolerance)
                 {
-                    if (Math.Abs(expected - mobilityYeastMix) > tolerance)
-                    {
-                        errors.Add(string.Format(
-                            $"{key} measured YeastMix drift time is {expected} but YeastMix measurement is {mobilityYeastMix} #{n}"));
-                    }
-                }
-                else
-                {
-                    expected = mobilityBSA.IonMobility;
-                    if (Math.Abs(expected - mobilityYeastMix) > tolerance)
-                    {
-                        errors.Add( string.Format(
-                            $"{key} measured BSA drift time is {expected} but YeastMix measurement is {mobilityYeastMix} #{n}"));
-                        
-                    }
+                    errors.Add( string.Format(
+                        $"{key} measured BSA drift time is {expected} but YeastMix measurement is {mobilityYeastMix} #{n}"));
+                    
                 }
                 if (Math.Abs(mobilityBSA.HighEnergyIonMobilityOffset - heoYeastMix) > 2.0)
                     errors.Add($"measured drift time high energy offset {mobilityBSA.HighEnergyIonMobilityOffset} vs {heoYeastMix} differs too much for " + key);
