@@ -202,6 +202,7 @@
     <Compile Include="Ms1SpectrumFilterTest.cs" />
     <Compile Include="MultiInjectionReplicatesTest.cs" />
     <Compile Include="OpenDocWithBackgroundProteomeTest.cs" />
+    <Compile Include="PeakAreaRelativeAbundanceGraphTest.cs" />
     <Compile Include="PeakAreaPeptideGraphTest.cs" />
     <Compile Include="PrmCeOptimizationTest.cs" />
     <Compile Include="QcTraceChromatogramTest.cs" />
@@ -612,6 +613,7 @@
     <None Include="PasteMoleculeTest.zip" />
     <None Include="PasteTransitionListTest.zip" />
     <None Include="PeakAreaDotpGraphTest.zip" />
+    <None Include="PeakAreaRelativeAbundanceGraphTest.zip" />
     <None Include="PeakAreaPeptideGraphTest.zip" />
     <None Include="PeakBoundaryCompareTest.zip" />
     <None Include="PeakScoringModelTest.zip" />

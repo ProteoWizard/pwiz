@@ -598,6 +598,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peptide Rank.
+        /// </summary>
+        public static string AreaPeptideGraphPane_UpdateAxes_Peptide_Rank {
+            get {
+                return ResourceManager.GetString("AreaPeptideGraphPane_UpdateAxes_Peptide_Rank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Expected.
         /// </summary>
         public static string AreaReplicateGraphPane_InitFromData_Expected {
@@ -4335,6 +4344,24 @@ namespace pwiz.Skyline.Properties {
         public static string ExportReportDlg_ShowShare_Report_Definitions {
             get {
                 return ResourceManager.GetString("ExportReportDlg_ShowShare_Report_Definitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein Expression.
+        /// </summary>
+        public static string Extensions_CustomToString_Protein_Expression {
+            get {
+                return ResourceManager.GetString("Extensions_CustomToString_Protein_Expression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Relative Abundance.
+        /// </summary>
+        public static string Extensions_CustomToString_Relative_Abundance {
+            get {
+                return ResourceManager.GetString("Extensions_CustomToString_Relative_Abundance", resourceCulture);
             }
         }
         
@@ -10682,6 +10709,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Protein Rank.
+        /// </summary>
+        public static string SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank {
+            get {
+                return ResourceManager.GetString("SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule Rank.
+        /// </summary>
+        public static string SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank {
+            get {
+                return ResourceManager.GetString("SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error running process.
         /// </summary>
         public static string TestNamedPipeProcessRunner_RunProcess_Error_running_process {
@@ -11734,6 +11779,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ViewLibraryDlg_MatchModifications_This_library_appears_to_contain_the_following_m" +
                         "odifications", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Relative Abundance Formatting.
+        /// </summary>
+        public static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting", resourceCulture);
             }
         }
         
