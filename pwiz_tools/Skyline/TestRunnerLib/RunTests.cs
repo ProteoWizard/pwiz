@@ -1036,13 +1036,13 @@ namespace TestRunnerLib
         [StringFormatMethod("info")]
 
         // N.B. not thread safe, use the non-static version (which calls this) from any RunTests object
-        public static void Log(StreamWriter log, string info, object[] args) 
+        public static void Log(StreamWriter log, string info, params object[] args) 
         {
             Console.Write(info, args);
             Console.Out.Flush(); // Get this info to TeamCity or SkylineTester ASAP
             if (log != null)
             {
-                log.Write(info, args ?? new object[] { });
+                log.Write(info, args);
                 log.Flush();
             }
         }

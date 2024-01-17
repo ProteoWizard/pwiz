@@ -1675,10 +1675,10 @@ namespace TestRunner
 
                 if (localNightlyBans.Any())
                 {
-                    RunTests.Log(log, $"# Local environment variable ${EnvVarSkylineNightlyTestExclusions} is set as \"{exclusions}\", skipping these tests:\n", null);
+                    RunTests.Log(log, $"# Local environment variable ${EnvVarSkylineNightlyTestExclusions} is set as \"{exclusions}\", skipping these tests:\n");
                     foreach (var banned in localNightlyBans)
                     {
-                        RunTests.Log(log, $"# {banned}\n", null);
+                        RunTests.Log(log, $"# {banned}\n");
                     }
                 }
             }
