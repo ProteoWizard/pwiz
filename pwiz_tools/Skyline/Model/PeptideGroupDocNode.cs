@@ -154,14 +154,17 @@ namespace pwiz.Skyline.Model
         public PeptideGroupDocNode ChangeProteinMetadata(ProteinMetadata proteinMetadata)
         {
             var newMetadata = proteinMetadata;
-            if (Equals(PeptideGroup.Name, newMetadata.Name))
-                newMetadata = newMetadata.ChangeName(null); // no actual override
-            if (Equals(PeptideGroup.Description, newMetadata.Description))
-                newMetadata = newMetadata.ChangeDescription(null); // no actual override
             var group = PeptideGroup as FastaSequenceGroup;
             if (group != null)
             {
                 Assume.AreEqual(group.FastaSequenceList.Count, proteinMetadata.ProteinMetadataList.Count);
+            }
+            else
+            {
+                if (Equals(PeptideGroup.Name, newMetadata.Name))
+                    newMetadata = newMetadata.ChangeName(null); // no actual override
+                if (Equals(PeptideGroup.Description, newMetadata.Description))
+                    newMetadata = newMetadata.ChangeDescription(null); // no actual override
             }
             return ChangeProp(ImClone(this), im => im._proteinMetadata = newMetadata);
         }
