@@ -1653,6 +1653,10 @@ namespace TestRunner
                 var exclusions = (Environment.GetEnvironmentVariable(EnvVarSkylineNightlyTestExclusions) ?? string.Empty);
                 foreach (var bannedPatterns in exclusions.Split(','))
                 {
+                    if (string.IsNullOrEmpty(bannedPatterns))
+                    {
+                        continue;
+                    }
                     var pattern = new Regex(bannedPatterns.Trim());
                     foreach (var t in testList)
                     {
