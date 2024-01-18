@@ -1032,6 +1032,9 @@
     <Compile Include="Controls\Graphs\MsGraphExtension.Designer.cs">
       <DependentUpon>MsGraphExtension.cs</DependentUpon>
     </Compile>
+    <Compile Include="ProtocolBuffers\GeneratedCode\GrpcService.cs" />
+    <Compile Include="ProtocolBuffers\GeneratedCode\GrpcServiceGrpc.cs" />
+    <Compile Include="ProtocolBuffers\GeneratedCode\ModelConfig.cs" />
     <Compile Include="SettingsUI\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
     <Compile Include="Model\Lib\LibraryKey.cs" />
@@ -1122,14 +1125,6 @@
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiUrl.cs" />
     <Compile Include="Model\TargetResolver.cs" />
     <Compile Include="Model\TransitionGroupIonMobilityInfo.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\Model.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\Predict.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\PredictionService.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\PredictionServiceGrpc.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\ResourceHandle.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\Tensor.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\TensorShape.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\Types.cs" />
     <Compile Include="SettingsUI\MetadataRuleEditor.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -3973,13 +3968,6 @@
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchPRM.png" />
     <EmbeddedResource Include="Resources\Ions_fragments.bmp" />
     <EmbeddedResource Include="Resources\Edit_Undo_Multiple.bmp" />
-    <Protobuf Include="ProtocolBuffers\model.proto" />
-    <Protobuf Include="ProtocolBuffers\predict.proto" />
-    <Protobuf Include="ProtocolBuffers\prediction_service.proto" />
-    <Protobuf Include="ProtocolBuffers\resource_handle.proto" />
-    <Protobuf Include="ProtocolBuffers\tensor.proto" />
-    <Protobuf Include="ProtocolBuffers\tensor_shape.proto" />
-    <Protobuf Include="ProtocolBuffers\types.proto" />
     <EmbeddedResource Include="Model\Prosit\Config\PrositConfig.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
@@ -4009,6 +3997,8 @@
     <None Include="Model\Prosit\Config\PrositConfig_development.xml" />
     <None Include="ProtocolBuffers\google\protobuf\wrappers.proto" />
     <None Include="PreBuildEvents.bat" />
+    <Protobuf Include="ProtocolBuffers\grpc_service.proto" />
+    <Protobuf Include="ProtocolBuffers\model_config.proto" />
     <None Include="Resources\Locked.bmp" />
     <EmbeddedResource Include="Resources\MoleculeLib.bmp" />
     <None Include="Resources\MoleculeStandard.bmp" />

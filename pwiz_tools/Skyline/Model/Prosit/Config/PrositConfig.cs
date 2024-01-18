@@ -18,6 +18,8 @@
  */
 
 using System;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Xml.Serialization;
 using Grpc.Core;
 using pwiz.Skyline.Model.Prosit.Communication;
@@ -30,6 +32,7 @@ namespace pwiz.Skyline.Model.Prosit.Config
     public class PrositConfig
     {
         public string Server { get; set; }
+        public bool RequireSsl { get; set; }
         public string RootCertificate { get; set; }
         public string ClientCertificate { get; set; }
         public string ClientKey { get; set; }
@@ -39,11 +42,27 @@ namespace pwiz.Skyline.Model.Prosit.Config
             return new Channel(Server, GetChannelCredentials());
         }
 
+        private const string BEGIN_CERTIFICATE = @"-----BEGIN CERTIFICATE-----";
+        private const string END_CERTIFICATE = @"-----END CERTIFICATE-----";
         public ChannelCredentials GetChannelCredentials()
         {
             if (string.IsNullOrEmpty(RootCertificate))
             {
-                return ChannelCredentials.Insecure;
+                if (RequireSsl)
+                {
+                    // use all certificates from system's root store
+                    var certStore = new X509Store(StoreName.Root, StoreLocation.CurrentUser);
+                    certStore.Open(OpenFlags.ReadOnly);
+                    var rootCertificates = new StringBuilder();
+                    foreach (var rootCert in certStore.Certificates)
+                        rootCertificates.AppendLine(string.Join(Environment.NewLine,
+                            BEGIN_CERTIFICATE,
+                            Convert.ToBase64String(rootCert.RawData, Base64FormattingOptions.InsertLineBreaks),
+                            END_CERTIFICATE));
+                    RootCertificate = rootCertificates.ToString();
+                }
+                else
+                    return ChannelCredentials.Insecure;
             }
 
             if (string.IsNullOrEmpty(ClientCertificate))
@@ -67,7 +86,9 @@ namespace pwiz.Skyline.Model.Prosit.Config
                     throw new InvalidOperationException(@"Unable to read PrositConfig.xml");
                 }
                 var xmlSerializer = new XmlSerializer(typeof(PrositConfig));
-                return (PrositConfig) xmlSerializer.Deserialize(stream);
+                var prositConfig = (PrositConfig) xmlSerializer.Deserialize(stream);
+                prositConfig.RequireSsl = true;
+                return prositConfig;
             }
         }
 

@@ -35,7 +35,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestConnected
 {
     [TestClass]
-    public class PrositConfigTest : AbstractUnitTest
+    public class PrositConfigTest : AbstractUnitTestEx
     {
         /// <summary>
         /// Tests that a connection can successfully be made to the server specified in PrositConfig.GetPrositConfig().
@@ -118,14 +118,6 @@ Even More Stuff
             var prositConfig = PrositConfig.GetPrositConfig();
             Assert.IsNotNull(prositConfig);
             Assert.IsFalse(string.IsNullOrEmpty(prositConfig.Server));
-        }
-
-        /// <summary>
-        /// Returns true if Skyline was compiled with a prosit config file that enables connecting to a real server.
-        /// </summary>
-        public static bool HasPrositServer()
-        {
-            return !string.IsNullOrEmpty(PrositConfig.GetPrositConfig().RootCertificate);
         }
     }
 }

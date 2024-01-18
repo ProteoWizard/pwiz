@@ -35,7 +35,7 @@ namespace pwiz.SkylineTestConnected
         [TestMethod]
         public void TestPrositBuildLibrary()
         {
-            if (!PrositConfigTest.HasPrositServer())
+            if (!HasPrositServer())
             {
                 return;
             }

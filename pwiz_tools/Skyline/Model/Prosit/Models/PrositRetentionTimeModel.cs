@@ -17,13 +17,14 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using Google.Protobuf.Collections;
+using System.Text;
+using Google.Protobuf;
+using Inference;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
-using Tensorflow;
+using static Inference.ModelInferRequest.Types;
 
 namespace pwiz.Skyline.Model.Prosit.Models
 {
@@ -94,10 +95,15 @@ namespace pwiz.Skyline.Model.Prosit.Models
             return (Model != null ? Model.GetHashCode() : 0);
         }
 
-        public static IEnumerable<string> Models
+        public static IEnumerable<string> Models => new[]
         {
-            get { yield return @"iRT"; }
-        }
+            @"Prosit_2019_irt",
+            //@"Prosit_2020_irt_TMT",
+            @"Deeplc_hela_hf",
+            @"AlphaPept_rt_generic"
+        };
+
+        public override IDictionary<string, ModelInputs> InputsForModel => null;
 
         public override PrositRTInput.PrositPeptideInput CreatePrositInputRow(SrmSettings settings, PeptideDocNodeWrapper skylineInput,
             out PrositException exception)
@@ -123,7 +129,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
             return new PrositRTInput(prositInputRows);
         }
 
-        public override PrositRTOutput CreatePrositOutput(MapField<string, TensorProto> prositOutputData)
+        public override PrositRTOutput CreatePrositOutput(ModelInferResponse prositOutputData)
         {
             return new PrositRTOutput(prositOutputData);
         }
@@ -173,7 +179,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         /// </summary>
         public sealed class PrositRTInput : PrositInput<PrositRTInput.PrositPeptideInput>
         {
-            public static readonly string PEPTIDES_KEY = @"sequence_integer";
+            public static readonly string PEPTIDES_KEY = @"peptide_sequences";
 
             public PrositRTInput(IList<PrositPeptideInput> peptideInputs)
             {
@@ -182,46 +188,45 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
             public override IList<PrositPeptideInput> InputRows { get; }
 
-            public override MapField<string, TensorProto> PrositTensors
+            public override IList<InferInputTensor> PrositTensors
             {
                 get
                 {
-                    return new MapField<string, TensorProto>
+                    return new List<InferInputTensor>()
                     {
-                        [PEPTIDES_KEY] = Create2dTensor(DataType.DtInt32, tp => tp.IntVal,
-                            InputRows.SelectMany(p => p.PeptideSequence).ToArray(),
-                            InputRows.Count, PrositConstants.PEPTIDE_SEQ_LEN),
+                        Create2dTensor(PEPTIDES_KEY, DataTypes.BYTES, tp => tp.BytesContents,
+                            InputRows.Select(p => ByteString.CopyFrom(p.PeptideSequence, Encoding.ASCII)).ToArray(),
+                            InputRows.Count, 1)
                     };
                 }
             }
 
+            public override IList<string> OutputTensorNames => new List<string> { PrositRTOutput.OUTPUT_KEY };
+
             public class PrositPeptideInput
             {
-                public PrositPeptideInput(int[] peptideSequence)
+                public PrositPeptideInput(string peptideSequence)
                 {
                     PeptideSequence = peptideSequence;
                 }
 
-                public int[] PeptideSequence { get; private set; }
+                public string PeptideSequence { get; private set; }
             }
         }
 
         public sealed class PrositRTOutput : PrositOutput<PrositRTOutput, PrositRTOutput.PrositPeptideOutput>
         {
-            public static readonly string OUTPUT_KEY = @"prediction/BiasAdd:0";
+            public static readonly string OUTPUT_KEY = @"irt";
 
-            public const double iRT_MEAN = 56.35363441;
-            public const double iRT_VARIANCE = 1883.0160689;
-
-            public PrositRTOutput(MapField<string, TensorProto> prositOutput)
+            public PrositRTOutput(ModelInferResponse prositOutput)
             {
-                var outputTensor = prositOutput[OUTPUT_KEY];
-                var peptideCount = outputTensor.TensorShape.Dim[0].Size;
+                //var outputTensor = prositOutput.Single(t => t.Name.Equals(OUTPUT_KEY, StringComparison.InvariantCultureIgnoreCase));
+                var peptideCount = prositOutput.Outputs[0].Shape[0];
                 OutputRows = new PrositPeptideOutput[peptideCount];
-
+                var stream = prositOutput.RawOutputContents[0].CreateCodedInput();
                 // Copy iRTs for each peptide
                 for (var i = 0; i < peptideCount; ++i)
-                    OutputRows[i] = new PrositPeptideOutput(outputTensor.FloatVal[i]);
+                    OutputRows[i] = new PrositPeptideOutput(stream.ReadFloat());
             }
             
             public PrositRTOutput()
@@ -235,7 +240,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
             {
                 public PrositPeptideOutput(double iRT)
                 {
-                    this.iRT = iRT * Math.Sqrt(iRT_VARIANCE) + iRT_MEAN;
+                    this.iRT = iRT;
                 }
                 
                 public double iRT { get; }

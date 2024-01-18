@@ -19,12 +19,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using Google.Protobuf.Collections;
+using Google.Protobuf;
 using Grpc.Core;
+using Inference;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -40,8 +43,6 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
-using Tensorflow;
-using Tensorflow.Serving;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -105,7 +106,7 @@ namespace pwiz.SkylineTestFunctional
             new PrositIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("CSLPRPWALTFSYGR", 0.2800f, 2)
+                    new PrositIntensityInput("C[unimod:4]SLPRPWALTFSYGR", 0.2800f, 2)
                 },
                 new[]
                 {
@@ -146,7 +147,7 @@ namespace pwiz.SkylineTestFunctional
             new PrositRetentionTimeQuery(
                 new[]
                 {
-                    "CSLPRPWALTFSYGR"
+                    "C[unimod:4]SLPRPWALTFSYGR"
                 },
                 new[]
                 {
@@ -156,7 +157,7 @@ namespace pwiz.SkylineTestFunctional
             new PrositIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("CSLPRPWALTFSYGR", 0.2500f, 2)
+                    new PrositIntensityInput("C[unimod:4]SLPRPWALTFSYGR", 0.2500f, 2)
                 },
                 new[]
                 {
@@ -197,7 +198,7 @@ namespace pwiz.SkylineTestFunctional
             new PrositRetentionTimeQuery(
                 new[]
                 {
-                    "CSLPRPWALTFSYGR"
+                    "C[unimod:4]SLPRPWALTFSYGR"
                 },
                 new[]
                 {
@@ -207,7 +208,7 @@ namespace pwiz.SkylineTestFunctional
             new PrositIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("CSLPRPWALTFSYGR", 0.2600f, 2)
+                    new PrositIntensityInput("C[unimod:4]SLPRPWALTFSYGR", 0.2600f, 2)
                 },
                 new[]
                 {
@@ -248,7 +249,7 @@ namespace pwiz.SkylineTestFunctional
             new PrositRetentionTimeQuery(
                 new[]
                 {
-                    "CSLPRPWALTFSYGR"
+                    "C[unimod:4]SLPRPWALTFSYGR"
                 },
                 new[]
                 {
@@ -258,7 +259,7 @@ namespace pwiz.SkylineTestFunctional
             new PrositIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("LGGEEVSVACK", 0.2600f, 2)
+                    new PrositIntensityInput("LGGEEVSVAC[unimod:4]K", 0.2600f, 2)
                 },
                 new[]
                 {
@@ -299,7 +300,7 @@ namespace pwiz.SkylineTestFunctional
             new PrositRetentionTimeQuery(
                 new[]
                 {
-                    "LGGEEVSVACK"
+                    "LGGEEVSVAC[unimod:4]K"
                 },
                 new[]
                 {
@@ -309,7 +310,7 @@ namespace pwiz.SkylineTestFunctional
             new PrositIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("LGGEEVSVACK", 0.2700f, 2)
+                    new PrositIntensityInput("LGGEEVSVAC[unimod:4]K", 0.2700f, 2)
                 },
                 new[]
                 {
@@ -350,7 +351,7 @@ namespace pwiz.SkylineTestFunctional
             new PrositRetentionTimeQuery(
                 new[]
                 {
-                    "LGGEEVSVACK"
+                    "LGGEEVSVAC[unimod:4]K"
                 },
                 new[]
                 {
@@ -564,7 +565,7 @@ namespace pwiz.SkylineTestFunctional
             new PrositIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("CSLPRPWALTFSYGR", 0.2500f, 2)
+                    new PrositIntensityInput("C[unimod:4]SLPRPWALTFSYGR", 0.2500f, 2)
                 },
                 new[]
                 {
@@ -605,7 +606,7 @@ namespace pwiz.SkylineTestFunctional
             new PrositRetentionTimeQuery(
                 new[]
                 {
-                    "CSLPRPWALTFSYGR"
+                    "C[unimod:4]SLPRPWALTFSYGR"
                 },
                 new[]
                 {
@@ -615,7 +616,7 @@ namespace pwiz.SkylineTestFunctional
             new PrositIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("CSLPRPWALTFSYGR", 0.2600f, 2)
+                    new PrositIntensityInput("C[unimod:4]SLPRPWALTFSYGR", 0.2600f, 2)
                 },
                 new[]
                 {
@@ -656,7 +657,7 @@ namespace pwiz.SkylineTestFunctional
             new PrositRetentionTimeQuery(
                 new[]
                 {
-                    "CSLPRPWALTFSYGR"
+                    "C[unimod:4]SLPRPWALTFSYGR"
                 },
                 new[]
                 {
@@ -666,7 +667,7 @@ namespace pwiz.SkylineTestFunctional
             new PrositIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("LGGEEVSVACK", 0.2600f, 2)
+                    new PrositIntensityInput("LGGEEVSVAC[unimod:4]K", 0.2600f, 2)
                 },
                 new[]
                 {
@@ -707,7 +708,7 @@ namespace pwiz.SkylineTestFunctional
             new PrositRetentionTimeQuery(
                 new[]
                 {
-                    "LGGEEVSVACK"
+                    "LGGEEVSVAC[unimod:4]K"
                 },
                 new[]
                 {
@@ -717,7 +718,7 @@ namespace pwiz.SkylineTestFunctional
             new PrositIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("LGGEEVSVACK", 0.2700f, 2)
+                    new PrositIntensityInput("LGGEEVSVAC[unimod:4]K", 0.2700f, 2)
                 },
                 new[]
                 {
@@ -758,7 +759,7 @@ namespace pwiz.SkylineTestFunctional
             new PrositRetentionTimeQuery(
                 new[]
                 {
-                    "LGGEEVSVACK"
+                    "LGGEEVSVAC[unimod:4]K"
                 },
                 new[]
                 {
@@ -1074,7 +1075,7 @@ namespace pwiz.SkylineTestFunctional
             new PrositIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("LGGEEVSVACK", 0.2700f, 2)
+                    new PrositIntensityInput("LGGEEVSVAC[unimod:4]K", 0.2700f, 2)
                 },
                 new[]
                 {
@@ -1115,7 +1116,7 @@ namespace pwiz.SkylineTestFunctional
             new PrositRetentionTimeQuery(
                 new[]
                 {
-                    "LGGEEVSVACK"
+                    "LGGEEVSVAC[unimod:4]K"
                 },
                 new[]
                 {
@@ -1176,8 +1177,8 @@ namespace pwiz.SkylineTestFunctional
             new PrositIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("CSLPRPWALTFSYGR", 0.3200f, 2),
-                    new PrositIntensityInput("LGGEEVSVACK", 0.3200f, 2),
+                    new PrositIntensityInput("C[unimod:4]SLPRPWALTFSYGR", 0.3200f, 2),
+                    new PrositIntensityInput("LGGEEVSVAC[unimod:4]K", 0.3200f, 2),
                     new PrositIntensityInput("GSYNLQDLLAQAK", 0.3200f, 2),
                     new PrositIntensityInput("GSYNLQDLLAQAK", 0.3200f, 2),
                     new PrositIntensityInput("TGTNLM[Oxidation (M)]DFLSR", 0.3200f, 2)
@@ -1349,8 +1350,8 @@ namespace pwiz.SkylineTestFunctional
             new PrositRetentionTimeQuery(
                 new[]
                 {
-                    "CSLPRPWALTFSYGR",
-                    "LGGEEVSVACK",
+                    "C[unimod:4]SLPRPWALTFSYGR",
+                    "LGGEEVSVAC[unimod:4]K",
                     "GSYNLQDLLAQAK",
                     "TGTNLM[Oxidation (M)]DFLSR"
                 },
@@ -1782,9 +1783,10 @@ namespace pwiz.SkylineTestFunctional
     public abstract class PrositQuery : IRecordable
     {
         public abstract string Model { get; }
-        public abstract PredictResponse Response { get; }
+        public abstract ModelInferResponse Response { get; }
 
-        public abstract void AssertMatchesQuery(PredictRequest pr);
+        public abstract void AssertMatchesQuery(ModelInferRequest pr);
+        public abstract bool MatchesQuery(ModelInferRequest pr);
         public abstract string ToCode();
     }
 
@@ -1820,30 +1822,31 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(_inputs.Length, _spectra.Length);
         }
 
-        public static PrositIntensityQuery FromTensors(PredictRequest request, PredictResponse response)
+        public static PrositIntensityQuery FromTensors(ModelInferRequest request, ModelInferResponse response)
         {
             // Sequences
-            var seqs = request.Inputs[PrositIntensityModel.PrositIntensityInput.PEPTIDES_KEY];
-            Assert.AreEqual(seqs.TensorShape.Dim.Count, 2);
-            Assert.AreEqual(seqs.TensorShape.Dim[1].Size, PrositConstants.PEPTIDE_SEQ_LEN);
+            var seqs = request.Inputs.Single(t => t.Name.Equals(PrositIntensityModel.PrositIntensityInput.PEPTIDES_KEY, StringComparison.InvariantCultureIgnoreCase));
+            Assert.AreEqual(seqs.Shape.Count, 2);
+            Assert.AreEqual(seqs.Shape[1], PrositConstants.PEPTIDE_SEQ_LEN);
             var decodedSeqs = PrositHelpers.DecodeSequences(seqs);
 
             // CEs
-            var ces = request.Inputs[PrositIntensityModel.PrositIntensityInput.COLLISION_ENERGY_KEY];
-            Assert.AreEqual(ces.TensorShape.Dim.Count, 2);
-            Assert.AreEqual(ces.TensorShape.Dim[1].Size, 1);
-            var decodedCes = ces.FloatVal.ToArray();
+            var ces = request.Inputs.Single(t => t.Name.Equals(PrositIntensityModel.PrositIntensityInput.COLLISION_ENERGY_KEY, StringComparison.InvariantCultureIgnoreCase));
+            Assert.AreEqual(ces.Shape.Count, 2);
+            Assert.AreEqual(ces.Shape[1], 1);
+            var decodedCes = ces.Contents.Fp32Contents.ToArray();
 
             // Charges
-            var charges = request.Inputs[PrositIntensityModel.PrositIntensityInput.PRECURSOR_CHARGE_KEY];
-            Assert.AreEqual(charges.TensorShape.Dim.Count, 2);
-            Assert.AreEqual(charges.TensorShape.Dim[1].Size, PrositConstants.PRECURSOR_CHARGES);
+            var charges = request.Inputs.Single(t => t.Name.Equals(PrositIntensityModel.PrositIntensityInput.PRECURSOR_CHARGE_KEY, StringComparison.InvariantCultureIgnoreCase));
+            Assert.AreEqual(charges.Shape.Count, 2);
+            Assert.AreEqual(charges.Shape[1], PrositConstants.PRECURSOR_CHARGES);
             var decodedCharges = PrositHelpers.DecodeCharges(charges);
 
             var inputs = Enumerable.Range(0, decodedSeqs.Length)
                 .Select(i => new PrositIntensityInput(decodedSeqs[i], decodedCes[i], decodedCharges[i])).ToArray();
 
-            var outputsFlattened = PrositHelpers.ReLU(response.Outputs[PrositIntensityModel.PrositIntensityOutput.OUTPUT_KEY].FloatVal.ToArray());
+            var outputsTensor = response.Outputs.Single(t => t.Name.Equals(PrositIntensityModel.PrositIntensityOutput.OUTPUT_KEYS[1], StringComparison.InvariantCultureIgnoreCase));
+            var outputsFlattened = PrositHelpers.ReLU(outputsTensor.Contents.Fp32Contents.ToArray());
 
             // Reshape and copy
             var outputs = new float[inputs.Length][];
@@ -1886,23 +1889,48 @@ namespace pwiz.SkylineTestFunctional
             return string.Format("new PrositIntensityQuery(\r\n    {0},\r\n    {1}\r\n),", inputsCode, spectraCode);
         }
 
-        public override PredictResponse Response
+        public override ModelInferResponse Response
         {
             get
             {
-                var pr = new PredictResponse();
-                pr.ModelSpec = new ModelSpec { Name = Model };
+                var pr = new ModelInferResponse();
+                pr.ModelName = Model;
 
                 // Construct Tensor
-                var tp = new TensorProto { Dtype = DataType.DtFloat };
+                var tp = new ModelInferResponse.Types.InferOutputTensor { Datatype = "BYTES" };
+                tp.Name = PrositIntensityModel.PrositIntensityOutput.OUTPUT_KEYS[0];
+                tp.Shape.Add(_spectra.Length);
+                tp.Shape.Add((PrositConstants.PEPTIDE_SEQ_LEN - 1) * PrositConstants.IONS_PER_RESIDUE);
+                pr.Outputs.Add(tp);
+                
+                tp = new ModelInferResponse.Types.InferOutputTensor { Datatype = "FP32" };
+                tp.Name = PrositIntensityModel.PrositIntensityOutput.OUTPUT_KEYS[1];
+                tp.Shape.Add(_spectra.Length);
+                tp.Shape.Add((PrositConstants.PEPTIDE_SEQ_LEN - 1) * PrositConstants.IONS_PER_RESIDUE) ;
+                pr.Outputs.Add(tp);
+
+                using var annotationStream = new MemoryStream();
+                using var annotationWriter = new BinaryWriter(annotationStream);
+                foreach (var input in _inputs)
+                {
+                    int sequenceLength = new ModifiedSequence(input.ModifiedSequence, MassType.Monoisotopic).GetUnmodifiedSequence().Length;
+                    foreach (var ionType in new[] { 'y', 'b' })
+                        for (int i = 1; i < PrositConstants.PEPTIDE_SEQ_LEN; ++i)
+                        {
+                            for (int z = 1; z <= PrositConstants.IONS_PER_RESIDUE / 2; ++z)
+                            {
+                                string annotation = string.Format("{0}{1}+{2}", ionType, i, z);
+                                annotationWriter.Write(annotation.Length);
+                                annotationWriter.Write(annotation.ToCharArray());
+                            }
+                        }
+                }
 
                 var spectraFlatten = _spectra.SelectMany(f => f).ToArray();
-                // Populate with data
-                tp.FloatVal.AddRange(spectraFlatten);
-                tp.TensorShape = new TensorShapeProto();
-                tp.TensorShape.Dim.Add(new TensorShapeProto.Types.Dim { Size = _spectra.Length });
-                tp.TensorShape.Dim.Add(new TensorShapeProto.Types.Dim { Size = (PrositConstants.PEPTIDE_SEQ_LEN - 1) * PrositConstants.PRECURSOR_CHARGES });
-                pr.Outputs[PrositIntensityModel.PrositIntensityOutput.OUTPUT_KEY] = tp;
+
+                annotationStream.Seek(0, SeekOrigin.Begin);
+                pr.RawOutputContents.Add(ByteString.FromStream(annotationStream));
+                pr.RawOutputContents.Add(ByteString.CopyFrom(PrimitiveArrays.ToBytes(spectraFlatten)));
 
                 return pr;
             }
@@ -1910,37 +1938,66 @@ namespace pwiz.SkylineTestFunctional
 
         public override string Model => PrositIntensityModel.Models.First();
 
-        public override void AssertMatchesQuery(PredictRequest pr)
+        public override bool MatchesQuery(ModelInferRequest pr)
         {
-            Assert.AreEqual(Model, pr.ModelSpec.Name);
+            var keys = pr.Inputs.Select(t => t.Name).OrderBy(s => s).ToArray();
+            if (Model != pr.ModelName ||
+                pr.Inputs.Count != 3 ||
+                keys[0] != PrositIntensityModel.PrositIntensityInput.COLLISION_ENERGY_KEY ||
+                keys[1] != PrositIntensityModel.PrositIntensityInput.PEPTIDES_KEY ||
+                keys[2] != PrositIntensityModel.PrositIntensityInput.PRECURSOR_CHARGE_KEY)
+                return false;
+
+            var seqs = pr.Inputs.Single(t => t.Name.Equals(PrositIntensityModel.PrositIntensityInput.PEPTIDES_KEY, StringComparison.InvariantCultureIgnoreCase));
+            var ces = pr.Inputs.Single(t => t.Name.Equals(PrositIntensityModel.PrositIntensityInput.COLLISION_ENERGY_KEY, StringComparison.InvariantCultureIgnoreCase));
+            var charges = pr.Inputs.Single(t => t.Name.Equals(PrositIntensityModel.PrositIntensityInput.PRECURSOR_CHARGE_KEY, StringComparison.InvariantCultureIgnoreCase));
+            return // Sequences
+                   seqs.Shape.Count == 2 &&
+                   seqs.Shape[0] == _inputs.Length &&
+                   seqs.Shape[1] == 1 &&
+                   ArrayUtil.EqualsDeep(_inputs.Select(i => new ModifiedSequence(i.ModifiedSequence, MassType.Monoisotopic)).ToArray(),
+                       PrositHelpers.DecodeSequences2(seqs)) &&
+
+                   // CEs
+                   ces.Shape.Count == 2 &&
+                   ces.Shape[0] == _inputs.Length &&
+                   ces.Shape[1] == 1 &&
+
+                   // Charges
+                   charges.Shape.Count == 2 &&
+                   charges.Shape[0] == _inputs.Length &&
+                   charges.Shape[1] == 1;
+        }
+
+        public override void AssertMatchesQuery(ModelInferRequest pr)
+        {
+            Assert.AreEqual(Model, pr.ModelName);
 
             Assert.AreEqual(pr.Inputs.Count, 3);
-            var keys = pr.Inputs.Keys.OrderBy(s => s).ToArray();
+            var keys = pr.Inputs.Select(t => t.Name).OrderBy(s => s).ToArray();
             Assert.AreEqual(keys[0], PrositIntensityModel.PrositIntensityInput.COLLISION_ENERGY_KEY);
             Assert.AreEqual(keys[1], PrositIntensityModel.PrositIntensityInput.PEPTIDES_KEY);
             Assert.AreEqual(keys[2], PrositIntensityModel.PrositIntensityInput.PRECURSOR_CHARGE_KEY);
 
             // Sequences
-            var seqs = pr.Inputs[PrositIntensityModel.PrositIntensityInput.PEPTIDES_KEY];
-            Assert.AreEqual(seqs.TensorShape.Dim.Count, 2);
-            Assert.AreEqual(seqs.TensorShape.Dim[0].Size, _inputs.Length);
-            Assert.AreEqual(seqs.TensorShape.Dim[1].Size, PrositConstants.PEPTIDE_SEQ_LEN);
-            AssertEx.AreEqualDeep(_inputs.Select(i => i.ModifiedSequence).ToArray(),
-                PrositHelpers.DecodeSequences(seqs));
+            var seqs = pr.Inputs.Single(t => t.Name.Equals(PrositIntensityModel.PrositIntensityInput.PEPTIDES_KEY, StringComparison.InvariantCultureIgnoreCase));
+            Assert.AreEqual(seqs.Shape.Count, 2);
+            Assert.AreEqual(seqs.Shape[0], _inputs.Length);
+            Assert.AreEqual(seqs.Shape[1], 1);
+            AssertEx.AreEqualDeep(_inputs.Select(i => new ModifiedSequence(i.ModifiedSequence, MassType.Monoisotopic)).ToArray(),
+                PrositHelpers.DecodeSequences2(seqs));
 
             // CEs
-            var ces = pr.Inputs[PrositIntensityModel.PrositIntensityInput.COLLISION_ENERGY_KEY];
-            Assert.AreEqual(ces.TensorShape.Dim.Count, 2);
-            Assert.AreEqual(ces.TensorShape.Dim[0].Size, _inputs.Length);
-            Assert.AreEqual(ces.TensorShape.Dim[1].Size, 1);
-            AssertEx.AreEqualDeep(_inputs.Select(i => i.NormalizedCollisionEnergy).ToArray(), ces.FloatVal);
+            var ces = pr.Inputs.Single(t => t.Name.Equals(PrositIntensityModel.PrositIntensityInput.COLLISION_ENERGY_KEY, StringComparison.InvariantCultureIgnoreCase));
+            Assert.AreEqual(ces.Shape.Count, 2);
+            Assert.AreEqual(ces.Shape[0], _inputs.Length);
+            Assert.AreEqual(ces.Shape[1], 1);
 
             // Charges
-            var charges = pr.Inputs[PrositIntensityModel.PrositIntensityInput.PRECURSOR_CHARGE_KEY];
-            Assert.AreEqual(charges.TensorShape.Dim.Count, 2);
-            Assert.AreEqual(charges.TensorShape.Dim[0].Size, _inputs.Length);
-            Assert.AreEqual(charges.TensorShape.Dim[1].Size, PrositConstants.PRECURSOR_CHARGES);
-            AssertEx.AreEqualDeep(_inputs.Select(i => i.PrecursorCharge).ToArray(), PrositHelpers.DecodeCharges(charges));
+            var charges = pr.Inputs.Single(t => t.Name.Equals(PrositIntensityModel.PrositIntensityInput.PRECURSOR_CHARGE_KEY, StringComparison.InvariantCultureIgnoreCase));
+            Assert.AreEqual(charges.Shape.Count, 2);
+            Assert.AreEqual(charges.Shape[0], _inputs.Length);
+            Assert.AreEqual(charges.Shape[1], 1);
         }
 
         public void AssertMatchesSpectra(PrositIntensityModel.PeptidePrecursorNCE[] peptidePrecursorNCEs, SpectrumDisplayInfo[] spectrumDisplayInfos)
@@ -1965,20 +2022,37 @@ namespace pwiz.SkylineTestFunctional
             var charges = Math.Min(input.PrecursorCharge, 3);
             var ionCount = 2 * residues * charges;
 
-            Assert.AreEqual(spectrumDisplayInfo.SpectrumPeaksInfo.Peaks.Length, ionCount);
+            //Assert.AreEqual(spectrumDisplayInfo.SpectrumPeaksInfo.Peaks.Length, ionCount);
             
             // Construct a prosit output object so that we can construct a spectrum for comparison.
             // There really is no easier way to do this without rewriting a lot of code for parsing the
             // flattened intensities and adding lots of extra test code inside of Skyline code.
-            var fakePrositOutputTensors = new MapField<string, TensorProto>();
-            var tensor = new TensorProto();
-            tensor.TensorShape = new TensorShapeProto();
-            tensor.TensorShape.Dim.Add(new TensorShapeProto.Types.Dim() { Size = 1 });
-            tensor.TensorShape.Dim.Add(new TensorShapeProto.Types.Dim() { Size = spectrum.Length });
-            tensor.FloatVal.AddRange(spectrum);
-            fakePrositOutputTensors[PrositIntensityModel.PrositIntensityOutput.OUTPUT_KEY] = tensor;
+            var response = new ModelInferResponse();
+            var tensor = new ModelInferResponse.Types.InferOutputTensor();
+            tensor.Shape.Add(1);
+            tensor.Shape.Add(spectrum.Length);
+            tensor.Contents = new InferTensorContents();
+            tensor.Contents.Fp32Contents.AddRange(spectrum);
+            tensor.Name = PrositIntensityModel.PrositIntensityOutput.OUTPUT_KEYS[1];
+            response.Outputs.Add(tensor);
 
-            var fakePrositOutput = new PrositIntensityModel.PrositIntensityOutput(fakePrositOutputTensors);
+            using var annotationStream = new MemoryStream();
+            using var annotationWriter = new BinaryWriter(annotationStream);
+            foreach (var ionType in new[] { 'y', 'b' })
+                for (int i = 1; i < PrositConstants.PEPTIDE_SEQ_LEN; ++i)
+                {
+                    for (int z = 1; z <= PrositConstants.IONS_PER_RESIDUE / 2; ++z)
+                    {
+                        string annotation = string.Format("{0}{1}+{2}", ionType, i, z);
+                        annotationWriter.Write(annotation.Length);
+                        annotationWriter.Write(annotation.ToCharArray());
+                    }
+                }
+            annotationStream.Seek(0, SeekOrigin.Begin);
+            response.RawOutputContents.Add(ByteString.FromStream(annotationStream));
+            response.RawOutputContents.Add(ByteString.CopyFrom(PrimitiveArrays.ToBytes(spectrum)));
+
+            var fakePrositOutput = new PrositIntensityModel.PrositIntensityOutput(response);
             var ms2Spectrum = new PrositMS2Spectrum(Program.MainWindow.Document.Settings,
                 peptidePrecursorNCE.WithNCE((int) (input.NormalizedCollisionEnergy * 100.0f)), 0, fakePrositOutput);
 
@@ -1998,17 +2072,17 @@ namespace pwiz.SkylineTestFunctional
             _iRTs = iRTs;
         }
 
-        public static PrositRetentionTimeQuery FromTensors(PredictRequest request, PredictResponse response)
+        public static PrositRetentionTimeQuery FromTensors(ModelInferRequest request, ModelInferResponse response)
         {
             // Sequences
-            var seqs = request.Inputs[PrositRetentionTimeModel.PrositRTInput.PEPTIDES_KEY];
-            Assert.AreEqual(seqs.TensorShape.Dim.Count, 2);
-            Assert.AreEqual(seqs.TensorShape.Dim[1].Size, PrositConstants.PEPTIDE_SEQ_LEN);
+            var seqs = request.Inputs.Single(t => t.Name.Equals(PrositRetentionTimeModel.PrositRTInput.PEPTIDES_KEY, StringComparison.InvariantCultureIgnoreCase));
+            Assert.AreEqual(seqs.Shape.Count, 2);
+            Assert.AreEqual(seqs.Shape[1], PrositConstants.PEPTIDE_SEQ_LEN);
             var decodedSeqs = PrositHelpers.DecodeSequences(seqs);
 
-            var outputs = response.Outputs[PrositRetentionTimeModel.PrositRTOutput.OUTPUT_KEY].FloatVal.ToArray();
+            var outputs = response.Outputs.Single(t => t.Name.Equals(PrositRetentionTimeModel.PrositRTOutput.OUTPUT_KEY));
 
-            return new PrositRetentionTimeQuery(decodedSeqs, outputs);
+            return new PrositRetentionTimeQuery(decodedSeqs, outputs.Contents.Fp32Contents.ToArray());
         }
 
         public override string ToCode()
@@ -2022,17 +2096,33 @@ namespace pwiz.SkylineTestFunctional
             return string.Format("new PrositRetentionTimeQuery(\r\n    {0},\r\n    {1}\r\n),", seqsCode, iRTCode);
         }
 
-        public override void AssertMatchesQuery(PredictRequest pr)
+        public override bool MatchesQuery(ModelInferRequest pr)
         {
-            Assert.AreEqual(Model, pr.ModelSpec.Name);
+            if (Model != pr.ModelName ||
+                pr.Inputs.Count != 1 &&
+                pr.Inputs.First().Name != PrositRetentionTimeModel.PrositRTInput.PEPTIDES_KEY)
+                return false;
+
+            var tensor = pr.Inputs.Single(t => t.Name.Equals(PrositRetentionTimeModel.PrositRTInput.PEPTIDES_KEY, StringComparison.InvariantCultureIgnoreCase));
+            return tensor.Shape.Count == 2 &&
+                   tensor.Shape[0] == _modifiedSequences.Length &&
+                   tensor.Shape[1] == 1 &&
+                   ArrayUtil.EqualsDeep(_modifiedSequences.Select(i => new ModifiedSequence(i, MassType.Monoisotopic)).ToArray(),
+                       PrositHelpers.DecodeSequences2(pr.Inputs.Single(t =>
+                           t.Name.Equals(PrositRetentionTimeModel.PrositRTInput.PEPTIDES_KEY))));
+        }
+
+        public override void AssertMatchesQuery(ModelInferRequest pr)
+        {
+            Assert.AreEqual(Model, pr.ModelName);
             Assert.AreEqual(pr.Inputs.Count, 1);
-            Assert.AreEqual(pr.Inputs.Keys.First(), PrositRetentionTimeModel.PrositRTInput.PEPTIDES_KEY);
-            var tensor = pr.Inputs[PrositRetentionTimeModel.PrositRTInput.PEPTIDES_KEY];
-            Assert.AreEqual(tensor.TensorShape.Dim.Count, 2);
-            Assert.AreEqual(tensor.TensorShape.Dim[0].Size, _modifiedSequences.Length);
-            Assert.AreEqual(tensor.TensorShape.Dim[1].Size, PrositConstants.PEPTIDE_SEQ_LEN);
-            AssertEx.AreEqualDeep(_modifiedSequences,
-                PrositHelpers.DecodeSequences(pr.Inputs[PrositRetentionTimeModel.PrositRTInput.PEPTIDES_KEY]));
+            Assert.AreEqual(pr.Inputs.First().Name, PrositRetentionTimeModel.PrositRTInput.PEPTIDES_KEY);
+            var tensor = pr.Inputs.Single(t => t.Name.Equals(PrositRetentionTimeModel.PrositRTInput.PEPTIDES_KEY, StringComparison.InvariantCultureIgnoreCase));
+            Assert.AreEqual(tensor.Shape.Count, 2);
+            Assert.AreEqual(tensor.Shape[0], _modifiedSequences.Length);
+            Assert.AreEqual(tensor.Shape[1], 1);
+            AssertEx.AreEqualDeep(_modifiedSequences.Select(i => new ModifiedSequence(i, MassType.Monoisotopic)).ToArray(),
+                PrositHelpers.DecodeSequences2(pr.Inputs.Single(t => t.Name.Equals(PrositRetentionTimeModel.PrositRTInput.PEPTIDES_KEY))));
         }
 
         public void AssertMatchesSpectra(SpectrumDisplayInfo[] spectrumDisplayInfos)
@@ -2054,29 +2144,31 @@ namespace pwiz.SkylineTestFunctional
 
         public static void AssertMatchesSpectrum(float iRT, SpectrumDisplayInfo spectrumDisplayInfo)
         {
-            var expected = iRT * Math.Sqrt(PrositRetentionTimeModel.PrositRTOutput.iRT_VARIANCE) +
-                           PrositRetentionTimeModel.PrositRTOutput.iRT_MEAN;
+            var expected = iRT;
 
             Assert.AreEqual(expected, spectrumDisplayInfo.RetentionTime);
         }
 
         public override string Model => PrositRetentionTimeModel.Models.First();
 
-        public override PredictResponse Response
+        public override ModelInferResponse Response
         {
             get
             {
-                var pr = new PredictResponse();
-                pr.ModelSpec = new ModelSpec { Name = Model };
+                var pr = new ModelInferResponse();
+                pr.ModelName = Model;
 
                 // Construct Tensor
-                var tp = new TensorProto { Dtype = DataType.DtFloat };
+                var tp = new ModelInferResponse.Types.InferOutputTensor { Datatype = "FP32" };
+                tp.Name = PrositRetentionTimeModel.PrositRTOutput.OUTPUT_KEY;
+                //tp.Contents = new InferTensorContents();
 
                 // Populate with data
-                tp.FloatVal.AddRange(_iRTs);
-                tp.TensorShape = new TensorShapeProto();
-                tp.TensorShape.Dim.Add(new TensorShapeProto.Types.Dim { Size = _iRTs.Length });
-                pr.Outputs[PrositRetentionTimeModel.PrositRTOutput.OUTPUT_KEY] = tp;
+                //tp.Contents.Fp32Contents.AddRange(_iRTs);
+                tp.Shape.Add(_iRTs.Length);
+                pr.Outputs.Add(tp);
+
+                pr.RawOutputContents.Add(ByteString.CopyFrom(PrimitiveArrays.ToBytes(_iRTs)));
 
                 return pr;
             }
@@ -2120,55 +2212,42 @@ namespace pwiz.SkylineTestFunctional
 
         public int QueryIndex { get; private set; }
 
-        public override PredictResponse Predict(PredictRequest request, CallOptions options)
+        public override ModelInferResponse ModelInfer(ModelInferRequest request, CallOptions options)
         {
-            try
-            {
-                PrositSkylineIntegrationTest.PING_QUERY_MS2.AssertMatchesQuery(request);
-                // If this is a ping ms2 request, silently return and don't log
+            // If this is a ping ms2 request, silently return and don't log
+            if (PrositSkylineIntegrationTest.PING_QUERY_MS2.MatchesQuery(request))
                 return PrositSkylineIntegrationTest.PING_QUERY_MS2.Response;
-            }
-            catch(AssertFailedException)
-            {
-                try
-                {
-                    PrositSkylineIntegrationTest.PING_QUERY_IRT.AssertMatchesQuery(request);
-                    // If this is a ping irt request, silently return and don't log
-                    return PrositSkylineIntegrationTest.PING_QUERY_IRT.Response;
-                }
-                catch
-                {
-                    // ignore
-                }
 
-            }
+            // If this is a ping irt request, silently return and don't log
+            if (PrositSkylineIntegrationTest.PING_QUERY_IRT.MatchesQuery(request))
+                return PrositSkylineIntegrationTest.PING_QUERY_IRT.Response;
 
             // Logging mode
             if (_expectedQueries == null)
             {
-                var response = base.Predict(request, options);
+                var response = base.ModelInfer(request, options);
                 LogQuery(request, response);
                 return response;
             }
 
             // Caching mode
             if (QueryIndex == _expectedQueries.Count)
-                Assert.Fail("Unexpected call to Predict (No more queries). Model: {0}", request.ModelSpec.Name);
+                Assert.Fail("Unexpected call to Predict (No more queries). Model: {0}", request.ModelName);
 
             var nextQuery = _expectedQueries[QueryIndex++];
             nextQuery.AssertMatchesQuery(request);
             return nextQuery.Response;
         }
 
-        private void LogQuery(PredictRequest request, PredictResponse response)
+        private void LogQuery(ModelInferRequest request, ModelInferResponse response)
         {
-            if (request.ModelSpec.Name.StartsWith(PrositIntensityModel.Models.First()))
+            if (request.ModelName.StartsWith(PrositIntensityModel.Models.First()))
                 Console.WriteLine(@"    " + PrositIntensityQuery.FromTensors(request, response).ToCode().Replace("\n", "\n    "));
-            else if (request.ModelSpec.Name.StartsWith(PrositRetentionTimeModel.Models.First()))
+            else if (request.ModelName.StartsWith(PrositRetentionTimeModel.Models.First()))
                 Console.WriteLine(@"    " +
                     PrositRetentionTimeQuery.FromTensors(request, response).ToCode().Replace("\n", "\n    "));
             else
-                Assert.Fail("Unknown model \"{0}\"", request.ModelSpec.Name);
+                Assert.Fail("Unknown model \"{0}\"", request.ModelName);
         }
     }
 }

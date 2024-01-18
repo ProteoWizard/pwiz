@@ -24,7 +24,6 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
-using pwiz.Skyline.Model.Prosit.Config;
 using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -71,12 +70,12 @@ namespace TestPerf
                     //"23aug2017_hela_serum_timecourse_wide_1f.mzML",
                 },
 
-                FinalTargetCounts = new[] { 317, 552, 552, 3922 },
+                FinalTargetCounts = new[] { 370, 725, 725, 5104 },
                 MassErrorStats = new[]
                 {
-                    new[] {-0.3, 2.4},
-                    new[] {-0.2, 2.4},
-                    new[] {-0.4, 2.4},
+                    new[] {-0.2, 2.5},
+                    new[] {-0.2, 2.5},
+                    new[] {-0.2, 2.5},
                 },
                 ChromatogramClickPoint = new PointF(32.2f, 12.5f)
             };
@@ -140,18 +139,16 @@ namespace TestPerf
         private void RunTest()
         {
             if (Program.UseOriginalURLs && !HasPrositServer())
+            {
+                Console.Error.WriteLine($"NOTE: skipping {TestContext.TestName} because Prosit is not configured");
                 return;
+            }
 
             TestFilesPersistent = new[] { "23aug2017_hela_serum_timecourse", "z3_nce33-prosit" };
 
             RunFunctionalTest();
 
             Assert.IsFalse(IsRecordMode, "Set IsRecordMode to false before commit");   // Make sure this doesn't get committed as true
-        }
-
-        public static bool HasPrositServer()
-        {
-            return !string.IsNullOrEmpty(PrositConfig.GetPrositConfig().RootCertificate);
         }
 
         private class AnalysisValues

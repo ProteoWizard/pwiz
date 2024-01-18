@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Model.Prosit
         public static readonly int PEPTIDE_SEQ_LEN = 30;
         public static readonly int IONS_PER_RESIDUE = 6;
         public static readonly int PRECURSOR_CHARGES = 6;
-        public static readonly int BATCH_SIZE = 4096;
+        public static readonly int BATCH_SIZE = 1000;
         public static readonly int MIN_NCE = 18;
         public static readonly int MAX_NCE = 39;
 

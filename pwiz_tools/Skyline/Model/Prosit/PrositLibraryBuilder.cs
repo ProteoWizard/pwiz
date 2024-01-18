@@ -30,14 +30,13 @@ using pwiz.Skyline.Model.Prosit.Communication;
 using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using Tensorflow.Serving;
 
 namespace pwiz.Skyline.Model.Prosit
 {
     public class PrositLibraryBuilder : IiRTCapableLibraryBuilder
     {
         private readonly SrmDocument _document;
-        private readonly PredictionService.PredictionServiceClient _prositClient;
+        private readonly Inference.GRPCInferenceService.GRPCInferenceServiceClient _prositClient;
         private readonly PrositIntensityModel _intensityModel;
         private readonly PrositRetentionTimeModel _rtModel;
         private readonly Func<bool> _replaceLibrary;

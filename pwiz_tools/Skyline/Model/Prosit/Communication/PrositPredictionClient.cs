@@ -18,8 +18,8 @@
  */
 
 using Grpc.Core;
+using Inference;
 using pwiz.Skyline.Model.Prosit.Config;
-using Tensorflow.Serving;
 
 namespace pwiz.Skyline.Model.Prosit.Communication
 {
@@ -27,7 +27,7 @@ namespace pwiz.Skyline.Model.Prosit.Communication
     /// A simple wrapper for simple construction of
     /// a prediction client through IP.
     /// </summary>
-    public class PrositPredictionClient : PredictionService.PredictionServiceClient
+    public class PrositPredictionClient : GRPCInferenceService.GRPCInferenceServiceClient
     {
         private static PrositPredictionClient _predictionClient;
 
@@ -47,6 +47,7 @@ namespace pwiz.Skyline.Model.Prosit.Communication
                 // because it only gets created once
                 var channel = config.CreateChannel();
                 _predictionClient = new PrositPredictionClient(channel, config.Server);
+
                 return _predictionClient;
             }
         }
