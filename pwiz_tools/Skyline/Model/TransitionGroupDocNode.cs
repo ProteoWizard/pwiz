@@ -38,8 +38,8 @@ namespace pwiz.Skyline.Model
 {
     public class TransitionGroupDocNode : DocNodeParent
     {
-        public const int MIN_DOT_PRODUCT_TRANSITIONS = 3;
-        public const int MIN_DOT_PRODUCT_MS1_TRANSITIONS = 3;
+        public const int MIN_DOT_PRODUCT_TRANSITIONS = 2;
+        public const int MIN_DOT_PRODUCT_MS1_TRANSITIONS = 2;
 
         public const int MIN_TREND_REPLICATES = 4;
         public const int MAX_TREND_REPLICATES = 6;

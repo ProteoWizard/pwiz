@@ -782,6 +782,12 @@
   <data name="areaPeptideComparisonContextMenuItem.Text" xml:space="preserve">
     <value>Peptide Comparison</value>
   </data>
+  <data name="areaRelativeAbundanceContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+	  <value>190, 22</value>
+  </data>
+  <data name="areaRelativeAbundanceContextMenuItem.Text" xml:space="preserve">
+    <value>Relative Abundance</value>
+  </data>
   <data name="areaCVHistogramContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
@@ -919,6 +925,42 @@
   </data>
   <data name="peptideCvsContextMenuItem.Text" xml:space="preserve">
     <value>CV Values</value>
+  </data>
+  <data name="abundanceTargetsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+	  <value>209, 22</value>
+  </data>
+  <data name="abundanceTargetsMenuItem.Text" xml:space="preserve">
+    <value>Targets</value>
+  </data>
+  <data name="abundanceTargetsProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+	  <value>209, 22</value>
+  </data>
+  <data name="abundanceTargetsProteinsMenuItem.Text" xml:space="preserve">
+    <value>Proteins</value>
+  </data>
+  <data name="abundanceTargetsPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+	  <value>209, 22</value>
+  </data>
+  <data name="abundanceTargetsPeptidesMenuItem.Text" xml:space="preserve">
+    <value>Peptides</value>
+  </data>
+  <data name="excludeTargetsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+	  <value>209, 22</value>
+  </data>
+  <data name="excludeTargetsMenuItem.Text" xml:space="preserve">
+    <value>Exclude</value>
+  </data>
+  <data name="excludeTargetsPeptideListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+	  <value>209, 22</value>
+  </data>
+  <data name="excludeTargetsPeptideListMenuItem.Text" xml:space="preserve">
+    <value>Peptide Lists</value>
+  </data>
+  <data name="excludeTargetsStandardsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+	  <value>209, 22</value>
+  </data>
+  <data name="excludeTargetsStandardsMenuItem.Text" xml:space="preserve">
+    <value>Standards</value>
   </data>
   <data name="toolStripSeparator28.Size" type="System.Drawing.Size, System.Drawing">
     <value>206, 6</value>
@@ -2764,6 +2806,12 @@
     <value>areaPeptideComparisonContextMenuItem</value>
   </data>
   <data name="&gt;&gt;areaPeptideComparisonContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaIntensityContextMenuItem.Name" xml:space="preserve">
+    <value>areaIntensityContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaIntensityContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;areaCVHistogramContextMenuItem.Name" xml:space="preserve">

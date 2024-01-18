@@ -46,12 +46,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected DetectionsPlotPane(GraphSummary graphSummary) : base(graphSummary)
         {
-            MaxRepCount = graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults.Chromatograms.Count;
+            MaxRepCount = graphSummary.DocumentUIContainer.DocumentUI?.MeasuredResults.Chromatograms.Count ?? 0;
 
             Settings.RepCount = MaxRepCount / 2;
             if (GraphSummary.Toolbar is DetectionsToolbar toolbar)
                 toolbar.UpdateUI();
-
+             
             XAxis.Scale.Min = YAxis.Scale.Min = 0;
             XAxis.Scale.MinAuto = XAxis.Scale.MaxAuto = YAxis.Scale.MinAuto = YAxis.Scale.MaxAuto = false;
             ToolTip = new ToolTipImplementation(this);
