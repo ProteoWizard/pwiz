@@ -353,6 +353,32 @@ namespace pwiz.Skyline.Model
                 };
                 if (UniMod.DictUniModIds.TryGetValue(key, out var mod))
                     return mod;
+
+                // if both AA and terminus are provided, look up keys with one or the other set instead of both
+                if (modAAs != null && modTerminus != null)
+                {
+
+                    var aaOnlyKey = new UniMod.UniModIdKey
+                    {
+                        Id = uniModId,
+                        Aa = modAAs[0], // any AA will work for terminal mods due to how UniMod.AddMod handles "all AA" mods
+                        AllAas = false,
+                        Terminus = null
+                    };
+                    if (UniMod.DictUniModIds.TryGetValue(aaOnlyKey, out mod))
+                        return mod;
+
+                    var terminusOnlyKey = new UniMod.UniModIdKey
+                    {
+                        Id = uniModId,
+                        Aa = 'A', // any AA will work for terminal mods due to how UniMod.AddMod handles "all AA" mods
+                        AllAas = true,
+                        Terminus = modTerminus
+                    };
+                    if (UniMod.DictUniModIds.TryGetValue(terminusOnlyKey, out mod))
+                        return mod;
+                }
+
                 var id = uniModId;
                 int idMatches = UniMod.DictUniModIds.Count(kvp => kvp.Key.Id == id);
                 if (idMatches == 1) // key didn't match because terminus and AAs weren't needed for specificity
@@ -434,7 +460,7 @@ namespace pwiz.Skyline.Model
             return sb.ToString();
         }
 
-        private static Exception ThrowUnimodException(string seq, int uniModId, int indexAA, int indexBracket, int indexClose)
+        public static Exception ThrowUnimodException(string seq, int uniModId, int indexAA, int indexBracket, int indexClose)
         {
             int indexFirst = Math.Max(0, indexBracket - 1);
             int indexLast = Math.Min(seq.Length, indexClose + 1);

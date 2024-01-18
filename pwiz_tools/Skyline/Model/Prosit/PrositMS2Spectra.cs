@@ -55,26 +55,26 @@ namespace pwiz.Skyline.Model.Prosit
             var target = peptidePrecursorNCE.NodePep?.Target ?? new Target(peptidePrecursorNCE.Sequence);
 
             var calc = settings.GetFragmentCalc(peptidePrecursorNCE.LabelType, explicitMods);
-            var ionTable = calc.GetFragmentIonMasses(target); // TODO: get mods and pass them as explicit mods above?
-            var ions = ionTable.GetLength(1);
+            var ionMzTable = calc.GetFragmentIonMasses(target); // TODO: get mods and pass them as explicit mods above?
+            var ionIntensityTable = prositIntensityOutput.OutputRows[precursorIndex].Intensities;
+            var ions = Math.Min(ionMzTable.GetLength(1), ionIntensityTable.GetLength(1));
 
             var mis = new List<SpectrumPeaksInfo.MI>(ions * PrositConstants.IONS_PER_RESIDUE);
 
             for (int i = 0; i < ions; ++i)
             {
-                var intensities = prositIntensityOutput.OutputRows[precursorIndex].Intensities[i].Intensities
-                    .Select(ReLu).ToArray();
-                var yMIs = CalcMIs(ionTable[IonType.y, ions - i - 1], intensities, 0);
-                var bMIs = CalcMIs(ionTable[IonType.b, i], intensities, PrositConstants.IONS_PER_RESIDUE / 2);
-                mis.AddRange(yMIs);
-                mis.AddRange(bMIs);
+                AddMIs(mis, ionMzTable[IonType.y, i], ionIntensityTable[IonType.y, i]);
+                AddMIs(mis, ionMzTable[IonType.b, i], ionIntensityTable[IonType.b, i]);
             }
 
-            var maxIntensity = mis.Max(mi => mi.Intensity);
+            if (ions > 0)
+            {
+                var maxIntensity = mis.Max(mi => mi.Intensity);
 
-            // Max Norm
-            for (int i = 0; i < mis.Count; ++i)
-                mis[i] = new SpectrumPeaksInfo.MI {Mz = mis[i].Mz, Intensity = mis[i].Intensity / maxIntensity };
+                // Max Norm
+                for (int i = 0; i < mis.Count; ++i)
+                    mis[i] = new SpectrumPeaksInfo.MI { Mz = mis[i].Mz, Intensity = mis[i].Intensity / maxIntensity };
+            }
 
             SpectrumPeaks = new SpectrumPeaksInfo(mis.ToArray());
         }
@@ -90,23 +90,24 @@ namespace pwiz.Skyline.Model.Prosit
             return Math.Max(f, 0.0f);
         }
 
-        private List<SpectrumPeaksInfo.MI> CalcMIs(TypedMass mass, float[] intensities, int offset)
+        private void AddMIs(List<SpectrumPeaksInfo.MI> mis, TypedMass mass, float[] intensities)
         {
-            var result = new List<SpectrumPeaksInfo.MI>(PrositConstants.IONS_PER_RESIDUE / 2);
-            for (var c = 0; c < PrositConstants.IONS_PER_RESIDUE / 2; ++c)
+            // will be null if all predicted intensities were <= 0
+            if (intensities == null)
+                return;
+
+            for (var c = 0; c < intensities.Length; ++c)
             {
                 // Not a possible charge
                 if (PeptidePrecursorNCE.PrecursorCharge <= c)
                     break;
 
-                result.Add(new SpectrumPeaksInfo.MI
+                mis.Add(new SpectrumPeaksInfo.MI
                 {
                     Mz = SequenceMassCalc.GetMZ(mass, c + 1),
-                    Intensity = intensities[c + offset]
+                    Intensity = intensities[c]
                 });
             }
-
-            return result;
         }
 
         public PrositIntensityModel.PeptidePrecursorNCE PeptidePrecursorNCE { get; private set; }

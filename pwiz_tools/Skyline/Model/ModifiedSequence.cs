@@ -141,6 +141,61 @@ namespace pwiz.Skyline.Model
             _defaultMassType = defaultMassType;
         }
 
+        public ModifiedSequence(string modifiedSequence, MassType defaultMassType)
+        {
+            string seq = modifiedSequence;
+            _unmodifiedSequence = FastaSequence.StripModifications(modifiedSequence);
+            int indexAA = 0;
+            int indexAAInSeq = 0;
+            int i = 0;
+            var mods = new List<ExplicitMod>();
+            while (i < seq.Length)
+            {
+                var aa = _unmodifiedSequence[indexAA];
+                int indexBracket = i + 1;
+                if (indexBracket < seq.Length && (FastaSequence.OPEN_MOD.Contains(seq[indexBracket])))
+                {
+                    char openBracket = seq[indexBracket];
+                    bool isHeavy = openBracket == '{';
+                    char closeBracket = FastaSequence.CLOSE_MOD[FastaSequence.OPEN_MOD.IndexOf(c => c == openBracket)];
+                    int indexStart = indexBracket + 1;
+                    int indexClose = seq.IndexOf(closeBracket, indexBracket);
+                    string mod = seq.Substring(indexStart, indexClose - indexStart);
+                    i = indexClose;
+                    ModTerminus? modTerminus = null;
+                    if (indexAA == 0)
+                        modTerminus = ModTerminus.N;
+                    if (indexAA == _unmodifiedSequence.Length - 1)
+                        modTerminus = ModTerminus.C;
+
+                    StaticMod staticMod = ModificationMatcher.GetStaticMod(mod, modTerminus, aa.ToString());
+                    MassModification massModification = MassModification.Parse(mod);
+                    if (massModification != null)
+                    {
+                        staticMod = new StaticMod(mod, aa.ToString(), modTerminus, null, LabelAtoms.None, massModification.Mass, null);
+                    }
+                    else
+                    {
+                        staticMod = ModificationMatcher.GetStaticMod(mod, modTerminus, aa.ToString());
+                    }
+
+                    mods.Add(new ExplicitMod(indexAA, staticMod));
+                }
+
+                // If the next character is a bracket, continue using the same amino
+                // acid and leave i where it is.
+                int iNext = i + 1;
+                if (iNext >= seq.Length || !FastaSequence.OPEN_MOD.Contains(seq[iNext]))
+                {
+                    i = indexAAInSeq = iNext;
+                    indexAA++;
+                }
+            }
+
+            _defaultMassType = defaultMassType;
+            _explicitMods = ImmutableList<Modification>.ValueOf(mods.Select(m => MakeModification(_unmodifiedSequence, m)));
+        }
+
         [Browsable(false)]
         public ImmutableList<Modification> ExplicitMods
         {

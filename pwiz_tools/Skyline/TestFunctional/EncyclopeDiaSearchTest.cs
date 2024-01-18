@@ -25,7 +25,6 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
-using pwiz.Skyline.Model.Prosit.Config;
 using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
@@ -45,13 +44,8 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        public static bool HasPrositServer()
-        {
-            return !string.IsNullOrEmpty(PrositConfig.GetPrositConfig().RootCertificate);
-        }
-
         private bool IsRecordMode => false;
-        private int[] FinalTargetCounts = { 34, 36, 36, 144 };
+        private int[] FinalTargetCounts = { 33, 35, 35, 140 };
 
         protected override void DoTest()
         {
@@ -69,8 +63,9 @@ namespace pwiz.SkylineTestFunctional
             //PauseTest();
 
             // if UseOriginalURLs, delete the blib so it will have to be freshly predicted from Prosit
+            string blibFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-prosit-5950B898E945AE52AD86D9CE06220EE.blib");
             if (Program.UseOriginalURLs)
-                File.Delete(TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-prosit-5950B898E945AE52AD86D9CE06220EE.blib"));
+                File.Delete(blibFilepath);
 
             RunUI(searchDlg.NextPage); // now on Prosit settings
 
@@ -220,7 +215,7 @@ namespace pwiz.SkylineTestFunctional
                 targetCounts[1] = peptideCount;
                 targetCounts[2] = precursorCount;
                 targetCounts[3] = transitionCount;
-                Console.WriteLine(@"{0} = new[] {{ {1}, {2}, {3}, {4} }},", propName, proteinCount, peptideCount, precursorCount, transitionCount);
+                Console.WriteLine(@"{0} = {{ {1}, {2}, {3}, {4} }},", propName, proteinCount, peptideCount, precursorCount, transitionCount);
                 return;
             }
 
