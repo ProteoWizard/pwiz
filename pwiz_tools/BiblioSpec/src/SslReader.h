@@ -105,6 +105,39 @@ class sslPSM : public PSM {
             }
         }
     }
+    static void setIonMobility(sslPSM& psm, const std::string& value) {
+        if (!value.empty()) {
+            try {
+                psm.ionMobility = boost::lexical_cast<double>(value);
+            }
+            catch (bad_lexical_cast) {
+                throw BlibException(false, "Non-numeric retention time: %s",
+                    value.c_str());
+            }
+        }
+    }
+    static void setIonMobilityUnits(sslPSM& psm, const std::string& value) {
+        if (!value.empty()) {
+            try {
+                psm.ionMobilityType = parseIonMobilityType(value.c_str());
+            }
+            catch (bad_lexical_cast) {
+                throw BlibException(false, "Non-numeric retention time: %s",
+                    value.c_str());
+            }
+        }
+    }
+    static void setCCS(sslPSM& psm, const std::string& value) {
+        if (!value.empty()) {
+            try {
+                psm.ccs = boost::lexical_cast<double>(value);
+            }
+            catch (bad_lexical_cast) {
+                throw BlibException(false, "Non-numeric retention time: %s",
+                    value.c_str());
+            }
+        }
+    }
     static void setPrecursorAdduct(sslPSM& psm, const std::string& value) {
         if (value.empty()){
             throw BlibException(false, "Missing precursor adduct.");
