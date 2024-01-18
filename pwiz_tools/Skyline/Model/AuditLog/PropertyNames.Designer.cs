@@ -3661,6 +3661,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Shape r included comparison type (min/max).
+        /// </summary>
+        public static string RefinementSettings_SCIncludedComparisonType {
+            get {
+                return ResourceManager.GetString("RefinementSettings_SCIncludedComparisonType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Shape r included cutoff.
+        /// </summary>
+        public static string RefinementSettings_SCIncludedCutoff {
+            get {
+                return ResourceManager.GetString("RefinementSettings_SCIncludedCutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Shape r quantitative comparison type (min/max).
+        /// </summary>
+        public static string RefinementSettings_SCQuantitativeComparisonType {
+            get {
+                return ResourceManager.GetString("RefinementSettings_SCQuantitativeComparisonType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Shape r quantitative cutoff.
+        /// </summary>
+        public static string RefinementSettings_SCQuantitativeCutoff {
+            get {
+                return ResourceManager.GetString("RefinementSettings_SCQuantitativeCutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Transitions.
         /// </summary>
         public static string RefinementSettings_Transitions {

@@ -211,6 +211,38 @@ namespace pwiz.SkylineTestData
                     Assert.AreEqual(lightTran.Transition.FragmentIonName, heavyTran.Transition.FragmentIonName);
                 }
             }
+
+
+            // remove all transitions with shape correlation values below the cutoffs
+            double includedCutoff = .99;
+            double quantativeCutoff = .994;
+            document = InitRefineDocumentIprg();
+            Assert.IsFalse(document.MoleculeTransitions.Any(t => t.ChromInfos.Any(c => c.PeakShapeValues?.ShapeCorrelation == null)));
+            refineSettings = new RefinementSettings { SCIncludedCutoff = includedCutoff, SCQuantitativeCutoff = quantativeCutoff};
+            var docRefineShapeCorrelation = refineSettings.Refine(document);
+            foreach (var tranNode in docRefineShapeCorrelation.MoleculeTransitions)
+            {
+                Assert.IsFalse(tranNode.ChromInfos.Any(c => c.PeakShapeValues?.ShapeCorrelation < includedCutoff));
+                if (tranNode.ChromInfos.Any(c => c.PeakShapeValues?.ShapeCorrelation < quantativeCutoff))
+                {
+                    Assert.IsFalse(tranNode.ExplicitQuantitative);
+                }
+            }
+
+            document = InitRefineDocumentIprg();
+            refineSettings = new RefinementSettings { SCIncludedCutoff = includedCutoff, SCQuantitativeCutoff = quantativeCutoff, 
+                SCIncludedComparisonType = RefinementSettings.ComparisonType.max, SCQuantitativeComparisonType = RefinementSettings.ComparisonType.max};
+            var docRefineShapeCorrelationMax = refineSettings.Refine(document);
+            foreach (var tranNode in docRefineShapeCorrelationMax.MoleculeTransitions)
+            {
+                Assert.IsFalse(tranNode.ChromInfos.Max(c => c.PeakShapeValues?.ShapeCorrelation) < includedCutoff);
+                if (tranNode.ChromInfos.Max(c => c.PeakShapeValues?.ShapeCorrelation) < quantativeCutoff)
+                {
+                    Assert.IsFalse(tranNode.ExplicitQuantitative);
+                }
+            }
+
+
             // Pick only the precursors with the max peak area
             document = InitRefineDocumentIprg();
             refineSettings = new RefinementSettings { MaxPrecursorPeakOnly = true };

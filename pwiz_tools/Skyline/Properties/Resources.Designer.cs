@@ -1067,6 +1067,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peak Area.
+        /// </summary>
+        public static string ChromatogramLibrarySpec_PEPTIDE_RANK_PEAK_AREA_Peak_Area {
+            get {
+                return ResourceManager.GetString("ChromatogramLibrarySpec_PEPTIDE_RANK_PEAK_AREA_Peak_Area", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This document contains only negative ion mode transitions, and the imported file contains only positive ion mode data so nothing can be loaded..
         /// </summary>
         public static string ChromCacheBuilder_BuildCache_This_document_contains_only_negative_ion_mode_transitions__and_the_imported_file_contains_only_positive_ion_mode_data_so_nothing_can_be_loaded_ {
@@ -4435,6 +4444,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Help.
+        /// </summary>
+        public static string FormulaBox_FormulaBox_Help {
+            get {
+                return ResourceManager.GetString("FormulaBox_FormulaBox_Help", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap Fragment {
@@ -5963,6 +5981,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("MessageBoxHelper_ValidateSignedNumberTextBox_Value__0__must_be_between__1__and__2" +
                         "__or__3__and__4__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error converting &apos;{0}&apos; to &apos;{1}&apos;:.
+        /// </summary>
+        public static string MetadataExtractor_ApplyStep_Error_converting___0___to___1___ {
+            get {
+                return ResourceManager.GetString("MetadataExtractor_ApplyStep_Error_converting___0___to___1___", resourceCulture);
             }
         }
         
@@ -8110,6 +8137,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Max.
+        /// </summary>
+        public static string RefineDlg_RefineDlg_Max {
+            get {
+                return ResourceManager.GetString("RefineDlg_RefineDlg_Max", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min.
+        /// </summary>
+        public static string RefineDlg_RefineDlg_Min {
+            get {
+                return ResourceManager.GetString("RefineDlg_RefineDlg_Min", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursors.
         /// </summary>
         public static string RefineDlg_RefineDlg_Precursors {
@@ -9973,6 +10018,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_publishToolStripMenuItem_Click_Skyline_Shared_Documents {
             get {
                 return ResourceManager.GetString("SkylineWindow_publishToolStripMenuItem_Click_Skyline_Shared_Documents", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This file was last uploaded to: {0}.
+        /// </summary>
+        public static string SkylineWindow_PublishToSavedUri_This_file_was_last_uploaded_to___0_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_PublishToSavedUri_This_file_was_last_uploaded_to___0_", resourceCulture);
             }
         }
         

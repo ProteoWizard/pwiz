@@ -73,6 +73,13 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.label3 = new System.Windows.Forms.Label();
             this.tabConsistency = new System.Windows.Forms.TabPage();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.comboQuantitativeComparisonType = new System.Windows.Forms.ComboBox();
+            this.comboIncludedComparisonType = new System.Windows.Forms.ComboBox();
+            this.label10 = new System.Windows.Forms.Label();
+            this.textQuantitativeCutoff = new System.Windows.Forms.TextBox();
+            this.label9 = new System.Windows.Forms.Label();
+            this.textIncludedCutoff = new System.Windows.Forms.TextBox();
             this.groupPeakArea = new System.Windows.Forms.GroupBox();
             this.labelTransType = new System.Windows.Forms.Label();
             this.comboTransType = new System.Windows.Forms.ComboBox();
@@ -108,6 +115,7 @@
             this.groupLibCorr.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.tabConsistency.SuspendLayout();
+            this.groupBox2.SuspendLayout();
             this.groupPeakArea.SuspendLayout();
             this.groupDetection.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownDetections)).BeginInit();
@@ -420,11 +428,58 @@
             // 
             // tabConsistency
             // 
+            this.tabConsistency.Controls.Add(this.groupBox2);
             this.tabConsistency.Controls.Add(this.groupPeakArea);
             this.tabConsistency.Controls.Add(this.groupDetection);
             resources.ApplyResources(this.tabConsistency, "tabConsistency");
             this.tabConsistency.Name = "tabConsistency";
             this.tabConsistency.UseVisualStyleBackColor = true;
+            // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.comboQuantitativeComparisonType);
+            this.groupBox2.Controls.Add(this.comboIncludedComparisonType);
+            this.groupBox2.Controls.Add(this.label10);
+            this.groupBox2.Controls.Add(this.textQuantitativeCutoff);
+            this.groupBox2.Controls.Add(this.label9);
+            this.groupBox2.Controls.Add(this.textIncludedCutoff);
+            resources.ApplyResources(this.groupBox2, "groupBox2");
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.TabStop = false;
+            // 
+            // comboQuantitativeComparisonType
+            // 
+            this.comboQuantitativeComparisonType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            resources.ApplyResources(this.comboQuantitativeComparisonType, "comboQuantitativeComparisonType");
+            this.comboQuantitativeComparisonType.FormattingEnabled = true;
+            this.comboQuantitativeComparisonType.Name = "comboQuantitativeComparisonType";
+            // 
+            // comboIncludedComparisonType
+            // 
+            this.comboIncludedComparisonType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            resources.ApplyResources(this.comboIncludedComparisonType, "comboIncludedComparisonType");
+            this.comboIncludedComparisonType.FormattingEnabled = true;
+            this.comboIncludedComparisonType.Name = "comboIncludedComparisonType";
+            // 
+            // label10
+            // 
+            resources.ApplyResources(this.label10, "label10");
+            this.label10.Name = "label10";
+            // 
+            // textQuantitativeCutoff
+            // 
+            resources.ApplyResources(this.textQuantitativeCutoff, "textQuantitativeCutoff");
+            this.textQuantitativeCutoff.Name = "textQuantitativeCutoff";
+            // 
+            // label9
+            // 
+            resources.ApplyResources(this.label9, "label9");
+            this.label9.Name = "label9";
+            // 
+            // textIncludedCutoff
+            // 
+            resources.ApplyResources(this.textIncludedCutoff, "textIncludedCutoff");
+            this.textIncludedCutoff.Name = "textIncludedCutoff";
             // 
             // groupPeakArea
             // 
@@ -639,6 +694,8 @@
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.tabConsistency.ResumeLayout(false);
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.groupPeakArea.ResumeLayout(false);
             this.groupPeakArea.PerformLayout();
             this.groupDetection.ResumeLayout(false);
@@ -724,5 +781,12 @@
         private System.Windows.Forms.Label labelFoldChangeUnit;
         private System.Windows.Forms.Label labelPValueUnit;
         private System.Windows.Forms.ComboBox comboMSGroupComparisons;
+        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.TextBox textIncludedCutoff;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.TextBox textQuantitativeCutoff;
+        private System.Windows.Forms.ComboBox comboIncludedComparisonType;
+        private System.Windows.Forms.ComboBox comboQuantitativeComparisonType;
     }
 }

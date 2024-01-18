@@ -226,6 +226,15 @@ namespace pwiz.Skyline.Model
         [Track]
         public int? MSLevelGroupComparison { get; set; }
         [Track]
+        public double? SCIncludedCutoff { get; set; }
+        [Track]
+        public double? SCQuantitativeCutoff { get; set; }
+        public enum ComparisonType {min, max};
+        [Track] 
+        public ComparisonType? SCIncludedComparisonType {get; set;}
+        [Track]
+        public ComparisonType? SCQuantitativeComparisonType { get; set; }
+        [Track]
         public List<GroupComparisonDef> GroupComparisonDefs { get; set; }
         public List<string> GroupComparisonNames { get; set; }
 
@@ -768,9 +777,39 @@ namespace pwiz.Skyline.Model
                         if (peakFoundRatio > MaxPeakFoundRatio.Value)
                             continue;
                     }
+
+
                 }
 
-                listTrans.Add(nodeTran);
+                var chromInfos = nodeTran.ChromInfos.ToList();
+                var numComparisonTypes = Enum.GetNames(typeof(ComparisonType)).Length - 1;
+                ComparisonType? includedComparisonType = SCIncludedComparisonType.HasValue && 0 <= (int?)SCIncludedComparisonType && (int?)SCIncludedComparisonType <= numComparisonTypes ? SCIncludedComparisonType : ComparisonType.min;
+                if (SCIncludedCutoff.HasValue)
+                {
+                    if (!checkIfShapeCorrelationAboveCutoff(chromInfos, SCIncludedCutoff, includedComparisonType))
+                    {
+                        continue;
+                    }
+                }
+
+                TransitionDocNode nonQuantitativeNodeTran = null;
+                ComparisonType? quantitativeComparisonType = SCQuantitativeComparisonType.HasValue && 0 <= (int?)SCQuantitativeComparisonType && (int?)SCQuantitativeComparisonType <= numComparisonTypes ? SCQuantitativeComparisonType : ComparisonType.min;
+                if (SCQuantitativeCutoff.HasValue)
+                {
+                    if (!checkIfShapeCorrelationAboveCutoff(chromInfos, SCQuantitativeCutoff, quantitativeComparisonType))
+                    {
+                        nonQuantitativeNodeTran = nodeTran.ChangeQuantitative(false);
+                    }
+                }
+
+                if (nonQuantitativeNodeTran != null)
+                {
+                    listTrans.Add(nonQuantitativeNodeTran);
+                }
+                else
+                {
+                    listTrans.Add(nodeTran);
+                }
             }
 
             TransitionGroupDocNode nodeGroupRefined = (TransitionGroupDocNode)
@@ -1242,6 +1281,26 @@ namespace pwiz.Skyline.Model
             newdoc = ForceReloadChromatograms(newdoc);
             CloseLibraryStreams(newdoc);
             return newdoc;
+        }
+
+
+        private bool checkIfShapeCorrelationAboveCutoff(List<TransitionChromInfo> chromInfos, double? cutoff, ComparisonType? type = ComparisonType.min)
+        {
+            float? comparisonValue = 0;
+            if (chromInfos.Any())
+            {
+                if (type == ComparisonType.min)
+                {
+                    comparisonValue = chromInfos.Min(c => c.PeakShapeValues?.ShapeCorrelation);
+                }
+                else if (type == ComparisonType.max)
+                {
+                    comparisonValue = chromInfos.Max(c => c.PeakShapeValues?.ShapeCorrelation);
+
+                }
+            }
+            return comparisonValue >= cutoff;
+
         }
 
         /// <summary>
