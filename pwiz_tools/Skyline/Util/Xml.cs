@@ -27,6 +27,7 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
@@ -1091,6 +1092,17 @@ namespace pwiz.Skyline.Util
             return Convert.ToDouble(attr.Value, CultureInfo.InvariantCulture);
         }
 
+        public static double GetDouble(this XElement xElement, string name, double defaultValue = 0)
+        {
+            XAttribute attr = xElement.Attribute(name);
+            if (attr == null)
+            {
+                return defaultValue;
+            }
+
+            return Convert.ToDouble(attr.Value, CultureInfo.InvariantCulture);
+        }
+
         public static int? GetNullableInt(this XElement xElement, Enum name)
         {
             XAttribute attr = xElement.Attribute(name);
@@ -1100,6 +1112,34 @@ namespace pwiz.Skyline.Util
             }
 
             return Convert.ToInt32(attr.Value, CultureInfo.InvariantCulture);
+        }
+
+        public static string GetAttribute(this XElement xElement, string name)
+        {
+            return xElement.Attribute(name)?.Value;
+        }
+
+        public static bool GetBoolAttribute(this XElement xElement, string name, bool defaultValue = false)
+        {
+            var attr = xElement.Attribute(name);
+            if (attr == null)
+            {
+                return defaultValue;
+            }
+
+            return Convert.ToBoolean(attr.Value, CultureInfo.InvariantCulture);
+        }
+
+        public static double? GetNullableDoubleAttribute(this XElement xElement, string name)
+        {
+            var attr = xElement.Attribute(name);
+            if (attr == null)
+            {
+                return null;
+            }
+
+            return Convert.ToDouble(attr.Value, CultureInfo.InvariantCulture);
+
         }
     }
 
