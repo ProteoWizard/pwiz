@@ -610,31 +610,46 @@ namespace pwiz.Skyline.Model.Serialization
                 }
             }
 
-            var srmSettings = documentElement.Elements().First().CreateReader().DeserializeElement<SrmSettings>() ?? SrmSettingsList.GetDefault();
+            var srmSettings = documentElement.Elements().FirstOrDefault()?.CreateReader().DeserializeElement<SrmSettings>() ?? SrmSettingsList.GetDefault();
             _annotationScrubber = AnnotationScrubber.MakeAnnotationScrubber(_stringPool, srmSettings.DataSettings, RemoveCalculatedAnnotationValues);
             srmSettings = _annotationScrubber.ScrubSrmSettings(srmSettings);
             Settings = srmSettings;
             List<Tuple<int, PeptideGroupDocNode>> list = new List<Tuple<int, PeptideGroupDocNode>>();
             ParallelEx.ForEach(documentElement.Elements().Skip(1).Select((element, index)=>Tuple.Create(index, element)), tuple =>
             {
-                var element = tuple.Item2;
-                PeptideGroupDocNode peptideGroupDocNode = null;
-                if (element.Name == EL.protein)
+                IEnumerable<XElement> elements;
+                if (tuple.Item2.Name == EL.selected_proteins)
                 {
-                    peptideGroupDocNode = ReadProteinXml(element);
+                    elements = tuple.Item2.Elements();
                 }
-                else if (element.Name == EL.protein_group)
+                else
                 {
-                    peptideGroupDocNode = ReadProteinGroupXml(element);
-                }
-                else if (element.Name == EL.peptide_list)
-                {
-                    peptideGroupDocNode = ReadPeptideGroupXml(element);
+                    elements = new[] { tuple.Item2 };
                 }
 
-                lock (list)
+                foreach (var element in elements)
                 {
-                    list.Add(Tuple.Create(tuple.Item1, peptideGroupDocNode));
+                    PeptideGroupDocNode peptideGroupDocNode = null;
+                    if (element.Name == EL.protein)
+                    {
+                        peptideGroupDocNode = ReadProteinXml(element);
+                    }
+                    else if (element.Name == EL.protein_group)
+                    {
+                        peptideGroupDocNode = ReadProteinGroupXml(element);
+                    }
+                    else if (element.Name == EL.peptide_list)
+                    {
+                        peptideGroupDocNode = ReadPeptideGroupXml(element);
+                    }
+
+                    if (peptideGroupDocNode != null)
+                    {
+                        lock (list)
+                        {
+                            list.Add(Tuple.Create(tuple.Item1, peptideGroupDocNode));
+                        }
+                    }
                 }
             });
             Children = list.OrderBy(x=>x.Item1).Select(x=>x.Item2).ToArray();
@@ -828,7 +843,6 @@ namespace pwiz.Skyline.Model.Serialization
             while (reader.IsStartElement(EL.alternative_protein))
             {
                 var proteinMetaData = ReadProteinMetadataXML((XElement)XNode.ReadFrom(reader), false);
-                reader.Read();
                 list.Add(proteinMetaData);
             }
             return list.ToArray();
