@@ -327,7 +327,6 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             catch (Exception x)
             {
-                Trace.TraceWarning(@"Error exporting to file: {0}", x);
                 MessageDlg.ShowWithException(owner,
                     string.Format(DatabindingResources.ExportReportDlg_ExportReport_Failed_exporting_to, fileName, x.Message), x);
                 return false;

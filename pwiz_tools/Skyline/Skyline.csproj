@@ -430,6 +430,7 @@
       <DependentUpon>TutorialTextResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Controls\TargetColumn.cs" />
+    <Compile Include="Controls\ImmediateWindowWarningListener.cs" />
     <Compile Include="Controls\TreeViewMSStateRestorer.cs" />
     <Compile Include="EditUI\EditLinkedPeptidesDlg.cs">
       <SubType>Form</SubType>
@@ -884,6 +885,7 @@
     <Compile Include="Util\HillSystemOrdering.cs" />
     <Compile Include="Util\ParsedMolecule.cs" />
     <Compile Include="Util\PersistentString.cs" />
+    <Compile Include="Util\TraceWarningListener.cs" />
     <Compile Include="Util\TypedMass.cs" />
     <Compile Include="Util\UiModes.cs" />
     <Compile Include="ToolsUI\ColorGrid.cs">

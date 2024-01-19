@@ -207,8 +207,10 @@ namespace pwiz.Skyline
             if (skylineFile != null)
                 _skylineFile = skylineFile;
 
+            TraceWarningListener traceWarningListener = new TraceWarningListener(_out);
             try
             {
+                Trace.Listeners.Add(traceWarningListener);
                 using (DocContainer = new ResultsMemoryDocumentContainer(null, _skylineFile))
                 {
                     DocContainer.ProgressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(),
@@ -237,6 +239,7 @@ namespace pwiz.Skyline
             finally
             {
                 DocContainer = null;
+                Trace.Listeners.Remove(traceWarningListener);
             }
             return Program.EXIT_CODE_SUCCESS;
         }
