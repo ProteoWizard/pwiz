@@ -123,10 +123,9 @@ namespace pwiz.SkylineTestConnected
                     server, 1, panoramaTestClient);
             }));
             string expectedMessage = new NullReferenceException().Message;
-            if (!TryWaitForCondition(() => expectedMessage == errorDlg.Message))
-            {
-                Assert.AreEqual(expectedMessage, errorDlg.Message);
-            }
+            TryWaitForCondition(() => expectedMessage == errorDlg.Message);
+            Assert.AreEqual(expectedMessage, errorDlg.Message);
+            
             OkDialog(errorDlg, errorDlg.OkDialog);
 
             errorDlg = ShowDialog<MessageDlg>(() => RunUI(() =>
