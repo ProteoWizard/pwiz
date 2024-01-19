@@ -122,10 +122,7 @@ namespace pwiz.SkylineTestConnected
                 SkylineWindow.DownloadPanoramaFile(path, TEST_FILE, null,
                     server, 1, panoramaTestClient);
             }));
-            string expectedMessage = new NullReferenceException().Message;
-            TryWaitForCondition(() => expectedMessage == errorDlg.Message);
-            Assert.AreEqual(expectedMessage, errorDlg.Message);
-            
+            Assert.AreEqual(new NullReferenceException().Message, errorDlg.Message);
             OkDialog(errorDlg, errorDlg.OkDialog);
 
             errorDlg = ShowDialog<MessageDlg>(() => RunUI(() =>

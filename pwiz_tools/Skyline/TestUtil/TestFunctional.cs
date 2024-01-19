@@ -1014,7 +1014,7 @@ namespace pwiz.SkylineTestUtil
             return WaitForCondition(WAIT_TIME, func, timeoutMessage);
         }
 
-        public static bool TryWaitForCondition([InstantHandle] Func<bool> func)
+        public static bool TryWaitForCondition(Func<bool> func)
         {
             return TryWaitForCondition(WAIT_TIME, func);
         }
