@@ -590,9 +590,7 @@ namespace pwiz.Skyline.Model.Serialization
         /// <param name="reader">The reader positioned at the document start tag</param>
         public void ReadXml(XmlReader reader)
         {
-            var xDocument = XDocument.Load(reader);
-            var documentElement = xDocument.Elements().First();
-            double formatVersionNumber = documentElement.GetDouble(ATTR.format_version);
+            double formatVersionNumber = reader.GetDoubleAttribute(ATTR.format_version);
             if (formatVersionNumber == 0)
             {
                 FormatVersion = DocumentFormat.VERSION_0_1;
@@ -602,68 +600,93 @@ namespace pwiz.Skyline.Model.Serialization
                 FormatVersion = new DocumentFormat(formatVersionNumber);
                 if (FormatVersion.CompareTo(DocumentFormat.CURRENT) > 0)
                 {
-// Resharper disable ImpureMethodCallOnReadonlyValueField
+                    // Resharper disable ImpureMethodCallOnReadonlyValueField
                     throw new VersionNewerException(
                         string.Format(SerializationResources.SrmDocument_ReadXml_The_document_format_version__0__is_newer_than_the_version__1__supported_by__2__,
                             formatVersionNumber, DocumentFormat.CURRENT.AsDouble(), Install.ProgramNameAndVersion));
-// ReSharper restore ImpureMethodCallOnReadonlyValueField
+                    // ReSharper restore ImpureMethodCallOnReadonlyValueField
                 }
             }
 
-            IEnumerable<XElement> proteinElements;
-            SrmSettings srmSettings;
-            if (documentElement.Elements().FirstOrDefault()?.Name == @"settings_summary")
-            {
-                srmSettings = documentElement.Elements().First().CreateReader().DeserializeElement<SrmSettings>();
-                proteinElements = documentElement.Elements().Skip(1);
-            }
-            else
-            {
-                srmSettings = SrmSettingsList.GetDefault();
-                proteinElements = documentElement.Elements();
-            }
+            reader.ReadStartElement();  // Start document element
+            var srmSettings = reader.DeserializeElement<SrmSettings>() ?? SrmSettingsList.GetDefault();
             _annotationScrubber = AnnotationScrubber.MakeAnnotationScrubber(_stringPool, srmSettings.DataSettings, RemoveCalculatedAnnotationValues);
             srmSettings = _annotationScrubber.ScrubSrmSettings(srmSettings);
             Settings = srmSettings;
+
+            _annotationScrubber = AnnotationScrubber.MakeAnnotationScrubber(_stringPool, srmSettings.DataSettings, RemoveCalculatedAnnotationValues);
+            srmSettings = _annotationScrubber.ScrubSrmSettings(srmSettings);
+            Settings = srmSettings;
+            
             List<Tuple<int, PeptideGroupDocNode>> list = new List<Tuple<int, PeptideGroupDocNode>>();
-            ParallelEx.ForEach(proteinElements.Select((element, index)=>Tuple.Create(index, element)), tuple =>
+            using var queue = new QueueWorker<Tuple<int, XElement>>(null, (workItem, threadIndex) =>
             {
-                IEnumerable<XElement> elements;
-                if (tuple.Item2.Name == EL.selected_proteins)
+                foreach (var proteinItem in ProcessProteinElement(workItem.Item2))
                 {
-                    elements = tuple.Item2.Elements();
-                }
-                else
-                {
-                    elements = new[] { tuple.Item2 };
-                }
-
-                foreach (var element in elements)
-                {
-                    PeptideGroupDocNode peptideGroupDocNode = null;
-                    if (element.Name == EL.protein)
+                    lock (list)
                     {
-                        peptideGroupDocNode = ReadProteinXml(element);
-                    }
-                    else if (element.Name == EL.protein_group)
-                    {
-                        peptideGroupDocNode = ReadProteinGroupXml(element);
-                    }
-                    else if (element.Name == EL.peptide_list)
-                    {
-                        peptideGroupDocNode = ReadPeptideGroupXml(element);
-                    }
-
-                    if (peptideGroupDocNode != null)
-                    {
-                        lock (list)
-                        {
-                            list.Add(Tuple.Create(tuple.Item1, peptideGroupDocNode));
-                        }
+                        list.Add(Tuple.Create(workItem.Item1, proteinItem));
                     }
                 }
             });
+            queue.RunAsync(ParallelEx.GetThreadCount(), @"Load Protein");
+            int proteinCount = 0;
+            foreach (var element in GetProteinElements(reader))
+            {
+                queue.Add(Tuple.Create(proteinCount++, element));
+            }
+            reader.ReadEndElement();    // End document element
+            queue.Wait();
+            if (Children == null)
+                Children = Array.Empty<PeptideGroupDocNode>();
+            
             Children = list.OrderBy(x=>x.Item1).Select(x=>x.Item2).ToArray();
+        }
+
+        private IEnumerable<XElement> GetProteinElements(XmlReader reader)
+        {
+            if (reader.IsStartElement(EL.selected_proteins))
+            {
+                if (reader.IsEmptyElement)
+                {
+                    reader.Read();
+                    yield break;
+                }
+                reader.ReadStartElement();
+            }
+            while (reader.IsStartElement(EL.protein) || reader.IsStartElement(EL.peptide_list) || reader.IsStartElement(EL.protein_group))
+            {
+                yield return (XElement) XNode.ReadFrom(reader);
+            }
+        }
+
+        private IEnumerable<PeptideGroupDocNode> ProcessProteinElement(XElement xElement)
+        {
+            IEnumerable<XElement> elements;
+            if (xElement.Name == EL.selected_proteins)
+            {
+                elements = xElement.Elements();
+            }
+            else
+            {
+                elements = new[] { xElement };
+            }
+
+            foreach (var element in elements)
+            {
+                if (element.Name == EL.protein)
+                {
+                    yield return ReadProteinXml(element);
+                }
+                else if (element.Name == EL.protein_group)
+                {
+                    yield return ReadProteinGroupXml(element);
+                }
+                else if (element.Name == EL.peptide_list)
+                {
+                    yield return ReadPeptideGroupXml(element);
+                }
+            }
         }
 
         /// <summary>
