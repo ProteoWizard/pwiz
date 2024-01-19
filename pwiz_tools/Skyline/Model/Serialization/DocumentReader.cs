@@ -55,8 +55,6 @@ namespace pwiz.Skyline.Model.Serialization
         }
         public PeptideGroupDocNode[] Children { get; private set; }
 
-        private readonly Dictionary<string, string> _uniqueSpecies = new Dictionary<string, string>();
-
         /// <summary>
         /// In older versions of Skyline we would handle ion notation by building it into the molecule, 
         /// so our current C12H5[M+2H] would have been C12H7 - this requires special handling on read
@@ -70,15 +68,7 @@ namespace pwiz.Skyline.Model.Serialization
         /// </summary>
         public string GetUniqueSpecies(string species)
         {
-            if (species == null)
-                return null;
-            string uniqueSpecies;
-            if (!_uniqueSpecies.TryGetValue(species, out uniqueSpecies))
-            {
-                _uniqueSpecies.Add(species, species);
-                uniqueSpecies = species;
-            }
-            return uniqueSpecies;
+            return _stringPool.GetString(species);
         }
 
         private PeptideChromInfo ReadPeptideChromInfo(XmlReader reader, ChromFileInfo fileInfo)
