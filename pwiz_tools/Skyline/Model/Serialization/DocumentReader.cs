@@ -610,12 +610,23 @@ namespace pwiz.Skyline.Model.Serialization
                 }
             }
 
-            var srmSettings = documentElement.Elements().FirstOrDefault()?.CreateReader().DeserializeElement<SrmSettings>() ?? SrmSettingsList.GetDefault();
+            IEnumerable<XElement> proteinElements;
+            SrmSettings srmSettings;
+            if (documentElement.Elements().FirstOrDefault()?.Name == @"settings_summary")
+            {
+                srmSettings = documentElement.Elements().First().CreateReader().DeserializeElement<SrmSettings>();
+                proteinElements = documentElement.Elements().Skip(1);
+            }
+            else
+            {
+                srmSettings = SrmSettingsList.GetDefault();
+                proteinElements = documentElement.Elements();
+            }
             _annotationScrubber = AnnotationScrubber.MakeAnnotationScrubber(_stringPool, srmSettings.DataSettings, RemoveCalculatedAnnotationValues);
             srmSettings = _annotationScrubber.ScrubSrmSettings(srmSettings);
             Settings = srmSettings;
             List<Tuple<int, PeptideGroupDocNode>> list = new List<Tuple<int, PeptideGroupDocNode>>();
-            ParallelEx.ForEach(documentElement.Elements().Skip(1).Select((element, index)=>Tuple.Create(index, element)), tuple =>
+            ParallelEx.ForEach(proteinElements.Select((element, index)=>Tuple.Create(index, element)), tuple =>
             {
                 IEnumerable<XElement> elements;
                 if (tuple.Item2.Name == EL.selected_proteins)
