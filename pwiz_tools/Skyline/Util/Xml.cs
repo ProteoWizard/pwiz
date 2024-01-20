@@ -1114,10 +1114,27 @@ namespace pwiz.Skyline.Util
             return Convert.ToInt32(attr.Value, CultureInfo.InvariantCulture);
         }
 
+        public static int? GetNullableInt(this XElement xElement, string name)
+        {
+            XAttribute attr = xElement.Attribute(name);
+            if (attr == null)
+            {
+                return null;
+            }
+
+            return Convert.ToInt32(attr.Value, CultureInfo.InvariantCulture);
+        }
+
         public static string GetAttribute(this XElement xElement, string name)
         {
             return xElement.Attribute(name)?.Value;
         }
+
+        public static string GetAttribute(this XElement xElement, Enum name)
+        {
+            return xElement.Attribute(name)?.Value;
+        }
+
 
         public static bool GetBoolAttribute(this XElement xElement, string name, bool defaultValue = false)
         {
