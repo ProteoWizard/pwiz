@@ -33,13 +33,11 @@ namespace pwiz.Skyline.Util
         public override void Write(string message)
         {
             // Ignore messages which have no TraceEventType
-            return;
         }
 
         public override void WriteLine(string message)
         {
             // Ignore messages which have no TraceEventType
-            return;
         }
 
         /// <summary>
