@@ -1778,7 +1778,6 @@ namespace pwiz.Skyline.Model.Serialization
             private int _totalProteinCount;
             private int _completedProteinCount;
 
-            private QueueWorker<Tuple<int, XElement>> _queueWorker;
             public ProteinProcessor(DocumentReader documentReader)
             {
                 DocumentReader = documentReader;
@@ -1833,11 +1832,11 @@ namespace pwiz.Skyline.Model.Serialization
             /// <returns>PeptideGroupDocNode's in the order that they should appear in the document</returns>
             public IEnumerable<PeptideGroupDocNode> ProcessProteinElements(XmlReader reader)
             {
-                _queueWorker = new QueueWorker<Tuple<int, XElement>>(null, ConsumeProteinElement);
-                _queueWorker.RunAsync(ParallelEx.GetThreadCount(), @"Load Protein XML");
+                using var queueWorker = new QueueWorker<Tuple<int, XElement>>(null, ConsumeProteinElement);
+                queueWorker.RunAsync(ParallelEx.GetThreadCount(), @"Load Protein XML");
                 foreach (var element in DocumentReader.GetProteinElements(reader))
                 {
-                    _queueWorker.Add(Tuple.Create(_totalProteinCount++, element));
+                    queueWorker.Add(Tuple.Create(_totalProteinCount++, element));
                     CheckForErrors();
                 }
 
