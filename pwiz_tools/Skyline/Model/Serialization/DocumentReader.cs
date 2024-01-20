@@ -924,12 +924,14 @@ namespace pwiz.Skyline.Model.Serialization
             // Number of peptides to process on each thread.
             // If there are fewer peptides than this, then they will all be processed on the current thread
             const int chunkSize = 512;
+            int processedElementCount = 0;
             Action<int> threadAction = chunkIndex =>
             {
                 int lastIndex = Math.Min(peptideElements.Count, (chunkIndex + 1) * chunkSize);
                 for (int peptideIndex = chunkIndex * chunkSize; peptideIndex < lastIndex; peptideIndex++)
                 {
                     var peptideElement = peptideElements[peptideIndex];
+                    Interlocked.Increment(ref processedElementCount);
                     if (peptideElement.Name == EL.molecule || peptideElement.Name == EL.peptide)
                     {
                         bool isCustomMolecule = peptideElement.Name == EL.molecule;
@@ -943,12 +945,14 @@ namespace pwiz.Skyline.Model.Serialization
             };
             if (peptideElements.Count > chunkSize)
             {
-                ParallelEx.For(0, peptideElements.Count / chunkSize, threadAction);
+                int chunkCount = 1 + (peptideElements.Count - 1) / chunkSize;
+                ParallelEx.For(0, chunkCount, threadAction);
             }
             else
             {
                 threadAction(0);
             }
+            Assume.AreEqual(peptideElements.Count, processedElementCount);
             return list.OrderBy(tuple => tuple.Item1).Select(tuple => tuple.Item2).ToArray();
 
         }
