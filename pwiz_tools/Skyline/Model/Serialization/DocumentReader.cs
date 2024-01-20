@@ -29,6 +29,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
@@ -601,11 +602,11 @@ namespace pwiz.Skyline.Model.Serialization
                 FormatVersion = new DocumentFormat(formatVersionNumber);
                 if (FormatVersion.CompareTo(DocumentFormat.CURRENT) > 0)
                 {
-                    // Resharper disable ImpureMethodCallOnReadonlyValueField
+// Resharper disable ImpureMethodCallOnReadonlyValueField
                     throw new VersionNewerException(
                         string.Format(SerializationResources.SrmDocument_ReadXml_The_document_format_version__0__is_newer_than_the_version__1__supported_by__2__,
                             formatVersionNumber, DocumentFormat.CURRENT.AsDouble(), Install.ProgramNameAndVersion));
-                    // ReSharper restore ImpureMethodCallOnReadonlyValueField
+// ReSharper restore ImpureMethodCallOnReadonlyValueField
                 }
             }
 
@@ -652,51 +653,30 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 if (element.Name == EL.protein)
                 {
-                    yield return ReadProteinXml(element);
+                    yield return ReadProteinXml(CreateReaderFromElement(element));
                 }
                 else if (element.Name == EL.protein_group)
                 {
-                    yield return ReadProteinGroupXml(element);
+                    yield return ReadProteinGroupXml(CreateReaderFromElement(element));
                 }
                 else if (element.Name == EL.peptide_list)
                 {
-                    yield return ReadPeptideGroupXml(element);
+                    yield return ReadPeptideGroupXml(CreateReaderFromElement(element));
                 }
             }
         }
 
-        /// <summary>
-        /// Deserializes an array of <see cref="PeptideGroupDocNode"/> from a
-        /// <see cref="XmlReader"/> positioned at the start of the list.
-        /// </summary>
-        /// <returns>An array of <see cref="PeptideGroupDocNode"/> objects for
-        ///         inclusion in a <see cref="SrmDocument"/> child list</returns>
-        // private PeptideGroupDocNode[] ReadPeptideGroupListXml(XmlReader reader)
-        // {
-        //     var list = new List<PeptideGroupDocNode>();
-        //     while (reader.IsStartElement(EL.protein) || reader.IsStartElement(EL.peptide_list) || reader.IsStartElement(EL.protein_group))
-        //     {
-        //         if (reader.IsStartElement(EL.protein))
-        //             list.Add(ReadProteinXml(reader));
-        //         else if (reader.IsStartElement(EL.protein_group))
-        //             list.Add(ReadProteinGroupXml(reader));
-        //         else
-        //             list.Add(ReadPeptideGroupXml(reader));
-        //     }
-        //     return list.ToArray();
-        // }
-
-        private ProteinMetadata ReadProteinMetadataXML(XElement element, bool labelNameAndDescription)
+        private ProteinMetadata ReadProteinMetadataXML(XmlReader reader, bool labelNameAndDescription)
         {
             var labelPrefix = labelNameAndDescription ? @"label_" : string.Empty;
             return new ProteinMetadata(
-                element.GetAttribute(labelPrefix + ATTR.name),
-                element.GetAttribute(labelPrefix + ATTR.description),
-                element.GetAttribute(ATTR.preferred_name),
-                element.GetAttribute(ATTR.accession),
-                element.GetAttribute(ATTR.gene),
-                GetUniqueSpecies(element.GetAttribute(ATTR.species)),
-                element.GetAttribute(ATTR.websearch_status));
+                reader.GetAttribute(labelPrefix + ATTR.name),
+                reader.GetAttribute(labelPrefix + ATTR.description),
+                reader.GetAttribute(ATTR.preferred_name),
+                reader.GetAttribute(ATTR.accession),
+                reader.GetAttribute(ATTR.gene),
+                GetUniqueSpecies(reader.GetAttribute(ATTR.species)),
+                reader.GetAttribute(ATTR.websearch_status));
         }
 
         /// <summary>
@@ -706,18 +686,19 @@ namespace pwiz.Skyline.Model.Serialization
         /// In order to support the v0.1 format, the returned node may represent
         /// either a FASTA sequence or a peptide list.
         /// </summary>
-        /// <param name="xElement">The reader positioned at a protein tag</param>
+        /// <param name="reader">The reader positioned at a protein tag</param>
         /// <param name="readPeptideList">Set to false to skip reading peptides for the protein (e.g. when the protein is inside a protein_group)</param>
         /// <returns>A new <see cref="PeptideGroupDocNode"/></returns>
-        private PeptideGroupDocNode ReadProteinXml(XElement xElement, bool readPeptideList = true)
+        private PeptideGroupDocNode ReadProteinXml(XmlReader reader, bool readPeptideList = true)
         {
-            string name = xElement.GetAttribute(ATTR.name);
-            string description = xElement.GetAttribute(ATTR.description);
-            bool peptideList = xElement.GetBoolAttribute(ATTR.peptide_list);
-            bool autoManageChildren = xElement.GetBoolAttribute(ATTR.auto_manage_children, true);
-            var labelProteinMetadata = ReadProteinMetadataXML(xElement, true);  // read label_name, label_description, and species, gene etc if any
-            var reader = xElement.CreateReader();
+            string name = reader.GetAttribute(ATTR.name);
+            string description = reader.GetAttribute(ATTR.description);
+            bool peptideList = reader.GetBoolAttribute(ATTR.peptide_list);
+            bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
+            var labelProteinMetadata = ReadProteinMetadataXML(reader, true);  // read label_name, label_description, and species, gene etc if any
+
             reader.ReadStartElement();
+
             var annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.protein);
 
             ProteinMetadata[] alternatives;
@@ -786,17 +767,18 @@ namespace pwiz.Skyline.Model.Serialization
         /// Deserializes a single <see cref="PeptideGroupDocNode"/> from a
         /// <see cref="XmlReader"/> positioned at a &lt;protein_group&gt; tag.
         /// </summary>
+        /// <param name="reader">The reader positioned at a protein_group tag</param>
         /// <returns>A new <see cref="PeptideGroupDocNode"/></returns>
-        private PeptideGroupDocNode ReadProteinGroupXml(XElement xElement)
+        private PeptideGroupDocNode ReadProteinGroupXml(XmlReader reader)
         {
-            string name = xElement.GetAttribute(ATTR.name);
-            string labelName = xElement.GetAttribute(ATTR.label_name);
-            string labelDescription = xElement.GetAttribute(ATTR.label_description);
-            bool peptideList = xElement.GetBoolAttribute(ATTR.peptide_list);
-            bool autoManageChildren = xElement.GetBoolAttribute(ATTR.auto_manage_children, true);
+            string name = reader.GetAttribute(ATTR.name);
+            string labelName = reader.GetAttribute(ATTR.label_name);
+            string labelDescription = reader.GetAttribute(ATTR.label_description);
+            bool peptideList = reader.GetBoolAttribute(ATTR.peptide_list);
+            bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
 
-            var reader = xElement.CreateReader();
             reader.ReadStartElement();
+
             var annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.protein);
 
             var proteinMetadataList = new List<ProteinMetadata>();
@@ -832,7 +814,7 @@ namespace pwiz.Skyline.Model.Serialization
             var list = new List<FastaSequence>();
             while (reader.IsStartElement(EL.protein))
             {
-                var proteinDocNode = ReadProteinXml((XElement) XNode.ReadFrom(reader), false);
+                var proteinDocNode = ReadProteinXml(reader, false);
                 proteinMetadata.Add(proteinDocNode.ProteinMetadata);
                 list.Add(proteinDocNode.PeptideGroup as FastaSequence);
             }
@@ -850,7 +832,8 @@ namespace pwiz.Skyline.Model.Serialization
             var list = new List<ProteinMetadata>();
             while (reader.IsStartElement(EL.alternative_protein))
             {
-                var proteinMetaData = ReadProteinMetadataXML((XElement)XNode.ReadFrom(reader), false);
+                var proteinMetaData = ReadProteinMetadataXML(reader, false);
+                reader.Read();
                 list.Add(proteinMetaData);
             }
             return list.ToArray();
@@ -878,31 +861,39 @@ namespace pwiz.Skyline.Model.Serialization
         /// a peptide list from a <see cref="XmlReader"/> positioned at the
         /// start element.
         /// </summary>
+        /// <param name="reader">The reader positioned at a start element of a peptide group</param>
         /// <returns>A new <see cref="PeptideGroupDocNode"/></returns>
-        private PeptideGroupDocNode ReadPeptideGroupXml(XElement element)
+        private PeptideGroupDocNode ReadPeptideGroupXml(XmlReader reader)
         {
-            ProteinMetadata proteinMetadata = ReadProteinMetadataXML(element, true); // read label_name and label_description
-            bool autoManageChildren = element.GetBoolAttribute(ATTR.auto_manage_children, true);
-            bool isDecoy = element.GetBoolAttribute(ATTR.decoy);
-            var proportionDecoysMatch = element.GetNullableDoubleAttribute(ATTR.decoy_match_proportion);
+            ProteinMetadata proteinMetadata = ReadProteinMetadataXML(reader, true); // read label_name and label_description
+            bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
+            bool isDecoy = reader.GetBoolAttribute(ATTR.decoy);
+            var proportionDecoysMatch = reader.GetNullableDoubleAttribute(ATTR.decoy_match_proportion);
 
             PeptideGroup group = new PeptideGroup(isDecoy);
 
             Annotations annotations = Annotations.EMPTY;
             PeptideDocNode[] children = null;
-            var reader = element.CreateReader();
-            reader.ReadStartElement();
-            annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.protein);
 
-            if (!reader.IsStartElement(EL.selected_peptides))
-                children = ReadPeptideListXml(reader, group);
-            else if (reader.IsEmptyElement)
+            if (reader.IsEmptyElement)
                 reader.Read();
             else
             {
-                reader.ReadStartElement(EL.selected_peptides);
-                children = ReadPeptideListXml(reader, group);
-                reader.ReadEndElement();
+                reader.ReadStartElement();
+                annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.protein);
+
+                if (!reader.IsStartElement(EL.selected_peptides))
+                    children = ReadPeptideListXml(reader, group);
+                else if (reader.IsEmptyElement)
+                    reader.Read();
+                else
+                {
+                    reader.ReadStartElement(EL.selected_peptides);
+                    children = ReadPeptideListXml(reader, group);
+                    reader.ReadEndElement();
+                }
+
+                reader.ReadEndElement();    // peptide_list
             }
 
             return new PeptideGroupDocNode(group, annotations, proteinMetadata,
@@ -930,8 +921,10 @@ namespace pwiz.Skyline.Model.Serialization
         private PeptideDocNode[] ReadPeptideElements(IList<XElement> peptideElements, PeptideGroup peptideGroup)
         {
             var list = new List<Tuple<int, PeptideDocNode>>();
+            // Number of peptides to process on each thread.
+            // If there are fewer peptides than this, then they will all be processed on the current thread
             const int chunkSize = 512;
-            Action<int> body = chunkIndex =>
+            Action<int> threadAction = chunkIndex =>
             {
                 int lastIndex = Math.Min(peptideElements.Count, (chunkIndex + 1) * chunkSize);
                 for (int peptideIndex = chunkIndex * chunkSize; peptideIndex < lastIndex; peptideIndex++)
@@ -940,7 +933,7 @@ namespace pwiz.Skyline.Model.Serialization
                     if (peptideElement.Name == EL.molecule || peptideElement.Name == EL.peptide)
                     {
                         bool isCustomMolecule = peptideElement.Name == EL.molecule;
-                        var peptideDocNode = ReadPeptideXml(peptideElement, peptideGroup, isCustomMolecule);
+                        var peptideDocNode = ReadPeptideXml(CreateReaderFromElement(peptideElement), peptideGroup, isCustomMolecule);
                         lock (list)
                         {
                             list.Add(Tuple.Create(peptideIndex, peptideDocNode));
@@ -950,11 +943,11 @@ namespace pwiz.Skyline.Model.Serialization
             };
             if (peptideElements.Count > chunkSize)
             {
-                ParallelEx.For(0, peptideElements.Count / chunkSize, body);
+                ParallelEx.For(0, peptideElements.Count / chunkSize, threadAction);
             }
             else
             {
-                body(0);
+                threadAction(0);
             }
             return list.OrderBy(tuple => tuple.Item1).Select(tuple => tuple.Item2).ToArray();
 
@@ -1014,16 +1007,16 @@ namespace pwiz.Skyline.Model.Serialization
         /// Deserializes a single <see cref="PeptideDocNode"/> from a <see cref="XmlReader"/>
         /// positioned at the start element.
         /// </summary>
-        /// <param name="element">The reader positioned at a start element of a peptide or molecule</param>
+        /// <param name="reader">The reader positioned at a start element of a peptide or molecule</param>
         /// <param name="group">A previously read parent <see cref="Identity"/></param>
         /// <param name="isCustomMolecule">if true, we're reading a custom molecule, not a peptide</param>
         /// <returns>A new <see cref="PeptideDocNode"/></returns>
-        private PeptideDocNode ReadPeptideXml(XElement element, PeptideGroup group, bool isCustomMolecule)
+        private PeptideDocNode ReadPeptideXml(XmlReader reader, PeptideGroup group, bool isCustomMolecule)
         {
-            int? start = element.GetNullableInt(ATTR.start);
-            int? end = element.GetNullableInt(ATTR.end);
-            string sequence = element.GetAttribute(ATTR.sequence);
-            string lookupSequence = element.GetAttribute(ATTR.lookup_sequence);
+            int? start = reader.GetNullableIntAttribute(ATTR.start);
+            int? end = reader.GetNullableIntAttribute(ATTR.end);
+            string sequence = reader.GetAttribute(ATTR.sequence);
+            string lookupSequence = reader.GetAttribute(ATTR.lookup_sequence);
             // If the group has no sequence, then this is a v0.1 peptide list or a custom ion
             if (group.Sequence == null)
             {
@@ -1031,24 +1024,23 @@ namespace pwiz.Skyline.Model.Serialization
                 start = null;
                 end = null;
             }
-            int missedCleavages = element.GetNullableInt(ATTR.num_missed_cleavages) ?? 0;
+            int missedCleavages = reader.GetIntAttribute(ATTR.num_missed_cleavages);
             // CONSIDER: Trusted value
-            int? rank = element.GetNullableInt(ATTR.rank);
-            double? concentrationMultiplier = element.GetNullableDoubleAttribute(ATTR.concentration_multiplier);
+            int? rank = reader.GetNullableIntAttribute(ATTR.rank);
+            double? concentrationMultiplier = reader.GetNullableDoubleAttribute(ATTR.concentration_multiplier);
             double? internalStandardConcentration =
-                element.GetNullableDoubleAttribute(ATTR.internal_standard_concentration);
-            string normalizationMethod = element.GetAttribute(ATTR.normalization_method);
-            string attributeGroupId = element.GetAttribute(ATTR.attribute_group_id);
-            string surrogateCalibrationCurve = element.GetAttribute(ATTR.surrogate_calibration_curve);
-            bool autoManageChildren = element.GetBoolAttribute(ATTR.auto_manage_children, true);
-            bool isDecoy = element.GetBoolAttribute(ATTR.decoy);
-            var standardType = StandardType.FromName(element.GetAttribute(ATTR.standard_type));
-            double? importedRetentionTimeValue = element.GetNullableDoubleAttribute(ATTR.explicit_retention_time);
-            double? importedRetentionTimeWindow = element.GetNullableDoubleAttribute(ATTR.explicit_retention_time_window);
+                reader.GetNullableDoubleAttribute(ATTR.internal_standard_concentration);
+            string normalizationMethod = reader.GetAttribute(ATTR.normalization_method);
+            string attributeGroupId = reader.GetAttribute(ATTR.attribute_group_id);
+            string surrogateCalibrationCurve = reader.GetAttribute(ATTR.surrogate_calibration_curve);
+            bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
+            bool isDecoy = reader.GetBoolAttribute(ATTR.decoy);
+            var standardType = StandardType.FromName(reader.GetAttribute(ATTR.standard_type));
+            double? importedRetentionTimeValue = reader.GetNullableDoubleAttribute(ATTR.explicit_retention_time);
+            double? importedRetentionTimeWindow = reader.GetNullableDoubleAttribute(ATTR.explicit_retention_time_window);
             var importedRetentionTime = importedRetentionTimeValue.HasValue
                 ? new ExplicitRetentionTimeInfo(importedRetentionTimeValue.Value, importedRetentionTimeWindow)
                 : null;
-            var reader = CreateReaderFromElement(element);
             var annotations = Annotations.EMPTY;
             ExplicitMods mods = null, lookupMods = null;
             CrosslinkStructure crosslinkStructure = null;
@@ -1794,8 +1786,8 @@ namespace pwiz.Skyline.Model.Serialization
             /// <summary>
             /// Queue worker method which processes XElement for one protein in the .sky file
             /// </summary>
-            /// <param name="tuple">Item1 is the position of the XElement
-            /// within the entire document. Item2 is the XElement to be processed</param>
+            /// <param name="tuple">Item1 is the position of the XElement within the entire document.
+            /// Item2 is the XElement to be processed</param>
             /// <param name="threadIndex">Ignored</param>
             private void ConsumeProteinElement(Tuple<int, XElement> tuple, int threadIndex)
             {
@@ -1844,6 +1836,9 @@ namespace pwiz.Skyline.Model.Serialization
                     _queueWorker.Add(Tuple.Create(_totalProteinCount++, element));
                     CheckForErrors();
                 }
+
+                if (reader.IsStartElement(AuditLogList.XML_ROOT))
+                    reader.Skip();
                 reader.ReadEndElement();
                 while (true)
                 {
@@ -1860,12 +1855,17 @@ namespace pwiz.Skyline.Model.Serialization
                 }
             }
 
-            public void CheckForErrors()
+            private void CheckForErrors()
             {
                 lock (this)
                 {
                     if (_exceptions.Count > 0)
                     {
+                        if (_exceptions.Count == 1)
+                        {
+                            var singleException = _exceptions.Single();
+                            throw new AggregateException(singleException.Message, singleException);
+                        }
                         throw new AggregateException(_exceptions);
                     }
                 }
