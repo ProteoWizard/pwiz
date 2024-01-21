@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace pwiz.Common.Storage
 {
-    public readonly struct ConstantList<T> : IReadOnlyList<T>
+    public class ConstantList<T> : IReadOnlyList<T>
     {
         private readonly T _value;
         public ConstantList(T value, int count)

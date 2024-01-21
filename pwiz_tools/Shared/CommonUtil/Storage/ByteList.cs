@@ -5,41 +5,46 @@ using System.Linq;
 
 namespace pwiz.Common.Storage
 {
-    public struct ByteList : IReadOnlyList<int>
+    public class ByteList : IReadOnlyList<int>
     {
         private readonly byte[] _bytes;
+
+        public static ByteList FromValues(IEnumerable<int> values)
+        {
+            return new ByteList(values.Select(CheckByte));
+        }
 
         public ByteList(IEnumerable<byte> bytes)
         {
             var array = bytes?.ToArray();
-            _bytes = array?.Length > 0 ? array : null;
+            _bytes = array?.Length > 0 ? array : Array.Empty<byte>();
         }
 
-        private byte[] Bytes
-        {
-            get { return _bytes ?? Array.Empty<byte>(); }
-        }
-        
         public int Count
         {
-            get { return Bytes.Length; }
+            get { return _bytes.Length; }
         }
 
         public IEnumerator GetEnumerator()
         {
-            return Bytes.GetEnumerator();
+            return _bytes.GetEnumerator();
         }
 
         IEnumerator<int> IEnumerable<int>.GetEnumerator()
         {
-            return Bytes.Select(b => (int)b).GetEnumerator();
+            return _bytes.Select(b => (int)b).GetEnumerator();
         }
 
-        int IReadOnlyList<int>.this[int index] => Bytes[index];
+        int IReadOnlyList<int>.this[int index] => _bytes[index];
 
-        public static int GetOverhead(int length)
+        public static byte CheckByte(int v)
         {
-            return (length + 31) / 16 * 16;
+            if (v < 0 || v >= byte.MaxValue)
+            {
+                throw new ArgumentException();
+            }
+
+            return (byte)v;
         }
     }
 }

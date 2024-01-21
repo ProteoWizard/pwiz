@@ -32,7 +32,7 @@ namespace pwiz.Common.Storage
 
         public static IEnumerable<KeyValuePair<ImmutableList<T>, IReadOnlyList<T>>> StoreUniqueLists(IList<ImmutableList<T>> lists)
         {
-            var remainingLists = new List<ImmutableList<T>>();
+            var remainingLists = new List<ListInfo>();
             foreach (var list in lists)
             {
                 if (list.Count <= 2)
@@ -41,23 +41,40 @@ namespace pwiz.Common.Storage
                     continue;
                 }
 
-                if (list.Skip(1).All(x => Equals(x, list[0])))
+                var listInfo = new ListInfo(list);
+                if (listInfo.UniqueValues.Count == 1)
                 {
-                    yield return new KeyValuePair<ImmutableList<T>, IReadOnlyList<T>>(list, new ConstantList<T>(list[0], list.Count));
-                    continue;
+                    yield return new KeyValuePair<ImmutableList<T>, IReadOnlyList<T>>(list,
+                        new ConstantList<T>(list[0], list.Count));
                 }
-                remainingLists.Add(list);
+                remainingLists.Add(listInfo);
             }
 
-            int totalItemCount = remainingLists.Sum(list => list.Count);
-            var factorLevels = remainingLists.SelectMany(list => list).
-                Where(item=>!Equals(item, default(T))).Distinct().ToList();
-            var factorListSize = GetListByteSize(factorLevels.Count);
+            if (remainingLists.Count == 0)
+            {
+                yield break;
+            }
+
+            var allUniqueItems = remainingLists.SelectMany(listInfo => listInfo.UniqueValues)
+                .Where(v => !Equals(v, default(T))).ToList();
+            
         }
 
         public static int GetListByteSize(int itemCount)
         {
             return (itemCount * ItemSize + 31) / 32 * 32;
+        }
+
+        class ListInfo
+        {
+            public ListInfo(IList<T> originalList)
+            {
+                OriginalList = originalList;
+                UniqueValues = OriginalList.Distinct().ToList();
+            }
+            
+            public IList<T> OriginalList { get; }
+            public IList<T> UniqueValues { get; }
         }
     }
 }
