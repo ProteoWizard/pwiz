@@ -9,7 +9,7 @@ namespace pwiz.Common.Storage
     {
         private readonly byte[] _bytes;
 
-        public static ByteList FromValues(IEnumerable<int> values)
+        public static ByteList FromInts(IEnumerable<int> values)
         {
             return new ByteList(values.Select(CheckByte));
         }

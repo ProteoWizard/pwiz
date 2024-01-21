@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.Collections;
 
 namespace pwiz.Common.Storage
 {
@@ -39,6 +41,53 @@ namespace pwiz.Common.Storage
                 }
 
                 return _levels[levelIndex - 1];
+            }
+        }
+
+        public class Builder
+        {
+            private Dictionary<T, int> _levelIndexes;
+            public Builder(IEnumerable<T> allValues)
+            {
+                Levels = ImmutableList.ValueOf(allValues.Where(v => !Equals(default(T), v)).Distinct());
+                _levelIndexes = new Dictionary<T, int>(Levels.Count);
+                foreach (var item in Levels)
+                {
+                    _levelIndexes.Add(item, _levelIndexes.Count + 1);
+                }
+            }
+            
+            public ImmutableList<T> Levels { get; }
+
+            public FactorList<T> MakeFactorList(IEnumerable<T> values)
+            {
+                var levelIndexes = new List<int>();
+                int maxLevelIndex = 0;
+                foreach (var item in values)
+                {
+                    if (Equals(default(T), item))
+                    {
+                        levelIndexes.Add(0);
+                    }
+                    else
+                    {
+                        int levelIndex = _levelIndexes[item];
+                        levelIndexes.Add(levelIndex);
+                        maxLevelIndex = Math.Max(maxLevelIndex, levelIndex);
+                    }
+                }
+
+                IReadOnlyList<int> levelIndexList;
+                if (maxLevelIndex <= byte.MaxValue)
+                {
+                    levelIndexList = ByteList.FromInts(levelIndexes);
+                }
+                else
+                {
+                    levelIndexList = levelIndexes.ToArray();
+                }
+
+                return new FactorList<T>(Levels, levelIndexList);
             }
         }
     }

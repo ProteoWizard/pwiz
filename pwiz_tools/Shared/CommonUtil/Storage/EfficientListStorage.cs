@@ -37,7 +37,6 @@ namespace pwiz.Common.Storage
             {
                 if (list.Count <= 2)
                 {
-                    yield return new KeyValuePair<ImmutableList<T>, IReadOnlyList<T>>(list, list);
                     continue;
                 }
 
@@ -57,7 +56,19 @@ namespace pwiz.Common.Storage
 
             var allUniqueItems = remainingLists.SelectMany(listInfo => listInfo.UniqueValues)
                 .Where(v => !Equals(v, default(T))).ToList();
+            if (allUniqueItems.Count >= byte.MaxValue)
+            {
+                yield break;
+            }
+
+            var factorListBuilder = new FactorList<T>.Builder(remainingLists.SelectMany(listInfo=>listInfo.UniqueValues));
             
+            var valueMap = allUniqueItems.Select((item, index) => Tuple.Create(item, index))
+                .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2 + 1);
+            foreach (var listInfo in remainingLists)
+            {
+                
+            }
         }
 
         public static int GetListByteSize(int itemCount)
