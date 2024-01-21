@@ -161,6 +161,11 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Images.resx</DependentUpon>
     </Compile>
+    <Compile Include="Storage\ByteList.cs" />
+    <Compile Include="Storage\ConstantList.cs" />
+    <Compile Include="Storage\EfficientListStorage.cs" />
+    <Compile Include="Storage\ListStorageRequirements.cs" />
+    <Compile Include="Storage\UshortArray.cs" />
     <Compile Include="SystemUtil\CommonFormEx.cs">
       <SubType>Form</SubType>
     </Compile>
