@@ -75,7 +75,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             Annotations annotations,
             TransitionDocNode.TransitionQuantInfo transitionQuantInfo,
             ExplicitTransitionValues explicitTransitionValues,
-            Results<TransitionChromInfo> results)
+            IResults<TransitionChromInfo> results)
         {
             var neutralFormula = GetNeutralFormula(chargedIon.NeutralFragmentIon);
             var productMass = GetFragmentMassFromFormula(Settings, neutralFormula);

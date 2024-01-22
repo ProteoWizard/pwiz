@@ -17,11 +17,13 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Crosslinking;
@@ -2030,7 +2032,7 @@ namespace pwiz.Skyline.Model
                 if (!Results<TransitionGroupChromInfo>.EqualsDeep(results, nodeGroupNew.Results))
                     nodeGroupNew = nodeGroupNew.ChangeResults(results);
 
-                nodeGroupNew = (TransitionGroupDocNode)nodeGroupNew.ChangeChildrenChecked(childrenNew);
+                nodeGroupNew = ((TransitionGroupDocNode)nodeGroupNew.ChangeChildrenChecked(childrenNew)).EfficientlyStoreResults(nodeGroup);
                 return nodeGroupNew;
             }
 
@@ -3251,6 +3253,17 @@ namespace pwiz.Skyline.Model
         public override string AuditLogText
         {
             get { return TransitionGroupTreeNode.GetLabel(TransitionGroup, PrecursorMz, string.Empty); }
+        }
+
+        public TransitionGroupDocNode EfficientlyStoreResults(TransitionGroupDocNode previous)
+        {
+            var newNodes = ImmutableList.ValueOf(TransitionChromInfoResults.StoreResults(Transitions).Cast<DocNode>());
+            if (ArrayUtil.ReferencesEqual(newNodes, Children))
+            {
+                return this;
+            }
+
+            return (TransitionGroupDocNode) ChangeChildren(newNodes);
         }
     }
 }

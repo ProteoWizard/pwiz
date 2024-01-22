@@ -305,7 +305,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             public SkylineDataSchema SkylineDataSchema { get; set; }
             public AnnotationUpdater AnnotationUpdater { get; set; }
-            public Results<TItem> Update(Results<TItem> results, IDictionary<ResultKey, TResult> resultObjects)
+            public Results<TItem> Update(IResults<TItem> results, IDictionary<ResultKey, TResult> resultObjects)
             {
                 if (results == null)
                 {

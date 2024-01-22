@@ -390,7 +390,7 @@ namespace pwiz.SkylineTestFunctional
             return all.Distinct((IEqualityComparer<ChromFileInfoId>)ReferenceValue.EQUALITY_COMPARER);
         }
 
-        private static IEnumerable<ChromFileInfoId> GetChromFileInfoIds<TItem>(Results<TItem> results) where TItem : ChromInfo
+        private static IEnumerable<ChromFileInfoId> GetChromFileInfoIds<TItem>(IResults<TItem> results) where TItem : ChromInfo
         {
             if (results == null)
             {
@@ -399,7 +399,7 @@ namespace pwiz.SkylineTestFunctional
             return results.SelectMany(result => result.Select(chromInfo => chromInfo.FileId));
         }
 
-        private static TItem FindChromInfo<TItem>(Results<TItem> results, ChromFileInfoId fileId) where TItem : ChromInfo
+        private static TItem FindChromInfo<TItem>(IResults<TItem> results, ChromFileInfoId fileId) where TItem : ChromInfo
         {
             if (results == null)
             {

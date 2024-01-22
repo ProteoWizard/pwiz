@@ -1034,6 +1034,68 @@ namespace pwiz.Skyline.Model.Results
 
     }
 
+    public static class ResultsExtensions
+    {
+        public static Results<TItem> ChangeAt<TItem>(this IResults<TItem> results, int index, ChromInfoList<TItem> item) where TItem : ChromInfo
+        {
+            var resultsObject = results as Results<TItem> ?? new Results<TItem>(results);
+            return resultsObject.ChangeAt(index, item);
+        }
+
+        public static void Validate<TItem>(this IResults<TItem> results, SrmSettings settings) where TItem : ChromInfo
+        {
+            var chromatogramSets = settings.MeasuredResults.Chromatograms;
+            if (chromatogramSets.Count != results.Count)
+            {
+                throw new InvalidDataException(
+                    string.Format(ResultsResources.Results_Validate_DocNode_results_count__0__does_not_match_document_results_count__1__,
+                        results.Count, chromatogramSets.Count));
+            }
+
+            for (int i = 0; i < chromatogramSets.Count; i++)
+            {
+                var chromList = results[i];
+                if (chromList.IsEmpty)
+                    continue;
+
+                var chromatogramSet = chromatogramSets[i];
+                if (chromList.Any(chromInfo => chromatogramSet.IndexOfId(chromInfo.FileId) == -1))
+                {
+                    throw new InvalidDataException(
+                        string.Format(ResultsResources.Results_Validate_DocNode_peak_info_found_for_file_with_no_match_in_document_results));
+                }
+            }
+        }
+        public static float? GetAverageValue<TItem>(this IResults<TItem> results, Func<TItem, float?> getVal) where TItem : ChromInfo
+        {
+            int valCount = 0;
+            double valTotal = 0;
+
+            foreach (var result in results)
+            {
+                if (result.IsEmpty)
+                    continue;
+                foreach (var chromInfo in result)
+                {
+                    if (Equals(chromInfo, default(TItem)))
+                        continue;
+                    float? val = getVal(chromInfo);
+                    if (!val.HasValue)
+                        continue;
+
+                    valTotal += val.Value;
+                    valCount++;
+                }
+            }
+
+            if (valCount == 0)
+                return null;
+
+            return (float)(valTotal / valCount);
+        }
+
+    }
+
     /// <summary>
     /// Chromatogram results summary data for a single <see cref="DocNode"/>.
     /// This list will contain one element per replicate (i.e. full run of the nodes
@@ -1055,7 +1117,7 @@ namespace pwiz.Skyline.Model.Results
             _list = ImmutableList.ValueOf(elements);
         }
 
-        public Results(IList<ChromInfoList<TItem>> elements)
+        public Results(IEnumerable<ChromInfoList<TItem>> elements)
         {
             _list = ImmutableList.ValueOf(elements);
         }
@@ -1075,7 +1137,7 @@ namespace pwiz.Skyline.Model.Results
             return new Results<TItem>(_list.ReplaceAt(index, list));
         }
 
-        public static Results<TItem> Merge(Results<TItem> resultsOld, List<IList<TItem>> chromInfoSet)
+        public static Results<TItem> Merge(IResults<TItem> resultsOld, List<IList<TItem>> chromInfoSet)
         {
             // Check for equal results in the same positions, and swap in the old
             // values if found to maintain reference equality.
@@ -1087,11 +1149,7 @@ namespace pwiz.Skyline.Model.Results
                         chromInfoSet[i] = resultsOld[i];
                 }
             }
-            var listInfo = chromInfoSet.ConvertAll(l => new ChromInfoList<TItem>(l));
-            if (ArrayUtil.InnerReferencesEqual<TItem, ChromInfoList<TItem>>(listInfo, resultsOld))
-                return resultsOld;
-
-            return new Results<TItem>(listInfo);
+            return new Results<TItem>(chromInfoSet.ConvertAll(l => new ChromInfoList<TItem>(l)));
         }
 
         public static Results<TItem> ChangeChromInfo(Results<TItem> results, ChromFileInfoId id, TItem newChromInfo)
@@ -1123,7 +1181,7 @@ namespace pwiz.Skyline.Model.Results
             return new Results<TItem>(elements);
         }
 
-        public static bool EqualsDeep(Results<TItem> resultsOld, Results<TItem> results)
+        public static bool EqualsDeep(IResults<TItem> resultsOld, IResults<TItem> results)
         {
             if (resultsOld == null && results == null)
                 return true;
@@ -1206,31 +1264,6 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return valBest;
-        }
-
-        public void Validate(SrmSettings settings)
-        {
-            var chromatogramSets = settings.MeasuredResults.Chromatograms;
-            if (chromatogramSets.Count != Count)
-            {
-                throw new InvalidDataException(
-                    string.Format(ResultsResources.Results_Validate_DocNode_results_count__0__does_not_match_document_results_count__1__,
-                                  Count, chromatogramSets.Count));
-            }
-
-            for (int i = 0; i < chromatogramSets.Count; i++)
-            {
-                var chromList = this[i];
-                if (chromList.IsEmpty)
-                    continue;
-
-                var chromatogramSet = chromatogramSets[i];
-                if (chromList.Any(chromInfo => chromatogramSet.IndexOfId(chromInfo.FileId) == -1))
-                {
-                    throw new InvalidDataException(
-                        string.Format(ResultsResources.Results_Validate_DocNode_peak_info_found_for_file_with_no_match_in_document_results));
-                }
-            }
         }
 
         private bool Equals(Results<TItem> other)

@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Model
                                  TypedMass mass,
                                  TransitionQuantInfo transitionQuantInfo,
                                  ExplicitTransitionValues explicitTransitionValues,
-                                 Results<TransitionChromInfo> results)
+                                 IResults<TransitionChromInfo> results)
             : this(ComplexFragmentIon.Simple(id, losses), annotations, losses == null ? mass : mass - losses.Mass, transitionQuantInfo, explicitTransitionValues, results)
         {
         }
@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Model
         public TransitionDocNode(ComplexFragmentIon complexFragmentIon, Annotations annotations, TypedMass mass,
             TransitionQuantInfo transitionQuantInfo,
             ExplicitTransitionValues explicitTransitionValues,
-            Results<TransitionChromInfo> results) : base(complexFragmentIon.PrimaryTransition, annotations)
+            IResults<TransitionChromInfo> results) : base(complexFragmentIon.PrimaryTransition, annotations)
         {
             ComplexFragmentIon = complexFragmentIon;
             Mz = Transition.IsCustom() ?
@@ -873,7 +873,7 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im => im.LibInfo = prop);
         }
 
-        public TransitionDocNode ChangeResults(Results<TransitionChromInfo> prop)
+        public TransitionDocNode ChangeResults(IResults<TransitionChromInfo> prop)
         {
             return ChangeProp(ImClone(this), im => im.Results = prop);
         }
@@ -982,8 +982,8 @@ namespace pwiz.Skyline.Model
         }
 
 
-        private Results<TransitionChromInfo> MergeResultsUserInfo(
-            SrmSettings settings, Results<TransitionChromInfo> results)
+        private IResults<TransitionChromInfo> MergeResultsUserInfo(
+            SrmSettings settings, IResults<TransitionChromInfo> results)
         {
             if (!HasResults)
                 return Results;
@@ -1022,8 +1022,6 @@ namespace pwiz.Skyline.Model
                     chromInfoList = new ChromInfoList<TransitionChromInfo>(listChromInfo);
                 listResults.Add(chromInfoList);
             }
-            if (ArrayUtil.InnerReferencesEqual<TransitionChromInfo, ChromInfoList<TransitionChromInfo>>(listResults, Results))
-                return Results;
             return new Results<TransitionChromInfo>(listResults);
         }
 
