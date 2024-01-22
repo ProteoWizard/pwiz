@@ -165,6 +165,7 @@
     <Compile Include="Storage\ConstantList.cs" />
     <Compile Include="Storage\EfficientListStorage.cs" />
     <Compile Include="Storage\FactorList.cs" />
+    <Compile Include="Storage\HashedObject.cs" />
     <Compile Include="SystemUtil\CommonFormEx.cs">
       <SubType>Form</SubType>
     </Compile>

@@ -242,7 +242,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public Results<TransitionChromInfo> Results { get; private set; }
+        public IResults<TransitionChromInfo> Results { get; private set; }
 
         public int? ResultsRank { get; private set; }
 

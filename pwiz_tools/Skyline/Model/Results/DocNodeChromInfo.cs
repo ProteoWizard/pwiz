@@ -1029,6 +1029,11 @@ namespace pwiz.Skyline.Model.Results
         }
     }
 
+    public interface IResults<TItem> : IReadOnlyList<ChromInfoList<TItem>> where TItem : ChromInfo 
+    {
+
+    }
+
     /// <summary>
     /// Chromatogram results summary data for a single <see cref="DocNode"/>.
     /// This list will contain one element per replicate (i.e. full run of the nodes
@@ -1041,7 +1046,7 @@ namespace pwiz.Skyline.Model.Results
     /// in <see cref="SrmSettings.MeasuredResults"/>.  This collection will have the same
     /// number of items as the chromatograms list.
     /// </summary>
-    public sealed class Results<TItem> : AbstractReadOnlyList<ChromInfoList<TItem>>
+    public sealed class Results<TItem> : AbstractReadOnlyList<ChromInfoList<TItem>>, IResults<TItem>
         where TItem : ChromInfo
     {
         private readonly ImmutableList<ChromInfoList<TItem>> _list;
