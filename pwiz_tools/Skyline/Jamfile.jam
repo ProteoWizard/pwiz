@@ -395,6 +395,10 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         return $(result) ;
     }
     
+    rule install-vendor-api-dependencies-to-debug-and-release ( properties * )
+    {
+        return [ install-vendor-api-dependencies-to-locations $(SKYLINE_PATH)/bin/x64/Debug $(SKYLINE_PATH)/bin/x64/Release : $(properties) ] ;
+    }
 
     notfile NugetRestore : @do_nuget_restore ;
 
@@ -412,7 +416,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>../../pwiz_tools/commandline//msconvert/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <assembly>TestDiagnostics//TestDiagnostics
             <conditional>@build-location
-            <conditional>@install-vendor-api-dependencies
+            #<conditional>@install-vendor-api-dependencies
+            <conditional>@install-vendor-api-dependencies-to-debug-and-release
             <dependency>NugetRestore
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)

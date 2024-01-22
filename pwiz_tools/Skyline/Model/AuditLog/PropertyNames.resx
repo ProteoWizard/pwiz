@@ -1781,4 +1781,7 @@
   <data name="FastaToPrositInputCsvConfig_MinMz" xml:space="preserve">
     <value>Min m/z</value>
   </data>
+  <data name="ParsimonySettings_GeneLevelParsimony" xml:space="preserve">
+    <value>Group at gene level</value>
+  </data>
 </root>
