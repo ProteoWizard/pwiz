@@ -2189,6 +2189,7 @@ namespace pwiz.Skyline
                 var proteinAssociation = new ProteinAssociation(Document, progressMonitor);
                 proteinAssociation.UseFastaFile(fastaPath, DigestProteinToPeptides, progressMonitor);
                 proteinAssociation.ApplyParsimonyOptions(commandArgs.AssociateProteinsGroupProteins.GetValueOrDefault(),
+                    commandArgs.AssociateProteinsGeneLevelParsimony.GetValueOrDefault(),
                     commandArgs.AssociateProteinsFindMinimalProteinList.GetValueOrDefault(),
                     commandArgs.AssociateProteinsRemoveSubsetProteins.GetValueOrDefault(),
                     commandArgs.AssociateProteinsSharedPeptides.GetValueOrDefault(),
