@@ -139,11 +139,13 @@ IONMOBILITY_TYPE parseIonMobilityType(const char* ionMobilityType)
 
     if (bal::iequals(ionMobilityType, "driftTime(msec)")) return IONMOBILITY_DRIFTTIME_MSEC;
     if (bal::iequals(ionMobilityType, "ms")) return IONMOBILITY_DRIFTTIME_MSEC;
+    if (bal::iequals(ionMobilityType, "msec")) return IONMOBILITY_DRIFTTIME_MSEC;
 
     if (bal::iequals(ionMobilityType, "inverseK0(Vsec/cm^2)")) return IONMOBILITY_INVERSEREDUCED_VSECPERCM2;
     if (bal::iequals(ionMobilityType, "inverseK0")) return IONMOBILITY_INVERSEREDUCED_VSECPERCM2;
     if (bal::iequals(ionMobilityType, "1/K0")) return IONMOBILITY_INVERSEREDUCED_VSECPERCM2;
     if (bal::iequals(ionMobilityType, "Vsec/cm^2")) return IONMOBILITY_INVERSEREDUCED_VSECPERCM2;
+    if (bal::iequals(ionMobilityType, "Vsec/cm2")) return IONMOBILITY_INVERSEREDUCED_VSECPERCM2;
 
     if (bal::iequals(ionMobilityType, "compensation(V)")) return IONMOBILITY_COMPENSATION_V;
     if (bal::iequals(ionMobilityType, "V")) return IONMOBILITY_COMPENSATION_V;
