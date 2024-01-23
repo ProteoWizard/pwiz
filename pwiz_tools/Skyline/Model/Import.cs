@@ -310,15 +310,7 @@ namespace pwiz.Skyline.Model
 
         private IList<string> _lines;
 
-        public IList<string> Lines
-        {
-            get
-            {
-                return LineCountLimit.HasValue && _lines != null && _lines.Count > LineCountLimit.Value ? 
-                    new List<string>(_lines.Take(LineCountLimit.Value)) : 
-                    _lines;
-            }
-        }
+        public IList<string> Lines { get { return _lines; } }
 
         public MassListInputs(string initText, bool fullText = false)
         {
@@ -344,7 +336,7 @@ namespace pwiz.Skyline.Model
 
         public IList<string> ReadLines(IProgressMonitor progressMonitor, IProgressStatus status = null)
         {
-            return Lines ?? (_lines = _inputFilename != null ? ReadLinesFromFile(progressMonitor, status) : ReadLinesFromText());
+            return _lines ?? (_lines = _inputFilename != null ? ReadLinesFromFile(progressMonitor, status) : ReadLinesFromText());
         }
 
         private IList<string> ReadLinesFromFile(IProgressMonitor progressMonitor, IProgressStatus status)
@@ -418,8 +410,6 @@ namespace pwiz.Skyline.Model
         {
             return MassListImporter.IsColumnar(inputLines, out provider, out sep, out var columnTypes);
         }
-
-        public int? LineCountLimit { get; set; } // Process no more than LineCountLimit lines when set
 
         public IFormatProvider FormatProvider { get; set; }
         public char Separator { get; set; }

@@ -216,7 +216,7 @@ namespace pwiz.Skyline.FileUI
             if (Document.MoleculeGroupCount > 0)
             {
                 var pathFrom = Document.GetPathTo(Document.FindNodeIndex(protein.Id));
-                var pathTo = Document.GetPathTo(Document.FindNodeIndex(Document.MoleculeGroups.First().Id));
+                var pathTo = new IdentityPath(Document.MoleculeGroups.First().Id);
                 if (!Equals(pathFrom, pathTo))
                 {
                     Document = Document.MoveNode(pathFrom, pathTo, out _);
