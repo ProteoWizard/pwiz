@@ -669,11 +669,17 @@ namespace pwiz.Skyline.Model
 
         public PeptideDocNode ChangeResults(Results<PeptideChromInfo> prop)
         {
+            prop = prop?.Merge(Results);
+            if (ReferenceEquals(prop, Results))
+            {
+                return this;
+            }
+
             return ChangeProp(ImClone(this), im =>
-                                                 {
-                                                     im.Results = prop;
-                                                     im.BestResult = im.CalcBestResult();
-                                                 });
+            {
+                im.Results = prop;
+                im.BestResult = im.CalcBestResult();
+            });
         }
 
         public PeptideDocNode ChangeExplicitRetentionTime(ExplicitRetentionTimeInfo prop)
@@ -1410,7 +1416,7 @@ namespace pwiz.Skyline.Model
                                              : nodeTran.ChangeResults(resultsTran));
                     }
 
-                    TransitionChromInfoResults.StoreResults(listTransNew);
+                    TransposedTransitionChromInfos.StoreResults(listTransNew);
                     listGroupsNew.Add(nodeGroupNew.ChangeChildrenChecked(listTransNew));
                 }
                 return (PeptideDocNode) nodePeptide.ChangeChildrenChecked(listGroupsNew);

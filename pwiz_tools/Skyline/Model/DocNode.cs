@@ -250,29 +250,6 @@ namespace pwiz.Skyline.Model
             return newDocNode;
         }
 
-        private static bool StripAnnotationValues<TItem>(ICollection<string> annotationNamesToKeep, ref IResults<TItem> results)
-            where TItem : ChromInfo
-        {
-            if (results == null)
-            {
-                return false;
-            }
-            var newResults = new List<ChromInfoList<TItem>>();
-            bool fResult = false;
-            foreach (var replicate in results)
-            {
-                var chromInfoList = replicate;
-                fResult |= StripAnnotationValues(annotationNamesToKeep, ref chromInfoList);
-                newResults.Add(chromInfoList);
-            }
-            if (fResult)
-            {
-                results = new Results<TItem>(newResults);
-            }
-            return fResult;
-        }
-
-
         private static bool StripAnnotationValues<TItem>(ICollection<string> annotationNamesToKeep, ref Results<TItem> results)
             where TItem : ChromInfo
         {
@@ -290,7 +267,7 @@ namespace pwiz.Skyline.Model
             }
             if (fResult)
             {
-                results = new Results<TItem>(newResults);
+                results = Results<TItem>.FromChromInfoLists(newResults);
             }
             return fResult;
         }

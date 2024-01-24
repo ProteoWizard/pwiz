@@ -103,7 +103,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public eIonMobilityUnits IonMobilityUnits { get { return ChromFileInfo.IonMobilityUnits; } }
 
-        public TChromInfo FindChromInfo<TChromInfo>(IResults<TChromInfo> chromInfos) where TChromInfo : ChromInfo
+        public TChromInfo FindChromInfo<TChromInfo>(Results<TChromInfo> chromInfos) where TChromInfo : ChromInfo
         {
             if (null == chromInfos || chromInfos.Count <= Replicate.ReplicateIndex)
             {
@@ -128,7 +128,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return 0;
         }
 
-        public Results<TChromInfo> ChangeChromInfo<TChromInfo>(IResults<TChromInfo> chromInfos, Func<TChromInfo, TChromInfo> changeFunc)
+        public Results<TChromInfo> ChangeChromInfo<TChromInfo>(Results<TChromInfo> chromInfos, Func<TChromInfo, TChromInfo> changeFunc)
             where TChromInfo : ChromInfo
         {
             var chromInfoList = chromInfos[Replicate.ReplicateIndex];

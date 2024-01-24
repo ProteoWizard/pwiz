@@ -536,7 +536,7 @@
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassFilter.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
-    <Compile Include="Model\Results\TransitionChromInfoResults.cs" />
+    <Compile Include="Model\Results\TransposedTransitionChromInfos.cs" />
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

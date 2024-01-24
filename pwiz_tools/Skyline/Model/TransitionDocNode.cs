@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Model
                                  TypedMass mass,
                                  TransitionQuantInfo transitionQuantInfo,
                                  ExplicitTransitionValues explicitTransitionValues,
-                                 IResults<TransitionChromInfo> results)
+                                 Results<TransitionChromInfo> results)
             : this(ComplexFragmentIon.Simple(id, losses), annotations, losses == null ? mass : mass - losses.Mass, transitionQuantInfo, explicitTransitionValues, results)
         {
         }
@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Model
         public TransitionDocNode(ComplexFragmentIon complexFragmentIon, Annotations annotations, TypedMass mass,
             TransitionQuantInfo transitionQuantInfo,
             ExplicitTransitionValues explicitTransitionValues,
-            IResults<TransitionChromInfo> results) : base(complexFragmentIon.PrimaryTransition, annotations)
+            Results<TransitionChromInfo> results) : base(complexFragmentIon.PrimaryTransition, annotations)
         {
             ComplexFragmentIon = complexFragmentIon;
             Mz = Transition.IsCustom() ?
@@ -242,7 +242,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public IResults<TransitionChromInfo> Results { get; private set; }
+        public Results<TransitionChromInfo> Results { get; private set; }
 
         public int? ResultsRank { get; private set; }
 
@@ -873,8 +873,13 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im => im.LibInfo = prop);
         }
 
-        public TransitionDocNode ChangeResults(IResults<TransitionChromInfo> prop)
+        public TransitionDocNode ChangeResults(Results<TransitionChromInfo> prop)
         {
+            prop = prop?.Merge(Results);
+            if (ReferenceEquals(prop, Results))
+            {
+                return this;
+            }
             return ChangeProp(ImClone(this), im => im.Results = prop);
         }
 
@@ -982,8 +987,8 @@ namespace pwiz.Skyline.Model
         }
 
 
-        private IResults<TransitionChromInfo> MergeResultsUserInfo(
-            SrmSettings settings, IResults<TransitionChromInfo> results)
+        private Results<TransitionChromInfo> MergeResultsUserInfo(
+            SrmSettings settings, Results<TransitionChromInfo> results)
         {
             if (!HasResults)
                 return Results;
@@ -1022,7 +1027,7 @@ namespace pwiz.Skyline.Model
                     chromInfoList = new ChromInfoList<TransitionChromInfo>(listChromInfo);
                 listResults.Add(chromInfoList);
             }
-            return new Results<TransitionChromInfo>(listResults);
+            return Results<TransitionChromInfo>.FromChromInfoLists(listResults);
         }
 
         #endregion

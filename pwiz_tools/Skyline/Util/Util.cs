@@ -30,6 +30,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
@@ -803,39 +804,60 @@ namespace pwiz.Skyline.Util
         /// <param name="values1">The first list in the comparison</param>
         /// <param name="values2">The second list in the comparison</param>
         /// <returns>True if all references in the lists are equal to each other</returns>
-        public static bool ReferencesEqual<TItem>(IList<TItem> values1, IList<TItem> values2)
+        public static bool ReferencesEqual<TItem>(IEnumerable<TItem> values1, IEnumerable<TItem> values2)
         {
             if (values1 == null && values2 == null)
                 return true;
             if (values1 == null || values2 == null)
                 return false;
-            int count = values1.Count;
-            if (count != values2.Count)
-                return false;
-            for (int i = 0; i < count; i++)
+            using var en1 = values1.GetEnumerator();
+            using var en2 = values2.GetEnumerator();
+            while (en1.MoveNext())
             {
-                if (!ReferenceEquals(values1[i], values2[i]))
+                if (!en2.MoveNext())
+                {
                     return false;
+                }
+
+                if (!ReferenceEquals(en1.Current, en2.Current))
+                {
+                    return false;
+                }
             }
+
+            if (en2.MoveNext())
+            {
+                return false;
+            }
+
             return true;
         }
 
-        public static bool InnerReferencesEqual<TItem, TItemList>(IList<TItemList> values1, IList<TItemList> values2)
-            where TItemList : IList<TItem>
+        public static bool InnerReferencesEqual<TItem, TItemList>(IEnumerable<TItemList> values1, IEnumerable<TItemList> values2)
+            where TItemList : IEnumerable<TItem>
         {
-            if (values1 == null && values2 == null)
+            if (ReferenceEquals(values1, values2))
+            {
                 return true;
+            }
             if (values1 == null || values2 == null)
                 return false;
-            if (values1.Count != values2.Count)
-                return false;
-            for (int i = 0; i < values1.Count; i++)
+            using var en1 = values1.GetEnumerator();
+            using var en2 = values2.GetEnumerator();
+            while (en1.MoveNext())
             {
-                if (!ReferencesEqual(values1[i], values2[i]))
+                if (!en2.MoveNext())
+                {
                     return false;
+                }
+
+                if (!ReferencesEqual(en1.Current, en2.Current))
+                {
+                    return false;
+                }
             }
+
             return true;
-            
         }
 
         /// <summary>

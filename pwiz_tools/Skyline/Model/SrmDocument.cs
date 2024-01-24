@@ -2286,7 +2286,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private static void ValidateChromInfo<TInfo>(SrmSettings settings, IResults<TInfo> results)
+        private static void ValidateChromInfo<TInfo>(SrmSettings settings, Results<TInfo> results)
             where TInfo : ChromInfo
         {
             if (!settings.HasResults)

@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         object ILinkValue.Value { get { return this; } }
 
         protected IDictionary<ResultKey, TResult> MakeChromInfoResultsMap<TChromInfo, TResult>(
-            IResults<TChromInfo> results, Func<ResultFile, TResult> newResultFunc) where TChromInfo : ChromInfo
+            Results<TChromInfo> results, Func<ResultFile, TResult> newResultFunc) where TChromInfo : ChromInfo
         {
             if (results == null)
             {

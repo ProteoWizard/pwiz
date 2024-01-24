@@ -591,7 +591,7 @@ namespace pwiz.Skyline.Model.Serialization
                 if (arrayListChromInfos[i] != null)
                     arrayChromInfoLists[i] = new ChromInfoList<TItem>(arrayListChromInfos[i]);
             }
-            return new Results<TItem>(arrayChromInfoLists);
+            return Results<TItem>.FromChromInfoLists(arrayChromInfoLists);
         }
 
         /// <summary>

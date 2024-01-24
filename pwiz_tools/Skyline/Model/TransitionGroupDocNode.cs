@@ -2770,9 +2770,12 @@ namespace pwiz.Skyline.Model
 
         public TransitionGroupDocNode ChangeResults(Results<TransitionGroupChromInfo> prop)
         {
-            return Results<TransitionGroupChromInfo>.EqualsDeep(Results, prop) ? 
-                   this : 
-                   ChangeProp(ImClone(this), im => im.Results = prop);
+            prop = prop?.Merge(Results);
+            if (ReferenceEquals(prop, Results))
+            {
+                return this;
+            }
+            return ChangeProp(ImClone(this), im => im.Results = prop);
         }
 
         public TransitionGroupDocNode ChangePrecursorAnnotations(ChromFileInfoId fileId, Annotations annotations)
@@ -3119,7 +3122,7 @@ namespace pwiz.Skyline.Model
             }
             if (ArrayUtil.InnerReferencesEqual<TransitionGroupChromInfo, ChromInfoList<TransitionGroupChromInfo>>(listResults, Results))
                 return Results;
-            return new Results<TransitionGroupChromInfo>(listResults);
+            return Results<TransitionGroupChromInfo>.FromChromInfoLists(listResults);
         }
 
         #endregion
@@ -3258,12 +3261,11 @@ namespace pwiz.Skyline.Model
         public TransitionGroupDocNode EfficientlyStoreResults(TransitionGroupDocNode previous)
         {
             var newNodes = Children.ToArray();
-            TransitionChromInfoResults.StoreResults(newNodes);
+            TransposedTransitionChromInfos.StoreResults(newNodes);
             if (ArrayUtil.ReferencesEqual(newNodes, Children))
             {
                 return this;
             }
-
             return (TransitionGroupDocNode) ChangeChildren(newNodes);
         }
     }

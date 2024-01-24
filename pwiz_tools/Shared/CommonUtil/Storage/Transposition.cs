@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
@@ -9,10 +8,9 @@ namespace pwiz.Common.Storage
 {
     public abstract class Transposition : Immutable
     {
-        private ColumnData[] _columns;
+        private ImmutableList<ColumnData> _columns;
         protected abstract ITransposer Transposer { get; }
-        protected abstract int RowCount { get; }
-
+        
         public Array ToRows(int start, int count)
         {
             return Transposer.ToRows(_columns, start, count);
@@ -22,7 +20,7 @@ namespace pwiz.Common.Storage
         {
             return ChangeProp(ImClone(this), im =>
             {
-                im._columns = columns.ToArray();
+                im._columns = ImmutableList.ValueOf(columns);
             });
         }
 
@@ -34,7 +32,7 @@ namespace pwiz.Common.Storage
         public Transposition ChangeColumnAt(int columnIndex, ColumnData column)
         {
             ColumnData currentColumn = default;
-            if (columnIndex < _columns.Length)
+            if (columnIndex < _columns.Count)
             {
                 currentColumn = _columns[columnIndex];
             }
@@ -44,15 +42,23 @@ namespace pwiz.Common.Storage
                 return this;
             }
 
-            ColumnData[] newColumns = new ColumnData[Math.Max(_columns.Length, columnIndex + 1)];
+            ColumnData[] newColumns = new ColumnData[Math.Max(_columns.Count, columnIndex + 1)];
             _columns.CopyTo(newColumns, 0);
             newColumns[columnIndex] = column;
-            return ChangeProp(ImClone(this), im => im._columns = newColumns);
+            return ChangeProp(ImClone(this), im => im._columns = ImmutableList.ValueOf(newColumns));
         }
 
-        public ColumnData GetColumnValues<T>(int columnIndex)
+        public IEnumerable<ColumnData> ColumnDatas
         {
-            if (columnIndex < _columns.Length)
+            get
+            {
+                return _columns;
+            }
+        }
+
+        public ColumnData GetColumnValues(int columnIndex)
+        {
+            if (columnIndex < _columns.Count)
             {
                 return _columns[columnIndex];
             }
@@ -68,27 +74,19 @@ namespace pwiz.Common.Storage
             return (Transposer<TRow>) Transposer;
         }
 
-        public IEnumerable<TRow> Rows
-        {
-            get
-            {
-                return Enumerable.Range(0, RowCount).Select(GetRow);
-            }
-        }
-
-        public TRow GetRow(int index) 
-        {
-            return ToRows(index, 1)[0];
-        }
-
         public new TRow[] ToRows(int start, int count)
         {
             return (TRow[])base.ToRows(start, count);
         }
 
+        public TRow GetRow(int index)
+        {
+            return ToRows(index, 1)[0];
+        }
+
         public Transposition ChangeRows(ICollection<TRow> rows)
         {
-            return ChangeColumns(GetTransposer().ToColumns(rows).Select(array=>new ColumnData(array)));
+            return ChangeColumns(GetTransposer().ToColumns(rows));
         }
     }
 
@@ -141,7 +139,7 @@ namespace pwiz.Common.Storage
         public override void EfficientlyStore<T>(IList<T> transpositions, int columnIndex)
         {
             int iTransposition = 0;
-            foreach (var newList in EfficientListStorage<TCol>.StoreLists(transpositions.Select(t=>t.GetColumnValues<TCol>(columnIndex))))
+            foreach (var newList in EfficientListStorage<TCol>.StoreLists(transpositions.Select(t=>t.GetColumnValues(columnIndex))))
             {
                 var transposition = transpositions[iTransposition];
                 transposition = (T) transposition.ChangeColumnAt(columnIndex, newList);
@@ -161,10 +159,12 @@ namespace pwiz.Common.Storage
             _columnDefs.Add(new ColumnDef<TRow,TCol>(getter, setter));
         }
 
-        public IEnumerable<Array> ToColumns(ICollection<TRow> rows)
+        public IEnumerable<ColumnData> ToColumns(ICollection<TRow> rows)
         {
-            return _columnDefs.Select(col => col.GetValues(rows));
+            return _columnDefs.Select(col => new ColumnData(col.GetValues(rows)));
         }
+
+        public abstract Transposition<TRow> Transpose(ICollection<TRow> rows);
 
         protected abstract TRow[] CreateRows(int rowCount);
         Array ITransposer.ToRows(IEnumerable<ColumnData> columns, int start, int count)

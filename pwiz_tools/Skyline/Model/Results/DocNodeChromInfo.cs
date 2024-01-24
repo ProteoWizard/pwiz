@@ -953,7 +953,7 @@ namespace pwiz.Skyline.Model.Results
                     .Select(transitionPeak => FromProtoTransitionPeak(annotationScrubber, settings, transitionPeak)).ToList();
                 lists.Add(new ChromInfoList<TransitionChromInfo>(transitionChromInfos));
             }
-            return new Results<TransitionChromInfo>(lists);
+            return Results<TransitionChromInfo>.FromChromInfoLists(lists);
         }
 
         private static TransitionChromInfo FromProtoTransitionPeak(AnnotationScrubber annotationScrubber, SrmSettings settings,
@@ -1036,6 +1036,16 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public static TransposedTransitionChromInfos Transpose(IEnumerable<TransitionChromInfo> chromInfos)
+        {
+            return TransposedTransitionChromInfos.EMPTY.ChangeResults(chromInfos);
+        }
+
+        public override ITransposer GetTransposer()
+        {
+            return TRANSPOSER;
+        }
+
         private class TransitionChromInfoTransposer : ChromInfoTransposer<TransitionChromInfo>
         {
             public TransitionChromInfoTransposer()
@@ -1063,97 +1073,11 @@ namespace pwiz.Skyline.Model.Results
             {
                 return Enumerable.Range(0, rowCount).Select(i => new TransitionChromInfo()).ToArray();
             }
-        }
-    }
 
-    public interface IResults<TItem> : IReadOnlyList<ChromInfoList<TItem>>, IEquatable<IResults<TItem>> where TItem : ChromInfo 
-    {
-        ReplicatePositions ReplicatePositions { get; }
-    }
-
-    public static class ResultsExtensions
-    {
-        public static Results<TItem> ChangeAt<TItem>(this IResults<TItem> results, int index, ChromInfoList<TItem> item) where TItem : ChromInfo
-        {
-            var resultsObject = results as Results<TItem> ?? new Results<TItem>(results);
-            return resultsObject.ChangeAt(index, item);
-        }
-
-        public static void Validate<TItem>(this IResults<TItem> results, SrmSettings settings) where TItem : ChromInfo
-        {
-            var chromatogramSets = settings.MeasuredResults.Chromatograms;
-            if (chromatogramSets.Count != results.Count)
+            public override Transposition<TransitionChromInfo> Transpose(ICollection<TransitionChromInfo> rows)
             {
-                throw new InvalidDataException(
-                    string.Format(ResultsResources.Results_Validate_DocNode_results_count__0__does_not_match_document_results_count__1__,
-                        results.Count, chromatogramSets.Count));
+                return (TransposedTransitionChromInfos) new TransposedTransitionChromInfos().ChangeColumns(ToColumns(rows));
             }
-
-            for (int i = 0; i < chromatogramSets.Count; i++)
-            {
-                var chromList = results[i];
-                if (chromList.IsEmpty)
-                    continue;
-
-                var chromatogramSet = chromatogramSets[i];
-                if (chromList.Any(chromInfo => chromatogramSet.IndexOfId(chromInfo.FileId) == -1))
-                {
-                    throw new InvalidDataException(
-                        string.Format(ResultsResources.Results_Validate_DocNode_peak_info_found_for_file_with_no_match_in_document_results));
-                }
-            }
-        }
-        public static float? GetAverageValue<TItem>(this IResults<TItem> results, Func<TItem, float?> getVal) where TItem : ChromInfo
-        {
-            int valCount = 0;
-            double valTotal = 0;
-
-            foreach (var result in results)
-            {
-                if (result.IsEmpty)
-                    continue;
-                foreach (var chromInfo in result)
-                {
-                    if (Equals(chromInfo, default(TItem)))
-                        continue;
-                    float? val = getVal(chromInfo);
-                    if (!val.HasValue)
-                        continue;
-
-                    valTotal += val.Value;
-                    valCount++;
-                }
-            }
-
-            if (valCount == 0)
-                return null;
-
-            return (float)(valTotal / valCount);
-        }
-
-        public static int GetResultsHashCode<T>(this IResults<T> results) where T : ChromInfo
-        {
-            if (results == null)
-            {
-                return 0;
-            }
-
-            return CollectionUtil.GetEnumerableHashCodeDeep(results);
-        }
-
-        public static bool ResultsEqual<T>(this IResults<T> results1, IResults<T> results2) where T : ChromInfo
-        {
-            if (ReferenceEquals(results1, results2))
-            {
-                return true;
-            }
-
-            if (ReferenceEquals(null, results1) || ReferenceEquals(null, results2))
-            {
-                return false;
-            }
-
-            return results1.SequenceEqual(results2);
         }
     }
 
@@ -1169,48 +1093,96 @@ namespace pwiz.Skyline.Model.Results
     /// in <see cref="SrmSettings.MeasuredResults"/>.  This collection will have the same
     /// number of items as the chromatograms list.
     /// </summary>
-    public sealed class Results<TItem> : AbstractReadOnlyList<ChromInfoList<TItem>>, IResults<TItem>
+    public abstract class Results<TItem> : Immutable, IReadOnlyList<ChromInfoList<TItem>>
         where TItem : ChromInfo
     {
-        private readonly ImmutableList<ChromInfoList<TItem>> _list;
-        public Results(params ChromInfoList<TItem>[] elements)
+        public static Results<TItem> FromChromInfos(ReplicatePositions replicatePositions, IEnumerable<TItem> items)
         {
-            _list = ImmutableList.ValueOf(elements);
+            return new Rows(replicatePositions, items);
         }
 
-        public Results(IEnumerable<ChromInfoList<TItem>> elements)
+        public static Results<TItem> FromColumns(ReplicatePositions replicatePositions, Transposition<TItem> columns)
         {
-            _list = ImmutableList.ValueOf(elements);
+            return new Columns(replicatePositions, columns);
         }
 
-        public override int Count
+        protected Results(ReplicatePositions replicatePositions)
         {
-            get { return _list.Count; }
+            ReplicatePositions = replicatePositions;
         }
 
-        public override ChromInfoList<TItem> this[int index]
+        IEnumerator IEnumerable.GetEnumerator()
         {
-            get { return _list[index]; }
+            return GetEnumerator();
+        }
+
+        public IEnumerator<ChromInfoList<TItem>> GetEnumerator()
+        {
+            return Enumerable.Range(0, Count).Select(i => this[i]).GetEnumerator();
+        }
+
+        public static Results<TItem> FromChromInfoLists(IList<ChromInfoList<TItem>> elements)
+        {
+            var replicatePositions = ReplicatePositions.FromCounts(elements.Select(e => e.Count));
+            return new Rows(replicatePositions, elements.SelectMany(e => e));
+        }
+
+        public int Count
+        {
+            get { return ReplicatePositions.Count; }
+        }
+
+        public ChromInfoList<TItem> this[int index]
+        {
+            get { return new ChromInfoList<TItem>(GetItems(ReplicatePositions.GetStart(index), ReplicatePositions.GetCount(index))); }
+        }
+
+        protected abstract IEnumerable<TItem> GetItems(int start, int count);
+
+        protected IEnumerable<TItem> GetItemsStartingAt(int start)
+        {
+            return GetItems(start, ReplicatePositions.TotalCount - start);
         }
 
         public Results<TItem> ChangeAt(int index, ChromInfoList<TItem> list)
         {
-            return new Results<TItem>(_list.ReplaceAt(index, list));
+            var newItems = GetItems(0, ReplicatePositions.GetStart(index - 1)).Concat(list)
+                .Concat(GetItemsStartingAt(ReplicatePositions.GetStart(index + 1)));
+            return new Rows(ReplicatePositions.ChangeCountAt(index, list.Count), newItems);
         }
 
-        public static Results<TItem> Merge(IResults<TItem> resultsOld, List<IList<TItem>> chromInfoSet)
+        public IEnumerable<TItem> FlatList
         {
-            // Check for equal results in the same positions, and swap in the old
-            // values if found to maintain reference equality.
-            if (resultsOld != null)
+            get
             {
-                for (int i = 0, len = Math.Min(resultsOld.Count, chromInfoSet.Count); i < len; i++)
-                {
-                    if (ArrayUtil.ReferencesEqual(resultsOld[i], chromInfoSet[i]) || EqualsDeep(resultsOld[i], chromInfoSet[i]))
-                        chromInfoSet[i] = resultsOld[i];
-                }
+                return this.SelectMany(chromInfoList => chromInfoList);
             }
-            return new Results<TItem>(chromInfoSet.ConvertAll(l => new ChromInfoList<TItem>(l)));
+        }
+
+        public virtual IEnumerable<ColumnData> GetColumnData(Transposer<TItem> transposer)
+        {
+            return transposer.ToColumns(FlatList.ToList());
+        }
+
+        public virtual Results<TItem> Merge(Results<TItem> resultsOld)
+        {
+            if (resultsOld == null || ReferenceEquals(this, resultsOld))
+            {
+                return this;
+            }
+
+            if (!ReferenceEquals(ReplicatePositions, resultsOld.ReplicatePositions) &&
+                Equals(ReplicatePositions, resultsOld.ReplicatePositions))
+            {
+                return ChangeProp(ImClone(this), im => im.ReplicatePositions = resultsOld.ReplicatePositions);
+            }
+
+            return this;
+        }
+
+        public static Results<TItem> Merge(Results<TItem> resultsOld, List<IList<TItem>> chromInfoSet)
+        {
+            return FromChromInfoLists(chromInfoSet.ConvertAll(l => new ChromInfoList<TItem>(l)));
         }
 
         public static Results<TItem> ChangeChromInfo(Results<TItem> results, ChromFileInfoId id, TItem newChromInfo)
@@ -1239,10 +1211,35 @@ namespace pwiz.Skyline.Model.Results
             }
             if (!found)
                 throw new InvalidOperationException(ResultsResources.ResultsGrid_ChangeChromInfo_Element_not_found);
-            return new Results<TItem>(elements);
+            return FromChromInfoLists(elements);
         }
 
-        public static bool EqualsDeep(IResults<TItem> resultsOld, IResults<TItem> results)
+        public void Validate(SrmSettings settings)
+        {
+            var chromatogramSets = settings.MeasuredResults.Chromatograms;
+            if (chromatogramSets.Count != Count)
+            {
+                throw new InvalidDataException(
+                    string.Format(ResultsResources.Results_Validate_DocNode_results_count__0__does_not_match_document_results_count__1__,
+                        Count, chromatogramSets.Count));
+            }
+
+            for (int i = 0; i < chromatogramSets.Count; i++)
+            {
+                var chromList = this[i];
+                if (chromList.IsEmpty)
+                    continue;
+
+                var chromatogramSet = chromatogramSets[i];
+                if (chromList.Any(chromInfo => chromatogramSet.IndexOfId(chromInfo.FileId) == -1))
+                {
+                    throw new InvalidDataException(
+                        string.Format(ResultsResources.Results_Validate_DocNode_peak_info_found_for_file_with_no_match_in_document_results));
+                }
+            }
+        }
+
+        public static bool EqualsDeep(Results<TItem> resultsOld, Results<TItem> results)
         {
             if (resultsOld == null && results == null)
                 return true;
@@ -1258,19 +1255,43 @@ namespace pwiz.Skyline.Model.Results
             return true;
         }
 
-        private static bool EqualsDeep(IList<TItem> chromInfosOld, IList<TItem> chromInfos)
+        private static bool EqualsDeep(IEnumerable<TItem> chromInfosOld, IEnumerable<TItem> chromInfos)
         {
-            if (!ArrayUtil.EqualsDeep(chromInfosOld, chromInfos))
-                return false;
-            if (chromInfos == null)
-                return true;
-
-            // If the arrays are otherwise equal, check the FileIds
-            for (int i = 0; i < chromInfos.Count; i++)
+            if (ReferenceEquals(chromInfosOld, chromInfos))
             {
-                if (!ReferenceEquals(chromInfosOld[i].FileId, chromInfos[i].FileId))
-                    return false;
+                return true;
             }
+
+            if (chromInfosOld == null || chromInfos == null)
+            {
+                return false;
+            }
+
+            using var enOld = chromInfosOld.GetEnumerator();
+            using var en = chromInfos.GetEnumerator();
+            while (en.MoveNext())
+            {
+                if (!enOld.MoveNext())
+                {
+                    return false;
+                }
+
+                if (!Equals(en.Current, enOld.Current))
+                {
+                    return false;
+                }
+
+                if (!ReferenceEquals(en.Current?.FileId, enOld.Current?.FileId))
+                {
+                    return false;
+                }
+            }
+
+            if (enOld.MoveNext())
+            {
+                return false;
+            }
+
             return true;
         }
 
@@ -1327,14 +1348,14 @@ namespace pwiz.Skyline.Model.Results
             return valBest;
         }
 
-        public bool Equals(IResults<TItem> other)
-        {
-            return this.ResultsEqual(other);
-        }
-
         private bool Equals(Results<TItem> other)
         {
-            return _list.Equals(other._list);
+            if (!Equals(ReplicatePositions, other.ReplicatePositions))
+            {
+                return false;
+            }
+
+            return GetItems(0, ReplicatePositions.Count).SequenceEqual(other.GetItems(0, ReplicatePositions.Count));
         }
 
         public override bool Equals(object obj)
@@ -1346,14 +1367,80 @@ namespace pwiz.Skyline.Model.Results
 
         public override int GetHashCode()
         {
-            return this.GetResultsHashCode();
+            return ReplicatePositions.GetHashCode();
         }
 
         public ReplicatePositions ReplicatePositions
         {
-            get
+            get; private set;
+        }
+
+        private class Rows : Results<TItem>
+        {
+            private ImmutableList<TItem> _items;
+            public Rows(ReplicatePositions replicatePositions, IEnumerable<TItem> items) : base(replicatePositions)
             {
-                return ReplicatePositions.FromResults(this);
+                _items = ImmutableList.ValueOfOrEmpty(items);
+                if (replicatePositions.TotalCount != _items.Count)
+                {
+                    throw new ArgumentException();
+                }
+            }
+
+            protected override IEnumerable<TItem> GetItems(int start, int count)
+            {
+                return Enumerable.Range(start, count).Select(i => _items[i]);
+            }
+
+            public override Results<TItem> Merge(Results<TItem> resultsOld)
+            {
+                var result = base.Merge(resultsOld);
+                var other = resultsOld as Rows;
+                if (other == null)
+                {
+                    return result;
+                }
+
+                var items = new List<TItem>();
+                for (int iReplicate = 0; iReplicate < ReplicatePositions.Count; iReplicate++)
+                {
+                    if (iReplicate >= other.ReplicatePositions.Count || !result[iReplicate].SequenceEqual(other[iReplicate]))
+                    {
+                        items.AddRange(result[iReplicate]);
+                    }
+                    else
+                    {
+                        items.AddRange(other[iReplicate]);
+                    }
+                }
+
+                if (ArrayUtil.ReferencesEqual(items, _items))
+                {
+                    return this;
+                }
+
+                return new Rows(result.ReplicatePositions, items);
+            }
+        }
+
+        private class Columns : Results<TItem>
+        {
+            private Transposition<TItem> _transposition;
+
+            public Columns(ReplicatePositions replicatePositions, Transposition<TItem> transposition) : base(replicatePositions)
+            {
+                _transposition = transposition;
+            }
+
+            protected override IEnumerable<TItem> GetItems(int start, int count)
+            {
+                return _transposition.ToRows(start, count);
+            }
+
+            public override IEnumerable<ColumnData> GetColumnData(Transposer<TItem> transposer)
+            {
+                Assume.AreEqual(_transposition.GetTransposer(), transposer);
+                return _transposition.ColumnDatas;
             }
         }
     }
@@ -1666,6 +1753,10 @@ namespace pwiz.Skyline.Model.Results
 
         #endregion
 
+        public virtual ITransposer GetTransposer()
+        {
+            return null;
+        }
         protected abstract class ChromInfoTransposer<T> : Transposer<T> where T : ChromInfo
         {
             protected ChromInfoTransposer()
