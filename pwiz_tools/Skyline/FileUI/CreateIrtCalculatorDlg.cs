@@ -175,6 +175,7 @@ namespace pwiz.Skyline.FileUI
             // Import transition list of standards, if applicable
             if (irtType == IrtType.separate_list)
             {
+                var userCanceled = false;
                 try
                 {
                     if (!File.Exists(textImportText.Text))
@@ -203,6 +204,7 @@ namespace pwiz.Skyline.FileUI
                             }
                             else
                             {
+                                userCanceled = true;
                                 throw new InvalidDataException(errorList[0].ErrorMessage);
                             }
                         }
@@ -212,8 +214,11 @@ namespace pwiz.Skyline.FileUI
                 }
                 catch (Exception x)
                 {
-                    MessageDlg.ShowWithException(this, string.Format(Resources.CreateIrtCalculatorDlg_OkDialog_Error_reading_iRT_standards_transition_list___0_, x.Message), x);
-                    return;
+                    if (!userCanceled)
+                    {
+                        MessageDlg.ShowWithException(this, string.Format(Resources.CreateIrtCalculatorDlg_OkDialog_Error_reading_iRT_standards_transition_list___0_, x.Message), x);
+                    }
+                    return; // Go back and try something else
                 }
             }
             else if (irtType == IrtType.protein)
