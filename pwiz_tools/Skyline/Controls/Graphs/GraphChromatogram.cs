@@ -1241,11 +1241,11 @@ namespace pwiz.Skyline.Controls.Graphs
                                            out RetentionTimeValues bestRetentionTimes)
         {
             bestRetentionTimes = null;
-            if (ChromGroupInfos.Length == 0)
+            var chromGroupInfo = ChromGroupInfos?.FirstOrDefault();
+            if (chromGroupInfo == null)
             {
                 return;
             }
-            var chromGroupInfo = ChromGroupInfos[0];
             var fileId = chromatograms.FindFile(chromGroupInfo);
 
             var nodeGroup = _nodeGroups != null ? _nodeGroups.FirstOrDefault() : null;
@@ -2514,7 +2514,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                      out bool changedGroups)
         {
             bool qcTraceNameMatches = extractor != ChromExtractor.qc ||
-                                      _arrayChromInfo?[0]?[0].QcTraceName == Settings.Default.ShowQcTraceName;
+                                      _arrayChromInfo?[0]?[0]?.QcTraceName == Settings.Default.ShowQcTraceName;
 
             if (UpdateGroups(nodeGroups, groupPaths, out changedGroups) &&
                 _extractor == extractor &&
