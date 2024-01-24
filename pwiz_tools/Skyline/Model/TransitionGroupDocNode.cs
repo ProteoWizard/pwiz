@@ -2032,7 +2032,7 @@ namespace pwiz.Skyline.Model
                 if (!Results<TransitionGroupChromInfo>.EqualsDeep(results, nodeGroupNew.Results))
                     nodeGroupNew = nodeGroupNew.ChangeResults(results);
 
-                nodeGroupNew = ((TransitionGroupDocNode)nodeGroupNew.ChangeChildrenChecked(childrenNew)).EfficientlyStoreResults(nodeGroup);
+                //nodeGroupNew = ((TransitionGroupDocNode)nodeGroupNew.ChangeChildrenChecked(childrenNew)).EfficientlyStoreResults(nodeGroup);
                 return nodeGroupNew;
             }
 
@@ -3257,7 +3257,8 @@ namespace pwiz.Skyline.Model
 
         public TransitionGroupDocNode EfficientlyStoreResults(TransitionGroupDocNode previous)
         {
-            var newNodes = ImmutableList.ValueOf(TransitionChromInfoResults.StoreResults(Transitions).Cast<DocNode>());
+            var newNodes = Children.ToArray();
+            TransitionChromInfoResults.StoreResults(newNodes);
             if (ArrayUtil.ReferencesEqual(newNodes, Children))
             {
                 return this;

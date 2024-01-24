@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
 using pwiz.Common.Collections;
+using pwiz.Common.Storage;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -514,6 +515,8 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public sealed class TransitionChromInfo : ChromInfo
     {
+        public static readonly Transposer<TransitionChromInfo> TRANSPOSER = new TransitionChromInfoTransposer();
+
         [Flags]
         private enum Flags : short
         {
@@ -529,6 +532,11 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private Flags _flags;
+
+        private TransitionChromInfo() : base(null)
+        {
+
+        }
         public TransitionChromInfo(float startRetentionTime, float endRetentionTime)
             : base(null)
         {
@@ -1025,6 +1033,34 @@ namespace pwiz.Skyline.Model.Results
             else
             {
                 _flags &= ~flag;
+            }
+        }
+
+        private class TransitionChromInfoTransposer : ChromInfoTransposer<TransitionChromInfo>
+        {
+            public TransitionChromInfoTransposer()
+            {
+                DefineColumn(c=>c._flags, (c,v)=>c._flags = v);
+                DefineColumn(c=>c.OptimizationStep, (c,v)=>c.OptimizationStep = v);
+                DefineColumn(c=>c._massError, (c,v)=>c._massError = v);
+                DefineColumn(c=>c.RetentionTime, (c,v)=>c.RetentionTime = v);
+                DefineColumn(c=>c.StartRetentionTime, (c,v)=>c.StartRetentionTime = v);
+                DefineColumn(c=>c.EndRetentionTime, (c,v)=>c.EndRetentionTime = v);
+                DefineColumn(c=>c.IonMobility, (c,v)=>c.IonMobility = v);
+                DefineColumn(c=>c.Area, (c,v)=>c.Area = v);
+                DefineColumn(c=>c.BackgroundArea, (c,v)=>c.BackgroundArea = v);
+                DefineColumn(c=>c.Height, (c,v)=>c.Height = v);
+                DefineColumn(c=>c.Fwhm, (c,v)=>c.Fwhm = v);
+                DefineColumn(c=>c.Rank, (c,v)=>c.Rank = v);
+                DefineColumn(c => c._pointsAcrossPeak, (c, v) => c._pointsAcrossPeak = v);
+                DefineColumn(c=>c._peakShapeValue, (c,v)=>c._peakShapeValue  = v);
+                DefineColumn(c=>c.Annotations, (c,v)=>c.Annotations = v);
+                DefineColumn(c=>c.UserSet, (c,v)=>c.UserSet = v);
+            }
+
+            protected override TransitionChromInfo[] CreateRows(int rowCount)
+            {
+                return Enumerable.Range(0, rowCount).Select(i => new TransitionChromInfo()).ToArray();
             }
         }
     }
@@ -1591,5 +1627,13 @@ namespace pwiz.Skyline.Model.Results
         }
 
         #endregion
+
+        protected abstract class ChromInfoTransposer<T> : Transposer<T> where T : ChromInfo
+        {
+            protected ChromInfoTransposer()
+            {
+                DefineColumn(c=>c.FileId, (c,v)=>c.FileId = v);
+            }
+        }
     }
 }

@@ -1409,6 +1409,8 @@ namespace pwiz.Skyline.Model
                                              ? nodeTran
                                              : nodeTran.ChangeResults(resultsTran));
                     }
+
+                    TransitionChromInfoResults.StoreResults(listTransNew);
                     listGroupsNew.Add(nodeGroupNew.ChangeChildrenChecked(listTransNew));
                 }
                 return (PeptideDocNode) nodePeptide.ChangeChildrenChecked(listGroupsNew);
