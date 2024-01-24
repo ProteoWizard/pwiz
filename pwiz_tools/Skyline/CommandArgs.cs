@@ -1684,7 +1684,8 @@ namespace pwiz.Skyline
                        FilterProductTypes != null ||
                        FilterStartProductIon != null ||
                        FilterEndProductIon != null ||
-                       FilterUseDIAWindowExclusion != null;
+                       FilterUseDIAWindowExclusion != null ||
+                       FilterSpecialIons != null;
             }
         }
 
