@@ -202,7 +202,7 @@ namespace pwiz.Skyline.EditUI
                 var row = _rowBindingList[rowIndex];
                 if (row.Property != null)
                 {
-                    _propertyColumns.TryGetValue(_rowBindingList[rowIndex].Property, out var propertyColumnDescriptor);
+                    _propertyColumns.TryGetValue(row.Property, out var propertyColumnDescriptor);
                     if (propertyColumnDescriptor != null)
                     {
                         autoCompleteStringCollection = AutoComplete.GetAutoCompleteValues(propertyColumnDescriptor.PropertyPath);
