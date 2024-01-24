@@ -113,7 +113,8 @@ namespace pwiz.Common.Chemistry
             // A few different possibilities here, e.g. "C12H5", "C12H5[-1.2/1.21]", "[+1.3/1.31]", "1.3/1.31"
             // Also possibly  "C12H5[-1.2/1.21]-C2H[-1.1]"
             var position = 0;
-            while (MoleculeMassOffset.StringContainsMassOffsetCue(formula))
+            var success = true;
+            while (success && MoleculeMassOffset.StringContainsMassOffsetCue(formula))
             {
                 var cuePlus = formula.IndexOf(MoleculeMassOffset.MASS_MOD_CUE_PLUS, position, StringComparison.InvariantCulture);
                 var cueMinus = formula.IndexOf(MoleculeMassOffset.MASS_MOD_CUE_MINUS, position, StringComparison.InvariantCulture);
@@ -134,18 +135,45 @@ namespace pwiz.Common.Chemistry
                 {
                     negate *= -1;
                 }
-                var monoMass = negate * double.Parse(parts[0].Substring(2).Trim(), CultureInfo.InvariantCulture);
-                modMassMono = (modMassMono??0) + monoMass;
-                modMassAverage = (modMassAverage??0) + (parts.Length > 1 ? negate * double.Parse(parts[1].Trim(), CultureInfo.InvariantCulture) : monoMass);
-                formula = formula.Substring(0, position) + formula.Substring(close + 1);
+
+                success = double.TryParse(parts[0].Substring(2).Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out var monoMassParsed);
+                if (success)
+                {
+                    monoMassParsed *= negate;
+                    modMassMono = (modMassMono??0) + monoMassParsed;
+                    var averageMassParsed = monoMassParsed;
+                    if (parts.Length > 1)
+                    {
+                        success = double.TryParse(parts[1].Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out averageMassParsed);
+                        if (success)
+                        {
+                            averageMassParsed *= negate;
+                        }
+                    }
+                    modMassAverage = (modMassAverage??0) + averageMassParsed;
+                }
+                if (success)
+                {
+                    formula = formula.Substring(0, position) + formula.Substring(close + 1);
+                }
             }
-            if (formula.Contains(@"/"))
+            if (success && formula.Contains(@"/"))
             {
                 // e.g.  "1.3/1.31"
                 var parts = formula.Split(new[] { '/' });
-                modMassMono = double.Parse(parts[0], CultureInfo.InvariantCulture);
-                modMassAverage = double.Parse(parts[1], CultureInfo.InvariantCulture);
+                double modMassAverageParsed = 0;
+                success = double.TryParse(parts[0], NumberStyles.Any, CultureInfo.InvariantCulture, out var modMassMonoParsed) &&
+                          double.TryParse(parts[1], NumberStyles.Any, CultureInfo.InvariantCulture, out modMassAverageParsed);
+                if (success)
+                {
+                    modMassMono = modMassMonoParsed;
+                    modMassAverage = modMassAverageParsed;
+                }
                 formula = string.Empty;
+            }
+            if (!success)
+            {
+                throw new ArgumentException($"Cannot parse formula \"{formulaAndMasses}\"");
             }
         }
 

@@ -235,6 +235,12 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(14, molC.Molecule["C"]);
             Assert.AreEqual(8, molC.Molecule["H"]);
 
+            // Error handling
+            AssertEx.ThrowsException<ArgumentException>(() => bioMassCalc.ParseFormulaMass("C12H5H3[-0x33]", out _));
+            AssertEx.ThrowsException<ArgumentException>(() => bioMassCalc.ParseFormulaMass("C12H5H3[+3.2/3n3]", out _));
+            AssertEx.ThrowsException<ArgumentException>(() => bioMassCalc.ParseFormulaMass("C12H5H3[-0.33]-C2[-0.11fish]", out _));
+            AssertEx.ThrowsException<ArgumentException>(() => bioMassCalc.ParseFormulaMass("C12himomH5H3[-0.33]", out _));
+
             Assert.IsTrue(IonInfo.IsFormulaWithAdduct("C12H5[+3.2/3.3][2M1.234+3H]", out var mol, out var adduct, out var neutralFormula));
             Assert.AreEqual(Adduct.FromStringAssumeChargeOnly("2M1.234+3H"), adduct);
             Assert.AreEqual("C12H5[+3.2/3.3]", neutralFormula);
