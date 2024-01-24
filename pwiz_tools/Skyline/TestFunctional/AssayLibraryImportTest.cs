@@ -92,6 +92,7 @@ namespace pwiz.SkylineTestFunctional
                 AsSmallMoleculeTestUtil.TranslateFilesToSmallMolecules(TestFilesDir.FullPath, false);
             }
             TestAssayImportGeneral();
+            DemoPause("Done with assay library detection - now on to direct Assay Library Import");
             if (!_asSmallMolecules)
             {
                 TestModificationMatcher();
@@ -101,7 +102,6 @@ namespace pwiz.SkylineTestFunctional
                 TestBlankDocScenario();
                 TestEmbeddedIrts();
             }
-            DemoPause("Done with assay library detection - now on to direct Assay Library Import");
 
             TestAssayImport2();
             if (_smallMolDemo)
@@ -531,21 +531,22 @@ namespace pwiz.SkylineTestFunctional
                 createIrtCalcGood.TextFilename = textIrt;
                 createIrtCalcGood.NewDatabaseName = newDatabase;
             });
-            DemoPause("iRT calculator creation");
+            DemoPause("iRT calculator creation, we will use a lightly edited originally peptide-oriented transition list");
             if (_asSmallMolecules)
             {
                 // Expect Skyline to not recognize column headers, and to offer user the chance to set headers
                 var importTransitionListColumnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(createIrtCalcGood.OkDialog);
-                DemoPause("Expect Skyline to not recognize column headers, and to offer user the chance to set headers");
+                DemoPause("Skyline does not recognize some column headers in the transition list, and offers the user the chance to set headers. In this test, the user is about to cancel out of the column picker.");
 
                 // Verify that cancel of column picker does not cancel the import
                 var errDlg = ShowDialog<AlertDlg>(importTransitionListColumnSelectDlg.CancelDialog);
                 // But it should show an error
-                DemoPause(" Verify that cancel of column picker does not cancel the import, but does cause an error");
+                DemoPause("As expected, cancelling the column picker does not cancel the import, but does cause an error. When the user clicks OK on the error message they will be returned to the Create iRt window.");
                 OkDialog(errDlg, errDlg.OkDialog);
+                DemoPause("Now the user will choose OK and return again to the column picker");
                 // Proceed
                 importTransitionListColumnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(createIrtCalcGood.OkDialog);
-                DemoPause("proceed");
+                DemoPause("Now the user will choose OK instead of Cancel and the import can proceed");
                 OkDialog(importTransitionListColumnSelectDlg, importTransitionListColumnSelectDlg.OkDialog);
             }
             else
