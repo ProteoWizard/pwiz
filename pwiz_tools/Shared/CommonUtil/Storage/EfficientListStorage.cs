@@ -28,14 +28,16 @@ namespace pwiz.Common.Storage
         public static IEnumerable<ColumnData> StoreLists(IEnumerable<ColumnData> lists)
         {
             var valueCache = new ValueCache();
-            var immutableLists = lists.Select(list=>Tuple.Create(list, valueCache.CacheValue(HashedImmutableList(list)))).ToList();
-            var storedLists = StoreUniqueLists(immutableLists.Select(tuple=>tuple.Item2).Distinct())
+            var columnInfos = lists.Select(list =>
+                    new ColumnDataInfo(list, valueCache.CacheValue(HashedObject.ValueOf(list.ToImmutableList<T>()))))
+                .ToList();
+            var storedLists = StoreUniqueLists(columnInfos.Where(col=>col.ImmutableList != null).Select(col=>col.ImmutableList).Distinct())
                 .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
-            foreach (var tuple in immutableLists)
+            foreach (var columnInfo in columnInfos)
             {
-                if (tuple.Item2.Value == null || !storedLists.TryGetValue(tuple.Item2, out var storedList))
+                if (columnInfo.ImmutableList == null || !storedLists.TryGetValue(columnInfo.ImmutableList, out var storedList))
                 {
-                    yield return tuple.Item1;
+                    yield return columnInfo.OriginalColumnData;
                 }
                 else
                 {
@@ -93,7 +95,7 @@ namespace pwiz.Common.Storage
                 yield break;
             }
 
-            int totalItemCount = remainingLists.Sum(list => list.OriginalList.Value.Count);
+            int totalItemCount = remainingLists.Sum(list => list.ImmutableList.Value.Count);
             var potentialSavings = (totalItemCount - allUniqueItems.Count) * (ItemSize - 1) - IntPtr.Size * remainingLists.Count;
             if (potentialSavings <= 0)
             {
@@ -103,21 +105,34 @@ namespace pwiz.Common.Storage
             var factorListBuilder = new FactorList<T>.Builder(remainingLists.SelectMany(listInfo=>listInfo.UniqueValues));
             foreach (var listInfo in remainingLists)
             {
-                yield return Tuple.Create(listInfo.OriginalList,
-                    new ColumnData(factorListBuilder.MakeFactorList(listInfo.OriginalList.Value)));
+                yield return Tuple.Create(listInfo.ImmutableList,
+                    new ColumnData(factorListBuilder.MakeFactorList(listInfo.ImmutableList.Value)));
             }
+        }
+
+        class ColumnDataInfo
+        {
+            public ColumnDataInfo(ColumnData columnData, HashedObject<ImmutableList<T>> immutableList)
+            {
+                OriginalColumnData = columnData;
+                ImmutableList = immutableList;
+            }
+
+            public ColumnData OriginalColumnData { get; }
+            
+            public HashedObject<ImmutableList<T>> ImmutableList { get; }
         }
 
         class ListInfo
         {
-            public ListInfo(HashedObject<ImmutableList<T>> originalList)
+            public ListInfo(HashedObject<ImmutableList<T>> list)
             {
-                OriginalList = originalList;
-                UniqueValues = OriginalList.Value.Distinct().ToList();
+                ImmutableList = list;
+                UniqueValues = ImmutableList.Value.Distinct().ToList();
             }
-            
-            public HashedObject<ImmutableList<T>> OriginalList { get; }
-            public IList<T> UniqueValues { get; }
+
+            public HashedObject<ImmutableList<T>> ImmutableList { get; }
+            public List<T> UniqueValues { get; }
         }
 
         private static HashedObject<ImmutableList<T>> HashedImmutableList(ColumnData list)

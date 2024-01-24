@@ -166,7 +166,6 @@
     <Compile Include="Storage\EfficientListStorage.cs" />
     <Compile Include="Storage\FactorList.cs" />
     <Compile Include="Storage\HashedObject.cs" />
-    <Compile Include="Storage\StoredList.cs" />
     <Compile Include="Storage\Transposition.cs" />
     <Compile Include="SystemUtil\CommonFormEx.cs">
       <SubType>Form</SubType>
