@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
@@ -8,7 +9,7 @@ namespace pwiz.Common.Storage
 {
     public static class EfficientListStorage
     {
-        public static IEnumerable<IReadOnlyList<T>> StoreLists<T>(IEnumerable<IReadOnlyList<T>> lists)
+        public static IEnumerable<ColumnData> StoreLists<T>(IEnumerable<ColumnData> lists)
         {
             return EfficientListStorage<T>.StoreLists(lists);
         }
@@ -16,17 +17,25 @@ namespace pwiz.Common.Storage
 
     public static class EfficientListStorage<T>
     {
-        public static IEnumerable<IReadOnlyList<T>> StoreLists(IEnumerable<IReadOnlyList<T>> lists)
+        private static int ItemSize
+        {
+            get
+            {
+                return Marshal.ReadInt32(typeof(T).TypeHandle.Value, 4);
+            }
+        }
+
+        public static IEnumerable<ColumnData> StoreLists(IEnumerable<ColumnData> lists)
         {
             var valueCache = new ValueCache();
-            var immutableLists = lists.Select(list=>valueCache.CacheValue(HashedImmutableList(list))).ToList();
-            var storedLists = StoreUniqueLists(immutableLists.Distinct())
+            var immutableLists = lists.Select(list=>Tuple.Create(list, valueCache.CacheValue(HashedImmutableList(list)))).ToList();
+            var storedLists = StoreUniqueLists(immutableLists.Select(tuple=>tuple.Item2).Distinct())
                 .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
-            foreach (var hashedImmutableList in immutableLists)
+            foreach (var tuple in immutableLists)
             {
-                if (hashedImmutableList == null || !storedLists.TryGetValue(hashedImmutableList, out var storedList))
+                if (tuple.Item2.Value == null || !storedLists.TryGetValue(tuple.Item2, out var storedList))
                 {
-                    yield return hashedImmutableList?.Value;
+                    yield return tuple.Item1;
                 }
                 else
                 {
@@ -35,12 +44,12 @@ namespace pwiz.Common.Storage
             }
         }
 
-        public static IEnumerable<Tuple<HashedObject<ImmutableList<T>>, IReadOnlyList<T>>> StoreUniqueLists(IEnumerable<HashedObject<ImmutableList<T>>> lists)
+        public static IEnumerable<Tuple<HashedObject<ImmutableList<T>>, ColumnData>> StoreUniqueLists(IEnumerable<HashedObject<ImmutableList<T>>> lists)
         {
             var remainingLists = new List<ListInfo>();
             foreach (var list in lists)
             {
-                if (list.Value.Count == 0)
+                if (list == null)
                 {
                     continue;
                 }
@@ -50,12 +59,11 @@ namespace pwiz.Common.Storage
                 {
                     if (Equals(list.Value[0], default(T)))
                     {
-                        yield return CreateTuple(list, null);
+                        yield return Tuple.Create(list, default(ColumnData));
                     }
-                    else
+                    else if (list.Value.Count > 1)
                     {
-                        yield return CreateTuple(list,
-                            new ConstantList<T>(list.Value[0], list.Value.Count));
+                        yield return Tuple.Create(list, ColumnData.Constant(list.Value[0]));
                     }
                     continue;
                 }
@@ -67,6 +75,17 @@ namespace pwiz.Common.Storage
                 yield break;
             }
 
+            if (ItemSize <= 1)
+            {
+                yield break;
+            }
+
+            var mostUniqueItems = remainingLists.Max(list => list.UniqueValues.Count);
+            if (mostUniqueItems >= byte.MaxValue)
+            {
+                yield break;
+            }
+            
             var allUniqueItems = remainingLists.SelectMany(listInfo => listInfo.UniqueValues)
                 .Where(v => !Equals(v, default(T))).ToList();
             if (allUniqueItems.Count >= byte.MaxValue)
@@ -74,11 +93,18 @@ namespace pwiz.Common.Storage
                 yield break;
             }
 
+            int totalItemCount = remainingLists.Sum(list => list.OriginalList.Value.Count);
+            var potentialSavings = (totalItemCount - allUniqueItems.Count) * (ItemSize - 1) - IntPtr.Size * remainingLists.Count;
+            if (potentialSavings <= 0)
+            {
+                yield break;
+            }
+
             var factorListBuilder = new FactorList<T>.Builder(remainingLists.SelectMany(listInfo=>listInfo.UniqueValues));
             foreach (var listInfo in remainingLists)
             {
-                yield return CreateTuple(listInfo.OriginalList,
-                    factorListBuilder.MakeFactorList(listInfo.OriginalList.Value));
+                yield return Tuple.Create(listInfo.OriginalList,
+                    new ColumnData(factorListBuilder.MakeFactorList(listInfo.OriginalList.Value)));
             }
         }
 
@@ -94,9 +120,9 @@ namespace pwiz.Common.Storage
             public IList<T> UniqueValues { get; }
         }
 
-        private static HashedObject<ImmutableList<T>> HashedImmutableList(IEnumerable<T> list)
+        private static HashedObject<ImmutableList<T>> HashedImmutableList(ColumnData list)
         {
-            return HashedObject.ValueOf(ImmutableList.ValueOf(list));
+            return HashedObject.ValueOf(list.ToImmutableList<T>());
         }
 
         private static Tuple<HashedObject<ImmutableList<T>>, IReadOnlyList<T>> CreateTuple(

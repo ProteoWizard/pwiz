@@ -9,7 +9,7 @@ namespace pwiz.Common.Storage
 {
     public abstract class Transposition : Immutable
     {
-        private IEnumerable[] _columns;
+        private ColumnData[] _columns;
         protected abstract ITransposer Transposer { get; }
         protected abstract int RowCount { get; }
 
@@ -18,7 +18,7 @@ namespace pwiz.Common.Storage
             return Transposer.ToRows(_columns, start, count);
         }
 
-        public Transposition ChangeColumns(IEnumerable<IEnumerable> columns)
+        public Transposition ChangeColumns(IEnumerable<ColumnData> columns)
         {
             return ChangeProp(ImClone(this), im =>
             {
@@ -26,44 +26,38 @@ namespace pwiz.Common.Storage
             });
         }
 
-        public Transposition ChangeColumnAt(int columnIndex, IEnumerable column)
+        public Transposition ChangeColumns(IEnumerable<Array> columns)
         {
-            IEnumerable currentColumn = null;
+            return ChangeColumns(columns.Select(array => new ColumnData(array)));
+        }
+
+        public Transposition ChangeColumnAt(int columnIndex, ColumnData column)
+        {
+            ColumnData currentColumn = default;
             if (columnIndex < _columns.Length)
             {
                 currentColumn = _columns[columnIndex];
             }
 
-            if (ReferenceEquals(currentColumn, column))
+            if (Equals(currentColumn, column))
             {
                 return this;
             }
 
-            IEnumerable[] newColumns = new IEnumerable[Math.Max(_columns.Length, columnIndex + 1)];
+            ColumnData[] newColumns = new ColumnData[Math.Max(_columns.Length, columnIndex + 1)];
             _columns.CopyTo(newColumns, 0);
             newColumns[columnIndex] = column;
             return ChangeProp(ImClone(this), im => im._columns = newColumns);
         }
 
-        public IEnumerable<T> GetColumnValues<T>(int columnIndex)
+        public ColumnData GetColumnValues<T>(int columnIndex)
         {
-            IEnumerable<T> column = null;
             if (columnIndex < _columns.Length)
             {
-                column = (IEnumerable<T>)_columns[columnIndex];
+                return _columns[columnIndex];
             }
 
-            if (column == null)
-            {
-                return null;
-            }
-
-            if (column is ImmutableList<T> immutableList)
-            {
-                return immutableList;
-            }
-
-            return column.Take(RowCount);
+            return default;
         }
     }
 
@@ -94,13 +88,13 @@ namespace pwiz.Common.Storage
 
         public Transposition ChangeRows(ICollection<TRow> rows)
         {
-            return ChangeColumns(GetTransposer().ToColumns(rows));
+            return ChangeColumns(GetTransposer().ToColumns(rows).Select(array=>new ColumnData(array)));
         }
     }
 
     public interface ITransposer
     {
-        Array ToRows(IEnumerable<IEnumerable> columns, int start, int count);
+        Array ToRows(IEnumerable<ColumnData> columns, int start, int count);
     }
 
     public abstract class ColumnDef
@@ -111,8 +105,7 @@ namespace pwiz.Common.Storage
     public abstract class ColumnDef<TRow> : ColumnDef
     {
         public abstract Array GetValues(IEnumerable<TRow> rows);
-        public abstract void SetValues(IList<TRow> rows, IEnumerable column);
-        public abstract void SetValues(IList<TRow> rows, IEnumerable column, int start);
+        public abstract void SetValues(IEnumerable<TRow> rows, ColumnData column, int start);
     }
 
     public sealed class ColumnDef<TRow, TCol> : ColumnDef<TRow>
@@ -135,40 +128,20 @@ namespace pwiz.Common.Storage
             return rows.Select(_getter).ToArray();
         }
 
-        public override void SetValues(IList<TRow> rows, IEnumerable column)
+        public override void SetValues(IEnumerable<TRow> rows, ColumnData column, int start)
         {
-            if (column == null)
-            {
-                return;
-            }
             int iRow = 0;
-            foreach (var value in column.Cast<TCol>())
+            foreach (var row in rows)
             {
-                var row = rows[iRow++];
-                _setter(row, value);
-            }
-        }
-
-        public override void SetValues(IList<TRow> rows, IEnumerable column, int start)
-        {
-            if (column == null)
-            {
-                return;
-            }
-
-            IReadOnlyList<TCol> columnList = (IReadOnlyList<TCol>)column;
-            int end = Math.Min(rows.Count, columnList.Count - start);
-            for (int iRow = 0; iRow < end; iRow++)
-            {
-                var row = rows[iRow];
-                _setter(row, columnList[iRow + start]);
+                _setter(row, column.GetValueAt<TCol>(iRow + start));
+                iRow++;
             }
         }
 
         public override void EfficientlyStore<T>(IList<T> transpositions, int columnIndex)
         {
             int iTransposition = 0;
-            foreach (var newList in EfficientListStorage<TCol>.StoreLists(transpositions.Select(t=>ImmutableList.ValueOf(t.GetColumnValues<TCol>(columnIndex)))))
+            foreach (var newList in EfficientListStorage<TCol>.StoreLists(transpositions.Select(t=>t.GetColumnValues<TCol>(columnIndex))))
             {
                 var transposition = transpositions[iTransposition];
                 transposition = (T) transposition.ChangeColumnAt(columnIndex, newList);
@@ -194,12 +167,12 @@ namespace pwiz.Common.Storage
         }
 
         protected abstract TRow[] CreateRows(int rowCount);
-        Array ITransposer.ToRows(IEnumerable<IEnumerable> columns, int start, int count)
+        Array ITransposer.ToRows(IEnumerable<ColumnData> columns, int start, int count)
         {
             return ToRows(columns, start, count);
         }
 
-        public TRow[] ToRows(IEnumerable<IEnumerable> columns, int start, int count)
+        public TRow[] ToRows(IEnumerable<ColumnData> columns, int start, int count)
         {
             var rows = CreateRows(count);
             int iColumn = 0;

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using pwiz.Common.Collections;
 using pwiz.Common.Storage;
 
@@ -116,6 +117,15 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public bool Equals(IResults<TChromInfo> other)
+        {
+            return this.ResultsEqual(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return this.GetResultsHashCode();
+        }
     }
 
     public class TransitionChromInfoResults : TransposedResults<TransitionChromInfo>

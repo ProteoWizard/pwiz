@@ -1066,7 +1066,7 @@ namespace pwiz.Skyline.Model.Results
         }
     }
 
-    public interface IResults<TItem> : IReadOnlyList<ChromInfoList<TItem>> where TItem : ChromInfo 
+    public interface IResults<TItem> : IReadOnlyList<ChromInfoList<TItem>>, IEquatable<IResults<TItem>> where TItem : ChromInfo 
     {
         ReplicatePositions ReplicatePositions { get; }
     }
@@ -1131,6 +1131,30 @@ namespace pwiz.Skyline.Model.Results
             return (float)(valTotal / valCount);
         }
 
+        public static int GetResultsHashCode<T>(this IResults<T> results) where T : ChromInfo
+        {
+            if (results == null)
+            {
+                return 0;
+            }
+
+            return CollectionUtil.GetEnumerableHashCodeDeep(results);
+        }
+
+        public static bool ResultsEqual<T>(this IResults<T> results1, IResults<T> results2) where T : ChromInfo
+        {
+            if (ReferenceEquals(results1, results2))
+            {
+                return true;
+            }
+
+            if (ReferenceEquals(null, results1) || ReferenceEquals(null, results2))
+            {
+                return false;
+            }
+
+            return results1.SequenceEqual(results2);
+        }
     }
 
     /// <summary>
@@ -1303,6 +1327,11 @@ namespace pwiz.Skyline.Model.Results
             return valBest;
         }
 
+        public bool Equals(IResults<TItem> other)
+        {
+            return this.ResultsEqual(other);
+        }
+
         private bool Equals(Results<TItem> other)
         {
             return _list.Equals(other._list);
@@ -1317,7 +1346,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override int GetHashCode()
         {
-            return _list.GetHashCode();
+            return this.GetResultsHashCode();
         }
 
         public ReplicatePositions ReplicatePositions

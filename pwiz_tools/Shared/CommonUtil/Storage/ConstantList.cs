@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,13 +7,15 @@ namespace pwiz.Common.Storage
     public class ConstantList<T> : IReadOnlyList<T>
     {
         private readonly T _value;
-        public ConstantList(T value, int count)
+        public ConstantList(T value)
         {
             _value = value;
-            Count = count;
         }
         
-        public int Count { get; }
+        public int Count
+        {
+            get { return int.MaxValue; }
+        }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
@@ -30,11 +31,6 @@ namespace pwiz.Common.Storage
         {
             get
             {
-                if (index < 0 || index >= Count)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(index));
-                }
-
                 return _value;
             }
         }
