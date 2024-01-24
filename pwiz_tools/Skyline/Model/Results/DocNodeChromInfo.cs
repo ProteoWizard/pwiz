@@ -1068,7 +1068,7 @@ namespace pwiz.Skyline.Model.Results
 
     public interface IResults<TItem> : IReadOnlyList<ChromInfoList<TItem>> where TItem : ChromInfo 
     {
-
+        ReplicatePositions ReplicatePositions { get; }
     }
 
     public static class ResultsExtensions
@@ -1318,6 +1318,14 @@ namespace pwiz.Skyline.Model.Results
         public override int GetHashCode()
         {
             return _list.GetHashCode();
+        }
+
+        public ReplicatePositions ReplicatePositions
+        {
+            get
+            {
+                return ReplicatePositions.FromResults(this);
+            }
         }
     }
 
@@ -1633,7 +1641,7 @@ namespace pwiz.Skyline.Model.Results
         {
             protected ChromInfoTransposer()
             {
-                DefineColumn(c=>c.FileId, (c,v)=>c.FileId = v);
+                DefineColumn(c=>ReferenceValue.Of(c.FileId), (c,v)=>c.FileId = v);
             }
         }
     }

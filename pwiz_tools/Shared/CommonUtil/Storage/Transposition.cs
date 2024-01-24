@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms.VisualStyles;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
@@ -12,24 +11,17 @@ namespace pwiz.Common.Storage
     {
         private IEnumerable[] _columns;
         protected abstract ITransposer Transposer { get; }
-
-        public int RowCount { get; private set; }
-
-        public Array ToRows()
-        {
-            return ToRows(0, RowCount);
-        }
+        protected abstract int RowCount { get; }
 
         public Array ToRows(int start, int count)
         {
             return Transposer.ToRows(_columns, start, count);
         }
 
-        public Transposition ChangeColumns(int rowCount, IEnumerable<IEnumerable> columns)
+        public Transposition ChangeColumns(IEnumerable<IEnumerable> columns)
         {
             return ChangeProp(ImClone(this), im =>
             {
-                im.RowCount = rowCount;
                 im._columns = columns.ToArray();
             });
         }
@@ -53,7 +45,7 @@ namespace pwiz.Common.Storage
             return ChangeProp(ImClone(this), im => im._columns = newColumns);
         }
 
-        public ImmutableList<T> GetColumnValues<T>(int columnIndex)
+        public IEnumerable<T> GetColumnValues<T>(int columnIndex)
         {
             IEnumerable<T> column = null;
             if (columnIndex < _columns.Length)
@@ -71,38 +63,38 @@ namespace pwiz.Common.Storage
                 return immutableList;
             }
 
-            return ImmutableList.ValueOf(column.Take(RowCount));
+            return column.Take(RowCount);
         }
     }
 
-    public abstract class Transposition<TRow> : Transposition, IReadOnlyList<TRow>
+    public abstract class Transposition<TRow> : Transposition
     {
-        IEnumerator IEnumerable.GetEnumerator()
+        public Transposer<TRow> GetTransposer()
         {
-            return GetEnumerator();
+            return (Transposer<TRow>) Transposer;
         }
 
-        public IEnumerator<TRow> GetEnumerator()
-        {
-            return Enumerable.Range(0, Count).Select(i => this[i]).GetEnumerator();
-        }
-
-        public int Count
-        {
-            get { return RowCount; }
-        }
-
-        public TRow this[int index] 
+        public IEnumerable<TRow> Rows
         {
             get
             {
-                return ToRows(index, 1)[0];
+                return Enumerable.Range(0, RowCount).Select(GetRow);
             }
+        }
+
+        public TRow GetRow(int index) 
+        {
+            return ToRows(index, 1)[0];
         }
 
         public new TRow[] ToRows(int start, int count)
         {
             return (TRow[])base.ToRows(start, count);
+        }
+
+        public Transposition ChangeRows(ICollection<TRow> rows)
+        {
+            return ChangeColumns(GetTransposer().ToColumns(rows));
         }
     }
 
@@ -176,7 +168,7 @@ namespace pwiz.Common.Storage
         public override void EfficientlyStore<T>(IList<T> transpositions, int columnIndex)
         {
             int iTransposition = 0;
-            foreach (var newList in EfficientListStorage<TCol>.StoreLists(transpositions.Select(t=>t.GetColumnValues<TCol>(columnIndex))))
+            foreach (var newList in EfficientListStorage<TCol>.StoreLists(transpositions.Select(t=>ImmutableList.ValueOf(t.GetColumnValues<TCol>(columnIndex)))))
             {
                 var transposition = transpositions[iTransposition];
                 transposition = (T) transposition.ChangeColumnAt(columnIndex, newList);

@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+﻿using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -26,9 +20,11 @@ namespace pwiz.SkylineTest
             var transitionChromInfo2 = new TransitionChromInfo(new ChromFileInfoId(), 13, 14, 15, 16, 17,
                 IonMobilityFilter.EMPTY, 18, 19, 20, 21, true, false, 22, PeakIdentification.TRUE, 23, 24,
                 Annotations.EMPTY, UserSet.IMPORTED, true, null);
-            var transposedResults = new TransitionChromInfoResults().ChangeColumns(2, TransitionChromInfo.TRANSPOSER.ToColumns(new[] { transitionChromInfo1, transitionChromInfo2 }));
+            var transposedResults = (TransitionChromInfoResults) new TransitionChromInfoResults(ReplicatePositions.Simple(2)).ChangeColumns(
+                TransitionChromInfo.TRANSPOSER.ToColumns(new[] { transitionChromInfo1, transitionChromInfo2 }));
             AssertEx.AreEqual(transitionChromInfo1, transposedResults.ToRows(0, 1).GetValue(0));
             AssertEx.AreEqual(transitionChromInfo2, transposedResults.ToRows(1, 1).GetValue(0));
+            AssertEx.AreEqual(transitionChromInfo2, transposedResults[1][0]);
             var array = new[] { transposedResults };
             TransitionChromInfo.TRANSPOSER.EfficientlyStore(array);
             AssertEx.AreEqual(transitionChromInfo1, array[0].ToRows(0, 1).GetValue(0));
