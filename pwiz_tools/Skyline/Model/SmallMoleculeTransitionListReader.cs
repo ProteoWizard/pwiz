@@ -253,14 +253,12 @@ namespace pwiz.Skyline.Model
                             var pair = new Tuple<Peptide, TransitionGroup, Transition>(molecule.Peptide, precursor.TransitionGroup, transition.Transition);
                             if (LibraryIntensities.TryGetValue(pair, out var intensity))
                             {
-                                var note = string.IsNullOrEmpty(transition.Annotations.Note)
-                                    ? null
-                                    : SpectrumPeakAnnotation.Create(transition.Transition.CustomIon, transition.Annotations.Note);
+                                var note = SpectrumPeakAnnotation.Create(transition.Transition.CustomIon, transition.Annotations.Note);
                                 spectrum.Add(new SpectrumPeaksInfo.MI
                                 {
                                     Mz = transition.Mz,
                                     Intensity = (float)intensity.Median(),
-                                    Annotations = new List<SpectrumPeakAnnotation> { note ?? SpectrumPeakAnnotation.EMPTY }
+                                    Annotations = new List<SpectrumPeakAnnotation> { note }
                                 });
                             }
                         }
