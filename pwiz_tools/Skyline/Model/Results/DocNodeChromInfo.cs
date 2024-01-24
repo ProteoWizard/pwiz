@@ -1052,6 +1052,7 @@ namespace pwiz.Skyline.Model.Results
                 DefineColumn(c=>c.Height, (c,v)=>c.Height = v);
                 DefineColumn(c=>c.Fwhm, (c,v)=>c.Fwhm = v);
                 DefineColumn(c=>c.Rank, (c,v)=>c.Rank = v);
+                DefineColumn(c=>c.RankByLevel, (c,v)=>c.RankByLevel = v);
                 DefineColumn(c => c._pointsAcrossPeak, (c, v) => c._pointsAcrossPeak = v);
                 DefineColumn(c=>c._peakShapeValue, (c,v)=>c._peakShapeValue  = v);
                 DefineColumn(c=>c.Annotations, (c,v)=>c.Annotations = v);

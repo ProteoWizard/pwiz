@@ -40,7 +40,7 @@ namespace pwiz.Common.Storage
             var remainingLists = new List<ListInfo>();
             foreach (var list in lists)
             {
-                if (list.Value.Count <= 2)
+                if (list.Value.Count == 0)
                 {
                     continue;
                 }
@@ -48,8 +48,15 @@ namespace pwiz.Common.Storage
                 var listInfo = new ListInfo(list);
                 if (listInfo.UniqueValues.Count == 1)
                 {
-                    yield return CreateTuple(list,
-                        new ConstantList<T>(list.Value[0], list.Value.Count));
+                    if (Equals(list.Value[0], default(T)))
+                    {
+                        yield return CreateTuple(list, null);
+                    }
+                    else
+                    {
+                        yield return CreateTuple(list,
+                            new ConstantList<T>(list.Value[0], list.Value.Count));
+                    }
                     continue;
                 }
                 remainingLists.Add(listInfo);
