@@ -477,9 +477,7 @@ namespace SkylineTester
                 var myId = Process.GetCurrentProcess().Id;
                 var query = string.Format("SELECT ParentProcessId FROM Win32_Process WHERE ProcessId = {0}", myId);
                 var search = new ManagementObjectSearcher("root\\CIMV2", query);
-                var results = search.Get().GetEnumerator();
-                results.MoveNext();
-                var queryObj = results.Current;
+                var queryObj = search.Get().Cast<ManagementBaseObject>().First();
                 var parentId = (uint) queryObj["ParentProcessId"];
                 var parent = Process.GetProcessById((int) parentId);
                 // Only go interactive if our parent process is not named "SkylineNightly"
