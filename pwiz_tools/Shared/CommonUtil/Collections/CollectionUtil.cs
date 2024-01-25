@@ -71,13 +71,8 @@ namespace pwiz.Common.Collections
         }
         public static int GetHashCodeDeep<T>(IList<T> list)
         {
-            return GetEnumerableHashCodeDeep(list);
+            return list.Aggregate(0, (seed, item) => seed*397 + SafeGetHashCode(item));
         }
-        public static int GetEnumerableHashCodeDeep<T>(IEnumerable<T> list)
-        {
-            return list.Aggregate(0, (seed, item) => seed * 397 + SafeGetHashCode(item));
-        }
-
         public static int SafeGetHashCode<T>(T item)
         {
             return Equals(null, item) ? 0 : item.GetHashCode();
