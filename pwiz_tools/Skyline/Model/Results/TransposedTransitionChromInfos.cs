@@ -108,6 +108,7 @@ namespace pwiz.Skyline.Model.Results
     public class TransposedTransitionChromInfos : TransposedResults<TransitionChromInfo>
     {
         public static readonly TransposedTransitionChromInfos EMPTY = new TransposedTransitionChromInfos();
+        public static int MIN_RESULTS_TO_TRANSPOSE = 0;
         public override Transposer<TransitionChromInfo> GetTransposer()
         {
             return TransitionChromInfo.TRANSPOSER;
@@ -115,6 +116,19 @@ namespace pwiz.Skyline.Model.Results
 
         public static void StoreResults<T>(ValueCache valueCache, IList<T> transitionDocNodes) where T : DocNode
         {
+            if (MIN_RESULTS_TO_TRANSPOSE > 0)
+            {
+                if (!transitionDocNodes.Cast<TransitionDocNode>().Any(d => d.Results?.ReplicatePositions.TotalCount >= MIN_RESULTS_TO_TRANSPOSE))
+                {
+                    return;
+                }
+            }
+
+            if (transitionDocNodes.Cast<TransitionDocNode>().All(docNode => false != docNode.Results?.IsColumnar))
+            {
+                // Everything already transposed: no work to do
+                return;
+            }
             var transposedResults = new TransposedTransitionChromInfos[transitionDocNodes.Count];
             for (int i = 0; i < transitionDocNodes.Count; i++)
             {
@@ -128,7 +142,7 @@ namespace pwiz.Skyline.Model.Results
                 if (transposedResults[i] != null)
                 {
                     var docNode = (TransitionDocNode)(object)transitionDocNodes[i];
-                    docNode = docNode.ChangeOptimizedResults(
+                    docNode = docNode.StoreOptimizedResults(
                         Results<TransitionChromInfo>.FromColumns(docNode.Results.ReplicatePositions,
                             transposedResults[i]));
                     transitionDocNodes[i] = (T)(object)docNode;

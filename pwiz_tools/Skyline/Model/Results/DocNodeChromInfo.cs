@@ -1165,6 +1165,14 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public virtual bool IsColumnar
+        {
+            get
+            {
+                return false;
+            }
+        }
+
         public virtual IEnumerable<ColumnData> GetColumnData(Transposer<TItem> transposer)
         {
             return transposer.ToColumns(FlatList.ToList());
@@ -1470,6 +1478,14 @@ namespace pwiz.Skyline.Model.Results
             {
                 Assume.AreEqual(_transposition.GetTransposer(), transposer);
                 return _transposition.ColumnDatas;
+            }
+
+            public override bool IsColumnar
+            {
+                get
+                {
+                    return true;
+                }
             }
         }
     }

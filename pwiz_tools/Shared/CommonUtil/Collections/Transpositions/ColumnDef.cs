@@ -60,7 +60,7 @@ namespace pwiz.Common.Collections.Transpositions
         {
             int iTransposition = 0;
 
-            foreach (var newList in optimizer.StoreLists(transpositions.Select(t => t.GetColumnValues(columnIndex))))
+            foreach (var newList in optimizer.OptimizeMemoryUsage(transpositions.Select(t => t.GetColumnValues(columnIndex))))
             {
                 var transposition = transpositions[iTransposition];
                 transposition = (T)transposition.ChangeColumnAt(columnIndex, newList);

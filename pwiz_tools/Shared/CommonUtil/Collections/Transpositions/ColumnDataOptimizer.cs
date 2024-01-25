@@ -1,4 +1,22 @@
-﻿using pwiz.Common.SystemUtil;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2024 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using pwiz.Common.SystemUtil;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,6 +24,9 @@ using System.Runtime.InteropServices;
 
 namespace pwiz.Common.Collections.Transpositions
 {
+    /// <summary>
+    /// Reduces the amount of memory that is used by collections of <see cref="ColumnData"/>
+    /// </summary>
     public class ColumnDataOptimizer<T>
     {
         public ColumnDataOptimizer() : this(null, ComputeItemSize())
@@ -18,6 +39,12 @@ namespace pwiz.Common.Collections.Transpositions
             ItemSize = itemSize;
         }
         
+        /// <summary>
+        /// The amount of memory that each item in the list is assumed to take.
+        /// This does not need to be exact. It is used to decide whether a
+        /// list can be made smaller by converting it into a <see cref="FactorList{T}"/> that is
+        /// indexed with a <see cref="ByteList"/>.
+        /// </summary>
         public int ItemSize { get; private set; }
 
         public static int ComputeItemSize()
@@ -32,31 +59,18 @@ namespace pwiz.Common.Collections.Transpositions
         
         public ValueCache ValueCache { get; private set; }
         
-        public IEnumerable<ColumnData> StoreLists(IEnumerable<ColumnData> lists)
+        public IEnumerable<ColumnData> OptimizeMemoryUsage(IEnumerable<ColumnData> columnDataList)
         {
-            var localValueCache = new ValueCache();
-            var columnInfos = new List<ColumnDataInfo>();
-            foreach (var list in lists)
-            {
-                var immutableList = list.ToImmutableList<T>();
-                if (immutableList == null)
-                {
-                    columnInfos.Add(new ColumnDataInfo(list, null));
-                }
-                else if (true == ValueCache?.TryGetCachedValue(ref immutableList))
-                {
-                    columnInfos.Add(new ColumnDataInfo(ColumnData.Immutable(immutableList), null));
-                }
-                else
-                {
-                    columnInfos.Add(new ColumnDataInfo(list, localValueCache.CacheValue(HashedObject.ValueOf(immutableList))));
-                }
-            }
-            var storedLists = StoreUniqueLists(columnInfos.Where(col => col.ImmutableList != null).Select(col => col.ImmutableList).Distinct())
-                .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
+            var columnInfos = GetColumnDataInfos(columnDataList);
+
+            var columnDataValues = columnInfos.Where(col => col.ColumnValues != null).Select(col => col.ColumnValues)
+                .Distinct().ToList();
+            
+            var optimizedColumnValues = OptimizeColumnDataValues(columnDataValues);
+            
             foreach (var columnInfo in columnInfos)
             {
-                if (columnInfo.ImmutableList == null || !storedLists.TryGetValue(columnInfo.ImmutableList, out var storedList))
+                if (columnInfo.ColumnValues == null || !optimizedColumnValues.TryGetValue(columnInfo.ColumnValues, out var storedList))
                 {
                     yield return columnInfo.OriginalColumnData;
                 }
@@ -64,7 +78,12 @@ namespace pwiz.Common.Collections.Transpositions
                 {
                     if (ValueCache != null && storedList.IsImmutableList<T>())
                     {
-                        yield return ColumnData.Immutable(ValueCache.CacheValue(storedList.ToImmutableList<T>()));
+                        var columnValues = storedList.TryGetValues<T>();
+                        if (columnValues == null)
+                        {
+                            throw new InvalidOperationException();
+                        }
+                        yield return ColumnData.Immutable(ValueCache.CacheValue(columnValues));
                     }
                     else
                     {
@@ -74,91 +93,129 @@ namespace pwiz.Common.Collections.Transpositions
             }
         }
 
-        public IEnumerable<Tuple<HashedObject<ImmutableList<T>>, ColumnData>> StoreUniqueLists(IEnumerable<HashedObject<ImmutableList<T>>> lists)
+        private List<ColumnDataInfo> GetColumnDataInfos(IEnumerable<ColumnData> columnDataList)
         {
-            var remainingLists = new List<ListInfo>();
-            foreach (var list in lists)
+            var localValueCache = new ValueCache();
+            var columnInfos = new List<ColumnDataInfo>();
+            foreach (var columnData in columnDataList)
+            {
+                var columnValues = columnData.TryGetValues<T>();
+                if (columnValues == null)
+                {
+                    // ColumnData is either empty or a constant: can't be optimized any more
+                    columnInfos.Add(new ColumnDataInfo(columnData, null));
+                }
+                else if (true == ValueCache?.TryGetCachedValue(ref columnValues))
+                {
+                    columnInfos.Add(new ColumnDataInfo(ColumnData.Immutable(columnValues), null));
+                }
+                else
+                {
+                    columnInfos.Add(new ColumnDataInfo(columnData, localValueCache.CacheValue(HashedObject.ValueOf(columnValues))));
+                }
+            }
+
+            return columnInfos;
+        }
+
+        public Dictionary<HashedObject<ImmutableList<T>>, ColumnData> OptimizeColumnDataValues(
+            IList<HashedObject<ImmutableList<T>>> columnDataValues)
+        {
+            IList<ColumnDataValueInfo> remainingLists = new List<ColumnDataValueInfo>();
+            var storedLists = new Dictionary<HashedObject<ImmutableList<T>>, ColumnData>();
+            foreach (var list in columnDataValues)
             {
                 if (list == null)
                 {
                     continue;
                 }
 
-                var listInfo = new ListInfo(list);
+                var listInfo = new ColumnDataValueInfo(list);
                 if (listInfo.UniqueValues.Count == 1)
                 {
                     if (Equals(list.Value[0], default(T)))
                     {
-                        yield return Tuple.Create(list, default(ColumnData));
+                        storedLists.Add(list, default);
                     }
                     else if (list.Value.Count > 1)
                     {
-                        yield return Tuple.Create(list, ColumnData.Constant(list.Value[0]));
+                        storedLists.Add(list, ColumnData.Constant(list.Value[0]));
                     }
+
                     continue;
                 }
+
                 remainingLists.Add(listInfo);
             }
 
             if (remainingLists.Count == 0)
             {
-                yield break;
+                return storedLists;
             }
 
+            // ReSharper disable once RedundantAssignment
+            remainingLists = MakeFactorLists(storedLists, remainingLists);
+            return storedLists;
+        }
+
+        protected IList<ColumnDataValueInfo> MakeFactorLists(
+            Dictionary<HashedObject<ImmutableList<T>>, ColumnData> storedLists, IList<ColumnDataValueInfo> remainingLists)
+        {
             if (ItemSize <= 1)
             {
-                yield break;
+                return remainingLists;
             }
 
             var mostUniqueItems = remainingLists.Max(list => list.UniqueValues.Count);
             if (mostUniqueItems >= byte.MaxValue)
             {
-                yield break;
+                return remainingLists;
             }
 
             var allUniqueItems = remainingLists.SelectMany(listInfo => listInfo.UniqueValues)
-                .Where(v => !Equals(v, default(T))).ToList();
+                .Where(v => !Equals(v, default(T))).Distinct().ToList();
             if (allUniqueItems.Count >= byte.MaxValue)
             {
-                yield break;
+                return remainingLists;
             }
 
-            int totalItemCount = remainingLists.Sum(list => list.ImmutableList.Value.Count);
+            int totalItemCount = remainingLists.Sum(list => list.ColumnValues.Value.Count);
             var potentialSavings = (totalItemCount - allUniqueItems.Count) * (ItemSize - 1) - IntPtr.Size * remainingLists.Count;
             if (potentialSavings <= 0)
             {
-                yield break;
+                return remainingLists;
             }
 
             var factorListBuilder = new FactorList<T>.Builder(remainingLists.SelectMany(listInfo => listInfo.UniqueValues));
             foreach (var listInfo in remainingLists)
             {
-                yield return Tuple.Create(listInfo.ImmutableList,
-                    ColumnData.FactorList(factorListBuilder.MakeFactorList(listInfo.ImmutableList.Value)));
+                storedLists.Add(listInfo.ColumnValues, ColumnData.FactorList(factorListBuilder.MakeFactorList(listInfo.ColumnValues.Value)));
             }
+
+            return ImmutableList.Empty<ColumnDataValueInfo>();
         }
 
-        class ColumnDataInfo
+        protected class ColumnDataInfo
         {
-            public ColumnDataInfo(ColumnData columnData, HashedObject<ImmutableList<T>> immutableList)
+            public ColumnDataInfo(ColumnData columnData, HashedObject<ImmutableList<T>> columnValues)
             {
                 OriginalColumnData = columnData;
-                ImmutableList = immutableList;
+                ColumnValues = columnValues;
             }
 
             public ColumnData OriginalColumnData { get; }
-            public HashedObject<ImmutableList<T>> ImmutableList { get; }
+            public HashedObject<ImmutableList<T>> ColumnValues { get; }
         }
 
-        class ListInfo
+        protected class ColumnDataValueInfo
         {
-            public ListInfo(HashedObject<ImmutableList<T>> list)
+            public ColumnDataValueInfo(HashedObject<ImmutableList<T>> list)
             {
-                ImmutableList = list;
-                UniqueValues = ImmutableList.Value.Distinct().ToList();
+                ColumnValues = list;
+                UniqueValues = ColumnValues.Value.Distinct().ToList();
             }
 
-            public HashedObject<ImmutableList<T>> ImmutableList { get; }
+            public HashedObject<ImmutableList<T>> ColumnValues { get; }
             public List<T> UniqueValues { get; }
         }
     }

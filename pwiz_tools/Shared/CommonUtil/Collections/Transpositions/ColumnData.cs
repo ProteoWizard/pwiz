@@ -57,7 +57,7 @@ namespace pwiz.Common.Collections.Transpositions
             return readOnlyList[index];
         }
 
-        public ImmutableList<T> ToImmutableList<T>()
+        public ImmutableList<T> TryGetValues<T>()
         {
             return ImmutableList.ValueOf(_data as IReadOnlyList<T>);
         }
