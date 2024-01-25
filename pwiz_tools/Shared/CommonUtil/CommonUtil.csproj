@@ -112,6 +112,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Collections\DisposableCollection.cs" />
     <Compile Include="Collections\Transpositions\ColumnData.cs" />
     <Compile Include="Collections\Transpositions\ColumnDataOptimizer.cs" />
     <Compile Include="Collections\Transpositions\ColumnDef.cs" />

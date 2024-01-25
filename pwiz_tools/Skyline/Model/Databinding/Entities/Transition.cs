@@ -174,13 +174,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
         [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
-        public char? CleavageAa
+        public string CleavageAa
         {
             get
             {
                 return IsCustomTransition()
-                    ? default(char?) 
-                    : DocNode.Transition.AA;
+                    ? null 
+                    : DocNode.Transition.AA.ToString();
             }
         }
         [Format(NullValue = TextUtil.EXCEL_NA)]
