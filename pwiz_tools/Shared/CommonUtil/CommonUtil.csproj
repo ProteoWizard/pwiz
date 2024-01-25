@@ -112,6 +112,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Collections\Transpositions\ColumnData.cs" />
+    <Compile Include="Collections\Transpositions\ColumnDataOptimizer.cs" />
+    <Compile Include="Collections\Transpositions\ColumnDef.cs" />
+    <Compile Include="Collections\Transpositions\Transposer.cs" />
     <Compile Include="CommonApplicationSettings.cs" />
     <Compile Include="Chemistry\AminoAcidFormulas.cs" />
     <Compile Include="Chemistry\Formula.cs" />
@@ -164,7 +168,7 @@
     <Compile Include="Collections\ByteList.cs" />
     <Compile Include="Collections\FactorList.cs" />
     <Compile Include="SystemUtil\HashedObject.cs" />
-    <Compile Include="Collections\Transposition.cs" />
+    <Compile Include="Collections\Transpositions\Transposition.cs" />
     <Compile Include="SystemUtil\CommonFormEx.cs">
       <SubType>Form</SubType>
     </Compile>

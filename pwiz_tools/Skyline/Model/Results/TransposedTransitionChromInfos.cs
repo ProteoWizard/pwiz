@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.Collections.Transpositions;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Results
@@ -107,7 +108,7 @@ namespace pwiz.Skyline.Model.Results
     public class TransposedTransitionChromInfos : TransposedResults<TransitionChromInfo>
     {
         public static readonly TransposedTransitionChromInfos EMPTY = new TransposedTransitionChromInfos();
-        public override Transposer GetTransposer()
+        public override Transposer<TransitionChromInfo> GetTransposer()
         {
             return TransitionChromInfo.TRANSPOSER;
         }
@@ -127,7 +128,7 @@ namespace pwiz.Skyline.Model.Results
                 if (transposedResults[i] != null)
                 {
                     var docNode = (TransitionDocNode)(object)transitionDocNodes[i];
-                    docNode = docNode.ChangeResults(
+                    docNode = docNode.ChangeOptimizedResults(
                         Results<TransitionChromInfo>.FromColumns(docNode.Results.ReplicatePositions,
                             transposedResults[i]));
                     transitionDocNodes[i] = (T)(object)docNode;

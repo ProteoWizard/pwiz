@@ -1406,6 +1406,7 @@ namespace pwiz.Skyline.Model
                         nodeGroupNew = nodeGroup.ChangeResults(resultsGroup);
 
                     var listTransNew = new List<DocNode>();
+                    bool anyChanges = false;
                     foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                     {
                         // Update transition ratios
@@ -1413,12 +1414,21 @@ namespace pwiz.Skyline.Model
                         var listTranInfoList = _listResultCalcs.ConvertAll(calc =>
                             calc.UpdateTransitionUserSetMatched(nodeTranConvert.Results[calc.ResultsIndex], isMatching));
                         var resultsTran = Results<TransitionChromInfo>.Merge(nodeTran.Results, listTranInfoList);
-                        listTransNew.Add(ReferenceEquals(resultsTran, nodeTran.Results)
-                                             ? nodeTran
-                                             : nodeTran.ChangeResults(resultsTran));
+                        if (ReferenceEquals(resultsTran, nodeTran.Results))
+                        {
+                            listTransNew.Add(nodeTran);
+                        }
+                        else
+                        {
+                            anyChanges = true;
+                            listTransNew.Add(nodeTran.ChangeResults(resultsTran));
+                        }
                     }
 
-                    TransposedTransitionChromInfos.StoreResults(ValueCache, listTransNew);
+                    if (anyChanges)
+                    {
+                        TransposedTransitionChromInfos.StoreResults(ValueCache, listTransNew);
+                    }
                     listGroupsNew.Add(nodeGroupNew.ChangeChildrenChecked(listTransNew));
                 }
                 return (PeptideDocNode) nodePeptide.ChangeChildrenChecked(listGroupsNew);

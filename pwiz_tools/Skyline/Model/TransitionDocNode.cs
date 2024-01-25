@@ -883,6 +883,11 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im => im.Results = prop);
         }
 
+        public TransitionDocNode ChangeOptimizedResults(Results<TransitionChromInfo> prop)
+        {
+            return ChangeProp(ImClone(this), im => im.Results = prop);
+        }
+
         public TransitionDocNode ChangeResultsRank(int? prop)
         {
             return ChangeProp(ImClone(this), im => im.ResultsRank = prop);

@@ -1283,7 +1283,7 @@ namespace pwiz.Skyline.Model
                     select ((TransitionDocNode)child).Key(this));
             }
 
-            var resultsCalc = new TransitionGroupResultsCalculator(settingsNew, nodePep, this, dictChromIdIndex);
+            var resultsCalc = new TransitionGroupResultsCalculator(settingsNew, diff.ValueCache, nodePep, this, dictChromIdIndex);
             var measuredResults = settingsNew.MeasuredResults;
             List<IList<ChromatogramGroupInfo>> allChromatogramGroupInfos = null;
             try
@@ -1944,12 +1944,13 @@ namespace pwiz.Skyline.Model
             private readonly IDictionary<int, int> _dictChromIdIndex;
 
             public TransitionGroupResultsCalculator(SrmSettings settings,
+                                                    ValueCache valueCache,
                                                     PeptideDocNode nodePep,
                                                     TransitionGroupDocNode nodeGroup,                                                    
                                                     IDictionary<int, int> dictChromIdIndex)
             {
                 Settings = settings;
-
+                ValueCache = valueCache;
                 _nodePep = nodePep;
                 _nodeGroup = nodeGroup;
                 _dictChromIdIndex = dictChromIdIndex;
@@ -1965,6 +1966,7 @@ namespace pwiz.Skyline.Model
             }
 
             private SrmSettings Settings { get; set; }
+            public ValueCache ValueCache { get; }
 
             public void AddSet()
             {
@@ -2023,6 +2025,11 @@ namespace pwiz.Skyline.Model
                 {
                     var nodeTran = (TransitionDocNode)nodeGroup.Children[iTran];
                     childrenNew.Add(UpdateTransitionNode(nodeTran, iTran));
+                }
+
+                if (!ArrayUtil.ReferencesEqual(childrenNew, nodeGroup.Children))
+                {
+                    TransposedTransitionChromInfos.StoreResults(ValueCache, childrenNew);
                 }
 
                 var listChromInfoLists = _listResultCalcs.ConvertAll(calc => calc.CalcChromInfoList());

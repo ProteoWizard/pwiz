@@ -22,7 +22,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
+using NHibernate.Criterion;
 using pwiz.Common.Collections;
+using pwiz.Common.Collections.Transpositions;
+using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -514,7 +517,7 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public sealed class TransitionChromInfo : ChromInfo
     {
-        public static readonly Transposition<TransitionChromInfo>.Transposer TRANSPOSER = new TransitionChromInfoTransposer();
+        public static readonly Transposer<TransitionChromInfo> TRANSPOSER = new TransitionChromInfoTransposer();
 
         [Flags]
         private enum Flags : short
@@ -1040,7 +1043,7 @@ namespace pwiz.Skyline.Model.Results
             return TransposedTransitionChromInfos.EMPTY.ChangeResults(chromInfos);
         }
 
-        public Transposition<TransitionChromInfo>.Transposer GetTransposer()
+        public Transposer<TransitionChromInfo> GetTransposer()
         {
             return TRANSPOSER;
         }
@@ -1162,7 +1165,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public virtual IEnumerable<Transposition.ColumnData> GetColumnData(Transposition<TItem>.Transposer transposer)
+        public virtual IEnumerable<ColumnData> GetColumnData(Transposer<TItem> transposer)
         {
             return transposer.ToColumns(FlatList.ToList());
         }
@@ -1172,6 +1175,11 @@ namespace pwiz.Skyline.Model.Results
             if (resultsOld == null || ReferenceEquals(this, resultsOld))
             {
                 return this;
+            }
+
+            if (EqualsDeep(this, resultsOld))
+            {
+                return resultsOld;
             }
 
             if (!ReferenceEquals(ReplicatePositions, resultsOld.ReplicatePositions) &&
@@ -1185,7 +1193,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static Results<TItem> Merge(Results<TItem> resultsOld, List<IList<TItem>> chromInfoSet)
         {
-            return FromChromInfoLists(chromInfoSet.ConvertAll(l => new ChromInfoList<TItem>(l)));
+            return FromChromInfoLists(chromInfoSet.ConvertAll(l => new ChromInfoList<TItem>(l))).Merge(resultsOld);
         }
 
         public static Results<TItem> ChangeChromInfo(Results<TItem> results, ChromFileInfoId id, TItem newChromInfo)
@@ -1397,23 +1405,32 @@ namespace pwiz.Skyline.Model.Results
 
             public override Results<TItem> Merge(Results<TItem> resultsOld)
             {
-                var result = base.Merge(resultsOld);
-                var other = resultsOld as Rows;
-                if (other == null)
+                var merged = base.Merge(resultsOld);
+                if (ReferenceEquals(merged, resultsOld))
                 {
-                    return result;
+                    return merged;
                 }
 
+                if (resultsOld is Rows oldRows && merged is Rows resultRows)
+                {
+                    return resultRows.MergeRows(oldRows);
+                }
+
+                return merged;
+            }
+
+            private Results<TItem> MergeRows(Rows oldRows)
+            {
                 var items = new List<TItem>();
                 for (int iReplicate = 0; iReplicate < ReplicatePositions.ReplicateCount; iReplicate++)
                 {
-                    if (iReplicate >= other.ReplicatePositions.ReplicateCount || !result[iReplicate].SequenceEqual(other[iReplicate]))
+                    if (iReplicate >= oldRows.ReplicatePositions.ReplicateCount || !this[iReplicate].SequenceEqual(oldRows[iReplicate]))
                     {
-                        items.AddRange(result[iReplicate]);
+                        items.AddRange(this[iReplicate]);
                     }
                     else
                     {
-                        items.AddRange(other[iReplicate]);
+                        items.AddRange(oldRows[iReplicate]);
                     }
                 }
 
@@ -1422,7 +1439,8 @@ namespace pwiz.Skyline.Model.Results
                     return this;
                 }
 
-                return new Rows(result.ReplicatePositions, items);
+                return new Rows(ReplicatePositions, items);
+
             }
 
             public override IEnumerable<TItem> FlatList
@@ -1448,7 +1466,7 @@ namespace pwiz.Skyline.Model.Results
                 return _transposition.ToRows(start, count);
             }
 
-            public override IEnumerable<Transposition.ColumnData> GetColumnData(Transposition<TItem>.Transposer transposer)
+            public override IEnumerable<ColumnData> GetColumnData(Transposer<TItem> transposer)
             {
                 Assume.AreEqual(_transposition.GetTransposer(), transposer);
                 return _transposition.ColumnDatas;
@@ -1764,11 +1782,29 @@ namespace pwiz.Skyline.Model.Results
 
         #endregion
 
-        protected abstract class ChromInfoTransposer<T> : Transposition<T>.Transposer where T : ChromInfo
+        protected abstract class ChromInfoTransposer<T> : Transposer<T> where T : ChromInfo
         {
             protected ChromInfoTransposer()
             {
-                DefineColumn(c=>ReferenceValue.Of(c.FileId), (c,v)=>c.FileId = v, true);
+                AddColumn(new FileIdColumn());
+            }
+
+            private class FileIdColumn : ColumnDef<T, ReferenceValue<ChromFileInfoId>>
+            {
+                protected override ReferenceValue<ChromFileInfoId> GetValue(T row)
+                {
+                    return ReferenceValue.Of(row.FileId);
+                }
+
+                protected override void SetValue(T row, ReferenceValue<ChromFileInfoId> value)
+                {
+                    row.FileId = value;
+                }
+
+                public override ColumnDataOptimizer<ReferenceValue<ChromFileInfoId>> GetColumnDataOptimizer(ValueCache valueCache)
+                {
+                    return new ColumnDataOptimizer<ReferenceValue<ChromFileInfoId>>(valueCache, IntPtr.Size);
+                }
             }
         }
     }
