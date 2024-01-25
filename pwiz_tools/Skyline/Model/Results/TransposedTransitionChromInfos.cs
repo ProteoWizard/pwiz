@@ -85,6 +85,20 @@ namespace pwiz.Skyline.Model.Results
                 .Concat(Enumerable.Range(index + 1, ReplicateCount - index - 1)));
         }
 
+        private bool Equals(ReplicatePositions other)
+        {
+            return _replicateEndPositions.Equals(other._replicateEndPositions);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return ReferenceEquals(this, obj) || obj is ReplicatePositions other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return _replicateEndPositions.GetHashCode();
+        }
     }
     public abstract class TransposedResults<TChromInfo> : Transposition<TChromInfo> where TChromInfo : ChromInfo
     {

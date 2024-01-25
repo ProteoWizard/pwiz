@@ -1154,7 +1154,7 @@ namespace pwiz.Skyline.Model.Results
             return new Rows(ReplicatePositions.ChangeCountAt(index, list.Count), newItems);
         }
 
-        public IEnumerable<TItem> FlatList
+        public virtual IEnumerable<TItem> FlatList
         {
             get
             {
@@ -1358,7 +1358,7 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             }
 
-            return GetItems(0, ReplicatePositions.ReplicateCount).SequenceEqual(other.GetItems(0, ReplicatePositions.ReplicateCount));
+            return FlatList.SequenceEqual(other.FlatList);
         }
 
         public override bool Equals(object obj)
@@ -1423,6 +1423,14 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 return new Rows(result.ReplicatePositions, items);
+            }
+
+            public override IEnumerable<TItem> FlatList
+            {
+                get
+                {
+                    return _items;
+                }
             }
         }
 
