@@ -2,9 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using pwiz.Common.Collections;
 
-namespace pwiz.Common.Storage
+namespace pwiz.Common.Collections
 {
     public class FactorList<T> : IReadOnlyList<T>
     {

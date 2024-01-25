@@ -161,12 +161,10 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Images.resx</DependentUpon>
     </Compile>
-    <Compile Include="Storage\ByteList.cs" />
-    <Compile Include="Storage\ColumnData.cs" />
-    <Compile Include="Storage\EfficientListStorage.cs" />
-    <Compile Include="Storage\FactorList.cs" />
-    <Compile Include="Storage\HashedObject.cs" />
-    <Compile Include="Storage\Transposition.cs" />
+    <Compile Include="Collections\ByteList.cs" />
+    <Compile Include="Collections\FactorList.cs" />
+    <Compile Include="SystemUtil\HashedObject.cs" />
+    <Compile Include="Collections\Transposition.cs" />
     <Compile Include="SystemUtil\CommonFormEx.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -279,6 +277,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="GraphicalUserInterface\" />
+    <Folder Include="Storage\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

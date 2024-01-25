@@ -1,12 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
-using pwiz.Common.Storage;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Results
 {
-    public sealed class ReplicatePositions : IReadOnlyList<IEnumerable<int>>
+    public sealed class ReplicatePositions
     {
         private ImmutableList<int> _replicateEndPositions;
 
@@ -32,7 +31,7 @@ namespace pwiz.Skyline.Model.Results
             _replicateEndPositions = endPositions;
         }
 
-        public int Count
+        public int ReplicateCount
         {
             get { return _replicateEndPositions.Count; }
         }
@@ -48,21 +47,6 @@ namespace pwiz.Skyline.Model.Results
 
                 return _replicateEndPositions[_replicateEndPositions.Count - 1];
             }
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        public IEnumerator<IEnumerable<int>> GetEnumerator()
-        {
-            return Enumerable.Range(0, Count).Select(i => this[i]).GetEnumerator();
-        }
-
-        public IEnumerable<int> this[int index]
-        {
-            get { return Enumerable.Range(GetStart(index), GetCount(index)); }
         }
 
         public int GetStart(int index)
@@ -98,7 +82,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return FromCounts(Enumerable.Range(0, index).Select(GetCount).Append(newCount)
-                .Concat(Enumerable.Range(index + 1, Count - index - 1)));
+                .Concat(Enumerable.Range(index + 1, ReplicateCount - index - 1)));
         }
 
     }
@@ -109,12 +93,12 @@ namespace pwiz.Skyline.Model.Results
     public class TransposedTransitionChromInfos : TransposedResults<TransitionChromInfo>
     {
         public static readonly TransposedTransitionChromInfos EMPTY = new TransposedTransitionChromInfos();
-        protected override ITransposer Transposer
+        public override Transposer GetTransposer()
         {
-            get { return TransitionChromInfo.TRANSPOSER; }
+            return TransitionChromInfo.TRANSPOSER;
         }
 
-        public static void StoreResults<T>(IList<T> transitionDocNodes) where T : DocNode
+        public static void StoreResults<T>(ValueCache valueCache, IList<T> transitionDocNodes) where T : DocNode
         {
             var transposedResults = new TransposedTransitionChromInfos[transitionDocNodes.Count];
             for (int i = 0; i < transitionDocNodes.Count; i++)
@@ -123,7 +107,7 @@ namespace pwiz.Skyline.Model.Results
                 transposedResults[i] = FromResults(docNode.Results);
             }
 
-            TransitionChromInfo.TRANSPOSER.EfficientlyStore(transposedResults);
+            TransitionChromInfo.TRANSPOSER.EfficientlyStore(valueCache, transposedResults);
             for (int i = 0; i < transposedResults.Length; i++)
             {
                 if (transposedResults[i] != null)
@@ -145,7 +129,11 @@ namespace pwiz.Skyline.Model.Results
 
         public static TransposedTransitionChromInfos FromResults(Results<TransitionChromInfo> results)
         {
-            return new TransposedTransitionChromInfos().ChangeResults(results.FlatList);
+            if (results == null)
+            {
+                return null;
+            }
+            return EMPTY.ChangeResults(results.FlatList);
         }
     }
 }

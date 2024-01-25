@@ -2032,7 +2032,7 @@ namespace pwiz.Skyline.Model
                 if (!Results<TransitionGroupChromInfo>.EqualsDeep(results, nodeGroupNew.Results))
                     nodeGroupNew = nodeGroupNew.ChangeResults(results);
 
-                //nodeGroupNew = ((TransitionGroupDocNode)nodeGroupNew.ChangeChildrenChecked(childrenNew)).EfficientlyStoreResults(nodeGroup);
+                nodeGroupNew = ((TransitionGroupDocNode)nodeGroupNew.ChangeChildrenChecked(childrenNew));
                 return nodeGroupNew;
             }
 
@@ -3256,17 +3256,6 @@ namespace pwiz.Skyline.Model
         public override string AuditLogText
         {
             get { return TransitionGroupTreeNode.GetLabel(TransitionGroup, PrecursorMz, string.Empty); }
-        }
-
-        public TransitionGroupDocNode EfficientlyStoreResults(TransitionGroupDocNode previous)
-        {
-            var newNodes = Children.ToArray();
-            TransposedTransitionChromInfos.StoreResults(newNodes);
-            if (ArrayUtil.ReferencesEqual(newNodes, Children))
-            {
-                return this;
-            }
-            return (TransitionGroupDocNode) ChangeChildren(newNodes);
         }
     }
 }

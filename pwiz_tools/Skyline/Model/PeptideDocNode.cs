@@ -873,7 +873,7 @@ namespace pwiz.Skyline.Model
             var annotations = Annotations.Merge(nodePepMerge.Annotations);
             if (!ReferenceEquals(annotations, Annotations))
                 result = (PeptideDocNode) result.ChangeAnnotations(annotations);
-            return result.UpdateResults(settings);
+            return result.UpdateResults(settings, diff.ValueCache);
         }
 
         public PeptideDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff, bool recurse = true)
@@ -1078,7 +1078,7 @@ namespace pwiz.Skyline.Model
             }
 
             if (diff.DiffResults || ChangedResults(nodeResult))
-                nodeResult = nodeResult.UpdateResults(settingsNew /*, diff*/);
+                nodeResult = nodeResult.UpdateResults(settingsNew, diff.ValueCache);
 
             return nodeResult;
         }
@@ -1245,7 +1245,7 @@ namespace pwiz.Skyline.Model
             return tranGroup.GetMatchingTransitions(settings, nodeGroupMatching, explicitMods);
         }
 
-        private PeptideDocNode UpdateResults(SrmSettings settingsNew /*, SrmSettingsDiff diff*/)
+        private PeptideDocNode UpdateResults(SrmSettings settingsNew, ValueCache valueCache)
         {
             // First check whether any child results are present
             if (!settingsNew.HasResults || Children.Count == 0)
@@ -1264,7 +1264,7 @@ namespace pwiz.Skyline.Model
 
             var transitionGroupKeys = new HashSet<Tuple<IsotopeLabelType, Adduct>>();
             // Update the results summary
-            var resultsCalc = new PeptideResultsCalculator(settingsNew, NormalizationMethod);
+            var resultsCalc = new PeptideResultsCalculator(settingsNew, valueCache);
             foreach (TransitionGroupDocNode nodeGroup in Children)
             {
                 var transitionGroupKey =
@@ -1350,13 +1350,15 @@ namespace pwiz.Skyline.Model
         {
             private readonly List<PeptideChromInfoListCalculator> _listResultCalcs;
 
-            public PeptideResultsCalculator(SrmSettings settings, NormalizationMethod normalizationMethod)
+            public PeptideResultsCalculator(SrmSettings settings, ValueCache valueCache)
             {
                 Settings = settings;
+                ValueCache = valueCache;
                 _listResultCalcs = new List<PeptideChromInfoListCalculator>(settings.MeasuredResults.Chromatograms.Count);
             }
 
             private SrmSettings Settings { get; set; }
+            public ValueCache ValueCache { get; }
             private int TransitionGroupCount { get; set; }
 
             public void AddGroupChromInfo(TransitionGroupDocNode nodeGroup)
@@ -1416,7 +1418,7 @@ namespace pwiz.Skyline.Model
                                              : nodeTran.ChangeResults(resultsTran));
                     }
 
-                    TransposedTransitionChromInfos.StoreResults(listTransNew);
+                    TransposedTransitionChromInfos.StoreResults(ValueCache, listTransNew);
                     listGroupsNew.Add(nodeGroupNew.ChangeChildrenChecked(listTransNew));
                 }
                 return (PeptideDocNode) nodePeptide.ChangeChildrenChecked(listGroupsNew);

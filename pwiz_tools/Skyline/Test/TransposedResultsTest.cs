@@ -24,7 +24,7 @@ namespace pwiz.SkylineTest
             AssertEx.AreEqual(transitionChromInfo1, transposedResults.GetRow(0));
             AssertEx.AreEqual(transitionChromInfo2, transposedResults.GetRow(1));
             var array = new[] { transposedResults };
-            TransitionChromInfo.TRANSPOSER.EfficientlyStore(array);
+            TransitionChromInfo.TRANSPOSER.EfficientlyStore(null, array);
             AssertEx.AreEqual(transitionChromInfo1, array[0].ToRows(0, 1).GetValue(0));
             AssertEx.AreEqual(transitionChromInfo2, array[0].ToRows(1, 1).GetValue(0));
         }

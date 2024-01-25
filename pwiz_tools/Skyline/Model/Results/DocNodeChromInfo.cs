@@ -23,7 +23,6 @@ using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
 using pwiz.Common.Collections;
-using pwiz.Common.Storage;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -515,7 +514,7 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public sealed class TransitionChromInfo : ChromInfo
     {
-        public static readonly Transposer<TransitionChromInfo> TRANSPOSER = new TransitionChromInfoTransposer();
+        public static readonly Transposition<TransitionChromInfo>.Transposer TRANSPOSER = new TransitionChromInfoTransposer();
 
         [Flags]
         private enum Flags : short
@@ -1041,7 +1040,7 @@ namespace pwiz.Skyline.Model.Results
             return TransposedTransitionChromInfos.EMPTY.ChangeResults(chromInfos);
         }
 
-        public override ITransposer GetTransposer()
+        public Transposition<TransitionChromInfo>.Transposer GetTransposer()
         {
             return TRANSPOSER;
         }
@@ -1076,7 +1075,7 @@ namespace pwiz.Skyline.Model.Results
 
             public override Transposition<TransitionChromInfo> Transpose(ICollection<TransitionChromInfo> rows)
             {
-                return (TransposedTransitionChromInfos) new TransposedTransitionChromInfos().ChangeColumns(ToColumns(rows));
+                return (TransposedTransitionChromInfos) TransposedTransitionChromInfos.EMPTY.ChangeColumns(ToColumns(rows));
             }
         }
     }
@@ -1096,6 +1095,12 @@ namespace pwiz.Skyline.Model.Results
     public abstract class Results<TItem> : Immutable, IReadOnlyList<ChromInfoList<TItem>>
         where TItem : ChromInfo
     {
+        public static Results<TItem> FromChromInfoLists(IList<ChromInfoList<TItem>> elements)
+        {
+            var replicatePositions = ReplicatePositions.FromCounts(elements.Select(e => e.Count));
+            return new Rows(replicatePositions, elements.SelectMany(e => e));
+        }
+
         public static Results<TItem> FromChromInfos(ReplicatePositions replicatePositions, IEnumerable<TItem> items)
         {
             return new Rows(replicatePositions, items);
@@ -1103,6 +1108,10 @@ namespace pwiz.Skyline.Model.Results
 
         public static Results<TItem> FromColumns(ReplicatePositions replicatePositions, Transposition<TItem> columns)
         {
+            if (columns == null)
+            {
+                return null;
+            }
             return new Columns(replicatePositions, columns);
         }
 
@@ -1121,15 +1130,9 @@ namespace pwiz.Skyline.Model.Results
             return Enumerable.Range(0, Count).Select(i => this[i]).GetEnumerator();
         }
 
-        public static Results<TItem> FromChromInfoLists(IList<ChromInfoList<TItem>> elements)
-        {
-            var replicatePositions = ReplicatePositions.FromCounts(elements.Select(e => e.Count));
-            return new Rows(replicatePositions, elements.SelectMany(e => e));
-        }
-
         public int Count
         {
-            get { return ReplicatePositions.Count; }
+            get { return ReplicatePositions.ReplicateCount; }
         }
 
         public ChromInfoList<TItem> this[int index]
@@ -1146,7 +1149,7 @@ namespace pwiz.Skyline.Model.Results
 
         public Results<TItem> ChangeAt(int index, ChromInfoList<TItem> list)
         {
-            var newItems = GetItems(0, ReplicatePositions.GetStart(index - 1)).Concat(list)
+            var newItems = GetItems(0, ReplicatePositions.GetStart(index)).Concat(list)
                 .Concat(GetItemsStartingAt(ReplicatePositions.GetStart(index + 1)));
             return new Rows(ReplicatePositions.ChangeCountAt(index, list.Count), newItems);
         }
@@ -1159,7 +1162,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public virtual IEnumerable<ColumnData> GetColumnData(Transposer<TItem> transposer)
+        public virtual IEnumerable<Transposition.ColumnData> GetColumnData(Transposition<TItem>.Transposer transposer)
         {
             return transposer.ToColumns(FlatList.ToList());
         }
@@ -1241,7 +1244,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static bool EqualsDeep(Results<TItem> resultsOld, Results<TItem> results)
         {
-            if (resultsOld == null && results == null)
+            if (ReferenceEquals(resultsOld, results))
                 return true;
             if (resultsOld == null || results == null)
                 return false;
@@ -1355,7 +1358,7 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             }
 
-            return GetItems(0, ReplicatePositions.Count).SequenceEqual(other.GetItems(0, ReplicatePositions.Count));
+            return GetItems(0, ReplicatePositions.ReplicateCount).SequenceEqual(other.GetItems(0, ReplicatePositions.ReplicateCount));
         }
 
         public override bool Equals(object obj)
@@ -1402,9 +1405,9 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 var items = new List<TItem>();
-                for (int iReplicate = 0; iReplicate < ReplicatePositions.Count; iReplicate++)
+                for (int iReplicate = 0; iReplicate < ReplicatePositions.ReplicateCount; iReplicate++)
                 {
-                    if (iReplicate >= other.ReplicatePositions.Count || !result[iReplicate].SequenceEqual(other[iReplicate]))
+                    if (iReplicate >= other.ReplicatePositions.ReplicateCount || !result[iReplicate].SequenceEqual(other[iReplicate]))
                     {
                         items.AddRange(result[iReplicate]);
                     }
@@ -1437,7 +1440,7 @@ namespace pwiz.Skyline.Model.Results
                 return _transposition.ToRows(start, count);
             }
 
-            public override IEnumerable<ColumnData> GetColumnData(Transposer<TItem> transposer)
+            public override IEnumerable<Transposition.ColumnData> GetColumnData(Transposition<TItem>.Transposer transposer)
             {
                 Assume.AreEqual(_transposition.GetTransposer(), transposer);
                 return _transposition.ColumnDatas;
@@ -1753,15 +1756,11 @@ namespace pwiz.Skyline.Model.Results
 
         #endregion
 
-        public virtual ITransposer GetTransposer()
-        {
-            return null;
-        }
-        protected abstract class ChromInfoTransposer<T> : Transposer<T> where T : ChromInfo
+        protected abstract class ChromInfoTransposer<T> : Transposition<T>.Transposer where T : ChromInfo
         {
             protected ChromInfoTransposer()
             {
-                DefineColumn(c=>ReferenceValue.Of(c.FileId), (c,v)=>c.FileId = v);
+                DefineColumn(c=>ReferenceValue.Of(c.FileId), (c,v)=>c.FileId = v, true);
             }
         }
     }

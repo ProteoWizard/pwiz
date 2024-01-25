@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace pwiz.Common.Storage
+namespace pwiz.Common.Collections
 {
     public class ByteList : IReadOnlyList<int>
     {

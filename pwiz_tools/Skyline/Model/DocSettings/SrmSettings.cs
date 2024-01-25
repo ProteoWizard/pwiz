@@ -2909,6 +2909,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public SrmSettingsChangeMonitor Monitor { get; set; }
 
+        public ValueCache ValueCache { get; } = new ValueCache();
+
         public bool DiffPeptides { get; private set; }
         public bool DiffPeptideProps { get; private set; }
         public bool DiffExplicit { get; private set; }
