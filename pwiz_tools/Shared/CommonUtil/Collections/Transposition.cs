@@ -84,7 +84,23 @@ namespace pwiz.Common.Collections
             {
                 return new ColumnData(new ConstantValue<T>(value));
             }
-            public ColumnData(IEnumerable list)
+
+            public static ColumnData Immutable<T>(IEnumerable<T> immutableList)
+            {
+                return new ColumnData(ImmutableList.ValueOf(immutableList));
+            }
+
+            public static ColumnData FactorList<T>(FactorList<T> list)
+            {
+                return new ColumnData(list);
+            }
+
+            public static ColumnData Array<T>(IEnumerable<T> items)
+            {
+                return new ColumnData(items?.ToArray());
+            }
+            
+            private ColumnData(IEnumerable list)
             {
                 _data = list;
             }
@@ -198,7 +214,7 @@ namespace pwiz.Common.Collections
 
         public new abstract class ColumnDef : Transposition.ColumnDef
         {
-            public abstract Array GetValues(IEnumerable<TRow> rows);
+            public abstract ColumnData GetValues(IEnumerable<TRow> rows);
             public abstract void SetValues(IEnumerable<TRow> rows, ColumnData column, int start);
         }
 
@@ -220,9 +236,10 @@ namespace pwiz.Common.Collections
             
             public bool UseValueCache { get; private set; }
 
-            public override Array GetValues(IEnumerable<TRow> rows)
+            public override ColumnData GetValues(IEnumerable<TRow> rows)
             {
-                return rows.Select(_getter).ToArray();
+                var values = rows.Select(_getter);
+                return UseValueCache ? ColumnData.Immutable(values) : ColumnData.Array(values);
             }
 
             public override void SetValues(IEnumerable<TRow> rows, ColumnData column, int start)
@@ -268,7 +285,7 @@ namespace pwiz.Common.Collections
                     }
                     else if (true == valueCache?.TryGetCachedValue(ref immutableList))
                     {
-                        columnInfos.Add(new ColumnDataInfo(new ColumnData(immutableList), null));
+                        columnInfos.Add(new ColumnDataInfo(ColumnData.Immutable(immutableList), null));
                     }
                     else
                     {
@@ -287,7 +304,7 @@ namespace pwiz.Common.Collections
                     {
                         if (valueCache != null && storedList.IsImmutableList<TCol>() )
                         {
-                            yield return new ColumnData(valueCache.CacheValue(storedList.ToImmutableList<TCol>()));
+                            yield return ColumnData.Immutable(valueCache.CacheValue(storedList.ToImmutableList<TCol>()));
                         }
                         else
                         {
@@ -357,7 +374,7 @@ namespace pwiz.Common.Collections
                 foreach (var listInfo in remainingLists)
                 {
                     yield return Tuple.Create(listInfo.ImmutableList,
-                        new ColumnData(factorListBuilder.MakeFactorList(listInfo.ImmutableList.Value)));
+                        ColumnData.FactorList(factorListBuilder.MakeFactorList(listInfo.ImmutableList.Value)));
                 }
             }
 
@@ -398,7 +415,7 @@ namespace pwiz.Common.Collections
 
             public IEnumerable<ColumnData> ToColumns(ICollection<TRow> rows)
             {
-                return _columnDefs.Select(col => new ColumnData(col.GetValues(rows)));
+                return _columnDefs.Select(col => col.GetValues(rows));
             }
 
             public abstract Transposition<TRow> Transpose(ICollection<TRow> rows);
