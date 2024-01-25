@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -760,8 +761,12 @@ namespace pwiz.Skyline.Model.Results
         {
             var allPeaks = new List<PeptideChromDataPeak>();
             var listUnmerged = new List<ChromDataSet>(dataSets);
-            var listEnumerators = listUnmerged.Select(dataSet => dataSet.PeakSets.GetEnumerator()).ToList();
-
+            using var allEnumerators = new DisposableCollection<IEnumerator<ChromDataPeakList>>();
+            foreach (var dataSet in listUnmerged)
+            {
+                allEnumerators.Add(dataSet.PeakSets.GetEnumerator());
+            }
+            var listEnumerators = allEnumerators.ToList();
             // Initialize an enumerator for each set of raw peaks, or remove
             // the set, if the list is found to be empty
             for (int i = listEnumerators.Count - 1; i >= 0; i--)
