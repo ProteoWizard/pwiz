@@ -1424,7 +1424,7 @@ namespace pwiz.Skyline.Model.Results
                 var items = new List<TItem>();
                 for (int iReplicate = 0; iReplicate < ReplicatePositions.ReplicateCount; iReplicate++)
                 {
-                    if (iReplicate >= oldRows.ReplicatePositions.ReplicateCount || !this[iReplicate].SequenceEqual(oldRows[iReplicate]))
+                    if (iReplicate >= oldRows.ReplicatePositions.ReplicateCount || !EqualsDeep(this[iReplicate], oldRows[iReplicate]))
                     {
                         items.AddRange(this[iReplicate]);
                     }
