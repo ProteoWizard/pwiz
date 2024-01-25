@@ -1,4 +1,22 @@
-﻿using System.Collections.Generic;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2024 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.Collections.Transpositions;
@@ -6,10 +24,16 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Results
 {
+    /// <summary>
+    /// Associates items in a flat list with particular replicates.
+    /// </summary>
     public sealed class ReplicatePositions
     {
         private ImmutableList<int> _replicateEndPositions;
 
+        /// <summary>
+        /// Returns a ReplicatePositions where there is one item per replicate
+        /// </summary>
         public static ReplicatePositions Simple(int replicateCount)
         {
             return FromCounts(Enumerable.Repeat(1, replicateCount));
@@ -50,29 +74,33 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public int GetStart(int index)
+        /// <summary>
+        /// Returns the position in the flat list of the first item associated with a particular replicate.
+        /// </summary>
+        public int GetStart(int replicateIndex)
         {
-            if (index <= 0)
+            if (replicateIndex <= 0)
             {
                 return 0;
             }
 
-            if (index >= _replicateEndPositions.Count)
+            if (replicateIndex >= _replicateEndPositions.Count)
             {
                 return TotalCount;
             }
 
-            return _replicateEndPositions[index - 1];
+            return _replicateEndPositions[replicateIndex - 1];
         }
 
-        public int GetCount(int index)
+        
+        public int GetCount(int replicateIndex)
         {
-            if (index < 0 || index >= _replicateEndPositions.Count)
+            if (replicateIndex < 0 || replicateIndex >= _replicateEndPositions.Count)
             {
                 return 0;
             }
 
-            return _replicateEndPositions[index] - GetStart(index);
+            return _replicateEndPositions[replicateIndex] - GetStart(replicateIndex);
         }
 
         public ReplicatePositions ChangeCountAt(int index, int newCount)
@@ -108,7 +136,7 @@ namespace pwiz.Skyline.Model.Results
     public class TransposedTransitionChromInfos : TransposedResults<TransitionChromInfo>
     {
         public static readonly TransposedTransitionChromInfos EMPTY = new TransposedTransitionChromInfos();
-        public static int MIN_RESULTS_TO_TRANSPOSE = 0;
+        public static int MIN_RESULTS_TO_TRANSPOSE = 10;
         public override Transposer<TransitionChromInfo> GetTransposer()
         {
             return TransitionChromInfo.TRANSPOSER;

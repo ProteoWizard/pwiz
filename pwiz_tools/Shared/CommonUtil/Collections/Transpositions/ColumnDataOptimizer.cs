@@ -25,7 +25,7 @@ using System.Runtime.InteropServices;
 namespace pwiz.Common.Collections.Transpositions
 {
     /// <summary>
-    /// Reduces the amount of memory that is used by collections of <see cref="ColumnData"/>
+    /// Reduces the amount of memory that is used by collections of <see cref="ColumnData"/>.
     /// </summary>
     public class ColumnDataOptimizer<T>
     {
@@ -59,6 +59,14 @@ namespace pwiz.Common.Collections.Transpositions
         
         public ValueCache ValueCache { get; private set; }
         
+        /// <summary>
+        /// Returns a new list of ColumnData objects with a smaller memory footprint.
+        /// The optimizations are made by <ul>
+        /// <li>Finding ColumnData's where all of the values are the same and replacing them with <see cref="ColumnData.Constant{T}"/></li>
+        /// <li>Finding ColumnData's with identical values in them and using the same <see cref="ImmutableList"/> for each of them</li>
+        /// <li>For lists with fewer than 255 unique values, replace them with a <see cref="FactorList{T}"/> indexed with a <see cref="ByteList"/></li>
+        /// </ul>
+        /// </summary>
         public IEnumerable<ColumnData> OptimizeMemoryUsage(IEnumerable<ColumnData> columnDataList)
         {
             var columnInfos = GetColumnDataInfos(columnDataList);
