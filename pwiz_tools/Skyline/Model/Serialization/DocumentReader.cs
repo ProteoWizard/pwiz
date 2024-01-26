@@ -864,10 +864,8 @@ namespace pwiz.Skyline.Model.Serialization
 
             PeptideGroup group = new PeptideGroup(isDecoy);
 
-            Annotations annotations = Annotations.EMPTY;
             var peptideGroupData = new PeptideGroupData(group)
             {
-                Annotations = annotations,
                 ProteinMetadata = proteinMetadata,
                 AutoManageChildren = autoManageChildren,
                 ProportionDecoysMatch = proportionDecoysMatch
@@ -878,7 +876,7 @@ namespace pwiz.Skyline.Model.Serialization
             else
             {
                 reader.ReadStartElement();
-                annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.protein);
+                peptideGroupData.Annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.protein);
 
                 if (!reader.IsStartElement(EL.selected_peptides))
                     ReadPeptideListXml(reader, peptideGroupData, peptideProcessor);
@@ -1825,6 +1823,7 @@ namespace pwiz.Skyline.Model.Serialization
             public PeptideGroupData(PeptideGroup peptideGroup)
             {
                 PeptideGroup = peptideGroup;
+                Annotations = Annotations.EMPTY;
             }
 
             private List<KeyValuePair<int, PeptideDocNode>> _peptides =

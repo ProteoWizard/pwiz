@@ -167,7 +167,7 @@ namespace pwiz.SkylineTest
                         StringAssert.DoesNotMatch(documentText, regexpTransitionData);
                     }
                     var document2 = (SrmDocument)xmlSerializer.Deserialize(new StringReader(stringWriter.ToString()));
-                    Assert.AreEqual(document, document2);
+                    AssertEx.AreEqual(document, document2);
                 }
             }
             finally
