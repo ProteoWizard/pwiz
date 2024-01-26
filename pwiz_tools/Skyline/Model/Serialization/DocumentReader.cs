@@ -896,7 +896,7 @@ namespace pwiz.Skyline.Model.Serialization
         }
 
         /// <summary>
-        /// Deserializes an array of <see cref="PeptideDocNode"/> objects from
+        /// Asynchronously deserializes an array of <see cref="PeptideDocNode"/> objects from
         /// a <see cref="XmlReader"/> positioned at the first element in the list.
         /// </summary>
         private void ReadPeptideListXml(XmlReader reader, PeptideGroupData peptideGroupData, PeptideProcessor queue)
@@ -1718,7 +1718,7 @@ namespace pwiz.Skyline.Model.Serialization
         }
 
         /// <summary>
-        /// Maintains a work queue for reading the XML for the proteins
+        /// Maintains a work queue for reading the XML for the peptides and molecules
         /// </summary>
         public class PeptideProcessor : IDisposable
         {
