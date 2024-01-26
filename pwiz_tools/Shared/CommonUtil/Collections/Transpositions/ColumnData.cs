@@ -42,7 +42,6 @@ namespace pwiz.Common.Collections.Transpositions
     }
     /// <summary>
     /// Holds data for one column in a <see cref="Transposition"/>.
-    /// 
     /// </summary>
     public abstract class ColumnData<T> : ColumnData
     {
