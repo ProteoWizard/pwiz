@@ -657,27 +657,6 @@ namespace pwiz.Skyline.Model.Serialization
             }
         }
 
-        // var proteinProcessor = new ProteinProcessor(this);
-        //     Children = proteinProcessor.ProcessProteinElements(reader).ToArray();
-        // }
-        //
-        private IEnumerable<XElement> GetProteinElements(XmlReader reader)
-        {
-            if (reader.IsStartElement(EL.selected_proteins))
-            {
-                if (reader.IsEmptyElement)
-                {
-                    reader.Read();
-                    yield break;
-                }
-                reader.ReadStartElement();
-            }
-            while (reader.IsStartElement(EL.protein) || reader.IsStartElement(EL.peptide_list) || reader.IsStartElement(EL.protein_group))
-            {
-                yield return (XElement) XNode.ReadFrom(reader);
-            }
-        }
-
         private ProteinMetadata ReadProteinMetadataXML(XmlReader reader, bool labelNameAndDescription)
         {
             var labelPrefix = labelNameAndDescription ? @"label_" : string.Empty;
