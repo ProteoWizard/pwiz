@@ -16,129 +16,125 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System.Collections;
 using System.Collections.Generic;
 
 namespace pwiz.Common.Collections.Transpositions
 {
+    public abstract class ColumnData
+    {
+        public static ColumnData<T> ForConstant<T>(T value)
+        {
+            return ColumnData<T>.ForConstant(value);
+        }
+
+        public static ColumnData<T> ForValues<T>(IEnumerable<T> values)
+        {
+            return ColumnData<T>.ForValues(ImmutableList<T>.ValueOf(values));
+        }
+
+        public static ColumnData<T> ForList<T>(IReadOnlyList<T> list)
+        {
+            return ColumnData<T>.ForList(list);
+        }
+
+        public abstract bool IsList { get; }
+        public abstract bool IsImmutableList { get; }
+    }
     /// <summary>
     /// Holds data for one column in a <see cref="Transposition"/>.
     /// 
     /// </summary>
-    public struct ColumnData
+    public abstract class ColumnData<T> : ColumnData
     {
-        /// <summary>
-        /// The data in the column. It can be one of the following types of values:
-        /// <ul>null: every value in the column is equal to the default value for the column's datatype</ul>
-        /// <ul><see cref="Constant{T}"/>: every value in the column is equal to that constant value</ul>
-        /// <ul>A list of length N: The first N values in the column are equal to the items in the list. Any values beyond that are equal to the default value of the datatype.</ul>
-        /// </summary>
-        private object _data;
 
-        public static ColumnData Constant<T>(T value)
+        private ColumnData()
         {
-            return new ColumnData(new ConstantValue<T>(value));
+        }
+        public abstract T GetValue(int row);
+        public abstract ImmutableList<T> ToImmutableList();
+
+        public static ColumnData<T> ForConstant(T value)
+        {
+            return Equals(default(T), value) ? null : new ConstantColumnData(value);
         }
 
-        public static ColumnData Immutable<T>(IEnumerable<T> immutableList)
+        public static ColumnData<T> ForValues(IEnumerable<T> values)
         {
-            return new ColumnData(ImmutableList.ValueOf(immutableList));
-        }
-
-        public static ColumnData FactorList<T>(FactorList<T> list)
-        {
-            return new ColumnData(list);
-        }
-
-        private ColumnData(IEnumerable list)
-        {
-            _data = list;
-        }
-
-        public bool IsEmpty
-        {
-            get { return _data == null; }
-        }
-
-        public bool IsConstant<T>()
-        {
-            return _data is ConstantValue<T>;
-        }
-
-        public T GetValueAt<T>(int index)
-        {
-            if (_data == null)
+            var immutableList = ImmutableList.ValueOf(values);
+            if (immutableList == null)
             {
-                return default;
+                return null;
+            }
+            return new ListColumnData(ImmutableList.ValueOf(immutableList));
+        }
+
+        public static ColumnData<T> ForList(IReadOnlyList<T> list)
+        {
+            if (list == null)
+            {
+                return null;
             }
 
-            if (_data is ConstantValue<T> constant)
-            {
-                return constant.Value;
-            }
-
-            var readOnlyList = (IReadOnlyList<T>)_data;
-            if (index < 0 || index >= readOnlyList.Count)
-            {
-                return default;
-            }
-            return readOnlyList[index];
+            return new ListColumnData(list);
         }
 
-        public ImmutableList<T> TryGetValues<T>()
+        private class ConstantColumnData : ColumnData<T>
         {
-            return ImmutableList.ValueOf(_data as IReadOnlyList<T>);
-        }
-
-        public bool IsImmutableList<T>()
-        {
-            return _data is ImmutableList<T>;
-        }
-
-        private class ConstantValue<T> : IEnumerable
-        {
-            public ConstantValue(T value)
+            private T _value;
+            public ConstantColumnData(T value)
             {
-                Value = value;
+                _value = value;
             }
-            public T Value { get; }
-            public IEnumerator GetEnumerator()
+            public override T GetValue(int row)
             {
-                yield break;
+                return _value;
             }
 
-            protected bool Equals(ConstantValue<T> other)
+            public override bool IsList
             {
-                return EqualityComparer<T>.Default.Equals(Value, other.Value);
+                get { return false; }
+            }
+            public override bool IsImmutableList
+            {
+                get { return false; }
             }
 
-            public override bool Equals(object obj)
+            public override ImmutableList<T> ToImmutableList()
             {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != GetType()) return false;
-                return Equals((ConstantValue<T>)obj);
-            }
-
-            public override int GetHashCode()
-            {
-                return EqualityComparer<T>.Default.GetHashCode(Value);
+                return null;
             }
         }
 
-        public bool Equals(ColumnData other)
+        public class ListColumnData : ColumnData<T>
         {
-            return Equals(_data, other._data);
-        }
+            private IReadOnlyList<T> _readOnlyList;
+            public ListColumnData(IReadOnlyList<T> readOnlyList)
+            {
+                _readOnlyList = readOnlyList;
+            }
 
-        public override bool Equals(object obj)
-        {
-            return obj is ColumnData other && Equals(other);
-        }
+            public override T GetValue(int row)
+            {
+                return _readOnlyList[row];
+            }
 
-        public override int GetHashCode()
-        {
-            return _data?.GetHashCode() ?? 0;
+            public override bool IsList
+            {
+                get { return true; }
+            }
+
+            public override bool IsImmutableList
+            {
+                get
+                {
+                    return _readOnlyList is ImmutableList<T>;
+                }
+            }
+
+            public override ImmutableList<T> ToImmutableList()
+            {
+                return ImmutableList.ValueOf(_readOnlyList);
+            }
         }
     }
 }

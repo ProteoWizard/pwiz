@@ -52,15 +52,24 @@ namespace pwiz.Common.Collections.Transpositions
         public override ColumnData GetValues(IEnumerable<TRow> rows)
         {
             var values = rows.Select(GetValue);
-            return ColumnData.Immutable(values);
+            return ColumnData.ForValues(values);
         }
 
-        public override void SetValues(IEnumerable<TRow> rows, ColumnData column, int start)
+        public override void SetValues(IEnumerable<TRow> rows, ColumnData columnData, int start)
+        {
+            if (columnData != null)
+            {
+                SetValues(rows, (ColumnData<TCol>) columnData, start);
+            }
+
+        }
+
+        public virtual void SetValues(IEnumerable<TRow> rows, ColumnData<TCol> column, int start)
         {
             int iRow = 0;
             foreach (var row in rows)
             {
-                SetValue(row, column.GetValueAt<TCol>(iRow + start));
+                SetValue(row, column.GetValue(iRow + start));
                 iRow++;
             }
         }
@@ -77,7 +86,7 @@ namespace pwiz.Common.Collections.Transpositions
         {
             int iTransposition = 0;
 
-            foreach (var newList in optimizer.OptimizeMemoryUsage(transpositions.Select(t => t.GetColumnValues(columnIndex))))
+            foreach (var newList in optimizer.OptimizeMemoryUsage(transpositions.Select(t => (ColumnData<TCol>)t.GetColumnValues(columnIndex))))
             {
                 var transposition = transpositions[iTransposition];
                 transposition = (T)transposition.ChangeColumnAt(columnIndex, newList);

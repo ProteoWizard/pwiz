@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.Collections.Transpositions
@@ -29,6 +30,7 @@ namespace pwiz.Common.Collections.Transpositions
     /// </summary>
     public abstract class Transposition : Immutable
     {
+        [ItemCanBeNull] 
         private ImmutableList<ColumnData> _columns;
         
         public Transposition ChangeColumns(IEnumerable<ColumnData> columns)
@@ -56,7 +58,7 @@ namespace pwiz.Common.Collections.Transpositions
             _columns.CopyTo(newColumns, 0);
             newColumns[columnIndex] = column;
             int nonEmptyCount = newColumns.Length;
-            while (nonEmptyCount > 0 && newColumns[nonEmptyCount - 1].IsEmpty)
+            while (nonEmptyCount > 0 && newColumns[nonEmptyCount - 1] == null)
             {
                 nonEmptyCount--;
             }

@@ -62,12 +62,12 @@ namespace pwiz.Common.Collections.Transpositions
         /// <summary>
         /// Returns a new list of ColumnData objects with a smaller memory footprint.
         /// The optimizations are made by <ul>
-        /// <li>Finding ColumnData's where all of the values are the same and replacing them with <see cref="ColumnData.Constant{T}"/></li>
+        /// <li>Finding ColumnData's where all of the values are the same and replacing them with <see cref="ColumnData.ForConstant{T}"/></li>
         /// <li>Finding ColumnData's with identical values in them and using the same <see cref="ImmutableList"/> for each of them</li>
         /// <li>For lists with fewer than 255 unique values, replace them with a <see cref="FactorList{T}"/> indexed with a <see cref="ByteList"/></li>
         /// </ul>
         /// </summary>
-        public IEnumerable<ColumnData> OptimizeMemoryUsage(IEnumerable<ColumnData> columnDataList)
+        public IEnumerable<ColumnData<T>> OptimizeMemoryUsage(IEnumerable<ColumnData<T>> columnDataList)
         {
             var columnInfos = GetColumnDataInfos(columnDataList);
 
@@ -84,14 +84,14 @@ namespace pwiz.Common.Collections.Transpositions
                 }
                 else
                 {
-                    if (ValueCache != null && storedList.IsImmutableList<T>())
+                    if (ValueCache != null && true == storedList?.IsImmutableList)
                     {
-                        var columnValues = storedList.TryGetValues<T>();
+                        var columnValues = storedList.ToImmutableList();
                         if (columnValues == null)
                         {
                             throw new InvalidOperationException();
                         }
-                        yield return ColumnData.Immutable(ValueCache.CacheValue(columnValues));
+                        yield return ColumnData<T>.ForValues(ValueCache.CacheValue(columnValues));
                     }
                     else
                     {
@@ -101,21 +101,22 @@ namespace pwiz.Common.Collections.Transpositions
             }
         }
 
-        private List<ColumnDataInfo> GetColumnDataInfos(IEnumerable<ColumnData> columnDataList)
+        private List<ColumnDataInfo> GetColumnDataInfos(IEnumerable<ColumnData<T>> columnDataList)
         {
             var localValueCache = new ValueCache();
             var columnInfos = new List<ColumnDataInfo>();
             foreach (var columnData in columnDataList)
             {
-                var columnValues = columnData.TryGetValues<T>();
+                var columnValues = columnData?.ToImmutableList();
                 if (columnValues == null)
                 {
                     // ColumnData is either empty or a constant: can't be optimized any more
                     columnInfos.Add(new ColumnDataInfo(columnData, null));
+                    continue;
                 }
-                else if (true == ValueCache?.TryGetCachedValue(ref columnValues))
+                if (ValueCache != null && ValueCache.TryGetCachedValue(ref columnValues))
                 {
-                    columnInfos.Add(new ColumnDataInfo(ColumnData.Immutable(columnValues), null));
+                    columnInfos.Add(new ColumnDataInfo(ColumnData.ForList(columnValues), HashedObject.ValueOf(columnValues)));
                 }
                 else
                 {
@@ -126,11 +127,11 @@ namespace pwiz.Common.Collections.Transpositions
             return columnInfos;
         }
 
-        public Dictionary<HashedObject<ImmutableList<T>>, ColumnData> OptimizeColumnDataValues(
+        public Dictionary<HashedObject<ImmutableList<T>>, ColumnData<T>> OptimizeColumnDataValues(
             IList<HashedObject<ImmutableList<T>>> columnDataValues)
         {
             IList<ColumnDataValueInfo> remainingLists = new List<ColumnDataValueInfo>();
-            var storedLists = new Dictionary<HashedObject<ImmutableList<T>>, ColumnData>();
+            var storedLists = new Dictionary<HashedObject<ImmutableList<T>>, ColumnData<T>>();
             foreach (var list in columnDataValues)
             {
                 if (list == null)
@@ -147,7 +148,7 @@ namespace pwiz.Common.Collections.Transpositions
                     }
                     else if (list.Value.Count > 1)
                     {
-                        storedLists.Add(list, ColumnData.Constant(list.Value[0]));
+                        storedLists.Add(list, ColumnData.ForConstant(list.Value[0]));
                     }
 
                     continue;
@@ -167,7 +168,7 @@ namespace pwiz.Common.Collections.Transpositions
         }
 
         protected IList<ColumnDataValueInfo> MakeFactorLists(
-            Dictionary<HashedObject<ImmutableList<T>>, ColumnData> storedLists, IList<ColumnDataValueInfo> remainingLists)
+            Dictionary<HashedObject<ImmutableList<T>>, ColumnData<T>> storedLists, IList<ColumnDataValueInfo> remainingLists)
         {
             if (ItemSize <= 1)
             {
@@ -197,7 +198,7 @@ namespace pwiz.Common.Collections.Transpositions
             var factorListBuilder = new FactorList<T>.Builder(remainingLists.SelectMany(listInfo => listInfo.UniqueValues));
             foreach (var listInfo in remainingLists)
             {
-                storedLists.Add(listInfo.ColumnValues, ColumnData.FactorList(factorListBuilder.MakeFactorList(listInfo.ColumnValues.Value)));
+                storedLists.Add(listInfo.ColumnValues, ColumnData.ForList(factorListBuilder.MakeFactorList(listInfo.ColumnValues.Value)));
             }
 
             return ImmutableList.Empty<ColumnDataValueInfo>();
@@ -205,13 +206,13 @@ namespace pwiz.Common.Collections.Transpositions
 
         protected class ColumnDataInfo
         {
-            public ColumnDataInfo(ColumnData columnData, HashedObject<ImmutableList<T>> columnValues)
+            public ColumnDataInfo(ColumnData<T> columnData, HashedObject<ImmutableList<T>> columnValues)
             {
                 OriginalColumnData = columnData;
                 ColumnValues = columnValues;
             }
 
-            public ColumnData OriginalColumnData { get; }
+            public ColumnData<T> OriginalColumnData { get; }
             public HashedObject<ImmutableList<T>> ColumnValues { get; }
         }
 
