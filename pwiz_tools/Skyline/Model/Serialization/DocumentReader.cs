@@ -637,7 +637,7 @@ namespace pwiz.Skyline.Model.Serialization
 
             reader.ReadEndElement();    // End document element
             peptideProcessor.WaitUntilFinished();
-            Children = peptideGroupDatas.Select(p => p.GetPeptideGroupDocNode()).ToArray();
+            Children = peptideGroupDatas.Select(p => p.MakePeptideGroupDocNode()).ToArray();
         }
 
         /// <summary>
@@ -809,7 +809,7 @@ namespace pwiz.Skyline.Model.Serialization
             while (reader.IsStartElement(EL.protein))
             {
                 var proteinDocNode = ReadProteinXml(reader, null);
-                proteinMetadata.Add(proteinDocNode.ProteinMetadata);
+                proteinMetadata.Add(proteinDocNode.MakePeptideGroupDocNode().ProteinMetadata);
                 list.Add(proteinDocNode.PeptideGroup as FastaSequence);
             }
             return list;
@@ -1842,7 +1842,7 @@ namespace pwiz.Skyline.Model.Serialization
                 }
             }
 
-            public PeptideGroupDocNode GetPeptideGroupDocNode()
+            public PeptideGroupDocNode MakePeptideGroupDocNode()
             {
                 return new PeptideGroupDocNode(PeptideGroup, Annotations, ProteinMetadata, GetPeptideDocNodes(),
                     AutoManageChildren, ProportionDecoysMatch);
