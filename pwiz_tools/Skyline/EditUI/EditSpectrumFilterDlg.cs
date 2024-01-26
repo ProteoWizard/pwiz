@@ -199,10 +199,14 @@ namespace pwiz.Skyline.EditUI
             AutoCompleteStringCollection autoCompleteStringCollection = null;
             if (AutoComplete != null && columnIndex == valueColumn.Index && rowIndex >= 0 && rowIndex < _rowBindingList.Count)
             {
-                _propertyColumns.TryGetValue(_rowBindingList[rowIndex].Property, out var propertyColumnDescriptor);
-                if (propertyColumnDescriptor != null)
+                var row = _rowBindingList[rowIndex];
+                if (row.Property != null)
                 {
-                    autoCompleteStringCollection = AutoComplete.GetAutoCompleteValues(propertyColumnDescriptor.PropertyPath);
+                    _propertyColumns.TryGetValue(row.Property, out var propertyColumnDescriptor);
+                    if (propertyColumnDescriptor != null)
+                    {
+                        autoCompleteStringCollection = AutoComplete.GetAutoCompleteValues(propertyColumnDescriptor.PropertyPath);
+                    }
                 }
             }
             TextBox textBox = e.Control as TextBox;
