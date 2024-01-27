@@ -100,7 +100,7 @@ namespace pwiz.Common.Collections.Transpositions
                     }
                 }
 #if DEBUG
-                if (!ColumnData.ContentsEqual(columnInfo.OriginalColumnData, optimizedColumn))
+                if (!Equals(columnInfo.OriginalColumnData, optimizedColumn))
                 {
                     throw new InvalidOperationException();
                 }
@@ -125,6 +125,7 @@ namespace pwiz.Common.Collections.Transpositions
                 }
                 if (ValueCache != null && ValueCache.TryGetCachedValue(ref columnValues))
                 {
+                    // If we find the values in the ValueCache, use that
                     columnInfos.Add(new ColumnDataInfo(ColumnData.ForList(columnValues), HashedObject.ValueOf(columnValues)));
                 }
                 else
@@ -139,7 +140,7 @@ namespace pwiz.Common.Collections.Transpositions
         public Dictionary<HashedObject<ImmutableList<T>>, ColumnData<T>.List> OptimizeColumnLists(
             IList<HashedObject<ImmutableList<T>>> columnDataValues)
         {
-            IList<ColumnDataValueInfo> remainingLists = new List<ColumnDataValueInfo>();
+            IList<ListInfo> remainingLists = new List<ListInfo>();
             var storedLists = new Dictionary<HashedObject<ImmutableList<T>>, ColumnData<T>.List>();
             foreach (var list in columnDataValues)
             {
@@ -149,7 +150,7 @@ namespace pwiz.Common.Collections.Transpositions
                 }
                 if (Options.UseFactorLists)
                 {
-                    remainingLists.Add(new ColumnDataValueInfo(list));
+                    remainingLists.Add(new ListInfo(list));
                 }
             }
 
@@ -163,8 +164,8 @@ namespace pwiz.Common.Collections.Transpositions
             return storedLists;
         }
 
-        protected IList<ColumnDataValueInfo> MakeFactorLists(
-            Dictionary<HashedObject<ImmutableList<T>>, ColumnData<T>.List> storedLists, IList<ColumnDataValueInfo> remainingLists)
+        protected IList<ListInfo> MakeFactorLists(
+            Dictionary<HashedObject<ImmutableList<T>>, ColumnData<T>.List> storedLists, IList<ListInfo> remainingLists)
         {
             if (ItemSize <= 1)
             {
@@ -206,7 +207,7 @@ namespace pwiz.Common.Collections.Transpositions
                 }
             }
 
-            return ImmutableList.Empty<ColumnDataValueInfo>();
+            return ImmutableList.Empty<ListInfo>();
         }
 
         protected class ColumnDataInfo
@@ -221,9 +222,9 @@ namespace pwiz.Common.Collections.Transpositions
             public HashedObject<ImmutableList<T>> ColumnValues { get; }
         }
 
-        protected class ColumnDataValueInfo
+        protected class ListInfo
         {
-            public ColumnDataValueInfo(HashedObject<ImmutableList<T>> list)
+            public ListInfo(HashedObject<ImmutableList<T>> list)
             {
                 ColumnValues = list;
                 UniqueValues = list.Value.Distinct().ToList();

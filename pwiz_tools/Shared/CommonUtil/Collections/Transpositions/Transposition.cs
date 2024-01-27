@@ -31,13 +31,13 @@ namespace pwiz.Common.Collections.Transpositions
     public abstract class Transposition : Immutable
     {
         [ItemCanBeNull] 
-        private ImmutableList<ColumnData> _columns;
+        private ImmutableList<ColumnData> _columns = ImmutableList<ColumnData>.EMPTY;
         
         public Transposition ChangeColumns(IEnumerable<ColumnData> columns)
         {
             return ChangeProp(ImClone(this), im =>
             {
-                im._columns = ImmutableList.ValueOf(columns);
+                im._columns = TrimNullsFromEnd(columns);
             });
         }
 
@@ -57,22 +57,7 @@ namespace pwiz.Common.Collections.Transpositions
             ColumnData[] newColumns = new ColumnData[Math.Max(_columns.Count, columnIndex + 1)];
             _columns.CopyTo(newColumns, 0);
             newColumns[columnIndex] = column;
-            int nonEmptyCount = newColumns.Length;
-            while (nonEmptyCount > 0 && newColumns[nonEmptyCount - 1] == null)
-            {
-                nonEmptyCount--;
-            }
-
-            ImmutableList<ColumnData> immutableList;
-            if (nonEmptyCount == newColumns.Length)
-            {
-                immutableList = ImmutableList.ValueOf(newColumns);
-            }
-            else
-            {
-                immutableList = ImmutableList.ValueOf(newColumns.Take(nonEmptyCount));
-            }
-            return ChangeProp(ImClone(this), im => im._columns = immutableList);
+            return ChangeColumns(newColumns);
         }
 
         public IEnumerable<ColumnData> ColumnDatas
@@ -92,6 +77,46 @@ namespace pwiz.Common.Collections.Transpositions
             }
 
             return default;
+        }
+
+        public override string ToString()
+        {
+            return @"{" + string.Join(@"," + Environment.NewLine, _columns) + @"}";
+        }
+
+        private static ImmutableList<ColumnData> TrimNullsFromEnd(IEnumerable<ColumnData> columnDatas)
+        {
+            var immutableList = ImmutableList.ValueOfOrEmpty(columnDatas);
+            int count = immutableList.Count;
+            while (count > 0 && immutableList[count - 1] == null)
+            {
+                count--;
+            }
+
+            if (count == immutableList.Count)
+            {
+                return immutableList;
+            }
+
+            return ImmutableList.ValueOf(immutableList.Take(count));
+        }
+
+        protected bool Equals(Transposition other)
+        {
+            return _columns.Equals(other._columns);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((Transposition)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return _columns.GetHashCode();
         }
     }
 

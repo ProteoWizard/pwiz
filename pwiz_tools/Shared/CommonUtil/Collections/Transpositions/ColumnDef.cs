@@ -25,10 +25,10 @@ namespace pwiz.Common.Collections.Transpositions
 {
     public abstract class ColumnDef : Immutable
     {
-        public abstract void EfficientlyStore<T>(ValueCache valueCache, IList<T> transpositions, int columnIndex) where T : Transposition;
-        public static ColumnDef<TRow, TCol> Define<TCol, TRow>(Func<TRow, TCol> getter, Action<TRow, TCol> setter)
+        public abstract void EfficientlyStore<T>(ValueCache valueCache, IList<T> transpositions) where T : Transposition;
+        public static ColumnDef<TRow, TCol> Define<TCol, TRow>(Func<TRow, TCol> getter, Action<TRow, TCol> setter, int columnIndex)
         {
-            return ColumnDef<TRow, TCol>.Define(getter, setter);
+            return ColumnDef<TRow, TCol>.Define(getter, setter, columnIndex);
         }
     }
 
@@ -42,10 +42,18 @@ namespace pwiz.Common.Collections.Transpositions
 
     public abstract class ColumnDef<TRow, TCol> : ColumnDef<TRow>
     {
-        public static ColumnDef<TRow, TCol> Define(Func<TRow, TCol> getter, Action<TRow, TCol> setter)
+        public static ColumnDef<TRow, TCol> Define(Func<TRow, TCol> getter, Action<TRow, TCol> setter, int columnIndex)
         {
-            return new Impl(getter, setter);
+            return new Impl(getter, setter, columnIndex);
         }
+
+        protected ColumnDef(int columnIndex)
+        {
+            ColumnIndex = columnIndex;
+        }
+
+        public int ColumnIndex { get; }
+
         public override Type ValueType
         {
             get { return typeof(TCol); }
@@ -90,26 +98,26 @@ namespace pwiz.Common.Collections.Transpositions
         }
 
        
-        public override void EfficientlyStore<T>(ValueCache valueCache, IList<T> transpositions, int columnIndex)
+        public override void EfficientlyStore<T>(ValueCache valueCache, IList<T> transpositions)
         {
-            Optimize(GetColumnDataOptimizer(valueCache), transpositions, columnIndex);
+            Optimize(GetColumnDataOptimizer(valueCache), transpositions);
         }
 
-        protected void Optimize<T>(ColumnDataOptimizer<TCol> optimizer, IList<T> transpositions, int columnIndex) where T : Transposition
+        protected void Optimize<T>(ColumnDataOptimizer<TCol> optimizer, IList<T> transpositions) where T : Transposition
         {
             int iTransposition = 0;
 
-            foreach (var newList in optimizer.OptimizeMemoryUsage(transpositions.Select(t => (ColumnData<TCol>)t.GetColumnData(columnIndex))))
+            foreach (var newList in optimizer.OptimizeMemoryUsage(transpositions.Select(t => (ColumnData<TCol>)t.GetColumnData(ColumnIndex))))
             {
                 var transposition = transpositions[iTransposition];
 #if DEBUG
-                var oldColumn = (ColumnData<TCol>) transposition.ColumnDatas.ElementAtOrDefault(columnIndex);
-                if (!ColumnData.ContentsEqual(oldColumn, newList))
+                var oldColumn = (ColumnData<TCol>) transposition.ColumnDatas.ElementAtOrDefault(ColumnIndex);
+                if (!Equals(oldColumn, newList))
                 {
                     throw new InvalidOperationException();
                 }
 #endif
-                transposition = (T)transposition.ChangeColumnAt(columnIndex, newList);
+                transposition = (T)transposition.ChangeColumnAt(ColumnIndex, newList);
                 transpositions[iTransposition] = transposition;
                 iTransposition++;
             }
@@ -124,16 +132,27 @@ namespace pwiz.Common.Collections.Transpositions
         {
             var columnData = (ColumnData<TCol>)column;
             int iRow = 0;
-            foreach (var row in rows)
+            foreach (var rowValue in GetValues(rows))
             {
-                var value = columnData == null ? default(TCol) : columnData.GetValue(iRow++);
-                if (!Equals(GetValue(row),value))
+                var columnValue = columnData == null ? default : columnData.GetValue(iRow++);
+                if (!Equals(rowValue, columnValue))
                 {
                     return false;
                 }
             }
 
             return true;
+        }
+
+        public IEnumerable<TCol> GetValuesFromColumn(ColumnData c, int start, int count)
+        {
+            var columnData = (ColumnData<TCol>) c;
+            if (columnData == null)
+            {
+                return Enumerable.Repeat(default(TCol), count);
+            }
+
+            return Enumerable.Range(start, count).Select(i => columnData.GetValue(i));
         }
 
         /// <summary>
@@ -144,7 +163,7 @@ namespace pwiz.Common.Collections.Transpositions
             private Func<TRow, TCol> _getter;
             private Action<TRow, TCol> _setter;
 
-            public Impl(Func<TRow, TCol> getter, Action<TRow, TCol> setter)
+            public Impl(Func<TRow, TCol> getter, Action<TRow, TCol> setter, int columnIndex) : base(columnIndex)
             {
                 _getter = getter;
                 _setter = setter;
@@ -159,6 +178,81 @@ namespace pwiz.Common.Collections.Transpositions
             {
                 _setter(row, value);
             }
+        }
+    }
+
+    public static class ColumnReader
+    {
+        public static ColumnReader<TRow, TCol> Custom<TRow, TCol>(Func<IEnumerable<TRow>, IEnumerable<TCol>> rowGetter,
+            Func<Transposition<TRow>, int, int, IEnumerable<TCol>> columnGetter)
+        {
+            return ColumnReader<TRow, TCol>.Custom(rowGetter, columnGetter);
+        }
+
+        public static ColumnReader<TRow, TCol> Simple<TRow, TCol>(ColumnDef<TRow, TCol> columnDef)
+        {
+            return ColumnReader<TRow, TCol>.Simple(columnDef);
+        }
+    }
+    
+    public abstract class ColumnReader<TRow, TCol>
+    {
+        public static ColumnReader<TRow, TCol> Simple(ColumnDef<TRow, TCol> columnDef)
+        {
+            return new SimpleImpl(columnDef);
+        }
+
+        public static ColumnReader<TRow, TCol> Custom(Func<IEnumerable<TRow>, IEnumerable<TCol>> rowGetter,
+            Func<Transposition<TRow>, int, int, IEnumerable<TCol>> columnGetter)
+        {
+            return new CustomImpl(rowGetter, columnGetter);
+        }
+
+        public abstract IEnumerable<TCol> FromRows(IEnumerable<TRow> row);
+
+        public abstract IEnumerable<TCol> FromTransposition(Transposition<TRow> transposition, int start, int count);
+
+        private class SimpleImpl : ColumnReader<TRow, TCol>
+        {
+            private ColumnDef<TRow, TCol> _columnDef;
+            public SimpleImpl(ColumnDef<TRow, TCol> columnDef)
+            {
+                _columnDef = columnDef;
+            }
+
+            public override IEnumerable<TCol> FromTransposition(Transposition<TRow> transposition, int start, int count)
+            {
+                return _columnDef.GetValuesFromColumn(transposition.GetColumnData(_columnDef.ColumnIndex), start,
+                    count);
+            }
+
+            public override IEnumerable<TCol> FromRows(IEnumerable<TRow> rows)
+            {
+                return _columnDef.GetValues(rows);
+            }
+        }
+
+        private class CustomImpl : ColumnReader<TRow, TCol>
+        {
+            private Func<IEnumerable<TRow>, IEnumerable<TCol>> _rowGetter;
+            private Func<Transposition<TRow>, int, int, IEnumerable<TCol>> _columnGetter;
+
+            public CustomImpl(Func<IEnumerable<TRow>, IEnumerable<TCol>> rowGetter,
+                Func<Transposition<TRow>, int, int, IEnumerable<TCol>> columnGetter)
+            {
+                _rowGetter = rowGetter;
+                _columnGetter = columnGetter;
+            }
+
+            public override IEnumerable<TCol> FromRows(IEnumerable<TRow> rows)
+            {
+                return _rowGetter(rows);
+            }
+            public override IEnumerable<TCol> FromTransposition(Transposition<TRow> transposition, int start, int count)
+            {
+                return _columnGetter(transposition, start, count);
+            }
+
         }
     }
 }

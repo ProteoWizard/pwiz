@@ -21,7 +21,6 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.Collections.Transpositions;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {

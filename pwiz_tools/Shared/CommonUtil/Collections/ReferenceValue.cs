@@ -59,6 +59,11 @@ namespace pwiz.Common.Collections
         {
             return new ReferenceValue<T>(value);
         }
+
+        public override string ToString()
+        {
+            return Value?.ToString() ?? string.Empty;
+        }
     }
 
     /// <summary>

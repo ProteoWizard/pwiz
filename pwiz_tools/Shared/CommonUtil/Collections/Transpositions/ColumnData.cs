@@ -40,17 +40,6 @@ namespace pwiz.Common.Collections.Transpositions
         {
             return ColumnData<T>.List.ForList(list);
         }
-
-
-        public static bool ContentsEqual(ColumnData columnData1, ColumnData columnData2)
-        {
-            if (ReferenceEquals(columnData1, columnData2))
-            {
-                return true;
-            }
-
-            return columnData1?.Equals(columnData2) ?? columnData2.Equals(columnData1);
-        }
     }
     /// <summary>
     /// Holds data for one column in a <see cref="Transposition"/>.
@@ -77,6 +66,11 @@ namespace pwiz.Common.Collections.Transpositions
             return List.ForReadOnlyList(list);
         }
 
+        /// <summary>
+        /// ColumnData representing all values being the same.
+        /// This class is only used if the value is not the default(T).
+        /// Null should be used to represent the default constant.
+        /// </summary>
         private class Constant : ColumnData<T>
         {
             public static ColumnData<T> ForValue(T value)
@@ -102,7 +96,7 @@ namespace pwiz.Common.Collections.Transpositions
             {
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != this.GetType()) return false;
+                if (obj.GetType() != GetType()) return false;
                 return Equals((Constant)obj);
             }
 
@@ -110,8 +104,18 @@ namespace pwiz.Common.Collections.Transpositions
             {
                 return EqualityComparer<T>.Default.GetHashCode(_value);
             }
+
+            public override string ToString()
+            {
+                return @"{" + _value + "}";
+            }
         }
 
+        /// <summary>
+        /// Subclass for column data that is a list of values.
+        /// This class is only used for lists that have more than one unique value.
+        /// If all of the values in the list are the same, then <see cref="ColumnData{T}.Constant"/> is used instead.
+        /// </summary>
         public class List : ColumnData<T>
         {
             public static ColumnData<T> ForReadOnlyList(IReadOnlyList<T> readOnlyList)
@@ -163,20 +167,25 @@ namespace pwiz.Common.Collections.Transpositions
 
             protected bool Equals(List other)
             {
-                return Equals(ToImmutableList(), other.ToImmutableList());
+                return _readOnlyList.SequenceEqual(other._readOnlyList);
             }
 
             public override bool Equals(object obj)
             {
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != this.GetType()) return false;
+                if (obj.GetType() != GetType()) return false;
                 return Equals((List)obj);
             }
 
             public override int GetHashCode()
             {
                 return ToImmutableList().GetHashCode();
+            }
+
+            public override string ToString()
+            {
+                return @"[" + string.Join(@",", _readOnlyList) + "]";
             }
         }
     }

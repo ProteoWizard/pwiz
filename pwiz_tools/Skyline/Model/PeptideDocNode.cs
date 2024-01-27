@@ -550,7 +550,6 @@ namespace pwiz.Skyline.Model
                 double maxScore = 0;
                 foreach (TransitionGroupDocNode nodeGroup in Children)
                 {
-
                     double groupArea = 0;
                     double groupTranMeasured = 0;
                     bool isGroupIdentified = false;
@@ -558,26 +557,31 @@ namespace pwiz.Skyline.Model
                     {
                         if (!nodeTran.HasResults)
                             continue;
-                        var result = nodeTran.Results[i];
-                        int resultCount = result.Count;
+                        int resultCount = nodeTran.Results.ReplicatePositions.GetCount(i);
                         if (resultCount == 0)
                             continue;
+                        List<bool> isIdentifiedList = null;
                         // Use average area over all files in a replicate to avoid
                         // counting a replicate as best, simply because it has more
                         // measurements.  Most of the time there should only be one
                         // file per precursor per replicate.
                         double tranArea = 0;
                         double tranMeasured = 0;
-                        for (int iChromInfo = 0; iChromInfo < resultCount; iChromInfo++)
+                        int iChromInfo = 0;
+                        foreach (var area in nodeTran.Results.GetReplicateValues(TransitionChromInfo.AreaColumn, i))
                         {
-                            var chromInfo = result[iChromInfo];
-                            if (chromInfo.Area > 0)
+                            if (area > 0)
                             {
-                                tranArea += chromInfo.Area;
+                                tranArea += area;
                                 tranMeasured++;
-
-                                isGroupIdentified = isGroupIdentified || chromInfo.IsIdentified;
+                                if (!isGroupIdentified)
+                                {
+                                    isIdentifiedList ??= nodeTran.Results
+                                        .GetReplicateValues(TransitionChromInfo.IsIdentifiedColumn, i).ToList();
+                                    isGroupIdentified |= isIdentifiedList[iChromInfo];
+                                }
                             }
+                            iChromInfo++;
                         }
                         groupArea += tranArea/resultCount;
                         groupTranMeasured += tranMeasured/resultCount;

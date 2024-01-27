@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using pwiz.Common.SystemUtil;
 
@@ -33,19 +32,26 @@ namespace pwiz.Common.Collections.Transpositions
     {
         private List<ColumnDef<TRow>> _columnDefs = new List<ColumnDef<TRow>>();
 
-        protected void AddColumn<TCol>(Func<TRow, TCol> getter, Action<TRow, TCol> setter)
+        protected ColumnDef<TRow, TCol> AddColumn<TCol>(Func<TRow, TCol> getter, Action<TRow, TCol> setter)
         {
-            AddColumn(DefineColumn(getter, setter));
+            return AddColumn(DefineColumn(getter, setter));
         }
 
         protected ColumnDef<TRow, TCol> DefineColumn<TCol>(Func<TRow, TCol> getter, Action<TRow, TCol> setter)
         {
-            return ColumnDef.Define(getter, setter);
+            return ColumnDef.Define(getter, setter, _columnDefs.Count);
         }
 
-        protected void AddColumn<TCol>(ColumnDef<TRow, TCol> columnDef)
+        protected ColumnDef<TRow, TCol> AddColumn<TCol>(ColumnDef<TRow, TCol> columnDef)
         {
+            if (!Equals(_columnDefs.Count, columnDef.ColumnIndex))
+            {
+                var message = string.Format(@"Column Index should be {0} but is {1}", _columnDefs.Count,
+                    columnDef.ColumnIndex);
+                throw new ArgumentException(message);
+            }
             _columnDefs.Add(columnDef);
+            return columnDef;
         }
 
         public IEnumerable<ColumnData> ToColumns(ICollection<TRow> rows)
@@ -72,7 +78,7 @@ namespace pwiz.Common.Collections.Transpositions
         {
             for (int iCol = 0; iCol < _columnDefs.Count; iCol++)
             {
-                _columnDefs[iCol].EfficientlyStore(valueCache, transpositions, iCol);
+                _columnDefs[iCol].EfficientlyStore(valueCache, transpositions);
             }
         }
 

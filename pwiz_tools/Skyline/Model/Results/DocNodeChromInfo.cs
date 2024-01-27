@@ -662,18 +662,23 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                if (!GetFlag(Flags.Identified))
-                {
-                    return PeakIdentification.FALSE;
-                }
-
-                return GetFlag(Flags.IdentifiedByAlignment) ? PeakIdentification.ALIGNED : PeakIdentification.TRUE;
+                return GetIdentified(_flags);
             }
             set
             {
                 SetFlag(Flags.Identified, value != PeakIdentification.FALSE);
                 SetFlag(Flags.IdentifiedByAlignment, value == PeakIdentification.ALIGNED);
             }
+        }
+
+        private static PeakIdentification GetIdentified(Flags flags)
+        {
+            if (0 == (flags & Flags.Identified))
+            {
+                return PeakIdentification.FALSE;
+            }
+
+            return 0 != (flags & Flags.IdentifiedByAlignment) ? PeakIdentification.ALIGNED : PeakIdentification.TRUE;
         }
         public short Rank { get; private set; }
         public short RankByLevel { get; private set; }
@@ -1041,7 +1046,7 @@ namespace pwiz.Skyline.Model.Results
             public TransitionChromInfoTransposer()
             {
                 var factorLists = ColumnOptimizeOptions.Default.WithFactorLists();
-                AddColumn(c=>c._flags, (c,v)=>c._flags = v);
+                var flagsColumn = AddColumn(c=>c._flags, (c,v)=>c._flags = v);
                 AddColumn(c=>c.OptimizationStep, (c,v)=>c.OptimizationStep = v);
                 AddColumn(c=>c._massError, (c,v)=>c._massError = v);
                 AddColumn(DefineColumn(c => c.RetentionTime, (c, v) => c.RetentionTime = v)
@@ -1051,7 +1056,7 @@ namespace pwiz.Skyline.Model.Results
                 AddColumn(DefineColumn(c => c.EndRetentionTime, (c, v) => c.EndRetentionTime = v)
                     .ChangeOptimizeOptions(factorLists));
                 AddColumn(DefineColumn(c=>c.IonMobility, (c,v)=>c.IonMobility = v));
-                AddColumn(c=>c.Area, (c,v)=>c.Area = v);
+                var areaColumn = AddColumn(c=>c.Area, (c,v)=>c.Area = v);
                 AddColumn(c=>c.BackgroundArea, (c,v)=>c.BackgroundArea = v);
                 AddColumn(c=>c.Height, (c,v)=>c.Height = v);
                 AddColumn(c=>c.Fwhm, (c,v)=>c.Fwhm = v);
@@ -1061,6 +1066,9 @@ namespace pwiz.Skyline.Model.Results
                 AddColumn(c=>c._peakShapeValue, (c,v)=>c._peakShapeValue  = v);
                 AddColumn(c=>c.Annotations, (c,v)=>c.Annotations = v);
                 AddColumn(c=>c.UserSet, (c,v)=>c.UserSet = v);
+
+                AreaColumn = ColumnReader.Simple(areaColumn);
+                IsIdentifiedColumn = new IsIdentifiedColumnReader(flagsColumn);
             }
 
             protected override TransitionChromInfo[] CreateRows(int rowCount)
@@ -1072,7 +1080,31 @@ namespace pwiz.Skyline.Model.Results
             {
                 return (TransposedTransitionChromInfos) TransposedTransitionChromInfos.EMPTY.ChangeColumns(ToColumns(rows));
             }
+
+            private class IsIdentifiedColumnReader : ColumnReader<TransitionChromInfo, bool>
+            {
+                private readonly ColumnDef<TransitionChromInfo, Flags> _flagsColumn;
+                public IsIdentifiedColumnReader(ColumnDef<TransitionChromInfo, Flags> flagsColumn)
+                {
+                    _flagsColumn = flagsColumn;
+                }
+                public override IEnumerable<bool> FromRows(IEnumerable<TransitionChromInfo> rows)
+                {
+                    return rows.Select(row => row.IsIdentified);
+                }
+
+                public override IEnumerable<bool> FromTransposition(Transposition<TransitionChromInfo> transposition, int start, int count)
+                {
+                    var columnData = transposition.GetColumnData(_flagsColumn.ColumnIndex);
+                    foreach (var flags in _flagsColumn.GetValuesFromColumn(columnData, start, count))
+                    {
+                        yield return PeakIdentification.FALSE != GetIdentified(flags);
+                    }
+                }
+            }
         }
+        public static ColumnReader<TransitionChromInfo, float> AreaColumn{ get; private set; }
+        public static ColumnReader<TransitionChromInfo, bool> IsIdentifiedColumn { get; private set; }
     }
 
     /// <summary>
@@ -1322,6 +1354,17 @@ namespace pwiz.Skyline.Model.Results
             get; private set;
         }
 
+        public IEnumerable<TCol> GetReplicateValues<TCol>(ColumnReader<TItem, TCol> columnReader, int replicateIndex)
+        {
+            return GetColumnValues(columnReader, ReplicatePositions.GetStart(replicateIndex),
+                ReplicatePositions.GetCount(replicateIndex));
+        }
+
+        protected virtual IEnumerable<TCol> GetColumnValues<TCol>(ColumnReader<TItem, TCol> columnReader, int start, int count)
+        {
+            return columnReader.FromRows(GetItems(start, count));
+        }
+
         private class Rows : Results<TItem>
         {
             private ImmutableList<TItem> _items;
@@ -1451,13 +1494,18 @@ namespace pwiz.Skyline.Model.Results
                 int firstCol = includeFileId ? 0 : 1;
                 for (int iColumn = firstCol; iColumn < transposer.ColumnCount; iColumn++)
                 {
-                    if (!ColumnData.ContentsEqual(_transposition.GetColumnData(iColumn), other._transposition.GetColumnData(iColumn)))
+                    if (!Equals(_transposition.GetColumnData(iColumn), other._transposition.GetColumnData(iColumn)))
                     {
                         return false;
                     }
                 }
 
                 return true;
+            }
+
+            protected override IEnumerable<TCol> GetColumnValues<TCol>(ColumnReader<TItem, TCol> columnReader, int start, int count)
+            {
+                return columnReader.FromTransposition(_transposition, start, count);
             }
         }
     }
@@ -1762,11 +1810,13 @@ namespace pwiz.Skyline.Model.Results
         {
             protected ChromInfoTransposer()
             {
-                AddColumn(DefineColumn(
+                FileIdColumn = AddColumn(DefineColumn(
                         c => ReferenceValue.Of(c.FileId),
                         (c, v) => c.FileId = v)
                     .ChangeOptimizeOptions(ColumnOptimizeOptions.Default.WithValueCache()));
             }
+
+            protected ColumnDef<T, ReferenceValue<ChromFileInfoId>> FileIdColumn { get; }
         }
     }
 }
