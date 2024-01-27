@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.SystemUtil;
@@ -44,7 +45,7 @@ namespace pwiz.Common.Collections.Transpositions
 
         public IEnumerable<ColumnData> ToColumns(ICollection<TRow> rows)
         {
-            return _columnDefs.Select(col => col.GetValues(rows));
+            return _columnDefs.Select(col => col.GetColumn(rows));
         }
 
         public abstract Transposition<TRow> Transpose(ICollection<TRow> rows);
@@ -80,7 +81,7 @@ namespace pwiz.Common.Collections.Transpositions
             return _columnDefs[index].ValueType;
         }
 
-        public bool EqualInColumn(int columnIndex, ColumnData columnData, IEnumerable<TRow> rows)
+        public bool ColumnEquals(int columnIndex, ColumnData columnData, IEnumerable<TRow> rows)
         {
             return _columnDefs[columnIndex].EqualsColumn(rows, columnData);
         }

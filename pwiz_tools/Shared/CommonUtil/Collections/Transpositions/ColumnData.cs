@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -42,20 +43,27 @@ namespace pwiz.Common.Collections.Transpositions
 
         public abstract bool IsList { get; }
         public abstract bool IsImmutableList { get; }
-        public abstract bool EqualsColumn(ColumnData other, int count);
+        public abstract bool SequenceEqual(IEnumerable values);
+        public abstract bool ContentsEqual(ColumnData columnData, int count);
 
-        public static bool ColumnsEqual(ColumnData x, ColumnData y, int count)
+        public static bool ContentsEqual(ColumnData columnData1, ColumnData columnData2, int count)
         {
-            if (ReferenceEquals(x, y))
+            if (count == 0)
             {
                 return true;
             }
 
-            if (x == null)
+            if (ReferenceEquals(columnData1, columnData2))
             {
-                return y.EqualsColumn(x, count);
+                return true;
             }
-            return x.EqualsColumn(y, count);
+
+            if (columnData1 != null)
+            {
+                return columnData1.ContentsEqual(columnData2, count);
+            }
+
+            return columnData2.ContentsEqual(columnData1, count);
         }
     }
     /// <summary>
@@ -69,6 +77,39 @@ namespace pwiz.Common.Collections.Transpositions
         public abstract T GetValue(int row);
         public abstract ImmutableList<T> ToImmutableList();
 
+        public sealed override bool SequenceEqual(IEnumerable enumerable)
+        {
+            return SequenceEqual(enumerable.Cast<T>());
+        }
+
+        protected virtual bool SequenceEqual(IEnumerable<T> enumerable)
+        {
+            int i = 0;
+            foreach (var item in enumerable)
+            {
+                if (!Equals(GetValue(i), item))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public sealed override bool ContentsEqual(ColumnData columnData, int count)
+        {
+            if (count == 0)
+            {
+                return true;
+            }
+            return ContentsEqual((ColumnData<T>)columnData ?? new ConstantColumnData(default), count);
+        }
+
+        protected virtual bool ContentsEqual(ColumnData<T> columnData, int count)
+        {
+            return Enumerable.Range(0, count).All(i => Equals(GetValue(i), columnData.GetValue(i)));
+        }
+
+
         public static ColumnData<T> ForConstant(T value)
         {
             return Equals(default(T), value) ? null : new ConstantColumnData(value);
@@ -79,7 +120,7 @@ namespace pwiz.Common.Collections.Transpositions
             var immutableList = ImmutableList.ValueOf(values);
             if (immutableList == null)
             {
-                return null;
+                return ForConstant(default);
             }
             return new ListColumnData(ImmutableList.ValueOf(immutableList));
         }
@@ -94,26 +135,6 @@ namespace pwiz.Common.Collections.Transpositions
             return new ListColumnData(list);
         }
 
-        public sealed override bool EqualsColumn(ColumnData other, int count)
-        {
-            if (count == 0)
-            {
-                return true;
-            }
-
-            other ??= new ConstantColumnData(default);
-            if (other is ColumnData<T> otherColumn)
-            {
-                return EqualsColumn(otherColumn, count);
-            }
-
-            return false;
-        }
-
-        protected virtual bool EqualsColumn(ColumnData<T> otherColumn, int count)
-        {
-            return Enumerable.Range(0, count).All(i => Equals(GetValue(i), otherColumn.GetValue(i)));
-        }
 
         private class ConstantColumnData : ColumnData<T>
         {
@@ -141,15 +162,16 @@ namespace pwiz.Common.Collections.Transpositions
                 return null;
             }
 
-            protected override bool EqualsColumn(ColumnData<T> otherColumn, int count)
+            protected override bool ContentsEqual(ColumnData<T> otherColumn, int count)
             {
                 if (otherColumn is ConstantColumnData otherConstant)
                 {
                     return Equals(_value, otherConstant._value);
                 }
 
-                return base.EqualsColumn(otherColumn, count);
+                return base.ContentsEqual(otherColumn, count);
             }
+
         }
 
         public class ListColumnData : ColumnData<T>
@@ -183,7 +205,7 @@ namespace pwiz.Common.Collections.Transpositions
                 return ImmutableList.ValueOf(_readOnlyList);
             }
 
-            protected override bool EqualsColumn(ColumnData<T> otherColumn, int count)
+            protected override bool ContentsEqual(ColumnData<T> otherColumn, int count)
             {
                 if (count != _readOnlyList.Count)
                 {
@@ -200,7 +222,7 @@ namespace pwiz.Common.Collections.Transpositions
                     return _readOnlyList.SequenceEqual(otherList._readOnlyList);
                 }
 
-                return base.EqualsColumn(otherColumn, count);
+                return base.ContentsEqual(otherColumn, count);
             }
         }
     }

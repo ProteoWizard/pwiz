@@ -83,7 +83,8 @@ namespace pwiz.Common.Collections.Transpositions
             }
         }
 
-        public ColumnData GetColumnValues(int columnIndex)
+        [CanBeNull]
+        public ColumnData GetColumnData(int columnIndex)
         {
             if (columnIndex < _columns.Count)
             {

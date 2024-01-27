@@ -1246,62 +1246,27 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public static bool EqualsDeep(Results<TItem> resultsOld, Results<TItem> results)
-        {
-            return resultsOld.EqualsResults(results, true);
-        }
-
         public float? GetAverageValue(Func<TItem, float?> getVal)
         {
             int valCount = 0;
             double valTotal = 0;
 
-            foreach (var result in this)
+            foreach (var chromInfo in FlatList)
             {
-                if (result.IsEmpty)
+                if (Equals(chromInfo, default(TItem)))
                     continue;
-                foreach (var chromInfo in result)
-                {
-                    if (Equals(chromInfo, default(TItem)))
-                        continue;
-                    float? val = getVal(chromInfo);
-                    if (!val.HasValue)
-                        continue;
+                float? val = getVal(chromInfo);
+                if (!val.HasValue)
+                    continue;
 
-                    valTotal += val.Value;
-                    valCount++;
-                }
+                valTotal += val.Value;
+                valCount++;
             }
 
             if (valCount == 0)
                 return null;
 
             return (float)(valTotal / valCount);            
-        }
-
-        public float? GetBestPeakValue(Func<TItem, RatedPeakValue> getVal)
-        {
-            double ratingBest = double.MinValue;
-            float? valBest = null;
-
-            foreach (var result in this)
-            {
-                if (result.IsEmpty)
-                    continue;
-                foreach (var chromInfo in result)
-                {
-                    if (Equals(chromInfo, default(TItem)))
-                        continue;
-                    RatedPeakValue rateVal = getVal(chromInfo);
-                    if (rateVal.Rating > ratingBest)
-                    {
-                        ratingBest = rateVal.Rating;
-                        valBest = rateVal.Value;
-                    }
-                }
-            }
-
-            return valBest;
         }
 
         private bool Equals(Results<TItem> other)
@@ -1473,9 +1438,10 @@ namespace pwiz.Skyline.Model.Results
                 var transposer = _transposition.GetTransposer();
                 Assume.AreEqual(typeof(ReferenceValue<ChromFileInfoId>), transposer.GetColumnValueType(0));
                 int firstCol = includeFileId ? 0 : 1;
+                int rowCount = ReplicatePositions.TotalCount;
                 for (int iColumn = firstCol; iColumn < transposer.ColumnCount; iColumn++)
                 {
-                    if (!transposer.EqualInColumn(iColumn, _transposition.GetColumnValues(iColumn), other.FlatList))
+                    if (!transposer.ColumnEquals(iColumn, _transposition.GetColumnData(iColumn),other.FlatList))
                     {
                         return false;
                     }
@@ -1493,8 +1459,7 @@ namespace pwiz.Skyline.Model.Results
                 int rowCount = ReplicatePositions.TotalCount;
                 for (int iColumn = firstCol; iColumn < transposer.ColumnCount; iColumn++)
                 {
-                    if (!ColumnData.ColumnsEqual(_transposition.GetColumnValues(iColumn),
-                            other._transposition.GetColumnValues(iColumn), rowCount))
+                    if (!ColumnData.ContentsEqual(_transposition.GetColumnData(iColumn), other._transposition.GetColumnData(iColumn), rowCount))
                     {
                         return false;
                     }
@@ -1503,18 +1468,6 @@ namespace pwiz.Skyline.Model.Results
                 return true;
             }
         }
-    }
-
-    public struct RatedPeakValue
-    {
-        public RatedPeakValue(double rating, float? value) : this()
-        {
-            Rating = rating;
-            Value = value;
-        }
-
-        public double Rating { get; private set; }
-        public float? Value { get; private set; }
     }
 
     /// <summary>

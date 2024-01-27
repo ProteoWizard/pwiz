@@ -34,7 +34,7 @@ namespace pwiz.Common.Collections.Transpositions
 
     public abstract class ColumnDef<TRow> : ColumnDef
     {
-        public abstract ColumnData GetValues(IEnumerable<TRow> rows);
+        public abstract ColumnData GetColumn(IEnumerable<TRow> rows);
         public abstract void SetValues(IEnumerable<TRow> rows, ColumnData column, int start);
         public abstract Type ValueType { get; }
         public abstract bool EqualsColumn(IEnumerable<TRow> rows, ColumnData column);
@@ -51,10 +51,14 @@ namespace pwiz.Common.Collections.Transpositions
             get { return typeof(TCol); }
         }
 
-        public override ColumnData GetValues(IEnumerable<TRow> rows)
+        public override ColumnData GetColumn(IEnumerable<TRow> rows)
         {
-            var values = rows.Select(GetValue);
-            return ColumnData.ForValues(values);
+            return ColumnData.ForValues(GetValues(rows));
+        }
+
+        public IEnumerable<TCol> GetValues(IEnumerable<TRow> rows)
+        {
+            return rows.Select(GetValue);
         }
 
         public override void SetValues(IEnumerable<TRow> rows, ColumnData columnData, int start)
@@ -88,7 +92,7 @@ namespace pwiz.Common.Collections.Transpositions
         {
             int iTransposition = 0;
 
-            foreach (var newList in optimizer.OptimizeMemoryUsage(transpositions.Select(t => (ColumnData<TCol>)t.GetColumnValues(columnIndex))))
+            foreach (var newList in optimizer.OptimizeMemoryUsage(transpositions.Select(t => (ColumnData<TCol>)t.GetColumnData(columnIndex))))
             {
                 var transposition = transpositions[iTransposition];
                 transposition = (T)transposition.ChangeColumnAt(columnIndex, newList);
