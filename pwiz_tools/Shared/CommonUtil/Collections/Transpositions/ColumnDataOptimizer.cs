@@ -31,6 +31,7 @@ namespace pwiz.Common.Collections.Transpositions
     {
         public ColumnDataOptimizer(ValueCache valueCache, ColumnOptimizeOptions options)
         {
+            Options = options;
             ValueCache = options.UseValueCache ? valueCache : null;
             ItemSize = ComputeItemSize();
         }
@@ -73,7 +74,7 @@ namespace pwiz.Common.Collections.Transpositions
             var columnDataValues = columnInfos.Where(col => col.ColumnValues != null).Select(col => col.ColumnValues)
                 .Distinct().ToList();
             
-            var optimizedColumnValues = OptimizeColumnDataValues(columnDataValues);
+            var optimizedColumnValues = OptimizeColumnLists(columnDataValues);
             
             foreach (var columnInfo in columnInfos)
             {
@@ -115,7 +116,7 @@ namespace pwiz.Common.Collections.Transpositions
             var columnInfos = new List<ColumnDataInfo>();
             foreach (var columnData in columnDataList)
             {
-                var columnValues = columnData?.ToImmutableList();
+                var columnValues = (columnData as ColumnData<T>.List)?.ToImmutableList();
                 if (columnValues == null)
                 {
                     // ColumnData is either empty or a constant: can't be optimized any more
@@ -135,37 +136,17 @@ namespace pwiz.Common.Collections.Transpositions
             return columnInfos;
         }
 
-        public Dictionary<HashedObject<ImmutableList<T>>, ColumnData<T>> OptimizeColumnDataValues(
+        public Dictionary<HashedObject<ImmutableList<T>>, ColumnData<T>.List> OptimizeColumnLists(
             IList<HashedObject<ImmutableList<T>>> columnDataValues)
         {
             IList<ColumnDataValueInfo> remainingLists = new List<ColumnDataValueInfo>();
-            var storedLists = new Dictionary<HashedObject<ImmutableList<T>>, ColumnData<T>>();
+            var storedLists = new Dictionary<HashedObject<ImmutableList<T>>, ColumnData<T>.List>();
             foreach (var list in columnDataValues)
             {
                 if (list == null)
                 {
                     continue;
                 }
-
-                if (list.Value.Count == 0)
-                {
-                    storedLists.Add(list, null);
-                    continue;
-                }
-                var firstValue = list.Value[0];
-                if (list.Value.Skip(1).All(v => Equals(firstValue, v)))
-                {
-                    if (Equals(firstValue, default(T)))
-                    {
-                        storedLists.Add(list, default);
-                    }
-                    else
-                    {
-                        storedLists.Add(list, ColumnData.ForConstant(firstValue));
-                    }
-                    continue;
-                }
-
                 if (Options.UseFactorLists)
                 {
                     remainingLists.Add(new ColumnDataValueInfo(list));
@@ -183,7 +164,7 @@ namespace pwiz.Common.Collections.Transpositions
         }
 
         protected IList<ColumnDataValueInfo> MakeFactorLists(
-            Dictionary<HashedObject<ImmutableList<T>>, ColumnData<T>> storedLists, IList<ColumnDataValueInfo> remainingLists)
+            Dictionary<HashedObject<ImmutableList<T>>, ColumnData<T>.List> storedLists, IList<ColumnDataValueInfo> remainingLists)
         {
             if (ItemSize <= 1)
             {
@@ -213,7 +194,16 @@ namespace pwiz.Common.Collections.Transpositions
             var factorListBuilder = new FactorList<T>.Builder(remainingLists.SelectMany(listInfo => listInfo.UniqueValues));
             foreach (var listInfo in remainingLists)
             {
-                storedLists.Add(listInfo.ColumnValues, ColumnData.ForList(factorListBuilder.MakeFactorList(listInfo.ColumnValues.Value)));
+                var storedData = ColumnData.ForList(factorListBuilder.MakeFactorList(listInfo.ColumnValues.Value));
+                if (storedData is ColumnData<T>.List storedList)
+                {
+                    storedLists.Add(listInfo.ColumnValues, storedList);
+                }
+                else
+                {
+                    string message = string.Format(@"ColumnData.ForList returned {0}", storedData);
+                    throw new InvalidOperationException(message);
+                }
             }
 
             return ImmutableList.Empty<ColumnDataValueInfo>();

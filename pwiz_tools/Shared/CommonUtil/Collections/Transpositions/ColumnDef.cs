@@ -82,7 +82,7 @@ namespace pwiz.Common.Collections.Transpositions
 
         protected abstract TCol GetValue(TRow row);
         protected abstract void SetValue(TRow row, TCol value);
-        public ColumnOptimizeOptions OptimizeOptions { get; private set; }
+        public ColumnOptimizeOptions OptimizeOptions { get; private set; } = ColumnOptimizeOptions.Default;
 
         public ColumnDef<TRow,TCol> ChangeOptimizeOptions(ColumnOptimizeOptions value)
         {

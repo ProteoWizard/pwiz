@@ -17,14 +17,15 @@
  * limitations under the License.
  */
 
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 
 namespace pwiz.Common.Collections.Transpositions
 {
     public abstract class ColumnData
     {
+        [CanBeNull]
         public static ColumnData<T> ForConstant<T>(T value)
         {
             return ColumnData<T>.ForConstant(value);
@@ -32,19 +33,14 @@ namespace pwiz.Common.Collections.Transpositions
 
         public static ColumnData<T> ForValues<T>(IEnumerable<T> values)
         {
-            return ColumnData<T>.ForValues(ImmutableList<T>.ValueOf(values));
+            return ForList(ImmutableList<T>.ValueOf(values));
         }
 
         public static ColumnData<T> ForList<T>(IReadOnlyList<T> list)
         {
-            return ColumnData<T>.ForList(list);
+            return ColumnData<T>.List.ForList(list);
         }
 
-        public abstract bool IsList { get; }
-        public abstract bool IsImmutableList { get; }
-        public abstract bool SequenceEqual(IEnumerable values);
-        public abstract bool ContentsEqual(ColumnData columnData);
-        public abstract int? RowCount { get; }
 
         public static bool ContentsEqual(ColumnData columnData1, ColumnData columnData2)
         {
@@ -53,13 +49,7 @@ namespace pwiz.Common.Collections.Transpositions
                 return true;
             }
 
-            int count = columnData1?.RowCount ?? columnData2?.RowCount ?? 1;
-            if (columnData1 != null)
-            {
-                return columnData1.ContentsEqual(columnData2);
-            }
-
-            return columnData2.ContentsEqual(columnData1);
+            return columnData1?.Equals(columnData2) ?? columnData2.Equals(columnData1);
         }
     }
     /// <summary>
@@ -71,68 +61,30 @@ namespace pwiz.Common.Collections.Transpositions
         {
         }
         public abstract T GetValue(int row);
-        public abstract ImmutableList<T> ToImmutableList();
-
-        public sealed override bool SequenceEqual(IEnumerable enumerable)
-        {
-            return SequenceEqual(enumerable.Cast<T>());
-        }
-
-        protected virtual bool SequenceEqual(IEnumerable<T> enumerable)
-        {
-            int i = 0;
-            foreach (var item in enumerable)
-            {
-                if (!Equals(GetValue(i), item))
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        public sealed override bool ContentsEqual(ColumnData columnData)
-        {
-            return ContentsEqual((ColumnData<T>)columnData ?? new ConstantColumnData(default));
-        }
-
-        protected virtual bool ContentsEqual(ColumnData<T> columnData)
-        {
-            int count = RowCount ?? columnData.RowCount ?? 1;
-            return Enumerable.Range(0, count).All(i => Equals(GetValue(i), columnData.GetValue(i)));
-        }
-
 
         public static ColumnData<T> ForConstant(T value)
         {
-            return Equals(default(T), value) ? null : new ConstantColumnData(value);
+            return Constant.ForValue(value);
         }
 
         public static ColumnData<T> ForValues(IEnumerable<T> values)
         {
-            var immutableList = ImmutableList.ValueOf(values);
-            if (immutableList == null)
-            {
-                return ForConstant(default);
-            }
-            return new ListColumnData(ImmutableList.ValueOf(immutableList));
+            return List.ForReadOnlyList(ImmutableList.ValueOf(values));
         }
 
         public static ColumnData<T> ForList(IReadOnlyList<T> list)
         {
-            if (list == null)
-            {
-                return null;
-            }
-
-            return new ListColumnData(list);
+            return List.ForReadOnlyList(list);
         }
 
-
-        private class ConstantColumnData : ColumnData<T>
+        private class Constant : ColumnData<T>
         {
+            public static ColumnData<T> ForValue(T value)
+            {
+                return Equals(value, default(T)) ? null : new Constant(value);
+            }
             private T _value;
-            public ConstantColumnData(T value)
+            private Constant(T value)
             {
                 _value = value;
             }
@@ -141,40 +93,44 @@ namespace pwiz.Common.Collections.Transpositions
                 return _value;
             }
 
-            public override bool IsList
+            protected bool Equals(Constant other)
             {
-                get { return false; }
-            }
-            public override bool IsImmutableList
-            {
-                get { return false; }
+                return EqualityComparer<T>.Default.Equals(_value, other._value);
             }
 
-            public override ImmutableList<T> ToImmutableList()
+            public override bool Equals(object obj)
             {
-                return null;
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((Constant)obj);
             }
 
-            protected override bool ContentsEqual(ColumnData<T> otherColumn)
+            public override int GetHashCode()
             {
-                if (otherColumn is ConstantColumnData otherConstant)
-                {
-                    return Equals(_value, otherConstant._value);
-                }
-
-                return base.ContentsEqual(otherColumn);
-            }
-
-            public override int? RowCount
-            {
-                get { return null; }
+                return EqualityComparer<T>.Default.GetHashCode(_value);
             }
         }
 
-        public class ListColumnData : ColumnData<T>
+        public class List : ColumnData<T>
         {
+            public static ColumnData<T> ForReadOnlyList(IReadOnlyList<T> readOnlyList)
+            {
+                if (readOnlyList == null || readOnlyList.Count == 0)
+                {
+                    return null;
+                }
+
+                var firstValue = readOnlyList[0];
+                if (Enumerable.Range(1, readOnlyList.Count - 1).All(i => Equals(firstValue, readOnlyList[i])))
+                {
+                    return Constant.ForValue(firstValue);
+                }
+
+                return new List(readOnlyList);
+            }
             private IReadOnlyList<T> _readOnlyList;
-            public ListColumnData(IReadOnlyList<T> readOnlyList)
+            private List(IReadOnlyList<T> readOnlyList)
             {
                 _readOnlyList = readOnlyList;
             }
@@ -184,12 +140,7 @@ namespace pwiz.Common.Collections.Transpositions
                 return _readOnlyList[row];
             }
 
-            public override bool IsList
-            {
-                get { return true; }
-            }
-
-            public override bool IsImmutableList
+            public bool IsImmutableList
             {
                 get
                 {
@@ -197,32 +148,35 @@ namespace pwiz.Common.Collections.Transpositions
                 }
             }
 
-            public override ImmutableList<T> ToImmutableList()
+            public ImmutableList<T> ToImmutableList()
             {
                 return ImmutableList.ValueOf(_readOnlyList);
             }
 
-            protected override bool ContentsEqual(ColumnData<T> otherColumn)
-            {
-                if (otherColumn is ListColumnData otherList)
-                {
-                    if (_readOnlyList is ImmutableList<T> && otherList._readOnlyList is ImmutableList<T>)
-                    {
-                        return Equals(_readOnlyList, otherList._readOnlyList);
-                    }
-
-                    return _readOnlyList.SequenceEqual(otherList._readOnlyList);
-                }
-
-                return base.ContentsEqual(otherColumn);
-            }
-
-            public override int? RowCount
+            public int RowCount
             {
                 get
                 {
                     return _readOnlyList.Count;
                 }
+            }
+
+            protected bool Equals(List other)
+            {
+                return Equals(ToImmutableList(), other.ToImmutableList());
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((List)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                return ToImmutableList().GetHashCode();
             }
         }
     }

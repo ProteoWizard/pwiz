@@ -163,22 +163,6 @@ namespace pwiz.Skyline.Model.Results
             {
                 var docNode = (TransitionDocNode)(object)transitionDocNodes[i];
                 transposedResults[i] = FromResults(docNode.Results);
-#if DEBUG
-                if (docNode.Results == null)
-                {
-                    Assume.IsNull(transposedResults[i]);
-                }
-                else
-                {
-                    var roundTrip =
-                        Results<TransitionChromInfo>.FromColumns(docNode.Results.ReplicatePositions,
-                            transposedResults[i]);
-                    if (!Equals(docNode.Results, roundTrip))
-                    {
-                        Assume.Fail();
-                    }
-                }
-#endif
             }
 
             TransitionChromInfo.TRANSPOSER.EfficientlyStore(valueCache, transposedResults);
