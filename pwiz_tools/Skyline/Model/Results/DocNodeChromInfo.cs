@@ -1040,12 +1040,16 @@ namespace pwiz.Skyline.Model.Results
         {
             public TransitionChromInfoTransposer()
             {
+                var factorLists = ColumnOptimizeOptions.Default.WithFactorLists();
                 AddColumn(c=>c._flags, (c,v)=>c._flags = v);
                 AddColumn(c=>c.OptimizationStep, (c,v)=>c.OptimizationStep = v);
                 AddColumn(c=>c._massError, (c,v)=>c._massError = v);
-                AddColumn(DefineColumn(c=>c.RetentionTime, (c,v)=>c.RetentionTime = v).SetUseFactorLists());
-                AddColumn(DefineColumn(c=>c.StartRetentionTime, (c,v)=>c.StartRetentionTime = v).SetUseFactorLists());
-                AddColumn(DefineColumn(c=>c.EndRetentionTime, (c,v)=>c.EndRetentionTime = v).SetUseFactorLists());
+                AddColumn(DefineColumn(c => c.RetentionTime, (c, v) => c.RetentionTime = v)
+                    .ChangeOptimizeOptions(factorLists));
+                AddColumn(DefineColumn(c => c.StartRetentionTime, (c, v) => c.StartRetentionTime = v)
+                    .ChangeOptimizeOptions(factorLists));
+                AddColumn(DefineColumn(c => c.EndRetentionTime, (c, v) => c.EndRetentionTime = v)
+                    .ChangeOptimizeOptions(factorLists));
                 AddColumn(DefineColumn(c=>c.IonMobility, (c,v)=>c.IonMobility = v));
                 AddColumn(c=>c.Area, (c,v)=>c.Area = v);
                 AddColumn(c=>c.BackgroundArea, (c,v)=>c.BackgroundArea = v);
@@ -1445,10 +1449,9 @@ namespace pwiz.Skyline.Model.Results
                 Assume.AreEqual(transposer, other._transposition.GetTransposer());
                 Assume.AreEqual(typeof(ReferenceValue<ChromFileInfoId>), transposer.GetColumnValueType(0));
                 int firstCol = includeFileId ? 0 : 1;
-                int rowCount = ReplicatePositions.TotalCount;
                 for (int iColumn = firstCol; iColumn < transposer.ColumnCount; iColumn++)
                 {
-                    if (!ColumnData.ContentsEqual(_transposition.GetColumnData(iColumn), other._transposition.GetColumnData(iColumn), rowCount))
+                    if (!ColumnData.ContentsEqual(_transposition.GetColumnData(iColumn), other._transposition.GetColumnData(iColumn)))
                     {
                         return false;
                     }
@@ -1762,7 +1765,7 @@ namespace pwiz.Skyline.Model.Results
                 AddColumn(DefineColumn(
                         c => ReferenceValue.Of(c.FileId),
                         (c, v) => c.FileId = v)
-                    .SetUseValueCache());
+                    .ChangeOptimizeOptions(ColumnOptimizeOptions.Default.WithValueCache()));
             }
         }
     }

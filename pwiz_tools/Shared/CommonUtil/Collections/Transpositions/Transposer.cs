@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using pwiz.Common.SystemUtil;
 
@@ -69,10 +70,22 @@ namespace pwiz.Common.Collections.Transpositions
 
         public void EfficientlyStore<T>(ValueCache valueCache, IList<T> transpositions) where T : Transposition
         {
+#if DEBUG
+            var originalTranspositions = ImmutableList.ValueOf(transpositions);
+#endif
             for (int iCol = 0; iCol < _columnDefs.Count; iCol++)
             {
                 _columnDefs[iCol].EfficientlyStore(valueCache, transpositions, iCol);
             }
+#if DEBUG
+            for (int i = 0; i < originalTranspositions.Count; i++)
+            {
+                if (!Transposition.ContentEqual(originalTranspositions[i], transpositions[i]))
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+#endif
         }
 
         public int ColumnCount

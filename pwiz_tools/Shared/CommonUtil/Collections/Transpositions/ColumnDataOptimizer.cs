@@ -29,14 +29,12 @@ namespace pwiz.Common.Collections.Transpositions
     /// </summary>
     public class ColumnDataOptimizer<T>
     {
-        public ColumnDataOptimizer() : this( ComputeItemSize())
+        public ColumnDataOptimizer(ValueCache valueCache, ColumnOptimizeOptions options)
         {
+            ValueCache = options.UseValueCache ? valueCache : null;
+            ItemSize = ComputeItemSize();
         }
 
-        public ColumnDataOptimizer(int itemSize)
-        {
-            ItemSize = itemSize;
-        }
         
         /// <summary>
         /// The amount of memory that each item in the list is assumed to take.
@@ -45,6 +43,8 @@ namespace pwiz.Common.Collections.Transpositions
         /// indexed with a <see cref="ByteList"/>.
         /// </summary>
         public int ItemSize { get; private set; }
+
+        public ColumnOptimizeOptions Options { get; private set; }
 
         public static int ComputeItemSize()
         {
@@ -56,8 +56,7 @@ namespace pwiz.Common.Collections.Transpositions
             return Marshal.ReadInt32(typeof(T).TypeHandle.Value, 4);
         }
         
-        public ValueCache ValueCache { get; set; }
-        public bool UseFactorLists { get; set; }
+        public ValueCache ValueCache { get; private set; }
         
         /// <summary>
         /// Returns a new list of ColumnData objects with a smaller memory footprint.
@@ -78,9 +77,10 @@ namespace pwiz.Common.Collections.Transpositions
             
             foreach (var columnInfo in columnInfos)
             {
+                ColumnData<T> optimizedColumn;
                 if (columnInfo.ColumnValues == null || !optimizedColumnValues.TryGetValue(columnInfo.ColumnValues, out var storedList))
                 {
-                    yield return columnInfo.OriginalColumnData;
+                    optimizedColumn = columnInfo.OriginalColumnData;
                 }
                 else
                 {
@@ -91,13 +91,21 @@ namespace pwiz.Common.Collections.Transpositions
                         {
                             throw new InvalidOperationException();
                         }
-                        yield return ColumnData<T>.ForValues(ValueCache.CacheValue(columnValues));
+                        optimizedColumn = ColumnData<T>.ForValues(ValueCache.CacheValue(columnValues));
                     }
                     else
                     {
-                        yield return storedList;
+                        optimizedColumn = storedList;
                     }
                 }
+#if DEBUG
+                if (!ColumnData.ContentsEqual(columnInfo.OriginalColumnData, optimizedColumn))
+                {
+                    throw new InvalidOperationException();
+                }
+
+#endif
+                yield return optimizedColumn;
             }
         }
 
@@ -158,7 +166,7 @@ namespace pwiz.Common.Collections.Transpositions
                     continue;
                 }
 
-                if (UseFactorLists)
+                if (Options.UseFactorLists)
                 {
                     remainingLists.Add(new ColumnDataValueInfo(list));
                 }
@@ -233,6 +241,27 @@ namespace pwiz.Common.Collections.Transpositions
 
             public HashedObject<ImmutableList<T>> ColumnValues { get; }
             public List<T> UniqueValues { get; private set; }
+        }
+    }
+
+    public class ColumnOptimizeOptions : Immutable
+    {
+        public static readonly ColumnOptimizeOptions Default = new ColumnOptimizeOptions();
+
+        private ColumnOptimizeOptions()
+        {
+        }
+        public bool UseValueCache { get; private set; }
+
+        public ColumnOptimizeOptions WithValueCache()
+        {
+            return ChangeProp(ImClone(this), im => im.UseValueCache = true);
+        }
+        public bool UseFactorLists { get; private set; }
+
+        public ColumnOptimizeOptions WithFactorLists()
+        {
+            return ChangeProp(ImClone(this), im => im.UseFactorLists = true);
         }
     }
 }

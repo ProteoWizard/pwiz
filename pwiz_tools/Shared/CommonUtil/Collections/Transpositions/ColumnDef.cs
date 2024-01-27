@@ -82,20 +82,14 @@ namespace pwiz.Common.Collections.Transpositions
 
         protected abstract TCol GetValue(TRow row);
         protected abstract void SetValue(TRow row, TCol value);
-        public bool OptimizeUsingValueCache { get; private set; }
+        public ColumnOptimizeOptions OptimizeOptions { get; private set; }
 
-        public ColumnDef<TRow, TCol> SetUseValueCache()
+        public ColumnDef<TRow,TCol> ChangeOptimizeOptions(ColumnOptimizeOptions value)
         {
-            return ChangeProp(ImClone(this), im => im.OptimizeUsingValueCache = true);
+            return ChangeProp(ImClone(this), im => im.OptimizeOptions = value);
         }
 
-        public bool OptimizeUsingFactorLists { get; private set; }
-
-        public ColumnDef<TRow, TCol> SetUseFactorLists()
-        {
-            return ChangeProp(ImClone(this), im => im.OptimizeUsingFactorLists = true);
-        }
-        
+       
         public override void EfficientlyStore<T>(ValueCache valueCache, IList<T> transpositions, int columnIndex)
         {
             Optimize(GetColumnDataOptimizer(valueCache), transpositions, columnIndex);
@@ -108,6 +102,13 @@ namespace pwiz.Common.Collections.Transpositions
             foreach (var newList in optimizer.OptimizeMemoryUsage(transpositions.Select(t => (ColumnData<TCol>)t.GetColumnData(columnIndex))))
             {
                 var transposition = transpositions[iTransposition];
+#if DEBUG
+                var oldColumn = (ColumnData<TCol>) transposition.ColumnDatas.ElementAtOrDefault(columnIndex);
+                if (!ColumnData.ContentsEqual(oldColumn, newList))
+                {
+                    throw new InvalidOperationException();
+                }
+#endif
                 transposition = (T)transposition.ChangeColumnAt(columnIndex, newList);
                 transpositions[iTransposition] = transposition;
                 iTransposition++;
@@ -116,7 +117,7 @@ namespace pwiz.Common.Collections.Transpositions
         
         public virtual ColumnDataOptimizer<TCol> GetColumnDataOptimizer(ValueCache valueCache)
         {
-            return new ColumnDataOptimizer<TCol>();
+            return new ColumnDataOptimizer<TCol>(valueCache, OptimizeOptions);
         }
 
         public override bool EqualsColumn(IEnumerable<TRow> rows, ColumnData column)
@@ -125,7 +126,7 @@ namespace pwiz.Common.Collections.Transpositions
             int iRow = 0;
             foreach (var row in rows)
             {
-                var value = columnData == null ? default(TCol) : columnData.GetValue(iRow);
+                var value = columnData == null ? default(TCol) : columnData.GetValue(iRow++);
                 if (!Equals(GetValue(row),value))
                 {
                     return false;

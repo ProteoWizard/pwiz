@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,26 +43,23 @@ namespace pwiz.Common.Collections.Transpositions
         public abstract bool IsList { get; }
         public abstract bool IsImmutableList { get; }
         public abstract bool SequenceEqual(IEnumerable values);
-        public abstract bool ContentsEqual(ColumnData columnData, int count);
+        public abstract bool ContentsEqual(ColumnData columnData);
+        public abstract int? RowCount { get; }
 
-        public static bool ContentsEqual(ColumnData columnData1, ColumnData columnData2, int count)
+        public static bool ContentsEqual(ColumnData columnData1, ColumnData columnData2)
         {
-            if (count == 0)
-            {
-                return true;
-            }
-
             if (ReferenceEquals(columnData1, columnData2))
             {
                 return true;
             }
 
+            int count = columnData1?.RowCount ?? columnData2?.RowCount ?? 1;
             if (columnData1 != null)
             {
-                return columnData1.ContentsEqual(columnData2, count);
+                return columnData1.ContentsEqual(columnData2);
             }
 
-            return columnData2.ContentsEqual(columnData1, count);
+            return columnData2.ContentsEqual(columnData1);
         }
     }
     /// <summary>
@@ -95,17 +91,14 @@ namespace pwiz.Common.Collections.Transpositions
             return true;
         }
 
-        public sealed override bool ContentsEqual(ColumnData columnData, int count)
+        public sealed override bool ContentsEqual(ColumnData columnData)
         {
-            if (count == 0)
-            {
-                return true;
-            }
-            return ContentsEqual((ColumnData<T>)columnData ?? new ConstantColumnData(default), count);
+            return ContentsEqual((ColumnData<T>)columnData ?? new ConstantColumnData(default));
         }
 
-        protected virtual bool ContentsEqual(ColumnData<T> columnData, int count)
+        protected virtual bool ContentsEqual(ColumnData<T> columnData)
         {
+            int count = RowCount ?? columnData.RowCount ?? 1;
             return Enumerable.Range(0, count).All(i => Equals(GetValue(i), columnData.GetValue(i)));
         }
 
@@ -162,16 +155,20 @@ namespace pwiz.Common.Collections.Transpositions
                 return null;
             }
 
-            protected override bool ContentsEqual(ColumnData<T> otherColumn, int count)
+            protected override bool ContentsEqual(ColumnData<T> otherColumn)
             {
                 if (otherColumn is ConstantColumnData otherConstant)
                 {
                     return Equals(_value, otherConstant._value);
                 }
 
-                return base.ContentsEqual(otherColumn, count);
+                return base.ContentsEqual(otherColumn);
             }
 
+            public override int? RowCount
+            {
+                get { return null; }
+            }
         }
 
         public class ListColumnData : ColumnData<T>
@@ -205,13 +202,8 @@ namespace pwiz.Common.Collections.Transpositions
                 return ImmutableList.ValueOf(_readOnlyList);
             }
 
-            protected override bool ContentsEqual(ColumnData<T> otherColumn, int count)
+            protected override bool ContentsEqual(ColumnData<T> otherColumn)
             {
-                if (count != _readOnlyList.Count)
-                {
-                    throw new ArgumentException(string.Format(@"Count should be {0} but is {1}", _readOnlyList.Count, count));
-                }
-
                 if (otherColumn is ListColumnData otherList)
                 {
                     if (_readOnlyList is ImmutableList<T> && otherList._readOnlyList is ImmutableList<T>)
@@ -222,7 +214,15 @@ namespace pwiz.Common.Collections.Transpositions
                     return _readOnlyList.SequenceEqual(otherList._readOnlyList);
                 }
 
-                return base.ContentsEqual(otherColumn, count);
+                return base.ContentsEqual(otherColumn);
+            }
+
+            public override int? RowCount
+            {
+                get
+                {
+                    return _readOnlyList.Count;
+                }
             }
         }
     }

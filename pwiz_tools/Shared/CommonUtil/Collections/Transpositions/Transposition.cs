@@ -93,6 +93,34 @@ namespace pwiz.Common.Collections.Transpositions
 
             return default;
         }
+
+        public static bool ContentEqual(Transposition a, Transposition b)
+        {
+            if (ReferenceEquals(a, b))
+            {
+                return true;
+            }
+
+            if (a != null && b != null)
+            {
+                if (a.GetType() != b.GetType())
+                {
+                    return false;
+                }
+            }
+
+            int columnCount = Math.Max(a?._columns?.Count ?? 0, b?._columns?.Count ?? 0);
+            for (int iCol = 0; iCol < columnCount; iCol++)
+            {
+                if (!ColumnData.ContentsEqual(a?._columns?.ElementAtOrDefault(iCol),
+                        b?._columns?.ElementAtOrDefault(iCol)))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 
     public abstract class Transposition<TRow> : Transposition
