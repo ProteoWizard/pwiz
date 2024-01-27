@@ -1096,10 +1096,10 @@ namespace pwiz.Skyline.Model.Results
     public abstract class Results<TItem> : Immutable, IReadOnlyList<ChromInfoList<TItem>>
         where TItem : ChromInfo
     {
-        public static Results<TItem> FromChromInfoLists(IList<ChromInfoList<TItem>> elements)
+        public static Results<TItem> FromChromInfoLists<TList>(IList<TList> elements) where TList:IList<TItem>
         {
-            var replicatePositions = ReplicatePositions.FromCounts(elements.Select(e => e.Count));
-            return new Rows(replicatePositions, elements.SelectMany(e => e));
+            var replicatePositions = ReplicatePositions.FromCounts(elements.Select(e => e?.Count ?? 0));
+            return FromChromInfos(replicatePositions, elements.SelectMany(e => e ?? Enumerable.Empty<TItem>()));
         }
 
         public static Results<TItem> FromChromInfos(ReplicatePositions replicatePositions, IEnumerable<TItem> items)
@@ -1171,11 +1171,6 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public virtual IEnumerable<ColumnData> GetColumnData(Transposer<TItem> transposer)
-        {
-            return transposer.ToColumns(FlatList.ToList());
-        }
-
         public virtual Results<TItem> Merge(Results<TItem> resultsOld)
         {
             if (resultsOld == null || ReferenceEquals(this, resultsOld))
@@ -1183,7 +1178,7 @@ namespace pwiz.Skyline.Model.Results
                 return this;
             }
 
-            if (EqualsDeep(this, resultsOld))
+            if (EqualsResults(resultsOld, true))
             {
                 return resultsOld;
             }
@@ -1195,11 +1190,6 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return this;
-        }
-
-        public static Results<TItem> Merge(Results<TItem> resultsOld, List<IList<TItem>> chromInfoSet)
-        {
-            return FromChromInfoLists(chromInfoSet.ConvertAll(l => new ChromInfoList<TItem>(l))).Merge(resultsOld);
         }
 
         public static Results<TItem> ChangeChromInfo(Results<TItem> results, ChromFileInfoId id, TItem newChromInfo)
@@ -1258,58 +1248,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static bool EqualsDeep(Results<TItem> resultsOld, Results<TItem> results)
         {
-            if (ReferenceEquals(resultsOld, results))
-                return true;
-            if (resultsOld == null || results == null)
-                return false;
-            if (resultsOld.Count != results.Count)
-                return false;
-            for (int i = 0, len = results.Count; i < len; i++)
-            {
-                if (!EqualsDeep(resultsOld[i], results[i]))
-                    return false;
-            }
-            return true;
-        }
-
-        private static bool EqualsDeep(IEnumerable<TItem> chromInfosOld, IEnumerable<TItem> chromInfos)
-        {
-            if (ReferenceEquals(chromInfosOld, chromInfos))
-            {
-                return true;
-            }
-
-            if (chromInfosOld == null || chromInfos == null)
-            {
-                return false;
-            }
-
-            using var enOld = chromInfosOld.GetEnumerator();
-            using var en = chromInfos.GetEnumerator();
-            while (en.MoveNext())
-            {
-                if (!enOld.MoveNext())
-                {
-                    return false;
-                }
-
-                if (!Equals(en.Current, enOld.Current))
-                {
-                    return false;
-                }
-
-                if (!ReferenceEquals(en.Current?.FileId, enOld.Current?.FileId))
-                {
-                    return false;
-                }
-            }
-
-            if (enOld.MoveNext())
-            {
-                return false;
-            }
-
-            return true;
+            return resultsOld.EqualsResults(results, true);
         }
 
         public float? GetAverageValue(Func<TItem, float?> getVal)
@@ -1367,12 +1306,44 @@ namespace pwiz.Skyline.Model.Results
 
         private bool Equals(Results<TItem> other)
         {
+            return EqualsResults(other, false);
+        }
+
+        public bool EqualsResults(Results<TItem> other, bool includeFileIds)
+        {
             if (!Equals(ReplicatePositions, other.ReplicatePositions))
             {
                 return false;
             }
 
-            return FlatList.SequenceEqual(other.FlatList);
+            bool? equal = EqualsContents(other, includeFileIds) ?? other.EqualsContents(this, includeFileIds);
+            if (equal.HasValue)
+            {
+                return equal.Value;
+            }
+
+            using var en1 = GetItems(0, ReplicatePositions.TotalCount).GetEnumerator();
+            using var en2 = other.GetItems(0, ReplicatePositions.TotalCount).GetEnumerator();
+            while (en1.MoveNext())
+            {
+                en2.MoveNext();
+                if (!Equals(en1.Current, en2.Current))
+                {
+                    return false;
+                }
+
+                if (includeFileIds && !ReferenceEquals(en1.Current!.FileId, en2.Current!.FileId))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        protected virtual bool? EqualsContents(Results<TItem> results, bool includeFileIds)
+        {
+            return null;
         }
 
         public override bool Equals(object obj)
@@ -1428,18 +1399,20 @@ namespace pwiz.Skyline.Model.Results
             private Results<TItem> MergeRows(Rows oldRows)
             {
                 var items = new List<TItem>();
-                for (int iReplicate = 0; iReplicate < ReplicatePositions.ReplicateCount; iReplicate++)
+                for (int i = 0; i < _items.Count; i++)
                 {
-                    if (iReplicate >= oldRows.ReplicatePositions.ReplicateCount || !EqualsDeep(this[iReplicate], oldRows[iReplicate]))
+                    var myItem = _items[i];
+                    var oldItem = i >= oldRows._items.Count ? null : oldRows._items[i];
+                    if (!Equals(myItem, oldItem) ||
+                        !ReferenceEquals(myItem?.FileId, oldItem?.FileId))
                     {
-                        items.AddRange(this[iReplicate]);
+                        items.Add(myItem);
                     }
                     else
                     {
-                        items.AddRange(oldRows[iReplicate]);
+                        items.Add(oldItem);
                     }
                 }
-
                 if (ArrayUtil.ReferencesEqual(items, _items))
                 {
                     return this;
@@ -1472,18 +1445,62 @@ namespace pwiz.Skyline.Model.Results
                 return _transposition.ToRows(start, count);
             }
 
-            public override IEnumerable<ColumnData> GetColumnData(Transposer<TItem> transposer)
-            {
-                Assume.AreEqual(_transposition.GetTransposer(), transposer);
-                return _transposition.ColumnDatas;
-            }
-
             public override bool IsColumnar
             {
                 get
                 {
                     return true;
                 }
+            }
+
+            protected override bool? EqualsContents(Results<TItem> other, bool includeFileId)
+            {
+                if (other is Rows otherRows)
+                {
+                    return EqualsRows(otherRows, includeFileId);
+                }
+
+                if (other is Columns otherColumns)
+                {
+                    return EqualsColumns(otherColumns, includeFileId);
+                }
+
+                return null;
+            }
+
+            private bool EqualsRows(Rows other, bool includeFileId)
+            {
+                var transposer = _transposition.GetTransposer();
+                Assume.AreEqual(typeof(ReferenceValue<ChromFileInfoId>), transposer.GetColumnValueType(0));
+                int firstCol = includeFileId ? 0 : 1;
+                for (int iColumn = firstCol; iColumn < transposer.ColumnCount; iColumn++)
+                {
+                    if (!transposer.EqualInColumn(iColumn, _transposition.GetColumnValues(iColumn), other.FlatList))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            private bool EqualsColumns(Columns other, bool includeFileId)
+            {
+                var transposer = _transposition.GetTransposer();
+                Assume.AreEqual(transposer, other._transposition.GetTransposer());
+                Assume.AreEqual(typeof(ReferenceValue<ChromFileInfoId>), transposer.GetColumnValueType(0));
+                int firstCol = includeFileId ? 0 : 1;
+                int rowCount = ReplicatePositions.TotalCount;
+                for (int iColumn = firstCol; iColumn < transposer.ColumnCount; iColumn++)
+                {
+                    if (!ColumnData.ColumnsEqual(_transposition.GetColumnValues(iColumn),
+                            other._transposition.GetColumnValues(iColumn), rowCount))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
             }
         }
     }

@@ -334,7 +334,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     newChromInfos.Add(list);
                 }
 
-                return Results<TItem>.Merge(results, newChromInfos);
+                return Results<TItem>.FromChromInfoLists(newChromInfos);
             }
 
             protected abstract Annotations GetAnnotations(TItem item);

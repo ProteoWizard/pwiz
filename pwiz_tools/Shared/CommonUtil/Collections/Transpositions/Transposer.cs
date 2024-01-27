@@ -69,5 +69,20 @@ namespace pwiz.Common.Collections.Transpositions
                 _columnDefs[iCol].EfficientlyStore(valueCache, transpositions, iCol);
             }
         }
+
+        public int ColumnCount
+        {
+            get { return _columnDefs.Count; }
+        }
+
+        public Type GetColumnValueType(int index)
+        {
+            return _columnDefs[index].ValueType;
+        }
+
+        public bool EqualInColumn(int columnIndex, ColumnData columnData, IEnumerable<TRow> rows)
+        {
+            return _columnDefs[columnIndex].EqualsColumn(rows, columnData);
+        }
     }
 }

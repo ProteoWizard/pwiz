@@ -889,7 +889,9 @@ namespace pwiz.Skyline.Model
             {
                 return this;
             }
+#if DEBUG
             Assume.AreEqual(prop, Results);
+#endif
             return ChangeProp(ImClone(this), im => im.Results = prop);
         }
 
@@ -1040,9 +1042,9 @@ namespace pwiz.Skyline.Model
             return Results<TransitionChromInfo>.FromChromInfoLists(listResults);
         }
 
-        #endregion
+#endregion
 
-        #region object overrides
+#region object overrides
 
         public bool Equals(TransitionDocNode obj)
         {
@@ -1077,7 +1079,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        #endregion
+#endregion
 
         public struct TransitionQuantInfo
         {

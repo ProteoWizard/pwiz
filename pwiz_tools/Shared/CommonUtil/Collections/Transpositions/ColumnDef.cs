@@ -36,6 +36,8 @@ namespace pwiz.Common.Collections.Transpositions
     {
         public abstract ColumnData GetValues(IEnumerable<TRow> rows);
         public abstract void SetValues(IEnumerable<TRow> rows, ColumnData column, int start);
+        public abstract Type ValueType { get; }
+        public abstract bool EqualsColumn(IEnumerable<TRow> rows, ColumnData column);
     }
 
     public abstract class ColumnDef<TRow, TCol> : ColumnDef<TRow>
@@ -44,7 +46,7 @@ namespace pwiz.Common.Collections.Transpositions
         {
             return new Impl(getter, setter);
         }
-        public Type ValueType
+        public override Type ValueType
         {
             get { return typeof(TCol); }
         }
@@ -98,6 +100,22 @@ namespace pwiz.Common.Collections.Transpositions
         public virtual ColumnDataOptimizer<TCol> GetColumnDataOptimizer(ValueCache valueCache)
         {
             return new ColumnDataOptimizer<TCol>();
+        }
+
+        public override bool EqualsColumn(IEnumerable<TRow> rows, ColumnData column)
+        {
+            var columnData = (ColumnData<TCol>)column;
+            int iRow = 0;
+            foreach (var row in rows)
+            {
+                var value = columnData == null ? default(TCol) : columnData.GetValue(iRow);
+                if (!Equals(GetValue(row),value))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>

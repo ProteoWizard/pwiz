@@ -2031,22 +2031,16 @@ namespace pwiz.Skyline.Model
                 }
 
                 var listChromInfoLists = _listResultCalcs.ConvertAll(calc => calc.CalcChromInfoList());
-                var results = Results<TransitionGroupChromInfo>.Merge(nodeGroup.Results, listChromInfoLists);
+                var results = Results<TransitionGroupChromInfo>.FromChromInfoLists(listChromInfoLists);
 
-                var nodeGroupNew = nodeGroup;
-                if (!Results<TransitionGroupChromInfo>.EqualsDeep(results, nodeGroupNew.Results))
-                    nodeGroupNew = nodeGroupNew.ChangeResults(results);
-
-                nodeGroupNew = ((TransitionGroupDocNode)nodeGroupNew.ChangeChildrenChecked(childrenNew));
-                return nodeGroupNew;
+                return (TransitionGroupDocNode) nodeGroup.ChangeResults(results).ChangeChildrenChecked(childrenNew);
             }
 
             private TransitionDocNode UpdateTransitionNode(TransitionDocNode nodeTran, int iTran)
             {
                 var chromInfoSet = _arrayTransitionChromInfoSets[iTran];
-                var results = Results<TransitionChromInfo>.Merge(nodeTran.Results, chromInfoSet.ChromInfoLists);
-                if (!Results<TransitionChromInfo>.EqualsDeep(results, nodeTran.Results))
-                    nodeTran = nodeTran.ChangeResults(results);
+                var results = Results<TransitionChromInfo>.FromChromInfoLists(chromInfoSet.ChromInfoLists);
+                nodeTran = nodeTran.ChangeResults(results);
                 if (nodeTran.ResultsRank != chromInfoSet.AverageRank)
                     nodeTran = nodeTran.ChangeResultsRank(chromInfoSet.AverageRank);
                 return nodeTran;
