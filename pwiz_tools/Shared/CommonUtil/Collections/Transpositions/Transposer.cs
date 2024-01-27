@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.SystemUtil;
@@ -33,9 +32,14 @@ namespace pwiz.Common.Collections.Transpositions
     {
         private List<ColumnDef<TRow>> _columnDefs = new List<ColumnDef<TRow>>();
 
-        protected void DefineColumn<TCol>(Func<TRow, TCol> getter, Action<TRow, TCol> setter)
+        protected void AddColumn<TCol>(Func<TRow, TCol> getter, Action<TRow, TCol> setter)
         {
-            AddColumn(ColumnDef.Define(getter, setter));
+            AddColumn(DefineColumn(getter, setter));
+        }
+
+        protected ColumnDef<TRow, TCol> DefineColumn<TCol>(Func<TRow, TCol> getter, Action<TRow, TCol> setter)
+        {
+            return ColumnDef.Define(getter, setter);
         }
 
         protected void AddColumn<TCol>(ColumnDef<TRow, TCol> columnDef)

@@ -1036,37 +1036,27 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public static TransposedTransitionChromInfos Transpose(IEnumerable<TransitionChromInfo> chromInfos)
-        {
-            return TransposedTransitionChromInfos.EMPTY.ChangeResults(chromInfos);
-        }
-
-        public Transposer<TransitionChromInfo> GetTransposer()
-        {
-            return TRANSPOSER;
-        }
-
         private class TransitionChromInfoTransposer : ChromInfoTransposer<TransitionChromInfo>
         {
             public TransitionChromInfoTransposer()
             {
-                DefineColumn(c=>c._flags, (c,v)=>c._flags = v);
-                DefineColumn(c=>c.OptimizationStep, (c,v)=>c.OptimizationStep = v);
-                DefineColumn(c=>c._massError, (c,v)=>c._massError = v);
-                DefineColumn(c=>c.RetentionTime, (c,v)=>c.RetentionTime = v);
-                DefineColumn(c=>c.StartRetentionTime, (c,v)=>c.StartRetentionTime = v);
-                DefineColumn(c=>c.EndRetentionTime, (c,v)=>c.EndRetentionTime = v);
-                DefineColumn(c=>c.IonMobility, (c,v)=>c.IonMobility = v);
-                DefineColumn(c=>c.Area, (c,v)=>c.Area = v);
-                DefineColumn(c=>c.BackgroundArea, (c,v)=>c.BackgroundArea = v);
-                DefineColumn(c=>c.Height, (c,v)=>c.Height = v);
-                DefineColumn(c=>c.Fwhm, (c,v)=>c.Fwhm = v);
-                DefineColumn(c=>c.Rank, (c,v)=>c.Rank = v);
-                DefineColumn(c=>c.RankByLevel, (c,v)=>c.RankByLevel = v);
-                DefineColumn(c => c._pointsAcrossPeak, (c, v) => c._pointsAcrossPeak = v);
-                DefineColumn(c=>c._peakShapeValue, (c,v)=>c._peakShapeValue  = v);
-                DefineColumn(c=>c.Annotations, (c,v)=>c.Annotations = v);
-                DefineColumn(c=>c.UserSet, (c,v)=>c.UserSet = v);
+                AddColumn(c=>c._flags, (c,v)=>c._flags = v);
+                AddColumn(c=>c.OptimizationStep, (c,v)=>c.OptimizationStep = v);
+                AddColumn(c=>c._massError, (c,v)=>c._massError = v);
+                AddColumn(DefineColumn(c=>c.RetentionTime, (c,v)=>c.RetentionTime = v).SetUseFactorLists());
+                AddColumn(DefineColumn(c=>c.StartRetentionTime, (c,v)=>c.StartRetentionTime = v).SetUseFactorLists());
+                AddColumn(DefineColumn(c=>c.EndRetentionTime, (c,v)=>c.EndRetentionTime = v).SetUseFactorLists());
+                AddColumn(DefineColumn(c=>c.IonMobility, (c,v)=>c.IonMobility = v));
+                AddColumn(c=>c.Area, (c,v)=>c.Area = v);
+                AddColumn(c=>c.BackgroundArea, (c,v)=>c.BackgroundArea = v);
+                AddColumn(c=>c.Height, (c,v)=>c.Height = v);
+                AddColumn(c=>c.Fwhm, (c,v)=>c.Fwhm = v);
+                AddColumn(c=>c.Rank, (c,v)=>c.Rank = v);
+                AddColumn(c=>c.RankByLevel, (c,v)=>c.RankByLevel = v);
+                AddColumn(c => c._pointsAcrossPeak, (c, v) => c._pointsAcrossPeak = v);
+                AddColumn(c=>c._peakShapeValue, (c,v)=>c._peakShapeValue  = v);
+                AddColumn(c=>c.Annotations, (c,v)=>c.Annotations = v);
+                AddColumn(c=>c.UserSet, (c,v)=>c.UserSet = v);
             }
 
             protected override TransitionChromInfo[] CreateRows(int rowCount)
@@ -1438,7 +1428,6 @@ namespace pwiz.Skyline.Model.Results
                 var transposer = _transposition.GetTransposer();
                 Assume.AreEqual(typeof(ReferenceValue<ChromFileInfoId>), transposer.GetColumnValueType(0));
                 int firstCol = includeFileId ? 0 : 1;
-                int rowCount = ReplicatePositions.TotalCount;
                 for (int iColumn = firstCol; iColumn < transposer.ColumnCount; iColumn++)
                 {
                     if (!transposer.ColumnEquals(iColumn, _transposition.GetColumnData(iColumn),other.FlatList))
@@ -1770,25 +1759,10 @@ namespace pwiz.Skyline.Model.Results
         {
             protected ChromInfoTransposer()
             {
-                AddColumn(new FileIdColumn());
-            }
-
-            private class FileIdColumn : ColumnDef<T, ReferenceValue<ChromFileInfoId>>
-            {
-                protected override ReferenceValue<ChromFileInfoId> GetValue(T row)
-                {
-                    return ReferenceValue.Of(row.FileId);
-                }
-
-                protected override void SetValue(T row, ReferenceValue<ChromFileInfoId> value)
-                {
-                    row.FileId = value;
-                }
-
-                public override ColumnDataOptimizer<ReferenceValue<ChromFileInfoId>> GetColumnDataOptimizer(ValueCache valueCache)
-                {
-                    return new ColumnDataOptimizer<ReferenceValue<ChromFileInfoId>>(valueCache, IntPtr.Size);
-                }
+                AddColumn(DefineColumn(
+                        c => ReferenceValue.Of(c.FileId),
+                        (c, v) => c.FileId = v)
+                    .SetUseValueCache());
             }
         }
     }

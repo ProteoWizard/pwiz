@@ -29,13 +29,12 @@ namespace pwiz.Common.Collections.Transpositions
     /// </summary>
     public class ColumnDataOptimizer<T>
     {
-        public ColumnDataOptimizer() : this(null, ComputeItemSize())
+        public ColumnDataOptimizer() : this( ComputeItemSize())
         {
         }
 
-        public ColumnDataOptimizer(ValueCache valueCache, int itemSize)
+        public ColumnDataOptimizer(int itemSize)
         {
-            ValueCache = valueCache;
             ItemSize = itemSize;
         }
         
@@ -57,7 +56,8 @@ namespace pwiz.Common.Collections.Transpositions
             return Marshal.ReadInt32(typeof(T).TypeHandle.Value, 4);
         }
         
-        public ValueCache ValueCache { get; private set; }
+        public ValueCache ValueCache { get; set; }
+        public bool UseFactorLists { get; set; }
         
         /// <summary>
         /// Returns a new list of ColumnData objects with a smaller memory footprint.
@@ -139,22 +139,29 @@ namespace pwiz.Common.Collections.Transpositions
                     continue;
                 }
 
-                var listInfo = new ColumnDataValueInfo(list);
-                if (listInfo.UniqueValues.Count == 1)
+                if (list.Value.Count == 0)
                 {
-                    if (Equals(list.Value[0], default(T)))
+                    storedLists.Add(list, null);
+                    continue;
+                }
+                var firstValue = list.Value[0];
+                if (list.Value.Skip(1).All(v => Equals(firstValue, v)))
+                {
+                    if (Equals(firstValue, default(T)))
                     {
                         storedLists.Add(list, default);
                     }
-                    else if (list.Value.Count > 1)
+                    else
                     {
-                        storedLists.Add(list, ColumnData.ForConstant(list.Value[0]));
+                        storedLists.Add(list, ColumnData.ForConstant(firstValue));
                     }
-
                     continue;
                 }
 
-                remainingLists.Add(listInfo);
+                if (UseFactorLists)
+                {
+                    remainingLists.Add(new ColumnDataValueInfo(list));
+                }
             }
 
             if (remainingLists.Count == 0)
@@ -221,11 +228,11 @@ namespace pwiz.Common.Collections.Transpositions
             public ColumnDataValueInfo(HashedObject<ImmutableList<T>> list)
             {
                 ColumnValues = list;
-                UniqueValues = ColumnValues.Value.Distinct().ToList();
+                UniqueValues = list.Value.Distinct().ToList();
             }
 
             public HashedObject<ImmutableList<T>> ColumnValues { get; }
-            public List<T> UniqueValues { get; }
+            public List<T> UniqueValues { get; private set; }
         }
     }
 }

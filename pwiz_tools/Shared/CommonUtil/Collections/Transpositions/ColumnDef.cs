@@ -82,7 +82,20 @@ namespace pwiz.Common.Collections.Transpositions
 
         protected abstract TCol GetValue(TRow row);
         protected abstract void SetValue(TRow row, TCol value);
+        public bool OptimizeUsingValueCache { get; private set; }
 
+        public ColumnDef<TRow, TCol> SetUseValueCache()
+        {
+            return ChangeProp(ImClone(this), im => im.OptimizeUsingValueCache = true);
+        }
+
+        public bool OptimizeUsingFactorLists { get; private set; }
+
+        public ColumnDef<TRow, TCol> SetUseFactorLists()
+        {
+            return ChangeProp(ImClone(this), im => im.OptimizeUsingFactorLists = true);
+        }
+        
         public override void EfficientlyStore<T>(ValueCache valueCache, IList<T> transpositions, int columnIndex)
         {
             Optimize(GetColumnDataOptimizer(valueCache), transpositions, columnIndex);
