@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using pwiz.Common.Collections;
@@ -26,6 +27,7 @@ using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -948,12 +950,27 @@ namespace pwiz.Skyline.Model.Results
             // Now that we have times loaded, apply explicit RT filter if any
             if (ExplicitRetentionTime != null)
             {
+                string moleculeText = null;
+
                 double explicitRT = ExplicitRetentionTime.RetentionTime;
                 for (var i = DataSets.Count - 1; i >= 0 ; i--)
                 {
                     var dataSet = DataSets[i];
                     if (explicitRT < dataSet.MinRawTime || dataSet.MaxRawTime < explicitRT)
                     {
+                        moleculeText ??= NodePep.CustomMolecule?.ToString() ?? NodePep.GetCrosslinkedSequence();
+                        string precursorText = moleculeText;
+                        if (NodePep.Children.Count > 1)
+                        {
+                            var transitionGroupDocNode = dataSet.NodeGroup;
+                            if (transitionGroupDocNode != null)
+                            {
+                                precursorText = TextUtil.SpaceSeparate(moleculeText,
+                                    transitionGroupDocNode.TransitionGroup.ToString());
+                            }
+                        }
+                        Trace.TraceWarning(ResultsResources.PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_,
+                            precursorText, explicitRT, dataSet.MinRawTime, dataSet.MaxRawTime);
                         DataSets.RemoveAt(i);
                     }
                     else
