@@ -362,7 +362,7 @@ namespace pwiz.Skyline
                     }
                     catch (Exception ex)
                     {
-                        Trace.TraceWarning(@"Exception sending analytics hit {0}", ex);
+                        Trace.TraceInformation(@"Exception sending analytics hit {0}", ex);
                     }
                 });
             }
@@ -603,7 +603,6 @@ namespace pwiz.Skyline
                 return;
             }
 
-            Trace.TraceError(@"Unhandled exception: {0}", exception);
             var stackTrace = new StackTrace(1, true);
             var mainWindow = MainWindow;
             try
