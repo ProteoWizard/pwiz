@@ -536,6 +536,11 @@
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassFilter.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
+    <Compile Include="Model\RetentionTimes\RetentionTimesResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>RetentionTimesResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -3359,6 +3364,10 @@
     <EmbeddedResource Include="Model\FullScanPropertiesRes.zh-CHS.resx">
       <DependentUpon>FullScanPropertiesRes.resx</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\RetentionTimes\RetentionTimesResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>RetentionTimesResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\SpectrumPropertiesResx.ja.resx">
       <DependentUpon>SpectrumPropertiesResx.resx</DependentUpon>
