@@ -36,6 +36,10 @@ namespace pwiz.Common.Collections.Transpositions
         {
             return AddColumn(DefineColumn(getter, setter));
         }
+        protected ColumnDef<TRow, TCol> AddColumn<TCol>(Func<TRow, TCol> getter, Action<TRow, TCol> setter, ColumnOptimizeOptions options)
+        {
+            return AddColumn(DefineColumn(getter, setter).ChangeOptimizeOptions(options));
+        }
 
         protected ColumnDef<TRow, TCol> DefineColumn<TCol>(Func<TRow, TCol> getter, Action<TRow, TCol> setter)
         {

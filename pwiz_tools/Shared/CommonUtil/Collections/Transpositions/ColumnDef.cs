@@ -183,32 +183,25 @@ namespace pwiz.Common.Collections.Transpositions
 
     public static class ColumnReader
     {
-        public static ColumnReader<TRow, TCol> Custom<TRow, TCol>(Func<IEnumerable<TRow>, IEnumerable<TCol>> rowGetter,
-            Func<Transposition<TRow>, int, int, IEnumerable<TCol>> columnGetter)
+        public static ColumnReader<TRow, TCol> ForColumn<TRow, TCol>(ColumnDef<TRow, TCol> columnDef)
         {
-            return ColumnReader<TRow, TCol>.Custom(rowGetter, columnGetter);
-        }
-
-        public static ColumnReader<TRow, TCol> Simple<TRow, TCol>(ColumnDef<TRow, TCol> columnDef)
-        {
-            return ColumnReader<TRow, TCol>.Simple(columnDef);
+            return ColumnReader<TRow, TCol>.ForColumn(columnDef);
         }
     }
     
     public abstract class ColumnReader<TRow, TCol>
     {
-        public static ColumnReader<TRow, TCol> Simple(ColumnDef<TRow, TCol> columnDef)
+        public static ColumnReader<TRow, TCol> ForColumn(ColumnDef<TRow, TCol> columnDef)
         {
             return new SimpleImpl(columnDef);
         }
 
-        public static ColumnReader<TRow, TCol> Custom(Func<IEnumerable<TRow>, IEnumerable<TCol>> rowGetter,
-            Func<Transposition<TRow>, int, int, IEnumerable<TCol>> columnGetter)
+        public ColumnReader<TRow, TValue> ConvertedColumn<TValue>(Func<TCol, TValue> converter)
         {
-            return new CustomImpl(rowGetter, columnGetter);
+            return new ColumnReader<TRow, TValue>.ConvertedImpl<TCol>(this, converter);
         }
 
-        public abstract IEnumerable<TCol> FromRows(IEnumerable<TRow> row);
+        public abstract IEnumerable<TCol> FromRows(IEnumerable<TRow> rows);
 
         public abstract IEnumerable<TCol> FromTransposition(Transposition<TRow> transposition, int start, int count);
 
@@ -232,27 +225,25 @@ namespace pwiz.Common.Collections.Transpositions
             }
         }
 
-        private class CustomImpl : ColumnReader<TRow, TCol>
+        private class ConvertedImpl<TParent> : ColumnReader<TRow, TCol>
         {
-            private Func<IEnumerable<TRow>, IEnumerable<TCol>> _rowGetter;
-            private Func<Transposition<TRow>, int, int, IEnumerable<TCol>> _columnGetter;
+            private ColumnReader<TRow, TParent> _parent;
+            private Func<TParent, TCol> _converter;
 
-            public CustomImpl(Func<IEnumerable<TRow>, IEnumerable<TCol>> rowGetter,
-                Func<Transposition<TRow>, int, int, IEnumerable<TCol>> columnGetter)
+            public ConvertedImpl(ColumnReader<TRow, TParent> parent, Func<TParent, TCol> converter)
             {
-                _rowGetter = rowGetter;
-                _columnGetter = columnGetter;
+                _parent = parent;
+                _converter = converter;
             }
-
             public override IEnumerable<TCol> FromRows(IEnumerable<TRow> rows)
             {
-                return _rowGetter(rows);
-            }
-            public override IEnumerable<TCol> FromTransposition(Transposition<TRow> transposition, int start, int count)
-            {
-                return _columnGetter(transposition, start, count);
+                return _parent.FromRows(rows).Select(_converter);
             }
 
+            public override IEnumerable<TCol> FromTransposition(Transposition<TRow> transposition, int start, int count)
+            {
+                return _parent.FromTransposition(transposition, start, count).Select(_converter);
+            }
         }
     }
 }

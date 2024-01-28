@@ -568,7 +568,7 @@ namespace pwiz.Skyline.Model
                         double tranArea = 0;
                         double tranMeasured = 0;
                         int iChromInfo = 0;
-                        foreach (var area in nodeTran.Results.GetReplicateValues(TransitionChromInfo.AreaColumn, i))
+                        foreach (var area in nodeTran.Results.GetReplicateValues(i, TransitionChromInfo.AreaColumn))
                         {
                             if (area > 0)
                             {
@@ -577,7 +577,7 @@ namespace pwiz.Skyline.Model
                                 if (!isGroupIdentified)
                                 {
                                     isIdentifiedList ??= nodeTran.Results
-                                        .GetReplicateValues(TransitionChromInfo.IsIdentifiedColumn, i).ToList();
+                                        .GetReplicateValues(i, TransitionChromInfo.IsIdentifiedColumn).ToList();
                                     isGroupIdentified |= isIdentifiedList[iChromInfo];
                                 }
                             }
@@ -1406,34 +1406,61 @@ namespace pwiz.Skyline.Model
                     var resultsGroup = Results<TransitionGroupChromInfo>.FromChromInfoLists(listGroupInfoList);
                     var nodeGroupNew = nodeGroup.ChangeResults(resultsGroup);
 
-                    var listTransNew = new List<DocNode>();
-                    bool anyChanges = false;
-                    foreach (TransitionDocNode nodeTran in nodeGroup.Children)
+                    if (isMatching)
                     {
-                        // Update transition ratios
-                        var nodeTranConvert = nodeTran;
-                        var listTranInfoList = _listResultCalcs.ConvertAll(calc =>
-                            calc.UpdateTransitionUserSetMatched(nodeTranConvert.Results[calc.ResultsIndex], isMatching));
-                        var resultsTran = Results<TransitionChromInfo>.FromChromInfoLists(listTranInfoList).Merge(nodeTran.Results);
-                        if (ReferenceEquals(resultsTran, nodeTran.Results))
+                        if (nodeGroupNew.Transitions.Any(IsUserSetChanged))
                         {
-                            listTransNew.Add(nodeTran);
-                        }
-                        else
-                        {
-                            anyChanges = true;
-                            listTransNew.Add(nodeTran.ChangeResults(resultsTran));
-                        }
-                    }
+                            var newTransitions = new List<DocNode>();
+                            foreach (var transition in nodeGroupNew.Transitions)
+                            {
+                                if (transition.Results == null)
+                                {
+                                    newTransitions.Add(transition);
+                                    continue;
+                                }
 
-                    if (anyChanges)
-                    {
-                        TransposedTransitionChromInfos.StoreResults(ValueCache, listTransNew);
+                                var transitionResults = transition.Results;
+                                foreach (var calc in _listResultCalcs)
+                                {
+                                    transitionResults = transitionResults.ChangeAt(calc.ResultsIndex,
+                                        calc.UpdateTransitionUserSetMatched(transitionResults[calc.ResultsIndex]));
+                                }
+                                newTransitions.Add(transition.ChangeResults(transitionResults));
+                            }
+
+                            TransposedTransitionChromInfos.StoreResults(ValueCache, newTransitions);
+                            nodeGroupNew = (TransitionGroupDocNode) nodeGroupNew.ChangeChildren(newTransitions);
+                        }
                     }
-                    listGroupsNew.Add(nodeGroupNew.ChangeChildrenChecked(listTransNew));
+                    listGroupsNew.Add(nodeGroupNew);
                 }
                 return (PeptideDocNode) nodePeptide.ChangeChildrenChecked(listGroupsNew);
             }
+
+            private bool IsUserSetChanged(TransitionDocNode transitionDocNode)
+            {
+                if (transitionDocNode.Results == null)
+                {
+                    return false;
+                }
+
+                foreach (var calc in _listResultCalcs)
+                {
+                    foreach (var (fileId, userSet) in transitionDocNode.Results.GetReplicateValues(calc.ResultsIndex,
+                                 TransitionChromInfo.FileIdColumn, TransitionChromInfo.UserSetColumn))
+                    {
+
+                        var userSetNew = calc.GetUserSetNew(fileId);
+                        if (userSetNew.HasValue && !Equals(userSetNew, userSet))
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }
+
 
             
             private List<IList<PeptideChromInfo>> CopyChromInfoAttributes(PeptideDocNode peptideDocNode,
@@ -1521,10 +1548,10 @@ namespace pwiz.Skyline.Model
 
             private SrmSettings Settings { get; set; }
 
-            private int FileIndexFirst { get; set; }
+            private ChromFileInfoId FileIdFirst { get; set; }
 
             private PeptideChromInfoCalculator CalculatorFirst;
-            private Dictionary<int, PeptideChromInfoCalculator> Calculators { get; set; }
+            private Dictionary<ReferenceValue<ChromFileInfoId>, PeptideChromInfoCalculator> Calculators { get; set; }
 
             public void AddChromInfoList(TransitionGroupDocNode nodeGroup)
             {
@@ -1538,42 +1565,42 @@ namespace pwiz.Skyline.Model
                         continue;
 
                     PeptideChromInfoCalculator calc;
-                    if (!TryGetCalculator(info.FileIndex, out calc))
+                    if (!TryGetCalculator(info.FileId, out calc))
                     {
                         calc = new PeptideChromInfoCalculator(Settings, ResultsIndex);
-                        AddCalculator(info.FileIndex, calc);
+                        AddCalculator(info.FileId, calc);
                     }
                     calc.AddChromInfo(nodeGroup, info);
                 }
             }
 
-            private void AddCalculator(int fileIndex, PeptideChromInfoCalculator calc)
+            private void AddCalculator(ChromFileInfoId fileId, PeptideChromInfoCalculator calc)
             {
                 if (CalculatorFirst == null)
                 {
-                    FileIndexFirst = fileIndex;
+                    FileIdFirst = fileId;
                     CalculatorFirst = calc;
                 }
                 else
                 {
                     if (Calculators == null)
-                        Calculators = new Dictionary<int, PeptideChromInfoCalculator>{{FileIndexFirst, CalculatorFirst}};
-                    Calculators.Add(fileIndex, calc);
+                        Calculators = new Dictionary<ReferenceValue<ChromFileInfoId>, PeptideChromInfoCalculator>{{FileIdFirst, CalculatorFirst}};
+                    Calculators.Add(fileId, calc);
                 }
             }
 
-            private bool TryGetCalculator(int fileIndex, out PeptideChromInfoCalculator calc)
+            private bool TryGetCalculator(ChromFileInfoId fileId, out PeptideChromInfoCalculator calc)
             {
                 if (CalculatorFirst != null)
                 {
-                    if (FileIndexFirst == fileIndex)
+                    if (ReferenceEquals(FileIdFirst, fileId))
                     {
                         calc = CalculatorFirst;
                         return true;
                     }
                     else if (Calculators != null)
                     {
-                        return Calculators.TryGetValue(fileIndex, out calc);
+                        return Calculators.TryGetValue(fileId, out calc);
                     }
                 }
                 calc = null;
@@ -1582,22 +1609,31 @@ namespace pwiz.Skyline.Model
 
             public void AddChromInfoList(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
             {
+                if (nodeTran.Results == null)
+                {
+                    return;
+                }
                 var listInfo = nodeTran.GetSafeChromInfo(ResultsIndex);
                 if (listInfo.IsEmpty)
                     return;
-
-                foreach (var info in listInfo)
+                foreach (var (optStep, isEmpty, fileId, area)
+                         in nodeTran.Results.GetReplicateValues(ResultsIndex,
+                             TransitionChromInfo.OptimizationStepColumn,
+                             TransitionChromInfo.IsEmptyColumn,
+                             TransitionChromInfo.FileIdColumn,
+                             TransitionChromInfo.AreaColumn))
                 {
-                    if (info.OptimizationStep != 0)
+                    if (optStep != 0 || isEmpty)
                         continue;
 
                     PeptideChromInfoCalculator calc;
-                    if (!TryGetCalculator(info.FileIndex, out calc))
+                    if (!TryGetCalculator(fileId, out calc))
                     {
                         calc = new PeptideChromInfoCalculator(Settings, ResultsIndex);
-                        AddCalculator(info.FileIndex, calc);
+                        AddCalculator(fileId, calc);
                     }
-                    calc.AddChromInfo(nodeGroup, nodeTran, info);
+
+                    calc.AddTransitionArea(nodeGroup, nodeTran, area);
                 }
             }
 
@@ -1620,37 +1656,36 @@ namespace pwiz.Skyline.Model
                     .ToArray();
             }
 
-            public IList<TransitionChromInfo> UpdateTransitionUserSetMatched(IList<TransitionChromInfo> listInfo, bool isMatching)
+            public UserSet? GetUserSetNew(ChromFileInfoId fileId)
             {
-                if (CalculatorFirst == null || listInfo == null)
-                    return null;
-
-                int countInfo = listInfo.Count;
-                // Delay allocation in the hope that nothing has changed for faster loading
-                TransitionChromInfo[] listInfoNew = null;
-                for (int iInfo = 0; iInfo < countInfo; iInfo++)
+                PeptideChromInfoCalculator calc;
+                if (TryGetCalculator(fileId, out calc))
                 {
-                    var info = listInfo[iInfo];
-
-                    PeptideChromInfoCalculator calc;
-                    if (TryGetCalculator(info.FileIndex, out calc))
-                    {
-                        if (isMatching && calc.IsSetMatching && !info.IsUserSetMatched)
-                            info = info.ChangeUserSet(UserSet.MATCHED);
-                        if (!ReferenceEquals(info, listInfo[iInfo]) && listInfoNew == null)
-                        {
-                            listInfoNew = listInfo.ToArray();
-                        }
-                    }
-
-                    if (listInfoNew != null)
-                        listInfoNew[iInfo] = info;
+                    if (calc.IsSetMatching)
+                        return UserSet.MATCHED;
                 }
-                
-                if (listInfoNew == null)
-                    return listInfo;
-                return listInfoNew;
+
+                return null;
             }
+
+            public ChromInfoList<TransitionChromInfo> UpdateTransitionUserSetMatched(IEnumerable<TransitionChromInfo> list)
+            {
+                var newChromInfos = new List<TransitionChromInfo>();
+                foreach (var info in list)
+                {
+                    var userSetNew = GetUserSetNew(info.FileId);
+                    if (userSetNew.HasValue && !Equals(userSetNew, info.UserSet))
+                    {
+                        newChromInfos.Add(info.ChangeUserSet(userSetNew.Value));
+                    }
+                    else
+                    {
+                        newChromInfos.Add(info);
+                    }
+                }
+                return new ChromInfoList<TransitionChromInfo>(newChromInfos);
+            }
+
 
             public IList<TransitionGroupChromInfo> UpdateTransitionGroupUserSetMatched(IList<TransitionGroupChromInfo> listInfo, bool isMatching)
             {
@@ -1664,7 +1699,7 @@ namespace pwiz.Skyline.Model
                     var info = listInfo[iInfo];
 
                     PeptideChromInfoCalculator calc;
-                    if (TryGetCalculator(info.FileIndex, out calc))
+                    if (TryGetCalculator(info.FileId, out calc))
                     {
                         if (isMatching && calc.IsSetMatching && !info.IsUserSetMatched)
                             info = info.ChangeUserSet(UserSet.MATCHED);
@@ -1737,18 +1772,15 @@ namespace pwiz.Skyline.Model
                     IsSetMatching = true;
             }
 
-            public void AddChromInfo(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, TransitionChromInfo info)
+            public void AddTransitionArea(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, float area)
             {
-                if (info.IsEmpty)
-                    return;
-
                 var key = new TransitionKey(nodeGroup, nodeTran.Key(nodeGroup), nodeGroup.TransitionGroup.LabelType);
                 if (TranAreas.ContainsKey(key))
                 {
                     return;
                 }
 
-                TranAreas.Add(key, info.Area);
+                TranAreas.Add(key, area);
                 TranTypes.Add(nodeGroup.TransitionGroup.LabelType);
             }
 
