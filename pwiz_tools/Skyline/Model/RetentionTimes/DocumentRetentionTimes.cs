@@ -24,8 +24,10 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
@@ -100,6 +102,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             var newResultsSources = ListSourcesForResults(document.Settings.MeasuredResults, newSources);
             var allLibraryRetentionTimes = ReadAllRetentionTimes(document, newSources);
             var newFileAlignments = new List<KeyValuePair<int, FileRetentionTimeAlignments>>();
+            var pairsToAlign = GetPairsToAlign(newResultsSources, document.MeasuredResults);
             using var cancellationTokenSource = new PollingCancellationToken(() => progressMonitor.IsCanceled);
             IProgressStatus progressStatus = new ProgressStatus(RetentionTimesResources.DocumentRetentionTimes_RecalculateAlignments_Aligning_retention_times);
             ParallelEx.ForEach(newResultsSources.Values.Select(Tuple.Create<RetentionTimeSource, int>), tuple =>
@@ -113,7 +116,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     {
                         var retentionTimeSource = tuple.Item1;
                         var fileAlignments = CalculateFileRetentionTimeAlignments(retentionTimeSource.Name,
-                            allLibraryRetentionTimes, cancellationTokenSource.Token);
+                            allLibraryRetentionTimes, pairsToAlign, cancellationTokenSource.Token);
                         lock (newFileAlignments)
                         {
                             newFileAlignments.Add(new KeyValuePair<int, FileRetentionTimeAlignments>(tuple.Item2, fileAlignments));
@@ -142,7 +145,9 @@ namespace pwiz.Skyline.Model.RetentionTimes
         }
 
         private static FileRetentionTimeAlignments CalculateFileRetentionTimeAlignments(
-            string dataFileName, ResultNameMap<IDictionary<Target, MeasuredRetentionTime>> libraryRetentionTimes, CancellationToken cancellationToken)
+            string dataFileName, ResultNameMap<IDictionary<Target, MeasuredRetentionTime>> libraryRetentionTimes, 
+            HashSet<Tuple<string, string>> pairsToAlign,
+            CancellationToken cancellationToken)
         {
             var targetTimes = libraryRetentionTimes.Find(dataFileName);
             if (targetTimes == null)
@@ -157,6 +162,11 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     continue;
                 }
 
+                if (!pairsToAlign.Contains(Tuple.Create(dataFileName, entry.Key)) &&
+                    !pairsToAlign.Contains(Tuple.Create(entry.Key, dataFileName)))
+                {
+                    continue;
+                }
                 var alignedFile = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimes, entry.Value,
                     REFINEMENT_THRESHHOLD, RegressionMethodRT.linear, cancellationToken);
                 if (alignedFile == null || alignedFile.RegressionRefinedStatistics == null ||
@@ -317,6 +327,110 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
 
             return dictionary;
+        }
+
+        public static HashSet<Tuple<string, string>> GetPairsToAlign(ResultNameMap<RetentionTimeSource> sources,
+            MeasuredResults measuredResults)
+        {
+            var replicateRetentionTimeSources = measuredResults.Chromatograms.ToDictionary(
+                chromatogramSet => chromatogramSet,
+                chromatogramSet => chromatogramSet.MSDataFileInfos.Select(fileInfo => sources.Find(fileInfo))
+                    .Where(source => null != source)
+                    .ToList());
+            var alignmentPairs = new HashSet<Tuple<string, string>>();
+            foreach (var tuple in GetReplicateAlignmentPairs(measuredResults.Chromatograms))
+            {
+                if (!replicateRetentionTimeSources.TryGetValue(tuple.Item1, out var sources1))
+                {
+                    continue;
+                }
+
+                if (!replicateRetentionTimeSources.TryGetValue(tuple.Item2, out var sources2))
+                {
+                    continue;
+                }
+                alignmentPairs.UnionWith(sources1.SelectMany(source1=>sources2.Select(source2=>Tuple.Create(source1.Name, source2.Name))));
+            }
+
+            return alignmentPairs;
+        }
+
+        public static IEnumerable<Tuple<ChromatogramSet, ChromatogramSet>> GetReplicateAlignmentPairs(
+            IEnumerable<ChromatogramSet> chromatogramSets)
+        {
+            List<ChromatogramSet> batchLeaders = new List<ChromatogramSet>();
+            foreach (var batch in chromatogramSets.Where(chromatogramSet=>_alignmentPriorities.ContainsKey(chromatogramSet.SampleType)).GroupBy(chromatogramSet => chromatogramSet.BatchName))
+            {
+                ChromatogramSet batchLeader = null;
+                foreach (var chromatogramSet in batch.OrderBy(chromatogramSet => _alignmentPriorities[chromatogramSet.SampleType]))
+                {
+                    if (batchLeader == null)
+                    {
+                        batchLeader = chromatogramSet;
+                        foreach (var otherLeader in batchLeaders)
+                        {
+                            yield return Tuple.Create(otherLeader, batchLeader);
+                        }
+                        batchLeaders.Add(batchLeader);
+                    }
+                    else
+                    {
+                        yield return Tuple.Create(batchLeader, chromatogramSet);
+                    }
+                }
+            }
+        }
+
+        private static readonly Dictionary<SampleType, int> _alignmentPriorities = new Dictionary<SampleType, int>
+        {
+            {SampleType.STANDARD, 1},
+            {SampleType.UNKNOWN, 2},
+            {SampleType.QC, 2},
+            {SampleType.BLANK, 3}
+            // Do not perform alignments on "DOUBLE_BLANK" and "SOLVENT"
+        };
+
+        public AlignmentFunction GetMappingFunction(string alignTo, string alignFrom, int maxStopovers)
+        {
+            var queue = new Queue<ImmutableList<KeyValuePair<string, RetentionTimeAlignment>>>();
+            queue.Enqueue(ImmutableList<KeyValuePair<string, RetentionTimeAlignment>>.EMPTY);
+            while (queue.Count > 0)
+            {
+                var list = queue.Dequeue();
+                var name = list.LastOrDefault().Key ?? alignTo;
+                var fileAlignment = FileAlignments.Find(name);
+                if (fileAlignment == null)
+                {
+                    continue;
+                }
+
+                var endAlignment = fileAlignment.RetentionTimeAlignments.Find(alignFrom);
+                if (endAlignment != null)
+                {
+                    return MakeAlignmentFunc(list.Select(tuple => tuple.Value.RegressionLine).Prepend(endAlignment.RegressionLine));
+                }
+
+                if (list.Count < maxStopovers)
+                {
+                    var excludeNames = list.Select(tuple => tuple.Key).ToHashSet();
+                    foreach (var availableAlignment in fileAlignment.RetentionTimeAlignments)
+                    {
+                        if (!excludeNames.Contains(availableAlignment.Key))
+                        {
+                            queue.Enqueue(ImmutableList.ValueOf(list.Prepend(availableAlignment)));
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public static AlignmentFunction MakeAlignmentFunc(IEnumerable<RegressionLine> regressionLines)
+        {
+
+            return AlignmentFunction.FromParts(regressionLines.Select(line =>
+                AlignmentFunction.Create(line.GetY, line.GetX)));
         }
     }
 }

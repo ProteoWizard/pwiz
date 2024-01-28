@@ -600,7 +600,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     return retentionTimeValues;
                 }
-                RegressionLine regressionFunction;
+                AlignmentFunction regressionFunction;
                 if (!RetentionTimeTransformOp.TryGetRegressionFunction(chromFileInfoId, out regressionFunction))
                 {
                     return null;
