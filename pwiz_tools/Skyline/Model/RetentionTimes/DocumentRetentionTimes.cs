@@ -98,6 +98,10 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public static SrmDocument RecalculateAlignments(SrmDocument document, IProgressMonitor progressMonitor)
         {
+            if (!document.Settings.HasResults)
+            {
+                return document;
+            }
             var newSources = ListAvailableRetentionTimeSources(document.Settings);
             var newResultsSources = ListSourcesForResults(document.Settings.MeasuredResults, newSources);
             var allLibraryRetentionTimes = ReadAllRetentionTimes(document, newSources);
@@ -334,7 +338,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         {
             var replicateRetentionTimeSources = measuredResults.Chromatograms.ToDictionary(
                 chromatogramSet => chromatogramSet,
-                chromatogramSet => chromatogramSet.MSDataFileInfos.Select(fileInfo => sources.Find(fileInfo))
+                chromatogramSet => chromatogramSet.MSDataFileInfos.Select(sources.Find)
                     .Where(source => null != source)
                     .ToList());
             var alignmentPairs = new HashSet<Tuple<string, string>>();
