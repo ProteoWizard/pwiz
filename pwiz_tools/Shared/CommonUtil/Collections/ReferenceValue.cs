@@ -42,7 +42,7 @@ namespace pwiz.Common.Collections
 
         public override bool Equals(object obj)
         {
-            return obj is ReferenceValue<T> other && ReferenceEquals(Value, other.Value);
+            return obj is ReferenceValue<T> other && Equals(other);
         }
 
         public override int GetHashCode()
