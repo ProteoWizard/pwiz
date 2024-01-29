@@ -189,6 +189,7 @@
     <Compile Include="ExportPropertiesTest.cs" />
     <Compile Include="FindNodeCancelTest.cs" />
     <Compile Include="IgnoreSimScansTest.cs" />
+    <Compile Include="ImmediateWindowWarningsTest.cs" />
     <Compile Include="InteractiveCommandLineToolTest.cs" />
     <Compile Include="LegacyOptimizationStepTest.cs" />
     <Compile Include="LegacyScoringModelTest.cs" />
@@ -565,6 +566,7 @@
     <None Include="HighPrecModsTest.zip" />
     <None Include="HighReplicateCountTest.zip" />
     <None Include="IgnoreSimScansTest.zip" />
+    <None Include="ImmediateWindowWarningsTest.zip" />
     <None Include="ImportAnnotationsTest.zip" />
     <None Include="ImportDocTest.zip" />
     <None Include="ImportEncyclopeDiaLibraryTest.zip" />

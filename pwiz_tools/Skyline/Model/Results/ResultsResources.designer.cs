@@ -581,6 +581,16 @@ namespace pwiz.Skyline.Model.Results {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Discarding chromatograms for &apos;{0}&apos; because the explicit retention time {1} is not between {2} and {3}.
+        /// </summary>
+        public static string PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_ {
+            get {
+                return ResourceManager.GetString("PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___bec" +
+                        "ause_the_explicit_retention_time__1__is_not_between__2__and__3_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unexpected null peak list.
         /// </summary>
         public static string PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list {
