@@ -98,10 +98,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public static SrmDocument RecalculateAlignments(SrmDocument document, IProgressMonitor progressMonitor)
         {
-            if (!document.Settings.HasResults)
-            {
-                return document;
-            }
             var newSources = ListAvailableRetentionTimeSources(document.Settings);
             var newResultsSources = ListSourcesForResults(document.Settings.MeasuredResults, newSources);
             var allLibraryRetentionTimes = ReadAllRetentionTimes(document, newSources);
@@ -336,12 +332,16 @@ namespace pwiz.Skyline.Model.RetentionTimes
         public static HashSet<Tuple<string, string>> GetPairsToAlign(ResultNameMap<RetentionTimeSource> sources,
             MeasuredResults measuredResults)
         {
+            var alignmentPairs = new HashSet<Tuple<string, string>>();
+            if (measuredResults == null)
+            {
+                return alignmentPairs;
+            }
             var replicateRetentionTimeSources = measuredResults.Chromatograms.ToDictionary(
                 chromatogramSet => chromatogramSet,
                 chromatogramSet => chromatogramSet.MSDataFileInfos.Select(sources.Find)
                     .Where(source => null != source)
                     .ToList());
-            var alignmentPairs = new HashSet<Tuple<string, string>>();
             foreach (var tuple in GetReplicateAlignmentPairs(measuredResults.Chromatograms))
             {
                 if (!replicateRetentionTimeSources.TryGetValue(tuple.Item1, out var sources1))
@@ -363,7 +363,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             IEnumerable<ChromatogramSet> chromatogramSets)
         {
             List<ChromatogramSet> batchLeaders = new List<ChromatogramSet>();
-            foreach (var batch in chromatogramSets.Where(chromatogramSet=>_alignmentPriorities.ContainsKey(chromatogramSet.SampleType)).GroupBy(chromatogramSet => chromatogramSet.BatchName))
+            foreach (var batch in chromatogramSets.GroupBy(chromatogramSet => chromatogramSet.BatchName))
             {
                 ChromatogramSet batchLeader = null;
                 foreach (var chromatogramSet in batch.OrderBy(chromatogramSet => _alignmentPriorities[chromatogramSet.SampleType]))
@@ -390,8 +390,9 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {SampleType.STANDARD, 1},
             {SampleType.UNKNOWN, 2},
             {SampleType.QC, 2},
-            {SampleType.BLANK, 3}
-            // Do not perform alignments on "DOUBLE_BLANK" and "SOLVENT"
+            {SampleType.BLANK, 3},
+            {SampleType.DOUBLE_BLANK, 4},
+            {SampleType.SOLVENT, 4}
         };
 
         public AlignmentFunction GetMappingFunction(string alignTo, string alignFrom, int maxStopovers)
