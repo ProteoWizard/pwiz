@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             var newResultsSources = ListSourcesForResults(document.Settings.MeasuredResults, newSources);
             var allLibraryRetentionTimes = ReadAllRetentionTimes(document, newSources);
             var newFileAlignments = new List<KeyValuePair<int, FileRetentionTimeAlignments>>();
-            var pairsToAlign = GetPairsToAlign(newResultsSources, document.MeasuredResults);
+            var pairsToAlign = GetPairsToAlign(newResultsSources, document.MeasuredResults, newSources);
             using var cancellationTokenSource = new PollingCancellationToken(() => progressMonitor.IsCanceled);
             IProgressStatus progressStatus = new ProgressStatus(RetentionTimesResources.DocumentRetentionTimes_RecalculateAlignments_Aligning_retention_times);
             ParallelEx.ForEach(newResultsSources.Values.Select(Tuple.Create<RetentionTimeSource, int>), tuple =>
@@ -329,8 +329,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return dictionary;
         }
 
-        public static HashSet<Tuple<string, string>> GetPairsToAlign(ResultNameMap<RetentionTimeSource> sources,
-            MeasuredResults measuredResults)
+        public static HashSet<Tuple<string, string>> GetPairsToAlign(ResultNameMap<RetentionTimeSource> sourcesInDocument,
+            MeasuredResults measuredResults, ResultNameMap<RetentionTimeSource> allSources)
         {
             var alignmentPairs = new HashSet<Tuple<string, string>>();
             if (measuredResults == null)
@@ -339,7 +339,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
             var replicateRetentionTimeSources = measuredResults.Chromatograms.ToDictionary(
                 chromatogramSet => chromatogramSet,
-                chromatogramSet => chromatogramSet.MSDataFileInfos.Select(sources.Find)
+                chromatogramSet => chromatogramSet.MSDataFileInfos.Select(sourcesInDocument.Find)
                     .Where(source => null != source)
                     .ToList());
             foreach (var tuple in GetReplicateAlignmentPairs(measuredResults.Chromatograms))
@@ -354,6 +354,15 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     continue;
                 }
                 alignmentPairs.UnionWith(sources1.SelectMany(source1=>sources2.Select(source2=>Tuple.Create(source1.Name, source2.Name))));
+            }
+
+            // Also, align all of the retention times from things that are not in the document with the first replicate
+            var primaryReplicate = measuredResults.Chromatograms
+                .OrderBy(c => _alignmentPriorities[c.SampleType]).FirstOrDefault();
+            if (primaryReplicate != null)
+            {
+                alignmentPairs.UnionWith(replicateRetentionTimeSources[primaryReplicate].SelectMany(source1 =>
+                    allSources.Select(source2 => Tuple.Create(source1.Name, source2.Key))));
             }
 
             return alignmentPairs;
