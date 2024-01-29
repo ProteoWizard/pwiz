@@ -539,7 +539,7 @@ namespace pwiz.SkylineTestFunctional
                 DemoPause("Skyline does not recognize some column headers in the transition list, and offers the user the chance to set headers. In this test, the user is about to cancel out of the column picker.");
 
                 // Verify that cancel of column picker does not cancel the import
-                RunUI(importTransitionListColumnSelectDlg.CancelDialog);
+                CancelDialog(importTransitionListColumnSelectDlg, importTransitionListColumnSelectDlg.CancelDialog);
                 DemoPause("As expected, cancelling the column picker returns the user to the Create iRT window. Next the user clicks OK and returns to the column picker");
                 // Proceed
                 importTransitionListColumnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(createIrtCalcGood.OkDialog);

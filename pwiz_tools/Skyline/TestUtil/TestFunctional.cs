@@ -1396,6 +1396,12 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static void CancelDialog(Form form, Action cancelAction)
+        {
+            RunUI(cancelAction);
+            WaitForClosedForm(form);
+        }
+
         public static void OkDialog(Form form, Action okAction)
         {
             RunUI(okAction);
