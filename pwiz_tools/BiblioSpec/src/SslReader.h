@@ -139,20 +139,72 @@ class sslPSM : public PSM {
             }
         }
     }
+    static void setIonMobility(sslPSM& psm, const std::string& value) {
+        if (!value.empty()) {
+            try {
+                psm.ionMobility = boost::lexical_cast<double>(value);
+            }
+            catch (bad_lexical_cast) {
+                throw BlibException(false, "Non-numeric ion mobility value: %s",
+                    value.c_str());
+            }
+        }
+    }
+    static void setIonMobilityUnits(sslPSM& psm, const std::string& value) {
+        if (!value.empty()) {
+            psm.ionMobilityType = parseIonMobilityType(value.c_str());
+        }
+    }
+    static void setCCS(sslPSM& psm, const std::string& value) {
+        if (!value.empty()) {
+            try {
+                psm.ccs = boost::lexical_cast<double>(value);
+            }
+            catch (bad_lexical_cast) {
+                throw BlibException(false, "Non-numeric CCS: %s",
+                    value.c_str());
+            }
+        }
+    }
     static void setPrecursorAdduct(sslPSM& psm, const std::string& value) {
-        psm.smallMolMetadata.precursorAdduct = value;
+        if (value.empty()){
+            throw BlibException(false, "Missing precursor adduct.");
+        }
+        else {
+            psm.smallMolMetadata.precursorAdduct = value;
+        }
     }
     static void setChemicalFormula(sslPSM& psm, const std::string& value) {
-        psm.smallMolMetadata.chemicalFormula = value;
+        if (value.empty()){
+            throw BlibException(false, "Missing chemical formula.");
+        }
+        else {
+            psm.smallMolMetadata.chemicalFormula = value;
+        }
     }
     static void setInchiKey(sslPSM& psm, const std::string& value) {
-        psm.smallMolMetadata.inchiKey = value;
+        if (value.empty()){
+            throw BlibException(false, "Missing InChiKey.");
+        }
+        else {
+            psm.smallMolMetadata.inchiKey = value;
+        }
     }
     static void setMoleculeName(sslPSM& psm, const std::string& value) {
-        psm.smallMolMetadata.moleculeName = value;
+        if (value.empty()){
+            throw BlibException(false, "Missing molecule name.");
+        }
+        else {
+            psm.smallMolMetadata.moleculeName = value;
+        }
     }
     static void setotherKeys(sslPSM& psm, const std::string& value) {
-        psm.smallMolMetadata.otherKeys = value;
+        if (value.empty()){
+            throw BlibException(false, "Missing otherKeys.");
+        }
+        else {
+            psm.smallMolMetadata.otherKeys = value;
+        }
     }
     static void setPrecursorMzDeclared(sslPSM& psm, const std::string& value) {
         if (!value.empty()) {

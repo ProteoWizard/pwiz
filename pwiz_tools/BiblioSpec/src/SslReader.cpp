@@ -106,7 +106,11 @@ SslReader::SslReader(BlibBuilder& maker,
 
       if (newPSM.rtInfo.retentionTime != 0 || newPSM.rtInfo.startTime != 0)
       {
-          int identifier = newPSM.idAsInteger();
+          int identifier = newPSM.specKey;
+          if (newPSM.specIndex != -1) // not default value means scan id is index=<index>
+              identifier = newPSM.specIndex;
+          else if (newPSM.specKey == -1) // default value
+              identifier = std::hash<string>()(newPSM.specName);
 
           overrideRt_[identifier] = newPSM.rtInfo;
       }
@@ -126,6 +130,10 @@ SslReader::SslReader(BlibBuilder& maker,
       fileReader.addOptionalColumn("retention-time", sslPSM::setRetentionTime);
       fileReader.addOptionalColumn("start-time", sslPSM::setStartTime);
       fileReader.addOptionalColumn("end-time", sslPSM::setEndTime);
+
+      fileReader.addOptionalColumn("ion-mobility", sslPSM::setIonMobility);
+      fileReader.addOptionalColumn("ion-mobility-units", sslPSM::setIonMobilityUnits);
+      fileReader.addOptionalColumn("ccs", sslPSM::setCCS);
 
       // add the optional small molecule columns
       fileReader.addOptionalColumn("inchikey", sslPSM::setInchiKey);
@@ -147,7 +155,6 @@ SslReader::SslReader(BlibBuilder& maker,
     DelimitedFileReader<sslPSM> fileReader(this, hasHeader_);
 
     setColumnsAndSeparators(fileReader);
-
 
     // parse, getting each line with addDataLine
     fileReader.parseFile(sslName_.c_str());
@@ -177,15 +184,28 @@ SslReader::SslReader(BlibBuilder& maker,
       psms_ = fileIterator->second;
 
       // look at first non-precursor-only psm for scanKey vs scanName
+      lookUpBy_ = UNKNOWN;
       for (unsigned int i = 0; i < psms_.size(); i++) {
           sslPSM* psm = static_cast<sslPSM*>(psms_.at(i));
           if (psm->specIndex >= 0) // not default value means scan id is index=<index>
+          {
               lookUpBy_ = INDEX_ID;
+              break;
+          }
           else if (psm->specKey <  0) // default value
+          {
               lookUpBy_ = NAME_ID;
+              break;
+          }
           else if (!psm->isPrecursorOnly())
+          {
               lookUpBy_ = SCAN_NUM_ID;
-          break;
+              break;
+          }
+      }
+      if (lookUpBy_ == UNKNOWN)
+      {
+        lookUpBy_ = SCAN_NUM_ID;
       }
       buildTables(fileScoreTypes_[fileIterator->first]);
     }
