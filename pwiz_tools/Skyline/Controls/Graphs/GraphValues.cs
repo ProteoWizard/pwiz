@@ -165,7 +165,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var unconversion = _retentionTimeRegression.GetUnconversion(chromFileInfoId);
                 if (unconversion != null)
                 {
-                    regressionFunction = AlignmentFunction.Create(unconversion.GetY, unconversion.GetX);
+                    regressionFunction = AlignmentFunction.Define(unconversion.GetY, unconversion.GetX);
                     return true;
                 }
 

@@ -37,13 +37,14 @@ namespace pwiz.Skyline.Model.RetentionTimes
     public enum RegressionMethodRT { linear, kde, log, loess }
 
     /// <summary>
-    /// Contains all of the retention time alignments that are relevant for a <see cref="SrmDocument"/>
+    /// Contains all the retention time alignments that are relevant for a <see cref="SrmDocument"/>
     /// </summary>
     [XmlRoot("doc_rt_alignments")]
     public class DocumentRetentionTimes : IXmlSerializable
     {
-        public static readonly DocumentRetentionTimes EMPTY = new DocumentRetentionTimes(new RetentionTimeSource[0], new FileRetentionTimeAlignments[0]);
-        public const double REFINEMENT_THRESHHOLD = .99;
+        public static readonly DocumentRetentionTimes EMPTY =
+            new DocumentRetentionTimes(Array.Empty<RetentionTimeSource>(), Array.Empty<FileRetentionTimeAlignments>());
+        public const double REFINEMENT_THRESHOLD = .99;
         public DocumentRetentionTimes(IEnumerable<RetentionTimeSource> sources, IEnumerable<FileRetentionTimeAlignments> fileAlignments)
             : this()
         {
@@ -168,9 +169,9 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     continue;
                 }
                 var alignedFile = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimes, entry.Value,
-                    REFINEMENT_THRESHHOLD, RegressionMethodRT.linear, cancellationToken);
+                    REFINEMENT_THRESHOLD, RegressionMethodRT.linear, cancellationToken);
                 if (alignedFile == null || alignedFile.RegressionRefinedStatistics == null ||
-                    !RetentionTimeRegression.IsAboveThreshold(alignedFile.RegressionRefinedStatistics.R, REFINEMENT_THRESHHOLD))
+                    !RetentionTimeRegression.IsAboveThreshold(alignedFile.RegressionRefinedStatistics.R, REFINEMENT_THRESHOLD))
                 {
                     continue;
                 }
@@ -277,7 +278,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 return ResultNameMap<RetentionTimeSource>.EMPTY;
             }
-            IEnumerable<RetentionTimeSource> sources = new RetentionTimeSource[0];
+            IEnumerable<RetentionTimeSource> sources = Array.Empty<RetentionTimeSource>();
             foreach (var library in settings.PeptideSettings.Libraries.Libraries)
             {
                 if (library == null || !library.IsLoaded)
@@ -329,6 +330,16 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return dictionary;
         }
 
+        /// <summary>
+        /// Returns the set of things that should be aligned against each other.
+        /// This function figures out the "Primary Replicate" which is the first replicate in
+        /// the document when ordered by <see cref="_alignmentPriorities"/>.
+        /// (That is, the first internal standard, or, if there are no internal standards then the first
+        /// ordinary replicate).
+        /// All retention times are aligned against the primary replicate.
+        /// In addition, within each <see cref="ChromatogramSet.BatchName"/>, all retention times within that
+        /// batch are aligned against the primary replicate of that batch.
+        /// </summary>
         public static HashSet<Tuple<string, string>> GetPairsToAlign(ResultNameMap<RetentionTimeSource> sourcesInDocument,
             MeasuredResults measuredResults, ResultNameMap<RetentionTimeSource> allSources)
         {
@@ -356,7 +367,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 alignmentPairs.UnionWith(sources1.SelectMany(source1=>sources2.Select(source2=>Tuple.Create(source1.Name, source2.Name))));
             }
 
-            // Also, align all of the retention times from things that are not in the document with the first replicate
+            // Also, align against the first replicate the things that are not in the document
             var primaryReplicate = measuredResults.Chromatograms
                 .OrderBy(c => _alignmentPriorities[c.SampleType]).FirstOrDefault();
             if (primaryReplicate != null)
@@ -444,7 +455,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         {
 
             return AlignmentFunction.FromParts(regressionLines.Select(line =>
-                AlignmentFunction.Create(line.GetY, line.GetX)));
+                AlignmentFunction.Define(line.GetY, line.GetX)));
         }
     }
 }
