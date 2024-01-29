@@ -3780,11 +3780,11 @@ namespace pwiz.SkylineTestData
             {
                 if (ServerStateEnum.available != MyServerState)
                 {
-                    throw new PanoramaServerException(MyServerState, "Invalid server state", ServerUri);
+                    throw new PanoramaServerException(MyServerState, ServerUri, null, new Exception("Invalid server state"));
                 }
                 if (UserStateEnum.valid != MyUserState)
                 {
-                    throw new PanoramaServerException(MyUserState, "Invalid user state", ServerUri);
+                    throw new PanoramaServerException(MyUserState, ServerUri, null, new Exception("Invalid user state"));
                 }
 
                 return new PanoramaServer(ServerUri, Username, Password);
@@ -3794,7 +3794,7 @@ namespace pwiz.SkylineTestData
             {
                 if (MyFolderState != FolderState.valid)
                 {
-                    throw new PanoramaServerException(MyFolderState, folderPath, null, ServerUri, null, Username);
+                    throw new PanoramaServerException(MyFolderState, folderPath, ServerUri, null, Username);
                 }
             }
         }

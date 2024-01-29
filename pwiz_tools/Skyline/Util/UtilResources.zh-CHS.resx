@@ -326,9 +326,6 @@
   <data name="WebPanoramaPublishClient_RenameTempZipFile_Error_renaming_temporary_zip_file__" xml:space="preserve">
     <value>重新命名临时压缩文件出错：</value>
   </data>
-  <data name="WebPanoramaPublishClient_SendZipFile_Deleting_temporary_file_on_server" xml:space="preserve">
-    <value>在服务器上删除临时文件</value>
-  </data>
   <data name="WebPanoramaPublishClient_SendZipFile_Renaming_temporary_file_on_server" xml:space="preserve">
     <value>在服务器上重新命名临时文件</value>
   </data>

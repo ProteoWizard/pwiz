@@ -120,8 +120,6 @@ namespace pwiz.Skyline.FileUI
 
         private void PublishDocumentDlgLoad(List<ServerFolders> listServerFolders)
         {
-            if (PanoramaPublishClient == null)
-                PanoramaPublishClient = new WebPanoramaPublishClient();
             var listErrorServers = new List<ServerError>();
             foreach (var server in _panoramaServers)
             {
@@ -134,7 +132,7 @@ namespace pwiz.Skyline.FileUI
                 JToken folders = null;
                 try
                 {
-                    folders = PanoramaPublishClient.GetInfoForFolders(server, null);
+                    folders = GetPublishClient(server).PanoramaClient.GetInfoForFolders(null);
                 }
                 catch (Exception ex)
                 {
@@ -299,7 +297,7 @@ namespace pwiz.Skyline.FileUI
             try
             {
                 var cancelled = false;
-                ShareType = PanoramaPublishClient.GetShareType(folderInfo, _docContainer.DocumentUI,
+                ShareType = GetPublishClient(folderInfo.Server).GetShareType(_docContainer.DocumentUI,
                     _docContainer.DocumentFilePath, _fileFormatOnDisk, this, ref cancelled);
                 if (cancelled)
                 {
@@ -321,8 +319,23 @@ namespace pwiz.Skyline.FileUI
             string folderPath = GetFolderPath(treeViewFolders.SelectedNode);
             var zipFilePath = tbFilePath.Text;
             FolderInformation folderInfo = treeViewFolders.SelectedNode.Tag as FolderInformation;
-            if(folderInfo != null)
-                PanoramaPublishClient.UploadSharedZipFile(parent,folderInfo.Server, zipFilePath, folderPath);
+            if (folderInfo != null)
+            {
+                GetPublishClient(folderInfo.Server).UploadSharedZipFile(parent, zipFilePath, folderPath);
+            }
+        }
+
+        private IPanoramaPublishClient GetPublishClient(PanoramaServer server)
+        {
+            // If a test client was provided in SkylineWindow.ShowPublishDlg(IPanoramaPublishClient publishClient), use that.
+            // Otherwise, create a client for the given server.
+            return GetDefaultPublishClient(server, PanoramaPublishClient);
+        }
+
+        // If the given client is not null return that.  Otherwise return a new WebPanoramaPublishClient
+        public static IPanoramaPublishClient GetDefaultPublishClient(PanoramaServer server, IPanoramaPublishClient client)
+        {
+            return client ?? new WebPanoramaPublishClient(server.URI, server.Username, server.Password);
         }
 
         private string GetFolderPath(TreeNode folderNode)

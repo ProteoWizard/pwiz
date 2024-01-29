@@ -329,9 +329,6 @@ Charge states are inferred from the presence of these adduct components:{1}</val
   <data name="WebPanoramaPublishClient_RenameTempZipFile_Error_renaming_temporary_zip_file__" xml:space="preserve">
     <value>Error renaming temporary zip file: </value>
   </data>
-  <data name="WebPanoramaPublishClient_SendZipFile_Deleting_temporary_file_on_server" xml:space="preserve">
-    <value>Deleting temporary file on server</value>
-  </data>
   <data name="WebPanoramaPublishClient_SendZipFile_Renaming_temporary_file_on_server" xml:space="preserve">
     <value>Renaming temporary file on server</value>
   </data>

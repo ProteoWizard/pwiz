@@ -57,7 +57,6 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        private readonly IPanoramaPublishClient _testPublishClient = new TestPanoramaPublishClient();
         private const string VALID_USER_NAME = "user@user.edu";
         private const string VALID_PASSWORD = "password";
 
@@ -67,6 +66,8 @@ namespace pwiz.SkylineTestFunctional
         private const string UNKNOWN_STATE_SERVER = "http://unknown.server-state.com";
         private const string BAD_SERVER_URL = "http://w ww.google.com";
         private const string EMPTY_SERVER_URL = " ";
+
+        // private readonly IPanoramaPublishClient _testPublishClient = new TestPanoramaPublishClient(VALID_PANORAMA_SERVER, VALID_USER_NAME, VALID_PASSWORD);
 
         private ToolOptionsUI ToolOptionsDlg { get; set; }
 
@@ -119,20 +120,24 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(ToolOptionsDlg, ToolOptionsDlg.OkDialog);
             
             RunUI(() => SkylineWindow.SaveDocument(TestContext.GetTestResultsPath("test.sky")));
-            
-            CheckPublishFailure(VALID_PANORAMA_SERVER, Resources.PublishDocumentDlg_OkDialog_Please_select_a_folder);
+
+            var testPanoramaClient = new TestSimplePanoramaClient(VALID_PANORAMA_SERVER, VALID_USER_NAME, VALID_USER_NAME);
+
+            CheckPublishFailure(VALID_PANORAMA_SERVER, Resources.PublishDocumentDlg_OkDialog_Please_select_a_folder, testPanoramaClient);
             CheckPublishFailure(NO_WRITE_TARGETED,
                 Resources
-                    .PublishDocumentDlg_UploadSharedZipFile_You_do_not_have_permission_to_upload_to_the_given_folder);
+                    .PublishDocumentDlg_UploadSharedZipFile_You_do_not_have_permission_to_upload_to_the_given_folder, testPanoramaClient);
             CheckPublishFailure(WRITE_NO_TARGETED,
                 Resources
-                    .PublishDocumentDlg_UploadSharedZipFile_You_do_not_have_permission_to_upload_to_the_given_folder);
-            CheckPublishSuccess(WRITE_TARGETED, false);
+                    .PublishDocumentDlg_UploadSharedZipFile_You_do_not_have_permission_to_upload_to_the_given_folder, testPanoramaClient);
+            CheckPublishSuccess(WRITE_TARGETED, false, testPanoramaClient);
+
+
             
             // Document has no chromatograms, should be published regardless of skyd version supported by server -- Success
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("no_chromatograms.sky")));
             WaitForDocumentLoaded();
-            ((TestPanoramaPublishClient)_testPublishClient).ServerSkydVersion = "7";
+            testPanoramaClient.ServerSkydVersion = "7";
             DocumentFormat? documentFormat = DocumentFormat.VERSION_1_9;
             var savedFileVersion = string.Format(Resources.ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__,
                 documentFormat.Value.GetDescription());
@@ -140,40 +145,40 @@ namespace pwiz.SkylineTestFunctional
             // for sharing should be listed as options in the ShareTypeDlg.
             var supportedVersions = new List<string> { savedFileVersion };
             supportedVersions.AddRange(SkylineVersion.SupportedForSharing().Select(v => v.ToString()));
-            CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions);
+            CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions, testPanoramaClient);
             
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("skyd9.sky")));
             WaitForDocumentLoaded();
             // Server supports a version lower than the chromatogram cache in this document -- Fail
-            ((TestPanoramaPublishClient)_testPublishClient).ServerSkydVersion = "7";
-            CheckPublishFailure(WRITE_TARGETED, string.Format(Resources.PublishDocumentDlg_ServerSupportsSkydVersion_, "9"));
+            testPanoramaClient.ServerSkydVersion = "7";
+            CheckPublishFailure(WRITE_TARGETED, string.Format(Resources.PublishDocumentDlg_ServerSupportsSkydVersion_, "9"), testPanoramaClient);
             Assert.AreEqual(SkylineWindow.Document.Settings.DataSettings.PanoramaPublishUri, null);
             
             // Server supports the version of the chromatogram cache in this document -- Success
-            ((TestPanoramaPublishClient) _testPublishClient).ServerSkydVersion = "9";
+            testPanoramaClient.ServerSkydVersion = "9";
             
             // Server supports the document's cache version. Even though this version (skyd 9) is not associated with
             // any of the Skyline versions supported for sharing we should see all of them in the available options since 
             // the cache format of the document does not change when it is shared.
-            CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions);
+            CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions, testPanoramaClient);
             Assert.AreNotEqual(SkylineWindow.Document.Settings.DataSettings.PanoramaPublishUri, null);
             
             // Server supports a higher version than the document. 
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("skyd9.sky")));
             WaitForDocumentLoaded();
-            ((TestPanoramaPublishClient)_testPublishClient).ServerSkydVersion = "13";
+            testPanoramaClient.ServerSkydVersion = "13";
             // The current saved file format and all the Skyline versions supported for sharing should be available as options.
-            CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions);
+            CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions, testPanoramaClient);
             Assert.AreNotEqual(SkylineWindow.Document.Settings.DataSettings.PanoramaPublishUri, null);
             
             // Document should be published even if an invalid version is returned by the server -- Success 
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("skyd9.sky")));
             WaitForDocumentLoaded();
-            ((TestPanoramaPublishClient)_testPublishClient).ServerSkydVersion = "NINE";
+            testPanoramaClient.ServerSkydVersion = "NINE";
             // If there is an error in getting a response from the server or an error in parsing the version returned by the server
             // PanoramaPublishClient.GetSupportedSkydVersion() returns CacheFormatVersion.CURRENT. So the available options in the 
             // ShareTypeDlg will include the current saved file format and all versions supported for sharing.
-            CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions);
+            CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions, testPanoramaClient);
             
             // After a document has been published, it is "dirty" because a "panorama_publish_uri" is added.
             // Attempting to publish it again will save the document. Now the selected "Current file version..." option
@@ -183,17 +188,17 @@ namespace pwiz.SkylineTestFunctional
                 documentFormat.Value.GetDescription());
             supportedVersions = new List<string> { savedFileVersion };
             supportedVersions.AddRange(SkylineVersion.SupportedForSharing().Select(v => v.ToString()));
-            CheckPublishSuccess(WRITE_TARGETED, true, supportedVersions);
+            CheckPublishSuccess(WRITE_TARGETED, true, supportedVersions, testPanoramaClient);
             
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("skyd15.sky")));
             WaitForDocumentLoaded();
-            ((TestPanoramaPublishClient)_testPublishClient).ServerSkydVersion = "14";
+            testPanoramaClient.ServerSkydVersion = "14";
             // Document's cache version is higher than what the server supports. The available options in ShareTypeDlg should not 
             // include the current saved file format or any Skyline versions associated with a cache version higher than 14.
             supportedVersions = SkylineVersion.SupportedForSharing()
                 .Where(ver => ver.CacheFormatVersion <= CacheFormatVersion.Fourteen)
                 .Select(v => v.ToString()).ToList();
-            CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions);
+            CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions, testPanoramaClient);
             
             TestPanoramaServerUrls();
             
@@ -202,19 +207,21 @@ namespace pwiz.SkylineTestFunctional
             TestDisplayLabKeyErrors();
         }
 
-        public void CheckPublishSuccess(string nodeSelection, bool expectingSavedUri)
+        public void CheckPublishSuccess(string nodeSelection, bool expectingSavedUri, TestSimplePanoramaClient panoramaClient)
         {
-            CheckPublishSuccess(nodeSelection, expectingSavedUri, null);
+            CheckPublishSuccess(nodeSelection, expectingSavedUri, null, panoramaClient);
         }
 
-        public void CheckPublishSuccess(string nodeSelection, bool expectingSavedUri, IList<string> supportedVersions)
+        public void CheckPublishSuccess(string nodeSelection, bool expectingSavedUri, IList<string> supportedVersions, TestSimplePanoramaClient panoramaClient)
         {
             bool hasSavedUri = SkylineWindow.Document.Settings.DataSettings.PanoramaPublishUri != null;
             Assert.AreEqual(expectingSavedUri, hasSavedUri);
+
+            var testPublishClient = new TestPanoramaPublishClient(panoramaClient);
             if (hasSavedUri)
             {
                 // Test click don't use saved uri
-                MultiButtonMsgDlg publishToSavedUri = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(_testPublishClient));
+                MultiButtonMsgDlg publishToSavedUri = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(testPublishClient));
 
                 OkDialog(publishToSavedUri, publishToSavedUri.ClickYes);
                 var shareTypeDlg = WaitForOpenForm<ShareTypeDlg>();
@@ -226,7 +233,7 @@ namespace pwiz.SkylineTestFunctional
             }
             else
             {
-                var publishDocumentDlg = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(_testPublishClient));
+                var publishDocumentDlg = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(testPublishClient));
                 WaitForCondition(60 * 1000, () => publishDocumentDlg.IsLoaded);
                 RunUI(() =>
                 {
@@ -253,9 +260,11 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.AreEqualDeep(supportedVersions, availableItems);
         }
 
-        public void CheckPublishFailure(string nodeSelection, string failureMessage)
+        public void CheckPublishFailure(string nodeSelection, string failureMessage, TestSimplePanoramaClient panoramaClient)
         {
-            var publishDocumentDlg = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(_testPublishClient));
+            var testPublishClient = new TestPanoramaPublishClient(panoramaClient);
+
+            var publishDocumentDlg = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(testPublishClient));
             WaitForCondition(60 * 1000, () => publishDocumentDlg.IsLoaded);
             RunUI(() =>
             {
@@ -380,7 +389,8 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
 
             // Try to "Upload to Panorama"
-            IPanoramaPublishClient publishClient = new TestPanoramaPublishClient();
+            var testPanoramaClient = new TestSimplePanoramaClient(VALID_PANORAMA_SERVER, VALID_USER_NAME, VALID_USER_NAME);
+            IPanoramaPublishClient publishClient = new TestPanoramaPublishClient(testPanoramaClient);
             var noServersDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(publishClient));
             var text = noServersDlg.Message;
             RunUI(() => Assert.IsTrue(noServersDlg.Message.Contains(Resources.SkylineWindow_ShowPublishDlg_Press_Register_to_register_for_a_project_on_PanoramaWeb_)));
@@ -504,9 +514,9 @@ namespace pwiz.SkylineTestFunctional
             AddServer(PANORAMA_SERVER, VALID_USER_NAME, VALID_PASSWORD);
 
             // Response returned by the server could not be parsed as JSON
-            var publishClient = new TestLabKeyErrorPublishClient();
-            publishClient.SetErrorType(BaseTestWebClientFactory.BAD_JSON);
-            var publishDialog = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(publishClient));
+            var publishDialog = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(
+                new TestLabKeyErrorPublishClient(new Uri(PANORAMA_SERVER), VALID_USER_NAME,
+                    VALID_PASSWORD, BaseTestRequestHelperFactory.BAD_JSON)));
             WaitForCondition(() => publishDialog.IsLoaded);
             RunUI(() => { publishDialog.SelectItem(PANORAMA_FOLDER); });
             var shareTypeDlg = ShowDialog<ShareTypeDlg>(publishDialog.OkDialog);
@@ -518,15 +528,16 @@ namespace pwiz.SkylineTestFunctional
                 string.Format(PanoramaClient.Properties.Resources.GenericState_AppendErrorAndUri_URL___0_,
                     PanoramaUtil.GetPipelineContainerUrl(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER)),
                 string.Format(PanoramaClient.Properties.Resources.BaseWebClient_ParseJsonResponse_Response___0_,
-                    NoJsonResponseWebClient.NOT_JSON));
+                    NoJsonResponseRequestHelper.NOT_JSON));
             Assert.AreEqual(expectedError, errorDlg.Message);
             OkDialog(errorDlg, errorDlg.OkDialog);
 
             // TODO: Returned JSON does not have the required attribute(s).
 
             // LabKey returned an error in the JSON response while uploading the file
-            publishClient.SetErrorType(BaseTestWebClientFactory.UPLOAD_ERROR);
-            publishDialog = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(publishClient));
+            publishDialog = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(
+                new TestLabKeyErrorPublishClient(new Uri(PANORAMA_SERVER), VALID_USER_NAME,
+                    VALID_PASSWORD, BaseTestRequestHelperFactory.UPLOAD_ERROR)));
             WaitForCondition(() => publishDialog.IsLoaded);
             RunUI(() => { publishDialog.SelectItem(PANORAMA_FOLDER); });
             shareTypeDlg = ShowDialog<ShareTypeDlg>(publishDialog.OkDialog);
@@ -534,7 +545,7 @@ namespace pwiz.SkylineTestFunctional
             expectedError = TextUtil.LineSeparate(
                 Resources
                     .AbstractPanoramaPublishClient_UploadFileCompleted_There_was_an_error_uploading_the_file_,
-                UploadErrorWebClient.GetLabKeyError(SkylineWindow.DocumentFilePath).ToString());
+                UploadErrorRequestHelper.GetLabKeyError(SkylineWindow.DocumentFilePath).ToString());
             Assert.AreEqual(expectedError, errorDlg.Message);
             OkDialog(errorDlg, errorDlg.OkDialog);
 
@@ -547,8 +558,9 @@ namespace pwiz.SkylineTestFunctional
 
 
             // No error.  File uploaded and imported successfully.
-            publishClient.SetErrorType(BaseTestWebClientFactory.NO_ERROR);
-            publishDialog = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(publishClient));
+            publishDialog = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(
+                new TestLabKeyErrorPublishClient(new Uri(PANORAMA_SERVER), VALID_USER_NAME,
+                    VALID_PASSWORD, BaseTestRequestHelperFactory.NO_ERROR)));
             WaitForCondition(() => publishDialog.IsLoaded);
             RunUI(() => { publishDialog.SelectItem(PANORAMA_FOLDER); });
             shareTypeDlg = ShowDialog<ShareTypeDlg>(publishDialog.OkDialog);
@@ -627,11 +639,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 if (string.Equals(Server, VALID_NON_PANORAMA_SERVER))
                 {
-                    throw new PanoramaServerException(UserStateEnum.nonvalid, "Test WebException", ServerUri, ServerUri);
+                    throw new PanoramaServerException(UserStateEnum.nonvalid, ServerUri, ServerUri, new WebException("Test WebException"));
                 }
 
                 else if (string.Equals(Server, NON_EXISTENT_SERVER))
-                    throw new PanoramaServerException(ServerStateEnum.missing, "Test WebException - NameResolutionFailure", ServerUri, ServerUri);
+                    throw new PanoramaServerException(ServerStateEnum.missing, ServerUri, ServerUri, new WebException("Test WebException - NameResolutionFailure"));
 
                 else if (Server.Contains(VALID_PANORAMA_SERVER) || Server.Contains(PANORAMA_SERVER))
                 {
@@ -642,11 +654,11 @@ namespace pwiz.SkylineTestFunctional
                     }
                     else
                     {
-                        throw new PanoramaServerException(UserStateEnum.nonvalid, "Test WebException", ServerUri,
-                            PanoramaUtil.GetEnsureLoginUri(new PanoramaServer(ServerUri, Username, Password)));
+                        throw new PanoramaServerException(UserStateEnum.nonvalid, ServerUri,
+                            PanoramaUtil.GetEnsureLoginUri(new PanoramaServer(ServerUri, Username, Password)), new WebException("Test WebException"));
                     }
                 }
-                throw new PanoramaServerException(ServerStateEnum.unknown, "Test WebException - unknown failure", ServerUri, ServerUri);
+                throw new PanoramaServerException(ServerStateEnum.unknown, ServerUri, ServerUri, new WebException("Test WebException - unknown failure"));
             }
 
             public override void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
@@ -666,7 +678,27 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        private class TestPanoramaPublishClient : AbstractPanoramaPublishClient
+        public class TestPanoramaPublishClient : AbstractPanoramaPublishClient
+        {
+            private TestSimplePanoramaClient _panoramaClient;
+
+            public TestPanoramaPublishClient(TestSimplePanoramaClient panoramaClient)
+            {
+                _panoramaClient = panoramaClient;
+            }
+
+            public TestPanoramaPublishClient(string serverUri, string username, string password)
+            {
+                _panoramaClient = new TestSimplePanoramaClient(serverUri, username, password);
+            }
+
+            public override IPanoramaClient PanoramaClient
+            {
+                get { return _panoramaClient; }
+            }
+        }
+
+        public class TestSimplePanoramaClient : TestPanoramaClient
         {
             string _serverSkydVersion = ChromatogramCache.FORMAT_VERSION_CACHE.ToString();
 
@@ -675,8 +707,11 @@ namespace pwiz.SkylineTestFunctional
                 private get { return _serverSkydVersion; }
                 set { _serverSkydVersion = value; }
             }
+            public TestSimplePanoramaClient(string serverUri, string username, string password) : base(serverUri, username, password)
+            {
+            }
 
-            public override JToken GetInfoForFolders(PanoramaServer server, string folder)
+            public override JToken GetInfoForFolders(string folder)
             {
                 // this addition is hacky but necessary as far as I can tell to get PanoramaSavedUri testing to work
                 // basically adds a WRITE_TARGET type folder in the root because the new code to deal with publishing to a 
@@ -690,67 +725,97 @@ namespace pwiz.SkylineTestFunctional
                 return testFolders;
             }
 
-            public override Uri SendZipFile(PanoramaServer server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
-            {
-                return null;
-            }
-
-            public override JObject SupportedVersionsJson(PanoramaServer server)
+            public override JObject SupportedVersionsJson()
             {
                 var obj = new JObject();
                 obj["SKYD_version"] = ServerSkydVersion;
                 return obj;
             }
 
-            public override IPublishWebClientFactory GetWebClientFactory()
+            public override Uri SendZipFile(string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
             {
-                throw new NotImplementedException();
+                return null;
             }
         }
 
-        public class TestLabKeyErrorPublishClient : AbstractPanoramaPublishClient
+        public class TestLabKeyErrorPanoramaClient : AbstractPanoramaClient
         {
             private int _errorType;
 
-            public void SetErrorType(int errorType)
+            public TestLabKeyErrorPanoramaClient(Uri serverUri, string username, string password, int errorType) : base(serverUri, username, password)
             {
                 _errorType = errorType;
             }
 
-            public override JToken GetInfoForFolders(PanoramaServer server, string folder)
+            public override JToken GetInfoForFolders(string folder)
             {
                 var testFolders = CreateFolder("LabKeyErrorsTest", true, false);
                 testFolders["children"] = new JArray(CreateFolder(PANORAMA_FOLDER, true, true));
                 return testFolders;
             }
 
-            public override JObject SupportedVersionsJson(PanoramaServer server)
+            public override void DownloadFile(string fileUrl, string fileName, long fileSize, string realName, IProgressMonitor pm,
+                IProgressStatus progressStatus)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override JObject SupportedVersionsJson()
             {
                 var obj = new JObject();
                 obj["SKYD_version"] = ChromatogramCache.FORMAT_VERSION_CACHE.ToString();
                 return obj;
             }
 
-            public override IPublishWebClientFactory GetWebClientFactory()
-            {
-                return new BaseTestWebClientFactory(this, _errorType);
-            }
-
             public void UpdateProgress()
             {
-                webClient_UploadProgressChanged(this, null);
+                webClient_UploadProgressChanged(this, null, GetRequestHelperFactory().Create(ServerUri, Username, Password));
             }
 
             public void UploadComplete(JObject labkeyResponse)
             {
-                UploadFileCompleted(labkeyResponse != null ? labkeyResponse.ToString() : string.Empty);
+                _uploadError = UploadFileCompleted(labkeyResponse != null ? labkeyResponse.ToString() : string.Empty);
             }
 
+            public override Uri ValidateUri(Uri serverUri, bool tryNewProtocol = true)
+            {
+                return serverUri;
+            }
+
+            public override PanoramaServer ValidateServerAndUser(Uri serverUri, string username, string password)
+            {
+                return new PanoramaServer(serverUri, username, password); ;
+            }
+
+            public override PanoramaServer EnsureLogin(PanoramaServer pServer)
+            {
+                return new PanoramaServer(pServer.URI, pServer.Username, pServer.Password);
+            }
+
+            public override IRequestHelperFactory GetRequestHelperFactory()
+            {
+                return new BaseTestRequestHelperFactory(this, _errorType);
+            }
         }
 
-        public class BaseTestWebClientFactory : IPublishWebClientFactory
+        public class TestLabKeyErrorPublishClient : AbstractPanoramaPublishClient
         {
-            private TestLabKeyErrorPublishClient _publishClient;
+            private TestLabKeyErrorPanoramaClient _panoramaClient;
+
+            public TestLabKeyErrorPublishClient (Uri serverUri, string username, string password, int errorType)
+            {
+                _panoramaClient = new TestLabKeyErrorPanoramaClient(serverUri, username, password, errorType);
+            }
+
+            public override IPanoramaClient PanoramaClient
+            {
+                get { return _panoramaClient; }
+            }
+        }
+
+        public class BaseTestRequestHelperFactory : IRequestHelperFactory
+        {
+            private TestLabKeyErrorPanoramaClient _panoramaClient;
             public const int NO_ERROR = 0;
             public const int BAD_JSON = 1;
             public const int UPLOAD_ERROR = 2;
@@ -758,36 +823,36 @@ namespace pwiz.SkylineTestFunctional
             public const int MOVE_REQUEST_ERROR = 4;
 
             private readonly int _errorType;
-            public BaseTestWebClientFactory (TestLabKeyErrorPublishClient publishClient, int errorType)
+            public BaseTestRequestHelperFactory (TestLabKeyErrorPanoramaClient panoramaClient, int errorType)
             {
-                _publishClient = publishClient;
+                _panoramaClient = panoramaClient;
                 _errorType = errorType;
             }
-            public IPublishWebClient Create(Uri serverUri, string username, string password)
+            public IRequestHelper Create(Uri serverUri, string username, string password)
             {
-                TestPublishWebClient _webClient;
+                TestPublishRequestHelper _requestHelper;
                 switch (_errorType)
                 {
                     case BAD_JSON: 
-                        _webClient = new NoJsonResponseWebClient(serverUri, username, password);
+                        _requestHelper = new NoJsonResponseRequestHelper(serverUri, username, password);
                         break;
                     case UPLOAD_ERROR:
-                        _webClient = new UploadErrorWebClient(serverUri, username, password);
+                        _requestHelper = new UploadErrorRequestHelper(serverUri, username, password);
                         break;
                     default:
-                        _webClient = new TestPublishWebClient(serverUri, username, password);
+                        _requestHelper = new TestPublishRequestHelper(serverUri, username, password);
                         break;
                 }
                 // var client = new TestPublishWebClient(serverUri, username, password);
-                _webClient.SetPublishClient(_publishClient);
-                return _webClient;
+                _requestHelper.SetPublishClient(_panoramaClient);
+                return _requestHelper;
             }
         }
 
-        public class NoJsonResponseWebClient : TestPublishWebClient
+        public class NoJsonResponseRequestHelper : TestPublishRequestHelper
         {
             public const string NOT_JSON = "<head><body>This is not JSON</body></head>";
-            public NoJsonResponseWebClient(Uri serverUri, string username, string password) : base(serverUri, username, password)
+            public NoJsonResponseRequestHelper(Uri serverUri, string username, string password) : base(serverUri, username, password)
             {
             }
             public override string DoGet(Uri uri)
@@ -796,16 +861,16 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        public class UploadErrorWebClient : TestPublishWebClient
+        public class UploadErrorRequestHelper : TestPublishRequestHelper
         {
-            public UploadErrorWebClient(Uri serverUri, string username, string password) : base(serverUri, username, password)
+            public UploadErrorRequestHelper(Uri serverUri, string username, string password) : base(serverUri, username, password)
             {
             }
 
             public static LabKeyError GetLabKeyError(string documentFilePath)
             {
                 var errResponse = GetLabKeyJsonResponse(Path.GetFileName(documentFilePath));
-                return GetIfErrorInResponse(errResponse);
+                return PanoramaUtil.GetIfErrorInResponse(errResponse);
             }
 
             private static JObject GetLabKeyJsonResponse(string filename)
@@ -832,22 +897,22 @@ namespace pwiz.SkylineTestFunctional
                     await Task.Delay(TimeSpan.FromSeconds(1.0));
                     // _publishClient.UpdateProgress();
                     // Thread.Sleep(1000);
-                    _publishClient.UploadComplete(GetLabKeyJsonResponse(fileName));
+                    _panoramaClient.UploadComplete(GetLabKeyJsonResponse(fileName));
                 });
             }
         }
 
-        public class TestPublishWebClient : PublishDocWebClient
+        public class TestPublishRequestHelper : AbstractRequestHelper
         {
-            protected TestLabKeyErrorPublishClient _publishClient;
+            protected TestLabKeyErrorPanoramaClient _panoramaClient;
 
-            public TestPublishWebClient(Uri serverUri, string username, string password) : base(serverUri, username, password)
+            public TestPublishRequestHelper(Uri serverUri, string username, string password) // : base(serverUri, username, password)
             {
             }
 
-            public void SetPublishClient(TestLabKeyErrorPublishClient publishClient)
+            public void SetPublishClient(TestLabKeyErrorPanoramaClient panoramaClient)
             {
-                _publishClient = publishClient;
+                _panoramaClient = panoramaClient;
             }
 
             public override string DoGet(Uri uri)
@@ -881,6 +946,21 @@ namespace pwiz.SkylineTestFunctional
                 }.ToString();
             }
 
+            public override void AddHeader(string name, string value)
+            {
+                // throw new NotImplementedException();
+            }
+
+            public override void AddHeader(HttpRequestHeader header, string value)
+            {
+                // throw new NotImplementedException();
+            }
+
+            public override void RemoveHeader(string name)
+            {
+                // throw new NotImplementedException();
+            }
+
 
             public override void AsyncUploadFile(Uri address, string method, string fileName)
             {
@@ -889,8 +969,33 @@ namespace pwiz.SkylineTestFunctional
                     await Task.Delay(TimeSpan.FromSeconds(1.0));
                     // _publishClient.UpdateProgress();
                     // Thread.Sleep(1000);
-                    _publishClient.UploadComplete(null);
+                    _panoramaClient.UploadComplete(null);
                 });
+            }
+
+            public override void CancelAsyncUpload()
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void AddUploadFileCompletedEventHandler(UploadFileCompletedEventHandler handler)
+            {
+                // throw new NotImplementedException();
+            }
+
+            public override void AddUploadProgressChangedEventHandler(UploadProgressChangedEventHandler handler)
+            {
+                // throw new NotImplementedException();
+            }
+
+            public override void Dispose()
+            {
+                
+            }
+
+            public override string DoPost(Uri uri, string postData)
+            {
+                throw new NotImplementedException();
             }
 
             public override void DoRequest(HttpWebRequest request, string method, string authHeader, string messageOnError)

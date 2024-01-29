@@ -3389,9 +3389,6 @@ namespace pwiz.Skyline
 
         public void ShowPublishDlg(IPanoramaPublishClient publishClient)
         {
-            if (publishClient == null)
-                publishClient = new WebPanoramaPublishClient();
-
             var document = DocumentUI;
             if (!document.IsLoaded)
             {
@@ -3549,12 +3546,15 @@ namespace pwiz.Skyline
             if (server == null)
                 return false;
 
+            // If we are given a test publish client use that, otherwise create the default client.
+            publishClient = PublishDocumentDlg.GetDefaultPublishClient(server, publishClient);
+
             JToken folders;
             var folderPath = panoramaSavedUri.AbsolutePath;
             var folderPathNoCtx = PanoramaServer.getFolderPath(server, panoramaSavedUri); // get folder path without the context path
             try
             {
-                folders = publishClient.GetInfoForFolders(server, folderPathNoCtx.TrimEnd('/').TrimStart('/'));
+                folders = publishClient.PanoramaClient.GetInfoForFolders(folderPathNoCtx.TrimEnd('/').TrimStart('/'));
             }
             catch (WebException ex)
             {
@@ -3578,7 +3578,7 @@ namespace pwiz.Skyline
                 try
                 {
                     folders =
-                        publishClient.GetInfoForFolders(server, folderPathNoCtx.TrimEnd('/').TrimStart('/'));
+                        publishClient.PanoramaClient.GetInfoForFolders(folderPathNoCtx.TrimEnd('/').TrimStart('/'));
                 }
                 catch (Exception)
                 {
@@ -3607,7 +3607,7 @@ namespace pwiz.Skyline
             try
             {
                 var cancelled = false;
-                shareType = publishClient.GetShareType(fileInfo, DocumentUI, DocumentFilePath, GetFileFormatOnDisk(), this, ref cancelled);
+                shareType = publishClient.GetShareType(DocumentUI, DocumentFilePath, GetFileFormatOnDisk(), this, ref cancelled);
                 if (cancelled)
                 {
                     return true;
@@ -3625,7 +3625,7 @@ namespace pwiz.Skyline
 
             var serverRelativePath = folders[@"path"].ToString() + '/'; 
             serverRelativePath = serverRelativePath.TrimStart('/'); 
-            publishClient.UploadSharedZipFile(this, server, zipFilePath, serverRelativePath);
+            publishClient.UploadSharedZipFile(this, zipFilePath, serverRelativePath);
             return true; // success!
         }
 

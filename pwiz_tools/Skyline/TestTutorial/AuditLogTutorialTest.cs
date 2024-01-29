@@ -674,7 +674,7 @@ namespace pwiz.SkylineTestTutorial
             requestData[@"folderType"] = @"Targeted MS";
             string createRequest = JsonConvert.SerializeObject(requestData);
 
-            using (var webClient = new WebClientWithCredentials(panoramaClient.ServerUri, panoramaClient.Username, panoramaClient.Password))
+            using (var webClient = new PanoramaRequestHelper(new WebClientWithCredentials(panoramaClient.ServerUri, panoramaClient.Username, panoramaClient.Password)))
             {
                 var requestUri = PanoramaUtil.CallNewInterface(panoramaClient.ServerUri, @"core", parentFolderPath, @"createContainer", "", true);
                 webClient.Post(requestUri, createRequest, "Error creating folder");
@@ -700,7 +700,7 @@ namespace pwiz.SkylineTestTutorial
         {
             if (FolderExists(panoramaClient, folderPath))
             {
-                using (var webClient = new WebClientWithCredentials(panoramaClient.ServerUri, panoramaClient.Username, panoramaClient.Password))
+                using (var webClient = new PanoramaRequestHelper(new WebClientWithCredentials(panoramaClient.ServerUri, panoramaClient.Username, panoramaClient.Password)))
                 {
                     var requestUri = PanoramaUtil.CallNewInterface(panoramaClient.ServerUri, @"core", folderPath, @"deleteContainer", "", true);
                     webClient.Post(requestUri, "", "Error deleting folder");
