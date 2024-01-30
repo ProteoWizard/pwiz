@@ -89,7 +89,10 @@ namespace pwiz.Skyline.EditUI
 
         protected override void OnShown(EventArgs e)
         {
-            this.Focus(); // It's natural to want to start typing the search term immediately after hitting ctrl-F
+            if (!Program.SkylineOffscreen)
+            {
+                this.Focus(); // It's natural to want to start typing the search term immediately after hitting ctrl-F
+            }
             base.OnShown(e);
         }
 
