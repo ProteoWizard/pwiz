@@ -41,7 +41,6 @@ namespace pwiz.PanoramaClient
     {
         private IProgressMonitor _progressMonitor;
         private IProgressStatus _progressStatus;
-        protected LabKeyError _uploadError; // This is set if LabKey returns an error while uploading the file
 
         private readonly Regex _runningStatusRegex = new Regex(@"RUNNING, (\d+)%");
         private int _waitTime = 1;
@@ -231,7 +230,9 @@ namespace pwiz.PanoramaClient
         private Uri UploadTempZipFile(string zipFilePath, Uri baseUploadUri, string escapedZipFileName,
             IRequestHelper requestHelper)
         {
-            requestHelper.AddUploadFileCompletedEventHandler((sender, e) => webClient_UploadFileCompleted(sender, e, out _uploadError));
+            LabKeyError uploadError = null; // This is set if LabKey returns an error while uploading the file.
+
+            requestHelper.AddUploadFileCompletedEventHandler((sender, e) => webClient_UploadFileCompleted(sender, e, out uploadError));
             requestHelper.AddUploadProgressChangedEventHandler((sender, e) => webClient_UploadProgressChanged(sender, e, requestHelper));
 
             var tmpUploadUri = new Uri(baseUploadUri, escapedZipFileName + @".part");
@@ -249,13 +250,11 @@ namespace pwiz.PanoramaClient
                 Monitor.Wait(this);
             }
 
-            if (_uploadError != null)
+            if (uploadError != null)
             {
                 // There was an error uploading the file.
-                // _uploadError gets set in webClient_UploadFileCompleted if there was an error in the LabKey JSON response.
-                var exception = new PanoramaServerException("There was an error uploading the file.", tmpUploadUri, _uploadError);
-                _uploadError = null;
-                throw exception;
+                // uploadError gets set in webClient_UploadFileCompleted if there was an error in the LabKey JSON response.
+                throw new PanoramaServerException("There was an error uploading the file.", tmpUploadUri, uploadError);
             }
 
             // Remove the "Temporary" header added while uploading the temporary file
@@ -389,7 +388,7 @@ namespace pwiz.PanoramaClient
                 );
         }
 
-        protected void webClient_UploadProgressChanged(object sender, UploadProgressChangedEventArgs e,
+        private void webClient_UploadProgressChanged(object sender, UploadProgressChangedEventArgs e,
             IRequestHelper requestHelper)
         {
             var message = e == null ? "Progress Updated" : string.Format(FileSize.FormatProvider,
@@ -403,17 +402,18 @@ namespace pwiz.PanoramaClient
         }
 
         private void webClient_UploadFileCompleted(object sender, UploadFileCompletedEventArgs e, out LabKeyError uploadError)
-        { 
-            uploadError = UploadFileCompleted(Encoding.UTF8.GetString(e.Result));
-        }
-
-        protected virtual LabKeyError UploadFileCompleted(string serverResponse)
         {
             lock (this)
             {
                 Monitor.PulseAll(this);
-                return serverResponse != null ? PanoramaUtil.GetIfErrorInResponse(serverResponse) : null;
+                uploadError = ParseUploadFileCompletedEventArgs(e);
             }
+        }
+
+        protected virtual LabKeyError ParseUploadFileCompletedEventArgs(UploadFileCompletedEventArgs e)
+        {
+            var serverResponse = e?.Result;
+            return serverResponse != null ? PanoramaUtil.GetIfErrorInResponse(Encoding.UTF8.GetString(serverResponse)) : null;
         }
 
         public virtual JObject SupportedVersionsJson()

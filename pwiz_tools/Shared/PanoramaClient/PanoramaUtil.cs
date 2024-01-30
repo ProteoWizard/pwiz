@@ -482,7 +482,7 @@ namespace pwiz.PanoramaClient
 
             if (uri != null)
             {
-                sb.AppendLine(string.Format(Resources.GenericState_AppendErrorAndUri_URL___0_, uri.AbsoluteUri));
+                sb.AppendLine(string.Format(Resources.GenericState_AppendErrorAndUri_URL___0_, uri));
             }
 
             if (sb.Length > 0)
