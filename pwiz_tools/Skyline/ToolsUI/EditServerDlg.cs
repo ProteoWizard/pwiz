@@ -120,7 +120,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
             }
 
-            var panoramaClient = PanoramaClient ?? new WebPanoramaClient(uriServer, Username, Password);
+            var panoramaClient = PanoramaClient ?? new PanoramaClient.PanoramaClient(uriServer, Username, Password);
 
             PanoramaServer validatedServer = null;
             using (var waitDlg = new LongWaitDlg())

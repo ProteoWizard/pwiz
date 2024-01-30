@@ -1004,7 +1004,7 @@ namespace pwiz.Skyline
         {
             try
             {
-                panoramaClient ??= new WebPanoramaClient(curServer.URI, curServer.Username, curServer.Password);
+                panoramaClient ??= new PanoramaClient.PanoramaClient(curServer.URI, curServer.Username, curServer.Password);
                 using (var fileSaver = new FileSaver(downloadPath))
                 {
                     using (var longWaitDlg = new LongWaitDlg())

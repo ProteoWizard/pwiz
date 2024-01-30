@@ -1230,7 +1230,7 @@ namespace pwiz.Skyline
                     return false;
                 }
 
-                var panoramaClient = new WebPanoramaClient(serverUri, PanoramaUserName, PanoramaPassword);
+                var panoramaClient = new PanoramaClient.PanoramaClient(serverUri, PanoramaUserName, PanoramaPassword);
                 var panoramaHelper = new PanoramaHelper(_out); // Helper writes messages for failures below
                 PanoramaServer = panoramaHelper.ValidateServer(panoramaClient);
                 if (PanoramaServer == null)
