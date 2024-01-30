@@ -71,6 +71,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RequestHelper.cs" />
+    <Compile Include="PanoramaClient.cs" />
     <Compile Include="PanoramaDirectoryPicker.cs">
       <SubType>Form</SubType>
     </Compile>
