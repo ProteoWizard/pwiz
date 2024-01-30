@@ -4294,7 +4294,7 @@ namespace pwiz.Skyline
                 var success = HandleExceptions(commandArgs, () =>
                 {
                     var server = commandArgs.PanoramaServer;
-                    var publishClient = new PanoramaPublishClient(server.URI, server.Username, server.Password);
+                    var publishClient = new WebPanoramaPublishClient(server.URI, server.Username, server.Password);
                     // If the Panorama server does not support the skyd version of the document, change the Skyline version to the 
                     // max version supported by the server.
                     selectedShareType = publishClient.DecideShareTypeVersion(document, selectedShareType);
@@ -4323,7 +4323,7 @@ namespace pwiz.Skyline
             {
                 var waitBroker = new CommandProgressMonitor(_statusWriter,
                     new ProgressStatus(SkylineResources.PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama));
-                IPanoramaClient publishClient = new PanoramaClient.PanoramaClient(panoramaServer.URI, panoramaServer.Username, panoramaServer.Password);
+                IPanoramaClient publishClient = new WebPanoramaClient(panoramaServer.URI, panoramaServer.Username, panoramaServer.Password);
                 try
                 {
                     publishClient.SendZipFile(panoramaFolder, zipFilePath, waitBroker);

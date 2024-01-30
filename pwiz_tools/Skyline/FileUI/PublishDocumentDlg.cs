@@ -335,7 +335,7 @@ namespace pwiz.Skyline.FileUI
         // If the given client is not null return that.  Otherwise return a new WebPanoramaPublishClient
         public static IPanoramaPublishClient GetDefaultPublishClient(PanoramaServer server, IPanoramaPublishClient client)
         {
-            return client ?? new PanoramaPublishClient(server.URI, server.Username, server.Password);
+            return client ?? new WebPanoramaPublishClient(server.URI, server.Username, server.Password);
         }
 
         private string GetFolderPath(TreeNode folderNode)

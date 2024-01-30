@@ -354,20 +354,20 @@ namespace pwiz.Skyline.Util
         }
     }
 
-    public class PanoramaPublishClient : AbstractPanoramaPublishClient
+    public class WebPanoramaPublishClient : AbstractPanoramaPublishClient
     {
-        private PanoramaClient.PanoramaClient _panoramaClient;
+        private WebPanoramaClient _panoramaClient;
 
-        public PanoramaPublishClient(Uri serverUri, string username, string password)
+        public WebPanoramaPublishClient(Uri serverUri, string username, string password)
         {
-            _panoramaClient = new PanoramaClient.PanoramaClient(serverUri, username, password);
+            _panoramaClient = new WebPanoramaClient(serverUri, username, password);
         }
 
         public override IPanoramaClient PanoramaClient => _panoramaClient;
 
         public static IPanoramaPublishClient Create(PanoramaServer server)
         {
-            return new PanoramaPublishClient(server.URI, server.Username, server.Password);
+            return new WebPanoramaPublishClient(server.URI, server.Username, server.Password);
         }
     }
 }
