@@ -45,8 +45,8 @@ namespace pwiz.Skyline.Model.Results
         private readonly SrmDocument _document;
         private readonly IonMobilityWindowWidthCalculator _filterWindowWidthCalculator;
         private TransitionGroupDocNode _currentDisplayedTransitionGroupDocNode;
-        private Dictionary<LibKey, List<IonMobilityFit>> _ms1IonMobilitiesPerLibKey;
-        private Dictionary<LibKey, List<IonMobilityFit>> _ms2IonMobilitiesPerLibKey;
+        private Dictionary<LibKey, IonMobilityFitList> _ms1IonMobilitiesPerLibKey;
+        private Dictionary<LibKey, IonMobilityFitList> _ms2IonMobilitiesPerLibKey;
         private int _totalSteps;
         private int _currentStep;
         private readonly IProgressMonitor _progressMonitor;
@@ -58,7 +58,25 @@ namespace pwiz.Skyline.Model.Results
         private eIonMobilityUnits _ionMobilityUnits = eIonMobilityUnits.none;
         private double _ms2IonMobilityFilterLow, _ms2IonMobilityFilterHigh; // For rejecting extreme MS2 high energy offset values
 
-        private class IonMobilityFit : IComparable<IonMobilityFit>
+        private class IonMobilityFitList
+        {
+            public List<IonMobilityFit> IonMobilityFits { get; private set; } = new List<IonMobilityFit>();
+            public IonMobilityFit BestIonMobilityFit { get; private set; }
+
+            public void Add(IonMobilityFit fit)
+            {
+                if (fit != null)
+                {
+                    IonMobilityFits.Add(fit);
+                    if (fit.BetterThan(BestIonMobilityFit))
+                    {
+                        BestIonMobilityFit = fit;
+                    }
+                }
+            }
+        }
+
+        private class IonMobilityFit
         {
             public IonMobilityFit(int fileIndex, double rt, double im, double? ccs, double iDotP, double intensityM0, double intensityMminus1)
             {
@@ -81,30 +99,31 @@ namespace pwiz.Skyline.Model.Results
 
             private double RatioMm1ToM0 => IntensityM0 == 0 ? double.MaxValue : (IntensityMminus1/IntensityM0);
 
-            // Sort order is best fits first
-            // Return -1 if this is a better fit than other
-            // Return 1 if other is a better fit than this
+            // Return true if this is a better fit than other
             // First by is best idotp then best intensity
             // For very similar idotp, intensity is the tie breaker
-            // If one has a suspicously strong M-1 signal, prefer the other
+            // If one has a suspiciously strong M-1 signal, prefer the other
             // N.B. retention time is not part of the sort
-            public int CompareTo(IonMobilityFit other)
+            public bool BetterThan(IonMobilityFit other)
             {
                 if (other == null)
                 {
-                    return -1; // Anything beats nothing
+                    return true; // Anything beats nothing
                 }
                 const double sketchyRatio = .25; // If M-1/M0 greater than this, we're probably actually in the middle of a different isotope envelope
                 var sketchy = RatioMm1ToM0 > sketchyRatio;
                 var sketchyOther = other.RatioMm1ToM0 > sketchyRatio; 
                 if (sketchyOther != sketchy) 
                 {
-                    return sketchy ? 1 : -1; // Take the one without the suspicious M-1 peak
+                    return !sketchy; // Take the one without the suspicious M-1 peak
                 }
 
-                var similarIdotP = SimilarIdotP(IdotP, other.IdotP);
+                if (SimilarIdotP(IdotP, other.IdotP))
+                {
+                    return IntensityM0 > other.IntensityM0;
+                }
 
-                return similarIdotP ? other.IntensityM0.CompareTo(IntensityM0) : other.IdotP.CompareTo(IdotP);
+                return IdotP > other.IdotP;
             }
 
             public static bool SimilarIdotP(double iDotP, double otherIdotP)
@@ -180,8 +199,8 @@ namespace pwiz.Skyline.Model.Results
                 // Avoid opening and re-opening raw files - make these the outer loop
                 //
 
-                _ms1IonMobilitiesPerLibKey = new Dictionary<LibKey, List<IonMobilityFit>>();
-                _ms2IonMobilitiesPerLibKey = new Dictionary<LibKey, List<IonMobilityFit>>();
+                _ms1IonMobilitiesPerLibKey = new Dictionary<LibKey, IonMobilityFitList>();
+                _ms2IonMobilitiesPerLibKey = new Dictionary<LibKey, IonMobilityFitList>();
                 var twopercent = (int) Math.Ceiling(_totalSteps*0.02);
                 _totalSteps += twopercent;
                 _currentStep = twopercent;
@@ -209,7 +228,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     // Choose the ion mobility which gave the best fit to expected isotope envelope
                     // CONSIDER: average IM and CCS values that fall "near" the IM of best fit? Or consider them multiple conformers? (Only if at same RT, though)
-                    var ms1IonMobilityFit = fitMS1.Value.Min(); // IonMobilityFit sorts best->worst
+                    var ms1IonMobilityFit = fitMS1.Value.BestIonMobilityFit;
                     double highEnergyIonMobilityValueOffset = 0;
                     if (_useHighEnergyOffset)
                     {
@@ -219,7 +238,7 @@ namespace pwiz.Skyline.Model.Results
                         _ms2IonMobilitiesPerLibKey.TryGetValue(fitMS1.Key, out var ionMobilityMS2Fits);
                         if (ionMobilityMS2Fits != null)
                         {
-                            ms2IonMobilityFit = ionMobilityMS2Fits.Where(f => f.FileIndex == ms1IonMobilityFit.FileIndex).
+                            ms2IonMobilityFit = ionMobilityMS2Fits.IonMobilityFits.Where(f => f.FileIndex == ms1IonMobilityFit.FileIndex).
                                 OrderBy(f => f.RetentionTime).
                                 FirstOrDefault(f => f.RetentionTime >= ms1IonMobilityFit.RetentionTime);
                         }
@@ -234,7 +253,7 @@ namespace pwiz.Skyline.Model.Results
                     if (!_ms1IonMobilitiesPerLibKey.ContainsKey(im.Key))
                     {
                         // Only MS2 ion mobility values found, use that as a reasonable inference of MS1 ion mobility
-                        var bestFit = im.Value.OrderByDescending(p => p.IntensityM0).FirstOrDefault();
+                        var bestFit = im.Value.IonMobilityFits.OrderByDescending(p => p.IntensityM0).FirstOrDefault();
                         if (bestFit != null)
                         {
                             var ccs = bestFit.CCS;
@@ -497,7 +516,7 @@ namespace pwiz.Skyline.Model.Results
             // Avoid picking MS2 ion mobility values wildly different from MS1 values
             if ((msLevel == 2) && _ms1IonMobilitiesPerLibKey.TryGetValue(libKey, out var ionMobilityFitsMS1))
             {
-                var bestFitMS1 = ionMobilityFitsMS1.Min(); // IonMobilityFit sorts best->worst
+                var bestFitMS1 = ionMobilityFitsMS1.BestIonMobilityFit;
                 _ms1IonMobilityBest = bestFitMS1.IonMobility; 
                 var imMS1 = _ms1IonMobilityBest ?? 0;
                 switch (_ionMobilityUnits)
@@ -590,6 +609,9 @@ namespace pwiz.Skyline.Model.Results
             }
 
             // Now check idotp, use total intensity as a tie breaker
+            // Note that we don't include the M-1 value if it's zero, because this
+            // would tend to reject good fits that happen to overlap the tail of some other
+            // isotope envelope. Note that M-1 can be nonzero for heavy labeled ions
             IonMobilityFit bestFit = null;
             var statExpectedIsotopeProportions = new Statistics(expectedIsotopeProportions.Skip(indexM0));
 
@@ -664,8 +686,8 @@ namespace pwiz.Skyline.Model.Results
                         if (!double.IsNaN(isotopeDotProduct) && isotopeDotProduct >= 0)
                         {
                             var fit = new IonMobilityFit(fileIndex, rt, isotopeIntensitiesThisIM.Key, null, // We'll calculate CCS later
-                                isotopeDotProduct, isotopeIntensitiesThisIM.Value[indexM0], indexM0 > 0 ? isotopeIntensitiesThisIM.Value[0] : 0);
-                            if (fit.CompareTo(bestFit) < 0) // IonMobilityFit.Compare sorts best->worst
+                                isotopeDotProduct, isotopeIntensitiesThisIM.Value[indexM0], indexM0 > 0 ? isotopeIntensitiesThisIM.Value[indexM0-1] : 0);
+                            if (fit.BetterThan(bestFit)) // IonMobilityFit.Compare sorts best->worst
                             {
                                 bestFit = fit; // This is a better fit than whatever we had, if any
                             }
@@ -703,13 +725,13 @@ namespace pwiz.Skyline.Model.Results
                 {
                     bestFit.CCS  = _msDataFileScanHelper.CCSFromIonMobility(bestFit.IonMobility, transitions.First().PrecursorMz, libKey.Charge);
                 }
-                List<IonMobilityFit> listPairs;
-                if (!dict.TryGetValue(libKey, out listPairs))
+
+                if (!dict.TryGetValue(libKey, out var ionMobilityFitList))
                 {
-                    listPairs = new List<IonMobilityFit>();
-                    dict.Add(libKey, listPairs);
+                    ionMobilityFitList = new IonMobilityFitList();
+                    dict.Add(libKey, ionMobilityFitList);
                 }
-                listPairs.Add(bestFit);
+                ionMobilityFitList.Add(bestFit);
             }
         }
 
