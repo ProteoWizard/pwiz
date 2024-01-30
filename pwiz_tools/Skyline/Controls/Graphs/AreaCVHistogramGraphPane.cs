@@ -146,7 +146,7 @@ namespace pwiz.Skyline.Controls.Graphs
             CurveList.Clear();
             _stickItems.Clear();
 
-            var gotData = _cache.TryGet(_document, settings, DataCallback, out _areaCVGraphData);
+            var gotData = _cache.TryGet(_document, GraphSummary.DocumentUIContainer.NormalizedValueCalculator, settings, DataCallback, out _areaCVGraphData);
 
             if (!gotData || !_areaCVGraphData.IsValid)
                 return;

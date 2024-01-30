@@ -48,6 +48,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public readonly List<AreaCVGraphData> Data;
             public SrmDocument Document { get; set; }
+            public NormalizedValueCalculator NormalizedValueCalculator { get; set; }
             public AreaCVGraphSettings Settings { get; set; }
         }
 
@@ -72,7 +73,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _tokenSource = new CancellationTokenSource();
             }
 
-            public bool TryGet(SrmDocument document, AreaCVGraphSettings settings, Action<AreaCVGraphData> callback, out AreaCVGraphData result)
+            public bool TryGet(SrmDocument document, NormalizedValueCalculator normalizedValueCalculator, AreaCVGraphSettings settings, Action<AreaCVGraphData> callback, out AreaCVGraphData result)
             {
                 var properties = new GraphDataProperties(settings);
                 if (!IsValidFor(document, settings))
@@ -83,6 +84,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         _cacheInfo.Clear();
                         _cacheInfo.Document = document;
+                        _cacheInfo.NormalizedValueCalculator = normalizedValueCalculator;
                         _cacheInfo.Settings = settings;
                     }
 
@@ -115,15 +117,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 var result = Get(properties);
                 if (result == null)
                 {
-                    SrmDocument document;
+                    NormalizedValueCalculator normalizedValueCalculator;
                     AreaCVGraphSettings settings;
                     lock (_cacheInfo)
                     {
-                        document = _cacheInfo.Document;
                         settings = _cacheInfo.Settings;
+                        normalizedValueCalculator = _cacheInfo.NormalizedValueCalculator;
                     }
 
-                    result = new AreaCVGraphData(document,
+                    var document = normalizedValueCalculator.Document;
+
+                    result = new AreaCVGraphData(normalizedValueCalculator,
                         new AreaCVGraphSettings(settings.GraphType,
                             properties.NormalizeOption,
                             settings.Group,

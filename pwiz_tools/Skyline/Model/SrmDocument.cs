@@ -160,6 +160,8 @@ namespace pwiz.Skyline.Model
         /// True if the UI is in the middle of an undo/redo operation
         /// </summary>
         bool InUndoRedo { get; }
+
+        NormalizedValueCalculator NormalizedValueCalculator { get; }
     }
 
     /// <summary>

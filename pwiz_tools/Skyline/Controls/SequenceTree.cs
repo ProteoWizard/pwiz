@@ -271,8 +271,6 @@ namespace pwiz.Skyline.Controls
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SrmDocument Document { get; private set; }
-        public NormalizedValueCalculator NormalizedValueCalculator { get; private set; }
-
         private int _updateLockCountDoc;
         private SrmDocument _updateDocPrevious;
 
@@ -309,8 +307,6 @@ namespace pwiz.Skyline.Controls
                 return;
 
             Document = document;
-            NormalizedValueCalculator = new NormalizedValueCalculator(Document);
-
             bool updateNodeStates = false;
             if (e.DocumentPrevious != null)
             {
@@ -1341,7 +1337,7 @@ namespace pwiz.Skyline.Controls
 
         public DisplaySettings GetDisplaySettings(PeptideDocNode nodePep)
         {
-            return new DisplaySettings(NormalizedValueCalculator, nodePep, ShowReplicate == ReplicateDisplay.best, ResultsIndex, NormalizeOption);
+            return new DisplaySettings(DocumentContainer.NormalizedValueCalculator, nodePep, ShowReplicate == ReplicateDisplay.best, ResultsIndex, NormalizeOption);
         }
 
         public Rectangle RectToScreen(Rectangle r)

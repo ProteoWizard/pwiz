@@ -259,7 +259,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
             var results = document.Settings.MeasuredResults;
-            NormalizedValueCalculator = new NormalizedValueCalculator(document);
+            NormalizedValueCalculator = GraphSummary.DocumentUIContainer.NormalizedValueCalculator;
             bool resultsAvailable = results != null;
             Clear();
 
@@ -443,6 +443,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document);
             var graphData = IsMultiSelect  ? 
                 new AreaGraphData(document,
+                    NormalizedValueCalculator,
                     peptidePaths,
                     displayType,
                     replicateGroupOp,
@@ -451,6 +452,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     expectedValue,
                     PaneKey) : 
                 new AreaGraphData(document,
+                    NormalizedValueCalculator,
                     identityPath,
                     displayType,
                     replicateGroupOp,
@@ -1074,6 +1076,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private PointPairList _dotpData;
 
             public AreaGraphData(SrmDocument document,
+                                 NormalizedValueCalculator normalizedValueCalculator,
                                  IdentityPath identityPath,
                                  DisplayTypeChrom displayType,
                                  ReplicateGroupOp replicateGroupOp,
@@ -1082,12 +1085,13 @@ namespace pwiz.Skyline.Controls.Graphs
                                  AreaExpectedValue expectedVisible,
                                  PaneKey paneKey,
                                  bool zeroMissingValues)
-                : this(document, new []{identityPath}, displayType, replicateGroupOp, normalizeOption, dataScalingOption, expectedVisible, paneKey, zeroMissingValues)
+                : this(document, normalizedValueCalculator, new []{identityPath}, displayType, replicateGroupOp, normalizeOption, dataScalingOption, expectedVisible, paneKey, zeroMissingValues)
             {
                 _docNode = document.FindNode(identityPath);
             }
 
             public AreaGraphData(SrmDocument document,
+                NormalizedValueCalculator normalizedValueCalculator,
                                  IEnumerable<IdentityPath> selectedDocNodePaths,
                                  DisplayTypeChrom displayType,
                                  ReplicateGroupOp replicateGroupOp,
@@ -1102,7 +1106,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _dataScalingOption = dataScalingOption;
                 _expectedVisible = expectedVisible;
                 _zeroMissingValues = zeroMissingValues;
-                NormalizedValueCalculator = new NormalizedValueCalculator(document);
+                NormalizedValueCalculator = normalizedValueCalculator;
             }
 
             protected override void InitData()

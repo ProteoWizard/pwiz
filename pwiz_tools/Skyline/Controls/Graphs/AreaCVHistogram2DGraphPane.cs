@@ -136,13 +136,14 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             _document = GraphSummary.DocumentUIContainer.DocumentUI;
+
             var settings = new AreaCVGraphData.AreaCVGraphSettings(_document.Settings, GraphSummary.Type);
             _percentage = !Settings.Default.AreaCVShowDecimals;
             _decimals = _percentage ? 1 : 3;
 
             CurveList.Clear();
 
-            var gotData = _cache.TryGet(_document, settings, DataCallback, out _areaCVGraphData);
+            var gotData = _cache.TryGet(_document, GraphSummary.DocumentUIContainer.NormalizedValueCalculator, settings, DataCallback, out _areaCVGraphData);
 
             if (!gotData)
             {

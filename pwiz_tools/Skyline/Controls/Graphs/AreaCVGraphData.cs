@@ -35,10 +35,10 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly AreaCVGraphSettings _graphSettings;
         private readonly AreaCVRefinementData _refinementData;
 
-        public AreaCVGraphData(SrmDocument document, AreaCVGraphSettings graphSettings, CancellationToken token = default(CancellationToken))
+        public AreaCVGraphData(NormalizedValueCalculator normalizedValueCalculator, AreaCVGraphSettings graphSettings, CancellationToken token = default(CancellationToken))
         {
             _graphSettings = graphSettings;
-
+            var document = normalizedValueCalculator.Document;
             if (document == null || !document.Settings.HasResults)
             {
                 IsValid = false;
@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             try
             {
-                _refinementData = new AreaCVRefinementData(document, graphSettings, token);
+                _refinementData = new AreaCVRefinementData(normalizedValueCalculator, graphSettings, token);
             }
             catch (Exception)
             {
