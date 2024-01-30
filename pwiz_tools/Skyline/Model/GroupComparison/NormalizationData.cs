@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using MathNet.Numerics.Statistics;
 using MSAmanda.Utils;
 using pwiz.Common.Collections;
@@ -174,12 +175,12 @@ namespace pwiz.Skyline.Model.GroupComparison
                 ReplicateIndex = replicateIndex;
                 ChromFileInfoId = chromFileInfoId;
             }
-            public int ReplicateIndex { get; private set; }
-            public ReferenceValue<ChromFileInfoId> ChromFileInfoId { get; private set; }
+            public int ReplicateIndex { get; }
+            public ChromFileInfoId ChromFileInfoId { get; }
 
             protected bool Equals(FileDataKey other)
             {
-                return ReplicateIndex == other.ReplicateIndex && ChromFileInfoId.Equals(other.ChromFileInfoId);
+                return ReplicateIndex == other.ReplicateIndex && ReferenceEquals(ChromFileInfoId, other.ChromFileInfoId);
             }
 
             public override bool Equals(object obj)
@@ -194,7 +195,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 unchecked
                 {
-                    return (ReplicateIndex * 397) ^ ChromFileInfoId.GetHashCode();
+                    return (ReplicateIndex * 397) ^ RuntimeHelpers.GetHashCode(ChromFileInfoId);
                 }
             }
         }

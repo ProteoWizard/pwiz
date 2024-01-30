@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public AreaCVGraphData(NormalizedValueCalculator normalizedValueCalculator, AreaCVGraphSettings graphSettings, CancellationToken token = default(CancellationToken))
         {
             _graphSettings = graphSettings;
-            var document = normalizedValueCalculator.Document;
+            var document = normalizedValueCalculator?.Document;
             if (document == null || !document.Settings.HasResults)
             {
                 IsValid = false;
