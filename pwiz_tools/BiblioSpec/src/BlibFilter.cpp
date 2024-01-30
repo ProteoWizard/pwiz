@@ -593,7 +593,7 @@ void BlibFilter::buildNonRedundantLib() {
             if (peaks.empty() && numPeaks != 0) { // Precursor-only entries have no MS2 peaks
                 Verbosity::error("Unable to read peaks for redundant library "
                     "spectrum %i, sequence %s, charge %i.",
-                    tmpRef->getDisplayName().c_str(),
+                    tmpRef->getLibSpecID(), tmpRef->getDisplayName().c_str(),
                     tmpRef->getCharge());
             }
             tmpRef->setRawPeaks(peaks);

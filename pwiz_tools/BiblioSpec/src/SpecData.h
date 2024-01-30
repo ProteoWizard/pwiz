@@ -71,6 +71,9 @@ struct SpecData{
         delete [] mzs;
         delete [] intensities;
         delete [] productIonMobilities;
+        mzs = NULL;
+        intensities = NULL;
+        productIonMobilities = NULL;
 
         if( numPeaks > 0){
             mzs = new double[numPeaks];
@@ -82,12 +85,6 @@ struct SpecData{
                 if (rhs.productIonMobilities != NULL)
                     productIonMobilities[i] = rhs.productIonMobilities[i];
             }   
-        }
-        else
-        {
-            mzs = NULL;
-            intensities = NULL;
-            productIonMobilities = NULL;
         }
         return *this;
     }

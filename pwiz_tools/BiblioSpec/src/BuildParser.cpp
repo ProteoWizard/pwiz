@@ -385,7 +385,6 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
         }
     }
 
-
     // for reading spectrum file
     if( specReader_ ) {
         if (needsSpectra)
@@ -699,37 +698,37 @@ void BuildParser::filterBySequence(const set<string>* targetSequences,
  */
 void BuildParser::removeDuplicates() {
 
-    map<string, int> keyIndexPairs; // spectrum id, position in the vector
+    map<string,int> keyIndexPairs; // spectrum id, position in the vector
 
-    for (unsigned int i = 0; i < psms_.size(); i++) {
+    int startingNumPsms = psms_.size(); // for debugging
+
+    for(unsigned int i=0; i<psms_.size(); i++) {
         PSM* psm = psms_.at(i);
-        if (psm == NULL) {
+        if( psm == NULL ){
             continue;
         }
         // choose the correct id type
         string id = boost::lexical_cast<string>(psm->specKey);
-        if (lookUpBy_ == INDEX_ID) {
+        if( lookUpBy_ == INDEX_ID ){
             id = boost::lexical_cast<string>(psm->specIndex);
-        }
-        else if (lookUpBy_ == NAME_ID) {
+        } else if( lookUpBy_ == NAME_ID ){
             id = psm->specName;
         }
 
         // have we seen this spec key yet?
-        map<string, int>::iterator found = keyIndexPairs.find(id);
-        if (found == keyIndexPairs.end()) {
+        map<string,int>::iterator found = keyIndexPairs.find(id);
+        if( found == keyIndexPairs.end() ) {
             // not seen yet
             keyIndexPairs[id] = i;
-        }
-        else {
+        } else {
             // it's a duplicate, four possibilties
             int dupIndex = found->second;
             PSM* dupPSM = psms_.at(dupIndex);
             // 1. was the duplicate already removed because of a third id
-            if (dupPSM == NULL) {
+            if( dupPSM == NULL ){
                 Verbosity::comment(V_DEBUG,
-                    "Removing duplicate spectrum id '%s' with sequence %s.",
-                    id.c_str(), psm->modifiedSeq.c_str());
+                       "Removing duplicate spectrum id '%s' with sequence %s.",
+                                   id.c_str(), psm->modifiedSeq.c_str());
                 if (blibMaker_.ambiguityMessages()) {
                     cout << "AMBIGUOUS:" << psm->modifiedSeq << endl;
                 }
@@ -738,24 +737,24 @@ void BuildParser::removeDuplicates() {
                 psms_.at(i) = NULL;
             }
             // 2. check for identical sequences
-            else if (psm->modifiedSeq == dupPSM->modifiedSeq) {
+            else if( psm->modifiedSeq == dupPSM->modifiedSeq ){
                 // remove only one
                 delete psms_.at(i);
                 psms_.at(i) = NULL;
             }
             // 2. check for I/L differences
-            else if (seqsILEquivalent(psm->modifiedSeq, dupPSM->modifiedSeq)) {
+            else if ( seqsILEquivalent(psm->modifiedSeq, dupPSM->modifiedSeq)){
                 keyIndexPairs[id] = i;
             }
             // 3. else delete
             else {
                 Verbosity::comment(V_DEBUG, "Removing duplicate spectra id "
-                    "'%s', sequences %s and %s.",
-                    id.c_str(), psm->modifiedSeq.c_str(),
-                    dupPSM->modifiedSeq.c_str());
+                                   "'%s', sequences %s and %s.",
+                                   id.c_str(), psm->modifiedSeq.c_str(),
+                                   dupPSM->modifiedSeq.c_str());
                 if (blibMaker_.ambiguityMessages()) {
                     cout << "AMBIGUOUS:" << psm->modifiedSeq << endl
-                        << "AMBIGUOUS:" << dupPSM->modifiedSeq << endl;
+                         << "AMBIGUOUS:" << dupPSM->modifiedSeq << endl;
                 }
                 // delete current
                 delete psms_.at(i);

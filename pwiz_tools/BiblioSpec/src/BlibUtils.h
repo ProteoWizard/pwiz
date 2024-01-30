@@ -60,7 +60,7 @@ namespace BiblioSpec {
  * The three possible ways a spectrum may be identified in both result
  * files and spectrum files.  
  */
-enum SPEC_ID_TYPE { SCAN_NUM_ID, INDEX_ID, NAME_ID };
+enum SPEC_ID_TYPE { UNKNOWN=-1, SCAN_NUM_ID, INDEX_ID, NAME_ID };
 const char* specIdTypeToString(SPEC_ID_TYPE specIdType);
 
 /**
