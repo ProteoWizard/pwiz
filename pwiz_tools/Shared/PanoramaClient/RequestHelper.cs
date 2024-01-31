@@ -303,9 +303,4 @@ namespace pwiz.PanoramaClient
             return serverError;
         }
     }
-
-    public interface IRequestHelperFactory
-    { 
-        public IRequestHelper Create(Uri serverUri, string username, string password);
-    }
 }

@@ -304,11 +304,6 @@ namespace pwiz.PanoramaClient
         {
             throw new NotImplementedException();
         }
-
-        public virtual IRequestHelperFactory GetRequestHelperFactory(bool forPublish)
-        {
-            throw new NotImplementedException();
-        }
     }
 
     public class PanoramaServerException : Exception
@@ -571,36 +566,6 @@ namespace pwiz.PanoramaClient
             Headers.Add(HttpRequestHeader.Authorization, PanoramaServer.GetBasicAuthHeader(username, password));
             _serverUri = serverUri;
         }
-    
-        // public JObject Post(Uri uri, NameValueCollection postData)
-        // {
-        //     return Post(uri, postData, null);
-        // }
-
-        // public JObject Post(Uri uri, NameValueCollection postData, string messageOnLabKeyError)
-        // {
-        //     postData ??= new NameValueCollection();
-        //     return Post(uri, postData, null, messageOnLabKeyError);
-        // }
-
-        // public JObject Post(Uri uri, string postData)
-        // {
-        //     return Post(uri, postData, null);
-        // }
-        //
-        // public JObject Post(Uri uri, string postData, string messageOnLabKeyError)
-        // {
-        //     return Post(uri, null, postData, messageOnLabKeyError);
-        // }
-
-        // protected override JObject Post(Uri uri, NameValueCollection postData, string postDataString, string messageOnLabKeyError)
-        // {
-        //     if (string.IsNullOrEmpty(_csrfToken))
-        //     {
-        //         GetCsrfTokenFromServer();
-        //     }
-        //     return base.Post(uri, postData, postDataString, messageOnLabKeyError);
-        // }
 
         protected override WebRequest GetWebRequest(Uri address)
         {
@@ -672,7 +637,7 @@ namespace pwiz.PanoramaClient
         {
             if (string.IsNullOrEmpty(_csrfToken))
             {
-                // GetCsrfTokenFromServer();
+                // After making this request the client should have the X-LABKEY-CSRF token 
                 DownloadString(new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH));
             }
             // After making this request the client should have the X-LABKEY-CSRF token 

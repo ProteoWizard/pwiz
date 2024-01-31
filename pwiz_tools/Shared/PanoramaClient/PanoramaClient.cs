@@ -34,7 +34,6 @@ namespace pwiz.PanoramaClient
 
         JObject SupportedVersionsJson();
 
-        IRequestHelperFactory GetRequestHelperFactory(bool forPublish = false);
     }
 
     public abstract class AbstractPanoramaClient : IPanoramaClient
@@ -63,7 +62,7 @@ namespace pwiz.PanoramaClient
         public abstract void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
             IProgressMonitor pm, IProgressStatus progressStatus);
 
-        public abstract IRequestHelperFactory GetRequestHelperFactory(bool forPublish = false);
+        public abstract IRequestHelper GetRequestHelper(bool forPublish = false);
 
         public PanoramaServer ValidateServer()
         {
@@ -81,9 +80,9 @@ namespace pwiz.PanoramaClient
 
         public virtual void ValidateFolder(Uri requestUri, string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
         {
-            using (var webClient = GetRequestHelperFactory().Create(ServerUri, Username, Password))
+            using (var requestHelper = GetRequestHelper())
             {
-                JToken response = webClient.Get(requestUri, string.Format("Error validating folder '{0}'", folderPath));
+                JToken response = requestHelper.Get(requestUri, string.Format("Error validating folder '{0}'", folderPath));
 
                 if (permission != null && !PanoramaUtil.CheckFolderPermissions(response, (FolderPermission)permission))
                 {
@@ -109,9 +108,9 @@ namespace pwiz.PanoramaClient
             // Retrieve folders from server.
             var uri = PanoramaUtil.GetContainersUri(ServerUri, folder, true);
 
-            using (var webClient = GetRequestHelperFactory().Create(ServerUri, Username, Password))
+            using (var requestHelper = GetRequestHelper())
             {
-                return webClient.Get(uri, string.Format("Error getting information for folder '{0}'", folder));
+                return requestHelper.Get(uri, string.Format("Error getting information for folder '{0}'", folder));
             }
         }
 
@@ -122,7 +121,7 @@ namespace pwiz.PanoramaClient
             var zipFileName = Path.GetFileName(zipFilePath) ?? string.Empty;
 
             // Upload zip file to pipeline folder.
-            using (var requestHelper = GetRequestHelperFactory(true).Create(ServerUri, Username, Password))
+            using (var requestHelper = GetRequestHelper(true))
             {
                 var webDavUrl = GetWebDavPath(folderPath, requestHelper);
 
@@ -420,11 +419,11 @@ namespace pwiz.PanoramaClient
         {
             var uri = PanoramaUtil.Call(ServerUri, @"targetedms", null, @"getMaxSupportedVersions");
 
-            using (var webClient = GetRequestHelperFactory().Create(ServerUri, Username, Password))
+            using (var requestHelper = GetRequestHelper())
             {
                 try
                 {
-                    return webClient.Get(uri, "Error getting the maximum supported version of Skyline documents on the server.");
+                    return requestHelper.Get(uri, "Error getting the maximum supported version of Skyline documents on the server.");
                 }
                 catch (Exception)
                 {
@@ -682,47 +681,24 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        public override IRequestHelperFactory GetRequestHelperFactory(bool forPublish = false)
+        public override IRequestHelper GetRequestHelper(bool forPublish = false)
         {
-            return new PanoramaRequestHelperFactory(forPublish);
+            var webClient = forPublish
+                ? new NonStreamBufferingWebClient(ServerUri, Username, Password)
+                : new WebClientWithCredentials(ServerUri, Username, Password);
+            return new PanoramaRequestHelper(webClient);
         }
 
 
-        /// <summary>
-        /// Borrowed from SkypSupport.cs, displays download progress
-        /// </summary>
-        /// <param name="downloaded"></param>
-        /// <param name="fileSize"></param>
-        /// <returns></returns>
-        public static string GetDownloadedSize(long downloaded, long fileSize)
+
+        // Copied from SkypSupport.cs. Build the string that shows download progress.
+        private static string GetDownloadedSize(long downloaded, long fileSize)
         {
             var formatProvider = new FileSizeFormatProvider();
-            if (fileSize > 0)
-            {
-                return string.Format(@"{0} / {1}", string.Format(formatProvider, @"{0:fs1}", downloaded), string.Format(formatProvider, @"{0:fs1}", fileSize));
-            }
-            else
-            {
-                return string.Format(formatProvider, @"{0:fs1}", downloaded);
-            }
-        }
-    }
-
-    public class PanoramaRequestHelperFactory : IRequestHelperFactory
-    {
-        private bool ForPublish { get; }
-
-        public PanoramaRequestHelperFactory(bool forPublish)
-        {
-            ForPublish = forPublish;
-        }
-
-        public IRequestHelper Create(Uri serverUri, string username, string password)
-        {
-            var webClient = ForPublish
-                ? new NonStreamBufferingWebClient(serverUri, username, password)
-                : new WebClientWithCredentials(serverUri, username, password);
-            return new PanoramaRequestHelper(webClient);
+            return fileSize > 0
+                ? string.Format(@"{0} / {1}", string.Format(formatProvider, @"{0:fs1}", downloaded),
+                    string.Format(formatProvider, @"{0:fs1}", fileSize))
+                : string.Format(formatProvider, @"{0:fs1}", downloaded);
         }
     }
 }

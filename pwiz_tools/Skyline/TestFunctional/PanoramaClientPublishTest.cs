@@ -261,9 +261,22 @@ namespace pwiz.SkylineTestFunctional
                 return base.SendZipFile(folderPath, zipFilePath, progressMonitor);
             }
 
-            public override IRequestHelperFactory GetRequestHelperFactory(bool forUpload = false)
+            public override IRequestHelper GetRequestHelper(bool forUpload = false)
             {
-                return new TestRequestHelperFactory(_errorType);
+                TestRequestHelper requestHelper;
+                switch (_errorType)
+                {
+                    case BAD_JSON:
+                        requestHelper = new NoJsonResponseRequestHelper();
+                        break;
+                    // case UPLOAD_ERROR:
+                    //     requestHelper = new UploadErrorRequestHelper();
+                    //     break;
+                    default:
+                        requestHelper = new TestRequestHelper();
+                        break;
+                }
+                return requestHelper;
             }
         }
 
@@ -418,32 +431,6 @@ namespace pwiz.SkylineTestFunctional
                     errResponse[@"status"] = 400;
                 }
                 return errResponse;
-            }
-        }
-
-        public class TestRequestHelperFactory : IRequestHelperFactory
-        {
-            private readonly int _errorType;
-            public TestRequestHelperFactory(int errorType)
-            {
-                _errorType = errorType;
-            }
-            public IRequestHelper Create(Uri serverUri, string username, string password)
-            {
-                TestRequestHelper requestHelper;
-                switch (_errorType)
-                {
-                    case BAD_JSON:
-                        requestHelper = new NoJsonResponseRequestHelper();
-                        break;
-                    // case UPLOAD_ERROR:
-                    //     requestHelper = new UploadErrorRequestHelper();
-                    //     break;
-                    default:
-                        requestHelper = new TestRequestHelper();
-                        break;
-                }
-                return requestHelper;
             }
         }
     }
