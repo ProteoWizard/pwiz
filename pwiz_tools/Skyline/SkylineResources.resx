@@ -1088,9 +1088,6 @@
   <data name="SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_" xml:space="preserve">
     <value>Press Continue to use the server of your choice.</value>
   </data>
-  <data name="SkylineWindow_ShowPublishDlg_Press_Edit_existing_to_add_user_account_information_for_an_existing_server_" xml:space="preserve">
-    <value>Press Edit existing to add user account information for an existing server.</value>
-  </data>
   <data name="SkylineWindow_ShowPublishDlg_Register" xml:space="preserve">
     <value>Register</value>
   </data>
@@ -1147,5 +1144,8 @@
   </data>
   <data name="ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___" xml:space="preserve">
     <value>The value '{0}' is not valid for the argument {1} which requires a comma-separated list of annotation targets {2}.</value>
+  </data>
+  <data name="SkylineWindow_ShowPublishDlg_Press__Edit_existing__to_add_user_account_information_for_an_existing_server_" xml:space="preserve">
+	  <value>Press 'Edit existing' to add user account information for an existing server.</value>
   </data>
 </root>

@@ -3454,7 +3454,7 @@ namespace pwiz.Skyline
                     TextUtil.LineSeparate(
                         Resources.SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_with_a_user_account__To_upload_documents_to_a_server_a_user_account_is_required_,
                         string.Empty,
-                        SkylineResources.SkylineWindow_ShowPublishDlg_Press_Edit_existing_to_add_user_account_information_for_an_existing_server_,
+                        SkylineResources.SkylineWindow_ShowPublishDlg_Press__Edit_existing__to_add_user_account_information_for_an_existing_server_,
                         SkylineResources.SkylineWindow_OpenFromPanorama_Press__Add__to_add_a_new_server_),
                     SkylineResources.SkylineWindow_ShowPublishDlg_Edit_existing, SkylineResources.SkylineWindow_Add,
                     true);
