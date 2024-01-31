@@ -223,4 +223,7 @@
   <data name="BaseWebClient_ParseJsonResponse_Error_parsing_response_as_JSON_" xml:space="preserve">
 	  <value>Error parsing response as JSON.</value>
   </data>
+  <data name="LabKeyError_ToString_Response_status___0_" xml:space="preserve">
+	  <value>Response status: {0}</value>
+  </data>
 </root>

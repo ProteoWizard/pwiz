@@ -3547,7 +3547,7 @@ namespace pwiz.Skyline
                 return false;
 
             // If we are given a test publish client use that, otherwise create the default client.
-            publishClient = PublishDocumentDlg.GetDefaultPublishClient(server, publishClient);
+            publishClient ??= PublishDocumentDlg.GetDefaultPublishClient(server);
 
             JToken folders;
             var folderPath = panoramaSavedUri.AbsolutePath;

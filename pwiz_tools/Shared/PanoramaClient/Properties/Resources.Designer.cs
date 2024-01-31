@@ -147,6 +147,15 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Response status: {0}.
+        /// </summary>
+        public static string LabKeyError_ToString_Response_status___0_ {
+            get {
+                return ResourceManager.GetString("LabKeyError_ToString_Response_status___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open.
         /// </summary>
         public static string PanoramaDirectoryPicker_DirectoryPicker_Load_Open {

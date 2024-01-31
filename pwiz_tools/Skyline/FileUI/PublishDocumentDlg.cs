@@ -132,7 +132,11 @@ namespace pwiz.Skyline.FileUI
                 JToken folders = null;
                 try
                 {
-                    folders = GetPublishClient(server).PanoramaClient.GetInfoForFolders(null);
+                    // Create a client for the server if we were not given one in SkylineWindow.ShowPublishDlg(IPanoramaPublishClient publishClient).
+                    var panoramaClient = PanoramaPublishClient != null
+                        ? PanoramaPublishClient.PanoramaClient
+                        : new WebPanoramaClient(server.URI, server.Username, server.Password);
+                    folders = panoramaClient.GetInfoForFolders(null);
                 }
                 catch (Exception ex)
                 {
@@ -294,10 +298,14 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
+            // If a test client was provided in SkylineWindow.ShowPublishDlg(IPanoramaPublishClient publishClient), use that.
+            // Otherwise, create a client for the selected server.
+            PanoramaPublishClient ??= GetDefaultPublishClient(folderInfo.Server); 
+
             try
             {
                 var cancelled = false;
-                ShareType = GetPublishClient(folderInfo.Server).GetShareType(_docContainer.DocumentUI,
+                ShareType = PanoramaPublishClient.GetShareType(_docContainer.DocumentUI,
                     _docContainer.DocumentFilePath, _fileFormatOnDisk, this, ref cancelled);
                 if (cancelled)
                 {
@@ -321,21 +329,14 @@ namespace pwiz.Skyline.FileUI
             FolderInformation folderInfo = treeViewFolders.SelectedNode.Tag as FolderInformation;
             if (folderInfo != null)
             {
-                GetPublishClient(folderInfo.Server).UploadSharedZipFile(parent, zipFilePath, folderPath);
+                PanoramaPublishClient ??= GetDefaultPublishClient(folderInfo.Server);
+                PanoramaPublishClient.UploadSharedZipFile(parent, zipFilePath, folderPath);
             }
         }
 
-        private IPanoramaPublishClient GetPublishClient(PanoramaServer server)
+        public static IPanoramaPublishClient GetDefaultPublishClient(PanoramaServer server)
         {
-            // If a test client was provided in SkylineWindow.ShowPublishDlg(IPanoramaPublishClient publishClient), use that.
-            // Otherwise, create a client for the given server.
-            return GetDefaultPublishClient(server, PanoramaPublishClient);
-        }
-
-        // If the given client is not null return that.  Otherwise return a new WebPanoramaPublishClient
-        public static IPanoramaPublishClient GetDefaultPublishClient(PanoramaServer server, IPanoramaPublishClient client)
-        {
-            return client ?? new WebPanoramaPublishClient(server.URI, server.Username, server.Password);
+            return new WebPanoramaPublishClient(server.URI, server.Username, server.Password);
         }
 
         private string GetFolderPath(TreeNode folderNode)

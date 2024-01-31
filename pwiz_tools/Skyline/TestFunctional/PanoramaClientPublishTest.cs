@@ -27,7 +27,6 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestPublishToPanorama()
         {
-            // TestFilesZip = @"TestFunctional\AccessServerTest.zip";
             using (new FakeProsit(null))
             {
                 RunFunctionalTest();
@@ -123,7 +122,7 @@ namespace pwiz.SkylineTestFunctional
                 Resources
                     .AbstractPanoramaPublishClient_UploadFileCompleted_There_was_an_error_uploading_the_file_,
                 string.Empty,
-                TestRequestHelper.GetLabKeyError(SkylineWindow.DocumentFilePath).ToString(),
+                string.Format(PanoramaClient.Properties.Resources.GenericState_AppendErrorAndUri_Error___0_, TestRequestHelper.GetLabKeyError(SkylineWindow.DocumentFilePath).ToString()),
                 string.Format("URL: {0}{1}Bad -file_name", PANORAMA_SERVER, TestRequestHelper.GetFolderWebdavUrl(PANORAMA_FOLDER).TrimStart('/')));
             Assert.IsTrue(errorDlg.Message.Contains(expectedErrorPart),
                 string.Format("Expected error to contain '{0}'.\nActual error: {1}", expectedErrorPart,

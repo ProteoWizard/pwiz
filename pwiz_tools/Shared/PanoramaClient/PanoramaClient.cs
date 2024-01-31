@@ -34,6 +34,7 @@ namespace pwiz.PanoramaClient
 
         JObject SupportedVersionsJson();
 
+        IRequestHelper GetRequestHelper(bool forPublish = false);
     }
 
     public abstract class AbstractPanoramaClient : IPanoramaClient

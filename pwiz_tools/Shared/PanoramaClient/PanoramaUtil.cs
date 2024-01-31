@@ -304,6 +304,11 @@ namespace pwiz.PanoramaClient
         {
             throw new NotImplementedException();
         }
+
+        public IRequestHelper GetRequestHelper(bool forPublish = false)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class PanoramaServerException : Exception
@@ -465,14 +470,16 @@ namespace pwiz.PanoramaClient
 
             var sb = new StringBuilder();
 
-            if (labkeyError != null)
-            {
-                sb.AppendLine(labkeyError.ToString());
-            }
-
             if (error != null)
             {
                 sb.AppendLine(string.Format(Resources.GenericState_AppendErrorAndUri_Error___0_, error));
+            }
+
+            if (labkeyError != null)
+            {
+                sb.AppendLine(error != null
+                    ? labkeyError.ToString()
+                    : string.Format(Resources.GenericState_AppendErrorAndUri_Error___0_, labkeyError));
             }
 
             if (uri != null)
@@ -612,7 +619,7 @@ namespace pwiz.PanoramaClient
                 // If we did not find it in the Response cookies look in the Request cookies.
                 // org.labkey.api.util.CSRFUtil.getExpectedToken() will not add the CSRF cookie to the response if the cookie
                 // is already there in the request.  This can happen if our WebClient is used to make multiple requests
-                // (e.g. WebPanoramaPublishClient.SendZipFile()) and the first request in the series gets redirected. When this
+                // (e.g. WebPanoramaClient.SendZipFile()) and the first request in the series gets redirected. When this
                 // happens CSRFUtil will not add the cookie to the response, because it is already in the redirected request. 
                 csrf = GetCsrfCookieFromRequest(requestUri);
             }

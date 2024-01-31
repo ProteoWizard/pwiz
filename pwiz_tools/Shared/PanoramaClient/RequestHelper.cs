@@ -65,7 +65,6 @@ namespace pwiz.PanoramaClient
 
         public JObject Post(Uri uri, string postData, string messageOnLabkeyError = null)
         {
-            AddHeader(HttpRequestHeader.ContentType, "application/json");
             return Post(uri, null, postData, messageOnLabkeyError);
         }
 
@@ -80,6 +79,7 @@ namespace pwiz.PanoramaClient
             }
             else
             {
+                AddHeader(HttpRequestHeader.ContentType, "application/json");
                 response = DoPost(uri, postDataString);
             }
             return ParseResponse(response, uri, messageOnLabkeyError);
@@ -192,7 +192,7 @@ namespace pwiz.PanoramaClient
                 // A WebException is usually thrown if the response status code is something other than 200
                 // We could still have a LabKey error in the JSON response. 
                 var labKeyError = PanoramaUtil.GetIfErrorInResponse(r);
-                throw new PanoramaServerException(messageOnLabkeyError, uri, e, labKeyError);
+                return new PanoramaServerException(messageOnLabkeyError, uri, e, labKeyError);
             }
         }
 
@@ -206,16 +206,13 @@ namespace pwiz.PanoramaClient
             }
             catch (WebException e)
             {
-                using (var r = e.Response)
-                {
-                    // TODO: A WebException is usually thrown if the response status code something other than 200
-                    // Will there be a LabKey error in the response if this is a real server error?
-                    // The answer is Yes.  For example, a POST request to create a folder that does not include 
-                    // any post data will return a 404, and response contains JSON with the labkey error.
-                    // TODO: Try not setting the ContentType header when doing a POST.
-                    messageOnLabkeyError ??= string.Format("{0} request was unsuccessful", @"POST");
-                    throw PanoramaServerException(uri, messageOnLabkeyError, e);
-                }
+                // TODO: A WebException is usually thrown if the response status code something other than 200
+                // Will there be a LabKey error in the response if this is a real server error?
+                // The answer is Yes.  For example, a POST request to create a folder that does not include 
+                // any post data will return a 404, and response contains JSON with the labkey error.
+                // TODO: Try not setting the ContentType header when doing a POST.
+                messageOnLabkeyError ??= string.Format("{0} request was unsuccessful", @"POST");
+                throw PanoramaServerException(uri, messageOnLabkeyError, e);
             }
         }
 
@@ -298,8 +295,10 @@ namespace pwiz.PanoramaClient
 
         public override string ToString()
         {
-            var serverError = string.Format("Error message: {0}", ErrorMessage);
-            if (Status != null) serverError = TextUtil.LineSeparate(serverError, string.Format("Response status: {0}", Status));
+            var serverError = ErrorMessage;
+            if (Status != null)
+                serverError = TextUtil.LineSeparate(serverError,
+                    string.Format(Resources.LabKeyError_ToString_Response_status___0_, Status));
             return serverError;
         }
     }
