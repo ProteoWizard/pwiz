@@ -1593,7 +1593,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void OnProductAvailable()
         {
-            UpdateGraph(false);
+            GraphSummary.UpdateUI(false);
         }
 
         public override void OnClose(EventArgs e)
