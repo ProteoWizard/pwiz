@@ -278,7 +278,7 @@ namespace pwiz.Skyline.Controls
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SrmDocument Document { get; private set; }
-        public NormalizedValueCalculator NormalizedValueCalculator { get; private set; }
+        public NormalizedValueCalculator NormalizedValueCalculator { get; private set; } = NormalizedValueCalculator.DEFAULT;
 
         private void UpdateNormalizedValueCalculator()
         {
