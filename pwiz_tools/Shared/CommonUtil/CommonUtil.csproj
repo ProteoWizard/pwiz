@@ -163,6 +163,7 @@
       <DependentUpon>Images.resx</DependentUpon>
     </Compile>
     <Compile Include="SystemUtil\Caching\CalculatedValueCache.cs" />
+    <Compile Include="SystemUtil\Caching\ProgressCallback.cs" />
     <Compile Include="SystemUtil\Caching\ResultSpec.cs" />
     <Compile Include="SystemUtil\Caching\CalculatedValueListener.cs" />
     <Compile Include="SystemUtil\Caching\ResultFactory.cs" />

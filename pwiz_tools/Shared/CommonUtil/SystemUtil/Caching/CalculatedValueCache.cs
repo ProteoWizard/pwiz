@@ -35,6 +35,15 @@ namespace pwiz.Common.SystemUtil.Caching
             }
         }
 
+        public int GetProgressValue(ResultSpec key)
+        {
+            lock (this)
+            {
+                _entries.TryGetValue(key, out var entry);
+                return entry?.ProgressValue??0;
+            }
+        }
+
         private Entry GetEntry(ResultSpec key)
         {
             lock (this)
@@ -194,12 +203,13 @@ namespace pwiz.Common.SystemUtil.Caching
                         return;
                     }
                     _cancellationTokenSource = new CancellationTokenSource();
-                    var cancellationToken = _cancellationTokenSource.Token;
+                    var progressCallback = new ProgressCallback(_cancellationTokenSource.Token);
+                    progressCallback.ProgressChange += OnMyProgressChanged;
                     CommonActionUtil.RunAsync(() =>
                     {
                         try
                         {
-                            object value = Key.Calculator.ComputeResult(cancellationToken, Key.Parameter, _dependencyResultValues);
+                            object value = Key.Calculator.ComputeResult(progressCallback, Key.Parameter, _dependencyResultValues);
                             NotifyResultAvailable(CalculatorResult.Success(value));
                         }
                         catch (Exception ex)
@@ -211,6 +221,44 @@ namespace pwiz.Common.SystemUtil.Caching
             }
 
             public CalculatorResult Result { get; private set; }
+
+            public bool IsWaiting()
+            {
+                lock (this)
+                {
+                    return false != _cancellationTokenSource?.IsCancellationRequested;
+                }
+            }
+
+            public void OnProgressChanged(ResultSpec key, int progress)
+            {
+                ICalculatedValueListener[] listeners;
+                lock (Cache)
+                {
+                    ProgressValue = progress;
+                    listeners = _listeners.ToArray();
+                }
+
+                foreach (var listener in listeners)
+                {
+                    listener.OnProgressChanged(key, progress);
+                }
+            }
+
+            private void OnMyProgressChanged(int progress)
+            {
+                OnProgressChanged(Key, progress);
+            }
+            
+            public int ProgressValue { get; private set; }
+        }
+
+        public bool IsWaiting()
+        {
+            lock (this)
+            {
+                return _entries.Values.Any(entry => entry.IsWaiting());
+            }
         }
     }
 }

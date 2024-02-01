@@ -21,6 +21,9 @@ using System;
 using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms;
+using NHibernate.Linq.Functions;
+using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model;
 using ZedGraph;
 using Settings = pwiz.Skyline.Controls.Graphs.DetectionsGraphController.Settings;
@@ -29,6 +32,8 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public abstract class DetectionsPlotPane : SummaryReplicateGraphPane
     {
+        protected CalculatedValueListener _calculatedValueListener;
+
         protected DetectionPlotData _detectionData = DetectionPlotData.INVALID;
         public int MaxRepCount { get; private set; }
         protected DetectionPlotData.DataSet TargetData => _detectionData.GetTargetData(Settings.TargetType);
@@ -56,13 +61,27 @@ namespace pwiz.Skyline.Controls.Graphs
             XAxis.Scale.MinAuto = XAxis.Scale.MaxAuto = YAxis.Scale.MinAuto = YAxis.Scale.MaxAuto = false;
             ToolTip = new ToolTipImplementation(this);
 
-            DetectionPlotData.GetDataCache().ReportProgress += UpdateProgressHandler;
-            DetectionPlotData.GetDataCache().StatusChange += UpdateStatusHandler;
+            _calculatedValueListener = new CalculatedValueListener(CalculatedValueCache.INSTANCE);
+            _calculatedValueListener.ProgressChange += UpdateProgressHandler;
+            _calculatedValueListener.ResultsAvailable += OnResultsAvailable;
         }
 
-        public void UpdateProgressHandler(int progress)
+        public void UpdateProgressHandler()
         {
-            ProgressBar?.UpdateProgress(progress);
+            CommonActionUtil.SafeBeginInvoke(GraphSummary, () =>
+            {
+                if (_calculatedValueListener.IsProcessing())
+                {
+                    ProgressBar ??= new PaneProgressBar(this);
+                    ProgressBar?.UpdateProgress(_calculatedValueListener.GetProgressValue());
+                }
+                else
+                {
+                    ProgressBar?.Dispose();
+                    ProgressBar = null;
+                }
+            });
+
         }
 
         public void UpdateStatusHandler(DetectionPlotData.DetectionDataCache.CacheStatus status, string message)
@@ -72,7 +91,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     AddLabels(status, message);
                     if (status == DetectionPlotData.DetectionDataCache.CacheStatus.processing)
-                        ProgressBar = new PaneProgressBar(this);
+                        ProgressBar ??= new PaneProgressBar(this);
                     else
                     {
                         ProgressBar?.Dispose();
@@ -85,13 +104,39 @@ namespace pwiz.Skyline.Controls.Graphs
                 }));
         }
 
+        protected virtual void OnResultsAvailable()
+        {
+            CommonActionUtil.SafeBeginInvoke(GraphSummary, () =>
+            {
+                var error = _calculatedValueListener.GetError();
+                
+                if (error != null)
+                {
+                    AddLabels(DetectionPlotData.DetectionDataCache.CacheStatus.error, error.Message);
+                }
+                else if (_calculatedValueListener.IsProcessing())
+                {
+                    ProgressBar = ProgressBar ?? new PaneProgressBar(this);
+                    ProgressBar.UpdateProgressUI(_calculatedValueListener.GetProgressValue());
+                }
+                else
+                {
+                    ProgressBar?.Dispose();
+                    ProgressBar = null;
+                }
+                GraphSummary.GraphControl.Invalidate();
+                GraphSummary.GraphControl.Update();
+                GraphSummary.Toolbar.UpdateUI();
+                UpdateGraph(false);
+            });
+        }
+
         public override bool HasToolbar { get { return true; } }
 
 
         public override void OnClose(EventArgs e)
         {
-            DetectionPlotData.GetDataCache().ReportProgress -= UpdateProgressHandler;
-            DetectionPlotData.GetDataCache().StatusChange -= UpdateStatusHandler;
+            _calculatedValueListener.Dispose();
         }
 
         protected abstract void HandleMouseClick(int index);
@@ -135,7 +180,24 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected virtual void AddLabels()
         {
-            AddLabels(DetectionPlotData.GetDataCache().Status, "");
+            DetectionPlotData.DetectionDataCache.CacheStatus status;
+            string message = string.Empty;
+            Exception error = _calculatedValueListener.GetError();
+            
+            if (error != null)
+            {
+                status = DetectionPlotData.DetectionDataCache.CacheStatus.error;
+                message = error.Message;
+            }
+            else if (_calculatedValueListener.IsProcessing())
+            {
+                status = DetectionPlotData.DetectionDataCache.CacheStatus.processing;
+            }
+            else
+            {
+                status = DetectionPlotData.DetectionDataCache.CacheStatus.idle;
+            }
+            AddLabels(status, message);
         }
 
         protected virtual void AddLabels(DetectionPlotData.DetectionDataCache.CacheStatus status, string message)

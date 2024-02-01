@@ -27,6 +27,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Util;
 
 // ReSharper disable InconsistentlySynchronizedField
@@ -463,8 +464,23 @@ namespace pwiz.Skyline.Controls.Graphs
                     IsDisposed = true;
                 }
             }
+        }
 
+        public static readonly ResultFactory<Tuple<ReferenceValue<SrmDocument>, float>, DetectionPlotData> FACTORY = new Factory();
+            
+            
+        private class Factory : ResultFactory<Tuple<ReferenceValue<SrmDocument>, float>, DetectionPlotData>
+        {
+            public override DetectionPlotData ComputeResult(ProgressCallback progressCallback, Tuple<ReferenceValue<SrmDocument>, float> parameter, IDictionary<ResultSpec, object> dependencies)
+            {
+                var data = new DetectionPlotData(parameter.Item1, parameter.Item2);
+                string message = data.Init(progressCallback.CancellationToken, progressCallback.SetProgress);
+                if (!data.IsValid)
+                {
+                    throw new Exception(message);
+                }
+                return data;
+            }
         }
     }
-
 }

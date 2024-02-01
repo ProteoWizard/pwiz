@@ -534,7 +534,7 @@ namespace pwiz.Skyline.Model.Results
         private class Calculator : ResultFactory<Tuple<ReferenceValue<SrmDocument>, NormalizationMethod>,
             NormalizedValueCalculator>
         {
-            public override NormalizedValueCalculator ComputeResult(CancellationToken cancellationToken, Tuple<ReferenceValue<SrmDocument>, NormalizationMethod> parameter, IDictionary<ResultSpec, object> dependencies)
+            public override NormalizedValueCalculator ComputeResult(ProgressCallback progressCallback, Tuple<ReferenceValue<SrmDocument>, NormalizationMethod> parameter, IDictionary<ResultSpec, object> dependencies)
             {
                 var document = parameter.Item1;
                 return new NormalizedValueCalculator(document,

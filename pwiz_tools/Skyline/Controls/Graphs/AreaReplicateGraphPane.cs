@@ -1597,5 +1597,11 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             CommonActionUtil.SafeBeginInvoke(GraphSummary, () => UpdateGraph(false));
         }
+
+        public override void OnClose(EventArgs e)
+        {
+            base.OnClose(e);
+            _calcListener.Dispose();
+        }
     }
 }

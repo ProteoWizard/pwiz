@@ -281,8 +281,8 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
 
         public static readonly ResultFactory<ReferenceValue<SrmDocument>, NormalizationData> CALCULATOR =
-            ResultFactory.FromFunction<ReferenceValue<SrmDocument>, NormalizationData>((cancellationToken, document) =>
-                GetNormalizationData(cancellationToken, document, false, null));
+            ResultFactory.FromFunction<ReferenceValue<SrmDocument>, NormalizationData>((progressCallback, document) =>
+                GetNormalizationData(progressCallback.CancellationToken, document, false, null));
         /// <summary>
         /// For the MS2 transitions, returns all the Area values for each of the Transitions for each of the replicates.
         /// For the MS1 transitions, returns the sum of the MS1 Area values for each of the replicates.

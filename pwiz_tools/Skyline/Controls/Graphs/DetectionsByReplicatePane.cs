@@ -23,6 +23,7 @@ using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -33,13 +34,13 @@ namespace pwiz.Skyline.Controls.Graphs
 {
 
     public class DetectionsByReplicatePane : DetectionsPlotPane
-
     {
-
         public DetectionsByReplicatePane(GraphSummary graphSummary) : base(graphSummary)
         {
             XAxis.Type = AxisType.Text;
             XAxis.Title.Text = GraphsResources.DetectionPlotPane_XAxis_Name;
+            _calculatedValueListener = new CalculatedValueListener(CalculatedValueCache.INSTANCE);
+            _calculatedValueListener.ResultsAvailable += OnResultsAvailable;
         }
 
         public override void PopulateTooltip(int index)
@@ -77,12 +78,21 @@ namespace pwiz.Skyline.Controls.Graphs
             GraphObjList.Clear();
             CurveList.Clear();
             Legend.IsVisible = false;
-            if (!DetectionPlotData.GetDataCache().TryGet(
-                GraphSummary.DocumentUIContainer.DocumentUI, Settings.QValueCutoff, this.DataCallback,
-                out _detectionData))
+
+            if (!_calculatedValueListener.TryGetValue(
+                    DetectionPlotData.FACTORY, GraphSummary.DocumentUIContainer.DocumentUI, Settings.QValueCutoff,
+                    out _detectionData))
+            {
                 return;
+            }
+
+
 
             AddLabels();
+            if (!_detectionData.IsValid)
+            {
+                return;
+            }
             BarSettings.Type = BarType.SortedOverlay;
             BarSettings.MinClusterGap = 0.3f;
             Legend.IsVisible = Settings.ShowLegend;
