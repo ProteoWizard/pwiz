@@ -129,7 +129,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _stickItems.Clear();
 
             var gotData =
-                _customer.TryGetValue(new AreaCVGraphData.Parameters(GraphSummary.DocumentUIContainer.DocumentUI, settings),
+                _customer.TryGetProduct(new AreaCVGraphData.Parameters(GraphSummary.DocumentUIContainer.DocumentUI, settings),
                     out _areaCVGraphData);
 
             if (!gotData || !_areaCVGraphData.IsValid)

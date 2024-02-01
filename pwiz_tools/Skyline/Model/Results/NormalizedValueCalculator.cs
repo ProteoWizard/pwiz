@@ -536,7 +536,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static WorkOrder MakeWorkOrder(SrmDocument document, NormalizeOption normalizeOption)
         {
-            return new WorkOrder(PRODUCER, new Params(document, normalizeOption));
+            return PRODUCER.MakeWorkOrder(new Params(document, normalizeOption));
         }
             
         private class NormalizedValueCalculatorProducer : Producer<Params,

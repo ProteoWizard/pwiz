@@ -444,7 +444,7 @@ namespace pwiz.Skyline.Controls.Graphs
             NormalizedValueCalculator normalizedValueCalculator = null;
             try
             {
-                if (!_calcListener.TryGetValue(new NormalizedValueCalculator.Params(document, normalizeOption), out normalizedValueCalculator))
+                if (!_calcListener.TryGetProduct(new NormalizedValueCalculator.Params(document, normalizeOption), out normalizedValueCalculator))
                 {
                     return;
                 }

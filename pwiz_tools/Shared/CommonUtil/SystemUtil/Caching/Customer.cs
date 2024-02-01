@@ -1,9 +1,31 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2024 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Diagnostics;
 using System.Windows.Forms;
 
 namespace pwiz.Common.SystemUtil.Caching
 {
+    /// <summary>
+    /// Keeps track of the progress of a request from a <see cref="Producer"/> and sends
+    /// out notification when the work is completed.
+    /// </summary>
     public class Customer : IDisposable
     {
         private bool _notificationPending;
@@ -29,8 +51,8 @@ namespace pwiz.Common.SystemUtil.Caching
 
         private void OnProductAvailable()
         {
-            var resultsAvailable = ProductAvailable;
-            if (resultsAvailable != null)
+            var productAvailable = ProductAvailable;
+            if (productAvailable != null)
             {
                 if (!_notificationPending)
                 {
@@ -38,7 +60,7 @@ namespace pwiz.Common.SystemUtil.Caching
                     CommonActionUtil.SafeBeginInvoke(OwnerControl, () =>
                     {
                         _notificationPending = false;
-                        resultsAvailable();
+                        productAvailable();
                     });
                 }
             }
@@ -79,20 +101,19 @@ namespace pwiz.Common.SystemUtil.Caching
             return null;
         }
 
-        public bool TryGetValue(object argument, out object resultValue)
+        public bool TryGetProduct(WorkOrder newWorkOrder, out object resultValue)
         {
             lock (this)
             {
-                var newResultSpec = new WorkOrder(Producer, argument);
-                if (!Equals(newResultSpec, _workOrder))
+                if (!Equals(newWorkOrder, _workOrder))
                 {
-                    Cache.Listen(newResultSpec, _listener);
+                    Cache.Listen(newWorkOrder, _listener);
                     if (_workOrder != null)
                     {
                         Cache.Unlisten(_workOrder, _listener);
                     }
 
-                    _workOrder = newResultSpec;
+                    _workOrder = newWorkOrder;
                 }
 
                 var result = Cache.GetResult(_workOrder);
@@ -170,12 +191,16 @@ namespace pwiz.Common.SystemUtil.Caching
         public Customer(ProductionFacility cache, Control ownerControl,
             Producer<TParam, TResult> factory) : base(cache, ownerControl, factory)
         {
-            
+        }
+        
+        public new Producer<TParam, TResult> Producer
+        {
+            get { return (Producer<TParam, TResult>)base.Producer; }
         }
 
-        public bool TryGetValue(TParam argument, out TResult resultValue)
+        public bool TryGetProduct(TParam workParameter, out TResult resultValue)
         {
-            if (base.TryGetValue(argument, out var resultObject))
+            if (TryGetProduct(Producer.MakeWorkOrder(workParameter), out var resultObject))
             {
                 resultValue = (TResult) resultObject;
                 return true;
@@ -185,9 +210,9 @@ namespace pwiz.Common.SystemUtil.Caching
             return false;
         }
 
-        public bool TryGetCurrentValue(out TResult resultValue)
+        public bool TryGetCurrentProduct(out TResult resultValue)
         {
-            if (CurrentWorkOrder == null || !base.TryGetValue(CurrentWorkOrder.Parameter, out var resultObject))
+            if (CurrentWorkOrder == null || !TryGetProduct(CurrentWorkOrder, out var resultObject))
             {
                 resultValue = default;
                 return false;

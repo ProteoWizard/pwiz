@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2024 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 
@@ -6,17 +24,17 @@ namespace pwiz.Common.SystemUtil.Caching
 {
     public interface IProducer
     {
-        object ProduceResult(ProductionMonitor productionMonitor, object parameter, IDictionary<WorkOrder, object> inputs);
+        object ProduceResult(ProductionMonitor productionMonitor, object workParameter, IDictionary<WorkOrder, object> inputs);
         /// <summary>
         /// Returns the list of other things that are needed to produce the products.
         /// These are intermediate results which might also be needed by other producers.
         /// </summary>
-        IEnumerable<WorkOrder> GetInputs(object parameter);
+        IEnumerable<WorkOrder> GetInputs(object workParameter);
     }
 
     public interface IProducer<in TParameter, out TResult> : IProducer
     {
-        public TResult ProduceResult(ProductionMonitor productionMonitor, TParameter parameter,
+        public TResult ProduceResult(ProductionMonitor productionMonitor, TParameter workParameter,
             IDictionary<WorkOrder, object> dependencies);
     }
 
@@ -32,10 +50,10 @@ namespace pwiz.Common.SystemUtil.Caching
             ParameterType = parameterType;
             ValueType = valueType;
         }
-        public abstract object ProduceResult(ProductionMonitor productionMonitor, object parameter, IDictionary<WorkOrder, object> dependencies);
+        public abstract object ProduceResult(ProductionMonitor productionMonitor, object workParameter, IDictionary<WorkOrder, object> dependencies);
         public Type ParameterType { get; }
         public Type ValueType { get; }
-        public virtual IEnumerable<WorkOrder> GetInputs(object parameter)
+        public virtual IEnumerable<WorkOrder> GetInputs(object workParameter)
         {
             return Array.Empty<WorkOrder>();
         }
@@ -53,17 +71,17 @@ namespace pwiz.Common.SystemUtil.Caching
         {
         }
 
-        public sealed override object ProduceResult(ProductionMonitor productionMonitor, object parameter, IDictionary<WorkOrder, object> inputs)
+        public sealed override object ProduceResult(ProductionMonitor productionMonitor, object workParameter, IDictionary<WorkOrder, object> inputs)
         {
-            return ProduceResult(productionMonitor, (TParameter)parameter, inputs);
+            return ProduceResult(productionMonitor, (TParameter)workParameter, inputs);
         }
 
         public abstract TResult ProduceResult(ProductionMonitor productionMonitor, TParameter parameter,
             IDictionary<WorkOrder, object> inputs);
 
-        public sealed override IEnumerable<WorkOrder> GetInputs(object parameter)
+        public sealed override IEnumerable<WorkOrder> GetInputs(object workParameter)
         {
-            return GetInputs((TParameter)parameter);
+            return GetInputs((TParameter)workParameter);
         }
 
         public virtual IEnumerable<WorkOrder> GetInputs(TParameter parameter)
@@ -95,9 +113,9 @@ namespace pwiz.Common.SystemUtil.Caching
             return default;
         }
 
-        public WorkOrder MakeWorkOrder(TParameter parameter)
+        public WorkOrder MakeWorkOrder(TParameter workParameter)
         {
-            return new WorkOrder(this, parameter);
+            return new WorkOrder(this, workParameter);
         }
 
         public Customer<TParameter, TResult> RegisterCustomer(Control ownerControl, Action productAvailableAction)

@@ -228,14 +228,13 @@ namespace pwiz.Common.SystemUtil.Caching
                     }
 
                     _cancellationTokenSource = new CancellationTokenSource();
-                    var progressCallback = new ProductionMonitor(_cancellationTokenSource.Token);
-                    progressCallback.ProgressChange += OnMyProgressChanged;
+                    var progressCallback = new ProductionMonitor(_cancellationTokenSource.Token, OnMyProgressChanged);
                     CommonActionUtil.RunAsync(() =>
                     {
                         try
                         {
                             Cache.IncrementWaitingCount();
-                            object value = Key.Producer.ProduceResult(progressCallback, Key.Parameter,
+                            object value = Key.Producer.ProduceResult(progressCallback, Key.WorkParameter,
                                 _dependencyResultValues);
                             NotifyResultAvailable(ProductionResult.Success(value));
                         }

@@ -134,7 +134,7 @@ namespace pwiz.Skyline.Controls.Graphs
             CurveList.Clear();
 
             var gotData =
-                _customer.TryGetValue(
+                _customer.TryGetProduct(
                     new AreaCVGraphData.Parameters(GraphSummary.DocumentUIContainer.DocumentUI, settings),
                     out _areaCVGraphData);
 

@@ -282,7 +282,7 @@ namespace pwiz.Skyline.Controls
 
         private void UpdateNormalizedValueCalculator()
         {
-            if (_customer.TryGetCurrentValue(out var normalizedValueCalcultor))
+            if (_customer.TryGetCurrentProduct(out var normalizedValueCalcultor))
             {
                 NormalizedValueCalculator = normalizedValueCalcultor;
             }
