@@ -2,27 +2,27 @@
 
 namespace pwiz.Common.SystemUtil.Caching
 {
-    public class CalculatorResult
+    public class ProductionResult
     {
-        private CalculatorResult()
+        private ProductionResult()
         {
         }
 
-        public static CalculatorResult Success(object value)
+        public static ProductionResult Success(object value)
         {
-            return new CalculatorResult
+            return new ProductionResult
             {
                 Value = value
             };
         }
 
-        public static CalculatorResult Error(Exception exception)
+        public static ProductionResult Error(Exception exception)
         {
             if (exception == null)
             {
                 throw new ArgumentNullException(nameof(exception));
             }
-            return new CalculatorResult { Exception = exception };
+            return new ProductionResult { Exception = exception };
         }
 
         public object Value { get; private set; }

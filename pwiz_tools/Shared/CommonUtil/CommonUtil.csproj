@@ -162,12 +162,12 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Images.resx</DependentUpon>
     </Compile>
-    <Compile Include="SystemUtil\Caching\CalculatedValueCache.cs" />
+    <Compile Include="SystemUtil\Caching\ProductionFacility.cs" />
     <Compile Include="SystemUtil\Caching\ProgressCallback.cs" />
-    <Compile Include="SystemUtil\Caching\ResultSpec.cs" />
-    <Compile Include="SystemUtil\Caching\CalculatedValueListener.cs" />
-    <Compile Include="SystemUtil\Caching\ResultFactory.cs" />
-    <Compile Include="SystemUtil\Caching\CalculatorResult.cs" />
+    <Compile Include="SystemUtil\Caching\WorkOrder.cs" />
+    <Compile Include="SystemUtil\Caching\Customer.cs" />
+    <Compile Include="SystemUtil\Caching\Producer.cs" />
+    <Compile Include="SystemUtil\Caching\ProductionResult.cs" />
     <Compile Include="SystemUtil\CommonFormEx.cs">
       <SubType>Form</SubType>
     </Compile>

@@ -26,6 +26,7 @@ using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Util;
+using System.Runtime.CompilerServices;
 
 // ReSharper disable InconsistentlySynchronizedField
 
@@ -269,14 +270,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
         }
 
-        public static readonly ResultFactory<Tuple<ReferenceValue<SrmDocument>, float>, DetectionPlotData> FACTORY =
+        public static readonly Producer<WorkOrderParam, DetectionPlotData> PRODUCER =
             new Factory();
             
-        private class Factory : ResultFactory<Tuple<ReferenceValue<SrmDocument>, float>, DetectionPlotData>
+        private class Factory : Producer<WorkOrderParam, DetectionPlotData>
         {
-            public override DetectionPlotData ComputeResult(ProgressCallback progressCallback, Tuple<ReferenceValue<SrmDocument>, float> parameter, IDictionary<ResultSpec, object> dependencies)
+            public override DetectionPlotData ProduceResult(ProgressCallback progressCallback, WorkOrderParam parameter, IDictionary<WorkOrder, object> dependencies)
             {
-                var data = new DetectionPlotData(parameter.Item1, parameter.Item2);
+                var data = new DetectionPlotData(parameter.Document, parameter.QValueCutoff);
                 string message = data.Init(progressCallback.CancellationToken, progressCallback.SetProgress);
                 if (!data.IsValid)
                 {
@@ -285,5 +286,39 @@ namespace pwiz.Skyline.Controls.Graphs
                 return data;
             }
         }
+
+        public class WorkOrderParam
+        {
+            public WorkOrderParam(SrmDocument document, float qValueCutoff)
+            {
+                Document = document;
+                QValueCutoff = qValueCutoff;
+            }
+
+            public SrmDocument Document { get; }
+            public float QValueCutoff { get; }
+
+            protected bool Equals(WorkOrderParam other)
+            {
+                return ReferenceEquals(Document, other.Document) && QValueCutoff.Equals(other.QValueCutoff);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((WorkOrderParam)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (RuntimeHelpers.GetHashCode(Document) * 397) ^ QValueCutoff.GetHashCode();
+                }
+            }
+        }
+
     }
 }

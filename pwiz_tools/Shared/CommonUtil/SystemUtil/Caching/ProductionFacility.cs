@@ -5,12 +5,12 @@ using System.Threading;
 
 namespace pwiz.Common.SystemUtil.Caching
 {
-    public class CalculatedValueCache
+    public class ProductionFacility
     {
-        public static readonly CalculatedValueCache INSTANCE = new CalculatedValueCache();
-        private Dictionary<ResultSpec, Entry> _entries = new Dictionary<ResultSpec, Entry>();
+        public static readonly ProductionFacility INSTANCE = new ProductionFacility();
+        private Dictionary<WorkOrder, Entry> _entries = new Dictionary<WorkOrder, Entry>();
 
-        public void Listen(ResultSpec key, CalculatedValueListener listener)
+        public void Listen(WorkOrder key, Customer listener)
         {
             if (key == null)
             {
@@ -22,7 +22,7 @@ namespace pwiz.Common.SystemUtil.Caching
             }
         }
 
-        public CalculatorResult GetResult(ResultSpec key)
+        public ProductionResult GetResult(WorkOrder key)
         {
             lock (this)
             {
@@ -31,7 +31,7 @@ namespace pwiz.Common.SystemUtil.Caching
             }
         }
 
-        public void Unlisten(ResultSpec key, CalculatedValueListener listener)
+        public void Unlisten(WorkOrder key, Customer listener)
         {
             if (key == null)
             {
@@ -43,7 +43,7 @@ namespace pwiz.Common.SystemUtil.Caching
             }
         }
 
-        public int GetProgressValue(ResultSpec key)
+        public int GetProgressValue(WorkOrder key)
         {
             lock (this)
             {
@@ -52,7 +52,7 @@ namespace pwiz.Common.SystemUtil.Caching
             }
         }
 
-        private Entry GetEntry(ResultSpec key)
+        private Entry GetEntry(WorkOrder key)
         {
             lock (this)
             {
@@ -65,7 +65,7 @@ namespace pwiz.Common.SystemUtil.Caching
             }
         }
 
-        private Entry GetOrCreateEntry(ResultSpec key)
+        private Entry GetOrCreateEntry(WorkOrder key)
         {
             lock (this)
             {
@@ -91,23 +91,23 @@ namespace pwiz.Common.SystemUtil.Caching
             }
         }
         
-        private class Entry : ICalculatedValueListener
+        private class Entry : ICustomer
         {
-            private HashSet<ResultSpec> _dependencies;
-            private Dictionary<ResultSpec, object> _dependencyResultValues = new Dictionary<ResultSpec, object>();
-            private List<ICalculatedValueListener> _listeners = new List<ICalculatedValueListener>();
+            private HashSet<WorkOrder> _dependencies;
+            private Dictionary<WorkOrder, object> _dependencyResultValues = new Dictionary<WorkOrder, object>();
+            private List<ICustomer> _listeners = new List<ICustomer>();
 
             private CancellationTokenSource _cancellationTokenSource;
-            public Entry(CalculatedValueCache cache, ResultSpec key)
+            public Entry(ProductionFacility cache, WorkOrder key)
             {
                 Cache = cache;
                 Key = key;
-                _dependencies = key.GetDependencies().ToHashSet();
+                _dependencies = key.GetInputs().ToHashSet();
             }
 
-            public CalculatedValueCache Cache { get; }
-            public ResultSpec Key { get; }
-            public void OnResultAvailable(ResultSpec key, CalculatorResult result)
+            public ProductionFacility Cache { get; }
+            public WorkOrder Key { get; }
+            public void OnProductAvailable(WorkOrder key, ProductionResult result)
             {
                 lock (this)
                 {
@@ -126,21 +126,24 @@ namespace pwiz.Common.SystemUtil.Caching
                 }
             }
 
-            public void AddListener(ICalculatedValueListener listener)
+            public void AddListener(ICustomer listener)
             {
-                if (_listeners.Contains(listener))
+                lock (Cache)
                 {
-                    throw new ArgumentException(@"Listener already added");
-                }
+                    if (_listeners.Contains(listener))
+                    {
+                        throw new ArgumentException(@"Listener already added");
+                    }
 
-                if (_listeners.Count == 0)
-                {
-                    BeforeFirstListenerAdded();
+                    if (_listeners.Count == 0)
+                    {
+                        BeforeFirstListenerAdded();
+                    }
+                    _listeners.Add(listener);
                 }
-                _listeners.Add(listener);
             }
 
-            public void RemoveListener(ICalculatedValueListener listener)
+            public void RemoveListener(ICustomer listener)
             {
                 lock (Cache)
                 {
@@ -181,9 +184,9 @@ namespace pwiz.Common.SystemUtil.Caching
                 }
             }
 
-            private void NotifyResultAvailable(CalculatorResult result)
+            private void NotifyResultAvailable(ProductionResult result)
             {
-                ICalculatedValueListener[] listeners;
+                ICustomer[] listeners;
                 lock (Cache)
                 {
                     Result = result;
@@ -193,7 +196,7 @@ namespace pwiz.Common.SystemUtil.Caching
 
                 foreach (var listener in listeners)
                 {
-                    listener.OnResultAvailable(Key, result);
+                    listener.OnProductAvailable(Key, result);
                 }
             }
 
@@ -205,11 +208,25 @@ namespace pwiz.Common.SystemUtil.Caching
                     {
                         return;
                     }
-
+                    
+                    foreach (var dependency in _dependencies.Except(_dependencyResultValues.Keys))
+                    {
+                        var result = Cache.GetResult(dependency);
+                        if (result != null)
+                        {
+                            if (result.Exception != null)
+                            {
+                                NotifyResultAvailable(result);
+                                return;
+                            }
+                            _dependencyResultValues.Add(dependency, result.Value);
+                        }
+                    }
                     if (_dependencies.Count > _dependencyResultValues.Count)
                     {
                         return;
                     }
+
                     _cancellationTokenSource = new CancellationTokenSource();
                     var progressCallback = new ProgressCallback(_cancellationTokenSource.Token);
                     progressCallback.ProgressChange += OnMyProgressChanged;
@@ -220,11 +237,11 @@ namespace pwiz.Common.SystemUtil.Caching
                             Cache.IncrementWaitingCount();
                             object value = Key.Calculator.ComputeResult(progressCallback, Key.Parameter,
                                 _dependencyResultValues);
-                            NotifyResultAvailable(CalculatorResult.Success(value));
+                            NotifyResultAvailable(ProductionResult.Success(value));
                         }
                         catch (Exception ex)
                         {
-                            NotifyResultAvailable(CalculatorResult.Error(ex));
+                            NotifyResultAvailable(ProductionResult.Error(ex));
                         }
                         finally
                         {
@@ -234,19 +251,23 @@ namespace pwiz.Common.SystemUtil.Caching
                 }
             }
 
-            public CalculatorResult Result { get; private set; }
+            public ProductionResult Result { get; private set; }
 
-            public bool IsWaiting()
+            public bool HasPendingNotifications
             {
-                lock (this)
+                get
                 {
-                    return Result == null && false != _cancellationTokenSource?.IsCancellationRequested;
+                    lock (Cache)
+                    {
+                        return _listeners.Any(listener => listener.HasPendingNotifications);
+                    }
+
                 }
             }
 
-            public void OnProgressChanged(ResultSpec key, int progress)
+            public void OnProductStatusChanged(WorkOrder key, int progress)
             {
-                ICalculatedValueListener[] listeners;
+                ICustomer[] listeners;
                 lock (Cache)
                 {
                     ProgressValue = progress;
@@ -255,13 +276,13 @@ namespace pwiz.Common.SystemUtil.Caching
 
                 foreach (var listener in listeners)
                 {
-                    listener.OnProgressChanged(key, progress);
+                    listener.OnProductStatusChanged(key, progress);
                 }
             }
 
             private void OnMyProgressChanged(int progress)
             {
-                OnProgressChanged(Key, progress);
+                OnProductStatusChanged(Key, progress);
             }
             
             public int ProgressValue { get; private set; }
@@ -269,7 +290,10 @@ namespace pwiz.Common.SystemUtil.Caching
 
         public bool IsWaiting()
         {
-            return _waitingCount != 0;
+            lock (this)
+            {
+                return _waitingCount != 0 || _entries.Values.Any(entry=>entry.HasPendingNotifications);
+            }
         }
 
         private int _waitingCount;

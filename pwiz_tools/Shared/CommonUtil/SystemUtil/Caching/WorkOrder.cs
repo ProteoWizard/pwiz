@@ -3,10 +3,10 @@ using System.Collections.Generic;
 
 namespace pwiz.Common.SystemUtil.Caching
 {
-    public class ResultSpec
+    public class WorkOrder
     {
         private int _hashCode;
-        public ResultSpec(ResultFactory calculator, object parameter)
+        public WorkOrder(Producer calculator, object parameter)
         {
             Calculator = calculator;
             Parameter = parameter;
@@ -16,14 +16,14 @@ namespace pwiz.Common.SystemUtil.Caching
             }
         }
 
-        public ResultFactory Calculator { get; }
+        public Producer Calculator { get; }
         public object Parameter { get; private set; }
         public Type ValueType
         {
             get { return Calculator.ValueType; }
         }
 
-        protected bool Equals(ResultSpec other)
+        protected bool Equals(WorkOrder other)
         {
             return Equals(Calculator, other.Calculator) && Equals(Parameter, other.Parameter);
         }
@@ -33,7 +33,7 @@ namespace pwiz.Common.SystemUtil.Caching
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
-            return Equals((ResultSpec)obj);
+            return Equals((WorkOrder)obj);
         }
 
         public override int GetHashCode()
@@ -41,9 +41,9 @@ namespace pwiz.Common.SystemUtil.Caching
             return _hashCode;
         }
 
-        public IEnumerable<ResultSpec> GetDependencies()
+        public IEnumerable<WorkOrder> GetInputs()
         {
-            return Calculator.GetDependencies(Parameter);
+            return Calculator.GetInputs(Parameter);
         }
     }
 }

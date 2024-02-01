@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -59,6 +60,7 @@ namespace pwiz.Skyline.Controls
         private NormalizeOption _normalizeOption;
         private StatementCompletionTextBox _editTextBox;
         private bool _inhibitAfterSelect;
+        private Customer<NormalizedValueCalculator.Params, NormalizedValueCalculator> _customer;
 
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
 
@@ -115,6 +117,13 @@ namespace pwiz.Skyline.Controls
             keep,
             no_peak,
             peak_blank            
+        }
+
+        public SequenceTree()
+        {
+            _customer = Customer.OfProducer(this, NormalizedValueCalculator.PRODUCER);
+
+            _customer.ProductAvailable += UpdateNormalizedValueCalculator;
         }
 
         public void InitializeTree(IDocumentUIContainer documentUIContainer)
@@ -186,7 +195,7 @@ namespace pwiz.Skyline.Controls
             OnTextZoomChanged();
             OnDocumentChanged(this, new DocumentChangedEventArgs(null));
         }
-
+        
         protected override void  Dispose(bool disposing)
         {
             if (_pickTimer != null)
@@ -271,6 +280,16 @@ namespace pwiz.Skyline.Controls
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SrmDocument Document { get; private set; }
+        public NormalizedValueCalculator NormalizedValueCalculator { get; private set; }
+
+        private void UpdateNormalizedValueCalculator()
+        {
+            if (_customer.TryGetCurrentValue(out var normalizedValueCalcultor))
+            {
+                NormalizedValueCalculator = normalizedValueCalcultor;
+            }
+        }
+
         private int _updateLockCountDoc;
         private SrmDocument _updateDocPrevious;
 
@@ -1337,7 +1356,7 @@ namespace pwiz.Skyline.Controls
 
         public DisplaySettings GetDisplaySettings(PeptideDocNode nodePep)
         {
-            return new DisplaySettings(DocumentContainer.NormalizedValueCalculator, nodePep, ShowReplicate == ReplicateDisplay.best, ResultsIndex, NormalizeOption);
+            return new DisplaySettings(NormalizedValueCalculator, nodePep, ShowReplicate == ReplicateDisplay.best, ResultsIndex, NormalizeOption);
         }
 
         public Rectangle RectToScreen(Rectangle r)

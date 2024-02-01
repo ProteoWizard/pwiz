@@ -152,14 +152,14 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         private int _labelHeight;
         private ImmutableList<float> _dotpData;
-        private readonly CalculatedValueListener<ReferenceValue<SrmDocument>, NormalizeOption, NormalizedValueCalculator> _calcListener;
+        private readonly Customer<NormalizedValueCalculator.Params, NormalizedValueCalculator> _calcListener;
         public AreaReplicateGraphPane(GraphSummary graphSummary, PaneKey paneKey)
             : base(graphSummary)
         {
             PaneKey = paneKey;
             ToolTip = new ToolTipImplementation(this);
-            _calcListener = CalculatedValueListener.FromFactory(graphSummary, NormalizedValueCalculator.CALCULATOR);
-            _calcListener.ResultsAvailable += OnResultsAvailable;
+            _calcListener = Customer.OfProducer(graphSummary, NormalizedValueCalculator.PRODUCER);
+            _calcListener.ProductAvailable += OnProductAvailable;
         }
 
         protected override void InitFromData(GraphData graphData)
@@ -445,7 +445,7 @@ namespace pwiz.Skyline.Controls.Graphs
             NormalizedValueCalculator normalizedValueCalculator = null;
             try
             {
-                if (!_calcListener.TryGetValue(document, normalizeOption, out normalizedValueCalculator))
+                if (!_calcListener.TryGetValue(new NormalizedValueCalculator.Params(document, normalizeOption), out normalizedValueCalculator))
                 {
                     return;
                 }
@@ -1592,7 +1592,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void OnResultsAvailable()
+        private void OnProductAvailable()
         {
             UpdateGraph(false);
         }

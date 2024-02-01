@@ -19,17 +19,21 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results
 {
     public class NormalizedValueCalculator
     {
+        public static readonly NormalizedValueCalculator DEFAULT =
+            new NormalizedValueCalculator(new SrmDocument(SrmSettingsList.GetDefault()));
         private readonly Lazy<NormalizationData> _normalizationData;
         private readonly Dictionary<ReferenceValue<ChromFileInfoId>, FileInfo> _fileInfos;
 
@@ -527,31 +531,68 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public static readonly
-            ResultFactory<Tuple<ReferenceValue<SrmDocument>, NormalizeOption>, NormalizedValueCalculator>
-            CALCULATOR = new Calculator();
+        public static readonly Producer<Params,
+            NormalizedValueCalculator> PRODUCER = new NormalizedValueCalculatorProducer();
+
+        public static WorkOrder MakeWorkOrder(SrmDocument document, NormalizeOption normalizeOption)
+        {
+            return new WorkOrder(PRODUCER, new Params(document, normalizeOption));
+        }
             
-        private class Calculator : ResultFactory<Tuple<ReferenceValue<SrmDocument>, NormalizeOption>,
+        private class NormalizedValueCalculatorProducer : Producer<Params,
             NormalizedValueCalculator>
         {
-            public override NormalizedValueCalculator ComputeResult(ProgressCallback progressCallback, Tuple<ReferenceValue<SrmDocument>, NormalizeOption> parameter, IDictionary<ResultSpec, object> dependencies)
+            public override NormalizedValueCalculator ProduceResult(ProgressCallback progressCallback, Params parameter, IDictionary<WorkOrder, object> dependencies)
             {
-                var document = parameter.Item1;
+                var document = parameter.Document;
                 return new NormalizedValueCalculator(document,
-                    NormalizationData.CALCULATOR.GetResult(dependencies, document));
+                    NormalizationData.PRODUCER.GetResult(dependencies, document));
             }
 
-            public override IEnumerable<ResultSpec> GetDependencies(Tuple<ReferenceValue<SrmDocument>, NormalizeOption> parameter)
+            public override IEnumerable<WorkOrder> GetInputs(Params parameter)
             {
-                var normalizeOption = parameter.Item2;
-                SrmDocument document = parameter.Item1;
+                var normalizeOption = parameter.NormalizeOption;
+                SrmDocument document = parameter.Document;
                 
                 if (Equals(NormalizationMethod.EQUALIZE_MEDIANS, normalizeOption?.NormalizationMethod) || Equals(NormalizationMethod.EQUALIZE_MEDIANS, document.Settings.PeptideSettings.Quantification.NormalizationMethod))
                 {
-                    return ImmutableList.Singleton(NormalizationData.CALCULATOR.MakeResultSpec(parameter.Item1));
+                    return ImmutableList.Singleton(NormalizationData.PRODUCER.MakeWorkOrder(document));
                 }
 
-                return Array.Empty<ResultSpec>();
+                return Array.Empty<WorkOrder>();
+            }
+        }
+
+        public class Params
+        {
+            public Params(SrmDocument document, NormalizeOption normalizeOption)
+            {
+                Document = document;
+                NormalizeOption = normalizeOption;
+            }
+            
+            public SrmDocument Document { get; }
+            public NormalizeOption NormalizeOption { get; }
+
+            protected bool Equals(Params other)
+            {
+                return ReferenceEquals(Document, other.Document) && NormalizeOption.Equals(other.NormalizeOption);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((Params)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (RuntimeHelpers.GetHashCode(Document) * 397) ^ NormalizeOption.GetHashCode();
+                }
             }
         }
     }

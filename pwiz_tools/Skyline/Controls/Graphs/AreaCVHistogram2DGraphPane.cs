@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -31,9 +32,9 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public class AreaCVHistogram2DGraphPane : SummaryGraphPane, IDisposable, IAreaCVHistogramInfo
+    public class AreaCVHistogram2DGraphPane : SummaryGraphPane, IAreaCVHistogramInfo
     {
-        private readonly AreaCVGraphData.AreaCVGraphDataCache _cache;
+        private readonly Customer<AreaCVGraphData.ProductionParams, AreaCVGraphData> _customer;
         private AreaCVGraphData _areaCVGraphData;
         private SrmDocument _document;
 
@@ -48,24 +49,14 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             _areaCVGraphData = null;
             _lineItems = new LineItem[2];
-            _cache = new AreaCVGraphData.AreaCVGraphDataCache();
+            _customer = Customer.OfProducer(graphSummary, AreaCVGraphData.PRODUCER);
+            _customer.ProductAvailable += OnProductAvailable;
         }
 
-        public AreaCVGraphData.AreaCVGraphDataCache Cache { get { return _cache; } }
 
         public int Items { get; private set; }
 
         public override bool HasToolbar { get { return true; } }
-
-        public override void OnClose(EventArgs e)
-        {
-            Dispose();
-        }
-
-        public void Dispose()
-        {
-            _cache.Dispose();
-        }
 
         public override bool HandleMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
@@ -122,9 +113,9 @@ namespace pwiz.Skyline.Controls.Graphs
             base.Draw(g);
         }
 
-        private void DataCallback(AreaCVGraphData data)
+        private void OnProductAvailable()
         {
-            GraphSummary.GraphControl.BeginInvoke((Action)(() => { GraphSummary.UpdateUI(); }));
+            GraphSummary.UpdateUI();
         }
 
         public override void UpdateGraph(bool selectionChanged)
@@ -143,7 +134,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
             CurveList.Clear();
 
-            var gotData = _cache.TryGet(_document, GraphSummary.DocumentUIContainer.NormalizedValueCalculator, settings, DataCallback, out _areaCVGraphData);
+            var gotData =
+                _customer.TryGetValue(
+                    new AreaCVGraphData.ProductionParams(GraphSummary.DocumentUIContainer.DocumentUI, settings),
+                    out _areaCVGraphData);
 
             if (!gotData)
             {

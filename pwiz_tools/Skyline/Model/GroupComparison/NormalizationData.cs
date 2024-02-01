@@ -280,8 +280,8 @@ namespace pwiz.Skyline.Model.GroupComparison
             return new Lazy<NormalizationData>(()=> GetNormalizationData(CancellationToken.None, document, false, null));
         }
 
-        public static readonly ResultFactory<ReferenceValue<SrmDocument>, NormalizationData> CALCULATOR =
-            ResultFactory.FromFunction<ReferenceValue<SrmDocument>, NormalizationData>((progressCallback, document) =>
+        public static readonly Producer<ReferenceValue<SrmDocument>, NormalizationData> PRODUCER =
+            Producer.FromFunction<ReferenceValue<SrmDocument>, NormalizationData>((progressCallback, document) =>
                 GetNormalizationData(progressCallback.CancellationToken, document, false, null));
         /// <summary>
         /// For the MS2 transitions, returns all the Area values for each of the Transitions for each of the replicates.

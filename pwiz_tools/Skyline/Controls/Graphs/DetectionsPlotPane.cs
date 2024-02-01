@@ -20,6 +20,7 @@
 using System;
 using System.Drawing;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil.Caching;
@@ -31,7 +32,7 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public abstract class DetectionsPlotPane : SummaryReplicateGraphPane
     {
-        protected CalculatedValueListener<ReferenceValue<SrmDocument>, float, DetectionPlotData> _calculatedValueListener;
+        protected Customer<DetectionPlotData.WorkOrderParam, DetectionPlotData> _customer;
 
         protected DetectionPlotData _detectionData = DetectionPlotData.INVALID;
         public int MaxRepCount { get; private set; }
@@ -60,17 +61,17 @@ namespace pwiz.Skyline.Controls.Graphs
             XAxis.Scale.MinAuto = XAxis.Scale.MaxAuto = YAxis.Scale.MinAuto = YAxis.Scale.MaxAuto = false;
             ToolTip = new ToolTipImplementation(this);
 
-            _calculatedValueListener = CalculatedValueListener.FromFactory(graphSummary, DetectionPlotData.FACTORY);
-            _calculatedValueListener.ProgressChange += UpdateProgressHandler;
-            _calculatedValueListener.ResultsAvailable += OnResultsAvailable;
+            _customer = Customer.OfProducer(graphSummary, DetectionPlotData.PRODUCER);
+            _customer.ProgressChange += UpdateProgressHandler;
+            _customer.ProductAvailable += OnResultsAvailable;
         }
 
         public void UpdateProgressHandler()
         {
-            if (_calculatedValueListener.IsProcessing())
+            if (_customer.IsProcessing())
             {
                 ProgressBar ??= new PaneProgressBar(this);
-                ProgressBar?.UpdateProgress(_calculatedValueListener.GetProgressValue());
+                ProgressBar?.UpdateProgress(_customer.GetProgressValue());
             }
             else
             {
@@ -81,15 +82,15 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected virtual void OnResultsAvailable()
         {
-            var error = _calculatedValueListener.GetError();
+            var error = _customer.GetError();
             if (error != null)
             {
                 AddLabels();
             }
-            else if (_calculatedValueListener.IsProcessing())
+            else if (_customer.IsProcessing())
             {
                 ProgressBar = ProgressBar ?? new PaneProgressBar(this);
-                ProgressBar.UpdateProgressUI(_calculatedValueListener.GetProgressValue());
+                ProgressBar.UpdateProgressUI(_customer.GetProgressValue());
             }
             else
             {
@@ -107,7 +108,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void OnClose(EventArgs e)
         {
-            _calculatedValueListener.Dispose();
+            _customer.Dispose();
         }
 
         protected abstract void HandleMouseClick(int index);
@@ -162,14 +163,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
             GraphObjList.Clear();
             string message = string.Empty;
-            Exception error = _calculatedValueListener.GetError();
+            Exception error = _customer.GetError();
 
             if (error != null)
             {
                 Title.Text = GraphsResources.DetectionPlotPane_EmptyPlotError_Label;
                 message = error.Message;
             }
-            else if (_calculatedValueListener.IsProcessing())
+            else if (_customer.IsProcessing())
             {
                 Title.Text = GraphsResources.DetectionPlotPane_WaitingForData_Label;
             }
