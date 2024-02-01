@@ -46,4 +46,10 @@ namespace pwiz.Common.SystemUtil.Caching
             return Producer.GetInputs(Parameter);
         }
     }
+    public interface IProductionListener
+    {
+        public void OnProductAvailable(WorkOrder key, ProductionResult result);
+        public void OnProductStatusChanged(WorkOrder key, int progress);
+        public bool HasPendingNotifications { get; }
+    }
 }

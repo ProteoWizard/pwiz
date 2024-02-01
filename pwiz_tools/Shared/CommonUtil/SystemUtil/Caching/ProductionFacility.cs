@@ -10,7 +10,7 @@ namespace pwiz.Common.SystemUtil.Caching
         public static readonly ProductionFacility DEFAULT = new ProductionFacility();
         private Dictionary<WorkOrder, Entry> _entries = new Dictionary<WorkOrder, Entry>();
 
-        public void Listen(WorkOrder key, Customer listener)
+        public void Listen(WorkOrder key, IProductionListener listener)
         {
             if (key == null)
             {
@@ -31,7 +31,7 @@ namespace pwiz.Common.SystemUtil.Caching
             }
         }
 
-        public void Unlisten(WorkOrder key, Customer listener)
+        public void Unlisten(WorkOrder key, IProductionListener listener)
         {
             if (key == null)
             {
@@ -91,11 +91,11 @@ namespace pwiz.Common.SystemUtil.Caching
             }
         }
         
-        private class Entry : ICustomer
+        private class Entry : IProductionListener
         {
             private HashSet<WorkOrder> _dependencies;
             private Dictionary<WorkOrder, object> _dependencyResultValues = new Dictionary<WorkOrder, object>();
-            private List<ICustomer> _listeners = new List<ICustomer>();
+            private List<IProductionListener> _listeners = new List<IProductionListener>();
 
             private CancellationTokenSource _cancellationTokenSource;
             public Entry(ProductionFacility cache, WorkOrder key)
@@ -126,7 +126,7 @@ namespace pwiz.Common.SystemUtil.Caching
                 }
             }
 
-            public void AddListener(ICustomer listener)
+            public void AddListener(IProductionListener listener)
             {
                 lock (Cache)
                 {
@@ -143,7 +143,7 @@ namespace pwiz.Common.SystemUtil.Caching
                 }
             }
 
-            public void RemoveListener(ICustomer listener)
+            public void RemoveListener(IProductionListener listener)
             {
                 lock (Cache)
                 {
@@ -186,7 +186,7 @@ namespace pwiz.Common.SystemUtil.Caching
 
             private void NotifyResultAvailable(ProductionResult result)
             {
-                ICustomer[] listeners;
+                IProductionListener[] listeners;
                 lock (Cache)
                 {
                     Result = result;
@@ -235,7 +235,7 @@ namespace pwiz.Common.SystemUtil.Caching
                         try
                         {
                             Cache.IncrementWaitingCount();
-                            object value = Key.Producer.ComputeResult(progressCallback, Key.Parameter,
+                            object value = Key.Producer.ProduceResult(progressCallback, Key.Parameter,
                                 _dependencyResultValues);
                             NotifyResultAvailable(ProductionResult.Success(value));
                         }
@@ -267,7 +267,7 @@ namespace pwiz.Common.SystemUtil.Caching
 
             public void OnProductStatusChanged(WorkOrder key, int progress)
             {
-                ICustomer[] listeners;
+                IProductionListener[] listeners;
                 lock (Cache)
                 {
                     ProgressValue = progress;

@@ -6,7 +6,11 @@ namespace pwiz.Common.SystemUtil.Caching
 {
     public interface IProducer
     {
-        object ComputeResult(ProductionMonitor productionMonitor, object parameter, IDictionary<WorkOrder, object> inputs);
+        object ProduceResult(ProductionMonitor productionMonitor, object parameter, IDictionary<WorkOrder, object> inputs);
+        /// <summary>
+        /// Returns the list of other things that are needed to produce the products.
+        /// These are intermediate results which might also be needed by other producers.
+        /// </summary>
         IEnumerable<WorkOrder> GetInputs(object parameter);
     }
 
@@ -28,7 +32,7 @@ namespace pwiz.Common.SystemUtil.Caching
             ParameterType = parameterType;
             ValueType = valueType;
         }
-        public abstract object ComputeResult(ProductionMonitor productionMonitor, object parameter, IDictionary<WorkOrder, object> dependencies);
+        public abstract object ProduceResult(ProductionMonitor productionMonitor, object parameter, IDictionary<WorkOrder, object> dependencies);
         public Type ParameterType { get; }
         public Type ValueType { get; }
         public virtual IEnumerable<WorkOrder> GetInputs(object parameter)
@@ -49,7 +53,7 @@ namespace pwiz.Common.SystemUtil.Caching
         {
         }
 
-        public sealed override object ComputeResult(ProductionMonitor productionMonitor, object parameter, IDictionary<WorkOrder, object> inputs)
+        public sealed override object ProduceResult(ProductionMonitor productionMonitor, object parameter, IDictionary<WorkOrder, object> inputs)
         {
             return ProduceResult(productionMonitor, (TParameter)parameter, inputs);
         }

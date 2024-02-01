@@ -4,24 +4,18 @@ using System.Windows.Forms;
 
 namespace pwiz.Common.SystemUtil.Caching
 {
-    public interface ICustomer
-    {
-        public void OnProductAvailable(WorkOrder key, ProductionResult result);
-        public void OnProductStatusChanged(WorkOrder key, int progress);
-        public bool HasPendingNotifications { get; }
-    }
-    
-    
-    public class Customer : ICustomer, IDisposable
+    public class Customer : IDisposable
     {
         private bool _notificationPending;
         private WorkOrder _workOrder;
+        private readonly IProductionListener _listener;
         public Customer(ProductionFacility cache, Control ownerControl, Producer factory)
         {
             Cache = cache;
             OwnerControl = ownerControl;
             Producer = factory;
             OwnerControl.HandleDestroyed += OwnerControlHandleDestroyed;
+            _listener = new Listener(this);
         }
 
         public ProductionFacility Cache
@@ -33,7 +27,7 @@ namespace pwiz.Common.SystemUtil.Caching
         
         public Producer Producer { get; }
 
-        void ICustomer.OnProductAvailable(WorkOrder key, ProductionResult result)
+        private void OnProductAvailable()
         {
             var resultsAvailable = ProductAvailable;
             if (resultsAvailable != null)
@@ -50,7 +44,7 @@ namespace pwiz.Common.SystemUtil.Caching
             }
         }
 
-        void ICustomer.OnProductStatusChanged(WorkOrder key, int progress)
+        private void OnProductStatusChanged()
         {
             lock (this)
             {
@@ -92,10 +86,10 @@ namespace pwiz.Common.SystemUtil.Caching
                 var newResultSpec = new WorkOrder(Producer, argument);
                 if (!Equals(newResultSpec, _workOrder))
                 {
-                    Cache.Listen(newResultSpec, this);
+                    Cache.Listen(newResultSpec, _listener);
                     if (_workOrder != null)
                     {
-                        Cache.Unlisten(_workOrder, this);
+                        Cache.Unlisten(_workOrder, _listener);
                     }
 
                     _workOrder = newResultSpec;
@@ -116,7 +110,7 @@ namespace pwiz.Common.SystemUtil.Caching
         {
             lock (this)
             {
-                Cache.Unlisten(_workOrder, this);
+                Cache.Unlisten(_workOrder, _listener);
                 _workOrder = null;
                 if (OwnerControl != null)
                 {
@@ -138,15 +132,37 @@ namespace pwiz.Common.SystemUtil.Caching
             return resultSpec != null && null == Cache.GetResult(resultSpec);
         }
 
-        public bool HasPendingNotifications
-        {
-            get { return OwnerControl != null && _notificationPending; }
-        }
-
         public WorkOrder CurrentWorkOrder
         {
             get { return _workOrder; }
         }
+
+        private class Listener : IProductionListener
+        {
+            public Listener(Customer customer)
+            {
+                Customer = customer;
+            }
+            public Customer Customer { get; }
+            public void OnProductAvailable(WorkOrder key, ProductionResult result)
+            {
+                Customer.OnProductAvailable();
+            }
+
+            public void OnProductStatusChanged(WorkOrder key, int progress)
+            {
+                Customer.OnProductStatusChanged();
+            }
+
+            public bool HasPendingNotifications
+            {
+                get
+                {
+                    return Customer.OwnerControl != null && Customer._notificationPending;
+                }
+            }
+        }
+
     }
 
     public class Customer<TParam, TResult> : Customer
