@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public class AreaCVHistogramGraphPane : SummaryGraphPane, IAreaCVHistogramInfo
     {
-        private readonly Customer<AreaCVGraphData.ProductionParams, AreaCVGraphData> _customer;
+        private readonly Customer<AreaCVGraphData.Parameters, AreaCVGraphData> _customer;
         private AreaCVGraphData _areaCVGraphData = AreaCVGraphData.INVALID;
         private CVData _selectedData;
         private SrmDocument _document;
@@ -50,9 +50,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public AreaCVHistogramGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
-            _stickItems = new List<StickItem>(2);
-            _customer = Customer.OfProducer(graphSummary, AreaCVGraphData.PRODUCER);
-            _customer.ProductAvailable += () => graphSummary.UpdateUI();
+            _customer = AreaCVGraphData.PRODUCER.RegisterCustomer(graphSummary, () => graphSummary.UpdateUI());
         }
 
         public int Items { get { return GetTotalBars(); } }
@@ -131,7 +129,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _stickItems.Clear();
 
             var gotData =
-                _customer.TryGetValue(new AreaCVGraphData.ProductionParams(GraphSummary.DocumentUIContainer.DocumentUI, settings),
+                _customer.TryGetValue(new AreaCVGraphData.Parameters(GraphSummary.DocumentUIContainer.DocumentUI, settings),
                     out _areaCVGraphData);
 
             if (!gotData || !_areaCVGraphData.IsValid)

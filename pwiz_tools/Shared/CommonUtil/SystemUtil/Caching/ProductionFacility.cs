@@ -7,7 +7,7 @@ namespace pwiz.Common.SystemUtil.Caching
 {
     public class ProductionFacility
     {
-        public static readonly ProductionFacility INSTANCE = new ProductionFacility();
+        public static readonly ProductionFacility DEFAULT = new ProductionFacility();
         private Dictionary<WorkOrder, Entry> _entries = new Dictionary<WorkOrder, Entry>();
 
         public void Listen(WorkOrder key, Customer listener)
@@ -228,14 +228,14 @@ namespace pwiz.Common.SystemUtil.Caching
                     }
 
                     _cancellationTokenSource = new CancellationTokenSource();
-                    var progressCallback = new ProgressCallback(_cancellationTokenSource.Token);
+                    var progressCallback = new ProductionMonitor(_cancellationTokenSource.Token);
                     progressCallback.ProgressChange += OnMyProgressChanged;
                     CommonActionUtil.RunAsync(() =>
                     {
                         try
                         {
                             Cache.IncrementWaitingCount();
-                            object value = Key.Calculator.ComputeResult(progressCallback, Key.Parameter,
+                            object value = Key.Producer.ComputeResult(progressCallback, Key.Parameter,
                                 _dependencyResultValues);
                             NotifyResultAvailable(ProductionResult.Success(value));
                         }

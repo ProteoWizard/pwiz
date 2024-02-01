@@ -229,9 +229,9 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public class ProductionParams
+        public class Parameters
         {
-            public ProductionParams(SrmDocument document, AreaCVGraphSettings settings)
+            public Parameters(SrmDocument document, AreaCVGraphSettings settings)
             {
                 Document = document;
                 Settings = settings;
@@ -239,7 +239,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public SrmDocument Document { get; }
             public AreaCVGraphSettings Settings { get; }
 
-            protected bool Equals(ProductionParams other)
+            protected bool Equals(Parameters other)
             {
                 return ReferenceEquals(Document, other.Document) && Equals(Settings, other.Settings);
             }
@@ -249,7 +249,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
                 if (obj.GetType() != this.GetType()) return false;
-                return Equals((ProductionParams)obj);
+                return Equals((Parameters)obj);
             }
 
             public override int GetHashCode()
@@ -261,17 +261,17 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public static readonly Producer<ProductionParams, AreaCVGraphData> PRODUCER = new DataProducer();
+        public static readonly Producer<Parameters, AreaCVGraphData> PRODUCER = new DataProducer();
 
-        private class DataProducer : Producer<ProductionParams, AreaCVGraphData>
+        private class DataProducer : Producer<Parameters, AreaCVGraphData>
         {
-            public override AreaCVGraphData ProduceResult(ProgressCallback progressCallback, ProductionParams parameter, IDictionary<WorkOrder, object> inputs)
+            public override AreaCVGraphData ProduceResult(ProductionMonitor productionMonitor, Parameters parameter, IDictionary<WorkOrder, object> inputs)
             {
                 var normalizedValueCalculator = (NormalizedValueCalculator)inputs.Values.FirstOrDefault();
-                return new AreaCVGraphData(normalizedValueCalculator, parameter.Settings, progressCallback.CancellationToken);
+                return new AreaCVGraphData(normalizedValueCalculator, parameter.Settings, productionMonitor.CancellationToken);
             }
 
-            public override IEnumerable<WorkOrder> GetInputs(ProductionParams parameter)
+            public override IEnumerable<WorkOrder> GetInputs(Parameters parameter)
             {
                 yield return NormalizedValueCalculator.MakeWorkOrder(parameter.Document, parameter.Settings.NormalizeOption);
             }

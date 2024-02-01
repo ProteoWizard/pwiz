@@ -542,7 +542,7 @@ namespace pwiz.Skyline.Model.Results
         private class NormalizedValueCalculatorProducer : Producer<Params,
             NormalizedValueCalculator>
         {
-            public override NormalizedValueCalculator ProduceResult(ProgressCallback progressCallback, Params parameter, IDictionary<WorkOrder, object> dependencies)
+            public override NormalizedValueCalculator ProduceResult(ProductionMonitor productionMonitor, Params parameter, IDictionary<WorkOrder, object> dependencies)
             {
                 var document = parameter.Document;
                 return new NormalizedValueCalculator(document,

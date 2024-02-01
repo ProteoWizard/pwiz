@@ -275,10 +275,10 @@ namespace pwiz.Skyline.Controls.Graphs
             
         private class Factory : Producer<WorkOrderParam, DetectionPlotData>
         {
-            public override DetectionPlotData ProduceResult(ProgressCallback progressCallback, WorkOrderParam parameter, IDictionary<WorkOrder, object> dependencies)
+            public override DetectionPlotData ProduceResult(ProductionMonitor productionMonitor, WorkOrderParam parameter, IDictionary<WorkOrder, object> dependencies)
             {
                 var data = new DetectionPlotData(parameter.Document, parameter.QValueCutoff);
-                string message = data.Init(progressCallback.CancellationToken, progressCallback.SetProgress);
+                string message = data.Init(productionMonitor.CancellationToken, productionMonitor.SetProgress);
                 if (!data.IsValid)
                 {
                     throw new Exception(message);

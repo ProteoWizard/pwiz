@@ -15,20 +15,12 @@ namespace pwiz.Common.SystemUtil.Caching
     public class Customer : ICustomer, IDisposable
     {
         private bool _notificationPending;
-        public static Customer<TParam, TResult> OfProducer<TParam, TResult>(
-            Control owner, Producer<TParam, TResult> factory)
-        {
-            return new Customer<TParam, TResult>(ProductionFacility.INSTANCE, owner,
-                factory);
-        }
-        
-        
-        protected WorkOrder _workOrder;
+        private WorkOrder _workOrder;
         public Customer(ProductionFacility cache, Control ownerControl, Producer factory)
         {
             Cache = cache;
             OwnerControl = ownerControl;
-            Factory = factory;
+            Producer = factory;
             OwnerControl.HandleDestroyed += OwnerControlHandleDestroyed;
         }
 
@@ -39,9 +31,9 @@ namespace pwiz.Common.SystemUtil.Caching
         
         public Control OwnerControl { get; private set; }
         
-        public Producer Factory { get; }
+        public Producer Producer { get; }
 
-        public void OnProductAvailable(WorkOrder key, ProductionResult result)
+        void ICustomer.OnProductAvailable(WorkOrder key, ProductionResult result)
         {
             var resultsAvailable = ProductAvailable;
             if (resultsAvailable != null)
@@ -58,7 +50,7 @@ namespace pwiz.Common.SystemUtil.Caching
             }
         }
 
-        public void OnProductStatusChanged(WorkOrder key, int progress)
+        void ICustomer.OnProductStatusChanged(WorkOrder key, int progress)
         {
             lock (this)
             {
@@ -97,7 +89,7 @@ namespace pwiz.Common.SystemUtil.Caching
         {
             lock (this)
             {
-                var newResultSpec = new WorkOrder(Factory, argument);
+                var newResultSpec = new WorkOrder(Producer, argument);
                 if (!Equals(newResultSpec, _workOrder))
                 {
                     Cache.Listen(newResultSpec, this);
@@ -128,7 +120,7 @@ namespace pwiz.Common.SystemUtil.Caching
                 _workOrder = null;
                 if (OwnerControl != null)
                 {
-                    Trace.TraceInformation("CalculatedValueListener destroyed: {0}", Factory.ValueType);
+                    Trace.TraceInformation("CalculatedValueListener destroyed: {0}", Producer.ValueType);
                     OwnerControl.HandleDestroyed -= OwnerControlHandleDestroyed;
                     OwnerControl = null;
                 }
@@ -149,6 +141,11 @@ namespace pwiz.Common.SystemUtil.Caching
         public bool HasPendingNotifications
         {
             get { return OwnerControl != null && _notificationPending; }
+        }
+
+        public WorkOrder CurrentWorkOrder
+        {
+            get { return _workOrder; }
         }
     }
 
@@ -174,7 +171,7 @@ namespace pwiz.Common.SystemUtil.Caching
 
         public bool TryGetCurrentValue(out TResult resultValue)
         {
-            if (_workOrder == null || !base.TryGetValue(_workOrder.Parameter, out var resultObject))
+            if (CurrentWorkOrder == null || !base.TryGetValue(CurrentWorkOrder.Parameter, out var resultObject))
             {
                 resultValue = default;
                 return false;

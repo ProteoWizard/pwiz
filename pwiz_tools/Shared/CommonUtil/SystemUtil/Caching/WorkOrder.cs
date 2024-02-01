@@ -6,26 +6,26 @@ namespace pwiz.Common.SystemUtil.Caching
     public class WorkOrder
     {
         private int _hashCode;
-        public WorkOrder(Producer calculator, object parameter)
+        public WorkOrder(Producer producer, object parameter)
         {
-            Calculator = calculator;
+            Producer = producer;
             Parameter = parameter;
             unchecked
             {
-                _hashCode = Calculator.GetHashCode() * 397 ^ ValueTuple.Create(Parameter).GetHashCode();
+                _hashCode = Producer.GetHashCode() * 397 ^ ValueTuple.Create(Parameter).GetHashCode();
             }
         }
 
-        public Producer Calculator { get; }
+        public Producer Producer { get; }
         public object Parameter { get; private set; }
         public Type ValueType
         {
-            get { return Calculator.ValueType; }
+            get { return Producer.ValueType; }
         }
 
         protected bool Equals(WorkOrder other)
         {
-            return Equals(Calculator, other.Calculator) && Equals(Parameter, other.Parameter);
+            return Equals(Producer, other.Producer) && Equals(Parameter, other.Parameter);
         }
 
         public override bool Equals(object obj)
@@ -43,7 +43,7 @@ namespace pwiz.Common.SystemUtil.Caching
 
         public IEnumerable<WorkOrder> GetInputs()
         {
-            return Calculator.GetInputs(Parameter);
+            return Producer.GetInputs(Parameter);
         }
     }
 }

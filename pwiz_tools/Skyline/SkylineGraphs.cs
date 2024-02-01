@@ -787,7 +787,7 @@ namespace pwiz.Skyline
                     throw new InvalidOperationException(
                         SkylineResources.SkylineWindow_IsGraphUpdatePending_Must_be_called_from_event_thread);
                 }
-                return _timerGraphs.Enabled || (_graphSpectrum != null && _graphSpectrum.IsGraphUpdatePending) || ProductionFacility.INSTANCE.IsWaiting();
+                return _timerGraphs.Enabled || (_graphSpectrum != null && _graphSpectrum.IsGraphUpdatePending) || ProductionFacility.DEFAULT.IsWaiting();
             }
         }
 

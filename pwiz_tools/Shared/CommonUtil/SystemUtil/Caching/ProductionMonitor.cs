@@ -3,9 +3,9 @@ using System.Threading;
 
 namespace pwiz.Common.SystemUtil.Caching
 {
-    public class ProgressCallback
+    public class ProductionMonitor
     {
-        public ProgressCallback(CancellationToken cancellationToken)
+        public ProductionMonitor(CancellationToken cancellationToken)
         {
             CancellationToken = cancellationToken;
         }

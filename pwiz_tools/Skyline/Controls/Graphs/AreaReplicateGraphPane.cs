@@ -158,8 +158,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             PaneKey = paneKey;
             ToolTip = new ToolTipImplementation(this);
-            _calcListener = Customer.OfProducer(graphSummary, NormalizedValueCalculator.PRODUCER);
-            _calcListener.ProductAvailable += OnProductAvailable;
+            _calcListener = NormalizedValueCalculator.PRODUCER.RegisterCustomer(graphSummary, OnProductAvailable);
         }
 
         protected override void InitFromData(GraphData graphData)

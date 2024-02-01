@@ -61,9 +61,8 @@ namespace pwiz.Skyline.Controls.Graphs
             XAxis.Scale.MinAuto = XAxis.Scale.MaxAuto = YAxis.Scale.MinAuto = YAxis.Scale.MaxAuto = false;
             ToolTip = new ToolTipImplementation(this);
 
-            _customer = Customer.OfProducer(graphSummary, DetectionPlotData.PRODUCER);
+            _customer = DetectionPlotData.PRODUCER.RegisterCustomer(graphSummary, OnResultsAvailable);
             _customer.ProgressChange += UpdateProgressHandler;
-            _customer.ProductAvailable += OnResultsAvailable;
         }
 
         public void UpdateProgressHandler()

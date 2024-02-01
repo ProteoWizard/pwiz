@@ -121,9 +121,7 @@ namespace pwiz.Skyline.Controls
 
         public SequenceTree()
         {
-            _customer = Customer.OfProducer(this, NormalizedValueCalculator.PRODUCER);
-
-            _customer.ProductAvailable += UpdateNormalizedValueCalculator;
+            _customer = NormalizedValueCalculator.PRODUCER.RegisterCustomer(this, UpdateNormalizedValueCalculator);
         }
 
         public void InitializeTree(IDocumentUIContainer documentUIContainer)
