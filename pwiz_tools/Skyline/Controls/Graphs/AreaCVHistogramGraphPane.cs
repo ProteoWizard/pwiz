@@ -50,6 +50,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public AreaCVHistogramGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
+            _stickItems = new List<StickItem>(2);
             _customer = AreaCVGraphData.PRODUCER.RegisterCustomer(graphSummary, () => graphSummary.UpdateUI());
         }
 
