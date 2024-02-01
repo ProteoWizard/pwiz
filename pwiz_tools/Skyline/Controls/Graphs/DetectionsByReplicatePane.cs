@@ -23,7 +23,6 @@ using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -39,8 +38,6 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             XAxis.Type = AxisType.Text;
             XAxis.Title.Text = GraphsResources.DetectionPlotPane_XAxis_Name;
-            _calculatedValueListener = new CalculatedValueListener(CalculatedValueCache.INSTANCE);
-            _calculatedValueListener.ResultsAvailable += OnResultsAvailable;
         }
 
         public override void PopulateTooltip(int index)
@@ -85,8 +82,6 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return;
             }
-
-
 
             AddLabels();
             if (!_detectionData.IsValid)

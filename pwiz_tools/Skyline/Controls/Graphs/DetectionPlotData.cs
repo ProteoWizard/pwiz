@@ -19,14 +19,11 @@
 
 using pwiz.Skyline.Model;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Util;
 
@@ -36,7 +33,6 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public class DetectionPlotData
     {
-        private static DetectionDataCache _dataCache;
         private Dictionary<DetectionsGraphController.TargetType, DataSet> _data = new Dictionary<DetectionsGraphController.TargetType, DataSet>();
 
         public SrmDocument Document { get; private set; }
@@ -53,19 +49,6 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             return _data[target];
 
-        }
-
-        public static DetectionDataCache GetDataCache()
-        {
-            if (_dataCache == null)
-                _dataCache = new DetectionDataCache();
-            return _dataCache;
-        }
-
-        public static void ReleaseDataCache()
-        {
-            _dataCache?.Dispose();
-            _dataCache = null;
         }
 
         public List<string> ReplicateNames { get; private set; }
@@ -286,188 +269,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         }
 
-        public class DetectionDataCache : IDisposable
-        {
-            private class DataRequest
-            {
-                public float qValue;
-            }
-
-            public SrmDocument _document;
-            private ConcurrentQueue<DetectionPlotData> _datas;
-            private readonly StackWorker<DataRequest> _stackWorker;
-            private CancellationTokenSource _tokenSource;
-            private Action<DetectionPlotData> _callback;
-            private readonly object _statusLock = new object();
-
-            // This is max number of replicates that the cache will store before starting to purge 
-            // the old datasets. Number of replicates is a good proxy for the amount of memory used 
-            // by a dataset.
-            private const int CACHE_CAPACITY = 200;
-
-            public event Action<CacheStatus, string> StatusChange;
-            public event Action<int> ReportProgress;
-
-            public enum CacheStatus { idle, processing, error, canceled }
-
-            private CacheStatus _status;
-            public CacheStatus Status
-            {
-                get => _status;
-            }
-
-            public void SetCacheStatus(CacheStatus newStatus, string message)
-            {
-                _status = newStatus;
-                StatusChange?.Invoke(_status, message);
-            }
-
-            //exposing for testing purposes
-            public ConcurrentQueue<DetectionPlotData> Datas => _datas;
-
-            public DetectionDataCache()
-            {
-                _stackWorker = new StackWorker<DataRequest>(null, CacheData);
-                //single worker thread because we do not need to paralelize the calculations, 
-                //only to offload them from the UI thread
-                _stackWorker.RunAsync(1, @"DetectionsDataCache");
-                _tokenSource = new CancellationTokenSource();
-                _datas = new ConcurrentQueue<DetectionPlotData>();
-                SetCacheStatus(CacheStatus.idle, string.Empty);
-            }
-
-            public bool TryGet(SrmDocument doc, float qValue, Action<DetectionPlotData> callback,  out DetectionPlotData data)
-            {
-                data = INVALID;
-                if (IsDisposed) return false;
-                var request = new DataRequest() { qValue = qValue};
-                _callback = callback;
-                if (ReferenceEquals(doc, _document))
-                {
-                    data = Get(request) ?? INVALID;
-                    if (data.IsValid)
-                        return true;
-                    _stackWorker.Add(request);
-                }
-                else
-                {
-                    _document = doc;
-                    new Task(() => CancelWorker(request, false)).Start(); 
-                }
-                return false;
-            }
-
-            public void Cancel()
-            {
-                if (IsDisposed) return;
-                new Task(() => CancelWorker(null, true)).Start();
-            }
-
-            private void CancelWorker(DataRequest request, bool userCancel)
-            {
-                //signal cancel to other workers and wait
-                _tokenSource.Cancel();
-                var oldTokenSource = _tokenSource;
-                _tokenSource = new CancellationTokenSource();
-                lock (_statusLock)  //Wait for the current worker to complete
-                {
-                    oldTokenSource.Dispose();
-                    //purge the queue
-                    var queueLength = _datas.Count;
-                    for (var i = 0; i < queueLength; i++)
-                    {
-                        if(_datas.TryDequeue(out var dump))
-                            if(ReferenceEquals(_document, dump.Document))
-                                _datas.Enqueue(dump);
-                    }
-                    if(userCancel)
-                        SetCacheStatus(CacheStatus.canceled,
-                            GraphsResources.DetectionPlotData_UsePropertiesDialog_Label);
-                    else
-                    {
-                        if (!_document.IsLoaded)
-                            SetCacheStatus(CacheStatus.idle, GraphsResources.DetectionPlotData_WaitingForDocumentLoad_Label);
-                        else
-                            SetCacheStatus(CacheStatus.idle, string.Empty);
-                    }
-                }
-                //if provided, add the new request to the queue after cancellation is complete
-                if (request != null)
-                {
-                    _stackWorker.Add(request);
-                }
-            }
-
-            private DetectionPlotData Get(DataRequest request)
-            {
-                return _datas.FirstOrDefault(d => d.IsValidFor(_document, request.qValue));
-            }
-
-            //Worker thread method
-            private void CacheData(DataRequest request, int index)
-            {
-                try
-                {
-                    if (!_document.IsLoaded)
-                    {
-                        SetCacheStatus(CacheStatus.idle, GraphsResources.DetectionPlotData_WaitingForDocumentLoad_Label);
-                        return;
-                    }
-
-                    lock (_statusLock)
-                    {
-                        //first make sure it hasn't been retrieved already
-                        //and calculate the queue size
-                        var currentSize = 0;
-                        DetectionPlotData res = null;
-                        foreach (var dat in _datas)
-                        {
-                            currentSize += dat.ReplicateCount;
-                            if (dat.IsValidFor(_document, request.qValue)) res = dat;
-                        }
-
-                        if (res != null) return;
-
-                        SetCacheStatus(CacheStatus.processing, string.Empty);
-                        res = new DetectionPlotData(_document, request.qValue);
-                        var statusMessage = res.Init(_tokenSource.Token, ReportProgress);
-                        SetCacheStatus(CacheStatus.idle, string.Empty);
-
-                        if (res.IsValid)
-                        {
-                            SetCacheStatus(CacheStatus.idle, GraphsResources.DetectionPlotData_DataRetrieved_Label);
-                            if (currentSize + res.ReplicateCount >= CACHE_CAPACITY) _datas.TryDequeue(out _);
-                            _datas.Enqueue(res);
-                            _callback.Invoke(res);
-                        }
-                        else
-                            SetCacheStatus(CacheStatus.error, statusMessage);
-                    }
-                }
-                catch (Exception e)
-                {
-                    SetCacheStatus(CacheStatus.idle, e.Message);
-                    throw;
-                }
-            }
-
-            public bool IsDisposed { get; private set; }
-
-            public void Dispose()
-            {
-                // Will only be called from UI thread, so it's safe to not have a lock
-                if (!IsDisposed)
-                {
-                    _tokenSource.Cancel();
-                    _stackWorker.Dispose();
-                    _tokenSource.Dispose();
-                    IsDisposed = true;
-                }
-            }
-        }
-
-        public static readonly ResultFactory<Tuple<ReferenceValue<SrmDocument>, float>, DetectionPlotData> FACTORY = new Factory();
-            
+        public static readonly ResultFactory<Tuple<ReferenceValue<SrmDocument>, float>, DetectionPlotData> FACTORY =
+            new Factory();
             
         private class Factory : ResultFactory<Tuple<ReferenceValue<SrmDocument>, float>, DetectionPlotData>
         {

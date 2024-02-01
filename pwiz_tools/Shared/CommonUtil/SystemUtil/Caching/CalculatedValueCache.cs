@@ -226,7 +226,7 @@ namespace pwiz.Common.SystemUtil.Caching
             {
                 lock (this)
                 {
-                    return false != _cancellationTokenSource?.IsCancellationRequested;
+                    return Result == null && false != _cancellationTokenSource?.IsCancellationRequested;
                 }
             }
 
