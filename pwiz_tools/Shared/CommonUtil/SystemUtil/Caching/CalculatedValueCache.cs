@@ -12,6 +12,10 @@ namespace pwiz.Common.SystemUtil.Caching
 
         public void Listen(ResultSpec key, CalculatedValueListener listener)
         {
+            if (key == null)
+            {
+                return;
+            }
             lock (this)
             {
                 GetOrCreateEntry(key).AddListener(listener);
@@ -29,6 +33,10 @@ namespace pwiz.Common.SystemUtil.Caching
 
         public void Unlisten(ResultSpec key, CalculatedValueListener listener)
         {
+            if (key == null)
+            {
+                return;
+            }
             lock (this)
             {
                 GetEntry(key).RemoveListener(listener);
@@ -209,12 +217,18 @@ namespace pwiz.Common.SystemUtil.Caching
                     {
                         try
                         {
-                            object value = Key.Calculator.ComputeResult(progressCallback, Key.Parameter, _dependencyResultValues);
+                            Cache.IncrementWaitingCount();
+                            object value = Key.Calculator.ComputeResult(progressCallback, Key.Parameter,
+                                _dependencyResultValues);
                             NotifyResultAvailable(CalculatorResult.Success(value));
                         }
                         catch (Exception ex)
                         {
                             NotifyResultAvailable(CalculatorResult.Error(ex));
+                        }
+                        finally
+                        {
+                            Cache.DecrementWaitingCount();
                         }
                     });
                 }
@@ -255,10 +269,22 @@ namespace pwiz.Common.SystemUtil.Caching
 
         public bool IsWaiting()
         {
-            lock (this)
-            {
-                return _entries.Values.Any(entry => entry.IsWaiting());
-            }
+            return _waitingCount != 0;
+        }
+
+        private int _waitingCount;
+        public int GetWaitingCount()
+        {
+            return _waitingCount;
+        }
+        public void IncrementWaitingCount()
+        {
+            Interlocked.Increment(ref _waitingCount);
+        }
+
+        public void DecrementWaitingCount()
+        {
+            Interlocked.Decrement(ref _waitingCount);
         }
     }
 }

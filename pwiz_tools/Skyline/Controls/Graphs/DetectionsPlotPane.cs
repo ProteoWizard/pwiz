@@ -21,7 +21,7 @@ using System;
 using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model;
 using ZedGraph;
@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public abstract class DetectionsPlotPane : SummaryReplicateGraphPane
     {
-        protected CalculatedValueListener _calculatedValueListener;
+        protected CalculatedValueListener<ReferenceValue<SrmDocument>, float, DetectionPlotData> _calculatedValueListener;
 
         protected DetectionPlotData _detectionData = DetectionPlotData.INVALID;
         public int MaxRepCount { get; private set; }
@@ -60,53 +60,46 @@ namespace pwiz.Skyline.Controls.Graphs
             XAxis.Scale.MinAuto = XAxis.Scale.MaxAuto = YAxis.Scale.MinAuto = YAxis.Scale.MaxAuto = false;
             ToolTip = new ToolTipImplementation(this);
 
-            _calculatedValueListener = new CalculatedValueListener(CalculatedValueCache.INSTANCE);
+            _calculatedValueListener = CalculatedValueListener.FromFactory(graphSummary, DetectionPlotData.FACTORY);
             _calculatedValueListener.ProgressChange += UpdateProgressHandler;
             _calculatedValueListener.ResultsAvailable += OnResultsAvailable;
         }
 
         public void UpdateProgressHandler()
         {
-            CommonActionUtil.SafeBeginInvoke(GraphSummary, () =>
+            if (_calculatedValueListener.IsProcessing())
             {
-                if (_calculatedValueListener.IsProcessing())
-                {
-                    ProgressBar ??= new PaneProgressBar(this);
-                    ProgressBar?.UpdateProgress(_calculatedValueListener.GetProgressValue());
-                }
-                else
-                {
-                    ProgressBar?.Dispose();
-                    ProgressBar = null;
-                }
-            });
-
+                ProgressBar ??= new PaneProgressBar(this);
+                ProgressBar?.UpdateProgress(_calculatedValueListener.GetProgressValue());
+            }
+            else
+            {
+                ProgressBar?.Dispose();
+                ProgressBar = null;
+            }
         }
 
         protected virtual void OnResultsAvailable()
         {
-            CommonActionUtil.SafeBeginInvoke(GraphSummary, () =>
+            var error = _calculatedValueListener.GetError();
+            if (error != null)
             {
-                var error = _calculatedValueListener.GetError();
-                if (error != null)
-                {
-                    AddLabels();
-                }
-                else if (_calculatedValueListener.IsProcessing())
-                {
-                    ProgressBar = ProgressBar ?? new PaneProgressBar(this);
-                    ProgressBar.UpdateProgressUI(_calculatedValueListener.GetProgressValue());
-                }
-                else
-                {
-                    ProgressBar?.Dispose();
-                    ProgressBar = null;
-                }
-                GraphSummary.Toolbar.UpdateUI();
-                UpdateGraph(false);
-                GraphSummary.GraphControl.Invalidate();
-                GraphSummary.GraphControl.Update();
-            });
+                AddLabels();
+            }
+            else if (_calculatedValueListener.IsProcessing())
+            {
+                ProgressBar = ProgressBar ?? new PaneProgressBar(this);
+                ProgressBar.UpdateProgressUI(_calculatedValueListener.GetProgressValue());
+            }
+            else
+            {
+                ProgressBar?.Dispose();
+                ProgressBar = null;
+            }
+            GraphSummary.Toolbar.UpdateUI();
+            UpdateGraph(false);
+            GraphSummary.GraphControl.Invalidate();
+            GraphSummary.GraphControl.Update();
         }
 
         public override bool HasToolbar { get { return true; } }

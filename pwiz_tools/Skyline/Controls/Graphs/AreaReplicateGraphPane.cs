@@ -23,7 +23,6 @@ using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -153,13 +152,13 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         private int _labelHeight;
         private ImmutableList<float> _dotpData;
-        private readonly CalculatedValueListener _calcListener;
+        private readonly CalculatedValueListener<ReferenceValue<SrmDocument>, NormalizeOption, NormalizedValueCalculator> _calcListener;
         public AreaReplicateGraphPane(GraphSummary graphSummary, PaneKey paneKey)
             : base(graphSummary)
         {
             PaneKey = paneKey;
             ToolTip = new ToolTipImplementation(this);
-            _calcListener = new CalculatedValueListener(CalculatedValueCache.INSTANCE);
+            _calcListener = CalculatedValueListener.FromFactory(graphSummary, NormalizedValueCalculator.CALCULATOR);
             _calcListener.ResultsAvailable += OnResultsAvailable;
         }
 
@@ -446,7 +445,7 @@ namespace pwiz.Skyline.Controls.Graphs
             NormalizedValueCalculator normalizedValueCalculator = null;
             try
             {
-                if (!_calcListener.TryGetValue(NormalizedValueCalculator.CALCULATOR, document, normalizeOption.NormalizationMethod, out normalizedValueCalculator))
+                if (!_calcListener.TryGetValue(document, normalizeOption, out normalizedValueCalculator))
                 {
                     return;
                 }
@@ -1595,7 +1594,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void OnResultsAvailable()
         {
-            CommonActionUtil.SafeBeginInvoke(GraphSummary, () => UpdateGraph(false));
+            UpdateGraph(false);
         }
 
         public override void OnClose(EventArgs e)

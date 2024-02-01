@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Windows.Forms;
 
 namespace pwiz.Common.SystemUtil.Caching
 {
@@ -13,27 +12,64 @@ namespace pwiz.Common.SystemUtil.Caching
     
     public class CalculatedValueListener : ICalculatedValueListener, IDisposable
     {
-        private HashSet<ResultSpec> _specs = new HashSet<ResultSpec>();
-        public CalculatedValueListener(CalculatedValueCache cache)
+        public static CalculatedValueListener<TParam1, TParam2, TResult> FromFactory<TParam1, TParam2, TResult>(
+            Control owner, ResultFactory<Tuple<TParam1, TParam2>, TResult> factory)
+        {
+            return new CalculatedValueListener<TParam1, TParam2, TResult>(CalculatedValueCache.INSTANCE, owner,
+                factory);
+        }
+        
+        
+        private ResultSpec _resultSpec;
+        public CalculatedValueListener(CalculatedValueCache cache, Control ownerControl, ResultFactory factory)
         {
             Cache = cache;
+            OwnerControl = ownerControl;
+            Factory = factory;
+            OwnerControl.HandleDestroyed += OwnerControlHandleDestroyed;
         }
 
         public CalculatedValueCache Cache
         {
             get;
         }
+        
+        public Control OwnerControl { get; private set; }
+        
+        public ResultFactory Factory { get; }
 
         public void OnResultAvailable(ResultSpec key, CalculatorResult result)
         {
-            ResultsAvailable?.Invoke();
+            var resultsAvailable = ResultsAvailable;
+            if (resultsAvailable != null)
+            {
+                Cache.IncrementWaitingCount();
+                if (!CommonActionUtil.SafeBeginInvoke(OwnerControl, () =>
+                    {
+                        try
+                        {
+                            resultsAvailable();
+                        }
+                        finally
+                        {
+                            Cache.DecrementWaitingCount();
+                        }
+                    }))
+                {
+                    Cache.DecrementWaitingCount();
+                }
+            }
         }
 
         public void OnProgressChanged(ResultSpec key, int progress)
         {
             lock (this)
             {
-                ProgressChange?.Invoke();
+                var progressChange = ProgressChange;
+                if (progressChange != null)
+                {
+                    CommonActionUtil.SafeBeginInvoke(OwnerControl, () => { progressChange(); });
+                }
             }
         }
 
@@ -42,129 +78,108 @@ namespace pwiz.Common.SystemUtil.Caching
 
         public int GetProgressValue()
         {
-            int count = 0;
-            int total = 0;
-            foreach (var spec in GetResultSpecs())
+            if (_resultSpec != null)
             {
-                count++;
-                total += Cache.GetProgressValue(spec);
+                return Cache.GetProgressValue(_resultSpec);
             }
 
-            if (count == 0)
-            {
-                return 0;
-            }
-
-            return Math.Min(100, Math.Max(0, total / count));
-        }
-
-        private ResultSpec[] GetResultSpecs()
-        {
-            lock (this)
-            {
-                return _specs.ToArray();
-            }
+            return 0;
         }
 
         public Exception GetError()
         {
-            var errors = new List<Exception>();
-            foreach (var spec in GetResultSpecs())
+            if (_resultSpec != null)
             {
-                var result = Cache.GetResult(spec);
-                var exception = result?.Exception;
-                if (exception != null)
-                {
-                    errors.Add(exception);
-                }
+                return Cache.GetResult(_resultSpec)?.Exception;
             }
 
-            if (errors.Count == 0)
-            {
-                return null;
-            }
-
-            if (errors.Count == 1)
-            {
-                return errors[0];
-            }
-
-            return new AggregateException(errors);
+            return null;
         }
 
-        public object[] GetValuesOrThrow(ResultSpec[] specs)
+        public bool TryGetValue(object argument, out object resultValue)
         {
             lock (this)
             {
-                foreach (var specToAdd in specs.Except(_specs))
+                var newResultSpec = new ResultSpec(Factory, argument);
+                if (!Equals(newResultSpec, _resultSpec))
                 {
-                    Cache.Listen(specToAdd, this);
-                    _specs.Add(specToAdd);
+                    Cache.Listen(newResultSpec, this);
+                    if (_resultSpec != null)
+                    {
+                        Cache.Unlisten(_resultSpec, this);
+                    }
+
+                    _resultSpec = newResultSpec;
                 }
 
-                foreach (var specToRemove in _specs.Except(specs).ToList())
+                var result = Cache.GetResult(_resultSpec);
+                if (result == null || result.Exception != null)
                 {
-                    Cache.Unlisten(specToRemove, this);
-                    _specs.Remove(specToRemove);
-                }
-                
-                var results = specs.Select(spec => Cache.GetResult(spec)).ToList();
-                var errors = results.Select(result => result?.Exception).Where(ex => ex != null).ToList();
-                if (errors.Count != 0)
-                {
-                    throw new AggregateException(string.Join(Environment.NewLine, errors.Select(e => e.Message)), errors);
-                }
-
-                if (results.Contains(null))
-                {
-                    return null;
-                }
-                return results.Select(r => r.Value).ToArray();
-            }
-        }
-
-        public bool TryGetValue<TParameter, TResult>(ResultFactory<TParameter, TResult> calculator, TParameter argument, out TResult result)
-        {
-            var spec = new ResultSpec(calculator, argument);
-            try
-            {
-                var values = GetValuesOrThrow(new[] { spec });
-                if (values == null)
-                {
-                    result = default;
+                    resultValue = null;
                     return false;
                 }
-                result = (TResult)values[0];
+
+                resultValue = result.Value;
                 return true;
             }
-            catch (Exception)
-            {
-                result = default;
-                return false;
-            }
         }
-
-        public bool TryGetValue<TParam1, TParam2, TResult>(ResultFactory<Tuple<TParam1, TParam2>, TResult> calculator,
-            TParam1 param1, TParam2 param2, out TResult result)
-        {
-            return TryGetValue(calculator, Tuple.Create(param1, param2), out result);
-        }
-
         public void Dispose()
         {
             lock (this)
             {
-                foreach (var key in _specs)
+                Cache.Unlisten(_resultSpec, this);
+                _resultSpec = null;
+                if (OwnerControl != null)
                 {
-                    Cache.Unlisten(key, this);
+                    OwnerControl.HandleDestroyed -= OwnerControlHandleDestroyed;
+                    OwnerControl = null;
                 }
-                _specs.Clear();
             }
+        }
+
+        private void OwnerControlHandleDestroyed(object sender, EventArgs eventArgs)
+        {
+            Dispose();
         }
 
         public bool IsProcessing()
         {
-            return GetResultSpecs().Any(spec => null == Cache.GetResult(spec));
+            var resultSpec = _resultSpec;
+            return resultSpec != null && null == Cache.GetResult(resultSpec);
+        }
+    }
+
+    public class CalculatedValueListener<TParam, TResult> : CalculatedValueListener
+    {
+        public CalculatedValueListener(CalculatedValueCache cache, Control ownerControl,
+            ResultFactory<TParam, TResult> factory) : base(cache, ownerControl, factory)
+        {
+            
+        }
+
+        public bool TryGetValue(TParam argument, out TResult resultValue)
+        {
+            if (base.TryGetValue(argument, out var resultObject))
+            {
+                resultValue = (TResult) resultObject;
+                return true;
+            }
+
+            resultValue = default;
+            return false;
+        }
+    }
+
+    public class CalculatedValueListener<TParam1, TParam2, TResult> : CalculatedValueListener<Tuple<TParam1, TParam2>, TResult>
+    {
+        public CalculatedValueListener(CalculatedValueCache cache, Control ownerControl,
+            ResultFactory<Tuple<TParam1, TParam2>, TResult> factory) : base(cache, ownerControl, factory)
+        {
+        }
+
+        public bool TryGetValue(TParam1 param1, TParam2 param2, out TResult resultValue)
+        {
+            return TryGetValue(Tuple.Create(param1, param2), out resultValue);
         }
     }
 }

@@ -76,9 +76,7 @@ namespace pwiz.Skyline.Controls.Graphs
             CurveList.Clear();
             Legend.IsVisible = false;
 
-            if (!_calculatedValueListener.TryGetValue(
-                    DetectionPlotData.FACTORY, GraphSummary.DocumentUIContainer.DocumentUI, Settings.QValueCutoff,
-                    out _detectionData))
+            if (!_calculatedValueListener.TryGetValue(GraphSummary.DocumentUIContainer.DocumentUI, Settings.QValueCutoff, out _detectionData))
             {
                 return;
             }

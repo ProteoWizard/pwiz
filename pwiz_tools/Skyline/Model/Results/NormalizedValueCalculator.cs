@@ -528,23 +528,25 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public static readonly
-            ResultFactory<Tuple<ReferenceValue<SrmDocument>, NormalizationMethod>, NormalizedValueCalculator>
+            ResultFactory<Tuple<ReferenceValue<SrmDocument>, NormalizeOption>, NormalizedValueCalculator>
             CALCULATOR = new Calculator();
             
-        private class Calculator : ResultFactory<Tuple<ReferenceValue<SrmDocument>, NormalizationMethod>,
+        private class Calculator : ResultFactory<Tuple<ReferenceValue<SrmDocument>, NormalizeOption>,
             NormalizedValueCalculator>
         {
-            public override NormalizedValueCalculator ComputeResult(ProgressCallback progressCallback, Tuple<ReferenceValue<SrmDocument>, NormalizationMethod> parameter, IDictionary<ResultSpec, object> dependencies)
+            public override NormalizedValueCalculator ComputeResult(ProgressCallback progressCallback, Tuple<ReferenceValue<SrmDocument>, NormalizeOption> parameter, IDictionary<ResultSpec, object> dependencies)
             {
                 var document = parameter.Item1;
                 return new NormalizedValueCalculator(document,
                     NormalizationData.CALCULATOR.GetResult(dependencies, document));
             }
 
-            public override IEnumerable<ResultSpec> GetDependencies(Tuple<ReferenceValue<SrmDocument>, NormalizationMethod> parameter)
+            public override IEnumerable<ResultSpec> GetDependencies(Tuple<ReferenceValue<SrmDocument>, NormalizeOption> parameter)
             {
-                var normalizationMethod = parameter.Item2;
-                if (Equals(normalizationMethod, NormalizationMethod.EQUALIZE_MEDIANS))
+                var normalizeOption = parameter.Item2;
+                SrmDocument document = parameter.Item1;
+                
+                if (Equals(NormalizationMethod.EQUALIZE_MEDIANS, normalizeOption?.NormalizationMethod) || Equals(NormalizationMethod.EQUALIZE_MEDIANS, document.Settings.PeptideSettings.Quantification.NormalizationMethod))
                 {
                     return ImmutableList.Singleton(NormalizationData.CALCULATOR.MakeResultSpec(parameter.Item1));
                 }
