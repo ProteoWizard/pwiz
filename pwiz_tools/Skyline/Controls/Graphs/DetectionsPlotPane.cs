@@ -20,9 +20,7 @@
 using System;
 using System.Drawing;
 using System.Globalization;
-using System.Runtime.CompilerServices;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model;
 using ZedGraph;
