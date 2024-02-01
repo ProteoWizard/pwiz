@@ -282,14 +282,19 @@ namespace pwiz.Skyline.Controls
 
         private void UpdateNormalizedValueCalculator()
         {
-            if (_customer.TryGetCurrentProduct(out var normalizedValueCalcultor))
+            if (_customer.TryGetCurrentProduct(out var normalizedValueCalculator))
             {
-                NormalizedValueCalculator = normalizedValueCalcultor;
+                NormalizedValueCalculator = normalizedValueCalculator;
+                if (_updateNodeStatesRequired)
+                {
+                    UpdateNodeStates();
+                }
             }
         }
 
         private int _updateLockCountDoc;
         private SrmDocument _updateDocPrevious;
+        private bool _updateNodeStatesRequired;
 
         public bool IsInUpdateDoc { get { return _updateLockCountDoc > 0; } }
 
@@ -382,6 +387,15 @@ namespace pwiz.Skyline.Controls
                     }
                 }
 
+                if (_customer.TryGetProduct(new NormalizedValueCalculator.Params(Document, _normalizeOption),
+                        out var normalizedValueCalculator))
+                {
+                    NormalizedValueCalculator = normalizedValueCalculator;
+                }
+                else
+                {
+                    _updateNodeStatesRequired |= updateNodeStates;
+                }
                 BeginUpdateMS();
 
                 SrmTreeNodeParent.UpdateNodes(this, Nodes, document.Children,
