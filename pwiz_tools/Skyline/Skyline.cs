@@ -104,7 +104,6 @@ namespace pwiz.Skyline
 
         private SrmDocument _document;
         private SrmDocument _documentUI;
-        private NormalizedValueCalculator _normalizedValueCalculatorUI;
         private int _savedVersion;
         private bool _closing;
         private readonly UndoManager _undoManager;
@@ -398,16 +397,6 @@ namespace pwiz.Skyline
             }
         }
 
-        public NormalizedValueCalculator NormalizedValueCalculator
-        {
-            get
-            {
-                if (InvokeRequired)
-                    throw new InvalidOperationException(@"The NormalizedValueCalculatorUI property may only be accessed on the UI thread");
-                return _normalizedValueCalculatorUI;
-            }
-        }
-
         /// <summary>
         /// The currently saved location of the document
         /// </summary>
@@ -544,7 +533,6 @@ namespace pwiz.Skyline
             Debug.Assert(!InvokeRequired);
             SrmDocument documentPrevious = _documentUI;
             _documentUI = Document;
-            _normalizedValueCalculatorUI = new NormalizedValueCalculator(_documentUI);
 
             // The previous document will be null at application start-up.
             if (documentPrevious != null)

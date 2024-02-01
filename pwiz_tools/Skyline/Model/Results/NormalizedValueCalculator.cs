@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model.DocSettings;
@@ -43,7 +42,7 @@ namespace pwiz.Skyline.Model.Results
             if (normalizationData == null)
             {
                 _normalizationData = new Lazy<NormalizationData>(() =>
-                    NormalizationData.GetNormalizationData(CancellationToken.None, document, false, null));
+                    NormalizationData.GetNormalizationData(document, false, null));
             }
             else
             {
@@ -546,17 +545,17 @@ namespace pwiz.Skyline.Model.Results
             {
                 var document = parameter.Document;
                 return new NormalizedValueCalculator(document,
-                    NormalizationData.PRODUCER.GetResult(dependencies, document));
+                    NormalizationData.PRODUCER.GetResult(dependencies, new NormalizationData.Parameters(document)));
             }
 
-            public override IEnumerable<WorkOrder> GetInputs(Params parameter)
+            public override IEnumerable<WorkOrder> GetInputs(Params workParameter)
             {
-                var normalizeOption = parameter.NormalizeOption;
-                SrmDocument document = parameter.Document;
+                var normalizeOption = workParameter.NormalizeOption;
+                SrmDocument document = workParameter.Document;
                 
                 if (Equals(NormalizationMethod.EQUALIZE_MEDIANS, normalizeOption?.NormalizationMethod) || Equals(NormalizationMethod.EQUALIZE_MEDIANS, document.Settings.PeptideSettings.Quantification.NormalizationMethod))
                 {
-                    return ImmutableList.Singleton(NormalizationData.PRODUCER.MakeWorkOrder(document));
+                    return ImmutableList.Singleton(NormalizationData.PRODUCER.MakeWorkOrder(new NormalizationData.Parameters(document)));
                 }
 
                 return Array.Empty<WorkOrder>();

@@ -119,11 +119,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 get => NormalizeOption.NONE;
                 set { }
             }
-
-            public NormalizedValueCalculator NormalizedValueCalculator
-            {
-                get { return null; }
-            }
         }
 
         private readonly IDocumentUIContainer _documentContainer;

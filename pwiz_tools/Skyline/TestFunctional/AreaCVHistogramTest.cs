@@ -253,8 +253,6 @@ namespace pwiz.SkylineTestFunctional
             });
             AssertDataCorrect(pane, statsStartIndex++);
             WaitForGraphs();
-            // TODO(nicksh)
-            // Assert.AreEqual(45, GetCache(pane).DataCount);
             
             // Make sure that grouping by an annotation works correctly
             RunUI(() => SkylineWindow.SetAreaCVAnnotation("D102"));

@@ -52,17 +52,17 @@ namespace pwiz.Skyline.Model.GroupComparison
         public static NormalizationData GetNormalizationData(SrmDocument document, bool treatMissingValuesAsZero,
             double? qValueCutoff)
         {
-            return GetNormalizationData(CancellationToken.None, document, treatMissingValuesAsZero, qValueCutoff);
+            return GetNormalizationData(CancellationToken.None, new Parameters(document, treatMissingValuesAsZero, qValueCutoff));
         }
 
-        public static NormalizationData GetNormalizationData(CancellationToken cancellationToken, SrmDocument document, bool treatMissingValuesAsZero, double? qValueCutoff)
+        public static NormalizationData GetNormalizationData(CancellationToken cancellationToken, Parameters parameters)
         {
+            var document = parameters.Document;
             if (!document.Settings.HasResults)
             {
                 return EMPTY;
             }
 
-            var areaOptions = new AreaOptions(treatMissingValuesAsZero, qValueCutoff);
             var internalStandardLabelTypes =
                 document.Settings.PeptideSettings.Modifications.InternalStandardTypes.ToHashSet();
             var endogenousAreas = new Dictionary<FileDataKey, List<double>>();
@@ -87,7 +87,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 foreach (var transitionGroup in peptide.TransitionGroups)
                 {
                     bool isInternalStandard = internalStandardLabelTypes.Contains(transitionGroup.LabelType);
-                    foreach (var dataFileAreas in GetAreasFromTransitionGroup(areaOptions, transitionGroup)
+                    foreach (var dataFileAreas in GetAreasFromTransitionGroup(parameters, transitionGroup)
                                  .GroupBy(tuple => tuple.Item1, tuple => tuple.Item2))
                     {
                         var dictionary = isInternalStandard ? internalStandardAreas : endogenousAreas;
@@ -277,24 +277,24 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public static Lazy<NormalizationData> LazyNormalizationData(SrmDocument document)
         {
-            return new Lazy<NormalizationData>(()=> GetNormalizationData(CancellationToken.None, document, false, null));
+            return new Lazy<NormalizationData>(()=> GetNormalizationData(document, false, null));
         }
 
-        public static readonly Producer<ReferenceValue<SrmDocument>, NormalizationData> PRODUCER =
-            Producer.FromFunction<ReferenceValue<SrmDocument>, NormalizationData>((progressCallback, document) =>
-                GetNormalizationData(progressCallback.CancellationToken, document, false, null));
+        public static readonly Producer<Parameters, NormalizationData> PRODUCER =
+            Producer.FromFunction<Parameters, NormalizationData>((progressCallback, parameters) =>
+                GetNormalizationData(progressCallback.CancellationToken, parameters));
         /// <summary>
         /// For the MS2 transitions, returns all the Area values for each of the Transitions for each of the replicates.
         /// For the MS1 transitions, returns the sum of the MS1 Area values for each of the replicates.
         /// </summary>
-        private static IEnumerable<Tuple<FileDataKey, double>> GetAreasFromTransitionGroup(AreaOptions areaOptions, TransitionGroupDocNode transitionGroup)
+        private static IEnumerable<Tuple<FileDataKey, double>> GetAreasFromTransitionGroup(Parameters parameters, TransitionGroupDocNode transitionGroup)
         {
             var transitionsByMsLevel = transitionGroup.Transitions.Where(transition => null != transition.Results)
                 .GroupBy(transition => transition.IsMs1);
             return transitionsByMsLevel.SelectMany(msLevelGroup =>
             {
                 bool areMs1 = msLevelGroup.Key;
-                var areaValues = msLevelGroup.SelectMany(transition => GetAreasFromTransition(areaOptions, transitionGroup, transition));
+                var areaValues = msLevelGroup.SelectMany(transition => GetAreasFromTransition(parameters, transitionGroup, transition));
                 if (areMs1)
                 {
                     // The MS1 transition peak areas should be summed together before returning.
@@ -308,7 +308,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             });
         }
 
-        private static IEnumerable<Tuple<FileDataKey, double>> GetAreasFromTransition(AreaOptions areaOptions, TransitionGroupDocNode transitionGroup, TransitionDocNode transition)
+        private static IEnumerable<Tuple<FileDataKey, double>> GetAreasFromTransition(Parameters parameters, TransitionGroupDocNode transitionGroup, TransitionDocNode transition)
         {
             for (int iResult = 0; iResult < transition.Results.Count; iResult++)
             {
@@ -318,7 +318,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     {
                         continue;
                     }
-                    double? area = GetTransitionArea(areaOptions, transitionGroup, transition, iResult, chromInfo);
+                    double? area = GetTransitionArea(parameters, transitionGroup, transition, iResult, chromInfo);
                     if (area.HasValue)
                     {
                         yield return Tuple.Create(new FileDataKey(iResult, chromInfo.FileId), area.Value);
@@ -327,23 +327,53 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
         }
 
-        private static double? GetTransitionArea(AreaOptions areaOptions, TransitionGroupDocNode transitionGroup,
+        private static double? GetTransitionArea(Parameters parameters, TransitionGroupDocNode transitionGroup,
             TransitionDocNode transition, int replicateIndex, TransitionChromInfo chromInfo)
         {
-            return PeptideQuantifier.GetArea(areaOptions.TreatMissingValuesAsZero, areaOptions.QValueCutoff,
+            return PeptideQuantifier.GetArea(parameters.TreatMissingValuesAsZero, parameters.QValueCutoff,
                 false, transitionGroup, transition, replicateIndex, chromInfo);
         }
 
-        private class AreaOptions
+        public class Parameters
         {
-            public AreaOptions(bool treatMissingAsZero, double? qValueCutoff)
+            public Parameters(SrmDocument document) : this(document, false, null)
             {
+            }
+            public Parameters(SrmDocument document, bool treatMissingAsZero, double? qValueCutoff)
+            {
+                Document = document;
                 TreatMissingValuesAsZero = treatMissingAsZero;
                 QValueCutoff = qValueCutoff;
             }
 
             public bool TreatMissingValuesAsZero { get; }
             public double? QValueCutoff { get; }
+            public SrmDocument Document { get; }
+
+            protected bool Equals(Parameters other)
+            {
+                return TreatMissingValuesAsZero == other.TreatMissingValuesAsZero &&
+                       Nullable.Equals(QValueCutoff, other.QValueCutoff) && ReferenceEquals(Document, other.Document);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((Parameters)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = TreatMissingValuesAsZero.GetHashCode();
+                    hashCode = (hashCode * 397) ^ QValueCutoff.GetHashCode();
+                    hashCode = (hashCode * 397) ^ RuntimeHelpers.GetHashCode(Document);
+                    return hashCode;
+                }
+            }
         }
     }
 }
