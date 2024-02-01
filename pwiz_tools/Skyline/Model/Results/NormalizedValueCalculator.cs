@@ -19,7 +19,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
@@ -30,10 +32,19 @@ namespace pwiz.Skyline.Model.Results
     {
         private readonly Lazy<NormalizationData> _normalizationData;
         private readonly Dictionary<ReferenceValue<ChromFileInfoId>, FileInfo> _fileInfos;
-        public NormalizedValueCalculator(SrmDocument document)
+
+        public NormalizedValueCalculator(SrmDocument document, NormalizationData normalizationData = null)
         {
             Document = document;
-            _normalizationData = new Lazy<NormalizationData>(()=>NormalizationData.GetNormalizationData(document, false, null));
+            if (normalizationData == null)
+            {
+                _normalizationData = new Lazy<NormalizationData>(() =>
+                    NormalizationData.GetNormalizationData(CancellationToken.None, document, false, null));
+            }
+            else
+            {
+                _normalizationData = new Lazy<NormalizationData>(()=>normalizationData);
+            }
             _fileInfos = new Dictionary<ReferenceValue<ChromFileInfoId>, FileInfo>();
             if (document.MeasuredResults != null)
             {
@@ -46,6 +57,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
             }
+
         }
 
         public SrmDocument Document { get; private set; }
@@ -512,6 +524,32 @@ namespace pwiz.Skyline.Model.Results
                     _surrogateStandardAreas.Add(ratioToSurrogate, value);
                     return value;
                 }
+            }
+        }
+
+        public static readonly
+            ResultFactory<Tuple<ReferenceValue<SrmDocument>, NormalizationMethod>, NormalizedValueCalculator>
+            CALCULATOR = new Calculator();
+            
+        private class Calculator : ResultFactory<Tuple<ReferenceValue<SrmDocument>, NormalizationMethod>,
+            NormalizedValueCalculator>
+        {
+            public override NormalizedValueCalculator ComputeResult(CancellationToken cancellationToken, Tuple<ReferenceValue<SrmDocument>, NormalizationMethod> parameter, IDictionary<ResultSpec, object> dependencies)
+            {
+                var document = parameter.Item1;
+                return new NormalizedValueCalculator(document,
+                    NormalizationData.CALCULATOR.GetResult(dependencies, document));
+            }
+
+            public override IEnumerable<ResultSpec> GetDependencies(Tuple<ReferenceValue<SrmDocument>, NormalizationMethod> parameter)
+            {
+                var normalizationMethod = parameter.Item2;
+                if (Equals(normalizationMethod, NormalizationMethod.EQUALIZE_MEDIANS))
+                {
+                    return ImmutableList.Singleton(NormalizationData.CALCULATOR.MakeResultSpec(parameter.Item1));
+                }
+
+                return Array.Empty<ResultSpec>();
             }
         }
     }

@@ -23,6 +23,8 @@ using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
@@ -151,11 +153,14 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         private int _labelHeight;
         private ImmutableList<float> _dotpData;
+        private readonly CalculatedValueListener _calcListener;
         public AreaReplicateGraphPane(GraphSummary graphSummary, PaneKey paneKey)
             : base(graphSummary)
         {
             PaneKey = paneKey;
             ToolTip = new ToolTipImplementation(this);
+            _calcListener = new CalculatedValueListener(CalculatedValueCache.INSTANCE);
+            _calcListener.ResultsAvailable += OnResultsAvailable;
         }
 
         protected override void InitFromData(GraphData graphData)
@@ -220,8 +225,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public TransitionGroupDocNode ParentGroupNode { get; private set; }
 
-        private NormalizedValueCalculator NormalizedValueCalculator { get; set; }
-
         public override void Draw(Graphics g)
         {
             // Make sure changes are not only drawn when the graph is updated.
@@ -259,7 +262,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
             SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
             var results = document.Settings.MeasuredResults;
-            NormalizedValueCalculator = GraphSummary.DocumentUIContainer.NormalizedValueCalculator;
             bool resultsAvailable = results != null;
             Clear();
 
@@ -441,9 +443,24 @@ namespace pwiz.Skyline.Controls.Graphs
                 expectedValue = ExpectedVisible;
 
             var replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document);
+            NormalizedValueCalculator normalizedValueCalculator = null;
+            try
+            {
+                if (!_calcListener.TryGetValue(NormalizedValueCalculator.CALCULATOR, document, normalizeOption.NormalizationMethod, out normalizedValueCalculator))
+                {
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                Title.Text = ex.Message;
+                EmptyGraph(document);
+                return;
+            }
+            
             var graphData = IsMultiSelect  ? 
                 new AreaGraphData(document,
-                    NormalizedValueCalculator,
+                    normalizedValueCalculator,
                     peptidePaths,
                     displayType,
                     replicateGroupOp,
@@ -452,7 +469,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     expectedValue,
                     PaneKey) : 
                 new AreaGraphData(document,
-                    NormalizedValueCalculator,
+                    normalizedValueCalculator,
                     identityPath,
                     displayType,
                     replicateGroupOp,
@@ -1066,8 +1083,6 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         private class AreaGraphData : GraphData
         {
-            public static readonly NormalizeOption RATIO_INDEX_NONE = NormalizeOption.NONE;
-
             private readonly DocNode _docNode;
             private readonly NormalizeOption _normalizeOption;
             private readonly DataScalingOption _dataScalingOption;
@@ -1576,6 +1591,11 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return (float?) NormalizedValueCalculator.GetTransitionDataValue(_normalizeOption, chromInfo);
             }
+        }
+
+        private void OnResultsAvailable()
+        {
+            CommonActionUtil.SafeBeginInvoke(GraphSummary, () => UpdateGraph(false));
         }
     }
 }

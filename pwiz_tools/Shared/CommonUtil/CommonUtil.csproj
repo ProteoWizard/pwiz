@@ -162,6 +162,11 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Images.resx</DependentUpon>
     </Compile>
+    <Compile Include="SystemUtil\Caching\CalculatedValueCache.cs" />
+    <Compile Include="SystemUtil\Caching\ResultSpec.cs" />
+    <Compile Include="SystemUtil\Caching\CalculatedValueListener.cs" />
+    <Compile Include="SystemUtil\Caching\ResultFactory.cs" />
+    <Compile Include="SystemUtil\Caching\CalculatorResult.cs" />
     <Compile Include="SystemUtil\CommonFormEx.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -272,9 +277,7 @@
   <ItemGroup>
     <Content Include="CommonResources\Copy.bmp" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="GraphicalUserInterface\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

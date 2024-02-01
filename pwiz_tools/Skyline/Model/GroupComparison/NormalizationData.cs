@@ -20,9 +20,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using MathNet.Numerics.Statistics;
 using MSAmanda.Utils;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.GroupComparison
@@ -47,7 +49,13 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
         }
 
-        public static NormalizationData GetNormalizationData(SrmDocument document, bool treatMissingValuesAsZero, double? qValueCutoff)
+        public static NormalizationData GetNormalizationData(SrmDocument document, bool treatMissingValuesAsZero,
+            double? qValueCutoff)
+        {
+            return GetNormalizationData(CancellationToken.None, document, treatMissingValuesAsZero, qValueCutoff);
+        }
+
+        public static NormalizationData GetNormalizationData(CancellationToken cancellationToken, SrmDocument document, bool treatMissingValuesAsZero, double? qValueCutoff)
         {
             if (!document.Settings.HasResults)
             {
@@ -62,6 +70,10 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             ParallelEx.ForEach(document.Molecules, peptide =>
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
                 if (peptide.IsDecoy)
                 {
                     return;
@@ -265,11 +277,14 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public static Lazy<NormalizationData> LazyNormalizationData(SrmDocument document)
         {
-            return new Lazy<NormalizationData>(()=> GetNormalizationData(document, false, null));
+            return new Lazy<NormalizationData>(()=> GetNormalizationData(CancellationToken.None, document, false, null));
         }
 
+        public static readonly ResultFactory<ReferenceValue<SrmDocument>, NormalizationData> CALCULATOR =
+            ResultFactory.FromFunction<ReferenceValue<SrmDocument>, NormalizationData>((cancellationToken, document) =>
+                GetNormalizationData(cancellationToken, document, false, null));
         /// <summary>
-        /// For the MS2 transitions, returns all of the Area values for each of the Transitions for each of the replicates.
+        /// For the MS2 transitions, returns all the Area values for each of the Transitions for each of the replicates.
         /// For the MS1 transitions, returns the sum of the MS1 Area values for each of the replicates.
         /// </summary>
         private static IEnumerable<Tuple<FileDataKey, double>> GetAreasFromTransitionGroup(AreaOptions areaOptions, TransitionGroupDocNode transitionGroup)
