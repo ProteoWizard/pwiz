@@ -204,7 +204,7 @@ namespace pwiz.ProteowizardWrapper
 
             public static Config GetConfigFromDiaUmpireOutput(string filepath)
             {
-                return MsDataFileInfo.RunPredicate(filepath, msd =>
+                /*return MsDataFileInfo.RunPredicate(filepath, msd =>
                 {
                     Config result = null;
                     foreach (var dp in msd.dataProcessingList)
@@ -252,7 +252,8 @@ namespace pwiz.ProteowizardWrapper
 
                     // if we get this far, there was no DIA-Umpire method to extract settings from
                     return null;
-                });
+                });*/
+                return null;
             }
 
             /// <summary>
