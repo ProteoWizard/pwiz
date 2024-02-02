@@ -22,8 +22,8 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using MathNet.Numerics.Statistics;
-using MSAmanda.Utils;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model.Results;
 
