@@ -137,6 +137,15 @@ namespace pwiz.Skyline.Model.Proteome {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Calculating gene groups.
+        /// </summary>
+        public static string ProteinAssociation_CalculateProteinOrGeneGroups_Calculating_gene_groups {
+            get {
+                return ResourceManager.GetString("ProteinAssociation_CalculateProteinOrGeneGroups_Calculating_gene_groups", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Calculating protein clusters.
         /// </summary>
         public static string ProteinAssociation_Calculating_protein_clusters {

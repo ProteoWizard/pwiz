@@ -300,6 +300,7 @@
         <xs:complexType>
           <xs:attribute name="min_peptides_per_protein" type="xs:integer"/>
           <xs:attribute name="group_proteins" type="xs:boolean" />
+          <xs:attribute name="gene_level_parsimony" type="xs:boolean" />
           <xs:attribute name="find_minimal_protein_list" type="xs:boolean" />
           <xs:attribute name="remove_subset_proteins" type="xs:boolean" />
           <xs:attribute name="shared_peptides" type="xs:string" />

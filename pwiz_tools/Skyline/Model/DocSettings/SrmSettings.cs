@@ -1508,7 +1508,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             var peptide = new Peptide(null, peptideSequence, null, null, missedCleavages);
             var enumDocNodes = peptide.CreateDocNodes(this, this);
-            return enumDocNodes.GetEnumerator().MoveNext();
+            return enumDocNodes.Any();
         }
 
         public bool Accept(string peptideSequence)
