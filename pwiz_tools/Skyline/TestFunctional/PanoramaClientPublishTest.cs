@@ -40,11 +40,20 @@ namespace pwiz.SkylineTestFunctional
 
         public const int PIPELINE_JOB_ID = 42;
 
-        public const int NO_ERROR = 0;
-        public const int BAD_JSON = 1;
-        public const int UPLOAD_ERROR = 2;
-        public const int HEAD_REQUEST_ERROR = 3;
-        public const int MOVE_REQUEST_ERROR = 4;
+        private const int NO_ERROR = 0;
+        private const int ERROR_BAD_JSON = 1;
+        private const int ERROR_BAD_FILE_NAME = 2;
+        private const int ERROR_HEAD_REQUEST = 3;
+        private const int ERROR_MOVE_REQUEST = 4;
+        private const int ERROR_SUBMIT_PIPELINE_JOB = 5;
+        private const int ERROR_CHECK_JOB_STATUS = 6;
+
+
+        public enum RequestType
+        {
+            HEAD = ERROR_HEAD_REQUEST,
+            MOVE = ERROR_MOVE_REQUEST
+        }
 
         private ToolOptionsUI ToolOptionsDlg { get; set; }
 
@@ -68,22 +77,16 @@ namespace pwiz.SkylineTestFunctional
             AddServer(PANORAMA_SERVER, USER_NAME, PASSWORD);
 
 
-            // Open a Skyline document
-            var BAD_FILE_NAME = "Bad -file_name.sky";
+            // Open a new Skyline document, and save it with a name that LabKey would reject.
             RunUI(() =>
             {
                 SkylineWindow.NewDocument(true);
-                SkylineWindow.SaveDocument(TestContext.GetTestResultsPath(BAD_FILE_NAME));
+                SkylineWindow.SaveDocument(TestContext.GetTestResultsPath("Bad -file_name.sky"));
             });
             WaitForDocumentLoaded();
 
-
-            // Response returned by the server could not be parsed as JSON.
-            TestInvalidJsonResponse();
-
-            // TODO: Returned JSON does not have the required attribute(s).
-
-            // LabKey returned an error in the JSON response while uploading the file.
+            // LabKey would return an error in the JSON response if we try to upload a file with name
+            // having a space followed by '-', followed by a non-space character (e.g. Bad -file_name.sky).
             TestBadFileNameLabKeyError();
 
             // Give the file a name that LabKey will accept.
@@ -93,8 +96,83 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForDocumentLoaded();
 
-            // File uploaded and imported successfully.
+
+            // Response returned by the server could not be parsed as JSON.
+            TestInvalidJsonResponse();
+
+            // TODO: Returned JSON does not have the required attribute(s).
+
+            
+            TestFailAtMethod(RequestType.HEAD); // HEAD request to check if sky.zip.part was uploaded
+            TestFailAtMethod(RequestType.MOVE); // MOVE request to check if the sky.zip.part was successfully renamed to sky.zip
+
+            // Fail at submitting a document import pipeline job
+            TestFailSubmitImportJob();
+
+            TestFailQueryPipelineJobStatus();
+
+            // File uploaded and imported without error
             TestSuccessfulUpload();
+        }
+
+        private static MessageDlg PublishError(IPanoramaPublishClient publishClient, out string shareZipFileName)
+        {
+            var publishDialog = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(publishClient));
+            WaitForCondition(() => publishDialog.IsLoaded);
+            RunUI(() => { publishDialog.SelectItem(PANORAMA_FOLDER); });
+            shareZipFileName = Path.GetFileName(publishDialog.FileName);
+            var shareTypeDlg = ShowDialog<ShareTypeDlg>(publishDialog.OkDialog);
+            var errorDlg = ShowDialog<MessageDlg>(shareTypeDlg.OkDialog);
+            return errorDlg;
+        }
+
+        private static void TestBadFileNameLabKeyError()
+        {
+            var publishClient = new TestLabKeyErrorPublishClient(new Uri(PANORAMA_SERVER), USER_NAME,
+                PASSWORD, ERROR_BAD_FILE_NAME);
+            var errorDlg = PublishError(publishClient, out var shareZipFileName);
+
+            Assert.AreEqual(BadFileNameRequestHelper.GetExpectedUploadError(GetTempZipFileName(shareZipFileName)), errorDlg.Message);
+            OkDialog(errorDlg, errorDlg.OkDialog);
+        }
+
+        private static string GetTempZipFileName(string shareZipFileName)
+        {
+            return shareZipFileName + ".part";
+        }
+
+        private static void TestInvalidJsonResponse()
+        {
+            TestFail(ERROR_BAD_JSON, NoJsonResponseRequestHelper.GetExpectedError());
+        }
+
+        private static void TestFailAtMethod(RequestType requestType)
+        {
+            var publishClient = new TestLabKeyErrorPublishClient(new Uri(PANORAMA_SERVER), USER_NAME,
+                PASSWORD, (int)requestType);
+            var errorDlg = PublishError(publishClient, out var shareZipFileName);
+            Assert.AreEqual(FailOnDoRequestRequestHelper.GetExpectedError(GetTempZipFileName(shareZipFileName), requestType),
+                errorDlg.Message);
+            OkDialog(errorDlg, errorDlg.OkDialog);
+        }
+
+        private static void TestFailSubmitImportJob()
+        {
+            TestFail(ERROR_SUBMIT_PIPELINE_JOB, FailOnSubmitPipelineJobRequestHelper.GetExpectedError());
+        }
+
+        private static void TestFailQueryPipelineJobStatus()
+        {
+            TestFail(ERROR_CHECK_JOB_STATUS, FailOnCheckJobStatusRequestHelper.GetExpectedError());
+        }
+
+        private static void TestFail(int errorCode, string expectedError)
+        {
+            var publishClient = new TestLabKeyErrorPublishClient(new Uri(PANORAMA_SERVER), USER_NAME,
+                PASSWORD, errorCode);
+            var errorDlg = PublishError(publishClient, out _);
+            Assert.AreEqual(expectedError, errorDlg.Message);
+            OkDialog(errorDlg, errorDlg.OkDialog);
         }
 
         private static void TestSuccessfulUpload()
@@ -107,48 +185,6 @@ namespace pwiz.SkylineTestFunctional
             var shareTypeDlg = ShowDialog<ShareTypeDlg>(publishDialog.OkDialog);
             var docUploadedDlg = ShowDialog<MultiButtonMsgDlg>(shareTypeDlg.OkDialog);
             OkDialog(docUploadedDlg, docUploadedDlg.ClickNo);
-        }
-
-        private static void TestBadFileNameLabKeyError()
-        {
-            var publishDialog = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(
-                new TestLabKeyErrorPublishClient(new Uri(PANORAMA_SERVER), USER_NAME,
-                    PASSWORD, UPLOAD_ERROR)));
-            WaitForCondition(() => publishDialog.IsLoaded);
-            RunUI(() => { publishDialog.SelectItem(PANORAMA_FOLDER); });
-            var shareTypeDlg = ShowDialog<ShareTypeDlg>(publishDialog.OkDialog);
-            var errorDlg = ShowDialog<MessageDlg>(shareTypeDlg.OkDialog);
-            var expectedErrorPart = TextUtil.LineSeparate(
-                Resources
-                    .AbstractPanoramaPublishClient_UploadFileCompleted_There_was_an_error_uploading_the_file_,
-                string.Empty,
-                string.Format(PanoramaClient.Properties.Resources.GenericState_AppendErrorAndUri_Error___0_, TestRequestHelper.GetLabKeyError(SkylineWindow.DocumentFilePath).ToString()),
-                string.Format("URL: {0}{1}Bad -file_name", PANORAMA_SERVER, TestRequestHelper.GetFolderWebdavUrl(PANORAMA_FOLDER).TrimStart('/')));
-            Assert.IsTrue(errorDlg.Message.Contains(expectedErrorPart),
-                string.Format("Expected error to contain '{0}'.\nActual error: {1}", expectedErrorPart,
-                    errorDlg.Message));
-            OkDialog(errorDlg, errorDlg.OkDialog);
-        }
-
-        private static void TestInvalidJsonResponse()
-        {
-            var publishDialog = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(
-                new TestLabKeyErrorPublishClient(new Uri(PANORAMA_SERVER), USER_NAME,
-                    PASSWORD, BAD_JSON)));
-            WaitForCondition(() => publishDialog.IsLoaded);
-            RunUI(() => { publishDialog.SelectItem(PANORAMA_FOLDER); });
-            var shareTypeDlg = ShowDialog<ShareTypeDlg>(publishDialog.OkDialog);
-            var errorDlg = ShowDialog<MessageDlg>(shareTypeDlg.OkDialog);
-            var expectedError = TextUtil.LineSeparate(
-                PanoramaClient.Properties.Resources.BaseWebClient_ParseJsonResponse_Error_parsing_response_as_JSON_,
-                string.Format(PanoramaClient.Properties.Resources.GenericState_AppendErrorAndUri_Error___0_,
-                    @"Unexpected character encountered while parsing value: <. Path '', line 0, position 0."),
-                string.Format(PanoramaClient.Properties.Resources.GenericState_AppendErrorAndUri_URL___0_,
-                    PanoramaUtil.GetPipelineContainerUrl(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER)),
-                string.Format(PanoramaClient.Properties.Resources.BaseWebClient_ParseJsonResponse_Response___0_,
-                    NoJsonResponseRequestHelper.NOT_JSON));
-            Assert.AreEqual(expectedError, errorDlg.Message);
-            OkDialog(errorDlg, errorDlg.OkDialog);
         }
 
         private void AddServer(string server, string userEmail, string password)
@@ -174,7 +210,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(ToolOptionsDlg, ToolOptionsDlg.OkDialog);
         }
 
-        static JObject CreateFolder(string name, bool write, bool targeted)
+        static JObject BuildFolderJson(string name, bool write, bool targeted)
         {
             JObject obj = new JObject();
             obj["name"] = name;
@@ -185,7 +221,7 @@ namespace pwiz.SkylineTestFunctional
                 // Create a writable subfolder if this folder is not writable, i.e. it is
                 // not a targetedMS folder or the user does not have write permissions in this folder.
                 // Otherwise, it will not get added to the folder tree (PublishDocumentDlg.AddChildContainers()).
-                obj["children"] = new JArray(CreateFolder("Subfolder", true, true));
+                obj["children"] = new JArray(BuildFolderJson("Subfolder", true, true));
             }
             else
             {
@@ -197,6 +233,18 @@ namespace pwiz.SkylineTestFunctional
                 ? new JArray("MS0", "MS1", "TargetedMS", "MS3")
                 : new JArray("MS0", "MS1", "MS3");
             return obj;
+        }
+
+        public class TestLabKeyErrorPublishClient : AbstractPanoramaPublishClient
+        {
+            private TestLabKeyErrorPanoramaClient _panoramaClient;
+
+            public TestLabKeyErrorPublishClient(Uri serverUri, string username, string password, int errorType)
+            {
+                _panoramaClient = new TestLabKeyErrorPanoramaClient(serverUri, username, password, errorType);
+            }
+
+            public override IPanoramaClient PanoramaClient => _panoramaClient;
         }
 
         public class TestLabKeyErrorPanoramaClient : AbstractPanoramaClient
@@ -216,8 +264,8 @@ namespace pwiz.SkylineTestFunctional
 
             public override JToken GetInfoForFolders(string folder)
             {
-                var testFolders = CreateFolder("LabKeyErrorsTest", true, false);
-                testFolders["children"] = new JArray(CreateFolder(PANORAMA_FOLDER, true, true));
+                var testFolders = BuildFolderJson("LabKeyErrorsTest", true, false);
+                testFolders["children"] = new JArray(BuildFolderJson(PANORAMA_FOLDER, true, true));
                 return testFolders;
             }
 
@@ -236,7 +284,7 @@ namespace pwiz.SkylineTestFunctional
 
             protected override LabKeyError ParseUploadFileCompletedEventArgs(UploadFileCompletedEventArgs e)
             {
-                return TestRequestHelper.GetLabKeyError(_skyZipPathForUpload);
+                return BadFileNameRequestHelper.GetLabKeyError(_skyZipPathForUpload);
             }
 
             public override Uri ValidateUri(Uri serverUri, bool tryNewProtocol = true)
@@ -265,12 +313,24 @@ namespace pwiz.SkylineTestFunctional
                 TestRequestHelper requestHelper;
                 switch (_errorType)
                 {
-                    case BAD_JSON:
+                    case ERROR_BAD_JSON:
                         requestHelper = new NoJsonResponseRequestHelper();
                         break;
-                    // case UPLOAD_ERROR:
-                    //     requestHelper = new UploadErrorRequestHelper();
-                    //     break;
+                    case ERROR_BAD_FILE_NAME:
+                        requestHelper = new BadFileNameRequestHelper();
+                        break;
+                    case ERROR_HEAD_REQUEST:
+                        requestHelper = new FailOnDoRequestRequestHelper(RequestType.HEAD);
+                        break;
+                    case ERROR_MOVE_REQUEST:
+                        requestHelper = new FailOnDoRequestRequestHelper(RequestType.MOVE);
+                        break;
+                    case ERROR_SUBMIT_PIPELINE_JOB:
+                        requestHelper = new FailOnSubmitPipelineJobRequestHelper();
+                        break;
+                    case ERROR_CHECK_JOB_STATUS:
+                        requestHelper = new FailOnCheckJobStatusRequestHelper();
+                        break;
                     default:
                         requestHelper = new TestRequestHelper();
                         break;
@@ -279,24 +339,171 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        public class TestLabKeyErrorPublishClient : AbstractPanoramaPublishClient
-        {
-            private TestLabKeyErrorPanoramaClient _panoramaClient;
-
-            public TestLabKeyErrorPublishClient(Uri serverUri, string username, string password, int errorType)
-            {
-                _panoramaClient = new TestLabKeyErrorPanoramaClient(serverUri, username, password, errorType);
-            }
-
-            public override IPanoramaClient PanoramaClient => _panoramaClient;
-        }
-
         public class NoJsonResponseRequestHelper : TestRequestHelper
         {
-            public const string NOT_JSON = "<head><body>This is not JSON</body></head>";
+            private const string NOT_JSON = "<head><body>This is not JSON</body></head>";
             public override string DoGet(Uri uri)
             {
                 return NOT_JSON;
+            }
+
+            public static string GetExpectedError()
+            {
+                return TextUtil.LineSeparate(
+                    PanoramaClient.Properties.Resources.BaseWebClient_ParseJsonResponse_Error_parsing_response_as_JSON_,
+                    string.Format(PanoramaClient.Properties.Resources.GenericState_AppendErrorAndUri_Error___0_,
+                        @"Unexpected character encountered while parsing value: <. Path '', line 0, position 0."),
+                    string.Format(PanoramaClient.Properties.Resources.GenericState_AppendErrorAndUri_URL___0_,
+                        PanoramaUtil.GetPipelineContainerUrl(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER)),
+                    string.Format(PanoramaClient.Properties.Resources.BaseWebClient_ParseJsonResponse_Response___0_, NOT_JSON));
+            }
+        }
+
+        public class FailOnDoRequestRequestHelper : TestRequestHelper
+        {
+            private readonly RequestType _requestMethod;
+            private static readonly string errorLine1 = "Testing exception on {0} request";
+            private static readonly string errorLine2 = "This is the LabKey error on {0} request";
+            public FailOnDoRequestRequestHelper(RequestType requestMethod)
+            {
+                _requestMethod = requestMethod;
+            }
+            public override void DoRequest(HttpWebRequest request, string method, string authHeader, string messageOnLabkeyError = null)
+            {
+                if (method.Equals(_requestMethod.ToString()))
+                {
+                    throw new PanoramaServerException(messageOnLabkeyError, request.RequestUri,
+                        new WebException(string.Format(errorLine1, method)), 
+                        new LabKeyError(string.Format(errorLine2, _requestMethod), null));
+                }
+            }
+
+            public static string GetExpectedError(string sharedZipFile, RequestType requestType)
+            {
+                string mainError;
+                switch (requestType)
+                {
+                    case RequestType.HEAD:
+                        mainError = PanoramaClient.Properties.Resources
+                            .AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_;
+                        break;
+                    case RequestType.MOVE:
+                        mainError = PanoramaClient.Properties.Resources.AbstractPanoramaClient_RenameTempZipFile_There_was_an_error_renaming_the_temporary_zip_file_on_the_server;
+                        break;
+                    default:
+                        mainError = "UNKNOWN ERROR";
+                        break;
+                }
+
+                var expectedError = TextUtil.LineSeparate(
+                    mainError,
+                    string.Empty,
+                    string.Format(PanoramaClient.Properties.Resources.GenericState_AppendErrorAndUri_Error___0_,
+                        string.Format(errorLine1, requestType.ToString())),
+                    string.Format(errorLine2, requestType.ToString()),
+                    string.Format("URL: {0}{1}{2}", PANORAMA_SERVER, GetFolderWebdavUrl(PANORAMA_FOLDER).TrimStart('/'),
+                        sharedZipFile)
+                );
+
+                return expectedError;
+            }
+        }
+
+        public class BadFileNameRequestHelper : TestRequestHelper
+        {
+            public static LabKeyError GetLabKeyError(string documentFilePath)
+            {
+                var errResponse = GetLabKeyJsonResponse(Path.GetFileName(documentFilePath));
+                return PanoramaUtil.GetIfErrorInResponse(errResponse);
+            }
+
+            private static JObject GetLabKeyJsonResponse(string filename)
+            {
+                var errResponse = new JObject();
+                // From org.labkey.api.util.FileUtil:
+                // if (Pattern.matches("(.*\\s--[^ ].*)|(.*\\s-[^- ].*)",s))
+                //     return "Filename may not contain space followed by dash.";
+                const string pattern = "(.*\\s--[^ ].*)|(.*\\s-[^- ].*)";
+                var match = Regex.Match(filename, pattern);
+                if (match.Success)
+                {
+                    errResponse[@"exception"] = "Filename may not contain space followed by dash.";
+                    errResponse[@"status"] = 400;
+                }
+                return errResponse;
+            }
+
+            public static string GetExpectedUploadError(string sharedZipFile)
+            {
+                var labkeyError = GetLabKeyError(sharedZipFile);
+                if (labkeyError != null)
+                {
+                    return TextUtil.LineSeparate(
+                        PanoramaClient.Properties.Resources
+                            .AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file,
+                        string.Empty,
+                        string.Format(PanoramaClient.Properties.Resources.GenericState_AppendErrorAndUri_Error___0_,
+                            labkeyError),
+                        string.Format("URL: {0}{1}{2}", PANORAMA_SERVER,
+                            GetFolderWebdavUrl(PANORAMA_FOLDER).TrimStart('/'), sharedZipFile));
+                }
+
+                return string.Format("No Error for file {0}", sharedZipFile);
+            }
+        }
+
+        public class FailOnSubmitPipelineJobRequestHelper : TestRequestHelper
+        {
+            private static readonly string errorLine1 = "Exception adding to the document import queue.";
+            private static readonly string errorLine2 = "This is the LabKey error.";
+
+            public override JObject Post(Uri uri, NameValueCollection postData, string messageOnLabkeyError = null)
+            {
+                if (uri.Equals(PanoramaUtil.GetImportSkylineDocUri(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER)))
+                {
+                    throw new PanoramaServerException(messageOnLabkeyError, uri, new WebException(errorLine1), new LabKeyError(errorLine2, null));
+                }
+                return base.Post(uri, postData, messageOnLabkeyError);
+            }
+
+            public static string GetExpectedError()
+            {
+                return TextUtil.LineSeparate(
+                    PanoramaClient.Properties.Resources
+                        .AbstractPanoramaClient_QueueDocUploadPipelineJob_There_was_an_error_adding_the_document_import_job_on_the_server,
+                    string.Empty,
+                    string.Format(PanoramaClient.Properties.Resources.GenericState_AppendErrorAndUri_Error___0_,
+                        errorLine1),
+                    errorLine2,
+                    string.Format("URL: {0}",
+                        PanoramaUtil.GetImportSkylineDocUri(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER)));
+            }
+        }
+
+        public class FailOnCheckJobStatusRequestHelper : TestRequestHelper
+        {
+            private static readonly string errorLine1 = "Exception checking the pipeline job status.";
+            private static readonly string errorLine2 = "This is the LabKey error.";
+            public override JObject Get(Uri uri, string messageOnLabkeyError = null)
+            {
+                if (uri.Equals(PanoramaUtil.GetPipelineJobStatusUri(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER, PIPELINE_JOB_ID)))
+                {
+                    throw new PanoramaServerException(messageOnLabkeyError, uri, new WebException(errorLine1), new LabKeyError(errorLine2, null));
+                }
+                return base.Get(uri, messageOnLabkeyError);
+            }
+
+            public static string GetExpectedError()
+            {
+                return TextUtil.LineSeparate(
+                    PanoramaClient.Properties.Resources
+                        .AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_the_status_of_the_document_import_pipeline_job,
+                    string.Empty,
+                    string.Format(PanoramaClient.Properties.Resources.GenericState_AppendErrorAndUri_Error___0_,
+                        errorLine1),
+                    errorLine2,
+                    string.Format("URL: {0}",
+                        PanoramaUtil.GetPipelineJobStatusUri(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER, PIPELINE_JOB_ID)));
             }
         }
 
@@ -388,7 +595,7 @@ namespace pwiz.SkylineTestFunctional
 
             public override void DoRequest(HttpWebRequest request, string method, string authHeader, string messageOnLabkeyError = null)
             {
-                // Method can be HEAD, MOVE, DELETE.  Error can be thrown based on the error.
+                // Method can be HEAD, MOVE, DELETE.  Error can be thrown based on the request method.
             }
 
             public override byte[] DoPost(Uri uri, NameValueCollection postData)
@@ -408,28 +615,6 @@ namespace pwiz.SkylineTestFunctional
                     return new UTF8Encoding().GetBytes(json.ToString());
                 }
                 else return Array.Empty<byte>();
-            }
-
-            public static LabKeyError GetLabKeyError(string documentFilePath)
-            {
-                var errResponse = GetLabKeyJsonResponse(Path.GetFileName(documentFilePath));
-                return PanoramaUtil.GetIfErrorInResponse(errResponse);
-            }
-
-            private static JObject GetLabKeyJsonResponse(string filename)
-            {
-                var errResponse = new JObject();
-                // From org.labkey.api.util.FileUtil:
-                // if (Pattern.matches("(.*\\s--[^ ].*)|(.*\\s-[^- ].*)",s))
-                //     return "Filename may not contain space followed by dash.";
-                const string pattern = "(.*\\s--[^ ].*)|(.*\\s-[^- ].*)";
-                var match = Regex.Match(filename, pattern);
-                if (match.Success)
-                {
-                    errResponse[@"exception"] = "Filename may not contain space followed by dash.";
-                    errResponse[@"status"] = 400;
-                }
-                return errResponse;
             }
         }
     }

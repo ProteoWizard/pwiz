@@ -61,6 +61,149 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to File was not uploaded to the server. Please try again, or if the problem persists, please contact your Panorama server administrator..
+        /// </summary>
+        public static string AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_ {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__P" +
+                        "lease_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server" +
+                        "_administrator_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error deleting the temporary zip file on the server.
+        /// </summary>
+        public static string AbstractPanoramaClient_DeleteTempZipFile_There_was_an_error_deleting_the_temporary_zip_file_on_the_server {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_DeleteTempZipFile_There_was_an_error_deleting_the_temporar" +
+                        "y_zip_file_on_the_server", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error getting information for folder &apos;{0}&apos;.
+        /// </summary>
+        public static string AbstractPanoramaClient_GetInfoForFolders_Error_getting_information_for_folder___0__ {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_GetInfoForFolders_Error_getting_information_for_folder___0" +
+                        "__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error getting the WebDAV url for folder &apos;{0}&apos;.
+        /// </summary>
+        public static string AbstractPanoramaClient_GetWebDavPath_There_was_an_error_getting_the_WebDAV_url_for_folder___0__ {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_GetWebDavPath_There_was_an_error_getting_the_WebDAV_url_fo" +
+                        "r_folder___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error adding the document import job on the server.
+        /// </summary>
+        public static string AbstractPanoramaClient_QueueDocUploadPipelineJob_There_was_an_error_adding_the_document_import_job_on_the_server {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_QueueDocUploadPipelineJob_There_was_an_error_adding_the_do" +
+                        "cument_import_job_on_the_server", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error renaming the temporary zip file on the server.
+        /// </summary>
+        public static string AbstractPanoramaClient_RenameTempZipFile_There_was_an_error_renaming_the_temporary_zip_file_on_the_server {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_RenameTempZipFile_There_was_an_error_renaming_the_temporar" +
+                        "y_zip_file_on_the_server", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Deleting temporary file on server.
+        /// </summary>
+        public static string AbstractPanoramaClient_SendZipFile_Deleting_temporary_file_on_server {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_SendZipFile_Deleting_temporary_file_on_server", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for data import completion....
+        /// </summary>
+        public static string AbstractPanoramaClient_SendZipFile_Waiting_for_data_import_completion___ {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_SendZipFile_Waiting_for_data_import_completion___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Importing data. {0}% complete..
+        /// </summary>
+        public static string AbstractPanoramaClient_updateProgressAndWait_Importing_data___0___complete_ {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_updateProgressAndWait_Importing_data___0___complete_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Status on server is: {0}.
+        /// </summary>
+        public static string AbstractPanoramaClient_updateProgressAndWait_Status_on_server_is___0_ {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_updateProgressAndWait_Status_on_server_is___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error uploading the file.
+        /// </summary>
+        public static string AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error validating folder &apos;{0}&apos;.
+        /// </summary>
+        public static string AbstractPanoramaClient_ValidateFolder_Error_validating_folder___0__ {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_ValidateFolder_Error_validating_folder___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error getting the status of the document import pipeline job.
+        /// </summary>
+        public static string AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_the_status_of_the_document_import_pipeline_job {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_" +
+                        "the_status_of_the_document_import_pipeline_job", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Progress Updated.
+        /// </summary>
+        public static string AbstractPanoramaClient_webClient_UploadProgressChanged_Progress_Updated {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_webClient_UploadProgressChanged_Progress_Updated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Uploaded {0:fs} of {1:fs}.
+        /// </summary>
+        public static string AbstractPanoramaClient_webClient_UploadProgressChanged_Uploaded__0_fs__of__1_fs_ {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_webClient_UploadProgressChanged_Uploaded__0_fs__of__1_fs_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error parsing response as JSON..
         /// </summary>
         public static string BaseWebClient_ParseJsonResponse_Error_parsing_response_as_JSON_ {
@@ -350,6 +493,16 @@ namespace pwiz.PanoramaClient.Properties {
         public static string WebPanoramaClient_DownloadFile_Downloading__0_ {
             get {
                 return ResourceManager.GetString("WebPanoramaClient_DownloadFile_Downloading__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Server did not return a valid JSON response. {0} is not a Panorama server..
+        /// </summary>
+        public static string WebPanoramaClient_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_ {
+            get {
+                return ResourceManager.GetString("WebPanoramaClient_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is" +
+                        "_not_a_Panorama_server_", resourceCulture);
             }
         }
         

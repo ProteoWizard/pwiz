@@ -226,4 +226,52 @@
   <data name="LabKeyError_ToString_Response_status___0_" xml:space="preserve">
 	  <value>Response status: {0}</value>
   </data>
+  <data name="AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_" xml:space="preserve">
+	  <value>File was not uploaded to the server. Please try again, or if the problem persists, please contact your Panorama server administrator.</value>
+  </data>
+  <data name="AbstractPanoramaClient_SendZipFile_Deleting_temporary_file_on_server" xml:space="preserve">
+	  <value>Deleting temporary file on server</value>
+  </data>
+  <data name="AbstractPanoramaClient_SendZipFile_Waiting_for_data_import_completion___" xml:space="preserve">
+	  <value>Waiting for data import completion...</value>
+  </data>
+  <data name="AbstractPanoramaClient_ValidateFolder_Error_validating_folder___0__" xml:space="preserve">
+	  <value>Error validating folder '{0}'</value>
+  </data>
+  <data name="AbstractPanoramaClient_GetInfoForFolders_Error_getting_information_for_folder___0__" xml:space="preserve">
+	  <value>Error getting information for folder '{0}'</value>
+  </data>
+  <data name="AbstractPanoramaClient_GetWebDavPath_There_was_an_error_getting_the_WebDAV_url_for_folder___0__" xml:space="preserve">
+	  <value>There was an error getting the WebDAV url for folder '{0}'</value>
+  </data>
+  <data name="AbstractPanoramaClient_updateProgressAndWait_Importing_data___0___complete_" xml:space="preserve">
+	  <value>Importing data. {0}% complete.</value>
+  </data>
+  <data name="AbstractPanoramaClient_updateProgressAndWait_Status_on_server_is___0_" xml:space="preserve">
+	  <value>Status on server is: {0}</value>
+  </data>
+  <data name="AbstractPanoramaClient_webClient_UploadProgressChanged_Progress_Updated" xml:space="preserve">
+	  <value>Progress Updated</value>
+  </data>
+  <data name="AbstractPanoramaClient_webClient_UploadProgressChanged_Uploaded__0_fs__of__1_fs_" xml:space="preserve">
+	  <value>Uploaded {0:fs} of {1:fs}</value>
+  </data>
+  <data name="WebPanoramaClient_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_" xml:space="preserve">
+	  <value>Server did not return a valid JSON response. {0} is not a Panorama server.</value>
+  </data>
+  <data name="AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_the_status_of_the_document_import_pipeline_job" xml:space="preserve">
+	  <value>There was an error getting the status of the document import pipeline job</value>
+  </data>
+  <data name="AbstractPanoramaClient_QueueDocUploadPipelineJob_There_was_an_error_adding_the_document_import_job_on_the_server" xml:space="preserve">
+	  <value>There was an error adding the document import job on the server</value>
+  </data>
+  <data name="AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file" xml:space="preserve">
+	  <value>There was an error uploading the file</value>
+  </data>
+  <data name="AbstractPanoramaClient_RenameTempZipFile_There_was_an_error_renaming_the_temporary_zip_file_on_the_server" xml:space="preserve">
+	  <value>There was an error renaming the temporary zip file on the server</value>
+  </data>
+  <data name="AbstractPanoramaClient_DeleteTempZipFile_There_was_an_error_deleting_the_temporary_zip_file_on_the_server" xml:space="preserve">
+	  <value>There was an error deleting the temporary zip file on the server</value>
+  </data>
 </root>

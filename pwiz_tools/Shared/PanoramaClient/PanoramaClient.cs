@@ -83,7 +83,9 @@ namespace pwiz.PanoramaClient
         {
             using (var requestHelper = GetRequestHelper())
             {
-                JToken response = requestHelper.Get(requestUri, string.Format("Error validating folder '{0}'", folderPath));
+                JToken response = requestHelper.Get(requestUri,
+                    string.Format(Resources.AbstractPanoramaClient_ValidateFolder_Error_validating_folder___0__,
+                        folderPath));
 
                 if (permission != null && !PanoramaUtil.CheckFolderPermissions(response, (FolderPermission)permission))
                 {
@@ -111,14 +113,17 @@ namespace pwiz.PanoramaClient
 
             using (var requestHelper = GetRequestHelper())
             {
-                return requestHelper.Get(uri, string.Format("Error getting information for folder '{0}'", folder));
+                return requestHelper.Get(uri,
+                    string.Format(
+                        Resources.AbstractPanoramaClient_GetInfoForFolders_Error_getting_information_for_folder___0__,
+                        folder));
             }
         }
 
         public virtual Uri SendZipFile(string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
         {
             _progressMonitor = progressMonitor;
-            _progressStatus = new ProgressStatus(String.Empty);
+            _progressStatus = new ProgressStatus(string.Empty);
             var zipFileName = Path.GetFileName(zipFilePath) ?? string.Empty;
 
             // Upload zip file to pipeline folder.
@@ -143,7 +148,7 @@ namespace pwiz.PanoramaClient
                     progressMonitor.UpdateProgress(
                         _progressStatus =
                             _progressStatus.ChangeMessage(
-                                "Deleting temporary file on server"));
+                                Resources.AbstractPanoramaClient_SendZipFile_Deleting_temporary_file_on_server));
                     DeleteTempZipFile(tmpUploadUri, authHeader, requestHelper);
                     return null;
                 }
@@ -159,7 +164,7 @@ namespace pwiz.PanoramaClient
                 RenameTempZipFile(tmpUploadUri, uploadUri, authHeader, requestHelper);
 
                 // Add a document import job to the queue on the Panorama server
-                _progressStatus = _progressStatus.ChangeMessage("Waiting for data import completion...");
+                _progressStatus = _progressStatus.ChangeMessage(Resources.AbstractPanoramaClient_SendZipFile_Waiting_for_data_import_completion___);
                 progressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangePercentComplete(-1));
 
                 var rowId = QueueDocUploadPipelineJob(folderPath, zipFileName, requestHelper);
@@ -180,7 +185,9 @@ namespace pwiz.PanoramaClient
                 if (progressMonitor.IsCanceled)
                     return null;
 
-                JToken jStatusResponse = requestHelper.Get(statusUri, "Error getting the status of the document import job");
+                JToken jStatusResponse = requestHelper.Get(statusUri,
+                    Resources
+                        .AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_the_status_of_the_document_import_pipeline_job);
                 JToken rows = jStatusResponse[@"rows"];
                 var row = rows.FirstOrDefault(r => (int)r[@"RowId"] == pipelineJobRowId);
                 if (row == null)
@@ -219,7 +226,8 @@ namespace pwiz.PanoramaClient
                 { @"file", zipFileName }
             };
 
-            JToken importResponse = requestHelper.Post(importUrl, dataImportInformation, "Error adding to the document import queue on the server.");
+            JToken importResponse = requestHelper.Post(importUrl, dataImportInformation,
+                Resources.AbstractPanoramaClient_QueueDocUploadPipelineJob_There_was_an_error_adding_the_document_import_job_on_the_server);
 
 
             // ID to check import status.
@@ -254,11 +262,12 @@ namespace pwiz.PanoramaClient
             {
                 // There was an error uploading the file.
                 // uploadError gets set in webClient_UploadFileCompleted if there was an error in the LabKey JSON response.
-                throw new PanoramaServerException("There was an error uploading the file.", tmpUploadUri, uploadError);
+                throw new PanoramaServerException(
+                    Resources.AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file,
+                    tmpUploadUri, uploadError);
             }
 
             // Remove the "Temporary" header added while uploading the temporary file
-            // _webClient.Headers.Remove(@"Temporary");
             requestHelper.RemoveHeader(@"Temporary");
 
             return tmpUploadUri;
@@ -269,7 +278,10 @@ namespace pwiz.PanoramaClient
             var getPipelineContainerUri = PanoramaUtil.GetPipelineContainerUrl(ServerUri, folderPath);
 
             var jsonResponse = requestHelper.Get(getPipelineContainerUri,
-                string.Format("Error getting the WebDAV url for folder '{0}'", folderPath));
+                string.Format(
+                    Resources
+                        .AbstractPanoramaClient_GetWebDavPath_There_was_an_error_getting_the_WebDAV_url_for_folder___0__,
+                    folderPath));
             var webDavUrl = (string)jsonResponse[@"webDavURL"];
             if (webDavUrl == null)
             {
@@ -305,7 +317,9 @@ namespace pwiz.PanoramaClient
                 if (int.TryParse(match.Groups[1].Value, out var progress))
                 {
                     progress = Math.Max(progress, currentProgress);
-                    _progressStatus = _progressStatus.ChangeMessage(string.Format("Importing data. {0}% complete.", progress));
+                    _progressStatus = _progressStatus.ChangeMessage(string.Format(
+                        Resources.AbstractPanoramaClient_updateProgressAndWait_Importing_data___0___complete_,
+                        progress));
                     _progressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangePercentComplete(progress));
 
                     var delta = progress - currentProgress;
@@ -330,14 +344,16 @@ namespace pwiz.PanoramaClient
                 // Display the status since we don't recognize it.  This could be, for example, an "Import Waiting" status if another 
                 // Skyline document is currently being imported on the server. 
                 _progressMonitor.UpdateProgress(_progressStatus = _progressStatus =
-                    _progressStatus.ChangeMessage(string.Format("Status on server is: {0}", jobStatus.StatusString)));
+                    _progressStatus.ChangeMessage(string.Format(
+                        Resources.AbstractPanoramaClient_updateProgressAndWait_Status_on_server_is___0_,
+                        jobStatus.StatusString)));
             }
 
-            else if (!_progressStatus.Message.Equals("Waiting for data import completion..."))
+            else if (!_progressStatus.Message.Equals(Resources.AbstractPanoramaClient_SendZipFile_Waiting_for_data_import_completion___))
             {
                 // Import is running now. Reset the progress message in case it had been set to something else (e.g. "Import Waiting") in a previous iteration.  
                 progressMonitor.UpdateProgress(_progressStatus =
-                    _progressStatus.ChangeMessage("Waiting for data import completion..."));
+                    _progressStatus.ChangeMessage(Resources.AbstractPanoramaClient_SendZipFile_Waiting_for_data_import_completion___));
             }
 
             // This is probably an older server (pre LK19.3) that does not include the progress percent in the status.
@@ -362,7 +378,8 @@ namespace pwiz.PanoramaClient
             requestHelper.DoRequest(request,
                 @"MOVE",
                 authHeader,
-                "Error renaming temporary zip file: "
+                Resources
+                    .AbstractPanoramaClient_RenameTempZipFile_There_was_an_error_renaming_the_temporary_zip_file_on_the_server
             );
         }
 
@@ -373,27 +390,32 @@ namespace pwiz.PanoramaClient
             requestHelper.DoRequest(request,
                 @"DELETE",
                 authHeader,
-                "Error deleting temporary zip file: ");
+                Resources
+                    .AbstractPanoramaClient_DeleteTempZipFile_There_was_an_error_deleting_the_temporary_zip_file_on_the_server
+            );
         }
 
         private void ConfirmFileOnServer(Uri sourceUri, string authHeader, IRequestHelper requestHelper)
         {
+            // TODO: check upto 5 times
             var request = (HttpWebRequest)WebRequest.Create(sourceUri);
-
             // Do a HEAD request to check if the file exists on the server.
             requestHelper.DoRequest(request,
                 @"HEAD",
                 authHeader,
-                "File was not uploaded to the server. Please try again, or if the problem persists, please contact your Panorama server administrator."
-                );
+                Resources
+                    .AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_
+            );
         }
 
         private void webClient_UploadProgressChanged(object sender, UploadProgressChangedEventArgs e,
             IRequestHelper requestHelper)
         {
-            var message = e == null ? "Progress Updated" : string.Format(FileSize.FormatProvider,
-                "Uploaded {0:fs} of {1:fs}",
-                e.BytesSent, e.TotalBytesToSend);
+            var message = e == null
+                ? Resources.AbstractPanoramaClient_webClient_UploadProgressChanged_Progress_Updated
+                : string.Format(FileSize.FormatProvider,
+                    Resources.AbstractPanoramaClient_webClient_UploadProgressChanged_Uploaded__0_fs__of__1_fs_,
+                    e.BytesSent, e.TotalBytesToSend);
             int percentComplete = e == null ? 20 : e.ProgressPercentage;
             _progressStatus = _progressStatus.ChangeMessage(message).ChangePercentComplete(percentComplete);
             _progressMonitor.UpdateProgress(_progressStatus);
@@ -424,7 +446,7 @@ namespace pwiz.PanoramaClient
             {
                 try
                 {
-                    return requestHelper.Get(uri, "Error getting the maximum supported version of Skyline documents on the server.");
+                    return requestHelper.Get(uri);
                 }
                 catch (Exception)
                 {
@@ -553,7 +575,7 @@ namespace pwiz.PanoramaClient
                         if (jsonResponse == null)
                         {
                             throw new PanoramaServerException(UserStateEnum.unknown, ServerUri, requestUri, response,
-                                string.Format("Server did not return a valid JSON response. {0} is not a Panorama server.", ServerUri));
+                                string.Format(Resources.WebPanoramaClient_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_, ServerUri));
                         }
                         else
                         {

@@ -489,7 +489,7 @@ namespace pwiz.PanoramaClient
 
             if (sb.Length > 0)
             {
-                message = TextUtil.LineSeparate(message, string.Empty, sb.ToString());
+                message = TextUtil.LineSeparate(message, string.Empty, sb.ToString().TrimEnd());
             }
             
             return message;
@@ -647,9 +647,6 @@ namespace pwiz.PanoramaClient
                 // After making this request the client should have the X-LABKEY-CSRF token 
                 DownloadString(new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH));
             }
-            // After making this request the client should have the X-LABKEY-CSRF token 
-            // DownloadString(new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH));
-            // DoGet(new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH));
         }
     }
 

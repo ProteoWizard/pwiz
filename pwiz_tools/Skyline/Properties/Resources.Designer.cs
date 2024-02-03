@@ -70,16 +70,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There was an error uploading the file..
-        /// </summary>
-        public static string AbstractPanoramaPublishClient_UploadFileCompleted_There_was_an_error_uploading_the_file_ {
-            get {
-                return ResourceManager.GetString("AbstractPanoramaPublishClient_UploadFileCompleted_There_was_an_error_uploading_th" +
-                        "e_file_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to score = {0:F06}.
         /// </summary>
         public static string AbstractSpectrumGraphItem_AddAnnotations_ {

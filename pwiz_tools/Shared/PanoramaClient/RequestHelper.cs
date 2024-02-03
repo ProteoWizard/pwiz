@@ -57,7 +57,7 @@ namespace pwiz.PanoramaClient
             return ParseResponse(response, uri, messageOnLabkeyError);
         }
 
-        public JObject Post(Uri uri, NameValueCollection postData, string messageOnLabkeyError = null)
+        public virtual JObject Post(Uri uri, NameValueCollection postData, string messageOnLabkeyError = null)
         {
             postData ??= new NameValueCollection();
             return Post(uri, postData, null, messageOnLabkeyError);
@@ -198,19 +198,13 @@ namespace pwiz.PanoramaClient
 
         protected override JObject Post(Uri uri, NameValueCollection postData, string postDataString, string messageOnLabkeyError)
         {
-            _client.GetCsrfTokenFromServer();
-            
             try
             {
+                _client.GetCsrfTokenFromServer();
                 return base.Post(uri, postData, postDataString, messageOnLabkeyError);
             }
             catch (WebException e)
             {
-                // TODO: A WebException is usually thrown if the response status code something other than 200
-                // Will there be a LabKey error in the response if this is a real server error?
-                // The answer is Yes.  For example, a POST request to create a folder that does not include 
-                // any post data will return a 404, and response contains JSON with the labkey error.
-                // TODO: Try not setting the ContentType header when doing a POST.
                 messageOnLabkeyError ??= string.Format("{0} request was unsuccessful", @"POST");
                 throw PanoramaServerException(uri, messageOnLabkeyError, e);
             }
