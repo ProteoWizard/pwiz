@@ -362,20 +362,27 @@ namespace pwiz.SkylineTestFunctional
         public class FailOnDoRequestRequestHelper : TestRequestHelper
         {
             private readonly RequestType _requestMethod;
-            private static readonly string errorLine1 = "Testing exception on {0} request";
-            private static readonly string errorLine2 = "This is the LabKey error on {0} request";
+            private static readonly string MSG_EXCEPTION = "Testing exception on {0} request";
+            private static readonly string MSG_LABKEY_ERR = "This is the LabKey error on {0} request";
+            private LabKeyError _labkeyError;
             public FailOnDoRequestRequestHelper(RequestType requestMethod)
             {
                 _requestMethod = requestMethod;
             }
-            public override void DoRequest(HttpWebRequest request, string method, string authHeader, string messageOnLabkeyError = null)
+            public override string GetResponse(HttpWebRequest request)
             {
-                if (method.Equals(_requestMethod.ToString()))
+                if (request.Method.Equals(_requestMethod.ToString()))
                 {
-                    throw new PanoramaServerException(messageOnLabkeyError, request.RequestUri,
-                        new WebException(string.Format(errorLine1, method)), 
-                        new LabKeyError(string.Format(errorLine2, _requestMethod), null));
+                    _labkeyError = new LabKeyError(string.Format(MSG_LABKEY_ERR, request.Method), null);
+                    throw new WebException(string.Format(MSG_EXCEPTION, request.Method)); 
                 }
+
+                return base.GetResponse(request);
+            }
+
+            public override LabKeyError GetLabkeyErrorFromWebException(WebException e)
+            {
+                return _labkeyError;
             }
 
             public static string GetExpectedError(string sharedZipFile, RequestType requestType)
@@ -399,8 +406,8 @@ namespace pwiz.SkylineTestFunctional
                     mainError,
                     string.Empty,
                     string.Format(PanoramaClient.Properties.Resources.GenericState_AppendErrorAndUri_Error___0_,
-                        string.Format(errorLine1, requestType.ToString())),
-                    string.Format(errorLine2, requestType.ToString()),
+                        string.Format(MSG_EXCEPTION, requestType.ToString())),
+                    string.Format(MSG_LABKEY_ERR, requestType.ToString()),
                     string.Format("URL: {0}{1}{2}", PANORAMA_SERVER, GetFolderWebdavUrl(PANORAMA_FOLDER).TrimStart('/'),
                         sharedZipFile)
                 );
@@ -452,18 +459,24 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
+        // TODO: Test WebException vs no exception but exception in JSON.
         public class FailOnSubmitPipelineJobRequestHelper : TestRequestHelper
         {
-            private static readonly string errorLine1 = "Exception adding to the document import queue.";
-            private static readonly string errorLine2 = "This is the LabKey error.";
+            private static readonly string exceptionMessage = "Exception adding to the document import queue.";
+            private static readonly string labkeyError = "This is the LabKey error.";
 
-            public override JObject Post(Uri uri, NameValueCollection postData, string messageOnLabkeyError = null)
+            public override byte[] DoPost(Uri uri, NameValueCollection postData)
             {
                 if (uri.Equals(PanoramaUtil.GetImportSkylineDocUri(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER)))
                 {
-                    throw new PanoramaServerException(messageOnLabkeyError, uri, new WebException(errorLine1), new LabKeyError(errorLine2, null));
+                    throw new  WebException(exceptionMessage);
                 }
-                return base.Post(uri, postData, messageOnLabkeyError);
+                return base.DoPost(uri, postData);
+            }
+
+            public override LabKeyError GetLabkeyErrorFromWebException(WebException e)
+            {
+                return e.Message.Equals(exceptionMessage) ? new LabKeyError(labkeyError, null) : null;
             }
 
             public static string GetExpectedError()
@@ -473,8 +486,8 @@ namespace pwiz.SkylineTestFunctional
                         .AbstractPanoramaClient_QueueDocUploadPipelineJob_There_was_an_error_adding_the_document_import_job_on_the_server,
                     string.Empty,
                     string.Format(PanoramaClient.Properties.Resources.GenericState_AppendErrorAndUri_Error___0_,
-                        errorLine1),
-                    errorLine2,
+                        exceptionMessage),
+                    labkeyError,
                     string.Format("URL: {0}",
                         PanoramaUtil.GetImportSkylineDocUri(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER)));
             }
@@ -482,15 +495,21 @@ namespace pwiz.SkylineTestFunctional
 
         public class FailOnCheckJobStatusRequestHelper : TestRequestHelper
         {
-            private static readonly string errorLine1 = "Exception checking the pipeline job status.";
-            private static readonly string errorLine2 = "This is the LabKey error.";
-            public override JObject Get(Uri uri, string messageOnLabkeyError = null)
+            private static readonly string exceptionMessage = "Exception checking the pipeline job status.";
+            private static readonly string labkeyError = "This is the LabKey error.";
+            public override string DoGet(Uri uri)
             {
                 if (uri.Equals(PanoramaUtil.GetPipelineJobStatusUri(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER, PIPELINE_JOB_ID)))
                 {
-                    throw new PanoramaServerException(messageOnLabkeyError, uri, new WebException(errorLine1), new LabKeyError(errorLine2, null));
+                    throw new WebException(exceptionMessage);
                 }
-                return base.Get(uri, messageOnLabkeyError);
+
+                return base.DoGet(uri);
+            }
+
+            public override LabKeyError GetLabkeyErrorFromWebException(WebException e)
+            {
+                return e.Message.Equals(exceptionMessage) ? new LabKeyError(labkeyError, null) : null;
             }
 
             public static string GetExpectedError()
@@ -500,8 +519,8 @@ namespace pwiz.SkylineTestFunctional
                         .AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_the_status_of_the_document_import_pipeline_job,
                     string.Empty,
                     string.Format(PanoramaClient.Properties.Resources.GenericState_AppendErrorAndUri_Error___0_,
-                        errorLine1),
-                    errorLine2,
+                        exceptionMessage),
+                    labkeyError,
                     string.Format("URL: {0}",
                         PanoramaUtil.GetPipelineJobStatusUri(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER, PIPELINE_JOB_ID)));
             }
@@ -584,6 +603,16 @@ namespace pwiz.SkylineTestFunctional
                 // _uploadProgressChangedEventHandler = handler;
             }
 
+            public override LabKeyError GetLabkeyErrorFromWebException(WebException e)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override string GetResponse(HttpWebRequest request)
+            {
+                return string.Empty;
+            }
+
             public override void Dispose()
             {
             }
@@ -593,16 +622,10 @@ namespace pwiz.SkylineTestFunctional
                 throw new NotImplementedException();
             }
 
-            public override void DoRequest(HttpWebRequest request, string method, string authHeader, string messageOnLabkeyError = null)
-            {
-                // Method can be HEAD, MOVE, DELETE.  Error can be thrown based on the request method.
-            }
-
             public override byte[] DoPost(Uri uri, NameValueCollection postData)
             {
                 if (uri.Equals(PanoramaUtil.GetImportSkylineDocUri(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER)))
                 {
-
                     var child = new JObject
                     {
                         [@"RowId"] = PIPELINE_JOB_ID

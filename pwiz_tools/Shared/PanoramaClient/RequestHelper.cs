@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Specialized;
+using System.IO;
 using System.Net;
 using System.Text;
 using Newtonsoft.Json;
@@ -10,16 +11,16 @@ namespace pwiz.PanoramaClient
 {
     public interface IRequestHelper : IDisposable
     {
-        string DoGet(Uri uri);
-        JObject Get(Uri uri, string messageOnLabkeyError = null);
-        byte[] DoPost(Uri uri, NameValueCollection postData);
-        string DoPost(Uri uri, string postData);
-        JObject Post(Uri uri, NameValueCollection postData, string messageOnLabkeyError = null);
-        JObject Post(Uri uri, string postData, string messageOnLabkeyError);
-        void DoRequest(HttpWebRequest request, string method, string authHeader, string messageOnLabkeyError = null);
+        // string DoGet(Uri uri);
+        JObject Get(Uri uri, string messageOnError = null);
+        //byte[] DoPost(Uri uri, NameValueCollection postData);
+        //string DoPost(Uri uri, string postData);
+        JObject Post(Uri uri, NameValueCollection postData, string messageOnError = null);
+        JObject Post(Uri uri, string postData, string messageOnError);
+        void DoRequest(HttpWebRequest request, string method, string authHeader, string messageOnError = null);
         void RequestJsonResponse();
         void AddHeader(string name, string value);
-        void AddHeader(HttpRequestHeader header, string value);
+        // void AddHeader(HttpRequestHeader header, string value);
         void RemoveHeader(string name);
         void AsyncUploadFile(Uri address, string method, string fileName);
         void CancelAsyncUpload();
@@ -29,19 +30,17 @@ namespace pwiz.PanoramaClient
 
     public abstract class AbstractRequestHelper : IRequestHelper
     {
-        public abstract string DoGet(Uri uri);
+        public abstract string DoGet(Uri uri); // TODO: Not in Interface
 
-        public abstract byte[] DoPost(Uri uri, NameValueCollection postData);
+        public abstract byte[] DoPost(Uri uri, NameValueCollection postData); // TODO: Not in Interface
 
-        public abstract string DoPost(Uri uri, string postData);
+        public abstract string DoPost(Uri uri, string postData); // TODO: Not in Interface
 
         public abstract void AddHeader(string name, string value);
 
-        public abstract void AddHeader(HttpRequestHeader header, string value);
+        public abstract void AddHeader(HttpRequestHeader header, string value); // TODO: Not in Interface
 
         public abstract void RemoveHeader(string name);
-
-        public abstract void DoRequest(HttpWebRequest request, string method, string authHeader, string messageOnLabkeyError = null);
 
         public abstract void AsyncUploadFile(Uri address, string method, string fileName);
 
@@ -51,38 +50,59 @@ namespace pwiz.PanoramaClient
 
         public abstract void AddUploadProgressChangedEventHandler(UploadProgressChangedEventHandler handler);
 
-        public virtual JObject Get(Uri uri, string messageOnLabkeyError = null)
+        public abstract string GetResponse(HttpWebRequest request);
+
+        public abstract LabKeyError GetLabkeyErrorFromWebException(WebException e);
+
+        // TODO: Take additional arg - list of expected keys in JSON?
+        public JObject Get(Uri uri, string messageOnError = null)
         {
-            var response = DoGet(uri);
-            return ParseResponse(response, uri, messageOnLabkeyError);
+            try
+            {
+                var response = DoGet(uri);
+                return ParseResponse(response, uri, messageOnError);
+            }
+            catch (WebException e)
+            {
+                messageOnError ??= string.Format("{0} request was unsuccessful", @"GET");
+                throw new PanoramaServerException(messageOnError, uri, e, GetLabkeyErrorFromWebException(e));
+            }
         }
 
-        public virtual JObject Post(Uri uri, NameValueCollection postData, string messageOnLabkeyError = null)
+        public JObject Post(Uri uri, NameValueCollection postData, string messageOnError = null)
         {
             postData ??= new NameValueCollection();
-            return Post(uri, postData, null, messageOnLabkeyError);
+            return Post(uri, postData, null, messageOnError);
         }
 
-        public JObject Post(Uri uri, string postData, string messageOnLabkeyError = null)
+        public JObject Post(Uri uri, string postData, string messageOnError = null)
         {
-            return Post(uri, null, postData, messageOnLabkeyError);
+            return Post(uri, null, postData, messageOnError);
         }
 
-        protected virtual JObject Post(Uri uri, NameValueCollection postData, string postDataString, string messageOnLabkeyError)
+        protected virtual JObject Post(Uri uri, NameValueCollection postData, string postDataString, string messageOnError)
         {
             RequestJsonResponse();
             string response;
-            if (postData != null)
+            try
             {
-                var responseBytes = DoPost(uri, postData);
-                response = Encoding.UTF8.GetString(responseBytes);
+                if (postData != null)
+                {
+                    var responseBytes = DoPost(uri, postData);
+                    response = Encoding.UTF8.GetString(responseBytes);
+                }
+                else
+                {
+                    AddHeader(HttpRequestHeader.ContentType, "application/json");
+                    response = DoPost(uri, postDataString);
+                }
+                return ParseResponse(response, uri, messageOnError);
             }
-            else
+            catch (WebException e)
             {
-                AddHeader(HttpRequestHeader.ContentType, "application/json");
-                response = DoPost(uri, postDataString);
+                messageOnError ??= string.Format("{0} request was unsuccessful", @"POST");
+                throw new PanoramaServerException(messageOnError, uri, e, GetLabkeyErrorFromWebException(e));
             }
-            return ParseResponse(response, uri, messageOnLabkeyError);
         }
 
         public void RequestJsonResponse()
@@ -97,9 +117,32 @@ namespace pwiz.PanoramaClient
             // 2.Well - formed HTTP requests with parameters that we don't like. This is less clear cut to me.
             // 3.Well - formed HTTP requests with legit parameters, but which exercise some sort of error scenario. We clearly shouldn't be sending a 400 for these.
             // 
-            // We have to look for the status and any exception in the returned JSON rather than expecting a WebException
-            // when the returned status is something other than 200.
+            // We have to look for the status and any exception in the returned JSON rather than expecting a WebException if the request
+            // fails on the server.
             AddHeader(HttpRequestHeader.Accept, @"application/json");
+        }
+
+        public void DoRequest(HttpWebRequest request, string method, string authHeader, string messageOnError = null)
+        {
+            request.Method = method;
+            request.Headers.Add(HttpRequestHeader.Authorization, authHeader);
+            request.Accept = @"application/json"; // Get LabKey to send JSON instead of HTML
+
+            try
+            {
+                var response = GetResponse(request);
+                // If the JSON response contains an exception message, throw a PanoramaServerException
+                var labkeyError = PanoramaUtil.GetIfErrorInResponse(response);
+                if (labkeyError != null)
+                {
+                    throw new PanoramaServerException(messageOnError, request.RequestUri, labkeyError);
+                }
+            }
+            catch (WebException e)
+            {
+                messageOnError ??= string.Format("{0} request was unsuccessful", method);
+                throw new PanoramaServerException(messageOnError, request.RequestUri, e, GetLabkeyErrorFromWebException(e));
+            }
         }
 
         protected JObject ParseJsonResponse(string response, Uri uri)
@@ -118,13 +161,13 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        protected JObject ParseResponse(string response, Uri uri, string messageOnLabKeyError)
+        protected JObject ParseResponse(string response, Uri uri, string messageOnError)
         {
             var jsonResponse = ParseJsonResponse(response, uri);
             var serverError = PanoramaUtil.GetIfErrorInResponse(jsonResponse);
             if (serverError != null)
             {
-                throw new PanoramaServerException(TextUtil.LineSeparate(messageOnLabKeyError, serverError.ToString()));
+                throw new PanoramaServerException(TextUtil.LineSeparate(messageOnError, serverError.ToString()));
             }
 
             return jsonResponse;
@@ -172,67 +215,41 @@ namespace pwiz.PanoramaClient
             return _client.UploadString(uri, PanoramaUtil.FORM_POST, postData);
         }
 
-        public override JObject Get(Uri uri, string messageOnLabkeyError = null)
-        {
-            try
-            {
-                return base.Get(uri, messageOnLabkeyError);
-            }
-            catch (WebException e)
-            {
-                messageOnLabkeyError ??= string.Format("{0} request was unsuccessful", @"GET");
-                throw PanoramaServerException(uri, messageOnLabkeyError, e);
-            }
-        }
-
-        private static PanoramaServerException PanoramaServerException(Uri uri, string messageOnLabkeyError, WebException e)
+        public override LabKeyError GetLabkeyErrorFromWebException(WebException e)
         {
             using (var r = e.Response)
             {
                 // A WebException is usually thrown if the response status code is something other than 200
                 // We could still have a LabKey error in the JSON response. 
-                var labKeyError = PanoramaUtil.GetIfErrorInResponse(r);
-                return new PanoramaServerException(messageOnLabkeyError, uri, e, labKeyError);
+                return PanoramaUtil.GetIfErrorInResponse(r);
             }
         }
 
-        protected override JObject Post(Uri uri, NameValueCollection postData, string postDataString, string messageOnLabkeyError)
+        protected override JObject Post(Uri uri, NameValueCollection postData, string postDataString, string messageOnError)
         {
             try
             {
                 _client.GetCsrfTokenFromServer();
-                return base.Post(uri, postData, postDataString, messageOnLabkeyError);
             }
             catch (WebException e)
             {
-                messageOnLabkeyError ??= string.Format("{0} request was unsuccessful", @"POST");
-                throw PanoramaServerException(uri, messageOnLabkeyError, e);
+                throw new PanoramaServerException("There was an error getting a CSRF token from the server", uri, e, GetLabkeyErrorFromWebException(e));
             }
+            return base.Post(uri, postData, postDataString, messageOnError);
         }
 
-        public override void DoRequest(HttpWebRequest request, string method, string authHeader, string messageOnLabkeyError = null)
+        public override string GetResponse(HttpWebRequest request)
         {
-            request.Method = method;
-            request.Headers.Add(HttpRequestHeader.Authorization, authHeader);
-            request.Accept = @"application/json"; // Get LabKey to send JSON instead of HTML
-
-            try
+            using (var response = request.GetResponse())
             {
-                using (var response = request.GetResponse())
+                var stream = response.GetResponseStream();
+                if (stream != null)
                 {
-                    // If the JSON response contains an exception message, throw a PanoramaServerException
-                    var labkeyError = PanoramaUtil.GetIfErrorInResponse(response);
-                    if (labkeyError != null)
-                    {
-                        throw new PanoramaServerException(messageOnLabkeyError, request.RequestUri, labkeyError);
-                    }
+                    return new StreamReader(stream).ReadToEnd();
                 }
             }
-            catch (WebException e)
-            {
-                messageOnLabkeyError ??= string.Format("{0} request was unsuccessful", method);
-                throw PanoramaServerException(request.RequestUri, messageOnLabkeyError, e);
-            }
+
+            return null;
         }
 
         public override void AsyncUploadFile(Uri address, string method, string fileName)
@@ -254,7 +271,6 @@ namespace pwiz.PanoramaClient
         {
             _client.UploadProgressChanged += handler;
         }
-
 
         protected virtual void Dispose(bool disposing)
         {
