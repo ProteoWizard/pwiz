@@ -189,6 +189,7 @@
     <Compile Include="ExportPropertiesTest.cs" />
     <Compile Include="FindNodeCancelTest.cs" />
     <Compile Include="IgnoreSimScansTest.cs" />
+    <Compile Include="ImmediateWindowWarningsTest.cs" />
     <Compile Include="InteractiveCommandLineToolTest.cs" />
     <Compile Include="LegacyOptimizationStepTest.cs" />
     <Compile Include="LegacyScoringModelTest.cs" />
@@ -202,6 +203,7 @@
     <Compile Include="Ms1SpectrumFilterTest.cs" />
     <Compile Include="MultiInjectionReplicatesTest.cs" />
     <Compile Include="OpenDocWithBackgroundProteomeTest.cs" />
+    <Compile Include="PeakAreaRelativeAbundanceGraphTest.cs" />
     <Compile Include="PeakAreaPeptideGraphTest.cs" />
     <Compile Include="PrmCeOptimizationTest.cs" />
     <Compile Include="QcTraceChromatogramTest.cs" />
@@ -564,6 +566,7 @@
     <None Include="HighPrecModsTest.zip" />
     <None Include="HighReplicateCountTest.zip" />
     <None Include="IgnoreSimScansTest.zip" />
+    <None Include="ImmediateWindowWarningsTest.zip" />
     <None Include="ImportAnnotationsTest.zip" />
     <None Include="ImportDocTest.zip" />
     <None Include="ImportEncyclopeDiaLibraryTest.zip" />
@@ -612,6 +615,7 @@
     <None Include="PasteMoleculeTest.zip" />
     <None Include="PasteTransitionListTest.zip" />
     <None Include="PeakAreaDotpGraphTest.zip" />
+    <None Include="PeakAreaRelativeAbundanceGraphTest.zip" />
     <None Include="PeakAreaPeptideGraphTest.zip" />
     <None Include="PeakBoundaryCompareTest.zip" />
     <None Include="PeakScoringModelTest.zip" />
