@@ -89,12 +89,12 @@ namespace pwiz.PanoramaClient
 
                 if (permission != null && !PanoramaUtil.CheckFolderPermissions(response, (FolderPermission)permission))
                 {
-                    throw new PanoramaServerException(FolderState.nopermission, folderPath, ServerUri, requestUri, Username);
+                    throw new PanoramaServerException(FolderState.nopermission.Error(ServerUri, folderPath, Username), requestUri);
                 }
 
                 if (checkTargetedMs && !PanoramaUtil.HasTargetedMsModule(response))
                 {
-                    throw new PanoramaServerException(FolderState.notpanorama, folderPath, ServerUri, requestUri, Username);
+                    throw new PanoramaServerException(FolderState.notpanorama.Error(ServerUri, folderPath, Username), requestUri);
                 }
             }
         }
@@ -483,7 +483,7 @@ namespace pwiz.PanoramaClient
                 if (ex.Status == WebExceptionStatus.NameResolutionFailure)
                 {
                     var responseUri = response?.ResponseUri;
-                    throw new PanoramaServerException(ServerStateEnum.missing, uri,
+                    throw new PanoramaServerException(ServerStateEnum.missing.Error(uri),
                         (responseUri != null && !uri.Equals(responseUri) ? responseUri : null), labkeyError, ex);
                 }
                 else if (tryNewProtocol)
@@ -503,7 +503,7 @@ namespace pwiz.PanoramaClient
                     }
                 }
 
-                throw new PanoramaServerException(ServerStateEnum.unknown, ServerUri, uri, labkeyError, ex);
+                throw new PanoramaServerException(ServerStateEnum.unknown.Error(ServerUri), uri, labkeyError, ex);
             }
         }
 
@@ -543,7 +543,7 @@ namespace pwiz.PanoramaClient
                 }
 
                 var labkeyError = PanoramaUtil.GetIfErrorInResponse(response);
-                throw new PanoramaServerException(UserStateEnum.unknown, ServerUri, PanoramaUtil.GetEnsureLoginUri(pServer), labkeyError, ex);
+                throw new PanoramaServerException(UserStateEnum.unknown.Error(ServerUri), PanoramaUtil.GetEnsureLoginUri(pServer), labkeyError, ex);
             }
         }
 
@@ -563,8 +563,10 @@ namespace pwiz.PanoramaClient
                 {
                     if (response.StatusCode != HttpStatusCode.OK)
                     {
-                        throw new PanoramaServerException(UserStateEnum.nonvalid, ServerUri, requestUri, response,
-                            string.Format("Response received from server: {0} {1}", response.StatusCode, response.StatusDescription));
+                        throw new PanoramaServerException(UserStateEnum.nonvalid.Error(ServerUri), requestUri,
+                            string.Format("Response received from server: {0} {1}", response.StatusCode, response.StatusDescription),
+                            PanoramaUtil.GetIfErrorInResponse(response)
+                        );
                     }
 
                     JObject jsonResponse = null;
@@ -574,16 +576,18 @@ namespace pwiz.PanoramaClient
                     {
                         if (jsonResponse == null)
                         {
-                            throw new PanoramaServerException(UserStateEnum.unknown, ServerUri, requestUri, response,
-                                string.Format(Resources.WebPanoramaClient_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_, ServerUri));
+                            throw new PanoramaServerException(UserStateEnum.unknown.Error(ServerUri), requestUri,
+                                string.Format(Resources.WebPanoramaClient_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_, ServerUri),
+                                PanoramaUtil.GetIfErrorInResponse(response));
                         }
                         else
                         {
+                            // TODO: Labkey error message (if any) should come before the JSON returned in the response.
                             var jsonText = jsonResponse.ToString(Formatting.None);
                             jsonText = jsonText.Replace(@"{", @"{{"); // escape curly braces
-                            throw new PanoramaServerException(UserStateEnum.unknown, ServerUri, requestUri,
-                                response,
-                                string.Format(Resources.PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_, jsonText));
+                            throw new PanoramaServerException(UserStateEnum.unknown.Error(ServerUri), requestUri,
+                                string.Format(Resources.PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_, jsonText),
+                                PanoramaUtil.GetIfErrorInResponse(response));
                         }
                     }
 
@@ -610,7 +614,7 @@ namespace pwiz.PanoramaClient
                         }
                         else
                         {
-                            throw new PanoramaServerException(UserStateEnum.nonvalid, ServerUri, requestUri, labKeyError, ex); // User cannot be authenticated
+                            throw new PanoramaServerException(UserStateEnum.nonvalid.Error(ServerUri), requestUri, labKeyError, ex); // User cannot be authenticated
                         }
                     }
 
@@ -622,7 +626,7 @@ namespace pwiz.PanoramaClient
                         return pServer;
                     }
 
-                    throw new PanoramaServerException(UserStateEnum.nonvalid, ServerUri, requestUri, labKeyError, ex); // User cannot be authenticated
+                    throw new PanoramaServerException(UserStateEnum.nonvalid.Error(ServerUri), requestUri, labKeyError, ex); // User cannot be authenticated
                 }
 
                 throw;
@@ -637,18 +641,17 @@ namespace pwiz.PanoramaClient
             }
             catch (WebException ex)
             {
-                // TODO: WebException should be caught by IRequestHelper.Get(uri) in base.ValidateFolder and throws back as PanoramaServerException
+                // TODO: WebException should be caught by IRequestHelper.Get(uri) in base.ValidateFolder and thrown back as PanoramaServerException
                 //       Remove the following code?
                 var response = ex.Response as HttpWebResponse;
                 var labkeyError = PanoramaUtil.GetIfErrorInResponse(response);
                 if (response != null && response.StatusCode == HttpStatusCode.NotFound)
                 {
-                    throw new PanoramaServerException(FolderState.notfound, folderPath, ServerUri, requestUri, Username, labkeyError, ex);
+                    throw new PanoramaServerException(FolderState.notfound.Error(ServerUri, folderPath, Username), requestUri, labkeyError, ex);
                 }
                 else
                 {
-                    throw new PanoramaServerException(FolderState.unknown, folderPath, ServerUri,
-                        requestUri, Username, labkeyError, ex);
+                    throw new PanoramaServerException(FolderState.unknown.Error(ServerUri, folderPath, Username), requestUri, labkeyError, ex);
                 }
             }
         }

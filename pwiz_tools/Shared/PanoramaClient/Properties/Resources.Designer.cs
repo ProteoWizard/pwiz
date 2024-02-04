@@ -448,6 +448,15 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The server {0} is not a Panorama server.
+        /// </summary>
+        public static string ServerStateErrors_Error_The_server__0__is_not_a_Panorama_server {
+            get {
+                return ResourceManager.GetString("ServerStateErrors_Error_The_server__0__is_not_a_Panorama_server", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap up_pro32 {

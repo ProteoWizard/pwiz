@@ -65,7 +65,7 @@ namespace pwiz.PanoramaClient
             catch (WebException e)
             {
                 messageOnError ??= string.Format("{0} request was unsuccessful", @"GET");
-                throw new PanoramaServerException(messageOnError, uri, e, GetLabkeyErrorFromWebException(e));
+                throw new PanoramaServerException(messageOnError, uri, GetLabkeyErrorFromWebException(e), e);
             }
         }
 
@@ -101,7 +101,7 @@ namespace pwiz.PanoramaClient
             catch (WebException e)
             {
                 messageOnError ??= string.Format("{0} request was unsuccessful", @"POST");
-                throw new PanoramaServerException(messageOnError, uri, e, GetLabkeyErrorFromWebException(e));
+                throw new PanoramaServerException(messageOnError, uri, GetLabkeyErrorFromWebException(e), e);
             }
         }
 
@@ -141,7 +141,7 @@ namespace pwiz.PanoramaClient
             catch (WebException e)
             {
                 messageOnError ??= string.Format("{0} request was unsuccessful", method);
-                throw new PanoramaServerException(messageOnError, request.RequestUri, e, GetLabkeyErrorFromWebException(e));
+                throw new PanoramaServerException(messageOnError, request.RequestUri, GetLabkeyErrorFromWebException(e), e);
             }
         }
 
@@ -233,7 +233,8 @@ namespace pwiz.PanoramaClient
             }
             catch (WebException e)
             {
-                throw new PanoramaServerException("There was an error getting a CSRF token from the server", uri, e, GetLabkeyErrorFromWebException(e));
+                throw new PanoramaServerException("There was an error getting a CSRF token from the server", uri,
+                    GetLabkeyErrorFromWebException(e), e);
             }
             return base.Post(uri, postData, postDataString, messageOnError);
         }

@@ -274,4 +274,7 @@
   <data name="AbstractPanoramaClient_DeleteTempZipFile_There_was_an_error_deleting_the_temporary_zip_file_on_the_server" xml:space="preserve">
 	  <value>There was an error deleting the temporary zip file on the server</value>
   </data>
+  <data name="ServerStateErrors_Error_The_server__0__is_not_a_Panorama_server" xml:space="preserve">
+	  <value>The server {0} is not a Panorama server</value>
+  </data>
 </root>

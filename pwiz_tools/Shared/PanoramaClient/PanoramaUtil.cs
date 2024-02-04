@@ -256,6 +256,80 @@ namespace pwiz.PanoramaClient
     public enum UserStateEnum { valid, nonvalid, unknown }
     public enum FolderState { valid, notpanorama, nopermission, notfound, unknown }
 
+
+    public static class ServerStateErrors
+    {
+        public static string Error(this ServerStateEnum state, Uri serverUri)
+        {
+            var stateError = string.Empty;
+            switch (state)
+            {
+                case ServerStateEnum.missing:
+                    stateError = string.Format(
+                        Resources.ServerState_GetErrorMessage_The_server__0__does_not_exist_,
+                        serverUri.AbsoluteUri);
+                    break;
+                case ServerStateEnum.notpanorama:
+                    stateError = string.Format(Resources.ServerStateErrors_Error_The_server__0__is_not_a_Panorama_server, serverUri.AbsoluteUri);
+                    break;
+                case ServerStateEnum.unknown:
+                    stateError = string.Format(
+                        Resources.ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__,
+                        serverUri.AbsoluteUri);
+                    break;
+            }
+            return stateError;
+        }
+    }
+
+    public static class UserStateErrors
+    {
+        public static string Error(this UserStateEnum state, Uri serverUri)
+        {
+            var stateError = string.Empty;
+            switch (state)
+            {
+                case UserStateEnum.nonvalid:
+                    stateError = Resources.UserState_GetErrorMessage_The_username_and_password_could_not_be_authenticated_with_the_panorama_server_;
+                    break;
+                case UserStateEnum.unknown:
+                    stateError = string.Format(
+                        Resources.UserState_GetErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__,
+                        serverUri.AbsoluteUri);
+                    break;
+            }
+            return stateError;
+        }
+    }
+
+    public static class FolderStateErrors
+    {
+        public static string Error(this FolderState state, Uri serverUri, string folderPath, string username)
+        {
+            var stateError = string.Empty;
+            switch (state)
+            {
+                case FolderState.notfound:
+                    stateError = string.Format(
+                        Resources.PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_,
+                        folderPath, serverUri);
+                    break;
+                case FolderState.nopermission:
+                    stateError = string.Format(Resources
+                            .PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_,
+                        username, folderPath);
+                    break;
+                case FolderState.notpanorama:
+                    stateError = string.Format(Resources.PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder, folderPath);
+                    break;
+                case FolderState.unknown:
+                    stateError = string.Format("Unrecognized error trying to get status for folder {0}.", folderPath);
+                    break;
+            }
+            return stateError;
+        }
+    }
+
     public enum FolderPermission
     {
         read = 1,   // Defined in org.labkey.api.security.ACL.java: public static final int PERM_READ = 0x00000001;
@@ -321,7 +395,12 @@ namespace pwiz.PanoramaClient
         {
         }
 
-        public PanoramaServerException(string message, Uri requestUri, Exception e, LabKeyError labkeyError) 
+        public PanoramaServerException(string message, Uri requestUri)
+            : base(AppendErrorAndUri(message, requestUri, null, null))
+        {
+        }
+
+        public PanoramaServerException(string message, Uri requestUri, LabKeyError labkeyError, Exception e) 
             : base(AppendErrorAndUri(message, requestUri, e.Message, labkeyError), e)
         {
         }
@@ -331,137 +410,9 @@ namespace pwiz.PanoramaClient
         {
         }
 
-        public PanoramaServerException(ServerStateEnum state, Uri uri, Uri requestUri, WebResponse response, Exception e)
-            : this(state, uri, requestUri, PanoramaUtil.GetIfErrorInResponse(response), e)
+        public PanoramaServerException(string message, Uri requestUri, string errorDetail, LabKeyError labkeyError)
+            : base(AppendErrorAndUri(message, requestUri, errorDetail, labkeyError))
         {
-        }
-
-        public PanoramaServerException(ServerStateEnum state, Uri uri, Uri requestUri, LabKeyError labkeyError, Exception e) 
-            : base(GetErrorMessage(state, uri, requestUri, labkeyError, e), e)
-        {
-        }
-
-        public PanoramaServerException(ServerStateEnum state, Uri uri, Uri requestUri, string error)
-            : this(GetErrorMessage(state, uri, requestUri, null, error))
-        {
-        }
-
-        public PanoramaServerException(UserStateEnum state, Uri uri, Uri requestUri, WebResponse response, string additionalMessage)
-            : this(state, uri, requestUri, PanoramaUtil.GetIfErrorInResponse(response), additionalMessage)
-        {
-        }
-
-        public PanoramaServerException(UserStateEnum state, Uri uri, Uri requestUri, LabKeyError error,string additionalMessage)
-            : base(GetErrorMessage(state, uri, requestUri, error, additionalMessage))
-        {
-        }
-
-        public PanoramaServerException(UserStateEnum state, Uri uri, Uri requestUri, WebResponse response, Exception e)
-            : this(state, uri, requestUri, PanoramaUtil.GetIfErrorInResponse(response), e)
-        {
-        }
-
-        public PanoramaServerException(UserStateEnum state, Uri uri, Uri requestUri, string error)
-            : this(GetErrorMessage(state, uri, requestUri, null, error))
-        {
-        }
-
-        public PanoramaServerException(UserStateEnum state, Uri uri,Uri requestUri, LabKeyError error, Exception e) 
-            : base(GetErrorMessage(state, uri, requestUri, error, e), e)
-        {
-        }
-
-        public PanoramaServerException(FolderState state, string folderPath, Uri uri, Uri requestUri, string username)
-            : base(GetErrorMessage(state, folderPath, uri, requestUri, username, null, null))
-        {
-        }
-
-        public PanoramaServerException(FolderState state, string folderPath, Uri uri, Uri requestUri, string username, WebResponse response, Exception e)
-            : this(state, folderPath, uri, requestUri, username, PanoramaUtil.GetIfErrorInResponse(response), e)
-        {
-        }
-
-        public PanoramaServerException(FolderState state, string folderPath, Uri uri, Uri requestUri, string username, LabKeyError error, Exception e) 
-            : base(GetErrorMessage(state, folderPath, uri, requestUri, username, error, e), e)
-        {
-        }
-
-
-        private static string GetErrorMessage(ServerStateEnum state, Uri serverUri, Uri requestUri, LabKeyError error, Exception e)
-        {
-            return GetErrorMessage(state, serverUri, requestUri, error, e?.Message);
-        }
-
-        private static string GetErrorMessage(ServerStateEnum state, Uri serverUri, Uri requestUri, LabKeyError error, string additionalErrorMessage)
-        {
-            var stateError = string.Empty;
-            switch (state)
-            {
-                case ServerStateEnum.missing:
-                    stateError = string.Format(
-                        Resources.ServerState_GetErrorMessage_The_server__0__does_not_exist_,
-                        serverUri.AbsoluteUri);
-                    break;
-                case ServerStateEnum.notpanorama:
-                    stateError = string.Format("The server {0} is not a Panorama server", serverUri.AbsoluteUri);
-                    break;
-                case ServerStateEnum.unknown:
-                    stateError = string.Format(
-                        Resources.ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__,
-                        serverUri.AbsoluteUri);
-                    break;
-            }
-
-            return AppendErrorAndUri(stateError, requestUri, additionalErrorMessage, error);
-        }
-
-        private static string GetErrorMessage(UserStateEnum state, Uri serverUri, Uri requestUri, LabKeyError error, Exception e)
-        {
-            return GetErrorMessage(state, serverUri, requestUri, error, e?.Message);
-        }
-
-        private static string GetErrorMessage(UserStateEnum state, Uri serverUri, Uri requestUri, LabKeyError error, string additionalErrorMessage)
-        {
-            var stateError = string.Empty;
-            switch (state)
-            {
-                case UserStateEnum.nonvalid:
-                    stateError = Resources.UserState_GetErrorMessage_The_username_and_password_could_not_be_authenticated_with_the_panorama_server_;
-                    break;
-                case UserStateEnum.unknown:
-                    stateError = string.Format(
-                        Resources.UserState_GetErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__,
-                        serverUri.AbsoluteUri);
-                    break;
-            }
-
-            return AppendErrorAndUri(stateError, requestUri, additionalErrorMessage, error);
-        }
-
-        private static string GetErrorMessage(FolderState state, string folderPath, Uri serverUri, Uri requestUri, string username, LabKeyError error, Exception e)
-        {
-            var stateError = string.Empty;
-            switch (state)
-            {
-                case FolderState.notfound:
-                    stateError = string.Format(
-                        Resources.PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_,
-                        folderPath, serverUri);
-                    break;
-                case FolderState.nopermission:
-                    stateError = string.Format(Resources
-                            .PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_,
-                        username, folderPath);
-                    break;
-                case FolderState.notpanorama:
-                    stateError = string.Format(Resources.PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder, folderPath);
-                    break;
-                case FolderState.unknown:
-                    stateError = string.Format("Unrecognized error trying to get status for folder {0}.", folderPath);
-                    break;
-            }
-
-            return AppendErrorAndUri(stateError, requestUri, e?.Message, error);
         }
 
         private static string AppendErrorAndUri(string mainMessage, Uri uri, string error, LabKeyError labkeyError)
@@ -492,6 +443,65 @@ namespace pwiz.PanoramaClient
                 message = TextUtil.LineSeparate(message, string.Empty, sb.ToString().TrimEnd());
             }
             
+            return message;
+        }
+    }
+
+    public class ExceptionMessageBuilder
+    {
+        private string _error;
+        private string _errorDetail;
+        private LabKeyError _labkeyError;
+        private Uri _uri;
+
+        public ExceptionMessageBuilder Error(string error)
+        {
+            _error = error;
+            return this;
+        }
+        public ExceptionMessageBuilder ErrorDetail(string errorDetail)
+        {
+            _errorDetail = errorDetail;
+            return this;
+        }
+        public ExceptionMessageBuilder LabKeyError(LabKeyError labkeyError)
+        {
+            _labkeyError = labkeyError;
+            return this;
+        }
+        public ExceptionMessageBuilder Uri(Uri requestUri)
+        {
+            _uri = requestUri;
+            return this;
+        }
+        public string build()
+        {
+            var message = _error;
+
+            var sb = new StringBuilder();
+
+            if (_errorDetail != null)
+            {
+                sb.AppendLine(string.Format(Resources.GenericState_AppendErrorAndUri_Error___0_, _errorDetail));
+            }
+
+            if (_labkeyError != null)
+            {
+                sb.AppendLine(_errorDetail != null
+                    ? _labkeyError.ToString()
+                    : string.Format(Resources.GenericState_AppendErrorAndUri_Error___0_, _labkeyError));
+            }
+
+            if (_uri != null)
+            {
+                sb.AppendLine(string.Format(Resources.GenericState_AppendErrorAndUri_URL___0_, _uri));
+            }
+
+            if (sb.Length > 0)
+            {
+                message = TextUtil.LineSeparate(message, string.Empty, sb.ToString().TrimEnd());
+            }
+
             return message;
         }
     }
