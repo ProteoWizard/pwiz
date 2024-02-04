@@ -69,26 +69,35 @@ namespace pwiz.PanoramaClient
             return serverName;
         }
 
-        public static bool TryGetJsonResponse(HttpWebResponse response, ref JObject jsonResponse)
+        public static bool TryGetJsonResponse(WebResponse response, ref JObject jsonResponse)
         {
-            using (var stream = response.GetResponseStream())
+            var responseText = GetResponseString(response);
+            if (responseText != null)
+            {
+                try
+                {
+                    jsonResponse = JObject.Parse(responseText);
+                    return true;
+                }
+                catch (JsonReaderException) { }
+            }
+            return false;
+        }
+
+        public static string GetResponseString(WebResponse response)
+        {
+            using (var stream = response?.GetResponseStream())
             {
                 if (stream != null)
                 {
                     using (var reader = new StreamReader(stream, Encoding.UTF8))
                     {
-                        var responseText = reader.ReadToEnd();
-                        try
-                        {
-                            jsonResponse = JObject.Parse(responseText);
-                            return true;
-                        }
-                        catch (JsonReaderException) {}
+                        return reader.ReadToEnd();
                     }
                 }
             }
 
-            return false;
+            return null;
         }
 
         public static bool IsValidEnsureLoginResponse(JObject jsonResponse, string expectedEmail)
@@ -112,7 +121,6 @@ namespace pwiz.PanoramaClient
             jsonResponse.TryGetValue(@"currentUser", out JToken currentUser);
             if (currentUser != null) 
             {
-                // TODO: remove this check? Replace with return currentUser != null && currentUser.Value<string>(@"email") != null;
                 var email = currentUser.Value<string>(@"email");
                 return email != null && email.Equals(expectedEmail, StringComparison.OrdinalIgnoreCase);
             }
@@ -225,14 +233,9 @@ namespace pwiz.PanoramaClient
 
         public static LabKeyError GetIfErrorInResponse(WebResponse response)
         {
-            var stream = response?.GetResponseStream();
-            if (stream != null)
-            {
-                var responseString = new StreamReader(stream).ReadToEnd();
-                return GetIfErrorInResponse(responseString);
-            }
-
-            return null;
+            JObject jsonResponse = null;
+            TryGetJsonResponse(response, ref jsonResponse);
+            return GetIfErrorInResponse(jsonResponse);
         }
 
         public static LabKeyError GetIfErrorInResponse(string responseString)
@@ -394,87 +397,52 @@ namespace pwiz.PanoramaClient
         public PanoramaServerException(string message, Exception e) : base(message, e)
         {
         }
-
-        public PanoramaServerException(string message, Uri requestUri)
-            : base(AppendErrorAndUri(message, requestUri, null, null))
-        {
-        }
-
-        public PanoramaServerException(string message, Uri requestUri, LabKeyError labkeyError, Exception e) 
-            : base(AppendErrorAndUri(message, requestUri, e.Message, labkeyError), e)
-        {
-        }
-
-        public PanoramaServerException(string message, Uri requestUri, LabKeyError labkeyError)
-            : base(AppendErrorAndUri(message, requestUri, null, labkeyError))
-        {
-        }
-
-        public PanoramaServerException(string message, Uri requestUri, string errorDetail, LabKeyError labkeyError)
-            : base(AppendErrorAndUri(message, requestUri, errorDetail, labkeyError))
-        {
-        }
-
-        private static string AppendErrorAndUri(string mainMessage, Uri uri, string error, LabKeyError labkeyError)
-        {
-            var message = mainMessage;
-
-            var sb = new StringBuilder();
-
-            if (error != null)
-            {
-                sb.AppendLine(string.Format(Resources.GenericState_AppendErrorAndUri_Error___0_, error));
-            }
-
-            if (labkeyError != null)
-            {
-                sb.AppendLine(error != null
-                    ? labkeyError.ToString()
-                    : string.Format(Resources.GenericState_AppendErrorAndUri_Error___0_, labkeyError));
-            }
-
-            if (uri != null)
-            {
-                sb.AppendLine(string.Format(Resources.GenericState_AppendErrorAndUri_URL___0_, uri));
-            }
-
-            if (sb.Length > 0)
-            {
-                message = TextUtil.LineSeparate(message, string.Empty, sb.ToString().TrimEnd());
-            }
-            
-            return message;
-        }
     }
 
-    public class ExceptionMessageBuilder
+    public class ErrorMessageBuilder
     {
         private string _error;
         private string _errorDetail;
         private LabKeyError _labkeyError;
         private Uri _uri;
+        private string _responseString;
 
-        public ExceptionMessageBuilder Error(string error)
+        public ErrorMessageBuilder (string error)
         {
             _error = error;
-            return this;
         }
-        public ExceptionMessageBuilder ErrorDetail(string errorDetail)
+        public ErrorMessageBuilder ErrorDetail(string errorDetail)
         {
             _errorDetail = errorDetail;
             return this;
         }
-        public ExceptionMessageBuilder LabKeyError(LabKeyError labkeyError)
+        public ErrorMessageBuilder LabKeyError(LabKeyError labkeyError)
         {
             _labkeyError = labkeyError;
             return this;
         }
-        public ExceptionMessageBuilder Uri(Uri requestUri)
+        public ErrorMessageBuilder Uri(Uri requestUri)
         {
             _uri = requestUri;
             return this;
         }
-        public string build()
+
+        public ErrorMessageBuilder Json(JObject json)
+        {
+            if (json != null)
+            {
+                _responseString = json.ToString(Formatting.None);
+                _responseString = _responseString.Replace(@"{", @"{{"); // escape curly braces
+            }
+            return this;
+        }
+        public ErrorMessageBuilder Response(string response)
+        {
+            _responseString = response;
+            return this;
+        }
+
+        public string Build()
         {
             var message = _error;
 
@@ -495,6 +463,11 @@ namespace pwiz.PanoramaClient
             if (_uri != null)
             {
                 sb.AppendLine(string.Format(Resources.GenericState_AppendErrorAndUri_URL___0_, _uri));
+            }
+
+            if (_responseString != null)
+            {
+                sb.AppendLine(Resources.ErrorMessageBuilder_Build_Response__).AppendLine(_responseString);
             }
 
             if (sb.Length > 0)

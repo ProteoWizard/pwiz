@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Specialized;
-using System.IO;
 using System.Net;
 using System.Text;
 using Newtonsoft.Json;
@@ -64,9 +63,15 @@ namespace pwiz.PanoramaClient
             }
             catch (WebException e)
             {
-                messageOnError ??= string.Format("{0} request was unsuccessful", @"GET");
-                throw new PanoramaServerException(messageOnError, uri, GetLabkeyErrorFromWebException(e), e);
+                throw GetPanoramaServerException(messageOnError, uri, @"GET", e);
             }
+        }
+
+        private PanoramaServerException GetPanoramaServerException(string messageOnError, Uri uri, string requestMethod, WebException e)
+        {
+            messageOnError ??= string.Format(Resources.AbstractRequestHelper_DoRequest__0__request_was_unsuccessful, requestMethod);
+            return new PanoramaServerException(new ErrorMessageBuilder(messageOnError)
+                .Uri(uri).LabKeyError(GetLabkeyErrorFromWebException(e)).ErrorDetail(e.Message).Build(), e);
         }
 
         public JObject Post(Uri uri, NameValueCollection postData, string messageOnError = null)
@@ -100,8 +105,7 @@ namespace pwiz.PanoramaClient
             }
             catch (WebException e)
             {
-                messageOnError ??= string.Format("{0} request was unsuccessful", @"POST");
-                throw new PanoramaServerException(messageOnError, uri, GetLabkeyErrorFromWebException(e), e);
+                throw GetPanoramaServerException(messageOnError, uri, @"POST", e);
             }
         }
 
@@ -128,6 +132,7 @@ namespace pwiz.PanoramaClient
             request.Headers.Add(HttpRequestHeader.Authorization, authHeader);
             request.Accept = @"application/json"; // Get LabKey to send JSON instead of HTML
 
+            messageOnError ??= string.Format(Resources.AbstractRequestHelper_DoRequest__0__request_was_unsuccessful, method);
             try
             {
                 var response = GetResponse(request);
@@ -135,13 +140,12 @@ namespace pwiz.PanoramaClient
                 var labkeyError = PanoramaUtil.GetIfErrorInResponse(response);
                 if (labkeyError != null)
                 {
-                    throw new PanoramaServerException(messageOnError, request.RequestUri, labkeyError);
+                    throw new PanoramaServerException(new ErrorMessageBuilder(messageOnError).Uri(request.RequestUri).LabKeyError(labkeyError).Build());
                 }
             }
             catch (WebException e)
             {
-                messageOnError ??= string.Format("{0} request was unsuccessful", method);
-                throw new PanoramaServerException(messageOnError, request.RequestUri, GetLabkeyErrorFromWebException(e), e);
+                throw GetPanoramaServerException(messageOnError, request.RequestUri, method, e);
             }
         }
 
@@ -153,11 +157,9 @@ namespace pwiz.PanoramaClient
             }
             catch (JsonReaderException e)
             {
-                throw new PanoramaServerException(TextUtil.LineSeparate(
-                    Resources.BaseWebClient_ParseJsonResponse_Error_parsing_response_as_JSON_,
-                    string.Format(Resources.GenericState_AppendErrorAndUri_Error___0_, e.Message),
-                    string.Format(Resources.GenericState_AppendErrorAndUri_URL___0_, uri),
-                    string.Format(Resources.BaseWebClient_ParseJsonResponse_Response___0_, response)), e);
+                throw new PanoramaServerException(
+                    new ErrorMessageBuilder(Resources.BaseWebClient_ParseJsonResponse_Error_parsing_response_as_JSON_)
+                        .ErrorDetail(e.Message).Uri(uri).Response(response).Build(), e);
             }
         }
 
@@ -167,7 +169,7 @@ namespace pwiz.PanoramaClient
             var serverError = PanoramaUtil.GetIfErrorInResponse(jsonResponse);
             if (serverError != null)
             {
-                throw new PanoramaServerException(TextUtil.LineSeparate(messageOnError, serverError.ToString()));
+                throw new PanoramaServerException(new ErrorMessageBuilder(messageOnError).LabKeyError(serverError).Build());
             }
 
             return jsonResponse;
@@ -233,24 +235,15 @@ namespace pwiz.PanoramaClient
             }
             catch (WebException e)
             {
-                throw new PanoramaServerException("There was an error getting a CSRF token from the server", uri,
-                    GetLabkeyErrorFromWebException(e), e);
+                throw new PanoramaServerException(new ErrorMessageBuilder("There was an error getting a CSRF token from the server")
+                    .Uri(uri).LabKeyError(GetLabkeyErrorFromWebException(e)).ErrorDetail(e.Message).Build(), e);
             }
             return base.Post(uri, postData, postDataString, messageOnError);
         }
 
         public override string GetResponse(HttpWebRequest request)
         {
-            using (var response = request.GetResponse())
-            {
-                var stream = response.GetResponseStream();
-                if (stream != null)
-                {
-                    return new StreamReader(stream).ReadToEnd();
-                }
-            }
-
-            return null;
+            return PanoramaUtil.GetResponseString(request.GetResponse());
         }
 
         public override void AsyncUploadFile(Uri address, string method, string fileName)

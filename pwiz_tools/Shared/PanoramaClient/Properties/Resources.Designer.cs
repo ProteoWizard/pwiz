@@ -92,6 +92,15 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Missing webDavURL in response.
+        /// </summary>
+        public static string AbstractPanoramaClient_GetWebDavPath_Missing_webDavURL_in_response {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_GetWebDavPath_Missing_webDavURL_in_response", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There was an error getting the WebDAV url for folder &apos;{0}&apos;.
         /// </summary>
         public static string AbstractPanoramaClient_GetWebDavPath_There_was_an_error_getting_the_WebDAV_url_for_folder___0__ {
@@ -204,20 +213,20 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} request was unsuccessful.
+        /// </summary>
+        public static string AbstractRequestHelper_DoRequest__0__request_was_unsuccessful {
+            get {
+                return ResourceManager.GetString("AbstractRequestHelper_DoRequest__0__request_was_unsuccessful", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error parsing response as JSON..
         /// </summary>
         public static string BaseWebClient_ParseJsonResponse_Error_parsing_response_as_JSON_ {
             get {
                 return ResourceManager.GetString("BaseWebClient_ParseJsonResponse_Error_parsing_response_as_JSON_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Response: {0}.
-        /// </summary>
-        public static string BaseWebClient_ParseJsonResponse_Response___0_ {
-            get {
-                return ResourceManager.GetString("BaseWebClient_ParseJsonResponse_Response___0_", resourceCulture);
             }
         }
         
@@ -248,6 +257,15 @@ namespace pwiz.PanoramaClient.Properties {
             get {
                 object obj = ResourceManager.GetObject("Edit_Undo", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Response: .
+        /// </summary>
+        public static string ErrorMessageBuilder_Build_Response__ {
+            get {
+                return ResourceManager.GetString("ErrorMessageBuilder_Build_Response__", resourceCulture);
             }
         }
         

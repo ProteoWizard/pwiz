@@ -355,7 +355,7 @@ namespace pwiz.SkylineTestFunctional
                         @"Unexpected character encountered while parsing value: <. Path '', line 0, position 0."),
                     string.Format(PanoramaClient.Properties.Resources.GenericState_AppendErrorAndUri_URL___0_,
                         PanoramaUtil.GetPipelineContainerUrl(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER)),
-                    string.Format(PanoramaClient.Properties.Resources.BaseWebClient_ParseJsonResponse_Response___0_, NOT_JSON));
+                    PanoramaClient.Properties.Resources.ErrorMessageBuilder_Build_Response__, NOT_JSON);
             }
         }
 

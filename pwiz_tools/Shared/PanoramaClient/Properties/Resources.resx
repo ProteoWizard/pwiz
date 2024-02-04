@@ -217,9 +217,6 @@
   <data name="PanoramaFilePicker_RECENT_VER_Most_recent" xml:space="preserve">
       <value>Most recent</value>
   </data>
-  <data name="BaseWebClient_ParseJsonResponse_Response___0_" xml:space="preserve">
-	  <value>Response: {0}</value>
-  </data>
   <data name="BaseWebClient_ParseJsonResponse_Error_parsing_response_as_JSON_" xml:space="preserve">
 	  <value>Error parsing response as JSON.</value>
   </data>
@@ -276,5 +273,14 @@
   </data>
   <data name="ServerStateErrors_Error_The_server__0__is_not_a_Panorama_server" xml:space="preserve">
 	  <value>The server {0} is not a Panorama server</value>
+  </data>
+  <data name="ErrorMessageBuilder_Build_Response__" xml:space="preserve">
+	  <value>Response: </value>
+  </data>
+  <data name="AbstractRequestHelper_DoRequest__0__request_was_unsuccessful" xml:space="preserve">
+	  <value>{0} request was unsuccessful</value>
+  </data>
+  <data name="AbstractPanoramaClient_GetWebDavPath_Missing_webDavURL_in_response" xml:space="preserve">
+	  <value>Missing webDavURL in response</value>
   </data>
 </root>

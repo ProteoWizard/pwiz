@@ -6,7 +6,6 @@ using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient.Properties;
@@ -89,12 +88,16 @@ namespace pwiz.PanoramaClient
 
                 if (permission != null && !PanoramaUtil.CheckFolderPermissions(response, (FolderPermission)permission))
                 {
-                    throw new PanoramaServerException(FolderState.nopermission.Error(ServerUri, folderPath, Username), requestUri);
+                    throw new PanoramaServerException(
+                        new ErrorMessageBuilder(FolderState.nopermission.Error(ServerUri, folderPath, Username))
+                            .Uri(requestUri).Build());
                 }
 
                 if (checkTargetedMs && !PanoramaUtil.HasTargetedMsModule(response))
                 {
-                    throw new PanoramaServerException(FolderState.notpanorama.Error(ServerUri, folderPath, Username), requestUri);
+                    throw new PanoramaServerException(
+                        new ErrorMessageBuilder(FolderState.notpanorama.Error(ServerUri, folderPath, Username))
+                            .Uri(requestUri).Build());
                 }
             }
         }
@@ -263,8 +266,9 @@ namespace pwiz.PanoramaClient
                 // There was an error uploading the file.
                 // uploadError gets set in webClient_UploadFileCompleted if there was an error in the LabKey JSON response.
                 throw new PanoramaServerException(
-                    Resources.AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file,
-                    tmpUploadUri, uploadError);
+                    new ErrorMessageBuilder(Resources.AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file)
+                        .Uri(tmpUploadUri)
+                        .LabKeyError(uploadError).Build());
             }
 
             // Remove the "Temporary" header added while uploading the temporary file
@@ -285,10 +289,8 @@ namespace pwiz.PanoramaClient
             var webDavUrl = (string)jsonResponse[@"webDavURL"];
             if (webDavUrl == null)
             {
-                throw new PanoramaServerException(TextUtil.LineSeparate(
-                    "Missing webDavURL in response.",
-                    string.Format("URL: {0}", getPipelineContainerUri),
-                    string.Format("Response: {0}", jsonResponse)));
+                throw new PanoramaServerException(new ErrorMessageBuilder(Resources.AbstractPanoramaClient_GetWebDavPath_Missing_webDavURL_in_response)
+                    .Uri(getPipelineContainerUri).Json(jsonResponse).Build());
             }
             return webDavUrl;
         }
@@ -483,8 +485,11 @@ namespace pwiz.PanoramaClient
                 if (ex.Status == WebExceptionStatus.NameResolutionFailure)
                 {
                     var responseUri = response?.ResponseUri;
-                    throw new PanoramaServerException(ServerStateEnum.missing.Error(uri),
-                        (responseUri != null && !uri.Equals(responseUri) ? responseUri : null), labkeyError, ex);
+                    throw new PanoramaServerException(
+                        new ErrorMessageBuilder(ServerStateEnum.missing.Error(uri))
+                            .ErrorDetail(ex.Message)
+                            .LabKeyError(labkeyError)
+                            .Uri(responseUri != null && !uri.Equals(responseUri) ? responseUri : null).Build(), ex);
                 }
                 else if (tryNewProtocol)
                 {
@@ -503,7 +508,9 @@ namespace pwiz.PanoramaClient
                     }
                 }
 
-                throw new PanoramaServerException(ServerStateEnum.unknown.Error(ServerUri), uri, labkeyError, ex);
+                throw new PanoramaServerException(new ErrorMessageBuilder(ServerStateEnum.unknown.Error(ServerUri))
+                    .Uri(uri).LabKeyError(labkeyError)
+                    .ErrorDetail(ex.Message).Build(), ex);
             }
         }
 
@@ -542,8 +549,10 @@ namespace pwiz.PanoramaClient
                     }
                 }
 
-                var labkeyError = PanoramaUtil.GetIfErrorInResponse(response);
-                throw new PanoramaServerException(UserStateEnum.unknown.Error(ServerUri), PanoramaUtil.GetEnsureLoginUri(pServer), labkeyError, ex);
+                throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.unknown.Error(ServerUri))
+                    .Uri(PanoramaUtil.GetEnsureLoginUri(pServer))
+                    .ErrorDetail(ex.Message)
+                    .LabKeyError(PanoramaUtil.GetIfErrorInResponse(response)).Build(), ex);
             }
         }
 
@@ -563,9 +572,12 @@ namespace pwiz.PanoramaClient
                 {
                     if (response.StatusCode != HttpStatusCode.OK)
                     {
-                        throw new PanoramaServerException(UserStateEnum.nonvalid.Error(ServerUri), requestUri,
-                            string.Format("Response received from server: {0} {1}", response.StatusCode, response.StatusDescription),
-                            PanoramaUtil.GetIfErrorInResponse(response)
+                        throw new PanoramaServerException(
+                            new ErrorMessageBuilder(UserStateEnum.nonvalid.Error(ServerUri))
+                                .Uri(requestUri)
+                                .ErrorDetail(string.Format("Response received from server: {0} {1}",
+                                    response.StatusCode, response.StatusDescription))
+                                .LabKeyError(PanoramaUtil.GetIfErrorInResponse(response)).Build()
                         );
                     }
 
@@ -576,18 +588,22 @@ namespace pwiz.PanoramaClient
                     {
                         if (jsonResponse == null)
                         {
-                            throw new PanoramaServerException(UserStateEnum.unknown.Error(ServerUri), requestUri,
-                                string.Format(Resources.WebPanoramaClient_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_, ServerUri),
-                                PanoramaUtil.GetIfErrorInResponse(response));
+                            throw new PanoramaServerException(
+                                new ErrorMessageBuilder(UserStateEnum.unknown.Error(ServerUri))
+                                    .Uri(requestUri)
+                                    .ErrorDetail(string.Format(
+                                        Resources.WebPanoramaClient_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_,
+                                        ServerUri)).Build());
                         }
                         else
                         {
-                            // TODO: Labkey error message (if any) should come before the JSON returned in the response.
-                            var jsonText = jsonResponse.ToString(Formatting.None);
-                            jsonText = jsonText.Replace(@"{", @"{{"); // escape curly braces
-                            throw new PanoramaServerException(UserStateEnum.unknown.Error(ServerUri), requestUri,
-                                string.Format(Resources.PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_, jsonText),
-                                PanoramaUtil.GetIfErrorInResponse(response));
+                            throw new PanoramaServerException(
+                                new ErrorMessageBuilder(UserStateEnum.unknown.Error(ServerUri))
+                                    .Uri(requestUri)
+                                    .ErrorDetail(Resources
+                                        .PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_)
+                                    .LabKeyError(PanoramaUtil.GetIfErrorInResponse(response))
+                                    .Json(jsonResponse).Build());
                         }
                     }
 
@@ -614,7 +630,8 @@ namespace pwiz.PanoramaClient
                         }
                         else
                         {
-                            throw new PanoramaServerException(UserStateEnum.nonvalid.Error(ServerUri), requestUri, labKeyError, ex); // User cannot be authenticated
+                            throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.nonvalid.Error(ServerUri))
+                                .Uri(requestUri).LabKeyError(labKeyError).ErrorDetail(ex.Message).Build(), ex); // User cannot be authenticated
                         }
                     }
 
@@ -626,7 +643,8 @@ namespace pwiz.PanoramaClient
                         return pServer;
                     }
 
-                    throw new PanoramaServerException(UserStateEnum.nonvalid.Error(ServerUri), requestUri, labKeyError, ex); // User cannot be authenticated
+                    throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.nonvalid.Error(ServerUri))
+                        .Uri(requestUri).LabKeyError(labKeyError).ErrorDetail(ex.Message).Build(), ex); // User cannot be authenticated
                 }
 
                 throw;
@@ -647,11 +665,13 @@ namespace pwiz.PanoramaClient
                 var labkeyError = PanoramaUtil.GetIfErrorInResponse(response);
                 if (response != null && response.StatusCode == HttpStatusCode.NotFound)
                 {
-                    throw new PanoramaServerException(FolderState.notfound.Error(ServerUri, folderPath, Username), requestUri, labkeyError, ex);
+                    throw new PanoramaServerException(new ErrorMessageBuilder(FolderState.notfound.Error(ServerUri, folderPath, Username))
+                        .Uri(requestUri).LabKeyError(labkeyError).ErrorDetail(ex.Message).Build(), ex);
                 }
                 else
                 {
-                    throw new PanoramaServerException(FolderState.unknown.Error(ServerUri, folderPath, Username), requestUri, labkeyError, ex);
+                    throw new PanoramaServerException(new ErrorMessageBuilder(FolderState.unknown.Error(ServerUri, folderPath, Username))
+                        .Uri(requestUri).LabKeyError(labkeyError).ErrorDetail(ex.Message).Build(), ex);
                 }
             }
         }
