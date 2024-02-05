@@ -190,7 +190,7 @@ namespace pwiz.PanoramaClient
 
                 JToken jStatusResponse = requestHelper.Get(statusUri,
                     Resources
-                        .AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_the_status_of_the_document_import_pipeline_job);
+                        .AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_the_status_of_the_document_import_pipeline_job_);
                 JToken rows = jStatusResponse[@"rows"];
                 var row = rows.FirstOrDefault(r => (int)r[@"RowId"] == pipelineJobRowId);
                 if (row == null)
@@ -230,7 +230,7 @@ namespace pwiz.PanoramaClient
             };
 
             JToken importResponse = requestHelper.Post(importUrl, dataImportInformation,
-                Resources.AbstractPanoramaClient_QueueDocUploadPipelineJob_There_was_an_error_adding_the_document_import_job_on_the_server);
+                Resources.AbstractPanoramaClient_QueueDocUploadPipelineJob_There_was_an_error_adding_the_document_import_job_on_the_server_);
 
 
             // ID to check import status.
@@ -266,7 +266,7 @@ namespace pwiz.PanoramaClient
                 // There was an error uploading the file.
                 // uploadError gets set in webClient_UploadFileCompleted if there was an error in the LabKey JSON response.
                 throw new PanoramaServerException(
-                    new ErrorMessageBuilder(Resources.AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file)
+                    new ErrorMessageBuilder(Resources.AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file_)
                         .Uri(tmpUploadUri)
                         .LabKeyError(uploadError).Build());
             }
@@ -289,7 +289,7 @@ namespace pwiz.PanoramaClient
             var webDavUrl = (string)jsonResponse[@"webDavURL"];
             if (webDavUrl == null)
             {
-                throw new PanoramaServerException(new ErrorMessageBuilder(Resources.AbstractPanoramaClient_GetWebDavPath_Missing_webDavURL_in_response)
+                throw new PanoramaServerException(new ErrorMessageBuilder(Resources.AbstractPanoramaClient_GetWebDavPath_Missing_webDavURL_in_response_)
                     .Uri(getPipelineContainerUri).Json(jsonResponse).Build());
             }
             return webDavUrl;
@@ -381,7 +381,7 @@ namespace pwiz.PanoramaClient
                 @"MOVE",
                 authHeader,
                 Resources
-                    .AbstractPanoramaClient_RenameTempZipFile_There_was_an_error_renaming_the_temporary_zip_file_on_the_server
+                    .AbstractPanoramaClient_RenameTempZipFile_There_was_an_error_renaming_the_temporary_zip_file_on_the_server_
             );
         }
 
@@ -393,7 +393,7 @@ namespace pwiz.PanoramaClient
                 @"DELETE",
                 authHeader,
                 Resources
-                    .AbstractPanoramaClient_DeleteTempZipFile_There_was_an_error_deleting_the_temporary_zip_file_on_the_server
+                    .AbstractPanoramaClient_DeleteTempZipFile_There_was_an_error_deleting_the_temporary_zip_file_on_the_server_
             );
         }
 
@@ -405,7 +405,7 @@ namespace pwiz.PanoramaClient
             requestHelper.DoRequest(request,
                 @"HEAD",
                 authHeader,
-                Resources.AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator
+                Resources.AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_
             );
         }
 

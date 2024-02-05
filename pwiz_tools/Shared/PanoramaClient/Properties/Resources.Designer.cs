@@ -61,23 +61,23 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to File was not uploaded to the server. Please try again, or if the problem persists, please contact your Panorama server administrator.
+        ///   Looks up a localized string similar to File was not uploaded to the server. Please try again, or if the problem persists, please contact your Panorama server administrator..
         /// </summary>
-        public static string AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator {
+        public static string AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_ {
             get {
                 return ResourceManager.GetString("AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__P" +
                         "lease_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server" +
-                        "_administrator", resourceCulture);
+                        "_administrator_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There was an error deleting the temporary zip file on the server.
+        ///   Looks up a localized string similar to There was an error deleting the temporary zip file on the server..
         /// </summary>
-        public static string AbstractPanoramaClient_DeleteTempZipFile_There_was_an_error_deleting_the_temporary_zip_file_on_the_server {
+        public static string AbstractPanoramaClient_DeleteTempZipFile_There_was_an_error_deleting_the_temporary_zip_file_on_the_server_ {
             get {
                 return ResourceManager.GetString("AbstractPanoramaClient_DeleteTempZipFile_There_was_an_error_deleting_the_temporar" +
-                        "y_zip_file_on_the_server", resourceCulture);
+                        "y_zip_file_on_the_server_", resourceCulture);
             }
         }
         
@@ -92,11 +92,11 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Missing webDavURL in response.
+        ///   Looks up a localized string similar to Missing webDavURL in response..
         /// </summary>
-        public static string AbstractPanoramaClient_GetWebDavPath_Missing_webDavURL_in_response {
+        public static string AbstractPanoramaClient_GetWebDavPath_Missing_webDavURL_in_response_ {
             get {
-                return ResourceManager.GetString("AbstractPanoramaClient_GetWebDavPath_Missing_webDavURL_in_response", resourceCulture);
+                return ResourceManager.GetString("AbstractPanoramaClient_GetWebDavPath_Missing_webDavURL_in_response_", resourceCulture);
             }
         }
         
@@ -111,22 +111,22 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There was an error adding the document import job on the server.
+        ///   Looks up a localized string similar to There was an error adding the document import job on the server..
         /// </summary>
-        public static string AbstractPanoramaClient_QueueDocUploadPipelineJob_There_was_an_error_adding_the_document_import_job_on_the_server {
+        public static string AbstractPanoramaClient_QueueDocUploadPipelineJob_There_was_an_error_adding_the_document_import_job_on_the_server_ {
             get {
                 return ResourceManager.GetString("AbstractPanoramaClient_QueueDocUploadPipelineJob_There_was_an_error_adding_the_do" +
-                        "cument_import_job_on_the_server", resourceCulture);
+                        "cument_import_job_on_the_server_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There was an error renaming the temporary zip file on the server.
+        ///   Looks up a localized string similar to There was an error renaming the temporary zip file on the server..
         /// </summary>
-        public static string AbstractPanoramaClient_RenameTempZipFile_There_was_an_error_renaming_the_temporary_zip_file_on_the_server {
+        public static string AbstractPanoramaClient_RenameTempZipFile_There_was_an_error_renaming_the_temporary_zip_file_on_the_server_ {
             get {
                 return ResourceManager.GetString("AbstractPanoramaClient_RenameTempZipFile_There_was_an_error_renaming_the_temporar" +
-                        "y_zip_file_on_the_server", resourceCulture);
+                        "y_zip_file_on_the_server_", resourceCulture);
             }
         }
         
@@ -167,11 +167,11 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There was an error uploading the file.
+        ///   Looks up a localized string similar to There was an error uploading the file..
         /// </summary>
-        public static string AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file {
+        public static string AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file_ {
             get {
-                return ResourceManager.GetString("AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file", resourceCulture);
+                return ResourceManager.GetString("AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file_", resourceCulture);
             }
         }
         
@@ -185,12 +185,12 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There was an error getting the status of the document import pipeline job.
+        ///   Looks up a localized string similar to There was an error getting the status of the document import pipeline job..
         /// </summary>
-        public static string AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_the_status_of_the_document_import_pipeline_job {
+        public static string AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_the_status_of_the_document_import_pipeline_job_ {
             get {
                 return ResourceManager.GetString("AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_" +
-                        "the_status_of_the_document_import_pipeline_job", resourceCulture);
+                        "the_status_of_the_document_import_pipeline_job_", resourceCulture);
             }
         }
         
@@ -213,20 +213,20 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} request was unsuccessful.
+        ///   Looks up a localized string similar to {0} request was unsuccessful..
         /// </summary>
-        public static string AbstractRequestHelper_DoRequest__0__request_was_unsuccessful {
+        public static string AbstractRequestHelper_DoRequest__0__request_was_unsuccessful_ {
             get {
-                return ResourceManager.GetString("AbstractRequestHelper_DoRequest__0__request_was_unsuccessful", resourceCulture);
+                return ResourceManager.GetString("AbstractRequestHelper_DoRequest__0__request_was_unsuccessful_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error parsing response as JSON.
+        ///   Looks up a localized string similar to Error parsing response as JSON..
         /// </summary>
-        public static string AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON {
+        public static string AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON_ {
             get {
-                return ResourceManager.GetString("AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON", resourceCulture);
+                return ResourceManager.GetString("AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON_", resourceCulture);
             }
         }
         
@@ -410,12 +410,12 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There was an error getting a CSRF token from the server.
+        ///   Looks up a localized string similar to There was an error getting a CSRF token from the server..
         /// </summary>
-        public static string PanoramaRequestHelper_Post_There_was_an_error_getting_a_CSRF_token_from_the_server {
+        public static string PanoramaRequestHelper_Post_There_was_an_error_getting_a_CSRF_token_from_the_server_ {
             get {
                 return ResourceManager.GetString("PanoramaRequestHelper_Post_There_was_an_error_getting_a_CSRF_token_from_the_serve" +
-                        "r", resourceCulture);
+                        "r_", resourceCulture);
             }
         }
         
@@ -495,11 +495,11 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The server {0} is not a Panorama server.
+        ///   Looks up a localized string similar to The server {0} is not a Panorama server..
         /// </summary>
-        public static string ServerStateErrors_Error_The_server__0__is_not_a_Panorama_server {
+        public static string ServerStateErrors_Error_The_server__0__is_not_a_Panorama_server_ {
             get {
-                return ResourceManager.GetString("ServerStateErrors_Error_The_server__0__is_not_a_Panorama_server", resourceCulture);
+                return ResourceManager.GetString("ServerStateErrors_Error_The_server__0__is_not_a_Panorama_server_", resourceCulture);
             }
         }
         

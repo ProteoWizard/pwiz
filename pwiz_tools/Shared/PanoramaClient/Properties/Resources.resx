@@ -247,41 +247,41 @@
   <data name="WebPanoramaClient_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_" xml:space="preserve">
 	  <value>Server did not return a valid JSON response. {0} is not a Panorama server.</value>
   </data>
-  <data name="AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_the_status_of_the_document_import_pipeline_job" xml:space="preserve">
-	  <value>There was an error getting the status of the document import pipeline job</value>
+  <data name="AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_the_status_of_the_document_import_pipeline_job_" xml:space="preserve">
+	  <value>There was an error getting the status of the document import pipeline job.</value>
   </data>
-  <data name="AbstractPanoramaClient_QueueDocUploadPipelineJob_There_was_an_error_adding_the_document_import_job_on_the_server" xml:space="preserve">
-	  <value>There was an error adding the document import job on the server</value>
+  <data name="AbstractPanoramaClient_QueueDocUploadPipelineJob_There_was_an_error_adding_the_document_import_job_on_the_server_" xml:space="preserve">
+	  <value>There was an error adding the document import job on the server.</value>
   </data>
-  <data name="AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file" xml:space="preserve">
-	  <value>There was an error uploading the file</value>
+  <data name="AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file_" xml:space="preserve">
+	  <value>There was an error uploading the file.</value>
   </data>
-  <data name="AbstractPanoramaClient_RenameTempZipFile_There_was_an_error_renaming_the_temporary_zip_file_on_the_server" xml:space="preserve">
-	  <value>There was an error renaming the temporary zip file on the server</value>
+  <data name="AbstractPanoramaClient_RenameTempZipFile_There_was_an_error_renaming_the_temporary_zip_file_on_the_server_" xml:space="preserve">
+	  <value>There was an error renaming the temporary zip file on the server.</value>
   </data>
-  <data name="AbstractPanoramaClient_DeleteTempZipFile_There_was_an_error_deleting_the_temporary_zip_file_on_the_server" xml:space="preserve">
-	  <value>There was an error deleting the temporary zip file on the server</value>
+  <data name="AbstractPanoramaClient_DeleteTempZipFile_There_was_an_error_deleting_the_temporary_zip_file_on_the_server_" xml:space="preserve">
+	  <value>There was an error deleting the temporary zip file on the server.</value>
   </data>
-  <data name="ServerStateErrors_Error_The_server__0__is_not_a_Panorama_server" xml:space="preserve">
-	  <value>The server {0} is not a Panorama server</value>
+  <data name="ServerStateErrors_Error_The_server__0__is_not_a_Panorama_server_" xml:space="preserve">
+	  <value>The server {0} is not a Panorama server.</value>
   </data>
   <data name="ErrorMessageBuilder_Build_Response__" xml:space="preserve">
 	  <value>Response: </value>
   </data>
-  <data name="AbstractRequestHelper_DoRequest__0__request_was_unsuccessful" xml:space="preserve">
-	  <value>{0} request was unsuccessful</value>
+  <data name="AbstractRequestHelper_DoRequest__0__request_was_unsuccessful_" xml:space="preserve">
+	  <value>{0} request was unsuccessful.</value>
   </data>
-  <data name="AbstractPanoramaClient_GetWebDavPath_Missing_webDavURL_in_response" xml:space="preserve">
-	  <value>Missing webDavURL in response</value>
+  <data name="AbstractPanoramaClient_GetWebDavPath_Missing_webDavURL_in_response_" xml:space="preserve">
+	  <value>Missing webDavURL in response.</value>
   </data>
-  <data name="AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator" xml:space="preserve">
-	  <value>File was not uploaded to the server. Please try again, or if the problem persists, please contact your Panorama server administrator</value>
+  <data name="AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_" xml:space="preserve">
+	  <value>File was not uploaded to the server. Please try again, or if the problem persists, please contact your Panorama server administrator.</value>
   </data>
-  <data name="AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON" xml:space="preserve">
-	  <value>Error parsing response as JSON</value>
+  <data name="AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON_" xml:space="preserve">
+	  <value>Error parsing response as JSON.</value>
   </data>
-  <data name="PanoramaRequestHelper_Post_There_was_an_error_getting_a_CSRF_token_from_the_server" xml:space="preserve">
-	  <value>There was an error getting a CSRF token from the server</value>
+  <data name="PanoramaRequestHelper_Post_There_was_an_error_getting_a_CSRF_token_from_the_server_" xml:space="preserve">
+	  <value>There was an error getting a CSRF token from the server.</value>
   </data>
   <data name="ErrorMessageBuilder_Build_Error__" xml:space="preserve">
 	  <value>Error: </value>

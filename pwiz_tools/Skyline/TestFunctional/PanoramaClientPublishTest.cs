@@ -350,7 +350,7 @@ namespace pwiz.SkylineTestFunctional
             public static string GetExpectedError()
             {
                 return new ErrorMessageBuilder(PanoramaClient.Properties.Resources
-                        .AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON)
+                        .AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON_)
                     .Exception(
                         new JsonReaderException(@"Unexpected character encountered while parsing value: <. Path '', line 0, position 0."))
                     .Uri(PanoramaUtil.GetPipelineContainerUrl(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER))
@@ -392,10 +392,10 @@ namespace pwiz.SkylineTestFunctional
                 {
                     case RequestType.HEAD:
                         mainError = PanoramaClient.Properties.Resources
-                            .AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator;
+                            .AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_;
                         break;
                     case RequestType.MOVE:
-                        mainError = PanoramaClient.Properties.Resources.AbstractPanoramaClient_RenameTempZipFile_There_was_an_error_renaming_the_temporary_zip_file_on_the_server;
+                        mainError = PanoramaClient.Properties.Resources.AbstractPanoramaClient_RenameTempZipFile_There_was_an_error_renaming_the_temporary_zip_file_on_the_server_;
                         break;
                     default:
                         mainError = "UNKNOWN ERROR";
@@ -442,7 +442,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     var uri = new Uri(new Uri(PANORAMA_SERVER), GetFolderWebdavUrl(PANORAMA_FOLDER).TrimStart('/') + sharedZipFile);
                     return new ErrorMessageBuilder(PanoramaClient.Properties.Resources
-                            .AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file)
+                            .AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file_)
                         .LabKeyError(labkeyError)
                         .Uri(uri)
                         .Build();
@@ -475,7 +475,7 @@ namespace pwiz.SkylineTestFunctional
             public static string GetExpectedError()
             {
                 return new ErrorMessageBuilder(PanoramaClient.Properties.Resources
-                        .AbstractPanoramaClient_QueueDocUploadPipelineJob_There_was_an_error_adding_the_document_import_job_on_the_server)
+                        .AbstractPanoramaClient_QueueDocUploadPipelineJob_There_was_an_error_adding_the_document_import_job_on_the_server_)
                     .ErrorDetail(exceptionMessage)
                     .LabKeyError(new LabKeyError(labkeyError, null))
                     .Uri(PanoramaUtil.GetImportSkylineDocUri(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER))
@@ -505,7 +505,7 @@ namespace pwiz.SkylineTestFunctional
             public static string GetExpectedError()
             {
                 return new ErrorMessageBuilder(PanoramaClient.Properties.Resources
-                        .AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_the_status_of_the_document_import_pipeline_job)
+                        .AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_the_status_of_the_document_import_pipeline_job_)
                     .ErrorDetail(exceptionMessage)
                     .LabKeyError(new LabKeyError(labkeyError, null))
                     .Uri(PanoramaUtil.GetPipelineJobStatusUri(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER,

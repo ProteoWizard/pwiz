@@ -273,7 +273,7 @@ namespace pwiz.PanoramaClient
                         serverUri.AbsoluteUri);
                     break;
                 case ServerStateEnum.notpanorama:
-                    stateError = string.Format(Resources.ServerStateErrors_Error_The_server__0__is_not_a_Panorama_server, serverUri.AbsoluteUri);
+                    stateError = string.Format(Resources.ServerStateErrors_Error_The_server__0__is_not_a_Panorama_server_, serverUri.AbsoluteUri);
                     break;
                 case ServerStateEnum.unknown:
                     stateError = string.Format(
