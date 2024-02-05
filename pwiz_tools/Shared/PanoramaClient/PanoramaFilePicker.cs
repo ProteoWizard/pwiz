@@ -715,7 +715,7 @@ namespace pwiz.PanoramaClient
 
         public string VersionsOption => versionOptions.Text;
 
-        public void ClickFile(string name)
+        public bool ClickFile(string name)
         {
             listView.SelectedItems.Clear();
             foreach (ListViewItem item in listView.Items)
@@ -726,8 +726,11 @@ namespace pwiz.PanoramaClient
                     item.Selected = true;
                     listView.Select();
                     ClickOpen();
+                    return true;
                 }
             }
+
+            return false;
         }
 
         #endregion

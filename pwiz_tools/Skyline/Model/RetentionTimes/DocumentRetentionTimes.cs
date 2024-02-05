@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -98,24 +99,42 @@ namespace pwiz.Skyline.Model.RetentionTimes
             var newSources = ListAvailableRetentionTimeSources(document.Settings);
             var newResultsSources = ListSourcesForResults(document.Settings.MeasuredResults, newSources);
             var allLibraryRetentionTimes = ReadAllRetentionTimes(document, newSources);
-            var newFileAlignments = new List<FileRetentionTimeAlignments>();
-            IProgressStatus progressStatus = new ProgressStatus(@"Aligning retention times"); // CONSIDER: localize?  Will users see this?
-            foreach (var retentionTimeSource in newResultsSources.Values)
+            var newFileAlignments = new List<KeyValuePair<int, FileRetentionTimeAlignments>>();
+            using var cancellationTokenSource = new PollingCancellationToken(() => progressMonitor.IsCanceled);
+            IProgressStatus progressStatus = new ProgressStatus(RetentionTimesResources.DocumentRetentionTimes_RecalculateAlignments_Aligning_retention_times);
+            ParallelEx.ForEach(newResultsSources.Values.Select(Tuple.Create<RetentionTimeSource, int>), tuple =>
             {
-                progressStatus = progressStatus.ChangePercentComplete(100*newFileAlignments.Count/newResultsSources.Count);
-                progressMonitor.UpdateProgress(progressStatus);
-                try
                 {
-                    var fileAlignments = CalculateFileRetentionTimeAlignments(retentionTimeSource.Name, allLibraryRetentionTimes, progressMonitor);
-                    newFileAlignments.Add(fileAlignments);
+                    if (progressMonitor.IsCanceled)
+                    {
+                        return;
+                    }
+                    try
+                    {
+                        var retentionTimeSource = tuple.Item1;
+                        var fileAlignments = CalculateFileRetentionTimeAlignments(retentionTimeSource.Name,
+                            allLibraryRetentionTimes, cancellationTokenSource.Token);
+                        lock (newFileAlignments)
+                        {
+                            newFileAlignments.Add(new KeyValuePair<int, FileRetentionTimeAlignments>(tuple.Item2, fileAlignments));
+                            progressStatus =
+                                progressStatus.ChangePercentComplete(100 * newFileAlignments.Count / newResultsSources.Count);
+                            progressMonitor.UpdateProgress(progressStatus);
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // ignore
+                    }
                 }
-                catch (OperationCanceledException)
-                {
-                    progressMonitor.UpdateProgress(progressStatus.Cancel());
-                    return null;
-                }
+            });
+            if (progressMonitor.IsCanceled)
+            {
+                return null;
             }
-            var newDocRt = new DocumentRetentionTimes(newSources.Values, newFileAlignments);
+
+            var newDocRt = new DocumentRetentionTimes(newSources.Values,
+                newFileAlignments.OrderBy(kvp => kvp.Key).Select(kvp => kvp.Value));
             var newDocument = document.ChangeSettings(document.Settings.ChangeDocumentRetentionTimes(newDocRt));
             Debug.Assert(IsLoaded(newDocument));
             progressMonitor.UpdateProgress(progressStatus.Complete());
@@ -123,7 +142,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         }
 
         private static FileRetentionTimeAlignments CalculateFileRetentionTimeAlignments(
-            string dataFileName, ResultNameMap<IDictionary<Target, MeasuredRetentionTime>> libraryRetentionTimes, IProgressMonitor progressMonitor)
+            string dataFileName, ResultNameMap<IDictionary<Target, MeasuredRetentionTime>> libraryRetentionTimes, CancellationToken cancellationToken)
         {
             var targetTimes = libraryRetentionTimes.Find(dataFileName);
             if (targetTimes == null)
@@ -138,19 +157,16 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     continue;
                 }
 
-                using (var tokenSource = new PollingCancellationToken(() => progressMonitor.IsCanceled))
+                var alignedFile = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimes, entry.Value,
+                    REFINEMENT_THRESHHOLD, RegressionMethodRT.linear, cancellationToken);
+                if (alignedFile == null || alignedFile.RegressionRefinedStatistics == null ||
+                    !RetentionTimeRegression.IsAboveThreshold(alignedFile.RegressionRefinedStatistics.R, REFINEMENT_THRESHHOLD))
                 {
-                    var alignedFile = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimes, entry.Value,
-                        REFINEMENT_THRESHHOLD, RegressionMethodRT.linear, tokenSource.Token);
-                    if (alignedFile == null || alignedFile.RegressionRefinedStatistics == null ||
-                        !RetentionTimeRegression.IsAboveThreshold(alignedFile.RegressionRefinedStatistics.R, REFINEMENT_THRESHHOLD))
-                    {
-                        continue;
-                    }
-                    var regressionLine = alignedFile.RegressionRefined.Conversion as RegressionLineElement;
-                    if (regressionLine != null)
-                        alignments.Add(new RetentionTimeAlignment(entry.Key, regressionLine));
+                    continue;
                 }
+                var regressionLine = alignedFile.RegressionRefined.Conversion as RegressionLineElement;
+                if (regressionLine != null)
+                    alignments.Add(new RetentionTimeAlignment(entry.Key, regressionLine));
             }
             return new FileRetentionTimeAlignments(dataFileName, alignments);
         }
