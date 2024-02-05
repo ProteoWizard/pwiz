@@ -857,7 +857,6 @@ namespace ZedGraph
 			foreach ( Axis axis in _y2AxisList )
 				axis.Scale.ResetScaleData();
 			*/
-            _labelLayout?.VisualizeDensity(g, false);
         }
 
 		internal void DrawGrid( Graphics g, float scaleFactor )
@@ -1534,11 +1533,6 @@ namespace ZedGraph
                 _vectorDiff = new SizeF(end.X - start.X, end.Y - start.Y);
             }
 
-            public static float operator *(VectorF v1, VectorF v2)
-            {
-                return v1._vectorDiff.Width * v2._vectorDiff.Width + v1._vectorDiff.Height * v2._vectorDiff.Height;
-            }
-
             public float X => _vectorDiff.Width;
             public float Y => _vectorDiff.Height;
 
@@ -1587,59 +1581,12 @@ namespace ZedGraph
                 public float _density;
                 public PointF _gradient;
                 public List<RectangleF> _overlaps; // a list of bounding rectangles of elements overlapping with this cell
-                 public static Dictionary<Color, Brush> _brushes = new Dictionary<Color, Brush>();
-
-                public Brush MakeDensityBrush()
-                {
-                    return MakeDensityBrush(Color.Blue);
-                }
-
-                public Brush MakeDensityBrush(Color col)
-                {
-					var density = (int)Math.Round(25.5 * _density / (_bounds.Width * _bounds.Height));
-					if(density > 25)
-						density = 25;
-                    var color = Color.FromArgb(density * 10, col);
-
-					if (!_brushes.TryGetValue(color, out var brush))
-                    {
-						brush = new SolidBrush(color);
-
-                        _brushes[color] = brush;
-                    }
-                    return brush;
-                }
-
-                // assuming goal range from 0 to 2. Anything higher than 2 is pure red
-                private const float RANGE = 30.0f;
-                public Brush MakeGoalBrush(PointF targetPoint, SizeF labelSize, LabelLayout layout)
-                {
-                    var goal = (int)Math.Round(layout.GoalFuncion(_location, targetPoint, labelSize)/100);
-                    var density = (int)Math.Round(25.5 * _density / (_bounds.Width * _bounds.Height));
-                    if (density > 25)
-                        density = 25;
-
-                    Color color;
-                    if (goal > RANGE)
-                        color = Color.FromArgb(127, 255, 0, density * 10);
-                    else
-                    {
-                        var colorCoord = (int)(goal / RANGE * 255);
-                        color = Color.FromArgb(127, colorCoord, 255 - colorCoord, density * 10);
-                    }
-                    if (_brushes.TryGetValue(color, out var brush))
-                        return brush;
-
-					var goalBrush = new SolidBrush(color);
-                    _brushes[color] = goalBrush;
-					return goalBrush;
-				}
+                public static Dictionary<Color, Brush> _brushes = new Dictionary<Color, Brush>();
 			}
 
 			// First index row, second index line
             private GridCell[][] _densityGrid;
-
-            private Size _densityGridSize;
+			private Size _densityGridSize;
 
             private void FillDensityGrid()
             {
@@ -1687,81 +1634,15 @@ namespace ZedGraph
                 }
             }
 
-            // these are used to pass the parameters, since this function is called from the Draw method
-            public PointF? _targetPoint;
-            private SizeF _labelSize;
-            private float[] _goalComponents = new float[5];
-            private const string _fileName = ".\\density.txt";
-            public void VisualizeDensity(Graphics g, bool IsGoal)
-            {
-                if (_targetPoint == null)
-                    return;
-
-                var totalMatrix = new StringBuilder();
-                var goalBreakdown = new StringBuilder();
-
-                var savedMatrix = g.Transform;
-				using (var path = new GraphicsPath())
-                {
-                    Brush brush = null;
-                    try
-                    {
-                        path.AddRectangle(new Rectangle(Point.Empty, new Size(_cellSize, _cellSize)));
-                        var i = 0;
-                        var j = 0;
-                        for (; i < _densityGridSize.Height; i++)
-                        {
-                            for (j = 0; j < _densityGridSize.Width; j++)
-                            {
-                                if (_densityGrid[i][j]._density > 0 || !IsGoal)
-                                {
-                                    var squareLocation = _densityGrid[i][j]._location;
-                                    g.TranslateTransform(squareLocation.X, squareLocation.Y);
-                                    if (IsGoal)
-                                        brush = _densityGrid[i][j].MakeDensityBrush();
-                                    else
-                                    {
-                                        brush = _densityGrid[i][j].MakeGoalBrush(_targetPoint.Value, _labelSize, this);
-                                        totalMatrix.Append(string.Format("{0},", _goalComponents[4]));
-                                        goalBreakdown.AppendLine(string.Format("{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}", i, j, squareLocation.X, squareLocation.Y,
-                                            _goalComponents[0], _goalComponents[1], _goalComponents[2], _goalComponents[3], _goalComponents[4]));
-                                    }
-                                }
-
-                                g.FillPath(brush, path);
-                                g.Transform = savedMatrix;
-                            }
-							totalMatrix.AppendLine();
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Trace.WriteLine("Draw method exception: " + e.Message);
-                    }
-                    finally
-                    {
-                        foreach (var b in GridCell._brushes.Values)
-                            b.Dispose();
-                        GridCell._brushes.Clear();
-                    }
-
-                    if (File.Exists(_fileName))
-                        File.Delete(_fileName);
-                    var file = File.CreateText(_fileName);
-				    file.Write(totalMatrix.ToString());
-					file.WriteLine();
-					file.Write(goalBreakdown.ToString());
-					file.Close();
-                }
-		    }
 
             /// <summary>
-            /// 
+            /// Calculates goal function for a labeled point and a suggested label position.
+            /// All coordinates are in screen pixels.
             /// </summary>
             /// <param name="pt">Center of the label box, in pixels</param>
-            /// <param name="targetPoint"></param>
+            /// <param name="targetPoint">point being labeled.</param>
             /// <param name="labelSize"> in pixels </param>
-            /// <returns></returns>
+            /// <returns>goal function value.</returns>
             private float GoalFuncion(PointF pt, PointF targetPoint, SizeF labelSize)
             {
                 var pathCellCoord = CellIndexesFromXY(targetPoint);
@@ -1786,8 +1667,6 @@ namespace ZedGraph
                     totalOverlap += 1.0 * intersect.Height * intersect.Width / (_cellSize * _cellSize) * cell._density;
                 }
 
-
-
                 // penalize this point if there is more points between it and its label
 				// we find the cells between the two points by traversing the vector intersection
 				// with the grid
@@ -1804,7 +1683,6 @@ namespace ZedGraph
                     while ((rxList.Last() + deltaX) < 1)
                         rxList.Add(rxList.Last() + deltaX);
                 }
-
                 var ryList = new List<float>();
                 if (lv.Y != 0)
                 {
@@ -1834,7 +1712,6 @@ namespace ZedGraph
 				// labeled point p to its label position. We do this by solving the equation p + rR = q + sV where r and s
 				// are parameters. If r and s both are <= 1, then the vectors intersect.
 				// For each crossover we penalize the goal function by some large number because we really do not want crossovers to happen.
-
 				var penalty = 0.0;
                 var thisVector = new VectorF(targetPoint, pt);
                 for (var i = 0; i < _labeledPoints.Count; i++)
@@ -1845,17 +1722,7 @@ namespace ZedGraph
                         penalty += 2000;
 
                 }
-
-                if (_targetPoint != null)
-                {
-                    _goalComponents[0] = dist;
-                    _goalComponents[1] = (float)totalOverlap;
-                    _goalComponents[2] = (float)penalty;
-					_goalComponents[3] = pathDensity;
-                    _goalComponents[4] = (float)((0.035 * dist + totalOverlap) + penalty + pathDensity);
-
-                }
-				return (float)((0.035 * dist + totalOverlap) + penalty + 0.2 * pathDensity);
+                return (float)((0.035 * dist + totalOverlap) + penalty + 0.2 * pathDensity);
             }
 
             private IEnumerable<GridCell> GetRectangleCells(RectangleF rect)
@@ -1884,25 +1751,9 @@ namespace ZedGraph
                 return new Point((int)((pt.X - _chartOffset.X) / _cellSize), (int)((pt.Y - _chartOffset.Y) / _cellSize));
             }
 
-            private GridCell CellFromXY(PointF pt)
-            {
-                return CellFromPoint(CellIndexesFromXY(pt));
-            }
-
             private bool IndexesWithinGrid(Point pt)
             {
                 return pt.X >=0 && pt.X < _densityGridSize.Width && pt.Y >=0 && pt.Y < _densityGridSize.Height;
-            }
-
-			/// returns a list of rectangle's vertices clockwise from top left
-			private List<Point> RectangleVertices(Rectangle rect)
-            {
-				var res = new List<Point>(4);
-				res.Add(rect.Location);
-				res.Add(new Point(rect.Right, rect.Top));
-				res.Add(new Point(rect.Right, rect.Bottom));
-                res.Add(new Point(rect.Left, rect.Bottom));
-                return res;
             }
 
             private int GetRandom(float range)
@@ -1910,13 +1761,6 @@ namespace ZedGraph
                 return (int)((_randGenerator.NextDouble() - 0.5) * (_randGenerator.NextDouble() - 0.5) * range*1.5);
 
             }
-
-            public static Size PointDiff(Point p1, Point p2) { return new Size(p1.X - p2.X, p1.Y - p2.Y); }
-            public static SizeF PointDiff(PointF p1, PointF p2) { return new SizeF(p1.X - p2.X, p1.Y - p2.Y); }
-
-            private static PointF ToPointF(Point p) { return new PointF(p.X, p.Y); }
-
-            private static Point ToPoint(PointF p) { return new Point((int)p.X, (int)p.Y); }
 
             private static Rectangle ToRectangle(RectangleF rect)
             {
@@ -1945,9 +1789,7 @@ namespace ZedGraph
                 var goal = float.MaxValue;
 				var goalCell = Point.Empty;
                 var gridRect = new Rectangle(Point.Empty, _densityGridSize);
-                var goalCount = 0;
 				var points = new List<Point>();
-                var watch = Stopwatch.StartNew();
 				for (var count = 80; count > 0; count--)
                 {
                     var randomGridPoint = pointCell + new Size(GetRandom(_densityGridSize.Width), GetRandom(_densityGridSize.Height));
@@ -1963,23 +1805,15 @@ namespace ZedGraph
                     }
 					points.Add(randomGridPoint);
                     var goalEstimate = GoalFuncion(CellFromPoint(randomGridPoint)._location, targetPoint, labelRect.Size);
-                    if ("YHGVTGLVVMDK".Equals(tbox.Text))
-                        Trace.WriteLine(string.Format("Try: {0}, {1}, {2}, {3}", pointCell, randomGridPoint, CellFromPoint(randomGridPoint)._location, goalEstimate));
                     if (goalEstimate < goal)
                     {
 						goal = goalEstimate;
 						goalCell = randomGridPoint;
-						goalCount = count;
                     }
 				}
-				watch.Stop();
-				Trace.Write(string.Format("{0}, {1}, {2} ", tbox.Text, targetPoint.X, targetPoint.Y));
-				// output headers: goal cell X, Y, grid search goal, grid search goal count, elapsedTicks, unique points count, fine search goal point X, Y, fine search offset X, Y, final goal, fine search goal gain, fine search count, fine elapsed ticks
-				Trace.Write(string.Format("{0}, {1}, {2}, {3}, {4}, {5}, ", goalCell.X, goalCell.Y, goal, goalCount, watch.Elapsed.Ticks, points.Count));
                 var roughGoal = goal;
 				// Search the cell neighborhood for a better position
                 var goalPoint = _densityGrid[goalCell.Y][goalCell.X]._location;
-				watch.Restart();
                 for (var count = 15; count > 0; count--)
                 {
                     var p = goalPoint + new Size(GetRandom(_cellSize * 2), GetRandom(_cellSize * 2));
@@ -1990,13 +1824,8 @@ namespace ZedGraph
                     {
 						goal = goalEstimate1;
                         goalPoint = p;
-						goalCount = count;
                     }
                 }
-				var searchOffset = PointDiff(_densityGrid[goalCell.Y][goalCell.X]._location, goalPoint);
-                watch.Stop();
-                Trace.WriteLine(string.Format("{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}", goalPoint.X, goalPoint.Y, searchOffset.Width, searchOffset.Height, goal, roughGoal - goal, goalCount, watch.Elapsed.Ticks));
-
 				var labelLocation = new PointF(goalPoint.X, goalPoint.Y + labelRect.Height/2);
 				_graph.ReverseTransform(new PointF(labelLocation.X, labelLocation.Y), out var x, out var y);
                 //_graph.ReverseTransform(targetPoint, out var x, out var y);
@@ -2006,20 +1835,9 @@ namespace ZedGraph
 
 				// update density grid to prevent overlaps
                 var cellArea = _cellSize * _cellSize;
-                //var newLabelRectangle = new Rectangle(goalPoint.X - (int)(labelRect.Width/2), (int)(goalPoint.Y - labelRect.Height), (int)labelRect.Width, (int)labelRect.Height);
 				var newLabelRectangle = ToRectangle(_graph.GetRectScreen(tbox, g));
 
-
-                // DEBUG: test for crossovers
-                var goalCheck = GoalFuncion(goalPoint, targetPoint, labelRect.Size);
-                var labelVector = new VectorF(targetPoint, goalPoint);
-                foreach (var vector in _labeledPoints)
-                {
-                    CheckForCrossovers(labelVector, vector,
-                        string.Format("{0} goal point, goal function {1}", tbox.Text, goalCheck));
-                }
-
-				foreach (var cell in GetRectangleCells(newLabelRectangle))
+                foreach (var cell in GetRectangleCells(newLabelRectangle))
                 {
                     var cellOverlap = RectangleF.Intersect(newLabelRectangle, cell._bounds);
                     var densityIncrement = cellOverlap.Height * cellOverlap.Width;
@@ -2027,20 +1845,7 @@ namespace ZedGraph
                 }
 
 				_labeledPoints.Add(new VectorF(targetPoint, goalPoint));
-				// DEBUG: Use this to visualize goal function for a specific peptide
-                // parameters of the VisualiseGoalFunction method
-				// if("YHGVTGLVVMDK".Equals(tbox.Text))
-				//	_targetPoint = targetPoint;
-                //  _labelSize = labelRect.Size;
             }
-            private void CheckForCrossovers(VectorF thisPoint, VectorF labeledPoint, string message)
-            {
-                if (thisPoint.DoIntersect(labeledPoint))
-                {
-                    Trace.WriteLine("Crossover detected: " + message);
-                }
-            }
-
         }
 
 		public void AdjustLabelSpacings(List<TextObj> objects, List<PointPair> points, int maxIter = 5)
@@ -2053,8 +1858,6 @@ namespace ZedGraph
                     _labelLayout = new LabelLayout(this, (int)Math.Ceiling(minLabelHeight));
                 }                
                 GraphObjList.RemoveAll(obj => obj is BoxObj || obj is LineObj);
-				if(_labelLayout != null)
-                    _labelLayout._targetPoint = null;
                 for (var i = 0; i < objects.Count; i++)
                 {
                     _labelLayout.PlaceLabel(objects[i], points[i], g);
