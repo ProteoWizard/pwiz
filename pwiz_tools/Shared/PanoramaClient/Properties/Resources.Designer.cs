@@ -61,13 +61,13 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to File was not uploaded to the server. Please try again, or if the problem persists, please contact your Panorama server administrator..
+        ///   Looks up a localized string similar to File was not uploaded to the server. Please try again, or if the problem persists, please contact your Panorama server administrator.
         /// </summary>
-        public static string AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_ {
+        public static string AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator {
             get {
                 return ResourceManager.GetString("AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__P" +
                         "lease_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server" +
-                        "_administrator_", resourceCulture);
+                        "_administrator", resourceCulture);
             }
         }
         
@@ -222,11 +222,11 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error parsing response as JSON..
+        ///   Looks up a localized string similar to Error parsing response as JSON.
         /// </summary>
-        public static string BaseWebClient_ParseJsonResponse_Error_parsing_response_as_JSON_ {
+        public static string AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON {
             get {
-                return ResourceManager.GetString("BaseWebClient_ParseJsonResponse_Error_parsing_response_as_JSON_", resourceCulture);
+                return ResourceManager.GetString("AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON", resourceCulture);
             }
         }
         

@@ -405,8 +405,7 @@ namespace pwiz.PanoramaClient
             requestHelper.DoRequest(request,
                 @"HEAD",
                 authHeader,
-                Resources
-                    .AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_
+                Resources.AbstractPanoramaClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator
             );
         }
 

@@ -10,16 +10,12 @@ namespace pwiz.PanoramaClient
 {
     public interface IRequestHelper : IDisposable
     {
-        // string DoGet(Uri uri);
         JObject Get(Uri uri, string messageOnError = null);
-        //byte[] DoPost(Uri uri, NameValueCollection postData);
-        //string DoPost(Uri uri, string postData);
         JObject Post(Uri uri, NameValueCollection postData, string messageOnError = null);
         JObject Post(Uri uri, string postData, string messageOnError);
         void DoRequest(HttpWebRequest request, string method, string authHeader, string messageOnError = null);
         void RequestJsonResponse();
         void AddHeader(string name, string value);
-        // void AddHeader(HttpRequestHeader header, string value);
         void RemoveHeader(string name);
         void AsyncUploadFile(Uri address, string method, string fileName);
         void CancelAsyncUpload();
@@ -29,15 +25,11 @@ namespace pwiz.PanoramaClient
 
     public abstract class AbstractRequestHelper : IRequestHelper
     {
-        public abstract string DoGet(Uri uri); // TODO: Not in Interface
+        private const string APPLICATION_JSON = @"application/json";
 
-        public abstract byte[] DoPost(Uri uri, NameValueCollection postData); // TODO: Not in Interface
-
-        public abstract string DoPost(Uri uri, string postData); // TODO: Not in Interface
+        #region IRequestHelper methods
 
         public abstract void AddHeader(string name, string value);
-
-        public abstract void AddHeader(HttpRequestHeader header, string value); // TODO: Not in Interface
 
         public abstract void RemoveHeader(string name);
 
@@ -49,11 +41,21 @@ namespace pwiz.PanoramaClient
 
         public abstract void AddUploadProgressChangedEventHandler(UploadProgressChangedEventHandler handler);
 
+        #endregion
+
+        public abstract string DoGet(Uri uri);
+
+        public abstract byte[] DoPost(Uri uri, NameValueCollection postData);
+
+        public abstract string DoPost(Uri uri, string postData);
+
+        public abstract void AddHeader(HttpRequestHeader header, string value);
+
         public abstract string GetResponse(HttpWebRequest request);
 
         public abstract LabKeyError GetLabkeyErrorFromWebException(WebException e);
 
-        // TODO: Take additional arg - list of expected keys in JSON?
+
         public JObject Get(Uri uri, string messageOnError = null)
         {
             try
@@ -98,7 +100,7 @@ namespace pwiz.PanoramaClient
                 }
                 else
                 {
-                    AddHeader(HttpRequestHeader.ContentType, "application/json");
+                    AddHeader(HttpRequestHeader.ContentType, APPLICATION_JSON);
                     response = DoPost(uri, postDataString);
                 }
                 return ParseResponse(response, uri, messageOnError);
@@ -123,14 +125,14 @@ namespace pwiz.PanoramaClient
             // 
             // We have to look for the status and any exception in the returned JSON rather than expecting a WebException if the request
             // fails on the server.
-            AddHeader(HttpRequestHeader.Accept, @"application/json");
+            AddHeader(HttpRequestHeader.Accept, APPLICATION_JSON);
         }
 
         public void DoRequest(HttpWebRequest request, string method, string authHeader, string messageOnError = null)
         {
             request.Method = method;
             request.Headers.Add(HttpRequestHeader.Authorization, authHeader);
-            request.Accept = @"application/json"; // Get LabKey to send JSON instead of HTML
+            request.Accept = APPLICATION_JSON; // Get LabKey to send JSON instead of HTML
 
             messageOnError ??= string.Format(Resources.AbstractRequestHelper_DoRequest__0__request_was_unsuccessful, method);
             try
@@ -158,7 +160,7 @@ namespace pwiz.PanoramaClient
             catch (JsonReaderException e)
             {
                 throw new PanoramaServerException(
-                    new ErrorMessageBuilder(Resources.BaseWebClient_ParseJsonResponse_Error_parsing_response_as_JSON_)
+                    new ErrorMessageBuilder(Resources.AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON)
                         .ErrorDetail(e.Message).Uri(uri).Response(response).Build(), e);
             }
         }
