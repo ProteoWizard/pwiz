@@ -431,7 +431,10 @@ namespace pwiz.PanoramaClient
             if (exception != null)
             {
                 var httpResponse = exception.Response as HttpWebResponse;
-                _responseStatus = (httpResponse?.StatusCode)?.ToString();
+                if (httpResponse != null)
+                {
+                    _responseStatus = ((int)httpResponse.StatusCode).ToString();
+                }
             }
 
             return this;
