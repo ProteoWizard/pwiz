@@ -3556,41 +3556,45 @@ namespace pwiz.Skyline
             {
                 folders = publishClient.PanoramaClient.GetInfoForFolders(folderPathNoCtx.TrimEnd('/').TrimStart('/'));
             }
-            catch (WebException ex)
-            {
-                // Handle this only for PanoramaWeb.  For the specific case where Skyline was upgraded
-                // to a version that does not assume the '/labkey' context path, BEFORE PanoramaWeb was
-                // re-configured to run as the ROOT webapp. In this case the panoramaSavedUri will contain '/labkey'
-                // but the server is no longer deployed at that context path.
-                if (!server.URI.Host.Contains(@"panoramaweb") || !folderPath.StartsWith(@"/labkey"))
-                {
-                    return false;
-                }
 
-                var response = ex.Response as HttpWebResponse;
-
-                if (response == null || response.StatusCode != HttpStatusCode.NotFound) // 404
-                {
-                    return false;
-                }
-
-                folderPathNoCtx = folderPath.Remove(0, @"/labkey".Length);
-                try
-                {
-                    folders =
-                        publishClient.PanoramaClient.GetInfoForFolders(folderPathNoCtx.TrimEnd('/').TrimStart('/'));
-                }
-                catch (Exception)
-                {
-                    return false;
-                }
-            }
-            catch (PanoramaServerException)
-            {
-                return false;
-            }
+            // Note: Removed special handling of WebException for PanoramaWeb if the server response was 404 (not found)
+            // and the folder path in the saved panorama Uri in the document starts with '/labkey'. This situation can 
+            // occur if the user is opening a document created with an older version of Skyline that assumed '/labkey/'
+            // context path. This will now result in an exception that will be ignored and the user will have to choose
+            // a folder to publish to.
+            // catch (WebException ex)
+            // {
+            //     // Handle this only for PanoramaWeb.  For the specific case where Skyline was upgraded
+            //     // to a version that does not assume the '/labkey' context path, BEFORE PanoramaWeb was
+            //     // re-configured to run as the ROOT webapp. In this case the panoramaSavedUri will contain '/labkey'
+            //     // but the server is no longer deployed at that context path.
+            //     if (!server.URI.Host.Contains(@"panoramaweb") || !folderPath.StartsWith(@"/labkey"))
+            //     {
+            //         return false;
+            //     }
+            //
+            //     var response = ex?.Response as HttpWebResponse;
+            //
+            //     if (response == null || response.StatusCode != HttpStatusCode.NotFound) // 404
+            //     {
+            //         return false;
+            //     }
+            //
+            //     folderPathNoCtx = folderPath.Remove(0, @"/labkey".Length);
+            //     try
+            //     {
+            //         folders =
+            //             publishClient.PanoramaClient.GetInfoForFolders(folderPathNoCtx.TrimEnd('/').TrimStart('/'));
+            //     }
+            //     catch (Exception)
+            //     {
+            //         return false;
+            //     }
+            // }
             catch (Exception e)
             {
+                if (e is PanoramaServerException || e is WebException) return false;
+
                 MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.RemoteSession_FetchContents_There_was_an_error_communicating_with_the_server__, e.Message), e);
                 return false;
             }
@@ -3602,7 +3606,6 @@ namespace pwiz.Skyline
             if (!(PanoramaUtil.CheckInsertPermissions(folders) && PanoramaUtil.HasTargetedMsModule(folders)))
                 return false;
 
-            var fileInfo = new FolderInformation(server, true);
             ShareType shareType;
             try
             {

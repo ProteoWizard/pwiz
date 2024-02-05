@@ -261,11 +261,29 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: .
+        /// </summary>
+        public static string ErrorMessageBuilder_Build_Error__ {
+            get {
+                return ResourceManager.GetString("ErrorMessageBuilder_Build_Error__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Response: .
         /// </summary>
         public static string ErrorMessageBuilder_Build_Response__ {
             get {
                 return ResourceManager.GetString("ErrorMessageBuilder_Build_Response__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Response status: {0}.
+        /// </summary>
+        public static string ErrorMessageBuilder_Build_Response_status___0_ {
+            get {
+                return ResourceManager.GetString("ErrorMessageBuilder_Build_Response_status___0_", resourceCulture);
             }
         }
         
@@ -280,11 +298,12 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: {0}.
+        ///   Looks up a localized string similar to Unrecognized error trying to get the status for folder {0}..
         /// </summary>
-        public static string GenericState_AppendErrorAndUri_Error___0_ {
+        public static string FolderStateErrors_Error_Unrecognized_error_trying_to_get_the_status_for_folder__0__ {
             get {
-                return ResourceManager.GetString("GenericState_AppendErrorAndUri_Error___0_", resourceCulture);
+                return ResourceManager.GetString("FolderStateErrors_Error_Unrecognized_error_trying_to_get_the_status_for_folder__0" +
+                        "__", resourceCulture);
             }
         }
         
@@ -387,6 +406,16 @@ namespace pwiz.PanoramaClient.Properties {
             get {
                 return ResourceManager.GetString("PanoramaFolderBrowser_InitializeServers_Go_to_Tools___Options___Panorama_tab_to_u" +
                         "pdate_the_username_and_password", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error getting a CSRF token from the server.
+        /// </summary>
+        public static string PanoramaRequestHelper_Post_There_was_an_error_getting_a_CSRF_token_from_the_server {
+            get {
+                return ResourceManager.GetString("PanoramaRequestHelper_Post_There_was_an_error_getting_a_CSRF_token_from_the_serve" +
+                        "r", resourceCulture);
             }
         }
         

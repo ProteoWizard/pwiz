@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
@@ -350,8 +351,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 return new ErrorMessageBuilder(PanoramaClient.Properties.Resources
                         .AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON)
-                    .ErrorDetail(
-                        @"Unexpected character encountered while parsing value: <. Path '', line 0, position 0.")
+                    .Exception(
+                        new JsonReaderException(@"Unexpected character encountered while parsing value: <. Path '', line 0, position 0."))
                     .Uri(PanoramaUtil.GetPipelineContainerUrl(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER))
                     .Response(NOT_JSON)
                     .Build();
@@ -566,7 +567,7 @@ namespace pwiz.SkylineTestFunctional
             {
             }
 
-            public override void AsyncUploadFile(Uri address, string method, string fileName)
+            public override void DoAsyncFileUpload(Uri address, string method, string fileName)
             {
                 Task.Run(async delegate
                 {
@@ -606,7 +607,7 @@ namespace pwiz.SkylineTestFunctional
 
             public override string DoPost(Uri uri, string postData)
             {
-                throw new NotImplementedException();
+                throw new NotImplementedException(); 
             }
 
             public override byte[] DoPost(Uri uri, NameValueCollection postData)

@@ -326,7 +326,7 @@ namespace pwiz.PanoramaClient
                     stateError = string.Format(Resources.PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder, folderPath);
                     break;
                 case FolderState.unknown:
-                    stateError = string.Format("Unrecognized error trying to get status for folder {0}.", folderPath);
+                    stateError = string.Format(Resources.FolderStateErrors_Error_Unrecognized_error_trying_to_get_the_status_for_folder__0__, folderPath);
                     break;
             }
             return stateError;
@@ -404,6 +404,8 @@ namespace pwiz.PanoramaClient
         private string _error;
         private string _errorDetail;
         private LabKeyError _labkeyError;
+        private string _exceptionMessage;
+        private string _responseStatus;
         private Uri _uri;
         private string _responseString;
 
@@ -421,6 +423,20 @@ namespace pwiz.PanoramaClient
             _labkeyError = labkeyError;
             return this;
         }
+
+        public ErrorMessageBuilder Exception(Exception ex)
+        {
+            _exceptionMessage = ex.Message;
+            var exception = ex as WebException;
+            if (exception != null)
+            {
+                var httpResponse = exception.Response as HttpWebResponse;
+                _responseStatus = (httpResponse?.StatusCode)?.ToString();
+            }
+
+            return this;
+        }
+
         public ErrorMessageBuilder Uri(Uri requestUri)
         {
             _uri = requestUri;
@@ -448,18 +464,18 @@ namespace pwiz.PanoramaClient
 
             var sb = new StringBuilder();
 
-            if (_errorDetail != null)
+            if (_errorDetail != null || _labkeyError != null || _exceptionMessage != null)
             {
-                sb.AppendLine(string.Format(Resources.GenericState_AppendErrorAndUri_Error___0_, _errorDetail));
+                sb.Append(Resources.ErrorMessageBuilder_Build_Error__);
+                if (_errorDetail != null) sb.AppendLine(_errorDetail);
+                if (_exceptionMessage != null) sb.AppendLine(_exceptionMessage);
+                if (_labkeyError != null) sb.AppendLine(_labkeyError.ToString());
             }
 
-            if (_labkeyError != null)
+            if (_responseStatus != null)
             {
-                sb.AppendLine(_errorDetail != null
-                    ? _labkeyError.ToString()
-                    : string.Format(Resources.GenericState_AppendErrorAndUri_Error___0_, _labkeyError));
+                sb.AppendLine(string.Format(Resources.ErrorMessageBuilder_Build_Response_status___0_, _responseStatus));
             }
-
             if (_uri != null)
             {
                 sb.AppendLine(string.Format(Resources.GenericState_AppendErrorAndUri_URL___0_, _uri));

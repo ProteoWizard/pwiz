@@ -33,13 +33,13 @@ namespace pwiz.PanoramaClient
 
         public abstract void RemoveHeader(string name);
 
-        public abstract void AsyncUploadFile(Uri address, string method, string fileName);
-
         public abstract void CancelAsyncUpload();
 
         public abstract void AddUploadFileCompletedEventHandler(UploadFileCompletedEventHandler handler);
 
         public abstract void AddUploadProgressChangedEventHandler(UploadProgressChangedEventHandler handler);
+
+        public abstract void Dispose();
 
         #endregion
 
@@ -47,8 +47,10 @@ namespace pwiz.PanoramaClient
 
         public abstract byte[] DoPost(Uri uri, NameValueCollection postData);
 
-        public abstract string DoPost(Uri uri, string postData);
+        public abstract string DoPost(Uri uri, string postData); // Used only in AuditLogTutorialTest
 
+        public abstract void DoAsyncFileUpload(Uri address, string method, string fileName);
+        
         public abstract void AddHeader(HttpRequestHeader header, string value);
 
         public abstract string GetResponse(HttpWebRequest request);
@@ -65,15 +67,15 @@ namespace pwiz.PanoramaClient
             }
             catch (WebException e)
             {
-                throw GetPanoramaServerException(messageOnError, uri, @"GET", e);
+                throw NewPanoramaServerException(messageOnError, uri, @"GET", e);
             }
         }
 
-        private PanoramaServerException GetPanoramaServerException(string messageOnError, Uri uri, string requestMethod, WebException e)
+        private PanoramaServerException NewPanoramaServerException(string messageOnError, Uri uri, string requestMethod, WebException e)
         {
             messageOnError ??= string.Format(Resources.AbstractRequestHelper_DoRequest__0__request_was_unsuccessful, requestMethod);
             return new PanoramaServerException(new ErrorMessageBuilder(messageOnError)
-                .Uri(uri).LabKeyError(GetLabkeyErrorFromWebException(e)).ErrorDetail(e.Message).Build(), e);
+                .Uri(uri).LabKeyError(GetLabkeyErrorFromWebException(e)).Exception(e).Build(), e);
         }
 
         public JObject Post(Uri uri, NameValueCollection postData, string messageOnError = null)
@@ -107,7 +109,7 @@ namespace pwiz.PanoramaClient
             }
             catch (WebException e)
             {
-                throw GetPanoramaServerException(messageOnError, uri, @"POST", e);
+                throw NewPanoramaServerException(messageOnError, uri, @"POST", e);
             }
         }
 
@@ -142,16 +144,34 @@ namespace pwiz.PanoramaClient
                 var labkeyError = PanoramaUtil.GetIfErrorInResponse(response);
                 if (labkeyError != null)
                 {
-                    throw new PanoramaServerException(new ErrorMessageBuilder(messageOnError).Uri(request.RequestUri).LabKeyError(labkeyError).Build());
+                    throw new PanoramaServerException(new ErrorMessageBuilder(messageOnError).Uri(request.RequestUri)
+                        .LabKeyError(labkeyError).Build());
                 }
             }
             catch (WebException e)
             {
-                throw GetPanoramaServerException(messageOnError, request.RequestUri, method, e);
+                throw NewPanoramaServerException(messageOnError, request.RequestUri, method, e);
             }
         }
 
-        protected JObject ParseJsonResponse(string response, Uri uri)
+        public void AsyncUploadFile(Uri address, string method, string fileName)
+        {
+            try
+            {
+                DoAsyncFileUpload(address, method, fileName);
+            }
+            catch (WebException e)
+            {
+                throw new PanoramaServerException(
+                    new ErrorMessageBuilder(Resources
+                            .AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file)
+                        .Exception(e)
+                        .Uri(address)
+                        .LabKeyError(GetLabkeyErrorFromWebException(e)).Build(), e);
+            }
+        }
+
+        private JObject ParseJsonResponse(string response, Uri uri)
         {
             try
             {
@@ -161,11 +181,11 @@ namespace pwiz.PanoramaClient
             {
                 throw new PanoramaServerException(
                     new ErrorMessageBuilder(Resources.AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON)
-                        .ErrorDetail(e.Message).Uri(uri).Response(response).Build(), e);
+                        .Exception(e).Uri(uri).Response(response).Build(), e);
             }
         }
 
-        protected JObject ParseResponse(string response, Uri uri, string messageOnError)
+        private JObject ParseResponse(string response, Uri uri, string messageOnError)
         {
             var jsonResponse = ParseJsonResponse(response, uri);
             var serverError = PanoramaUtil.GetIfErrorInResponse(jsonResponse);
@@ -176,8 +196,6 @@ namespace pwiz.PanoramaClient
 
             return jsonResponse;
         }
-
-        public abstract void Dispose();
     }
 
     public class PanoramaRequestHelper : AbstractRequestHelper
@@ -237,8 +255,8 @@ namespace pwiz.PanoramaClient
             }
             catch (WebException e)
             {
-                throw new PanoramaServerException(new ErrorMessageBuilder("There was an error getting a CSRF token from the server")
-                    .Uri(uri).LabKeyError(GetLabkeyErrorFromWebException(e)).ErrorDetail(e.Message).Build(), e);
+                throw new PanoramaServerException(new ErrorMessageBuilder(Resources.PanoramaRequestHelper_Post_There_was_an_error_getting_a_CSRF_token_from_the_server)
+                    .Uri(uri).LabKeyError(GetLabkeyErrorFromWebException(e)).Exception(e).Build(), e);
             }
             return base.Post(uri, postData, postDataString, messageOnError);
         }
@@ -248,7 +266,7 @@ namespace pwiz.PanoramaClient
             return PanoramaUtil.GetResponseString(request.GetResponse());
         }
 
-        public override void AsyncUploadFile(Uri address, string method, string fileName)
+        public override void DoAsyncFileUpload(Uri address, string method, string fileName)
         {
             _client.UploadFileAsync(address, method, fileName);
         }
@@ -268,23 +286,18 @@ namespace pwiz.PanoramaClient
             _client.UploadProgressChanged += handler;
         }
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                _client?.Dispose();
-            }
-        }
-
         public override void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
-        ~PanoramaRequestHelper()
+        private void Dispose(bool disposing)
         {
-            Dispose(false);
+            if (disposing)
+            {
+                _client?.Dispose();
+            }
         }
     }
 

@@ -486,7 +486,7 @@ namespace pwiz.PanoramaClient
                     var responseUri = response?.ResponseUri;
                     throw new PanoramaServerException(
                         new ErrorMessageBuilder(ServerStateEnum.missing.Error(uri))
-                            .ErrorDetail(ex.Message)
+                            .Exception(ex)
                             .LabKeyError(labkeyError)
                             .Uri(responseUri != null && !uri.Equals(responseUri) ? responseUri : null).Build(), ex);
                 }
@@ -509,7 +509,7 @@ namespace pwiz.PanoramaClient
 
                 throw new PanoramaServerException(new ErrorMessageBuilder(ServerStateEnum.unknown.Error(ServerUri))
                     .Uri(uri).LabKeyError(labkeyError)
-                    .ErrorDetail(ex.Message).Build(), ex);
+                    .Exception(ex).Build(), ex);
             }
         }
 
@@ -550,7 +550,7 @@ namespace pwiz.PanoramaClient
 
                 throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.unknown.Error(ServerUri))
                     .Uri(PanoramaUtil.GetEnsureLoginUri(pServer))
-                    .ErrorDetail(ex.Message)
+                    .Exception(ex)
                     .LabKeyError(PanoramaUtil.GetIfErrorInResponse(response)).Build(), ex);
             }
         }
@@ -630,7 +630,7 @@ namespace pwiz.PanoramaClient
                         else
                         {
                             throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.nonvalid.Error(ServerUri))
-                                .Uri(requestUri).LabKeyError(labKeyError).ErrorDetail(ex.Message).Build(), ex); // User cannot be authenticated
+                                .Uri(requestUri).LabKeyError(labKeyError).Exception(ex).Build(), ex); // User cannot be authenticated
                         }
                     }
 
@@ -643,7 +643,7 @@ namespace pwiz.PanoramaClient
                     }
 
                     throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.nonvalid.Error(ServerUri))
-                        .Uri(requestUri).LabKeyError(labKeyError).ErrorDetail(ex.Message).Build(), ex); // User cannot be authenticated
+                        .Uri(requestUri).LabKeyError(labKeyError).Exception(ex).Build(), ex); // User cannot be authenticated
                 }
 
                 throw;
@@ -665,12 +665,12 @@ namespace pwiz.PanoramaClient
                 if (response != null && response.StatusCode == HttpStatusCode.NotFound)
                 {
                     throw new PanoramaServerException(new ErrorMessageBuilder(FolderState.notfound.Error(ServerUri, folderPath, Username))
-                        .Uri(requestUri).LabKeyError(labkeyError).ErrorDetail(ex.Message).Build(), ex);
+                        .Uri(requestUri).LabKeyError(labkeyError).Exception(ex).Build(), ex);
                 }
                 else
                 {
                     throw new PanoramaServerException(new ErrorMessageBuilder(FolderState.unknown.Error(ServerUri, folderPath, Username))
-                        .Uri(requestUri).LabKeyError(labkeyError).ErrorDetail(ex.Message).Build(), ex);
+                        .Uri(requestUri).LabKeyError(labkeyError).Exception(ex).Build(), ex);
                 }
             }
         }
