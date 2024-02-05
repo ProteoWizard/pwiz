@@ -132,8 +132,8 @@ int BlibMaker::parseNextSwitch(int i, int argc, char* argv[])
     } else if (switchName == 't') {
         scoreLookupMode_ = true;
     }
-    else if (switchName == 'z') {
-        string charges((++i < argc) ? argv[i] : "");
+    else if (switchName == 'z' && ++i < argc) {
+        string charges(argv[i]);
         vector<string> result;
         boost::split(result, charges, boost::is_any_of(","));
         for (int c = 0; c < result.size(); c++) {

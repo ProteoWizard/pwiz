@@ -28,8 +28,8 @@
 namespace BiblioSpec {
 
 BuildParser::BuildParser(BlibBuilder& maker,
-                             const char* filename,
-                             const ProgressIndicator* parentProgress_)
+                         const char* filename,
+                         const ProgressIndicator* parentProgress_)
 : fullFilename_(filename),
   blibMaker_(maker),
   fileProgressIncrement_(0),
@@ -330,6 +330,24 @@ sqlite3_int64 BuildParser::insertProtein(const Protein* protein) {
     return sqlite3_last_insert_rowid(blibMaker_.getDb());
 }
 
+// Optionally sort the psms before writing
+void BuildParser::OptionalSort(PSM_SCORE_TYPE scoreType)
+{
+    if (scoreType == PSM_SCORE_TYPE::HARDKLOR_CORRELATION_SCORE)
+    {
+        // Sort PSMs by mass before writing to library
+        std::stable_sort(psms_.begin(), psms_.end(), [](PSM* a, PSM* b)
+        {
+            if (a == NULL || b == NULL)
+                return false; // No change in order
+            double massA = (a->smallMolMetadata.precursorMzDeclared - PROTON_MASS) * (double)a->charge;
+            double massB = (b->smallMolMetadata.precursorMzDeclared - PROTON_MASS) * (double)b->charge;
+            return massA < massB;
+        }
+        );
+    }
+}
+
 /**
  * \brief Use the BlibBuilder to add to the library entries in the list
  * of psms, adding spectra from the curSpecFileName file. The same
@@ -374,6 +392,9 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
         if (!hasMatches)
             Verbosity::status("No matches left after removing ambiguous spectra in %s.", curSpecFileName_.c_str());
     }
+
+    // Optionally sort the psms before writing
+    OptionalSort(scoreType);
 
     bool needsSpectra = false;
     for (unsigned int i = 0; i < psms_.size(); i++) {
