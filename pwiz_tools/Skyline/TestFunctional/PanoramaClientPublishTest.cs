@@ -100,9 +100,7 @@ namespace pwiz.SkylineTestFunctional
             // Response returned by the server could not be parsed as JSON.
             TestInvalidJsonResponse();
 
-            // TODO: Returned JSON does not have the required attribute(s).
 
-            
             TestFailAtMethod(RequestType.HEAD); // HEAD request to check if sky.zip.part was uploaded
             TestFailAtMethod(RequestType.MOVE); // MOVE request to check if the sky.zip.part was successfully renamed to sky.zip
 

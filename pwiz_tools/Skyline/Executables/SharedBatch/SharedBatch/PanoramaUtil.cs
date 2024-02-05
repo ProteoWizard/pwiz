@@ -336,7 +336,7 @@ namespace SharedBatch
         PanoramaState IsPanorama();
         UserState IsValidUser(string username, string password);
         FolderState IsValidFolder(string folderPath, string username, string password);
-        bool PingPanorama(string folderPath, string username, string password, string version);
+        bool PingPanorama(string folderPath, string username, string password);
     }
 
     public class WebPanoramaClient : IPanoramaClient
@@ -496,7 +496,7 @@ namespace SharedBatch
             return FolderState.valid;
         }
 
-        public bool PingPanorama(string folderPath, string username, string password, string version)
+        public bool PingPanorama(string folderPath, string username, string password)
         {
             try
             {
@@ -510,13 +510,7 @@ namespace SharedBatch
                         // We need both a X-LABKEY-CSRF header and a cookie
                         _csrfToken = webClient.GetCsrfToken();
                     }
-
-                    var postData = new Dictionary<string, string>
-                    {
-                        [@"softwareVersion"] = version
-                    };
-
-                    webClient.Post(uri, JsonConvert.SerializeObject(postData), _csrfToken); // Try to reuse the CSRF token
+                    webClient.Post(uri, "", _csrfToken); // Try to reuse the CSRF token
                 }
             }
             catch (WebException ex)
