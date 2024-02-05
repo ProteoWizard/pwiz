@@ -224,7 +224,7 @@ namespace pwiz.PanoramaClient
 
         public static LabKeyError GetIfErrorInResponse(JObject jsonResponse)
         {
-            if (jsonResponse[@"exception"] != null)
+            if (jsonResponse?[@"exception"] != null)
             {
                 return new LabKeyError(jsonResponse[@"exception"].ToString(), jsonResponse[@"status"]?.ToObject<int>());
             }
@@ -235,7 +235,7 @@ namespace pwiz.PanoramaClient
         {
             JObject jsonResponse = null;
             TryGetJsonResponse(response, ref jsonResponse);
-            return GetIfErrorInResponse(jsonResponse);
+            return jsonResponse != null ? GetIfErrorInResponse(jsonResponse) : null;
         }
 
         public static LabKeyError GetIfErrorInResponse(string responseString)

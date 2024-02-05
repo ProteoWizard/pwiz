@@ -399,7 +399,6 @@ namespace pwiz.PanoramaClient
 
         private void ConfirmFileOnServer(Uri sourceUri, string authHeader, IRequestHelper requestHelper)
         {
-            // TODO: check upto 5 times
             var request = (HttpWebRequest)WebRequest.Create(sourceUri);
             // Do a HEAD request to check if the file exists on the server.
             requestHelper.DoRequest(request,
@@ -659,7 +658,7 @@ namespace pwiz.PanoramaClient
             catch (WebException ex)
             {
                 // TODO: WebException should be caught by IRequestHelper.Get(uri) in base.ValidateFolder and thrown back as PanoramaServerException
-                //       Remove the following code?
+                //       Remove the method override?
                 var response = ex.Response as HttpWebResponse;
                 var labkeyError = PanoramaUtil.GetIfErrorInResponse(response);
                 if (response != null && response.StatusCode == HttpStatusCode.NotFound)
@@ -733,8 +732,6 @@ namespace pwiz.PanoramaClient
                 : new WebClientWithCredentials(ServerUri, Username, Password);
             return new PanoramaRequestHelper(webClient);
         }
-
-
 
         // Copied from SkypSupport.cs. Build the string that shows download progress.
         private static string GetDownloadedSize(long downloaded, long fileSize)
