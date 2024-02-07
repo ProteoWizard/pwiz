@@ -4381,4 +4381,10 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank" xml:space="preserve">
     <value>Molecule Rank</value>
   </data>
+  <data name="ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_" xml:space="preserve">
+    <value>Unable to add peptide modification '{0}': {1}</value>
+  </data>
+  <data name="PeptideMod_SetTerminus_A_peptide_modification_must_be_added_before_giving_it_a_terminal_or_amino_acid_specificity_" xml:space="preserve">
+    <value>A peptide modification must be added before giving it a terminal or amino acid specificity.</value>
+  </data>
 </root>

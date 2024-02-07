@@ -73,6 +73,7 @@ namespace pwiz.Skyline
         public static readonly Func<string> PATH_TO_REPORT = () => GetPathToFile(ReportSpecList.EXT_REPORTS);
         public static readonly Func<string> PATH_TO_INSTALL = () => GetPathToFile(ToolDescription.EXT_INSTALL);
         public static readonly Func<string> DATE_VALUE = () => CommandArgUsage.CommandArgs_DATE_VALUE;
+        public static readonly Func<string> BOOL_VALUE = () => string.Join(TextUtil.CsvSeparator + @" ", bool.TrueString, bool.FalseString);
         public static readonly Func<string> INT_VALUE = () => CommandArgUsage.CommandArgs_INT_VALUE;
         public static readonly Func<string> NUM_VALUE = () => CommandArgUsage.CommandArgs_NUM_VALUE;
         public static readonly Func<string> NUM_LIST_VALUE = () => CommandArgUsage.CommandArgs_NUM_LIST_VALUE;
@@ -93,7 +94,11 @@ namespace pwiz.Skyline
         public static readonly Func<string> COMMAND_ARGUMENTS_VALUE = () => CommandArgUsage.CommandArgs_COMMAND_ARGUMENTS_VALUE;
         public static readonly Func<string> PROGRAM_MACRO_VALUE = () => CommandArgUsage.CommandArgs_PROGRAM_MACRO_VALUE;
         public static readonly Func<string> LABEL_VALUE = () => CommandArgUsage.CommandArgs_LABEL_VALUE;
+        public static readonly Func<string> MOD_NAME_VALUE = () => CommandArgUsage.CommandArgs_MOD_NAME_VALUE_full_name__e_g___Oxidation__M______short_name__Oxi_;
+        public static readonly Func<string> MOD_UNIMOD_VALUE = () => CommandArgUsage.CommandArgs_MOD_UNIMOD_VALUE_UniMod_ID__e_g___35__;
+        public static readonly Func<string> MOD_AA_VALUE = () => string.Concat(AminoAcid.All);
         // ReSharper disable LocalizableElement
+        public static readonly Func<string> MOD_TERMINUS_VALUE = () => "N, C";
         public static readonly Func<string> INT_LIST_VALUE = () => "\"1, 2, 3...\"";  // Not L10N
         public static readonly Func<string> ION_TYPE_LIST_VALUE = () => "\"a, b, c, x, y, z, p\"";    // Not L10N
         public static readonly Func<string> ANNOTATION_TARGET_LIST_VALUE = () => "\"protein, molecule_list, peptide, molecule, precursor, transition, replicate, precursor_result, transition_result\""; // Not L10N
@@ -172,7 +177,7 @@ namespace pwiz.Skyline
         });
         public static readonly Argument ARG_OVERWRITE = new DocArgument(@"overwrite", (c, p) =>
         {
-            c.OverwriteExisting = p.IsNameOnly || bool.Parse(p.Value);
+            c.OverwriteExisting = p.ValueBool;
         });
         public static readonly Argument ARG_SHARE_ZIP = new DocArgument(@"share-zip", PATH_TO_ZIP,
             (c, p) =>
@@ -1124,9 +1129,13 @@ namespace pwiz.Skyline
                 (c, p) => c.AddAnnotationsResolveConflictsBySkipping = p.IsValue(ARG_VALUE_SKIP))
             { WrapValue = true, InternalUse = true};
 
+        public static readonly Argument ARG_INTEGRATE_ALL = new DocArgument(@"integrate-all", BOOL_VALUE,
+            (c, p) => c.IntegrateAll = p.ValueBool)
+            { OptionalValue = true };
 
         public static readonly ArgumentGroup GROUP_DOCUMENT_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_DOCUMENT_SETTINGS, false,
-                ARG_ADD_ANNOTATIONS_NAME, ARG_ADD_ANNOTATIONS_TARGETS, ARG_ADD_ANNOTATIONS_TYPE, ARG_ADD_ANNOTATIONS_VALUES, ARG_ADD_ANNOTATIONS_FILE, ARG_ADD_ANNOTATIONS_CONFLICT_RESOLUTION) 
+                ARG_ADD_ANNOTATIONS_NAME, ARG_ADD_ANNOTATIONS_TARGETS, ARG_ADD_ANNOTATIONS_TYPE, ARG_ADD_ANNOTATIONS_VALUES, ARG_ADD_ANNOTATIONS_FILE, ARG_ADD_ANNOTATIONS_CONFLICT_RESOLUTION,
+                ARG_INTEGRATE_ALL) 
             { LeftColumnWidth = 36, Validate = c => c.ValidateAddAnnotationsArgs()};
         public string AddAnnotationsFile { get; private set; }
         public bool AddingAnnotationsFile { get { return !string.IsNullOrEmpty(AddAnnotationsFile) || !string.IsNullOrEmpty(AddAnnotationsName); } }
@@ -1135,6 +1144,7 @@ namespace pwiz.Skyline
         public ListPropertyType AddAnnotationsType { get; private set; }
         public string[] AddAnnotationsValues { get; private set; }
         public bool ?AddAnnotationsResolveConflictsBySkipping { get; private set; }
+        public bool? IntegrateAll { get; private set; }
 
         private bool ValidateAddAnnotationsArgs()
         {
@@ -1443,8 +1453,7 @@ namespace pwiz.Skyline
             () => TransitionFilter.GetEndFragmentFinderLabels().ToArray(),
             (c, p) => c.FilterEndProductIon = TransitionFilter.GetEndFragmentFinder(TransitionFilter.GetEndFragmentNameFromLabel(p.Value))) { WrapValue = true };
         public static readonly Argument ARG_TRAN_PRODUCT_SPECIAL_IONS_CLEAR = new DocArgument(@"tran-product-clear-special-ions",
-                (c, p) => c.FilterSpecialIons = Array.Empty<string>())
-            { OptionalValue = true };
+                (c, p) => c.FilterSpecialIons = Array.Empty<string>());
         public static readonly Argument ARG_TRAN_PRODUCT_SPECIAL_IONS_ADD = new DocArgument(@"tran-product-add-special-ion",
                 () => GetDisplayNames(Settings.Default.MeasuredIonList),
                 (c, p) => c.FilterSpecialIons = c.FilterSpecialIons == null ? new[] { p.Value } : c.FilterSpecialIons.Append(p.Value))
@@ -1535,6 +1544,21 @@ namespace pwiz.Skyline
             { WrapValue = true };
         public static readonly Argument ARG_BGPROTEOME_PATH = new DocArgument(@"background-proteome-file", PATH_TO_PROTDB, (c, p) => c.BackgroundProteomePath = p.Value);
 
+        public static readonly Argument ARG_PEPTIDE_CLEAR_MODS = new DocArgument(@"pep-clear-mods",
+            (c, p) => c.PeptideMods = Array.Empty<PeptideMod>());
+        public static readonly Argument ARG_PEPTIDE_ADD_MOD = new DocArgument(@"pep-add-mod", MOD_NAME_VALUE,
+            (c, p) => c.PeptideMods = c.PeptideMods?.AppendToNew(new PeptideMod(p.Value)) ?? new [] { new PeptideMod(p.Value) });
+        public static readonly Argument ARG_PEPTIDE_ADD_UNIMOD = new DocArgument(@"pep-add-unimod", MOD_UNIMOD_VALUE,
+            (c, p) => c.PeptideMods = c.PeptideMods?.AppendToNew(new PeptideMod(p.ValueInt)) ?? new[] { new PeptideMod(p.ValueInt) });
+        public static readonly Argument ARG_PEPTIDE_ADD_MOD_AA = new DocArgument(@"pep-add-mod-aa", MOD_AA_VALUE,
+            (c, p) => PeptideMod.SetAA(c.PeptideMods, p.Value));
+        public static readonly Argument ARG_PEPTIDE_ADD_MOD_TERM = new DocArgument(@"pep-add-mod-term", MOD_TERMINUS_VALUE,
+            (c, p) => PeptideMod.SetTerminus(c.PeptideMods, p.Value));
+        public static readonly Argument ARG_PEPTIDE_MAX_VAR_MODS = new DocArgument(@"pep-max-variable-mods", INT_VALUE,
+            (c, p) => c.PeptideMaxVariableMods = p.GetValueInt(PeptideModifications.MIN_MAX_VARIABLE_MODS, PeptideModifications.MAX_MAX_VARIABLE_MODS));
+        public static readonly Argument ARG_PEPTIDE_MAX_LOSSES = new DocArgument(@"pep-max-losses", INT_VALUE,
+            (c, p) => c.PeptideMaxLosses = p.GetValueInt(PeptideModifications.MIN_MAX_NEUTRAL_LOSSES, PeptideModifications.MAX_MAX_NEUTRAL_LOSSES));
+
         public static readonly Argument ARG_IMS_LIBRARY_RES = new DocArgument(@"ims-library-res", RP_VALUE,
                 (c, p) => c.IonMobilityLibraryRes = p.ValueDouble);
 
@@ -1596,7 +1620,9 @@ namespace pwiz.Skyline
 
         private static readonly ArgumentGroup GROUP_PEPTIDE_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_SETTINGS_Peptide_Settings, false,
             ARG_PEPTIDE_ENZYME_NAME, ARG_PEPTIDE_MAX_MISSED_CLEAVAGES, ARG_PEPTIDE_UNIQUE_BY, ARG_BGPROTEOME_NAME, ARG_BGPROTEOME_PATH,
-            ARG_PEPTIDE_MIN_LENGTH, ARG_PEPTIDE_MAX_LENGTH, ARG_PEPTIDE_EXCLUDE_NTERMINAL_AAS, ARG_PEPTIDE_EXCLUDE_POTENTIAL_RAGGED_ENDS)
+            ARG_PEPTIDE_MIN_LENGTH, ARG_PEPTIDE_MAX_LENGTH, ARG_PEPTIDE_EXCLUDE_NTERMINAL_AAS, ARG_PEPTIDE_EXCLUDE_POTENTIAL_RAGGED_ENDS,
+            ARG_PEPTIDE_ADD_MOD, ARG_PEPTIDE_ADD_UNIMOD, ARG_PEPTIDE_ADD_MOD_AA, ARG_PEPTIDE_ADD_MOD_TERM,
+            ARG_PEPTIDE_CLEAR_MODS, ARG_PEPTIDE_MAX_VAR_MODS, ARG_PEPTIDE_MAX_LOSSES)
         {
             LeftColumnWidth = 40,
             Validate = c =>
@@ -1776,6 +1802,55 @@ namespace pwiz.Skyline
                                              BackgroundProteomeName != null ||
                                              BackgroundProteomePath != null ||
                                              PeptideDigestUniquenessConstraint.HasValue;
+
+        public class PeptideMod
+        {
+            public PeptideMod(string name)
+            {
+                NameOrUniModId = name;
+            }
+
+            public PeptideMod(int uniModId)
+            {
+                NameOrUniModId = ModifiedSequence.UnimodPrefix + uniModId;
+            }
+
+            public string NameOrUniModId { get; }
+            public string AAs { get; set; }
+            public ModTerminus? Terminus { get; set; }
+
+            public static void SetAA(PeptideMod[] mods, string aas)
+            {
+                if (mods.IsNullOrEmpty())
+                    throw new ArgumentException(Resources.PeptideMod_SetTerminus_A_peptide_modification_must_be_added_before_giving_it_a_terminal_or_amino_acid_specificity_);
+
+                var invalidAA = aas.FirstOrDefault(aa => !AminoAcid.IsAA(aa));
+                if (invalidAA != 0)
+                    throw new ValueInvalidAminoAcidException(ARG_PEPTIDE_ADD_MOD_AA, invalidAA.ToString());
+                mods.Last().AAs = aas;
+            }
+
+            public static void SetTerminus(PeptideMod[] mods, string terminus)
+            {
+                if (mods.IsNullOrEmpty())
+                    throw new ArgumentException(Resources.PeptideMod_SetTerminus_A_peptide_modification_must_be_added_before_giving_it_a_terminal_or_amino_acid_specificity_);
+
+                mods.Last().Terminus = terminus.ToLowerInvariant() switch
+                {
+                    "n" => ModTerminus.N,
+                    "c" => ModTerminus.C,
+                    _ => throw new ValueInvalidModTerminusException(ARG_PEPTIDE_ADD_MOD_TERM, terminus)
+                };
+            }
+        }
+
+        public PeptideMod[] PeptideMods { get; set; }
+        public int? PeptideMaxVariableMods { get; set; }
+        public int? PeptideMaxLosses { get; set; }
+
+        public bool PeptideModSettings => PeptideMods != null ||
+                                          PeptideMaxVariableMods.HasValue ||
+                                          PeptideMaxLosses.HasValue;
 
         public double? IonMobilityLibraryRes { get; private set; }
 
@@ -2671,6 +2746,9 @@ namespace pwiz.Skyline
             }
         }
 
+        /// <summary>
+        /// An Argument that requires a Skyline document to be created/opened to operate on.
+        /// </summary>
         public class DocArgument : Argument
         {
             public DocArgument(string name, Func<CommandArgs, NameValuePair, bool> processValue)
@@ -2837,6 +2915,18 @@ namespace pwiz.Skyline
             public string Value { get; private set; }
 
             public Argument Match { get; private set; }
+
+            public bool ValueBool
+            {
+                get
+                {
+                    if (IsNameOnly)
+                        return true;
+                    if (bool.TryParse(Value, out var result))
+                        return result;
+                    throw new ValueInvalidException(Match, Value, new[] { bool.TrueString, bool.FalseString });
+                }
+            }
 
             public int ValueInt
             {
@@ -3197,6 +3287,32 @@ namespace pwiz.Skyline
         {
             public ValueInvalidAnnotationTargetListException(Argument arg, string value, string annotationTargets)
                 : base(string.Format(SkylineResources.ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___, value, arg.ArgumentText, annotationTargets))
+            {
+            }
+        }
+
+        public class ValueInvalidModTerminusException : ValueInvalidException
+        {
+            public ValueInvalidModTerminusException(Argument arg, string value)
+                : base(arg, value, new []{ ModTerminus.N.ToString(), ModTerminus.C.ToString() })
+            {
+            }
+        }
+
+        public class ValueInvalidAminoAcidException : UsageException
+        {
+            public ValueInvalidAminoAcidException(Argument arg, string value)
+                : base(string.Format(
+                    Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                    value, arg.ArgumentText, MOD_AA_VALUE()))
+            {
+            }
+        }
+
+        public class ValueInvalidModException : UsageException
+        {
+            public ValueInvalidModException(Argument arg, string mod, ArgumentException ex)
+                : base(string.Format(Resources.ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_, mod, ex.Message))
             {
             }
         }

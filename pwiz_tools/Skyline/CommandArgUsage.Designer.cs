@@ -1096,6 +1096,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to When set all transitions contributing any signal between the integration boundaries are considered found. When not set, only transitions that are coeluting are considered found. Regardless of the setting all signal from the quantitative transitions between the integration boundaries is summed to produce the TotalArea for the precursor..
+        /// </summary>
+        internal static string _integrate_all {
+            get {
+                return ResourceManager.GetString("_integrate_all", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add an ion mobility library to the open document, based on its currently loaded chromatograms..
         /// </summary>
         internal static string _ionmobility_library_create {
@@ -1279,6 +1288,51 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add a UniMod modification to the document. The modification can be specified by long name (&quot;Oxidation (M)&quot;) or short name (&quot;Oxi&quot;). If using the short name, you may have to use --pep-add-mod-aa or --pep-add-mod-term to choose which specificity of the modification that you want to add to the document..
+        /// </summary>
+        internal static string _pep_add_mod {
+            get {
+                return ResourceManager.GetString("_pep_add_mod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sets the amino acid specificity of the last peptide modification added by --pep-add-mod..
+        /// </summary>
+        internal static string _pep_add_mod_aa {
+            get {
+                return ResourceManager.GetString("_pep_add_mod_aa", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sets the terminus specificity of the last peptide modification added by --pep-add-mod..
+        /// </summary>
+        internal static string _pep_add_mod_term {
+            get {
+                return ResourceManager.GetString("_pep_add_mod_term", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add a UniMod modification to the document by its UniMod ID. If the modification has multiple specificities, you must use --pep-add-mod-aa or --pep-add-mod-term to choose which specificity that you want to add to the document..
+        /// </summary>
+        internal static string _pep_add_unimod {
+            get {
+                return ResourceManager.GetString("_pep_add_unimod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Clears all peptide modifications from the currently open document..
+        /// </summary>
+        internal static string _pep_clear_mods {
+            get {
+                return ResourceManager.GetString("_pep_clear_mods", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The protease enzyme definition used to parse peptide sequences from protein sequences added as targets to the document. Peptide lists added as targets ignore this setting other than counting missed cleavages..
         /// </summary>
         internal static string _pep_digest_enzyme {
@@ -1315,11 +1369,29 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The maximum number of neutral loss events allowed to occur in combination on any fragment instance..
+        /// </summary>
+        internal static string _pep_max_losses {
+            get {
+                return ResourceManager.GetString("_pep_max_losses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The maximum number of missed cleavages allowed in a peptide when considering protein digestion..
         /// </summary>
         internal static string _pep_max_missed_cleavages {
             get {
                 return ResourceManager.GetString("_pep_max_missed_cleavages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum number of variable modifications allowed to occur in combination on any peptide instance..
+        /// </summary>
+        internal static string _pep_max_variable_mods {
+            get {
+                return ResourceManager.GetString("_pep_max_variable_mods", resourceCulture);
             }
         }
         
@@ -2517,6 +2589,24 @@ namespace pwiz.Skyline {
         internal static string CommandArgs_MINUTES_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_MINUTES_VALUE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to full name (e.g. &quot;Oxidation (M)&quot;) | short name (Oxi).
+        /// </summary>
+        internal static string CommandArgs_MOD_NAME_VALUE_full_name__e_g___Oxidation__M______short_name__Oxi_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_MOD_NAME_VALUE_full_name__e_g___Oxidation__M______short_name__Oxi_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to UniMod ID (e.g. &quot;35&quot;).
+        /// </summary>
+        internal static string CommandArgs_MOD_UNIMOD_VALUE_UniMod_ID__e_g___35__ {
+            get {
+                return ResourceManager.GetString("CommandArgs_MOD_UNIMOD_VALUE_UniMod_ID__e_g___35__", resourceCulture);
             }
         }
         

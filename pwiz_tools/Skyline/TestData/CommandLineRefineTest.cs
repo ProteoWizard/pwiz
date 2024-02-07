@@ -439,6 +439,9 @@ namespace pwiz.SkylineTestData
                 CommandArgs.ARG_TOOL_INITIAL_DIR,
                 CommandArgs.ARG_TOOL_PROGRAM_PATH,
                 CommandArgs.ARG_BGPROTEOME_NAME, // special validation logic tested in ConsoleNewDocumentTest
+                CommandArgs.ARG_PEPTIDE_ADD_MOD, // tested in ConsoleModsTest
+                CommandArgs.ARG_PEPTIDE_ADD_MOD_AA, // tested in ConsoleModsTest
+                CommandArgs.ARG_PEPTIDE_ADD_MOD_TERM, // tested in ConsoleModsTest
             };
             var allArgumentsSet = new HashSet<CommandArgs.Argument>(
                 CommandArgs.AllArguments.Where(a => !a.InternalUse && !testedArguments.Contains(a)));
@@ -470,7 +473,7 @@ namespace pwiz.SkylineTestData
             const string NO_VALUE = "NO VALUE";
             string expected = string.Format(
                 Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
-                NO_VALUE, arg.ArgumentText, string.Join(@", ", arg.Values));
+                NO_VALUE, arg.ArgumentText, arg.ValueExample());
             expected = expected.Substring(0, expected.IndexOf(@"None, ", StringComparison.Ordinal) + 6);
             AssertEx.ThrowsException<CommandArgs.ValueInvalidException>(() => arg.GetArgumentTextWithValue(NO_VALUE), expected);
             testedArguments.Add(arg);

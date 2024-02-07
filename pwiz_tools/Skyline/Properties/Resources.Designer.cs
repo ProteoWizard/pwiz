@@ -7421,6 +7421,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A peptide modification must be added before giving it a terminal or amino acid specificity..
+        /// </summary>
+        public static string PeptideMod_SetTerminus_A_peptide_modification_must_be_added_before_giving_it_a_terminal_or_amino_acid_specificity_ {
+            get {
+                return ResourceManager.GetString("PeptideMod_SetTerminus_A_peptide_modification_must_be_added_before_giving_it_a_te" +
+                        "rminal_or_amino_acid_specificity_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap PeptideQc {
@@ -11539,6 +11549,16 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("ValueInvalidIonTypeListException_ValueInvalidIonTypeListException_The_value___0__" +
                         "_is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_fra" +
                         "gment_ion_types__a__b__c__x__y__z__p__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to add peptide modification &apos;{0}&apos;: {1}.
+        /// </summary>
+        public static string ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_ {
+            get {
+                return ResourceManager.GetString("ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modificat" +
+                        "ion___0_____1_", resourceCulture);
             }
         }
         
