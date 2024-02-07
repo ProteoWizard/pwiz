@@ -90,7 +90,8 @@ namespace pwiz.Skyline.Model.DocSettings
             if (mod != null)
             {
                 // If we found a match in the set of common modifications, return it now
-                // unless the modification is very unspecific (e.g. 15N on all amino acids)
+                // unless the modification we found is very unspecific (e.g. 15N on all amino acids)
+                // and "specific" was true
                 if (!specific || !string.IsNullOrEmpty(mod.AAs) || mod.Terminus.HasValue)
                 {
                     return mod;
