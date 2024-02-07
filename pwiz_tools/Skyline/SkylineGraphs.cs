@@ -5650,6 +5650,7 @@ namespace pwiz.Skyline
             else
             {
                 rows = 1;
+                // ReSharper disable once PossibleLossOfFraction
                 while ((height / rows) / (width / (groups / rows + (groups % rows > 0 ? 1 : 0))) > MAX_TILED_ASPECT_RATIO)
                     rows++;
             }
