@@ -87,14 +87,29 @@ namespace pwiz.Skyline.Model.DocSettings
             ModTerminus? terminus, bool specific)
         {
             var mod = MassLookup.MatchModificationMass(mass, aa, roundTo, structural, terminus, specific);
-            if (mod == null)
+            if (mod != null)
             {
-                mod = MassLookupHidden.MatchModificationMass(mass, aa, roundTo, structural, terminus, specific);
+                // If we found a match in the set of common modifications, return it now
+                // unless the modification is very unspecific (e.g. 15N on all amino acids)
+                if (!specific || !string.IsNullOrEmpty(mod.AAs) || mod.Terminus.HasValue)
+                {
+                    return mod;
+                }
             }
-            return mod;
+            var modHidden = MassLookupHidden.MatchModificationMass(mass, aa, roundTo, structural, terminus, specific);
+            if (modHidden != null)
+            {
+                if (specific && string.IsNullOrEmpty(mod?.AAs) && null == mod?.Terminus)
+                {
+                    if (!string.IsNullOrEmpty(modHidden.AAs) || modHidden.Terminus.HasValue)
+                    {
+                        return modHidden;
+                    }
+                }
+            }
+
+            return mod ?? modHidden;
         }
-
-
 
         private static void AddMod(UniModModificationData data)
         {
