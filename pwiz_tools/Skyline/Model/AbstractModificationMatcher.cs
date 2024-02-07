@@ -464,6 +464,18 @@ namespace pwiz.Skyline.Model
                     {
                         var isotopeLabelType = key.Adduct.HasIsotopeLabels ? IsotopeLabelType.heavy : IsotopeLabelType.light;
                         var group = new TransitionGroup(peptide, key.Adduct, isotopeLabelType);
+                        //var retentionTime = libInfo.RT;
+                        ExplicitRetentionTimeInfo retentionTimeInfo = null;
+                        if (libInfo is NistSpectrumHeaderInfo)
+                        {
+                            var nistLibInfo = (NistSpectrumHeaderInfo)libInfo;
+                            if (nistLibInfo.RT.HasValue)
+                                retentionTimeInfo = new ExplicitRetentionTimeInfo(
+                                    nistLibInfo.RT.Value,
+                                    null
+                                    );
+                        }
+
                         nodeGroupMatched = new TransitionGroupDocNode(group, Annotations.EMPTY, Settings, null, libInfo, ExplicitTransitionGroupValues.EMPTY, null, null, false);
                         SpectrumPeaksInfo spectrum;
                         if (Settings.PeptideSettings.Libraries.TryLoadSpectrum(key, out spectrum))
@@ -479,7 +491,10 @@ namespace pwiz.Skyline.Model
                                 GetSmallMoleculeFragments(key, nodeGroupMatched, spectrum, transitionDocNodes);
                             }
                             nodeGroupMatched = (TransitionGroupDocNode)nodeGroupMatched.ChangeChildren(transitionDocNodes);
-                            return (PeptideDocNode)nodePep.ChangeChildren(new List<DocNode>() { nodeGroupMatched });
+                            var modNodePep = nodePep;
+                            if(retentionTimeInfo != null)
+                                modNodePep = nodePep.ChangeExplicitRetentionTime(retentionTimeInfo);
+                            return (PeptideDocNode)modNodePep.ChangeChildren(new List<DocNode>() { nodeGroupMatched });
                         }
                     }
                 }
