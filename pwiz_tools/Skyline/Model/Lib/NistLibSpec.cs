@@ -466,7 +466,6 @@ namespace pwiz.Skyline.Model.Lib
                 {"Ub_LysC", SequenceMassCalc.GetModDiffDescription(1431.831075)}, // Ubiquitin LysC tail
                 {"GlyGly", SequenceMassCalc.GetModDiffDescription(114.042927)}, // Ubiquitin/NEDD8 Tryptic tail (2 glycines)
             };
-        // ReSharper restore LocalizableElement
 
 #pragma warning disable 169
         private static readonly Dictionary<string, string> MODIFICATION_MASSES_AVG = new Dictionary<string, string>
