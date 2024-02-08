@@ -123,10 +123,10 @@ namespace pwiz.PanoramaClient
         /// </summary>
         private JToken GetJson(Uri queryUri)
         {
-            using (var webClient = new PanoramaRequestHelper(new WebClientWithCredentials(queryUri, FolderBrowser.GetActiveServer().Username,
+            using (var requestHelper = new PanoramaRequestHelper(new WebClientWithCredentials(queryUri, FolderBrowser.GetActiveServer().Username,
                        FolderBrowser.GetActiveServer().Password)))
             {
-                JToken json = webClient.Get(queryUri);
+                JToken json = requestHelper.Get(queryUri);
                 return json;
             }
         }

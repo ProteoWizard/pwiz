@@ -3559,7 +3559,7 @@ namespace pwiz.Skyline
 
             // Note: Removed special handling of WebException for PanoramaWeb if the server response was 404 (not found)
             // and the folder path in the saved panorama Uri in the document starts with '/labkey'. This situation can 
-            // occur if the user is opening a document created with an older version of Skyline that assumed '/labkey/'
+            // occur if the user is opening a document created with a very old version of Skyline that assumed '/labkey/'
             // context path. This will now result in an exception that will be ignored and the user will have to choose
             // a folder to publish to.
             // catch (WebException ex)

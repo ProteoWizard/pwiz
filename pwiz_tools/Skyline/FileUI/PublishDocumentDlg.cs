@@ -135,7 +135,7 @@ namespace pwiz.Skyline.FileUI
                     // Create a client for the server if we were not given one in SkylineWindow.ShowPublishDlg(IPanoramaPublishClient publishClient).
                     var panoramaClient = PanoramaPublishClient != null
                         ? PanoramaPublishClient.PanoramaClient
-                        : new WebPanoramaClient(server.URI, server.Username, server.Password);
+                        : GetDefaultPublishClient(server).PanoramaClient;
                     folders = panoramaClient.GetInfoForFolders(null);
                 }
                 catch (Exception ex)

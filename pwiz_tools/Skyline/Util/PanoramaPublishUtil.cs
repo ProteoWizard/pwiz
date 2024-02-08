@@ -170,7 +170,7 @@ namespace pwiz.Skyline.Util
     public interface IPanoramaPublishClient
     {
         void UploadSharedZipFile(Control parent, string zipFilePath, string folderPath);
-        ShareType DecideShareTypeVersion(SrmDocument document, ShareType shareType);
+        
         ShareType GetShareType(SrmDocument document, string documentFilePath,
             DocumentFormat? fileFormatOnDisk, Control parent, ref bool cancelled);
 
@@ -343,7 +343,6 @@ namespace pwiz.Skyline.Util
             }
 
             // Change PanoramaUrl setting to the successful url used
-            // TODO: Test this (this changes the panorama Uri in the .sky XML
             var uriString = PanoramaClient.ServerUri + folderPath;
             uriString = Uri.EscapeUriString(uriString);
             var window = parent as SkylineWindow;

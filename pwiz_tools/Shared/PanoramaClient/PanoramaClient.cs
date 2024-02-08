@@ -55,14 +55,14 @@ namespace pwiz.PanoramaClient
             Password = password;
         }
 
-        public abstract Uri ValidateUri(Uri serverUri, bool tryNewProtocol = true);
-        public abstract PanoramaServer ValidateServerAndUser(Uri serverUri, string username, string password);
-        public abstract PanoramaServer EnsureLogin(PanoramaServer pServer);
-
         public abstract void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
             IProgressMonitor pm, IProgressStatus progressStatus);
 
         public abstract IRequestHelper GetRequestHelper(bool forPublish = false);
+
+        protected abstract Uri ValidateUri(Uri serverUri, bool tryNewProtocol = true);
+        protected abstract PanoramaServer ValidateServerAndUser(Uri serverUri, string username, string password);
+        public abstract PanoramaServer EnsureLogin(PanoramaServer pServer);
 
         public PanoramaServer ValidateServer()
         {
@@ -290,7 +290,7 @@ namespace pwiz.PanoramaClient
             if (webDavUrl == null)
             {
                 throw new PanoramaServerException(new ErrorMessageBuilder(Resources.AbstractPanoramaClient_GetWebDavPath_Missing_webDavURL_in_response_)
-                    .Uri(getPipelineContainerUri).Json(jsonResponse).Build());
+                    .Uri(getPipelineContainerUri).Response(jsonResponse).Build());
             }
             return webDavUrl;
         }
@@ -465,7 +465,7 @@ namespace pwiz.PanoramaClient
         {
         }
 
-        public override Uri ValidateUri(Uri uri, bool tryNewProtocol = true)
+        protected override Uri ValidateUri(Uri uri, bool tryNewProtocol = true)
         {
             try
             {
@@ -477,16 +477,14 @@ namespace pwiz.PanoramaClient
             }
             catch (WebException ex)
             {
-                var response = ex.Response as HttpWebResponse;
-                var labkeyError = PanoramaUtil.GetIfErrorInResponse(response);
                 // Invalid URL
                 if (ex.Status == WebExceptionStatus.NameResolutionFailure)
                 {
+                    var response = ex.Response as HttpWebResponse;
                     var responseUri = response?.ResponseUri;
                     throw new PanoramaServerException(
                         new ErrorMessageBuilder(ServerStateEnum.missing.Error(uri))
-                            .Exception(ex)
-                            .LabKeyError(labkeyError)
+                            .Exception(ex, PanoramaUtil.GetErrorFromWebException)
                             .Uri(responseUri != null && !uri.Equals(responseUri) ? responseUri : null).Build(), ex);
                 }
                 else if (tryNewProtocol)
@@ -507,12 +505,11 @@ namespace pwiz.PanoramaClient
                 }
 
                 throw new PanoramaServerException(new ErrorMessageBuilder(ServerStateEnum.unknown.Error(ServerUri))
-                    .Uri(uri).LabKeyError(labkeyError)
-                    .Exception(ex).Build(), ex);
+                    .Uri(uri).Exception(ex, PanoramaUtil.GetErrorFromWebException).Build(), ex);
             }
         }
 
-        public override PanoramaServer ValidateServerAndUser(Uri serverUri, string username, string password)
+        protected override PanoramaServer ValidateServerAndUser(Uri serverUri, string username, string password)
         {
             var pServer = new PanoramaServer(serverUri, username, password);
 
@@ -549,8 +546,8 @@ namespace pwiz.PanoramaClient
 
                 throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.unknown.Error(ServerUri))
                     .Uri(PanoramaUtil.GetEnsureLoginUri(pServer))
-                    .Exception(ex)
-                    .LabKeyError(PanoramaUtil.GetIfErrorInResponse(response)).Build(), ex);
+                    .Exception(ex, PanoramaUtil.GetErrorFromWebException)
+                    .Build(), ex);
             }
         }
 
@@ -584,10 +581,11 @@ namespace pwiz.PanoramaClient
                     if (!(PanoramaUtil.TryGetJsonResponse(response, ref jsonResponse)
                           && PanoramaUtil.IsValidEnsureLoginResponse(jsonResponse, pServer.Username)))
                     {
+                        var error = UserStateEnum.unknown.Error(ServerUri);
                         if (jsonResponse == null)
                         {
                             throw new PanoramaServerException(
-                                new ErrorMessageBuilder(UserStateEnum.unknown.Error(ServerUri))
+                                new ErrorMessageBuilder(error)
                                     .Uri(requestUri)
                                     .ErrorDetail(string.Format(
                                         Resources.WebPanoramaClient_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_,
@@ -596,12 +594,11 @@ namespace pwiz.PanoramaClient
                         else
                         {
                             throw new PanoramaServerException(
-                                new ErrorMessageBuilder(UserStateEnum.unknown.Error(ServerUri))
+                                new ErrorMessageBuilder(error)
                                     .Uri(requestUri)
-                                    .ErrorDetail(Resources
-                                        .PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_)
+                                    .ErrorDetail(Resources.PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_)
                                     .LabKeyError(PanoramaUtil.GetIfErrorInResponse(response))
-                                    .Json(jsonResponse).Build());
+                                    .Response(jsonResponse).Build());
                         }
                     }
 
@@ -611,7 +608,6 @@ namespace pwiz.PanoramaClient
             catch (WebException ex)
             {
                 var response = ex.Response as HttpWebResponse;
-                var labKeyError = PanoramaUtil.GetIfErrorInResponse(response);
 
                 if (response != null && response.StatusCode == HttpStatusCode.Unauthorized) // 401
                 {
@@ -629,7 +625,7 @@ namespace pwiz.PanoramaClient
                         else
                         {
                             throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.nonvalid.Error(ServerUri))
-                                .Uri(requestUri).LabKeyError(labKeyError).Exception(ex).Build(), ex); // User cannot be authenticated
+                                .Uri(requestUri).Exception(ex, PanoramaUtil.GetErrorFromWebException).Build(), ex); // User cannot be authenticated
                         }
                     }
 
@@ -642,38 +638,12 @@ namespace pwiz.PanoramaClient
                     }
 
                     throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.nonvalid.Error(ServerUri))
-                        .Uri(requestUri).LabKeyError(labKeyError).Exception(ex).Build(), ex); // User cannot be authenticated
+                        .Uri(requestUri).Exception(ex, PanoramaUtil.GetErrorFromWebException).Build(), ex); // User cannot be authenticated
                 }
 
                 throw;
             }
         }
-
-        public override void ValidateFolder(Uri requestUri, string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
-        {
-            try
-            {
-                base.ValidateFolder(requestUri, folderPath, permission, checkTargetedMs);
-            }
-            catch (WebException ex)
-            {
-                // TODO: WebException should be caught by IRequestHelper.Get(uri) in base.ValidateFolder and thrown back as PanoramaServerException
-                //       Remove the method override?
-                var response = ex.Response as HttpWebResponse;
-                var labkeyError = PanoramaUtil.GetIfErrorInResponse(response);
-                if (response != null && response.StatusCode == HttpStatusCode.NotFound)
-                {
-                    throw new PanoramaServerException(new ErrorMessageBuilder(FolderState.notfound.Error(ServerUri, folderPath, Username))
-                        .Uri(requestUri).LabKeyError(labkeyError).Exception(ex).Build(), ex);
-                }
-                else
-                {
-                    throw new PanoramaServerException(new ErrorMessageBuilder(FolderState.unknown.Error(ServerUri, folderPath, Username))
-                        .Uri(requestUri).LabKeyError(labkeyError).Exception(ex).Build(), ex);
-                }
-            }
-        }
-
 
         /// <summary>
         /// Downloads a given file to a given folder path and shows the progress
@@ -741,6 +711,52 @@ namespace pwiz.PanoramaClient
                 ? string.Format(@"{0} / {1}", string.Format(formatProvider, @"{0:fs1}", downloaded),
                     string.Format(formatProvider, @"{0:fs1}", fileSize))
                 : string.Format(formatProvider, @"{0:fs1}", downloaded);
+        }
+    }
+
+    /// <summary>
+    /// Base class for panorama clients used in tests.
+    /// </summary>
+    public class BaseTestPanoramaClient : IPanoramaClient
+    {
+        public Uri ServerUri { get; set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
+
+        public virtual PanoramaServer ValidateServer()
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual JToken GetInfoForFolders(string folder)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
+            IProgressMonitor pm, IProgressStatus progressStatus)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual Uri SendZipFile(string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual JObject SupportedVersionsJson()
+        {
+            throw new NotImplementedException();
+        }
+
+        public IRequestHelper GetRequestHelper(bool forPublish = false)
+        {
+            throw new NotImplementedException();
         }
     }
 }

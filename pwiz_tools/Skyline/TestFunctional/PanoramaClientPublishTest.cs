@@ -285,12 +285,12 @@ namespace pwiz.SkylineTestFunctional
                 return BadFileNameRequestHelper.GetLabKeyError(_skyZipPathForUpload);
             }
 
-            public override Uri ValidateUri(Uri serverUri, bool tryNewProtocol = true)
+            protected override Uri ValidateUri(Uri serverUri, bool tryNewProtocol = true)
             {
                 return serverUri;
             }
 
-            public override PanoramaServer ValidateServerAndUser(Uri serverUri, string username, string password)
+            protected override PanoramaServer ValidateServerAndUser(Uri serverUri, string username, string password)
             {
                 return new PanoramaServer(serverUri, username, password);
             }
@@ -308,31 +308,16 @@ namespace pwiz.SkylineTestFunctional
 
             public override IRequestHelper GetRequestHelper(bool forUpload = false)
             {
-                TestRequestHelper requestHelper;
-                switch (_errorType)
+                TestRequestHelper requestHelper = _errorType switch
                 {
-                    case ERROR_BAD_JSON:
-                        requestHelper = new NoJsonResponseRequestHelper();
-                        break;
-                    case ERROR_BAD_FILE_NAME:
-                        requestHelper = new BadFileNameRequestHelper();
-                        break;
-                    case ERROR_HEAD_REQUEST:
-                        requestHelper = new FailOnDoRequestRequestHelper(RequestType.HEAD);
-                        break;
-                    case ERROR_MOVE_REQUEST:
-                        requestHelper = new FailOnDoRequestRequestHelper(RequestType.MOVE);
-                        break;
-                    case ERROR_SUBMIT_PIPELINE_JOB:
-                        requestHelper = new FailOnSubmitPipelineJobRequestHelper();
-                        break;
-                    case ERROR_CHECK_JOB_STATUS:
-                        requestHelper = new FailOnCheckJobStatusRequestHelper();
-                        break;
-                    default:
-                        requestHelper = new TestRequestHelper();
-                        break;
-                }
+                    ERROR_BAD_JSON => new NoJsonResponseRequestHelper(),
+                    ERROR_BAD_FILE_NAME => new BadFileNameRequestHelper(),
+                    ERROR_HEAD_REQUEST => new FailOnDoRequestRequestHelper(RequestType.HEAD),
+                    ERROR_MOVE_REQUEST => new FailOnDoRequestRequestHelper(RequestType.MOVE),
+                    ERROR_SUBMIT_PIPELINE_JOB => new FailOnSubmitPipelineJobRequestHelper(),
+                    ERROR_CHECK_JOB_STATUS => new FailOnCheckJobStatusRequestHelper(),
+                    _ => new TestRequestHelper()
+                };
                 return requestHelper;
             }
         }
@@ -350,7 +335,8 @@ namespace pwiz.SkylineTestFunctional
                 return new ErrorMessageBuilder(PanoramaClient.Properties.Resources
                         .AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON_)
                     .Exception(
-                        new JsonReaderException(@"Unexpected character encountered while parsing value: <. Path '', line 0, position 0."))
+                        new JsonReaderException(@"Unexpected character encountered while parsing value: <. Path '', line 0, position 0."),
+                        (e) => { return null; })
                     .Uri(PanoramaUtil.GetPipelineContainerUrl(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER))
                     .Response(NOT_JSON)
                     .Build();
@@ -377,10 +363,9 @@ namespace pwiz.SkylineTestFunctional
 
                 return base.GetResponse(request);
             }
-
-            public override LabKeyError GetLabkeyErrorFromWebException(WebException e)
+            public override Func<WebException, LabKeyError> GetWebExceptionResponseReader()
             {
-                return _labkeyError;
+                return e => _labkeyError;
             }
 
             public static string GetExpectedError(string sharedZipFile, RequestType requestType)
@@ -465,9 +450,10 @@ namespace pwiz.SkylineTestFunctional
                 return base.DoPost(uri, postData);
             }
 
-            public override LabKeyError GetLabkeyErrorFromWebException(WebException e)
+            public override Func<WebException, LabKeyError> GetWebExceptionResponseReader()
             {
-                return e.Message.Equals(exceptionMessage) ? new LabKeyError(labkeyError, null) : null;
+                return e =>
+                    e.Message.Equals(exceptionMessage) ? new LabKeyError(labkeyError, null) : null;
             }
 
             public static string GetExpectedError()
@@ -485,6 +471,7 @@ namespace pwiz.SkylineTestFunctional
         {
             private static readonly string exceptionMessage = "Exception checking the pipeline job status.";
             private static readonly string labkeyError = "This is the LabKey error.";
+
             public override string DoGet(Uri uri)
             {
                 if (uri.Equals(PanoramaUtil.GetPipelineJobStatusUri(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER, PIPELINE_JOB_ID)))
@@ -495,9 +482,10 @@ namespace pwiz.SkylineTestFunctional
                 return base.DoGet(uri);
             }
 
-            public override LabKeyError GetLabkeyErrorFromWebException(WebException e)
+            public override Func<WebException, LabKeyError> GetWebExceptionResponseReader()
             {
-                return e.Message.Equals(exceptionMessage) ? new LabKeyError(labkeyError, null) : null;
+                return e =>
+                    e.Message.Equals(exceptionMessage) ? new LabKeyError(labkeyError, null) : null;
             }
 
             public static string GetExpectedError()
@@ -570,7 +558,6 @@ namespace pwiz.SkylineTestFunctional
                 Task.Run(async delegate
                 {
                     await Task.Delay(TimeSpan.FromSeconds(1.0));
-                    // Thread.Sleep(1000);
                     _uploadCompletedEventHandler.Invoke(this, null);
                 });
             }
@@ -589,14 +576,14 @@ namespace pwiz.SkylineTestFunctional
                 // _uploadProgressChangedEventHandler = handler;
             }
 
-            public override LabKeyError GetLabkeyErrorFromWebException(WebException e)
-            {
-                throw new NotImplementedException();
-            }
-
             public override string GetResponse(HttpWebRequest request)
             {
                 return string.Empty;
+            }
+
+            public override Func<WebException, LabKeyError> GetWebExceptionResponseReader()
+            {
+                return e => null; // No Labkey error
             }
 
             public override void Dispose()

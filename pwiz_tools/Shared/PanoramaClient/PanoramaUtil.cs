@@ -122,6 +122,9 @@ namespace pwiz.PanoramaClient
             if (currentUser != null) 
             {
                 var email = currentUser.Value<string>(@"email");
+                // Do a case insensitive comparison. LabKey does not allow creating different accounts for same email address, different case.
+                // User reported error in AutoQC Loader: https://panoramaweb.org/home/support/announcements-thread.view?rowId=9136. They entered
+                // an all-caps version of their email address in AutoQC Loader.
                 return email != null && email.Equals(expectedEmail, StringComparison.OrdinalIgnoreCase);
             }
 
@@ -175,9 +178,11 @@ namespace pwiz.PanoramaClient
         public static Uri Call(Uri serverUri, string controller, string folderPath, string method, string query,
             bool isApi = false)
         {
-            folderPath ??= string.Empty;
-            folderPath = folderPath.Trim().TrimStart('/').TrimEnd('/');
-            var path = controller + @"/" + folderPath + (string.Empty.Equals(folderPath) ? string.Empty : @"/") + method + (isApi ? @".api" : @".view");
+            const string separator = @"/";
+            // Trim leading and trailing '/' from the folderPath so that we don't end up with double '//' in the Uri
+            folderPath = string.IsNullOrEmpty(folderPath) ? string.Empty : folderPath.Trim().Trim(separator.ToCharArray());
+            if (!(string.IsNullOrEmpty(folderPath) || folderPath.EndsWith(separator))) folderPath += separator;
+            var path = controller + separator + folderPath + method + (isApi ? @".api" : @".view");
 
             if (!string.IsNullOrEmpty(query))
             {
@@ -194,7 +199,6 @@ namespace pwiz.PanoramaClient
             string apiString = isApi ? @"api" : @"view";
             string queryString = string.IsNullOrEmpty(query) ? "" : @"?" + query;
             string path = $@"{folderPath}/{controller}-{method}.{apiString}{queryString}";
-            path = path.TrimStart('/');
 
             return new Uri(serverUri, path);
         }
@@ -220,6 +224,19 @@ namespace pwiz.PanoramaClient
         {
             return Call(serverUri, @"query", folderPath, @"selectRows",
                 @"query.queryName=job&schemaName=pipeline&query.rowId~eq=" + pipelineJobRowId);
+        }
+
+        public static LabKeyError GetErrorFromWebException(WebException e)
+        {
+            if (e == null) return null;
+            using (var r = e.Response)
+            {
+                // A WebException is usually thrown if the response status code is something other than 200
+                // We could still have a LabKey error in the JSON response. For example, when we get a 404
+                // response when trying to upload to a folder that does not exist. The response contains a 
+                // LabKey error like "No such folder or workbook..."
+                return GetIfErrorInResponse(r);
+            }
         }
 
         public static LabKeyError GetIfErrorInResponse(JObject jsonResponse)
@@ -257,8 +274,15 @@ namespace pwiz.PanoramaClient
 
     public enum ServerStateEnum { unknown, missing, notpanorama, available }
     public enum UserStateEnum { valid, nonvalid, unknown }
-    public enum FolderState { valid, notpanorama, nopermission, notfound, unknown }
+    public enum FolderState { valid, notpanorama, nopermission, notfound }
 
+    public enum FolderPermission
+    {
+        read = 1,   // Defined in org.labkey.api.security.ACL.java: public static final int PERM_READ = 0x00000001;
+        insert = 2, // Defined in org.labkey.api.security.ACL.java: public static final int PERM_INSERT = 0x00000002;
+        delete = 8, // Defined in org.labkey.api.security.ACL.java: public static final int PERM_DELETE = 0x00000008;
+        admin = 32768  // Defined in org.labkey.api.security.ACL.java: public static final int PERM_ADMIN = 0x00008000;
+    }
 
     public static class ServerStateErrors
     {
@@ -270,15 +294,15 @@ namespace pwiz.PanoramaClient
                 case ServerStateEnum.missing:
                     stateError = string.Format(
                         Resources.ServerState_GetErrorMessage_The_server__0__does_not_exist_,
-                        serverUri.AbsoluteUri);
+                        serverUri?.AbsoluteUri);
                     break;
                 case ServerStateEnum.notpanorama:
-                    stateError = string.Format(Resources.ServerStateErrors_Error_The_server__0__is_not_a_Panorama_server_, serverUri.AbsoluteUri);
+                    stateError = string.Format(Resources.ServerStateErrors_Error_The_server__0__is_not_a_Panorama_server_, serverUri?.AbsoluteUri);
                     break;
                 case ServerStateEnum.unknown:
                     stateError = string.Format(
                         Resources.ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__,
-                        serverUri.AbsoluteUri);
+                        serverUri?.AbsoluteUri);
                     break;
             }
             return stateError;
@@ -298,7 +322,7 @@ namespace pwiz.PanoramaClient
                 case UserStateEnum.unknown:
                     stateError = string.Format(
                         Resources.UserState_GetErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__,
-                        serverUri.AbsoluteUri);
+                        serverUri?.AbsoluteUri);
                     break;
             }
             return stateError;
@@ -315,7 +339,7 @@ namespace pwiz.PanoramaClient
                 case FolderState.notfound:
                     stateError = string.Format(
                         Resources.PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_,
-                        folderPath, serverUri);
+                        folderPath, serverUri?.AbsoluteUri);
                     break;
                 case FolderState.nopermission:
                     stateError = string.Format(Resources
@@ -325,66 +349,8 @@ namespace pwiz.PanoramaClient
                 case FolderState.notpanorama:
                     stateError = string.Format(Resources.PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder, folderPath);
                     break;
-                case FolderState.unknown:
-                    stateError = string.Format(Resources.FolderStateErrors_Error_Unrecognized_error_trying_to_get_the_status_for_folder__0__, folderPath);
-                    break;
             }
             return stateError;
-        }
-    }
-
-    public enum FolderPermission
-    {
-        read = 1,   // Defined in org.labkey.api.security.ACL.java: public static final int PERM_READ = 0x00000001;
-        insert = 2, // Defined in org.labkey.api.security.ACL.java: public static final int PERM_INSERT = 0x00000002;
-        delete = 8, // Defined in org.labkey.api.security.ACL.java: public static final int PERM_DELETE = 0x00000008;
-        admin = 32768  // Defined in org.labkey.api.security.ACL.java: public static final int PERM_ADMIN = 0x00008000;
-    }
-
-
-    /// <summary>
-    /// Base class for panorama clients used in tests.
-    /// </summary>
-    public class BaseTestPanoramaClient : IPanoramaClient
-    {
-        public Uri ServerUri { get; set; }
-        public string Username { get; set; }
-        public string Password { get; set; }
-
-        public virtual PanoramaServer ValidateServer()
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual JToken GetInfoForFolders(string folder)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
-            IProgressMonitor pm, IProgressStatus progressStatus)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual Uri SendZipFile(string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual JObject SupportedVersionsJson()
-        {
-            throw new NotImplementedException();
-        }
-
-        public IRequestHelper GetRequestHelper(bool forPublish = false)
-        {
-            throw new NotImplementedException();
         }
     }
 
@@ -401,11 +367,10 @@ namespace pwiz.PanoramaClient
 
     public class ErrorMessageBuilder
     {
-        private string _error;
+        private readonly string _error;
         private string _errorDetail;
-        private LabKeyError _labkeyError;
         private string _exceptionMessage;
-        private string _responseStatus;
+        private LabKeyError _labkeyError;
         private Uri _uri;
         private string _responseString;
 
@@ -426,15 +391,20 @@ namespace pwiz.PanoramaClient
 
         public ErrorMessageBuilder Exception(Exception ex)
         {
+            Exception(ex, null);
+            return this;
+        }
+
+        // If the given exception is a WebException, this method tries to parse the response as JSON and
+        // get a LabKey error if it was set. The method accepts a function to parse the response in the 
+        // WebException so that tests can pass in a custom function.
+        public ErrorMessageBuilder Exception(Exception ex, Func<WebException, LabKeyError> labkeyErrorGetter)
+        {
             _exceptionMessage = ex.Message;
             var exception = ex as WebException;
-            if (exception != null)
+            if (exception != null && labkeyErrorGetter != null)
             {
-                var httpResponse = exception.Response as HttpWebResponse;
-                if (httpResponse != null)
-                {
-                    _responseStatus = ((int)httpResponse.StatusCode).ToString();
-                }
+                _labkeyError = labkeyErrorGetter(exception);
             }
 
             return this;
@@ -446,7 +416,7 @@ namespace pwiz.PanoramaClient
             return this;
         }
 
-        public ErrorMessageBuilder Json(JObject json)
+        public ErrorMessageBuilder Response(JObject json)
         {
             if (json != null)
             {
@@ -463,38 +433,26 @@ namespace pwiz.PanoramaClient
 
         public string Build()
         {
-            var message = _error;
+            var sb = new StringBuilder(_error);
 
-            var sb = new StringBuilder();
-
-            if (_errorDetail != null || _labkeyError != null || _exceptionMessage != null)
+            if (!string.IsNullOrEmpty(_errorDetail) || !string.IsNullOrEmpty(_exceptionMessage) || _labkeyError != null)
             {
                 sb.Append(Resources.ErrorMessageBuilder_Build_Error__);
-                if (_errorDetail != null) sb.AppendLine(_errorDetail);
-                if (_exceptionMessage != null) sb.AppendLine(_exceptionMessage);
+                if (!string.IsNullOrEmpty(_errorDetail)) sb.AppendLine(_errorDetail);
+                if (!string.IsNullOrEmpty(_exceptionMessage)) sb.AppendLine(_exceptionMessage);
                 if (_labkeyError != null) sb.AppendLine(_labkeyError.ToString());
-            }
-
-            if (_responseStatus != null)
-            {
-                sb.AppendLine(string.Format(Resources.ErrorMessageBuilder_Build_Response_status___0_, _responseStatus));
             }
             if (_uri != null)
             {
                 sb.AppendLine(string.Format(Resources.GenericState_AppendErrorAndUri_URL___0_, _uri));
             }
 
-            if (_responseString != null)
+            if (!string.IsNullOrEmpty(_responseString))
             {
                 sb.AppendLine(Resources.ErrorMessageBuilder_Build_Response__).AppendLine(_responseString);
             }
 
-            if (sb.Length > 0)
-            {
-                message = TextUtil.LineSeparate(message, string.Empty, sb.ToString().TrimEnd());
-            }
-
-            return message;
+            return sb.ToString().TrimEnd();
         }
     }
 
@@ -620,9 +578,13 @@ namespace pwiz.PanoramaClient
             {
                 // If we did not find it in the Response cookies look in the Request cookies.
                 // org.labkey.api.util.CSRFUtil.getExpectedToken() will not add the CSRF cookie to the response if the cookie
-                // is already there in the request.  This can happen if our WebClient is used to make multiple requests
-                // (e.g. WebPanoramaClient.SendZipFile()) and the first request in the series gets redirected. When this
-                // happens CSRFUtil will not add the cookie to the response, because it is already in the redirected request. 
+                // is already there in the request cookies.
+                // An example of where this can happen is WebPanoramaClient.SendZipFile(). This uses one instance of the web client
+                // to do multiple requests. Normally the first request (getPipelineContainer) retrieves the CSRF token from the response
+                // cookies and saves it for any future requests. But this request may get redirected(302) because the Panorama folder was 
+                // renamed, and if that happens the response cookies get copied to the request's cookie container, and CSRFUtil.getExpectedToken
+                // does not add a response cookie because it sees the CSRF cookie in the request cookies. So when we look for the CSRF cookie
+                // in the response after the redirected request returns we don't find it. But we can find it in the request cookies.
                 csrf = GetCsrfCookieFromRequest(requestUri);
             }
             if (csrf != null)

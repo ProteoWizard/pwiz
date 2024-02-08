@@ -27,6 +27,7 @@ namespace pwiz.PanoramaClient
     {
         private const string APPLICATION_JSON = @"application/json";
 
+
         #region IRequestHelper methods
 
         public abstract void AddHeader(string name, string value);
@@ -55,8 +56,7 @@ namespace pwiz.PanoramaClient
 
         public abstract string GetResponse(HttpWebRequest request);
 
-        public abstract LabKeyError GetLabkeyErrorFromWebException(WebException e);
-
+        public abstract Func<WebException, LabKeyError> GetWebExceptionResponseReader();
 
         public JObject Get(Uri uri, string messageOnError = null)
         {
@@ -74,8 +74,7 @@ namespace pwiz.PanoramaClient
         private PanoramaServerException NewPanoramaServerException(string messageOnError, Uri uri, string requestMethod, WebException e)
         {
             messageOnError ??= string.Format(Resources.AbstractRequestHelper_DoRequest__0__request_was_unsuccessful_, requestMethod);
-            return new PanoramaServerException(new ErrorMessageBuilder(messageOnError)
-                .Uri(uri).LabKeyError(GetLabkeyErrorFromWebException(e)).Exception(e).Build(), e);
+            return new PanoramaServerException(new ErrorMessageBuilder(messageOnError).Uri(uri).Exception(e, GetWebExceptionResponseReader()).Build(), e);
         }
 
         public JObject Post(Uri uri, NameValueCollection postData, string messageOnError = null)
@@ -165,9 +164,7 @@ namespace pwiz.PanoramaClient
                 throw new PanoramaServerException(
                     new ErrorMessageBuilder(Resources
                             .AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file_)
-                        .Exception(e)
-                        .Uri(address)
-                        .LabKeyError(GetLabkeyErrorFromWebException(e)).Build(), e);
+                        .Exception(e, GetWebExceptionResponseReader()).Uri(address).Build(), e);
             }
         }
 
@@ -237,15 +234,6 @@ namespace pwiz.PanoramaClient
             return _client.UploadString(uri, PanoramaUtil.FORM_POST, postData);
         }
 
-        public override LabKeyError GetLabkeyErrorFromWebException(WebException e)
-        {
-            using (var r = e.Response)
-            {
-                // A WebException is usually thrown if the response status code is something other than 200
-                // We could still have a LabKey error in the JSON response. 
-                return PanoramaUtil.GetIfErrorInResponse(r);
-            }
-        }
 
         protected override JObject Post(Uri uri, NameValueCollection postData, string postDataString, string messageOnError)
         {
@@ -256,7 +244,7 @@ namespace pwiz.PanoramaClient
             catch (WebException e)
             {
                 throw new PanoramaServerException(new ErrorMessageBuilder(Resources.PanoramaRequestHelper_Post_There_was_an_error_getting_a_CSRF_token_from_the_server_)
-                    .Uri(uri).LabKeyError(GetLabkeyErrorFromWebException(e)).Exception(e).Build(), e);
+                    .Uri(uri).Exception(e, GetWebExceptionResponseReader()).Build(), e);
             }
             return base.Post(uri, postData, postDataString, messageOnError);
         }
@@ -264,6 +252,11 @@ namespace pwiz.PanoramaClient
         public override string GetResponse(HttpWebRequest request)
         {
             return PanoramaUtil.GetResponseString(request.GetResponse());
+        }
+
+        public override Func<WebException, LabKeyError> GetWebExceptionResponseReader()
+        {
+            return PanoramaUtil.GetErrorFromWebException;
         }
 
         public override void DoAsyncFileUpload(Uri address, string method, string fileName)

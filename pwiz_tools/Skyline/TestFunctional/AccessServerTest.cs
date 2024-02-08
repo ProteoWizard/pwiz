@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
@@ -61,11 +60,6 @@ namespace pwiz.SkylineTestFunctional
         private const string BAD_SERVER_URL = "http://w ww.google.com";
         private const string EMPTY_SERVER_URL = " ";
 
-        public const string PANORAMA_SERVER = "https://localhost:8080/";
-        public const string PANORAMA_FOLDER = "TestUpload";
-
-        public const int PIPELINE_JOB_ID = 42;
-        
         private ToolOptionsUI ToolOptionsDlg { get; set; }
 
         private const string NO_WRITE_NO_TARGETED = "No write permissions/TargetedMS is not active";
@@ -526,13 +520,13 @@ namespace pwiz.SkylineTestFunctional
             {
                 if (string.Equals(Server, VALID_NON_PANORAMA_SERVER))
                 {
-                    throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.nonvalid.Error(ServerUri)).Uri(ServerUri).Exception(new WebException("Test WebException")).Build());
+                    throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.nonvalid.Error(ServerUri)).Uri(ServerUri).ErrorDetail("Test WebException").Build());
                 }
 
                 else if (string.Equals(Server, NON_EXISTENT_SERVER))
-                    throw new PanoramaServerException(new ErrorMessageBuilder(ServerStateEnum.missing.Error(ServerUri)).Uri(ServerUri).Exception(new WebException("Test WebException - NameResolutionFailure")).Build());
+                    throw new PanoramaServerException(new ErrorMessageBuilder(ServerStateEnum.missing.Error(ServerUri)).Uri(ServerUri).ErrorDetail("Test WebException - NameResolutionFailure").Build());
 
-                else if (Server.Contains(VALID_PANORAMA_SERVER) || Server.Contains(PANORAMA_SERVER))
+                else if (Server.Contains(VALID_PANORAMA_SERVER))
                 {
                     if (string.Equals(Username, VALID_USER_NAME) &&
                         string.Equals(Password, VALID_PASSWORD))
@@ -542,10 +536,10 @@ namespace pwiz.SkylineTestFunctional
                     else
                     {
                         throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.nonvalid.Error(ServerUri))
-                            .Uri(PanoramaUtil.GetEnsureLoginUri(new PanoramaServer(ServerUri, Username, Password))).Exception(new WebException("Test WebException")).Build());
+                            .Uri(PanoramaUtil.GetEnsureLoginUri(new PanoramaServer(ServerUri, Username, Password))).ErrorDetail("Test WebException").Build());
                     }
                 }
-                throw new PanoramaServerException(new ErrorMessageBuilder(ServerStateEnum.unknown.Error(ServerUri)).Uri(ServerUri).Exception(new WebException("Test WebException - unknown failure")).Build());
+                throw new PanoramaServerException(new ErrorMessageBuilder(ServerStateEnum.unknown.Error(ServerUri)).Uri(ServerUri).ErrorDetail("Test WebException - unknown failure").Build());
             }
 
             public override void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)

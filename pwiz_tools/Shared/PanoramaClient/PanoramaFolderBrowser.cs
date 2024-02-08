@@ -541,8 +541,8 @@ public class WebDavBrowser : PanoramaFolderBrowser
             try
             {
                 query = new Uri(string.Concat(folderInfo.Server.URI, PanoramaUtil.WEBDAV, folderInfo.FolderPath, "?method=json"));
-                using var webClient = new PanoramaRequestHelper(new WebClientWithCredentials(query, folderInfo.Server.Username, folderInfo.Server.Password));
-                JToken json = webClient.Get(query);
+                using var requestHelper = new PanoramaRequestHelper(new WebClientWithCredentials(query, folderInfo.Server.Username, folderInfo.Server.Password));
+                JToken json = requestHelper.Get(query);
                 if ((int)json[@"fileCount"] != 0)
                 {
                     var files = json[@"files"];
