@@ -115,7 +115,7 @@ namespace pwiz.PanoramaClient
         public void RequestJsonResponse()
         {
             // Get LabKey to send JSON instead of HTML.
-            // When we request a JSON response, the HTTP status returned is always 200 even when the request fails on the server,
+            // When we request a JSON response, the HTTP status can be 200 even when the request fails on the server,
             // and the returned status would have been 400 otherwise. This is intentional:
             // Issue 44964: Don't use Bad Request/400 HTTP status codes for valid requests
             // https://www.labkey.org/home/Developer/issues/issues-details.view?issueId=44964
@@ -124,8 +124,8 @@ namespace pwiz.PanoramaClient
             // 2.Well - formed HTTP requests with parameters that we don't like. This is less clear cut to me.
             // 3.Well - formed HTTP requests with legit parameters, but which exercise some sort of error scenario. We clearly shouldn't be sending a 400 for these.
             // 
-            // We have to look for the status and any exception in the returned JSON rather than expecting a WebException if the request
-            // fails on the server.
+            // We have to look for the status and any exception in the returned JSON rather than expecting a WebException (non-200 response) if the request
+            // fails on the server. Example JSON response with error: {"exception":"Filename may not contain space followed by dash.","success":false,"status":400}
             AddHeader(HttpRequestHeader.Accept, APPLICATION_JSON);
         }
 

@@ -253,7 +253,7 @@ namespace pwiz.PanoramaClient
                 // Add a "Temporary" header so that LabKey marks this as a temporary file.
                 // https://www.labkey.org/issues/home/Developer/issues/details.view?issueId=19220
                 requestHelper.AddHeader(@"Temporary", @"T");
-                requestHelper.RequestJsonResponse();
+                requestHelper.RequestJsonResponse(); // Request a JSON response so that we can parse any LabKey-specific errors
                 requestHelper.AsyncUploadFile(tmpUploadUri, @"PUT",
                     PathEx.SafePath(zipFilePath));
 

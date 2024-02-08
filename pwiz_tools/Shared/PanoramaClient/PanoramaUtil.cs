@@ -420,8 +420,7 @@ namespace pwiz.PanoramaClient
         {
             if (json != null)
             {
-                _responseString = json.ToString(Formatting.None);
-                _responseString = _responseString.Replace(@"{", @"{{"); // escape curly braces
+                _responseString = json.ToString(Formatting.Indented);
             }
             return this;
         }
@@ -433,8 +432,7 @@ namespace pwiz.PanoramaClient
 
         public string Build()
         {
-            var sb = new StringBuilder(_error);
-
+            var sb = new StringBuilder();
             if (!string.IsNullOrEmpty(_errorDetail) || !string.IsNullOrEmpty(_exceptionMessage) || _labkeyError != null)
             {
                 sb.Append(Resources.ErrorMessageBuilder_Build_Error__);
@@ -444,15 +442,20 @@ namespace pwiz.PanoramaClient
             }
             if (_uri != null)
             {
-                sb.AppendLine(string.Format(Resources.GenericState_AppendErrorAndUri_URL___0_, _uri));
+                sb.AppendLine(string.Format(Resources.GenericState_AppendErrorAndUri_URL___0_, _uri.AbsoluteUri));
             }
 
             if (!string.IsNullOrEmpty(_responseString))
             {
+                // TODO: Should we truncate the response string, or display it at all?
+                //       CommonAlertDlg truncates the displayed string to 50000. 
+                //       The response is not useful for the user but it may be useful for debugging. The response gets set
+                //       only if there in an error doing a GET request. Since the request URL is included in the  message 
+                //       dialog, a developer could also recreate the response by impersonating the user. 
                 sb.AppendLine(Resources.ErrorMessageBuilder_Build_Response__).AppendLine(_responseString);
             }
 
-            return sb.ToString().TrimEnd();
+            return sb.Length > 0 ? TextUtil.LineSeparate(_error, sb.ToString().TrimEnd()) : _error;
         }
     }
 
