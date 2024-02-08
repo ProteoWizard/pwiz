@@ -416,9 +416,10 @@ enum PWIZ_API_DECL ScanFilterMassAnalyzerType
     ScanFilterMassAnalyzerType_SQMS = 2,          // Single Quadrupole
     ScanFilterMassAnalyzerType_TOFMS = 3,         // Time of Flight
     ScanFilterMassAnalyzerType_FTMS = 4,          // Fourier Transform
-    ScanFilterMassAnalyzerType_ASTMS = 5,         // ASymmetric Track lossless
-    ScanFilterMassAnalyzerType_Sector = 6,        // Magnetic Sector
-    ScanFilterMassAnalyzerType_Count = 7
+    ScanFilterMassAnalyzerType_Sector = 5,        // Magnetic Sector
+    ScanFilterMassAnalyzerType_Any = 6,           // returned by RawFileReader when filter type is unspecified
+    ScanFilterMassAnalyzerType_ASTMS = 7,         // ASymmetric Track lossless
+    ScanFilterMassAnalyzerType_Count = 8
 };
 
 
