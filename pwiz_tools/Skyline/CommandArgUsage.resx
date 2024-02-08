@@ -1051,4 +1051,7 @@ Useful in sample mixtures including multiple species.</value>
   <data name="_pep_max_variable_mods" xml:space="preserve">
     <value>The maximum number of variable modifications allowed to occur in combination on any peptide instance.</value>
   </data>
+  <data name="CommandArgs_BOOL_VALUE__0__or__1_" xml:space="preserve">
+      <value>{0} or {1}</value>
+  </data>
 </root>

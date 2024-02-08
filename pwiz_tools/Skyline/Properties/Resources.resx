@@ -4387,4 +4387,7 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="PeptideMod_SetTerminus_A_peptide_modification_must_be_added_before_giving_it_a_terminal_or_amino_acid_specificity_" xml:space="preserve">
     <value>A peptide modification must be added before giving it a terminal or amino acid specificity.</value>
   </data>
+  <data name="ValueInvalidBoolException_ValueInvalidBoolException_The_value___0___is_not_valid_for_the_argument___1____it_must_be__2_" xml:space="preserve">
+    <value>The value '{0}' is not valid for the argument '{1}': it must be {2}</value>
+  </data>
 </root>

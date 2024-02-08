@@ -73,7 +73,7 @@ namespace pwiz.Skyline
         public static readonly Func<string> PATH_TO_REPORT = () => GetPathToFile(ReportSpecList.EXT_REPORTS);
         public static readonly Func<string> PATH_TO_INSTALL = () => GetPathToFile(ToolDescription.EXT_INSTALL);
         public static readonly Func<string> DATE_VALUE = () => CommandArgUsage.CommandArgs_DATE_VALUE;
-        public static readonly Func<string> BOOL_VALUE = () => string.Join(TextUtil.CsvSeparator + @" ", bool.TrueString, bool.FalseString);
+        public static readonly Func<string> BOOL_VALUE = () => string.Format(CommandArgUsage.CommandArgs_BOOL_VALUE__0__or__1_, bool.TrueString, bool.FalseString);
         public static readonly Func<string> INT_VALUE = () => CommandArgUsage.CommandArgs_INT_VALUE;
         public static readonly Func<string> NUM_VALUE = () => CommandArgUsage.CommandArgs_NUM_VALUE;
         public static readonly Func<string> NUM_LIST_VALUE = () => CommandArgUsage.CommandArgs_NUM_LIST_VALUE;
@@ -2924,7 +2924,7 @@ namespace pwiz.Skyline
                         return true;
                     if (bool.TryParse(Value, out var result))
                         return result;
-                    throw new ValueInvalidException(Match, Value, new[] { bool.TrueString, bool.FalseString });
+                    throw new ValueInvalidBoolException(Match, Value);
                 }
             }
 
@@ -3231,6 +3231,14 @@ namespace pwiz.Skyline
         {
             public ValueInvalidException(Argument arg, string value, string[] argValues)
                 : base(string.Format(Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_, value, arg.ArgumentText, string.Join(@", ", argValues)))
+            {
+            }
+        }
+
+        public class ValueInvalidBoolException : UsageException
+        {
+            public ValueInvalidBoolException(Argument arg, string value)
+                : base(string.Format(Resources.ValueInvalidBoolException_ValueInvalidBoolException_The_value___0___is_not_valid_for_the_argument___1____it_must_be__2_, value, arg.ArgumentText, BOOL_VALUE()))
             {
             }
         }

@@ -11491,6 +11491,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The value &apos;{0}&apos; is not valid for the argument &apos;{1}&apos;: it must be {2}.
+        /// </summary>
+        public static string ValueInvalidBoolException_ValueInvalidBoolException_The_value___0___is_not_valid_for_the_argument___1____it_must_be__2_ {
+            get {
+                return ResourceManager.GetString("ValueInvalidBoolException_ValueInvalidBoolException_The_value___0___is_not_valid_" +
+                        "for_the_argument___1____it_must_be__2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The value &apos;{0}&apos; is not valid for the argument {1} which requires an comma-separated list of integers..
         /// </summary>
         public static string ValueInvalidChargeListException_ValueInvalidChargeListException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_integers_ {

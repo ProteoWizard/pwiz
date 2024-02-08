@@ -501,6 +501,8 @@ namespace pwiz.SkylineTestData
                     BAD_VALUE, arg.ArgumentText, arg.ValueExample()),
                 string.Format(Resources.ValueInvalidMzToleranceException_ValueInvalidMzToleranceException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_value_and_a_unit__For_example___2__,
                     BAD_VALUE, arg.ArgumentText, arg.ValueExample()),
+                string.Format(Resources.ValueInvalidBoolException_ValueInvalidBoolException_The_value___0___is_not_valid_for_the_argument___1____it_must_be__2_,
+                    BAD_VALUE, arg.ArgumentText, arg.ValueExample()),
             };
             Assert.IsTrue(badValueStrings.Any(s => output.Contains(s)),
                 "{0} does not contain any of:\r\n{1}", output, TextUtil.LineSeparate(badValueStrings));

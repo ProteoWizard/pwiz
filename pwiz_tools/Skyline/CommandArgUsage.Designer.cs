@@ -2268,6 +2268,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} or {1}.
+        /// </summary>
+        internal static string CommandArgs_BOOL_VALUE__0__or__1_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_BOOL_VALUE__0__or__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &quot;&lt;arguments&gt;&quot;.
         /// </summary>
         internal static string CommandArgs_COMMAND_ARGUMENTS_VALUE {
