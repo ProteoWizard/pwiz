@@ -1560,7 +1560,7 @@ namespace ZedGraph
         {
             private GraphPane _graph;
             private int _cellSize;
-			private Random _randGenerator = new Random(123);
+			private Random _randGenerator = new Random();
             private PointF _chartOffset;
             private List<VectorF> _labeledPoints = new List<VectorF>();
 
