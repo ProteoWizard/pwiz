@@ -6,7 +6,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
@@ -270,7 +269,7 @@ namespace pwiz.SkylineTestFunctional
             public override void DownloadFile(string fileUrl, string fileName, long fileSize, string realName, IProgressMonitor pm,
                 IProgressStatus progressStatus)
             {
-                throw new NotImplementedException();
+                throw new InvalidOperationException();
             }
 
             public override JObject SupportedVersionsJson()
@@ -334,12 +333,10 @@ namespace pwiz.SkylineTestFunctional
             {
                 return new ErrorMessageBuilder(PanoramaClient.Properties.Resources
                         .AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON_)
-                    .Exception(
-                        new JsonReaderException(@"Unexpected character encountered while parsing value: <. Path '', line 0, position 0."),
-                        (e) => { return null; })
+                    .ExceptionMessage(@"Unexpected character encountered while parsing value: <. Path '', line 0, position 0.")
                     .Uri(PanoramaUtil.GetPipelineContainerUrl(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER))
                     .Response(NOT_JSON)
-                    .Build();
+                    .ToString();
             }
         }
 
@@ -363,9 +360,9 @@ namespace pwiz.SkylineTestFunctional
 
                 return base.GetResponse(request);
             }
-            public override Func<WebException, LabKeyError> GetWebExceptionResponseReader()
+            public override LabKeyError GetErrorFromException(WebException e)
             {
-                return e => _labkeyError;
+                return _labkeyError;
             }
 
             public static string GetExpectedError(string sharedZipFile, RequestType requestType)
@@ -390,7 +387,7 @@ namespace pwiz.SkylineTestFunctional
                     .ErrorDetail(string.Format(MSG_EXCEPTION, requestType.ToString()))
                     .LabKeyError(new LabKeyError(string.Format(MSG_LABKEY_ERR, requestType), null))
                     .Uri(uri)
-                    .Build();
+                    .ToString();
             }
         }
 
@@ -428,7 +425,7 @@ namespace pwiz.SkylineTestFunctional
                             .AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file_)
                         .LabKeyError(labkeyError)
                         .Uri(uri)
-                        .Build();
+                        .ToString();
                 }
 
                 return string.Format("No Error for file {0}", sharedZipFile);
@@ -450,10 +447,9 @@ namespace pwiz.SkylineTestFunctional
                 return base.DoPost(uri, postData);
             }
 
-            public override Func<WebException, LabKeyError> GetWebExceptionResponseReader()
+            public override LabKeyError GetErrorFromException(WebException e)
             {
-                return e =>
-                    e.Message.Equals(exceptionMessage) ? new LabKeyError(labkeyError, null) : null;
+                return e.Message.Equals(exceptionMessage) ? new LabKeyError(labkeyError, null) : null;
             }
 
             public static string GetExpectedError()
@@ -463,7 +459,7 @@ namespace pwiz.SkylineTestFunctional
                     .ErrorDetail(exceptionMessage)
                     .LabKeyError(new LabKeyError(labkeyError, null))
                     .Uri(PanoramaUtil.GetImportSkylineDocUri(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER))
-                    .Build();
+                    .ToString();
             }
         }
 
@@ -482,10 +478,9 @@ namespace pwiz.SkylineTestFunctional
                 return base.DoGet(uri);
             }
 
-            public override Func<WebException, LabKeyError> GetWebExceptionResponseReader()
+            public override LabKeyError GetErrorFromException(WebException e)
             {
-                return e =>
-                    e.Message.Equals(exceptionMessage) ? new LabKeyError(labkeyError, null) : null;
+                return e.Message.Equals(exceptionMessage) ? new LabKeyError(labkeyError, null) : null;
             }
 
             public static string GetExpectedError()
@@ -496,7 +491,7 @@ namespace pwiz.SkylineTestFunctional
                     .LabKeyError(new LabKeyError(labkeyError, null))
                     .Uri(PanoramaUtil.GetPipelineJobStatusUri(new Uri(PANORAMA_SERVER), PANORAMA_FOLDER,
                         PIPELINE_JOB_ID))
-                    .Build();
+                    .ToString();
             }
         }
 
@@ -581,9 +576,9 @@ namespace pwiz.SkylineTestFunctional
                 return string.Empty;
             }
 
-            public override Func<WebException, LabKeyError> GetWebExceptionResponseReader()
+            public override LabKeyError GetErrorFromException(WebException e)
             {
-                return e => null; // No Labkey error
+                return null; // No Labkey error
             }
 
             public override void Dispose()
@@ -592,7 +587,7 @@ namespace pwiz.SkylineTestFunctional
 
             public override string DoPost(Uri uri, string postData)
             {
-                throw new NotImplementedException(); 
+                throw new InvalidOperationException(); 
             }
 
             public override byte[] DoPost(Uri uri, NameValueCollection postData)

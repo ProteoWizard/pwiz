@@ -3787,11 +3787,11 @@ namespace pwiz.SkylineTestData
             {
                 if (ServerStateEnum.available != MyServerState)
                 {
-                    throw new PanoramaServerException(new ErrorMessageBuilder(MyServerState.Error(ServerUri)).ErrorDetail("Invalid server state").Build());
+                    throw new PanoramaServerException(new ErrorMessageBuilder(MyServerState.Error(ServerUri)).ErrorDetail("Invalid server state").ToString());
                 }
                 if (UserStateEnum.valid != MyUserState)
                 {
-                    throw new PanoramaServerException(new ErrorMessageBuilder(MyUserState.Error(ServerUri)).ErrorDetail("Invalid user state").Build());
+                    throw new PanoramaServerException(new ErrorMessageBuilder(MyUserState.Error(ServerUri)).ErrorDetail("Invalid user state").ToString());
                 }
 
                 return new PanoramaServer(ServerUri, Username, Password);

@@ -56,7 +56,7 @@ namespace pwiz.PanoramaClient
 
         public abstract string GetResponse(HttpWebRequest request);
 
-        public abstract Func<WebException, LabKeyError> GetWebExceptionResponseReader();
+        public abstract LabKeyError GetErrorFromException(WebException e);
 
         public JObject Get(Uri uri, string messageOnError = null)
         {
@@ -74,7 +74,9 @@ namespace pwiz.PanoramaClient
         private PanoramaServerException NewPanoramaServerException(string messageOnError, Uri uri, string requestMethod, WebException e)
         {
             messageOnError ??= string.Format(Resources.AbstractRequestHelper_DoRequest__0__request_was_unsuccessful_, requestMethod);
-            return new PanoramaServerException(new ErrorMessageBuilder(messageOnError).Uri(uri).Exception(e, GetWebExceptionResponseReader()).Build(), e);
+            return new PanoramaServerException(
+                new ErrorMessageBuilder(messageOnError).Uri(uri).ExceptionMessage(e.Message)
+                    .LabKeyError(GetErrorFromException(e)).ToString(), e);
         }
 
         public JObject Post(Uri uri, NameValueCollection postData, string messageOnError = null)
@@ -144,7 +146,7 @@ namespace pwiz.PanoramaClient
                 if (labkeyError != null)
                 {
                     throw new PanoramaServerException(new ErrorMessageBuilder(messageOnError).Uri(request.RequestUri)
-                        .LabKeyError(labkeyError).Build());
+                        .LabKeyError(labkeyError).ToString());
                 }
             }
             catch (WebException e)
@@ -164,7 +166,7 @@ namespace pwiz.PanoramaClient
                 throw new PanoramaServerException(
                     new ErrorMessageBuilder(Resources
                             .AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file_)
-                        .Exception(e, GetWebExceptionResponseReader()).Uri(address).Build(), e);
+                        .ExceptionMessage(e.Message).LabKeyError(GetErrorFromException(e)).Uri(address).ToString(), e);
             }
         }
 
@@ -178,7 +180,7 @@ namespace pwiz.PanoramaClient
             {
                 throw new PanoramaServerException(
                     new ErrorMessageBuilder(Resources.AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON_)
-                        .Exception(e).Uri(uri).Response(response).Build(), e);
+                        .ExceptionMessage(e.Message).Uri(uri).Response(response).ToString(), e);
             }
         }
 
@@ -188,7 +190,7 @@ namespace pwiz.PanoramaClient
             var serverError = PanoramaUtil.GetIfErrorInResponse(jsonResponse);
             if (serverError != null)
             {
-                throw new PanoramaServerException(new ErrorMessageBuilder(messageOnError).LabKeyError(serverError).Build());
+                throw new PanoramaServerException(new ErrorMessageBuilder(messageOnError).LabKeyError(serverError).ToString());
             }
 
             return jsonResponse;
@@ -244,7 +246,7 @@ namespace pwiz.PanoramaClient
             catch (WebException e)
             {
                 throw new PanoramaServerException(new ErrorMessageBuilder(Resources.PanoramaRequestHelper_Post_There_was_an_error_getting_a_CSRF_token_from_the_server_)
-                    .Uri(uri).Exception(e, GetWebExceptionResponseReader()).Build(), e);
+                    .Uri(uri).ExceptionMessage(e.Message).LabKeyError(GetErrorFromException(e)).ToString(), e);
             }
             return base.Post(uri, postData, postDataString, messageOnError);
         }
@@ -254,9 +256,9 @@ namespace pwiz.PanoramaClient
             return PanoramaUtil.GetResponseString(request.GetResponse());
         }
 
-        public override Func<WebException, LabKeyError> GetWebExceptionResponseReader()
+        public override LabKeyError GetErrorFromException(WebException e)
         {
-            return PanoramaUtil.GetErrorFromWebException;
+            return PanoramaUtil.GetErrorFromWebException(e);
         }
 
         public override void DoAsyncFileUpload(Uri address, string method, string fileName)

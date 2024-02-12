@@ -90,14 +90,14 @@ namespace pwiz.PanoramaClient
                 {
                     throw new PanoramaServerException(
                         new ErrorMessageBuilder(FolderState.nopermission.Error(ServerUri, folderPath, Username))
-                            .Uri(requestUri).Build());
+                            .Uri(requestUri).ToString());
                 }
 
                 if (checkTargetedMs && !PanoramaUtil.HasTargetedMsModule(response))
                 {
                     throw new PanoramaServerException(
                         new ErrorMessageBuilder(FolderState.notpanorama.Error(ServerUri, folderPath, Username))
-                            .Uri(requestUri).Build());
+                            .Uri(requestUri).ToString());
                 }
             }
         }
@@ -182,7 +182,7 @@ namespace pwiz.PanoramaClient
             var statusUri = PanoramaUtil.GetPipelineJobStatusUri(ServerUri, folderPath, pipelineJobRowId);
 
             // Wait for import to finish before returning.
-            var startTime = DateTime.Now;
+            var startTime = DateTime.UtcNow;
             while (true)
             {
                 if (progressMonitor.IsCanceled)
@@ -212,7 +212,7 @@ namespace pwiz.PanoramaClient
                     throw e;
                 }
 
-                updateProgressAndWait(status, progressMonitor, startTime);
+                UpdateProgressAndWait(status, progressMonitor, startTime);
             }
         }
 
@@ -268,7 +268,7 @@ namespace pwiz.PanoramaClient
                 throw new PanoramaServerException(
                     new ErrorMessageBuilder(Resources.AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file_)
                         .Uri(tmpUploadUri)
-                        .LabKeyError(uploadError).Build());
+                        .LabKeyError(uploadError).ToString());
             }
 
             // Remove the "Temporary" header added while uploading the temporary file
@@ -290,7 +290,7 @@ namespace pwiz.PanoramaClient
             if (webDavUrl == null)
             {
                 throw new PanoramaServerException(new ErrorMessageBuilder(Resources.AbstractPanoramaClient_GetWebDavPath_Missing_webDavURL_in_response_)
-                    .Uri(getPipelineContainerUri).Response(jsonResponse).Build());
+                    .Uri(getPipelineContainerUri).Response(jsonResponse).ToString());
             }
             return webDavUrl;
         }
@@ -309,7 +309,7 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        private void updateProgressAndWait(ImportStatus jobStatus, IProgressMonitor progressMonitor, DateTime startTime)
+        private void UpdateProgressAndWait(ImportStatus jobStatus, IProgressMonitor progressMonitor, DateTime startTime)
         {
             var match = _runningStatusRegex.Match(jobStatus.StatusString);
             if (match.Success)
@@ -336,7 +336,12 @@ namespace pwiz.PanoramaClient
                         _waitTime = Math.Min(10, _waitTime * 2);
                     }
 
-                    Thread.Sleep(_waitTime * 1000);
+                    for (var i = 0; i < _waitTime * 10; i++)
+                    {
+                        if (progressMonitor.IsCanceled)
+                            return;
+                        Thread.Sleep(100);
+                    }
                     return;
                 }
             }
@@ -360,7 +365,7 @@ namespace pwiz.PanoramaClient
 
             // This is probably an older server (pre LK19.3) that does not include the progress percent in the status.
             // Wait between 1 and 5 seconds before checking status again.
-            var elapsed = (DateTime.Now - startTime).TotalMinutes;
+            var elapsed = (DateTime.UtcNow - startTime).TotalMinutes;
             var sleepTime = elapsed > 5 ? 5 * 1000 : (int)(Math.Max(1, elapsed % 5) * 1000);
             Thread.Sleep(sleepTime);
         }
@@ -427,8 +432,8 @@ namespace pwiz.PanoramaClient
         {
             lock (this)
             {
-                Monitor.PulseAll(this);
                 uploadError = ParseUploadFileCompletedEventArgs(e);
+                Monitor.PulseAll(this);
             }
         }
 
@@ -484,8 +489,9 @@ namespace pwiz.PanoramaClient
                     var responseUri = response?.ResponseUri;
                     throw new PanoramaServerException(
                         new ErrorMessageBuilder(ServerStateEnum.missing.Error(uri))
-                            .Exception(ex, PanoramaUtil.GetErrorFromWebException)
-                            .Uri(responseUri != null && !uri.Equals(responseUri) ? responseUri : null).Build(), ex);
+                            .ExceptionMessage(ex.Message)
+                            .LabKeyError(PanoramaUtil.GetErrorFromWebException(ex))
+                            .Uri(responseUri != null && !uri.Equals(responseUri) ? responseUri : null).ToString(), ex);
                 }
                 else if (tryNewProtocol)
                 {
@@ -505,7 +511,7 @@ namespace pwiz.PanoramaClient
                 }
 
                 throw new PanoramaServerException(new ErrorMessageBuilder(ServerStateEnum.unknown.Error(ServerUri))
-                    .Uri(uri).Exception(ex, PanoramaUtil.GetErrorFromWebException).Build(), ex);
+                    .Uri(uri).ExceptionMessage(ex.Message).LabKeyError(PanoramaUtil.GetErrorFromWebException(ex)).ToString(), ex);
             }
         }
 
@@ -523,31 +529,27 @@ namespace pwiz.PanoramaClient
 
                 if (response != null && response.StatusCode == HttpStatusCode.NotFound) // 404
                 {
-                    var newServer = pServer.AddLabKeyContextPath();
-                    if (!ReferenceEquals(pServer, newServer))
-                    {
+                    var newServer = pServer.HasContextPath()
+                        // e.g. User entered the home page of the LabKey Server, running as the root webapp: 
+                        // https://panoramaweb.org/project/home/begin.view OR https://panoramaweb.org/home/project-begin.view
+                        // We will first try https://panoramaweb.org/project/ OR https://panoramaweb.org/home/ as the server URL. 
+                        // And that will fail.  Remove the assumed context path and try again.
+                        ? pServer.RemoveContextPath()
                         // e.g. Given server URL is https://panoramaweb.org but LabKey Server is not deployed as the root webapp.
                         // Try again with '/labkey' context path
-                        return EnsureLogin(newServer);
-                    }
-                    else
+                        : pServer.AddLabKeyContextPath();
+
+                    if (!ReferenceEquals(pServer, newServer))
                     {
-                        newServer = pServer.RemoveContextPath();
-                        if (!ReferenceEquals(pServer, newServer))
-                        {
-                            // e.g. User entered the home page of the LabKey Server, running as the root webapp: 
-                            // https://panoramaweb.org/project/home/begin.view OR https://panoramaweb.org/home/project-begin.view
-                            // We will first try https://panoramaweb.org/project/ OR https://panoramaweb.org/home/ as the server URL. 
-                            // And that will fail.  Remove the assumed context path and try again.
-                            return EnsureLogin(newServer);
-                        }
+                        return EnsureLogin(newServer);
                     }
                 }
 
                 throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.unknown.Error(ServerUri))
                     .Uri(PanoramaUtil.GetEnsureLoginUri(pServer))
-                    .Exception(ex, PanoramaUtil.GetErrorFromWebException)
-                    .Build(), ex);
+                    .ExceptionMessage(ex.Message)
+                    .LabKeyError(PanoramaUtil.GetErrorFromWebException(ex))
+                    .ToString(), ex);
             }
         }
 
@@ -572,7 +574,7 @@ namespace pwiz.PanoramaClient
                                 .Uri(requestUri)
                                 .ErrorDetail(string.Format("Response received from server: {0} {1}",
                                     response.StatusCode, response.StatusDescription))
-                                .LabKeyError(PanoramaUtil.GetIfErrorInResponse(response)).Build()
+                                .LabKeyError(PanoramaUtil.GetIfErrorInResponse(response)).ToString()
                         );
                     }
 
@@ -589,7 +591,7 @@ namespace pwiz.PanoramaClient
                                     .Uri(requestUri)
                                     .ErrorDetail(string.Format(
                                         Resources.WebPanoramaClient_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_,
-                                        ServerUri)).Build());
+                                        ServerUri)).ToString());
                         }
                         else
                         {
@@ -598,7 +600,7 @@ namespace pwiz.PanoramaClient
                                     .Uri(requestUri)
                                     .ErrorDetail(Resources.PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_)
                                     .LabKeyError(PanoramaUtil.GetIfErrorInResponse(response))
-                                    .Response(jsonResponse).Build());
+                                    .Response(jsonResponse).ToString());
                         }
                     }
 
@@ -625,7 +627,7 @@ namespace pwiz.PanoramaClient
                         else
                         {
                             throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.nonvalid.Error(ServerUri))
-                                .Uri(requestUri).Exception(ex, PanoramaUtil.GetErrorFromWebException).Build(), ex); // User cannot be authenticated
+                                .Uri(requestUri).ExceptionMessage(ex.Message).LabKeyError(PanoramaUtil.GetErrorFromWebException(ex)).ToString(), ex); // User cannot be authenticated
                         }
                     }
 
@@ -638,7 +640,7 @@ namespace pwiz.PanoramaClient
                     }
 
                     throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.nonvalid.Error(ServerUri))
-                        .Uri(requestUri).Exception(ex, PanoramaUtil.GetErrorFromWebException).Build(), ex); // User cannot be authenticated
+                        .Uri(requestUri).ExceptionMessage(ex.Message).LabKeyError(PanoramaUtil.GetErrorFromWebException(ex)).ToString(), ex); // User cannot be authenticated
                 }
 
                 throw;
@@ -725,38 +727,38 @@ namespace pwiz.PanoramaClient
 
         public virtual PanoramaServer ValidateServer()
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public virtual void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public virtual JToken GetInfoForFolders(string folder)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public virtual void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
             IProgressMonitor pm, IProgressStatus progressStatus)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public virtual Uri SendZipFile(string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public virtual JObject SupportedVersionsJson()
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public IRequestHelper GetRequestHelper(bool forPublish = false)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
     }
 }

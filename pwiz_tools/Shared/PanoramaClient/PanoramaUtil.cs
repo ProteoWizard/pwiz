@@ -389,24 +389,9 @@ namespace pwiz.PanoramaClient
             return this;
         }
 
-        public ErrorMessageBuilder Exception(Exception ex)
+        public ErrorMessageBuilder ExceptionMessage(string exceptionMessage)
         {
-            Exception(ex, null);
-            return this;
-        }
-
-        // If the given exception is a WebException, this method tries to parse the response as JSON and
-        // get a LabKey error if it was set. The method accepts a function to parse the response in the 
-        // WebException so that tests can pass in a custom function.
-        public ErrorMessageBuilder Exception(Exception ex, Func<WebException, LabKeyError> labkeyErrorGetter)
-        {
-            _exceptionMessage = ex.Message;
-            var exception = ex as WebException;
-            if (exception != null && labkeyErrorGetter != null)
-            {
-                _labkeyError = labkeyErrorGetter(exception);
-            }
-
+            _exceptionMessage = exceptionMessage;
             return this;
         }
 
@@ -430,7 +415,7 @@ namespace pwiz.PanoramaClient
             return this;
         }
 
-        public string Build()
+        public override string ToString()
         {
             var sb = new StringBuilder();
             if (!string.IsNullOrEmpty(_errorDetail) || !string.IsNullOrEmpty(_exceptionMessage) || _labkeyError != null)
@@ -673,7 +658,7 @@ namespace pwiz.PanoramaClient
             // With no trailing '/', new Uri("https://panoramaweb.org/labkey", "project/getContainers.view") will
             // return https://panoramaweb.org/project/getContainers.view (no labkey)
             // ReSharper disable LocalizableElement
-            path = path + (path.EndsWith("/") ? "" : "/");
+            path += path.EndsWith("/") ? "" : "/";
             // ReSharper restore LocalizableElement
 
             URI = new UriBuilder(serverUri) { Path = path, Query = string.Empty, Fragment = string.Empty }.Uri;
@@ -691,9 +676,14 @@ namespace pwiz.PanoramaClient
             return Username?.Trim().Length > 0 && Password?.Trim().Length > 0;
         }
 
+        public bool HasContextPath()
+        {
+            return !URI.AbsolutePath.Equals(@"/");
+        }
+
         public PanoramaServer RemoveContextPath()
         {
-            if (!URI.AbsolutePath.Equals(@"/"))
+            if (HasContextPath())
             {
                 var newUri = new UriBuilder(URI) { Path = @"/" }.Uri;
                 return new PanoramaServer(newUri, Username, Password);
@@ -704,7 +694,7 @@ namespace pwiz.PanoramaClient
 
         public PanoramaServer AddLabKeyContextPath()
         {
-            if (URI.AbsolutePath.Equals(@"/"))
+            if (!HasContextPath())
             {
                 var newUri = new UriBuilder(URI) { Path = PanoramaUtil.LABKEY_CTX }.Uri;
                 return new PanoramaServer(newUri, Username, Password);

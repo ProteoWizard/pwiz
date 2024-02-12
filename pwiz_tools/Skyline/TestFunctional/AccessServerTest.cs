@@ -520,11 +520,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 if (string.Equals(Server, VALID_NON_PANORAMA_SERVER))
                 {
-                    throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.nonvalid.Error(ServerUri)).Uri(ServerUri).ErrorDetail("Test WebException").Build());
+                    throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.nonvalid.Error(ServerUri)).Uri(ServerUri).ErrorDetail("Test WebException").ToString());
                 }
 
                 else if (string.Equals(Server, NON_EXISTENT_SERVER))
-                    throw new PanoramaServerException(new ErrorMessageBuilder(ServerStateEnum.missing.Error(ServerUri)).Uri(ServerUri).ErrorDetail("Test WebException - NameResolutionFailure").Build());
+                    throw new PanoramaServerException(new ErrorMessageBuilder(ServerStateEnum.missing.Error(ServerUri)).Uri(ServerUri).ErrorDetail("Test WebException - NameResolutionFailure").ToString());
 
                 else if (Server.Contains(VALID_PANORAMA_SERVER))
                 {
@@ -536,10 +536,10 @@ namespace pwiz.SkylineTestFunctional
                     else
                     {
                         throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.nonvalid.Error(ServerUri))
-                            .Uri(PanoramaUtil.GetEnsureLoginUri(new PanoramaServer(ServerUri, Username, Password))).ErrorDetail("Test WebException").Build());
+                            .Uri(PanoramaUtil.GetEnsureLoginUri(new PanoramaServer(ServerUri, Username, Password))).ErrorDetail("Test WebException").ToString());
                     }
                 }
-                throw new PanoramaServerException(new ErrorMessageBuilder(ServerStateEnum.unknown.Error(ServerUri)).Uri(ServerUri).ErrorDetail("Test WebException - unknown failure").Build());
+                throw new PanoramaServerException(new ErrorMessageBuilder(ServerStateEnum.unknown.Error(ServerUri)).Uri(ServerUri).ErrorDetail("Test WebException - unknown failure").ToString());
             }
 
             public override void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
