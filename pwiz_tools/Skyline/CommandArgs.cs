@@ -98,7 +98,7 @@ namespace pwiz.Skyline
         public static readonly Func<string> MOD_UNIMOD_VALUE = () => CommandArgUsage.CommandArgs_MOD_UNIMOD_VALUE_UniMod_ID__e_g___35__;
         public static readonly Func<string> MOD_AA_VALUE = () => string.Concat(AminoAcid.All);
         // ReSharper disable LocalizableElement
-        public static readonly Func<string> MOD_TERMINUS_VALUE = () => "N, C";
+        public static readonly Func<string[]> MOD_TERMINUS_VALUE = () => new [] { "N", "C" };
         public static readonly Func<string> INT_LIST_VALUE = () => "\"1, 2, 3...\"";  // Not L10N
         public static readonly Func<string> ION_TYPE_LIST_VALUE = () => "\"a, b, c, x, y, z, p\"";    // Not L10N
         public static readonly Func<string> ANNOTATION_TARGET_LIST_VALUE = () => "\"protein, molecule_list, peptide, molecule, precursor, transition, replicate, precursor_result, transition_result\""; // Not L10N
@@ -1542,17 +1542,20 @@ namespace pwiz.Skyline
                     .Append(SkylineResources.CommandArgs_ARG_BGPROTEOME_NAME_name_to_give_protdb_imported_by___background_proteome_file)),
                 (c, p) => c.BackgroundProteomeName = p.Value)
             { WrapValue = true };
-        public static readonly Argument ARG_BGPROTEOME_PATH = new DocArgument(@"background-proteome-file", PATH_TO_PROTDB, (c, p) => c.BackgroundProteomePath = p.Value);
+        public static readonly Argument ARG_BGPROTEOME_PATH = new DocArgument(@"background-proteome-file", PATH_TO_PROTDB, (c, p) => c.BackgroundProteomePath = p.Value)
+            { WrapValue = true };
 
         public static readonly Argument ARG_PEPTIDE_CLEAR_MODS = new DocArgument(@"pep-clear-mods",
             (c, p) => c.PeptideMods = Array.Empty<PeptideMod>());
         public static readonly Argument ARG_PEPTIDE_ADD_MOD = new DocArgument(@"pep-add-mod", MOD_NAME_VALUE,
-            (c, p) => c.PeptideMods = c.PeptideMods?.AppendToNew(new PeptideMod(p.Value)) ?? new [] { new PeptideMod(p.Value) });
+            (c, p) => c.PeptideMods = c.PeptideMods?.AppendToNew(new PeptideMod(p.Value)) ?? new [] { new PeptideMod(p.Value) })
+            { WrapValue = true };
         public static readonly Argument ARG_PEPTIDE_ADD_UNIMOD = new DocArgument(@"pep-add-unimod", MOD_UNIMOD_VALUE,
             (c, p) => c.PeptideMods = c.PeptideMods?.AppendToNew(new PeptideMod(p.ValueInt)) ?? new[] { new PeptideMod(p.ValueInt) });
-        public static readonly Argument ARG_PEPTIDE_ADD_MOD_AA = new DocArgument(@"pep-add-mod-aa", MOD_AA_VALUE,
-            (c, p) => PeptideMod.SetAA(c.PeptideMods, p.Value));
-        public static readonly Argument ARG_PEPTIDE_ADD_MOD_TERM = new DocArgument(@"pep-add-mod-term", MOD_TERMINUS_VALUE,
+        public static readonly Argument ARG_PEPTIDE_ADD_MOD_AA = new DocArgument(@"pep-add-unimod-aa", MOD_AA_VALUE,
+            (c, p) => PeptideMod.SetAA(c.PeptideMods, p.Value))
+            { WrapValue = true };
+        public static readonly Argument ARG_PEPTIDE_ADD_MOD_TERM = new DocArgument(@"pep-add-unimod-term", MOD_TERMINUS_VALUE,
             (c, p) => PeptideMod.SetTerminus(c.PeptideMods, p.Value));
         public static readonly Argument ARG_PEPTIDE_MAX_VAR_MODS = new DocArgument(@"pep-max-variable-mods", INT_VALUE,
             (c, p) => c.PeptideMaxVariableMods = p.GetValueInt(PeptideModifications.MIN_MAX_VARIABLE_MODS, PeptideModifications.MAX_MAX_VARIABLE_MODS));
@@ -3101,10 +3104,7 @@ namespace pwiz.Skyline
                     ct.Preamble = Preamble();
                 if (Postamble != null)
                     ct.Postamble = Postamble();
-                if (LeftColumnWidth.HasValue)
-                    ct.Widths = new[] { LeftColumnWidth.Value, width - LeftColumnWidth.Value - 3 };   // 3 borders
-                else
-                    ct.Width = width;
+                ct.Width = width;
 
                 bool hasAppliesTo = Args.Any(a => a.AppliesTo != null);
                 if (ShowHeaders)
@@ -3117,12 +3117,43 @@ namespace pwiz.Skyline
                         ct.SetHeaders(CommandArgUsage.CommandArgGroup_ToString_Argument,
                             CommandArgUsage.CommandArgGroup_ToString_Description);
                 }
-                foreach (var commandArg in Args.Where(a => !a.InternalUse))
+
+                var usageArgs = Args.Where(a => !a.InternalUse).ToList();
+                foreach (var commandArg in usageArgs)
                 {
                     if (hasAppliesTo)
                         ct.AddRow(commandArg.AppliesTo ?? string.Empty, commandArg.ArgumentDescription, commandArg.Description);
                     else
                         ct.AddRow(commandArg.ArgumentDescription, commandArg.Description);
+                }
+
+                int GetIdealArgumentWidth(Argument a)
+                {
+                    int maxWidth = width / 2;
+
+                    // if value is on a separate line or the argument by itself is over the max width, just use argument plus =
+                    if (a.WrapValue || a.ArgumentText.Length + 2 > maxWidth)
+                        return a.ArgumentText.Length + 2;
+
+                    // if value is included on single line, set a reasonable limit
+                    return Math.Min(maxWidth, a.ArgumentDescription.Length);
+                }
+
+                if (!hasAppliesTo)
+                {
+                    int minLines = int.MaxValue;
+                    int bestWidth = 0;
+                    for (int leftColumnWidth = usageArgs.Max(GetIdealArgumentWidth); leftColumnWidth < width - 10; leftColumnWidth += 5)
+                    {
+                        ct.Widths = new[] { leftColumnWidth, width - leftColumnWidth - 3 };   // 3 borders
+                        int numLines = ct.ToString().Split(new [] { Environment.NewLine }, StringSplitOptions.None).Length;
+                        if (bestWidth == 0 || numLines <= minLines)
+                        {
+                            minLines = numLines;
+                            bestWidth = leftColumnWidth;
+                        }
+                    }
+                    ct.Widths = new[] { bestWidth, width - bestWidth - 3 };   // 3 borders
                 }
 
                 return ct.ToString();
@@ -3230,7 +3261,7 @@ namespace pwiz.Skyline
         public class ValueInvalidException : UsageException
         {
             public ValueInvalidException(Argument arg, string value, string[] argValues)
-                : base(string.Format(Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_, value, arg.ArgumentText, string.Join(@", ", argValues)))
+                : base(string.Format(CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_, value, arg.ArgumentText, string.Join(@", ", argValues)))
             {
             }
         }
@@ -3238,7 +3269,7 @@ namespace pwiz.Skyline
         public class ValueInvalidBoolException : UsageException
         {
             public ValueInvalidBoolException(Argument arg, string value)
-                : base(string.Format(Resources.ValueInvalidBoolException_ValueInvalidBoolException_The_value___0___is_not_valid_for_the_argument___1____it_must_be__2_, value, arg.ArgumentText, BOOL_VALUE()))
+                : base(string.Format(CommandArgUsage.ValueInvalidBoolException_ValueInvalidBoolException_The_value___0___is_not_valid_for_the_argument___1____it_must_be__2_, value, arg.ArgumentText, BOOL_VALUE()))
             {
             }
         }
@@ -3311,7 +3342,7 @@ namespace pwiz.Skyline
         {
             public ValueInvalidAminoAcidException(Argument arg, string value)
                 : base(string.Format(
-                    Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                    CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
                     value, arg.ArgumentText, MOD_AA_VALUE()))
             {
             }
@@ -3320,7 +3351,7 @@ namespace pwiz.Skyline
         public class ValueInvalidModException : UsageException
         {
             public ValueInvalidModException(Argument arg, string mod, ArgumentException ex)
-                : base(string.Format(Resources.ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_, mod, ex.Message))
+                : base(string.Format(CommandArgUsage.ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_, mod, ex.Message))
             {
             }
         }

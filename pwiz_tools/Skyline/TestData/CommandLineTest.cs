@@ -594,7 +594,7 @@ namespace pwiz.SkylineTestData
             settings = new[] { "--pep-digest-enzyme=nope" };
 
             RunCommandAndValidateError(settings, string.Format(
-                Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
                 "nope", CommandArgs.ARG_PEPTIDE_ENZYME_NAME.ArgumentText, string.Join(", ", Settings.Default.EnzymeList.Select(e => e.Name))));
 
             // parameter validation: unknown background proteome name
@@ -697,9 +697,9 @@ namespace pwiz.SkylineTestData
                         _ => throw new ArgumentException()
                     };
                     if (!aas.IsNullOrEmpty())
-                        modSettings = modSettings.Append("--pep-add-mod-aa=" + aas);
+                        modSettings = modSettings.Append("--pep-add-unimod-aa=" + aas);
                     if (!terminus.IsNullOrEmpty())
-                        modSettings = modSettings.Append("--pep-add-mod-term=" + terminus);
+                        modSettings = modSettings.Append("--pep-add-unimod-term=" + terminus);
                     return modSettings.ToArray();
                 }
 
@@ -761,29 +761,33 @@ namespace pwiz.SkylineTestData
                 const bool printErrors = false; // set to true for easy viewing of what the error messages actually look like
 
                 RunCommandAndValidateError(new[] { "--pep-add-mod=Foo" },
-                    string.Format(Resources.ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_,
+                    string.Format(CommandArgUsage.ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_,
                         "Foo", ModelResources.ModificationMatcher_GetStaticMod_no_UniMod_match), printErrors);
 
-                RunCommandAndValidateError(new[] { "--pep-add-mod=Foo", "--pep-add-mod-term=N" },
-                    string.Format(Resources.ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_,
+                RunCommandAndValidateError(new[] { "--pep-add-mod=Foo", "--pep-add-unimod-term=N" },
+                    string.Format(CommandArgUsage.ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_,
                         "Foo", ModelResources.ModificationMatcher_GetStaticMod_no_UniMod_match), printErrors);
+
+                RunCommandAndValidateError(new[] { "--pep-add-mod=Oxidation" },
+                    string.Format(CommandArgUsage.ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_,
+                        "Oxidation", ModelResources.ModificationMatcher_GetStaticMod_no_UniMod_match), printErrors);
 
                 RunCommandAndValidateError(new [] { "--pep-add-mod=Oxi" },
-                    string.Format(Resources.ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_,
+                    string.Format(CommandArgUsage.ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_,
                         "Oxi", ModelResources.ModificationMatcher_GetStaticMod_found_more_than_one_UniMod_match__add_terminus_and_or_amino_acid_specificity_to_choose_a_single_match));
 
-                RunCommandAndValidateError(new[] { "--pep-add-mod=Oxi", "--pep-add-mod-term=N" },
-                    string.Format(Resources.ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_,
+                RunCommandAndValidateError(new[] { "--pep-add-mod=Oxi", "--pep-add-unimod-term=N" },
+                    string.Format(CommandArgUsage.ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_,
                         "Oxi", string.Format(ModelResources.ModificationMatcher_GetStaticMod_found_more_than_one_UniMod_match_but_the_given_specificity___0___does_not_match_any_of_them_,
                             TextUtil.ColonSeparate(PropertyNames.StaticMod_Terminus, "N"))), printErrors);
-
-                RunCommandAndValidateError(new[] { "--pep-add-mod-term=N" },
+                
+                RunCommandAndValidateError(new[] { "--pep-add-unimod-term=N" },
                     Resources.PeptideMod_SetTerminus_A_peptide_modification_must_be_added_before_giving_it_a_terminal_or_amino_acid_specificity_, printErrors);
 
-                RunCommandAndValidateError(new[] { "--pep-add-mod=Oxi", "--pep-add-mod-term=Z" },
+                RunCommandAndValidateError(new[] { "--pep-add-mod=Oxi", "--pep-add-unimod-term=Z" },
                     new CommandArgs.ValueInvalidModTerminusException(CommandArgs.ARG_PEPTIDE_ADD_MOD_TERM, "Z").Message, printErrors);
 
-                RunCommandAndValidateError(new[] { "--pep-add-mod=Oxi", "--pep-add-mod-aa=1" },
+                RunCommandAndValidateError(new[] { "--pep-add-unimod=35", "--pep-add-unimod-aa=1" },
                     new CommandArgs.ValueInvalidAminoAcidException(CommandArgs.ARG_PEPTIDE_ADD_MOD_AA, "1").Message, printErrors);
 
                 Assert.IsFalse(printErrors, "Set printErrors to false before committing.");
@@ -1008,7 +1012,7 @@ namespace pwiz.SkylineTestData
                 "--exp-annotations=" + exportPath, // Export annotations
                 "--exp-annotations-include-object=" + invalidName // Test specifying an invalid object name
             );
-            CheckRunCommandOutputContains(string.Format(Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+            CheckRunCommandOutputContains(string.Format(CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
                 invalidName,
                 "--exp-annotations-include-object", string.Join(", ", CommandArgs.GetAllHandlerNames())), output);
             // Test error (no annotations and not including properties)
