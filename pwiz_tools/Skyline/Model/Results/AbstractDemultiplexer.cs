@@ -23,7 +23,6 @@ using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -77,7 +76,7 @@ namespace pwiz.Skyline.Model.Results
         protected void InitializeFile()
         {
             if (!AnalyzeFile())
-                throw new IOException(Resources.OverlapDemultiplexer_InitializeFile_OverlapDemultiplexer_InitializeFile_Improperly_formed_overlap_multiplexing_file);
+                throw new IOException(ResultsResources.OverlapDemultiplexer_InitializeFile_OverlapDemultiplexer_InitializeFile_Improperly_formed_overlap_multiplexing_file);
             _isoMapper.DetermineDeconvRegions();
             NumDeconvRegions = _isoMapper.NumDeconvRegions;
             NumIsoWindows = _isoMapper.NumWindows;
@@ -110,7 +109,7 @@ namespace pwiz.Skyline.Model.Results
                     previousNumWindows = _isoMapper.NumWindows;
                     if (_isoMapper.NumWindows > 1000)
                     {
-                        throw new InvalidDataException(Resources.AbstractDemultiplexer_AnalyzeFile_Isolation_scheme_is_set_to_multiplexing_but_file_does_not_appear_to_contain_multiplexed_acquisition_data_);
+                        throw new InvalidDataException(ResultsResources.AbstractDemultiplexer_AnalyzeFile_Isolation_scheme_is_set_to_multiplexing_but_file_does_not_appear_to_contain_multiplexed_acquisition_data_);
                     }
                 }
                 var scanNumber = _msMsSpectra[i];
@@ -149,7 +148,7 @@ namespace pwiz.Skyline.Model.Results
             }
             if (_msMsIndex == -1)
                 throw new IndexOutOfRangeException(
-                    string.Format(Resources.MsxDemultiplexer_FindStartStop_MsxDemultiplexer_MS_MS_index__0__not_found,
+                    string.Format(ResultsResources.MsxDemultiplexer_FindStartStop_MsxDemultiplexer_MS_MS_index__0__not_found,
                                   scanIndex));
             int countMsMs = NumScansBlock - 1;
             centerIndex = _msMsIndex;
@@ -626,7 +625,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 if (!precursor.IsolationMz.HasValue)
                 {
-                    throw new ArgumentException(Resources.AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_center_);
+                    throw new ArgumentException(ResultsResources.AbstractIsoWindowMapper_Add_Scan_in_imported_file_appears_to_be_missing_an_isolation_window_center_);
                 }
 
                 // use the Skyline document isolation scheme to determine the boundaries of the isolation window
@@ -635,7 +634,7 @@ namespace pwiz.Skyline.Model.Results
                 filter.CalcDiaIsolationValues(ref isolationCenter, ref isolationWidth);
                 if (!isolationWidth.HasValue)
                 {
-                    throw new ArgumentException(Resources.AbstractIsoWindowMapper_Add_The_isolation_width_for_a_scan_in_the_imported_file_could_not_be_determined_);
+                    throw new ArgumentException(ResultsResources.AbstractIsoWindowMapper_Add_The_isolation_width_for_a_scan_in_the_imported_file_could_not_be_determined_);
                 }
 
                 double isoMzLeft = isolationCenter - isolationWidth.Value / 2.0;
@@ -692,7 +691,7 @@ namespace pwiz.Skyline.Model.Results
                 if (!TryGetWindowIndex(precursorMz, out isoIndex))
                 {
                     throw new ArgumentException(
-                        string.Format(Resources.AbstractIsoWindowMapper_GetWindowMask_Tried_to_get_a_window_mask_for__0___a_spectrum_with_previously_unobserved_isolation_windows__Demultiplexing_requires_a_repeating_cycle_of_isolation_windows_,
+                        string.Format(ResultsResources.AbstractIsoWindowMapper_GetWindowMask_Tried_to_get_a_window_mask_for__0___a_spectrum_with_previously_unobserved_isolation_windows__Demultiplexing_requires_a_repeating_cycle_of_isolation_windows_,
                                       precursorMz));
                 }
                 isolationIndicesList.Add(isoIndex);
@@ -1080,7 +1079,7 @@ namespace pwiz.Skyline.Model.Results
         public void BinData(double[] mzVals, double[] intensityVals, ref double[] binnedData)
         {
             if (mzVals.Length != intensityVals.Length)
-                throw new IndexOutOfRangeException(String.Format(Resources.TransitionBinner_BinData_, mzVals.Length, intensityVals.Length));
+                throw new IndexOutOfRangeException(String.Format(ResultsResources.TransitionBinner_BinData_, mzVals.Length, intensityVals.Length));
             if (binnedData.Length != NumBins)
                 binnedData = new double[NumBins];
             else

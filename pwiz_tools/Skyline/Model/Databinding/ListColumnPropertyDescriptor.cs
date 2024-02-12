@@ -24,7 +24,6 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Lists;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Databinding
 {
@@ -124,7 +123,7 @@ namespace pwiz.Skyline.Model.Databinding
                 var listInfo = GetListInfo(doc);
                 if (listInfo == null)
                 {
-                    throw new InvalidOperationException(Resources.ListColumnPropertyDescriptor_SetValue_List_has_been_deleted);
+                    throw new InvalidOperationException(DatabindingResources.ListColumnPropertyDescriptor_SetValue_List_has_been_deleted);
                 }
                 if (listInfo.ColumnIndex < 0)
                 {
@@ -133,7 +132,7 @@ namespace pwiz.Skyline.Model.Databinding
                 int rowIndex = listInfo.ListData.RowIndexOf(existingRecord.ListItemId);
                 if (rowIndex < 0)
                 {
-                    throw new ArgumentException(Resources.ListColumnPropertyDescriptor_SetValue_List_item_has_been_deleted_);
+                    throw new ArgumentException(DatabindingResources.ListColumnPropertyDescriptor_SetValue_List_item_has_been_deleted_);
                 }
                 var listData = listInfo.ListData;
                 listData = listData.ChangeColumn(listInfo.ColumnIndex, listData.Columns[listInfo.ColumnIndex].SetValue(rowIndex, value));
@@ -154,7 +153,7 @@ namespace pwiz.Skyline.Model.Databinding
                     return dataSettings.ChangeListDefs(dataSettings.Lists.ReplaceAt(i, listData));
                 }
             }
-            throw new ArgumentException(string.Format(Resources.ListColumnPropertyDescriptor_ChangeListData_No_such_list__0_, listData.ListDef.Name));
+            throw new ArgumentException(string.Format(DatabindingResources.ListColumnPropertyDescriptor_ChangeListData_No_such_list__0_, listData.ListDef.Name));
         }
 
         public override bool ShouldSerializeValue(object component)

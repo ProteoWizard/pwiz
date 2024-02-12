@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
 using pwiz.Skyline.Alerts;
@@ -103,10 +102,10 @@ namespace pwiz.SkylineTestConnected
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
             RunUI(() =>
             {
-                remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER);
-                remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER);
+                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER), "Unable to select {0}", TEST_FOLDER);
+                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER), "Unable to select {0}", PANORAMA_FOLDER);
             });
-            OkDialog(remoteDlg, () => remoteDlg.ClickFile(TEST_FILE));
+            OkDialog(remoteDlg, () => Assert.IsTrue(remoteDlg.ClickFile(TEST_FILE), "Unable to click file {0}", TEST_FILE));
             WaitForCondition(() => File.Exists(path));
             FileEx.SafeDelete(path, true);
             Assert.IsFalse(File.Exists(path));
@@ -171,8 +170,8 @@ namespace pwiz.SkylineTestConnected
 
             RunUI(() =>
             {
-                remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER);
-                remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER);
+                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER), "Unable to select {0}", TEST_FOLDER);
+                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER), "Unable to select {0}", PANORAMA_FOLDER);
                 remoteDlg.Close();
                 state = remoteDlg.FolderBrowser.TreeState;
             });
@@ -201,9 +200,9 @@ namespace pwiz.SkylineTestConnected
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
             RunUI(() =>
             {
-                remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER);
-                remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER);
-                remoteDlg.ClickFile(DELETED_FILE);
+                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER), "Unable to select {0}", TEST_FOLDER);
+                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER), "Unable to select {0}", PANORAMA_FOLDER);
+                Assert.IsTrue(remoteDlg.ClickFile(DELETED_FILE), "Unable to click file {0}", DELETED_FILE);
             });
             var errorDlg = ShowDialog<MessageDlg>(remoteDlg.ClickOpen);
             Assert.IsFalse(File.Exists(path));
@@ -223,9 +222,9 @@ namespace pwiz.SkylineTestConnected
 
             RunUI(() =>
             {
-                remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER);
-                remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER);
-                remoteDlg.ClickFile(RENAMED_FILE);
+                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER), "Unable to select {0}", TEST_FOLDER);
+                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER), "Unable to select {0}", PANORAMA_FOLDER);
+                Assert.IsTrue(remoteDlg.ClickFile(RENAMED_FILE), "Unable to click file {0}", RENAMED_FILE);
                 Assert.AreNotEqual(RENAMED_FILE, remoteDlg.GetItemName(0));
             });
             WaitForClosedForm(remoteDlg);
@@ -266,9 +265,9 @@ namespace pwiz.SkylineTestConnected
 
             var remoteDlg = ShowDialog<PanoramaFilePicker>(() => ShowPanoramaFilePicker(serverList, selectedPath));
             WaitForConditionUI(() => remoteDlg.IsLoaded);
-            RunUI(() => remoteDlg.FolderBrowser.SelectNode("@files")); 
+            RunUI(() => Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode("@files"), "Unable to select @files")); 
             WaitForConditionUI(() => remoteDlg.FileNumber == 13);
-            RunUI(() => remoteDlg.FolderBrowser.SelectNode("FileRenamedOnServer"));
+            RunUI(() => Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode("FileRenamedOnServer"), "Unable to select FileRenamedOnServer"));
             WaitForConditionUI(() => remoteDlg.FileNumber == 6);
             OkDialog(remoteDlg, remoteDlg.Close);
         }
@@ -279,16 +278,13 @@ namespace pwiz.SkylineTestConnected
         private void ShowPanoramaFilePicker(List<PanoramaServer> serverList, string selectedPath)
         {
             using var remoteDlg = new PanoramaFilePicker(serverList, string.Empty, true, selectedPath);
+            remoteDlg.InitializeDialog();   // CONSIDER: Should this be using LongOptionRunner like SkylineWindow?
             remoteDlg.ShowDialog();
         }
 
-        private class TestPanoramaClient : IPanoramaClient
+        private class TestPanoramaClient : BaseTestPanoramaClient
         {
-            public Uri ServerUri { get; set; }
-
             public string Server { get; }
-            public string Username { get; }
-            public string Password { get; }
             public TestPanoramaClient(string server, string username, string password)
             {
                 Server = server;
@@ -304,38 +300,8 @@ namespace pwiz.SkylineTestConnected
                 }
             }
 
-            public ServerState GetServerState()
-            {
-                throw new NotImplementedException();
-            }
-
-            public UserState IsValidUser(string username, string password)
-            {
-                throw new NotImplementedException();
-            }
-
-            public FolderState IsValidFolder(string folderPath, string username, string password)
-            {
-                return FolderState.valid;
-            }
-
-            public FolderOperationStatus CreateFolder(string parentPath, string folderName, string username, string password)
-            {
-                throw new NotImplementedException();
-            }
-
-            public FolderOperationStatus DeleteFolder(string folderPath, string username, string password)
-            {
-                throw new NotImplementedException();
-            }
-
-            public JToken GetInfoForFolders(PanoramaServer server, string folder)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
-                PanoramaServer server, IProgressMonitor pm, IProgressStatus progressStatus)
+            public override void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
+                IProgressMonitor pm, IProgressStatus progressStatus)
             {
                 Exception e = null;
                 switch (fileSize)

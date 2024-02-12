@@ -309,6 +309,9 @@
   <data name="StaticMod_IsCrosslinker" xml:space="preserve">
     <value>クロスリンカー</value>
   </data>
+  <data name="StaticMod_RelativeRT" xml:space="preserve">
+    <value>相対保持時間</value>
+  </data>
   <data name="TransitionFullScan_UseSelectiveExtraction" xml:space="preserve">
     <value>高選択性の抽出を使用</value>
   </data>
@@ -1041,7 +1044,7 @@
     <value>ドキュメント内のペプチドをフィルタリング</value>
   </data>
   <data name="BuildPeptideSearchLibrarySettings_IncludeAmbiguousMatches" xml:space="preserve">
-    <value>あいまい一致を含む</value>
+    <value>曖昧な一致を含む</value>
   </data>
   <data name="BuildPeptideSearchLibrarySettings_SearchFileNames" xml:space="preserve">
     <value>ファイルを検索</value>
@@ -1708,5 +1711,56 @@
   </data>
   <data name="PeptideSettings_ProteinAssociationSettings" xml:space="preserve">
     <value>タンパク質の関連付け設定</value>
+  </data>
+  <data name="GroupComparisonDef_MsLevel" xml:space="preserve">
+    <value>MSレベル</value>
+  </data>
+  <data name="EncyclopeDiaSettings" xml:space="preserve">
+    <value>EncyclopeDIA検索</value>
+  </data>
+  <data name="EncyclopeDiaSettings_EncyclopeDiaChromLibrary" xml:space="preserve">
+    <value>クロマトグラムライブラリ</value>
+  </data>
+  <data name="EncyclopeDiaSettings_EncyclopeDiaConfig" xml:space="preserve">
+    <value>EncyclopeDIA設定</value>
+  </data>
+  <data name="EncyclopeDiaSettings_EncyclopeDiaQuantLibrary" xml:space="preserve">
+    <value>定量化ライブラリ</value>
+  </data>
+  <data name="EncyclopeDiaSettings_FastaSettings" xml:space="preserve">
+    <value>FASTA設定</value>
+  </data>
+  <data name="EncyclopeDiaSettings_NarrowWindowResults" xml:space="preserve">
+    <value>狭いウィンドウ結果</value>
+  </data>
+  <data name="EncyclopeDiaSettings_PrositSettings" xml:space="preserve">
+    <value>Prosit設定</value>
+  </data>
+  <data name="EncyclopeDiaSettings_WideWindowResults" xml:space="preserve">
+    <value>広いウィンドウ結果</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_DefaultCharge" xml:space="preserve">
+    <value>デフォルト電荷</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_DefaultNCE" xml:space="preserve">
+    <value>デフォルトNCE</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_MaxCharge" xml:space="preserve">
+    <value>最大電荷</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_MaxMissedCleavage" xml:space="preserve">
+    <value>最大未切断数</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_MinCharge" xml:space="preserve">
+    <value>最小電荷</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_Enzyme" xml:space="preserve">
+    <value>酵素</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_MaxMz" xml:space="preserve">
+    <value>最大m/z</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_MinMz" xml:space="preserve">
+    <value>最小m/z</value>
   </data>
 </root>

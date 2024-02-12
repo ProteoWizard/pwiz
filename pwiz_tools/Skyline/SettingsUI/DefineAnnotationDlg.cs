@@ -274,7 +274,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (annotationDef.Name == name)
                     {
-                        messageBoxHelper.ShowTextBoxError(tbxName, Resources.DefineAnnotationDlg_OkDialog_There_is_already_an_annotation_defined_named__0__, name);
+                        messageBoxHelper.ShowTextBoxError(tbxName, SettingsUIResources.DefineAnnotationDlg_OkDialog_There_is_already_an_annotation_defined_named__0__, name);
                         return;
                     }
                 }
@@ -284,7 +284,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (checkedListBoxAppliesTo.CheckedItems.Count == 0)
                 {
-                    messageBoxHelper.ShowTextBoxError(checkedListBoxAppliesTo, Resources.DefineAnnotationDlg_OkDialog_Choose_at_least_one_type_for_this_annotation_to_apply_to);
+                    messageBoxHelper.ShowTextBoxError(checkedListBoxAppliesTo, SettingsUIResources.DefineAnnotationDlg_OkDialog_Choose_at_least_one_type_for_this_annotation_to_apply_to);
                     return;
                 }
                 if (new ListPropertyType(AnnotationDef.AnnotationType.value_list, null).Equals(ListPropertyType))
@@ -300,12 +300,12 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (comboAppliesTo.SelectedIndex < 0)
                 {
-                    messageBoxHelper.ShowTextBoxError(comboAppliesTo, Resources.DefineAnnotationDlg_OkDialog_Choose_a_type_for_this_annotation_to_apply_to_);
+                    messageBoxHelper.ShowTextBoxError(comboAppliesTo, SettingsUIResources.DefineAnnotationDlg_OkDialog_Choose_a_type_for_this_annotation_to_apply_to_);
                     return;
                 }
                 if (GetSelectedColumnDescriptor() == null)
                 {
-                    messageBoxHelper.ShowTextBoxError(availableFieldsTree1, Resources.DefineAnnotationDlg_OkDialog_Choose_a_value_for_this_annotation_);
+                    messageBoxHelper.ShowTextBoxError(availableFieldsTree1, SettingsUIResources.DefineAnnotationDlg_OkDialog_Choose_a_value_for_this_annotation_);
                     return;
                 }
             }

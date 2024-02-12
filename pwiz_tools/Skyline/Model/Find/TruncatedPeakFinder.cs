@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Find
 {
@@ -33,14 +32,14 @@ namespace pwiz.Skyline.Model.Find
 
         public override string DisplayName
         {
-            get { return Resources.TruncatedPeakFinder_DisplayName_Truncated_peaks; }
+            get { return FindResources.TruncatedPeakFinder_DisplayName_Truncated_peaks; }
         }
 
         protected override FindMatch MatchTransition(Bookmark bookmark, TransitionChromInfo transitionChromInfo)
         {
             if (transitionChromInfo.IsTruncated.GetValueOrDefault(false))
             {
-                return new FindMatch(bookmark, Resources.TruncatedPeakFinder_MatchTransition_Truncated_peak);
+                return new FindMatch(bookmark, FindResources.TruncatedPeakFinder_MatchTransition_Truncated_peak);
             }
             return null;
         }
@@ -52,11 +51,11 @@ namespace pwiz.Skyline.Model.Find
             {
                 if (truncatedCount == 1)
                 {
-                    return new FindMatch(bookmark, Resources.TruncatedPeakFinder_MatchTransitionGroup__1_truncated_peak);
+                    return new FindMatch(bookmark, FindResources.TruncatedPeakFinder_MatchTransitionGroup__1_truncated_peak);
                 }
 
                 return new FindMatch(bookmark, string.Format(
-                    Resources.TruncatedPeakFinder_MatchTransitionGroup__0__truncated_peaks,
+                    FindResources.TruncatedPeakFinder_MatchTransitionGroup__0__truncated_peaks,
                     truncatedCount));
             }
             return null;

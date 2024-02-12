@@ -27,7 +27,6 @@ using pwiz.Common.Collections;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Util.Extensions;
@@ -285,12 +284,12 @@ namespace pwiz.Skyline.Model
         public static void ValidateSequence(string seq)
         {
             if (string.IsNullOrEmpty(seq))
-                throw new InvalidDataException(Resources.FastaSequence_ValidateSequence_A_protein_sequence_may_not_be_empty);
+                throw new InvalidDataException(ModelResources.FastaSequence_ValidateSequence_A_protein_sequence_may_not_be_empty);
             for (int i = 0; i < seq.Length; i++)
             {
                 char c = seq[i];
                 if (!AminoAcid.IsExAA(c) && c != '*' && c != '-')
-                    throw new InvalidDataException(string.Format(Resources.FastaSequence_ValidateSequence_A_protein_sequence_may_not_contain_the_character__0__at__1__, seq[i], i));
+                    throw new InvalidDataException(string.Format(ModelResources.FastaSequence_ValidateSequence_A_protein_sequence_may_not_contain_the_character__0__at__1__, seq[i], i));
             }
         }
 
@@ -375,9 +374,9 @@ namespace pwiz.Skyline.Model
         public static int ComparePeptides(Peptide pep1, Peptide pep2)
         {
             if (pep1.FastaSequence == null || pep2.FastaSequence == null)
-                throw new InvalidOperationException(Resources.FastaSequence_ComparePeptides_Peptides_without_FASTA_sequence_information_may_not_be_compared);
+                throw new InvalidOperationException(ModelResources.FastaSequence_ComparePeptides_Peptides_without_FASTA_sequence_information_may_not_be_compared);
             if (!ReferenceEquals(pep1.FastaSequence, pep2.FastaSequence))
-                throw new InvalidOperationException(Resources.FastaSequence_ComparePeptides_Peptides_in_different_FASTA_sequences_may_not_be_compared);
+                throw new InvalidOperationException(ModelResources.FastaSequence_ComparePeptides_Peptides_in_different_FASTA_sequences_may_not_be_compared);
 
             return Comparer<int>.Default.Compare(pep1.Order, pep2.Order);
         }
@@ -468,7 +467,7 @@ namespace pwiz.Skyline.Model
         private ImmutableList<FastaSequence> _fastaSequenceList;
 
         public FastaSequenceGroup(string name, IList<FastaSequence> fastaSequenceList) : base(name,
-            string.Format(Resources.ProteinAssociation_CalculateProteinGroups_Group_of__0__proteins, fastaSequenceList.Count),
+            string.Format(ModelResources.ProteinAssociation_CalculateProteinGroups_Group_of__0__proteins, fastaSequenceList.Count),
             null, fastaSequenceList[0].Sequence)
         {
             _name = name;
@@ -482,10 +481,11 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return base.Equals(obj) &&
+            var equals = base.Equals(obj) &&
                    Equals(obj._name, _name) &&
                    ArrayUtil.EqualsDeep(obj.FastaSequenceList, FastaSequenceList) &&
                    obj.IsDecoy == IsDecoy;
+            return equals;
         }
 
         public override bool Equals(object obj)

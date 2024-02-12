@@ -300,6 +300,7 @@
         <xs:complexType>
           <xs:attribute name="min_peptides_per_protein" type="xs:integer"/>
           <xs:attribute name="group_proteins" type="xs:boolean" />
+          <xs:attribute name="gene_level_parsimony" type="xs:boolean" />
           <xs:attribute name="find_minimal_protein_list" type="xs:boolean" />
           <xs:attribute name="remove_subset_proteins" type="xs:boolean" />
           <xs:attribute name="shared_peptides" type="xs:string" />
@@ -891,6 +892,7 @@
         <xs:attribute name="internal_standard_concentration" type="xs:double" />
         <xs:attribute name="normalization_method" type="xs:string" />
         <xs:attribute name="attribute_group_id" type="xs:string" />
+        <xs:attribute name="surrogate_calibration_curve" type="xs:string" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

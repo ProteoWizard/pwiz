@@ -28,6 +28,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -254,6 +255,15 @@ namespace pwiz.Skyline.Model
             return false;
         }
 
+        // Check for the various kinds of exceptions that may be thrown in the course of
+        // parsing sometimes-wonky user data
+        public static bool IsParserException(Exception exception)
+        {
+            return exception is InvalidOperationException
+                   || exception is InvalidDataException
+                   || exception is ArgumentException;
+        }
+
         // Returns true on error
         private bool ErrorFindingTransitionGroupForPrecursor(ref SrmDocument document, ParsedIonInfo precursor, Row row,
             PeptideGroupDocNode pepGroup, Adduct adduct, double precursorMonoMz, double precursorAverageMz,
@@ -296,13 +306,9 @@ namespace pwiz.Skyline.Model
                                     _firstAddedPathPepGroup = _firstAddedPathPepGroup ?? pathGroup;
                                 }
                             }
-                            catch (InvalidDataException x)
+                            catch (Exception exception) when (IsParserException(exception))
                             {
-                                errmsg = x.Message;
-                            }
-                            catch (InvalidOperationException x) // Adduct handling code can throw these
-                            {
-                                errmsg = x.Message;
+                                errmsg = exception.Message;
                             }
 
                             if (errmsg != null)
@@ -1245,7 +1251,7 @@ namespace pwiz.Skyline.Model
                 {
                     Column = INDEX_PRECURSOR_DRIFT_TIME_MSEC,
                     Line = row.Index,
-                    Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_value__0_, row.GetCell(INDEX_PRECURSOR_DRIFT_TIME_MSEC))
+                    Message = String.Format(ModelResources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_value__0_, row.GetCell(INDEX_PRECURSOR_DRIFT_TIME_MSEC))
                 });
                 return null;
             }
@@ -1260,7 +1266,7 @@ namespace pwiz.Skyline.Model
                 {
                     Column = INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC,
                     Line = row.Index,
-                    Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_high_energy_offset_value__0_, row.GetCell(INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC))
+                    Message = String.Format(ModelResources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_high_energy_offset_value__0_, row.GetCell(INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC))
                 });
                 return null;
             }
@@ -1288,7 +1294,7 @@ namespace pwiz.Skyline.Model
                     {
                         Column = INDEX_PRECURSOR_ION_MOBILITY,
                         Line = row.Index,
-                        Message = Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Missing_ion_mobility_units
+                        Message = ModelResources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Missing_ion_mobility_units
                     });
                     return null;
                 }
@@ -1357,7 +1363,7 @@ namespace pwiz.Skyline.Model
                             adduct = DetermineAdductFromFormulaChargeAndMz(formula, charge.Value, mz);
                         }
                     }
-                    catch (Exception e)
+                    catch (Exception e) when (IsParserException(e))
                     {
                         ShowTransitionError(new PasteError
                         {
@@ -1511,13 +1517,9 @@ namespace pwiz.Skyline.Model
                             }
                         }
                     }
-                    catch (InvalidDataException x)
+                    catch (Exception exception) when (IsParserException(exception))
                     {
-                        massErrMsg = x.Message;
-                    }
-                    catch (InvalidOperationException x)  // Adduct handling code can throw these
-                    {
-                        massErrMsg = x.Message;
+                        massErrMsg = exception.Message;
                     }
                     if (massErrMsg != null)
                     {
@@ -1570,7 +1572,7 @@ namespace pwiz.Skyline.Model
                 else
                 {
                     // Don't just leave it blank
-                    errMessage = Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_unknown_error;
+                    errMessage = ModelResources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_unknown_error;
                 }
             }
             ShowTransitionError(new PasteError
@@ -1704,7 +1706,7 @@ namespace pwiz.Skyline.Model
                 adduct = Adduct.FromStringAssumeChargeOnly(adductText);
                 IonInfo.ApplyAdductToFormula(formula ?? string.Empty, adduct); // Just to see if it throws
             }
-            catch (Exception x) when ((x is InvalidOperationException) || (x is ArgumentException))
+            catch (Exception x) when (IsParserException(x))
             {
                 ShowTransitionError(new PasteError
                 {
@@ -1831,7 +1833,7 @@ namespace pwiz.Skyline.Model
                     molecule = new CustomMolecule(parsedIonInfo.MonoMass, parsedIonInfo.AverageMass, shortName, parsedIonInfo.MoleculeID.AccessionNumbers);
                 }
             }
-            catch (ArgumentException e)
+            catch (Exception e) when (IsParserException(e))
             {
                 ShowTransitionError(new PasteError
                 {
@@ -1849,7 +1851,7 @@ namespace pwiz.Skyline.Model
                     return null;
                 return new PeptideDocNode(pep, document.Settings, null, null, parsedIonInfo.ExplicitRetentionTime, new[] { tranGroup }, false);
             }
-            catch (InvalidOperationException e)
+            catch (Exception e) when (IsParserException(e))
             {
                 ShowTransitionError(new PasteError
                 {
@@ -1869,7 +1871,7 @@ namespace pwiz.Skyline.Model
                 {
                     Column = INDEX_PRECURSOR_MZ,
                     Line = row.Index,
-                    Message = String.Format(Resources.PasteDlg_GetMoleculeTransitionGroup_The_precursor_m_z__0__is_not_measureable_with_your_current_instrument_settings_, moleculeInfo.Mz)
+                    Message = String.Format(ModelResources.PasteDlg_GetMoleculeTransitionGroup_The_precursor_m_z__0__is_not_measureable_with_your_current_instrument_settings_, moleculeInfo.Mz)
                 });
                 return null;
             }
@@ -1908,11 +1910,7 @@ namespace pwiz.Skyline.Model
                 return new TransitionGroupDocNode(group, document.Annotations, document.Settings, null,
                     null, moleculeInfo.ExplicitTransitionGroupValues, null, new[] { tran }, false);
             }
-            catch (InvalidDataException x)
-            {
-                errmsg = x.Message;
-            }
-            catch (InvalidOperationException x) // Adduct handling code can throw these
+            catch (Exception x) when (IsParserException(x))
             {
                 errmsg = x.Message;
             }
@@ -1982,9 +1980,26 @@ namespace pwiz.Skyline.Model
             if (explicitTransitionGroupValues?.CollisionEnergy == ion.ExplicitTransitionValues?.CollisionEnergy)
             {
                 // No need for per-transition CE override if it matches precursor CE override
-                ionExplicitTransitionValues = ionExplicitTransitionValues.ChangeCollisionEnergy(null); 
+                ionExplicitTransitionValues = ionExplicitTransitionValues.ChangeCollisionEnergy(null);
             }
-            return new TransitionDocNode(transition, annotations, null, mass, TransitionDocNode.TransitionQuantInfo.DEFAULT, ionExplicitTransitionValues, null);
+
+            var transitionQuantInfo = TransitionDocNode.TransitionQuantInfo.DEFAULT;
+            if (ionType == IonType.precursor && customMolecule.ParsedMolecule.HasChemicalFormula)
+            {
+                var fullScan = document.Settings.TransitionSettings.FullScan;
+                if (fullScan.IsHighResPrecursor)
+                {
+                    var calc = document.Settings.GetPrecursorCalc(IsotopeLabelType.light, null);
+                    var massDist = calc.GetMZDistribution(customMolecule.ParsedMolecule.GetMoleculeMassOffset(), adduct,
+                        fullScan.IsotopeAbundances);
+                    var isotopeDistInfo = IsotopeDistInfo.MakeIsotopeDistInfo(massDist, mass, adduct, fullScan);
+                    var transitionIsotopeDistInfo = new TransitionIsotopeDistInfo(isotopeDistInfo.GetRankI(0),
+                        isotopeDistInfo.GetProportionI(0));
+                    transitionQuantInfo = transitionQuantInfo.ChangeIsotopeDistInfo(transitionIsotopeDistInfo);
+                }
+            }
+
+            return new TransitionDocNode(transition, annotations, null, mass, transitionQuantInfo, ionExplicitTransitionValues, null);
         }
     }
 
@@ -2209,28 +2224,28 @@ namespace pwiz.Skyline.Model
                     Thread.CurrentThread.CurrentCulture = culture;
                 foreach (var pair in new[] {
                     // ReSharper disable StringLiteralTypo
-                    Tuple.Create(moleculeGroup, Resources.PasteDlg_UpdateMoleculeType_Molecule_List_Name),
+                    Tuple.Create(moleculeGroup, ModelResources.PasteDlg_UpdateMoleculeType_Molecule_List_Name),
                     Tuple.Create(moleculeGroup, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name),
                     Tuple.Create(namePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Name),
                     Tuple.Create(namePrecursor, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name),
-                    Tuple.Create(namePrecursor, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Molecule),
-                    Tuple.Create(namePrecursor, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Compound),
+                    Tuple.Create(namePrecursor, ModelResources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Molecule),
+                    Tuple.Create(namePrecursor, ModelResources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Compound),
                     Tuple.Create(nameProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Name),
-                    Tuple.Create(formulaPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Formula),
+                    Tuple.Create(formulaPrecursor, ModelResources.PasteDlg_UpdateMoleculeType_Precursor_Formula),
                     Tuple.Create(formulaPrecursor, Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula),
                     Tuple.Create(formulaProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Formula),
-                    Tuple.Create(mzPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z),
+                    Tuple.Create(mzPrecursor, ModelResources.PasteDlg_UpdateMoleculeType_Precursor_m_z),
                     Tuple.Create(mzPrecursor, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z),
-                    Tuple.Create(mzProduct, Resources.PasteDlg_UpdateMoleculeType_Product_m_z),
+                    Tuple.Create(mzProduct, ModelResources.PasteDlg_UpdateMoleculeType_Product_m_z),
                     Tuple.Create(mzProduct, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z),
-                    Tuple.Create(chargePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Charge),
+                    Tuple.Create(chargePrecursor, ModelResources.PasteDlg_UpdateMoleculeType_Precursor_Charge),
                     Tuple.Create(chargePrecursor, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge),
                     Tuple.Create(chargeProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Charge),
                     Tuple.Create(adductPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct),
                     Tuple.Create(adductProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Adduct),
                     Tuple.Create(rtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time),
                     Tuple.Create(rtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Retention_Time),
-                    Tuple.Create(rtPrecursor, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_RT__min_), // ""RT (min)"
+                    Tuple.Create(rtPrecursor, ModelResources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_RT__min_), // ""RT (min)"
                     Tuple.Create(rtPrecursor, @"explicitretentiontime"),
                     Tuple.Create(rtPrecursor, @"precursorrt"),
                     Tuple.Create(rtWindowPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window),
@@ -2238,9 +2253,9 @@ namespace pwiz.Skyline.Model
                     Tuple.Create(rtWindowPrecursor, @"explicitretentiontimewindow"),
                     Tuple.Create(rtWindowPrecursor, @"precursorrtwindow"),
                     Tuple.Create(cePrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy),
-                    Tuple.Create(cePrecursor, Resources.PasteDlg_UpdateMoleculeType_Collision_Energy),
-                    Tuple.Create(dtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time__msec_),
-                    Tuple.Create(dtHighEnergyOffset, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time_High_Energy_Offset__msec_),
+                    Tuple.Create(cePrecursor, ModelResources.PasteDlg_UpdateMoleculeType_Collision_Energy),
+                    Tuple.Create(dtPrecursor, ModelResources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time__msec_),
+                    Tuple.Create(dtHighEnergyOffset, ModelResources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time_High_Energy_Offset__msec_),
                     Tuple.Create(imPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility),
                     Tuple.Create(imPrecursor, Resources.PasteDlg_UpdateMoleculeType_Ion_Mobility),
                     Tuple.Create(imPrecursor, @"explicitionmobility"),
@@ -2264,7 +2279,7 @@ namespace pwiz.Skyline.Model
                     Tuple.Create(compensationVoltage, @"CoV"),
                     Tuple.Create(ccsPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_),
                     Tuple.Create(ccsPrecursor, Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_),
-                    Tuple.Create(ccsPrecursor, Resources.PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_),
+                    Tuple.Create(ccsPrecursor, ModelResources.PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_),
                     Tuple.Create(ccsPrecursor, @"Collisional Cross Section"),
                     Tuple.Create(ccsPrecursor, @"Collision Cross Section"),
                     Tuple.Create(ccsPrecursor, @"CCS"),
@@ -2277,12 +2292,12 @@ namespace pwiz.Skyline.Model
                     Tuple.Create(coneVoltage, Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage),
                     Tuple.Create(compensationVoltage, Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage),
                     Tuple.Create(compensationVoltage, Resources.PasteDlg_UpdateMoleculeType_Compensation_Voltage),
-                    Tuple.Create(declusteringPotential, Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential),
+                    Tuple.Create(declusteringPotential, ModelResources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential),
                     Tuple.Create(declusteringPotential, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential),
-                    Tuple.Create(declusteringPotential, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Declustering_Potential),
+                    Tuple.Create(declusteringPotential, ModelResources.ImportTransitionListColumnSelectDlg_ComboChanged_Declustering_Potential),
                     Tuple.Create(note, Resources.PasteDlg_UpdateMoleculeType_Note),
                     Tuple.Create(labelType, Resources.PasteDlg_UpdateMoleculeType_Label_Type),
-                    Tuple.Create(labelType, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Label),
+                    Tuple.Create(labelType, ModelResources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Label),
                     Tuple.Create(idInChiKey, idInChiKey),
                     Tuple.Create(idCAS, idCAS),
                     Tuple.Create(idHMDB, idHMDB),

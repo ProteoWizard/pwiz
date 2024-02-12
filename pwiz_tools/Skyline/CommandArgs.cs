@@ -28,15 +28,18 @@ using System.Threading;
 using System.Web;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
+using pwiz.ProteomeDatabase.API;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Tools;
@@ -63,6 +66,9 @@ namespace pwiz.Skyline
         public static readonly Func<string> PATH_TO_CSV = () => GetPathToFile(TextUtil.EXT_CSV);
         public static readonly Func<string> PATH_TO_TSV = () => GetPathToFile(TextUtil.EXT_TSV);
         public static readonly Func<string> PATH_TO_IRTDB = () => GetPathToFile(IrtDb.EXT);
+        public static readonly Func<string> PATH_TO_PROTDB = () => GetPathToFile(ProteomeDb.EXT_PROTDB);
+        public static readonly Func<string> PATH_TO_BLIB = () => GetPathToFile(BiblioSpecLiteSpec.EXT);
+        public static readonly Func<string> PATH_TO_XML = () => GetPathToFile(DataSourceUtil.EXT_XML);
         public static readonly Func<string> PATH_TO_IMSDB = () => GetPathToFile(IonMobilityDb.EXT);
         public static readonly Func<string> PATH_TO_REPORT = () => GetPathToFile(ReportSpecList.EXT_REPORTS);
         public static readonly Func<string> PATH_TO_INSTALL = () => GetPathToFile(ToolDescription.EXT_INSTALL);
@@ -71,6 +77,7 @@ namespace pwiz.Skyline
         public static readonly Func<string> NUM_VALUE = () => CommandArgUsage.CommandArgs_NUM_VALUE;
         public static readonly Func<string> NUM_LIST_VALUE = () => CommandArgUsage.CommandArgs_NUM_LIST_VALUE;
         public static readonly Func<string> NAME_VALUE = () => CommandArgUsage.CommandArgs_NAME_VALUE;
+        public static readonly Func<string> ANNOTATION_VALUES_VALUE = () => CommandArgUsage.CommandArgs_ANNOTATION_VALUES_VALUE;
         public static readonly Func<string> FEATURE_NAME_VALUE = () => CommandArgUsage.CommandArgs_FEATURE_NAME_VALUE;
         public static readonly Func<string> REPORT_NAME_VALUE = () => CommandArgUsage.CommandArgs_REPORT_NAME_VALUE;
         public static readonly Func<string> PIPE_NAME_VALUE = () => CommandArgUsage.CommandArgs_PIPE_NAME_VALUE;
@@ -89,6 +96,7 @@ namespace pwiz.Skyline
         // ReSharper disable LocalizableElement
         public static readonly Func<string> INT_LIST_VALUE = () => "\"1, 2, 3...\"";  // Not L10N
         public static readonly Func<string> ION_TYPE_LIST_VALUE = () => "\"a, b, c, x, y, z, p\"";    // Not L10N
+        public static readonly Func<string> ANNOTATION_TARGET_LIST_VALUE = () => "\"protein, molecule_list, peptide, molecule, precursor, transition, replicate, precursor_result, transition_result\""; // Not L10N
 
         public static readonly Func<string> MZTOLERANCE_VALUE = () => "\"" + 0.5 + "mz or 15ppm\"";
         // ReSharper restore LocalizableElement
@@ -102,14 +110,21 @@ namespace pwiz.Skyline
         public static readonly HashSet<Func<string>> PATH_TYPE_VALUES = new HashSet<Func<string>>
         {
             PATH_TO_DOCUMENT, PATH_TO_FILE, PATH_TO_FOLDER, PATH_TO_ZIP, PATH_TO_REPORT, PATH_TO_TSV, PATH_TO_IMSDB,
-            PATH_TO_INSTALL, PATH_TO_CSV, PATH_TO_IRTDB
+            PATH_TO_INSTALL, PATH_TO_CSV, PATH_TO_IRTDB, PATH_TO_BLIB, PATH_TO_XML, PATH_TO_PROTDB
         };
 
         public static readonly HashSet<Func<string>> STRING_TYPE_VALUES = new HashSet<Func<string>>(new[]
         {
             FEATURE_NAME_VALUE, REPORT_NAME_VALUE, PIPE_NAME_VALUE, REGEX_VALUE, SERVER_URL_VALUE, USERNAME_VALUE,
-            PASSWORD_VALUE, COMMAND_VALUE, COMMAND_ARGUMENTS_VALUE, PROGRAM_MACRO_VALUE, LABEL_VALUE, NAME_VALUE
+            PASSWORD_VALUE, COMMAND_VALUE, COMMAND_ARGUMENTS_VALUE, PROGRAM_MACRO_VALUE, LABEL_VALUE, NAME_VALUE,
+            ANNOTATION_TARGET_LIST_VALUE, ANNOTATION_VALUES_VALUE
         }.Concat(PATH_TYPE_VALUES));
+
+        // For value examples that should wrap but do not contain '|' characters
+        public static readonly HashSet<Func<string>> WRAPPABLE_LIST_TYPE_VALUES = new HashSet<Func<string>>(new[]
+        {
+            ANNOTATION_TARGET_LIST_VALUE
+        });
 
         private static void SetCulture(string cultureName)
         {
@@ -127,13 +142,16 @@ namespace pwiz.Skyline
             (c, p) => c.HideAllChromatogramsGraph = true) {InternalUse = true};
         public static readonly Argument ARG_TEST_NOACG = new Argument(@"noacg",
             (c, p) => c.NoAllChromatogramsGraph = true) {InternalUse = true};
+        public static readonly Argument ARG_TEST_EXCEPTION = new Argument(@"exception",
+            (c, p) => c.IsTestExceptions = true) { InternalUse = true };
 
         private static readonly ArgumentGroup GROUP_INTERNAL = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_INTERNAL, false,
             ARG_INTERNAL_SCREEN_WIDTH, ARG_INTERNAL_CULTURE, ARG_INTERNAL_IMPORT_FILE_CACHE, ARG_INTERNAL_IMPORT_PROGRESS_PIPE,
-            ARG_TEST_UI, ARG_TEST_HIDEACG, ARG_TEST_NOACG);
+            ARG_TEST_UI, ARG_TEST_HIDEACG, ARG_TEST_NOACG, ARG_TEST_EXCEPTION);
 
         public bool HideAllChromatogramsGraph { get; private set; }
         public bool NoAllChromatogramsGraph { get; private set; }
+        public bool IsTestExceptions { get; private set; }
 
         // Conflict resolution values
         public const string ARG_VALUE_OVERWRITE = "overwrite";
@@ -180,7 +198,7 @@ namespace pwiz.Skyline
             {
                 if (!Directory.Exists(p.Value))
                 {
-                    c.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__The_specified_working_directory__0__does_not_exist_, p.Value);
+                    c.WriteLine(SkylineResources.CommandArgs_ParseArgsInternal_Error__The_specified_working_directory__0__does_not_exist_, p.Value);
                     return false;
                 }
                 Directory.SetCurrentDirectory(p.Value);
@@ -195,10 +213,12 @@ namespace pwiz.Skyline
         public const string ARG_VALUE_ASCII = "ascii";
         public const string ARG_VALUE_NO_BORDERS = "no-borders";
         public static readonly Argument ARG_VERSION = new Argument(@"version", (c, p) => c.Version());
+        public static readonly Argument ARG_VERBOSE_ERRORS =
+            new Argument(@"verbose-errors", (c, p) => c._out.IsVerboseExceptions = true);
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
             ARG_IN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_NEW, ARG_OVERWRITE, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
-            ARG_LOG_FILE, ARG_HELP, ARG_VERSION)
+            ARG_LOG_FILE, ARG_HELP, ARG_VERSION, ARG_VERBOSE_ERRORS)
         {
             Validate = c => c.ValidateGeneralArgs()
         };
@@ -438,7 +458,7 @@ namespace pwiz.Skyline
             }
             catch (Exception e)
             {
-                WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__Regular_expression__0__cannot_be_parsed_,
+                WriteLine(SkylineResources.CommandArgs_ParseArgsInternal_Error__Regular_expression__0__cannot_be_parsed_,
                     importNamingPatternVal);
                 WriteLine(e.Message);
                 return false;
@@ -690,7 +710,7 @@ namespace pwiz.Skyline
         private static readonly Argument ARG_REINTEGRATE_LOG_TRAINING = new DocArgument(@"reintegrate-log-training",
             (c, p) => c.IsLogTraining = true) {InternalUse = true};
         private static readonly Argument ARG_REINTEGRATE_EXCLUDE_FEATURE = new DocArgument(@"reintegrate-exclude-feature", FEATURE_NAME_VALUE,
-                (c, p) => c.ParseReintegrateExcludeFeature(p))
+                (c, p) => c.ParseExcludeFeature(p, c.ExcludeFeatures))
             { WrapValue = true };
 
         private static readonly ArgumentGroup GROUP_REINTEGRATE = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_REINTEGRATE_Reintegrate_with_advanced_peak_picking_models, false,
@@ -715,7 +735,7 @@ namespace pwiz.Skyline
         {
             if (ReintegrateModelType != ScoringModelType.mProphet && ExcludeFeatures.Count > 0)
             {
-                WriteLine(Resources.CommandLine_CreateUntrainedScoringModel_Error__Excluding_feature_scores_is_not_permitted_with_the_default_Skyline_model_);
+                WriteLine(SkylineResources.CommandLine_CreateUntrainedScoringModel_Error__Excluding_feature_scores_is_not_permitted_with_the_default_Skyline_model_);
                 return false;
             }
 
@@ -723,14 +743,14 @@ namespace pwiz.Skyline
             {
                 if (ReintegrateModelType == ScoringModelType.Skyline)
                 {
-                    WriteLine(Resources.CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs_cannot_be_applied_in_calibrating_the_Skyline_default_model_);
+                    WriteLine(SkylineResources.CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs_cannot_be_applied_in_calibrating_the_Skyline_default_model_);
                     return false;
                 }
 
                 double maxCutoff = MProphetPeakScoringModel.DEFAULT_CUTOFFS[0];
                 if (MonotonicallyDecreasing(ReintegrateModelCutoffs, maxCutoff))
                 {
-                    WriteLine(Resources.CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs___0___must_be_in_decreasing_order_greater_than_zero_and_less_than__1__, string.Join(
+                    WriteLine(SkylineResources.CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs___0___must_be_in_decreasing_order_greater_than_zero_and_less_than__1__, string.Join(
                         CultureInfo.CurrentCulture.TextInfo.ListSeparator, ReintegrateModelCutoffs.Select(c => c.ToString(CultureInfo.CurrentCulture))), maxCutoff);
                 }
             }
@@ -787,9 +807,19 @@ namespace pwiz.Skyline
             }
         }
 
-        private bool ParseReintegrateExcludeFeature(NameValuePair pair)
+        /// <summary>
+        /// Retrieve an array of all possible element handler names to be displayed to the user
+        /// </summary>
+        /// <returns>An array of all possible element handler names </returns>
+        public static string[] GetAllHandlerNames()
         {
-            string featureName = pair.Value;
+            var document = new SrmDocument(SrmSettingsList.GetDefault());
+            return CommandLine.GetAllHandlers(document).Select(handler => handler.Name).ToArray();
+        }
+
+        private bool ParseExcludeFeature(NameValuePair pair, ICollection<IPeakFeatureCalculator> featureList)
+        {
+            var featureName = pair.Value;
             var calc = PeakFeatureCalculator.Calculators.FirstOrDefault(c =>
                 Equals(featureName, c.HeaderName) || Equals(featureName, c.Name));
             if (calc == null)
@@ -803,14 +833,14 @@ namespace pwiz.Skyline
                     if (Equals(featureCalculator.HeaderName, featureCalculator.Name))
                         WriteLine(@"    {0}", featureCalculator.HeaderName);
                     else
-                        WriteLine(Resources.CommandArgs_ParseArgsInternal______0__or___1__, featureCalculator.HeaderName,
+                        WriteLine(SkylineResources.CommandArgs_ParseArgsInternal______0__or___1__, featureCalculator.HeaderName,
                             featureCalculator.Name);
                 }
 
                 return false;
             }
-
-            ExcludeFeatures.Add(calc);
+            
+            featureList.Add(calc);
             return true;
         }
 
@@ -860,7 +890,7 @@ namespace pwiz.Skyline
             (c, p) => c.Refinement.UseBestResult = true);
         // Refinement consistency tab
         public static readonly Argument ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF = new RefineArgument(@"refine-cv-remove-above-cutoff", NUM_VALUE,
-            (c,p) => c.Refinement.CVCutoff = p.ValueDouble >= 1 ? p.ValueDouble : p.ValueDouble * 100);  // If a value like 0.2, interpret as 20%
+            (c,p) => c.Refinement.CVCutoff = p.ValueDouble >= 1 ? p.ValueDouble : p.ValueDouble * 100){WrapValue = true};  // If a value like 0.2, interpret as 20%
         public static readonly Argument ARG_REFINE_CV_GLOBAL_NORMALIZE = new RefineArgument(@"refine-cv-global-normalize",
             new[] { NormalizationMethod.GLOBAL_STANDARDS.Name, NormalizationMethod.EQUALIZE_MEDIANS.Name, NormalizationMethod.TIC.Name },
             (c, p) =>
@@ -1033,6 +1063,132 @@ namespace pwiz.Skyline
         public bool ChromatogramsTics { get; private set; }
         public bool ExportingChromatograms { get { return !string.IsNullOrEmpty(ChromatogramsFile); } }
 
+        // For exporting other file types
+        public static readonly Argument ARG_SPECTRAL_LIBRARY_FILE = new DocArgument(@"exp-speclib-file", PATH_TO_BLIB,
+            (c, p) => c.SpecLibFile= p.ValueFullPath);
+        public static readonly Argument ARG_MPROPHET_FEATURES_FILE = new DocArgument(@"exp-mprophet-features", PATH_TO_CSV,
+            (c, p) => c.MProphetFeaturesFile = p.ValueFullPath);
+        public static readonly Argument ARG_MPROPHET_FEATURES_BEST_SCORING_PEAKS =
+            new DocArgument(@"exp-mprophet-best-peaks-only", (c, p) => c.MProphetUseBestScoringPeaks = true);
+        public static readonly Argument ARG_MPROPHET_FEATURES_TARGETS_ONLY =
+            new DocArgument(@"exp-mprophet-targets-only", (c, p) => c.MProphetTargetsOnly = true);
+        public static readonly Argument ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES = 
+            new DocArgument(@"exp-mprophet-exclude-feature", FEATURE_NAME_VALUE, 
+                (c, p) => c.ParseExcludeFeature(p, c.MProphetExcludeScores)) {WrapValue = true};
+        public static readonly Argument ARG_ANNOTATIONS_FILE = new DocArgument(@"exp-annotations", PATH_TO_CSV,
+            (c, p) => c.AnnotationsFile = p.ValueFullPath);
+        public static readonly Argument ARG_ANNOTATIONS_INCLUDE_OBJECTS =
+            new DocArgument(@"exp-annotations-include-object", GetAllHandlerNames(),
+                (c, p) => c.AnnotationsIncludeObjects.Add(p.Value)){WrapValue = true};
+        public static readonly Argument ARG_ANNOTATIONS_EXCLUDE_PROPERTIES =
+            new DocArgument(@"exp-annotations-include-properties",
+                (c, p) => c.AnnotationsIncludeProperties = true){WrapValue = true};
+        public static readonly Argument ARG_ANNOTATIONS_REMOVE_BLANK_ROWS =
+            new DocArgument(@"exp-annotations-remove-blank-rows", (c, p) => c.AnnotationsRemoveBlankRows = true);
+
+        private static readonly ArgumentGroup GROUP_OTHER_FILE_TYPES = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_OTHER_FILE_TYPES, false, 
+            ARG_SPECTRAL_LIBRARY_FILE, ARG_MPROPHET_FEATURES_FILE, ARG_MPROPHET_FEATURES_BEST_SCORING_PEAKS, ARG_MPROPHET_FEATURES_TARGETS_ONLY, 
+            ARG_MPROPHET_FEATURES_MPROPHET_EXCLUDE_SCORES, ARG_ANNOTATIONS_FILE, ARG_ANNOTATIONS_INCLUDE_OBJECTS, 
+            ARG_ANNOTATIONS_EXCLUDE_PROPERTIES, ARG_ANNOTATIONS_REMOVE_BLANK_ROWS
+        ) { LeftColumnWidth = 40 };
+
+        public string SpecLibFile { get; private set; }
+
+        public bool ExportingSpecLib { get { return !string.IsNullOrEmpty(SpecLibFile); } }
+
+        public string MProphetFeaturesFile { get; private set; }
+
+        public bool ExportingMProphetFeatures { get { return !string.IsNullOrEmpty(MProphetFeaturesFile); } }
+
+        public bool MProphetUseBestScoringPeaks { get; private set; }
+
+        public bool MProphetTargetsOnly { get; private set; }
+
+        public List<IPeakFeatureCalculator> MProphetExcludeScores { get; private set; }
+
+        // For adding annotations
+        public static readonly Argument ARG_ADD_ANNOTATIONS_FILE = new DocArgument(@"annotation-file",
+            PATH_TO_XML,
+            (c, p) => c.AddAnnotationsFile = p.ValueFullPath) {InternalUse = true};
+        public static readonly Argument ARG_ADD_ANNOTATIONS_NAME = new DocArgument(@"annotation-name", NAME_VALUE,
+            (c, p) => c.AddAnnotationsName = p.Value);
+        public static readonly Argument ARG_ADD_ANNOTATIONS_TARGETS = new DocArgument(@"annotation-targets",
+            ANNOTATION_TARGET_LIST_VALUE,
+            (c, p) => c.ParseAnnotationTargets(p.Value)){WrapValue = true};
+        public static readonly Argument ARG_ADD_ANNOTATIONS_TYPE = DocArgument.FromEnumType<AnnotationDef.AnnotationType>(@"annotation-type",
+            (c, p) => c.AddAnnotationsType = new ListPropertyType(p, null), false);
+        public static readonly Argument ARG_ADD_ANNOTATIONS_VALUES = new DocArgument(@"annotation-values", ANNOTATION_VALUES_VALUE,
+            (c, p) => c.ParseAnnotationValues(p.Value));
+        public static readonly Argument ARG_ADD_ANNOTATIONS_CONFLICT_RESOLUTION = new Argument(@"annotation-conflict-resolution",
+                new[] { ARG_VALUE_OVERWRITE, ARG_VALUE_SKIP },
+                (c, p) => c.AddAnnotationsResolveConflictsBySkipping = p.IsValue(ARG_VALUE_SKIP))
+            { WrapValue = true, InternalUse = true};
+
+
+        public static readonly ArgumentGroup GROUP_DOCUMENT_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_DOCUMENT_SETTINGS, false,
+                ARG_ADD_ANNOTATIONS_NAME, ARG_ADD_ANNOTATIONS_TARGETS, ARG_ADD_ANNOTATIONS_TYPE, ARG_ADD_ANNOTATIONS_VALUES, ARG_ADD_ANNOTATIONS_FILE, ARG_ADD_ANNOTATIONS_CONFLICT_RESOLUTION) 
+            { LeftColumnWidth = 36, Validate = c => c.ValidateAddAnnotationsArgs()};
+        public string AddAnnotationsFile { get; private set; }
+        public bool AddingAnnotationsFile { get { return !string.IsNullOrEmpty(AddAnnotationsFile) || !string.IsNullOrEmpty(AddAnnotationsName); } }
+        public string AddAnnotationsName { get; private set; }
+        public AnnotationDef.AnnotationTargetSet AddAnnotationsTargets { get; private set; }
+        public ListPropertyType AddAnnotationsType { get; private set; }
+        public string[] AddAnnotationsValues { get; private set; }
+        public bool ?AddAnnotationsResolveConflictsBySkipping { get; private set; }
+
+        private bool ValidateAddAnnotationsArgs()
+        {
+            // The user must specify a list of values if they are trying to define a value_list type annotation
+            var valueListName = AnnotationDef.AnnotationType.value_list.ToString();
+            if (Equals(valueListName, AddAnnotationsType.AnnotationType.ToString()) && AddAnnotationsValues.IsNullOrEmpty())
+            {
+                _out.WriteLine(
+                    Resources.CommandLine_AddAnnotationsFromArguments_Error__Cannot_add_a__0__type_annotation_without_providing_a_list_values_of_through__1__,
+                    valueListName, ARG_ADD_ANNOTATIONS_VALUES.ArgumentText);
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Parse a comma-separated list of values to be associated with a value_list
+        /// type annotation.
+        /// </summary>
+        /// <param name="commaSeparatedValues">A comma-separated of annotation values</param>
+        private void ParseAnnotationValues(string commaSeparatedValues)
+        {
+            AddAnnotationsValues =
+                ArrayUtil.Parse(commaSeparatedValues, Convert.ToString, TextUtil.SEPARATOR_CSV, null);
+        }
+
+        /// <summary>
+        /// Parse a comma-separated list of target types to apply an annotation to. Case-insensitive.
+        /// </summary>
+        /// <param name="annotationTargets">A comma-separated list of annotation targets specified by the user</param>
+        /// <exception cref="ValueInvalidAnnotationTargetListException">Thrown if no targets are
+        /// parsed from the list</exception>
+        private void ParseAnnotationTargets(string annotationTargets)
+        {
+            try
+            {
+                AddAnnotationsTargets = AnnotationDef.AnnotationTargetSet.Parse(annotationTargets.ToLowerInvariant());
+            }
+            catch (Exception)
+            {
+                throw new ValueInvalidAnnotationTargetListException(
+                    ARG_ADD_ANNOTATIONS_TARGETS, annotationTargets, ANNOTATION_TARGET_LIST_VALUE.Invoke());
+            }
+        }
+      
+        public string AnnotationsFile { get; private set; }
+
+        public bool ExportingAnnotations { get { return !string.IsNullOrEmpty(AnnotationsFile); } }
+
+        public List<string> AnnotationsIncludeObjects { get; private set; }
+
+        public bool AnnotationsIncludeProperties { get; private set; }
+
+        public bool AnnotationsRemoveBlankRows { get; private set; }
 
         // For publishing the document to Panorama
         public static readonly Argument ARG_PANORAMA_SERVER = new DocArgument(@"panorama-server", SERVER_URL_VALUE,
@@ -1074,13 +1230,13 @@ namespace pwiz.Skyline
                     return false;
                 }
 
-                var panoramaClient = new WebPanoramaClient(serverUri);
+                var panoramaClient = new WebPanoramaClient(serverUri, PanoramaUserName, PanoramaPassword);
                 var panoramaHelper = new PanoramaHelper(_out); // Helper writes messages for failures below
-                PanoramaServer = panoramaHelper.ValidateServer(panoramaClient, PanoramaUserName, PanoramaPassword);
+                PanoramaServer = panoramaHelper.ValidateServer(panoramaClient);
                 if (PanoramaServer == null)
                     return false;
 
-                if (!panoramaHelper.ValidateFolder(panoramaClient, PanoramaServer, PanoramaFolder))
+                if (!panoramaHelper.ValidateFolder(panoramaClient, PanoramaFolder))
                     return false;
 
                 PublishingToPanorama = true;
@@ -1130,16 +1286,15 @@ namespace pwiz.Skyline
                 _statusWriter = statusWriter;
             }
 
-            public PanoramaServer ValidateServer(IPanoramaClient panoramaClient, string panoramaUsername, string panoramaPassword)
+            public PanoramaServer ValidateServer(IPanoramaClient panoramaClient)
             {
                 try
                 {
-                    PanoramaUtil.VerifyServerInformation(panoramaClient, panoramaUsername, panoramaPassword);
-                    return new PanoramaServer(panoramaClient.ServerUri, panoramaUsername, panoramaPassword);
+                    return panoramaClient.ValidateServer();
                 }
                 catch (PanoramaServerException x)
                 {
-                    _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateServer_PanoramaServerException_, x.Message);
+                    _statusWriter.WriteLine(SkylineResources.PanoramaHelper_ValidateServer_PanoramaServerException_, x.Message);
                 }
                 catch (Exception x)
                 {
@@ -1149,21 +1304,21 @@ namespace pwiz.Skyline
                 return null;
             }
 
-            public bool ValidateFolder(IPanoramaClient panoramaClient, PanoramaServer server, string panoramaFolder)
+            public bool ValidateFolder(IPanoramaClient panoramaClient, string panoramaFolder)
             {
                 try
                 {
-                    PanoramaUtil.VerifyFolder(panoramaClient, server, panoramaFolder);
+                    panoramaClient.ValidateFolder(panoramaFolder, FolderPermission.insert);
                     return true;
                 }
                 catch (PanoramaServerException x)
                 {
-                    _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateFolder_PanoramaServerException_, x.Message);
+                    _statusWriter.WriteLine(SkylineResources.PanoramaHelper_ValidateFolder_PanoramaServerException_, x.Message);
                 }
                 catch (Exception x)
                 {
                     _statusWriter.WriteLine(
-                        Resources.PanoramaHelper_ValidateFolder_Exception_,
+                        SkylineResources.PanoramaHelper_ValidateFolder_Exception_,
                         panoramaFolder, panoramaClient.ServerUri,
                         x.Message);
                 }
@@ -1244,6 +1399,8 @@ namespace pwiz.Skyline
 
         public static readonly Argument ARG_AP_GROUP_PROTEINS = new Argument(@"associate-proteins-group-proteins",
             (c, p) => c.AssociateProteinsGroupProteins = p.IsNameOnly || bool.Parse(p.Value));
+        public static readonly Argument ARG_AP_GENE_LEVEL = new Argument(@"associate-proteins-gene-level-parsimony",
+            (c, p) => c.AssociateProteinsGeneLevelParsimony = p.IsNameOnly || bool.Parse(p.Value));
         public static readonly Argument ARG_AP_SHARED_PEPTIDES = DocArgument.FromEnumType<SharedPeptides>(@"associate-proteins-shared-peptides",
             (c, p) => c.AssociateProteinsSharedPeptides = p);
         public static readonly Argument ARG_AP_MINIMAL_LIST = new Argument(@"associate-proteins-minimal-protein-list",
@@ -1254,16 +1411,18 @@ namespace pwiz.Skyline
             (c, p) => c.AssociateProteinsMinPeptidesPerProtein = p.ValueInt) { WrapValue = true };
 
         private static readonly ArgumentGroup GROUP_ASSOCIATE_PROTEINS = new ArgumentGroup(() => Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins, false,
-            ARG_AP_GROUP_PROTEINS, ARG_AP_SHARED_PEPTIDES, ARG_AP_MINIMAL_LIST, ARG_AP_MIN_PEPTIDES, ARG_AP_REMOVE_SUBSETS)
+            ARG_AP_GROUP_PROTEINS, ARG_AP_GENE_LEVEL, ARG_AP_SHARED_PEPTIDES, ARG_AP_MINIMAL_LIST, ARG_AP_MIN_PEPTIDES, ARG_AP_REMOVE_SUBSETS)
             { LeftColumnWidth = 45 };
 
         public bool? AssociateProteinsGroupProteins { get; private set; }
+        public bool? AssociateProteinsGeneLevelParsimony { get; private set; }
         public bool? AssociateProteinsFindMinimalProteinList { get; private set; }
         public bool? AssociateProteinsRemoveSubsetProteins { get; private set; }
         public SharedPeptides? AssociateProteinsSharedPeptides { get; private set; }
         public int? AssociateProteinsMinPeptidesPerProtein { get; private set; }
         public bool AssociatingProteins => AssociateProteinsFindMinimalProteinList.HasValue ||
                                            AssociateProteinsGroupProteins.HasValue ||
+                                           AssociateProteinsGeneLevelParsimony.HasValue ||
                                            AssociateProteinsMinPeptidesPerProtein.HasValue ||
                                            AssociateProteinsRemoveSubsetProteins.HasValue ||
                                            AssociateProteinsSharedPeptides.HasValue;
@@ -1351,6 +1510,31 @@ namespace pwiz.Skyline
             (c, p) => c.FullScanRetentionTimeFilter = p);
         public static readonly Argument ARG_FULL_SCAN_RT_FILTER_TOLERANCE = new DocArgument(@"full-scan-rt-filter-tolerance", MINUTES_VALUE,
             (c, p) => c.FullScanRetentionTimeFilterLength = p.ValueDouble) { WrapValue = true };
+
+        public static readonly Argument ARG_PEPTIDE_MIN_LENGTH = new DocArgument(@"pep-min-length", INT_VALUE,
+            (c, p) => c.PeptideFilterMinLength = p.GetValueInt(PeptideFilter.MIN_MIN_LENGTH, PeptideFilter.MAX_MIN_LENGTH));
+        public static readonly Argument ARG_PEPTIDE_MAX_LENGTH = new DocArgument(@"pep-max-length", INT_VALUE,
+            (c, p) => c.PeptideFilterMaxLength = p.GetValueInt(PeptideFilter.MIN_MAX_LENGTH, PeptideFilter.MAX_MAX_LENGTH));
+        public static readonly Argument ARG_PEPTIDE_EXCLUDE_NTERMINAL_AAS = new DocArgument(@"pep-exclude-nterminal-aas", INT_VALUE,
+            (c, p) => c.PeptideFilterExcludeNTerminalAAs = p.GetValueInt(PeptideFilter.MIN_EXCLUDE_NTERM_AA, PeptideFilter.MAX_EXCLUDE_NTERM_AA));
+        public static readonly Argument ARG_PEPTIDE_EXCLUDE_POTENTIAL_RAGGED_ENDS = new DocArgument(@"pep-exclude-potential-ragged-ends",
+            (c, p) => c.PeptideFilterExcludePotentialRaggedEnds = p.IsNameOnly || bool.Parse(p.Value))
+            { OptionalValue = true };
+
+        public static readonly Argument ARG_PEPTIDE_ENZYME_NAME = new DocArgument(@"pep-digest-enzyme", () => Settings.Default.EnzymeList.Select(e => e.Name).ToArray(),
+            (c, p) => c.PeptideDigestEnzymeName = p.Value)
+            { WrapValue = true };
+        public static readonly Argument ARG_PEPTIDE_MAX_MISSED_CLEAVAGES = new DocArgument(@"pep-max-missed-cleavages", INT_VALUE,
+            (c, p) => c.PeptideDigestMaxMissedCleavages = p.GetValueInt(DigestSettings.MIN_MISSED_CLEAVAGES, DigestSettings.MAX_MISSED_CLEAVAGES));
+        public static readonly Argument ARG_PEPTIDE_UNIQUE_BY = DocArgument.FromEnumType<PeptideFilter.PeptideUniquenessConstraint>(@"pep-unique-by",
+            (c, p) => c.PeptideDigestUniquenessConstraint = p);
+        public static readonly Argument ARG_BGPROTEOME_NAME = new DocArgument(@"background-proteome-name",
+                () => Argument.ValuesToExample(Settings.Default.BackgroundProteomeList.Select(p => p.Name)
+                    .Append(SkylineResources.CommandArgs_ARG_BGPROTEOME_NAME_name_to_give_protdb_imported_by___background_proteome_file)),
+                (c, p) => c.BackgroundProteomeName = p.Value)
+            { WrapValue = true };
+        public static readonly Argument ARG_BGPROTEOME_PATH = new DocArgument(@"background-proteome-file", PATH_TO_PROTDB, (c, p) => c.BackgroundProteomePath = p.Value);
+
         public static readonly Argument ARG_IMS_LIBRARY_RES = new DocArgument(@"ims-library-res", RP_VALUE,
                 (c, p) => c.IonMobilityLibraryRes = p.ValueDouble);
 
@@ -1371,7 +1555,7 @@ namespace pwiz.Skyline
                 (c, p) => c.InstrumentIsTriggeredChromatogramAcquisition = p.IsNameOnly || bool.Parse(p.Value))
             { OptionalValue = true };
 
-        private static readonly ArgumentGroup GROUP_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_SETTINGS_Document_Settings, false,
+        private static readonly ArgumentGroup GROUP_TRANSITION_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_SETTINGS_Transition_Settings, false,
             ARG_TRAN_PRECURSOR_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_TYPES,
             ARG_TRAN_PRODUCT_START_ION, ARG_TRAN_PRODUCT_END_ION, ARG_TRAN_PRODUCT_SPECIAL_IONS_CLEAR, ARG_TRAN_PRODUCT_SPECIAL_IONS_ADD,
             ARG_TRAN_PREDICT_CE, ARG_TRAN_PREDICT_DP, ARG_TRAN_PREDICT_COV, ARG_TRAN_PREDICT_OPTDB,
@@ -1403,6 +1587,27 @@ namespace pwiz.Skyline
                 {
                     c.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_,
                         c.FullScanProductIsolationScheme, ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME.ArgumentText, ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME.ValueExample());
+                    return false;
+                }
+
+                return true;
+            }
+        };
+
+        private static readonly ArgumentGroup GROUP_PEPTIDE_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_SETTINGS_Peptide_Settings, false,
+            ARG_PEPTIDE_ENZYME_NAME, ARG_PEPTIDE_MAX_MISSED_CLEAVAGES, ARG_PEPTIDE_UNIQUE_BY, ARG_BGPROTEOME_NAME, ARG_BGPROTEOME_PATH,
+            ARG_PEPTIDE_MIN_LENGTH, ARG_PEPTIDE_MAX_LENGTH, ARG_PEPTIDE_EXCLUDE_NTERMINAL_AAS, ARG_PEPTIDE_EXCLUDE_POTENTIAL_RAGGED_ENDS)
+        {
+            LeftColumnWidth = 40,
+            Validate = c =>
+            {
+                // if BackgroundProteomePath is not set, BackgroundProteomeName must be one of the existing BackgroundProteomeList
+                if (c.BackgroundProteomePath == null &&
+                    c.BackgroundProteomeName != null &&
+                    !Settings.Default.BackgroundProteomeList.Contains(p => p.Name == c.BackgroundProteomeName))
+                {
+                    c.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_,
+                        c.BackgroundProteomeName, ARG_BGPROTEOME_NAME.ArgumentText, string.Join(@", ", Settings.Default.BackgroundProteomeList.Select(p => p.Name)));
                     return false;
                 }
 
@@ -1479,7 +1684,8 @@ namespace pwiz.Skyline
                        FilterProductTypes != null ||
                        FilterStartProductIon != null ||
                        FilterEndProductIon != null ||
-                       FilterUseDIAWindowExclusion != null;
+                       FilterUseDIAWindowExclusion != null ||
+                       FilterSpecialIons != null;
             }
         }
 
@@ -1548,6 +1754,28 @@ namespace pwiz.Skyline
                            ?? FullScanRetentionTimeFilterLength).HasValue;
             }
         }
+
+        public int? PeptideFilterMinLength { get; private set; }
+        public int? PeptideFilterMaxLength { get; private set; }
+        public int? PeptideFilterExcludeNTerminalAAs { get; private set; }
+        public bool? PeptideFilterExcludePotentialRaggedEnds { get; private set; }
+
+        public bool PeptideFilterSettings => PeptideFilterExcludeNTerminalAAs.HasValue ||
+                                             PeptideFilterExcludePotentialRaggedEnds.HasValue ||
+                                             PeptideFilterMaxLength.HasValue ||
+                                             PeptideFilterMinLength.HasValue;
+
+        public string PeptideDigestEnzymeName { get; private set; }
+        public int? PeptideDigestMaxMissedCleavages { get; private set; }
+        public string BackgroundProteomeName { get; private set; }
+        public string BackgroundProteomePath { get; private set; }
+        public PeptideFilter.PeptideUniquenessConstraint? PeptideDigestUniquenessConstraint { get; private set; }
+
+        public bool PeptideDigestSettings => PeptideDigestEnzymeName != null ||
+                                             PeptideDigestMaxMissedCleavages.HasValue ||
+                                             BackgroundProteomeName != null ||
+                                             BackgroundProteomePath != null ||
+                                             PeptideDigestUniquenessConstraint.HasValue;
 
         public double? IonMobilityLibraryRes { get; private set; }
 
@@ -1621,7 +1849,7 @@ namespace pwiz.Skyline
             var spliced = pair.Value.Split(',');
             if (spliced.Length > 2)
             {
-                WriteLine(Resources.CommandArgs_ParseArgsInternal_Warning__Incorrect_Usage_of_the___tool_program_macro_command_);
+                WriteLine(SkylineResources.CommandArgs_ParseArgsInternal_Warning__Incorrect_Usage_of_the___tool_program_macro_command_);
             }
             else
             {
@@ -1663,13 +1891,13 @@ namespace pwiz.Skyline
             }
         }
 
-        private static readonly ArgumentGroup GROUP_TOOLS = new ArgumentGroup(() => Resources.CommandArgs_GROUP_TOOLS_Tools_Installation, false,
+        private static readonly ArgumentGroup GROUP_TOOLS = new ArgumentGroup(() => SkylineResources.CommandArgs_GROUP_TOOLS_Tools_Installation, false,
             ARG_TOOL_ADD, ARG_TOOL_COMMAND, ARG_TOOL_ARGUMENTS, ARG_TOOL_INITIAL_DIR, ARG_TOOL_CONFLICT_RESOLUTION,
             ARG_TOOL_REPORT, ARG_TOOL_OUTPUT_TO_IMMEDIATE_WINDOW, ARG_TOOL_ADD_ZIP, ARG_TOOL_ZIP_CONFLICT_RESOLUTION,
             ARG_TOOL_ZIP_OVERWRITE_ANNOTATIONS, ARG_TOOL_PROGRAM_MACRO, ARG_TOOL_PROGRAM_PATH,
             ARG_TOOL_IGNORE_REQUIRED_PACKAGES, ARG_TOOL_LIST_EXPORT)
         {
-            Preamble = () => Resources.CommandArgs_GROUP_TOOLS_The_arguments_below_can_be_used_to_install_tools_onto_the_Tools_menu_and_do_not_rely_on_the____in__argument_because_they_independent_of_a_specific_Skyline_document_,
+            Preamble = () => SkylineResources.CommandArgs_GROUP_TOOLS_The_arguments_below_can_be_used_to_install_tools_onto_the_Tools_menu_and_do_not_rely_on_the____in__argument_because_they_independent_of_a_specific_Skyline_document_,
         };
 
         public bool InstallingToolsFromZip { get; private set; }
@@ -1712,7 +1940,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    throw new ArgumentException(string.Format(Resources.CommandArgs_IsolationListInstrumentType_The_instrument_type__0__is_not_valid_for_isolation_list_export, value));
+                    throw new ArgumentException(string.Format(SkylineResources.CommandArgs_IsolationListInstrumentType_The_instrument_type__0__is_not_valid_for_isolation_list_export, value));
                 }
             }
         }
@@ -1734,7 +1962,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    throw new ArgumentException(string.Format(Resources.CommandArgs_TransListInstrumentType_The_instrument_type__0__is_not_valid_for_transition_list_export, value));
+                    throw new ArgumentException(string.Format(SkylineResources.CommandArgs_TransListInstrumentType_The_instrument_type__0__is_not_valid_for_transition_list_export, value));
                 }
             }
         }
@@ -1753,7 +1981,7 @@ namespace pwiz.Skyline
             catch (ArgumentException)
             {
                 WriteInstrumentValueError(pair, ExportInstrumentType.ISOLATION_LIST_TYPES);
-                WriteLine(Resources.CommandArgs_ParseArgsInternal_No_isolation_list_will_be_exported_);
+                WriteLine(SkylineResources.CommandArgs_ParseArgsInternal_No_isolation_list_will_be_exported_);
             }
         }
 
@@ -1766,13 +1994,13 @@ namespace pwiz.Skyline
             catch (ArgumentException)
             {
                 WriteInstrumentValueError(pair, ExportInstrumentType.TRANSITION_LIST_TYPES);
-                WriteLine(Resources.CommandArgs_ParseArgsInternal_No_transition_list_will_be_exported_);
+                WriteLine(SkylineResources.CommandArgs_ParseArgsInternal_No_transition_list_will_be_exported_);
             }
         }
 
         private void WriteInstrumentValueError(NameValuePair pair, string[] listInstrumentTypes)
         {
-            WriteLine(Resources.CommandArgs_ParseArgsInternal_Warning__The_instrument_type__0__is_not_valid__Please_choose_from_,
+            WriteLine(SkylineResources.CommandArgs_ParseArgsInternal_Warning__The_instrument_type__0__is_not_valid__Please_choose_from_,
                 pair.Value);
             foreach (string str in listInstrumentTypes)
                 WriteLine(str);
@@ -1798,7 +2026,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    throw new ArgumentException(string.Format(Resources.CommandArgs_MethodInstrumentType_The_instrument_type__0__is_not_valid_for_method_export, value));
+                    throw new ArgumentException(string.Format(SkylineResources.CommandArgs_MethodInstrumentType_The_instrument_type__0__is_not_valid_for_method_export, value));
                 }
             }
         }
@@ -1819,7 +2047,7 @@ namespace pwiz.Skyline
             catch (ArgumentException)
             {
                 WriteInstrumentValueError(pair, ExportInstrumentType.METHOD_TYPES);
-                WriteLine(Resources.CommandArgs_ParseArgsInternal_No_method_will_be_exported_);
+                WriteLine(SkylineResources.CommandArgs_ParseArgsInternal_No_method_will_be_exported_);
             }
         }
 
@@ -1919,7 +2147,7 @@ namespace pwiz.Skyline
                 case OPT_DP:
                     return ExportOptimize.DP;
                 default:
-                    throw new ArgumentException(string.Format(Resources.CommandArgs_ToOptimizeString_The_instrument_parameter__0__is_not_valid_for_optimization_, value));
+                    throw new ArgumentException(string.Format(SkylineResources.CommandArgs_ToOptimizeString_The_instrument_parameter__0__is_not_valid_for_optimization_, value));
             }
         }
 
@@ -1949,7 +2177,7 @@ namespace pwiz.Skyline
             {
                 if (value < AbstractMassListExporter.PRIMARY_COUNT_MIN || value > AbstractMassListExporter.PRIMARY_COUNT_MAX)
                 {
-                    throw new ArgumentException(string.Format(Resources.CommandArgs_PrimaryTransitionCount_The_primary_transition_count__0__must_be_between__1__and__2__, value, AbstractMassListExporter.PRIMARY_COUNT_MIN, AbstractMassListExporter.PRIMARY_COUNT_MAX));
+                    throw new ArgumentException(string.Format(SkylineResources.CommandArgs_PrimaryTransitionCount_The_primary_transition_count__0__must_be_between__1__and__2__, value, AbstractMassListExporter.PRIMARY_COUNT_MIN, AbstractMassListExporter.PRIMARY_COUNT_MAX));
                 }
                 _primaryTransitionCount = value;
             }
@@ -1963,7 +2191,7 @@ namespace pwiz.Skyline
             {
                 if (value < AbstractMassListExporter.DWELL_TIME_MIN || value > AbstractMassListExporter.DWELL_TIME_MAX)
                 {
-                    throw new ArgumentException(string.Format(Resources.CommandArgs_DwellTime_The_dwell_time__0__must_be_between__1__and__2__, value, AbstractMassListExporter.DWELL_TIME_MIN, AbstractMassListExporter.DWELL_TIME_MAX));
+                    throw new ArgumentException(string.Format(SkylineResources.CommandArgs_DwellTime_The_dwell_time__0__must_be_between__1__and__2__, value, AbstractMassListExporter.DWELL_TIME_MIN, AbstractMassListExporter.DWELL_TIME_MAX));
                 }
                 _dwellTime = value;
             }
@@ -1980,7 +2208,7 @@ namespace pwiz.Skyline
                 // Not inclusive of minimum, because it was made zero
                 if (value <= AbstractMassListExporter.RUN_LENGTH_MIN || value > AbstractMassListExporter.RUN_LENGTH_MAX)
                 {
-                    throw new ArgumentException(string.Format(Resources.CommandArgs_RunLength_The_run_length__0__must_be_between__1__and__2__, value, AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX));
+                    throw new ArgumentException(string.Format(SkylineResources.CommandArgs_RunLength_The_run_length__0__must_be_between__1__and__2__, value, AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX));
                 }
                 _runLength = value;
             }
@@ -2061,12 +2289,15 @@ namespace pwiz.Skyline
                     GROUP_REFINEMENT_W_RESULTS,
                     GROUP_REPORT,
                     GROUP_CHROMATOGRAM,
+                    GROUP_OTHER_FILE_TYPES,
                     GROUP_LISTS,
                     GROUP_METHOD,
                     GROUP_EXP_GENERAL,
                     GROUP_EXP_INSTRUMENT,
                     GROUP_PANORAMA,
-                    GROUP_SETTINGS,
+                    GROUP_DOCUMENT_SETTINGS,
+                    GROUP_PEPTIDE_SETTINGS,
+                    GROUP_TRANSITION_SETTINGS,
                     GROUP_TOOLS
                 };
             }
@@ -2144,6 +2375,13 @@ namespace pwiz.Skyline
             ExcludeFeatures = new List<IPeakFeatureCalculator>();
             SharedFileType = ShareType.DEFAULT;
 
+            MProphetExcludeScores = new List<IPeakFeatureCalculator>();
+            AnnotationsIncludeObjects = new List<string>();
+
+            AddAnnotationsTargets = new AnnotationDef.AnnotationTargetSet();
+            AddAnnotationsResolveConflictsBySkipping = false;
+            AddAnnotationsType = ListPropertyType.TEXT;
+
             ImportBeforeDate = null;
             ImportOnOrAfterDate = null;
         }
@@ -2205,7 +2443,7 @@ namespace pwiz.Skyline
                 }
             }
             // Unmatched argument
-            WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__Unexpected_argument____0_, pair.Name);
+            WriteLine(SkylineResources.CommandArgs_ParseArgsInternal_Error__Unexpected_argument____0_, pair.Name);
             return false;
         }
 
@@ -2246,7 +2484,7 @@ namespace pwiz.Skyline
             var requiredArgsText = new List<string>()
             {
                 string.Format(
-                    Resources
+                    SkylineResources
                         .CommandArgs_WarnArgRequirementText_Use_of_the_argument__0__requires_one_of_the_following_arguments_,
                     usedArg.ArgumentText)
             };
@@ -2261,7 +2499,7 @@ namespace pwiz.Skyline
 
         public static string ErrorArgsExclusiveText(Argument arg1, Argument arg2)
         {
-            return string.Format(Resources.CommandArgs_ErrorArgsExclusiveText_Error__The_arguments__0__and__1__options_cannot_be_used_together_,
+            return string.Format(SkylineResources.CommandArgs_ErrorArgsExclusiveText_Error__The_arguments__0__and__1__options_cannot_be_used_together_,
                 arg1.ArgumentText, arg2.ArgumentText);
         }
 
@@ -2475,12 +2713,12 @@ namespace pwiz.Skyline
             {
             }
 
-            public static DocArgument FromEnumType<TEnum>(string name, Action<CommandArgs, TEnum> processValue)
+            public static DocArgument FromEnumType<TEnum>(string name, Action<CommandArgs, TEnum> processValue, bool wrapValue = true) where TEnum : Enum
             {
                 var enumType = typeof(TEnum);
                 return new DocArgument(name, () => Enum.GetNames(enumType),
-                        (c, p) => processValue(c, (TEnum) Enum.Parse(enumType, p.Value)))
-                    { WrapValue = true };
+                        (c, p) => processValue(c, (TEnum) Enum.Parse(enumType, p.Value, true)))
+                    { WrapValue = wrapValue };
             }
 
             private static bool ProcessValueOverride(CommandArgs c, NameValuePair p, Func<CommandArgs, NameValuePair, bool> processValue)
@@ -2830,7 +3068,7 @@ namespace pwiz.Skyline
                     if (hasAppliesTo)
                         sb.Append("<td>").Append(commandArg.AppliesTo != null ? HtmlEncode(commandArg.AppliesTo) : "&nbsp;").Append("</td>");
                     string argDescription = HtmlEncode(commandArg.ArgumentDescription);
-                    if (!argDescription.Contains('|'))
+                    if (!argDescription.Contains('|') && !WRAPPABLE_LIST_TYPE_VALUES.Contains(commandArg.ValueExample))
                         argDescription = argDescription.Replace(" ", "&nbsp;");
                     argDescription = argDescription.Replace(Environment.NewLine, "<br/>");
                     sb.Append("<td>").Append(argDescription).Append("</td>");
@@ -2951,6 +3189,14 @@ namespace pwiz.Skyline
         {
             public ValueInvalidIonTypeListException(Argument arg, string value)
                 : base(string.Format(Resources.ValueInvalidIonTypeListException_ValueInvalidIonTypeListException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_fragment_ion_types__a__b__c__x__y__z__p__, value, arg.ArgumentText))
+            {
+            }
+        }
+
+        public class ValueInvalidAnnotationTargetListException : UsageException
+        {
+            public ValueInvalidAnnotationTargetListException(Argument arg, string value, string annotationTargets)
+                : base(string.Format(SkylineResources.ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___, value, arg.ArgumentText, annotationTargets))
             {
             }
         }

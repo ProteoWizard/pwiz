@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -129,13 +129,13 @@ namespace pwiz.Skyline.Model
                     {
                         if (_countIons > SrmDocument.MaxTransitionCount)
                         {
-                            throw new InvalidDataException(TextUtil.LineSeparate(string.Format(Resources.FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__transitions_in__1_n0__peptides_at_line__2_n0__,
-                                SrmDocument.MaxTransitionCount, _countPeptides, linesRead), Resources.FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_and_restrictive_enough_transition_selection_));
+                            throw new InvalidDataException(TextUtil.LineSeparate(string.Format(ModelResources.FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__transitions_in__1_n0__peptides_at_line__2_n0__,
+                                SrmDocument.MaxTransitionCount, _countPeptides, linesRead), ModelResources.FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_and_restrictive_enough_transition_selection_));
                         }
                         else if (_countPeptides > SrmDocument.MAX_PEPTIDE_COUNT)
                         {
-                            throw new InvalidDataException(TextUtil.LineSeparate(string.Format(Resources.FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__peptides_at_line__1_n0__,
-                                SrmDocument.MAX_PEPTIDE_COUNT, linesRead), Resources.FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_));
+                            throw new InvalidDataException(TextUtil.LineSeparate(string.Format(ModelResources.FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__peptides_at_line__1_n0__,
+                                SrmDocument.MAX_PEPTIDE_COUNT, linesRead), ModelResources.FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_));
                         }
                     }
                     try
@@ -149,18 +149,18 @@ namespace pwiz.Skyline.Model
                     }
                     catch (Exception x)
                     {
-                        throw new InvalidDataException(string.Format(Resources.FastaImporter_Import_Error_at_or_around_line__0____1_, linesRead, x.Message), x);
+                        throw new InvalidDataException(string.Format(ModelResources.FastaImporter_Import_Error_at_or_around_line__0____1_, linesRead, x.Message), x);
                     }
 
                     if (progressMonitor != null)
                     {
-                        string message = string.Format(Resources.FastaImporter_Import_Adding_protein__0__,
+                        string message = string.Format(ModelResources.FastaImporter_Import_Adding_protein__0__,
                             seqBuilder.Name);
                         int newPeptideCount = _countPeptides - originalPeptideCount;
                         if (newPeptideCount > 0)
                         {
                             message = TextUtil.LineSeparate(message,
-                                string.Format(Resources.FastaImporter_Import__0__proteins_and__1__peptides_added, peptideGroupsNew.Count,
+                                string.Format(ModelResources.FastaImporter_Import__0__proteins_and__1__peptides_added, peptideGroupsNew.Count,
                                     newPeptideCount));
                         }
                         progressMonitor.UpdateProgress(status = status.ChangeMessage(message));
@@ -271,7 +271,7 @@ namespace pwiz.Skyline.Model
                 lineNum++;
                 string[] columns = line.Split(separator);
                 if (columns.Length < 2)
-                    throw new LineColNumberedIoException(Resources.FastaImporter_ToFasta_Too_few_columns_found, lineNum, -1);
+                    throw new LineColNumberedIoException(ModelResources.FastaImporter_ToFasta_Too_few_columns_found, lineNum, -1);
                 int fastaCol = columns.Length - 1;  // Start with assumption of Name Description Sequence
                 string seq = columns[fastaCol].Trim();
                 if ((fastaCol > 2) && (!FastaSequence.IsExSequence(seq)))
@@ -282,7 +282,7 @@ namespace pwiz.Skyline.Model
                 }
                 if (!FastaSequence.IsExSequence(seq))
                     throw new LineColNumberedIoException(
-                        Resources.FastaImporter_ToFasta_Last_column_does_not_contain_a_valid_protein_sequence, lineNum,
+                        ModelResources.FastaImporter_ToFasta_Last_column_does_not_contain_a_valid_protein_sequence, lineNum,
                         fastaCol);
                 sb.Append(@">").Append(columns[0].Trim().Replace(@" ", @"_")); // ID
                 for (int i = 1; i < fastaCol; i++)
@@ -464,7 +464,7 @@ namespace pwiz.Skyline.Model
 
         public bool PreImport(IProgressMonitor progressMonitor, ColumnIndices indices, bool tolerateErrors, bool rowReadRequired = false, SrmDocument.DOCUMENT_TYPE defaultDocumentType = SrmDocument.DOCUMENT_TYPE.none)
         {
-            IProgressStatus status = new ProgressStatus(Resources.MassListImporter_Import_Reading_transition_list).ChangeSegments(0, 3);
+            IProgressStatus status = new ProgressStatus(ModelResources.MassListImporter_Import_Reading_transition_list).ChangeSegments(0, 3);
             // Get the lines used to guess the necessary columns and create the row reader
             if (progressMonitor != null)
             {
@@ -493,7 +493,7 @@ namespace pwiz.Skyline.Model
                 // Check first line for validity
                 var line = lines.FirstOrDefault();
                 if (string.IsNullOrEmpty(line))
-                    throw new InvalidDataException(Resources.MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_least_precursor_m_z_product_m_z_and_peptide_sequence);
+                    throw new InvalidDataException(ModelResources.MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_least_precursor_m_z_product_m_z_and_peptide_sequence);
 
                 // If no numeric columns in the first row
                 if (rowReadRequired)
@@ -515,7 +515,7 @@ namespace pwiz.Skyline.Model
             {
                 if (progressMonitor.IsCanceled)
                     return false;
-                progressMonitor.UpdateProgress(status = status.ChangeMessage(Resources.MassListImporter_Import_Inspecting_peptide_sequence_information));
+                progressMonitor.UpdateProgress(status = status.ChangeMessage(ModelResources.MassListImporter_Import_Inspecting_peptide_sequence_information));
             }
             if (indices != null)
             {
@@ -567,7 +567,7 @@ namespace pwiz.Skyline.Model
             // Check first line for validity
             var line = lines.FirstOrDefault();
             if (string.IsNullOrEmpty(line))
-                throw new InvalidDataException(Resources
+                throw new InvalidDataException(ModelResources
                     .MassListImporter_Import_Invalid_transition_list_Transition_lists_must_contain_at_least_precursor_m_z_product_m_z_and_peptide_sequence);
             var indices = ColumnIndices.FromLine(line, Separator, s => GetColumnType(s, FormatProvider));
             if (indices.Headers != null)
@@ -645,7 +645,7 @@ namespace pwiz.Skyline.Model
                     int percentComplete = (_linesSeen * PERCENT_READER / lines.Count);
                     if (status.PercentComplete != percentComplete)
                     {
-                        string message = string.Format(Resources.MassListImporter_Import_Importing__0__,
+                        string message = string.Format(ModelResources.MassListImporter_Import_Importing__0__,
                             RowReader.TransitionInfo.ProteinName ?? RowReader.TransitionInfo.PeptideSequence);
                         progressMonitor.UpdateProgress(status = status.ChangePercentComplete(percentComplete).ChangeMessage(message));
                     }
@@ -759,7 +759,7 @@ namespace pwiz.Skyline.Model
                     {
                         // TODO(brendanx): Switch to new message for 20.1 "Merging lists and targets"
                         progressMonitor.UpdateProgress(status = status.ChangePercentComplete(percentComplete)
-                            .ChangeMessage(Resources.MassListImporter_Import_Reading_transition_list));
+                            .ChangeMessage(ModelResources.MassListImporter_Import_Reading_transition_list));
                     }
                 }
             }
@@ -1000,7 +1000,7 @@ namespace pwiz.Skyline.Model
                     if (imUnits == eIonMobilityUnits.none)
                     {
                         ionMobility = null;
-                        return Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Missing_ion_mobility_units;
+                        return ModelResources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Missing_ion_mobility_units;
                     }
                     declarations[imUnits] = im;
                 }
@@ -1075,7 +1075,7 @@ namespace pwiz.Skyline.Model
                 Fields = line.ParseDsvFields(Separator);
 
                 if (PeptideColumn == -1)
-                    return new TransitionImportErrorInfo(Resources.MassListRowReader_NextRow_No_peptide_sequence_column_specified, null, lineNum, line);
+                    return new TransitionImportErrorInfo(ModelResources.MassListRowReader_NextRow_No_peptide_sequence_column_specified, null, lineNum, line);
 
                 ExTransitionInfo info;
                 try
@@ -1102,8 +1102,8 @@ namespace pwiz.Skyline.Model
                 }
                 if (!info.DefaultLabelType.IsLight && !IsHeavyTypeAllowed(info.DefaultLabelType))
                 {
-                    return new TransitionImportErrorInfo(TextUtil.SpaceSeparate(Resources.MassListRowReader_NextRow_Isotope_labeled_entry_found_without_matching_settings_,
-                            Resources.MassListRowReader_NextRow_Check_the_Modifications_tab_in_Transition_Settings),
+                    return new TransitionImportErrorInfo(TextUtil.SpaceSeparate(ModelResources.MassListRowReader_NextRow_Isotope_labeled_entry_found_without_matching_settings_,
+                            ModelResources.MassListRowReader_NextRow_Check_the_Modifications_tab_in_Transition_Settings),
                                                          LabelTypeColumn,
                                                          lineNum, line);
                 }
@@ -1205,7 +1205,7 @@ namespace pwiz.Skyline.Model
                 else if (!Settings.TransitionSettings.Instrument.IsMeasurable(precursorMz))
                 {
                     precursorMz = Math.Round(SequenceMassCalc.PersistentMZ(precursorMz), MZ_ROUND_DIGITS);
-                    errorInfo = new TransitionImportErrorInfo(TextUtil.SpaceSeparate(string.Format(Resources.MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_out_of_range_for_the_instrument_settings_,
+                    errorInfo = new TransitionImportErrorInfo(TextUtil.SpaceSeparate(string.Format(ModelResources.MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_out_of_range_for_the_instrument_settings_,
                                 precursorMz, info.PeptideSequence),
                             Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings),
                                                               PrecursorColumn,
@@ -1215,9 +1215,9 @@ namespace pwiz.Skyline.Model
                 else if (!Settings.TransitionSettings.IsMeasurablePrecursor(precursorMz))
                 {
                     precursorMz = Math.Round(SequenceMassCalc.PersistentMZ(precursorMz), MZ_ROUND_DIGITS);
-                    errorInfo = new TransitionImportErrorInfo(TextUtil.SpaceSeparate(string.Format(Resources.MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_outside_the_range_covered_by_the_DIA_isolation_scheme_,
+                    errorInfo = new TransitionImportErrorInfo(TextUtil.SpaceSeparate(string.Format(ModelResources.MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_outside_the_range_covered_by_the_DIA_isolation_scheme_,
                                 precursorMz, info.PeptideSequence),
-                            Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_isolation_scheme_in_the_full_scan_settings_),
+                            ModelResources.MassListRowReader_CalcPrecursorExplanations_Check_the_isolation_scheme_in_the_full_scan_settings_),
                                                               PrecursorColumn,
                                                               lineNum, lineText);
                 }
@@ -1536,7 +1536,7 @@ namespace pwiz.Skyline.Model
 
                 var linesSeen = 0;
                 status = progressMonitor != null
-                    ? (status ?? new ProgressStatus()).ChangeMessage(Resources.MassListImporter_Import_Inspecting_peptide_sequence_information)
+                    ? (status ?? new ProgressStatus()).ChangeMessage(ModelResources.MassListImporter_Import_Inspecting_peptide_sequence_information)
                     : null;
 
                 foreach (var line in lines)
@@ -1626,7 +1626,7 @@ namespace pwiz.Skyline.Model
                             {
                                 break; // Caller will assign columns by other means
                             }
-                            throw new MzMatchException(Resources.GeneralRowReader_Create_No_valid_precursor_m_z_column_found, 1, -1);
+                            throw new MzMatchException(ModelResources.GeneralRowReader_Create_No_valid_precursor_m_z_column_found, 1, -1);
                         }
                         sequenceCandidates = listNewCandidates.ToArray();
                     }
@@ -1655,7 +1655,7 @@ namespace pwiz.Skyline.Model
                     int iProduct = FindProduct(fieldsFirstRow, prec.Sequence, prec.TransitionExps, prec.SequenceIndex, prec.PrecursorMzIdex,
                         tolerance, provider, settings);
                     if (iProduct == -1 && !tolerateErrors)
-                        throw new MzMatchException(Resources.GeneralRowReader_Create_No_valid_product_m_z_column_found, 1, -1);
+                        throw new MzMatchException(ModelResources.GeneralRowReader_Create_No_valid_product_m_z_column_found, 1, -1);
 
                     int iProt = indices.ProteinColumn;
                     if (iProt == -1)
@@ -2024,7 +2024,7 @@ namespace pwiz.Skyline.Model
                 string exPeptide = Fields[PeptideColumn];
                 Match match = ExPeptideRegex.Match(exPeptide);
                 if (!match.Success)
-                    throw new LineColNumberedIoException(string.Format(Resources.ExPeptideRowReader_CalcTransitionInfo_Invalid_extended_peptide_format__0__, exPeptide), lineNum, PeptideColumn);
+                    throw new LineColNumberedIoException(string.Format(ModelResources.ExPeptideRowReader_CalcTransitionInfo_Invalid_extended_peptide_format__0__, exPeptide), lineNum, PeptideColumn);
 
                 // Check for consistent ion mobility declaration, if any
                 var err = TryGetIonMobility(out _, out _, out var errColumn);
@@ -2050,7 +2050,7 @@ namespace pwiz.Skyline.Model
                 catch (Exception)
                 {
                     throw new LineColNumberedIoException(
-                        string.Format(Resources.ExPeptideRowReader_CalcTransitionInfo_Invalid_extended_peptide_format__0__,
+                        string.Format(ModelResources.ExPeptideRowReader_CalcTransitionInfo_Invalid_extended_peptide_format__0__,
                                       exPeptide),
                         lineNum, PeptideColumn);
                 }
@@ -2082,8 +2082,8 @@ namespace pwiz.Skyline.Model
 
                 if (!labelType.IsLight && !modSettings.HasHeavyImplicitModifications)
                 {
-                    var message = TextUtil.LineSeparate(Resources.ExPeptideRowReader_Create_Isotope_labeled_entry_found_without_matching_settings,
-                                                        Resources.ExPeptideRowReaderCreateCheck_the_Modifications_tab_in_Transition_Settings);
+                    var message = TextUtil.LineSeparate(ModelResources.ExPeptideRowReader_Create_Isotope_labeled_entry_found_without_matching_settings,
+                                                        ModelResources.ExPeptideRowReaderCreateCheck_the_Modifications_tab_in_Transition_Settings);
                     throw new LineColNumberedIoException(message, 1, iExPeptide);
                 }
 
@@ -2092,12 +2092,12 @@ namespace pwiz.Skyline.Model
                 int iPrecursor = FindPrecursor(fields, sequence, modifiedSequence, labelType, iExPeptide, indices.DecoyColumn,
                                                tolerance, provider, settings, out transitionExps);
                 if (iPrecursor == -1)
-                    throw new MzMatchException(Resources.GeneralRowReader_Create_No_valid_precursor_m_z_column_found, 1, -1);
+                    throw new MzMatchException(ModelResources.GeneralRowReader_Create_No_valid_precursor_m_z_column_found, 1, -1);
 
                 int iProduct = FindProduct(fields, sequence, transitionExps, iExPeptide, iPrecursor,
                     tolerance, provider, settings);
                 if (iProduct == -1)
-                    throw new MzMatchException(Resources.GeneralRowReader_Create_No_valid_product_m_z_column_found, 1, -1);
+                    throw new MzMatchException(ModelResources.GeneralRowReader_Create_No_valid_product_m_z_column_found, 1, -1);
 
                 indices.AssignDetected(iExPeptide, iExPeptide, iPrecursor, iProduct, iExPeptide, iExPeptide, iExPeptide);
                 return new ExPeptideRowReader(provider, separator, indices, exPeptideRegex, settings, lines, progressMonitor, status);
@@ -2976,7 +2976,7 @@ namespace pwiz.Skyline.Model
                     if (begin == -1)
                     {
                         // CONSIDER: Use fasta sequence format code currently in SrmDocument to show formatted sequence.
-                        throw new InvalidDataException(string.Format(Resources.PeptideGroupBuilder_AppendTransition_The_peptide__0__was_not_found_in_the_sequence__1__,
+                        throw new InvalidDataException(string.Format(ModelResources.PeptideGroupBuilder_AppendTransition_The_peptide__0__was_not_found_in_the_sequence__1__,
                                                        sequence, _activeFastaSeq.Name));
                     }
                     end = begin + sequence.Length;
@@ -2998,7 +2998,7 @@ namespace pwiz.Skyline.Model
             else if (_activePrecursorMz == info.PrecursorMz)
             {
                 var precursorMz = Math.Round(_activePrecursorMz, MassListImporter.MZ_ROUND_DIGITS);
-                var errorInfo = new TransitionImportErrorInfo(string.Format(Resources.PeptideGroupBuilder_AppendTransition_Failed_to_explain_all_transitions_for_m_z__0___peptide__1___with_a_single_precursor,
+                var errorInfo = new TransitionImportErrorInfo(string.Format(ModelResources.PeptideGroupBuilder_AppendTransition_Failed_to_explain_all_transitions_for_m_z__0___peptide__1___with_a_single_precursor,
                         precursorMz, info.PeptideSequence),
                                                                 null,
                                                                 lineNum, lineText);
@@ -3140,7 +3140,7 @@ namespace pwiz.Skyline.Model
                         for (int i = 0; i < groupTriple.NodeGroup.TransitionCount; ++i)
                         {
                             var precursorMz = Math.Round(groupTriple.PrecursorMz, MassListImporter.MZ_ROUND_DIGITS);
-                            var errorInfo = new TransitionImportErrorInfo(string.Format(Resources.PeptideGroupBuilder_FinalizeTransitionGroups_Missing_iRT_value_for_peptide__0___precursor_m_z__1_,
+                            var errorInfo = new TransitionImportErrorInfo(string.Format(ModelResources.PeptideGroupBuilder_FinalizeTransitionGroups_Missing_iRT_value_for_peptide__0___precursor_m_z__1_,
                                     _activePeptide.Sequence, precursorMz),
                                                                             null, null, null);
                             _peptideGroupErrorInfo.Add(errorInfo);
@@ -3474,7 +3474,7 @@ namespace pwiz.Skyline.Model
                 for (int i=0; i < line.Length; ++i)
                     if (!IsValidFastaChar(line[i]))
                         throw new InvalidDataException(string.Format(
-                            Resources.FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_position__2___are_you_sure_this_is_a_FASTA_file_,
+                            ModelResources.FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_position__2___are_you_sure_this_is_a_FASTA_file_,
                             lineNum, line[i], i));
                     
                 if (line.StartsWith(@">"))

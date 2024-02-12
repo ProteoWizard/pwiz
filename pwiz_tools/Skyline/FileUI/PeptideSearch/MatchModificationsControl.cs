@@ -57,11 +57,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 {
                     sb.Append(' ');
                     if (ModificationType == ModType.heavy)
-                        sb.Append(Resources.ListBoxModification_ToString__isotopic_label_);
+                        sb.Append(PeptideSearchResources.ListBoxModification_ToString__isotopic_label_);
                     else if (Mod.IsVariable)
-                        sb.Append(Resources.ListBoxModification_ToString__variable_);
+                        sb.Append(PeptideSearchResources.ListBoxModification_ToString__variable_);
                     else
-                        sb.Append(Resources.ListBoxModification_ToString__fixed_);
+                        sb.Append(PeptideSearchResources.ListBoxModification_ToString__fixed_);
                 }
                 return string.Format(Resources.AbstractModificationMatcherFoundMatches__0__equals__1__, Mod.Name, sb);
             }
@@ -128,10 +128,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return false;
             if (ImportPeptideSearch.IsDDASearch)
             {
-                labelModifications.Text = Resources.MatchModificationsControl_ModificationLabelText_DDA_Search;
-                btnAddModification.Text = Resources.MatchModificationsControl_Initialize__Edit_modifications;
-                menuItemAddStructuralModification.Text = Resources.MatchModificationsControl_Initialize_Edit__structural_modifications___;
-                menuItemAddHeavyModification.Text = Resources.MatchModificationsControl_Initialize_Edit__heavy_modifications___;
+                labelModifications.Text = PeptideSearchResources.MatchModificationsControl_ModificationLabelText_DDA_Search;
+                btnAddModification.Text = PeptideSearchResources.MatchModificationsControl_Initialize__Edit_modifications;
+                menuItemAddStructuralModification.Text = PeptideSearchResources.MatchModificationsControl_Initialize_Edit__structural_modifications___;
+                menuItemAddHeavyModification.Text = PeptideSearchResources.MatchModificationsControl_Initialize_Edit__heavy_modifications___;
             }
 
             ImportPeptideSearch.InitializeModifications(document);

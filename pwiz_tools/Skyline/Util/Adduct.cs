@@ -370,7 +370,7 @@ namespace pwiz.Skyline.Util
                         // ReSharper restore LocalizableElement
                         if (test.Any(t => !char.IsDigit(t) && t != '\0') || test[test.Length - 1] != '\0') // This will catch 2Cl373H -> "2\03H" or 2Cl373H23 -> "2\03\03"
                         {
-                            var errmsg = string.Format(Resources.Adduct_ParseDescription_isotope_error,
+                            var errmsg = string.Format(UtilResources.Adduct_ParseDescription_isotope_error,
                                     match.Groups[@"label"].Value.Split(']')[0], input, string.Join(@" ", DICT_ADDUCT_ISOTOPE_NICKNAMES.Keys));
                             throw new InvalidOperationException(errmsg);
                         }
@@ -549,7 +549,7 @@ namespace pwiz.Skyline.Util
             {
                 throw new InvalidOperationException(
                     string.Format(
-                        Resources
+                        UtilResources
                             .BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0____declared_charge__1__does_not_agree_with_calculated_charge__2_,
                         input, declaredCharge.Value, calculatedCharge));
             }
@@ -1317,7 +1317,7 @@ namespace pwiz.Skyline.Util
                 var components = DICT_ADDUCT_NICKNAMES.Aggregate<KeyValuePair<string, string>, string>(null, (current, c) => current + (String.IsNullOrEmpty(current) ? "\r\n" : ", ") + String.Format("{0} ({1})", c.Key, c.Value));
                 components += DICT_ADDUCT_ISOTOPE_NICKNAMES.Aggregate<KeyValuePair<string, string>, string>(null, (current, c) => current + ", " + String.Format("{0} ({1})", c.Key, c.Value));
                 var chargers = DICT_ADDUCT_ION_CHARGES.Aggregate<KeyValuePair<string, int>, string>(null, (current, c) => current + (String.IsNullOrEmpty(current) ? "\r\n" : ", ") + String.Format("{0} ({1:+#;-#;+0})", c.Key, c.Value));
-                return string.Format(Resources.IonInfo_AdductTips_, components, chargers);
+                return string.Format(UtilResources.IonInfo_AdductTips_, components, chargers);
             }
         }
         // ReSharper restore LocalizableElement
@@ -1446,7 +1446,7 @@ namespace pwiz.Skyline.Util
                     {
                         throw new InvalidOperationException(
                             string.Format(
-                                Resources
+                                UtilResources
                                     .Adduct_ApplyToMolecule_Adduct___0___calls_for_labeling_more__1__atoms_than_are_found_in_the_molecule__2_,
                                 this, unlabeledSymbol, molecule.ToString()));
                     }

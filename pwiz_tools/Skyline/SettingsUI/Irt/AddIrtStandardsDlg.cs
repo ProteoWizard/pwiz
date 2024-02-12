@@ -21,7 +21,6 @@ using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI.Irt
@@ -38,7 +37,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             InitializeComponent();
 
-            labelMessage.Text = string.Format(!peptidesExcluded ? labelMessage.Text : Resources.AddIrtStandardsDlg_AddIrtStandardsDlg_MessagePeptidesExcluded, peptideCount);
+            labelMessage.Text = string.Format(!peptidesExcluded ? labelMessage.Text : IrtResources.AddIrtStandardsDlg_AddIrtStandardsDlg_MessagePeptidesExcluded, peptideCount);
         }
 
         public AddIrtStandardsDlg(int peptideCount, string message, RegressionGraphData graphData = null)

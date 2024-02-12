@@ -1776,8 +1776,9 @@ namespace ZedGraph
              * using the target function. The target function takes into account area of overlap, and location (direction and distance)
              * of the label relative to it's data point.
              *  The algorighm works in screen coordinates (pixels). There is no need to use user coordinates here.
+             *  Returns true if the label has been successfully placed, false otherwise.
              */
-            public void PlaceLabel(TextObj tbox, PointPair point, Graphics g)
+            public bool PlaceLabel(TextObj tbox, PointPair point, Graphics g)
             {
                 var labelRect = _graph.GetRectScreen(tbox, g);
                 var targetPoint = _graph.TransformCoord(point.X, point.Y, CoordType.AxisXYScale);
@@ -1785,7 +1786,7 @@ namespace ZedGraph
 
                 var pointCell = new Point((int)((targetPoint.X - _chartOffset.X) / _cellSize), (int)((targetPoint.Y - _chartOffset.Y) / _cellSize));
 				if (!new Rectangle(Point.Empty, _densityGridSize).Contains(pointCell))
-					return;
+					return false;
                 var goal = float.MaxValue;
 				var goalCell = Point.Empty;
                 var gridRect = new Rectangle(Point.Empty, _densityGridSize);
@@ -1845,46 +1846,78 @@ namespace ZedGraph
                 }
 
 				_labeledPoints.Add(new VectorF(targetPoint, goalPoint));
+                return true;
+            }
+            public void DrawConnector(TextObj obj, PointPair point, Graphics g)
+            {
+                var rect = _graph.GetRectScreen(obj, g);
+                var targetPoint = _graph.TransformCoord(point.X, point.Y, CoordType.AxisXYScale);
+
+
+                var diag1 = new VectorF(rect.Location, new PointF(rect.X + rect.Width, rect.Y + rect.Height));
+                var diag2 = new VectorF(new PointF(rect.X, rect.Y + rect.Height), new PointF(rect.Right, rect.Y));
+                var center = new PointF(rect.Left + rect.Width / 2, rect.Top + rect.Height / 2);
+
+                var labelVector = new VectorF(new PointF((float)targetPoint.X, (float)targetPoint.Y), center);
+
+                PointF endPoint;
+                if (VectorF.VectorDeterminant(labelVector, diag1) * VectorF.VectorDeterminant(labelVector, diag2) > 0)
+                    endPoint = new PointF(center.X - rect.Height * labelVector.X / (2 * Math.Abs(labelVector.Y)), rect.Top + (labelVector.Y < 0 ? rect.Height : 0));
+                else
+                    endPoint = new PointF(rect.Left + (labelVector.X > 0 ? 0 : rect.Width), center.Y + rect.Width * labelVector.Y / (2 * Math.Abs(labelVector.X)));
+
+                _graph.ReverseTransform(new PointF(endPoint.X, endPoint.Y), out var x, out var y);
+
+                var line = new LineObj(obj.FontSpec.FontColor, point.X, point.Y, x, y);
+                _graph.GraphObjList.Add(line);
+            }
+            public bool IsPointVisible(PointPair point)
+            {
+                var chartRect = new RectangleF((float)_graph.XAxis.Scale.Min, (float)_graph.YAxis.Scale.Min,
+                    (float)(_graph.XAxis.Scale.Max - _graph.XAxis.Scale.Min), (float)(_graph.YAxis.Scale.Max - _graph.YAxis.Scale.Min));
+				return chartRect.Contains(new PointF((float)point.X, (float)point.Y));
             }
         }
 
-		public void AdjustLabelSpacings(List<TextObj> objects, List<PointPair> points, int maxIter = 5)
+        public void AdjustLabelSpacings(List<TextObj> objects, List<PointPair> points, int maxIter = 5)
         {
+            if (!objects.Any())
+                return;
+            XAxis.Scale.SetupScaleData(this, XAxis);
+            YAxis.Scale.SetupScaleData(this, YAxis);
+
             using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
             {
-				if(objects.Any())
-                {
-                    var minLabelHeight = objects.Min(o => GetRectScreen(o, g).Height);
-                    _labelLayout = new LabelLayout(this, (int)Math.Ceiling(minLabelHeight));
-                }                
-                GraphObjList.RemoveAll(obj => obj is BoxObj || obj is LineObj);
+                var minLabelHeight = objects.Min(o => GetRectScreen(o, g).Height);
+                _labelLayout = new LabelLayout(this, (int)Math.Ceiling(minLabelHeight));
+
+                var visiblePoints = new List<PointPair>();
+                var visibleLabels = new List<TextObj>();
                 for (var i = 0; i < objects.Count; i++)
                 {
-                    _labelLayout.PlaceLabel(objects[i], points[i], g);
-					DrawConnector(objects[i], points[i], g);
+                    if (_labelLayout.IsPointVisible(points[i]))
+                    {
+                        visibleLabels.Add(objects[i]);
+                        visiblePoints.Add(points[i]);
+                        objects[i].IsVisible = true;
+                    }
+					else
+                        objects[i].IsVisible = false;
+
+				}
+
+				if (visibleLabels.Any())
+                {
+                    GraphObjList.RemoveAll(obj => obj is BoxObj || obj is LineObj);
+                    for (var i = 0; i < visiblePoints.Count; i++)
+                    {
+                        if (_labelLayout.PlaceLabel(visibleLabels[i], visiblePoints[i], g))
+                            _labelLayout.DrawConnector(visibleLabels[i], visiblePoints[i], g);
+                    }
                 }
             }
         }
 		
-        public void DrawConnector(TextObj obj, PointPair point, Graphics g)
-        {
-            var rect = GetRect(obj, g);
-
-            var diag1 = new VectorF(rect.Location, new PointF(rect.X + rect.Width, rect.Y - rect.Height));
-            var diag2 = new VectorF(new PointF(rect.X, rect.Y - rect.Height), new PointF(rect.Right, rect.Y));
-            var center = new PointF(rect.Left + rect.Width / 2, rect.Top - rect.Height / 2);
-
-			var labelVector = new VectorF(new PointF((float)point.X, (float)point.Y), center);
-
-            PointF endPoint;
-            if (VectorF.VectorDeterminant(labelVector, diag1) * VectorF.VectorDeterminant(labelVector, diag2) > 0)
-                endPoint = new PointF(center.X - rect.Height * labelVector.X / (2 * Math.Abs(labelVector.Y)), rect.Top - (labelVector.Y > 0 ? rect.Height : 0));
-            else
-				endPoint = new PointF(rect.Left + (labelVector.X > 0 ? 0 : rect.Width), center.Y - rect.Width * labelVector.Y / (2 * Math.Abs(labelVector.X)));
-
-            var line = new LineObj(obj.FontSpec.FontColor, point.X, point.Y, endPoint.X, endPoint.Y);
-			GraphObjList.Add(line);
-        }
         public void InflateRectangle(ref RectangleF rect, float size)
         {
             var size2 = size * 2;
@@ -2588,9 +2621,11 @@ namespace ZedGraph
 									{
 										valueHandler.GetValues( curve, iPt, out xVal, out _, out yVal );
 									}
-
-									distX = ( xVal - xAct ) * xPixPerUnit;
-									distY = ( yVal - yAct ) * yPixPerUnitAct;
+									// Pixel distance needs to be calculated differently for log scale graphs
+									distY = YAxis.Type == AxisType.Log ? LogScalePixelDistance(yVal, yAct, _chart._rect.Height) : 
+										(yVal - yAct) * yPixPerUnitAct;
+									distX = XAxis.Type == AxisType.Log ? LogScalePixelDistance(xVal, xAct, _chart._rect.Width) : 
+										( xVal - xAct ) * xPixPerUnit;
 									dist = distX * distX + distY * distY;
 
 									if ( dist >= minDist )
@@ -2636,6 +2671,11 @@ namespace ZedGraph
 				return false;
 		}
 
+		private double LogScalePixelDistance(double positionA, double positionB, double totalDistance)
+		{
+			var fractionOfDistance = (Math.Log(positionA) - Math.Log(positionB)) / Math.Log(totalDistance);
+			return fractionOfDistance * totalDistance;
+		}
 		/// <summary>
 		/// Search through the <see cref="GraphObjList" /> and <see cref="CurveList" /> for
 		/// items that contain active <see cref="Link" /> objects.
