@@ -201,8 +201,14 @@ namespace pwiz.Skyline.Model
         private bool ErrorAddingToExistingMoleculeGroup(ref SrmDocument document, ParsedIonInfo precursor, string groupName,
             string defaultPepGroupName, HashSet<MoleculeNameAndAccessions> moleculeIDsSeen, Row row, ref bool pepGroupFound)
         {
-            var adduct = precursor.Adduct;
+            var adduct = precursor?.Adduct;
+            if (Adduct.IsNullOrEmpty(adduct))
+            {
+                return true; // Can't process
+            }
+            // ReSharper disable PossibleNullReferenceException
             var precursorMonoMz = adduct.MzFromNeutralMass(precursor.MonoMass);
+            // ReSharper restore PossibleNullReferenceException
             var precursorAverageMz = adduct.MzFromNeutralMass(precursor.AverageMass);
             if (string.IsNullOrEmpty(groupName))
             {
