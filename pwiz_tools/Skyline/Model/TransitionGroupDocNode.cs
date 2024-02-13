@@ -1388,7 +1388,10 @@ namespace pwiz.Skyline.Model
                     if (results.IsEmpty)
                         resultsCalc.AddTransitionChromInfo(iTran, null);
                     else
-                        resultsCalc.AddTransitionChromInfo(iTran, results.ToList());
+                    {
+                        resultsCalc.AddTransitionChromInfo(iTran, results
+                            .Where(chromInfo => chromatograms.IndexOfId(chromInfo.FileId) >= 0).ToList());
+                    }
                 }
 
                 return;
