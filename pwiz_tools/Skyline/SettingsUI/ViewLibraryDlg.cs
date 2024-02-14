@@ -460,7 +460,7 @@ namespace pwiz.Skyline.SettingsUI
 
                         var info = new ViewLibraryPepInfo(key, libInfo);
                         // If there are any, set the ion mobility values of entry
-                        return key.IsSmallMoleculeKey ? SetIonMobilityCCSValues(info) : info; // Don't do this for peptides until we have performance issues worked out
+                        return SetIonMobilityCCSValues(info);
                     });
             }
 
@@ -2965,11 +2965,9 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public IonMobilityAndCCS GetIonMobility(ViewLibraryPepInfo pepInfo)
         {
-            var bestSpectrum = _selectedLibrary.GetSpectra(pepInfo.Key,
-                IsotopeLabelType.light, LibraryRedundancy.best).FirstOrDefault();
-            if (bestSpectrum != null)
+            if (_selectedLibrary.TryGetIonMobilityInfos(new[] { pepInfo.Key }, out var ionMobilities))
             {
-                return bestSpectrum.IonMobilityInfo;
+                return ionMobilities.GetIonMobilityDict().Values.First().FirstOrDefault();
             }
             return IonMobilityAndCCS.EMPTY;
         }

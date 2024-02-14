@@ -2201,6 +2201,11 @@ namespace pwiz.Skyline.Model.Lib
             return new MoleculeAccessionNumbers(OtherKeys, InChiKey);
         }
 
+        internal static string FormatMass(double mass)
+        {
+            return string.Format(@"{0:F04}", mass);
+        }
+
         public List<KeyValuePair<string,string>> LocalizedKeyValuePairs
         {
             get
@@ -2218,12 +2223,12 @@ namespace pwiz.Skyline.Model.Lib
                 var massMono = BioMassCalc.MONOISOTOPIC.CalculateMass(ChemicalFormulaOrMasses);
                 if (massMono != 0)
                 {
-                    smallMolLines.Add(new KeyValuePair<string, string>(LibResources.SmallMoleculeLibraryAttributes_KeyValuePairs_Monoisotopic_mass, massMono.ToString()));
+                    smallMolLines.Add(new KeyValuePair<string, string>(LibResources.SmallMoleculeLibraryAttributes_KeyValuePairs_Monoisotopic_mass, FormatMass(massMono)));
                 }
                 var massAverage = BioMassCalc.AVERAGE.CalculateMass(ChemicalFormulaOrMasses);
                 if (massAverage != 0)
                 {
-                    smallMolLines.Add(new KeyValuePair<string, string>(LibResources.SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass, chemicalFormula));
+                    smallMolLines.Add(new KeyValuePair<string, string>(LibResources.SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass, FormatMass(massAverage)));
                 }
                 if (!string.IsNullOrEmpty(InChiKey))
                 {
@@ -2487,7 +2492,7 @@ namespace pwiz.Skyline.Model.Lib
         public abstract LibraryChromGroup ChromatogramData { get; }
     }
 
-    public class SpectrumInfoLibrary : SpectrumInfo
+    public class SpectrumInfoLibrary : SpectrumInfo, IEquatable<SpectrumInfoLibrary>
     {
         private Library _library;
         // Cache peaks and chromatograms to avoid loading every time
@@ -2550,6 +2555,39 @@ namespace pwiz.Skyline.Model.Lib
         public double? RetentionTime { get; set; }
         public IonMobilityAndCCS IonMobilityInfo { get; private set; }
         public string Protein { get; private set; } // Also used as Molecule List Name for small molecules
+
+        public bool Equals(SpectrumInfoLibrary other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return base.Equals(other) && 
+                   Equals(_library, other._library) && 
+                   Equals(_peaksInfo, other._peaksInfo) && 
+                   Equals(_chromGroup, other._chromGroup) && 
+                   Equals(SpectrumKey, other.SpectrumKey) && 
+                   Equals(SpectrumHeaderInfo, other.SpectrumHeaderInfo) && 
+                   FilePath == other.FilePath && Nullable.Equals(RetentionTime, other.RetentionTime) && 
+                   Equals(IonMobilityInfo, other.IonMobilityInfo) && 
+                   Protein == other.Protein;
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hashCode = base.GetHashCode();
+                hashCode = (hashCode * 397) ^ (_library != null ? _library.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (_peaksInfo != null ? _peaksInfo.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (_chromGroup != null ? _chromGroup.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (SpectrumKey != null ? SpectrumKey.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (SpectrumHeaderInfo != null ? SpectrumHeaderInfo.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (FilePath != null ? FilePath.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ RetentionTime.GetHashCode();
+                hashCode = (hashCode * 397) ^ (IonMobilityInfo != null ? IonMobilityInfo.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Protein != null ? Protein.GetHashCode() : 0);
+                return hashCode;
+            }
+        }
 
         public SpectrumProperties CreateProperties(ViewLibraryPepInfo pepInfo, TransitionGroupDocNode precursorInfo, LibKeyModificationMatcher matcher, SpectrumProperties currentProperties = null)
         {

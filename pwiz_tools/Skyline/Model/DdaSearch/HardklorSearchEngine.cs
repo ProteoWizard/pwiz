@@ -108,9 +108,20 @@ namespace pwiz.Skyline.Model.DdaSearch
                             // First pass - run Hardklor
                             var paramsFileText = GenerateHardklorConfigFile(skylineWorkingDirectory);
 
-                            _paramsFilename = string.IsNullOrEmpty(skylineWorkingDirectory)
-                                ? Path.GetTempFileName()
-                                : Path.Combine(skylineWorkingDirectory, @"Hardklor.conf");
+                            RunNumber = 0;
+                            void SetHardklorParamsFileName()
+                            {
+                                var versionString = RunNumber == 0 ? string.Empty : $@"_{RunNumber:000}";
+                                _paramsFilename = string.IsNullOrEmpty(skylineWorkingDirectory)
+                                    ? Path.GetTempFileName()
+                                    : Path.Combine(skylineWorkingDirectory, $@"Hardklor{versionString}.conf");
+                            }
+
+                            for (SetHardklorParamsFileName(); File.Exists(_paramsFilename);)
+                            {
+                                RunNumber++;
+                                SetHardklorParamsFileName(); // Avoid stomping previous runs
+                            }
                             File.WriteAllText(_paramsFilename, paramsFileText.ToString());
                             exeName = @"Hardklor";
                             args = $@"""{_paramsFilename}""";
@@ -188,10 +199,10 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private class hkFeatureDetail
         {
-            public double mass; // Declared mono mass
+            public double mzObserved; // Observed mz
             public string massString; // Original text representation of mono mass
             public string avergineAndOffset; // The value declared in the avergine column e.g. "H104C54N15O16[+4.761216]"
-            public double intensity; // "Summed Intensity" column
+            public double quality; // Define relative quality for sorting as "Best Correlation" column x "Num of Scans" column (i.e. Points across peak * correlation)
             public double rt; // "Best RTime" column
             public int charge; // Declared z
             public int fileIndex; // Which file it's from
@@ -205,6 +216,14 @@ namespace pwiz.Skyline.Model.DdaSearch
             var bfiles = SpectrumFileNames.Select(GetSearchResultFilepath).ToArray();
             if (bfiles.Length > 1)
             {
+                
+                var ppm = GetPPM();
+                bool SimilarMz(double mzJ, double mzI)
+                {
+                    var mzDiff = (Math.Abs(mzJ - mzI) / mzI) * 1.0E6;
+                    return mzDiff <= ppm;
+                }
+
                 _progressStatus = _progressStatus.ChangeMessage(string.Empty);
                 _progressStatus = _progressStatus.ChangePercentComplete(0).ChangeMessage(DdaSearchResources.HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_runs);
 
@@ -213,6 +232,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 // The shape of the isotope distribution is pretty much determined by everything but
                 // hydrogen, so create a lookup based on avergine formulas with H removed
                 var featuresByCNOS = new Dictionary<string, List<hkFeatureDetail>>();
+                var libraryCharges = new HashSet<int>(this._searchSettings.SettingsHardklor.Charges);
                 var contents = new List<string[]>();
                 var updatedFiles = new HashSet<int>();
                 var updates = new List<hkFeatureDetail>();
@@ -225,28 +245,19 @@ namespace pwiz.Skyline.Model.DdaSearch
                     foreach (var line in lines.Skip(1))
                     {
                         var col = line.Split('\t');
-                        var averagine_no_H = col[15].Split('[')[0].Split('C')[1];
+                        var averagine_no_H = col[15].Split('[')[0].Split('C')[1]; // e.g. "H120C119N33O35S1[+0.12]" => "119N33O35S1"
                         var feature = new hkFeatureDetail()
                         {
                             charge = int.Parse(col[4], CultureInfo.InvariantCulture),
-                            mass = double.Parse(col[5], CultureInfo.InvariantCulture),
                             massString = col[5],
-                            avergineAndOffset = col[15],
-                            intensity = double.Parse(col[8], CultureInfo.InvariantCulture),
+                            mzObserved = double.Parse(col[6], CultureInfo.InvariantCulture),
+                            quality = double.Parse(col[3], CultureInfo.InvariantCulture) * double.Parse(col[12], CultureInfo.InvariantCulture), // Points across peak * correlation, for sorting
                             rt = double.Parse(col[11], CultureInfo.InvariantCulture),
+                            avergineAndOffset = col[15],
                             fileIndex = fileIndex,
                             lineIndex = l,
                             updated = false
                         };
-                        var mzCalc = Adduct.FromChargeProtonated(feature.charge).MzFromNeutralMass(feature.mass, MassType.Monoisotopic);
-                        var mzDeclared = double.Parse(col[6], CultureInfo.InvariantCulture); // 'Base Isotope Peak'
-                        if (Math.Abs(mzCalc - mzDeclared) > .001)
-                        {
-                            // We're interested in the m/z of the mono peak, which may not be the biggest in the envelope
-                            col[6] = mzCalc.ToString(@"F4", CultureInfo.InvariantCulture);
-                            lines[l] = string.Join(TextUtil.SEPARATOR_TSV_STR, col);
-                            updatedFiles.Add(fileIndex); // We'll want to write that back to the file
-                        }
 
                         if (!featuresByCNOS.TryGetValue(averagine_no_H, out var featureList))
                         {
@@ -263,13 +274,12 @@ namespace pwiz.Skyline.Model.DdaSearch
 
                 // We have a dictionary of all known isotope distributions (that is, the averagine formulas with H)
                 // and all known masses and intensities
-                var ppm = GetPPM();
                 var rtToler = this._searchSettings.SettingsHardklor.FeatureRetentionTimeTolerance ?? double.MaxValue;
                 foreach (var featureByCNOS in featuresByCNOS)
                 {
-                    // Starting with the strongest signal, see if any other entries from similar RT are similar mass.
+                    // Starting with the highest score, see if any other entries from similar RT are similar m/z.
                     // If they are, update the mass information to match the more solid ID.
-                    var ordered = featureByCNOS.Value.OrderByDescending(v => v.intensity).ToArray();
+                    var ordered = featureByCNOS.Value.OrderByDescending(v => v.quality).ToArray();
                     for (var i = 0; i < ordered.Length; i++)
                     {
                         var hkFeatureDetailI = ordered[i];
@@ -277,11 +287,19 @@ namespace pwiz.Skyline.Model.DdaSearch
                         {
                             continue;
                         }
-                        var mass = hkFeatureDetailI.mass;
-                        if (mass == 0)
+
+                        var chargeI = hkFeatureDetailI.charge;
+                        if (!libraryCharges.Contains(chargeI))
+                        {
+                            continue; // Don't bother processing, it won't end up in the library
+                        }
+
+                        var mzI = hkFeatureDetailI.mzObserved;
+                        if (mzI == 0)
                         {
                             continue;
                         }
+
                         for (var j = i + 1; j < ordered.Length; j++)
                         {
                             var hkFeatureDetailJ = ordered[j];
@@ -290,22 +308,26 @@ namespace pwiz.Skyline.Model.DdaSearch
                                 continue; // Already processed
                             }
 
-                            var fileI = SpectrumFileNames[hkFeatureDetailI.fileIndex];
-                            var fileJ = SpectrumFileNames[hkFeatureDetailJ.fileIndex];
-                            var rtI = hkFeatureDetailI.rt;
-                            var rtJ = hkFeatureDetailJ.rt;
-                            if (_alignments.TryGetValue(Tuple.Create(fileI, fileJ), out var alignment))
+                            if (hkFeatureDetailJ.charge != chargeI)
                             {
-                                rtI = alignment.GetValue(rtJ);
+                                continue;
                             }
-                            if (Math.Abs(rtI - rtJ) > rtToler)
+
+                            if (SimilarMz(hkFeatureDetailJ.mzObserved, mzI))
                             {
-                                continue; // Not an RT match
-                            }
-                            var diff = Math.Abs((hkFeatureDetailJ.mass - mass) / mass) * 1.0E6;
-                            if (diff <= ppm)
-                            {
-                                hkFeatureDetailJ.mass = mass;
+                                // Isotope envelopes agree, m/z is similar, so it's just a tiny mass shift - does RT agree?
+                                var fileI = SpectrumFileNames[hkFeatureDetailI.fileIndex];
+                                var fileJ = SpectrumFileNames[hkFeatureDetailJ.fileIndex];
+                                var rtI = hkFeatureDetailI.rt;
+                                var rtJ = hkFeatureDetailJ.rt;
+                                if (_alignments.TryGetValue(Tuple.Create(fileI, fileJ), out var alignment))
+                                {
+                                    rtI = alignment.GetValue(rtJ);
+                                }
+                                if (Math.Abs(rtI - rtJ) > rtToler)
+                                {
+                                    continue; // Not an RT match
+                                }
                                 hkFeatureDetailJ.massString = hkFeatureDetailI.massString;
                                 hkFeatureDetailJ.avergineAndOffset = hkFeatureDetailI.avergineAndOffset;
                                 hkFeatureDetailJ.updated = true; // No need to compare to others in this list
@@ -315,18 +337,23 @@ namespace pwiz.Skyline.Model.DdaSearch
                     }
                 }
 
-                // Now write back any adjustments before we hand off the files to BlibBuild
+                // Now write back any adjustments before we hand off the files to BlibBuild, so it understands 
+                // that the IDs we matched are the same things
                 foreach (var update in updates.Where(u => u.updated))
                 {
                     var col = contents[update.fileIndex][update.lineIndex].Split('\t');
+                    col[5] = update.massString;
                     col[15] = update.avergineAndOffset;
-                    col[5] = update.massString; 
-                    col[6] = Adduct.FromChargeProtonated(update.charge).MzFromNeutralMass(update.mass, MassType.Monoisotopic).ToString(@"F4", CultureInfo.InvariantCulture);
                     contents[update.fileIndex][update.lineIndex] = string.Join(TextUtil.SEPARATOR_TSV_STR, col);
                     updatedFiles.Add(update.fileIndex);
                 }
                 foreach (var f in updatedFiles)
                 {
+                    // Note the original
+                    var unaligned = GetBullseyeKronikUnalignedFilename(bfiles[f]);
+                    FileEx.SafeDelete(unaligned);
+                    File.Copy(bfiles[f], unaligned);
+                    // Update for handoff to BiblioSpec
                     File.WriteAllLines(bfiles[f], contents[f]);  // Update the current file
                 }
             }
@@ -336,6 +363,11 @@ namespace pwiz.Skyline.Model.DdaSearch
         private static string GetBullseyeKronikFilename(string hkFile)
         {
             return hkFile + @".bs.kro";
+        }
+
+        private static string GetBullseyeKronikUnalignedFilename(string kronikFile)
+        {
+            return kronikFile + @".unaligned";
         }
 
         private static string GetBullseyeNoMatchFilename(string hkFile)
@@ -413,7 +445,9 @@ namespace pwiz.Skyline.Model.DdaSearch
                     foreach (var hkFile in _inputsAndOutputs.Values)
                     {
                         FileEx.SafeDelete(hkFile, true); // The hardklor .hk file
-                        FileEx.SafeDelete(GetBullseyeKronikFilename(hkFile), true); // The Bullseye result file
+                        var bullseyeKronikFilename = GetBullseyeKronikFilename(hkFile);
+                        FileEx.SafeDelete(bullseyeKronikFilename, true); // The Bullseye result file
+                        FileEx.SafeDelete(GetBullseyeKronikUnalignedFilename(bullseyeKronikFilename), true); // The Bullseye result file before we aligned it
                         FileEx.SafeDelete(GetBullseyeMatchFilename(hkFile), true);
                         FileEx.SafeDelete(GetBullseyeNoMatchFilename(hkFile), true);
                     }
@@ -454,6 +488,8 @@ namespace pwiz.Skyline.Model.DdaSearch
             File.AppendAllLines(_isotopesFilename, isotopeValues);
         }
 
+        public static int RunNumber { get; private set; } // Used in filename creation to avoid stomping previous results, exposed for test usage
+        
         private string GenerateHardklorConfigFile(string skylineWorkingDirectory)
         {
             _inputsAndOutputs = new SortedDictionary<MsDataFileUri, string>();
@@ -462,7 +498,20 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             foreach (var input in SpectrumFileNames)
             {
-                _inputsAndOutputs.Add(input, $@"{Path.Combine(workingDirectory, input.GetFileName())}.hk");
+                string outputHardklorFile;
+
+                void SetHardklorOutputFilename()
+                {
+                    var version = RunNumber == 0 ? string.Empty : $@"_{RunNumber:000}";
+                    outputHardklorFile = $@"{Path.Combine(workingDirectory, input.GetFileName())}{version}.hk";
+                }
+
+                for (SetHardklorOutputFilename(); File.Exists(outputHardklorFile);)
+                {
+                    RunNumber++;
+                    SetHardklorOutputFilename(); // Don't stomp existing results
+                }
+                _inputsAndOutputs.Add(input, outputHardklorFile);
                 if (!isCentroided.HasValue)
                 {
                     // Hardklor wants to know if the data is centroided, we should

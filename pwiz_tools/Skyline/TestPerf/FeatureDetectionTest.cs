@@ -358,23 +358,29 @@ namespace TestPerf
             // IsPauseForScreenShots = true; // enable for quick demo
             PauseForScreenShot("complete");
 
-            // See if Hardklor outout is stable
+            // See if Hardklor output is stable
             var expectedHardklorFiles = @"expected_hardklor_files";
-            foreach (var hkFile in Directory.EnumerateFiles(GetTestPath(expectedHardklorFiles)))
+            var expectedFilesPath = GetTestPath(expectedHardklorFiles);
+            foreach (var hkExpectedFilePath in Directory.EnumerateFiles(expectedFilesPath))
             {
-                AssertEx.FileEquals(hkFile, hkFile.Replace(expectedHardklorFiles, Path.Combine(expectedHardklorFiles, @"..")), null, true);
+                var hkActualFilePath = hkExpectedFilePath.Replace(expectedHardklorFiles, Path.Combine(expectedHardklorFiles, @".."));
+                if (HardklorSearchEngine.RunNumber != 0)
+                {
+                    hkActualFilePath = hkActualFilePath.Replace(@".hk.", $@"_{HardklorSearchEngine.RunNumber:000}.hk.");
+                }
+                AssertEx.FileEquals(hkExpectedFilePath,  hkActualFilePath, null, true);
             }
 
             // Verify use of library RT in chromatogram extraction
             var doc = SkylineWindow.Document;
             var tg = doc.MoleculeTransitions.First(t => t.Transition.Group.IsCustomIon);
             var r = tg.Results.First().First();
-            AssertEx.AreEqual(33.79, r.RetentionTime, .01);
-            AssertEx.AreEqual(33.61, r.StartRetentionTime, .01);
-            AssertEx.AreEqual(34.26, r.EndRetentionTime, .01);
+            AssertEx.AreEqual(25.486, r.RetentionTime, .01);
+            AssertEx.AreEqual(24.407, r.StartRetentionTime, .01);
+            AssertEx.AreEqual(27.104, r.EndRetentionTime, .01);
 
-            var expectedFeatures = 866;
-            var expectedFeaturesTransitions = 2598;
+            var expectedFeatures = 906;
+            var expectedFeaturesTransitions = 2718;
             if (pass == SMALL_MOL_ONLY_PASS)
             {
                 AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, expectedFeatures, expectedFeatures, expectedFeaturesTransitions);
@@ -393,27 +399,46 @@ namespace TestPerf
                 RunUI(() => documentGrid.ChooseView(pwiz.Skyline.Properties.Resources.ReportSpecList_GetDefaults_Transition_Results));
                 WaitForCondition(() => (documentGrid.RowCount == 2*(expectedPeptideTransitions + expectedFeaturesTransitions))); // Let it initialize
 
+                var propMaxHeight = "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.MaxHeight";
+                EnableDocumentGridColumns(documentGrid,
+                    pwiz.Skyline.Properties.Resources.ReportSpecList_GetDefaults_Transition_Results,
+                    2 * (expectedPeptideTransitions + expectedFeaturesTransitions),
+                    new[] { propMaxHeight });
+
                 PauseForScreenShot("document grid");
 
                 var colName = FindDocumentGridColumn(documentGrid, "Precursor.Peptide").Index;
                 var colZ = FindDocumentGridColumn(documentGrid, "Precursor.Charge").Index;
                 var colMZ = FindDocumentGridColumn(documentGrid, "Precursor.Mz").Index;
+                var colFragMZ = FindDocumentGridColumn(documentGrid,"ProductMz").Index;
                 var colRT = FindDocumentGridColumn(documentGrid, "Results!*.Value.RetentionTime").Index;
+                var colMaxHeight = FindDocumentGridColumn(documentGrid, "Results!*.Value.PrecursorResult.MaxHeight").Index;
                 var hits = new HashSet<Hit>();
                 var rowCount = documentGrid.DataGridView.RowCount;
                 for (var row = 0; row < rowCount; row++)
                 {
-                    var line = documentGrid.DataGridView.Rows[row];
-                    hits.Add(new Hit()
+                    RunUI(() =>
                     {
-                        name = line.Cells[colName].Value.ToString(),
-                        z = (line.Cells[colZ].Value as int?) ?? 0,
-                        mz = (line.Cells[colMZ].Value as double?) ?? 0,
-                        rt = (line.Cells[colRT].Value as double?) ?? 0
+                        var line = documentGrid.DataGridView.Rows[row];
+                        var mzValue = (line.Cells[colMZ].Value as double?) ?? 0;
+                        var mzFragValue = (line.Cells[colFragMZ].Value as double?) ?? 0;
+                        if (mzFragValue == mzValue) // Just get the M0 entry
+                        {
+                            var hit = new Hit()
+                            {
+                                name = line.Cells[colName].Value.ToString(),
+                                z = (line.Cells[colZ].Value as int?) ?? 0,
+                                mz = mzValue,
+                                rt = (line.Cells[colRT].Value as double?) ?? 0,
+                                maxHeight = (line.Cells[colMaxHeight].Value as double?) ?? 0
+                            };
+                            hits.Add(hit);
+                        }
                     });
                 }
 
                 var unmatched = new HashSet<Hit>();
+                var matched = new HashSet<Hit>();
                 foreach (var hitP in hits.Where(h => !h.name.StartsWith("mass")))
                 {
                     var match = false;
@@ -422,6 +447,7 @@ namespace TestPerf
                         if ((Math.Abs(hitP.mz - hitM.mz) < .1) && (Math.Abs(hitM.rt - hitM.rt) < 1))
                         {
                             match = true;
+                            matched.Add(hitP);
                             break;
                         }
                     }
@@ -440,13 +466,14 @@ namespace TestPerf
                 }
 
                 // Hardklor+Bullseye simply misses some peptides that search engine found
+                // For the most part these are down in the grass, so maybe to be expected
                 // CONSIDER:(bspratt) debug Hardklor+Bullseye code?
                 var expectedMisses = new[]
                 {
-                    ("DIDISSPEFK",2),
+                    ("DQVANSAFVER",2), 
+                    ("DIDISSPEFK",2), 
                     ("LPSGSGAASPTGSAVDIR",2),
                     ("ISMQDVDLSLGSPK",2),
-                    ("ISAPNVDFNLEGPK",2),
                     ("ISAPNVDFNLEGPK",2),
                     ("GKGGVTGSPEASISGSKGDLK",3),
                     ("GGVTGSPEASISGSK",2),
@@ -463,9 +490,20 @@ namespace TestPerf
                     ("VVDYSQFQESDDADEDYGRDSGPPTK",3),
                     ("KETESEAEDNLDDLEK",3)
                 };
+
+                var missedHits = hits.Where(h =>
+                    expectedMisses.Any(miss => Equals(h.name, miss.Item1) && Equals(h.z, miss.Item2))).ToArray();
+                var threshold = hits.Select(h => h.maxHeight).Max() * .1;
+                foreach (var miss in missedHits)
+                {
+                    AssertEx.IsTrue((miss.maxHeight < threshold), $"Hardklor did not find a match for {miss.name} even though it's fairly strong signal");
+                }
                 var unexpectedMisses = unmatched.Where(um => !expectedMisses.Contains((um.name, um.z))).ToArray();
+                var unexpectedMatches = matched.Where(um => expectedMisses.Contains((um.name, um.z))).ToArray();
                 AssertEx.IsFalse(unexpectedMisses.Any(),
                     $"Expected to find features for peptides\n{string.Join("\n", unexpectedMisses.Select(u => u.ToString()))}");
+                AssertEx.IsFalse(unexpectedMatches.Any(),
+                    $"Did not expected to find features for peptides\n{string.Join("\n", unexpectedMisses.Select(u => u.ToString()))}");
             }
 
         }
@@ -476,10 +514,11 @@ namespace TestPerf
             public int z;
             public double mz;
             public double rt;
+            public double maxHeight;
 
             public override string ToString()
             {
-                return $"{name} mz={mz} z={z} RT={rt}";
+                return $"{name} mz={mz} z={z} RT={rt} maxH={maxHeight}";
             }
 
             public bool Equals(Hit other)

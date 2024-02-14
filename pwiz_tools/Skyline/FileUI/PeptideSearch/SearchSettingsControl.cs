@@ -384,6 +384,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 {
                     return false;
                 }
+
                 if (!helper.ValidateDecimalTextBox(this.textHardklorSignalToNoise, 0, 10, out var signalToNoise))
                 {
                     return false;
@@ -393,6 +394,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     HardklorResolution,
                     correlation, signalToNoise, _documentContainer.TransitionSettings.Filter.PeptidePrecursorCharges.Select(a => a.AdductCharge).Distinct().ToArray(),
                     _documentContainer.TransitionSettings.FullScan.RetentionTimeFilterLength);
+                ImportPeptideSearch.CutoffScore = correlation;
                 return true;
             }
 
@@ -445,20 +447,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             get
             {
-                return (FullScanSettingsControl.IsResMzAnalyzer(HardklorInstument) 
-                    ? _hardklorInstrumentSettingsControl.PrecursorResMz 
-                    : _hardklorInstrumentSettingsControl.PrecursorRes) ?? 0;
+                return _hardklorInstrumentSettingsControl.PrecursorRes  ?? 0;
             }
             set
             {
-                if (FullScanSettingsControl.IsResMzAnalyzer(HardklorInstument))
-                {
-                    _hardklorInstrumentSettingsControl.PrecursorResMz = value;
-                }
-                else
-                {
-                    _hardklorInstrumentSettingsControl.PrecursorRes = value;
-                }
+                _hardklorInstrumentSettingsControl.PrecursorRes = value;
             }
         }
 

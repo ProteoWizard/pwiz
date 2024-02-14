@@ -254,9 +254,9 @@ namespace pwiz.Skyline.SettingsUI
             private ImmutableList<int> CreateItem(string propertyName)
             {
                 var intList = new RangeList(new Range(0, _pepInfos.Count)).ToList();
-                if (propertyName.Equals(UNMODIFIED_TARGET_TEXT))
+                if (propertyName.Equals(UNMODIFIED_TARGET_TEXT) && !_pepInfos.Any(pi => pi.KeyStringSplitNumeric.HasValue))
                 {
-                    // The list of entries is already sorted by this field, so don't bother sorting it again
+                    // For peptides, the list of entries is already alphabetically sorted by this field, so don't bother sorting it again
                     return ImmutableList.ValueOf(intList);
                 }
 
@@ -403,16 +403,31 @@ namespace pwiz.Skyline.SettingsUI
 
         public static int ComparePepInfos(ViewLibraryPepInfo info1, ViewLibraryPepInfo info2)
         {
-            int result = string.Compare(info1.UnmodifiedTargetText, info2.UnmodifiedTargetText,
-                StringComparison.OrdinalIgnoreCase);
+            var result = 0;
+            // Prefer natural sort, e.g. "mass223.4" < "mass1123.4"
+            if (info1.KeyStringSplitNumeric.HasValue && info2.KeyStringSplitNumeric.HasValue &&
+                string.Equals(info1.KeyStringSplitText, info2.KeyStringSplitText, StringComparison.OrdinalIgnoreCase))
+            {
+                result = info1.KeyStringSplitNumeric.Value.CompareTo(info2.KeyStringSplitNumeric.Value);
+            }
+            else  // Normal alpha sort
+            {
+                result = string.Compare(info1.UnmodifiedTargetText, info2.UnmodifiedTargetText,
+                    StringComparison.OrdinalIgnoreCase);
+            }
+
             if (result == 0)
             {
+                // Same molecule, sort by adduct
                 result = info1.Adduct.CompareTo(info2.Adduct);
+
+                if (result == 0)
+                {
+                    // Last try, alpha sort on whatever Key.ToString() produced
+                    result = string.Compare(info1.KeyString, info2.KeyString, StringComparison.OrdinalIgnoreCase);
+                }
             }
-            if (result == 0)
-            {
-                result = string.Compare(info1.KeyString, info2.KeyString, StringComparison.OrdinalIgnoreCase);
-            }
+
             return result;
         }
     }
