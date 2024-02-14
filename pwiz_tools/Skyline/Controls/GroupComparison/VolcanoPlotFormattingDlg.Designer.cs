@@ -34,6 +34,7 @@
             this.button2 = new System.Windows.Forms.Button();
             this.regexColorRowGrid1 = new pwiz.Skyline.Controls.GroupComparison.RegexColorRowGrid();
             this.advancedCheckBox = new System.Windows.Forms.CheckBox();
+            this.layoutLabelsBox = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // button1
@@ -65,6 +66,15 @@
             this.advancedCheckBox.Name = "advancedCheckBox";
             this.advancedCheckBox.UseVisualStyleBackColor = true;
             this.advancedCheckBox.CheckedChanged += new System.EventHandler(this.advancedCheckBox_CheckedChanged);
+
+            // 
+            // layoutLabelsBox
+            // 
+            resources.ApplyResources(this.layoutLabelsBox, "layoutLabelsBox");
+            this.layoutLabelsBox.Name = "layoutLabelsBox";
+            this.layoutLabelsBox.UseVisualStyleBackColor = true;
+            this.layoutLabelsBox.CheckedChanged += new System.EventHandler(this.layoutLabelsBox_CheckedChanged);
+
             // 
             // VolcanoPlotFormattingDlg
             // 
@@ -91,6 +101,7 @@
         private System.Windows.Forms.Button button2;
         private RegexColorRowGrid regexColorRowGrid1;
         private System.Windows.Forms.CheckBox advancedCheckBox;
+        private System.Windows.Forms.CheckBox layoutLabelsBox;
 
     }
 }

@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly List<DotPlotUtil.LabeledPoint> _labeledPoints;
         public bool ShowingFormattingDlg { get; set; }
         public IList<MatchRgbHexColor> ColorRows { get; set; }
-        protected SummaryRelativeAbundanceGraphPane(GraphSummary graphSummary)
+        protected SummaryRelativeAbundanceGraphPane(GraphSummary graphSummary, IList<MatchRgbHexColor> colorRows)
             : base(graphSummary)
         {
             var xAxisTitle =
@@ -68,7 +68,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _areaProteinTargets = Settings.Default.AreaProteinTargets;
             _excludePeptideLists = Settings.Default.ExcludePeptideListsFromAbundanceGraph;
             _excludeStandards = Settings.Default.ExcludeStandardsFromAbundanceGraph;
-            ColorRows = new List<MatchRgbHexColor>();
+            ColorRows = colorRows ?? new List<MatchRgbHexColor>();
             var container = new MemoryDocumentContainer();
             container.SetDocument(Document, null);
             _schema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);

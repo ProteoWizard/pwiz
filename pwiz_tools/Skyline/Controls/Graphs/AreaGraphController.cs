@@ -18,11 +18,13 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -222,7 +224,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     GraphSummary.DoUpdateGraph(this, GraphSummary.Type);
                     break;
                 case GraphTypeSummary.abundance:
-                    GraphSummary.GraphPanes = new[] { new AreaRelativeAbundanceGraphPane(GraphSummary) };
+                    GraphSummary.GraphPanes = new[] { new AreaRelativeAbundanceGraphPane(GraphSummary, (pane as SummaryRelativeAbundanceGraphPane)?.ColorRows) };
                     break;
                 case GraphTypeSummary.histogram:
                     if (!(pane is AreaCVHistogramGraphPane))
@@ -290,6 +292,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get { return GraphsResources.SkylineWindow_CreateGraphPeakArea_Peak_Areas; }
         }
+
     }
 }
 

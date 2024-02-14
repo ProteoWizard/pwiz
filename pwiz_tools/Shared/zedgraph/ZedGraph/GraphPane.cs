@@ -1560,7 +1560,7 @@ namespace ZedGraph
         {
             private GraphPane _graph;
             private int _cellSize;
-			private Random _randGenerator = new Random();
+			private Random _randGenerator = new Random(123);
             private PointF _chartOffset;
             private List<VectorF> _labeledPoints = new List<VectorF>();
 
@@ -1609,7 +1609,7 @@ namespace ZedGraph
                     }
                 }
 
-                foreach (var line in _graph.CurveList.OfType<LineItem>().Where(c => c.Symbol.Type == SymbolType.Circle))
+                foreach (var line in _graph.CurveList.OfType<LineItem>().Where(c => c.Symbol.Type != SymbolType.None))
                 {
                     for (var i = 0; i < line.Points.Count; i++)
                     {
@@ -1851,6 +1851,7 @@ namespace ZedGraph
             public void DrawConnector(TextObj obj, PointPair point, Graphics g)
             {
                 var rect = _graph.GetRectScreen(obj, g);
+                GraphPane.InflateRectangle(ref rect, -1);
                 var targetPoint = _graph.TransformCoord(point.X, point.Y, CoordType.AxisXYScale);
 
 
@@ -1861,10 +1862,11 @@ namespace ZedGraph
                 var labelVector = new VectorF(new PointF((float)targetPoint.X, (float)targetPoint.Y), center);
 
                 PointF endPoint;
+				// If this multiple >0 then the connector line approaches the label from top or bottom, otherwise from right or left.
                 if (VectorF.VectorDeterminant(labelVector, diag1) * VectorF.VectorDeterminant(labelVector, diag2) > 0)
                     endPoint = new PointF(center.X - rect.Height * labelVector.X / (2 * Math.Abs(labelVector.Y)), rect.Top + (labelVector.Y < 0 ? rect.Height : 0));
                 else
-                    endPoint = new PointF(rect.Left + (labelVector.X > 0 ? 0 : rect.Width), center.Y + rect.Width * labelVector.Y / (2 * Math.Abs(labelVector.X)));
+                    endPoint = new PointF(rect.Left + (labelVector.X > 0 ? 0 : rect.Width), center.Y - rect.Width * labelVector.Y / (2 * Math.Abs(labelVector.X)));
 
                 _graph.ReverseTransform(new PointF(endPoint.X, endPoint.Y), out var x, out var y);
 
@@ -1918,7 +1920,7 @@ namespace ZedGraph
             }
         }
 		
-        public void InflateRectangle(ref RectangleF rect, float size)
+        public static void InflateRectangle(ref RectangleF rect, float size)
         {
             var size2 = size * 2;
             rect.Location += new SizeF(-size, size);
