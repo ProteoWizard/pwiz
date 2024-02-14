@@ -140,7 +140,9 @@ namespace pwiz.Skyline.Model
         // SCIEX has used 100, Thermo MSX can use 20 * 5, Astral using 300,
         // A user may want to simulate a gas phase fractionation isolation scheme which might
         // contain 300 to 1200 m/z by 1 m/z isolation windows or 900 total
-        private const int MAX_SPECTRA_PER_CYCLE = 1000;
+        
+        // DO NOT MERGE TO MASTER, INVESTIGATING MEMORY USAGE AFTER MAX_SPECTRA_PER_CYCLE WAS CHANGED TO 1000 IN COMMIT 1ab37db66a4d26b0334c4c5ee38c52bd8e246dec
+        private const int MAX_SPECTRA_PER_CYCLE = 400; // FORMER VALUE, DID INCREASE TO 1000 CAUSE MEMORY PROBLEM?
         private const int MAX_MULTI_CYCLE = MAX_SPECTRA_PER_CYCLE * 3;
 
         private IsolationRange[] ReadIsolationRanges(MsDataFileUri dataSource, IsolationRange[] isolationRanges)
