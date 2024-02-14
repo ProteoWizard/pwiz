@@ -70,8 +70,8 @@ namespace pwiz.Skyline.Util.Extensions
         /// The CSV separator character for a given culture.  Like Excel, a comma
         /// is used unless the decimal separator is a comma.  This allows exported CSV
         /// files to be imported directly into Excel on the same system.
-        /// <param name="cultureInfo">The culture for which the separator is requested.</param>
         /// </summary>
+        /// <param name="cultureInfo">The culture for which the separator is requested.</param>
         public static char GetCsvSeparator(IFormatProvider cultureInfo)
         {
             var numberFormat = cultureInfo.GetFormat(typeof(NumberFormatInfo)) as NumberFormatInfo;
