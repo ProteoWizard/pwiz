@@ -254,7 +254,6 @@ Config parseCommandLine(int argc, char** argv)
     bool format_MS2 = false;
     bool format_CMS2 = false;
     bool format_mzMLb = false;
-    int mzMLb_compression_level = 0;
     int mzMLb_chunk_size = 0;    
     bool format_mz5 = false;
     bool precision_32 = false;
@@ -270,7 +269,8 @@ Config parseCommandLine(int argc, char** argv)
     bool mz_linear = false;
     bool intensity_linear = false;
     bool noindex = false;
-    bool zlib = false;
+    bool zlib = true;
+    bool noZlib = false;
     bool gzip = false;
     bool ms_numpress_all = false; // if true, use this numpress compression with default tolerance
     double ms_numpress_linear = -1; // if >= 0, use this numpress linear compression with this tolerance
@@ -292,7 +292,8 @@ Config parseCommandLine(int argc, char** argv)
     pair<int, int> consoleBounds = get_console_bounds(); // get platform-specific console bounds, or default values if an error occurs
     int wrapWidth = consoleBounds.first;
     po::options_description od_config("Options", wrapWidth);
-    od_config.add_options()
+    auto addOptions = [&](auto& optionsDescription) {
+        optionsDescription.add_options()
         ("filelist,f",
             po::value<string>(&filelistFilename),
             ": specify text file containing filenames")
@@ -334,7 +335,7 @@ Config parseCommandLine(int argc, char** argv)
             po::value<int>(&mzMLb_chunk_size)->default_value(1048576),
             ": mzMLb dataset chunk size in bytes")
         ("mzMLbCompressionLevel",
-            po::value<int>(&mzMLb_compression_level)->default_value(0),
+            po::value<int>(&config.writeConfig.mzMLb_compression_level)->default_value(4),
             ": mzMLb GZIP compression level (0-9)")
 #endif
         ("mgf",
@@ -402,7 +403,10 @@ Config parseCommandLine(int argc, char** argv)
             ": filename for contact info")
         ("zlib,z",
             po::value<bool>(&zlib)->zero_tokens(),
-            ": use zlib compression for binary data")
+            ": use zlib compression for binary data (default)")
+        ("noZlib,u",
+            po::value<bool>(&noZlib)->zero_tokens(),
+            ": disable zlib compression for binary data")
         ("numpressLinear",
             po::value<std::string>(&ms_numpress_linear_str)->implicit_value(ms_numpress_linear_default),
             ": use numpress linear prediction compression for binary mz and rt data (relative accuracy loss will not exceed given tolerance arg, unless set to 0)")
@@ -482,6 +486,8 @@ Config parseCommandLine(int argc, char** argv)
             po::value<bool>(&writeDoc)->zero_tokens(),
            ": writes output of --help and --show-examples, without version info")
                 ;
+    };
+    addOptions(od_config);
 
     // handle positional arguments
 
@@ -502,6 +508,9 @@ Config parseCommandLine(int argc, char** argv)
     po::store(po::command_line_parser(argc, (char**)argv).
               options(od_parse).positional(pod_args).run(), vm);
     po::notify(vm);
+
+    if (zlib && noZlib)
+        throw usage_exception("The --zlib and --noZlib options cannot both be set at the same time.");
 
     // negate unknownInstrumentIsError value since command-line parameter (ignoreUnknownInstrumentError) and the Config parameters use inverse semantics
     config.unknownInstrumentIsError = !config.unknownInstrumentIsError;
@@ -525,14 +534,16 @@ Config parseCommandLine(int argc, char** argv)
     }
     else
     {
-        // append options description to usage string
-        usage << od_config;
-
         // extra usage
         if (writeDoc)
         {
             wrapWidth = 10000; // Let viewer handle wrapping
         }
+
+        // append options description to usage string
+        po::options_description nowrap_config("Options", wrapWidth);
+        addOptions(nowrap_config);
+        usage << nowrap_config;
         usage << SpectrumListFactory::usage(detailedHelp, detailedHelp ? nullptr : "(run this program with --help to see details for all filters)", wrapWidth);
         usage << ChromatogramListFactory::usage(detailedHelp, nullptr, wrapWidth) << endl;
         if (writeDoc)
@@ -775,14 +786,8 @@ Config parseCommandLine(int argc, char** argv)
     if (noindex)
         config.writeConfig.indexed = false;
 
-    if (zlib || mzMLb_compression_level > 0)
-    {
-        config.writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
-        if (mzMLb_compression_level == 0)
-            config.writeConfig.mzMLb_compression_level = 4;            
-        else
-            config.writeConfig.mzMLb_compression_level = mzMLb_compression_level;                       
-    }
+    if (!noZlib)
+        config.writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib; 
  
     config.writeConfig.mzMLb_chunk_size = mzMLb_chunk_size;
 
