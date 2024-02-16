@@ -122,7 +122,7 @@ struct PSM{
   void setPrecursorOnly()
   {
       specName = std::string(PRECURSOR_WITHOUT_MS2_SCAN) + "_"
-      + smallMolMetadata.moleculeName + modifiedSeq + "_"
+      + smallMolMetadata.moleculeName + "_" + smallMolMetadata.chemicalFormula + "_" + modifiedSeq + "_"
       + smallMolMetadata.precursorAdduct + boost::lexical_cast<std::string>(charge);
   }
 

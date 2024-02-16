@@ -232,10 +232,9 @@ namespace pwiz.Skyline.Model.DdaSearch
                 // The shape of the isotope distribution is pretty much determined by everything but
                 // hydrogen, so create a lookup based on avergine formulas with H removed
                 var featuresByCNOS = new Dictionary<string, List<hkFeatureDetail>>();
-                var libraryCharges = new HashSet<int>(this._searchSettings.SettingsHardklor.Charges);
+                var featuresAll = new List<hkFeatureDetail>();
                 var contents = new List<string[]>();
                 var updatedFiles = new HashSet<int>();
-                var updates = new List<hkFeatureDetail>();
                 for (var fileIndex = 0; fileIndex < bfiles.Length; fileIndex++)
                 {
                     var file = bfiles[fileIndex];
@@ -258,6 +257,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                             lineIndex = l,
                             updated = false
                         };
+                        featuresAll.Add(feature);
 
                         if (!featuresByCNOS.TryGetValue(averagine_no_H, out var featureList))
                         {
@@ -289,10 +289,6 @@ namespace pwiz.Skyline.Model.DdaSearch
                         }
 
                         var chargeI = hkFeatureDetailI.charge;
-                        if (!libraryCharges.Contains(chargeI))
-                        {
-                            continue; // Don't bother processing, it won't end up in the library
-                        }
 
                         var mzI = hkFeatureDetailI.mzObserved;
                         if (mzI == 0)
@@ -331,7 +327,68 @@ namespace pwiz.Skyline.Model.DdaSearch
                                 hkFeatureDetailJ.massString = hkFeatureDetailI.massString;
                                 hkFeatureDetailJ.avergineAndOffset = hkFeatureDetailI.avergineAndOffset;
                                 hkFeatureDetailJ.updated = true; // No need to compare to others in this list
-                                updates.Add(hkFeatureDetailJ);  // We will write these values back to the file
+                            }
+                        }
+                    }
+                }
+
+                // We asked Hardklor to write its mass values at greater than normal precision, let's peel
+                //  that back to 4 decimal places, but we have to watch for collisions
+                var featuresByRoundedMass = new Dictionary<string, List<hkFeatureDetail>>();
+                foreach (var feature in featuresAll)
+                {
+                    var rounded = double.Parse(feature.massString, CultureInfo.InvariantCulture)
+                        .ToString(@"0.0000", CultureInfo.InvariantCulture);
+                    if (!featuresByRoundedMass.TryGetValue(rounded, out var featureList))
+                    {
+                        featuresByRoundedMass.Add(rounded, new List<hkFeatureDetail>() { feature });
+                    }
+                    else
+                    {
+                        featureList.Add(feature);
+                    }
+                }
+                foreach (var byRoundedMass in featuresByRoundedMass)
+                {
+                    if (byRoundedMass.Value.Count == 1)
+                    {
+                        var feat = byRoundedMass.Value[0];
+                        feat.massString = byRoundedMass.Key;
+                        feat.updated = true;
+                    }
+                    else
+                    {
+                        var features = byRoundedMass.Value;
+                        var masses = features
+                            .Select(v => double.Parse(v.massString, CultureInfo.InvariantCulture))
+                            .ToArray();
+                        for (var digits = 4; digits < 9; digits++)
+                        {
+                            var format = $@"0.{new string('0', digits)}";
+                            var revisedMassStrings = masses.Select(v => v.ToString(format, CultureInfo.InvariantCulture)).ToArray();
+                            var success = true;
+                            // Can use this precision only if there's no conflict in the averagines
+                            for (var i = 0; success && i < masses.Length; i++)
+                            {
+                                for (var j = i + 1; j < masses.Length; j++)
+                                {
+                                    if (revisedMassStrings[i] == revisedMassStrings[j] &&
+                                        !features[i].avergineAndOffset.Equals(features[j].avergineAndOffset))
+                                    {
+                                        success = false;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (success)
+                            {
+                                for (var i = 0; i < features.Count; i++)
+                                {
+                                    features[i].massString = revisedMassStrings[i];
+                                    features[i].updated = true;
+                                }
+                                break;
                             }
                         }
                     }
@@ -339,7 +396,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
                 // Now write back any adjustments before we hand off the files to BlibBuild, so it understands 
                 // that the IDs we matched are the same things
-                foreach (var update in updates.Where(u => u.updated))
+                foreach (var update in featuresAll.Where(u => u.updated))
                 {
                     var col = contents[update.fileIndex][update.lineIndex].Split('\t');
                     col[5] = update.massString;

@@ -368,7 +368,9 @@ namespace TestPerf
                 {
                     hkActualFilePath = hkActualFilePath.Replace(@".hk.", $@"_{HardklorSearchEngine.RunNumber:000}.hk.");
                 }
-                AssertEx.FileEquals(hkExpectedFilePath,  hkActualFilePath, null, true);
+
+                var columnTolerances = new Dictionary<int, double>() { { -1, .00015 } }; // Allow a little rounding wiggle in the decimal values
+                AssertEx.FileEquals(hkExpectedFilePath,  hkActualFilePath, columnTolerances, true);
             }
 
             // Verify use of library RT in chromatogram extraction

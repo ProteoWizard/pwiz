@@ -340,9 +340,13 @@ void BuildParser::OptionalSort(PSM_SCORE_TYPE scoreType)
         {
             if (a == NULL || b == NULL)
                 return false; // No change in order
+            if (a->specName == b->specName)
+            {
+                return a->score > b->score; // High score first, so it gets retained in case we're discarding ambiguous
+            }
             double massA = (a->smallMolMetadata.precursorMzDeclared - PROTON_MASS) * (double)a->charge;
             double massB = (b->smallMolMetadata.precursorMzDeclared - PROTON_MASS) * (double)b->charge;
-            return massA < massB;
+            return massA < massB; // Lower mass first
         }
         );
     }
@@ -384,6 +388,9 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
     if (!hasMatches)
         Verbosity::status("No matches left after filtering for target sequences in %s.", curSpecFileName_.c_str());
 
+    // Optionally sort the psms before writing
+    OptionalSort(scoreType);
+
     // prune out any duplicates from the list of psms
     if (!keepAmbiguous()) {
         removeDuplicates();
@@ -392,9 +399,6 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
         if (!hasMatches)
             Verbosity::status("No matches left after removing ambiguous spectra in %s.", curSpecFileName_.c_str());
     }
-
-    // Optionally sort the psms before writing
-    OptionalSort(scoreType);
 
     bool needsSpectra = false;
     for (unsigned int i = 0; i < psms_.size(); i++) {
