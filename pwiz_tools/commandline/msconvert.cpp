@@ -142,19 +142,6 @@ ostream& operator<<(ostream& os, const Config& config)
     return os;
 }
 
-static double string_to_double( const std::string& str )
-{
-    errno = 0;
-    const char* stringToConvert = str.c_str();
-    const char* endOfConversion = stringToConvert;
-    double value = STRTOD( stringToConvert, const_cast<char**>(&endOfConversion) );
-    if( value == 0.0 && stringToConvert == endOfConversion ) // error: conversion could not be performed
-        throw bad_lexical_cast(); // not a double
-    if (*endOfConversion)
-        throw bad_lexical_cast(); // started out as a double but became something else - like "10foo.raw"
-    return value;
-}
-
 void ShowExamples(ostringstream &usage)
 {
     usage << "Examples:\n"
@@ -270,19 +257,14 @@ Config parseCommandLine(int argc, char** argv)
     bool intensity_linear = false;
     bool noindex = false;
     bool zlib = true;
-    bool noZlib = false;
     bool gzip = false;
     bool ms_numpress_all = false; // if true, use this numpress compression with default tolerance
     double ms_numpress_linear = -1; // if >= 0, use this numpress linear compression with this tolerance
-    string ms_numpress_linear_str; // input as text, to help with the "msconvert --numpresslinear foo.raw" case
-    string ms_numpress_linear_default = (boost::format("%4.2g") % BinaryDataEncoder_default_numpressLinearErrorTolerance).str();
+    double ms_numpress_linear_default = BinaryDataEncoder_default_numpressLinearErrorTolerance;
     bool ms_numpress_pic = false; // if true, use this numpress Pic compression
     double ms_numpress_slof = -1; // if >= 0, use this numpress slof compression with this tolerance
     double ms_numpress_linear_abs_tolerance = -1; // if >= 0, use this numpress linear compression with this absolute Th tolerance
-    string ms_numpress_linear_abs_tolerance_str; // input as text
-    string ms_numpress_linear_abs_tolerance_str_default("-1"); // input as text
-    string ms_numpress_slof_str; // input as text, to help with the "msconvert --numpressslof foo.raw" case
-    string ms_numpress_slof_default = (boost::format("%4.2g") % BinaryDataEncoder_default_numpressSlofErrorTolerance).str();
+    double ms_numpress_slof_default = BinaryDataEncoder_default_numpressSlofErrorTolerance;
     string runIndexSet;
     bool detailedHelp = false;
     bool writeDoc = false;
@@ -402,22 +384,19 @@ Config parseCommandLine(int argc, char** argv)
             po::value<string>(&config.contactFilename),
             ": filename for contact info")
         ("zlib,z",
-            po::value<bool>(&zlib)->zero_tokens(),
-            ": use zlib compression for binary data (default)")
-        ("noZlib,u",
-            po::value<bool>(&noZlib)->zero_tokens(),
-            ": disable zlib compression for binary data")
+            po::value<bool>(&zlib)->implicit_value(true),
+            ": use zlib compression for binary data (add =off to disable compression)")
         ("numpressLinear",
-            po::value<std::string>(&ms_numpress_linear_str)->implicit_value(ms_numpress_linear_default),
+            po::value<double>(&ms_numpress_linear)->implicit_value(ms_numpress_linear_default, toString(ms_numpress_linear_default)),
             ": use numpress linear prediction compression for binary mz and rt data (relative accuracy loss will not exceed given tolerance arg, unless set to 0)")
         ("numpressLinearAbsTol",
-            po::value<std::string>(&ms_numpress_linear_abs_tolerance_str)->implicit_value(ms_numpress_linear_abs_tolerance_str_default),
+            po::value<double>(&ms_numpress_linear_abs_tolerance)->implicit_value(ms_numpress_linear_abs_tolerance),
             ": desired absolute tolerance for linear numpress prediction (e.g. use 1e-4 for a mass accuracy of 0.2 ppm at 500 m/z, default uses -1.0 for maximal accuracy). Note: setting this value may substantially reduce file size, this overrides relative accuracy tolerance.")
         ("numpressPic",
             po::value<bool>(&ms_numpress_pic)->zero_tokens(),
             ": use numpress positive integer compression for binary intensities (absolute accuracy loss will not exceed 0.5)")
         ("numpressSlof",
-            po::value<std::string>(&ms_numpress_slof_str)->implicit_value(ms_numpress_slof_default),
+            po::value<double>(&ms_numpress_slof)->implicit_value(ms_numpress_slof_default, toString(ms_numpress_slof_default)),
             ": use numpress short logged float compression for binary intensities (relative accuracy loss will not exceed given tolerance arg, unless set to 0)")
         ("numpressAll,n",
             po::value<bool>(&ms_numpress_all)->zero_tokens(),
@@ -508,9 +487,6 @@ Config parseCommandLine(int argc, char** argv)
     po::store(po::command_line_parser(argc, (char**)argv).
               options(od_parse).positional(pod_args).run(), vm);
     po::notify(vm);
-
-    if (zlib && noZlib)
-        throw usage_exception("The --zlib and --noZlib options cannot both be set at the same time.");
 
     // negate unknownInstrumentIsError value since command-line parameter (ignoreUnknownInstrumentError) and the Config parameters use inverse semantics
     config.unknownInstrumentIsError = !config.unknownInstrumentIsError;
@@ -604,7 +580,7 @@ Config parseCommandLine(int argc, char** argv)
             if (isHTTP(filename))
                 globbedFilenames.push_back(filename);
             else if (expand_pathmask(bfs::path(filename), globbedFilenames) == 0)
-                cout << "[msconvert] no files found matching \"" << filename << "\"" << endl;
+                throw user_error("[msconvert] no files found matching \"" + filename + "\"");
         }
 
         config.filenames.clear();
@@ -622,35 +598,6 @@ Config parseCommandLine(int argc, char** argv)
             string filename;
             getlinePortable(is, filename);
             if (is) config.filenames.push_back(filename);
-        }
-    }
-
-    // check stuff
-
-    if (ms_numpress_slof_str.length()) // was that a numerical arg to --numpressSlof, or a filename?
-    {
-        try 
-        {
-            ms_numpress_slof = string_to_double(ms_numpress_slof_str); 
-        }
-        catch(...) {
-            config.filenames.push_back(ms_numpress_slof_str); // actually that was a filename
-            ms_numpress_slof = BinaryDataEncoder_default_numpressSlofErrorTolerance;
-        }
-    }
-    if (ms_numpress_linear_abs_tolerance_str.length()) // this argument needs to be numerical
-    {
-        ms_numpress_linear_abs_tolerance = string_to_double(ms_numpress_linear_abs_tolerance_str);
-    }
-    if (ms_numpress_linear_str.length()) // was that a numerical arg to --numpressLinear, or a filename?
-    {
-        try 
-        {
-            ms_numpress_linear = string_to_double(ms_numpress_linear_str); 
-        }
-        catch(...) {
-            config.filenames.push_back(ms_numpress_linear_str); // actually that was a filename
-            ms_numpress_linear = BinaryDataEncoder_default_numpressLinearErrorTolerance;
         }
     }
 
@@ -786,7 +733,7 @@ Config parseCommandLine(int argc, char** argv)
     if (noindex)
         config.writeConfig.indexed = false;
 
-    if (!noZlib)
+    if (zlib)
         config.writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib; 
  
     config.writeConfig.mzMLb_chunk_size = mzMLb_chunk_size;
