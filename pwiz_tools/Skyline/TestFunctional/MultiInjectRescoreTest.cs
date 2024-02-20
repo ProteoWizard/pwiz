@@ -75,6 +75,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 rescoreResultsDlg.Rescore(false);
             });
+
             var allChromatogramsGraph = WaitForOpenForm<AllChromatogramsGraph>();
             WaitForConditionUI(() => allChromatogramsGraph.Finished);
             RunUI(() =>
@@ -85,6 +86,25 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsNull(fileStatuses[1].Error);
             });
             OkDialog(allChromatogramsGraph, allChromatogramsGraph.Close);
+        }
+
+        /// <summary>
+        /// Add extra information to a test failure exception in hopes of tracking down intermittent failure.
+        /// </summary>
+        private Exception AnnotateTestFailure(Exception testFailure)
+        {
+            // Write out the current document's XML in hopes of figuring out what went wrong
+            try
+            {
+                var documentStringWriter = new StringWriter();
+                new XmlSerializer(typeof(SrmDocument)).Serialize(documentStringWriter, SkylineWindow.Document);
+                return new AssertFailedException("Unexpected test failure. Document XML: " + documentStringWriter,
+                    testFailure);
+            }
+            catch (Exception exception2)
+            {
+                throw new AggregateException(testFailure, exception2);
+            }
         }
 
         /// <summary>
