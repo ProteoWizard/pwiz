@@ -364,9 +364,15 @@ namespace TestPerf
             foreach (var hkExpectedFilePath in Directory.EnumerateFiles(expectedFilesPath))
             {
                 var hkActualFilePath = hkExpectedFilePath.Replace(expectedHardklorFiles, Path.Combine(expectedHardklorFiles, @".."));
-                if (HardklorSearchEngine.RunNumber != 0)
+                // In the test loop there are lots of intentional starts and cancels, and multiple passes - always use the latest
+                for (var lastRun = 20; lastRun > 0; lastRun--) 
                 {
-                    hkActualFilePath = hkActualFilePath.Replace(@".hk.", $@"_{HardklorSearchEngine.RunNumber:000}.hk.");
+                    var potentialResultPath = hkActualFilePath.Replace(@".hk.", $@"_{lastRun:000}.hk.");
+                    if (File.Exists(potentialResultPath))
+                    {
+                        hkActualFilePath = potentialResultPath;
+                        break;
+                    }
                 }
 
                 var columnTolerances = new Dictionary<int, double>() { { -1, .00015 } }; // Allow a little rounding wiggle in the decimal values

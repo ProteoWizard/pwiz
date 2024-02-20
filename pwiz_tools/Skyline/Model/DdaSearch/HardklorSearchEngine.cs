@@ -545,7 +545,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             File.AppendAllLines(_isotopesFilename, isotopeValues);
         }
 
-        public static int RunNumber { get; private set; } // Used in filename creation to avoid stomping previous results, exposed for test usage
+        private static int RunNumber { get; set; } // Used in filename creation to avoid stomping previous results
         
         private string GenerateHardklorConfigFile(string skylineWorkingDirectory)
         {
