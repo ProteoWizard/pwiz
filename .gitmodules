@@ -1,12 +1,9 @@
 [submodule "pwiz_tools/Skyline/Executables/Hardklor/Hardklor"]
 	path = pwiz_tools/Skyline/Executables/Hardklor/Hardklor
 	url = https://github.com/proteowizard/Hardklor
-	commit =  d7f829f7773838dc491369c03087ea6924faff2a
 [submodule "pwiz_tools/Skyline/Executables/Hardklor/MSToolkit"]
 	path = pwiz_tools/Skyline/Executables/Hardklor/MSToolkit
 	url = https://github.com/proteowizard/MSToolkit
-	commit=8110ef7b7856f551b98f2c8cca449e44b288878a
 [submodule "pwiz_tools/Skyline/Executables/BullseyeSharp"]
 	path = pwiz_tools/Skyline/Executables/BullseyeSharp
 	url = https://github.com/ProteoWizard/BullseyeSharp
-	commit = f9c9347414cbe7a303bcfd81d2ca9a8fa59abf01
