@@ -17,14 +17,10 @@
  * limitations under the License.
  */
 
-using System;
-using System.IO;
 using System.Linq;
-using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
-using pwiz.Skyline.Model;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -86,44 +82,6 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsNull(fileStatuses[1].Error);
             });
             OkDialog(allChromatogramsGraph, allChromatogramsGraph.Close);
-        }
-
-        /// <summary>
-        /// Add extra information to a test failure exception in hopes of tracking down intermittent failure.
-        /// </summary>
-        private Exception AnnotateTestFailure(Exception testFailure)
-        {
-            // Write out the current document's XML in hopes of figuring out what went wrong
-            try
-            {
-                var documentStringWriter = new StringWriter();
-                new XmlSerializer(typeof(SrmDocument)).Serialize(documentStringWriter, SkylineWindow.Document);
-                return new AssertFailedException("Unexpected test failure. Document XML: " + documentStringWriter,
-                    testFailure);
-            }
-            catch (Exception exception2)
-            {
-                throw new AggregateException(testFailure, exception2);
-            }
-        }
-
-        /// <summary>
-        /// Add extra information to a test failure exception in hopes of tracking down intermittent failure.
-        /// </summary>
-        private Exception AnnotateTestFailure(Exception testFailure)
-        {
-            // Write out the current document's XML in hopes of figuring out what went wrong
-            try
-            {
-                var documentStringWriter = new StringWriter();
-                new XmlSerializer(typeof(SrmDocument)).Serialize(documentStringWriter, SkylineWindow.Document);
-                return new AssertFailedException("Unexpected test failure. Document XML: " + documentStringWriter,
-                    testFailure);
-            }
-            catch (Exception exception2)
-            {
-                throw new AggregateException(testFailure, exception2);
-            }
         }
     }
 }
