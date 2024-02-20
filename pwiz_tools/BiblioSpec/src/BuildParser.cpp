@@ -340,12 +340,12 @@ void BuildParser::OptionalSort(PSM_SCORE_TYPE scoreType)
         {
             if (a == NULL || b == NULL)
                 return false; // No change in order
-            if (a->specName == b->specName)
+            const double massA = (a->smallMolMetadata.precursorMzDeclared - PROTON_MASS) * static_cast<double>(a->charge);
+            const double massB = (b->smallMolMetadata.precursorMzDeclared - PROTON_MASS) * static_cast<double>(b->charge);
+            if (massA == massB)
             {
                 return a->score > b->score; // High score first, so it gets retained in case we're discarding ambiguous
             }
-            double massA = (a->smallMolMetadata.precursorMzDeclared - PROTON_MASS) * (double)a->charge;
-            double massB = (b->smallMolMetadata.precursorMzDeclared - PROTON_MASS) * (double)b->charge;
             return massA < massB; // Lower mass first
         }
         );
