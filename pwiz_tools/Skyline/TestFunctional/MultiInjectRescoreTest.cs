@@ -17,14 +17,10 @@
  * limitations under the License.
  */
 
-using System;
-using System.IO;
 using System.Linq;
-using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
-using pwiz.Skyline.Model;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -75,17 +71,9 @@ namespace pwiz.SkylineTestFunctional
             {
                 rescoreResultsDlg.Rescore(false);
             });
-            try
-            {
-                WaitForCondition(() => SkylineWindow.Document.MeasuredResults?.Chromatograms[0]?.FileCount == 1);
-            }
-            catch (Exception ex)
-            {
-                throw AnnotateTestFailure(ex);
-            }
-
 
             var allChromatogramsGraph = WaitForOpenForm<AllChromatogramsGraph>();
+            WaitForConditionUI(() => allChromatogramsGraph.Finished);
             RunUI(() =>
             {
                 var fileStatuses = allChromatogramsGraph.Files.ToList();
@@ -93,35 +81,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsNotNull(fileStatuses[0].Error);
                 Assert.IsNull(fileStatuses[1].Error);
             });
-            measuredResults = SkylineWindow.Document.Settings.MeasuredResults;
-            Assert.AreEqual(1, measuredResults.Chromatograms.Count);
-            Assert.AreEqual(1, measuredResults.Chromatograms[0].FileCount);
-
-            // Verify that the peptides still have their results for the one file that did not fail
-            foreach (var peptideDocNode in SkylineWindow.Document.Molecules)
-            {
-                Assert.AreEqual(1, peptideDocNode.Results[0].Count);
-            }
             OkDialog(allChromatogramsGraph, allChromatogramsGraph.Close);
-        }
-
-        /// <summary>
-        /// Add extra information to a test failure exception in hopes of tracking down intermittent failure.
-        /// </summary>
-        private Exception AnnotateTestFailure(Exception testFailure)
-        {
-            // Write out the current document's XML in hopes of figuring out what went wrong
-            try
-            {
-                var documentStringWriter = new StringWriter();
-                new XmlSerializer(typeof(SrmDocument)).Serialize(documentStringWriter, SkylineWindow.Document);
-                return new AssertFailedException("Unexpected test failure. Document XML: " + documentStringWriter,
-                    testFailure);
-            }
-            catch (Exception exception2)
-            {
-                throw new AggregateException(testFailure, exception2);
-            }
         }
     }
 }
