@@ -245,7 +245,11 @@ void MSDataFile::write(const MSData& msd,
 #ifdef WITHOUT_MZMLB
             throw runtime_error("[MSDataFile::write()] library was not built with mzMLb support.");
 #else
-            Connection_mzMLb con(filename, config.mzMLb_chunk_size, config.mzMLb_compression_level);
+            int mzMLb_compression_level = config.mzMLb_compression_level;
+            if (config.binaryDataEncoderConfig.compression == BinaryDataEncoder::Compression_Zlib && mzMLb_compression_level == 0)
+                mzMLb_compression_level = 4;
+
+            Connection_mzMLb con(filename, config.mzMLb_chunk_size, mzMLb_compression_level);
             boost::iostreams::stream<Connection_mzMLb> mzMLb_os(con, config.mzMLb_chunk_size);
             writeStream(mzMLb_os, msd, config, iterationListenerRegistry);
 #endif
