@@ -621,12 +621,12 @@ if [ modules.peek : NT ]
 
     # overwrite the original header files because of MSVC looking in the current header's path with #include "foo"
 
-    # HACK: bug in boost::interprocess (up to at least 1.55) requires a patch to support opening memory-mapped files with UTF-8 filenames
-    # Boost bug ticket: https://svn.boost.org/trac/boost/ticket/4335
-    #SHELL "@IF NOT EXIST $(BOOST_SOURCE)\\boost\\interprocess\\detail\\os_file_functions.hpp.bak rename $(BOOST_SOURCE)\\boost\\interprocess\\detail\\os_file_functions.hpp os_file_functions.hpp.bak" ;
-    #SHELL "@IF NOT EXIST $(BOOST_SOURCE)\\boost\\interprocess\\detail\\win32_api.hpp.bak rename $(BOOST_SOURCE)\\boost\\interprocess\\detail\\win32_api.hpp win32_api.hpp.bak" ;
-    #SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\boost\\interprocess\\detail\\os_file_functions.hpp $(BOOST_SOURCE)\\boost\\interprocess\\detail" ;
-    #SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\boost\\interprocess\\detail\\win32_api.hpp $(BOOST_SOURCE)\\boost\\interprocess\\detail" ;
+    # HACK: fix program_options implicit_value eating adjacent positional tokens
+    # Reapplying commit: https://github.com/boostorg/program_options/commit/88dea3c6fdea8c9ea894911897b1770599c383e4 (which was later reverted but was the proper behavior IMO)
+    SHELL "@IF NOT EXIST $(BOOST_SOURCE)\\boost\\program_options\\value_semantic.hpp.bak rename $(BOOST_SOURCE)\\boost\\program_options\\value_semantic.hpp value_semantic.hpp.bak" ;
+    SHELL "@IF NOT EXIST $(BOOST_SOURCE)\\libs\\program_options\\src\\cmdline.cpp.bak rename $(BOOST_SOURCE)\\libs\\program_options\\src\\cmdline.cpp cmdline.cpp.bak" ;
+    SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\boost\\program_options\\value_semantic.hpp $(BOOST_SOURCE)\\boost\\program_options" ;
+    SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\libs\\program_options\\src\\cmdline.cpp $(BOOST_SOURCE)\\libs\\program_options\\src" ;
 }
 else
 {
