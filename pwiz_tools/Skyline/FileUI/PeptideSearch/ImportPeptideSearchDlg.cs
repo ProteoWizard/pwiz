@@ -1021,7 +1021,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             // Older Resharper code inspection implementations insist on warning here
             // Resharper disable PossibleMultipleEnumeration
-            string[] resultNames = foundResults.Select(f => f.Name).ToArray();
+            string[] resultNames = foundResults.Select(f => Path.GetFileNameWithoutExtension(f.Name)).ToArray();
             string prefix = ImportResultsDlg.GetCommonPrefix(resultNames);
             string suffix = ImportResultsDlg.GetCommonSuffix(resultNames);
             // Resharper restore PossibleMultipleEnumeration
