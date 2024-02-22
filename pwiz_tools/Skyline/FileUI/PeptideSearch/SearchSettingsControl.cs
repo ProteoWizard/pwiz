@@ -64,7 +64,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 _hardklorInstrumentSettingsControl.Location = new System.Drawing.Point(0, 0);
                 // And adjust location of the other settings controls
                 groupBoxHardklor.Enabled = groupBoxHardklor.Visible = true;
-                groupBoxHardklor.Location = new System.Drawing.Point(_hardklorInstrumentSettingsControl.GroupBoxMS1Bounds.Left, _hardklorInstrumentSettingsControl.Bottom + 10);
+                groupBoxHardklor.Location = new System.Drawing.Point(_hardklorInstrumentSettingsControl.GroupBoxMS1Bounds.Left, _hardklorInstrumentSettingsControl.GroupBoxMS1Bounds.Bottom + 10);
                 groupBoxHardklor.Width = _hardklorInstrumentSettingsControl.GroupBoxMS1Bounds.Width;
             }
             else
