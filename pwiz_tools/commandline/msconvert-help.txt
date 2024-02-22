@@ -5,15 +5,16 @@ Return value: # of failed files.
 
 Options:
   -f [ --filelist ] arg              : specify text file containing filenames
-  -o [ --outdir ] arg (=.)           : set output directory ('-' for stdout, 
-                                     '.' for current directory) [.]
+  -o [ --outdir ] arg (=.)           : set output directory ('-' for stdout, '.' for current directory) [.]
   -c [ --config ] arg                : configuration file (optionName=value)
   --outfile arg                      : Override the name of output file.
-  -e [ --ext ] arg                   : set extension for output files 
-                                     [mzML|mzXML|mgf|txt|mz5]
+  -e [ --ext ] arg                   : set extension for output files [mzML|mzXML|mgf|txt|mz5|mzMLb]
   --mzML                             : write mzML format [default]
   --mzXML                            : write mzXML format
   --mz5                              : write mz5 format
+  --mzMLb                            : write mzMLb format
+  --mzMLbChunkSize arg (=1048576)    : mzMLb dataset chunk size in bytes
+  --mzMLbCompressionLevel arg (=4)   : mzMLb GZIP compression level (0-9)
   --mgf                              : write Mascot generic format
   --text                             : write ProteoWizard internal text format
   --ms1                              : write MS1 format
@@ -21,99 +22,47 @@ Options:
   --ms2                              : write MS2 format
   --cms2                             : write CMS2 format
   -v [ --verbose ]                   : display detailed progress information
-  --64                               : set default binary encoding to 64-bit 
-                                     precision [default]
-  --32                               : set default binary encoding to 32-bit 
-                                     precision
-  --mz64                             : encode m/z values in 64-bit precision 
-                                     [default]
+  --64                               : set default binary encoding to 64-bit precision [default]
+  --32                               : set default binary encoding to 32-bit precision
+  --mz64                             : encode m/z values in 64-bit precision [default]
   --mz32                             : encode m/z values in 32-bit precision
-  --inten64                          : encode intensity values in 64-bit 
-                                     precision
-  --inten32                          : encode intensity values in 32-bit 
-                                     precision [default]
+  --inten64                          : encode intensity values in 64-bit precision
+  --inten32                          : encode intensity values in 32-bit precision [default]
+  --mzTruncation arg (=0)            : Number of mantissa precision bits to truncate for mz and rt, or if -1 will store integers only
+  --intenTruncation arg (=0)         : Number of mantissa precision bits to truncate for intensities, or if -1 will store integers only
+  --mzDelta                          : apply delta prediction to mz and rt values
+  --intenDelta                       : apple delta prediction to intensity values
+  --mzLinear                         : apply linear prediction to mz and rt values
+  --intenLinear                      : apply linear prediction to intensity values
   --noindex                          : do not write index
   -i [ --contactInfo ] arg           : filename for contact info
-  -z [ --zlib ]                      : use zlib compression for binary data
-  --numpressLinear [=arg(=2e-09)]    : use numpress linear prediction 
-                                     compression for binary mz and rt data 
-                                     (relative accuracy loss will not exceed 
-                                     given tolerance arg, unless set to 0)
-  --numpressLinearAbsTol [=arg(=-1)] : desired absolute tolerance for linear 
-                                     numpress prediction (e.g. use 1e-4 for a 
-                                     mass accuracy of 0.2 ppm at 500 m/z, 
-                                     default uses -1.0 for maximal accuracy). 
-                                     Note: setting this value may substantially
-                                     reduce file size, this overrides relative 
-                                     accuracy tolerance.
-  --numpressPic                      : use numpress positive integer 
-                                     compression for binary intensities 
-                                     (absolute accuracy loss will not exceed 
-                                     0.5)
-  --numpressSlof [=arg(=0.0002)]     : use numpress short logged float 
-                                     compression for binary intensities 
-                                     (relative accuracy loss will not exceed 
-                                     given tolerance arg, unless set to 0)
-  -n [ --numpressAll ]               : same as --numpressLinear --numpressSlof 
-                                     (see https://github.com/fickludd/ms-numpre
-                                     ss for more info)
-  -g [ --gzip ]                      : gzip entire output file (adds .gz to 
-                                     filename)
+  -z [ --zlib ] [=arg(=1)]           : use zlib compression for binary data (add =off to disable compression)
+  --numpressLinear [=arg(=2.0e-09)]  : use numpress linear prediction compression for binary mz and rt data (relative accuracy loss will not exceed given tolerance arg, unless set to 0)
+  --numpressLinearAbsTol [=arg(=-1)] : desired absolute tolerance for linear numpress prediction (e.g. use 1e-4 for a mass accuracy of 0.2 ppm at 500 m/z, default uses -1.0 for maximal accuracy). Note: setting this value may substantially reduce file size, this overrides relative accuracy tolerance.
+  --numpressPic                      : use numpress positive integer compression for binary intensities (absolute accuracy loss will not exceed 0.5)
+  --numpressSlof [=arg(=2.0e-04)]    : use numpress short logged float compression for binary intensities (relative accuracy loss will not exceed given tolerance arg, unless set to 0)
+  -n [ --numpressAll ]               : same as --numpressLinear --numpressSlof (see https://github.com/fickludd/ms-numpress for more info)
+  -g [ --gzip ]                      : gzip entire output file (adds .gz to filename)
   --filter arg                       : add a spectrum list filter
   --chromatogramFilter arg           : add a chromatogram list filter
-  --merge                            : create a single output file from 
-                                     multiple input files by merging file-level
-                                     metadata and concatenating spectrum lists
-  --runIndexSet arg                  : for multi-run sources, select only the 
-                                     specified run indices
-  --simAsSpectra                     : write selected ion monitoring as 
-                                     spectra, not chromatograms
-  --srmAsSpectra                     : write selected reaction monitoring as 
-                                     spectra, not chromatograms
-  --combineIonMobilitySpectra        : write all ion mobility or Waters SONAR 
-                                     bins/scans in a frame/block as one 
-                                     spectrum instead of individual spectra
-  --ddaProcessing                    : if supported by vendor; combine MS2 
-                                     spectra referring to the same precursor 
-                                     and survey scan, and calculate accurate 
-                                     precursor masses.
-  --ignoreCalibrationScans           : do not process calibration scans 
-                                     (currently only applies to Waters lockmass
-                                     function)
-  --acceptZeroLengthSpectra          : some vendor readers have an efficient 
-                                     way of filtering out empty spectra, but it
-                                     takes more time to open the file
-  --ignoreMissingZeroSamples         : some vendor readers do not include zero 
-                                     samples in their profile data; the default
-                                     behavior is to add the zero samples but 
-                                     this option disables that
-  --ignoreUnknownInstrumentError     : if true, if an instrument cannot be 
-                                     determined from a vendor file, it will not
-                                     be an error
-  --stripLocationFromSourceFiles     : if true, sourceFile elements will be 
-                                     stripped of location information, so the 
-                                     same file converted from different 
-                                     locations will produce the same mzML
-  --stripVersionFromSoftware         : if true, software elements will be 
-                                     stripped of version information, so the 
-                                     same file converted with different 
-                                     versions will produce the same mzML
-  --singleThreaded [=arg(=1)] (=2)   : if true, reading and writing spectra 
-                                     will be done on a single thread
-  --continueOnError                  : if true, if an error is seen when 
-                                     enumerating a spectrum or chromatogram, it
-                                     is skipped and enumeration will attempt to
-                                     continue (but keep in mind a crash may 
-                                     follow, or the remaining data might be 
-                                     obviously or subtly incorrect)
-  --help                             : show this message, with extra detail on 
-                                     filter options
-  --help-filter arg                  : name of a single filter to get detailed 
-                                     help for
-  --show-examples                    : show examples of how to run 
-                                     msconvert.exe
-  --doc                              : writes output of --help and 
-                                     --show-examples, without version info
+  --merge                            : create a single output file from multiple input files by merging file-level metadata and concatenating spectrum lists
+  --runIndexSet arg                  : for multi-run sources, select only the specified run indices
+  --simAsSpectra                     : write selected ion monitoring as spectra, not chromatograms
+  --srmAsSpectra                     : write selected reaction monitoring as spectra, not chromatograms
+  --combineIonMobilitySpectra        : write all ion mobility or Waters SONAR bins/scans in a frame/block as one spectrum instead of individual spectra
+  --ddaProcessing                    : if supported by vendor; combine MS2 spectra referring to the same precursor and survey scan, and calculate accurate precursor masses.
+  --ignoreCalibrationScans           : do not process calibration scans (currently only applies to Waters lockmass function)
+  --acceptZeroLengthSpectra          : some vendor readers have an efficient way of filtering out empty spectra, but it takes more time to open the file
+  --ignoreMissingZeroSamples         : some vendor readers do not include zero samples in their profile data; the default behavior is to add the zero samples but this option disables that
+  --ignoreUnknownInstrumentError     : if true, if an instrument cannot be determined from a vendor file, it will not be an error
+  --stripLocationFromSourceFiles     : if true, sourceFile elements will be stripped of location information, so the same file converted from different locations will produce the same mzML
+  --stripVersionFromSoftware         : if true, software elements will be stripped of version information, so the same file converted with different versions will produce the same mzML
+  --singleThreaded [=arg(=1)] (=2)   : if true, reading and writing spectra will be done on a single thread
+  --continueOnError                  : if true, if an error is seen when enumerating a spectrum or chromatogram, it is skipped and enumeration will attempt to continue (but keep in mind a crash may follow, or the remaining data might be obviously or subtly incorrect)
+  --help                             : show this message, with extra detail on filter options
+  --help-filter arg                  : name of a single filter to get detailed help for
+  --show-examples                    : show examples of how to run msconvert.exe
+  --doc                              : writes output of --help and --show-examples, without version info
 
 Spectrum List Filters
 =====================
@@ -262,6 +211,12 @@ thermoScanFilter <exact|contains> <include|exclude> <match string>
                       If "exclude" is set, only spectra that do NOT match the filter will be kept.
                      used the filter drops data points that match the various criteria instead of keeping them.   <match string> specifies the search string to be compared to each scan filter (it may contain spaces)
 
+
+mzShift <m/z shift as number and units (e.g. 10ppm or 1Da)> [msLevels=int_set (1-)]
+Shifts all m/z values by the specified amount if a spectrum's ms level is in the msLevels set.
+Both metadata (e.g. scan window, base peak m/z) and binary data (m/z array) are shifted.
+Precursor metadata is only shifted if the spectrum's precursor ms level (ms level - 1) is in the msLevels set.
+This allows applying different shifts for different ms levels.
 
 MS2Denoise [<peaks_in_window> [<window_width_Da> [multicharge_fragment_relaxation]]]
 Noise peak removal for spectra with precursor ions.
