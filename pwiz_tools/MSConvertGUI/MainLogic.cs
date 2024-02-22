@@ -447,7 +447,15 @@ namespace MSConvertGUI
                 config.WriteConfig.indexed = false;
 
             if (zlib)
+            {
                 config.WriteConfig.compression = MSDataFile.Compression.Compression_Zlib;
+                config.WriteConfig.mzMLb_compression_level = 4;
+            }
+            else
+            {
+                config.WriteConfig.compression = MSDataFile.Compression.Compression_None;
+                config.WriteConfig.mzMLb_compression_level = 0;
+            }
 
             return config;
         }
