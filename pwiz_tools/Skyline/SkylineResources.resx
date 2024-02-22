@@ -1148,4 +1148,7 @@
   <data name="ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___" xml:space="preserve">
     <value>The value '{0}' is not valid for the argument {1} which requires a comma-separated list of annotation targets {2}.</value>
   </data>
+  <data name="CommandLine_SetPeptideModSettings_Error__Failed_attempting_to_change_the_peptide_modification_settings_" xml:space="preserve">
+	  <value>Error: Failed attempting to change the peptide modification settings.</value>
+  </data>
 </root>

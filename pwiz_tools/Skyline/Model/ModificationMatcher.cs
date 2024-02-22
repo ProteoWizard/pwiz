@@ -22,10 +22,12 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
@@ -326,6 +328,59 @@ namespace pwiz.Skyline.Model
             }
             // Try short name string
             return UniMod.DictShortNamesToUniMod.TryGetValue(unimodString.ToLower(), out uniModId);
+        }
+
+        /// <summary>
+        /// Get a UniMod StaticMod from any of: unimod:XXX numeric ID, short name, or full name.
+        /// If the short name or ID has multiple specificities in UniMod, each one has its own StaticMod.
+        /// In that case, the terminus or modAAs parameter must be used to choose which specificity to return.
+        /// </summary>
+        /// <param name="unimodNameOrId">Mod name or numeric ID</param>
+        /// <param name="modTerminus">If non-null, match only mods with the given terminus specificity.</param>
+        /// <param name="modAAs">If non-null, match only mods with the given AA specificity.</param>
+        /// <exception cref="ArgumentException">When unimodNameOrId does not match anything in UniMod,
+        /// or when it matches to multiple StaticMods and modTerminus or modAAs are not provided to pick which specific one to return.</exception>
+        public static StaticMod GetStaticMod(string unimodNameOrId, ModTerminus? modTerminus, string modAAs)
+        {
+            if (TryGetIdFromUnimod(unimodNameOrId, out int uniModId))
+            {
+                var key = new UniMod.UniModIdKey
+                {
+                    Id = uniModId,
+                    Aa = modAAs?[0] ?? 'A', // any AA will work for terminal mods due to how UniMod.AddMod handles "all AA" mods
+                    AllAas = modAAs == null,
+                    Terminus = modTerminus
+                };
+                if (UniMod.DictUniModIds.TryGetValue(key, out var mod))
+                    return mod;
+                var id = uniModId;
+                int idMatches = UniMod.DictUniModIds.Count(kvp => kvp.Key.Id == id);
+                if (idMatches == 1) // key didn't match because terminus and AAs weren't needed for specificity
+                    return UniMod.DictUniModIds.First(kvp => kvp.Key.Id == id).Value;
+
+                Assume.IsTrue(idMatches > 0); // if there were 0 matches, TryGetIdFromUnimod should not have returned true
+                if (modTerminus == null && modAAs == null)
+                {
+                    throw new ArgumentException(ModelResources
+                        .ModificationMatcher_GetStaticMod_found_more_than_one_UniMod_match__add_terminus_and_or_amino_acid_specificity_to_choose_a_single_match);
+                }
+                else
+                {
+                    var specificityOptions = new List<string>();
+                    if (modTerminus.HasValue)
+                        specificityOptions.Add(TextUtil.ColonSeparate(PropertyNames.StaticMod_Terminus, modTerminus.ToString()));
+                    if (modAAs != null)
+                        specificityOptions.Add(TextUtil.ColonSeparate(PropertyNames.StaticMod_AAs, modAAs));
+                    string specificity = TextUtil.TextSeparate(TextUtil.CsvSeparator.ToString(), specificityOptions);
+                    throw new ArgumentException(string.Format(
+                        ModelResources.ModificationMatcher_GetStaticMod_found_more_than_one_UniMod_match_but_the_given_specificity___0___does_not_match_any_of_them_,
+                        specificity));
+                }
+            }
+
+            // Try long name string
+            return UniMod.GetModification(unimodNameOrId, out _) ??
+                   throw new ArgumentException(ModelResources.ModificationMatcher_GetStaticMod_no_UniMod_match);
         }
 
         public string SimplifyUnimodSequence(string seq)
