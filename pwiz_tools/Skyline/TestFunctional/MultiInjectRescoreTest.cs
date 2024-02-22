@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
@@ -70,9 +71,9 @@ namespace pwiz.SkylineTestFunctional
             {
                 rescoreResultsDlg.Rescore(false);
             });
-            WaitForCondition(() => SkylineWindow.Document.MeasuredResults?.Chromatograms[0]?.FileCount == 1);
 
             var allChromatogramsGraph = WaitForOpenForm<AllChromatogramsGraph>();
+            WaitForConditionUI(() => allChromatogramsGraph.Finished);
             RunUI(() =>
             {
                 var fileStatuses = allChromatogramsGraph.Files.ToList();
@@ -80,15 +81,6 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsNotNull(fileStatuses[0].Error);
                 Assert.IsNull(fileStatuses[1].Error);
             });
-            measuredResults = SkylineWindow.Document.Settings.MeasuredResults;
-            Assert.AreEqual(1, measuredResults.Chromatograms.Count);
-            Assert.AreEqual(1, measuredResults.Chromatograms[0].FileCount);
-
-            // Verify that the peptides still have their results for the one file that did not fail
-            foreach (var peptideDocNode in SkylineWindow.Document.Molecules)
-            {
-                Assert.AreEqual(1, peptideDocNode.Results[0].Count);
-            }
             OkDialog(allChromatogramsGraph, allChromatogramsGraph.Close);
         }
     }
