@@ -18,6 +18,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -247,7 +248,8 @@ namespace pwiz.Skyline.Model
             rhs = rhs.ToLowerInvariant().Replace(@"true", @"1").Replace(@"false", @"0");
             if (int.TryParse(lhs, out int lhsInt) && int.TryParse(rhs, out int rhsInt))
                 return lhsInt == rhsInt;
-            if (double.TryParse(lhs, out double lhsDbl) && double.TryParse(rhs, out double rhsDbl))
+            if (double.TryParse(lhs.Replace(@".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), out double lhsDbl) &&
+                double.TryParse(rhs.Replace(@".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator), out double rhsDbl))
                 return lhsDbl.AlmostEqual(rhsDbl, 5);
             return lhs == rhs;
         }
