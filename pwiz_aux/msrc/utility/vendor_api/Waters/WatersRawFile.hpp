@@ -35,6 +35,7 @@
 #include <iostream>
 #include <fstream>
 
+#pragma warning (push)
 #pragma warning (disable: 4189)
 //#include "MassLynxRawDataFile.h"
 #include "MassLynxRawBase.hpp"
