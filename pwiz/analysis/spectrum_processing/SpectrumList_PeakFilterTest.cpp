@@ -28,6 +28,7 @@
 #include "MS2NoiseFilter.hpp"
 #include "SpectrumList_PeakFilter.hpp"
 #include "SpectrumList_ZeroSamplesFilter.hpp"
+#include "MzShiftFilter.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/data/msdata/examples.hpp"
 #include "pwiz/data/msdata/TextWriter.hpp"
@@ -762,7 +763,56 @@ void testIsolationWindowFilter()
     unit_assert_operator_equal(~parseDoubleArray("2 3 4 5 6 7 8"), (vector<double>) s2->getMZArray()->data);
     unit_assert_operator_equal(~parseDoubleArray("1 0 1 2 1 0 1"), (vector<double>) s2->getIntensityArray()->data);
 }
-    
+
+void testMzShiftFilter()
+{
+    MSData msd;
+    examples::initializeTiny(msd);
+
+    auto mzShift = MZTolerance(10, MZTolerance::PPM);
+    SpectrumDataFilterPtr filterPtr(new MzShiftFilter(mzShift, IntegerSet(1, 2)));
+    SpectrumListPtr filteredList(new SpectrumList_PeakFilter(msd.run.spectrumListPtr, filterPtr));
+
+    for (size_t i = 0; i < filteredList->size(); ++i)
+    {
+        auto original = msd.run.spectrumListPtr->spectrum(i);
+        auto filtered = filteredList->spectrum(i);
+
+        auto testMzShift = [&](ParamContainer& p1, ParamContainer& p2)
+        {
+            for (auto& cvParam : p1.cvParams)
+                if (cvParam.units == MS_m_z)
+                {
+                    double mz1 = cvParam.valueAs<double>() + (cvParam.units == MS_m_z ? mzShift : MZTolerance());
+                    double mz2 = p2.cvParam(cvParam.cvid).valueAs<double>();
+                    unit_assert_operator_equal(mz1, mz2);
+                }
+        };
+
+        testMzShift(*original, *filtered);
+        unit_assert_operator_equal(original->scanList.scans.size(), filtered->scanList.scans.size());
+        for (size_t j = 0; j < original->scanList.scans.size(); ++j)
+            testMzShift(original->scanList.scans[j], filtered->scanList.scans[j]);
+
+        unit_assert_operator_equal(original->precursors.size(), filtered->precursors.size());
+        for (size_t j = 0; j < original->precursors.size(); ++j)
+        {
+            testMzShift(original->precursors[j], filtered->precursors[j]);
+            testMzShift(original->precursors[j].activation, filtered->precursors[j].activation);
+            testMzShift(original->precursors[j].isolationWindow, filtered->precursors[j].isolationWindow);
+
+            unit_assert_operator_equal(original->precursors[j].selectedIons.size(), filtered->precursors[j].selectedIons.size());
+            for (size_t k = 0; k < original->precursors[j].selectedIons.size(); ++k)
+                testMzShift(original->precursors[j].selectedIons[k], filtered->precursors[j].selectedIons[k]);
+        }
+
+        auto originalData = original->getMZArray()->data;
+        auto filteredData = filtered->getMZArray()->data;
+        unit_assert_operator_equal(originalData.size(), filteredData.size());
+        for (size_t j = 0; j < originalData.size(); ++j)
+            unit_assert_operator_equal(originalData[j] + mzShift, filteredData[j]);
+    }
+}
 
 void test()
 {
@@ -772,6 +822,7 @@ void test()
     testMS2Denoising();
     testZeroSamplesFilter();
     testIsolationWindowFilter();
+    testMzShiftFilter();
 }
 
 int main(int argc, char* argv[])
