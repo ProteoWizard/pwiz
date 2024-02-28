@@ -877,7 +877,7 @@ namespace pwiz.Skyline.Model
                 }
                 listResultsNew.Add(new ChromInfoList<TransitionGroupChromInfo>(infoNew));
             }
-            var resultsNew = new Results<TransitionGroupChromInfo>(listResultsNew);
+            var resultsNew = Results<TransitionGroupChromInfo>.FromChromInfoLists(listResultsNew);
             return resultsNew;
         }
 

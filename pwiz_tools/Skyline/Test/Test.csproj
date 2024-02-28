@@ -146,6 +146,7 @@
     <Compile Include="BookmarkEnumeratorTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="ChromatogramGroupIdsTest.cs" />
+    <Compile Include="ColumnDataTest.cs" />
     <Compile Include="ElibQuantifiableTransitionTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
     <Compile Include="LibraryRankedSpectrumInfoTest.cs" />
@@ -248,6 +249,7 @@
     <Compile Include="ToolDescriptionTest.cs" />
     <Compile Include="TransitionSettings07Test.cs" />
     <Compile Include="SubstringFinderTest.cs" />
+    <Compile Include="TransposedResultsTest.cs" />
     <Compile Include="TypedMassTest.cs" />
     <Compile Include="TypeSafeEnumTest.cs" />
     <Compile Include="UndoManagerTest.cs" />

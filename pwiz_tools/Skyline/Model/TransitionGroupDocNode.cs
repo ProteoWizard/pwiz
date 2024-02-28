@@ -1281,7 +1281,7 @@ namespace pwiz.Skyline.Model
                     select ((TransitionDocNode)child).Key(this));
             }
 
-            var resultsCalc = new TransitionGroupResultsCalculator(settingsNew, nodePep, this, dictChromIdIndex);
+            var resultsCalc = new TransitionGroupResultsCalculator(settingsNew, diff.ValueCache, nodePep, this, dictChromIdIndex);
             var measuredResults = settingsNew.MeasuredResults;
             List<IList<ChromatogramGroupInfo>> allChromatogramGroupInfos = null;
             try
@@ -1945,12 +1945,13 @@ namespace pwiz.Skyline.Model
             private readonly IDictionary<int, int> _dictChromIdIndex;
 
             public TransitionGroupResultsCalculator(SrmSettings settings,
+                                                    ValueCache valueCache,
                                                     PeptideDocNode nodePep,
                                                     TransitionGroupDocNode nodeGroup,                                                    
                                                     IDictionary<int, int> dictChromIdIndex)
             {
                 Settings = settings;
-
+                ValueCache = valueCache;
                 _nodePep = nodePep;
                 _nodeGroup = nodeGroup;
                 _dictChromIdIndex = dictChromIdIndex;
@@ -1966,6 +1967,7 @@ namespace pwiz.Skyline.Model
             }
 
             private SrmSettings Settings { get; set; }
+            public ValueCache ValueCache { get; }
 
             public void AddSet()
             {
@@ -2026,23 +2028,22 @@ namespace pwiz.Skyline.Model
                     childrenNew.Add(UpdateTransitionNode(nodeTran, iTran));
                 }
 
+                if (!ArrayUtil.ReferencesEqual(childrenNew, nodeGroup.Children))
+                {
+                    TransposedTransitionChromInfos.StoreResults(ValueCache, childrenNew);
+                }
+
                 var listChromInfoLists = _listResultCalcs.ConvertAll(calc => calc.CalcChromInfoList());
-                var results = Results<TransitionGroupChromInfo>.Merge(nodeGroup.Results, listChromInfoLists);
+                var results = Results<TransitionGroupChromInfo>.FromChromInfoLists(listChromInfoLists);
 
-                var nodeGroupNew = nodeGroup;
-                if (!Results<TransitionGroupChromInfo>.EqualsDeep(results, nodeGroupNew.Results))
-                    nodeGroupNew = nodeGroupNew.ChangeResults(results);
-
-                nodeGroupNew = (TransitionGroupDocNode)nodeGroupNew.ChangeChildrenChecked(childrenNew);
-                return nodeGroupNew;
+                return (TransitionGroupDocNode) nodeGroup.ChangeResults(results).ChangeChildrenChecked(childrenNew);
             }
 
             private TransitionDocNode UpdateTransitionNode(TransitionDocNode nodeTran, int iTran)
             {
                 var chromInfoSet = _arrayTransitionChromInfoSets[iTran];
-                var results = Results<TransitionChromInfo>.Merge(nodeTran.Results, chromInfoSet.ChromInfoLists);
-                if (!Results<TransitionChromInfo>.EqualsDeep(results, nodeTran.Results))
-                    nodeTran = nodeTran.ChangeResults(results);
+                var results = Results<TransitionChromInfo>.FromChromInfoLists(chromInfoSet.ChromInfoLists);
+                nodeTran = nodeTran.ChangeResults(results);
                 if (nodeTran.ResultsRank != chromInfoSet.AverageRank)
                     nodeTran = nodeTran.ChangeResultsRank(chromInfoSet.AverageRank);
                 return nodeTran;
@@ -2771,9 +2772,12 @@ namespace pwiz.Skyline.Model
 
         public TransitionGroupDocNode ChangeResults(Results<TransitionGroupChromInfo> prop)
         {
-            return Results<TransitionGroupChromInfo>.EqualsDeep(Results, prop) ? 
-                   this : 
-                   ChangeProp(ImClone(this), im => im.Results = prop);
+            prop = prop?.Merge(Results);
+            if (ReferenceEquals(prop, Results))
+            {
+                return this;
+            }
+            return ChangeProp(ImClone(this), im => im.Results = prop);
         }
 
         public TransitionGroupDocNode ChangePrecursorAnnotations(ChromFileInfoId fileId, Annotations annotations)
@@ -3120,9 +3124,10 @@ namespace pwiz.Skyline.Model
                     chromInfoList = new ChromInfoList<TransitionGroupChromInfo>(listChromInfo);
                 listResults.Add(chromInfoList);
             }
+
             if (ArrayUtil.InnerReferencesEqual<TransitionGroupChromInfo, ChromInfoList<TransitionGroupChromInfo>>(listResults, Results))
                 return Results;
-            return new Results<TransitionGroupChromInfo>(listResults);
+            return Results<TransitionGroupChromInfo>.FromChromInfoLists(listResults);
         }
 
         #endregion

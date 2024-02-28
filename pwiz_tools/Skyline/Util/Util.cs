@@ -820,7 +820,7 @@ namespace pwiz.Skyline.Util
             return true;
         }
 
-        public static bool InnerReferencesEqual<TItem, TItemList>(IList<TItemList> values1, IList<TItemList> values2)
+        public static bool InnerReferencesEqual<TItem, TItemList>(IReadOnlyList<TItemList> values1, IReadOnlyList<TItemList> values2)
             where TItemList : IList<TItem>
         {
             if (values1 == null && values2 == null)

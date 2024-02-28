@@ -875,6 +875,23 @@ namespace pwiz.Skyline.Model
 
         public TransitionDocNode ChangeResults(Results<TransitionChromInfo> prop)
         {
+            prop = prop?.Merge(Results);
+            if (ReferenceEquals(prop, Results))
+            {
+                return this;
+            }
+            return ChangeProp(ImClone(this), im => im.Results = prop);
+        }
+
+        public TransitionDocNode StoreOptimizedResults(Results<TransitionChromInfo> prop)
+        {
+            if (ReferenceEquals(prop, Results))
+            {
+                return this;
+            }
+#if DEBUG
+            Assume.AreEqual(prop, Results);
+#endif
             return ChangeProp(ImClone(this), im => im.Results = prop);
         }
 
@@ -1022,14 +1039,12 @@ namespace pwiz.Skyline.Model
                     chromInfoList = new ChromInfoList<TransitionChromInfo>(listChromInfo);
                 listResults.Add(chromInfoList);
             }
-            if (ArrayUtil.InnerReferencesEqual<TransitionChromInfo, ChromInfoList<TransitionChromInfo>>(listResults, Results))
-                return Results;
-            return new Results<TransitionChromInfo>(listResults);
+            return Results<TransitionChromInfo>.FromChromInfoLists(listResults);
         }
 
-        #endregion
+#endregion
 
-        #region object overrides
+#region object overrides
 
         public bool Equals(TransitionDocNode obj)
         {
@@ -1064,7 +1079,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        #endregion
+#endregion
 
         public struct TransitionQuantInfo
         {

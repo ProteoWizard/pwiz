@@ -25,20 +25,7 @@ namespace pwiz.Common.SystemUtil
     /// </summary>
     public class ValueCache
     {
-        /// <summary>
-        /// An empty cache which never stores anything in the cache.
-        /// </summary>
-        public static readonly ValueCache EMPTY = new ValueCache(null);
-        private readonly HashSet<object> _cachedValues;
-
-        public ValueCache() : this(new HashSet<object>())
-        {
-            
-        }
-        private ValueCache(HashSet<object> cachedValues)
-        {
-            _cachedValues = cachedValues;
-        }
+        private readonly HashSet<object> _cachedValues = new HashSet<object>();
 
         /// <summary>
         /// If the value has already been stored in this cache, then sets <paramref name="value"/> to 
@@ -46,15 +33,19 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public bool TryGetCachedValue<T>(ref T value)
         {
-            if (_cachedValues == null || ReferenceEquals(value, null))
+            if (ReferenceEquals(value, null))
             {
                 return true;
             }
-            object objectFromCache;
-            if (_cachedValues.TryGetValue(value, out objectFromCache))
+
+            lock (_cachedValues)
             {
-                value = (T) objectFromCache;
-                return true;
+                object objectFromCache;
+                if (_cachedValues.TryGetValue(value, out objectFromCache))
+                {
+                    value = (T)objectFromCache;
+                    return true;
+                }
             }
             return false;
         }
@@ -65,9 +56,12 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public T CacheValue<T>(T value)
         {
-            if (!TryGetCachedValue(ref value))
+            lock (_cachedValues)
             {
-                _cachedValues.Add(value);
+                if (!TryGetCachedValue(ref value))
+                {
+                    _cachedValues.Add(value);
+                }
             }
             return value;
         }
