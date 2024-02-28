@@ -430,7 +430,7 @@ namespace pwiz.Skyline.SettingsUI
         // Natural sort (e.g. "xyz200.5" comes before "xyz1200.5")
         public static int ComparePepInfosNatural(ViewLibraryPepInfo info1, ViewLibraryPepInfo info2)
         {
-            var result = new NaturalStringComparer().Compare(info1.UnmodifiedTargetText, info2.UnmodifiedTargetText);
+            var result = NaturalStringComparer.Compare(info1.UnmodifiedTargetText, info2.UnmodifiedTargetText);
 
             if (result == 0)
             {
@@ -439,7 +439,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (result == 0)
                 {
                     // Last try, natural sort on whatever Key.ToString() produced
-                    result = new NaturalStringComparer().Compare(info1.KeyString, info2.KeyString);
+                    result = NaturalStringComparer.Compare(info1.KeyString, info2.KeyString);
                 }
             }
             return result;

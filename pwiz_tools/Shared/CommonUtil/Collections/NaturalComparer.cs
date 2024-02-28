@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
@@ -50,12 +49,12 @@ namespace pwiz.Common.Collections
     // Similar to the filename comparer, except that decimals are understood
     // e.g. for the filename comparer, "123.4056" comes after "123.456" because 4056 > 456 -
     // it doesn't seem them as two parts of a decimal value
-    public class NaturalStringComparer : IComparer<string>
+    public class NaturalStringComparer
     {
         // Regular expression pattern to match decimal parts - note it accepts both . and , decimal separator
         private static readonly Regex REGEX = new Regex(@"(\d+(?:[.,]\d+)?|\D+)", RegexOptions.Compiled);
 
-        public int Compare(string x, string y)
+        public static int Compare(string x, string y)
         {
             if (x == null)
             {

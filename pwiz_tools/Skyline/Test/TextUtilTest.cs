@@ -144,7 +144,7 @@ namespace pwiz.SkylineTest
             {
                 List<string> misOrdered = Shuffle(ordered); // Shuffle
 
-                misOrdered.Sort((x, y) => useFilenameSort ? NaturalFilenameComparer.Compare(x, y) : new NaturalStringComparer().Compare(x, y)); // Naturally sort
+                misOrdered.Sort((x, y) => useFilenameSort ? NaturalFilenameComparer.Compare(x, y) : NaturalStringComparer.Compare(x, y)); // Naturally sort
 
                 // Compare with original. Prints out discrepancies between sort and original if they should occur
                 for (int i = 0; i < ordered.Count; i++)
