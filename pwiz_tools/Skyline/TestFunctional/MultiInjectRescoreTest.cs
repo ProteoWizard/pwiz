@@ -19,6 +19,7 @@
 
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
 using pwiz.SkylineTestUtil;
@@ -82,6 +83,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsNull(fileStatuses[1].Error);
             });
             OkDialog(allChromatogramsGraph, allChromatogramsGraph.Close);
+            RunDlg<MultiButtonMsgDlg>(()=>SkylineWindow.NewDocument(), messageDlg=>messageDlg.ClickNo());
         }
     }
 }
