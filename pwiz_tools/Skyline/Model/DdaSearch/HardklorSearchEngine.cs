@@ -204,6 +204,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             public string avergineAndOffset; // The value declared in the avergine column e.g. "H104C54N15O16[+4.761216]"
             public double quality; // Define relative quality for sorting as "Best Correlation" column x "Num of Scans" column (i.e. Points across peak * correlation)
             public double rt; // "Best RTime" column
+            public double rtAligned; // RT of best scoring occurance when found in more than one file
             public int charge; // Declared z
             public int fileIndex; // Which file it's from
             public int lineIndex; // Which line in that file
@@ -234,7 +235,6 @@ namespace pwiz.Skyline.Model.DdaSearch
                 var featuresByCNOS = new Dictionary<string, List<hkFeatureDetail>>();
                 var featuresAll = new List<hkFeatureDetail>();
                 var contents = new List<string[]>();
-                var updatedFiles = new HashSet<int>();
                 for (var fileIndex = 0; fileIndex < bfiles.Length; fileIndex++)
                 {
                     var file = bfiles[fileIndex];
@@ -245,13 +245,15 @@ namespace pwiz.Skyline.Model.DdaSearch
                     {
                         var col = line.Split('\t');
                         var averagine_no_H = col[15].Split('[')[0].Split('C')[1]; // e.g. "H120C119N33O35S1[+0.12]" => "119N33O35S1"
+                        var rtParsed = double.Parse(col[11], CultureInfo.InvariantCulture);
                         var feature = new hkFeatureDetail()
                         {
                             charge = int.Parse(col[4], CultureInfo.InvariantCulture),
                             massString = col[5],
                             mzObserved = double.Parse(col[6], CultureInfo.InvariantCulture),
                             quality = double.Parse(col[3], CultureInfo.InvariantCulture) * double.Parse(col[12], CultureInfo.InvariantCulture), // Points across peak * correlation, for sorting
-                            rt = double.Parse(col[11], CultureInfo.InvariantCulture),
+                            rt = rtParsed,
+                            rtAligned = rtParsed,
                             avergineAndOffset = col[15],
                             fileIndex = fileIndex,
                             lineIndex = l,
@@ -325,6 +327,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                                     continue; // Not an RT match
                                 }
                                 hkFeatureDetailJ.massString = hkFeatureDetailI.massString;
+                                hkFeatureDetailJ.rtAligned = hkFeatureDetailI.rtAligned;
                                 hkFeatureDetailJ.avergineAndOffset = hkFeatureDetailI.avergineAndOffset;
                                 hkFeatureDetailJ.updated = true; // No need to compare to others in this list
                             }
@@ -402,9 +405,21 @@ namespace pwiz.Skyline.Model.DdaSearch
                     col[5] = update.massString;
                     col[15] = update.avergineAndOffset;
                     contents[update.fileIndex][update.lineIndex] = string.Join(TextUtil.SEPARATOR_TSV_STR, col);
-                    updatedFiles.Add(update.fileIndex);
                 }
-                foreach (var f in updatedFiles)
+
+                // Now add the column for feature names, where name consists of mass and aligned RT e.g. mass123.45_RT23.45678
+                for (var f = 0; f < bfiles.Length; f++)
+                {
+                    contents[f][0] += $@"{TextUtil.SEPARATOR_TSV_STR}FeatureName"; // This must agree with pwiz_tools\BiblioSpec\src\HardklorReader.cpp
+                }
+                foreach (var hkFeatureDetail in featuresAll)
+                {
+                    var featureName =$@"mass{hkFeatureDetail.massString}_RT{hkFeatureDetail.rtAligned.ToString(@"0.0000", CultureInfo.InvariantCulture)}";
+                    contents[hkFeatureDetail.fileIndex][hkFeatureDetail.lineIndex] += $@"{TextUtil.SEPARATOR_TSV_STR}{featureName}";
+                }
+
+                // And write it all back, preserving a copy of the original
+                for (var f = 0; f < bfiles.Length; f++)
                 {
                     // Note the original
                     var unaligned = GetBullseyeKronikUnalignedFilename(bfiles[f]);

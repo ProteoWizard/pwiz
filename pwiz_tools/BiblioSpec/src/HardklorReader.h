@@ -64,8 +64,8 @@ private:
         psm.smallMolMetadata.precursorAdduct = buf;
     }
 
-    static void setNameAsMass(sslPSM& psm, const std::string& value) {
-        psm.smallMolMetadata.moleculeName = "mass"+value;
+    static void setFeatureName(sslPSM& psm, const std::string& value) {
+        psm.smallMolMetadata.moleculeName = value;
     }
 };
 

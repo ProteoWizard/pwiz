@@ -73,19 +73,19 @@ namespace BiblioSpec {
         Modifications	Modifications on the peptide, if searched for.
         Correlation Score	The dot - product score of this feature to the theoretical model.
         NONSTANDARD ADDITION FOR SKYLINE:
-        Averagine Formula and mass offset    Skyline's version of Hardklor adds this column for use in BiblioSpec.
+        Averagine Formula and mass offset	Skyline's version of Hardklor adds this column for use in BiblioSpec.
+        FeatureName	Skyline adds this column for use in BiblioSpec, to note features which are detected in multiple files after RT alignment. The name indicates the mass and the RT of the best scoring incidence across files.
 
         In the BullseyeSharp output these are reduced to
         File, First Scan, Last Scan, Num of Scans, Charge, Monoisotopic Mass, Base Isotope Peak, Best Intensity, Summed Intensity, First RTime, Last RTime, Best RTime, Best Correlation, Modifications
 
         The special Skyline build adds
-        Best Scan, Averagine
+        Best Scan, Averagine, FeatureName
         
         */
 
         fileReader.addRequiredColumn("File", sslPSM::setFile); // N.B. the offical BullseyeSharp puts "NULL" in all this column's entries
         fileReader.addRequiredColumn("Charge", setChargeAndAdduct);
-        fileReader.addRequiredColumn("Monoisotopic Mass", setNameAsMass);
         fileReader.addRequiredColumn("Base Isotope Peak", sslPSM::setPrecursorMzDeclared);
         fileReader.addRequiredColumn("Best Correlation", sslPSM::setScore);
         fileReader.addRequiredColumn("Best RTime", sslPSM::setRetentionTime);
@@ -94,6 +94,7 @@ namespace BiblioSpec {
 
         // fileReader.addRequiredColumn("Best Scan", sslPSM::setScanNumber);  // Only in files produced by special Skyline build of Hardklor+Bullseye - not needed for now, MS1 only
         fileReader.addRequiredColumn("Averagine", setChemicalFormulaAndMassShift); // Only in files produced by special Skyline build of Hardklor+Bullseye
+        fileReader.addRequiredColumn("FeatureName", setFeatureName);
 
         // Hardklor filename entries may be in Windows path style, the default backslash escape character is trouble
         fileReader.defineSeparatorsNoEscape("\t", ""); // Hardklor files are tab delimited, don't use quotes, or escape characters
