@@ -171,7 +171,7 @@ namespace SkylineBatch
                     throw new ArgumentException(string.Format(Resources.MainSettings_ValidateAnalysisFolder_The__parent_directory_of_the_data_folder__0__does_not_exist_1, dataFolder));
             }
             FileUtil.ValidateNotInDownloads(dataFolder, Resources.MainSettings_ValidateDataFolder_data_folder);
-            if (!hasServer && !Directory.GetFiles(dataFolder).Any())
+            if (!hasServer && !Directory.EnumerateFileSystemEntries(dataFolder).Any())
                 throw new ArgumentException(Resources.MainSettings_ValidateAllButServer_The_data_folder_cannot_be_empty__Please_choose_a_folder_with_at_least_one_data_file_);
         }
 

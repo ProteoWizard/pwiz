@@ -20,7 +20,6 @@ using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 using System;
 
 namespace pwiz.Skyline.Controls.Databinding
@@ -59,7 +58,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         protected override SrmDocument EndDeferSettingsChanges(SrmDocument document, SrmDocument originalDocument)
         {
-            string message = Resources.DataGridViewPasteHandler_EndDeferSettingsChangesOnDocument_Updating_settings;
+            string message = DatabindingResources.DataGridViewPasteHandler_EndDeferSettingsChangesOnDocument_Updating_settings;
             using (var longWaitDlg = new LongWaitDlg())
             {
                 longWaitDlg.Message = message;

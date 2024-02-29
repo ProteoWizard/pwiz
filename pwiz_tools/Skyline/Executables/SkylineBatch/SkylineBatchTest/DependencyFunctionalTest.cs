@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using SharedBatch;
+using pwiz.Common.GUI;
 using SkylineBatch;
 
 namespace SkylineBatchTest
@@ -70,7 +70,7 @@ namespace SkylineBatchTest
             RunUI(() => { FunctionalTestUtil.CheckConfigs(2, 0, mainForm); });
 
             RunUI(() => { mainForm.ClickConfig(0); });
-            RunDlg<AlertDlg>(() => mainForm.ClickDelete(),
+            RunDlg<CommonAlertDlg>(() => mainForm.ClickDelete(),
                 dlg =>
                 {
                     Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.SkylineBatchConfigManager_UserRemoveSelected_Deleting___0___may_impact_the_template_files_of_the_following_configurations_, "BaseConfiguration") + Environment.NewLine +
@@ -83,7 +83,7 @@ namespace SkylineBatchTest
             RunUI(() => { FunctionalTestUtil.CheckConfigs(2, 0, mainForm); });
 
             RunUI(() => { mainForm.ClickConfig(0); });
-            RunDlg<AlertDlg>(() => mainForm.ClickDelete(),
+            RunDlg<CommonAlertDlg>(() => mainForm.ClickDelete(),
                 dlg => { dlg.ClickYes(); });
             RunUI(() => { FunctionalTestUtil.CheckConfigs(1, 1, mainForm); });
         }
@@ -107,7 +107,7 @@ namespace SkylineBatchTest
             AssertDependentMatches(mainForm, Path.Combine(CONFIG_FOLDER, "RefinedOutput.sky"), 1);
 
             RunUI(() => { mainForm.ClickConfig(0); });
-            RunDlg<AlertDlg>(() => mainForm.ClickDelete(),
+            RunDlg<CommonAlertDlg>(() => mainForm.ClickDelete(),
                 dlg =>
                 {
                     Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.SkylineBatchConfigManager_UserRemoveSelected_Deleting___0___may_impact_the_template_files_of_the_following_configurations_, "BaseConfiguration") + Environment.NewLine +
@@ -125,7 +125,7 @@ namespace SkylineBatchTest
                 FunctionalTestUtil.CheckConfigs(1, 0, mainForm);
             });
             var invalidDependentConfigsFile = Path.Combine(BCFG_FOLDER, "InvalidDependentConfigurations.bcfg");
-            RunDlg<AlertDlg>(() => { mainForm.DoImport(invalidDependentConfigsFile);},
+            RunDlg<CommonAlertDlg>(() => { mainForm.DoImport(invalidDependentConfigsFile);},
                 dlg =>
                 {
                     Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.SkylineBatchConfigManager_AssignDependencies_The_following_configurations_use_refined_template_files_from_other_configurations_that_do_not_exist_, "BaseConfiguration") + Environment.NewLine +
@@ -196,7 +196,7 @@ namespace SkylineBatchTest
             {
                 mainForm.SetConfigEnabled(1, true);
             });
-            RunDlg<AlertDlg>(() => mainForm.ClickRun(),
+            RunDlg<CommonAlertDlg>(() => mainForm.ClickRun(),
                 dlg =>
                 {
                     Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.SkylineBatchConfigManager_StartBatchRun_Configuration__0__must_be_run_before__1__to_generate_its_template_file_, "BaseConfiguration", "ValidDependent") + Environment.NewLine +
@@ -210,7 +210,7 @@ namespace SkylineBatchTest
                 mainForm.SetConfigEnabled(0, true);
                 mainForm.ClickDown();
             });
-            RunDlg<AlertDlg>(() => mainForm.ClickRun(),
+            RunDlg<CommonAlertDlg>(() => mainForm.ClickRun(),
                 dlg =>
                 {
                     Assert.AreEqual(string.Format(SkylineBatch.Properties.Resources.SkylineBatchConfigManager_StartBatchRun_Configuration__0__must_be_run_before__1__to_generate_its_template_file_, "BaseConfiguration", "ValidDependent") + Environment.NewLine +

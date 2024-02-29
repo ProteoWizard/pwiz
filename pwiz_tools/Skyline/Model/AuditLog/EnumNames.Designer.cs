@@ -1537,6 +1537,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Assigned to the gene with the most peptides.
+        /// </summary>
+        public static string SharedPeptidesGene_AssignedToBestProtein {
+            get {
+                return ResourceManager.GetString("SharedPeptidesGene_AssignedToBestProtein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assigned to the first gene.
+        /// </summary>
+        public static string SharedPeptidesGene_AssignedToFirstProtein {
+            get {
+                return ResourceManager.GetString("SharedPeptidesGene_AssignedToFirstProtein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicated between genes.
+        /// </summary>
+        public static string SharedPeptidesGene_DuplicatedBetweenProteins {
+            get {
+                return ResourceManager.GetString("SharedPeptidesGene_DuplicatedBetweenProteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed (peptides must be unique to a single gene).
+        /// </summary>
+        public static string SharedPeptidesGene_Removed {
+            get {
+                return ResourceManager.GetString("SharedPeptidesGene_Removed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Assigned to the protein group with the most peptides.
         /// </summary>
         public static string SharedPeptidesGroup_AssignedToBestProtein {

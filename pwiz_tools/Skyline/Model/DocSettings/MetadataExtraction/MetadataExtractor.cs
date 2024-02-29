@@ -27,7 +27,6 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
@@ -144,7 +143,7 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
                     catch (Exception x)
                     {
                         string message = TextUtil.LineSeparate(
-                            string.Format(Resources.MetadataExtractor_ApplyStep_Error_converting___0___to___1___, strReplacedValue,
+                            string.Format(MetadataExtractionResources.MetadataExtractor_ApplyStep_Error_converting___0___to___1___, strReplacedValue,
                                 step.Target.DisplayName),
                             x.Message);
                         strErrorText = message;
@@ -174,7 +173,7 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
             if (!_textColumns.TryGetValue(propertyPath, out textColumn))
             {
                 errors?.Add(CommonException.Create(new StepError(rule, propertyName, 
-                    string.Format(Resources.MetadataExtractor_ResolveColumn_Unable_to_find_column__0_, propertyPath))));
+                    string.Format(MetadataExtractionResources.MetadataExtractor_ResolveColumn_Unable_to_find_column__0_, propertyPath))));
             }
 
             return textColumn;
@@ -265,7 +264,7 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
 
             public override string ToString()
             {
-                return TextUtil.LineSeparate(string.Format(Resources.RuleError_ToString_An_error_occurred_applying_the_rule___0___, RuleName), Message);
+                return TextUtil.LineSeparate(string.Format(MetadataExtractionResources.RuleError_ToString_An_error_occurred_applying_the_rule___0___, RuleName), Message);
                 
             }
         }

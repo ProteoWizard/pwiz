@@ -55,7 +55,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
 //            IsCoverShotMode = true;
             CoverShotName = "HiResMetabolomics";
 
-            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/HiResMetabolomics-20_1.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/HiResMetabolomics-23_1.pdf";
             ForceMzml = true; // Prefer mzML as being the more efficient download
 
             TestFilesPersistent = new[] { ExtWatersRaw };
@@ -202,7 +202,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
 
                 var expectedTransCount = new Dictionary<string, int[]>
                 {
-                    // peptides, transition groups, heavy transition groups, tranistions, heavy transitions
+                    // peptides, transition groups, heavy transition groups, transitions, heavy transitions
                     {"default", new[] {4, 4, 3, 8, 6}}, // Most have these values
                     {"ID31609_01_E749_4745_091517", new[] {4, 4, 3, 7, 6}},
 
@@ -233,7 +233,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     documentGrid = FindOpenForm<DocumentGridForm>();
                 }
                 if (!IsCoverShotMode)
-                    RunUI(() => documentGrid.ChooseView(Resources.Resources_ReportSpecList_GetDefaults_Peptide_Quantification));
+                    RunUI(() => documentGrid.ChooseView(Resources.PersistedViews_GetDefaults_Molecule_Quantification));
                 else
                 {
                     RunUI(() => documentGrid.DataboundGridControl.ChooseView(new ViewName(ViewGroup.BUILT_IN.Id,
@@ -286,7 +286,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                         peptideSettingsUI.QuantUnits = "uM";
                     });
 
-                    PauseForScreenShot<PeptideSettingsUI.QuantificationTab>("Peptide Settings - Quantitation", 13);
+                    PauseForScreenShot<PeptideSettingsUI.QuantificationTab>("Molecule Settings - Quantitation", 13);
                     OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
                 }
 
@@ -316,30 +316,34 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 });
                 // Make sure the edits have flowed to the document
                 WaitForConditionUI(() => SkylineWindow.DocumentUI.Settings.MeasuredResults.Chromatograms.Where(c => c.Name.StartsWith("GW")).All(c => c.SampleType.Equals(SampleType.QC)));
+                RestoreViewOnScreen(14);
                 PauseForScreenShot<DocumentGridForm>("Document Grid - replicates", 14);
 
                 // Finish setting up quant
                 var documentGrid3 = FindOpenForm<DocumentGridForm>();
                 RunUI(() =>
                 {
-                    documentGrid3.ChooseView(Resources.Resources_ReportSpecList_GetDefaults_Peptide_Quantification);
+                    documentGrid3.ChooseView(Resources.PersistedViews_GetDefaults_Molecule_Quantification);
                 });
-                WaitForConditionUI(() => (documentGrid3.RowCount > 0 &&
-                                          documentGrid3.ColumnCount > 6)); // Let it initialize
+                WaitForConditionUI(() => documentGrid3.IsComplete);
 
                 RunUI(() =>
                 {
+                    var colNormal = documentGrid3.FindColumn(PropertyPath.Root.Property("NormalizationMethod"));
+                    var colMultiplier = documentGrid3.FindColumn(PropertyPath.Root.Property("ConcentrationMultiplier"));
+                    const int indexOfHeavyDha = 6;
                     var gridView = documentGrid3.DataGridView;
-                    var methods = ((DataGridViewComboBoxCell) gridView.Rows[0].Cells[6]).Items;
-                    var ratioToSurrogateHeavyDHA = ((Tuple<String, NormalizationMethod>)methods[6]).Item2;
-                    gridView.Rows[0].Cells[5].Value = 2838.0;
-                    gridView.Rows[1].Cells[5].Value = 54.0;
-                    gridView.Rows[1].Cells[6].Value = ratioToSurrogateHeavyDHA;
-                    gridView.Rows[2].Cells[5].Value = 984.0;
-                    gridView.Rows[3].Cells[5].Value = 118.0;
+                    var methods = ((DataGridViewComboBoxCell) gridView.Rows[0].Cells[colNormal.Index]).Items;
+                    var ratioToSurrogateHeavyDHA = ((Tuple<String, NormalizationMethod>)methods[indexOfHeavyDha]).Item2;
+                    gridView.Rows[0].Cells[colMultiplier.Index].Value = 2838.0;
+                    gridView.Rows[1].Cells[colMultiplier.Index].Value = 54.0;
+                    gridView.Rows[1].Cells[colNormal.Index].Value = ratioToSurrogateHeavyDHA;
+                    gridView.Rows[2].Cells[colMultiplier.Index].Value = 984.0;
+                    gridView.Rows[3].Cells[colMultiplier.Index].Value = 118.0;
                 });
 
-                PauseForScreenShot<DocumentGridForm>("Document Grid - peptide quant again", 15);
+                RestoreViewOnScreen(15);
+                PauseForScreenShot<DocumentGridForm>("Document Grid - molecule quant again", 15);
 
                 RunUI(() => SkylineWindow.ShowCalibrationForm());
                 SelectNode(SrmDocument.Level.Molecules, 0);

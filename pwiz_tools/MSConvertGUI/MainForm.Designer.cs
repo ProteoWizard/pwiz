@@ -1553,6 +1553,7 @@ namespace MSConvertGUI
             "mzML",
             "mzXML",
             "mz5",
+            "mzMLb",
             "mgf",
             "text",
             "ms1",

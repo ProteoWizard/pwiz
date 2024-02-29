@@ -404,8 +404,9 @@ namespace pwiz.SkylineTestFunctional
             SetZoom(false);
             ClickChromatogram(33.11, 15.055, PaneKey.PRODUCTS);
             WaitForGraphs();
+
             //Labels are not created in offscreen mode, so we just validate total number of ions matching the show settings
-            Assert.AreEqual(Skyline.Program.SkylineOffscreen? 70 : 20, SkylineWindow.GraphFullScan.IonLabels.Count());
+            Assert.AreEqual(ExpectedLabelCount(70, 20, 15), SkylineWindow.GraphFullScan.IonLabels.Count());
 
             var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() => transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Library);
@@ -432,11 +433,42 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForGraphs();
             var graphLabels = SkylineWindow.GraphFullScan.IonLabels;
-            Assert.AreEqual(Skyline.Program.SkylineOffscreen ? 48 : 1, graphLabels.Count());
+            Assert.AreEqual(ExpectedLabelCount(48, 1, 2), graphLabels.Count());
+        }
+
+        private static int ExpectedLabelCount(int offscreenCount, int onscreenEnCount, int onscreenJaCount)
+        {
+            if (Skyline.Program.SkylineOffscreen)
+                return offscreenCount;
+
+            var cultureShort = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+            if (Equals(cultureShort, "ja") || Equals(cultureShort, "zh"))
+                return onscreenJaCount;
+
+            return onscreenEnCount;
         }
 
         private void TestPropertySheet(Dictionary<string, object> expectedPropertiesDict)
         {
+            var expectedPropertiesDict = new Dictionary<string, object> {
+                {"FileName","ID12692_01_UCA168_3727_040714.mzML"},
+                {"ReplicateName","ID12692_01_UCA168_3727_040714"},
+                {"RetentionTime",33.05.ToString(CultureInfo.CurrentCulture)},
+                {"IonMobility",3.477.ToString(CultureInfo.CurrentCulture) + " msec"},
+                {"IsolationWindow","50:2000 (-975:+975)"},
+                {"IonMobilityRange",TextUtil.AppendColon(0.069.ToString(CultureInfo.CurrentCulture)) + 13.8.ToString(CultureInfo.CurrentCulture)},
+                {"IonMobilityFilterRange",TextUtil.AppendColon(3.152.ToString(CultureInfo.CurrentCulture)) + 3.651.ToString(CultureInfo.CurrentCulture)},
+                {"ScanId","1.0.309201 - 1.0.309400"},
+                {"MSLevel","1"},
+                {"Instrument",new Dictionary<string, object> {
+                        {"InstrumentModel","Waters instrument model"},
+                        {"InstrumentManufacturer","Waters"}
+                    }
+                },
+                {"DataPoints",105373.ToString(@"N0", CultureInfo.CurrentCulture)},
+                {"MzCount",45751.ToString(@"N0", CultureInfo.CurrentCulture)},
+                {"IsCentroided","False"}
+            };
             var expectedProperties = new FullScanProperties();
             expectedProperties.Deserialize(expectedPropertiesDict);
 
@@ -460,9 +492,8 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(currentProperties);
             // To write new json string for the expected property values into the output stream uncomment the next line
             //Trace.Write(currentProperties.Serialize());
-
-            var diff = expectedProperties.GetDifference(currentProperties);
-            Assert.IsFalse(diff.Any(), @"Different values:" + string.Join(",", diff) );
+            AssertEx.NoDiff(expectedProperties.Serialize(), currentProperties.Serialize());
+            Assert.IsTrue(expectedProperties.IsSameAs(currentProperties));
             Assert.IsTrue(propertiesButton.Checked);
 
             // make sure the properties are updated when the spectrum changes

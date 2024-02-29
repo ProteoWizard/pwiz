@@ -133,7 +133,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 using (var dlg = new LongWaitDlg())
                 {
-                    dlg.Message = Resources.RInstaller_InstallR_Downloading_R;
+                    dlg.Message = ToolsUIResources.RInstaller_InstallR_Downloading_R;
                     dlg.ProgressValue = 0;
                     // Short wait, because this can't possible happen fast enough to avoid
                     // showing progress, except in testing
@@ -141,7 +141,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 using (var dlg = new LongWaitDlg(null, false))
                 {
-                    dlg.Message = Resources.RInstaller_GetR_Installing_R;
+                    dlg.Message = ToolsUIResources.RInstaller_GetR_Installing_R;
                     dlg.PerformWork(this, 50, InstallR);
                 }
                 MessageDlg.Show(this, Resources.RInstaller_GetR_R_installation_complete_);
@@ -207,7 +207,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 using (var dlg = new LongWaitDlg(null, false))
                 {
-                    dlg.Message = Resources.RInstaller_GetPAckages_Installing_Packages;
+                    dlg.Message = ToolsUIResources.RInstaller_GetPAckages_Installing_Packages;
                     dlg.PerformWork(this, 1000, InstallPackages);
                 }
             }
@@ -237,7 +237,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 string failedMessage = string.IsNullOrEmpty(checkedSite)
                     ? Resources.RInstaller_InstallPackages_Error__No_internet_connection_
-                    : string.Format(Resources.RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_, checkedSite);
+                    : string.Format(ToolsUIResources.RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_, checkedSite);
                 throw new ToolExecutionException(
                     TextUtil.LineSeparate(failedMessage,string.Empty, Resources.RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again));
             }
@@ -267,7 +267,7 @@ namespace pwiz.Skyline.ToolsUI
                     if (failedPackages.Count == 1)
                     {
                         throw new ToolExecutionException(
-                            string.Format(TextUtil.LineSeparate(Resources.RInstaller_InstallPackages_The_package__0__failed_to_install_,
+                            string.Format(TextUtil.LineSeparate(ToolsUIResources.RInstaller_InstallPackages_The_package__0__failed_to_install_,
                                                                 string.Empty,
                                                                 Resources.RInstaller_InstallPackages_Output_logged_to_the_Immediate_Window_), failedPackages.First().Name));
                     }

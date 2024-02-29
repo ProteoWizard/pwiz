@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public static string FILTER_MSP
         {
-            get { return TextUtil.FileDialogFilterAll(Resources.NistLibrary_SpecFilter_NIST_Spectral_Library, EXT); }            
+            get { return TextUtil.FileDialogFilterAll(LibResources.NistLibrary_SpecFilter_NIST_Spectral_Library, EXT); }            
         }
 
         public NistLibSpec(string name, string path)
@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string GetLibraryTypeName()
         {
-            return Resources.NistLibrary_SpecFilter_NIST_Spectral_Library;
+            return LibResources.NistLibrary_SpecFilter_NIST_Spectral_Library;
         }
 
         #region Implementation of IXmlSerializable
@@ -108,7 +108,7 @@ namespace pwiz.Skyline.Model.Lib
     public abstract class NistLibSpecBase : LibrarySpec
     {
         public static readonly PeptideRankId PEP_RANK_TFRATIO =
-            new PeptideRankId(@"TFRatio", () => Resources.NistLibSpecBase_PEP_RANK_TFRATIO_TFRatio);
+            new PeptideRankId(@"TFRatio", () => LibResources.NistLibSpecBase_PEP_RANK_TFRATIO_TFRatio);
 
         private static readonly PeptideRankId[] RANK_IDS = { PEP_RANK_COPIES, PEP_RANK_TOTAL_INTENSITY, PEP_RANK_PICKED_INTENSITY, PEP_RANK_TFRATIO};
 
@@ -630,7 +630,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 // Not sure the cause, but found a case where LibraryPath was CachePath (.splc)
                 if (Equals(FilePath, CachePath))
-                    loader.UpdateProgress(status.ChangeErrorException(new IOException(string.Format(Resources.NistLibraryBase_Load_The_file___0___is_not_a_valid_library_, FilePath))));
+                    loader.UpdateProgress(status.ChangeErrorException(new IOException(string.Format(LibResources.NistLibraryBase_Load_The_file___0___is_not_a_valid_library_, FilePath))));
                 else
                 {
                     // Reset readStream so we don't read corrupt file.
@@ -653,7 +653,7 @@ namespace pwiz.Skyline.Model.Lib
                     // Building the cache will take 95% of the load time.
                     loadPercent = 5;
 
-                    status = status.ChangeMessage(string.Format(Resources.NistLibraryBase_Load_Building_binary_cache_for__0__library, Path.GetFileName(FilePath)));
+                    status = status.ChangeMessage(string.Format(LibResources.NistLibraryBase_Load_Building_binary_cache_for__0__library, Path.GetFileName(FilePath)));
                     status = status.ChangePercentComplete(0);
 
                     loader.UpdateProgress(status);
@@ -665,7 +665,7 @@ namespace pwiz.Skyline.Model.Lib
                 }
 
                 var valueCache = new ValueCache();
-                status = status.ChangeMessage(string.Format(Resources.NistLibraryBase_Load_Loading__0__library, Path.GetFileName(FilePath)));
+                status = status.ChangeMessage(string.Format(LibResources.NistLibraryBase_Load_Loading__0__library, Path.GetFileName(FilePath)));
                 loader.UpdateProgress(status);
 
                 // Use a buffered stream for initial read
@@ -707,7 +707,7 @@ namespace pwiz.Skyline.Model.Lib
                     // Read spectrum header
                     int charge = ReadSize(stream);
                     if (charge == 0 || charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
-                        throw new InvalidDataException(Resources.NistLibraryBase_Load_Invalid_precursor_charge_found_File_may_be_corrupted);
+                        throw new InvalidDataException(LibResources.NistLibraryBase_Load_Invalid_precursor_charge_found_File_may_be_corrupted);
 
                     float tfRatio = PrimitiveArrays.ReadOneValue<float>(stream);
                     bool hasRt = PrimitiveArrays.ReadOneValue<bool>(stream);
@@ -750,7 +750,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 if (!cached)
                 {
-                    x = new Exception(string.Format(Resources.NistLibraryBase_Load_Failed_loading_library__0__, FilePath), x);
+                    x = new Exception(string.Format(LibResources.NistLibraryBase_Load_Failed_loading_library__0__, FilePath), x);
                     loader.UpdateProgress(status.ChangeErrorException(x));
                 }
                 return false;
@@ -921,7 +921,7 @@ namespace pwiz.Skyline.Model.Lib
                         }
 
                         if (line.StartsWith(@"_EOF_", StringComparison.InvariantCultureIgnoreCase))
-                            ThrowIOException(lineCount, Resources.NistLibraryBase_CreateCache_Unexpected_end_of_file);
+                            ThrowIOException(lineCount, LibResources.NistLibraryBase_CreateCache_Unexpected_end_of_file);
                         else if (line.StartsWith(NAME, StringComparison.InvariantCultureIgnoreCase))
                             break; // Start of next section - no peaks declared for this one, apparently, but not necessarily an error
 
@@ -993,7 +993,7 @@ namespace pwiz.Skyline.Model.Lib
                         continue; // In the end, couldn't understand this as a peptide nor as a small molecule - ignore. CONSIDER(bspratt): throw an error? Historical behavior is to be silent.
 
                     if (numPeaksDeclared == 0)
-                        ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_No_peaks_found_for_peptide__0__, sequence));
+                        ThrowIOException(lineCount, string.Format(LibResources.NistLibraryBase_CreateCache_No_peaks_found_for_peptide__0__, sequence));
 
                     double totalIntensity = 0;
                     var annotations = isPeptide ? null : new List<List<SpectrumPeakAnnotation>>(); // List of lists, as each peak may have multiple annotations
@@ -1005,7 +1005,7 @@ namespace pwiz.Skyline.Model.Lib
                         var linePeaks = reader.ReadLine();
                         if (linePeaks == null)
                         {
-                            ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Unexpected_end_of_file_in_peaks_for__0__, sequence));
+                            ThrowIOException(lineCount, string.Format(LibResources.NistLibraryBase_CreateCache_Unexpected_end_of_file_in_peaks_for__0__, sequence));
                             break;  // ReSharper
                         }
                         lineCount++;
@@ -1110,7 +1110,7 @@ namespace pwiz.Skyline.Model.Lib
                     }
 
                     if (numNonZeroPeaks > ushort.MaxValue)
-                        ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Peak_count_for_MS_MS_spectrum_excedes_maximum__0__, ushort.MaxValue));
+                        ThrowIOException(lineCount, string.Format(LibResources.NistLibraryBase_CreateCache_Peak_count_for_MS_MS_spectrum_excedes_maximum__0__, ushort.MaxValue));
 
                     if (numNonZeroPeaks < numPeaksDeclared)
                     {
@@ -1215,8 +1215,8 @@ namespace pwiz.Skyline.Model.Lib
             if (ambiguousKeys.Any() && ambiguousKeys.All(k => k.IsSmallMoleculeKey))
             {
                 var pairType = ambiguousKeys.Any(k => k.IsSmallMoleculeKey)
-                    ? Resources.NistLibraryBase_CreateCache_molecule_adduct
-                    : Resources.NistLibraryBase_CreateCache_peptide_charge;
+                    ? LibResources.NistLibraryBase_CreateCache_molecule_adduct
+                    : LibResources.NistLibraryBase_CreateCache_peptide_charge;
                 warning = string.Format(Resources.NistLibraryBase_CreateCache_,
                     pairType, TextUtil.LineSeparate(ambiguousKeys.Select(k => k.ToString())));
             }
@@ -1445,7 +1445,7 @@ namespace pwiz.Skyline.Model.Lib
                     catch
                     {
                         ThrowIOException(lineCount,
-                            string.Format(Resources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__,
+                            string.Format(LibResources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__,
                                 line));
                     }
 
@@ -1461,7 +1461,7 @@ namespace pwiz.Skyline.Model.Lib
                     if (!TextUtil.TryParseDoubleUncertainCulture(match.Groups[1].Value, out var mw))
                     {
                         ThrowIOException(lineCount,
-                            string.Format(Resources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__,
+                            string.Format(LibResources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__,
                                 line));
                     }
                     molWeight = mw;
@@ -1541,7 +1541,7 @@ namespace pwiz.Skyline.Model.Lib
         private void ThrowIoExceptionInvalidPeakFormat(long lineCount, int i, string sequence)
         {
             ThrowIOException(lineCount,
-                string.Format(Resources.NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__, i + 1, sequence));
+                string.Format(LibResources.NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__, i + 1, sequence));
         }
 
         private static void ParseFragmentAnnotation(int iTab2, List<List<SpectrumPeakAnnotation>> annotations, int i, string line, Adduct adduct, int charge,
@@ -1595,7 +1595,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private void ThrowIOException(long lineNum, string message)
         {
-            throw new IOException(string.Format(Resources.NistLibraryBase_ThrowIOException__0__line__1__2__, FilePath,
+            throw new IOException(string.Format(LibResources.NistLibraryBase_ThrowIOException__0__line__1__2__, FilePath,
                                                 lineNum, message));
         }
 
@@ -1687,9 +1687,9 @@ namespace pwiz.Skyline.Model.Lib
 
                     // Single read to get all the peaks
                     if (fs.Read(peaksCompressed, 0, peaksCompressed.Length) < peaksCompressed.Length)
-                        throw new IOException(Resources.NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks);
+                        throw new IOException(LibResources.NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks);
                     if (annotationsBytes != null && fs.Read(annotationsBytes, 0, info.AnnotationsSize) < info.AnnotationsSize)
-                        throw new IOException(Resources.NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks);
+                        throw new IOException(LibResources.NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks);
                 }
                 catch (Exception)
                 {
@@ -1717,7 +1717,7 @@ namespace pwiz.Skyline.Model.Lib
                 var annotations = SpectrumPeakAnnotation.FromCacheFormat(Encoding.UTF8.GetString(annotationsBytes));
                 if (annotations.Count != info.NumPeaks)
                 {
-                    throw new IOException(Resources.NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks);
+                    throw new IOException(LibResources.NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks);
                 }
                 for (int i = 0; i < info.NumPeaks; i++)
                 {

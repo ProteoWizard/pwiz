@@ -33,7 +33,7 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestSmallMoleculesDocumentGrid()
         {
-            TestFilesZip = @"TestFunctional\SmallMoleculesDocumentGrid.zip";
+            TestFilesZipPaths = new [] { @"TestFunctional\SmallMoleculesDocumentGrid.zip", @"TestFunctional\SmallMoleculeIrtTest.zip"} ;
             RunFunctionalTest();
         }
 
@@ -42,6 +42,7 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         protected override void DoTest()
         {
+            TestSmallMoleculeResultsDoc();
             TestMixedDoc();
             TestPeptideOnlyDoc();
             TestSmallMoleculeOnlyDoc();
@@ -82,7 +83,21 @@ namespace pwiz.SkylineTestFunctional
             CheckDocumentGridAndColumns(smallMoleculeSky,
                 Resources.SkylineViewContext_GetDocumentGridRowSources_Molecules,
                 1, 10, SrmDocument.DOCUMENT_TYPE.small_molecules);
+        }
 
+        private void TestSmallMoleculeResultsDoc() 
+        {
+            const string smallMoleculeSky = "DextranLadder.sky";
+            CheckDocumentGridAndColumns(smallMoleculeSky,
+                Resources.ReportSpecList_GetDefaults_Molecule_RT_Results,
+                113, 6, SrmDocument.DOCUMENT_TYPE.small_molecules, 
+                null, null, null, null, null, 
+                14.64);
+            CheckDocumentGridAndColumns(smallMoleculeSky,
+                Resources.ReportSpecList_GetDefaults_Molecule_Transition_Results,
+                118, 14, SrmDocument.DOCUMENT_TYPE.small_molecules,
+                null, null, null, null, null,
+                14.64);
         }
 
         private void TestPeptideOnlyDoc()
@@ -111,7 +126,8 @@ namespace pwiz.SkylineTestFunctional
             string expectedFragmentIon = null,
             string expectedMolecularFormula = null,
             string expectedPrecursorNeutralFormula = null,
-            string expectedPrecursorIonFormula = null)
+            string expectedPrecursorIonFormula = null,
+            double? expectedRT = null)
         {
             var oldDoc = SkylineWindow.Document;
             OpenDocument(docName);
@@ -120,19 +136,21 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm<DocumentGridForm>();
             var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
             RunUI(() => documentGrid.ChooseView(viewName));
-            WaitForCondition(() => (documentGrid.RowCount == rowCount)); // Let it initialize
+            WaitForConditionUI(() => (documentGrid.RowCount == rowCount),
+                () => string.Format("Expecting row count <{0}>, actual <{1}>", rowCount, documentGrid.RowCount)); // Let it initialize
             int iteration = 0;
-            WaitForCondition(() =>
+            WaitForConditionUI(() =>
             {
                 bool result = documentGrid.ColumnCount == colCount;
                 if (!result && iteration++ > 9)
                     Assert.AreNotEqual(colCount, documentGrid.ColumnCount);   // Put breakpoint on this line, if you have changed columns and need to update the numbers
                 return result;
-            }); // Let it initialize
+            }, () => string.Format("Expecting column count <{0}>, actual <{1}>", colCount, documentGrid.ColumnCount)); // Let it initialize
 
             var colProductIonFormula = documentGrid.FindColumn(PropertyPath.Parse("ProductIonFormula"));
             var colProductNeutralFormula = documentGrid.FindColumn(PropertyPath.Parse("ProductNeutralFormula"));
             var colProductAdduct = documentGrid.FindColumn(PropertyPath.Parse("ProductAdduct"));
+            var colProductCharge = documentGrid.FindColumn(PropertyPath.Parse("ProductCharge"));
             var colFragmentIon = documentGrid.FindColumn(PropertyPath.Parse("FragmentIonType"));
             var colMoleculeFormula = documentGrid.FindColumn(PropertyPath.Parse("Precursor.Peptide.MoleculeFormula"));
             var colPrecursorNeutralFormula = documentGrid.FindColumn(PropertyPath.Parse("Precursor.NeutralFormula"));
@@ -141,15 +159,16 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.IsNull(colProductIonFormula);
                 Assert.IsNull(colProductNeutralFormula);
-                Assert.IsNull(colProductAdduct);
             }
             else RunUI(() =>
             {
                 var formula = documentGrid.DataGridView.Rows[0].Cells[colProductIonFormula.Index].Value.ToString();
+                var adduct = documentGrid.DataGridView.Rows[0].Cells[colProductAdduct.Index].Value.ToString();
+                var z = documentGrid.DataGridView.Rows[0].Cells[colProductCharge.Index].Value;
+                Assert.AreEqual(z, Adduct.FromString(adduct, Adduct.ADDUCT_TYPE.non_proteomic, null).AdductCharge);
                 if (expectedProductIonFormula.Contains("["))
                 {
                     var formulaNeutral = documentGrid.DataGridView.Rows[0].Cells[colProductNeutralFormula.Index].Value.ToString();
-                    var adduct = documentGrid.DataGridView.Rows[0].Cells[colProductAdduct.Index].Value.ToString();
                     Assert.AreEqual(expectedProductIonFormula, formulaNeutral+adduct);
                 }
                 else
@@ -170,6 +189,16 @@ namespace pwiz.SkylineTestFunctional
                 var frag = documentGrid.DataGridView.Rows[0].Cells[colFragmentIon.Index].Value.ToString();
                 Assert.AreEqual(expectedFragmentIon, frag);
             });
+            if (expectedRT.HasValue)
+            {
+                var colRT = documentGrid.FindColumn(PropertyPath.Parse("Results!*.Value.PeptideRetentionTime")) ??
+                            documentGrid.FindColumn(PropertyPath.Parse("Results!*.Value.RetentionTime"));
+                RunUI(() =>
+                {
+                    Assert.AreEqual(expectedRT.Value,
+                        (double)documentGrid.DataGridView.Rows[0].Cells[colRT.Index].Value, .001);
+                });
+            }
             RunUI(() => documentGrid.Close());
         }
 

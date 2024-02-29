@@ -157,6 +157,8 @@
     <Compile Include="CommandLineTest.cs" />
     <Compile Include="CommandLineImportTest.cs" />
     <Compile Include="CommandLineWiffTest.cs" />
+    <Compile Include="ConsoleAddAnnotationsTest.cs" />
+    <Compile Include="ConsoleVerboseExceptionsTest.cs" />
     <Compile Include="ExportMethodShimadzuTest.cs" />
     <Compile Include="FullScanAcquisitionMethodTest.cs" />
     <Compile Include="InstrumentInfoUtilTest.cs" />
@@ -240,6 +242,11 @@
     <None Include="CommandLineRefineGroupComparisonTest.zip" />
     <None Include="CommandLineTest.zip" />
     <None Include="CommandLineWiffTest.zip" />
+    <None Include="ConsoleAddAnnotationsTest.zip" />
+    <None Include="ConsoleAnnotationsExportToImportTest.zip" />
+    <None Include="ConsoleExportAnnotationsTest.zip" />
+    <None Include="ConsoleExportMProphetTest.zip" />
+    <None Include="ConsoleExportSpecLibTest.zip" />
     <None Include="ImportAllCmdLineTest.zip" />
     <None Include="ImportAllCmdLineTestMzml.zip" />
     <None Include="ImportCommandLineSameName.zip" />

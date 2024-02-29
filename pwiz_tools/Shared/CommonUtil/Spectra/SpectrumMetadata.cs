@@ -99,8 +99,8 @@ namespace pwiz.Common.Spectra
         {
             return ChangeProp(ImClone(this), im =>
             {
-                im.ScanWindowLowerLimit = ScanWindowLowerLimit;
-                im.ScanWindowUpperLimit = ScanWindowUpperLimit;
+                im.ScanWindowLowerLimit = lowerLimit;
+                im.ScanWindowUpperLimit = upperLimit;
             });
         }
 

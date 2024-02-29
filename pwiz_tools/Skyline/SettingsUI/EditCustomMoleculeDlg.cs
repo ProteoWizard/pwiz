@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
@@ -192,11 +191,11 @@ namespace pwiz.Skyline.SettingsUI
             ResultExplicitTransitionValues = new ExplicitTransitionValues(explicitTransitionAttributes);
 
             string labelAverage = !defaultCharge.IsEmpty
-                ? Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_m_z_
-                : Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_mass_;
+                ? SettingsUIResources.EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_m_z_
+                : SettingsUIResources.EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_mass_;
             string labelMono = !defaultCharge.IsEmpty
-                ? Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_m_z_
-                : Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_mass_;
+                ? SettingsUIResources.EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_m_z_
+                : SettingsUIResources.EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_mass_;
             var defaultFormula = (molecule == null || molecule.ParsedMolecule.IsMassOnly) ? string.Empty : molecule.ParsedMolecule.ToString();
             var transition = initialId as Transition;
 
@@ -210,7 +209,7 @@ namespace pwiz.Skyline.SettingsUI
             string formulaBoxLabel;
             if (defaultCharge.IsEmpty)
             {
-                formulaBoxLabel = Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg_Chemi_cal_formula_;
+                formulaBoxLabel = SettingsUIResources.EditCustomMoleculeDlg_EditCustomMoleculeDlg_Chemi_cal_formula_;
             }
             else if (editMode == FormulaBox.EditMode.adduct_only)
             {
@@ -220,12 +219,12 @@ namespace pwiz.Skyline.SettingsUI
                     // Defined by mass only
                     prompt = molecule.ToString();
                 }
-                formulaBoxLabel = string.Format(Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg_Addu_ct_for__0__,
+                formulaBoxLabel = string.Format(SettingsUIResources.EditCustomMoleculeDlg_EditCustomMoleculeDlg_Addu_ct_for__0__,
                     prompt);
             }
             else
             {
-                formulaBoxLabel = Resources.EditMeasuredIonDlg_EditMeasuredIonDlg_Ion__chemical_formula_;
+                formulaBoxLabel = SettingsUIResources.EditMeasuredIonDlg_EditMeasuredIonDlg_Ion__chemical_formula_;
             }
 
             double? averageMass = null;
@@ -749,7 +748,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     SetResult(new CustomMolecule(_formulaBox.NeutralFormula, name), Adduct);
                 }
-                catch (InvalidDataException x)
+                catch(Exception x) when(SmallMoleculeTransitionListReader.IsParserException(x))
                 {
                     _formulaBox.ShowTextBoxErrorFormula(helper, x.Message);
                     return;
@@ -836,7 +835,7 @@ namespace pwiz.Skyline.SettingsUI
             })))
             {
                 helper.ShowTextBoxError(textName,
-                    Resources.EditCustomMoleculeDlg_OkDialog_A_similar_transition_already_exists_, textName.Text);
+                    SettingsUIResources.EditCustomMoleculeDlg_OkDialog_A_similar_transition_already_exists_, textName.Text);
                 return;
             }
             DialogResult = DialogResult.OK;

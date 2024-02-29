@@ -437,7 +437,11 @@ namespace pwiz.SkylineTestData
             {
                 CommandArgs.ARG_PANORAMA_FOLDER,
                 CommandArgs.ARG_TOOL_INITIAL_DIR,
-                CommandArgs.ARG_TOOL_PROGRAM_PATH
+                CommandArgs.ARG_TOOL_PROGRAM_PATH,
+                CommandArgs.ARG_BGPROTEOME_NAME, // special validation logic tested in ConsoleNewDocumentTest
+                CommandArgs.ARG_PEPTIDE_ADD_MOD, // tested in ConsoleModsTest
+                CommandArgs.ARG_PEPTIDE_ADD_MOD_AA, // tested in ConsoleModsTest
+                CommandArgs.ARG_PEPTIDE_ADD_MOD_TERM, // tested in ConsoleModsTest
             };
             var allArgumentsSet = new HashSet<CommandArgs.Argument>(
                 CommandArgs.AllArguments.Where(a => !a.InternalUse && !testedArguments.Contains(a)));
@@ -468,8 +472,8 @@ namespace pwiz.SkylineTestData
         {
             const string NO_VALUE = "NO VALUE";
             string expected = string.Format(
-                Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
-                NO_VALUE, arg.ArgumentText, string.Join(@", ", arg.Values));
+                CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                NO_VALUE, arg.ArgumentText, arg.ValueExample());
             expected = expected.Substring(0, expected.IndexOf(@"None, ", StringComparison.Ordinal) + 6);
             AssertEx.ThrowsException<CommandArgs.ValueInvalidException>(() => arg.GetArgumentTextWithValue(NO_VALUE), expected);
             testedArguments.Add(arg);
@@ -493,9 +497,11 @@ namespace pwiz.SkylineTestData
                 BadValueString(Resources.ValueInvalidIonTypeListException_ValueInvalidIonTypeListException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_fragment_ion_types__a__b__c__x__y__z__p__),
                 string.Format(Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_,
                     BAD_VALUE, arg.ArgumentText, arg.ValueExample()),
-                string.Format(Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                string.Format(CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
                     BAD_VALUE, arg.ArgumentText, arg.ValueExample()),
                 string.Format(Resources.ValueInvalidMzToleranceException_ValueInvalidMzToleranceException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_value_and_a_unit__For_example___2__,
+                    BAD_VALUE, arg.ArgumentText, arg.ValueExample()),
+                string.Format(CommandArgUsage.ValueInvalidBoolException_ValueInvalidBoolException_The_value___0___is_not_valid_for_the_argument___1____it_must_be__2_,
                     BAD_VALUE, arg.ArgumentText, arg.ValueExample()),
             };
             Assert.IsTrue(badValueStrings.Any(s => output.Contains(s)),

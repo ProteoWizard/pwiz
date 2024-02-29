@@ -50,7 +50,7 @@ namespace TestPerf
             //RunPerfTests = true;
             CoverShotName = "DDASearch";
 
-            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DDASearch-20_2.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DDASearch-22_2.pdf";
 
             TestFilesZipPaths = new[]
             {
@@ -337,10 +337,10 @@ namespace TestPerf
                     }
                     else
                     {
-                        Assert.AreEqual(3258, proteinCount);
-                        Assert.AreEqual(6438, peptideCount);
-                        Assert.AreEqual(12732, precursorCount);
-                        Assert.AreEqual(38196, transitionCount);
+                        Assert.AreEqual(3237, proteinCount);
+                        Assert.AreEqual(6404, peptideCount);
+                        Assert.AreEqual(12664, precursorCount);
+                        Assert.AreEqual(37992, transitionCount);
                     }
                 }
             });

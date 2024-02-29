@@ -4,12 +4,11 @@ using System.Collections.Immutable;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.GUI;
 using SharedBatch;
 using SkylineBatch.Properties;
 using pwiz.PanoramaClient;
 using PanoramaServer = pwiz.PanoramaClient.PanoramaServer;
-using AlertDlg = SharedBatch.AlertDlg;
-using Newtonsoft.Json.Linq;
 using PanoramaUtil = pwiz.PanoramaClient.PanoramaUtil;
 
 namespace SkylineBatch
@@ -81,7 +80,7 @@ namespace SkylineBatch
 
             if (_remoteFileSources.ContainsKey(textName.Text) && !textName.Text.Equals(_editingSourceName))
             {
-                AlertDlg.ShowError(this, Program.AppName(),
+                AlertDlg.ShowError(this,
                     string.Format(
                         Resources
                             .RemoteSourceForm_btnSave_Click_Another_remote_file_location_with_the_name__0__already_exists__Please_choose_a_unique_name_,
@@ -104,7 +103,7 @@ namespace SkylineBatch
             }
             catch (ArgumentException ex)
             {
-                AlertDlg.ShowError(this, Program.AppName(), ex.Message);
+                CommonAlertDlg.ShowException(this, ex);
             }
         }
 
@@ -137,21 +136,12 @@ namespace SkylineBatch
         }
 
 
-        public void OpenFromPanorama(string server, string user, string pass, JToken folderJson)
-        {
-            using var dlg = new PanoramaDirectoryPicker(new Uri(server), user, pass, folderJson);
-            if (dlg.ShowDialog() != DialogResult.Cancel)
-            {
-
-            }
-        }
-
         public void OpenFromPanorama()
         {
             PanoramaServer server;
             if (textUserName.Text != "" && textPassword.Text != "")
             {
-                server = new PanoramaServer(new Uri(textServerName.Text), textUserName.Text,textPassword.Text);
+                server = new PanoramaServer(new Uri(textServerName.Text), textUserName.Text, textPassword.Text);
 
             }
             else
@@ -170,8 +160,9 @@ namespace SkylineBatch
             try
             {
                 
-                using (PanoramaDirectoryPicker dlg = new PanoramaDirectoryPicker(panoramaServers, state, showWebDavFolders:false, selectedPath:decodedUrl))
+                using (var dlg = new PanoramaDirectoryPicker(panoramaServers, state, false, decodedUrl))
                 {
+                    dlg.InitializeDialog(); // TODO: Should use a LongOperationRunner to show busy-wait UI
                     if (dlg.ShowDialog() != DialogResult.Cancel)
                     {
                         dlg.OkButtonText = "Select";
@@ -187,7 +178,7 @@ namespace SkylineBatch
             }
             catch (Exception e)
             {
-                AlertDlg.ShowError(this, Program.AppName(), e.Message);
+                CommonAlertDlg.ShowException(this, e);
             }
 
             Settings.Default.Save();

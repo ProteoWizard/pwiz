@@ -157,7 +157,7 @@ namespace pwiz.Skyline.EditUI
         {
             using (OpenFileDialog dlg = new OpenFileDialog())
             {
-                dlg.Title = Resources.RenameProteinsDlg_btnFASTA_Click_Add_FASTA_File;
+                dlg.Title = EditUIResources.RenameProteinsDlg_btnFASTA_Click_Add_FASTA_File;
                 dlg.InitialDirectory = Settings.Default.FastaDirectory;
                 dlg.CheckPathExists = true; // FASTA files often have no extension as well as .fasta and others
                 if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -224,13 +224,13 @@ namespace pwiz.Skyline.EditUI
                     }));
                 if (NameCount == 0)
                 {
-                    MessageDlg.Show(this, string.Format(Resources.RenameProteinsDlg_UseFastaFile_No_protein_sequence_matches_found_between_the_current_document_and_the_FASTA_file__0_,
+                    MessageDlg.Show(this, string.Format(EditUIResources.RenameProteinsDlg_UseFastaFile_No_protein_sequence_matches_found_between_the_current_document_and_the_FASTA_file__0_,
                                                         fastaFile));
                 }
             }
             catch (IOException x)
             {
-                MessageDlg.Show(this, string.Format(Resources.RenameProteinsDlg_UseFastaFile_Failed_reading_the_file__0__1__,
+                MessageDlg.Show(this, string.Format(EditUIResources.RenameProteinsDlg_UseFastaFile_Failed_reading_the_file__0__1__,
                                                     fastaFile, x.Message));
             }
         }
@@ -265,7 +265,7 @@ namespace pwiz.Skyline.EditUI
                 // Should only have columns for current and new name
                 if (columns.Length > 2)
                 {
-                    MessageDlg.Show(parent, string.Format(Resources.GridViewDriver_ValidateRow_On_line__0__row_has_more_than_2_columns, lineNumber));
+                    MessageDlg.Show(parent, string.Format(EditUIResources.GridViewDriver_ValidateRow_On_line__0__row_has_more_than_2_columns, lineNumber));
                     return false;
                 }
                 return true;
@@ -327,7 +327,7 @@ namespace pwiz.Skyline.EditUI
                 }));
             if (NameCount == 0)
             {
-                MessageDlg.Show(this, string.Format(Resources.RenameProteinsDlg_UseAccessionOrPreferredNameorGene_No_protein_metadata_available));
+                MessageDlg.Show(this, string.Format(EditUIResources.RenameProteinsDlg_UseAccessionOrPreferredNameorGene_No_protein_metadata_available));
             }
             
         }
