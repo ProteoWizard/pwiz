@@ -478,7 +478,7 @@ namespace pwiz.Skyline.FileUI
                 {
                     return x.isFolder ? -1 : 1; 
                 }
-                return NaturalComparer.Compare(x.name, y.name); // Use normal compare if both elements are of the same type (folder vs folder, file vs file)
+                return NaturalFilenameComparer.Compare(x.name, y.name); // Use normal compare if both elements are of the same type (folder vs folder, file vs file)
             }); // Sorts by natural sort order for easier more natural readability e.g. (A1.raw, A22.raw, A5.raw --> A1.raw, A5.raw, A22.raw)
 
 
