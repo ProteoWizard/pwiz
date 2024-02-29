@@ -24,7 +24,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib
 {
@@ -43,24 +42,7 @@ namespace pwiz.Skyline.Model.Lib
             LibInfo = libInfo;
             UnmodifiedTargetText = GetUnmodifiedTargetText(key.LibraryKey);
             KeyString = key.ToString();
-
-            // When sorting molecule names like "mass223.4" vs "mass1123.4", we want a "natural sort"
-            // where numbers are understood - so "mass223.4" comes before "mass1123.4"
-            KeyStringSplitText = null;
-            KeyStringSplitNumeric = null;
-            if (!(key.Target?.IsProteomic ?? true))
-            {
-                var targetDisplayName = key.Target.DisplayName;
-                var textLen = targetDisplayName.IndexOfAny(NUMERIC_BREAK);
-                if (textLen > 0 && TextUtil.TryParseDoubleUncertainCulture(targetDisplayName.Substring(textLen), out var keyPartNumeric))
-                {
-                    KeyStringSplitText = targetDisplayName.Substring(0,textLen);
-                    KeyStringSplitNumeric = keyPartNumeric;
-                }
-            }
         }
-
-        private static readonly char[] NUMERIC_BREAK = @"1234567890+-".ToCharArray(); // For use in natural sort setup
 
         public LibKey Key { get; private set; }
         public SpectrumHeaderInfo LibInfo { get; private set; } // Provides peptide/protein association when available
@@ -101,11 +83,6 @@ namespace pwiz.Skyline.Model.Lib
         public string UnmodifiedTargetText { get; private set; }
 
         public string KeyString { get; private set; } // Used in sorting, may be expensive to calculate so we cache it here
-
-        // When sorting names like "mass223.4" vs "mass1123.4", we want a "natural sort"
-        // where numbers are understood - so "mass223.4" comes before "mass1123.4"
-        public string KeyStringSplitText { get; private set; } // Used in sorting, represents the "xyz" in "xyz123.4", expensive to calculate, so we cache it here
-        public double? KeyStringSplitNumeric { get; private set; } // Used in sorting, represents the 123.4 in "xyz123.4", expensive to calculate, so we cache it here
 
         public string DisplayText
         {
@@ -393,6 +370,11 @@ namespace pwiz.Skyline.Model.Lib
                 ModifiedAminoAcid = modifiedAminoAcid;
                 ModifiedMass = modifiedMass;
             }
+        }
+
+        public override string ToString()
+        {
+            return KeyString; // For debugging convenience, not user facing
         }
     }
 }
