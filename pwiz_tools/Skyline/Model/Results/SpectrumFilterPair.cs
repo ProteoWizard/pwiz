@@ -705,6 +705,11 @@ namespace pwiz.Skyline.Model.Results
             return hashCode;
         }
 
+        public override string ToString()
+        {
+            return $@"mz={mz} heo={ionMobilityHighEnergyOffset}"; // For debug convenience, not user facing
+        }
+
         public int CompareTo(SpectrumFilterValues other)
         {
             if (ReferenceEquals(this, other)) return 0;
@@ -718,7 +723,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (ReferenceEquals(null, obj)) return 1;
             if (ReferenceEquals(this, obj)) return 0;
-            if (!(obj is SpectrumFilterValues)) throw new ArgumentException(@"Object must be of type MzAndIonMobilityHighEnergyOffset");
+            if (!(obj is SpectrumFilterValues)) throw new ArgumentException(@"Object must be of type SpectrumFilterValues");
             return CompareTo((SpectrumFilterValues)obj);
         }
     }

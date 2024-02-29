@@ -153,7 +153,9 @@ namespace pwiz.Skyline.Model.Serialization
                 endTime,
                 transitionGroupIonMobilityInfo,
                 fwhm,
-                area, null, null, // Ms1 and Fragment values calculated later
+                area, 
+                null, // Update areaScorable later as we discover reporter ions
+                null, null, // Ms1 and Fragment values calculated later
                 backgroundArea, null, null, // Ms1 and Fragment values calculated later
                 height,
                 massError,
@@ -257,7 +259,7 @@ namespace pwiz.Skyline.Model.Serialization
             public bool Quantitative { get; private set; }
             public ExplicitTransitionValues ExplicitValues { get; private set; }
 
-        public void ReadXml(XmlReader reader, DocumentFormat formatVersion, out double? declaredMz, ExplicitTransitionValues pre422ExplicitTransitionValues)
+            public void ReadXml(XmlReader reader, DocumentFormat formatVersion, out double? declaredMz, ExplicitTransitionValues pre422ExplicitTransitionValues)
             {
                 ReadXmlAttributes(reader, formatVersion, pre422ExplicitTransitionValues);
                 ReadXmlElements(reader, out declaredMz);

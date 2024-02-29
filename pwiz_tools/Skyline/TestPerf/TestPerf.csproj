@@ -168,6 +168,7 @@
     <Compile Include="PerfMobilIonTest.cs" />
     <Compile Include="PerfMs3ChromatogramTest.cs" />
     <Compile Include="PerfNegativeIonDIATest.cs" />
+    <Compile Include="PerfNonScoringTransitionsTest.cs" />
     <Compile Include="PerfOpenSwathConvert.cs" />
     <Compile Include="PerfOptimizeCEImportResultsNativeVsMz5Test.cs" />
     <Compile Include="PerfImportResultsNativeVsMz5Test.cs" />

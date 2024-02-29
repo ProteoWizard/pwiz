@@ -150,7 +150,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
 
                 // Calculate best peak index
-                if (tranPeakInfo != null)
+                if (tranPeakInfo != null && ParticipatesInScoring)
                 {
                     iLastStart = 0;
                     _bestPeakTimeIndex = GetMaxIndex(tranPeakInfo.StartRetentionTime, tranPeakInfo.EndRetentionTime, ref iLastStart);
@@ -165,6 +165,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public TransitionChromInfo TransitionChromInfo { get; private set; }
         public RegressionLine TimeRegressionFunction { get; private set; }
         public TransformChrom? TransformChrom { get; set; }
+        public bool ParticipatesInScoring => TransitionNode == null || TransitionNode is { ParticipatesInScoring: true }; // Some ions don't participate in RT calculation, e.g. reporter ions like TMT
+
         public ScaledRetentionTime ScaleRetentionTime(double measuredTime)
         {
             return new ScaledRetentionTime(measuredTime, MeasuredTimeToDisplayTime(measuredTime));
@@ -185,7 +187,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public bool HideBest { get; set; }
 
-        public double BestPeakTime { get { return _bestPeakTimeIndex != -1 ? _measuredTimes[_bestPeakTimeIndex] : 0; } }
+        public double BestPeakTime { get { return ParticipatesInScoring && _bestPeakTimeIndex != -1 ? _measuredTimes[_bestPeakTimeIndex] : 0; } }
 
         public string CurveAnnotation { get; set; }
         public PeptideGraphInfo GraphInfo { get; set; }

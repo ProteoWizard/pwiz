@@ -857,8 +857,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     {
                         if (ReferenceEquals(fileInfo.FileId, groupChromInfo.FileId) &&
                                 groupChromInfo.OptimizationStep == 0 &&
-                                groupChromInfo.Area.HasValue)
-                            globalStandardArea += groupChromInfo.Area.Value;
+                                groupChromInfo.AreaScorable.HasValue)
+                            globalStandardArea += groupChromInfo.AreaScorable.Value; // Omitting area of reporter ions etc that do not contribute to "best peak" determination
                     }
                 }
             }
