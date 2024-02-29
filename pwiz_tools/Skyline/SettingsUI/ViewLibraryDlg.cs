@@ -1384,7 +1384,10 @@ namespace pwiz.Skyline.SettingsUI
                 FilterAndUpdate();
             }
 
-            textPeptide.Focus(); // Assume that the next thing the user wants to do is work with the filter value
+            if (!Program.FunctionalTest)
+            {
+                textPeptide.Focus(); // Assume that the next thing the user wants to do is work with the filter value
+            }
         }
         private void listPeptide_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -2990,7 +2993,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (_selectedLibrary.TryGetIonMobilityInfos(new[] { pepInfo.Key }, out var ionMobilities))
             {
-                return ionMobilities.GetIonMobilityDict().Values.First().FirstOrDefault();
+                return ionMobilities.GetIonMobilityDict().Values.SelectMany(x => x).FirstOrDefault();
             }
             return IonMobilityAndCCS.EMPTY;
         }
