@@ -208,7 +208,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var alignedTimes = AlignedRetentionTimes.AlignLibraryRetentionTimes(
                     dataRow.TargetTimes, dataRow.SourceTimes,
-                    DocumentRetentionTimes.REFINEMENT_THRESHHOLD,
+                    DocumentRetentionTimes.REFINEMENT_THRESHOLD,
                     RegressionMethodRT.linear,
                     cancellationToken);
 
