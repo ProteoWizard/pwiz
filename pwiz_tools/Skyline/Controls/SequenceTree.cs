@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Controls
         private NormalizeOption _normalizeOption;
         private StatementCompletionTextBox _editTextBox;
         private bool _inhibitAfterSelect;
-        private Customer<NormalizedValueCalculator.Params, NormalizedValueCalculator> _customer;
+        private Receiver<NormalizedValueCalculator.Params, NormalizedValueCalculator> _receiver;
 
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
 
@@ -121,7 +121,7 @@ namespace pwiz.Skyline.Controls
 
         public SequenceTree()
         {
-            _customer = NormalizedValueCalculator.PRODUCER.RegisterCustomer(this, UpdateNormalizedValueCalculator);
+            _receiver = NormalizedValueCalculator.PRODUCER.RegisterCustomer(this, UpdateNormalizedValueCalculator);
         }
 
         public void InitializeTree(IDocumentUIContainer documentUIContainer)
@@ -282,7 +282,7 @@ namespace pwiz.Skyline.Controls
 
         private void UpdateNormalizedValueCalculator()
         {
-            if (_customer.TryGetCurrentProduct(out var normalizedValueCalculator))
+            if (_receiver.TryGetCurrentProduct(out var normalizedValueCalculator))
             {
                 NormalizedValueCalculator = normalizedValueCalculator;
                 if (_updateNodeStatesRequired)
@@ -387,7 +387,7 @@ namespace pwiz.Skyline.Controls
                     }
                 }
 
-                if (_customer.TryGetProduct(new NormalizedValueCalculator.Params(Document, _normalizeOption),
+                if (_receiver.TryGetProduct(new NormalizedValueCalculator.Params(Document, _normalizeOption),
                         out var normalizedValueCalculator))
                 {
                     NormalizedValueCalculator = normalizedValueCalculator;

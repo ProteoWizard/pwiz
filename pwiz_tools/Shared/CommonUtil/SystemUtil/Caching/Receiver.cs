@@ -26,12 +26,12 @@ namespace pwiz.Common.SystemUtil.Caching
     /// Keeps track of the progress of a request from a <see cref="Producer"/> and sends
     /// out notification when the work is completed.
     /// </summary>
-    public class Customer : IDisposable
+    public class Receiver : IDisposable
     {
         private bool _notificationPending;
         private WorkOrder _workOrder;
         private readonly IProductionListener _listener;
-        public Customer(ProductionFacility cache, Control ownerControl, Producer factory)
+        public Receiver(ProductionFacility cache, Control ownerControl, Producer factory)
         {
             Cache = cache;
             OwnerControl = ownerControl;
@@ -160,35 +160,35 @@ namespace pwiz.Common.SystemUtil.Caching
 
         private class Listener : IProductionListener
         {
-            public Listener(Customer customer)
+            public Listener(Receiver receiver)
             {
-                Customer = customer;
+                Receiver = receiver;
             }
-            public Customer Customer { get; }
+            public Receiver Receiver { get; }
             public void OnProductAvailable(WorkOrder key, ProductionResult result)
             {
-                Customer.OnProductAvailable();
+                Receiver.OnProductAvailable();
             }
 
             public void OnProductStatusChanged(WorkOrder key, int progress)
             {
-                Customer.OnProductStatusChanged();
+                Receiver.OnProductStatusChanged();
             }
 
             public bool HasPendingNotifications
             {
                 get
                 {
-                    return Customer.OwnerControl != null && Customer._notificationPending;
+                    return Receiver.OwnerControl != null && Receiver._notificationPending;
                 }
             }
         }
 
     }
 
-    public class Customer<TParam, TResult> : Customer
+    public class Receiver<TParam, TResult> : Receiver
     {
-        public Customer(ProductionFacility cache, Control ownerControl,
+        public Receiver(ProductionFacility cache, Control ownerControl,
             Producer<TParam, TResult> factory) : base(cache, ownerControl, factory)
         {
         }

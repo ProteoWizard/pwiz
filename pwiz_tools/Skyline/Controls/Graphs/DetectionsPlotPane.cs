@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public abstract class DetectionsPlotPane : SummaryReplicateGraphPane
     {
-        protected Customer<DetectionPlotData.WorkOrderParam, DetectionPlotData> _customer;
+        protected Receiver<DetectionPlotData.WorkOrderParam, DetectionPlotData> Receiver;
 
         protected DetectionPlotData _detectionData = DetectionPlotData.INVALID;
         public int MaxRepCount { get; private set; }
@@ -59,16 +59,16 @@ namespace pwiz.Skyline.Controls.Graphs
             XAxis.Scale.MinAuto = XAxis.Scale.MaxAuto = YAxis.Scale.MinAuto = YAxis.Scale.MaxAuto = false;
             ToolTip = new ToolTipImplementation(this);
 
-            _customer = DetectionPlotData.PRODUCER.RegisterCustomer(graphSummary, OnResultsAvailable);
-            _customer.ProgressChange += UpdateProgressHandler;
+            Receiver = DetectionPlotData.PRODUCER.RegisterCustomer(graphSummary, OnResultsAvailable);
+            Receiver.ProgressChange += UpdateProgressHandler;
         }
 
         public void UpdateProgressHandler()
         {
-            if (_customer.IsProcessing())
+            if (Receiver.IsProcessing())
             {
                 ProgressBar ??= new PaneProgressBar(this);
-                ProgressBar?.UpdateProgress(_customer.GetProgressValue());
+                ProgressBar?.UpdateProgress(Receiver.GetProgressValue());
             }
             else
             {
@@ -79,15 +79,15 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected virtual void OnResultsAvailable()
         {
-            var error = _customer.GetError();
+            var error = Receiver.GetError();
             if (error != null)
             {
                 AddLabels();
             }
-            else if (_customer.IsProcessing())
+            else if (Receiver.IsProcessing())
             {
                 ProgressBar = ProgressBar ?? new PaneProgressBar(this);
-                ProgressBar.UpdateProgressUI(_customer.GetProgressValue());
+                ProgressBar.UpdateProgressUI(Receiver.GetProgressValue());
             }
             else
             {
@@ -105,7 +105,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void OnClose(EventArgs e)
         {
-            _customer.Dispose();
+            Receiver.Dispose();
         }
 
         protected abstract void HandleMouseClick(int index);
@@ -160,14 +160,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
             GraphObjList.Clear();
             string message = string.Empty;
-            Exception error = _customer.GetError();
+            Exception error = Receiver.GetError();
 
             if (error != null)
             {
                 Title.Text = GraphsResources.DetectionPlotPane_EmptyPlotError_Label;
                 message = error.Message;
             }
-            else if (_customer.IsProcessing())
+            else if (Receiver.IsProcessing())
             {
                 Title.Text = GraphsResources.DetectionPlotPane_WaitingForData_Label;
             }

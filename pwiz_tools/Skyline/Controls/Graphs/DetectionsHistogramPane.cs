@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Controls.Graphs
             CurveList.Clear();
             Legend.IsVisible = false;
 
-            if (!_customer.TryGetProduct(new DetectionPlotData.WorkOrderParam(GraphSummary.DocumentUIContainer.DocumentUI, Settings.QValueCutoff), out _detectionData))
+            if (!Receiver.TryGetProduct(new DetectionPlotData.WorkOrderParam(GraphSummary.DocumentUIContainer.DocumentUI, Settings.QValueCutoff), out _detectionData))
             {
                 return;
             }

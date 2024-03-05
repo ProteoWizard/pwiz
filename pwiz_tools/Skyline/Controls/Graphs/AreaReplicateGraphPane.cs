@@ -152,7 +152,7 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         private int _labelHeight;
         private ImmutableList<float> _dotpData;
-        private readonly Customer<NormalizedValueCalculator.Params, NormalizedValueCalculator> _calcListener;
+        private readonly Receiver<NormalizedValueCalculator.Params, NormalizedValueCalculator> _calcListener;
         public AreaReplicateGraphPane(GraphSummary graphSummary, PaneKey paneKey)
             : base(graphSummary)
         {

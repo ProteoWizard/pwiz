@@ -118,9 +118,9 @@ namespace pwiz.Common.SystemUtil.Caching
             return new WorkOrder(this, workParameter);
         }
 
-        public Customer<TParameter, TResult> RegisterCustomer(Control ownerControl, Action productAvailableAction)
+        public Receiver<TParameter, TResult> RegisterCustomer(Control ownerControl, Action productAvailableAction)
         {
-            var customer = new Customer<TParameter, TResult>(ProductionFacility.DEFAULT, ownerControl, this);
+            var customer = new Receiver<TParameter, TResult>(ProductionFacility.DEFAULT, ownerControl, this);
             if (productAvailableAction != null)
             {
                 customer.ProductAvailable += productAvailableAction;

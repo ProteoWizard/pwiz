@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public class AreaCVHistogram2DGraphPane : SummaryGraphPane, IAreaCVHistogramInfo
     {
-        private readonly Customer<AreaCVGraphData.Parameters, AreaCVGraphData> _customer;
+        private readonly Receiver<AreaCVGraphData.Parameters, AreaCVGraphData> _receiver;
         private AreaCVGraphData _areaCVGraphData;
         private SrmDocument _document;
 
@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             _areaCVGraphData = null;
             _lineItems = new LineItem[2];
-            _customer = AreaCVGraphData.PRODUCER.RegisterCustomer(graphSummary, OnProductAvailable);
+            _receiver = AreaCVGraphData.PRODUCER.RegisterCustomer(graphSummary, OnProductAvailable);
         }
 
 
@@ -134,7 +134,7 @@ namespace pwiz.Skyline.Controls.Graphs
             CurveList.Clear();
 
             var gotData =
-                _customer.TryGetProduct(
+                _receiver.TryGetProduct(
                     new AreaCVGraphData.Parameters(GraphSummary.DocumentUIContainer.DocumentUI, settings),
                     out _areaCVGraphData);
 
