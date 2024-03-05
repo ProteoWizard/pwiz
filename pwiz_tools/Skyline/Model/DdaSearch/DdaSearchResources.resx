@@ -178,4 +178,7 @@
   <data name="HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_runs" xml:space="preserve">
       <value>Looking for features occurring in multiple runs</value>
   </data>
+  <data name="HardklorSearchEngine_Run_See_Hardklor_Bullseye_log_for_details" xml:space="preserve">
+      <value>See Hardklor/Bullseye log for details</value>
+  </data>
 </root>
