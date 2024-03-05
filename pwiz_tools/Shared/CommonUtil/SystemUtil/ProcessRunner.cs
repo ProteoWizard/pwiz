@@ -92,7 +92,7 @@ namespace pwiz.Common.SystemUtil
             _tmpDirForCleanup = forceTempfilesCleanup ? SetTmpDirForCleanup(psi) : null;
 
             Process proc = null;
-            var msgFailureStartingCommand = @"Failure starting command ""{cmd}"".";
+            var msgFailureStartingCommand = $@"Failure starting command ""{cmd}"".";
             try
             {
                 proc = Process.Start(psi);
