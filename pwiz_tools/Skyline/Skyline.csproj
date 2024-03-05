@@ -541,6 +541,7 @@
     <Compile Include="Model\Results\Spectra\Alignment\SimilarityMatrix.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassFilter.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
+    <Compile Include="Model\RetentionTimes\AlignmentFunction.cs" />
     <Compile Include="Model\RetentionTimes\RetentionTimesResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -917,7 +918,6 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Util\AnnotationHelper.cs" />
-    <Compile Include="Controls\Graphs\AreaCVGraphDataCache.cs" />
     <Compile Include="Controls\Graphs\AreaCVToolbar.cs">
       <SubType>UserControl</SubType>
     </Compile>

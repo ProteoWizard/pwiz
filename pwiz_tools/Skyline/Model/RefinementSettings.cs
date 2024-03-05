@@ -373,7 +373,8 @@ namespace pwiz.Skyline.Model
                 var qvalue = QValueCutoff.HasValue ? QValueCutoff.Value : double.NaN;
                 var minDetections = MinimumDetections.HasValue ? MinimumDetections.Value : -1;
                 var countTransitions = CountTransitions.HasValue ? CountTransitions.Value : -1;
-                var data = new AreaCVRefinementData(refined, new AreaCVRefinementSettings(cvcutoff, qvalue, minDetections, NormalizationMethod,
+                var normalizedValueCalculator = new NormalizedValueCalculator(refined);
+                var data = new AreaCVRefinementData(normalizedValueCalculator, new AreaCVRefinementSettings(cvcutoff, qvalue, minDetections, NormalizationMethod,
                     Transitions, countTransitions, MSLevel), CancellationToken.None, progressMonitor);
                 refined = data.RemoveAboveCVCutoff(refined);
             }

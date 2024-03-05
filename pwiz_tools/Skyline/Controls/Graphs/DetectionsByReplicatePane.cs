@@ -33,9 +33,7 @@ namespace pwiz.Skyline.Controls.Graphs
 {
 
     public class DetectionsByReplicatePane : DetectionsPlotPane
-
     {
-
         public DetectionsByReplicatePane(GraphSummary graphSummary) : base(graphSummary)
         {
             XAxis.Type = AxisType.Text;
@@ -77,12 +75,17 @@ namespace pwiz.Skyline.Controls.Graphs
             GraphObjList.Clear();
             CurveList.Clear();
             Legend.IsVisible = false;
-            if (!DetectionPlotData.GetDataCache().TryGet(
-                GraphSummary.DocumentUIContainer.DocumentUI, Settings.QValueCutoff, this.DataCallback,
-                out _detectionData))
+
+            if (!Receiver.TryGetProduct(new DetectionPlotData.WorkOrderParam(GraphSummary.DocumentUIContainer.DocumentUI, Settings.QValueCutoff), out _detectionData))
+            {
                 return;
+            }
 
             AddLabels();
+            if (!_detectionData.IsValid)
+            {
+                return;
+            }
             BarSettings.Type = BarType.SortedOverlay;
             BarSettings.MinClusterGap = 0.3f;
             Legend.IsVisible = Settings.ShowLegend;
