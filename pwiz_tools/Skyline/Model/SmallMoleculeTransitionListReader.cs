@@ -206,10 +206,8 @@ namespace pwiz.Skyline.Model
             {
                 return true; // Can't process
             }
-            // ReSharper disable PossibleNullReferenceException
-            var precursorMonoMz = adduct.MzFromNeutralMass(precursor.MonoMass);
-            // ReSharper restore PossibleNullReferenceException
-            var precursorAverageMz = adduct.MzFromNeutralMass(precursor.AverageMass);
+            var precursorMonoMz = adduct!.MzFromNeutralMass(precursor.MonoMass);
+            var precursorAverageMz = adduct!.MzFromNeutralMass(precursor.AverageMass);
             if (string.IsNullOrEmpty(groupName))
             {
                 groupName = defaultPepGroupName;
