@@ -339,7 +339,9 @@ void BuildParser::OptionalSort(PSM_SCORE_TYPE scoreType)
         std::stable_sort(psms_.begin(), psms_.end(), [](PSM* a, PSM* b)
         {
             if (a == NULL || b == NULL)
-                return false; // No change in order - there's no point moving a NULL relative to anything else since it's ultimately ignored
+            {
+                return b != NULL; // Nulls are ultimately ignored, but sort consistency matters
+            }
             const double massA = (a->smallMolMetadata.precursorMzDeclared - PROTON_MASS) * static_cast<double>(a->charge);
             const double massB = (b->smallMolMetadata.precursorMzDeclared - PROTON_MASS) * static_cast<double>(b->charge);
             if (massA == massB)
