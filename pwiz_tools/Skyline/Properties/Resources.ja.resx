@@ -3723,9 +3723,6 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="ValueInvalidDoubleException_ValueInvalidDoubleException_The_value___0___is_not_valid_for_the_argument__1__which_requires_a_decimal_number_" xml:space="preserve">
     <value>値「{0}」は、十進数を必要とする引数{1}に対して有効ではありません。</value>
   </data>
-  <data name="ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_" xml:space="preserve">
-    <value>値「{0}」は引数{1}に対して有効ではありません。{2}の1つを使用します。</value>
-  </data>
   <data name="ValueInvalidIntException_ValueInvalidIntException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_integer_" xml:space="preserve">
     <value>値「{0}」は、整数を必要とする引数{1}に対して有効ではありません。</value>
   </data>

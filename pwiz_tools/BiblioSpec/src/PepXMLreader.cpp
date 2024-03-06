@@ -83,7 +83,8 @@ PepXMLreader::PepXMLreader(BlibBuilder& maker,
   scoreType_(PEPTIDE_PROPHET_SOMETHING),
   lastFilePosition_(0),
   state(STATE_INIT),
-  isScoreLookup_(false)
+  isScoreLookup_(false),
+  isMGF_(false)
 {
     this->setFileName(xmlfilename); // this is for the saxhandler
     numFiles = 0;
@@ -276,7 +277,9 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
 
        setSpecFileName(fileroot_.c_str(), extensions, dirs);
 
-       if ((analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS) && bal::iends_with(getSpecFileName(), ".mgf")) {
+       isMGF_ = bal::iends_with(getSpecFileName(), ".mgf");
+
+       if ((analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS) && isMGF_) {
            lookUpBy_ = NAME_ID;
            specReader_->setIdType(NAME_ID);
        }
@@ -305,16 +308,22 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        }
        // if morpheus or msfragger type
        else if (analysisType_ == MORPHEUS_ANALYSIS || analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS) {
-           spectrumName = getRequiredAttrValue("spectrum", attr);
+           spectrumName = getAttrValue("spectrumNativeID", attr);
            scanNumber = getIntRequiredAttrValue("start_scan", attr);
            scanIndex = scanNumber - 1;
 
-           // HACK: remove zero padding of scan numbers in the spectrum attribute title because MSFragger MGF files don't have padding
-           if (lookUpBy_ == NAME_ID && (analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS))
-           {
-               namespace bxp = boost::xpressive;
-               auto scanNumberPaddingRegex = bxp::sregex::compile("(.*?\\.)0*(\\d+\\.)0*(\\d+\\.\\d+)");
-               spectrumName = bxp::regex_replace(spectrumName, scanNumberPaddingRegex, "$1$2$3");
+           if (!isMGF_ && !spectrumName.empty()) {
+               lookUpBy_ = NAME_ID;
+           }
+           else {
+               spectrumName = getRequiredAttrValue("spectrum", attr);
+               // HACK: remove zero padding of scan numbers in the spectrum attribute title because MSFragger MGF files don't have padding
+               if (lookUpBy_ == NAME_ID && (analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS))
+               {
+                   namespace bxp = boost::xpressive;
+                   auto scanNumberPaddingRegex = bxp::sregex::compile("(.*?\\.)0*(\\d+\\.)0*(\\d+\\.\\d+)");
+                   spectrumName = bxp::regex_replace(spectrumName, scanNumberPaddingRegex, "$1$2$3");
+               }
            }
        }
        // this should never happen, error should have been thrown earlier

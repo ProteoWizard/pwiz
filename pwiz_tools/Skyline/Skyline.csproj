@@ -14,7 +14,7 @@
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>Skyline.ico</ApplicationIcon>
     <IsWebBootstrapper>true</IsWebBootstrapper>
-    <ManifestCertificateThumbprint>1FF0D460A5DD19CBE0417A8B54285FB233C23079</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>586806A1F7B1C85AD63BC46CA599EC4142EBE84A</ManifestCertificateThumbprint>
     <ManifestKeyFile>
     </ManifestKeyFile>
     <GenerateManifests>true</GenerateManifests>
@@ -52,8 +52,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>347</ApplicationRevision>
-    <ApplicationVersion>23.1.1.347</ApplicationVersion>
+    <ApplicationRevision>418</ApplicationRevision>
+    <ApplicationVersion>23.1.1.418</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -537,6 +537,7 @@
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassFilter.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
+    <Compile Include="Model\RetentionTimes\AlignmentFunction.cs" />
     <Compile Include="Model\RetentionTimes\RetentionTimesResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -912,7 +913,6 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Util\AnnotationHelper.cs" />
-    <Compile Include="Controls\Graphs\AreaCVGraphDataCache.cs" />
     <Compile Include="Controls\Graphs\AreaCVToolbar.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2284,7 +2284,7 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="CommandArgUsage.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>CommandArgUsage.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
@@ -7051,7 +7051,7 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">
-    <Exec Command="SignAfterPublishPW.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
+    <Exec Command="SignAfterPublish.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).crt&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
   </Target>
   <PropertyGroup>
     <PreBuildEvent>$(ProjectDir)PreBuildEvents.bat</PreBuildEvent>

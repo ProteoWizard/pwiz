@@ -33,9 +33,6 @@ namespace identdata {
 class PWIZ_API_DECL  MascotReader : public Reader
 {
 public:
-    MascotReader();
-    ~MascotReader() {}
-
     virtual std::string identify(const std::string& filename,
                                  const std::string& head) const;
 
@@ -55,11 +52,6 @@ public:
                       const Reader::Config&) const;
 
     virtual const char *getType() const { return "Mascot DAT"; }
-
-private:
-    class Impl;
-
-    Impl* pimpl;
 };
 
 } // namespace pwiz 

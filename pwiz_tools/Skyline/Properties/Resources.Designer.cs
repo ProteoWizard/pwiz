@@ -7421,6 +7421,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A peptide modification must be added before giving it a terminal or amino acid specificity..
+        /// </summary>
+        public static string PeptideMod_SetTerminus_A_peptide_modification_must_be_added_before_giving_it_a_terminal_or_amino_acid_specificity_ {
+            get {
+                return ResourceManager.GetString("PeptideMod_SetTerminus_A_peptide_modification_must_be_added_before_giving_it_a_te" +
+                        "rminal_or_amino_acid_specificity_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap PeptideQc {
@@ -10543,6 +10553,18 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 
+        ///
+        ///This library entry only provides precursor
+        ///information, there is no spectrum to show.
+        /// </summary>
+        public static string SpectrumGraphItem_library_entry_provides_only_precursor_values {
+            get {
+                return ResourceManager.GetString("SpectrumGraphItem_library_entry_provides_only_precursor_values", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Data files.
         /// </summary>
         public static string SpectrumLibraryInfoDlg_SetDetailsText_Data_files {
@@ -11508,16 +11530,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ValueInvalidDoubleException_ValueInvalidDoubleException_The_value___0___is_not_va" +
                         "lid_for_the_argument__1__which_requires_a_decimal_number_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The value &apos;{0}&apos; is not valid for the argument {1}. Use one of {2}.
-        /// </summary>
-        public static string ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_ {
-            get {
-                return ResourceManager.GetString("ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_" +
-                        "argument__1___Use_one_of__2_", resourceCulture);
             }
         }
         

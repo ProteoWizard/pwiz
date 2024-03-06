@@ -20,8 +20,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -30,15 +32,16 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public partial class AreaCVGraphData : Immutable
+    public class AreaCVGraphData : Immutable
     {
         private readonly AreaCVGraphSettings _graphSettings;
         private readonly AreaCVRefinementData _refinementData;
 
-        public AreaCVGraphData(SrmDocument document, AreaCVGraphSettings graphSettings, CancellationToken token = default(CancellationToken))
+        public AreaCVGraphData(NormalizedValueCalculator normalizedValueCalculator, AreaCVGraphSettings graphSettings, CancellationToken token = default(CancellationToken))
         {
             _graphSettings = graphSettings;
-
+            Document = normalizedValueCalculator?.Document;
+            var document = normalizedValueCalculator?.Document;
             if (document == null || !document.Settings.HasResults)
             {
                 IsValid = false;
@@ -47,7 +50,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             try
             {
-                _refinementData = new AreaCVRefinementData(document, graphSettings, token);
+                _refinementData = new AreaCVRefinementData(normalizedValueCalculator, graphSettings, token);
             }
             catch (Exception)
             {
@@ -66,6 +69,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 string.Empty, (PointsTypePeakArea) ~0, double.NaN, double.NaN, -1, double.NaN, (AreaCVMsLevel) ~0,
                 (AreaCVTransitions) ~0, -1));
 
+        
+        public SrmDocument Document { get; }
         private void CalculateStats()
         {
             MedianCV = 0.0;
@@ -221,6 +226,54 @@ namespace pwiz.Skyline.Controls.Graphs
                     hashCode = (hashCode * 397) ^ BinWidth.GetHashCode();
                     return hashCode;
                 }
+            }
+        }
+
+        public class Parameters
+        {
+            public Parameters(SrmDocument document, AreaCVGraphSettings settings)
+            {
+                Document = document;
+                Settings = settings;
+            }
+            public SrmDocument Document { get; }
+            public AreaCVGraphSettings Settings { get; }
+
+            protected bool Equals(Parameters other)
+            {
+                return ReferenceEquals(Document, other.Document) && Equals(Settings, other.Settings);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((Parameters)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (RuntimeHelpers.GetHashCode(Document) * 397) ^ Settings.GetHashCode();
+                }
+            }
+        }
+
+        public static readonly Producer<Parameters, AreaCVGraphData> PRODUCER = new DataProducer();
+
+        private class DataProducer : Producer<Parameters, AreaCVGraphData>
+        {
+            public override AreaCVGraphData ProduceResult(ProductionMonitor productionMonitor, Parameters parameter, IDictionary<WorkOrder, object> inputs)
+            {
+                var normalizedValueCalculator = (NormalizedValueCalculator)inputs.Values.FirstOrDefault();
+                return new AreaCVGraphData(normalizedValueCalculator, parameter.Settings, productionMonitor.CancellationToken);
+            }
+
+            public override IEnumerable<WorkOrder> GetInputs(Parameters parameter)
+            {
+                yield return NormalizedValueCalculator.MakeWorkOrder(parameter.Document, parameter.Settings.NormalizeOption);
             }
         }
     }
