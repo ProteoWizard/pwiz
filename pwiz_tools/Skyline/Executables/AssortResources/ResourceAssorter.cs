@@ -96,7 +96,11 @@ namespace AssortResources
             }
         }
 
-        public void DoWork()
+        /// <summary>
+        /// Do the moves (or inspection) for strings needing relocation
+        /// </summary>
+        /// <param name="inspectionResults">If non-null, write inspection results to this list instead of console (used by Skyline code inspection test)</param>
+        public void DoWork(List<string> inspectionResults = null)
         {
             var folders = CsProjFile.ListAllSourceFiles()
                 .ToLookup(path => Path.GetDirectoryName(path) ?? string.Empty);
@@ -159,10 +163,17 @@ namespace AssortResources
             {
                 foreach (var move in moves)
                 {
-                    Console.WriteLine(move);
+                    if (inspectionResults != null)
+                    {
+                        inspectionResults.Add(move);
+                    }
+                    else
+                    {
+                        Console.WriteLine(move);
+                    }
                 }
 
-                if (moves.Count > 0)
+                if (moves.Count > 0 && inspectionResults == null)
                 {
                     Console.WriteLine($"\nThis can be done with command:\n\"{Process.GetCurrentProcess().MainModule!.FileName}\" --resourcefile \"{ResourceFile.FilePath}\" --projectfile \"{CsProjFile.ProjFilePath}\" ");
                     Environment.ExitCode = moves.Count;

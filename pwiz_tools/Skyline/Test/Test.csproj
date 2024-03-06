@@ -139,16 +139,26 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Executables\AssortResources\CsProjFile.cs">
+      <Link>CsProjFile.cs</Link>
+    </Compile>
+    <Compile Include="..\Executables\AssortResources\ResourceAssorter.cs">
+      <Link>ResourceAssorter.cs</Link>
+    </Compile>
+    <Compile Include="..\Executables\AssortResources\ResourceFile.cs">
+      <Link>ResourceFile.cs</Link>
+    </Compile>
+    <Compile Include="..\Executables\AssortResources\ResourceIdentifiers.cs">
+      <Link>ResourceIdentifiers.cs</Link>
+    </Compile>
+    <Compile Include="..\Executables\AssortResources\ResourceReference.cs">
+      <Link>ResourceReference.cs</Link>
+    </Compile>
     <Compile Include="AddTransitionsTest.cs" />
     <Compile Include="AdductTest.cs" />
     <Compile Include="AnalyticsTest.cs" />
     <Compile Include="AnnotationUnitTest.cs" />
     <Compile Include="AntivirusExclusionTest.cs" />
-    <Compile Include="AssortResources\CsProjFile.cs" />
-    <Compile Include="AssortResources\ResourceAssorter.cs" />
-    <Compile Include="AssortResources\ResourceFile.cs" />
-    <Compile Include="AssortResources\ResourceIdentifiers.cs" />
-    <Compile Include="AssortResources\ResourceReference.cs" />
     <Compile Include="AuditLogListTest.cs" />
     <Compile Include="BilinearCurveFitTest.cs" />
     <Compile Include="BookmarkEnumeratorTest.cs" />
