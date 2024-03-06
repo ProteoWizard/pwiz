@@ -130,4 +130,7 @@
   <data name="FoldChangeForm_BuildContextMenu_Volcano_Plot" xml:space="preserve">
     <value>Volcano Plot</value>
   </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting" xml:space="preserve">
+    <value>Relative Abundance Formatting</value>
+  </data>
 </root>
