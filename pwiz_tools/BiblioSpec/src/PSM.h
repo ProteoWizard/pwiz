@@ -132,16 +132,6 @@ struct PSM{
           (smallMolMetadata.IsCompleteEnough() ||
            (charge != 0 && !unmodSeq.empty()));
   }
-  
-  int idAsInteger() const
-  {
-      if (specIndex >= 0) // not default value means scan id is index=<index>
-          return specIndex;
-      else if (specKey < 0) // default value
-          return std::hash<string>()(specName);
-      else
-          return specKey;
-  }
 
   std::string idAsString() const {
     std::string result;
