@@ -78,10 +78,10 @@ namespace pwiz.Skyline.Model
             res.MSLevel = spectrum.Level.ToString();
             res.ScanId = spectrum.Id;
 
+            res.Instrument = new InstrumentInfo();
+            res.Instrument.InstrumentManufacturer = spectrum.InstrumentVendor;
             if (spectrum.InstrumentInfo != null)
             {
-                res.Instrument = new InstrumentInfo();
-                res.Instrument.InstrumentManufacturer = spectrum.InstrumentVendor;
                 res.Instrument.InstrumentModel = spectrum.InstrumentInfo.Model;
                 if (new[]
                     {
@@ -96,8 +96,8 @@ namespace pwiz.Skyline.Model
                     res.Instrument.InstrumentComponents.Detector = spectrum.InstrumentInfo.Detector;
                 }
             }
-
             res.Instrument.InstrumentSerialNumber = spectrum.InstrumentSerialNumber;
+
             res.IsCentroided = spectrum.Centroided.ToString(CultureInfo.CurrentCulture);
             return res;
         }

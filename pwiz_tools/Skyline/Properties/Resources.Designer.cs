@@ -10562,6 +10562,18 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 
+        ///
+        ///This library entry only provides precursor
+        ///information, there is no spectrum to show.
+        /// </summary>
+        public static string SpectrumGraphItem_library_entry_provides_only_precursor_values {
+            get {
+                return ResourceManager.GetString("SpectrumGraphItem_library_entry_provides_only_precursor_values", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Data files.
         /// </summary>
         public static string SpectrumLibraryInfoDlg_SetDetailsText_Data_files {
