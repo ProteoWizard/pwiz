@@ -6422,6 +6422,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot parse formula &quot;{0}&quot;.
+        /// </summary>
+        public static string ParsedMolecule_SplitFormulaAndMasses_Cannot_parse_formula___0__ {
+            get {
+                return ResourceManager.GetString("ParsedMolecule_SplitFormulaAndMasses_Cannot_parse_formula___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The value {0} for {1} is not valid: it must be greater than or equal to {2}..
         /// </summary>
         public static string ParsimonySettings_Validate_The_value__0__for__1__is_not_valid__it_must_be_greater_than_or_equal_to__2__ {
