@@ -12,13 +12,16 @@ in detail.
 
 Inputs
 
-Most input files are in inputs.tar.bz2 although recently we have been
-adding them directly to git.  Those that are in the bz2 file are automatically
-unpacked into BiblioSpec/tests/inputs by bjam as part of the
-proteowizard build process. If you change an input file from the bz2 file, be
-sure to update the tar file and check the new version into the
-repository. For new work just add the file directly to git, it's much easier
-to track changes that way.
+The input files for many older tests are in the inputs.tar.bz2 file, 
+but it is no longer being maintained. Instead, newer tests add their 
+inputs directly into git because it's much easier to track changes 
+that way. 
+
+The inputs.tar.bz2 file is automatically extracted during the build 
+process but does not overwrite existing files. If you need to change 
+an input file from the bz2, change it and check it in, but do not 
+modify the bz2 file. The revised copy checked directly into git will 
+be the one that prevails.
 
 Expected outputs
 
