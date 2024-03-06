@@ -865,7 +865,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // Add the library molecules to the document
             var status = new ProgressStatus(PeptideSearchResources.ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document);
             progressMonitor.UpdateProgress(status);
-            Assume.IsTrue(!Equals(Document.Settings.PeptideSettings.Libraries.LibrarySpecs, _existingLibraries.LibrarySpecs));
+            Assume.AreNotEqual(Document.Settings.PeptideSettings.Libraries.LibrarySpecs, _existingLibraries.LibrarySpecs);
             var docNew = Document;
             foreach (var lib in Document.Settings.PeptideSettings.Libraries.Libraries.Where(l =>
                          !_existingLibraries.Libraries.Contains(l)))
