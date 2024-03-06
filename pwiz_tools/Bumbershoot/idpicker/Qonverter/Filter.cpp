@@ -497,9 +497,8 @@ struct Filter::Impl
             return;
 
         char buf[32768];
-
-        FILE* f = fopen(filepath.c_str(), "r");
-        while (fread(&buf, 32768, 1, f) > 0) {}
+        ifstream f(filepath.c_str());
+        while (f.readsome(reinterpret_cast<char*>(&buf), 32768) > 0) {}
     }
 
     void initializeConnection()
