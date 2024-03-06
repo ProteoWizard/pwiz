@@ -29,6 +29,7 @@ using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 //
@@ -145,7 +146,7 @@ namespace TestPerf
         private void PerformSearchTest(int pass)
         {
 
-
+            TidyBetweenPasses(); // For consistent audit log, remove any previous artifacts
             if (pass == 0)
             {
                 // Make sure we're testing the mzML conversion
@@ -265,6 +266,8 @@ namespace TestPerf
             Assert.IsFalse(searchSucceeded.Value);
             searchSucceeded = null;
             PauseForScreenShot("search cancelled, now go back and  test 2 input files with the same name in different directories");
+            TidyBetweenPasses(); // For consistent audit log, remove any previous artifacts
+
             // Go back and test 2 input files with the same name in different directories
             RunUI(() =>
             {
@@ -364,17 +367,6 @@ namespace TestPerf
             foreach (var hkExpectedFilePath in Directory.EnumerateFiles(expectedFilesPath))
             {
                 var hkActualFilePath = hkExpectedFilePath.Replace(expectedHardklorFiles, Path.Combine(expectedHardklorFiles, @".."));
-                // In the test loop there are lots of intentional starts and cancels, and multiple passes - always use the latest
-                for (var lastRun = 20; lastRun > 0; lastRun--) 
-                {
-                    var potentialResultPath = hkActualFilePath.Replace(@".hk.", $@"_{lastRun:000}.hk.");
-                    if (File.Exists(potentialResultPath))
-                    {
-                        hkActualFilePath = potentialResultPath;
-                        break;
-                    }
-                }
-
                 var columnTolerances = new Dictionary<int, double>() { { -1, .00015 } }; // Allow a little rounding wiggle in the decimal values
                 AssertEx.FileEquals(hkExpectedFilePath,  hkActualFilePath, columnTolerances, true);
             }
@@ -553,6 +545,19 @@ namespace TestPerf
                     hashCode = (hashCode * 397) ^ mz.GetHashCode();
                     hashCode = (hashCode * 397) ^ rt.GetHashCode();
                     return hashCode;
+                }
+            }
+        }
+
+        private void TidyBetweenPasses()
+        {
+            // In the test loop there are lots of intentional starts and cancels, and multiple passes, which causes file renames,
+            // so restore test directory to initial state for stable audit log creation for test purposes
+            foreach (var ext in new[]{"*.kro", "*.hk", "*.ms2", "*.conf"})
+            {
+                foreach (var f in new DirectoryInfo(GetTestPath(string.Empty)).EnumerateFiles(ext))
+                {
+                    FileEx.SafeDelete(f.FullName);
                 }
             }
         }
