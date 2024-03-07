@@ -98,7 +98,7 @@ namespace pwiz.SkylineTestTutorial
             AsSmallMoleculesTestMode = smallMoleculesTestMode;
 
             if (smallMoleculesTestMode !=  RefinementSettings.ConvertToSmallMoleculesMode.none)
-                TestDirectoryName = "AsSmMol_" + smallMoleculesTestMode;
+                TestDirectoryName = smallMoleculesTestMode.ToString().Replace("_", string.Empty); // Avoid long test paths
 
             LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/PRM-22_2.pdf";
 
