@@ -6422,11 +6422,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot parse formula &quot;{0}&quot;.
+        ///   Looks up a localized string similar to Cannot parse the formula &quot;{0}&quot;.
         /// </summary>
-        public static string ParsedMolecule_SplitFormulaAndMasses_Cannot_parse_formula___0__ {
+        public static string ParsedMolecule_SplitFormulaAndMasses_Cannot_parse_the_formula___0__ {
             get {
-                return ResourceManager.GetString("ParsedMolecule_SplitFormulaAndMasses_Cannot_parse_formula___0__", resourceCulture);
+                return ResourceManager.GetString("ParsedMolecule_SplitFormulaAndMasses_Cannot_parse_the_formula___0__", resourceCulture);
             }
         }
         

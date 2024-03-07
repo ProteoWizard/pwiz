@@ -4387,7 +4387,7 @@ information, there is no spectrum to show</value>
   <data name="PeptideMod_SetTerminus_A_peptide_modification_must_be_added_before_giving_it_a_terminal_or_amino_acid_specificity_" xml:space="preserve">
     <value>A peptide modification must be added before giving it a terminal or amino acid specificity.</value>
   </data>
-  <data name="ParsedMolecule_SplitFormulaAndMasses_Cannot_parse_formula___0__" xml:space="preserve">
-    <value>Cannot parse formula "{0}"</value>
+  <data name="ParsedMolecule_SplitFormulaAndMasses_Cannot_parse_the_formula___0__" xml:space="preserve">
+    <value>Cannot parse the formula "{0}"</value>
   </data>
 </root>
