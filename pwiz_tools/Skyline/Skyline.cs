@@ -749,10 +749,6 @@ namespace pwiz.Skyline
             {
                 MessageDlg.ShowWithException(this, TextUtil.LineSeparate(SkylineResources.SkylineWindow_ModifyDocument_Failure_attempting_to_modify_the_document, x.Message), x);
             }
-            catch (InvalidOperationException x)
-            {
-                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(SkylineResources.SkylineWindow_ModifyDocument_Failure_attempting_to_modify_the_document, x.Message), x);
-            }
         }
 
         public bool AssumeNonNullModificationAuditLogging { get; set; }
