@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Properties;
 
@@ -206,78 +207,104 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        // A few different possibilities here, e.g. "C12H5", "C12H5[-1.2/1.21]", "[+1.3/1.31]", "1.3/1.31"
+        // Also possibly  "C12H5[-1.2/1.21]-C2H[-1.1]" or  "C12H5-C2H[-1.1]"
+        private static Regex FormulaAndMassesRegex = new Regex(@"(-?)([^\[\-]*)(\[([^\]]+)\])?", 
+            RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
         /// <summary>
         /// Parse the formula and mass offset declarations in a string presumed to describe a chemical formula and/or mass offsets.
         /// Is aware of simple math, e.g. "C12H5[-1.2/1.21]-C2H[-1.1]" => "C12H5-C2H", 0.1, 0.11
         /// </summary>
         /// <param name="formulaAndMasses">input string  e.g. "C12H5", "C12H5[-1.2/1.21]", "[+1.3/1.31]", "1.3/1.31", "C12H5[-1.2/1.21]-C2H[-1.1]"</param>
-        /// <param name="formula">string with any mass modifiers stripped out e.g.  "C12H5[-1.2/1.21]-C2H[-1.1]" ->  "C12H5-C2H" </param>
-        /// <param name="modMassMono">effect of any mono mass modifiers e.g. "C12H5[-1.2/1.21]-C2H[-1.1]" => 0.1 </param>
-        /// <param name="modMassAverage">effect of any avg mass modifiers e.g. "C12H5[-1.2/1.21]-C2H[-1.1]" => 0.11</param>
-        private static void ParseFormulaAndMasses(string formulaAndMasses, out string formula, out double? modMassMono, out double? modMassAverage)
+        /// <param name="formulaOut">string with any mass modifiers stripped out e.g.  "C12H5[-1.2/1.21]-C2H[-1.1]" ->  "C12H5-C2H" </param>
+        /// <param name="modMassMonoOut">effect of any mono mass modifiers e.g. "C12H5[-1.2/1.21]-C2H[-1.1]" => 0.1 </param>
+        /// <param name="modMassAverageOut">effect of any avg mass modifiers e.g. "C12H5[-1.2/1.21]-C2H[-1.1]" => 0.11</param>
+        private static void ParseFormulaAndMasses(string formulaAndMasses, out string formulaOut, out double? modMassMonoOut, out double? modMassAverageOut)
         {
-            modMassMono = null;
-            modMassAverage = null;
-            formula = formulaAndMasses?.Trim();
-            if (string.IsNullOrEmpty(formula))
+            modMassMonoOut = null;
+            modMassAverageOut = null;
+            formulaOut = formulaAndMasses?.Trim();
+            if (string.IsNullOrEmpty(formulaOut))
             {
                 return;
             }
-            // A few different possibilities here, e.g. "C12H5", "C12H5[-1.2/1.21]", "[+1.3/1.31]", "1.3/1.31"
-            // Also possibly  "C12H5[-1.2/1.21]-C2H[-1.1]"
-            var position = 0;
-            while (MoleculeMassOffset.StringContainsMassOffsetCue(formula))
+
+            if (!char.IsUpper(formulaOut[0]) && !MoleculeMassOffset.StringContainsMassOffsetCue(formulaOut))
             {
-                var cuePlus = formula.IndexOf(MoleculeMassOffset.MASS_MOD_CUE_PLUS, position, StringComparison.InvariantCulture);
-                var cueMinus = formula.IndexOf(MoleculeMassOffset.MASS_MOD_CUE_MINUS, position, StringComparison.InvariantCulture);
-                if (cuePlus < 0)
+                // No formula or "[+1.2/1.21]" for regex to match - but could be bare "+1.2/1.21"
+                if (TryParseMassOffsetValues(formulaOut, 1.0, out var monoMassParsed, out var averageMassParsed))
                 {
-                    cuePlus = int.MaxValue;
+                    modMassMonoOut = monoMassParsed;
+                    modMassAverageOut = averageMassParsed;
+                    formulaOut = string.Empty;
                 }
-                if (cueMinus < 0)
+                return;
+            }
+
+            var matches = FormulaAndMassesRegex.Matches(formulaOut);
+            if (matches.Count > 0)
+            {
+                formulaOut = string.Empty;
+                foreach (Match match in matches)
                 {
-                    cueMinus = int.MaxValue;
+                    double sign = match.Groups[1].Value == @"-" ? -1 : 1;
+                    var thisFormula = match.Groups[2].Value;
+                    if (sign < 0 && !string.IsNullOrEmpty(thisFormula))
+                    {
+                        formulaOut += @"-";
+                    }
+                    formulaOut += thisFormula;
+                    var brackets = match.Groups[3].Value;
+                    if (!string.IsNullOrEmpty(brackets))
+                    {
+                        if (!TryParseMassOffsetValues(brackets, sign, out var monoMassParsed, out var averageMassParsed))
+                        {
+                            throw new ArgumentException(string.Format(Resources.ParsedMolecule_SplitFormulaAndMasses_Cannot_parse_the_formula___0__, formulaAndMasses));
+                        }
+                        modMassMonoOut = (modMassMonoOut ?? 0) + monoMassParsed;
+                        modMassAverageOut = (modMassAverageOut ?? 0) + averageMassParsed;
+                    }
                 }
-                // e.g. "C12H5[-1.2/1.21]", "{+1.3/1.31]",  "{-1.3]"
-                position = Math.Min(cuePlus, cueMinus);
-                var close = formula.IndexOf(']', position);
-                var parts = formula.Substring(position, close - position).Split('/');
-                double negate = Equals(cueMinus, position) ? -1 : 1;
-                if (formula.Substring(0, position).Contains(@"-"))
+            }
+
+            bool TryParseMassOffsetValues(string text, double sign, out double monoMassParsed, out double averageMassParsed)
+            {
+                var index = text.StartsWith(@"[") ? 1 : 0; // Deal with "[+1.2/1.22]" or  "+1.2/1.22" or "1.2/1.22"
+                if (text.Length == index)
                 {
-                    negate *= -1;
+                    averageMassParsed = monoMassParsed = 0;
+                    return false;
                 }
-                if (!double.TryParse(parts[0].Substring(2).Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out var monoMassParsed))
+                if (text[index] == '-')
                 {
-                    throw new ArgumentException(string.Format(Resources.ParsedMolecule_SplitFormulaAndMasses_Cannot_parse_the_formula___0__, formulaAndMasses));
+                    sign *= -1;
+                    index++;
                 }
-                monoMassParsed *= negate;
-                modMassMono = (modMassMono ?? 0) + monoMassParsed;
-                var averageMassParsed = monoMassParsed;
+                else if (text[index] == '+')
+                {
+                    index++;
+                }
+                var parts = text.Split('/');
+                if (!double.TryParse(parts[0].Substring(index).Trim(']'), NumberStyles.Any, CultureInfo.InvariantCulture, out monoMassParsed))
+                {
+                    averageMassParsed = 0;
+                    return false;
+                }
+                monoMassParsed *= sign;
+                averageMassParsed = monoMassParsed;
                 if (parts.Length > 1)
                 {
-                    if (!double.TryParse(parts[1].Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out averageMassParsed))
+                    if (!double.TryParse(parts[1].Trim(']'), NumberStyles.Any, CultureInfo.InvariantCulture, out averageMassParsed))
                     {
-                        throw new ArgumentException(string.Format(Resources.ParsedMolecule_SplitFormulaAndMasses_Cannot_parse_the_formula___0__, formulaAndMasses));
+                        return false;
                     }
-                    averageMassParsed *= negate;
+                    averageMassParsed *= sign;
                 }
-                modMassAverage = (modMassAverage ?? 0) + averageMassParsed;
-                formula = formula.Substring(0, position) + formula.Substring(close + 1);
+
+                return true;
             }
-            if (formula.Contains(@"/")) // e.g.  "1.3/1.31"
-            {
-                var parts = formula.Split(new[] { '/' });
-                double modMassAverageParsed = 0;
-                if (!(double.TryParse(parts[0], NumberStyles.Any, CultureInfo.InvariantCulture, out var modMassMonoParsed) &&
-                      double.TryParse(parts[1], NumberStyles.Any, CultureInfo.InvariantCulture, out modMassAverageParsed)))
-                {
-                    throw new ArgumentException(string.Format(Resources.ParsedMolecule_SplitFormulaAndMasses_Cannot_parse_the_formula___0__, formulaAndMasses));
-                }
-                modMassMono = modMassMonoParsed;
-                modMassAverage = modMassAverageParsed;
-                formula = string.Empty;
-            }
+
         }
 
         #region math

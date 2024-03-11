@@ -214,8 +214,12 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(27.2, bioMassCalc.ParseFormulaMass(description, out _), .01);
             description = "C'2H[-1.2]";
             Assert.AreEqual(25.815, bioMassCalc.ParseFormulaMass(description, out _), .01);
+            description = "41.027549007/41.027549007";
+            Assert.AreEqual(41.02, bioMassCalc.ParseFormulaMass(description, out _), .01);
             description = "C'2[+1.2]-C'";
             Assert.AreEqual(14.2, bioMassCalc.ParseFormulaMass(description, out _), .01);
+            description = "C'2-C'[+1.2]";
+            Assert.AreEqual(11.8, bioMassCalc.ParseFormulaMass(description, out _), .01);
             description = "C12H5[-1.2 / 1.21] - C2H[-1.1]";
             var parsed = ParsedMolecule.Create(description);
             Assert.AreEqual(-.1, parsed.GetMassOffset(MassType.Monoisotopic), .01);
