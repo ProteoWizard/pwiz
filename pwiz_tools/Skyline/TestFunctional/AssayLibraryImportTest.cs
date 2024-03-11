@@ -1228,7 +1228,7 @@ namespace pwiz.SkylineTestFunctional
 
         // Expects a message dialog after import window closes
         public static void ImportTransitionListSkipColumnSelectWithMessage<TDlg>(string csvPath, Action<TDlg> messageAction)
-            where TDlg : FormEx
+            where TDlg : Form
         {
             ImportTransitionListSkipColumnSelect(csvPath);
             var messageDlg = WaitForOpenForm<TDlg>();

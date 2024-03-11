@@ -44,7 +44,7 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
 
-            TestFilesZip = @"https://skyline.gs.washington.edu/tutorials/MSstatsTutorial.zip"; // Not L10
+            TestFilesZip = @"https://skyline.ms/tutorials/MSstatsTutorial.zip"; // Not L10
             RunFunctionalTest();
         }
 

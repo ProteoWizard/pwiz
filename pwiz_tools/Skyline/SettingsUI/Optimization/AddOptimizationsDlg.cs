@@ -38,9 +38,9 @@ namespace pwiz.Skyline.SettingsUI.Optimization
             OptimizationsCount = optimizationCount;
 
             if (optimizationCount == 0)
-                labelOptimizationsAdded.Text = Resources.AddOptimizationsDlg_AddOptimizationsDlg_No_new_optimizations_will_be_added_to_the_library_;
+                labelOptimizationsAdded.Text = OptimizationResources.AddOptimizationsDlg_AddOptimizationsDlg_No_new_optimizations_will_be_added_to_the_library_;
             else if (optimizationCount == 1)
-                labelOptimizationsAdded.Text = Resources.AddOptimizationsDlg_AddOptimizationsDlg__1_new_optimization_will_be_added_to_the_library_;
+                labelOptimizationsAdded.Text = OptimizationResources.AddOptimizationsDlg_AddOptimizationsDlg__1_new_optimization_will_be_added_to_the_library_;
             else
                 labelOptimizationsAdded.Text = string.Format(labelOptimizationsAdded.Text, optimizationCount);
 

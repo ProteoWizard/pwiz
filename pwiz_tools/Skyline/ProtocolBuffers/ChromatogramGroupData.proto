@@ -40,6 +40,7 @@ message ResultFileMetaDataProto {
 		int32 scanDescriptionIndex = 5;
 		int32 presetScanConfiguration = 6;
 		int32 analyzerIndex = 7;
+		int32 scanWindowIndex = 8;
 	}
 
 	message Precursor {
@@ -49,11 +50,16 @@ message ResultFileMetaDataProto {
 		double collisionEnergy = 4;
 		int32 msLevel = 5;
 	}
+	message ScanWindow {
+		double lowerLimit = 1;
+		double upperLimit = 2;
+	}
 
 	repeated SpectrumMetadata spectra = 1;
 	repeated Precursor precursors = 2;
 	repeated string scanDescriptions = 3;
 	repeated string analyzers = 4;
+	repeated ScanWindow scanWindows = 5;
 }
 message ChromatogramGroupIdsProto {
 	enum FilterOperation {

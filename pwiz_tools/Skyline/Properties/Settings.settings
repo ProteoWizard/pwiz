@@ -245,6 +245,15 @@
     <Setting Name="AreaLogScale" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="AreaProteinTargets" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ExcludePeptideListsFromAbundanceGraph" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ExcludeStandardsFromAbundanceGraph" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
     <Setting Name="AreaPeptideOrderEnum" Type="System.String" Scope="User">
       <Value Profile="(Default)">document</Value>
     </Setting>
@@ -853,6 +862,9 @@
     </Setting>
     <Setting Name="PanoramaLocalSavePath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="ExportMethodXICWidth" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0.02</Value>
     </Setting>
     <Setting Name="FullScanPropertySheetVisible" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>

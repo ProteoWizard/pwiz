@@ -148,12 +148,14 @@
     <Compile Include="ChromatogramGroupIdsTest.cs" />
     <Compile Include="ElibQuantifiableTransitionTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
+    <Compile Include="LibraryRankedSpectrumInfoTest.cs" />
     <Compile Include="OnDemandFeatureCalculatorTest.cs" />
     <Compile Include="FeatureTooltipTest.cs" />
     <Compile Include="CommandLinePeakBoundaryTest.cs" />
     <Compile Include="PeptideTest.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\LegacySkylineDocumentProto.cs" />
     <Compile Include="ProtocolBuffers\LegacyProtocolBufferFormatsTest.cs" />
+    <Compile Include="ReferenceValueTest.cs" />
     <Compile Include="ScoreQValueMapTest.cs" />
     <Compile Include="MeasuredIonTest.cs" />
     <Compile Include="SchemaDocumentsTest.cs" />

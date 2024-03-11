@@ -26,7 +26,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -169,7 +168,7 @@ namespace pwiz.Skyline.Model
         public SrmDocument ChangePeaks(IProgressMonitor progressMonitor = null)
         {
             var settingsChangeMonitor = progressMonitor != null
-                ? new SrmSettingsChangeMonitor(progressMonitor, Resources.MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries)
+                ? new SrmSettingsChangeMonitor(progressMonitor, ModelResources.MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries)
                 : null;
             using (settingsChangeMonitor)
             {

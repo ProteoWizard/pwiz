@@ -19,13 +19,15 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -761,8 +763,12 @@ namespace pwiz.Skyline.Model.Results
         {
             var allPeaks = new List<PeptideChromDataPeak>();
             var listUnmerged = new List<ChromDataSet>(dataSets);
-            var listEnumerators = listUnmerged.Select(dataSet => dataSet.PeakSets.GetEnumerator()).ToList();
-
+            using var allEnumerators = new DisposableCollection<IEnumerator<ChromDataPeakList>>();
+            foreach (var dataSet in listUnmerged)
+            {
+                allEnumerators.Add(dataSet.PeakSets.GetEnumerator());
+            }
+            var listEnumerators = allEnumerators.ToList();
             // Initialize an enumerator for each set of raw peaks, or remove
             // the set, if the list is found to be empty
             for (int i = listEnumerators.Count - 1; i >= 0; i--)
@@ -786,7 +792,7 @@ namespace pwiz.Skyline.Model.Results
                     var dataSet = listUnmerged[i];
                     var dataPeakList = listEnumerators[i].Current;
                     if (dataPeakList == null)
-                        throw new InvalidOperationException(Resources.PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list);
+                        throw new InvalidOperationException(ResultsResources.PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list);
                     if (Compare(dataPeakList, dataSet.IsStandard, maxPeak, maxStandard) > 0)
                     {
                         maxPeak = dataPeakList;
@@ -879,7 +885,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     string peptideName = NodePep == null ? string.Empty : NodePep.ModifiedSequenceDisplay;
                     string message = string.Format(
-                        Resources.PeptideChromDataSets_AddDataSet_Unable_to_process_chromatograms_for_the_molecule___0___because_one_chromatogram_ends_at_time___1___and_the_other_ends_at_time___2___,
+                        ResultsResources.PeptideChromDataSets_AddDataSet_Unable_to_process_chromatograms_for_the_molecule___0___because_one_chromatogram_ends_at_time___1___and_the_other_ends_at_time___2___,
                         peptideName, firstMaxTime, nextMaxTime);
                     throw new InvalidOperationException(message);
                 }
@@ -944,12 +950,27 @@ namespace pwiz.Skyline.Model.Results
             // Now that we have times loaded, apply explicit RT filter if any
             if (ExplicitRetentionTime != null)
             {
+                string moleculeText = null;
+
                 double explicitRT = ExplicitRetentionTime.RetentionTime;
                 for (var i = DataSets.Count - 1; i >= 0 ; i--)
                 {
                     var dataSet = DataSets[i];
                     if (explicitRT < dataSet.MinRawTime || dataSet.MaxRawTime < explicitRT)
                     {
+                        moleculeText ??= NodePep.CustomMolecule?.ToString() ?? NodePep.GetCrosslinkedSequence();
+                        string precursorText = moleculeText;
+                        if (NodePep.Children.Count > 1)
+                        {
+                            var transitionGroupDocNode = dataSet.NodeGroup;
+                            if (transitionGroupDocNode != null)
+                            {
+                                precursorText = TextUtil.SpaceSeparate(moleculeText,
+                                    transitionGroupDocNode.TransitionGroup.ToString());
+                            }
+                        }
+                        Trace.TraceWarning(ResultsResources.PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_,
+                            precursorText, explicitRT, dataSet.MinRawTime, dataSet.MaxRawTime);
                         DataSets.RemoveAt(i);
                     }
                     else

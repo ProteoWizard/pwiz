@@ -108,6 +108,7 @@
             this.peakAreasMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaReplicateComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaPeptideComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaRelativeAbundanceMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVHistogramMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVHistogram2DMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsPlotsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -696,6 +697,7 @@
             this.peakAreasMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.areaReplicateComparisonMenuItem,
             this.areaPeptideComparisonMenuItem,
+            this.areaRelativeAbundanceMenuItem,
             this.areaCVHistogramMenuItem,
             this.areaCVHistogram2DMenuItem});
             resources.ApplyResources(this.peakAreasMenuItem, "peakAreasMenuItem");
@@ -713,6 +715,12 @@
             this.areaPeptideComparisonMenuItem.Name = "areaPeptideComparisonMenuItem";
             resources.ApplyResources(this.areaPeptideComparisonMenuItem, "areaPeptideComparisonMenuItem");
             this.areaPeptideComparisonMenuItem.Click += new System.EventHandler(this.areaPeptideComparisonMenuItem_Click);
+            // 
+            // areaRelativeAbundanceMenuItem
+            // 
+            this.areaRelativeAbundanceMenuItem.Name = "areaRelativeAbundanceMenuItem";
+            resources.ApplyResources(this.areaRelativeAbundanceMenuItem, "areaRelativeAbundanceMenuItem");
+            this.areaRelativeAbundanceMenuItem.Click += new System.EventHandler(this.areaRelativeAbundanceMenuItem_Click);
             // 
             // areaCVHistogramMenuItem
             // 
@@ -982,6 +990,7 @@
         private System.Windows.Forms.ToolStripMenuItem peakAreasMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaReplicateComparisonMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaPeptideComparisonMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaRelativeAbundanceMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVHistogramMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVHistogram2DMenuItem;
         private System.Windows.Forms.ToolStripMenuItem detectionsPlotsMenuItem;

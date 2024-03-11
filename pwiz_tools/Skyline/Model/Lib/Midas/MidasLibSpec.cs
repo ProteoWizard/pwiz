@@ -22,7 +22,6 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -38,7 +37,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
 
         public static string FILTER_MIDAS
         {
-            get { return TextUtil.FileDialogFilterAll(Resources.MidasLibrary_SpecFilter_MIDAS_Spectral_Library, EXT); }
+            get { return TextUtil.FileDialogFilterAll(MidasResources.MidasLibrary_SpecFilter_MIDAS_Spectral_Library, EXT); }
         }
 
         public static string GetName(string documentPath, IEnumerable<LibrarySpec> libSpecs = null)
@@ -76,7 +75,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
 
         public override string GetLibraryTypeName()
         {
-            return Resources.MidasLibrary_SpecFilter_MIDAS_Spectral_Library;
+            return MidasResources.MidasLibrary_SpecFilter_MIDAS_Spectral_Library;
         }
 
         #region Implementation of IXmlSerializable

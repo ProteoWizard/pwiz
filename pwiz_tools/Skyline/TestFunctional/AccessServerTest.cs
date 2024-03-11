@@ -44,7 +44,10 @@ namespace pwiz.SkylineTestFunctional
         public void TestAccessServer()
         {
             TestFilesZip = @"TestFunctional\AccessServerTest.zip";
-            RunFunctionalTest();
+            using (new FakeProsit(null))
+            {
+                RunFunctionalTest();
+            }
         }
 
         private readonly IPanoramaPublishClient _testPublishClient = new TestPanoramaPublishClient();
@@ -186,6 +189,8 @@ namespace pwiz.SkylineTestFunctional
             CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions);
 
             TestPanoramaServerUrls();
+
+            TestAnonymousServers();
         }
 
         public void CheckPublishSuccess(string nodeSelection, bool expectingSavedUri)
@@ -317,35 +322,150 @@ namespace pwiz.SkylineTestFunctional
             var serverUri = PanoramaUtil.ServerNameToUri(PWEB);
             var pServer = new PanoramaServer(serverUri, string.Empty, string.Empty);
             Assert.AreEqual(pServer.URI.AbsoluteUri, PWEB_FULL);
-            Assert.IsFalse(pServer.RemoveContextPath());
-            Assert.IsTrue(pServer.AddLabKeyContextPath());
-            Assert.AreEqual(pServer.URI.AbsoluteUri, PWEB_LK_FULL);
+
+            var tempServer = pServer.RemoveContextPath(); // pServer does not have a context path. Nothing to remove.
+            Assert.IsTrue(ReferenceEquals(pServer, tempServer)); 
+            tempServer = pServer.AddLabKeyContextPath(); // pServer does not have a context path. It should get added to tempServer.
+            Assert.IsFalse(ReferenceEquals(pServer, tempServer));
+            Assert.AreEqual(tempServer.URI.AbsoluteUri, PWEB_LK_FULL);
 
             serverUri = PanoramaUtil.ServerNameToUri(PWEB_LK);
             pServer = new PanoramaServer(serverUri, string.Empty, string.Empty);
             Assert.AreEqual(pServer.URI.AbsoluteUri, PWEB_LK_FULL);
-            Assert.IsFalse(pServer.AddLabKeyContextPath());
-            Assert.IsTrue(pServer.RemoveContextPath());
-            Assert.AreEqual(pServer.URI.AbsoluteUri, PWEB_FULL);
+
+            tempServer = pServer.AddLabKeyContextPath(); // pServer has a 'labkey' context path. Nothing to add.
+            Assert.IsTrue(ReferenceEquals(pServer, tempServer));
+            tempServer = pServer.RemoveContextPath(); // 'labkey' context path should be removed
+            Assert.IsFalse(ReferenceEquals(pServer, tempServer));
+            Assert.AreEqual(tempServer.URI.AbsoluteUri, PWEB_FULL);
 
             serverUri = PanoramaUtil.ServerNameToUri(PWEB_LK);
             pServer = new PanoramaServer(serverUri, string.Empty, string.Empty);
             Assert.AreEqual(pServer.URI, PWEB_LK_FULL);
-            Assert.IsTrue(pServer.Redirect(PWEB_FULL + PanoramaUtil.ENSURE_LOGIN_PATH,
-                PanoramaUtil.ENSURE_LOGIN_PATH));
-            Assert.AreEqual(pServer.URI, PWEB_FULL);
+            // Redirect from https://panoramaweb.org/labkey/ -> "https://panoramaweb.org/
+            tempServer = pServer.Redirect(PWEB_FULL + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH); 
+            Assert.IsFalse(ReferenceEquals(pServer, tempServer));
+            Assert.AreEqual(tempServer.URI, PWEB_FULL);
 
-            Assert.IsFalse(pServer.Redirect("/labkey/" + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH)); // Need full URL
-            Assert.IsFalse(pServer.Redirect("http:/another.server/" + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH)); // Not the same host
+            // No redirection in the following cases
+            Assert.IsTrue(ReferenceEquals(pServer, pServer.Redirect("/labkey/" + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH))); // Need full URL
+            Assert.IsTrue(ReferenceEquals(pServer, pServer.Redirect("http:/another.server/" + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH))); // Not well formed URL.
+            Assert.IsTrue(ReferenceEquals(pServer, pServer.Redirect("http://another.server/" + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH))); // Not the same host
         }
 
-        public class TestPanoramaClient : IPanoramaClient
+        private void TestAnonymousServers()
         {
-            public Uri ServerUri { get; set; }
+            // Remove all saved Panorama servers
+            ToolOptionsDlg = ShowDialog<ToolOptionsUI>(() => SkylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Panorama));
+            var editServerListDlg = ShowDialog<EditListDlg<SettingsListBase<Server>, Server>>(ToolOptionsDlg.EditServers);
+            RunUI(editServerListDlg.ResetList);
+            OkDialog(editServerListDlg, editServerListDlg.OkDialog);
+            OkDialog(ToolOptionsDlg, ToolOptionsDlg.OkDialog);
 
+            // Open a Skyline document
+            RunUI(() =>
+            {
+                SkylineWindow.NewDocument(true);
+                SkylineWindow.SaveDocument(TestContext.GetTestResultsPath("test_anonymous_servers.sky"));
+            });
+            WaitForDocumentLoaded();
+
+            // Try to "Upload to Panorama"
+            IPanoramaPublishClient publishClient = new TestPanoramaPublishClient();
+            var noServersDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(publishClient));
+            var text = noServersDlg.Message;
+            RunUI(() => Assert.IsTrue(noServersDlg.Message.Contains(Resources.SkylineWindow_ShowPublishDlg_Press_Register_to_register_for_a_project_on_PanoramaWeb_)));
+            OkDialog(noServersDlg, noServersDlg.CancelDialog);
+            
+
+            // Add an anonymous server
+            AddAnonymousServer(VALID_PANORAMA_SERVER, 1);
+
+
+            // Try "Upload to Panorama" again
+            noServersDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(publishClient));
+            RunUI(() => Assert.IsTrue(noServersDlg.Message.Contains(Resources
+                .SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_with_a_user_account__To_upload_documents_to_a_server_a_user_account_is_required_)));
+
+            // 1. Click "Edit existing". "Anonymous access" checkbox should be disabled. Add account information
+            var editServerDlg = ShowDialog<EditServerDlg>(noServersDlg.ClickYes);
+            var testClient = new TestPanoramaClient(VALID_PANORAMA_SERVER, VALID_USER_NAME, VALID_PASSWORD);
+            RunUI(() =>
+            {
+                Assert.IsFalse(editServerDlg.AnonymousSeverCbEnabled());
+                Assert.AreEqual(VALID_PANORAMA_SERVER, editServerDlg.URL);
+                editServerDlg.PanoramaClient = testClient;
+                editServerDlg.Username = testClient.Username;
+                editServerDlg.Password = testClient.Password;
+            });
+
+
+            // 2. PublishDocumentDlg should NOT display the "Show anonymous servers" checkbox
+            var publishDocDlg = ShowDialog<PublishDocumentDlg>(editServerDlg.OkDialog);
+            RunUI( () => Assert.IsFalse(publishDocDlg.CbAnonymousServersVisible));
+            OkDialog(publishDocDlg, publishDocDlg.CancelDialog);
+
+
+
+            // Add another anonymous server
+            // 1. PublishDocumentDlg should display the "Show anonymous servers" checkbox
+            // 2. View anonymous servers
+            const string pweb = "https://panoramaweb.org/";
+            AddAnonymousServer(pweb, 2);
+            publishDocDlg = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(publishClient));
+            RunUI(() =>
+            {
+                // 1. PublishDocumentDlg should display the "Show anonymous servers" checkbox
+                Assert.IsTrue(publishDocDlg.CbAnonymousServersVisible);
+
+                var servers = publishDocDlg.GetServers();
+                Assert.AreEqual(1, servers.Count);
+                Assert.AreEqual(VALID_PANORAMA_SERVER, servers[0]);
+
+                // 2. View anonymous servers
+                publishDocDlg.ShowAnonymousServers = true;
+                servers = publishDocDlg.GetServers();
+                Assert.AreEqual(2, servers.Count);
+                Assert.AreEqual(pweb + @" (anonymous)", servers[1]);
+
+                publishDocDlg.ShowAnonymousServers = false;
+                servers = publishDocDlg.GetServers();
+                Assert.AreEqual(1, servers.Count);
+                Assert.AreEqual(VALID_PANORAMA_SERVER, servers[0]);
+            });
+            OkDialog(publishDocDlg, publishDocDlg.CancelDialog);
+        }
+
+        private void AddAnonymousServer(string server, int expectedServerCount)
+        {
+            ToolOptionsDlg = ShowDialog<ToolOptionsUI>(() => SkylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Panorama));
+            var editServerListDlg = ShowDialog<EditListDlg<SettingsListBase<Server>, Server>>(ToolOptionsDlg.EditServers);
+            var testClient = new TestAnonymousPanoramaClient(server);
+            var editServerDlg = ShowDialog<EditServerDlg>(editServerListDlg.AddItem);
+            RunUI(() =>
+            {
+                editServerDlg.PanoramaClient = testClient;
+                editServerDlg.URL = testClient.Server;
+            });
+            var messageDlg = ShowDialog<MessageDlg>(editServerDlg.OkDialog);
+            RunUI(() => Assert.AreEqual(string.Format(Resources.MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty, editServerDlg.GetTextUsernameControlLabel()), messageDlg.Message));
+
+            OkDialog(messageDlg, messageDlg.OkDialog);
+            RunUI(() =>
+            {
+                editServerDlg.AnonymousServer = true;
+            });
+
+            OkDialog(editServerDlg, editServerDlg.OkDialog);
+            OkDialog(editServerListDlg, editServerListDlg.OkDialog);
+            TryWaitForConditionUI(() => expectedServerCount == Settings.Default.ServerList.Count);
+            RunUI(() => Assert.AreEqual(expectedServerCount, Settings.Default.ServerList.Count));
+            OkDialog(ToolOptionsDlg, ToolOptionsDlg.OkDialog);
+        }
+
+        public class TestPanoramaClient : BaseTestPanoramaClient
+        {
             public string Server { get; }
-            public string Username { get; }
-            public string Password { get; }
             public TestPanoramaClient(string server, string username, string password)
             {
                 Server = server;
@@ -361,58 +481,47 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
 
-            public ServerState GetServerState()
+            public override PanoramaServer ValidateServer()
             {
-                if (Server.Contains(VALID_PANORAMA_SERVER) ||
-                    string.Equals(Server, VALID_NON_PANORAMA_SERVER))
-                    return ServerState.VALID;
-
-                else if (string.Equals(Server, NON_EXISTENT_SERVER))
-                    return new ServerState(ServerStateEnum.missing, "Test WebException - NameResolutionFailure", ServerUri);
-
-                return new ServerState(ServerStateEnum.unknown, "Test WebException - unknown failure", ServerUri);
-            }
-
-            public UserState IsValidUser(string username, string password)
-            {
-                if (Server.Contains(VALID_PANORAMA_SERVER))
+                if (string.Equals(Server, VALID_NON_PANORAMA_SERVER))
                 {
-                    if (string.Equals(username, VALID_USER_NAME) &&
-                        string.Equals(password, VALID_PASSWORD))
-                    {
-                        return UserState.VALID;
-                    }
+                    throw new PanoramaServerException(UserStateEnum.nonvalid, "Test WebException", ServerUri, ServerUri);
                 }
 
-                return new UserState(UserStateEnum.nonvalid, "Test WebException", ServerUri);
+                else if (string.Equals(Server, NON_EXISTENT_SERVER))
+                    throw new PanoramaServerException(ServerStateEnum.missing, "Test WebException - NameResolutionFailure", ServerUri, ServerUri);
+
+                else if (Server.Contains(VALID_PANORAMA_SERVER))
+                {
+                    if (string.Equals(Username, VALID_USER_NAME) &&
+                        string.Equals(Password, VALID_PASSWORD))
+                    {
+                        return new PanoramaServer(ServerUri, Username, Password);
+                    }
+                    else
+                    {
+                        throw new PanoramaServerException(UserStateEnum.nonvalid, "Test WebException", ServerUri,
+                            PanoramaUtil.GetEnsureLoginUri(new PanoramaServer(ServerUri, Username, Password)));
+                    }
+                }
+                throw new PanoramaServerException(ServerStateEnum.unknown, "Test WebException - unknown failure", ServerUri, ServerUri);
             }
 
-            public FolderState IsValidFolder(string folderPath, string username, string password)
+            public override void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
             {
-                return FolderState.valid;
             }
+        }
 
-            public FolderOperationStatus CreateFolder(string parentPath, string folderName, string username, string password)
+        public class TestAnonymousPanoramaClient : TestPanoramaClient
+        {
+            public TestAnonymousPanoramaClient(string server) : base(server, string.Empty, string.Empty)
             {
-                throw new NotImplementedException();
             }
 
-            public FolderOperationStatus DeleteFolder(string folderPath, string username, string password)
+            public override PanoramaServer ValidateServer()
             {
-                throw new NotImplementedException();
+                return new PanoramaServer(ServerUri, string.Empty, string.Empty);
             }
-
-            public JToken GetInfoForFolders(PanoramaServer server, string folder)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
-                PanoramaServer server, IProgressMonitor pm, IProgressStatus progressStatus)
-            {
-                throw new NotImplementedException();
-            }
-
         }
 
         private class TestPanoramaPublishClient : AbstractPanoramaPublishClient

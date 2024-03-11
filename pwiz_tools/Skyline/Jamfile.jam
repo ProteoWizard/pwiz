@@ -26,14 +26,22 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     path-constant PWIZ_WRAPPER_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/ProteowizardWrapper ;
     path-constant BIBLIO_SPEC_PATH :  $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/BiblioSpec ;
     path-constant PFX_PATH : "$(SKYLINE_PATH)/University of Washington (MacCoss Lab).pfx" ;
-    path-constant NUGET_PATH : "C:/Program Files/Microsoft Visual Studio/2022/Community/dotnet/runtime/dotnet.exe" ;
+    path-constant NUGET_PATH : "C:/Program Files/dotnet/dotnet.exe" ;
+    if ! [ path.exists $(NUGET_PATH) ]
+    {
+        path-constant NUGET_PATH : "C:/Program Files/Microsoft Visual Studio/2022/Community/dotnet/runtime/dotnet.exe" ;
+        if ! [ path.exists $(NUGET_PATH) ]
+        {
+            path-constant NUGET_PATH : "C:/Program Files/Microsoft Visual Studio/2022/Community/dotnet/net8.0/runtime/dotnet.exe" ;
+        }
+    }
 
     local ymd = [ MATCH "([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])" : [ modules.peek : JAMDATE ] ] ;
     local year_2digit = [ MATCH "[0-9][0-9]([0-9][0-9])" : $(ymd) ] ;
 
     constant SKYLINE_YEAR : 23 ;
-    constant SKYLINE_ORDINAL : 0 ; # A count of official releases made so far this year
-    constant SKYLINE_BRANCH : 9 ; # 0 - release, 1 - daily, 9 - feature complete daily
+    constant SKYLINE_ORDINAL : 1 ; # A count of official releases made so far this year
+    constant SKYLINE_BRANCH : 1 ; # 0 - release, 1 - daily, 9 - feature complete daily
 
     # when releasing a patch for a previous year, the day-of-year component will be incremented by 365 for each year difference
     # (figuring out leap year here seems like overkill)
@@ -343,15 +351,15 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         ) > "$(<)"
     }
 
+    constant SKYLINE_PROSIT_CONFIG : "$(SKYLINE_PATH)/Model/Prosit/Config/PrositConfig_production.xml" ;
     if --official in [ modules.peek : ARGV ]
     {
-        constant SKYLINE_PROSIT_CONFIG : "$(SKYLINE_PATH)/Model/Prosit/Config/PrositConfig_production.xml" ;
         if ! [ path.exists $(SKYLINE_PROSIT_CONFIG) ]
         {
             errors.user-error "PrositConfig_production.xml must be present for an official build" ;
         }
     }
-    else
+    else if ! [ path.exists $(SKYLINE_PROSIT_CONFIG) ]
     {
         constant SKYLINE_PROSIT_CONFIG : "$(SKYLINE_PATH)/Model/Prosit/Config/PrositConfig_development.xml" ;
     }
@@ -391,6 +399,10 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         return $(result) ;
     }
     
+    rule install-vendor-api-dependencies-to-debug-and-release ( properties * )
+    {
+        return [ install-vendor-api-dependencies-to-locations $(SKYLINE_PATH)/bin/x64/Debug $(SKYLINE_PATH)/bin/x64/Release : $(properties) ] ;
+    }
 
     notfile NugetRestore : @do_nuget_restore ;
 
@@ -408,7 +420,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>../../pwiz_tools/commandline//msconvert/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <assembly>TestDiagnostics//TestDiagnostics
             <conditional>@build-location
-            <conditional>@install-vendor-api-dependencies
+            #<conditional>@install-vendor-api-dependencies
+            <conditional>@install-vendor-api-dependencies-to-debug-and-release
             <dependency>NugetRestore
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)

@@ -714,4 +714,16 @@
   <data name="Simple_ratio_to_light" xml:space="preserve">
     <value>Ratio to Light</value>
   </data>
+  <data name="SharedPeptidesGene_AssignedToBestProtein" xml:space="preserve">
+    <value>Assigned to the gene with the most peptides</value>
+  </data>
+  <data name="SharedPeptidesGene_AssignedToFirstProtein" xml:space="preserve">
+    <value>Assigned to the first gene</value>
+  </data>
+  <data name="SharedPeptidesGene_DuplicatedBetweenProteins" xml:space="preserve">
+    <value>Duplicated between genes</value>
+  </data>
+  <data name="SharedPeptidesGene_Removed" xml:space="preserve">
+    <value>Removed (peptides must be unique to a single gene)</value>
+  </data>
 </root>

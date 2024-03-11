@@ -47,13 +47,15 @@ namespace TestPerf
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestEncyclopeDiaSearchTutorial()
         {
+            TestFilesZip = @"https://skyline.ms/tutorials/EncyclopeDiaSearchTutorial.zip";
+
             _analysisValues = new AnalysisValues
             {
                 IsWholeProteome = false,
                 NarrowWindowDiaFiles = new[]
                 {
                     "23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML",
-                    //"23aug2017_hela_serum_timecourse_4mz_narrow_2.mzML",
+                    "23aug2017_hela_serum_timecourse_4mz_narrow_2.mzML",
                     //"23aug2017_hela_serum_timecourse_4mz_narrow_3.mzML",
                     //"23aug2017_hela_serum_timecourse_4mz_narrow_4.mzML",
                     //"23aug2017_hela_serum_timecourse_4mz_narrow_5.mzML",
@@ -69,24 +71,26 @@ namespace TestPerf
                     //"23aug2017_hela_serum_timecourse_wide_1f.mzML",
                 },
 
-                FinalTargetCounts = new[] { 557, 5733, 5733, 40777 },
+                FinalTargetCounts = new[] { 317, 552, 552, 3922 },
                 MassErrorStats = new[]
                 {
-                    new[] {0.0, 2.2},
-                    new[] {0.0, 2.2},
-                    new[] {-0.1, 2.2},
+                    new[] {-0.3, 2.4},
+                    new[] {-0.2, 2.4},
+                    new[] {-0.4, 2.4},
                 },
-                ChromatogramClickPoint = new PointF(19.1f, 23f)
+                ChromatogramClickPoint = new PointF(32.2f, 12.5f)
             };
 
             RunTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME), Timeout(36000000)] // 10 hours
+        //[TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME), Timeout(36000000)] // 10 hours
         public void TestEncyclopeDiaSearchTutorialFullFileset()
         {
             if (!RunPerfTests)
                 return;
+
+            TestFilesZip = @"https://skyline.ms/tutorials/EncyclopeDiaSearchTutorial_30to40.zip";
 
             _analysisValues = new AnalysisValues
             {
@@ -109,14 +113,18 @@ namespace TestPerf
                     "23aug2017_hela_serum_timecourse_wide_1e.mzML",
                     "23aug2017_hela_serum_timecourse_wide_1f.mzML",
                 },
-                FinalTargetCounts = new[] { 558, 13631, 13631, 98734 },
+                FinalTargetCounts = new[] { 546, 3244, 3244, 23503 },
                 MassErrorStats = new[]
                 {
-                    new[] {0.1, 2.3},
-                    new[] {0.1, 2.2},
-                    new[] {0.1, 2.3},
+                    new[] {-0.3, 2.3},
+                    new[] {-0.3, 2.3},
+                    new[] {-0.3, 2.3},
+                    new[] {-0.3, 2.3},
+                    new[] {-0.4, 2.3},
+                    new[] {-0.4, 2.3},
+                    new[] {-0.3, 2.4},
                 },
-                ChromatogramClickPoint = new PointF(19.1f, 24f)
+                ChromatogramClickPoint = new PointF(32.2f, 12.5f)
             };
 
             RunTest();
@@ -134,8 +142,6 @@ namespace TestPerf
             if (Program.UseOriginalURLs && !HasPrositServer())
                 return;
 
-            //TestFilesZip = @"https://skyline.ms/tutorials/EncyclopeDiaSearchTutorial.zip";
-            TestFilesZip = @"https://skyline.ms/tutorials/EncyclopeDiaSearchTutorialDemux.zip";
             TestFilesPersistent = new[] { "23aug2017_hela_serum_timecourse", "z3_nce33-prosit" };
 
             RunFunctionalTest();
@@ -196,12 +202,18 @@ namespace TestPerf
                 .Replace(".fasta", $"-z3_nce33-prosit-{_analysisValues.PrositHash}.blib");
             FileEx.HardLinkOrCopyFile(persistentBlibFilepath, tempBlibFilepath);
 
-            string persistentPath = Path.GetDirectoryName(persistentBlibFilepath) ?? string.Empty;
-            DirectoryEx.SafeDelete(Path.Combine(persistentPath, "elib_chrom"));
-            DirectoryEx.SafeDelete(Path.Combine(persistentPath, "elib_quant"));
+            // hard-link the mzMLs to a working directory inside the persistent files directory so the EncyclopeDIA intermediate files can be deleted easily;
+            // NB: some intermediate (demux'd) files are persisted in the ZIP file to speed up the processing
+            string workingDir = Path.Combine(TestFilesDir.PersistentFilesDir, "working");
+            if (Directory.Exists(workingDir))
+                Directory.Delete(workingDir, true);
+            Directory.CreateDirectory(workingDir);
+
+            foreach (var mzml in Directory.EnumerateFiles(TestFilesDir.PersistentFilesDir, "*.mzML"))
+                FileEx.HardLinkOrCopyFile(mzml, Path.Combine(workingDir, Path.GetFileName(mzml)));
 
             if (Program.UseOriginalURLs)
-                FileEx.SafeDelete(TestFilesDir.GetTestPath(_analysisValues.BlibPath), true);
+                FileEx.SafeDelete(tempBlibFilepath, true);
 
             RunUI(searchDlg.NextPage); // now on Prosit settings
 
@@ -223,18 +235,18 @@ namespace TestPerf
             var browseNarrowDlg = ShowDialog<OpenDataSourceDialog>(() => searchDlg.NarrowWindowResults.Browse());
             RunUI(() =>
             {
-                browseNarrowDlg.CurrentDirectory = new MsDataFilePath(TestFilesDir.PersistentFilesDir);
+                browseNarrowDlg.CurrentDirectory = new MsDataFilePath(workingDir);
                 browseNarrowDlg.SelectAllFileType("mzML", s => _analysisValues.NarrowWindowDiaFiles.Contains(s));
             });
             PauseForScreenShot<OpenDataSourceDialog>("Narrow Window Results - Browse for Results Files form", screenshotPage++);
             OkDialog(browseNarrowDlg, browseNarrowDlg.Open);
             PauseForScreenShot<EncyclopeDiaSearchDlg.NarrowWindowPage>("Narrow Window Results page", screenshotPage++);
-
+            
             RunUI(searchDlg.NextPage); // now on wide fractions
             var browseWideDlg = ShowDialog<OpenDataSourceDialog>(() => searchDlg.WideWindowResults.Browse());
             RunUI(() =>
             {
-                browseWideDlg.CurrentDirectory = new MsDataFilePath(TestFilesDir.PersistentFilesDir);
+                browseWideDlg.CurrentDirectory = new MsDataFilePath(workingDir);
                 browseWideDlg.SelectAllFileType("mzML", s => _analysisValues.WideWindowDiaFiles.Contains(s));
             });
             PauseForScreenShot<OpenDataSourceDialog>("Wide Window Results - Browse for Results Files form", screenshotPage++);
@@ -299,7 +311,7 @@ namespace TestPerf
 
             RunUI(() =>
             {
-                // modifications page is skipped
+                // modifications page is skipped 
 
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
                 importPeptideSearchDlg.TransitionSettingsControl.MinIonCount = 3;
@@ -331,6 +343,7 @@ namespace TestPerf
             var emptyProteinsDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
 
             WaitForConditionUI(() => emptyProteinsDlg.DocumentFinalCalculated);
+
             RunUI(() =>
             {
                 int proteinCount, peptideCount, precursorCount, transitionCount;
@@ -351,7 +364,7 @@ namespace TestPerf
             RunUI(() => SkylineWindow.SaveDocument());
 
             const string proteinNameToSelect = "sp|P21333|FLNA_HUMAN";
-            const string peptideToSelect = "VKVEPSHDASK";
+            const string peptideToSelect = "DAPQDFHPDR";
             if (Equals(proteinNameToSelect, SkylineWindow.Document.MoleculeGroups.Skip(1).First().Name))
                 SelectNode(SrmDocument.Level.MoleculeGroups, 1);
             else

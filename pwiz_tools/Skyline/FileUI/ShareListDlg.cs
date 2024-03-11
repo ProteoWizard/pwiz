@@ -41,7 +41,7 @@ namespace pwiz.Skyline.FileUI
             InitializeComponent();
 
             List = list;
-            Filter = TextUtil.FileDialogFilterAll(Resources.ShareListDlg_ShareListDlg_Skyline_Settings, SrmSettingsList.EXT_SETTINGS);
+            Filter = TextUtil.FileDialogFilterAll(FileUIResources.ShareListDlg_ShareListDlg_Skyline_Settings, SrmSettingsList.EXT_SETTINGS);
             
             LoadList();
         }
@@ -57,8 +57,8 @@ namespace pwiz.Skyline.FileUI
             {
                 _label = value;
 
-                Text = string.Format(Resources.ShareListDlg_Label_Save__0__, _label);
-                labelMessage.Text = string.Format(Resources.ShareListDlg_Label_Select_the__0__you_want_to_save_to_a_file, 
+                Text = string.Format(FileUIResources.ShareListDlg_Label_Save__0__, _label);
+                labelMessage.Text = string.Format(FileUIResources.ShareListDlg_Label_Select_the__0__you_want_to_save_to_a_file, 
                     _label.ToLower());
             }
         }
@@ -186,7 +186,7 @@ namespace pwiz.Skyline.FileUI
         public static bool Import(Form parent, TList listDest)
         {
             return ImportFile(parent, listDest, GetImportFileName(parent,
-                TextUtil.FileDialogFilterAll(Resources.ShareListDlg_ShareListDlg_Skyline_Settings, SrmSettingsList.EXT_SETTINGS)));
+                TextUtil.FileDialogFilterAll(FileUIResources.ShareListDlg_ShareListDlg_Skyline_Settings, SrmSettingsList.EXT_SETTINGS)));
         }
 
         public static string GetImportFileName(Form parent, string filter)
@@ -220,10 +220,10 @@ namespace pwiz.Skyline.FileUI
 
         private static IList<string> ResolveImportConflicts(Form parent, IList<string> existing)
         {
-            var multipleMessage = TextUtil.LineSeparate(Resources.ShareListDlg_ImportFile_The_following_names_already_exist, string.Empty,
-                                                    @"{0}", string.Empty, Resources.ShareListDlg_ImportFile_Do_you_want_to_replace_them);
+            var multipleMessage = TextUtil.LineSeparate(FileUIResources.ShareListDlg_ImportFile_The_following_names_already_exist, string.Empty,
+                                                    @"{0}", string.Empty, FileUIResources.ShareListDlg_ImportFile_Do_you_want_to_replace_them);
             string messageFormat = existing.Count == 1 ?
-               Resources.ShareListDlg_ImportFile_The_name__0__already_exists_Do_you_want_to_replace_it :
+               FileUIResources.ShareListDlg_ImportFile_The_name__0__already_exists_Do_you_want_to_replace_it :
                multipleMessage;
             var result = MultiButtonMsgDlg.Show(parent, string.Format(messageFormat, TextUtil.LineSeparate(existing)),
                 MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true);

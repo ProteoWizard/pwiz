@@ -150,7 +150,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (DatabaseChanged)
             {
-                var result = MultiButtonMsgDlg.Show(this, Resources.EditOptimizationLibraryDlg_btnOpen_Click_Are_you_sure_you_want_to_open_a_new_optimization_library_file__Any_changes_to_the_current_library_will_be_lost_,
+                var result = MultiButtonMsgDlg.Show(this, SettingsUIResources.EditOptimizationLibraryDlg_btnOpen_Click_Are_you_sure_you_want_to_open_a_new_optimization_library_file__Any_changes_to_the_current_library_will_be_lost_,
                     MessageBoxButtons.YesNo);
 
                 if (result != DialogResult.Yes)
@@ -159,7 +159,7 @@ namespace pwiz.Skyline.SettingsUI
 
             using (OpenFileDialog dlg = new OpenFileDialog())
             {
-                dlg.Title = Resources.EditOptimizationLibraryDlg_btnOpen_Click_Open_Optimization_Library;
+                dlg.Title = SettingsUIResources.EditOptimizationLibraryDlg_btnOpen_Click_Open_Optimization_Library;
                 dlg.InitialDirectory = Settings.Default.ActiveDirectory;
                 dlg.DefaultExt = OptimizationDb.EXT;
                 dlg.Filter = TextUtil.FileDialogFiltersAll(OptimizationDb.FILTER_OPTDB);
@@ -177,7 +177,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (!File.Exists(path))
             {
-                MessageDlg.Show(this, String.Format(Resources.EditOptimizationLibraryDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Create_button_to_create_a_new_library_or_the_Open_button_to_find_the_missing_file_,
+                MessageDlg.Show(this, String.Format(SettingsUIResources.EditOptimizationLibraryDlg_OpenDatabase_The_file__0__does_not_exist__Click_the_Create_button_to_create_a_new_library_or_the_Open_button_to_find_the_missing_file_,
                                                     path));
                 return;
             }
@@ -204,7 +204,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (DatabaseChanged)
             {
-                var result = MultiButtonMsgDlg.Show(this, Resources.EditOptimizationLibraryDlg_btnCreate_Click_Are_you_sure_you_want_to_create_a_new_optimization_library_file__Any_changes_to_the_current_library_will_be_lost_,
+                var result = MultiButtonMsgDlg.Show(this, SettingsUIResources.EditOptimizationLibraryDlg_btnCreate_Click_Are_you_sure_you_want_to_create_a_new_optimization_library_file__Any_changes_to_the_current_library_will_be_lost_,
                     MessageBoxButtons.YesNo);
 
                 if (result != DialogResult.Yes)
@@ -213,7 +213,7 @@ namespace pwiz.Skyline.SettingsUI
 
             using (var dlg = new SaveFileDialog())
             {
-                dlg.Title = Resources.EditOptimizationLibraryDlg_btnCreate_Click_Create_Optimization_Library;
+                dlg.Title = SettingsUIResources.EditOptimizationLibraryDlg_btnCreate_Click_Create_Optimization_Library;
                 dlg.InitialDirectory = Settings.Default.ActiveDirectory;
                 dlg.OverwritePrompt = true;
                 dlg.DefaultExt = OptimizationDb.EXT;
@@ -260,7 +260,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             catch (Exception x)
             {
-                var message = TextUtil.LineSeparate(string.Format(Resources.EditOptimizationLibraryDlg_CreateDatabase_The_file__0__could_not_be_created_, path),
+                var message = TextUtil.LineSeparate(string.Format(SettingsUIResources.EditOptimizationLibraryDlg_CreateDatabase_The_file__0__could_not_be_created_, path),
                                                     x.Message);
                 MessageDlg.ShowWithException(this, message, x);
             }
@@ -270,7 +270,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (string.IsNullOrEmpty(textName.Text))
             {
-                MessageDlg.Show(this, Resources.EditOptimizationLibraryDlg_OkDialog_Please_enter_a_name_for_the_optimization_library_);
+                MessageDlg.Show(this, SettingsUIResources.EditOptimizationLibraryDlg_OkDialog_Please_enter_a_name_for_the_optimization_library_);
                 textName.Focus();
                 return;
             }
@@ -281,7 +281,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (Equals(existing.Name, textName.Text) && !Equals(existing.Name, _editingName))
                     {
-                        if (MultiButtonMsgDlg.Show(this, string.Format(Resources.EditOptimizationLibraryDlg_OkDialog_A_library_with_the_name__0__already_exists__Do_you_want_to_overwrite_it_,
+                        if (MultiButtonMsgDlg.Show(this, string.Format(SettingsUIResources.EditOptimizationLibraryDlg_OkDialog_A_library_with_the_name__0__already_exists__Do_you_want_to_overwrite_it_,
                                 textName.Text), 
                             MessageBoxButtons.YesNo) != DialogResult.Yes)
                         {
@@ -295,8 +295,8 @@ namespace pwiz.Skyline.SettingsUI
             string message;
             if (string.IsNullOrEmpty(textDatabase.Text))
             {
-                message = TextUtil.LineSeparate(Resources.EditOptimizationLibraryDlg_OkDialog_Please_choose_a_library_file_for_the_optimization_library_,
-                                                Resources.EditOptimizationLibraryDlg_OkDialog_Click_the_Create_button_to_create_a_new_library_or_the_Open_button_to_open_an_existing_library_file_);
+                message = TextUtil.LineSeparate(SettingsUIResources.EditOptimizationLibraryDlg_OkDialog_Please_choose_a_library_file_for_the_optimization_library_,
+                                                SettingsUIResources.EditOptimizationLibraryDlg_OkDialog_Click_the_Create_button_to_create_a_new_library_or_the_Open_button_to_open_an_existing_library_file_);
                 MessageDlg.Show(this, message);
                 textDatabase.Focus();
                 return;
@@ -304,8 +304,8 @@ namespace pwiz.Skyline.SettingsUI
             string path = Path.GetFullPath(textDatabase.Text);
             if (!Equals(path, textDatabase.Text))
             {
-                message = TextUtil.LineSeparate(Resources.EditOptimizationLibraryDlg_OkDialog_Please_use_a_full_path_to_a_library_file_for_the_optimization_library_,
-                                                Resources.EditOptimizationLibraryDlg_OkDialog_Click_the_Create_button_to_create_a_new_library_or_the_Open_button_to_open_an_existing_library_file_);
+                message = TextUtil.LineSeparate(SettingsUIResources.EditOptimizationLibraryDlg_OkDialog_Please_use_a_full_path_to_a_library_file_for_the_optimization_library_,
+                                                SettingsUIResources.EditOptimizationLibraryDlg_OkDialog_Click_the_Create_button_to_create_a_new_library_or_the_Open_button_to_open_an_existing_library_file_);
                 MessageDlg.Show(this, message);
                 textDatabase.Focus();
                 return;
@@ -313,7 +313,7 @@ namespace pwiz.Skyline.SettingsUI
             if (!string.Equals(Path.GetExtension(path), OptimizationDb.EXT))
                 path += OptimizationDb.EXT;
 
-            if (!ValidateOptimizationList(LibraryOptimizations, Resources.EditOptimizationLibraryDlg_OkDialog_library))
+            if (!ValidateOptimizationList(LibraryOptimizations, SettingsUIResources.EditOptimizationLibraryDlg_OkDialog_library))
             {
                 gridViewLibrary.Focus();
                 return;
@@ -342,7 +342,7 @@ namespace pwiz.Skyline.SettingsUI
                 // CONSIDER: Not sure if this is the right thing to do.  It would
                 //           be nice to solve whatever is causing this, but this is
                 //           better than showing an unexpected error form with stack trace.
-                MessageDlg.Show(this, Resources.EditOptimizationLibraryDlg_OkDialog_Failure_updating_optimizations_in_the_optimization_library__The_database_may_be_out_of_synch_);
+                MessageDlg.Show(this, SettingsUIResources.EditOptimizationLibraryDlg_OkDialog_Failure_updating_optimizations_in_the_optimization_library__The_database_may_be_out_of_synch_);
                 return;
             }
 
@@ -360,14 +360,14 @@ namespace pwiz.Skyline.SettingsUI
                 string seqModified = optimization.Target.ToSerializableString();
                 if (_gridViewLibraryDriver.ValidateSequence(seqModified) != null)
                 {
-                    MessageDlg.Show(this, ModeUIAwareStringFormat(Resources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_,
+                    MessageDlg.Show(this, ModeUIAwareStringFormat(SettingsUIResources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_,
                                                         seqModified));
                     return false;
                 }
 
                 if (keySet.Contains(optimization.Key))
                 {
-                    MessageDlg.Show(this, ModeUIAwareStringFormat(Resources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_optimization_with_sequence__0___charge__1___fragment_ion__2__and_product_charge__3__appears_in_the__4__table_more_than_once_,
+                    MessageDlg.Show(this, ModeUIAwareStringFormat(SettingsUIResources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_optimization_with_sequence__0___charge__1___fragment_ion__2__and_product_charge__3__appears_in_the__4__table_more_than_once_,
                                                         seqModified, optimization.Adduct, optimization.FragmentIon, optimization.ProductAdduct, tableName));
                     return false;
                 }
@@ -666,7 +666,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (columns.Length != GridView.Columns.Cast<DataGridViewColumn>().Count(column => column.Visible))
                 {
-                    MessageDlg.Show(parent, Resources.LibraryGridViewDriver_ValidateOptimizationRow_The_pasted_text_must_contain_the_same_number_of_columns_as_the_table_);
+                    MessageDlg.Show(parent, SettingsUIResources.LibraryGridViewDriver_ValidateOptimizationRow_The_pasted_text_must_contain_the_same_number_of_columns_as_the_table_);
                     return false;
                 }
 
@@ -678,29 +678,29 @@ namespace pwiz.Skyline.SettingsUI
                 string message; 
                 if (string.IsNullOrWhiteSpace(seq))
                 {
-                    message = _form.ModeUIAwareStringFormat(Resources.PeptideGridViewDriver_ValidateRow_Missing_peptide_sequence_on_line__0_, lineNumber);
+                    message = _form.ModeUIAwareStringFormat(SettingsUIResources.PeptideGridViewDriver_ValidateRow_Missing_peptide_sequence_on_line__0_, lineNumber);
                 }
                 else if (ValidateSequence(seq) != null)
                 {
-                    message = _form.ModeUIAwareStringFormat(Resources.PeptideGridViewDriver_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1_, seq, lineNumber);
+                    message = _form.ModeUIAwareStringFormat(SettingsUIResources.PeptideGridViewDriver_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1_, seq, lineNumber);
                 }
                 else if (prodVisible && string.IsNullOrWhiteSpace(prod))
                 {
-                    message = string.Format(Resources.LibraryGridViewDriver_ValidateOptimizationRow_Missing_product_ion_on_line__1_, prod, lineNumber);
+                    message = string.Format(SettingsUIResources.LibraryGridViewDriver_ValidateOptimizationRow_Missing_product_ion_on_line__1_, prod, lineNumber);
                 }
                 else if (prodVisible && ValidateProductIon(prod) != null)
                 {
-                    message = string.Format(Resources.LibraryGridViewDriver_ValidateRow_Invalid_product_ion_format__0__on_line__1__, prod, lineNumber);
+                    message = string.Format(SettingsUIResources.LibraryGridViewDriver_ValidateRow_Invalid_product_ion_format__0__on_line__1__, prod, lineNumber);
                 }
                 else
                 {
                     if (string.IsNullOrWhiteSpace(val))
                     {
-                        message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_Missing_value_on_line__0_, lineNumber);
+                        message = string.Format(SettingsUIResources.PeptideGridViewDriver_ValidateRow_Missing_value_on_line__0_, lineNumber);
                     }
                     else if (!double.TryParse(val, out _))
                     {
-                        message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_Invalid_decimal_number_format__0__on_line__1_, val, lineNumber);
+                        message = string.Format(SettingsUIResources.PeptideGridViewDriver_ValidateRow_Invalid_decimal_number_format__0__on_line__1_, val, lineNumber);
                     }
                     else
                     {
@@ -759,7 +759,7 @@ namespace pwiz.Skyline.SettingsUI
                     if (iExist != -1 && iExist != rowIndex)
                     {
                         errorText = string.Format(
-                            Resources.LibraryGridViewDriver_DoCellValidating_There_is_already_an_optimization_with_sequence___0___and_product_ion___2___in_the_list_,
+                            SettingsUIResources.LibraryGridViewDriver_DoCellValidating_There_is_already_an_optimization_with_sequence___0___and_product_ion___2___in_the_list_,
                             curKey.PeptideModSeq, Transition.GetChargeIndicator(curKey.PrecursorAdduct), curKey.FragmentIon, Transition.GetChargeIndicator(curKey.ProductAdduct));
                     }
                 }
@@ -807,7 +807,7 @@ namespace pwiz.Skyline.SettingsUI
             public string ValidateSequence(string sequenceText)
             {
                 if (string.IsNullOrWhiteSpace(sequenceText))
-                    return Resources.LibraryGridViewDriver_ValidateSequence_Sequence_cannot_be_empty_;
+                    return SettingsUIResources.LibraryGridViewDriver_ValidateSequence_Sequence_cannot_be_empty_;
                 if (!FastaSequence.IsExSequence(Transition.StripChargeIndicators(sequenceText, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE)))
                 {
                     if (IsMoleculeWithAdduct(sequenceText, out var target, out var adduct))
@@ -815,7 +815,7 @@ namespace pwiz.Skyline.SettingsUI
                         return null;
                     }
 
-                    return _form.ModeUIAwareStringFormat(Resources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_, sequenceText);
+                    return _form.ModeUIAwareStringFormat(SettingsUIResources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_, sequenceText);
                 }
                 return null;
             }
@@ -823,14 +823,14 @@ namespace pwiz.Skyline.SettingsUI
             private static string ValidateProductIon(string productIonText)
             {
                 if (string.IsNullOrWhiteSpace(productIonText))
-                    return Resources.LibraryGridViewDriver_ValidateProductIon_Product_ion_cannot_be_empty_;
+                    return SettingsUIResources.LibraryGridViewDriver_ValidateProductIon_Product_ion_cannot_be_empty_;
 
                 string stripped = Transition.StripChargeIndicators(productIonText, Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE);
                 if (!RGX_PRODUCT_ION.IsMatch(stripped))
                 {
                     if (Transition.FindAdductDescription(productIonText, out var adduct)>0)
                         return null; // Looks like a smallmol fragment name and an adduct
-                    return string.Format(Resources.LibraryGridViewDriver_ValidateProductIon_Product_ion__0__is_invalid_, stripped);
+                    return string.Format(SettingsUIResources.LibraryGridViewDriver_ValidateProductIon_Product_ion__0__is_invalid_, stripped);
                 }
                 return null;
             }
@@ -839,7 +839,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 double optimizedValue;
                 if (optimizedText == null || !double.TryParse(optimizedText, out optimizedValue))
-                    return Resources.LibraryGridViewDriver_ValidateOptimizedValue_Optimized_values_must_be_valid_decimal_numbers_;
+                    return SettingsUIResources.LibraryGridViewDriver_ValidateOptimizedValue_Optimized_values_must_be_valid_decimal_numbers_;
                 switch (ViewDbType)
                 {
                     case OptimizationType.compensation_voltage_fine:
@@ -847,7 +847,7 @@ namespace pwiz.Skyline.SettingsUI
                     case OptimizationType.compensation_voltage_rough:
                         return null;
                     default:
-                        return optimizedValue <= 0 ? Resources.LibraryGridViewDriver_ValidateOptimizedValue_Optimized_values_must_be_greater_than_zero_ : null;
+                        return optimizedValue <= 0 ? SettingsUIResources.LibraryGridViewDriver_ValidateOptimizedValue_Optimized_values_must_be_greater_than_zero_ : null;
                 }
             }
 
@@ -902,7 +902,7 @@ namespace pwiz.Skyline.SettingsUI
                 var settings = _document.Settings;
                 if (!settings.HasResults)
                 {
-                    MessageDlg.Show(MessageParent, Resources.LibraryGridViewDriver_AddResults_The_active_document_must_contain_results_in_order_to_add_optimized_values_);
+                    MessageDlg.Show(MessageParent, SettingsUIResources.LibraryGridViewDriver_AddResults_The_active_document_must_contain_results_in_order_to_add_optimized_values_);
                     return;
                 }
 
@@ -963,8 +963,8 @@ namespace pwiz.Skyline.SettingsUI
                 IEnumerable<DbOptimization> optimizations = null;
                 using (var longWait = new LongWaitDlg())
                 {
-                    longWait.Text = Resources.LibraryGridViewDriver_AddOptimizationLibrary_Adding_optimization_library;
-                    longWait.Message = string.Format(Resources.LibraryGridViewDriver_AddOptimizationLibrary_Adding_optimization_values_from__0_, optLibrary.DatabasePath);
+                    longWait.Text = SettingsUIResources.LibraryGridViewDriver_AddOptimizationLibrary_Adding_optimization_library;
+                    longWait.Message = string.Format(SettingsUIResources.LibraryGridViewDriver_AddOptimizationLibrary_Adding_optimization_values_from__0_, optLibrary.DatabasePath);
                     longWait.FormBorderStyle = FormBorderStyle.Sizable;
                     try
                     {
@@ -983,7 +983,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     catch (Exception x)
                     {
-                        var message = TextUtil.LineSeparate(string.Format(Resources.LibraryGridViewDriver_AddOptimizationLibrary_An_error_occurred_attempting_to_load_the_optimization_library_file__0__,
+                        var message = TextUtil.LineSeparate(string.Format(SettingsUIResources.LibraryGridViewDriver_AddOptimizationLibrary_An_error_occurred_attempting_to_load_the_optimization_library_file__0__,
                                                                           optLibrary.DatabasePath),
                                                             x.Message);
                         MessageDlg.ShowWithException(MessageParent, message, x);
@@ -1087,22 +1087,22 @@ namespace pwiz.Skyline.SettingsUI
             if (Equals(ViewType, ExportOptimize.CE))
             {
                 labelNumOptimizations.Text = string.Format(optCount == 1
-                    ? Resources.EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_collision_energy
-                    : Resources.EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_collision_energies,
+                    ? SettingsUIResources.EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_collision_energy
+                    : SettingsUIResources.EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_collision_energies,
                     optCount);
             }
             else if (Equals(ViewType, ExportOptimize.DP))
             {
                 labelNumOptimizations.Text = string.Format(optCount == 1
-                    ? Resources.EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_declustering_potential
-                    : Resources.EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_declustering_potentials,
+                    ? SettingsUIResources.EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_declustering_potential
+                    : SettingsUIResources.EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_declustering_potentials,
                     optCount);
             }
             else if (Equals(ViewType, ExportOptimize.COV))
             {
                 labelNumOptimizations.Text = string.Format(optCount == 1
-                    ? Resources.EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_compensation_voltage
-                    : Resources.EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_compensation_voltages,
+                    ? SettingsUIResources.EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_compensation_voltage
+                    : SettingsUIResources.EditOptimizationLibraryDlg_UpdateNumOptimizations__0__optimized_compensation_voltages,
                     optCount);
             }
         }

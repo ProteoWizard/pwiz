@@ -165,9 +165,12 @@ void CVTranslator::Impl::insert(const string& text, CVID cvid)
         if (shouldIgnore(key, map_[key], cvid))
             return;
 
+        if (map_[key] == cvid) // ignore exact synonyms that only differ before canonicalization
+            return;
+
         if (!shouldReplace(key, map_[key], cvid))
         {
-            throw runtime_error("[CVTranslator::insert()] Collision: " + 
+            throw runtime_error("[CVTranslator::insert()] Collision: " + key + " " +
                                 lexical_cast<string>(map_[key]) + " " +
                                 lexical_cast<string>(cvid));
         }

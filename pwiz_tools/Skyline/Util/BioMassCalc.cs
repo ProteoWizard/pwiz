@@ -384,7 +384,7 @@ namespace pwiz.Skyline.Util
             string errmsg =
                 string.Format(
                     Resources.BioMassCalc_CalculateMass_The_expression__0__is_not_a_valid_chemical_formula, desc) +
-                Resources.BioMassCalc_FormatArgumentException__Supported_chemical_symbols_include__;
+                UtilResources.BioMassCalc_FormatArgumentException__Supported_chemical_symbols_include__;
             foreach (var key in MONOISOTOPIC._atomicMasses.Keys)
                 errmsg += key + @" "; 
             return errmsg;

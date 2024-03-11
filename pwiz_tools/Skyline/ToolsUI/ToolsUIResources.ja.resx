@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="ConfigureToolsDlg_AddFromFile_Cancel" xml:space="preserve">
+    <value>キャンセル</value>
+  </data>
+  <data name="ConfigureToolsDlg_AddFromFile_You_must_save_changes_before_installing_tools__Would_you_like_to_save_changes_" xml:space="preserve">
+    <value>ツールをインストールする前に変更を保存しなければなりません。変更を保存しますか？</value>
+  </data>
+  <data name="ConfigureToolsDlg_AddFromFile_Zip_Files" xml:space="preserve">
+    <value>Zipファイル</value>
+  </data>
+  <data name="ConfigureToolsDlg_AddFromWeb_Contacting_the_server" xml:space="preserve">
+    <value>サーバーに連絡中</value>
+  </data>
+  <data name="ConfigureToolsDlg_AddFromWeb_Unknown_error_connecting_to_the_tool_store" xml:space="preserve">
+    <value>ツールストアに接続中の不明なエラー</value>
+  </data>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_All_Executables" xml:space="preserve">
+    <value>すべての実行ファイル</value>
+  </data>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Batch_Files" xml:space="preserve">
+    <value>バッチファイル</value>
+  </data>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Command_Files" xml:space="preserve">
+    <value>コマンドファイル</value>
+  </data>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Information_Files" xml:space="preserve">
+    <value>情報ファイル</value>
+  </data>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Perl_Scripts" xml:space="preserve">
+    <value>Perlスクリプト</value>
+  </data>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Python_Scripts" xml:space="preserve">
+    <value>Pythonスクリプト</value>
+  </data>
+  <data name="ConfigureToolsDlg_CheckPassTool__Note__if_you_would_like_the_command_to_launch_a_link__make_sure_to_include_http____or_https___" xml:space="preserve">
+    <value>メモ：コマンドを使ってリンクを立ち上げる場合、必ずhttp://またはhttps://を含みます</value>
+  </data>
+  <data name="ConfigureToolsDlg_CheckPassToolInternal_Please_select_a_report_or_remove__0__from_arguments_" xml:space="preserve">
+    <value>レポートを選択するか、引数から{0}を削除してください。</value>
+  </data>
+  <data name="ConfigureToolsDlg_CheckPassToolInternal_Please_specify_a_valid_URL_" xml:space="preserve">
+    <value>有効なURLを指定してください。</value>
+  </data>
+  <data name="ConfigureToolsDlg_CheckPassToolInternal_Tool_titles_must_be_unique__please_enter_a_unique_title_for_this_tool_" xml:space="preserve">
+    <value>ツールのタイトルは一意でなければなりません。このツールに一意のタイトルを入力してください。</value>
+  </data>
+  <data name="ConfigureToolsDlg_CheckPassToolInternal_You_have_provided__0__as_an_argument_but_have_not_selected_a_report_" xml:space="preserve">
+    <value>{0}を引数として提供しましたが、レポートが選択されていません。</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteAnnotations_An_annotation_with_the_following_name_already_exists_" xml:space="preserve">
+    <value>以下の名前の注釈が既に存在しています：</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteAnnotations_Annotations_with_the_following_names_already_exist_" xml:space="preserve">
+    <value>以下の名前の注釈が既に存在しています：</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteAnnotations_Do_you_want_to_overwrite_or_keep_the_existing_annotations_" xml:space="preserve">
+    <value>既存の注釈を上書きしますか、それとも保持しますか？</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteAnnotations_Keep_Existing" xml:space="preserve">
+    <value>既存を保持</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_In_Parallel" xml:space="preserve">
+    <value>並行</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_Overwrite" xml:space="preserve">
+    <value>上書き</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_Reinstall" xml:space="preserve">
+    <value>再インストール</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_in_conflict_with_the_new_installation" xml:space="preserve">
+    <value>ツール{0}が新しいインストールと競合しています</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_This_installation_would_modify_the_following_reports" xml:space="preserve">
+    <value>このインストールは以下のレポートを変更します</value>
+  </data>
+  <data name="ConfigureToolsDlg_OverwriteOrInParallel_Upgrade" xml:space="preserve">
+    <value>アップグレード</value>
+  </data>
+  <data name="ConfigureToolsDlg_PopulateMacroDropdown_Arguments_collected_at_run_time" xml:space="preserve">
+    <value>実行時に収集した引数</value>
+  </data>
+  <data name="ConfigureToolsDlg_PopulateMacroDropdown_N_A" xml:space="preserve">
+    <value>該当なし</value>
+  </data>
+  <data name="ConfigureToolsDlg_textCommand_TextChanged__Command_" xml:space="preserve">
+    <value>コマンド(&amp;C)：</value>
+  </data>
+  <data name="ConfigureToolsDlg_textCommand_TextChanged__Query_params_" xml:space="preserve">
+    <value>クエリーパラメータ(&amp;Q)：</value>
+  </data>
+  <data name="ConfigureToolsDlg_textCommand_TextChanged_A_rguments_" xml:space="preserve">
+    <value>引数(&amp;R)：</value>
+  </data>
+  <data name="ConfigureToolsDlg_textCommand_TextChanged_U_RL_" xml:space="preserve">
+    <value>URL(&amp;R)：</value>
+  </data>
+  <data name="EditCustomThemeDlg_buttonSave_Click_The_color_scheme___0___already_exists_" xml:space="preserve">
+    <value>{0}」というカラースキームが既に存在しています。</value>
+  </data>
+  <data name="EditCustomThemeDlg_dataGridViewColors_DataError_Colors_must_be_entered_in_HEX_or_RGB_format_" xml:space="preserve">
+    <value>カラーはHEXまたはRGB形式で入力してください。</value>
+  </data>
+  <data name="EditCustomThemeDlg_DoPaste_Unable_to_parse_the_color___0____Use_HEX_or_RGB_format_" xml:space="preserve">
+    <value>カラー「{0}」を解析できません。HEXまたはRGB形式を使用してください。</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestSettings_Settings_are_correct" xml:space="preserve">
+    <value>設定は問題ありません</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_" xml:space="preserve">
+    <value>認証試行中にエラーが発生しました。</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestUnifiAccount_An_exception_occurred_while_trying_to_fetch_the_directory_listing_" xml:space="preserve">
+    <value>ディレクトリ一覧を取得しようとして例外が発生しました。</value>
+  </data>
+  <data name="EditRemoteAccountDlg_ValidateValues_Invalid_server_URL_" xml:space="preserve">
+    <value>無効なサーバーURLです。</value>
+  </data>
+  <data name="EditRemoteAccountDlg_ValidateValues_Server_cannot_be_blank" xml:space="preserve">
+    <value>サーバーは空白にできません</value>
+  </data>
+  <data name="EditRemoteAccountDlg_ValidateValues_Server_URL_must_start_with_https____or_http___" xml:space="preserve">
+    <value>サーバーのURLはhttps://またはhttp://で開始しなくてはなりません</value>
+  </data>
+  <data name="EditRemoteAccountDlg_ValidateValues_There_is_already_an_account_defined_for_the_user__0__on_the_server__1_" xml:space="preserve">
+    <value>サーバー{1}にユーザー{0}向けに定義されたアカウントが既に存在します</value>
+  </data>
+  <data name="EditRemoteAccountDlg_ValidateValues_Username_cannot_be_blank" xml:space="preserve">
+    <value>ユーザー名は空白にできません</value>
+  </data>
+  <data name="EditServerDlg_OkDialog__0__is_not_a_valid_email_address_" xml:space="preserve">
+    <value>{0}は有効なメールアドレスではありません。</value>
+  </data>
+  <data name="EditServerDlg_OkDialog_Verifying_server_information" xml:space="preserve">
+    <value>サーバー情報の確認中。</value>
+  </data>
+  <data name="LibrarySpec_Add_spectral_library" xml:space="preserve">
+    <value>スペクトルライブラリを追加</value>
+  </data>
+  <data name="LibrarySpec_CreateFromPath_Unrecognized_library_type_at__0_" xml:space="preserve">
+    <value>{0}で認識されていないライブラリタイプ</value>
+  </data>
+  <data name="PythonInstaller_GetPackages_Installing_Packages" xml:space="preserve">
+    <value>パッケージのインストール</value>
+  </data>
+  <data name="PythonInstaller_GetPip_Installing_Pip" xml:space="preserve">
+    <value>Pipのインストール中</value>
+  </data>
+  <data name="PythonInstaller_GetPython_Installing_Python" xml:space="preserve">
+    <value>Pythonのインストール</value>
+  </data>
+  <data name="PythonInstaller_InstallPackages_Install" xml:space="preserve">
+    <value>インストール</value>
+  </data>
+  <data name="RInstaller_GetPAckages_Installing_Packages" xml:space="preserve">
+    <value>パッケージのインストール</value>
+  </data>
+  <data name="RInstaller_GetR_Installing_R" xml:space="preserve">
+    <value>Rのインストール中</value>
+  </data>
+  <data name="RInstaller_InstallPackages_Error__Failed_to_connect_to_the_website__0_" xml:space="preserve">
+    <value>エラー：ウェブサイト{0}への接続が失敗しました</value>
+  </data>
+  <data name="RInstaller_InstallPackages_The_package__0__failed_to_install_" xml:space="preserve">
+    <value>パッケージ{0}のインストールに失敗しました：</value>
+  </data>
+  <data name="RInstaller_InstallR_Downloading_R" xml:space="preserve">
+    <value>Rのダウンロード中</value>
+  </data>
+  <data name="TestToolStoreClient_GetToolZipFile_Cannot_find_a_file_with_that_identifier_" xml:space="preserve">
+    <value>この識別子のあるファイルを見つけることができません。</value>
+  </data>
+  <data name="ToolDescription_CallArgsCollector_Error_running_the_installed_tool__0___The_method___1___has_the_wrong_signature_" xml:space="preserve">
+    <value>インストールされたツール{0}を実行する際のエラーです。メソッド「{1}」のシグネチャは正しくありません。</value>
+  </data>
+  <data name="ToolDescription_FindArgsCollectorMethod_Unable_to_find_any_CollectArgs_method_to_call_on_class___0___" xml:space="preserve">
+    <value>クラス「{0}」を呼び出すCollectArgsメソッドが見つかりません。</value>
+  </data>
+  <data name="ToolDescription_RunExecutableBackground_The_tool__0__had_an_error_" xml:space="preserve">
+    <value>ツール{0}でエラーがありました。</value>
+  </data>
+  <data name="ToolDescription_RunTool_Please_reconfigure_that_tool__it_failed_to_execute__" xml:space="preserve">
+    <value>そのツールを再設定してください。実行に失敗しました。</value>
+  </data>
+  <data name="ToolInstallUI_InstallZipFromWeb_The_server_returned_an_invalid_response__It_might_be_down_for_maintenance__Please_check_the_Tool_Store_on_the_skyline_ms_website_" xml:space="preserve">
+    <value>サーバーが無効な応答を返しました。メンテナンスのためにサーバーが休止している可能性があります。 skyline.msウェブサイトでツールストアを確認してください。</value>
+  </data>
+  <data name="ToolOptionsUI_btnResetSettings_Click_Are_you_sure_you_want_to_clear_all_saved_settings__This_will_immediately_return__0__to_its_original_configuration_and_cannot_be_undone_" xml:space="preserve">
+    <value>本当に保存されたすべての設定をクリアしてもよろしいですか？これで直ちに{0}が元の設定に戻り、それを元に戻すことはできません。</value>
+  </data>
+  <data name="ToolOptionsUI_ToolOptionsUI_Default___0__" xml:space="preserve">
+    <value>デフォルト ({0})</value>
+    <comment>Example: Default (English)</comment>
+  </data>
+  <data name="ToolService_DeleteElementsNow_Unsupported_element__0_" xml:space="preserve">
+    <value>対応していない要素{0}</value>
+  </data>
+  <data name="ToolService_GetSelectedElementRefNow_Unsupported_element_type___0__" xml:space="preserve">
+    <value>対応していない要素タイプ「{0}」</value>
+  </data>
+  <data name="ToolService_ImportFasta_Insert_proteins" xml:space="preserve">
+    <value>タンパク質を挿入</value>
+  </data>
+  <data name="ToolService_ImportPeakBoundaries_Import_peak_boundaries_from_external_tool" xml:space="preserve">
+    <value>外部ツールからピーク境界をインポート</value>
+  </data>
+  <data name="ToolService_ImportProperties_Import_Properties_from_external_tool" xml:space="preserve">
+    <value>外部ツールからプロパティをインポート</value>
+  </data>
+  <data name="ToolStoreDlg_DownloadSelectedTool_Downloading__0_" xml:space="preserve">
+    <value>{0}のダウンロード中</value>
+  </data>
+  <data name="ToolStoreDlg_FormatVersionText_Currently_installed_and_fully_updated__Version___0___" xml:space="preserve">
+    <value>現在インストール済みで完全にアップデートされています（バージョン：{0}）。</value>
+  </data>
+  <data name="ToolStoreDlg_FormatVersionText_Not_currently_installed__Version___0__is_available" xml:space="preserve">
+    <value>現在インストールされていません。バージョン：{0}が利用可能です。</value>
+  </data>
+  <data name="ToolStoreDlg_FormatVersionText_Version__0__currently_installed__Version__1__is_available_" xml:space="preserve">
+    <value>バージョン{0}は現在インストールされていません。バージョン{1}が利用可能です。</value>
+  </data>
+  <data name="ToolStoreDlg_UpdateDisplayedTool_Install" xml:space="preserve">
+    <value>インストール</value>
+  </data>
+  <data name="ToolStoreDlg_UpdateDisplayedTool_Reinstall" xml:space="preserve">
+    <value>再インストール</value>
+  </data>
+  <data name="ToolStoreDlg_UpdateDisplayedTool_Update" xml:space="preserve">
+    <value>アップデート</value>
+  </data>
+  <data name="ToolUpdatesDlg_GetTools_Downloading_Updates" xml:space="preserve">
+    <value>アップデートのダウンロード中</value>
+  </data>
+  <data name="ToolUpdatesDlg_GetToolsToUpdate_Downloading_Updates" xml:space="preserve">
+    <value>アップデートのダウンロード中</value>
+  </data>
+  <data name="ToolUpdatesDlg_InstallUpdates_Installing_updates_to__0_" xml:space="preserve">
+    <value>{0}にアップデートのインストール中</value>
+  </data>
+</root>

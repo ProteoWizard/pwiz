@@ -225,9 +225,14 @@ namespace pwiz.Skyline.Model.AuditLog
             var accessors = propertyInfo.GetAccessors(true);
             if (accessors.Length > 0)
             {
-                var baseDef = accessors[0].GetBaseDefinition();
+                var firstAccessor = accessors[0];
+                var baseDef = firstAccessor.GetBaseDefinition();
                 if (baseDef.DeclaringType != null)
-                    DeclaringType = baseDef.DeclaringType;    
+                {
+                    DeclaringType = baseDef.DeclaringType;
+                    GetValue = o => baseDef.Invoke(o, Array.Empty<object>());
+                }
+
             }
 
             PropertyInfo = propertyInfo;
