@@ -16,10 +16,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Model;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -90,6 +93,33 @@ namespace pwiz.SkylineTestFunctional
                 PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(
                     14.30043, 13.79692, 
                     13.83123, 13.66408, 13.52982));
+            });
+            // Test "Apply Peak To All" with multiple selection
+            RunUI(() =>
+            {
+                var identityPaths = new List<IdentityPath>();
+                foreach ((string pep, double time) in new[]
+                         {
+                             Tuple.Create("GILAADESVGSMAK", 21.9337),
+                             Tuple.Create("LGGEEVSVAC[+57.0]K", 11.1179),
+                             Tuple.Create("LNDGSQITFEK", 27.5473)
+                         })
+                {
+                    PeakMatcherTestUtil.SelectPeak(pep, null, "D_103_REP1", time);
+                    identityPaths.Add(SkylineWindow.SelectedPath);
+                }
+
+                SkylineWindow.SequenceTree.SelectedPaths = identityPaths;
+                SkylineWindow.ApplyPeak(false, false);
+                SkylineWindow.SequenceTree.SelectedPath = identityPaths[0];
+                PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(
+                    21.93372, 20.88247, 21.79523, 22.86122, 22.25558));
+                SkylineWindow.SequenceTree.SelectedPath = identityPaths[1];
+                PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(
+                    11.11793, 11.15042, 10.78273, 11.15158, 11.18482));
+                SkylineWindow.SequenceTree.SelectedPath = identityPaths[2];
+                PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(
+                    27.54730, 27.24320, 26.82722, 27.28895, 27.10232));
             });
         }
 
