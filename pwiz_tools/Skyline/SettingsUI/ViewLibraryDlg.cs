@@ -2637,7 +2637,7 @@ namespace pwiz.Skyline.SettingsUI
                         string.Format(SettingsUIResources.ViewLibSpectrumGraphItem_Title__0__1__Charge__2__, libraryNamePrefix, TransitionGroup.Peptide.Target, TransitionGroup.PrecursorAdduct);
                     if (this.PeaksCount == 0)
                     {
-                        title += Resources.SpectrumGraphItem_library_entry_provides_only_precursor_values;
+                        title += SettingsUIResources.SpectrumGraphItem_library_entry_provides_only_precursor_values;
                     }
                     return title;
                 }
