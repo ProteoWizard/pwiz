@@ -1384,10 +1384,7 @@ namespace pwiz.Skyline.SettingsUI
                 FilterAndUpdate();
             }
 
-            if (!Program.SkylineOffscreen)
-            {
-                textPeptide.Focus(); // Assume that the next thing the user wants to do is work with the filter value
-            }
+            textPeptide.Focus(); // Assume that the next thing the user wants to do is work with the filter value
         }
         private void listPeptide_SelectedIndexChanged(object sender, EventArgs e)
         {
