@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -77,7 +78,7 @@ namespace pwiz.SkylineTest
 
         private void TestException(string formula, string adductText)
         {
-            AssertEx.ThrowsException<InvalidOperationException>(() =>
+            AssertEx.ThrowsException<InvalidDataException>(() =>
             {
                 var adduct = Adduct.FromStringAssumeProtonated(adductText);
                 IonInfo.ApplyAdductToFormula(formula, adduct);
@@ -171,9 +172,9 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M+2Na"), Adduct.FromStringAssumeProtonated("M+Na").ChangeCharge(2));
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M+2Na"), Adduct.FromStringAssumeProtonated("M+3Na").ChangeCharge(2));
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M2Cl37+2Na"), Adduct.FromStringAssumeProtonated("M2Cl37+3Na").ChangeCharge(2));
-            AssertEx.ThrowsException<InvalidOperationException>(()=>Adduct.FromStringAssumeProtonated("M+2Na-H").ChangeCharge(2)); // Too complex to adjust formula
+            AssertEx.ThrowsException<InvalidDataException>(()=>Adduct.FromStringAssumeProtonated("M+2Na-H").ChangeCharge(2)); // Too complex to adjust formula
 
-            AssertEx.ThrowsException<InvalidOperationException>(() => Adduct.FromStringAssumeProtonatedNonProteomic("[M2")); // Seen in the wild, wasn't handled well
+            AssertEx.ThrowsException<InvalidDataException>(() => Adduct.FromStringAssumeProtonatedNonProteomic("[M2")); // Seen in the wild, wasn't handled well
 
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M++++").AdductCharge,Adduct.FromChargeNoMass(4).AdductCharge);
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M+4"), Adduct.FromChargeNoMass(4));
