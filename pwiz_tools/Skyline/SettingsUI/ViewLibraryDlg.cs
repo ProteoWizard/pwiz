@@ -1384,7 +1384,7 @@ namespace pwiz.Skyline.SettingsUI
                 FilterAndUpdate();
             }
 
-            if (!Program.FunctionalTest)
+            if (!Program.SkylineOffscreen)
             {
                 textPeptide.Focus(); // Assume that the next thing the user wants to do is work with the filter value
             }
