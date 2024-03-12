@@ -36,6 +36,8 @@
 #include <boost/thread.hpp>
 #include <sqlite3pp.h>
 
+#include "Parser.hpp"
+
 
 using namespace pwiz::proteome;
 using namespace pwiz::chemistry;
@@ -136,9 +138,7 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
     vector<bfs::path> idpDbFiles;
     for(const bfs::path& idFile : idFiles)
     {
-        idpDbFiles.push_back(idFile);
-        string idpDbFilepath = bal::replace_all_copy(idpDbFiles.back().string(), ".pep.xml", ".pepXML");
-        idpDbFiles.back() = bfs::path(idpDbFilepath).replace_extension(".idpDB");
+        idpDbFiles.push_back(IDPicker::Parser::outputFilepath(idFile.string()).string());
 
         unit_assert(bfs::exists(idpDbFiles.back()));
         sqlite3pp::database db(idpDbFiles.back().string());

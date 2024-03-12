@@ -2549,6 +2549,18 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 
+        ///
+        ///This library entry only provides precursor
+        ///information, there is no spectrum to show.
+        /// </summary>
+        public static string SpectrumGraphItem_library_entry_provides_only_precursor_values {
+            get {
+                return ResourceManager.GetString("SpectrumGraphItem_library_entry_provides_only_precursor_values", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The settings have been reset to the default values..
         /// </summary>
         public static string StartPageSettingsUI_btnResetDefaults_Click_The_settings_have_been_reset_to_the_default_values_ {
