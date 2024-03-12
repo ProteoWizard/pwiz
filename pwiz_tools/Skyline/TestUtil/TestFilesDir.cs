@@ -127,17 +127,38 @@ namespace pwiz.SkylineTestUtil
         /// Returns a full path to a file in the unzipped directory.
         /// </summary>
         /// <param name="relativePath">Relative path, as stored in the ZIP file, to the file</param>
+        /// <param name="forRead">If true, OK to look in the persistent files area</param>
         /// <returns>Absolute path to the file for use in tests</returns>
-        public string GetTestPath(string relativePath)
+        public string GetTestPath(string relativePath, bool forRead = true)
+        {
+            if (forRead)
+            {
+                // See if it's a persistent test file
+                var persisted = GetPersistentTestPath(relativePath);
+                if (!string.IsNullOrEmpty(persisted))
+                {
+                    return Path.Combine(PersistentFilesDir, relativePath);
+                }
+            }
+            if (!Directory.Exists(FullPath)) // can happen when all files are in the persistant area, but we're creating a new one as part of the test
+                Directory.CreateDirectory(FullPath);
+            return Path.Combine(FullPath, relativePath);
+        }
+
+        /// <summary>
+        /// Returns a full path to a file in the unzipped directory.
+        /// </summary>
+        /// <param name="relativePath">Relative path, as stored in the ZIP file, to the file</param>
+        /// <returns>Absolute path to the file for use in tests</returns>
+        public string GetPersistentTestPath(string relativePath)
         {
             if ((PersistentFiles != null) && (PersistentFiles.Contains(relativePath) || PersistentFiles.Any(relativePath.Contains)))
             {
                 // persistent file - probably so because it's large. 
                 return Path.Combine(PersistentFilesDir, relativePath);
             }
-            if (!Directory.Exists(FullPath)) // can happen when all files are in the persistant area, but we're creating a new one as part of the test
-                Directory.CreateDirectory(FullPath);
-            return Path.Combine(FullPath, relativePath);
+
+            return null;
         }
 
         /// <summary>

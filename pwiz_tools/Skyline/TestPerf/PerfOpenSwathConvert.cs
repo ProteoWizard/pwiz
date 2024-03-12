@@ -62,7 +62,7 @@ namespace TestPerf
             var testFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);                 
 
 
-            var inFiles = INDIVIDUAL_OUTPUT.Select(testFilesDir.GetTestPath);
+            var inFiles = INDIVIDUAL_OUTPUT.Select(testFilesDir.GetPersistentTestPath);
             string outFile = testFilesDir.GetTestPath("Spectronaut.csv");
             RunConversion(inFiles, outFile);
         }

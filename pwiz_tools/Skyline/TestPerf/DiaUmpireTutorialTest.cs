@@ -323,15 +323,13 @@ namespace TestPerf
             Assert.IsFalse(IsRecordMode, "Set IsRecordMode to false before commit");   // Make sure this doesn't get committed as true
         }
 
-        private string DataPath { get { return TestFilesDirs.Last().PersistentFilesDir; } }
-
         private PropertyPath _resultProperty = PropertyPath.Root.Property("FoldChangeResult");
         private PropertyPath _proteinProperty = PropertyPath.Root.Property("Protein");
         private const string OXIDATION_M = "Oxidation (M)";
 
-        private string GetTestPath(string path)
+        private string GetTestPath(string path, bool forRead = true)
         {
-            return TestFilesDirs[0].GetTestPath(Path.Combine(RootName, path));
+            return TestFilesDirs[0].GetTestPath(Path.Combine(RootName, path), forRead);
         }
 
         /// <summary>
@@ -345,6 +343,9 @@ namespace TestPerf
             if (IsRecordMode)
                 Console.WriteLine();
 
+            // Make sure there's a suitably named local working directory
+            Directory.CreateDirectory(GetTestPath(string.Empty, false)); 
+
             // Clean-up before running the test
             RunUI(() => SkylineWindow.ModifyDocument("Set default settings",
                 d => d.ChangeSettings(SrmSettingsList.GetDefault())));
@@ -353,7 +354,7 @@ namespace TestPerf
             SrmDocument doc = SkylineWindow.Document;
 
             string documentBaseName = "DIA-" + InstrumentTypeName + "-tutorial";
-            string documentFile = GetTestPath(documentBaseName + SrmDocument.EXT);
+            string documentFile = GetTestPath(documentBaseName + SrmDocument.EXT, false);
             RunUI(() => SkylineWindow.SaveDocument(documentFile));
 
             // Launch the wizard
