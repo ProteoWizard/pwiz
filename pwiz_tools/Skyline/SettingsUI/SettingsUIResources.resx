@@ -1137,6 +1137,12 @@
   <data name="WindowType_MEASUREMENT_Measurement" xml:space="preserve">
     <value>Measurement</value>
   </data>
+  <data name="SpectrumGraphItem_library_entry_provides_only_precursor_values" xml:space="preserve">
+    <value>
+
+This library entry only provides precursor
+information, there is no spectrum to show</value>
+  </data>
   <data name="FullScanSettingsControl_Initialize_minutes_of_detected_features" xml:space="preserve">
     <value>minutes of detected features</value>
   </data>
