@@ -2990,7 +2990,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (_selectedLibrary.TryGetIonMobilityInfos(new[] { pepInfo.Key }, out var ionMobilities))
             {
-                return ionMobilities.GetIonMobilityDict().Values.SelectMany(x => x).FirstOrDefault() ??  IonMobilityAndCCS.EMPTY;
+                return ionMobilities.GetIonMobilityDict().Values.SelectMany(x => x).FirstOrDefault() ?? IonMobilityAndCCS.EMPTY;
             }
             return IonMobilityAndCCS.EMPTY;
         }
