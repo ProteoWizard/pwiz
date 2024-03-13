@@ -820,7 +820,7 @@ PWIZ_API_DECL void Spectrum::setMZIntensityPairs(const MZIntensityPair* input, s
 
 /// set m/z and intensity arrays separately (they must be the same size) by swapping the vector contents
 /// this allows for a more nearly zero copy setup.  Contents of mzArray and intensityArray are undefined after calling.
-PWIZ_API_DECL void Spectrum::swapMZIntensityArrays(pwiz::util::BinaryData<double>& mzArray, pwiz::util::BinaryData<double>& intensityArray, CVID intensityUnits)
+PWIZ_API_DECL void Spectrum::swapMZIntensityArrays(pwiz::util::BinaryData<double>& mzArray, pwiz::util::BinaryData<double>& intensityArray, CVID intensityUnits, CVID mzUnits)
 {
     if (mzArray.size() != intensityArray.size())
         throw runtime_error("[MSData::Spectrum::swapMZIntensityArrays()] Sizes do not match.");
@@ -833,9 +833,22 @@ PWIZ_API_DECL void Spectrum::swapMZIntensityArrays(pwiz::util::BinaryData<double
 
     if (!bd_mz.get())
     {
+        CVID arrayTypeId;
+
+        switch (mzUnits)
+        {
+            case UO_nanometer:
+                arrayTypeId = MS_wavelength_array;
+                break;
+
+            default:
+                arrayTypeId = MS_m_z_array;
+                break;
+        }
+
         bd_mz = BinaryDataArrayPtr(new BinaryDataArray);
-        CVParam arrayType(MS_m_z_array);
-        arrayType.units = MS_m_z;
+        CVParam arrayType(arrayTypeId);
+        arrayType.units = mzUnits;
         bd_mz->cvParams.push_back(arrayType);
         binaryDataArrayPtrs.push_back(bd_mz);
     }
