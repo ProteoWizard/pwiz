@@ -1033,7 +1033,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     if (result != DialogResult.Cancel && dlgName.IsRemove)
                     {
                         ImportResultsControl.FoundResultsFiles = ImportResultsControl.FoundResultsFiles.Select(f =>
-                            new ImportPeptideSearch.FoundResultsFile(dlgName.ApplyNameChange(f.Name), f.Path)).ToList();
+                            new ImportPeptideSearch.FoundResultsFile(dlgName.ApplyNameChange(Path.GetFileNameWithoutExtension(f.Name)), f.Path)).ToList();
 
                         ImportResultsControl.Prefix =
                             string.IsNullOrEmpty(prefix) ? null : prefix;
