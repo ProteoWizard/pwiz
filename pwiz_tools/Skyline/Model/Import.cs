@@ -1255,8 +1255,8 @@ namespace pwiz.Skyline.Model
 
                 foreach (var transitionExp in info.TransitionExps.ToArray())
                 {
-                    transitionExp.Product = GetCustomIonProductExp(productMz, info) ??
-                                            GetPrecursorIsotopeProductExp(transitionExp, productMz, productZ, info);
+                    transitionExp.Product = GetCustomIonProductExp(productMz, productZ, MzMatchTolerance, info, Settings) ??
+                                            GetPrecursorIsotopeProductExp(transitionExp, sequence, productMz, productZ, MzMatchTolerance, info, Settings);
                     if (transitionExp.Product != null)
                         continue;
 
@@ -1320,21 +1320,22 @@ namespace pwiz.Skyline.Model
                 return info;
             }
 
-            private ProductExp GetPrecursorIsotopeProductExp(TransitionExp transitionExp, double productMz, int? productZ, ExTransitionInfo info)
+            private static ProductExp GetPrecursorIsotopeProductExp(TransitionExp transitionExp, Target sequence, double productMz, int? productZ, double tolerance,
+                ExTransitionInfo info, SrmSettings settings)
             {
                 var precursorAdduct = transitionExp.Precursor.PrecursorAdduct;
                 // If a product charge is specified, it must be the same as the precursor
                 if (productZ.HasValue && productZ.Value != precursorAdduct.AdductCharge)
                     return null;
 
-                var fullScan = Settings.TransitionSettings.FullScan;
+                var fullScan = settings.TransitionSettings.FullScan;
                 if (!fullScan.IsHighResPrecursor)
                     return null;
 
                 var mods = transitionExp.Precursor.VariableMods;
-                var calc = Settings.GetPrecursorCalc(transitionExp.Precursor.LabelType, mods);
-                var mass = calc.GetPrecursorMass(info.PeptideTarget);
-                var massDist = calc.GetMzDistribution(info.PeptideTarget,
+                var calc = settings.GetPrecursorCalc(transitionExp.Precursor.LabelType, mods);
+                var mass = calc.GetPrecursorMass(sequence);
+                var massDist = calc.GetMzDistribution(sequence,
                     precursorAdduct, fullScan.IsotopeAbundances);
                 var isotopeDist =
                     IsotopeDistInfo.MakeIsotopeDistInfo(massDist, mass, precursorAdduct, fullScan);
@@ -1346,7 +1347,7 @@ namespace pwiz.Skyline.Model
                     int massIndex = isotopeDist.PeakIndexToMassIndex(i);
                     double isotopeMz = isotopeDist.GetMZI(massIndex);
                     var deltaMz = Math.Abs(productMz - isotopeMz);
-                    if (deltaMz < minDeltaMz && deltaMz <= MzMatchTolerance)
+                    if (deltaMz < minDeltaMz && deltaMz <= tolerance)
                     {
                         productExp = new ProductExp(precursorAdduct, massIndex, info);
                         minDeltaMz = deltaMz;
@@ -1359,19 +1360,22 @@ namespace pwiz.Skyline.Model
             /// <summary>
             /// Finds the closest custom product ion if any to a specified product m/z value.
             /// </summary>
-            private ProductExp GetCustomIonProductExp(double productMz, ExTransitionInfo info)
+            private static ProductExp GetCustomIonProductExp(double productMz, int? productZ, double tolerance, ExTransitionInfo info, SrmSettings settings)
             {
                 double minDeltaMz = double.MaxValue;
                 ProductExp productExp = null;
-                var massType = Settings.TransitionSettings.Prediction.FragmentMassType;
+                var massType = settings.TransitionSettings.Prediction.FragmentMassType;
 
-                foreach (var measuredIon in Settings.TransitionSettings.Filter.MeasuredIons.Where(m => m.IsCustom))
+                foreach (var measuredIon in settings.TransitionSettings.Filter.MeasuredIons.Where(m => m.IsCustom))
                 {
+                    if (productZ.HasValue && productZ.Value != measuredIon.Charge)
+                        continue;
+
                     var customIonMz = massType == MassType.Monoisotopic
                         ? measuredIon.SettingsCustomIon.MonoisotopicMassMz
                         : measuredIon.SettingsCustomIon.AverageMassMz;
                     var deltaMz = Math.Abs(productMz - customIonMz);
-                    if (deltaMz < minDeltaMz && deltaMz <= MzMatchTolerance)
+                    if (deltaMz < minDeltaMz && deltaMz <= tolerance)
                     {
                         productExp = new ProductExp(measuredIon.Adduct, measuredIon.SettingsCustomIon, info);
                         minDeltaMz = deltaMz;
@@ -1488,6 +1492,9 @@ namespace pwiz.Skyline.Model
                 var types = settings.TransitionSettings.Filter.PeptideIonTypes;
                 foreach (var transitionExp in transitionExps)
                 {
+                    if (transitionExp.Product != null)
+                        continue;
+
                     var mods = transitionExp.Precursor.VariableMods;
                     var calc = settings.GetFragmentCalc(transitionExp.Precursor.LabelType, mods);
                     var productPrecursorMass = calc.GetPrecursorFragmentMass(sequence);
@@ -1504,7 +1511,13 @@ namespace pwiz.Skyline.Model
                         if (productMz == 0)
                             continue;
 
-                        var charge = TransitionCalc.CalcProductCharge(productPrecursorMass,
+                        // First check for reporter ions and precursor isotopes
+                        var specialProduct = GetCustomIonProductExp(productMz, null, tolerance, null, settings) ??
+                                             GetPrecursorIsotopeProductExp(transitionExp, sequence, productMz, null, tolerance, null, settings);
+
+                        // If not found check for backbone fragment ions
+                        var charge = specialProduct != null ? Adduct.SINGLY_PROTONATED :
+                            TransitionCalc.CalcProductCharge(productPrecursorMass,
                                                                       null, // CONSIDER: Use product charge field?
                                                                       transitionExp.Precursor.PrecursorAdduct,
                                                                       types,
