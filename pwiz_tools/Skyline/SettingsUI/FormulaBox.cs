@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
@@ -601,7 +602,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void UpdateMonoTextForMass()
         {
-            // Avoid a casecade of text-changed events
+            // Avoid a cascade of text-changed events
             var text = GetTextFromMass(_monoMass, MassType.Monoisotopic);
             if (!Equals(GetMassFromText(text, MassType.Monoisotopic), GetMassFromText(textMono.Text, MassType.Monoisotopic)))
                 textMono.Text = text;
@@ -609,7 +610,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void UpdateAverageTextForMass()
         {
-            // Avoid a casecade of text-changed events
+            // Avoid a cascade of text-changed events
             var text = GetTextFromMass(_averageMass, MassType.Average);
             if (!Equals(GetMassFromText(text, MassType.Average), GetMassFromText(textAverage.Text, MassType.Average)))
                 textAverage.Text = text;
@@ -703,6 +704,10 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
             catch (InvalidOperationException)
+            {
+                valid = false;
+            }
+            catch (InvalidDataException)
             {
                 valid = false;
             }

@@ -291,9 +291,13 @@ namespace pwiz.Skyline.Model
             Dictionary<MoleculeNameAndAccessions, List<ParsedIonInfo>> parsedPrecursors,
             Row row, ref bool pepGroupFound)
         {
-            var adduct = precursor.Adduct;
-            var precursorMonoMz = adduct.MzFromNeutralMass(precursor.MonoMass);
-            var precursorAverageMz = adduct.MzFromNeutralMass(precursor.AverageMass);
+            var adduct = precursor?.Adduct;
+            if (Adduct.IsNullOrEmpty(adduct))
+            {
+                return true; // Can't process
+            }
+            var precursorMonoMz = adduct!.MzFromNeutralMass(precursor.MonoMass);
+            var precursorAverageMz = adduct!.MzFromNeutralMass(precursor.AverageMass);
             if (string.IsNullOrEmpty(groupName))
             {
                 groupName = defaultPepGroupName;

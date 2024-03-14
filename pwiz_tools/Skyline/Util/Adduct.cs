@@ -21,6 +21,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
@@ -155,7 +156,7 @@ namespace pwiz.Skyline.Util
                     if (posClose >= 0 && posClose < posNext)
                     {
                         // This isn't an adduct description, probably actually examining a modified peptide e.g. K[1Ac]IDGFGPMK
-                        throw new InvalidOperationException(
+                        throw new InvalidDataException(
                             string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0__, input));
                     }
                     if (input[posNext] != '+' && input[posNext] != '-') 
@@ -339,7 +340,7 @@ namespace pwiz.Skyline.Util
                     success = int.TryParse(massMultiplierStr, out massMultiplier);
                     if (!success || massMultiplier <= 0)
                     {
-                        throw new InvalidOperationException(
+                        throw new InvalidDataException(
                             string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0__, input));
                     }
                 }
@@ -371,7 +372,7 @@ namespace pwiz.Skyline.Util
                         {
                             var errmsg = string.Format(UtilResources.Adduct_ParseDescription_isotope_error,
                                     match.Groups[@"label"].Value.Split(']')[0], input, string.Join(@" ", DICT_ADDUCT_ISOTOPE_NICKNAMES.Keys));
-                            throw new InvalidOperationException(errmsg);
+                            throw new InvalidDataException(errmsg);
                         }
 
                         label = DICT_ADDUCT_ISOTOPE_NICKNAMES.Aggregate(label, (current, nickname) => current.Replace(nickname.Key, nickname.Value)); // eg Cl37 -> Cl'
@@ -508,7 +509,7 @@ namespace pwiz.Skyline.Util
                         }
                         catch (ArgumentException)
                         {
-                            throw new InvalidOperationException(
+                            throw new InvalidDataException(
                                 string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Unknown_symbol___0___in_adduct_description___1__,
                                     ion, input));
                         }
@@ -518,7 +519,7 @@ namespace pwiz.Skyline.Util
             AdductCharge = calculatedCharge ?? declaredCharge ?? 0;
             if (!composition.Keys.All(k => BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)))
             {
-                throw new InvalidOperationException(
+                throw new InvalidDataException(
                     string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Unknown_symbol___0___in_adduct_description___1__,
                         composition.Keys.First(k => !BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)), input));
             }
@@ -540,13 +541,13 @@ namespace pwiz.Skyline.Util
                 }
                 if (!success)
                 {
-                    throw new InvalidOperationException(
+                    throw new InvalidDataException(
                         string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0__, input));
                 }
             }
             if (declaredCharge.HasValue && calculatedCharge.HasValue && declaredCharge != calculatedCharge)
             {
-                throw new InvalidOperationException(
+                throw new InvalidDataException(
                     string.Format(
                         UtilResources
                             .BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0____declared_charge__1__does_not_agree_with_calculated_charge__2_,
@@ -963,7 +964,7 @@ namespace pwiz.Skyline.Util
                     }
                 }
             }
-            throw new InvalidOperationException(string.Format(@"Unable to adjust adduct formula {0} to achieve charge state {1}", AdductFormula, newCharge));
+            throw new InvalidDataException(string.Format(@"Unable to adjust adduct formula {0} to achieve charge state {1}", AdductFormula, newCharge));
         }
 
         /// <summary>
@@ -1387,7 +1388,7 @@ namespace pwiz.Skyline.Util
                 }
                 if (count < 0 && !Equals(pair.Key, BioMassCalc.H)) // Treat H loss as a general proton loss
                 {
-                    throw new InvalidOperationException(
+                    throw new InvalidDataException(
                         string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_,
                             this, pair.Key, molecule.ToString()));
                 }
@@ -1445,7 +1446,7 @@ namespace pwiz.Skyline.Util
                     }
                     else // Can't remove that which is not there
                     {
-                        throw new InvalidOperationException(
+                        throw new InvalidDataException(
                             string.Format(
                                 UtilResources
                                     .Adduct_ApplyToMolecule_Adduct___0___calls_for_labeling_more__1__atoms_than_are_found_in_the_molecule__2_,

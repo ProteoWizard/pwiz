@@ -29,7 +29,7 @@ namespace AssortResources
             var resourceIdentifiers = ResourceIdentifiers.FromPath(path);
             var languages = new Dictionary<string, ResourceIdentifiers>();
             var baseName = Path.GetFileNameWithoutExtension(path) + ".";
-            foreach (var filePath in Directory.EnumerateFiles(Path.GetDirectoryName(path), "*.resx"))
+            foreach (var filePath in Directory.EnumerateFiles(Path.GetDirectoryName(path) ?? string.Empty, "*.resx"))
             {
                 var fileName = Path.GetFileName(filePath);
                 if (fileName.StartsWith(baseName) && fileName.Length > baseName.Length + 5)
