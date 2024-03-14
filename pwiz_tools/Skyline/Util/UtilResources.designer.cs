@@ -605,6 +605,15 @@ namespace pwiz.Skyline.Util {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot parse the formula &quot;{0}&quot;.
+        /// </summary>
+        public static string ParsedMolecule_SplitFormulaAndMasses_Cannot_parse_the_formula___0__ {
+            get {
+                return ResourceManager.GetString("ParsedMolecule_SplitFormulaAndMasses_Cannot_parse_the_formula___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The file {0} has been modified, since it was first opened..
         /// </summary>
         public static string PooledFileStream_Connect_The_file__0__has_been_modified_since_it_was_first_opened {
