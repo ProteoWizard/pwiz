@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
 {
