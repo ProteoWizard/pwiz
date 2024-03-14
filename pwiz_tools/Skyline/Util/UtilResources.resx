@@ -365,7 +365,7 @@ Charge states are inferred from the presence of these adduct components:{1}</val
   <data name="XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element" xml:space="preserve">
     <value>Attempt to serialize list missing an element.</value>
   </data>
-  <data name="ParsedMolecule_SplitFormulaAndMasses_Cannot_parse_the_formula___0__" xml:space="preserve">
-    <value>Cannot parse the formula "{0}"</value>
+  <data name="ParsedMolecule_SplitFormulaAndMasses_Cannot_parse___0___as_a_formula_and_mass_offset" xml:space="preserve">
+    <value>Cannot parse "{0}" as a formula and mass offset</value>
   </data>
 </root>
