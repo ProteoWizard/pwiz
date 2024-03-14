@@ -218,7 +218,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                     else if (_ionMobilityUnits != fileInfo.IonMobilityUnits)
                     {
-                        throw new IOException(TextUtil.LineSeparate(Resources.IonMobilityFinder_ProcessMSLevel_Failed_using_results_to_populate_ion_mobility_library_, Resources.IonMobilityFinder_FindIonMobilityPeaks_mixed_ion_mobility_types_are_not_supported), _dataFileScanHelperException);
+                        throw new IOException(TextUtil.LineSeparate(Resources.IonMobilityFinder_ProcessMSLevel_Failed_using_results_to_populate_ion_mobility_library_, ResultsResources.IonMobilityFinder_FindIonMobilityPeaks_mixed_ion_mobility_types_are_not_supported), _dataFileScanHelperException);
                     }
                     if (!ProcessFile(fileInfo))
                         return null; // User cancelled
@@ -627,7 +627,7 @@ namespace pwiz.Skyline.Model.Results
                 if (ionMobilityHalfWindow <= 0)
                 {
                     throw new IOException(TextUtil.LineSeparate(Resources.IonMobilityFinder_ProcessMSLevel_Failed_using_results_to_populate_ion_mobility_library_, 
-                        Resources.IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settings___ion_mobility_filtering___Window_type), null);
+                        ResultsResources.IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settings___ion_mobility_filtering___Window_type), null);
                 }
                 var isotopeIntensities = isotopeIntensitiesPerIM[observedIM];
                 var windowedIsotopeIntensities = new double[isotopeIntensities.Length];

@@ -5251,26 +5251,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to need a value for  Transition Settings  Ion mobility filtering  Window type.
-        /// </summary>
-        public static string IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settings___ion_mobility_filtering___Window_type {
-            get {
-                return ResourceManager.GetString("IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settin" +
-                        "gs___ion_mobility_filtering___Window_type", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to mixed ion mobility types are not supported.
-        /// </summary>
-        public static string IonMobilityFinder_FindIonMobilityPeaks_mixed_ion_mobility_types_are_not_supported {
-            get {
-                return ResourceManager.GetString("IonMobilityFinder_FindIonMobilityPeaks_mixed_ion_mobility_types_are_not_supported" +
-                        "", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Failed using results to populate ion mobility library:.
         /// </summary>
         public static string IonMobilityFinder_ProcessMSLevel_Failed_using_results_to_populate_ion_mobility_library_ {
