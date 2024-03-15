@@ -648,12 +648,20 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public override void ExportViewsToFile(Control owner, ViewSpecList viewSpecList, string fileName)
         {
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
-            SafeWriteToFile(owner, fileName, stream =>
+            try
             {
-                xmlSerializer.Serialize(stream, viewSpecList);
-                return true;
-            });
+                XmlSerializer xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
+                SafeWriteToFile(owner, fileName, stream =>
+                {
+                    xmlSerializer.Serialize(stream, viewSpecList);
+                    return true;
+                });
+            }
+            catch (Exception x)
+            {
+                MessageDlg.ShowWithException(owner,
+                    string.Format(DatabindingResources.ExportReportDlg_ExportReport_Failed_exporting_to, fileName, x.Message), x);
+            }
         }
 
         public override void ImportViews(Control owner, ViewGroup group)

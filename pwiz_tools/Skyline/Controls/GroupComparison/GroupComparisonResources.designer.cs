@@ -95,5 +95,14 @@ namespace pwiz.Skyline.Controls.GroupComparison {
                 return ResourceManager.GetString("FoldChangeForm_BuildContextMenu_Volcano_Plot", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Relative Abundance Formatting.
+        /// </summary>
+        public static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting", resourceCulture);
+            }
+        }
     }
 }

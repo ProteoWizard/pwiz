@@ -1137,4 +1137,10 @@
   <data name="WindowType_MEASUREMENT_Measurement" xml:space="preserve">
     <value>Measurement</value>
   </data>
+  <data name="SpectrumGraphItem_library_entry_provides_only_precursor_values" xml:space="preserve">
+    <value>
+
+This library entry only provides precursor
+information, there is no spectrum to show</value>
+  </data>
 </root>
