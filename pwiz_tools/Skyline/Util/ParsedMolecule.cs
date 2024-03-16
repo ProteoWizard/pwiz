@@ -259,7 +259,7 @@ namespace pwiz.Skyline.Util
                     {
                         if (!TryParseMassOffsetValues(brackets, sign, out var monoMassParsed, out var averageMassParsed))
                         {
-                            throw new ArgumentException(string.Format(UtilResources.ParsedMolecule_SplitFormulaAndMasses_Cannot_parse___0___as_a_formula_and_mass_offset, formulaAndMasses));
+                            throw new ArgumentException(string.Format(UtilResources.ParsedMolecule_SplitFormulaAndMasses_Cannot_parse___0___as_a_mass_offset_in_the_text___1___, brackets, formulaAndMasses));
                         }
                         modMassMonoOut = (modMassMonoOut ?? 0) + monoMassParsed;
                         modMassAverageOut = (modMassAverageOut ?? 0) + averageMassParsed;

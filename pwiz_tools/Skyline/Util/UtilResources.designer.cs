@@ -605,12 +605,12 @@ namespace pwiz.Skyline.Util {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot parse &quot;{0}&quot; as a formula and mass offset.
+        ///   Looks up a localized string similar to Cannot parse &quot;{0}&quot; as a mass offset in the text &quot;{1}&quot;.
         /// </summary>
-        public static string ParsedMolecule_SplitFormulaAndMasses_Cannot_parse___0___as_a_formula_and_mass_offset {
+        public static string ParsedMolecule_SplitFormulaAndMasses_Cannot_parse___0___as_a_mass_offset_in_the_text___1___ {
             get {
-                return ResourceManager.GetString("ParsedMolecule_SplitFormulaAndMasses_Cannot_parse___0___as_a_formula_and_mass_off" +
-                        "set", resourceCulture);
+                return ResourceManager.GetString("ParsedMolecule_SplitFormulaAndMasses_Cannot_parse___0___as_a_mass_offset_in_the_t" +
+                        "ext___1___", resourceCulture);
             }
         }
         
