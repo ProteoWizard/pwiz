@@ -214,8 +214,12 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(27.2, bioMassCalc.ParseFormulaMass(description, out _), .01);
             description = "C'2H[-1.2]";
             Assert.AreEqual(25.815, bioMassCalc.ParseFormulaMass(description, out _), .01);
+            description = "41.027549007/41.027549007";
+            Assert.AreEqual(41.02, bioMassCalc.ParseFormulaMass(description, out _), .01);
             description = "C'2[+1.2]-C'";
             Assert.AreEqual(14.2, bioMassCalc.ParseFormulaMass(description, out _), .01);
+            description = "C'2-C'[+1.2]";
+            Assert.AreEqual(11.8, bioMassCalc.ParseFormulaMass(description, out _), .01);
             description = "C12H5[-1.2 / 1.21] - C2H[-1.1]";
             var parsed = ParsedMolecule.Create(description);
             Assert.AreEqual(-.1, parsed.GetMassOffset(MassType.Monoisotopic), .01);
@@ -234,6 +238,12 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(-.44, molC.MonoMassOffset); // -0.33 - 0.11
             Assert.AreEqual(14, molC.Molecule["C"]);
             Assert.AreEqual(8, molC.Molecule["H"]);
+
+            // Error handling
+            AssertEx.ThrowsException<ArgumentException>(() => bioMassCalc.ParseFormulaMass("C12H5H3[-0x33]", out _));
+            AssertEx.ThrowsException<ArgumentException>(() => bioMassCalc.ParseFormulaMass("C12H5H3[+3.2/3n3]", out _));
+            AssertEx.ThrowsException<ArgumentException>(() => bioMassCalc.ParseFormulaMass("C12H5H3[-0.33]-C2[-0.11fish]", out _));
+            AssertEx.ThrowsException<ArgumentException>(() => bioMassCalc.ParseFormulaMass("C12himomH5H3[-0.33]", out _));
 
             Assert.IsTrue(IonInfo.IsFormulaWithAdduct("C12H5[+3.2/3.3][2M1.234+3H]", out var mol, out var adduct, out var neutralFormula));
             Assert.AreEqual(Adduct.FromStringAssumeChargeOnly("2M1.234+3H"), adduct);
