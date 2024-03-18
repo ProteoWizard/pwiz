@@ -65,6 +65,7 @@ namespace pwiz.Skyline.FileUI
             {
                 FileUIResources.OpenDataSourceDialog_OpenDataSourceDialog_Any_spectra_format,
                 DataSourceUtil.TYPE_WIFF,
+                DataSourceUtil.TYPE_WIFF2,
                 DataSourceUtil.TYPE_AGILENT,
                 DataSourceUtil.TYPE_BRUKER,
                 DataSourceUtil.TYPE_SHIMADZU,
