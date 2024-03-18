@@ -114,7 +114,14 @@ namespace pwiz.Common.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public object SelectedItem
         {
-            get => SelectedIndex >= 0 ? Items[SelectedIndex] : null;
+            get
+            {
+                if (SelectedIndex >= 0 && SelectedIndex < Items.Count)
+                {
+                    return Items[SelectedIndex];
+                }
+                return null;
+            }
             set => SelectedIndex = Items.IndexOf(value);
         }
 
