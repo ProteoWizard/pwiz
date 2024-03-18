@@ -204,7 +204,7 @@ namespace pwiz.SkylineTest
             var modifiedSequence3 = new ModifiedSequence("C[unimod:4]PT[UNIMOD:21]IDEK[UNIMOD:2016]", MassType.Monoisotopic);
             Assert.AreEqual("CPTIDEK", modifiedSequence3.GetUnmodifiedSequence());
             Assert.AreEqual(3, modifiedSequence3.ExplicitMods.Count);
-            Assert.AreEqual("Carbamidomethyl (N-term)", modifiedSequence3.ExplicitMods[0].Name);
+            Assert.AreEqual("Carbamidomethyl (C)", modifiedSequence3.ExplicitMods[0].Name);
             Assert.AreEqual("Phospho (ST)", modifiedSequence3.ExplicitMods[1].Name);
             Assert.AreEqual("TMTpro (K)", modifiedSequence3.ExplicitMods[2].Name);
 
