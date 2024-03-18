@@ -67,8 +67,8 @@ namespace pwiz.SkylineTestFunctional
                 {"RetentionTime",33.05.ToString(CultureInfo.CurrentCulture)},
                 {"IonMobility",3.477.ToString(CultureInfo.CurrentCulture) + " msec"},
                 {"IsolationWindow","50:2000 (-975:+975)"},
-                {"IonMobilityRange",0.069.ToString(CultureInfo.CurrentCulture) + ":" + 13.8.ToString(CultureInfo.CurrentCulture)},
-                {"IonMobilityFilterRange",3.152.ToString(CultureInfo.CurrentCulture) + ":"+ 3.651.ToString(CultureInfo.CurrentCulture)},
+                {"IonMobilityRange",TextUtil.AppendColon(0.069.ToString(CultureInfo.CurrentCulture)) + 13.8.ToString(CultureInfo.CurrentCulture)},
+                {"IonMobilityFilterRange",TextUtil.AppendColon(3.152.ToString(CultureInfo.CurrentCulture)) + 3.651.ToString(CultureInfo.CurrentCulture)},
                 {"ScanId","1.0.309201 - 1.0.309400"},
                 {"MSLevel","1"},
                 {"Instrument",new Dictionary<string, object> {
@@ -87,8 +87,8 @@ namespace pwiz.SkylineTestFunctional
                 {"RetentionTime", (33.1).ToString(CultureInfo.CurrentCulture)},
                 {"IonMobility", (3.326).ToString(CultureInfo.CurrentCulture) + " msec"},
                 {"IsolationWindow","50:2000 (-975:+975)"},
-                {"IonMobilityRange",0.069.ToString(CultureInfo.CurrentCulture) + ":" + 13.8.ToString(CultureInfo.CurrentCulture)},
-                {"IonMobilityFilterRange",3.152.ToString(CultureInfo.CurrentCulture) + ":" + 3.651.ToString(CultureInfo.CurrentCulture)},
+                {"IonMobilityRange", TextUtil.AppendColon(0.069.ToString(CultureInfo.CurrentCulture)) + 13.8.ToString(CultureInfo.CurrentCulture)},
+                {"IonMobilityFilterRange",TextUtil.AppendColon(3.152.ToString(CultureInfo.CurrentCulture)) + 3.651.ToString(CultureInfo.CurrentCulture)},
                 {"ScanId","2.0.309601 - 2.0.309800"},
                 {"MSLevel","1"},
                 {"Instrument",new Dictionary<string, object> {
@@ -111,11 +111,11 @@ namespace pwiz.SkylineTestFunctional
                 { "IsolationWindow", "50:2000 (-975:+975)" },
                 {
                     "IonMobilityRange",
-                    (0.069).ToString(CultureInfo.CurrentCulture) + ":" + (13.8).ToString(CultureInfo.CurrentCulture)
+                    TextUtil.AppendColon((0.069).ToString(CultureInfo.CurrentCulture)) + (13.8).ToString(CultureInfo.CurrentCulture)
                 },
                 {
                     "IonMobilityFilterRange",
-                    (5.423).ToString(CultureInfo.CurrentCulture) + ":" +
+                    TextUtil.AppendColon((5.423).ToString(CultureInfo.CurrentCulture)) +
                     (6.161).ToString(CultureInfo.CurrentCulture)
                 },
                 { "ScanId", "2.0.308201 - 2.0.308400" },
@@ -282,7 +282,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             FindNode(679.38.ToString(CultureInfo.CurrentCulture));
             WaitForGraphs();
-            ClickChromatogram(32.98, 17, PaneKey.PRODUCTS);
+            ClickChromatogram(32.96, 17, PaneKey.PRODUCTS);
             TestPropertySheet(expectedPropertiesProduct2);
         }
 
@@ -450,25 +450,6 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestPropertySheet(Dictionary<string, object> expectedPropertiesDict)
         {
-            var expectedPropertiesDict = new Dictionary<string, object> {
-                {"FileName","ID12692_01_UCA168_3727_040714.mzML"},
-                {"ReplicateName","ID12692_01_UCA168_3727_040714"},
-                {"RetentionTime",33.05.ToString(CultureInfo.CurrentCulture)},
-                {"IonMobility",3.477.ToString(CultureInfo.CurrentCulture) + " msec"},
-                {"IsolationWindow","50:2000 (-975:+975)"},
-                {"IonMobilityRange",TextUtil.AppendColon(0.069.ToString(CultureInfo.CurrentCulture)) + 13.8.ToString(CultureInfo.CurrentCulture)},
-                {"IonMobilityFilterRange",TextUtil.AppendColon(3.152.ToString(CultureInfo.CurrentCulture)) + 3.651.ToString(CultureInfo.CurrentCulture)},
-                {"ScanId","1.0.309201 - 1.0.309400"},
-                {"MSLevel","1"},
-                {"Instrument",new Dictionary<string, object> {
-                        {"InstrumentModel","Waters instrument model"},
-                        {"InstrumentManufacturer","Waters"}
-                    }
-                },
-                {"DataPoints",105373.ToString(@"N0", CultureInfo.CurrentCulture)},
-                {"MzCount",45751.ToString(@"N0", CultureInfo.CurrentCulture)},
-                {"IsCentroided","False"}
-            };
             var expectedProperties = new FullScanProperties();
             expectedProperties.Deserialize(expectedPropertiesDict);
 
