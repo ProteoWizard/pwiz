@@ -159,6 +159,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 Text = GroupComparisonResources.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting;
             }
             SetExpressionMinimumWidth();
+            layoutLabelsBox.Checked = Settings.Default.GroupComparisonAvoidLabelOverlap;
+            layoutLabelsBox.CheckedChanged += this.layoutLabelsBox_CheckedChanged;
+
         }
 
         public class PointSizeStringPair
@@ -198,6 +201,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         protected override void OnHandleDestroyed(EventArgs e)
         {
             _bindingList.ListChanged -= _bindingList_ListChanged;
+            layoutLabelsBox.CheckedChanged += this.layoutLabelsBox_CheckedChanged;
 
             base.OnHandleDestroyed(e);
         }
@@ -403,6 +407,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private void advancedCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             UpdateAdvancedColumns();
+        }
+        private void layoutLabelsBox_CheckedChanged(object sender, EventArgs e)
+        {
+            Settings.Default.GroupComparisonAvoidLabelOverlap = layoutLabelsBox.Checked;
+            _updateGraph(ResultList);
         }
     }
 }

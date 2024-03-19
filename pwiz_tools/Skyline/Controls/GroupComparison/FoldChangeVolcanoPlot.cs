@@ -137,7 +137,13 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 _minPValueLine[1].X = pane.XAxis.Scale.Max;
             }
 
-            DotPlotUtil.AdjustLabelLocations(_labeledPoints, pane.YAxis.Scale, pane.Rect.Height);
+            if (Settings.Default.GroupComparisonAvoidLabelOverlap)
+            {
+                zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints.Select(l => l.Label).ToList(),
+                    _labeledPoints.Select(l => l.Point).ToList());
+            }
+            else
+                zedGraphControl.GraphPane.EnableLabelLayout = false;
         }
 
         private void GraphPane_AxisChangeEvent(GraphPane pane)
@@ -182,6 +188,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
         }
 
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            Settings.Default.PropertyChanged += OnLabelOverlapPropertyChange;
+            base.OnHandleCreated(e);
+        }
+
         protected override void OnHandleDestroyed(EventArgs e)
         {
             if (_tip != null)
@@ -198,6 +210,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
 
             zedGraphControl.GraphPane.AxisChangeEvent -= GraphPane_AxisChangeEvent;
+            Settings.Default.PropertyChanged -= OnLabelOverlapPropertyChange;
 
             if (_bindingListSource != null)
             {
@@ -306,7 +319,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 var foldChange = row.FoldChangeResult.Log2FoldChange;
                 var pvalue = -Math.Log10(Math.Max(MIN_PVALUE, row.FoldChangeResult.AdjustedPValue));
-
                 var point = new PointPair(foldChange, pvalue) { Tag = row };
                 if (Settings.Default.GroupComparisonShowSelection && count < MAX_SELECTED && DotPlotUtil.IsTargetSelected(_skylineWindow, row.Peptide, row.Protein))
                 {
@@ -359,11 +371,14 @@ namespace pwiz.Skyline.Controls.GroupComparison
             zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = true;       
             zedGraphControl.GraphPane.AxisChange();
             zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = false;
-
+            if (Settings.Default.GroupComparisonAvoidLabelOverlap)
+            {
+                zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints.Select(l => l.Label).ToList(),
+                    _labeledPoints.Select(l => l.Point).ToList());
+            }
             zedGraphControl.Invalidate();
         }
         // ReSharper restore PossibleMultipleEnumeration
-
 
         private void AddPoints(PointPairList points, Color color, float size, bool labeled, PointSymbol pointSymbol, bool selected = false)
         {
@@ -375,7 +390,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 lineItem = new LineItem(null, points, Color.Black, symbolType)
                 {
                     Line = { IsVisible = false },
-                    Symbol = { Border = { IsVisible = false }, Fill = new Fill(color), Size = size, IsAntiAlias = true}
+                    Symbol = { Border = { IsVisible = false }, Fill = new Fill(color), Size = size, IsAntiAlias = true }
                 };
             }
             else
@@ -418,7 +433,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             return new LineItem(text, new[] { fromX, toX }, new[] { fromY, toY }, color, SymbolType.None, 1.0f)
             {
-                Line = { Style = DashStyle.Dash }
+                Line = { Style = DashStyle.Dash },
+                
             };
         }
 
@@ -593,14 +609,28 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Formatting___, null, OnFormattingClick));
                 menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Selection, null, OnSelectionClick)
                     { Checked = Settings.Default.GroupComparisonShowSelection });
+                menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Avoid_Label_Overlap, null, OnLabelOverlapClick)
+                    { Checked = Settings.Default.GroupComparisonAvoidLabelOverlap });
                 if (AnyCutoffSettingsValid)
                 {
                     menuStrip.Items.Insert(index++, new ToolStripSeparator());
                     menuStrip.Items.Insert(index, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Remove_Below_Cutoffs, null, OnRemoveBelowCutoffsClick));
-                }  
+                }
+
+
             }
         }
 
+        public void OnLabelOverlapPropertyChange(object sender, PropertyChangedEventArgs e)
+        {
+            if(e.PropertyName == @"GroupComparisonAvoidLabelOverlap")
+                UpdateGraph();
+        }
+
+        private void OnLabelOverlapClick(object o, EventArgs eventArgs)
+        {
+            Settings.Default.GroupComparisonAvoidLabelOverlap = !Settings.Default.GroupComparisonAvoidLabelOverlap;
+        }
         private void OnFormattingClick(object o, EventArgs eventArgs)
         {
             ShowFormattingDialog();
@@ -614,11 +644,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
             // This list will later be used as a BindingList, so we have to create a mutable clone
             var copy = GroupComparisonDef.ColorRows.Select(r => (MatchRgbHexColor) r.Clone()).ToList();
             using (var form = new VolcanoPlotFormattingDlg(this, copy, foldChangeRows,
-                rows =>
-                {
-                    EditGroupComparisonDlg.ChangeGroupComparisonDef(false, GroupComparisonModel, GroupComparisonDef.ChangeColorRows(rows));
-                    UpdateGraph();
-                }))
+            rows =>
+            {
+                EditGroupComparisonDlg.ChangeGroupComparisonDef(false, GroupComparisonModel, GroupComparisonDef.ChangeColorRows(rows));
+                zedGraphControl.GraphPane.EnableLabelLayout = Settings.Default.GroupComparisonAvoidLabelOverlap;
+                UpdateGraph();
+            }))
             {
                 if (form.ShowDialog(FormEx.GetParentForm(this)) == DialogResult.OK)
                 {
