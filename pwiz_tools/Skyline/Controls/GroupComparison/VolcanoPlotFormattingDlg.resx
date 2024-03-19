@@ -255,7 +255,7 @@
     <value>1</value>
   </data>
   <data name="layoutLabelsBox.Text" xml:space="preserve">
-    <value>Arrange Labels</value>
+    <value>Auto arrange labels</value>
   </data>
   <data name="&gt;&gt;layoutLabelsBox.Name" xml:space="preserve">
     <value>layoutLabelsBox</value>

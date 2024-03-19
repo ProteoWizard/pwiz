@@ -19,6 +19,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -75,12 +77,14 @@ namespace pwiz.Skyline.Controls.Graphs
             _labeledPoints = new List<DotPlotUtil.LabeledPoint>();
 
             AxisChangeEvent += this_AxisChangeEvent;
+            Settings.Default.PropertyChanged += OnLabelOverlapPropertyChange;
         }
 
         public override void OnClose(EventArgs e)
         {
             base.OnClose(e);
             AxisChangeEvent -= this_AxisChangeEvent;
+            Settings.Default.PropertyChanged -= OnLabelOverlapPropertyChange;
         }
 
         protected override int SelectedIndex
@@ -140,6 +144,7 @@ namespace pwiz.Skyline.Controls.Graphs
                        rows  =>
                        {
                            ColorRows = rows;
+                           EnableLabelLayout = Settings.Default.GroupComparisonAvoidLabelOverlap;
                            GraphSummary.UpdateUI();
                        }))
             {
@@ -148,6 +153,12 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             ShowingFormattingDlg = false;
+        }
+
+        public void OnLabelOverlapPropertyChange(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == @"GroupComparisonAvoidLabelOverlap")
+                GraphSummary.UpdateUI();
         }
 
         public override bool HandleMouseDownEvent(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
@@ -248,12 +259,19 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             var pointList = _graphData.PointPairList;
             // For each valid match expression specified by the user
+            var unmatchedPoints = new List<PointPair>(pointList);
             foreach (var colorRow in ColorRows.Where(r => r.MatchExpression != null))
             {
                 var matchedPoints = pointList.Where(p =>
                 {
                     var pointData = (GraphPointData)p.Tag;
-                    return colorRow.MatchExpression.Matches(Document, pointData.Protein, pointData.Peptide, null, null) && !selectedPoints.Contains(p);
+                    if (colorRow.MatchExpression.Matches(Document, pointData.Protein, pointData.Peptide, null, null) && !selectedPoints.Contains(p))
+                    {
+                        unmatchedPoints.Remove(p);
+                        return true;
+                    }
+                    else
+                        return false;
                 }).ToArray();
 
                 if (matchedPoints.Any())
@@ -261,7 +279,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     AddPoints(new PointPairList(matchedPoints), colorRow.Color, DotPlotUtil.PointSizeToFloat(colorRow.PointSize), colorRow.Labeled, colorRow.PointSymbol);
                 }
             }
-            AddPoints(new PointPairList(pointList), Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
+            AddPoints(new PointPairList(unmatchedPoints), Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
             UpdateAxes();
             DotPlotUtil.AdjustLabelLocations(_labeledPoints, GraphSummary.GraphControl.GraphPane.YAxis.Scale, GraphSummary.GraphControl.GraphPane.Rect.Height);
             if (Settings.Default.GroupComparisonAvoidLabelOverlap)

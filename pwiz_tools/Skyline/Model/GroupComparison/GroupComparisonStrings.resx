@@ -369,6 +369,6 @@
     <value>Group comparisons at the protein level using calibrated values is not yet supported in Skyline.</value>
   </data>
   <data name="FoldChangeVolcanoPlot_BuildContextMenu_Avoid_Label_Overlap" xml:space="preserve">
-    <value>Avoid Label Overlap</value>
+    <value>Auto arrange labels</value>
   </data>
 </root>

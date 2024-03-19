@@ -522,8 +522,8 @@ namespace ZedGraph
 			if ( _masterPane != null )
 			{
 				GraphPane pane = _masterPane.FindChartRect( mousePt );
-				if ( ( _isEnableHPan || _isEnableVPan ) && ( Control.ModifierKeys == Keys.Shift || _isPanning ) &&
-					( pane != null || _isPanning ) )
+				if (((_isEnableHPan || _isEnableVPan) && (Control.ModifierKeys == Keys.Shift || _isPanning) &&
+                     (pane != null || _isPanning)) || (pane != null && pane.IsOverLabel(mousePt)))
 					this.Cursor = Cursors.Hand;
 				else if ( ( _isEnableVZoom || _isEnableHZoom ) && ( pane != null || _isZooming ) )
 					this.Cursor = Cursors.Cross;

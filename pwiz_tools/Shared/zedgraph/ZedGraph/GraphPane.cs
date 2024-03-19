@@ -151,6 +151,17 @@ namespace ZedGraph
 
 		private LabelLayout _labelLayout;
 
+        public bool EnableLabelLayout
+        {
+			get => _labelLayout != null;
+            set
+            {
+                if (!value)
+                    _labelLayout = null;
+            }
+        }
+		public LabelLayout Layout => _labelLayout;
+
 	#endregion
 
 	#region Defaults
@@ -1518,9 +1529,9 @@ namespace ZedGraph
 
 		#endregion
 
-		#region General Utility Methods
+	#region General Utility Methods
 
-        class VectorF
+        public class VectorF
         {
             public PointF Start;
             public PointF End;
@@ -1562,9 +1573,11 @@ namespace ZedGraph
             private int _cellSize;
 			private Random _randGenerator = new Random(123);
             private PointF _chartOffset;
-            private List<VectorF> _labeledPoints = new List<VectorF>();
+            private Dictionary<TextObj, VectorF> _labeledPoints = new Dictionary<TextObj, VectorF>();
 
-            public LabelLayout(GraphPane graph, int cellSize)
+			public Dictionary<TextObj, VectorF> LabeledPoints => _labeledPoints;
+
+			public LabelLayout(GraphPane graph, int cellSize)
             {
                 _graph = graph;
                 _cellSize = cellSize;
@@ -1714,11 +1727,11 @@ namespace ZedGraph
 				// For each crossover we penalize the goal function by some large number because we really do not want crossovers to happen.
 				var penalty = 0.0;
                 var thisVector = new VectorF(targetPoint, pt);
-                for (var i = 0; i < _labeledPoints.Count; i++)
+                foreach (var point in _labeledPoints)
                 {
-                    if (_labeledPoints[i].Start.Equals(targetPoint))
+                    if (point.Value.Start.Equals(targetPoint))
                         break;
-                    if (thisVector.DoIntersect(_labeledPoints[i]))
+                    if (thisVector.DoIntersect(point.Value))
                         penalty += 2000;
 
                 }
@@ -1836,7 +1849,8 @@ namespace ZedGraph
 
 				// update density grid to prevent overlaps
                 var cellArea = _cellSize * _cellSize;
-				var newLabelRectangle = ToRectangle(_graph.GetRectScreen(tbox, g));
+                var newScreenRectangle = _graph.GetRectScreen(tbox, g);
+                var newLabelRectangle = ToRectangle(newScreenRectangle);
 
                 foreach (var cell in GetRectangleCells(newLabelRectangle))
                 {
@@ -1845,7 +1859,7 @@ namespace ZedGraph
                     cell._density = Math.Min(cell._density + (int)(densityIncrement), cellArea);
                 }
 
-				_labeledPoints.Add(new VectorF(targetPoint, goalPoint));
+                _labeledPoints[tbox] = new VectorF(targetPoint, goalPoint);
                 return true;
             }
             public void DrawConnector(TextObj obj, PointPair point, Graphics g)
@@ -1918,6 +1932,22 @@ namespace ZedGraph
                     }
                 }
             }
+        }
+
+        public bool IsOverLabel(Point mousePt)
+        {
+            if (_labelLayout != null)
+            {
+                using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
+                {
+                    if (FindNearestObject(mousePt, g, out var nearestObj, out _))
+                    {
+                        if (nearestObj is TextObj label && _labelLayout.LabeledPoints.ContainsKey(label))
+                            return true;
+                    }
+                }
+            }
+			return false;
         }
 		
         public static void InflateRectangle(ref RectangleF rect, float size)

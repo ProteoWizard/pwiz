@@ -351,7 +351,7 @@ namespace pwiz.Skyline.Model.GroupComparison {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Avoid Label Overlap.
+        ///   Looks up a localized string similar to Auto arrange labels.
         /// </summary>
         internal static string FoldChangeVolcanoPlot_BuildContextMenu_Avoid_Label_Overlap {
             get {

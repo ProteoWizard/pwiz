@@ -73,7 +73,6 @@
             resources.ApplyResources(this.layoutLabelsBox, "layoutLabelsBox");
             this.layoutLabelsBox.Name = "layoutLabelsBox";
             this.layoutLabelsBox.UseVisualStyleBackColor = true;
-            this.layoutLabelsBox.CheckedChanged += new System.EventHandler(this.layoutLabelsBox_CheckedChanged);
 
             // 
             // VolcanoPlotFormattingDlg
