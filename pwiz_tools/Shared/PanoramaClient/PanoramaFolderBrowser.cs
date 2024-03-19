@@ -308,13 +308,16 @@ namespace pwiz.PanoramaClient
             return node is { IsSelected: true };
         }
 
-        public void SelectNode(string nodeName)
+        public bool SelectNode(string nodeName)
         {
             var node = SearchTree(treeView.Nodes, nodeName);
             if (node?.Tag is FolderInformation)
             {
                 UpdateNavButtons(node);
+                return true;
             }
+
+            return false;
         }
 
         public string SelectedNodeText => _selectedNode.Text;

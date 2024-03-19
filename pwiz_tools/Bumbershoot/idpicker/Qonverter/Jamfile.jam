@@ -152,7 +152,7 @@ run CommandlineTest.cpp
     : # input-files
        [ SORT idpQonvert idpAssemble idpQuery ]
     : # requirements
-        $(TEAMCITY_TEST_DECORATION) <dependency>gene2protein.db3/<location-prefix>CommandlineTest.test <library>Qonverter
+        $(TEAMCITY_TEST_DECORATION) <dependency>gene2protein.db3/<location-prefix>CommandlineTest.test.test <library>Qonverter
     : # target name
         CommandlineTest
    : # default-build

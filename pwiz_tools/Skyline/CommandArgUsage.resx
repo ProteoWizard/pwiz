@@ -658,77 +658,57 @@ Waters</value>
     <value>Precursors of the specified isotope label type will be removed (default) or added if --refine-add-label-type is also used.</value>
   </data>
   <data name="_refine_min_peptides" xml:space="preserve">
-    <value>Proteins with fewer than this number of peptides will be
-removed from the document.</value>
+    <value>Proteins with fewer than this number of peptides will be removed from the document.</value>
   </data>
   <data name="_refine_min_transitions" xml:space="preserve">
-    <value>Precursors with fewer than this number of transitions will be
-removed from the document.</value>
+    <value>Precursors with fewer than this number of transitions will be removed from the document.</value>
   </data>
   <data name="_refine_missing_library" xml:space="preserve">
     <value>All targets that do not correspond to a library match will be removed.</value>
   </data>
   <data name="_refine_remove_duplicates" xml:space="preserve">
-    <value>All peptides that are not unique within the document
-will be removed.</value>
+    <value>All peptides that are not unique within the document will be removed.</value>
   </data>
   <data name="_refine_remove_repeats" xml:space="preserve">
-    <value>All repeated peptides will be removed to leave only the
-first occurrence of any peptide.</value>
+    <value>All repeated peptides will be removed to leave only the first occurrence of any peptide.</value>
   </data>
   <data name="CommandArgs_LABEL_VALUE" xml:space="preserve">
     <value>&lt;label type&gt;</value>
   </data>
   <data name="_refine_max_peak_found_ratio" xml:space="preserve">
-    <value>All elements with peak found ratio above this number
-will be removed from the document:
+    <value>All elements with peak found ratio above this number will be removed from the document:
 
 Green = 1.0
 Orange &gt;= 0.5
 Red &lt; 0.5</value>
   </data>
   <data name="_refine_max_peptide_peak_rank" xml:space="preserve">
-    <value>All transitions with an average area peak ranking
-greater than this number will be removed from the
-document.</value>
+    <value>All transitions with an average area peak ranking greater than this number will be removed from the document.</value>
   </data>
   <data name="_refine_max_transition_peak_rank" xml:space="preserve">
-    <value>All transitions with an average area peak ranking
-greater than this number will be removed from the
-document.</value>
+    <value>All transitions with an average area peak ranking greater than this number will be removed from the document.</value>
   </data>
   <data name="_refine_min_dotp" xml:space="preserve">
-    <value>All precursors with a product ion peak area to library
-spectrum dot-product below this threshold will be removed
-from the document.</value>
+    <value>All precursors with a product ion peak area to library spectrum dot-product below this threshold will be removed from the document.</value>
   </data>
   <data name="_refine_min_idotp" xml:space="preserve">
-    <value>All precursors with a MS1 precursor peak area to expected
-isotope distribution dot-product below this threshold will be
-removed from the document.</value>
+    <value>All precursors with a MS1 precursor peak area to expected isotope distribution dot-product below this threshold will be removed from the document.</value>
   </data>
   <data name="_refine_min_peak_found_ratio" xml:space="preserve">
-    <value>All elements with peak found ratio below this number
-will be removed from the document:
+    <value>All elements with peak found ratio below this number will be removed from the document:
 
 Green = 1.0
 Orange &gt;= 0.5
 Red &lt; 0.5</value>
   </data>
   <data name="_refine_min_time_correlation" xml:space="preserve">
-    <value>Precursors will be removed from the document
-until the target value for the correlation coefficient of a linear
-regression with the optimal retention time calculator
-exceed this threshold.</value>
+    <value>Precursors will be removed from the document until the target value for the correlation coefficient of a linear regression with the optimal retention time calculator exceed this threshold.</value>
   </data>
   <data name="_refine_missing_results" xml:space="preserve">
-    <value>All elements without measured results will be
-removed from the document.</value>
+    <value>All elements without measured results will be removed from the document.</value>
   </data>
   <data name="_refine_prefer_larger_products" xml:space="preserve">
-    <value>Causes refinement to choose larger product ions
-when smaller, less selective ions yeild only fractionally
-greater peak area.</value>
+    <value>Causes refinement to choose larger product ions when smaller, less selective ions yeild only fractionally greater peak area.</value>
   </data>
   <data name="_refine_use_best_result" xml:space="preserve">
     <value>Use only the best replicate for each peptide in refinement value calculations. (use for fractionation)</value>
@@ -1017,5 +997,50 @@ Useful in sample mixtures including multiple species.</value>
   </data>
   <data name="_verbose_errors" xml:space="preserve">
     <value>Adds additional information to the program output in the case of an error, that may be helpful to Skyline developers.</value>
+  </data>
+  <data name="_associate_proteins_gene_level_parsimony" xml:space="preserve">
+    <value>Associate peptides with genes (or gene groups) instead of proteins, and apply parsimony options to that association.</value>
+  </data>
+  <data name="CommandArgs_MOD_NAME_VALUE_full_name__e_g___Oxidation__M______short_name__Oxi_" xml:space="preserve">
+    <value>full name (e.g. "Oxidation (M)") | short name (Oxi)</value>
+  </data>
+  <data name="CommandArgs_MOD_UNIMOD_VALUE_UniMod_ID__e_g___35__" xml:space="preserve">
+    <value>UniMod ID (e.g. "35")</value>
+  </data>
+  <data name="_integrate_all" xml:space="preserve">
+    <value>When set all transitions contributing any signal between the integration boundaries are considered found. When not set, only transitions that are coeluting are considered found. Regardless of the setting all signal from the quantitative transitions between the integration boundaries is summed to produce the TotalArea for the precursor.</value>
+  </data>
+  <data name="_pep_add_mod" xml:space="preserve">
+    <value>Add a UniMod modification to the document. The modification must be specified by PSI-MS name and site together ("Oxidation (M)").</value>
+  </data>
+  <data name="_pep_add_unimod_aa" xml:space="preserve">
+    <value>Provides the amino acid specificity for the last peptide modification added by --pep-add-unimod.</value>
+  </data>
+  <data name="_pep_add_unimod_term" xml:space="preserve">
+    <value>Provides the terminus specificity for the last peptide modification added by --pep-add-unimod.</value>
+  </data>
+  <data name="_pep_add_unimod" xml:space="preserve">
+    <value>Add a UniMod modification to the document by its UniMod ID. If the modification has multiple specificities, you must use --pep-add-unimod-aa or --pep-add-unimod-term to choose which specificity you want to add to the document.</value>
+  </data>
+  <data name="_pep_clear_mods" xml:space="preserve">
+    <value>Clears all peptide modifications from the currently open document.</value>
+  </data>
+  <data name="_pep_max_losses" xml:space="preserve">
+    <value>The maximum number of neutral loss events allowed to occur in combination on any fragment instance.</value>
+  </data>
+  <data name="_pep_max_variable_mods" xml:space="preserve">
+    <value>The maximum number of variable modifications allowed to occur in combination on any peptide instance.</value>
+  </data>
+  <data name="CommandArgs_BOOL_VALUE__0__or__1_" xml:space="preserve">
+    <value>{0} or {1}</value>
+  </data>
+  <data name="ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_" xml:space="preserve">
+    <value>The value '{0}' is not valid for the argument {1}. Use one of {2}</value>
+  </data>
+  <data name="ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_" xml:space="preserve">
+    <value>Unable to add peptide modification '{0}': {1}</value>
+  </data>
+  <data name="ValueInvalidBoolException_ValueInvalidBoolException_The_value___0___is_not_valid_for_the_argument___1____it_must_be__2_" xml:space="preserve">
+    <value>The value '{0}' is not valid for the argument '{1}': it must be {2}</value>
   </data>
 </root>

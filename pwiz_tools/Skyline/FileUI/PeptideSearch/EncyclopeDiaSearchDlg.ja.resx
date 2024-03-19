@@ -1024,7 +1024,7 @@
     <value>31</value>
   </data>
   <data name="lblMs2Tolerance.Text" xml:space="preserve">
-    <value>MS2公差(&amp;2)：</value>
+    <value>MS2許容誤差(&amp;2)：</value>
   </data>
   <data name="&gt;&gt;lblMs2Tolerance.Name" xml:space="preserve">
     <value>lblMs2Tolerance</value>
@@ -1096,7 +1096,7 @@
     <value>28</value>
   </data>
   <data name="lblMs1Tolerance.Text" xml:space="preserve">
-    <value>MS1公差(&amp;1)：</value>
+    <value>MS1許容誤差(&amp;1)：</value>
   </data>
   <data name="&gt;&gt;lblMs1Tolerance.Name" xml:space="preserve">
     <value>lblMs1Tolerance</value>

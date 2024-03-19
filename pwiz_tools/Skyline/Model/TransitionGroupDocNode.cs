@@ -38,8 +38,8 @@ namespace pwiz.Skyline.Model
 {
     public class TransitionGroupDocNode : DocNodeParent
     {
-        public const int MIN_DOT_PRODUCT_TRANSITIONS = 3;
-        public const int MIN_DOT_PRODUCT_MS1_TRANSITIONS = 3;
+        public const int MIN_DOT_PRODUCT_TRANSITIONS = 2;
+        public const int MIN_DOT_PRODUCT_MS1_TRANSITIONS = 2;
 
         public const int MIN_TREND_REPLICATES = 4;
         public const int MAX_TREND_REPLICATES = 6;
@@ -1388,7 +1388,10 @@ namespace pwiz.Skyline.Model
                     if (results.IsEmpty)
                         resultsCalc.AddTransitionChromInfo(iTran, null);
                     else
-                        resultsCalc.AddTransitionChromInfo(iTran, results.ToList());
+                    {
+                        resultsCalc.AddTransitionChromInfo(iTran, results
+                            .Where(chromInfo => chromatograms.IndexOfId(chromInfo.FileId) >= 0).ToList());
+                    }
                 }
 
                 return;
@@ -2957,7 +2960,9 @@ namespace pwiz.Skyline.Model
             // Only synchronize groups with the same adduct, ignoring any isotopes specified in the adducts for match purposes.
             if (!TransitionGroup.PrecursorAdduct.Unlabeled.Equals(nodeGroupSynch.TransitionGroup.PrecursorAdduct.Unlabeled))
                 return this;
-
+            // Only synchronize groups with the same Spectrum Filter
+            if (!SpectrumClassFilter.Equals(nodeGroupSynch.SpectrumClassFilter))
+                return this;
             // Start with the current node as the default
             var nodeResult = this;
 
