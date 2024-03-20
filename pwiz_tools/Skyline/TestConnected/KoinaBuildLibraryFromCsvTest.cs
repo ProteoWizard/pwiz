@@ -10,7 +10,7 @@ using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using pwiz.SkylineTestUtil;
-using pwiz.Skyline.Model.Prosit.Models;
+using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -18,14 +18,14 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.SkylineTestConnected
 {
     [TestClass]
-    public class PrositBuildLibraryFromCsvTest : AbstractUnitTestEx
+    public class KoinaBuildLibraryFromCsvTest : AbstractUnitTestEx
     {
         const string TEST_ZIP_PATH = @"Test\PredictionBuildLibraryFromCsvTest.zip";
 
         [TestMethod]
-        public void TestPrositBuildLibraryFromCsv()
+        public void TestKoinaBuildLibraryFromCsv()
         {
-            if (!HasPrositServer())
+            if (!HasKoinaServer())
                 return;
 
             TestAllPredictionModels();
@@ -58,7 +58,7 @@ namespace pwiz.SkylineTestConnected
 
         private Dictionary<string, IList<PredictionTest>> PredictionTestsByModel = new Dictionary<string, IList<PredictionTest>>()
         {
-            {"Prosit_2019_intensity-Prosit_2019_irt", new[]
+            {"Koina_2019_intensity-Koina_2019_irt", new[]
             {
                 new PredictionTest("TTSSMDPNDMMR", precursorCharge: 2, nce: 31.167, precursorMz: 693.27833652, retentionTime: 45.2506713867188,
                     new [] { 175.11895, 189.08698, 203.10263, 254.60723, 290.13466, 306.15944, 377.16669, 382.16492, 437.19992, 439.67839, 508.20717, 552.22686, 623.23412, 642.75450, 666.26979, 763.32256, 878.34950, 1009.38998, 1096.42201, 1183.45404, 1284.50172 },
@@ -86,7 +86,7 @@ namespace pwiz.SkylineTestConnected
                     new [] { 000.00023, 000.14599, 000.00347, 000.50220, 000.00126, 000.08492, 000.00078, 000.06166, 001.00000, 000.00023, 000.00209, 000.00462, 000.00485, 000.00038, 000.00026, 000.01542, 000.11064, 000.00003, 000.03704, 000.02001, 000.00213, 000.07425, 000.00190, 000.01410, 000.00281, 000.01252, 000.30399, 000.00715, 000.02702, 000.00314, 000.02085, 000.16757, 000.01843, 000.06884, 000.00124, 000.01246, 000.10343, 000.00141, 000.09627, 000.08906, 000.00162, 000.08537, 000.14448, 000.00101, 0000.17531, 0000.00679, 0000.05157, 0000.05000, 0000.02340, 0000.02006, 0000.03973, 0000.01752, 0000.02102, 0000.00597 }),
             }},
 
-            {"Prosit_2020_intensity_CID-Prosit_2019_irt", new[]
+            {"Koina_2020_intensity_CID-Koina_2019_irt", new[]
             {
                 new PredictionTest("TTSSMDPNDMMR", precursorCharge: 2, nce: 31.167, precursorMz: 693.27833652, retentionTime: 45.2506713867188,
                     new [] { 189.08698, 203.10263, 254.60723, 276.61707, 290.13466, 306.15944, 333.63853, 360.64708, 377.16669, 382.16492, 417.66854, 437.19992, 439.67839, 475.18201, 505.19863, 508.20717, 540.70226, 548.71464, 552.22686, 592.23066, 606.22250, 623.23412, 642.75450, 666.26979, 720.28688, 763.32256, 834.32981, 878.34950, 949.35675, 1009.38998, 1080.39724, 1096.42201, 1183.45404, 1211.43772 },
@@ -114,7 +114,7 @@ namespace pwiz.SkylineTestConnected
                     new [] { 00.00330, 000.00178, 000.01642, 000.00115, 000.01047, 000.00167, 000.05050, 000.01093, 000.00200, 000.01067, 000.00821, 000.00597, 000.00395, 000.01035, 000.03391, 000.01002, 000.01461, 000.66293, 000.01527, 000.01621, 000.01367, 000.01641, 000.02265, 000.02027, 000.02952, 000.01809, 000.02218, 000.02110, 000.02711, 000.03573, 000.01974, 000.32777, 000.02015, 000.04370, 000.03544, 000.03029, 000.02238, 000.08875, 000.02845, 000.06861, 000.02525, 000.03380, 000.21854, 000.03591, 000.05010, 000.06568, 000.51979, 000.07179, 000.04654, 000.29945, 000.07615, 000.09076, 000.05798, 000.69314, 000.06436, 000.05660, 000.55742, 000.13415, 000.07415, 000.49139, 000.04141, 000.49639, 000.05417, 000.08378, 000.33977, 000.06269, 000.30819, 001.00000, 000.11548, 000.22126, 000.05630, 000.15853, 000.22485, 000.14431, 0000.11058, 0000.02707, 0000.07286, 0000.07343, 0000.03643, 0000.02755, 0000.00092 }),
             }},
 
-            {"Prosit_2020_intensity_HCD-Prosit_2019_irt", new[]
+            {"Koina_2020_intensity_HCD-Koina_2019_irt", new[]
             {
                 new PredictionTest("TTSSMDPNDMMR", precursorCharge: 2, nce: 31.167, precursorMz: 693.27833652, retentionTime: 45.2506713867188,
                     new [] { 175.11895, 189.08698, 203.10263, 290.13466, 306.15944, 377.16669, 382.16492, 437.19992, 439.67839, 505.19863, 508.20717, 552.22686, 623.23412, 666.26979, 763.32256, 878.34950, 1009.38998, 1096.42201, 1183.45404 },
@@ -142,7 +142,7 @@ namespace pwiz.SkylineTestConnected
                     new [] { 000.18834, 000.00177, 000.64104, 000.08977, 000.00018, 000.09108, 000.00265, 001.00000, 000.00222, 000.00329, 000.00491, 000.01495, 000.11755, 000.03251, 000.01153, 000.00090, 000.08542, 000.00863, 000.00645, 000.03288, 000.36409, 000.00159, 000.02972, 000.00078, 000.02002, 000.20628, 000.00903, 000.06181, 000.01979, 000.12527, 000.10857, 000.12146, 000.11071, 000.17608, 0000.15900, 0000.07313, 0000.03381, 0000.02990, 0000.01320, 0000.05999, 0000.01704, 0000.01534 }),
             }},
 
-            {"Prosit_2023_intensity_timsTOF-Prosit_2019_irt", new[]
+            {"Koina_2023_intensity_timsTOF-Koina_2019_irt", new[]
             {
                 new PredictionTest("TTSSMDPNDMMR", precursorCharge: 2, nce: 31.167, precursorMz: 693.27833652, retentionTime: 45.2506713867188,
                     new [] { 145.57097, 189.08698, 203.10263, 254.60723, 290.13466, 306.15944, 312.12070, 360.64708, 377.16669, 382.16492, 417.66854, 437.19992, 439.67839, 475.18201, 505.19863, 508.20717, 540.70226, 548.71464, 552.22686, 592.23066, 606.22250, 623.23412, 642.75450, 666.26979, 720.28688, 763.32256, 834.32981, 878.34950, 949.35675, 1009.38998, 1080.39724, 1096.42201, 1183.45404 },
@@ -170,7 +170,7 @@ namespace pwiz.SkylineTestConnected
                     new [] { 00.00292, 00.00231, 00.00524, 00.00036, 000.00717, 000.00190, 000.00139, 000.00001, 000.00460, 000.00398, 000.10654, 000.00377, 000.00296, 000.07738, 000.00440, 000.00514, 000.01155, 000.00808, 000.00171, 000.00239, 000.01157, 000.08541, 000.00907, 000.01006, 001.00000, 000.01359, 000.00515, 000.01171, 000.01622, 000.01801, 000.01428, 000.03341, 000.01222, 000.01384, 000.01229, 000.01037, 000.05092, 000.01363, 000.18892, 000.01315, 000.00835, 000.01766, 000.01470, 000.01422, 000.10633, 000.01511, 000.00961, 000.01429, 000.01550, 000.05744, 000.01345, 000.01505, 000.03369, 000.18177, 000.00705, 000.01543, 000.06010, 000.01678, 000.00853, 000.01531, 000.06150, 000.01441, 000.09144, 000.73825, 000.03592, 000.09714, 000.03050, 000.05752, 000.40159, 000.05492, 000.20127, 000.02088, 000.11729, 000.25285, 000.02200, 000.24992, 000.33363, 000.01725, 000.25267, 000.28601, 000.01519, 0000.24714, 0000.01362, 0000.07823, 0000.05467, 0000.02641, 0000.02529, 0000.02493, 0000.02027 }),
             }},
 
-            {"ms2pip_2021_HCD-Prosit_2019_irt", new[]
+            {"ms2pip_2021_HCD-Koina_2019_irt", new[]
             {
                 new PredictionTest("TTSSMDPNDMMR", precursorCharge: 2, nce: 31.167, precursorMz: 693.27833652, retentionTime: 45.2506713867188,
                     new [] { 102.05495, 175.11895, 203.10263, 290.13466, 306.15944, 377.16669, 437.19992, 508.20717, 552.22686, 623.23412, 666.26979, 763.32256, 834.32981, 878.34950, 949.35675, 1009.38998, 1080.39724, 1096.42201, 1183.45404, 1284.50172 },
@@ -198,7 +198,7 @@ namespace pwiz.SkylineTestConnected
                     new [] { 000.34485, 000.76494, 000.10839, 000.11119, 001.00000, 000.02989, 000.05109, 000.00058, 000.07300, 000.23618, 000.04096, 000.17879, 000.13514, 000.10102, 000.15715, 000.22940, 0000.33882, 0000.09870, 0000.02615, 0000.01570, 0000.00509, 0000.01626, 0000.01716, 0000.02364, 0000.00016, 0000.00114, 0000.00114, 0000.00340, 0000.00060, 0000.00031 }),
             }},
 
-            {"Prosit_2019_intensity-Deeplc_hela_hf", new[]
+            {"Koina_2019_intensity-Deeplc_hela_hf", new[]
             {
                 new PredictionTest("TTSSMDPNDMMR", precursorCharge: 2, nce: 31.167, precursorMz: 693.27833652, retentionTime: 4.77053070068359),
                 new PredictionTest("FISANLPC[+57.02146]NKFK", precursorCharge: 2, nce: 31.167, precursorMz: 719.87920214, retentionTime: 6.11395931243896),
@@ -210,7 +210,7 @@ namespace pwiz.SkylineTestConnected
                 new PredictionTest("AFVSSTHAAQMSAVSFVPLK", precursorCharge: 3, nce: 33, precursorMz: 693.362824963333, retentionTime: 7.56344747543335),
             }},
 
-            {"Prosit_2019_intensity-AlphaPept_rt_generic", new[]
+            {"Koina_2019_intensity-AlphaPept_rt_generic", new[]
             {
                 new PredictionTest("TTSSMDPNDMMR", precursorCharge: 2, nce: 31.167, precursorMz: 693.27833652, retentionTime: 12.35107421875),
                 new PredictionTest("FISANLPC[+57.02146]NKFK", precursorCharge: 2, nce: 31.167, precursorMz: 719.87920214, retentionTime: 26.6221313476563),
@@ -226,9 +226,9 @@ namespace pwiz.SkylineTestConnected
         private void TestAllPredictionModels()
         {
             TestFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
-            string prositCsvTestFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33.csv");
+            string koinaCsvTestFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33.csv");
 
-            Settings.Default.PrositIntensityModel = PrositIntensityModel.Models.First();
+            Settings.Default.KoinaIntensityModel = KoinaIntensityModel.Models.First();
 
             int modelsFailed = 0;
             var emc = new SequenceMassCalc(MassType.Monoisotopic);
@@ -236,15 +236,15 @@ namespace pwiz.SkylineTestConnected
             void comparePredictionResultsToFile(string intensityModel, string rtModel, bool comparePeaks)
             {
                 string modelsSuffix = $"{PathEx.ReplaceInvalidFilenameCharacters(intensityModel)}-{PathEx.ReplaceInvalidFilenameCharacters(rtModel)}";
-                string prositBlibOutputFilepath = TestFilesDir.GetTestPath($"pan_human_library_690to705-z3_nce33-output-{modelsSuffix}.blib");
+                string koinaBlibOutputFilepath = TestFilesDir.GetTestPath($"pan_human_library_690to705-z3_nce33-output-{modelsSuffix}.blib");
 
                 var pm = new CommandProgressMonitor(new StringWriter(), new ProgressStatus());
                 IProgressStatus status = new ProgressStatus();
-                var prositOutput = PrositHelpers.PredictBatchesFromPrositCsv(prositCsvTestFilepath, pm, ref status, CancellationToken.None);
-                PrositHelpers.ExportPrositSpectraToBlib(prositOutput, prositBlibOutputFilepath, pm, ref status);
+                var koinaOutput = KoinaHelpers.PredictBatchesFromKoinaCsv(koinaCsvTestFilepath, pm, ref status, CancellationToken.None);
+                KoinaHelpers.ExportKoinaSpectraToBlib(koinaOutput, koinaBlibOutputFilepath, pm, ref status);
 
-                AssertEx.IsTrue(File.Exists(prositBlibOutputFilepath));
-                var blibLibrary = BiblioSpecLiteLibrary.Load(new BiblioSpecLiteSpec("test", prositBlibOutputFilepath), new DefaultFileLoadMonitor(new SilentProgressMonitor()));
+                AssertEx.IsTrue(File.Exists(koinaBlibOutputFilepath));
+                var blibLibrary = BiblioSpecLiteLibrary.Load(new BiblioSpecLiteSpec("test", koinaBlibOutputFilepath), new DefaultFileLoadMonitor(new SilentProgressMonitor()));
 
                 try
                 {
@@ -329,17 +329,17 @@ namespace pwiz.SkylineTestConnected
                 }
             }
 
-            foreach(var rtModel in PrositRetentionTimeModel.Models)
+            foreach(var rtModel in KoinaRetentionTimeModel.Models)
             {
-                Settings.Default.PrositRetentionTimeModel = rtModel;
-                comparePredictionResultsToFile(Settings.Default.PrositIntensityModel, rtModel, false);
+                Settings.Default.KoinaRetentionTimeModel = rtModel;
+                comparePredictionResultsToFile(Settings.Default.KoinaIntensityModel, rtModel, false);
             }
 
-            Settings.Default.PrositRetentionTimeModel = PrositRetentionTimeModel.Models.First();
-            foreach (var intensityModel in PrositIntensityModel.Models)
+            Settings.Default.KoinaRetentionTimeModel = KoinaRetentionTimeModel.Models.First();
+            foreach (var intensityModel in KoinaIntensityModel.Models)
             {
-                Settings.Default.PrositIntensityModel = intensityModel;
-                comparePredictionResultsToFile(intensityModel, Settings.Default.PrositRetentionTimeModel, true);
+                Settings.Default.KoinaIntensityModel = intensityModel;
+                comparePredictionResultsToFile(intensityModel, Settings.Default.KoinaRetentionTimeModel, true);
             }
 
             Assert.AreEqual(0, modelsFailed);

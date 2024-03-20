@@ -118,16 +118,16 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="PrositHelpers_ExportPrositSpectraToBlib_Exporting_Prosit_spectra_to_BiblioSpec_library" xml:space="preserve">
-    <value>Exporting Prosit spectra to BiblioSpec library</value>
+  <data name="KoinaHelpers_ExportKoinaSpectraToBlib_Exporting_Koina_spectra_to_BiblioSpec_library" xml:space="preserve">
+    <value>KoinaスペクトルのBiblioSpecライブラリへのエクスポート</value>
   </data>
-  <data name="PrositHelpers_ExportPrositSpectraToBlib_failed_to_write_Prosit_output_to_blib" xml:space="preserve">
-    <value>failed to write Prosit output to blib</value>
+  <data name="KoinaHelpers_ExportKoinaSpectraToBlib_failed_to_write_Koina_output_to_blib" xml:space="preserve">
+    <value>Koina出力をblibに書き込めませんでした</value>
   </data>
-  <data name="PrositHelpers_PredictBatchesFromPrositCsv_Reading_Prosit_CSV_input" xml:space="preserve">
-    <value>Reading Prosit CSV input</value>
+  <data name="KoinaHelpers_PredictBatchesFromKoinaCsv_Reading_Koina_CSV_input" xml:space="preserve">
+    <value>Koina CSV入力の読み取り</value>
   </data>
-  <data name="PrositIntensityModel_CreatePrositInputRow_UnsupportedCharge" xml:space="preserve">
-    <value>The charge {0} is not supported by Prosit. The maximum supported charge is {1}.</value>
+  <data name="KoinaIntensityModel_CreateKoinaInputRow_UnsupportedCharge" xml:space="preserve">
+    <value>Koinaでは電荷{0}に対応していません。対応最大電荷は{1}です。</value>
   </data>
 </root>

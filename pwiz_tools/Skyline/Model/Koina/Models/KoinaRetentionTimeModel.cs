@@ -26,48 +26,48 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using static Inference.ModelInferRequest.Types;
 
-namespace pwiz.Skyline.Model.Prosit.Models
+namespace pwiz.Skyline.Model.Koina.Models
 {
-    public sealed class PrositRetentionTimeModel : PrositModel<PrositRetentionTimeModel.PrositRTInput.PrositPeptideInput,
-        PrositRetentionTimeModel.PrositRTInput,
-        PrositRetentionTimeModel.PeptideDocNodeWrapper,
-        PrositRetentionTimeModel.PrositRTOutput.PrositPeptideOutput,
-        PrositRetentionTimeModel.PrositRTOutput,
+    public sealed class KoinaRetentionTimeModel : KoinaModel<KoinaRetentionTimeModel.KoinaRTInput.KoinaPeptideInput,
+        KoinaRetentionTimeModel.KoinaRTInput,
+        KoinaRetentionTimeModel.PeptideDocNodeWrapper,
+        KoinaRetentionTimeModel.KoinaRTOutput.KoinaPeptideOutput,
+        KoinaRetentionTimeModel.KoinaRTOutput,
         Dictionary<PeptideDocNode, double>>
     {
-        static PrositRetentionTimeModel()
+        static KoinaRetentionTimeModel()
         {
             // Not sure if the models count will ever change. Maybe in the future
             // users can somehow add their own models. But this is just capacity anyways.
-            _instances = new List<PrositRetentionTimeModel>(Models.Count());
+            _instances = new List<KoinaRetentionTimeModel>(Models.Count());
         }
 
         // Singleton pattern
-        private PrositRetentionTimeModel(string model)
+        private KoinaRetentionTimeModel(string model)
         {
             if (!Models.Contains(model))
-                throw new PrositNotConfiguredException(string.Format(
-                    PrositResources.PrositRetentionTimeModel_PrositRetentionTimeModel_Retention_time_model___0___does_not_exist,
+                throw new KoinaNotConfiguredException(string.Format(
+                    KoinaResources.KoinaRetentionTimeModel_KoinaRetentionTimeModel_Retention_time_model___0___does_not_exist,
                     model));
 
             Model = model;
         }
 
-        private static List<PrositRetentionTimeModel> _instances;
+        private static List<KoinaRetentionTimeModel> _instances;
 
-        public static PrositRetentionTimeModel GetInstance(string model)
+        public static KoinaRetentionTimeModel GetInstance(string model)
         {
             var intensityModel = _instances.FirstOrDefault(p => p.Model == model);
             if (intensityModel == null)
-                _instances.Add(intensityModel = new PrositRetentionTimeModel(model));
+                _instances.Add(intensityModel = new KoinaRetentionTimeModel(model));
             return intensityModel;
         }
 
-        public static PrositRetentionTimeModel Instance
+        public static KoinaRetentionTimeModel Instance
         {
             get
             {
-                var selectedModel = Settings.Default.PrositRetentionTimeModel;
+                var selectedModel = Settings.Default.KoinaRetentionTimeModel;
                 return GetInstance(selectedModel);
             }
         }
@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         public override string Signature => SIGNATURE;
         public override string Model { get; protected set; }
 
-        private bool Equals(PrositRetentionTimeModel other)
+        private bool Equals(KoinaRetentionTimeModel other)
         {
             return string.Equals(Model, other.Model);
         }
@@ -87,7 +87,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj is PrositRetentionTimeModel other && Equals(other);
+            return obj is KoinaRetentionTimeModel other && Equals(other);
         }
 
         public override int GetHashCode()
@@ -105,39 +105,39 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
         public override IDictionary<string, ModelInputs> InputsForModel => null;
 
-        public override PrositRTInput.PrositPeptideInput CreatePrositInputRow(SrmSettings settings, PeptideDocNodeWrapper skylineInput,
-            out PrositException exception)
+        public override KoinaRTInput.KoinaPeptideInput CreateKoinaInputRow(SrmSettings settings, PeptideDocNodeWrapper skylineInput,
+            out KoinaException exception)
         {
-            var sequence = PrositHelpers.EncodeSequence(settings, skylineInput, IsotopeLabelType.light, out exception);
+            var sequence = KoinaHelpers.EncodeSequence(settings, skylineInput, IsotopeLabelType.light, out exception);
             if (sequence == null)
                 return null;
 
-            return new PrositRTInput.PrositPeptideInput(sequence);
+            return new KoinaRTInput.KoinaPeptideInput(sequence);
         }
 
-        public static PrositRTInput.PrositPeptideInput CreatePrositInputRow(SrmSettings settings, string peptide, out PrositException exception)
+        public static KoinaRTInput.KoinaPeptideInput CreateKoinaInputRow(SrmSettings settings, string peptide, out KoinaException exception)
         {
-            var sequence = PrositHelpers.EncodeSequence(peptide, out exception);
+            var sequence = KoinaHelpers.EncodeSequence(peptide, out exception);
             if (sequence == null)
                 return null;
 
-            return new PrositRTInput.PrositPeptideInput(sequence);
+            return new KoinaRTInput.KoinaPeptideInput(sequence);
         }
 
-        public override PrositRTInput CreatePrositInput(IList<PrositRTInput.PrositPeptideInput> prositInputRows)
+        public override KoinaRTInput CreateKoinaInput(IList<KoinaRTInput.KoinaPeptideInput> koinaInputRows)
         {
-            return new PrositRTInput(prositInputRows);
+            return new KoinaRTInput(koinaInputRows);
         }
 
-        public override PrositRTOutput CreatePrositOutput(ModelInferResponse prositOutputData)
+        public override KoinaRTOutput CreateKoinaOutput(ModelInferResponse koinaOutputData)
         {
-            return new PrositRTOutput(prositOutputData);
+            return new KoinaRTOutput(koinaOutputData);
         }
 
-        public override Dictionary<PeptideDocNode, double> CreateSkylineOutput(SrmSettings settings, IList<PeptideDocNodeWrapper> skylineInputs, PrositRTOutput prositOutput)
+        public override Dictionary<PeptideDocNode, double> CreateSkylineOutput(SrmSettings settings, IList<PeptideDocNodeWrapper> skylineInputs, KoinaRTOutput koinaOutput)
         {
             return Enumerable.Range(0, skylineInputs.Count)
-                .ToDictionary(i => (PeptideDocNode) skylineInputs[i], i => prositOutput.OutputRows[i].iRT);
+                .ToDictionary(i => (PeptideDocNode) skylineInputs[i], i => koinaOutput.OutputRows[i].iRT);
         }
 
         /// <summary>
@@ -174,21 +174,21 @@ namespace pwiz.Skyline.Model.Prosit.Models
         }
 
         /// <summary>
-        /// Input structure at the Prosit level, it contains the tensor
-        /// which is sent to Prosit.
+        /// Input structure at the Koina level, it contains the tensor
+        /// which is sent to Koina.
         /// </summary>
-        public sealed class PrositRTInput : PrositInput<PrositRTInput.PrositPeptideInput>
+        public sealed class KoinaRTInput : KoinaInput<KoinaRTInput.KoinaPeptideInput>
         {
             public static readonly string PEPTIDES_KEY = @"peptide_sequences";
 
-            public PrositRTInput(IList<PrositPeptideInput> peptideInputs)
+            public KoinaRTInput(IList<KoinaPeptideInput> peptideInputs)
             {
                 InputRows = peptideInputs;
             }
 
-            public override IList<PrositPeptideInput> InputRows { get; }
+            public override IList<KoinaPeptideInput> InputRows { get; }
 
-            public override IList<InferInputTensor> PrositTensors
+            public override IList<InferInputTensor> KoinaTensors
             {
                 get
                 {
@@ -201,11 +201,11 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 }
             }
 
-            public override IList<string> OutputTensorNames => new List<string> { PrositRTOutput.OUTPUT_KEY };
+            public override IList<string> OutputTensorNames => new List<string> { KoinaRTOutput.OUTPUT_KEY };
 
-            public class PrositPeptideInput
+            public class KoinaPeptideInput
             {
-                public PrositPeptideInput(string peptideSequence)
+                public KoinaPeptideInput(string peptideSequence)
                 {
                     PeptideSequence = peptideSequence;
                 }
@@ -214,31 +214,31 @@ namespace pwiz.Skyline.Model.Prosit.Models
             }
         }
 
-        public sealed class PrositRTOutput : PrositOutput<PrositRTOutput, PrositRTOutput.PrositPeptideOutput>
+        public sealed class KoinaRTOutput : KoinaOutput<KoinaRTOutput, KoinaRTOutput.KoinaPeptideOutput>
         {
             public static readonly string OUTPUT_KEY = @"irt";
 
-            public PrositRTOutput(ModelInferResponse prositOutput)
+            public KoinaRTOutput(ModelInferResponse koinaOutput)
             {
-                //var outputTensor = prositOutput.Single(t => t.Name.Equals(OUTPUT_KEY, StringComparison.InvariantCultureIgnoreCase));
-                var peptideCount = prositOutput.Outputs[0].Shape[0];
-                OutputRows = new PrositPeptideOutput[peptideCount];
-                var stream = prositOutput.RawOutputContents[0].CreateCodedInput();
+                //var outputTensor = koinaOutput.Single(t => t.Name.Equals(OUTPUT_KEY, StringComparison.InvariantCultureIgnoreCase));
+                var peptideCount = koinaOutput.Outputs[0].Shape[0];
+                OutputRows = new KoinaPeptideOutput[peptideCount];
+                var stream = koinaOutput.RawOutputContents[0].CreateCodedInput();
                 // Copy iRTs for each peptide
                 for (var i = 0; i < peptideCount; ++i)
-                    OutputRows[i] = new PrositPeptideOutput(stream.ReadFloat());
+                    OutputRows[i] = new KoinaPeptideOutput(stream.ReadFloat());
             }
             
-            public PrositRTOutput()
+            public KoinaRTOutput()
             {
-                OutputRows = new PrositPeptideOutput[0];
+                OutputRows = new KoinaPeptideOutput[0];
             }
 
-            public override IList<PrositPeptideOutput> OutputRows { get; protected set; }
+            public override IList<KoinaPeptideOutput> OutputRows { get; protected set; }
 
-            public class PrositPeptideOutput
+            public class KoinaPeptideOutput
             {
-                public PrositPeptideOutput(double iRT)
+                public KoinaPeptideOutput(double iRT)
                 {
                     this.iRT = iRT;
                 }

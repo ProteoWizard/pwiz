@@ -34,10 +34,10 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Prosit;
-using pwiz.Skyline.Model.Prosit.Communication;
-using pwiz.Skyline.Model.Prosit.Config;
-using pwiz.Skyline.Model.Prosit.Models;
+using pwiz.Skyline.Model.Koina;
+using pwiz.Skyline.Model.Koina.Communication;
+using pwiz.Skyline.Model.Koina.Config;
+using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
@@ -47,15 +47,15 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class PrositSkylineIntegrationTest : AbstractFunctionalTestEx
+    public class KoinaSkylineIntegrationTest : AbstractFunctionalTestEx
     {
         private bool RecordData { get { return false; } }
 
 
-        public static PrositQuery PING_QUERY_MS2 = new PrositIntensityQuery(
+        public static KoinaQuery PING_QUERY_MS2 = new KoinaIntensityQuery(
             new[]
             {
-                new PrositIntensityInput("PING", 0.3200f, 1)
+                new KoinaIntensityInput("PING", 0.3200f, 1)
             },
             new[]
             {
@@ -94,19 +94,19 @@ namespace pwiz.SkylineTestFunctional
             }
         );
 
-        public static PrositQuery PING_QUERY_IRT = new PrositRetentionTimeQuery(
+        public static KoinaQuery PING_QUERY_IRT = new KoinaRetentionTimeQuery(
             new[]
             {
                 "PING"
             },
             new[] {0.0f});
 
-        private static List<PrositQuery> QUERIES = new List<PrositQuery>(new PrositQuery[]
+        private static List<KoinaQuery> QUERIES = new List<KoinaQuery>(new KoinaQuery[]
         {
-            new PrositIntensityQuery(
+            new KoinaIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("C[unimod:4]SLPRPWALTFSYGR", 0.2800f, 2)
+                    new KoinaIntensityInput("C[unimod:4]SLPRPWALTFSYGR", 0.2800f, 2)
                 },
                 new[]
                 {
@@ -144,7 +144,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             ),
-            new PrositRetentionTimeQuery(
+            new KoinaRetentionTimeQuery(
                 new[]
                 {
                     "C[unimod:4]SLPRPWALTFSYGR"
@@ -154,10 +154,10 @@ namespace pwiz.SkylineTestFunctional
                     1.2758f
                 }
             ),
-            new PrositIntensityQuery(
+            new KoinaIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("C[unimod:4]SLPRPWALTFSYGR", 0.2500f, 2)
+                    new KoinaIntensityInput("C[unimod:4]SLPRPWALTFSYGR", 0.2500f, 2)
                 },
                 new[]
                 {
@@ -195,7 +195,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             ),
-            new PrositRetentionTimeQuery(
+            new KoinaRetentionTimeQuery(
                 new[]
                 {
                     "C[unimod:4]SLPRPWALTFSYGR"
@@ -205,10 +205,10 @@ namespace pwiz.SkylineTestFunctional
                     1.2758f
                 }
             ),
-            new PrositIntensityQuery(
+            new KoinaIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("C[unimod:4]SLPRPWALTFSYGR", 0.2600f, 2)
+                    new KoinaIntensityInput("C[unimod:4]SLPRPWALTFSYGR", 0.2600f, 2)
                 },
                 new[]
                 {
@@ -246,7 +246,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             ),
-            new PrositRetentionTimeQuery(
+            new KoinaRetentionTimeQuery(
                 new[]
                 {
                     "C[unimod:4]SLPRPWALTFSYGR"
@@ -256,10 +256,10 @@ namespace pwiz.SkylineTestFunctional
                     1.2758f
                 }
             ),
-            new PrositIntensityQuery(
+            new KoinaIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("LGGEEVSVAC[unimod:4]K", 0.2600f, 2)
+                    new KoinaIntensityInput("LGGEEVSVAC[unimod:4]K", 0.2600f, 2)
                 },
                 new[]
                 {
@@ -297,7 +297,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             ),
-            new PrositRetentionTimeQuery(
+            new KoinaRetentionTimeQuery(
                 new[]
                 {
                     "LGGEEVSVAC[unimod:4]K"
@@ -307,10 +307,10 @@ namespace pwiz.SkylineTestFunctional
                     -0.6807f
                 }
             ),
-            new PrositIntensityQuery(
+            new KoinaIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("LGGEEVSVAC[unimod:4]K", 0.2700f, 2)
+                    new KoinaIntensityInput("LGGEEVSVAC[unimod:4]K", 0.2700f, 2)
                 },
                 new[]
                 {
@@ -348,7 +348,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             ),
-            new PrositRetentionTimeQuery(
+            new KoinaRetentionTimeQuery(
                 new[]
                 {
                     "LGGEEVSVAC[unimod:4]K"
@@ -358,10 +358,10 @@ namespace pwiz.SkylineTestFunctional
                     -0.6807f
                 }
             ),
-            new PrositIntensityQuery(
+            new KoinaIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("GSYNLQDLLAQAK", 0.2700f, 2)
+                    new KoinaIntensityInput("GSYNLQDLLAQAK", 0.2700f, 2)
                 },
                 new[]
                 {
@@ -399,7 +399,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             ),
-            new PrositRetentionTimeQuery(
+            new KoinaRetentionTimeQuery(
                 new[]
                 {
                     "GSYNLQDLLAQAK"
@@ -409,10 +409,10 @@ namespace pwiz.SkylineTestFunctional
                     1.2877f
                 }
             ),
-            new PrositIntensityQuery(
+            new KoinaIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("GSYNLQDLLAQAK", 0.2800f, 2)
+                    new KoinaIntensityInput("GSYNLQDLLAQAK", 0.2800f, 2)
                 },
                 new[]
                 {
@@ -450,7 +450,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             ),
-            new PrositRetentionTimeQuery(
+            new KoinaRetentionTimeQuery(
                 new[]
                 {
                     "GSYNLQDLLAQAK"
@@ -460,10 +460,10 @@ namespace pwiz.SkylineTestFunctional
                     1.2877f
                 }
             ),
-            new PrositIntensityQuery(
+            new KoinaIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("TGTNLM[Oxidation (M)]DFLSR", 0.2800f, 2)
+                    new KoinaIntensityInput("TGTNLM[Oxidation (M)]DFLSR", 0.2800f, 2)
                 },
                 new[]
                 {
@@ -501,7 +501,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             ),
-            new PrositRetentionTimeQuery(
+            new KoinaRetentionTimeQuery(
                 new[]
                 {
                     "TGTNLM[Oxidation (M)]DFLSR"
@@ -511,10 +511,10 @@ namespace pwiz.SkylineTestFunctional
                     0.7566f
                 }
             ),
-            new PrositIntensityQuery(
+            new KoinaIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("TGTNLM[Oxidation (M)]DFLSR", 0.2900f, 2)
+                    new KoinaIntensityInput("TGTNLM[Oxidation (M)]DFLSR", 0.2900f, 2)
                 },
                 new[]
                 {
@@ -552,7 +552,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             ),
-            new PrositRetentionTimeQuery(
+            new KoinaRetentionTimeQuery(
                 new[]
                 {
                     "TGTNLM[Oxidation (M)]DFLSR"
@@ -562,10 +562,10 @@ namespace pwiz.SkylineTestFunctional
                     0.7566f
                 }
             ),
-            new PrositIntensityQuery(
+            new KoinaIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("C[unimod:4]SLPRPWALTFSYGR", 0.2500f, 2)
+                    new KoinaIntensityInput("C[unimod:4]SLPRPWALTFSYGR", 0.2500f, 2)
                 },
                 new[]
                 {
@@ -603,7 +603,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             ),
-            new PrositRetentionTimeQuery(
+            new KoinaRetentionTimeQuery(
                 new[]
                 {
                     "C[unimod:4]SLPRPWALTFSYGR"
@@ -613,10 +613,10 @@ namespace pwiz.SkylineTestFunctional
                     1.2758f
                 }
             ),
-            new PrositIntensityQuery(
+            new KoinaIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("C[unimod:4]SLPRPWALTFSYGR", 0.2600f, 2)
+                    new KoinaIntensityInput("C[unimod:4]SLPRPWALTFSYGR", 0.2600f, 2)
                 },
                 new[]
                 {
@@ -654,7 +654,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             ),
-            new PrositRetentionTimeQuery(
+            new KoinaRetentionTimeQuery(
                 new[]
                 {
                     "C[unimod:4]SLPRPWALTFSYGR"
@@ -664,10 +664,10 @@ namespace pwiz.SkylineTestFunctional
                     1.2758f
                 }
             ),
-            new PrositIntensityQuery(
+            new KoinaIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("LGGEEVSVAC[unimod:4]K", 0.2600f, 2)
+                    new KoinaIntensityInput("LGGEEVSVAC[unimod:4]K", 0.2600f, 2)
                 },
                 new[]
                 {
@@ -705,7 +705,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             ),
-            new PrositRetentionTimeQuery(
+            new KoinaRetentionTimeQuery(
                 new[]
                 {
                     "LGGEEVSVAC[unimod:4]K"
@@ -715,10 +715,10 @@ namespace pwiz.SkylineTestFunctional
                     -0.6807f
                 }
             ),
-            new PrositIntensityQuery(
+            new KoinaIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("LGGEEVSVAC[unimod:4]K", 0.2700f, 2)
+                    new KoinaIntensityInput("LGGEEVSVAC[unimod:4]K", 0.2700f, 2)
                 },
                 new[]
                 {
@@ -756,7 +756,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             ),
-            new PrositRetentionTimeQuery(
+            new KoinaRetentionTimeQuery(
                 new[]
                 {
                     "LGGEEVSVAC[unimod:4]K"
@@ -766,10 +766,10 @@ namespace pwiz.SkylineTestFunctional
                     -0.6807f
                 }
             ),
-            new PrositIntensityQuery(
+            new KoinaIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("GSYNLQDLLAQAK", 0.2700f, 2)
+                    new KoinaIntensityInput("GSYNLQDLLAQAK", 0.2700f, 2)
                 },
                 new[]
                 {
@@ -807,7 +807,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             ),
-            new PrositRetentionTimeQuery(
+            new KoinaRetentionTimeQuery(
                 new[]
                 {
                     "GSYNLQDLLAQAK"
@@ -817,10 +817,10 @@ namespace pwiz.SkylineTestFunctional
                     1.2877f
                 }
             ),
-            new PrositIntensityQuery(
+            new KoinaIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("GSYNLQDLLAQAK", 0.2800f, 2)
+                    new KoinaIntensityInput("GSYNLQDLLAQAK", 0.2800f, 2)
                 },
                 new[]
                 {
@@ -858,7 +858,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             ),
-            new PrositRetentionTimeQuery(
+            new KoinaRetentionTimeQuery(
                 new[]
                 {
                     "GSYNLQDLLAQAK"
@@ -868,10 +868,10 @@ namespace pwiz.SkylineTestFunctional
                     1.2877f
                 }
             ),
-            new PrositIntensityQuery(
+            new KoinaIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("GSYNLQDLLAQAK", 0.2800f, 2)
+                    new KoinaIntensityInput("GSYNLQDLLAQAK", 0.2800f, 2)
                 },
                 new[]
                 {
@@ -909,7 +909,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             ),
-            new PrositRetentionTimeQuery(
+            new KoinaRetentionTimeQuery(
                 new[]
                 {
                     "GSYNLQDLLAQAK"
@@ -919,10 +919,10 @@ namespace pwiz.SkylineTestFunctional
                     1.2877f
                 }
             ),
-            new PrositIntensityQuery(
+            new KoinaIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("GSYNLQDLLAQAK", 0.2900f, 2)
+                    new KoinaIntensityInput("GSYNLQDLLAQAK", 0.2900f, 2)
                 },
                 new[]
                 {
@@ -960,7 +960,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             ),
-            new PrositRetentionTimeQuery(
+            new KoinaRetentionTimeQuery(
                 new[]
                 {
                     "GSYNLQDLLAQAK"
@@ -970,10 +970,10 @@ namespace pwiz.SkylineTestFunctional
                     1.2877f
                 }
             ),
-            new PrositIntensityQuery(
+            new KoinaIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("TGTNLM[Oxidation (M)]DFLSR", 0.2900f, 2)
+                    new KoinaIntensityInput("TGTNLM[Oxidation (M)]DFLSR", 0.2900f, 2)
                 },
                 new[]
                 {
@@ -1011,7 +1011,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             ),
-            new PrositRetentionTimeQuery(
+            new KoinaRetentionTimeQuery(
                 new[]
                 {
                     "TGTNLM[Oxidation (M)]DFLSR"
@@ -1021,10 +1021,10 @@ namespace pwiz.SkylineTestFunctional
                     0.7566f
                 }
             ),
-            new PrositIntensityQuery(
+            new KoinaIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("TGTNLM[Oxidation (M)]DFLSR", 0.3000f, 2)
+                    new KoinaIntensityInput("TGTNLM[Oxidation (M)]DFLSR", 0.3000f, 2)
                 },
                 new[]
                 {
@@ -1062,7 +1062,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             ),
-            new PrositRetentionTimeQuery(
+            new KoinaRetentionTimeQuery(
                 new[]
                 {
                     "TGTNLM[Oxidation (M)]DFLSR"
@@ -1072,10 +1072,10 @@ namespace pwiz.SkylineTestFunctional
                     0.7566f
                 }
             ),
-            new PrositIntensityQuery(
+            new KoinaIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("LGGEEVSVAC[unimod:4]K", 0.2700f, 2)
+                    new KoinaIntensityInput("LGGEEVSVAC[unimod:4]K", 0.2700f, 2)
                 },
                 new[]
                 {
@@ -1113,7 +1113,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             ),
-            new PrositRetentionTimeQuery(
+            new KoinaRetentionTimeQuery(
                 new[]
                 {
                     "LGGEEVSVAC[unimod:4]K"
@@ -1123,10 +1123,10 @@ namespace pwiz.SkylineTestFunctional
                     -0.6807f
                 }
             ),
-            new PrositIntensityQuery(
+            new KoinaIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("GSYNLQDLLAQAK", 0.2700f, 2)
+                    new KoinaIntensityInput("GSYNLQDLLAQAK", 0.2700f, 2)
                 },
                 new[]
                 {
@@ -1164,7 +1164,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             ),
-            new PrositRetentionTimeQuery(
+            new KoinaRetentionTimeQuery(
                 new[]
                 {
                     "GSYNLQDLLAQAK"
@@ -1174,14 +1174,14 @@ namespace pwiz.SkylineTestFunctional
                     1.2877f
                 }
             ),
-            new PrositIntensityQuery(
+            new KoinaIntensityQuery(
                 new[]
                 {
-                    new PrositIntensityInput("C[unimod:4]SLPRPWALTFSYGR", 0.3200f, 2),
-                    new PrositIntensityInput("LGGEEVSVAC[unimod:4]K", 0.3200f, 2),
-                    new PrositIntensityInput("GSYNLQDLLAQAK", 0.3200f, 2),
-                    new PrositIntensityInput("GSYNLQDLLAQAK", 0.3200f, 2),
-                    new PrositIntensityInput("TGTNLM[Oxidation (M)]DFLSR", 0.3200f, 2)
+                    new KoinaIntensityInput("C[unimod:4]SLPRPWALTFSYGR", 0.3200f, 2),
+                    new KoinaIntensityInput("LGGEEVSVAC[unimod:4]K", 0.3200f, 2),
+                    new KoinaIntensityInput("GSYNLQDLLAQAK", 0.3200f, 2),
+                    new KoinaIntensityInput("GSYNLQDLLAQAK", 0.3200f, 2),
+                    new KoinaIntensityInput("TGTNLM[Oxidation (M)]DFLSR", 0.3200f, 2)
                 },
                 new[]
                 {
@@ -1347,7 +1347,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             ),
-            new PrositRetentionTimeQuery(
+            new KoinaRetentionTimeQuery(
                 new[]
                 {
                     "C[unimod:4]SLPRPWALTFSYGR",
@@ -1366,9 +1366,9 @@ namespace pwiz.SkylineTestFunctional
         });
 
         [TestMethod]
-        public void TestPrositSkylineIntegration()
+        public void TestKoinaSkylineIntegration()
         {
-            TestFilesZip = "TestFunctional/PrositSkylineIntegrationTest.zip";
+            TestFilesZip = "TestFunctional/KoinaSkylineIntegrationTest.zip";
             RunFunctionalTest();
         }
 
@@ -1379,7 +1379,7 @@ namespace pwiz.SkylineTestFunctional
             /*var doc = SkylineWindow.Document;
             RunUI(() =>
             {
-                // Add Prosit supported mods
+                // Add Koina supported mods
                 SkylineWindow.ChangeSettings(SkylineWindow.Document.Settings.ChangePeptideModifications(pm =>
                 {
                     return pm.ChangeStaticModifications(new[]
@@ -1401,24 +1401,24 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.ShowCharge2 = true;
             Settings.Default.ShowCharge3 = true;
 
-            PrositConstants.CACHE_PREV_PREDICTION = false;
-            using (new FakeProsit(RecordData ? null : QUERIES))
+            KoinaConstants.CACHE_PREV_PREDICTION = false;
+            using (new FakeKoina(RecordData ? null : QUERIES))
             {
                 if (RecordData)
-                    Console.WriteLine(@"private static List<PrositQuery> QUERIES = new List<PrositQuery>(new PrositQuery[] {");
+                    Console.WriteLine(@"private static List<KoinaQuery> QUERIES = new List<KoinaQuery>(new KoinaQuery[] {");
 
-                TestPrositOptions();
-                TestPrositSinglePrecursorPredictions();
-                TestLivePrositMirrorPlots();
-                Settings.Default.Prosit = false; // Disable Prosit to avoid that last query after building the library
-                TestPrositLibraryBuild(false);
+                TestKoinaOptions();
+                TestKoinaSinglePrecursorPredictions();
+                TestLiveKoinaMirrorPlots();
+                Settings.Default.Koina = false; // Disable Koina to avoid that last query after building the library
+                TestKoinaLibraryBuild(false);
                 TestInvalidPepSequences(); // Do this at the end, otherwise it messes with the order of nodes
                 var expected = RecordData ? 0 : QUERIES.Count;
-                Assert.AreEqual(expected, ((FakePrositPredictionClient)PrositPredictionClient.Current).QueryIndex);
+                Assert.AreEqual(expected, ((FakeKoinaPredictionClient)KoinaPredictionClient.Current).QueryIndex);
 
-                TestPrositLibraryBuild(true);
+                TestKoinaLibraryBuild(true);
             }
-            PrositConstants.CACHE_PREV_PREDICTION = true;
+            KoinaConstants.CACHE_PREV_PREDICTION = true;
             if (RecordData)
                 Console.WriteLine(@"});");
         }
@@ -1440,14 +1440,14 @@ namespace pwiz.SkylineTestFunctional
             });*/
 
             // Unknown Amino Acid 'O'
-            TestPrositException("ROHDESKYLINE", typeof(PrositUnsupportedAminoAcidException));
+            TestKoinaException("ROHDESKYLINE", typeof(KoinaUnsupportedAminoAcidException));
             // Too long
-            TestPrositException(string.Concat(Enumerable.Repeat("AAAA", 8)), typeof(PrositPeptideTooLongException));
+            TestKoinaException(string.Concat(Enumerable.Repeat("AAAA", 8)), typeof(KoinaPeptideTooLongException));
             // Unsupported mod
-            TestPrositException("S[+80]KYLINE", typeof(PrositUnsupportedModificationException));
+            TestKoinaException("S[+80]KYLINE", typeof(KoinaUnsupportedModificationException));
             // Small molecule
-            // We are careful not to involve Prosit with small molecules, so no exception expected
-            TestPrositException("Methionine", null);
+            // We are careful not to involve Koina with small molecules, so no exception expected
+            TestKoinaException("Methionine", null);
         }
 
         private void SelectNodeBySeq(string seq)
@@ -1476,7 +1476,7 @@ namespace pwiz.SkylineTestFunctional
                                      pep.DocNode.Peptide.Target.DisplayName == seq);
         }
 
-        private void TestPrositException(string seq, Type expectedException)
+        private void TestKoinaException(string seq, Type expectedException)
         {
             /*var doc = SkylineWindow.Document;
             if (!addMods)
@@ -1493,7 +1493,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentChange(doc);*/
 
             SelectNodeBySeq(seq);
-            Settings.Default.Prosit = true;
+            Settings.Default.Koina = true;
             RunUI(SkylineWindow.UpdateGraphPanes);
             // Add first precursor
             /*RunDlg<PopupPickList>(SkylineWindow.ShowPickChildrenInTest, dlg =>
@@ -1508,20 +1508,20 @@ namespace pwiz.SkylineTestFunctional
             {
                 WaitForConditionUI(() =>
                     SkylineWindow.GraphSpectrum.GraphException != null &&
-                    !(SkylineWindow.GraphSpectrum.GraphException is PrositPredictingException));
+                    !(SkylineWindow.GraphSpectrum.GraphException is KoinaPredictingException));
 
                 RunUI(() =>
                 {
                     Assert.IsInstanceOfType(SkylineWindow.GraphSpectrum.GraphException, expectedException);
                 });
             }
-            Settings.Default.Prosit = false;
+            Settings.Default.Koina = false;
         }
 
-        public void TestPrositLibraryBuild(bool newDocument)
+        public void TestKoinaLibraryBuild(bool newDocument)
         {
-            var client = (FakePrositPredictionClient)PrositPredictionClient.Current;
-            var outBlib = TestFilesDir.GetTestPath("Prosit.blib");
+            var client = (FakeKoinaPredictionClient)KoinaPredictionClient.Current;
+            var outBlib = TestFilesDir.GetTestPath("Koina.blib");
 
             if (newDocument)
                 RunUI(() => SkylineWindow.NewDocument(true));
@@ -1534,19 +1534,19 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() =>
             {
-                Assert.IsFalse(buildLibrary.Prosit);
-                buildLibrary.Prosit = true;
+                Assert.IsFalse(buildLibrary.Koina);
+                buildLibrary.Koina = true;
             });
 
             RunUI(() =>
             {
-                var nce = Settings.Default.PrositNCE;
+                var nce = Settings.Default.KoinaNCE;
                 Assert.AreEqual(buildLibrary.NCE, nce);
                 buildLibrary.NCE = 32;
                 // Don't want this to change the settings nce, this is just for building the library
-                Assert.AreEqual(Settings.Default.PrositNCE, nce);
+                Assert.AreEqual(Settings.Default.KoinaNCE, nce);
 
-                buildLibrary.LibraryName = "Prosit";
+                buildLibrary.LibraryName = "Koina";
                 buildLibrary.LibraryPath = outBlib;
                 // buildLibrary.IrtStandard = IrtStandard.BIOGNOSYS_11;
             });
@@ -1556,10 +1556,10 @@ namespace pwiz.SkylineTestFunctional
 
             // Wait for library build
             Assert.IsTrue(WaitForConditionUI(() =>
-                peptideSettings.AvailableLibraries.Contains("Prosit")));
+                peptideSettings.AvailableLibraries.Contains("Koina")));
             // Select new library
             RunUI(() => peptideSettings.PickedLibraries =
-                peptideSettings.PickedLibraries.Concat(new[] { "Prosit" }).ToArray());
+                peptideSettings.PickedLibraries.Concat(new[] { "Koina" }).ToArray());
             // Close pep settings
             OkDialog(peptideSettings, peptideSettings.OkDialog);
 
@@ -1576,14 +1576,14 @@ namespace pwiz.SkylineTestFunctional
                 .Distinct().Count();
 
             const int notSupportedCount = 3;
-            WaitForLibrary(distinctPrecursorCount - notSupportedCount, SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs.IndexOf(l => l.Name == "Prosit"));
+            WaitForLibrary(distinctPrecursorCount - notSupportedCount, SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs.IndexOf(l => l.Name == "Koina"));
 
-            var prositLib = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Last();
+            var koinaLib = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Last();
 
             // Extract spectrum and rt info from the library and store it a way that
             // allows us to verify the spectra easily
             var spectrumDisplayInfos = new SpectrumDisplayInfo[precursorCount];
-            var peptidesRepeat = new PrositIntensityModel.PeptidePrecursorNCE[precursorCount];
+            var peptidesRepeat = new KoinaIntensityModel.PeptidePrecursorNCE[precursorCount];
             var peptides = SkylineWindow.Document.Peptides.ToArray();
             var idx = 0;
             var noMatchCount = 0;
@@ -1593,7 +1593,7 @@ namespace pwiz.SkylineTestFunctional
                 for (var j = 0; j < precursors.Length; ++j)
                 {
                     var libKey = new LibKey(peptides[i].ModifiedSequence, precursors[j].PrecursorAdduct);
-                    var spectra = prositLib.GetSpectra(libKey, IsotopeLabelType.light, LibraryRedundancy.all).ToArray();
+                    var spectra = koinaLib.GetSpectra(libKey, IsotopeLabelType.light, LibraryRedundancy.all).ToArray();
                     if (spectra.Length == 0)
                     {
                         ++noMatchCount;
@@ -1604,7 +1604,7 @@ namespace pwiz.SkylineTestFunctional
                         spectrumDisplayInfos[idx] = new SpectrumDisplayInfo(spectra[0], precursors[j], spectra[0].RetentionTime);
                     }
 
-                    peptidesRepeat[idx++] = new PrositIntensityModel.PeptidePrecursorNCE(peptides[i], precursors[j], IsotopeLabelType.light);
+                    peptidesRepeat[idx++] = new KoinaIntensityModel.PeptidePrecursorNCE(peptides[i], precursors[j], IsotopeLabelType.light);
                 }
             }
 
@@ -1614,70 +1614,70 @@ namespace pwiz.SkylineTestFunctional
                 return;
 
             // Get queries and make sure they match the actual spectra
-            var intensityQuery = QUERIES.ElementAt(client.QueryIndex - 2) as PrositIntensityQuery;
+            var intensityQuery = QUERIES.ElementAt(client.QueryIndex - 2) as KoinaIntensityQuery;
             Assert.IsNotNull(intensityQuery);
             intensityQuery.AssertMatchesSpectra(peptidesRepeat, spectrumDisplayInfos);
-            var rtQuery = QUERIES.ElementAt(client.QueryIndex - 1) as PrositRetentionTimeQuery;
+            var rtQuery = QUERIES.ElementAt(client.QueryIndex - 1) as KoinaRetentionTimeQuery;
             Assert.IsNotNull(rtQuery);
             rtQuery.AssertMatchesSpectra(spectrumDisplayInfos);
         }
 
-        public void TestPrositOptions()
+        public void TestKoinaOptions()
         {
-            // Enable Prosit
-            Settings.Default.Prosit = true;
+            // Enable Koina
+            Settings.Default.Koina = true;
 
-            // For now just set all Prosit settings
-            var toolOptions = ShowDialog<ToolOptionsUI>(() => SkylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Prosit));
+            // For now just set all Koina settings
+            var toolOptions = ShowDialog<ToolOptionsUI>(() => SkylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Koina));
 
-            var intensityModel = PrositIntensityModel.Models.First();
-            var rtModel = PrositRetentionTimeModel.Models.First();
+            var intensityModel = KoinaIntensityModel.Models.First();
+            var rtModel = KoinaRetentionTimeModel.Models.First();
             RunUI(() =>
             {
                 // Also set ip, otherwise we will keep getting exceptions about the server not being set,
                 // although we are using the fake test client
-                toolOptions.PrositIntensityModelCombo = intensityModel;
-                toolOptions.PrositRetentionTimeModelCombo = rtModel;
+                toolOptions.KoinaIntensityModelCombo = intensityModel;
+                toolOptions.KoinaRetentionTimeModelCombo = rtModel;
                 toolOptions.CECombo = 28;
             });
 
-            WaitForConditionUI(() => toolOptions.PrositServerStatus == ToolOptionsUI.ServerStatus.AVAILABLE);
+            WaitForConditionUI(() => toolOptions.KoinaServerStatus == ToolOptionsUI.ServerStatus.AVAILABLE);
             RunUI(() => toolOptions.DialogResult = DialogResult.OK);
             WaitForClosedForm(toolOptions);
 
-            Assert.AreEqual(intensityModel, Settings.Default.PrositIntensityModel);
-            Assert.AreEqual(rtModel, Settings.Default.PrositRetentionTimeModel);
-            Assert.AreEqual(28, Settings.Default.PrositNCE);
+            Assert.AreEqual(intensityModel, Settings.Default.KoinaIntensityModel);
+            Assert.AreEqual(rtModel, Settings.Default.KoinaRetentionTimeModel);
+            Assert.AreEqual(28, Settings.Default.KoinaNCE);
         }
 
-        public void TestPrositSinglePrecursorPredictions()
+        public void TestKoinaSinglePrecursorPredictions()
         {
-            var client = (FakePrositPredictionClient) PrositPredictionClient.Current;
+            var client = (FakeKoinaPredictionClient) KoinaPredictionClient.Current;
 
             var baseCE = 28;
-            Assert.AreEqual(baseCE, Settings.Default.PrositNCE);
+            Assert.AreEqual(baseCE, Settings.Default.KoinaNCE);
 
             // Selecting a protein should will make a prediction for its first precursor
             SelectNode(SrmDocument.Level.MoleculeGroups, 0);
             GraphSpectrum.SpectrumNodeSelection selection = null;
             RunUI(() => selection = GraphSpectrum.SpectrumNodeSelection.GetCurrent(SkylineWindow));
-            WaitForPrositSpectrum(selection.NodePepGroup.Peptides.First().TransitionGroups.First(), baseCE);
+            WaitForKoinaSpectrum(selection.NodePepGroup.Peptides.First().TransitionGroups.First(), baseCE);
 
             // Select several peptides and make sure they are displayed correctly
-            TestPrositSinglePrecursorPredictions(client, SrmDocument.Level.Molecules, 0, 4);
+            TestKoinaSinglePrecursorPredictions(client, SrmDocument.Level.Molecules, 0, 4);
             // Do the same for transition groups, we have one more of those because of the heavy precursor
-            TestPrositSinglePrecursorPredictions(client, SrmDocument.Level.TransitionGroups, 0, 5);
+            TestKoinaSinglePrecursorPredictions(client, SrmDocument.Level.TransitionGroups, 0, 5);
         }
 
-        public void TestPrositSinglePrecursorPredictions(FakePrositPredictionClient client, SrmDocument.Level level, int start, int end)
+        public void TestKoinaSinglePrecursorPredictions(FakeKoinaPredictionClient client, SrmDocument.Level level, int start, int end)
         {
             var baseCE = 25;
-            Settings.Default.PrositNCE = baseCE;
+            Settings.Default.KoinaNCE = baseCE;
 
             // Select several peptides and make sure they are displayed correctly
             for (var i = start; i < end; ++i)
             {
-                // Select node, causing prosit predictions to be made
+                // Select node, causing koina predictions to be made
                 SelectNode(level, i); // i'th peptide
 
                 // Get selected node, since we need it for calculating MZs. Selecting a node is instant,
@@ -1685,27 +1685,27 @@ namespace pwiz.SkylineTestFunctional
                 GraphSpectrum.SpectrumNodeSelection selection = null;
                 RunUI(() => selection = GraphSpectrum.SpectrumNodeSelection.GetCurrent(SkylineWindow));
 
-                WaitForPrositSpectrum(selection.NodeTranGroup, baseCE + i);
+                WaitForKoinaSpectrum(selection.NodeTranGroup, baseCE + i);
 
                 if (!RecordData)
-                    AssertIntensityAndIRTSpectrumCorrect((PrositIntensityModel.PeptidePrecursorNCE)selection, client.QueryIndex);
+                    AssertIntensityAndIRTSpectrumCorrect((KoinaIntensityModel.PeptidePrecursorNCE)selection, client.QueryIndex);
 
                 RunUI(() =>
                 {
                     Assert.IsTrue(SkylineWindow.GraphSpectrum.NCEVisible);
                     Assert.IsFalse(SkylineWindow.GraphSpectrum.MirrorComboVisible);
-                    Assert.AreEqual(Settings.Default.PrositNCE, SkylineWindow.GraphSpectrum.PrositNCE);
+                    Assert.AreEqual(Settings.Default.KoinaNCE, SkylineWindow.GraphSpectrum.KoinaNCE);
 
                     // Change NCE and predict again
-                    ++SkylineWindow.GraphSpectrum.PrositNCE;
+                    ++SkylineWindow.GraphSpectrum.KoinaNCE;
 
-                    Assert.AreEqual(Settings.Default.PrositNCE, SkylineWindow.GraphSpectrum.PrositNCE);
+                    Assert.AreEqual(Settings.Default.KoinaNCE, SkylineWindow.GraphSpectrum.KoinaNCE);
                 });
 
-                WaitForPrositSpectrum(selection.NodeTranGroup, baseCE + i + 1);
+                WaitForKoinaSpectrum(selection.NodeTranGroup, baseCE + i + 1);
 
                 if (!RecordData)
-                    AssertIntensityAndIRTSpectrumCorrect((PrositIntensityModel.PeptidePrecursorNCE)selection, client.QueryIndex);
+                    AssertIntensityAndIRTSpectrumCorrect((KoinaIntensityModel.PeptidePrecursorNCE)selection, client.QueryIndex);
             }
         }
 
@@ -1722,48 +1722,48 @@ namespace pwiz.SkylineTestFunctional
             return new PeptidePrecursorPair(pep, precursor);
         }*/
 
-        public void AssertIntensityAndIRTSpectrumCorrect(PrositIntensityModel.PeptidePrecursorNCE peptidePrecursorNCE, int index)
+        public void AssertIntensityAndIRTSpectrumCorrect(KoinaIntensityModel.PeptidePrecursorNCE peptidePrecursorNCE, int index)
         {
             // We are interested in the queries just processed
             index -= 2;
 
             SpectrumDisplayInfo spectrumDisplayInfo = null;
-            RunUI(() => spectrumDisplayInfo = SkylineWindow.GraphSpectrum.PrositSpectrum);
+            RunUI(() => spectrumDisplayInfo = SkylineWindow.GraphSpectrum.KoinaSpectrum);
             Assert.IsNotNull(spectrumDisplayInfo);
 
             // There need to be at least two queries (ms2, irt)
             AssertEx.IsGreaterThanOrEqual(QUERIES.Count - index, 2);
 
             // Get queries and make sure they match the actual spectra
-            var intensityQuery = QUERIES.ElementAt(index) as PrositIntensityQuery;
+            var intensityQuery = QUERIES.ElementAt(index) as KoinaIntensityQuery;
             Assert.IsNotNull(intensityQuery);
             intensityQuery.AssertMatchesSpectrum(peptidePrecursorNCE, spectrumDisplayInfo);
 
-            var rtQuery = QUERIES.ElementAt(index + 1) as PrositRetentionTimeQuery;
+            var rtQuery = QUERIES.ElementAt(index + 1) as KoinaRetentionTimeQuery;
             Assert.IsNotNull(rtQuery);
             rtQuery.AssertMatchesSpectrum(spectrumDisplayInfo);
         }
 
-        public void WaitForPrositSpectrum(TransitionGroupDocNode precursor, int nce)
+        public void WaitForKoinaSpectrum(TransitionGroupDocNode precursor, int nce)
         {
             WaitForConditionUI(() =>
             {
                 if (!SkylineWindow.GraphSpectrum.HasSpectrum ||
-                    !(SkylineWindow.GraphSpectrum.PrositSpectrum?.SpectrumInfo is SpectrumInfoProsit info))
+                    !(SkylineWindow.GraphSpectrum.KoinaSpectrum?.SpectrumInfo is SpectrumInfoKoina info))
                     return false;
                 return ReferenceEquals(info.Precursor, precursor) && info.NCE == nce;
             });
         }
 
-        public void TestLivePrositMirrorPlots()
+        public void TestLiveKoinaMirrorPlots()
         {
-            var client = (FakePrositPredictionClient) PrositPredictionClient.Current;
+            var client = (FakeKoinaPredictionClient) KoinaPredictionClient.Current;
 
             // Enable mirror plots
             Settings.Default.LibMatchMirror = true;
 
             // Reset NCE
-            Settings.Default.PrositNCE = 27;
+            Settings.Default.KoinaNCE = 27;
 
             // TODO: maybe somehow make checks more specific, since the checks here are very similar to
             // checks for the regular spectra
@@ -1773,12 +1773,12 @@ namespace pwiz.SkylineTestFunctional
                 SelectNode(SrmDocument.Level.Molecules, i);
                 GraphSpectrum.SpectrumNodeSelection selection = null;
                 RunUI(() => selection = GraphSpectrum.SpectrumNodeSelection.GetCurrent(SkylineWindow));
-                WaitForPrositSpectrum(selection.NodeTranGroup, Settings.Default.PrositNCE);
+                WaitForKoinaSpectrum(selection.NodeTranGroup, Settings.Default.KoinaNCE);
                 // These are the same if we are not displaying a mirror plot
-                RunUI(() => Assert.AreNotSame(SkylineWindow.SelectedSpectrum, SkylineWindow.GraphSpectrum.PrositSpectrum));
+                RunUI(() => Assert.AreNotSame(SkylineWindow.SelectedSpectrum, SkylineWindow.GraphSpectrum.KoinaSpectrum));
 
                 if (!RecordData)
-                    AssertIntensityAndIRTSpectrumCorrect((PrositIntensityModel.PeptidePrecursorNCE)selection, client.QueryIndex);
+                    AssertIntensityAndIRTSpectrumCorrect((KoinaIntensityModel.PeptidePrecursorNCE)selection, client.QueryIndex);
             }
         }
     }
@@ -1788,7 +1788,7 @@ namespace pwiz.SkylineTestFunctional
         string ToCode();
     }
 
-    public abstract class PrositQuery : IRecordable
+    public abstract class KoinaQuery : IRecordable
     {
         public abstract string Model { get; }
         public abstract ModelInferResponse Response { get; }
@@ -1798,9 +1798,9 @@ namespace pwiz.SkylineTestFunctional
         public abstract string ToCode();
     }
 
-    public class PrositIntensityInput : IRecordable
+    public class KoinaIntensityInput : IRecordable
     {
-        public PrositIntensityInput(string modifiedSequence, float normalizedCollisionEnergy, int precursorCharge)
+        public KoinaIntensityInput(string modifiedSequence, float normalizedCollisionEnergy, int precursorCharge)
         {
             ModifiedSequence = modifiedSequence;
             NormalizedCollisionEnergy = normalizedCollisionEnergy;
@@ -1813,59 +1813,59 @@ namespace pwiz.SkylineTestFunctional
 
         public string ToCode()
         {
-            return string.Format("new PrositIntensityInput(\"{0}\", {1:0.0000}f, {2})", ModifiedSequence, NormalizedCollisionEnergy,
+            return string.Format("new KoinaIntensityInput(\"{0}\", {1:0.0000}f, {2})", ModifiedSequence, NormalizedCollisionEnergy,
                 PrecursorCharge);
         }
     }
 
-    public class PrositIntensityQuery : PrositQuery
+    public class KoinaIntensityQuery : KoinaQuery
     {
-        private PrositIntensityInput[] _inputs;
+        private KoinaIntensityInput[] _inputs;
         private float[][] _spectra;
 
-        public PrositIntensityQuery(PrositIntensityInput[] inputs, float[][] spectra)
+        public KoinaIntensityQuery(KoinaIntensityInput[] inputs, float[][] spectra)
         {
             _inputs = inputs;
             _spectra = spectra;
             Assert.AreEqual(_inputs.Length, _spectra.Length);
         }
 
-        public static PrositIntensityQuery FromTensors(ModelInferRequest request, ModelInferResponse response)
+        public static KoinaIntensityQuery FromTensors(ModelInferRequest request, ModelInferResponse response)
         {
             // Sequences
-            var seqs = request.Inputs.Single(t => t.Name.Equals(PrositIntensityModel.PrositIntensityInput.PEPTIDES_KEY, StringComparison.InvariantCultureIgnoreCase));
+            var seqs = request.Inputs.Single(t => t.Name.Equals(KoinaIntensityModel.KoinaIntensityInput.PEPTIDES_KEY, StringComparison.InvariantCultureIgnoreCase));
             Assert.AreEqual(seqs.Shape.Count, 2);
-            Assert.AreEqual(seqs.Shape[1], PrositConstants.PEPTIDE_SEQ_LEN);
-            var decodedSeqs = PrositHelpers.DecodeSequences(seqs);
+            Assert.AreEqual(seqs.Shape[1], KoinaConstants.PEPTIDE_SEQ_LEN);
+            var decodedSeqs = KoinaHelpers.DecodeSequences(seqs);
 
             // CEs
-            var ces = request.Inputs.Single(t => t.Name.Equals(PrositIntensityModel.PrositIntensityInput.COLLISION_ENERGY_KEY, StringComparison.InvariantCultureIgnoreCase));
+            var ces = request.Inputs.Single(t => t.Name.Equals(KoinaIntensityModel.KoinaIntensityInput.COLLISION_ENERGY_KEY, StringComparison.InvariantCultureIgnoreCase));
             Assert.AreEqual(ces.Shape.Count, 2);
             Assert.AreEqual(ces.Shape[1], 1);
             var decodedCes = ces.Contents.Fp32Contents.ToArray();
 
             // Charges
-            var charges = request.Inputs.Single(t => t.Name.Equals(PrositIntensityModel.PrositIntensityInput.PRECURSOR_CHARGE_KEY, StringComparison.InvariantCultureIgnoreCase));
+            var charges = request.Inputs.Single(t => t.Name.Equals(KoinaIntensityModel.KoinaIntensityInput.PRECURSOR_CHARGE_KEY, StringComparison.InvariantCultureIgnoreCase));
             Assert.AreEqual(charges.Shape.Count, 2);
-            Assert.AreEqual(charges.Shape[1], PrositConstants.PRECURSOR_CHARGES);
-            var decodedCharges = PrositHelpers.DecodeCharges(charges);
+            Assert.AreEqual(charges.Shape[1], KoinaConstants.PRECURSOR_CHARGES);
+            var decodedCharges = KoinaHelpers.DecodeCharges(charges);
 
             var inputs = Enumerable.Range(0, decodedSeqs.Length)
-                .Select(i => new PrositIntensityInput(decodedSeqs[i], decodedCes[i], decodedCharges[i])).ToArray();
+                .Select(i => new KoinaIntensityInput(decodedSeqs[i], decodedCes[i], decodedCharges[i])).ToArray();
 
-            var outputsTensor = response.Outputs.Single(t => t.Name.Equals(PrositIntensityModel.PrositIntensityOutput.OUTPUT_KEYS[1], StringComparison.InvariantCultureIgnoreCase));
-            var outputsFlattened = PrositHelpers.ReLU(outputsTensor.Contents.Fp32Contents.ToArray());
+            var outputsTensor = response.Outputs.Single(t => t.Name.Equals(KoinaIntensityModel.KoinaIntensityOutput.OUTPUT_KEYS[1], StringComparison.InvariantCultureIgnoreCase));
+            var outputsFlattened = KoinaHelpers.ReLU(outputsTensor.Contents.Fp32Contents.ToArray());
 
             // Reshape and copy
             var outputs = new float[inputs.Length][];
-            var batch = (PrositConstants.PEPTIDE_SEQ_LEN - 1) * PrositConstants.IONS_PER_RESIDUE;
+            var batch = (KoinaConstants.PEPTIDE_SEQ_LEN - 1) * KoinaConstants.IONS_PER_RESIDUE;
             for (int i = 0; i < inputs.Length; ++i)
             {
                 outputs[i] = new float[batch];
                 Array.Copy(outputsFlattened, i * batch, outputs[i], 0, batch);
             }
 
-            return new PrositIntensityQuery(inputs, outputs);
+            return new KoinaIntensityQuery(inputs, outputs);
         }
 
         public override string ToCode()
@@ -1878,9 +1878,9 @@ namespace pwiz.SkylineTestFunctional
             {
                 var code = new StringBuilder();
                 code.AppendLine("        new[] {");
-                for (int i = 0; i < PrositConstants.PEPTIDE_SEQ_LEN - 1; ++i)
+                for (int i = 0; i < KoinaConstants.PEPTIDE_SEQ_LEN - 1; ++i)
                     code.AppendLine("            " + string.Join(", ",
-                                        f.Skip(i * PrositConstants.IONS_PER_RESIDUE).Take(PrositConstants.IONS_PER_RESIDUE)
+                                        f.Skip(i * KoinaConstants.IONS_PER_RESIDUE).Take(KoinaConstants.IONS_PER_RESIDUE)
                                             .Select(fl => string.Format("{0:00.0000}f", fl))) + ",");
                 code.Remove(code.Length - 3, 3);
                 code.AppendLine();
@@ -1894,7 +1894,7 @@ namespace pwiz.SkylineTestFunctional
             spectraCode.AppendLine();
             spectraCode.Append("    }");
 
-            return string.Format("new PrositIntensityQuery(\r\n    {0},\r\n    {1}\r\n),", inputsCode, spectraCode);
+            return string.Format("new KoinaIntensityQuery(\r\n    {0},\r\n    {1}\r\n),", inputsCode, spectraCode);
         }
 
         public override ModelInferResponse Response
@@ -1906,15 +1906,15 @@ namespace pwiz.SkylineTestFunctional
 
                 // Construct Tensor
                 var tp = new ModelInferResponse.Types.InferOutputTensor { Datatype = "BYTES" };
-                tp.Name = PrositIntensityModel.PrositIntensityOutput.OUTPUT_KEYS[0];
+                tp.Name = KoinaIntensityModel.KoinaIntensityOutput.OUTPUT_KEYS[0];
                 tp.Shape.Add(_spectra.Length);
-                tp.Shape.Add((PrositConstants.PEPTIDE_SEQ_LEN - 1) * PrositConstants.IONS_PER_RESIDUE);
+                tp.Shape.Add((KoinaConstants.PEPTIDE_SEQ_LEN - 1) * KoinaConstants.IONS_PER_RESIDUE);
                 pr.Outputs.Add(tp);
                 
                 tp = new ModelInferResponse.Types.InferOutputTensor { Datatype = "FP32" };
-                tp.Name = PrositIntensityModel.PrositIntensityOutput.OUTPUT_KEYS[1];
+                tp.Name = KoinaIntensityModel.KoinaIntensityOutput.OUTPUT_KEYS[1];
                 tp.Shape.Add(_spectra.Length);
-                tp.Shape.Add((PrositConstants.PEPTIDE_SEQ_LEN - 1) * PrositConstants.IONS_PER_RESIDUE) ;
+                tp.Shape.Add((KoinaConstants.PEPTIDE_SEQ_LEN - 1) * KoinaConstants.IONS_PER_RESIDUE) ;
                 pr.Outputs.Add(tp);
 
                 using var annotationStream = new MemoryStream();
@@ -1923,9 +1923,9 @@ namespace pwiz.SkylineTestFunctional
                 {
                     int sequenceLength = new ModifiedSequence(input.ModifiedSequence, MassType.Monoisotopic).GetUnmodifiedSequence().Length;
                     foreach (var ionType in new[] { 'y', 'b' })
-                        for (int i = 1; i < PrositConstants.PEPTIDE_SEQ_LEN; ++i)
+                        for (int i = 1; i < KoinaConstants.PEPTIDE_SEQ_LEN; ++i)
                         {
-                            for (int z = 1; z <= PrositConstants.IONS_PER_RESIDUE / 2; ++z)
+                            for (int z = 1; z <= KoinaConstants.IONS_PER_RESIDUE / 2; ++z)
                             {
                                 string annotation = string.Format("{0}{1}+{2}", ionType, i, z);
                                 annotationWriter.Write(annotation.Length);
@@ -1944,27 +1944,27 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        public override string Model => PrositIntensityModel.Models.First();
+        public override string Model => KoinaIntensityModel.Models.First();
 
         public override bool MatchesQuery(ModelInferRequest pr)
         {
             var keys = pr.Inputs.Select(t => t.Name).OrderBy(s => s).ToArray();
             if (Model != pr.ModelName ||
                 pr.Inputs.Count != 3 ||
-                keys[0] != PrositIntensityModel.PrositIntensityInput.COLLISION_ENERGY_KEY ||
-                keys[1] != PrositIntensityModel.PrositIntensityInput.PEPTIDES_KEY ||
-                keys[2] != PrositIntensityModel.PrositIntensityInput.PRECURSOR_CHARGE_KEY)
+                keys[0] != KoinaIntensityModel.KoinaIntensityInput.COLLISION_ENERGY_KEY ||
+                keys[1] != KoinaIntensityModel.KoinaIntensityInput.PEPTIDES_KEY ||
+                keys[2] != KoinaIntensityModel.KoinaIntensityInput.PRECURSOR_CHARGE_KEY)
                 return false;
 
-            var seqs = pr.Inputs.Single(t => t.Name.Equals(PrositIntensityModel.PrositIntensityInput.PEPTIDES_KEY, StringComparison.InvariantCultureIgnoreCase));
-            var ces = pr.Inputs.Single(t => t.Name.Equals(PrositIntensityModel.PrositIntensityInput.COLLISION_ENERGY_KEY, StringComparison.InvariantCultureIgnoreCase));
-            var charges = pr.Inputs.Single(t => t.Name.Equals(PrositIntensityModel.PrositIntensityInput.PRECURSOR_CHARGE_KEY, StringComparison.InvariantCultureIgnoreCase));
+            var seqs = pr.Inputs.Single(t => t.Name.Equals(KoinaIntensityModel.KoinaIntensityInput.PEPTIDES_KEY, StringComparison.InvariantCultureIgnoreCase));
+            var ces = pr.Inputs.Single(t => t.Name.Equals(KoinaIntensityModel.KoinaIntensityInput.COLLISION_ENERGY_KEY, StringComparison.InvariantCultureIgnoreCase));
+            var charges = pr.Inputs.Single(t => t.Name.Equals(KoinaIntensityModel.KoinaIntensityInput.PRECURSOR_CHARGE_KEY, StringComparison.InvariantCultureIgnoreCase));
             return // Sequences
                    seqs.Shape.Count == 2 &&
                    seqs.Shape[0] == _inputs.Length &&
                    seqs.Shape[1] == 1 &&
                    ArrayUtil.EqualsDeep(_inputs.Select(i => new ModifiedSequence(i.ModifiedSequence, MassType.Monoisotopic)).ToArray(),
-                       PrositHelpers.DecodeSequences2(seqs)) &&
+                       KoinaHelpers.DecodeSequences2(seqs)) &&
 
                    // CEs
                    ces.Shape.Count == 2 &&
@@ -1983,47 +1983,47 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.AreEqual(pr.Inputs.Count, 3);
             var keys = pr.Inputs.Select(t => t.Name).OrderBy(s => s).ToArray();
-            Assert.AreEqual(keys[0], PrositIntensityModel.PrositIntensityInput.COLLISION_ENERGY_KEY);
-            Assert.AreEqual(keys[1], PrositIntensityModel.PrositIntensityInput.PEPTIDES_KEY);
-            Assert.AreEqual(keys[2], PrositIntensityModel.PrositIntensityInput.PRECURSOR_CHARGE_KEY);
+            Assert.AreEqual(keys[0], KoinaIntensityModel.KoinaIntensityInput.COLLISION_ENERGY_KEY);
+            Assert.AreEqual(keys[1], KoinaIntensityModel.KoinaIntensityInput.PEPTIDES_KEY);
+            Assert.AreEqual(keys[2], KoinaIntensityModel.KoinaIntensityInput.PRECURSOR_CHARGE_KEY);
 
             // Sequences
-            var seqs = pr.Inputs.Single(t => t.Name.Equals(PrositIntensityModel.PrositIntensityInput.PEPTIDES_KEY, StringComparison.InvariantCultureIgnoreCase));
+            var seqs = pr.Inputs.Single(t => t.Name.Equals(KoinaIntensityModel.KoinaIntensityInput.PEPTIDES_KEY, StringComparison.InvariantCultureIgnoreCase));
             Assert.AreEqual(seqs.Shape.Count, 2);
             Assert.AreEqual(seqs.Shape[0], _inputs.Length);
             Assert.AreEqual(seqs.Shape[1], 1);
             AssertEx.AreEqualDeep(_inputs.Select(i => new ModifiedSequence(i.ModifiedSequence, MassType.Monoisotopic)).ToArray(),
-                PrositHelpers.DecodeSequences2(seqs));
+                KoinaHelpers.DecodeSequences2(seqs));
 
             // CEs
-            var ces = pr.Inputs.Single(t => t.Name.Equals(PrositIntensityModel.PrositIntensityInput.COLLISION_ENERGY_KEY, StringComparison.InvariantCultureIgnoreCase));
+            var ces = pr.Inputs.Single(t => t.Name.Equals(KoinaIntensityModel.KoinaIntensityInput.COLLISION_ENERGY_KEY, StringComparison.InvariantCultureIgnoreCase));
             Assert.AreEqual(ces.Shape.Count, 2);
             Assert.AreEqual(ces.Shape[0], _inputs.Length);
             Assert.AreEqual(ces.Shape[1], 1);
 
             // Charges
-            var charges = pr.Inputs.Single(t => t.Name.Equals(PrositIntensityModel.PrositIntensityInput.PRECURSOR_CHARGE_KEY, StringComparison.InvariantCultureIgnoreCase));
+            var charges = pr.Inputs.Single(t => t.Name.Equals(KoinaIntensityModel.KoinaIntensityInput.PRECURSOR_CHARGE_KEY, StringComparison.InvariantCultureIgnoreCase));
             Assert.AreEqual(charges.Shape.Count, 2);
             Assert.AreEqual(charges.Shape[0], _inputs.Length);
             Assert.AreEqual(charges.Shape[1], 1);
         }
 
-        public void AssertMatchesSpectra(PrositIntensityModel.PeptidePrecursorNCE[] peptidePrecursorNCEs, SpectrumDisplayInfo[] spectrumDisplayInfos)
+        public void AssertMatchesSpectra(KoinaIntensityModel.PeptidePrecursorNCE[] peptidePrecursorNCEs, SpectrumDisplayInfo[] spectrumDisplayInfos)
         {
             for (int i = 0; i < _inputs.Length; ++i)
                 if (spectrumDisplayInfos[i] != null)
                     AssertMatchesSpectrum(peptidePrecursorNCEs[i], _inputs[i], _spectra[i], spectrumDisplayInfos[i]);
         }
 
-        public void AssertMatchesSpectrum(PrositIntensityModel.PeptidePrecursorNCE peptidePrecursorNCE, SpectrumDisplayInfo spectrumDisplayInfo)
+        public void AssertMatchesSpectrum(KoinaIntensityModel.PeptidePrecursorNCE peptidePrecursorNCE, SpectrumDisplayInfo spectrumDisplayInfo)
         {
             AssertMatchesSpectrum(peptidePrecursorNCE, _inputs[0], _spectra[0], spectrumDisplayInfo);
         }
 
-        public static void AssertMatchesSpectrum(PrositIntensityModel.PeptidePrecursorNCE peptidePrecursorNCE, PrositIntensityInput input, float[] spectrum, SpectrumDisplayInfo spectrumDisplayInfo)
+        public static void AssertMatchesSpectrum(KoinaIntensityModel.PeptidePrecursorNCE peptidePrecursorNCE, KoinaIntensityInput input, float[] spectrum, SpectrumDisplayInfo spectrumDisplayInfo)
         {
             Assert.IsNotNull(spectrumDisplayInfo);
-            Assert.AreEqual(spectrumDisplayInfo.Name, "Prosit");
+            Assert.AreEqual(spectrumDisplayInfo.Name, "Koina");
 
             // Calculate expected number of peaks. 1 peak per residue times the number of possible charges
             var residues = FastaSequence.StripModifications(input.ModifiedSequence).Length - 1;
@@ -2032,7 +2032,7 @@ namespace pwiz.SkylineTestFunctional
 
             //Assert.AreEqual(spectrumDisplayInfo.SpectrumPeaksInfo.Peaks.Length, ionCount);
             
-            // Construct a prosit output object so that we can construct a spectrum for comparison.
+            // Construct a koina output object so that we can construct a spectrum for comparison.
             // There really is no easier way to do this without rewriting a lot of code for parsing the
             // flattened intensities and adding lots of extra test code inside of Skyline code.
             var response = new ModelInferResponse();
@@ -2041,15 +2041,15 @@ namespace pwiz.SkylineTestFunctional
             tensor.Shape.Add(spectrum.Length);
             tensor.Contents = new InferTensorContents();
             tensor.Contents.Fp32Contents.AddRange(spectrum);
-            tensor.Name = PrositIntensityModel.PrositIntensityOutput.OUTPUT_KEYS[1];
+            tensor.Name = KoinaIntensityModel.KoinaIntensityOutput.OUTPUT_KEYS[1];
             response.Outputs.Add(tensor);
 
             using var annotationStream = new MemoryStream();
             using var annotationWriter = new BinaryWriter(annotationStream);
             foreach (var ionType in new[] { 'y', 'b' })
-                for (int i = 1; i < PrositConstants.PEPTIDE_SEQ_LEN; ++i)
+                for (int i = 1; i < KoinaConstants.PEPTIDE_SEQ_LEN; ++i)
                 {
-                    for (int z = 1; z <= PrositConstants.IONS_PER_RESIDUE / 2; ++z)
+                    for (int z = 1; z <= KoinaConstants.IONS_PER_RESIDUE / 2; ++z)
                     {
                         string annotation = string.Format("{0}{1}+{2}", ionType, i, z);
                         annotationWriter.Write(annotation.Length);
@@ -2060,37 +2060,37 @@ namespace pwiz.SkylineTestFunctional
             response.RawOutputContents.Add(ByteString.FromStream(annotationStream));
             response.RawOutputContents.Add(ByteString.CopyFrom(PrimitiveArrays.ToBytes(spectrum)));
 
-            var fakePrositOutput = new PrositIntensityModel.PrositIntensityOutput(response);
-            var ms2Spectrum = new PrositMS2Spectrum(Program.MainWindow.Document.Settings,
-                peptidePrecursorNCE.WithNCE((int) (input.NormalizedCollisionEnergy * 100.0f)), 0, fakePrositOutput);
+            var fakeKoinaOutput = new KoinaIntensityModel.KoinaIntensityOutput(response);
+            var ms2Spectrum = new KoinaMS2Spectrum(Program.MainWindow.Document.Settings,
+                peptidePrecursorNCE.WithNCE((int) (input.NormalizedCollisionEnergy * 100.0f)), 0, fakeKoinaOutput);
 
             // Compare the spectra
             AssertEx.AreEqualDeep(ms2Spectrum.SpectrumPeaks.Peaks, spectrumDisplayInfo.SpectrumPeaksInfo.Peaks);
         }
     }
 
-    public class PrositRetentionTimeQuery : PrositQuery
+    public class KoinaRetentionTimeQuery : KoinaQuery
     {
         private string[] _modifiedSequences;
         private float[] _iRTs;
 
-        public PrositRetentionTimeQuery(string[] modifiedSequences, float[] iRTs)
+        public KoinaRetentionTimeQuery(string[] modifiedSequences, float[] iRTs)
         {
             _modifiedSequences = modifiedSequences;
             _iRTs = iRTs;
         }
 
-        public static PrositRetentionTimeQuery FromTensors(ModelInferRequest request, ModelInferResponse response)
+        public static KoinaRetentionTimeQuery FromTensors(ModelInferRequest request, ModelInferResponse response)
         {
             // Sequences
-            var seqs = request.Inputs.Single(t => t.Name.Equals(PrositRetentionTimeModel.PrositRTInput.PEPTIDES_KEY, StringComparison.InvariantCultureIgnoreCase));
+            var seqs = request.Inputs.Single(t => t.Name.Equals(KoinaRetentionTimeModel.KoinaRTInput.PEPTIDES_KEY, StringComparison.InvariantCultureIgnoreCase));
             Assert.AreEqual(seqs.Shape.Count, 2);
-            Assert.AreEqual(seqs.Shape[1], PrositConstants.PEPTIDE_SEQ_LEN);
-            var decodedSeqs = PrositHelpers.DecodeSequences(seqs);
+            Assert.AreEqual(seqs.Shape[1], KoinaConstants.PEPTIDE_SEQ_LEN);
+            var decodedSeqs = KoinaHelpers.DecodeSequences(seqs);
 
-            var outputs = response.Outputs.Single(t => t.Name.Equals(PrositRetentionTimeModel.PrositRTOutput.OUTPUT_KEY));
+            var outputs = response.Outputs.Single(t => t.Name.Equals(KoinaRetentionTimeModel.KoinaRTOutput.OUTPUT_KEY));
 
-            return new PrositRetentionTimeQuery(decodedSeqs, outputs.Contents.Fp32Contents.ToArray());
+            return new KoinaRetentionTimeQuery(decodedSeqs, outputs.Contents.Fp32Contents.ToArray());
         }
 
         public override string ToCode()
@@ -2101,36 +2101,36 @@ namespace pwiz.SkylineTestFunctional
             var iRTCode = string.Format("new[] {{\r\n{0}\r\n    }}",
                 string.Join(",\r\n", _iRTs.Select(irt => string.Format("        {0:0.0000}f", irt))));
 
-            return string.Format("new PrositRetentionTimeQuery(\r\n    {0},\r\n    {1}\r\n),", seqsCode, iRTCode);
+            return string.Format("new KoinaRetentionTimeQuery(\r\n    {0},\r\n    {1}\r\n),", seqsCode, iRTCode);
         }
 
         public override bool MatchesQuery(ModelInferRequest pr)
         {
             if (Model != pr.ModelName ||
                 pr.Inputs.Count != 1 &&
-                pr.Inputs.First().Name != PrositRetentionTimeModel.PrositRTInput.PEPTIDES_KEY)
+                pr.Inputs.First().Name != KoinaRetentionTimeModel.KoinaRTInput.PEPTIDES_KEY)
                 return false;
 
-            var tensor = pr.Inputs.Single(t => t.Name.Equals(PrositRetentionTimeModel.PrositRTInput.PEPTIDES_KEY, StringComparison.InvariantCultureIgnoreCase));
+            var tensor = pr.Inputs.Single(t => t.Name.Equals(KoinaRetentionTimeModel.KoinaRTInput.PEPTIDES_KEY, StringComparison.InvariantCultureIgnoreCase));
             return tensor.Shape.Count == 2 &&
                    tensor.Shape[0] == _modifiedSequences.Length &&
                    tensor.Shape[1] == 1 &&
                    ArrayUtil.EqualsDeep(_modifiedSequences.Select(i => new ModifiedSequence(i, MassType.Monoisotopic)).ToArray(),
-                       PrositHelpers.DecodeSequences2(pr.Inputs.Single(t =>
-                           t.Name.Equals(PrositRetentionTimeModel.PrositRTInput.PEPTIDES_KEY))));
+                       KoinaHelpers.DecodeSequences2(pr.Inputs.Single(t =>
+                           t.Name.Equals(KoinaRetentionTimeModel.KoinaRTInput.PEPTIDES_KEY))));
         }
 
         public override void AssertMatchesQuery(ModelInferRequest pr)
         {
             Assert.AreEqual(Model, pr.ModelName);
             Assert.AreEqual(pr.Inputs.Count, 1);
-            Assert.AreEqual(pr.Inputs.First().Name, PrositRetentionTimeModel.PrositRTInput.PEPTIDES_KEY);
-            var tensor = pr.Inputs.Single(t => t.Name.Equals(PrositRetentionTimeModel.PrositRTInput.PEPTIDES_KEY, StringComparison.InvariantCultureIgnoreCase));
+            Assert.AreEqual(pr.Inputs.First().Name, KoinaRetentionTimeModel.KoinaRTInput.PEPTIDES_KEY);
+            var tensor = pr.Inputs.Single(t => t.Name.Equals(KoinaRetentionTimeModel.KoinaRTInput.PEPTIDES_KEY, StringComparison.InvariantCultureIgnoreCase));
             Assert.AreEqual(tensor.Shape.Count, 2);
             Assert.AreEqual(tensor.Shape[0], _modifiedSequences.Length);
             Assert.AreEqual(tensor.Shape[1], 1);
             AssertEx.AreEqualDeep(_modifiedSequences.Select(i => new ModifiedSequence(i, MassType.Monoisotopic)).ToArray(),
-                PrositHelpers.DecodeSequences2(pr.Inputs.Single(t => t.Name.Equals(PrositRetentionTimeModel.PrositRTInput.PEPTIDES_KEY))));
+                KoinaHelpers.DecodeSequences2(pr.Inputs.Single(t => t.Name.Equals(KoinaRetentionTimeModel.KoinaRTInput.PEPTIDES_KEY))));
         }
 
         public void AssertMatchesSpectra(SpectrumDisplayInfo[] spectrumDisplayInfos)
@@ -2157,7 +2157,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(expected, spectrumDisplayInfo.RetentionTime);
         }
 
-        public override string Model => PrositRetentionTimeModel.Models.First();
+        public override string Model => KoinaRetentionTimeModel.Models.First();
 
         public override ModelInferResponse Response
         {
@@ -2168,7 +2168,7 @@ namespace pwiz.SkylineTestFunctional
 
                 // Construct Tensor
                 var tp = new ModelInferResponse.Types.InferOutputTensor { Datatype = "FP32" };
-                tp.Name = PrositRetentionTimeModel.PrositRTOutput.OUTPUT_KEY;
+                tp.Name = KoinaRetentionTimeModel.KoinaRTOutput.OUTPUT_KEY;
                 //tp.Contents = new InferTensorContents();
 
                 // Populate with data
@@ -2183,22 +2183,22 @@ namespace pwiz.SkylineTestFunctional
         }
     }
 
-    internal class FakeProsit : IDisposable
+    internal class FakeKoina : IDisposable
     {
         private Channel _channel;
-        private FakePrositPredictionClient _fakeClient;
-        public FakeProsit(IList<PrositQuery> expectedQueries)
+        private FakeKoinaPredictionClient _fakeClient;
+        public FakeKoina(IList<KoinaQuery> expectedQueries)
         {
-            _channel = PrositConfig.GetPrositConfig().CreateChannel();
-            _fakeClient = new FakePrositPredictionClient(_channel, expectedQueries);
-            Assert.IsNull(PrositPredictionClient.FakeClient);
-            PrositPredictionClient.FakeClient = _fakeClient;
+            _channel = KoinaConfig.GetKoinaConfig().CreateChannel();
+            _fakeClient = new FakeKoinaPredictionClient(_channel, expectedQueries);
+            Assert.IsNull(KoinaPredictionClient.FakeClient);
+            KoinaPredictionClient.FakeClient = _fakeClient;
         }
 
         public void Dispose()
         {
-            Assert.AreSame(_fakeClient, PrositPredictionClient.FakeClient);
-            PrositPredictionClient.FakeClient = null;
+            Assert.AreSame(_fakeClient, KoinaPredictionClient.FakeClient);
+            KoinaPredictionClient.FakeClient = null;
             _channel.ShutdownAsync().Wait();
         }
     }
@@ -2208,12 +2208,12 @@ namespace pwiz.SkylineTestFunctional
     /// predictions. For logging, it needs to be constructed with a server address.
     /// For returning cached predictions, a queue of expected queries should be passed in.
     /// </summary>
-    public class FakePrositPredictionClient : PrositPredictionClient
+    public class FakeKoinaPredictionClient : KoinaPredictionClient
     {
-        private IList<PrositQuery> _expectedQueries;
+        private IList<KoinaQuery> _expectedQueries;
 
-        public FakePrositPredictionClient(Channel channel, IList<PrositQuery> expectedQueries) :
-            base(channel, PrositConfig.GetPrositConfig().Server)
+        public FakeKoinaPredictionClient(Channel channel, IList<KoinaQuery> expectedQueries) :
+            base(channel, KoinaConfig.GetKoinaConfig().Server)
         {
             _expectedQueries = expectedQueries;
         }
@@ -2223,12 +2223,12 @@ namespace pwiz.SkylineTestFunctional
         public override ModelInferResponse ModelInfer(ModelInferRequest request, CallOptions options)
         {
             // If this is a ping ms2 request, silently return and don't log
-            if (PrositSkylineIntegrationTest.PING_QUERY_MS2.MatchesQuery(request))
-                return PrositSkylineIntegrationTest.PING_QUERY_MS2.Response;
+            if (KoinaSkylineIntegrationTest.PING_QUERY_MS2.MatchesQuery(request))
+                return KoinaSkylineIntegrationTest.PING_QUERY_MS2.Response;
 
             // If this is a ping irt request, silently return and don't log
-            if (PrositSkylineIntegrationTest.PING_QUERY_IRT.MatchesQuery(request))
-                return PrositSkylineIntegrationTest.PING_QUERY_IRT.Response;
+            if (KoinaSkylineIntegrationTest.PING_QUERY_IRT.MatchesQuery(request))
+                return KoinaSkylineIntegrationTest.PING_QUERY_IRT.Response;
 
             // Logging mode
             if (_expectedQueries == null)
@@ -2249,11 +2249,11 @@ namespace pwiz.SkylineTestFunctional
 
         private void LogQuery(ModelInferRequest request, ModelInferResponse response)
         {
-            if (request.ModelName.StartsWith(PrositIntensityModel.Models.First()))
-                Console.WriteLine(@"    " + PrositIntensityQuery.FromTensors(request, response).ToCode().Replace("\n", "\n    "));
-            else if (request.ModelName.StartsWith(PrositRetentionTimeModel.Models.First()))
+            if (request.ModelName.StartsWith(KoinaIntensityModel.Models.First()))
+                Console.WriteLine(@"    " + KoinaIntensityQuery.FromTensors(request, response).ToCode().Replace("\n", "\n    "));
+            else if (request.ModelName.StartsWith(KoinaRetentionTimeModel.Models.First()))
                 Console.WriteLine(@"    " +
-                    PrositRetentionTimeQuery.FromTensors(request, response).ToCode().Replace("\n", "\n    "));
+                    KoinaRetentionTimeQuery.FromTensors(request, response).ToCode().Replace("\n", "\n    "));
             else
                 Assert.Fail("Unknown model \"{0}\"", request.ModelName);
         }

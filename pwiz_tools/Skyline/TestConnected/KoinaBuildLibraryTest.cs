@@ -21,7 +21,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model.Irt;
-using pwiz.Skyline.Model.Prosit.Models;
+using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
@@ -30,12 +30,12 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestConnected
 {
     [TestClass]
-    public class PrositBuildLibraryTest : AbstractFunctionalTest
+    public class KoinaBuildLibraryTest : AbstractFunctionalTest
     {
         [TestMethod]
-        public void TestPrositBuildLibrary()
+        public void TestKoinaBuildLibrary()
         {
-            if (!HasPrositServer())
+            if (!HasKoinaServer())
             {
                 return;
             }
@@ -47,9 +47,9 @@ namespace pwiz.SkylineTestConnected
             var toolsOptionsUi = ShowDialog<ToolOptionsUI>(SkylineWindow.ShowToolOptionsUI);
             RunUI(()=>
             {
-                toolsOptionsUi.NavigateToTab(ToolOptionsUI.TABS.Prosit);
-                toolsOptionsUi.PrositIntensityModelCombo = PrositIntensityModel.Models.First();
-                toolsOptionsUi.PrositRetentionTimeModelCombo = PrositRetentionTimeModel.Models.First();
+                toolsOptionsUi.NavigateToTab(ToolOptionsUI.TABS.Koina);
+                toolsOptionsUi.KoinaIntensityModelCombo = KoinaIntensityModel.Models.First();
+                toolsOptionsUi.KoinaRetentionTimeModelCombo = KoinaRetentionTimeModel.Models.First();
             });
             OkDialog(toolsOptionsUi, toolsOptionsUi.OkDialog);
             RunDlg<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg, pasteDlg =>
@@ -70,7 +70,7 @@ namespace pwiz.SkylineTestConnected
             {
                 buildLibraryDlg.LibraryName = libraryWithoutIrt;
                 buildLibraryDlg.LibraryPath = Path.Combine(TestContext.TestDir, "LibraryWithoutIrt.blib");
-                buildLibraryDlg.Prosit = true;
+                buildLibraryDlg.Koina = true;
             });
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
 
@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestConnected
             {
                 buildLibraryDlg.LibraryName = libraryWithIrt;
                 buildLibraryDlg.LibraryPath = Path.Combine(TestContext.TestDir, "LibraryWithIrt.blib");
-                buildLibraryDlg.Prosit = true;
+                buildLibraryDlg.Koina = true;
                 buildLibraryDlg.IrtStandard = IrtStandard.PIERCE;
             });
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);

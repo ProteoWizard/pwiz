@@ -29,54 +29,54 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using static Inference.ModelInferRequest.Types;
-using static pwiz.Skyline.Model.Prosit.Models.PrositIntensityModel;
+using static pwiz.Skyline.Model.Koina.Models.KoinaIntensityModel;
 
-namespace pwiz.Skyline.Model.Prosit.Models
+namespace pwiz.Skyline.Model.Koina.Models
 {
     /// <summary>
-    /// Represents Prosit's Intensity model.
+    /// Represents Koina's Intensity model.
     /// </summary>
-    public sealed class PrositIntensityModel : PrositModel<PrositIntensityInput.PrositPrecursorInput,
-        PrositIntensityInput,
-        PeptidePrecursorNCE,
-        PrositIntensityOutput.PrositPrecursorOutput,
-        PrositIntensityOutput,
-        PrositMS2Spectra>
+    public sealed class KoinaIntensityModel : KoinaModel<KoinaIntensityModel.KoinaIntensityInput.KoinaPrecursorInput,
+        KoinaIntensityModel.KoinaIntensityInput,
+        KoinaIntensityModel.PeptidePrecursorNCE,
+        KoinaIntensityModel.KoinaIntensityOutput.KoinaPrecursorOutput,
+        KoinaIntensityModel.KoinaIntensityOutput,
+        KoinaMS2Spectra>
     {
-        static PrositIntensityModel()
+        static KoinaIntensityModel()
         {
             // Not sure if the models count will ever change. Maybe in the future
             // users can somehow add their own models. But this is just capacity anyways.
-            _instances = new List<PrositIntensityModel>(Models.Count());
+            _instances = new List<KoinaIntensityModel>(Models.Count());
         }
 
         // Singleton pattern
-        private PrositIntensityModel(string model)
+        private KoinaIntensityModel(string model)
         {
             if (!Models.Contains(model))
-                throw new PrositNotConfiguredException(string.Format(
-                    PrositResources.PrositIntensityModel_PrositIntensityModel_Intensity_model__0__does_not_exist,
+                throw new KoinaNotConfiguredException(string.Format(
+                    KoinaResources.KoinaIntensityModel_KoinaIntensityModel_Intensity_model__0__does_not_exist,
                     model));
 
             Model = model;
         }
         
-        private static List<PrositIntensityModel> _instances;
+        private static List<KoinaIntensityModel> _instances;
 
-        public static PrositIntensityModel GetInstance(string model)
+        public static KoinaIntensityModel GetInstance(string model)
         {
             var intensityModel = _instances.FirstOrDefault(p => p.Model == model);
             if (intensityModel == null)
-                _instances.Add(intensityModel = new PrositIntensityModel(model));
+                _instances.Add(intensityModel = new KoinaIntensityModel(model));
                 
             return intensityModel;
         }
 
-        public static PrositIntensityModel Instance
+        public static KoinaIntensityModel Instance
         {
             get
             {
-                var selectedModel = Settings.Default.PrositIntensityModel;
+                var selectedModel = Settings.Default.KoinaIntensityModel;
                 return GetInstance(selectedModel);
             }
         }
@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         public override string Signature => SIGNATURE;
         public override string Model { get; protected set; }
 
-        private bool Equals(PrositIntensityModel other)
+        private bool Equals(KoinaIntensityModel other)
         {
             return string.Equals(Model, other.Model);
         }
@@ -95,7 +95,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj is PrositIntensityModel other && Equals(other);
+            return obj is KoinaIntensityModel other && Equals(other);
         }
 
         public override int GetHashCode()
@@ -127,44 +127,44 @@ namespace pwiz.Skyline.Model.Prosit.Models
             // {@"AlphaPept_ms2_generic", new ModelInputs(true, true, true)},
         };
 
-        public override PrositIntensityInput.PrositPrecursorInput CreatePrositInputRow(SrmSettings settings, PeptidePrecursorNCE skylineInput, out PrositException exception)
+        public override KoinaIntensityInput.KoinaPrecursorInput CreateKoinaInputRow(SrmSettings settings, PeptidePrecursorNCE skylineInput, out KoinaException exception)
         {
-            var peptideSequence = PrositHelpers.EncodeSequence(settings, skylineInput.NodePep, IsotopeLabelType.light, out exception);
+            var peptideSequence = KoinaHelpers.EncodeSequence(settings, skylineInput.NodePep, IsotopeLabelType.light, out exception);
             if (peptideSequence == null) // equivalently, exception != null
                 return null;
-            if (skylineInput.NodeGroup.PrecursorCharge > PrositConstants.PRECURSOR_CHARGES)
+            if (skylineInput.NodeGroup.PrecursorCharge > KoinaConstants.PRECURSOR_CHARGES)
             {
-                exception = new PrositException(string.Format(
-                    ModelsResources.PrositIntensityModel_CreatePrositInputRow_UnsupportedCharge,
-                    skylineInput.NodeGroup.PrecursorCharge, PrositConstants.PRECURSOR_CHARGES));
+                exception = new KoinaException(string.Format(
+                    ModelsResources.KoinaIntensityModel_CreateKoinaInputRow_UnsupportedCharge,
+                    skylineInput.NodeGroup.PrecursorCharge, KoinaConstants.PRECURSOR_CHARGES));
                 return null;
             }
 
-            return new PrositIntensityInput.PrositPrecursorInput(peptideSequence, skylineInput.PrecursorCharge, skylineInput.NCE.Value);
+            return new KoinaIntensityInput.KoinaPrecursorInput(peptideSequence, skylineInput.PrecursorCharge, skylineInput.NCE.Value);
         }
 
-        public static PrositIntensityInput.PrositPrecursorInput CreatePrositInputRow(string sequence, int charge, float nce, out PrositException exception)
+        public static KoinaIntensityInput.KoinaPrecursorInput CreateKoinaInputRow(string sequence, int charge, float nce, out KoinaException exception)
         {
-            var peptideSequence = PrositHelpers.EncodeSequence(sequence, out exception);
+            var peptideSequence = KoinaHelpers.EncodeSequence(sequence, out exception);
             if (peptideSequence == null) // equivalently, exception != null
                 return null;
 
-            return new PrositIntensityInput.PrositPrecursorInput(peptideSequence, charge, nce);
+            return new KoinaIntensityInput.KoinaPrecursorInput(peptideSequence, charge, nce);
         }
 
-        public override PrositIntensityInput CreatePrositInput(IList<PrositIntensityInput.PrositPrecursorInput> prositInputRows)
+        public override KoinaIntensityInput CreateKoinaInput(IList<KoinaIntensityInput.KoinaPrecursorInput> koinaInputRows)
         {
-            return new PrositIntensityInput(prositInputRows);
+            return new KoinaIntensityInput(koinaInputRows);
         }
 
-        public override PrositIntensityOutput CreatePrositOutput(ModelInferResponse prositOutputData)
+        public override KoinaIntensityOutput CreateKoinaOutput(ModelInferResponse koinaOutputData)
         {
-            return new PrositIntensityOutput(prositOutputData);
+            return new KoinaIntensityOutput(koinaOutputData);
         }
 
-        public override PrositMS2Spectra CreateSkylineOutput(SrmSettings settings, IList<PeptidePrecursorNCE> skylineInputs, PrositIntensityOutput prositOutput)
+        public override KoinaMS2Spectra CreateSkylineOutput(SrmSettings settings, IList<PeptidePrecursorNCE> skylineInputs, KoinaIntensityOutput koinaOutput)
         {
-            return new PrositMS2Spectra(settings, skylineInputs, prositOutput);
+            return new KoinaMS2Spectra(settings, skylineInputs, koinaOutput);
         }
 
         public class PeptidePrecursorNCE : SkylineInputRow
@@ -216,23 +216,23 @@ namespace pwiz.Skyline.Model.Prosit.Models
         }
 
         /// <summary>
-        /// Input structure at the Prosit level, it contains the tensors
-        /// which are sent to Prosit.
+        /// Input structure at the Koina level, it contains the tensors
+        /// which are sent to Koina.
         /// </summary>
-        public sealed class PrositIntensityInput : PrositInput<PrositIntensityInput.PrositPrecursorInput>
+        public sealed class KoinaIntensityInput : KoinaInput<KoinaIntensityInput.KoinaPrecursorInput>
         {
             public static readonly string PEPTIDES_KEY = @"peptide_sequences";
             public static readonly string PRECURSOR_CHARGE_KEY = @"precursor_charges";
             public static readonly string COLLISION_ENERGY_KEY = @"collision_energies";
 
-            public PrositIntensityInput(IList<PrositPrecursorInput> precursorInputs)
+            public KoinaIntensityInput(IList<KoinaPrecursorInput> precursorInputs)
             {
                 InputRows = precursorInputs;
             }
 
-            public override IList<PrositPrecursorInput> InputRows { get; }
+            public override IList<KoinaPrecursorInput> InputRows { get; }
 
-            public override IList<InferInputTensor> PrositTensors
+            public override IList<InferInputTensor> KoinaTensors
             {
                 get
                 {
@@ -252,15 +252,15 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
             }
 
-            public override IList<string> OutputTensorNames => PrositIntensityOutput.OUTPUT_KEYS;
+            public override IList<string> OutputTensorNames => KoinaIntensityOutput.OUTPUT_KEYS;
 
             /// <summary>
             /// Represents a single Precursor that can be used to construct
-            /// input tensors for Prosits intensity model.
+            /// input tensors for Koinas intensity model.
             /// </summary>
-            public class PrositPrecursorInput
+            public class KoinaPrecursorInput
             {
-                public PrositPrecursorInput(string peptideSequence, int precursorCharge, float normalizedCollisionEnergy)
+                public KoinaPrecursorInput(string peptideSequence, int precursorCharge, float normalizedCollisionEnergy)
                 {
                     PeptideSequence = peptideSequence;
                     PrecursorCharge = precursorCharge;
@@ -276,25 +276,25 @@ namespace pwiz.Skyline.Model.Prosit.Models
         }
 
         /// <summary>
-        /// Represents the output returned from Prosits
+        /// Represents the output returned from Koinas
         /// intensity model. Is constructed directly from the incoming tensors.
         /// </summary>
-        public sealed class PrositIntensityOutput : PrositOutput<PrositIntensityOutput, PrositIntensityOutput.PrositPrecursorOutput>
+        public sealed class KoinaIntensityOutput : KoinaOutput<KoinaIntensityOutput, KoinaIntensityOutput.KoinaPrecursorOutput>
         {
             public static readonly string[] OUTPUT_KEYS = { @"annotation", @"intensities" };
 
-            public PrositIntensityOutput(ModelInferResponse prositOutput)
+            public KoinaIntensityOutput(ModelInferResponse koinaOutput)
             {
                 // Note that this is essentially a lightweight iterator. We pass
                 // down an index by reference that keeps getting increased.
-                var precursorCount = (int) prositOutput.Outputs[0].Shape[0];
-                OutputRows = new PrositPrecursorOutput[precursorCount];
+                var precursorCount = (int) koinaOutput.Outputs[0].Shape[0];
+                OutputRows = new KoinaPrecursorOutput[precursorCount];
 
-                using var annotationStream = new MemoryStream(prositOutput.RawOutputContents[0].ToByteArray());
+                using var annotationStream = new MemoryStream(koinaOutput.RawOutputContents[0].ToByteArray());
                 using var annotationReader = new BinaryReader(annotationStream, Encoding.ASCII);
-                var intensityStream = prositOutput.RawOutputContents[1].CreateCodedInput();
-                int totalAnnotations = prositOutput.RawOutputContents[1].Length / sizeof(float);
-                int annotationsPerPrecursor = prositOutput.RawOutputContents[1].Length / precursorCount / sizeof(float);
+                var intensityStream = koinaOutput.RawOutputContents[1].CreateCodedInput();
+                int totalAnnotations = koinaOutput.RawOutputContents[1].Length / sizeof(float);
+                int annotationsPerPrecursor = koinaOutput.RawOutputContents[1].Length / precursorCount / sizeof(float);
 
                 // assume all precursors have the same number of annotations (true for all models AFAIK)
                 Assume.AreEqual(0, totalAnnotations % precursorCount);
@@ -314,26 +314,26 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 for (var i = 0; i < precursorCount; ++i)
                 {
                     var annotationsForPrecursor = new ReadOnlySpan<string>(annotations, i * annotationsPerPrecursor, annotationsPerPrecursor);
-                    OutputRows[i] = new PrositPrecursorOutput(annotationsForPrecursor, intensityStream, ref index);
+                    OutputRows[i] = new KoinaPrecursorOutput(annotationsForPrecursor, intensityStream, ref index);
                 }
             }
 
-            public PrositIntensityOutput()
+            public KoinaIntensityOutput()
             {
-                OutputRows = new PrositPrecursorOutput[0];
+                OutputRows = new KoinaPrecursorOutput[0];
             }
 
-            public override IList<PrositPrecursorOutput> OutputRows { get; protected set; }
+            public override IList<KoinaPrecursorOutput> OutputRows { get; protected set; }
 
 
             /// <summary>
             /// Represents the intensity predictions for a single peptide.
             /// </summary>
-            public class PrositPrecursorOutput
+            public class KoinaPrecursorOutput
             {
                 static readonly char[] NUMBERS = { '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
-                public PrositPrecursorOutput(ReadOnlySpan<string> annotations, CodedInputStream intensityStream, ref int index)
+                public KoinaPrecursorOutput(ReadOnlySpan<string> annotations, CodedInputStream intensityStream, ref int index)
                 {
                     var ionTypeNumberCharges = new (IonType ionType, int ionNumber, int ionCharge, float intensity)[annotations.Length];
 
@@ -357,7 +357,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
                     Intensities = new IonTable<float[]>(IonType.y, seqLength);
 
-                    const float intensityCutoff = 1.0e-6f; // Koina produces many peaks with intensity < 1e-6 that the older Prosit does not
+                    const float intensityCutoff = 1.0e-6f; // Koina produces many peaks with intensity < 1e-6 that the older Koina does not
 
                     for (int i = 0; i < ionTypeNumberCharges.Length; ++i)
                     {

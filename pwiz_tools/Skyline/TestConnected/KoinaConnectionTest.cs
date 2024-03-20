@@ -24,9 +24,9 @@ using System.Threading;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Prosit.Communication;
-using pwiz.Skyline.Model.Prosit.Config;
-using pwiz.Skyline.Model.Prosit.Models;
+using pwiz.Skyline.Model.Koina.Communication;
+using pwiz.Skyline.Model.Koina.Config;
+using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -34,32 +34,32 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestConnected
 {
     [TestClass]
-    public class PrositConfigTest : AbstractUnitTestEx
+    public class KoinaConfigTest : AbstractUnitTestEx
     {
         /// <summary>
-        /// Tests that a connection can successfully be made to the server specified in PrositConfig.GetPrositConfig().
+        /// Tests that a connection can successfully be made to the server specified in KoinaConfig.GetKoinaConfig().
         /// </summary>
         [TestMethod]
-        public void TestPrositConnection()
+        public void TestKoinaConnection()
         {
-            if (!HasPrositServer())
+            if (!HasKoinaServer())
             {
                 return;
             }
-            PrositConfig.GetPrositConfig().CallWithClient(client =>
+            KoinaConfig.GetKoinaConfig().CallWithClient(client =>
             {
                 Assert.IsTrue(TestClient(client));
             });
         }
 
-        public bool TestClient(PrositPredictionClient client)
+        public bool TestClient(KoinaPredictionClient client)
         {
             var pingPep = new Peptide(@"PING");
             var peptide = new PeptideDocNode(pingPep);
             var precursor = new TransitionGroupDocNode(new TransitionGroup(pingPep, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light),
                 new TransitionDocNode[0]);
-            var input = new PrositIntensityModel.PeptidePrecursorNCE(peptide, precursor, IsotopeLabelType.light, 32);
-            var intensityModel = PrositIntensityModel.GetInstance(PrositIntensityModel.Models.First());
+            var input = new KoinaIntensityModel.PeptidePrecursorNCE(peptide, precursor, IsotopeLabelType.light, 32);
+            var intensityModel = KoinaIntensityModel.GetInstance(KoinaIntensityModel.Models.First());
             try
             {
                 intensityModel.PredictSingle(client, SrmSettingsList.GetDefault(), input, CancellationToken.None);
@@ -72,13 +72,13 @@ namespace pwiz.SkylineTestConnected
         }
 
         /// <summary>
-        /// Tests that the PrositConfig class can round-trip in XML serialization.
+        /// Tests that the KoinaConfig class can round-trip in XML serialization.
         /// Also, outputs the XML serialization text so that you can see what it is supposed to look like.
         /// </summary>
         [TestMethod]
-        public void TestPrositConfigSerialization()
+        public void TestKoinaConfigSerialization()
         {
-            var prositConfig = new PrositConfig()
+            var koinaConfig = new KoinaConfig()
             {
                 Server = "myhost",
                 ClientCertificate = @"-----BEGIN CERTIFICATE-----
@@ -95,12 +95,12 @@ Even More Stuff
 "
 
             };
-            var xmlSerializer = new XmlSerializer(typeof(PrositConfig));
+            var xmlSerializer = new XmlSerializer(typeof(KoinaConfig));
             var myStream = new MemoryStream();
-            xmlSerializer.Serialize(myStream, prositConfig);
+            xmlSerializer.Serialize(myStream, koinaConfig);
             myStream.Seek(0, SeekOrigin.Begin);
             var roundTrip = xmlSerializer.Deserialize(myStream);
-            Assert.IsInstanceOfType(roundTrip, typeof(PrositConfig));
+            Assert.IsInstanceOfType(roundTrip, typeof(KoinaConfig));
             try
             {
                 TestContext.WriteLine(Encoding.UTF8.GetString(myStream.ToArray()));
@@ -112,11 +112,11 @@ Even More Stuff
         }
 
         [TestMethod]
-        public void TestGetPrositConfig()
+        public void TestGetKoinaConfig()
         {
-            var prositConfig = PrositConfig.GetPrositConfig();
-            Assert.IsNotNull(prositConfig);
-            Assert.IsFalse(string.IsNullOrEmpty(prositConfig.Server));
+            var koinaConfig = KoinaConfig.GetKoinaConfig();
+            Assert.IsNotNull(koinaConfig);
+            Assert.IsFalse(string.IsNullOrEmpty(koinaConfig.Server));
         }
     }
 }

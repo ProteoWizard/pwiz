@@ -19,19 +19,19 @@
 
 using Grpc.Core;
 using Inference;
-using pwiz.Skyline.Model.Prosit.Config;
+using pwiz.Skyline.Model.Koina.Config;
 
-namespace pwiz.Skyline.Model.Prosit.Communication
+namespace pwiz.Skyline.Model.Koina.Communication
 {
     /// <summary>
     /// A simple wrapper for simple construction of
     /// a prediction client through IP.
     /// </summary>
-    public class PrositPredictionClient : GRPCInferenceService.GRPCInferenceServiceClient
+    public class KoinaPredictionClient : GRPCInferenceService.GRPCInferenceServiceClient
     {
-        private static PrositPredictionClient _predictionClient;
+        private static KoinaPredictionClient _predictionClient;
 
-        public static PrositPredictionClient Current
+        public static KoinaPredictionClient Current
         {
             get
             {
@@ -41,12 +41,12 @@ namespace pwiz.Skyline.Model.Prosit.Communication
                 if (_predictionClient != null)
                     return _predictionClient;
 
-                var config = PrositConfig.GetPrositConfig();
+                var config = KoinaConfig.GetKoinaConfig();
                 
                 // TODO(nicksh): this Channel never gets disposed, but it does not really matter
                 // because it only gets created once
                 var channel = config.CreateChannel();
-                _predictionClient = new PrositPredictionClient(channel, config.Server);
+                _predictionClient = new KoinaPredictionClient(channel, config.Server);
 
                 return _predictionClient;
             }
@@ -58,19 +58,19 @@ namespace pwiz.Skyline.Model.Prosit.Communication
         /// <param name="channel">Channel that the client should use. Caller is responsible for shutting down the channel.</param>
         /// <param name="server">Name of the server</param>
         /// <returns>A client for making predictions with the given server</returns>
-        public static PrositPredictionClient CreateClient(Channel channel, string server)
+        public static KoinaPredictionClient CreateClient(Channel channel, string server)
         {
             if (FakeClient != null)
             {
                 return FakeClient;
             }
-            return new PrositPredictionClient(channel, server);
+            return new KoinaPredictionClient(channel, server);
         }
 
         /// <summary>
         /// Constructs a new client. Caller is responsible for shutting down the Channel.
         /// </summary>
-        public PrositPredictionClient(Channel channel, string server) : base(channel)
+        public KoinaPredictionClient(Channel channel, string server) : base(channel)
         {
             Server = server;
         }
@@ -79,6 +79,6 @@ namespace pwiz.Skyline.Model.Prosit.Communication
 
         // For faking predictions, usually without an actual server but instead
         // a set of cached predictions
-        public static PrositPredictionClient FakeClient { get; set; }
+        public static KoinaPredictionClient FakeClient { get; set; }
     }
 }

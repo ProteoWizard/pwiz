@@ -24,32 +24,32 @@ using System.Linq;
 using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Koina.Communication;
+using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
-using pwiz.Skyline.Model.Prosit.Communication;
-using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
-namespace pwiz.Skyline.Model.Prosit
+namespace pwiz.Skyline.Model.Koina
 {
-    public class PrositLibraryBuilder : IiRTCapableLibraryBuilder
+    public class KoinaLibraryBuilder : IiRTCapableLibraryBuilder
     {
         private readonly SrmDocument _document;
-        private readonly Inference.GRPCInferenceService.GRPCInferenceServiceClient _prositClient;
-        private readonly PrositIntensityModel _intensityModel;
-        private readonly PrositRetentionTimeModel _rtModel;
+        private readonly Inference.GRPCInferenceService.GRPCInferenceServiceClient _koinaClient;
+        private readonly KoinaIntensityModel _intensityModel;
+        private readonly KoinaRetentionTimeModel _rtModel;
         private readonly Func<bool> _replaceLibrary;
         private readonly IList<PeptideDocNode> _peptides;
         private readonly IList<TransitionGroupDocNode> _precursors;
         private readonly int _nce;
 
-        public PrositLibraryBuilder(SrmDocument doc, string name, string outPath, Func<bool> replaceLibrary,
+        public KoinaLibraryBuilder(SrmDocument doc, string name, string outPath, Func<bool> replaceLibrary,
             IrtStandard irtStandard, IList<PeptideDocNode> peptides, IList<TransitionGroupDocNode> precursors, int nce)
         {
-            _prositClient = PrositPredictionClient.Current;
-            _intensityModel = PrositIntensityModel.Instance;
-            _rtModel = PrositRetentionTimeModel.Instance;
+            _koinaClient = KoinaPredictionClient.Current;
+            _intensityModel = KoinaIntensityModel.Instance;
+            _rtModel = KoinaRetentionTimeModel.Instance;
             _peptides = peptides;
             _precursors = precursors;
             _document = doc;
@@ -87,12 +87,12 @@ namespace pwiz.Skyline.Model.Prosit
                 if (standardPeptidesToAdd != null && standardPeptidesToAdd.Count > 0)
                 {
                     // Get iRTs
-                    var standardIRTMap = _rtModel.Predict(_prositClient, _document.Settings,
-                        standardPeptidesToAdd.Select(p => (PrositRetentionTimeModel.PeptideDocNodeWrapper)p.NodePep).ToArray(),
+                    var standardIRTMap = _rtModel.Predict(_koinaClient, _document.Settings,
+                        standardPeptidesToAdd.Select(p => (KoinaRetentionTimeModel.PeptideDocNodeWrapper)p.NodePep).ToArray(),
                         CancellationToken.None);
 
                     // Get spectra
-                    var standardMS = _intensityModel.PredictBatches(_prositClient, progress, ref progressStatus, _document.Settings,
+                    var standardMS = _intensityModel.PredictBatches(_koinaClient, progress, ref progressStatus, _document.Settings,
                         standardPeptidesToAdd.ToArray(),
                         CancellationToken.None);
 
@@ -108,10 +108,10 @@ namespace pwiz.Skyline.Model.Prosit
 
             progressStatus = progressStatus.NextSegment();
             // Predict fragment intensities
-            PrositMS2Spectra ms = _intensityModel.PredictBatches(_prositClient, progress, ref progressStatus, _document.Settings,
+            KoinaMS2Spectra ms = _intensityModel.PredictBatches(_koinaClient, progress, ref progressStatus, _document.Settings,
                 _peptides.Zip(_precursors,
                     (pep, prec) =>
-                        new PrositIntensityModel.PeptidePrecursorNCE(pep, prec, IsotopeLabelType.light, _nce)).ToArray(),
+                        new KoinaIntensityModel.PeptidePrecursorNCE(pep, prec, IsotopeLabelType.light, _nce)).ToArray(),
                 CancellationToken.None);
             progressStatus = progressStatus.NextSegment();
 
@@ -119,15 +119,15 @@ namespace pwiz.Skyline.Model.Prosit
 
             // Predict iRTs for peptides
             var distinctModifiedSequences = new HashSet<string>();
-            var distinctPeps = new List<PrositRetentionTimeModel.PeptideDocNodeWrapper>();
+            var distinctPeps = new List<KoinaRetentionTimeModel.PeptideDocNodeWrapper>();
             foreach (var p in _peptides)
             {
                 if (distinctModifiedSequences.Add(p.ModifiedSequence))
                 {
-                    distinctPeps.Add(new PrositRetentionTimeModel.PeptideDocNodeWrapper(p));
+                    distinctPeps.Add(new KoinaRetentionTimeModel.PeptideDocNodeWrapper(p));
                 }
             }
-            var iRTMap = _rtModel.PredictBatches(_prositClient, progress, ref progressStatus, _document.Settings,
+            var iRTMap = _rtModel.PredictBatches(_koinaClient, progress, ref progressStatus, _document.Settings,
                 distinctPeps, CancellationToken.None);
             progressStatus = progressStatus.NextSegment();
 
@@ -140,7 +140,7 @@ namespace pwiz.Skyline.Model.Prosit
             // Build library
             var librarySpectra = SpectrumMzInfo.RemoveDuplicateSpectra(standardSpectra.Concat(specMzInfo).ToList());
 
-            // Delete if already exists, no merging with Prosit
+            // Delete if already exists, no merging with Koina
             var libraryExists = File.Exists(LibrarySpec.FilePath);
             if (libraryExists)
             {
@@ -170,7 +170,7 @@ namespace pwiz.Skyline.Model.Prosit
             return true;
         }
 
-        public static List<PrositIntensityModel.PeptidePrecursorNCE> ReadStandardPeptides(IrtStandard standard, int? nce)
+        public static List<KoinaIntensityModel.PeptidePrecursorNCE> ReadStandardPeptides(IrtStandard standard, int? nce)
         {
             var peps = standard.GetDocument().Peptides.ToList();
             var precs = peps.Select(p => p.TransitionGroups.First());
@@ -182,7 +182,7 @@ namespace pwiz.Skyline.Model.Prosit
                     new TypedExplicitModifications[0]));
             }*/
             return Enumerable.Zip(peps, precs,
-                (pep, prec) => new PrositIntensityModel.PeptidePrecursorNCE(pep, prec, null, nce)).ToList();
+                (pep, prec) => new KoinaIntensityModel.PeptidePrecursorNCE(pep, prec, null, nce)).ToList();
         }
 
         public LibrarySpec LibrarySpec { get; private set; }

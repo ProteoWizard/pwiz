@@ -285,21 +285,21 @@ namespace pwiz.Skyline.Model.Lib {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Converting FASTA to Prosit input.
+        ///   Looks up a localized string similar to Converting FASTA to Koina input.
         /// </summary>
-        public static string EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_Converting_FASTA_to_Prosit_input {
+        public static string EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_Converting_FASTA_to_Koina_input {
             get {
-                return ResourceManager.GetString("EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_Converting_FASTA_to_Prosit_input" +
+                return ResourceManager.GetString("EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_Converting_FASTA_to_Koina_input" +
                         "", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Converting Prosit output to EncyclopeDIA library.
+        ///   Looks up a localized string similar to Converting Koina output to EncyclopeDIA library.
         /// </summary>
-        public static string EncyclopeDiaHelpers_ConvertPrositOutputToDlib_Converting_Prosit_output_to_EncyclopeDia_library {
+        public static string EncyclopeDiaHelpers_ConvertKoinaOutputToDlib_Converting_Koina_output_to_EncyclopeDia_library {
             get {
-                return ResourceManager.GetString("EncyclopeDiaHelpers_ConvertPrositOutputToDlib_Converting_Prosit_output_to_Encyclo" +
+                return ResourceManager.GetString("EncyclopeDiaHelpers_ConvertKoinaOutputToDlib_Converting_Koina_output_to_Encyclo" +
                         "peDia_library", resourceCulture);
             }
         }
@@ -361,9 +361,9 @@ namespace pwiz.Skyline.Model.Lib {
         /// <summary>
         ///   Looks up a localized string similar to unsupported enzyme &apos;{0}&apos;; allowed values are: {1}.
         /// </summary>
-        public static string FastaToProsit_Enzyme_unsupported_enzyme___0____allowed_values_are___1_ {
+        public static string FastaToKoina_Enzyme_unsupported_enzyme___0____allowed_values_are___1_ {
             get {
-                return ResourceManager.GetString("FastaToProsit_Enzyme_unsupported_enzyme___0____allowed_values_are___1_", resourceCulture);
+                return ResourceManager.GetString("FastaToKoina_Enzyme_unsupported_enzyme___0____allowed_values_are___1_", resourceCulture);
             }
         }
         

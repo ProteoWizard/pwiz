@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace pwiz.Skyline.Model.Prosit {
+namespace pwiz.Skyline.Model.Koina {
     using System;
     
     
@@ -22,14 +22,14 @@ namespace pwiz.Skyline.Model.Prosit {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class PrositResources {
+    internal class KoinaResources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal PrositResources() {
+        internal KoinaResources() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.Prosit {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("pwiz.Skyline.Model.Prosit.PrositResources", typeof(PrositResources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("pwiz.Skyline.Model.Koina.KoinaResources", typeof(KoinaResources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,11 +61,11 @@ namespace pwiz.Skyline.Model.Prosit {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Prosit is not properly configured. Would you like to change Prosit settings now?.
+        ///   Looks up a localized string similar to Koina is not properly configured. Would you like to change Koina settings now?.
         /// </summary>
-        internal static string BuildLibraryDlg_dataSourceFilesRadioButton_CheckedChanged_Some_Prosit_settings_are_not_set__Would_you_like_to_set_them_now_ {
+        internal static string BuildLibraryDlg_dataSourceFilesRadioButton_CheckedChanged_Some_Koina_settings_are_not_set__Would_you_like_to_set_them_now_ {
             get {
-                return ResourceManager.GetString("BuildLibraryDlg_dataSourceFilesRadioButton_CheckedChanged_Some_Prosit_settings_ar" +
+                return ResourceManager.GetString("BuildLibraryDlg_dataSourceFilesRadioButton_CheckedChanged_Some_Koina_settings_ar" +
                         "e_not_set__Would_you_like_to_set_them_now_", resourceCulture);
             }
         }
@@ -89,106 +89,106 @@ namespace pwiz.Skyline.Model.Prosit {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Prosit is not properly configured..
+        ///   Looks up a localized string similar to Koina is not properly configured..
         /// </summary>
-        internal static string GraphSpectrum_UpdateUI_Some_Prosit_settings_are_not_set_ {
+        internal static string GraphSpectrum_UpdateUI_Some_Koina_settings_are_not_set_ {
             get {
-                return ResourceManager.GetString("GraphSpectrum_UpdateUI_Some_Prosit_settings_are_not_set_", resourceCulture);
+                return ResourceManager.GetString("GraphSpectrum_UpdateUI_Some_Koina_settings_are_not_set_", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Intensity model &apos;{0}&apos; does not exist.
         /// </summary>
-        internal static string PrositIntensityModel_PrositIntensityModel_Intensity_model__0__does_not_exist {
+        internal static string KoinaIntensityModel_KoinaIntensityModel_Intensity_model__0__does_not_exist {
             get {
-                return ResourceManager.GetString("PrositIntensityModel_PrositIntensityModel_Intensity_model__0__does_not_exist", resourceCulture);
+                return ResourceManager.GetString("KoinaIntensityModel_KoinaIntensityModel_Intensity_model__0__does_not_exist", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Constructing Prosit inputs.
+        ///   Looks up a localized string similar to Constructing Koina inputs.
         /// </summary>
-        internal static string PrositModel_BatchPredict_Constructing_Prosit_inputs {
+        internal static string KoinaModel_BatchPredict_Constructing_Koina_inputs {
             get {
-                return ResourceManager.GetString("PrositModel_BatchPredict_Constructing_Prosit_inputs", resourceCulture);
+                return ResourceManager.GetString("KoinaModel_BatchPredict_Constructing_Koina_inputs", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Requesting predictions from Prosit.
+        ///   Looks up a localized string similar to Requesting predictions from Koina.
         /// </summary>
-        internal static string PrositModel_BatchPredict_Requesting_predictions_from_Prosit {
+        internal static string KoinaModel_BatchPredict_Requesting_predictions_from_Koina {
             get {
-                return ResourceManager.GetString("PrositModel_BatchPredict_Requesting_predictions_from_Prosit", resourceCulture);
+                return ResourceManager.GetString("KoinaModel_BatchPredict_Requesting_predictions_from_Koina", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Peptide Sequence &apos;{0}&apos; ({1}) is longer than the maximum supported length by Prosit ({2}).
+        ///   Looks up a localized string similar to Peptide Sequence &apos;{0}&apos; ({1}) is longer than the maximum supported length by Koina ({2}).
         /// </summary>
-        internal static string PrositPeptideTooLongException_PrositPeptideTooLongException_Peptide_Sequence___0_____1___is_longer_than_the_maximum_supported_length_by_Prosit___2__ {
+        internal static string KoinaPeptideTooLongException_KoinaPeptideTooLongException_Peptide_Sequence___0_____1___is_longer_than_the_maximum_supported_length_by_Koina___2__ {
             get {
-                return ResourceManager.GetString("PrositPeptideTooLongException_PrositPeptideTooLongException_Peptide_Sequence___0_" +
-                        "____1___is_longer_than_the_maximum_supported_length_by_Prosit___2__", resourceCulture);
+                return ResourceManager.GetString("KoinaPeptideTooLongException_KoinaPeptideTooLongException_Peptide_Sequence___0_" +
+                        "____1___is_longer_than_the_maximum_supported_length_by_Koina___2__", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Amino acid &apos;{0}&apos; in &apos;{1}&apos; is not supported by Prosit.
+        ///   Looks up a localized string similar to Amino acid &apos;{0}&apos; in &apos;{1}&apos; is not supported by Koina.
         /// </summary>
-        internal static string PrositPeptideTooLongException_PrositUnsupportedAminoAcidException_Amino_acid___0___in___1___is_not_supported_by_Prosit {
+        internal static string KoinaPeptideTooLongException_KoinaUnsupportedAminoAcidException_Amino_acid___0___in___1___is_not_supported_by_Koina {
             get {
-                return ResourceManager.GetString("PrositPeptideTooLongException_PrositUnsupportedAminoAcidException_Amino_acid___0_" +
-                        "__in___1___is_not_supported_by_Prosit", resourceCulture);
+                return ResourceManager.GetString("KoinaPeptideTooLongException_KoinaUnsupportedAminoAcidException_Amino_acid___0_" +
+                        "__in___1___is_not_supported_by_Koina", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Making predictions....
         /// </summary>
-        internal static string PrositPredictingException_PrositPredictingException_Making_predictions___ {
+        internal static string KoinaPredictingException_KoinaPredictingException_Making_predictions___ {
             get {
-                return ResourceManager.GetString("PrositPredictingException_PrositPredictingException_Making_predictions___", resourceCulture);
+                return ResourceManager.GetString("KoinaPredictingException_KoinaPredictingException_Making_predictions___", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No Prosit server set.
+        ///   Looks up a localized string similar to No Koina server set.
         /// </summary>
-        internal static string PrositPredictionClient_Current_No_Prosit_server_set {
+        internal static string KoinaPredictionClient_Current_No_Koina_server_set {
             get {
-                return ResourceManager.GetString("PrositPredictionClient_Current_No_Prosit_server_set", resourceCulture);
+                return ResourceManager.GetString("KoinaPredictionClient_Current_No_Koina_server_set", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Retention time model &apos;{0}&apos; does not exist.
         /// </summary>
-        internal static string PrositRetentionTimeModel_PrositRetentionTimeModel_Retention_time_model___0___does_not_exist {
+        internal static string KoinaRetentionTimeModel_KoinaRetentionTimeModel_Retention_time_model___0___does_not_exist {
             get {
-                return ResourceManager.GetString("PrositRetentionTimeModel_PrositRetentionTimeModel_Retention_time_model___0___does" +
+                return ResourceManager.GetString("KoinaRetentionTimeModel_KoinaRetentionTimeModel_Retention_time_model___0___does" +
                         "_not_exist", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Prosit only supports peptides. &apos;{0}&apos; is a small molecule..
+        ///   Looks up a localized string similar to Koina only supports peptides. &apos;{0}&apos; is a small molecule..
         /// </summary>
-        internal static string PrositSmallMoleculeException_PrositSmallMoleculeException_Prosit_only_supports_peptides____0___is_a_small_molecule_ {
+        internal static string KoinaSmallMoleculeException_KoinaSmallMoleculeException_Koina_only_supports_peptides____0___is_a_small_molecule_ {
             get {
-                return ResourceManager.GetString("PrositSmallMoleculeException_PrositSmallMoleculeException_Prosit_only_supports_pe" +
+                return ResourceManager.GetString("KoinaSmallMoleculeException_KoinaSmallMoleculeException_Koina_only_supports_pe" +
                         "ptides____0___is_a_small_molecule_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Modifcation &apos;{0}&apos; at index &apos;{1}&apos; in &apos;{2}&apos; is not supported by Prosit.
+        ///   Looks up a localized string similar to Modifcation &apos;{0}&apos; at index &apos;{1}&apos; in &apos;{2}&apos; is not supported by Koina.
         /// </summary>
-        internal static string PrositUnsupportedModificationException_PrositUnsupportedModificationException_Modifcation___0___at_index___1___in___2___is_not_supported_by_Prosit {
+        internal static string KoinaUnsupportedModificationException_KoinaUnsupportedModificationException_Modifcation___0___at_index___1___in___2___is_not_supported_by_Koina {
             get {
-                return ResourceManager.GetString("PrositUnsupportedModificationException_PrositUnsupportedModificationException_Mod" +
-                        "ifcation___0___at_index___1___in___2___is_not_supported_by_Prosit", resourceCulture);
+                return ResourceManager.GetString("KoinaUnsupportedModificationException_KoinaUnsupportedModificationException_Mod" +
+                        "ifcation___0___at_index___1___in___2___is_not_supported_by_Koina", resourceCulture);
             }
         }
         

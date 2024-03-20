@@ -21,33 +21,33 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Util;
 
-namespace pwiz.Skyline.Model.Prosit
+namespace pwiz.Skyline.Model.Koina
 {
-    public class PrositMS2Spectra
+    public class KoinaMS2Spectra
     {
-        public PrositMS2Spectra(SrmSettings settings, IList<PrositIntensityModel.PeptidePrecursorNCE> peptidePrecursorPairs, PrositIntensityModel.PrositIntensityOutput prositIntensityOutput)
+        public KoinaMS2Spectra(SrmSettings settings, IList<KoinaIntensityModel.PeptidePrecursorNCE> peptidePrecursorPairs, KoinaIntensityModel.KoinaIntensityOutput koinaIntensityOutput)
         {
-            Spectra = new PrositMS2Spectrum[peptidePrecursorPairs.Count];
+            Spectra = new KoinaMS2Spectrum[peptidePrecursorPairs.Count];
             for (int i = 0; i < peptidePrecursorPairs.Count; ++i)
-                Spectra[i] = new PrositMS2Spectrum(settings, peptidePrecursorPairs[i], i, prositIntensityOutput);
+                Spectra[i] = new KoinaMS2Spectrum(settings, peptidePrecursorPairs[i], i, koinaIntensityOutput);
         }
 
-        public PrositMS2Spectrum GetSpectrum(TransitionGroupDocNode precursor)
+        public KoinaMS2Spectrum GetSpectrum(TransitionGroupDocNode precursor)
         {
             return Spectra.FirstOrDefault(s => s.PeptidePrecursorNCE.NodeGroup.EqualsId(precursor));
         }
 
-        public PrositMS2Spectrum[] Spectra { get; private set; }
+        public KoinaMS2Spectrum[] Spectra { get; private set; }
     }
 
-    public class PrositMS2Spectrum : IEquatable<PrositMS2Spectrum>
+    public class KoinaMS2Spectrum : IEquatable<KoinaMS2Spectrum>
     {
-        public PrositMS2Spectrum(SrmSettings settings, PrositIntensityModel.PeptidePrecursorNCE peptidePrecursorNCE,
-            int precursorIndex, PrositIntensityModel.PrositIntensityOutput prositIntensityOutput)
+        public KoinaMS2Spectrum(SrmSettings settings, KoinaIntensityModel.PeptidePrecursorNCE peptidePrecursorNCE,
+            int precursorIndex, KoinaIntensityModel.KoinaIntensityOutput koinaIntensityOutput)
         {
             PeptidePrecursorNCE = peptidePrecursorNCE;
             Settings = settings;
@@ -56,10 +56,10 @@ namespace pwiz.Skyline.Model.Prosit
 
             var calc = settings.GetFragmentCalc(peptidePrecursorNCE.LabelType, explicitMods);
             var ionMzTable = calc.GetFragmentIonMasses(target); // TODO: get mods and pass them as explicit mods above?
-            var ionIntensityTable = prositIntensityOutput.OutputRows[precursorIndex].Intensities;
+            var ionIntensityTable = koinaIntensityOutput.OutputRows[precursorIndex].Intensities;
             var ions = Math.Min(ionMzTable.GetLength(1), ionIntensityTable.GetLength(1));
 
-            var mis = new List<SpectrumPeaksInfo.MI>(ions * PrositConstants.IONS_PER_RESIDUE);
+            var mis = new List<SpectrumPeaksInfo.MI>(ions * KoinaConstants.IONS_PER_RESIDUE);
 
             for (int i = 0; i < ions; ++i)
             {
@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model.Prosit
             SpectrumPeaks = new SpectrumPeaksInfo(mis.ToArray());
         }
 
-        public bool Equals(PrositMS2Spectrum other)
+        public bool Equals(KoinaMS2Spectrum other)
         {
             return other != null && PeptidePrecursorNCE.Equals(other.PeptidePrecursorNCE) &&
                    ArrayUtil.EqualsDeep(SpectrumPeaks.Peaks, other.SpectrumPeaks.Peaks);
@@ -110,7 +110,7 @@ namespace pwiz.Skyline.Model.Prosit
             }
         }
 
-        public PrositIntensityModel.PeptidePrecursorNCE PeptidePrecursorNCE { get; private set; }
+        public KoinaIntensityModel.PeptidePrecursorNCE PeptidePrecursorNCE { get; private set; }
         public SpectrumPeaksInfo SpectrumPeaks { get; private set; }
 
         private SrmSettings Settings { get; }
@@ -135,7 +135,7 @@ namespace pwiz.Skyline.Model.Prosit
                 info.PrecursorMz = precursor.PrecursorMz;
                 info.RetentionTime = null;
                 info.RetentionTimes = null;
-                info.SourceFile = string.Format(@"Prosit{0}_{1}", PrositIntensityModel.Instance.Model, PrositIntensityModel.SIGNATURE); // TODO: maybe put URL here?
+                info.SourceFile = string.Format(@"Koina{0}_{1}", KoinaIntensityModel.Instance.Model, KoinaIntensityModel.SIGNATURE); // TODO: maybe put URL here?
                 return info;
             }
         }

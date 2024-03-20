@@ -20,16 +20,16 @@
 using System.Collections.Generic;
 using pwiz.Skyline.Model.DocSettings;
 
-namespace pwiz.Skyline.Model.Prosit
+namespace pwiz.Skyline.Model.Koina
 {
     /// <summary>
-    /// Prosit based retention time scoring. Modeled after
+    /// Koina based retention time scoring. Modeled after
     /// SSRCalc3's implementation of the interface. The score is
-    /// simply the predicted iRT from Prosit.
+    /// simply the predicted iRT from Koina.
     /// </summary>
-    public class PrositRetentionScoreCalculator : IRetentionScoreCalculator
+    public class KoinaRetentionScoreCalculator : IRetentionScoreCalculator
     {
-        public PrositRetentionScoreCalculator(string name)
+        public KoinaRetentionScoreCalculator(string name)
         {
             Name = name;
             ScoreProvider = new RetentionScoreProvider();
@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Model.Prosit
             {
                 return ScoreProvider.GetScore(modifiedSequence);
             }
-            catch(PrositException)
+            catch(KoinaException)
             {
             }
 

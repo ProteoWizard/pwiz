@@ -98,22 +98,22 @@
 	<resheader name="writer">
 		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
 	</resheader>
-  <data name="PrositPeptideTooLongException_PrositPeptideTooLongException_Peptide_Sequence___0_____1___is_longer_than_the_maximum_supported_length_by_Prosit___2__" xml:space="preserve">
-    <value>Peptide Sequence '{0}' ({1}) is longer than the maximum supported length by Prosit ({2})</value>
+  <data name="KoinaPeptideTooLongException_KoinaPeptideTooLongException_Peptide_Sequence___0_____1___is_longer_than_the_maximum_supported_length_by_Koina___2__" xml:space="preserve">
+    <value>Peptide Sequence '{0}' ({1}) is longer than the maximum supported length by Koina ({2})</value>
   </data>
-  <data name="PrositPeptideTooLongException_PrositUnsupportedAminoAcidException_Amino_acid___0___in___1___is_not_supported_by_Prosit" xml:space="preserve">
-    <value>Amino acid '{0}' in '{1}' is not supported by Prosit</value>
+  <data name="KoinaPeptideTooLongException_KoinaUnsupportedAminoAcidException_Amino_acid___0___in___1___is_not_supported_by_Koina" xml:space="preserve">
+    <value>Amino acid '{0}' in '{1}' is not supported by Koina</value>
   </data>
-  <data name="PrositUnsupportedModificationException_PrositUnsupportedModificationException_Modifcation___0___at_index___1___in___2___is_not_supported_by_Prosit" xml:space="preserve">
-    <value>Modifcation '{0}' at index '{1}' in '{2}' is not supported by Prosit</value>
+  <data name="KoinaUnsupportedModificationException_KoinaUnsupportedModificationException_Modifcation___0___at_index___1___in___2___is_not_supported_by_Koina" xml:space="preserve">
+    <value>Modifcation '{0}' at index '{1}' in '{2}' is not supported by Koina</value>
   </data>
-  <data name="PrositModel_BatchPredict_Constructing_Prosit_inputs" xml:space="preserve">
-    <value>Constructing Prosit inputs</value>
+  <data name="KoinaModel_BatchPredict_Constructing_Koina_inputs" xml:space="preserve">
+    <value>Constructing Koina inputs</value>
   </data>
-  <data name="PrositModel_BatchPredict_Requesting_predictions_from_Prosit" xml:space="preserve">
-    <value>Requesting predictions from Prosit</value>
+  <data name="KoinaModel_BatchPredict_Requesting_predictions_from_Koina" xml:space="preserve">
+    <value>Requesting predictions from Koina</value>
   </data>
-  <data name="PrositIntensityModel_PrositIntensityModel_Intensity_model__0__does_not_exist" xml:space="preserve">
+  <data name="KoinaIntensityModel_KoinaIntensityModel_Intensity_model__0__does_not_exist" xml:space="preserve">
     <value>Intensity model '{0}' does not exist</value>
   </data>
   <data name="ToolOptionsUI_ToolOptionsUI_Server_online" xml:space="preserve">
@@ -122,28 +122,28 @@
   <data name="ToolOptionsUI_ToolOptionsUI_Server_offline" xml:space="preserve">
     <value>Server offline</value>
   </data>
-  <data name="PrositPredictionClient_Current_No_Prosit_server_set" xml:space="preserve">
-    <value>No Prosit server set</value>
+  <data name="KoinaPredictionClient_Current_No_Koina_server_set" xml:space="preserve">
+    <value>No Koina server set</value>
   </data>
   <data name="ToolOptionsUI_UpdateServerStatus_Server_unavailable" xml:space="preserve">
     <value>Server unavailable</value>
   </data>
-  <data name="PrositSmallMoleculeException_PrositSmallMoleculeException_Prosit_only_supports_peptides____0___is_a_small_molecule_" xml:space="preserve">
-    <value>Prosit only supports peptides. '{0}' is a small molecule.</value>
+  <data name="KoinaSmallMoleculeException_KoinaSmallMoleculeException_Koina_only_supports_peptides____0___is_a_small_molecule_" xml:space="preserve">
+    <value>Koina only supports peptides. '{0}' is a small molecule.</value>
   </data>
-  <data name="BuildLibraryDlg_dataSourceFilesRadioButton_CheckedChanged_Some_Prosit_settings_are_not_set__Would_you_like_to_set_them_now_" xml:space="preserve">
-    <value>Prosit is not properly configured. Would you like to change Prosit settings now?</value>
+  <data name="BuildLibraryDlg_dataSourceFilesRadioButton_CheckedChanged_Some_Koina_settings_are_not_set__Would_you_like_to_set_them_now_" xml:space="preserve">
+    <value>Koina is not properly configured. Would you like to change Koina settings now?</value>
   </data>
-  <data name="GraphSpectrum_UpdateUI_Some_Prosit_settings_are_not_set_" xml:space="preserve">
-    <value>Prosit is not properly configured.</value>
+  <data name="GraphSpectrum_UpdateUI_Some_Koina_settings_are_not_set_" xml:space="preserve">
+    <value>Koina is not properly configured.</value>
   </data>
   <data name="GraphSpectrum_UpdateUI__0__vs___1_" xml:space="preserve">
     <value>{0} vs. {1}</value>
   </data>
-  <data name="PrositRetentionTimeModel_PrositRetentionTimeModel_Retention_time_model___0___does_not_exist" xml:space="preserve">
+  <data name="KoinaRetentionTimeModel_KoinaRetentionTimeModel_Retention_time_model___0___does_not_exist" xml:space="preserve">
     <value>Retention time model '{0}' does not exist</value>
   </data>
-  <data name="PrositPredictingException_PrositPredictingException_Making_predictions___" xml:space="preserve">
+  <data name="KoinaPredictingException_KoinaPredictingException_Making_predictions___" xml:space="preserve">
     <value>Making predictions...</value>
   </data>
   <data name="ToolOptionsUI_UpdateServerStatus_Querying_server___" xml:space="preserve">

@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace pwiz.Skyline.Model.Prosit.Models {
+namespace pwiz.Skyline.Model.Koina.Models {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.Prosit.Models {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("pwiz.Skyline.Model.Prosit.Models.ModelsResources", typeof(ModelsResources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("pwiz.Skyline.Model.Koina.Models.ModelsResources", typeof(ModelsResources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,39 +61,39 @@ namespace pwiz.Skyline.Model.Prosit.Models {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Exporting Prosit spectra to BiblioSpec library.
+        ///   Looks up a localized string similar to Exporting Koina spectra to BiblioSpec library.
         /// </summary>
-        public static string PrositHelpers_ExportPrositSpectraToBlib_Exporting_Prosit_spectra_to_BiblioSpec_library {
+        public static string KoinaHelpers_ExportKoinaSpectraToBlib_Exporting_Koina_spectra_to_BiblioSpec_library {
             get {
-                return ResourceManager.GetString("PrositHelpers_ExportPrositSpectraToBlib_Exporting_Prosit_spectra_to_BiblioSpec_li" +
+                return ResourceManager.GetString("KoinaHelpers_ExportKoinaSpectraToBlib_Exporting_Koina_spectra_to_BiblioSpec_li" +
                         "brary", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to failed to write Prosit output to blib.
+        ///   Looks up a localized string similar to failed to write Koina output to blib.
         /// </summary>
-        public static string PrositHelpers_ExportPrositSpectraToBlib_failed_to_write_Prosit_output_to_blib {
+        public static string KoinaHelpers_ExportKoinaSpectraToBlib_failed_to_write_Koina_output_to_blib {
             get {
-                return ResourceManager.GetString("PrositHelpers_ExportPrositSpectraToBlib_failed_to_write_Prosit_output_to_blib", resourceCulture);
+                return ResourceManager.GetString("KoinaHelpers_ExportKoinaSpectraToBlib_failed_to_write_Koina_output_to_blib", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reading Prosit CSV input.
+        ///   Looks up a localized string similar to Reading Koina CSV input.
         /// </summary>
-        public static string PrositHelpers_PredictBatchesFromPrositCsv_Reading_Prosit_CSV_input {
+        public static string KoinaHelpers_PredictBatchesFromKoinaCsv_Reading_Koina_CSV_input {
             get {
-                return ResourceManager.GetString("PrositHelpers_PredictBatchesFromPrositCsv_Reading_Prosit_CSV_input", resourceCulture);
+                return ResourceManager.GetString("KoinaHelpers_PredictBatchesFromKoinaCsv_Reading_Koina_CSV_input", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The charge {0} is not supported by Prosit. The maximum supported charge is {1}..
+        ///   Looks up a localized string similar to The charge {0} is not supported by Koina. The maximum supported charge is {1}..
         /// </summary>
-        public static string PrositIntensityModel_CreatePrositInputRow_UnsupportedCharge {
+        public static string KoinaIntensityModel_CreateKoinaInputRow_UnsupportedCharge {
             get {
-                return ResourceManager.GetString("PrositIntensityModel_CreatePrositInputRow_UnsupportedCharge", resourceCulture);
+                return ResourceManager.GetString("KoinaIntensityModel_CreateKoinaInputRow_UnsupportedCharge", resourceCulture);
             }
         }
     }

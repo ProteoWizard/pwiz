@@ -31,42 +31,42 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Koina.Communication;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
-using pwiz.Skyline.Model.Prosit.Communication;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using static Inference.ModelInferRequest.Types;
-using static pwiz.Skyline.Model.Prosit.Models.PrositIntensityModel;
+using static pwiz.Skyline.Model.Koina.Models.KoinaIntensityModel;
 using Settings = pwiz.Skyline.Properties.Settings;
 
-namespace pwiz.Skyline.Model.Prosit.Models
+namespace pwiz.Skyline.Model.Koina.Models
 {
     /// <summary>
-    /// An abstract class representing a Prosit tensor flow model
+    /// An abstract class representing a Koina tensor flow model
     /// such as the intensity or RT model. It supports simple prediction
     /// and batch construction/prediction. The various type parameters
     /// are necessary due to the several layers of data representation.
     /// 
     /// For the input layer, we convert:
-    /// IList{TSkylineInputRow} -> TPrositIn{TPrositInputRow} -> MapField{string}{TensorProto}
+    /// IList{TSkylineInputRow} -> TKoinaIn{TKoinaInputRow} -> MapField{string}{TensorProto}
     /// 
     /// For the output layer, we convert:
-    /// MapField{string}{TensorProto} -> TPrositOut{TPrositOut, TPrositOutputRow} -> TSkylineOutput
+    /// MapField{string}{TensorProto} -> TKoinaOut{TKoinaOut, TKoinaOutputRow} -> TSkylineOutput
     /// </summary>
     /// 
-    /// <typeparam name="TPrositInputRow">A single input for Prosit, for instance a precursor</typeparam>
-    /// <typeparam name="TPrositIn">The entire input for Prosit, such as a list of precursors</typeparam>
-    /// <typeparam name="TSkylineInputRow">A single input for Prosit in Skyline data structures, such as a TransitionGroupDocNode</typeparam>
-    /// <typeparam name="TPrositOutputRow">A single output of Prosit, such as list of fragment intensities</typeparam>
-    /// <typeparam name="TPrositOut">The entire output of Prosit, such as a list of fragment intensities for all requested peptides</typeparam>
-    /// <typeparam name="TSkylineOutput">The entire output of Prosit in Skyline  friendly data structures</typeparam>
+    /// <typeparam name="TKoinaInputRow">A single input for Koina, for instance a precursor</typeparam>
+    /// <typeparam name="TKoinaIn">The entire input for Koina, such as a list of precursors</typeparam>
+    /// <typeparam name="TSkylineInputRow">A single input for Koina in Skyline data structures, such as a TransitionGroupDocNode</typeparam>
+    /// <typeparam name="TKoinaOutputRow">A single output of Koina, such as list of fragment intensities</typeparam>
+    /// <typeparam name="TKoinaOut">The entire output of Koina, such as a list of fragment intensities for all requested peptides</typeparam>
+    /// <typeparam name="TSkylineOutput">The entire output of Koina in Skyline  friendly data structures</typeparam>
 
-    public abstract class PrositModel<TPrositInputRow, TPrositIn, TSkylineInputRow, TPrositOutputRow, TPrositOut, TSkylineOutput>
+    public abstract class KoinaModel<TKoinaInputRow, TKoinaIn, TSkylineInputRow, TKoinaOutputRow, TKoinaOut, TSkylineOutput>
         where TSkylineInputRow : SkylineInputRow
-        where TPrositIn : PrositInput<TPrositInputRow>
-        where TPrositOut : PrositOutput<TPrositOut, TPrositOutputRow>, new()
+        where TKoinaIn : KoinaInput<TKoinaInputRow>
+        where TKoinaOut : KoinaOutput<TKoinaOut, TKoinaOutputRow>, new()
     {
         /// <summary>
         /// A signature that is required by TensorFlow, currently v1
@@ -98,11 +98,11 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 {
                     var result = new List<string>();
                     if (PeptideSequences)
-                        result.Add(PrositIntensityInput.PEPTIDES_KEY);
+                        result.Add(KoinaIntensityModel.KoinaIntensityInput.PEPTIDES_KEY);
                     if (PrecursorCharges)
-                        result.Add(PrositIntensityInput.PRECURSOR_CHARGE_KEY);
+                        result.Add(KoinaIntensityModel.KoinaIntensityInput.PRECURSOR_CHARGE_KEY);
                     if (CollisionEnergies)
-                        result.Add(PrositIntensityInput.COLLISION_ENERGY_KEY);
+                        result.Add(KoinaIntensityModel.KoinaIntensityInput.COLLISION_ENERGY_KEY);
                     return result;
                 }
             }
@@ -111,41 +111,41 @@ namespace pwiz.Skyline.Model.Prosit.Models
         public abstract IDictionary<string, ModelInputs> InputsForModel { get; }
 
         /// <summary>
-        /// Construct Prosit input given Skyline input. Note that
+        /// Construct Koina input given Skyline input. Note that
         /// this function does not throw any exceptions but uses the exception out
         /// parameter to speed up constructing large amounts of inputs.
         /// </summary>
         /// <param name="settings">Settings to use for construction</param>
         /// <param name="skylineInput">The input at the Skyline level (for example docnodes)</param>
         /// <param name="exception">Exception that occured during the creating Process</param>
-        /// <returns>The input at the Prosit level</returns>
-        public abstract TPrositInputRow CreatePrositInputRow(SrmSettings settings, TSkylineInputRow skylineInput, out PrositException exception);
+        /// <returns>The input at the Koina level</returns>
+        public abstract TKoinaInputRow CreateKoinaInputRow(SrmSettings settings, TSkylineInputRow skylineInput, out KoinaException exception);
 
         /// <summary>
-        /// Constructs the final input (tensors) that is sent to Prosit, given
-        /// Prosit inputs.
+        /// Constructs the final input (tensors) that is sent to Koina, given
+        /// Koina inputs.
         /// </summary>
-        /// <param name="prositInputRows">The prosit inputs to use</param>
-        /// <returns>A Prosit input object that can be directly sent to Prosit</returns>
-        public abstract TPrositIn CreatePrositInput(IList<TPrositInputRow> prositInputRows);
+        /// <param name="koinaInputRows">The koina inputs to use</param>
+        /// <returns>A Koina input object that can be directly sent to Koina</returns>
+        public abstract TKoinaIn CreateKoinaInput(IList<TKoinaInputRow> koinaInputRows);
 
         /// <summary>
         /// Converts a map of tensors to an easier to work with data structure,
-        /// still at the Prosit level.
+        /// still at the Koina level.
         /// </summary>
-        /// <param name="prositOutputData">The data from the prediction</param>
-        /// <returns>A Prosit output object containing the parsed information from the tensors</returns>
-        public abstract TPrositOut CreatePrositOutput(ModelInferResponse prositOutputData);
+        /// <param name="koinaOutputData">The data from the prediction</param>
+        /// <returns>A Koina output object containing the parsed information from the tensors</returns>
+        public abstract TKoinaOut CreateKoinaOutput(ModelInferResponse koinaOutputData);
 
         /// <summary>
-        /// Constructs Skyline level outputs given Prosit outputs
+        /// Constructs Skyline level outputs given Koina outputs
         /// </summary>
         /// <param name="settings">Settings to use for construction</param>
         /// <param name="skylineInputs">The original skyline inputs used for the prediction. Should
         /// exclude items that could not be predicted</param>
-        /// <param name="prositOutput">The prosit output from the prediction</param>
+        /// <param name="koinaOutput">The koina output from the prediction</param>
         /// <returns>A skyline level object that can be used in Skyline, for instance for display in the UI</returns>
-        public abstract TSkylineOutput CreateSkylineOutput(SrmSettings settings, IList<TSkylineInputRow> skylineInputs, TPrositOut prositOutput);
+        public abstract TSkylineOutput CreateSkylineOutput(SrmSettings settings, IList<TSkylineInputRow> skylineInputs, TKoinaOut koinaOutput);
 
         /// <summary>
         /// Helper function for creating input tensors.
@@ -168,38 +168,38 @@ namespace pwiz.Skyline.Model.Prosit.Models
         }
 
         /// <summary>
-        /// Single threaded Prosit prediction for several inputs
+        /// Single threaded Koina prediction for several inputs
         /// </summary>
         /// <param name="predictionClient">Client to use for prediction</param>
         /// <param name="settings">Settings to use for constructing </param>
         /// <param name="inputs">The precursors (and other info) to make predictions for</param>
         /// <param name="token">Token for cancelling prediction</param>
-        /// <returns>Predictions from Prosit</returns>
+        /// <returns>Predictions from Koina</returns>
         public TSkylineOutput Predict(GRPCInferenceService.GRPCInferenceServiceClient predictionClient,
             SrmSettings settings, IList<TSkylineInputRow> inputs, CancellationToken token)
         {
             inputs = inputs.Distinct().ToArray();
 
             var validSkylineInputs = new List<TSkylineInputRow>(inputs.Count);
-            var prositInputs = new List<TPrositInputRow>(inputs.Count);
+            var koinaInputs = new List<TKoinaInputRow>(inputs.Count);
 
             foreach (var singleInput in inputs)
             {
-                var input = CreatePrositInputRow(settings, singleInput, out _);
+                var input = CreateKoinaInputRow(settings, singleInput, out _);
                 if (input != null)
                 {
-                    prositInputs.Add(input);
+                    koinaInputs.Add(input);
                     validSkylineInputs.Add(singleInput);
                 }
             }
 
-            var prositIn = CreatePrositInput(prositInputs);
-            var prediction = Predict(predictionClient, prositIn, token);
+            var koinaIn = CreateKoinaInput(koinaInputs);
+            var prediction = Predict(predictionClient, koinaIn, token);
             return CreateSkylineOutput(settings, validSkylineInputs, prediction);
         }
 
         // Variables for remembering the previous prediction request and its outcome.
-        // Uses lock since the PrositModel classes are intended to be used as singletons
+        // Uses lock since the KoinaModel classes are intended to be used as singletons
         private readonly object _cacheLock = new object();
         private GRPCInferenceService.GRPCInferenceServiceClient _cachedClient;
         private SrmSettings _cachedSettings;
@@ -216,24 +216,24 @@ namespace pwiz.Skyline.Model.Prosit.Models
         /// <param name="settings">Settings to use for creating inputs and outputs</param>
         /// <param name="input">Precursor and other information</param>
         /// <param name="token">Token for cancelling prediction</param>
-        /// <returns>Prediction from Prosit</returns>
+        /// <returns>Prediction from Koina</returns>
         public TSkylineOutput PredictSingle(GRPCInferenceService.GRPCInferenceServiceClient predictionClient,
             SrmSettings settings, TSkylineInputRow input, CancellationToken token)
         {
             lock (_cacheLock)
             {
-                if (PrositConstants.CACHE_PREV_PREDICTION && _cachedInput != null && _cachedOutput != null &&
+                if (KoinaConstants.CACHE_PREV_PREDICTION && _cachedInput != null && _cachedOutput != null &&
                     _cachedInput.Equals(input) && ReferenceEquals(_cachedClient, predictionClient) &&
                     ReferenceEquals(settings, _cachedSettings))
                     return _cachedOutput;
             }
 
-            var prositInputRow = CreatePrositInputRow(settings, input, out var exception);
-            if (prositInputRow == null)
+            var koinaInputRow = CreateKoinaInputRow(settings, input, out var exception);
+            if (koinaInputRow == null)
                 throw exception;
 
-            var prositIn = CreatePrositInput(new[] { prositInputRow });
-            var prediction = Predict(predictionClient, prositIn, token);
+            var koinaIn = CreateKoinaInput(new[] { koinaInputRow });
+            var prediction = Predict(predictionClient, koinaIn, token);
             var output = CreateSkylineOutput(settings, new[] { input }, prediction);
 
             lock (_cacheLock)
@@ -249,13 +249,13 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
         /// <summary>
         /// Private version of Predict that works with data structures at
-        /// the Prosit level
+        /// the Koina level
         /// </summary>
         /// <param name="predictionClient">Client to use for prediction</param>
         /// <param name="inputData">Input data, consisting tensors to send for prediction</param>
         /// <param name="token">Token for cancelling prediction</param>
-        /// <returns>Predicted tensors from Prosit</returns>
-        private TPrositOut Predict(GRPCInferenceService.GRPCInferenceServiceClient predictionClient, TPrositIn inputData, CancellationToken token)
+        /// <returns>Predicted tensors from Koina</returns>
+        private TKoinaOut Predict(GRPCInferenceService.GRPCInferenceServiceClient predictionClient, TKoinaIn inputData, CancellationToken token)
         {
             var predictRequest = new ModelInferRequest();
             predictRequest.ModelName = Model;
@@ -265,20 +265,20 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 if (InputsForModel != null && InputsForModel.ContainsKey(Model))
                 {
                     var tensorKeys = InputsForModel[Model].TensorKeys;
-                    predictRequest.Inputs.AddRange(inputData.PrositTensors.Where(t => tensorKeys.Contains(t.Name)));
+                    predictRequest.Inputs.AddRange(inputData.KoinaTensors.Where(t => tensorKeys.Contains(t.Name)));
                 }
                 else
                 {
-                    predictRequest.Inputs.AddRange(inputData.PrositTensors);
+                    predictRequest.Inputs.AddRange(inputData.KoinaTensors);
                 }
                 predictRequest.Outputs.AddRange(inputData.OutputTensorNames.Select(n => new InferRequestedOutputTensor { Name = n }));
 
                 // Make prediction
                 var predictResponse = predictionClient.ModelInfer(predictRequest, cancellationToken: token);
-                return CreatePrositOutput(predictResponse);
+                return CreateKoinaOutput(predictResponse);
             }
             catch (RpcException ex) {
-                throw new PrositException(ex.Message, ex);
+                throw new KoinaException(ex.Message, ex);
             }
         }
 
@@ -291,13 +291,13 @@ namespace pwiz.Skyline.Model.Prosit.Models
         /// <param name="settings">Settings to use for constructing inputs and outputs</param>
         /// <param name="inputs">List of inputs to predict</param>
         /// <param name="token">Token for cancelling prediction</param>
-        /// <returns>Predictions from Prosit</returns>
+        /// <returns>Predictions from Koina</returns>
         public TSkylineOutput PredictBatches(GRPCInferenceService.GRPCInferenceServiceClient predictionClient,
             IProgressMonitor progressMonitor, ref IProgressStatus progressStatus, SrmSettings settings, IList<TSkylineInputRow> inputs, CancellationToken token)
         {
             const int CONSTRUCTING_INPUTS_FRACTION = 50;
             progressMonitor.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(PrositResources.PrositModel_BatchPredict_Constructing_Prosit_inputs)
+                .ChangeMessage(KoinaResources.KoinaModel_BatchPredict_Constructing_Koina_inputs)
                 .ChangePercentComplete(0));
               
             inputs = inputs.Distinct().ToArray();
@@ -307,23 +307,23 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
             var inputLock = new object();
             var inputsList =
-                new List<TPrositInputRow>();
+                new List<TKoinaInputRow>();
             var validInputsList =
                 new List<TSkylineInputRow>();
 
             // Construct batch inputs in parallel
             var localProgressStatus = progressStatus;
-            ParallelEx.ForEach(PrositHelpers.EnumerateBatches(inputs, PrositConstants.BATCH_SIZE),
+            ParallelEx.ForEach(KoinaHelpers.EnumerateBatches(inputs, KoinaConstants.BATCH_SIZE),
                 batchEnumerable =>
                 {
                     var batch = batchEnumerable.ToArray();
 
-                    var batchInputs = new List<TPrositInputRow>(batch.Length);
+                    var batchInputs = new List<TKoinaInputRow>(batch.Length);
                     var validSkylineInputs = new List<TSkylineInputRow>(batch.Length);
 
                     foreach (var singleInput in batch)
                     {
-                        var input = CreatePrositInputRow(settings, singleInput, out _);
+                        var input = CreateKoinaInputRow(settings, singleInput, out _);
                         if (input != null)
                         {
                             batchInputs.Add(input);
@@ -347,9 +347,9 @@ namespace pwiz.Skyline.Model.Prosit.Models
             totalCount = inputsList.Count;
 
             // Make predictions batch by batch in sequence and merge the outputs
-            var prositOutputAll = PredictBatches(predictionClient, progressMonitor, ref progressStatus, settings, inputsList, token);
+            var koinaOutputAll = PredictBatches(predictionClient, progressMonitor, ref progressStatus, settings, inputsList, token);
 
-            return CreateSkylineOutput(settings, validInputsList.Select(i => i).ToArray(), prositOutputAll);
+            return CreateSkylineOutput(settings, validInputsList.Select(i => i).ToArray(), koinaOutputAll);
         }
 
         /// <summary>
@@ -361,19 +361,19 @@ namespace pwiz.Skyline.Model.Prosit.Models
         /// <param name="settings">Settings to use for constructing inputs and outputs</param>
         /// <param name="inputs">List of inputs to predict</param>
         /// <param name="token">Token for cancelling prediction</param>
-        /// <returns>Predictions from Prosit</returns>
-        public TPrositOut PredictBatches(GRPCInferenceService.GRPCInferenceServiceClient predictionClient,
-            IProgressMonitor progressMonitor, ref IProgressStatus progressStatus, SrmSettings settings, List<TPrositInputRow> inputs, CancellationToken token)
+        /// <returns>Predictions from Koina</returns>
+        public TKoinaOut PredictBatches(GRPCInferenceService.GRPCInferenceServiceClient predictionClient,
+            IProgressMonitor progressMonitor, ref IProgressStatus progressStatus, SrmSettings settings, List<TKoinaInputRow> inputs, CancellationToken token)
         {
             var processed = 0;
             var totalCount = inputs.Count;
 
             if (totalCount == 0)
-                return new TPrositOut();
+                return new TKoinaOut();
 
             var inputLock = new object();
-            var batches = PrositHelpers.EnumerateBatches(inputs, PrositConstants.BATCH_SIZE).ToList();
-            var inputsList = new List<TPrositIn>();
+            var batches = KoinaHelpers.EnumerateBatches(inputs, KoinaConstants.BATCH_SIZE).ToList();
+            var inputsList = new List<TKoinaIn>();
             for(int i=0; i < batches.Count; ++i)
                 inputsList.Add(null);
 
@@ -386,7 +386,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
                     
                     lock (inputLock)
                     {
-                        inputsList[batchIndex] = CreatePrositInput(batch);
+                        inputsList[batchIndex] = CreateKoinaInput(batch);
 
                         // ReSharper disable AccessToModifiedClosure
                         processed += batch.Length;
@@ -403,58 +403,58 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
             const int REQUESTING_INPUTS_FRACTION = 100;
             progressStatus = progressStatus
-                .ChangeMessage(PrositResources.PrositModel_BatchPredict_Requesting_predictions_from_Prosit)
+                .ChangeMessage(KoinaResources.KoinaModel_BatchPredict_Requesting_predictions_from_Koina)
                 .ChangePercentComplete(0);
             if (progressMonitor.UpdateProgress(progressStatus) == UpdateProgressResponse.cancel)
                 return null;
 
             // Make predictions batch by batch in sequence and merge the outputs
-            var prositOutput = new List<TPrositOut>();
+            var koinaOutput = new List<TKoinaOut>();
             for (int i = 0; i < inputsList.Count; ++i)
-                prositOutput.Add(null);
+                koinaOutput.Add(null);
 
             ParallelEx.For(0, inputsList.Count, batchIndex =>
             {
-                var prositIn = inputsList[batchIndex];
+                var koinaIn = inputsList[batchIndex];
 
                 if (progressMonitor.UpdateProgress(localProgressStatus) == UpdateProgressResponse.cancel)
                     return;
 
-                prositOutput[batchIndex] = Predict(predictionClient, prositIn, token);
+                koinaOutput[batchIndex] = Predict(predictionClient, koinaIn, token);
 
                 lock(progressMonitor)
                 {
-                    processed += prositIn.InputRows.Count;
+                    processed += koinaIn.InputRows.Count;
                     localProgressStatus = localProgressStatus.ChangeMessage(TextUtil.SpaceSeparate(
-                            PrositResources.PrositModel_BatchPredict_Requesting_predictions_from_Prosit,
+                            KoinaResources.KoinaModel_BatchPredict_Requesting_predictions_from_Koina,
                             processed.ToString(), @"/", totalCount.ToString()))
                         .ChangePercentComplete(REQUESTING_INPUTS_FRACTION * processed / totalCount);
                     progressMonitor.UpdateProgress(localProgressStatus);
                     Console.WriteLine(localProgressStatus.Message);
                 }
-            }, maxThreads: PrositConstants.KOINA_MAX_THREADS);
+            }, maxThreads: KoinaConstants.MAX_THREADS);
 
-            var prositOutputAll = prositOutput[0];
-            for (int i = 1; i < prositOutput.Count; ++i)
-                prositOutputAll = prositOutputAll.MergeOutputs(prositOutput[i]);
+            var koinaOutputAll = koinaOutput[0];
+            for (int i = 1; i < koinaOutput.Count; ++i)
+                koinaOutputAll = koinaOutputAll.MergeOutputs(koinaOutput[i]);
 
-            return prositOutputAll;
+            return koinaOutputAll;
         }
     }
 
-    public static class PrositHelpers
+    public static class KoinaHelpers
     {
-        public static PrositMS2Spectra PredictBatchesFromPrositCsv(string prositCsvFilePath, IProgressMonitor progressMonitor,
+        public static KoinaMS2Spectra PredictBatchesFromKoinaCsv(string koinaCsvFilePath, IProgressMonitor progressMonitor,
             ref IProgressStatus progressStatus, CancellationToken token)
         {
-            progressStatus = progressStatus.ChangeMessage(ModelsResources.PrositHelpers_PredictBatchesFromPrositCsv_Reading_Prosit_CSV_input);
+            progressStatus = progressStatus.ChangeMessage(ModelsResources.KoinaHelpers_PredictBatchesFromKoinaCsv_Reading_Koina_CSV_input);
 
-            var inputRows = new List<PrositIntensityInput.PrositPrecursorInput>();
-            var peptides = new List<PeptidePrecursorNCE>();
+            var inputRows = new List<KoinaIntensityModel.KoinaIntensityInput.KoinaPrecursorInput>();
+            var peptides = new List<KoinaIntensityModel.PeptidePrecursorNCE>();
             var calc = new SequenceMassCalc(MassType.Monoisotopic);
             var defaultSettings = SrmSettingsList.GetDefault();
 
-            using var csvReader = new StreamReader(prositCsvFilePath);
+            using var csvReader = new StreamReader(koinaCsvFilePath);
             csvReader.ReadLine(); // skip header
             while (csvReader.ReadLine() is { } row)
             {
@@ -462,28 +462,28 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 string sequence = values[0];
                 var ce = Convert.ToSingle(values[1], CultureInfo.InvariantCulture);
                 var charge = Convert.ToInt32(values[2], CultureInfo.InvariantCulture);
-                inputRows.Add(CreatePrositInputRow(sequence, charge, ce, out _));
-                peptides.Add(new PeptidePrecursorNCE(sequence, charge, new SignedMz(calc.GetPrecursorMass(sequence) / charge),
+                inputRows.Add(CreateKoinaInputRow(sequence, charge, ce, out _));
+                peptides.Add(new KoinaIntensityModel.PeptidePrecursorNCE(sequence, charge, new SignedMz(calc.GetPrecursorMass(sequence) / charge),
                     ExplicitMods.EMPTY, IsotopeLabelType.light, (int)ce));
             }
             progressStatus = progressStatus.NextSegment();
 
-            var prositOutput = Instance.PredictBatches(PrositPredictionClient.Current,
+            var koinaOutput = Instance.PredictBatches(KoinaPredictionClient.Current,
                 progressMonitor, ref progressStatus, defaultSettings, inputRows, token);
             progressStatus = progressStatus.NextSegment();
 
-            var ms2 = new PrositMS2Spectra(SrmSettingsList.GetDefault(), peptides, prositOutput);
+            var ms2 = new KoinaMS2Spectra(SrmSettingsList.GetDefault(), peptides, koinaOutput);
 
             // Predict iRTs for peptides
             var distinctModifiedSequences = new HashSet<string>();
-            var distinctPeps = new List<PrositRetentionTimeModel.PrositRTInput.PrositPeptideInput>();
+            var distinctPeps = new List<KoinaRetentionTimeModel.KoinaRTInput.KoinaPeptideInput>();
             foreach (var p in peptides)
             {
                 if (distinctModifiedSequences.Add(p.Sequence))
-                    distinctPeps.Add(PrositRetentionTimeModel.CreatePrositInputRow(defaultSettings, p.Sequence, out _));
+                    distinctPeps.Add(KoinaRetentionTimeModel.CreateKoinaInputRow(defaultSettings, p.Sequence, out _));
             }
 
-            var irtOutput = PrositRetentionTimeModel.Instance.PredictBatches(PrositPredictionClient.Current,
+            var irtOutput = KoinaRetentionTimeModel.Instance.PredictBatches(KoinaPredictionClient.Current,
                 progressMonitor, ref progressStatus, defaultSettings, distinctPeps, token);
             //progressStatus = progressStatus.NextSegment();
             var iRTMap = Enumerable.Range(0, distinctPeps.Count).ToDictionary(i => peptides[i], i => irtOutput.OutputRows[i].iRT);
@@ -492,21 +492,21 @@ namespace pwiz.Skyline.Model.Prosit.Models
             {
                 if (iRTMap.TryGetValue(ms2.Spectra[i].PeptidePrecursorNCE, out var iRT))
                     ms2.Spectra[i].SpecMzInfo.RetentionTime = iRT;
-                ms2.Spectra[i].SpecMzInfo.SourceFile = prositCsvFilePath;
+                ms2.Spectra[i].SpecMzInfo.SourceFile = koinaCsvFilePath;
             }
 
             return ms2;
         }
 
-        public static void ExportPrositSpectraToBlib(PrositMS2Spectra spectra, string encyclopediaBlibFilePath, IProgressMonitor progressMonitor,
+        public static void ExportKoinaSpectraToBlib(KoinaMS2Spectra spectra, string encyclopediaBlibFilePath, IProgressMonitor progressMonitor,
             ref IProgressStatus progressStatus)
         {
-            progressStatus = progressStatus.ChangeMessage(ModelsResources.PrositHelpers_ExportPrositSpectraToBlib_Exporting_Prosit_spectra_to_BiblioSpec_library);
+            progressStatus = progressStatus.ChangeMessage(ModelsResources.KoinaHelpers_ExportKoinaSpectraToBlib_Exporting_Koina_spectra_to_BiblioSpec_library);
             string libraryName = Path.GetFileName(encyclopediaBlibFilePath);
 
             progressMonitor.UpdateProgress(progressStatus);
 
-            // Delete if already exists, no merging with Prosit
+            // Delete if already exists, no merging with Koina
             var libraryExists = File.Exists(encyclopediaBlibFilePath);
             if (libraryExists)
                 FileEx.SafeDelete(encyclopediaBlibFilePath);
@@ -520,17 +520,17 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 var mzSpecInfo = spectra.Spectra.Select(s => s.SpecMzInfo);
                 var docLibraryNew = blibDb.CreateLibraryFromSpectra(docLibrarySpec2, mzSpecInfo.ToList(), libraryName, progressMonitor, ref progressStatus);
                 if (docLibraryNew == null)
-                    throw new InvalidOperationException(ModelsResources.PrositHelpers_ExportPrositSpectraToBlib_failed_to_write_Prosit_output_to_blib);
+                    throw new InvalidOperationException(ModelsResources.KoinaHelpers_ExportKoinaSpectraToBlib_failed_to_write_Koina_output_to_blib);
             }
         }
 
-        public class PrositRequest
+        public class KoinaRequest
         {
             protected CancellationTokenSource _tokenSource = new CancellationTokenSource();
             protected Action _updateCallback;
 
-            public PrositRequest(PrositPredictionClient client, PrositIntensityModel intensityModel,
-                PrositRetentionTimeModel rtModel, SrmSettings settings,
+            public KoinaRequest(KoinaPredictionClient client, KoinaIntensityModel intensityModel,
+                KoinaRetentionTimeModel rtModel, SrmSettings settings,
                 PeptideDocNode peptide, TransitionGroupDocNode precursor, IsotopeLabelType labelType,
                 int nce, Action updateCallback)
             {
@@ -545,21 +545,21 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 _updateCallback = updateCallback;
             }
 
-            public PrositRequest(SrmSettings settings, PeptideDocNode peptide, TransitionGroupDocNode precursor,
+            public KoinaRequest(SrmSettings settings, PeptideDocNode peptide, TransitionGroupDocNode precursor,
                 IsotopeLabelType labelType, int nce, Action updateCallback) :
-                this(PrositPredictionClient.Current, PrositIntensityModel.Instance, PrositRetentionTimeModel.Instance,
+                this(KoinaPredictionClient.Current, KoinaIntensityModel.Instance, KoinaRetentionTimeModel.Instance,
                     settings, peptide, precursor, labelType, nce, updateCallback)
             {
             }
 
-            public virtual PrositRequest Predict()
+            public virtual KoinaRequest Predict()
             {
                 ActionUtil.RunAsync(() =>
                 {
                     try
                     {
                         var labelType = LabelType ?? Precursor.LabelType;
-                        var skyIn = new PeptidePrecursorNCE(Peptide,
+                        var skyIn = new KoinaIntensityModel.PeptidePrecursorNCE(Peptide,
                             Precursor, labelType, NCE);
                         var massSpectrum = IntensityModel.PredictSingle(Client,
                             Settings, skyIn,
@@ -568,12 +568,12 @@ namespace pwiz.Skyline.Model.Prosit.Models
                             Settings,
                             Peptide, _tokenSource.Token);
                         Spectrum = new SpectrumDisplayInfo(
-                            new SpectrumInfoProsit(massSpectrum, Precursor, labelType, NCE),
+                            new SpectrumInfoKoina(massSpectrum, Precursor, labelType, NCE),
                             // ReSharper disable once AssignNullToNotNullAttribute
                             Precursor,
                             iRT[Peptide]);
                     }
-                    catch (PrositException ex)
+                    catch (KoinaException ex)
                     {
                         Exception = ex;
 
@@ -598,16 +598,16 @@ namespace pwiz.Skyline.Model.Prosit.Models
     
             public Exception Exception { get; protected set; }
 
-            public PrositPredictionClient Client { get; protected set; }
-            public PrositIntensityModel IntensityModel { get; protected set; }
-            public PrositRetentionTimeModel RTModel { get; protected set; }
+            public KoinaPredictionClient Client { get; protected set; }
+            public KoinaIntensityModel IntensityModel { get; protected set; }
+            public KoinaRetentionTimeModel RTModel { get; protected set; }
             public SrmSettings Settings { get; protected set; }
             public PeptideDocNode Peptide { get; protected set; }
             public TransitionGroupDocNode Precursor { get; protected set; }
             public IsotopeLabelType LabelType { get; protected set; }
             public int NCE { get; protected set; }
 
-            protected bool Equals(PrositRequest other)
+            protected bool Equals(KoinaRequest other)
             {
                 return Client.Server == other.Client.Server && ReferenceEquals(IntensityModel, other.IntensityModel) &&
                        ReferenceEquals(RTModel, other.RTModel) && ReferenceEquals(Settings, other.Settings) &&
@@ -620,7 +620,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
                 if (obj.GetType() != GetType()) return false;
-                return Equals((PrositRequest)obj);
+                return Equals((KoinaRequest)obj);
             }
 
             public override int GetHashCode()
@@ -640,12 +640,12 @@ namespace pwiz.Skyline.Model.Prosit.Models
             }
         }
 
-        public static bool PrositSettingsValid
+        public static bool KoinaSettingsValid
         {
             get
             {
-                return !string.IsNullOrEmpty(Settings.Default.PrositIntensityModel) &&
-                       !string.IsNullOrEmpty(Settings.Default.PrositRetentionTimeModel);
+                return !string.IsNullOrEmpty(Settings.Default.KoinaIntensityModel) &&
+                       !string.IsNullOrEmpty(Settings.Default.KoinaRetentionTimeModel);
             }
         }
 
@@ -749,28 +749,28 @@ namespace pwiz.Skyline.Model.Prosit.Models
         private const string UNIMOD_FORMAT = "[UNIMOD:{0}]";
 
         /// <summary>
-        /// Sequences are passed to Prosit as an array of indices mapping into an array
+        /// Sequences are passed to Koina as an array of indices mapping into an array
         /// of amino acids (with modifications). Actually throwing exceptions in this method
         /// slows down constructing inputs (for larger data sets with unknown mods (and aa's)significantly,
-        /// which is why PrositExceptions (only) are set as an output parameter and null is returned.
+        /// which is why KoinaExceptions (only) are set as an output parameter and null is returned.
         /// </summary>
-        public static string EncodeSequence(SrmSettings settings, PeptideDocNode peptide, IsotopeLabelType label, out PrositException exception)
+        public static string EncodeSequence(SrmSettings settings, PeptideDocNode peptide, IsotopeLabelType label, out KoinaException exception)
         {
             if (!peptide.Target.IsProteomic)
-                throw new PrositSmallMoleculeException(peptide.ModifiedTarget);
+                throw new KoinaSmallMoleculeException(peptide.ModifiedTarget);
 
             var sequence = peptide.Target.Sequence;
-            if (sequence.Length > PrositConstants.PEPTIDE_SEQ_LEN) {
-                exception = new PrositPeptideTooLongException(peptide.ModifiedTarget);
+            if (sequence.Length > KoinaConstants.PEPTIDE_SEQ_LEN) {
+                exception = new KoinaPeptideTooLongException(peptide.ModifiedTarget);
                 return null;
             }
 
             var modifiedSequence = ModifiedSequence.GetModifiedSequence(settings, peptide.ModifiedTarget.Sequence, peptide.ExplicitMods, label);
-            var result = new StringBuilder(PrositConstants.PEPTIDE_SEQ_LEN);
+            var result = new StringBuilder(KoinaConstants.PEPTIDE_SEQ_LEN);
 
             for (var i = 0; i < sequence.Length; ++i) {
-                if (!PrositConstants.AMINO_ACIDS.TryGetValue(sequence[i], out _)) {
-                    exception = new PrositUnsupportedAminoAcidException(peptide.ModifiedTarget, i);
+                if (!KoinaConstants.AMINO_ACIDS.TryGetValue(sequence[i], out _)) {
+                    exception = new KoinaUnsupportedAminoAcidException(peptide.ModifiedTarget, i);
                     return null;
                 }
 
@@ -783,9 +783,9 @@ namespace pwiz.Skyline.Model.Prosit.Models
                         continue;
 
                     var staticMod = UniMod.FindMatchingStaticMod(mod.StaticMod, true) ?? mod.StaticMod;
-                    if (!PrositConstants.MODIFICATIONS.TryGetValue(staticMod.Name, out var _))
+                    if (!KoinaConstants.MODIFICATIONS.TryGetValue(staticMod.Name, out var _))
                     {
-                        exception = new PrositUnsupportedModificationException(peptide.ModifiedTarget,
+                        exception = new KoinaUnsupportedModificationException(peptide.ModifiedTarget,
                             mod.StaticMod,
                             mod.IndexAA);
                         return null;
@@ -801,15 +801,15 @@ namespace pwiz.Skyline.Model.Prosit.Models
         }
 
         /// <summary>
-        /// Sequences are passed to Prosit as an array of indices mapping into an array
+        /// Sequences are passed to Koina as an array of indices mapping into an array
         /// of amino acids (with modifications). Actually throwing exceptions in this method
         /// slows down constructing inputs (for larger data sets with unknown mods (and aa's)significantly,
-        /// which is why PrositExceptions (only) are set as an output parameter and null is returned.
+        /// which is why KoinaExceptions (only) are set as an output parameter and null is returned.
         /// </summary>
-        public static string EncodeSequence(string sequence, out PrositException exception)
+        public static string EncodeSequence(string sequence, out KoinaException exception)
         {
-            if (sequence.Length > PrositConstants.PEPTIDE_SEQ_LEN) {
-                exception = new PrositPeptideTooLongException(new Target(sequence));
+            if (sequence.Length > KoinaConstants.PEPTIDE_SEQ_LEN) {
+                exception = new KoinaPeptideTooLongException(new Target(sequence));
                 return null;
             }
             
@@ -818,7 +818,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         }
 
         /// <summary>
-        /// Decodes "Prosit-encoded" peptide sequences from a tensor. Only used in testing
+        /// Decodes "Koina-encoded" peptide sequences from a tensor. Only used in testing
         /// </summary>
         /// <param name="tensor">Int tensor of shape n x Constants.PEPTIDE_SEQ_LEN</param>
         /// <returns>A list of string representations of the sequence</returns>
@@ -838,12 +838,12 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 {
                     if (encodedSeqs[idx + j] == 0) // Essentially a null terminator
                         break;
-                    else if (Constants.AMINO_ACIDS_REVERSE.TryGetValue(encodedSeqs[idx + j], out var prositAA))
-                        seq.Append(prositAA.AA);
-                    else if (Constants.MODIFICATIONS_REVERSE.TryGetValue(encodedSeqs[idx + j], out var prositAAMod))
-                        seq.Append(string.Format(@"{0}[{1}]", prositAAMod.AA, prositAAMod.Mod.ShortName));
+                    else if (Constants.AMINO_ACIDS_REVERSE.TryGetValue(encodedSeqs[idx + j], out var koinaAA))
+                        seq.Append(koinaAA.AA);
+                    else if (Constants.MODIFICATIONS_REVERSE.TryGetValue(encodedSeqs[idx + j], out var koinaAAMod))
+                        seq.Append(string.Format(@"{0}[{1}]", koinaAAMod.AA, koinaAAMod.Mod.ShortName));
                     else
-                        throw new PrositException(string.Format(@"Unknown Prosit AA index {0}", encodedSeqs[idx + j]));
+                        throw new KoinaException(string.Format(@"Unknown Koina AA index {0}", encodedSeqs[idx + j]));
                 }
 
                 result[i] = seq.ToString();
@@ -854,7 +854,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         }
 
         /// <summary>
-        /// Decodes "Prosit-encoded" peptide sequences from a tensor. Only used in testing
+        /// Decodes "Koina-encoded" peptide sequences from a tensor. Only used in testing
         /// </summary>
         /// <param name="tensor">Int tensor of shape n x Constants.PEPTIDE_SEQ_LEN</param>
         /// <returns>A list of modified sequence objects representing the decoded sequences</returns>
@@ -886,7 +886,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 result[i] = -1;
                 for (int j = 0; j < tensor.Shape[1]; ++j)
                 {
-                    if (tensor.Contents.Fp32Contents[i * PrositConstants.PRECURSOR_CHARGES + j] == 1.0f)
+                    if (tensor.Contents.Fp32Contents[i * KoinaConstants.PRECURSOR_CHARGES + j] == 1.0f)
                     {
                         result[i] = j + 1;
                         break;
@@ -895,8 +895,8 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
                 if (result[i] == -1)
                 {
-                    var charges = tensor.Contents.Fp32Contents.Skip(i * PrositConstants.PRECURSOR_CHARGES).Take(PrositConstants.PRECURSOR_CHARGES);
-                    throw new PrositException(string.Format(@"[{0}] is not a valid one-hot encoded charge", string.Join(
+                    var charges = tensor.Contents.Fp32Contents.Skip(i * KoinaConstants.PRECURSOR_CHARGES).Take(KoinaConstants.PRECURSOR_CHARGES);
+                    throw new KoinaException(string.Format(@"[{0}] is not a valid one-hot encoded charge", string.Join(
                         @", ", charges)));
                 }
             }
@@ -929,29 +929,29 @@ namespace pwiz.Skyline.Model.Prosit.Models
     }
 
     /// <summary>
-    /// An interface for mapping Prosit inputs (only integers and floats) to
+    /// An interface for mapping Koina inputs (only integers and floats) to
     /// tensors directly fed to the model. The interface
-    /// itself represents an entire set of smaller inputs to Prosit and allows
-    /// for the conversion Prosit Input -> Prosit Tensor input
+    /// itself represents an entire set of smaller inputs to Koina and allows
+    /// for the conversion Koina Input -> Koina Tensor input
     /// </summary>
-    /// <typeparam name="TPrositInputRow">The type of a single input for Prosit. For instance
+    /// <typeparam name="TKoinaInputRow">The type of a single input for Koina. For instance
     /// a single precursor</typeparam>
-    public abstract class PrositInput<TPrositInputRow>
+    public abstract class KoinaInput<TKoinaInputRow>
     {
-        public abstract IList<TPrositInputRow> InputRows { get; }
-        public abstract IList<InferInputTensor> PrositTensors { get; }
+        public abstract IList<TKoinaInputRow> InputRows { get; }
+        public abstract IList<InferInputTensor> KoinaTensors { get; }
         public abstract IList<string> OutputTensorNames { get; }
     }
 
     /// <summary>
     /// An interface for mapping tensors returned from
-    /// Prosit to Skyline data structures.
+    /// Koina to Skyline data structures.
     /// </summary>
     /// <typeparam name="T">The derived type itself</typeparam>
-    /// <typeparam name="TPrositOutputRow">Type of single prosit output, such as an iRT value</typeparam>
-    public abstract class PrositOutput<T, TPrositOutputRow> where T : PrositOutput<T, TPrositOutputRow>, new()
+    /// <typeparam name="TKoinaOutputRow">Type of single koina output, such as an iRT value</typeparam>
+    public abstract class KoinaOutput<T, TKoinaOutputRow> where T : KoinaOutput<T, TKoinaOutputRow>, new()
     {
-        public abstract IList<TPrositOutputRow> OutputRows { get; protected set; }
+        public abstract IList<TKoinaOutputRow> OutputRows { get; protected set; }
 
         public virtual T MergeOutputs(T other)
         {

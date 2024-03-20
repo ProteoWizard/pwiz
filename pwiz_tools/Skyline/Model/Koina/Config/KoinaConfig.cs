@@ -22,14 +22,14 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Xml.Serialization;
 using Grpc.Core;
-using pwiz.Skyline.Model.Prosit.Communication;
+using pwiz.Skyline.Model.Koina.Communication;
 
-namespace pwiz.Skyline.Model.Prosit.Config
+namespace pwiz.Skyline.Model.Koina.Config
 {
     /// <summary>
-    /// Configuration of a Prosit server.
+    /// Configuration of a Koina server.
     /// </summary>
-    public class PrositConfig
+    public class KoinaConfig
     {
         public string Server { get; set; }
         public bool RequireSsl { get; set; }
@@ -74,30 +74,30 @@ namespace pwiz.Skyline.Model.Prosit.Config
 
 
         /// <summary>
-        /// Read the configuration from the PrositConfig.xml embedded resource
+        /// Read the configuration from the KoinaConfig.xml embedded resource
         /// </summary>
-        public static PrositConfig GetPrositConfig()
+        public static KoinaConfig GetKoinaConfig()
         {
-            using (var stream = typeof(PrositConfig).Assembly
-                .GetManifestResourceStream(typeof(PrositConfig), "PrositConfig.xml"))
+            using (var stream = typeof(KoinaConfig).Assembly
+                .GetManifestResourceStream(typeof(KoinaConfig), "KoinaConfig.xml"))
             {
                 if (stream == null)
                 {
-                    throw new InvalidOperationException(@"Unable to read PrositConfig.xml");
+                    throw new InvalidOperationException(@"Unable to read KoinaConfig.xml");
                 }
-                var xmlSerializer = new XmlSerializer(typeof(PrositConfig));
-                var prositConfig = (PrositConfig) xmlSerializer.Deserialize(stream);
-                prositConfig.RequireSsl = true;
-                return prositConfig;
+                var xmlSerializer = new XmlSerializer(typeof(KoinaConfig));
+                var koinaConfig = (KoinaConfig) xmlSerializer.Deserialize(stream);
+                koinaConfig.RequireSsl = true;
+                return koinaConfig;
             }
         }
 
-        public void CallWithClient(Action<PrositPredictionClient> action)
+        public void CallWithClient(Action<KoinaPredictionClient> action)
         {
             var channel = CreateChannel();
             try
             {
-                var client = new PrositPredictionClient(channel, Server);
+                var client = new KoinaPredictionClient(channel, Server);
                 action(client);
             }
             finally

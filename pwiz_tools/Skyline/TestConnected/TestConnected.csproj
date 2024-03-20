@@ -211,11 +211,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PanoramaClientDownloadTest.cs" />
-    <Compile Include="PrositBuildLibraryTest.cs" />
-    <Compile Include="PrositConnectionTest.cs" />
+    <Compile Include="KoinaBuildLibraryTest.cs" />
+    <Compile Include="KoinaConnectionTest.cs" />
     <Compile Include="UnifiFunctionalTest.cs" />
     <Compile Include="Results\RemoteApi\UnifiTest.cs" />
-    <Compile Include="PrositBuildLibraryFromCsvTest.cs" />
+    <Compile Include="KoinaBuildLibraryFromCsvTest.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
