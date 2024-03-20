@@ -979,11 +979,11 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Prosit settings.
+        ///   Looks up a localized string similar to Koina settings.
         /// </summary>
-        public static string EncyclopeDiaSettings_PrositSettings {
+        public static string EncyclopeDiaSettings_KoinaSettings {
             get {
-                return ResourceManager.GetString("EncyclopeDiaSettings_PrositSettings", resourceCulture);
+                return ResourceManager.GetString("EncyclopeDiaSettings_KoinaSettings", resourceCulture);
             }
         }
         
@@ -1224,72 +1224,72 @@ namespace pwiz.Skyline.Model.AuditLog {
         /// <summary>
         ///   Looks up a localized string similar to Default charge.
         /// </summary>
-        public static string FastaToPrositInputCsvConfig_DefaultCharge {
+        public static string FastaToKoinaInputCsvConfig_DefaultCharge {
             get {
-                return ResourceManager.GetString("FastaToPrositInputCsvConfig_DefaultCharge", resourceCulture);
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_DefaultCharge", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Default NCE.
         /// </summary>
-        public static string FastaToPrositInputCsvConfig_DefaultNCE {
+        public static string FastaToKoinaInputCsvConfig_DefaultNCE {
             get {
-                return ResourceManager.GetString("FastaToPrositInputCsvConfig_DefaultNCE", resourceCulture);
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_DefaultNCE", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Enzyme.
         /// </summary>
-        public static string FastaToPrositInputCsvConfig_Enzyme {
+        public static string FastaToKoinaInputCsvConfig_Enzyme {
             get {
-                return ResourceManager.GetString("FastaToPrositInputCsvConfig_Enzyme", resourceCulture);
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_Enzyme", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Max charge.
         /// </summary>
-        public static string FastaToPrositInputCsvConfig_MaxCharge {
+        public static string FastaToKoinaInputCsvConfig_MaxCharge {
             get {
-                return ResourceManager.GetString("FastaToPrositInputCsvConfig_MaxCharge", resourceCulture);
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_MaxCharge", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Max missed cleavages.
         /// </summary>
-        public static string FastaToPrositInputCsvConfig_MaxMissedCleavage {
+        public static string FastaToKoinaInputCsvConfig_MaxMissedCleavage {
             get {
-                return ResourceManager.GetString("FastaToPrositInputCsvConfig_MaxMissedCleavage", resourceCulture);
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_MaxMissedCleavage", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Max m/z.
         /// </summary>
-        public static string FastaToPrositInputCsvConfig_MaxMz {
+        public static string FastaToKoinaInputCsvConfig_MaxMz {
             get {
-                return ResourceManager.GetString("FastaToPrositInputCsvConfig_MaxMz", resourceCulture);
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_MaxMz", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Min charge.
         /// </summary>
-        public static string FastaToPrositInputCsvConfig_MinCharge {
+        public static string FastaToKoinaInputCsvConfig_MinCharge {
             get {
-                return ResourceManager.GetString("FastaToPrositInputCsvConfig_MinCharge", resourceCulture);
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_MinCharge", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Min m/z.
         /// </summary>
-        public static string FastaToPrositInputCsvConfig_MinMz {
+        public static string FastaToKoinaInputCsvConfig_MinMz {
             get {
-                return ResourceManager.GetString("FastaToPrositInputCsvConfig_MinMz", resourceCulture);
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_MinMz", resourceCulture);
             }
         }
         

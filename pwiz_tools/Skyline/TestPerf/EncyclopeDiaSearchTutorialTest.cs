@@ -24,7 +24,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
-using pwiz.Skyline.Model.Prosit.Models;
+using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
@@ -46,7 +46,7 @@ namespace TestPerf
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestEncyclopeDiaSearchTutorial()
         {
-            TestFilesZip = @"https://skyline.ms/tutorials/EncyclopeDiaSearchTutorial.zip";
+            TestFilesZip = @"https://skyline.ms/tutorials/EncyclopeDiaSearchTutorial-24_1.zip";
 
             _analysisValues = new AnalysisValues
             {
@@ -70,7 +70,7 @@ namespace TestPerf
                     //"23aug2017_hela_serum_timecourse_wide_1f.mzML",
                 },
 
-                FinalTargetCounts = new[] { 370, 725, 725, 5104 },
+                FinalTargetCounts = new[] { 368, 717, 717, 5050 },
                 MassErrorStats = new[]
                 {
                     new[] {-0.2, 2.5},
@@ -138,13 +138,13 @@ namespace TestPerf
 
         private void RunTest()
         {
-            if (Program.UseOriginalURLs && !HasPrositServer())
+            if (Program.UseOriginalURLs && !HasKoinaServer())
             {
-                Console.Error.WriteLine($"NOTE: skipping {TestContext.TestName} because Prosit is not configured");
+                Console.Error.WriteLine($"NOTE: skipping {TestContext.TestName} because Koina is not configured");
                 return;
             }
 
-            TestFilesPersistent = new[] { "z3_nce33-prosit" };
+            TestFilesPersistent = new[] { "z3_nce33-koina" };
 
             RunFunctionalTest();
 
@@ -173,13 +173,13 @@ namespace TestPerf
 
             public string BlibPath =>
                 IsWholeProteome
-                    ? "20220721-uniprot-sprot-human-z3_nce33-prosit-7C7C51618B8D2289272F4E24498B7C.blib"
-                    : "20230123-abundant-proteins-z3_nce33-prosit-53253019C6592C9A4D7B3FA95E6CBE.blib";
+                    ? "20220721-uniprot-sprot-human-z3_nce33-koina-7C7C51618B8D2289272F4E24498B7C.blib"
+                    : "20230123-abundant-proteins-z3_nce33-koina-Prosit_2019_intensity-Prosit_2019_irt-53253019C6592C9A4D7B3FA95E6CBE.blib";
 
-            public string PrositHash =>
+            public string KoinaHash =>
                 IsWholeProteome
-                    ? "7C7C51618B8D2289272F4E24498B7C"
-                    : "53253019C6592C9A4D7B3FA95E6CBE";
+                    ? "Prosit_2019_intensity-Prosit_2019_irt-7C7C51618B8D2289272F4E24498B7C"
+                    : "Prosit_2019_intensity-Prosit_2019_irt-53253019C6592C9A4D7B3FA95E6CBE";
         }
 
         protected override void DoTest()
@@ -193,20 +193,20 @@ namespace TestPerf
             var screenshotPage = 5;
             PauseForScreenShot<EncyclopeDiaSearchDlg.FastaPage>("Fasta Settings page", screenshotPage++);
 
-            // copy expected blib to actual blib path so it will be re-used and Prosit won't be called
+            // copy expected blib to actual blib path so it will be re-used and Koina won't be called
             string persistentBlibFilepath = TestFilesDir.GetTestPath(_analysisValues.BlibPath);
             string tempBlibFilepath = TestFilesDir.GetTestPath(fastaFilepath)
-                .Replace(".fasta", $"-z3_nce33-prosit-{_analysisValues.PrositHash}.blib");
+                .Replace(".fasta", $"-z3_nce33-koina-{_analysisValues.KoinaHash}.blib");
 
             string workingDir = TestFilesDir.FullPath;
 
             if (!Program.UseOriginalURLs)
                 FileEx.HardLinkOrCopyFile(persistentBlibFilepath, tempBlibFilepath);
 
-            RunUI(searchDlg.NextPage); // now on Prosit settings
+            RunUI(searchDlg.NextPage); // now on Koina settings
 
-            Settings.Default.PrositIntensityModel = PrositIntensityModel.Models.First();
-            Settings.Default.PrositRetentionTimeModel = PrositRetentionTimeModel.Models.First();
+            Settings.Default.KoinaIntensityModel = KoinaIntensityModel.Models.First();
+            Settings.Default.KoinaRetentionTimeModel = KoinaRetentionTimeModel.Models.First();
             RunUI(() =>
             {
                 searchDlg.DefaultCharge = 3;
@@ -217,7 +217,7 @@ namespace TestPerf
                 //searchDlg.MaxMz = 551;
                 searchDlg.ImportFastaControl.MaxMissedCleavages = 2;
             });
-            PauseForScreenShot<EncyclopeDiaSearchDlg.PrositPage>("Prosit Settings page", screenshotPage++);
+            PauseForScreenShot<EncyclopeDiaSearchDlg.KoinaPage>("Koina Settings page", screenshotPage++);
 
             RunUI(searchDlg.NextPage); // now on narrow fractions
             var browseNarrowDlg = ShowDialog<OpenDataSourceDialog>(() => searchDlg.NarrowWindowResults.Browse());

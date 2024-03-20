@@ -217,14 +217,14 @@
   <data name="DDASearchControl_SearchProgress_Starting_search" xml:space="preserve">
     <value>Starting search...</value>
   </data>
-  <data name="EncyclopeDiaSearchControl_Search_Reusing_Prosit_predictions_from___0_" xml:space="preserve">
-    <value>Reusing Prosit predictions from: {0}</value>
+  <data name="EncyclopeDiaSearchControl_Search_Reusing_Koina_predictions_from___0_" xml:space="preserve">
+    <value>Reusing Koina predictions from: {0}</value>
   </data>
   <data name="EncyclopeDiaSearchDlg_ImportEncyclopediaLibrary_Ran_EncyclopeDIA_Search" xml:space="preserve">
     <value>Ran EncyclopeDIA Search</value>
   </data>
-  <data name="EncyclopeDiaSearchDlg_NextPage_A_FASTA_file_is_required_for_an_EncyclopeDia_Prosit_search_" xml:space="preserve">
-    <value>A FASTA file is required for an EncyclopeDIA Prosit search.</value>
+  <data name="EncyclopeDiaSearchDlg_NextPage_A_FASTA_file_is_required_for_an_EncyclopeDia_Koina_search_" xml:space="preserve">
+    <value>A FASTA file is required for an EncyclopeDIA Koina search.</value>
   </data>
   <data name="EncyclopeDiaSearchDlg_NextPage_Run" xml:space="preserve">
     <value>Run</value>

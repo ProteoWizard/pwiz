@@ -416,11 +416,11 @@
   <data name="toolStripSeparator14.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 6</value>
   </data>
-  <data name="prositLibMatchItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="koinaLibMatchItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
   </data>
-  <data name="prositLibMatchItem.Text" xml:space="preserve">
-    <value>Prosit</value>
+  <data name="koinaLibMatchItem.Text" xml:space="preserve">
+    <value>Koina</value>
   </data>
   <data name="mirrorMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -2430,10 +2430,10 @@
   <data name="&gt;&gt;toolStripSeparator14.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;prositLibMatchItem.Name" xml:space="preserve">
-    <value>prositLibMatchItem</value>
+  <data name="&gt;&gt;koinaLibMatchItem.Name" xml:space="preserve">
+    <value>koinaLibMatchItem</value>
   </data>
-  <data name="&gt;&gt;prositLibMatchItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;koinaLibMatchItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;mirrorMenuItem.Name" xml:space="preserve">

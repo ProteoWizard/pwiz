@@ -257,12 +257,20 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
+        /// Returns true iff c is a valid filename character (e.g. isn't one of \/*:?&lt;>|" nor a non-printable chars).
+        /// </summary>
+        public static bool IsValidFilenameChar(char c)
+        {
+            const string illegalFilename = "\\/*:?<>|\"";
+            return !(c < 0x20 || c == 0x7f || illegalFilename.Contains(c));
+        }
+
+        /// <summary>
         /// Replaces invalid filename characters (\/*:?&lt;>|" and non-printable chars) with a replacement character (default '_').
         /// </summary>
         public static string ReplaceInvalidFilenameCharacters(string filename, char replacementChar = '_')
         {
-            const string illegalFilename = "\\/*:?<>|\"";
-            return new string(filename.Select(t=>t < 0x20 || t == 0x7f || illegalFilename.Contains(t) ? '_' : t).ToArray());
+            return filename.All(IsValidFilenameChar) ? filename : new string(filename.Select(c => IsValidFilenameChar(c) ? c : '_').ToArray());
         }
 
         /// <summary>
