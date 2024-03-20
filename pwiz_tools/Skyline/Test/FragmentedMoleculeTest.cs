@@ -215,8 +215,9 @@ namespace pwiz.SkylineTest
             Assert.AreEqual("Phospho (ST)", modifiedSequence4.ExplicitMods[1].Name);
             Assert.AreEqual("TMTpro (K)", modifiedSequence4.ExplicitMods[2].Name);
 
-            AssertEx.ThrowsException<ArgumentException>(() => new ModifiedSequence("C[Carbamidomethyl]PT[Phospho]IDEK[TMTpro]", MassType.Monoisotopic),
-                ModelResources.ModificationMatcher_GetStaticMod_no_UniMod_match);
+            AssertEx.ThrowsException<FormatException>(() => new ModifiedSequence("C[Carbamidomethyl]PT[Phospho]IDEK[TMTpro]", MassType.Monoisotopic),
+                string.Format(ModelResources.ModificationMatcher_ThrowUnimodException_Unrecognized_Unimod_id__0__in_modified_peptide_sequence__1___amino_acid__2____3___,
+                    0, "C[Carbamidomethyl]PT[Phospho]IDEK[TMTpro]", 1, "C[Carbamidomethyl]"));
         }
     }
 }
