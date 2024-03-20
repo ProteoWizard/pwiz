@@ -233,7 +233,7 @@ namespace pwiz.Skyline.Model.Results
             double minStartTime = double.MaxValue;
             double maxEndTime = double.MinValue;
             double apexTime = double.MinValue;
-            double apexHeight = 0;
+            double? apexHeight = null;
             for (int iTransition = 0; iTransition < transitionChromInfos.Count; iTransition++)
             {
                 var transitionChromInfo = transitionChromInfos[iTransition];
@@ -256,7 +256,7 @@ namespace pwiz.Skyline.Model.Results
 
                     minStartTime = Math.Min(minStartTime, chromPeak.StartTime);
                     maxEndTime = Math.Max(maxEndTime, chromPeak.EndTime);
-                    if (chromPeak.Height > apexHeight)
+                    if (!apexHeight.HasValue || chromPeak.Height > apexHeight)
                     {
                         apexHeight = chromPeak.Height;
                         apexTime = chromPeak.RetentionTime;
