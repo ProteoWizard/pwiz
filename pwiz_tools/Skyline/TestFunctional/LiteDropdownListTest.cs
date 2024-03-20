@@ -127,6 +127,40 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(strNewModName, editPepModsDlg.GetComboBox(IsotopeLabelType.light, 1).SelectedItem);
                 Assert.AreEqual(strCarbonyl, editPepModsDlg.GetComboBox(IsotopeLabelType.light, 2).SelectedItem);
             });
+            var oxidationV = new StaticMod(@"Carboxidation (V)", "V", null, "CO");
+            RunDlg<EditStaticModDlg>(
+                () => editPepModsDlg.GetComboBox(IsotopeLabelType.light, 2).SelectedItem =
+                    Resources.SettingsListComboDriver_Add,
+                addModDlg =>
+                {
+                    addModDlg.Modification = oxidationV;
+                    addModDlg.OkDialog();
+                }
+            );
+
+            RunUI(() =>
+            {
+                var combo = editPepModsDlg.GetComboBox(IsotopeLabelType.light, 2);
+                Assert.AreEqual(oxidationV.Name, combo.SelectedItem);
+                Assert.AreEqual(oxidationV.Name, combo.Text);
+            });
+
+            RunDlg<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(
+                () => editPepModsDlg.GetComboBox(IsotopeLabelType.light, 2).SelectedItem =
+                    Resources.SettingsListComboDriver_Edit_list,
+                editListDlg =>
+                {
+                    editListDlg.SelectItem(oxidationV.Name);
+                    editListDlg.RemoveItem();
+                    editListDlg.OkDialog();
+                });
+
+            RunUI(() =>
+            {
+                var combo = editPepModsDlg.GetComboBox(IsotopeLabelType.light, 2);
+                Assert.IsNull(combo.SelectedItem);
+                Assert.AreEqual(string.Empty, combo.Text);
+            });
 
             OkDialog(editPepModsDlg, editPepModsDlg.OkDialog);
         }
