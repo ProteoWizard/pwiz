@@ -368,6 +368,9 @@ namespace pwiz.Skyline.Model.Prosit.Models
             var processed = 0;
             var totalCount = inputs.Count;
 
+            if (totalCount == 0)
+                return new TPrositOut();
+
             var inputLock = new object();
             var batches = PrositHelpers.EnumerateBatches(inputs, PrositConstants.BATCH_SIZE).ToList();
             var inputsList = new List<TPrositIn>();
@@ -429,7 +432,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
                     progressMonitor.UpdateProgress(localProgressStatus);
                     Console.WriteLine(localProgressStatus.Message);
                 }
-            }, maxThreads: 4);
+            }, maxThreads: PrositConstants.KOINA_MAX_THREADS);
 
             var prositOutputAll = prositOutput[0];
             for (int i = 1; i < prositOutput.Count; ++i)

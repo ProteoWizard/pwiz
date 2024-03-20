@@ -1411,10 +1411,12 @@ namespace pwiz.SkylineTestFunctional
                 TestPrositSinglePrecursorPredictions();
                 TestLivePrositMirrorPlots();
                 Settings.Default.Prosit = false; // Disable Prosit to avoid that last query after building the library
-                TestPrositLibraryBuild();
+                TestPrositLibraryBuild(false);
                 TestInvalidPepSequences(); // Do this at the end, otherwise it messes with the order of nodes
                 var expected = RecordData ? 0 : QUERIES.Count;
                 Assert.AreEqual(expected, ((FakePrositPredictionClient)PrositPredictionClient.Current).QueryIndex);
+
+                TestPrositLibraryBuild(true);
             }
             PrositConstants.CACHE_PREV_PREDICTION = true;
             if (RecordData)
@@ -1516,10 +1518,13 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.Prosit = false;
         }
 
-        public void TestPrositLibraryBuild()
+        public void TestPrositLibraryBuild(bool newDocument)
         {
             var client = (FakePrositPredictionClient)PrositPredictionClient.Current;
             var outBlib = TestFilesDir.GetTestPath("Prosit.blib");
+
+            if (newDocument)
+                RunUI(() => SkylineWindow.NewDocument(true));
 
             var doc = SkylineWindow.Document;
 
@@ -1560,6 +1565,9 @@ namespace pwiz.SkylineTestFunctional
 
             // Wait for stable document
             WaitForDocumentChangeLoaded(doc);
+
+            if (newDocument)
+                return;
 
             var precursorCount = SkylineWindow.Document.PeptideTransitionGroupCount;
             var distinctPrecursorCount = 
