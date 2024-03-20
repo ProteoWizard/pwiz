@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -74,7 +73,7 @@ namespace pwiz.SkylineTest
 
             // Try precursor [M-1] first to make the importer decide
             // the product m/z column from the M-1 isotope m/z
-            var lines = text.ToLines();
+            var lines = text.ReadLines().ToList();
             Assert.AreEqual(13, lines.Count);
             (lines[1], lines[2]) = (lines[2], lines[1]);    // Swap lines 2 and 3 - leaving header
             var textPMinusFirst = TextUtil.LineSeparate(lines);
@@ -82,8 +81,7 @@ namespace pwiz.SkylineTest
 
             // Try only custom ions with no precursors to make the importer decide
             // the product m/z column from a custom ion mass
-            lines = text.ToLines();
-            var linesNoP = new List<string>(lines);
+            var linesNoP = text.ReadLines().ToList();
             linesNoP.RemoveRange(1, PRECURSOR_COUNT);
             var textNoP = TextUtil.LineSeparate(linesNoP);
             VerifyImport(doc, textNoP, 0, CUSTOM_IONS.Length, 0);

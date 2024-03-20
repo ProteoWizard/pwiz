@@ -381,7 +381,12 @@ namespace pwiz.Skyline.Util.Extensions
             return LineSeparate(lines.AsEnumerable());
         }
 
-        public static IList<string> ToLines(this string text)
+        /// <summary>
+        /// Utility function for <see cref="string"/> like <see cref="File"/> ReadLines().
+        /// </summary>
+        /// <param name="text">Text possibly multi-line</param>
+        /// <returns>Enumerable lines without line endings</returns>
+        public static IEnumerable<string> ReadLines(this string text)
         {
             using var reader = new StringReader(text);
             var lines = new List<string>();
