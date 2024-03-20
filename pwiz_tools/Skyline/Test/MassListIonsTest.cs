@@ -72,19 +72,20 @@ namespace pwiz.SkylineTest
             doc = doc.ChangeSettings(settings);
             VerifyImport(doc, text, 5, CUSTOM_IONS.Length, 0);
 
-            const string lineBreak = "\r\n";
             // Try precursor [M-1] first to make the importer decide
             // the product m/z column from the M-1 isotope m/z
-            var lines = text.Split(new[] { lineBreak }, StringSplitOptions.None).ToList();
+            var lines = text.ToLines();
+            Assert.AreEqual(13, lines.Count);
             (lines[1], lines[2]) = (lines[2], lines[1]);    // Swap lines 2 and 3 - leaving header
-            var textPMinusFirst = string.Join(lineBreak, lines);
+            var textPMinusFirst = TextUtil.LineSeparate(lines);
             VerifyImport(doc, textPMinusFirst, 5, CUSTOM_IONS.Length, 0);
 
             // Try only custom ions with no precursors to make the importer decide
             // the product m/z column from a custom ion mass
-            lines = text.Split(new[] { lineBreak }, StringSplitOptions.None).ToList();
-            lines.RemoveRange(1, PRECURSOR_COUNT);
-            var textNoP = string.Join(lineBreak, lines);
+            lines = text.ToLines();
+            var linesNoP = new List<string>(lines);
+            linesNoP.RemoveRange(1, PRECURSOR_COUNT);
+            var textNoP = TextUtil.LineSeparate(linesNoP);
             VerifyImport(doc, textNoP, 0, CUSTOM_IONS.Length, 0);
         }
 

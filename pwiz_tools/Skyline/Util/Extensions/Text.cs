@@ -381,6 +381,16 @@ namespace pwiz.Skyline.Util.Extensions
             return LineSeparate(lines.AsEnumerable());
         }
 
+        public static IList<string> ToLines(this string text)
+        {
+            using var reader = new StringReader(text);
+            var lines = new List<string>();
+            string line;
+            while ((line = reader.ReadLine()) != null)
+                lines.Add(line);
+            return lines;
+        }
+
         /// <summary>
         /// This function can be used as a replacement for String.Join(" ", ...)
         /// </summary>
