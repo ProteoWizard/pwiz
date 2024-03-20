@@ -150,7 +150,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            var goodPointsLineItem = new LineItem(@"Peptides", points, Color.Black, SymbolType.Diamond) // CONSIDER: localize?
+            var goodPointsLineItem = new LineItem(ModeUIAwareStringFormat(Resources.AlignmentForm_UpdateGraph_Peptides), points, Color.Black, SymbolType.Diamond)
                 {
                     Symbol = {Size = 8f},
                     Line = {IsVisible = false}
@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 outlierLineItem.Line.IsVisible = false;
                 outlierLineItem.Symbol.Border.IsVisible = false;
                 outlierLineItem.Symbol.Fill = new Fill(RTLinearRegressionGraphPane.COLOR_OUTLIERS);
-                goodPointsLineItem.Label.Text = Resources.AlignmentForm_UpdateGraph_Peptides_Refined;
+                goodPointsLineItem.Label.Text = ModeUIAwareStringFormat(GraphsResources.GraphData_Graph_Peptides_Refined);
             }
             zedGraphControl.GraphPane.CurveList.Add(goodPointsLineItem);
             if (points.Count > 0 && PlotType == PlotTypeRT.correlation)
