@@ -2082,15 +2082,6 @@
   <data name="PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_" xml:space="preserve">
     <value>服务器 {0} 的响应异常</value>
   </data>
-  <data name="PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder" xml:space="preserve">
-    <value>{0}不是 Panorama 文件夹</value>
-  </data>
-  <data name="PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_" xml:space="preserve">
-    <value>文件夹{0}不存在于 Panorama 服务器{1}中</value>
-  </data>
-  <data name="PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_" xml:space="preserve">
-    <value>用户{0}没有权限上传至 Panorama 文件夹{1}</value>
-  </data>
   <data name="ParsimonySettings_Validate_The_value__0__for__1__is_not_valid__it_must_be_greater_than_or_equal_to__2__" xml:space="preserve">
     <value>{1} 的 {0} 值无效：必须大于或等于 {2}。</value>
   </data>

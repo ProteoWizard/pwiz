@@ -205,6 +205,7 @@
     <Compile Include="MultiInjectionReplicatesTest.cs" />
     <Compile Include="MultiInjectRescoreTest.cs" />
     <Compile Include="OpenDocWithBackgroundProteomeTest.cs" />
+    <Compile Include="PanoramaClientPublishTest.cs" />
     <Compile Include="PeakAreaRelativeAbundanceGraphTest.cs" />
     <Compile Include="PeakAreaPeptideGraphTest.cs" />
     <Compile Include="PrmCeOptimizationTest.cs" />
