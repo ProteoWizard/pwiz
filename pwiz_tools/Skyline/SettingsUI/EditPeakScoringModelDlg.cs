@@ -1259,5 +1259,19 @@ namespace pwiz.Skyline.SettingsUI
         {
             ZedGraphHelper.BuildContextMenu(graphControl, menuStrip);
         }
+
+        public ZedGraphControl ZedGraphPValues
+        {
+            get { return zedGraphPValues; }
+        }
+        public ZedGraphControl ZedGraphQValues
+        {
+            get { return zedGraphQValues; }
+        }
+
+        public ToolStrip ToolStripFind
+        {
+            get { return toolStripFind; }
+        }
     }
 }
