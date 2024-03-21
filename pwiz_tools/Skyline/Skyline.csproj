@@ -740,11 +740,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>RetentionTimesResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\Prosit\PrositResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>PrositResources.resx</DependentUpon>
-    </Compile>
     <Compile Include="Model\Lib\ChromLib\ChromLibResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -1009,11 +1004,6 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>UnifiResources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Model\Prosit\Models\ModelsResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ModelsResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Controls\Spectra\SpectraResources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -4121,9 +4111,8 @@
     <None Include="Resources\Cluster.ico" />
     <None Include="Resources\Close.bmp" />
     <None Include="Resources\PanoramaDownload.bmp" />
-    <None Include="Resources\koina-logo.fdf731d5.png" />
+    <EmbeddedResource Include="Resources\koina-logo.fdf731d5.png" />
     <Content Include="SkylineDocPointer.ico" />
-    <EmbeddedResource Include="Resources\Prosit_logo_dark_blue.png" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -5695,11 +5684,6 @@
       <DependentUpon>UnifiResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>UnifiResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\Koina\Models\ModelsResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
