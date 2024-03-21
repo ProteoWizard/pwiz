@@ -38,7 +38,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class NewDocumentLoadLibrariesTest : AbstractFunctionalTest
     {
-        [TestMethod]
+        [TestMethod, NoParallelTesting("TODO: Fix blib file locking")]
         public void TestNewDocumentLoadLibraries()
         {
             TestFilesZip = @"TestFunctional\NewDocumentLoadLibrariesTest.zip";

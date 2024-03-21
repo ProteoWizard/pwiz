@@ -162,7 +162,7 @@ namespace pwiz.SkylineTestTutorial
                 var emptyProteinsDlg = ShowDialog<EmptyProteinsDlg>(SkylineWindow.Paste);
                 RunUI(() => emptyProteinsDlg.IsKeepEmptyProteins = true);
                 OkDialog(emptyProteinsDlg, emptyProteinsDlg.OkDialog);
-                WaitForCondition(millis, () => SkylineWindow.SequenceTree.Nodes.Count > 4);
+                WaitForConditionUI(() => SkylineWindow.SequenceTree.Nodes.Count > 4);
             }
 
             RunUI(() =>
