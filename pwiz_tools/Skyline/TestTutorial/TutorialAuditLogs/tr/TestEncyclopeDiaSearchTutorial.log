@@ -4,11 +4,11 @@ All Info  :
 Added spectral library "20230123-abundant-proteins-z3_nce33.elib, 20230123-abundant-proteins-z3_nce33-quant.elib"
 EncyclopeDIA Search > FASTA settings > Max missed cleavages is "2"
 EncyclopeDIA Search > FASTA settings > FASTA file is "20230123-abundant-proteins.fasta"
-EncyclopeDIA Search > Prosit settings > Default NCE is "33"
-EncyclopeDIA Search > Prosit settings > Default charge is "3"
-EncyclopeDIA Search > Prosit settings > Min charge is "2"
-EncyclopeDIA Search > Prosit settings > Max charge is "3"
-EncyclopeDIA Search > Prosit settings > Max missed cleavages is "2"
+EncyclopeDIA Search > Koina settings > Default NCE is "33"
+EncyclopeDIA Search > Koina settings > Default charge is "3"
+EncyclopeDIA Search > Koina settings > Min charge is "2"
+EncyclopeDIA Search > Koina settings > Max charge is "3"
+EncyclopeDIA Search > Koina settings > Max missed cleavages is "2"
 EncyclopeDIA Search > Narrow window results : contains "23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML"
 EncyclopeDIA Search > Narrow window results : contains "23aug2017_hela_serum_timecourse_4mz_narrow_2.mzML"
 EncyclopeDIA Search > Wide window results : contains "23aug2017_hela_serum_timecourse_wide_1a.mzML"
@@ -21,7 +21,7 @@ Extra Info: FASTA settings =
     Max missed cleavages = "2",
     FASTA file = "20230123-abundant-proteins.fasta"
 },
-Prosit settings = 
+Koina settings = 
 {
     Default NCE = "33",
     Default charge = "3",

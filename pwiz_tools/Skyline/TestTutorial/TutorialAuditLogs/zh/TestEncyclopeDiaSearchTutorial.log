@@ -4,11 +4,11 @@ All Info  :
 已添加谱图库“20230123-abundant-proteins-z3_nce33.elib, 20230123-abundant-proteins-z3_nce33-quant.elib”
 EncyclopeDIA 搜索 > FASTA 设置 > 最大的漏切酶解位点数 是 "2"
 EncyclopeDIA 搜索 > FASTA 设置 > FASTA 文件 是 "20230123-abundant-proteins.fasta"
-EncyclopeDIA 搜索 > Prosit 设置 > 默认 NCE 是 "33"
-EncyclopeDIA 搜索 > Prosit 设置 > 默认电荷 是 "3"
-EncyclopeDIA 搜索 > Prosit 设置 > 最小电荷 是 "2"
-EncyclopeDIA 搜索 > Prosit 设置 > 最大电荷 是 "3"
-EncyclopeDIA 搜索 > Prosit 设置 > 最大的漏切酶解位点数 是 "2"
+EncyclopeDIA 搜索 > Koina 设置 > 默认 NCE 是 "33"
+EncyclopeDIA 搜索 > Koina 设置 > 默认电荷 是 "3"
+EncyclopeDIA 搜索 > Koina 设置 > 最小电荷 是 "2"
+EncyclopeDIA 搜索 > Koina 设置 > 最大电荷 是 "3"
+EncyclopeDIA 搜索 > Koina 设置 > 最大的漏切酶解位点数 是 "2"
 EncyclopeDIA 搜索 > 窄窗口结果 : 包含 "23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML"
 EncyclopeDIA 搜索 > 窄窗口结果 : 包含 "23aug2017_hela_serum_timecourse_4mz_narrow_2.mzML"
 EncyclopeDIA 搜索 > 宽窗口结果 : 包含 "23aug2017_hela_serum_timecourse_wide_1a.mzML"
@@ -21,7 +21,7 @@ Extra Info: FASTA 设置 =
     最大的漏切酶解位点数 = "2",
     FASTA 文件 = "20230123-abundant-proteins.fasta"
 },
-Prosit 设置 = 
+Koina 设置 = 
 {
     默认 NCE = "33",
     默认电荷 = "3",
