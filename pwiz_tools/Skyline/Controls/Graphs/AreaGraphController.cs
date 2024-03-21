@@ -178,10 +178,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     // The annotation we were grouping by has been removed
                     if (!annotations.Contains(GroupByAnnotation))
                         GroupByAnnotation = null;
-
-                    var paneInfo = GraphSummary.GraphPanes.FirstOrDefault() as IAreaCVHistogramInfo;
-                    if(paneInfo != null)
-                        paneInfo.Cache.Cancel();
                 }
             }
         }

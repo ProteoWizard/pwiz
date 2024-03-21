@@ -281,6 +281,11 @@ namespace pwiz.Skyline
                 if (!SetPeptideFilterSettings(commandArgs))
                     return false;
             }
+            if (commandArgs.PeptideModSettings)
+            {
+                if (!SetPeptideModSettings(commandArgs))
+                    return false;
+            }
 
             if (commandArgs.ImsSettings)
             {
@@ -308,6 +313,15 @@ namespace pwiz.Skyline
                 {
                     
                     return false;
+                }
+            }
+
+            if (commandArgs.IntegrateAll.HasValue)
+            {
+                if (Document.Settings.TransitionSettings.Integration.IsIntegrateAll != commandArgs.IntegrateAll.Value)
+                {
+                    ModifyDocumentWithLogging(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionIntegration(i => i.ChangeIntegrateAll(commandArgs.IntegrateAll.Value))),
+                        AuditLogEntry.SettingsLogFunction);
                 }
             }
 
@@ -1152,48 +1166,6 @@ namespace pwiz.Skyline
             }, SkylineResources.CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_peptide_digestion_settings_);
         }
 
-        private bool HandleExceptions(CommandArgs commandArgs, Action func, string formatMessage, string string0, bool formatIncludesException = false)
-        {
-            return HandleExceptions(commandArgs, () =>
-            {
-                func();
-                return true;
-            }, x =>
-            {
-                if (formatIncludesException)
-                    _out.WriteException(formatMessage, string0, x);
-                else
-                    _out.WriteException(string.Format(formatMessage, string0), x, true);
-            });
-        }
-
-        private bool HandleExceptions(CommandArgs commandArgs, Action func, string message = null, bool formatIncludesException = false)
-        {
-            return HandleExceptions(commandArgs, () =>
-            {
-                func();
-                return true;
-            }, x => _out.WriteException(message, x, !formatIncludesException));
-        }
-
-        private static T HandleExceptions<T>(CommandArgs commandArgs, Func<T> func, Action<Exception> outputFunc)
-        {
-            try
-            {
-                if (commandArgs.IsTestExceptions)
-                {
-                    throw new Exception();
-                }
-
-                return func();
-            }
-            catch (Exception x)
-            {
-                outputFunc(x);
-                return default;
-            }
-        }
-
         private bool SetPeptideFilterSettings(CommandArgs commandArgs)
         {
             return HandleExceptions(commandArgs, () =>
@@ -1237,6 +1209,69 @@ namespace pwiz.Skyline
                 },
                 SkylineResources
                     .CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_peptide_filter_settings_);
+        }
+
+        private bool SetPeptideModSettings(CommandArgs commandArgs)
+        {
+            return HandleExceptions(commandArgs, () =>
+            {
+                ModifyDocumentWithLogging(d => d.ChangeSettings(d.Settings.ChangePeptideSettings(p =>
+                {
+                    var modSettings = p.Modifications;
+
+                    if (commandArgs.PeptideMaxVariableMods.HasValue)
+                        modSettings = modSettings.ChangeMaxVariableMods(commandArgs.PeptideMaxVariableMods.Value);
+
+                    if (commandArgs.PeptideMaxLosses.HasValue)
+                        modSettings = modSettings.ChangeMaxNeutralLosses(commandArgs.PeptideMaxLosses.Value);
+
+                    if (commandArgs.PeptideMods != null)
+                    {
+                        if (commandArgs.PeptideMods.Length == 0)
+                        {
+                            // clear mods from all label types
+                            foreach (var type in modSettings.GetModificationTypes())
+                                modSettings = modSettings.ChangeModifications(type, Array.Empty<StaticMod>());
+                        }
+                        else
+                        {
+                            var strMods = modSettings.GetModifications(IsotopeLabelType.light);
+                            var isoMods = modSettings.GetModifications(IsotopeLabelType.heavy);
+                            foreach (var peptideMod in commandArgs.PeptideMods)
+                            {
+                                var modName = peptideMod.NameOrUniModId;
+                                if (int.TryParse(modName, out _))
+                                    modName = ModifiedSequence.UnimodPrefix + modName;
+
+                                try
+                                {
+                                    var mod = ModificationMatcher.GetStaticMod(modName, peptideMod.Terminus, peptideMod.AAs);
+                                    bool structural = UniMod.IsStructuralModification(mod.Name);
+                                    var modList = structural ? strMods : isoMods;
+                                    if (modList.Contains(mod))
+                                        continue;
+                                    modList = modList.Append(mod).ToList();
+                                    if (structural)
+                                        strMods = modList;
+                                    else
+                                        isoMods = modList;
+                                }
+                                catch (ArgumentException ex)
+                                {
+                                    throw new CommandArgs.ValueInvalidModException(CommandArgs.ARG_PEPTIDE_ADD_MOD, modName, ex);
+                                }
+                            }
+
+                            modSettings = modSettings.ChangeModifications(IsotopeLabelType.light, strMods);
+                            modSettings = modSettings.ChangeModifications(IsotopeLabelType.heavy, isoMods);
+                        }
+                    }
+
+                    p = p.ChangeModifications(modSettings);
+
+                    return p;
+                })), AuditLogEntry.SettingsLogFunction);
+            }, SkylineResources.CommandLine_SetPeptideModSettings_Error__Failed_attempting_to_change_the_peptide_modification_settings_);
         }
 
         private bool SetImsSettings(CommandArgs commandArgs)
@@ -4276,6 +4311,48 @@ namespace pwiz.Skyline
                 statusWriter.WriteException(x);
             });
             return success;
+        }
+
+        private bool HandleExceptions(CommandArgs commandArgs, Action func, string formatMessage, string string0, bool formatIncludesException = false)
+        {
+            return HandleExceptions(commandArgs, () =>
+            {
+                func();
+                return true;
+            }, x =>
+            {
+                if (formatIncludesException)
+                    _out.WriteException(formatMessage, string0, x);
+                else
+                    _out.WriteException(string.Format(formatMessage, string0), x, true);
+            });
+        }
+
+        private bool HandleExceptions(CommandArgs commandArgs, Action func, string message = null, bool formatIncludesException = false)
+        {
+            return HandleExceptions(commandArgs, () =>
+            {
+                func();
+                return true;
+            }, x => _out.WriteException(message, x, !formatIncludesException));
+        }
+
+        private static T HandleExceptions<T>(CommandArgs commandArgs, Func<T> func, Action<Exception> outputFunc)
+        {
+            try
+            {
+                if (commandArgs.IsTestExceptions)
+                {
+                    throw new Exception();
+                }
+
+                return func();
+            }
+            catch (Exception x)
+            {
+                outputFunc(x);
+                return default;
+            }
         }
 
         public void Dispose()

@@ -1148,4 +1148,7 @@
   <data name="SkylineWindow_ShowPublishDlg_Press__Edit_existing__to_add_user_account_information_for_an_existing_server_" xml:space="preserve">
 	  <value>Press 'Edit existing' to add user account information for an existing server.</value>
   </data>
+  <data name="CommandLine_SetPeptideModSettings_Error__Failed_attempting_to_change_the_peptide_modification_settings_" xml:space="preserve">
+	  <value>Error: Failed attempting to change the peptide modification settings.</value>
+  </data>
 </root>

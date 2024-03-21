@@ -95,7 +95,14 @@ namespace pwiz.Common.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int SelectedIndex
         {
-            get => _selectedIndex;
+            get
+            {
+                if (_selectedIndex < 0 || _selectedIndex >= Items.Count)
+                {
+                    return -1;
+                }
+                return _selectedIndex;
+            }
             set
             {
                 var oldValue = _selectedIndex;
