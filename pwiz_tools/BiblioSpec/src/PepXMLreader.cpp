@@ -83,7 +83,8 @@ PepXMLreader::PepXMLreader(BlibBuilder& maker,
   scoreType_(PEPTIDE_PROPHET_SOMETHING),
   lastFilePosition_(0),
   state(STATE_INIT),
-  isScoreLookup_(false)
+  isScoreLookup_(false),
+  isMGF_(false)
 {
     this->setFileName(xmlfilename); // this is for the saxhandler
     numFiles = 0;
@@ -276,7 +277,9 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
 
        setSpecFileName(fileroot_.c_str(), extensions, dirs);
 
-       if ((analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS) && bal::iends_with(getSpecFileName(), ".mgf")) {
+       isMGF_ = bal::iends_with(getSpecFileName(), ".mgf");
+
+       if ((analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS) && isMGF_) {
            lookUpBy_ = NAME_ID;
            specReader_->setIdType(NAME_ID);
        }
@@ -309,7 +312,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            scanNumber = getIntRequiredAttrValue("start_scan", attr);
            scanIndex = scanNumber - 1;
 
-           if (!spectrumName.empty()) {
+           if (!isMGF_ && !spectrumName.empty()) {
                lookUpBy_ = NAME_ID;
            }
            else {

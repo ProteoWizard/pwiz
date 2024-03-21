@@ -712,4 +712,16 @@ Here are the last 3 errors:
   <data name="UnavailableMSGraphItem_UnavailableMSGraphItem_Spectrum_information_unavailable" xml:space="preserve">
     <value>Spectrum information unavailable</value>
   </data>
+  <data name="AreaPeptideGraphPane_UpdateAxes_Peptide_Rank" xml:space="preserve">
+    <value>Peptide Rank</value>
+  </data>
+  <data name="Extensions_CustomToString_Relative_Abundance" xml:space="preserve">
+    <value>Relative Abundance</value>
+  </data>
+  <data name="SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank" xml:space="preserve">
+    <value>Protein Rank</value>
+  </data>
+  <data name="SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank" xml:space="preserve">
+    <value>Molecule Rank</value>
+  </data>
 </root>

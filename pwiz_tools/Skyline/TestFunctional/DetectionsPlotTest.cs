@@ -124,17 +124,8 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.EditDelete();
             });
             WaitForGraphs();
-            WaitForConditionUI(() => DetectionPlotData.GetDataCache().Datas.Any((dat) =>
-                    ReferenceEquals(SkylineWindow.DocumentUI, dat.Document) &&
-                    DetectionsGraphController.Settings.QValueCutoff == dat.QValueCutoff),
-                "Cache is not updated on document change.");
 
             //verify that the cache is purged after the document update
-            RunUI(() =>
-            {
-                Assert.IsTrue(DetectionPlotData.GetDataCache().Datas.All((dat) =>
-                    ReferenceEquals(SkylineWindow.DocumentUI, dat.Document)));
-            });
             AssertDataCorrect(pane, 4, 0.001f);
 
             RunUI(() => { SkylineWindow.ShowDetectionsHistogramGraph(); });
@@ -170,8 +161,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => pane.CurrentData != null 
                                            && pane.CurrentData.QValueCutoff == qValue
                                            && pane.CurrentData.TryGetTargetData(DetectionsGraphController.TargetType.PEPTIDE, out _)
-                                           && pane.CurrentData.TryGetTargetData(DetectionsGraphController.TargetType.PRECURSOR, out _)
-                                           && DetectionPlotData.GetDataCache().Status == DetectionPlotData.DetectionDataCache.CacheStatus.idle,
+                                           && pane.CurrentData.TryGetTargetData(DetectionsGraphController.TargetType.PRECURSOR, out _),
                 () => $"Retrieving data for qValue {qValue}, refIndex {refIndex} took too long.");
             WaitForGraphs();
             WaitForCondition(() => pane.CurrentData.IsValid);

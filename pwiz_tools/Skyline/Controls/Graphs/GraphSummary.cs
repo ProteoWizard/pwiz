@@ -603,7 +603,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 case GraphTypeSummary.peptide:
                     return GraphsResources.Extensions_CustomToString_Peptide_Comparison;
                 case GraphTypeSummary.abundance:
-                    return Resources.Extensions_CustomToString_Relative_Abundance;
+                    return GraphsResources.Extensions_CustomToString_Relative_Abundance;
                 case GraphTypeSummary.score_to_run_regression:
                     return GraphsResources.Extensions_CustomToString_Score_To_Run_Regression;
                 case GraphTypeSummary.schedule:

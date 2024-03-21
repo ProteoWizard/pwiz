@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Controls.Graphs
             : base(graphSummary)
         {
             var xAxisTitle =
-                Helpers.PeptideToMoleculeTextMapper.Translate(Resources.SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank,
+                Helpers.PeptideToMoleculeTextMapper.Translate(GraphsResources.SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank,
                     graphSummary.DocumentUIContainer.DocumentUI.DocumentType);
             XAxis.Title.Text = xAxisTitle;
             XAxis.Type = AxisType.Linear;
@@ -307,11 +307,11 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (AnyMolecules)
             {
-                XAxis.Title.Text = Resources.SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank;
+                XAxis.Title.Text = GraphsResources.SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank;
             }
             else
             {
-                XAxis.Title.Text = Settings.Default.AreaProteinTargets ? Resources.SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank : Resources.AreaPeptideGraphPane_UpdateAxes_Peptide_Rank;
+                XAxis.Title.Text = Settings.Default.AreaProteinTargets ? GraphsResources.SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank : GraphsResources.AreaPeptideGraphPane_UpdateAxes_Peptide_Rank;
             }
             const double xAxisGrace = 0;
             XAxis.Scale.MaxGrace = xAxisGrace;

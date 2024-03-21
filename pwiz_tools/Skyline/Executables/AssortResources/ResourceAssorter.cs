@@ -21,6 +21,7 @@ using System;
 using System.CodeDom;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Resources.Tools;
@@ -42,16 +43,22 @@ namespace AssortResources
         private readonly Dictionary<string, HashSet<string>> _referencedResourcesByFolder =
             new Dictionary<string, HashSet<string>>();
 
-        public ResourceAssorter(string csProjPath, string resourceFilePath, params string[] otherProjectPaths)
+        public ResourceAssorter(string csProjPath, string resourceFilePath, bool inspectOnly, params string[] otherProjectPaths)
         {
             CsProjFile = CsProjFile.FromProjFilePath(csProjPath);
             ResourceFile = ResourceFile.FromPath(resourceFilePath);
             OtherProjectFiles = new List<CsProjFile>();
+            InspectOnly = inspectOnly;
             foreach (var otherProjectPath in otherProjectPaths)
             {
                 OtherProjectFiles.Add(CsProjFile.FromProjFilePath(otherProjectPath));
             }
         }
+
+        /// <summary>
+        /// If true, do no actual work - just report what work is needed
+        /// </summary>
+        public bool InspectOnly { get; }
 
         /// <summary>
         /// Big resource file to look for resources in.
@@ -89,7 +96,11 @@ namespace AssortResources
             }
         }
 
-        public void DoWork()
+        /// <summary>
+        /// Do the moves (or inspection) for strings needing relocation
+        /// </summary>
+        /// <param name="inspectionResults">If non-null, write inspection results to this list instead of console (used by Skyline code inspection test)</param>
+        public void DoWork(List<string> inspectionResults = null)
         {
             var folders = CsProjFile.ListAllSourceFiles()
                 .ToLookup(path => Path.GetDirectoryName(path) ?? string.Empty);
@@ -114,7 +125,7 @@ namespace AssortResources
                     continue;
                 }
                 int count = 0;
-                string foundFolderPath = null;
+                string foundFolderPath = string.Empty;
                 foreach (var entry in _referencedResourcesByFolder)
                 {
                     if (entry.Value.Contains(resourceName))
@@ -142,9 +153,32 @@ namespace AssortResources
                 }
             }
 
+            var moves = new List<string>();
             foreach (var entry in uniqueReferences)
             {
-                MakeResourceFile(entry.Key, folders[entry.Key], entry.Value.ToHashSet());
+                MakeResourceFile(entry.Key, folders[entry.Key], entry.Value.ToHashSet(), moves);
+            }
+
+            if (InspectOnly)
+            {
+                foreach (var move in moves)
+                {
+                    if (inspectionResults != null)
+                    {
+                        inspectionResults.Add(move);
+                    }
+                    else
+                    {
+                        Console.WriteLine(move);
+                    }
+                }
+
+                if (moves.Count > 0 && inspectionResults == null)
+                {
+                    Console.WriteLine($"\nThis can be done with command:\n\"{Process.GetCurrentProcess().MainModule!.FileName}\" --resourcefile \"{ResourceFile.FilePath}\" --projectfile \"{CsProjFile.ProjFilePath}\" ");
+                    Environment.ExitCode = moves.Count;
+                }
+                return;
             }
 
             var stringsToDelete = uniqueReferences.SelectMany(entry => entry.Value).ToHashSet();
@@ -190,7 +224,7 @@ namespace AssortResources
             }
         }
 
-        public void MakeResourceFile(string folderPath, IEnumerable<string> files, HashSet<string> resourceIdentifiers)
+        public void MakeResourceFile(string folderPath, IEnumerable<string> files, HashSet<string> resourceIdentifiers, List<string> moves)
         {
             string folderName;
             if (string.IsNullOrEmpty(folderPath))
@@ -203,6 +237,18 @@ namespace AssortResources
             }
             var newResourcesName = folderName + ResourceFile.ResourceIdentifiers.ResourceFileName;
             var resourceFilePath = Path.Combine(folderPath, newResourcesName + ".resx");
+
+            if (InspectOnly)
+            {
+                moves.Add($"{resourceIdentifiers.Count} non-shared resource(s) should be moved from {ResourceFile.FilePath} into {resourceFilePath}:" );
+                foreach (var resourceIdentifier in resourceIdentifiers)
+                {
+                    moves.Add(resourceIdentifier ?? "?");
+                }
+                return;
+            }
+
+            var resourceFileExists = File.Exists(resourceFilePath);
             AddResources(resourceFilePath, ResourceFile.ResourceIdentifiers, resourceIdentifiers);
             foreach (var languageEntry in ResourceFile.Languages)
             {
@@ -210,7 +256,10 @@ namespace AssortResources
                 AddResources(languageFilePath, languageEntry.Value, resourceIdentifiers);
             }
             RunCustomTool(resourceFilePath);
-            CsProjFile.AddResourceFile(resourceFilePath, ResourceFile.Languages.Keys);
+            if (!resourceFileExists)  // If we didn't create it just now, assume it's already noted in the project file
+            {
+                CsProjFile.AddResourceFile(resourceFilePath, ResourceFile.Languages.Keys);
+            }
             foreach (var sourceFile in files)
             {
                 if (File.Exists(sourceFile))
@@ -223,6 +272,7 @@ namespace AssortResources
                     }
                 }
             }
+
             Console.Error.WriteLine("Moved {0} resources into {1}", resourceIdentifiers.Count, resourceFilePath);
         }
 
@@ -264,6 +314,10 @@ namespace AssortResources
 
         public void WriteDocument(XDocument document, string path)
         {
+            if (InspectOnly)
+            {
+                return;
+            }
             using (var xmlWriter = XmlWriter.Create(path, new XmlWriterSettings()
                    {
                        Indent = true,
@@ -278,10 +332,10 @@ namespace AssortResources
         {
             string baseName = Path.GetFileNameWithoutExtension(filePath);
             var namespaceName = CsProjFile.GetNamespace(filePath);
-            Directory.SetCurrentDirectory(Path.GetDirectoryName(filePath));
+            Directory.SetCurrentDirectory(Path.GetDirectoryName(filePath) ?? string.Empty);
             var csharpProvider = new CSharpCodeProvider();
             CodeCompileUnit codeCompileUnit = StronglyTypedResourceBuilder.Create(filePath, baseName, namespaceName, csharpProvider, false, out _);
-            var designerCsFileName = Path.Combine(Path.GetDirectoryName(filePath), baseName + ".designer.cs");
+            var designerCsFileName = Path.Combine(Path.GetDirectoryName(filePath) ?? string.Empty, baseName + ".designer.cs");
             using (var writer = new StreamWriter(designerCsFileName))
             using (var indentedTextWriter = new IndentedTextWriter(writer, "    "))
             {

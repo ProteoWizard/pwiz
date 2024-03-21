@@ -735,6 +735,18 @@ namespace pwiz.Skyline.SettingsUI
             if (_usageMode == UsageMode.precursor)
             {
                 // Only the adduct should be changing
+                if (!string.IsNullOrEmpty(_formulaBox.NeutralFormula))
+                {
+                    try
+                    {
+                        Adduct.ApplyToFormula(_formulaBox.NeutralFormula); // Does adduct make sense with formula?
+                    }
+                    catch (Exception x) when (SmallMoleculeTransitionListReader.IsParserException(x))
+                    {
+                        _formulaBox.ShowTextBoxErrorFormula(helper, x.Message);
+                        return;
+                    }
+                }
                 SetResult(_resultCustomMolecule, Adduct);
             }
             else if (!string.IsNullOrEmpty(_formulaBox.NeutralFormula))

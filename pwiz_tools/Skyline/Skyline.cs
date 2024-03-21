@@ -1128,9 +1128,6 @@ namespace pwiz.Skyline
                 // ReSharper disable LocalizableElement
                 LogManager.GetLogger(typeof(SkylineWindow)).Info("Skyline closed.\r\n-----------------------");
             // ReSharper restore LocalizableElement
-
-            DetectionPlotData.ReleaseDataCache();
-            
             base.OnClosed(e);
         }
 

@@ -241,8 +241,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
         bool GraphSummary.IController.HandleKeyDownEvent(object sender, KeyEventArgs e)
         {
-            if(e.KeyCode == Keys.Escape)
-                DetectionPlotData.GetDataCache().Cancel();
             return true;
         }
 

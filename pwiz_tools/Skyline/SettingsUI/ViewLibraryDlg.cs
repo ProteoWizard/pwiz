@@ -2637,7 +2637,7 @@ namespace pwiz.Skyline.SettingsUI
                         string.Format(SettingsUIResources.ViewLibSpectrumGraphItem_Title__0__1__Charge__2__, libraryNamePrefix, TransitionGroup.Peptide.Target, TransitionGroup.PrecursorAdduct);
                     if (this.PeaksCount == 0)
                     {
-                        title += Resources.SpectrumGraphItem_library_entry_provides_only_precursor_values;
+                        title += SettingsUIResources.SpectrumGraphItem_library_entry_provides_only_precursor_values;
                     }
                     return title;
                 }
@@ -2990,7 +2990,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (_selectedLibrary.TryGetIonMobilityInfos(new[] { pepInfo.Key }, out var ionMobilities))
             {
-                return ionMobilities.GetIonMobilityDict().Values.First().FirstOrDefault();
+                return ionMobilities.GetIonMobilityDict().Values.SelectMany(x => x).FirstOrDefault() ?? IonMobilityAndCCS.EMPTY;
             }
             return IonMobilityAndCCS.EMPTY;
         }

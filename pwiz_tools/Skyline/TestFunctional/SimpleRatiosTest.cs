@@ -54,6 +54,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath("SimpleRatiosTest.sky"));
                 SkylineWindow.ExpandPrecursors();
             });
+            WaitForGraphs();
             Assert.IsFalse(SkylineWindow.Document.Settings.PeptideSettings.Quantification.SimpleRatios);
             Assert.AreEqual(new NormalizationMethod.RatioToLabel(IsotopeLabelType.heavy),
                 SkylineWindow.Document.Settings.PeptideSettings.Quantification.NormalizationMethod);

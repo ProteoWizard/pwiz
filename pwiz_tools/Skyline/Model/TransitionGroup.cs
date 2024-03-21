@@ -114,6 +114,10 @@ namespace pwiz.Skyline.Model
             int diffOffset = tran1.CleavageOffset - tran2.CleavageOffset;
             if (diffOffset != 0)
                 return diffOffset;
+            if (tran1.IonType == IonType.precursor)
+                return tran1.MassIndex - tran2.MassIndex;
+            if (tran1.IonType == IonType.custom)
+                return tran1.CustomIon.MonoisotopicMassMz.CompareTo(tran2.CustomIon.MonoisotopicMassMz);
             return 0;
         }
 

@@ -92,12 +92,12 @@ namespace pwiz.SkylineTestFunctional
             var alignedRetentionTimes10To1 = AlignedRetentionTimes.AlignLibraryRetentionTimes(
                 document.Settings.GetRetentionTimes("S_1").GetFirstRetentionTimes(),
                 document.Settings.GetRetentionTimes("S_10").GetFirstRetentionTimes(),
-                DocumentRetentionTimes.REFINEMENT_THRESHHOLD, 
+                DocumentRetentionTimes.REFINEMENT_THRESHOLD, 
                 RegressionMethodRT.linear, CancellationToken.None);
             var alignedRetentionTimes1To10 = AlignedRetentionTimes.AlignLibraryRetentionTimes(
                 document.Settings.GetRetentionTimes("S_10").GetFirstRetentionTimes(),
                 document.Settings.GetRetentionTimes("S_1").GetFirstRetentionTimes(),
-                DocumentRetentionTimes.REFINEMENT_THRESHHOLD, 
+                DocumentRetentionTimes.REFINEMENT_THRESHOLD, 
                 RegressionMethodRT.linear, CancellationToken.None);
             var regressionLine10To1 = (RegressionLineElement) alignedRetentionTimes10To1.RegressionRefined.Conversion;
             Assert.AreEqual(af10To1.RegressionLine.Slope, regressionLine10To1.Slope);

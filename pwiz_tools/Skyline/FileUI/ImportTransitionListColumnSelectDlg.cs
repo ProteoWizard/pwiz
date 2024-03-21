@@ -1507,6 +1507,7 @@ namespace pwiz.Skyline.FileUI
             foreach (var comboBox in ComboBoxes)
             {
                 comboBox.Items.Clear();
+                comboBox.SelectedIndex = -1;
                 UpdateCombo(comboBox);
             }
             checkBoxAssociateProteins.Visible = CheckboxVisible();

@@ -419,7 +419,9 @@ void write_sample_enzyme(XMLWriter& xmlWriter, const IdentData& mzid)
     string enzymeName = bal::join(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_name()), " + ");
 
     // find the minimum specificity
-    int minSpecificity = *boost::range::min_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_specificity()));
+    int minSpecificity = 2;
+    if (!sip.enzymes.enzymes.empty())
+        minSpecificity = *boost::range::min_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_specificity()));
 
     XMLWriter::Attributes attributes;
     attributes.add("name", enzymeName);
@@ -505,10 +507,14 @@ void write_search_summary(XMLWriter& xmlWriter, const IdentData& mzid, const str
         string enzymeName = bal::join(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_name()), " + ");
 
         // find the maximum missed cleavages
-        int maxMissedCleavages = *boost::range::max_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_missedCleavages()));
+        int maxMissedCleavages = 0;
+        if (!sip.enzymes.enzymes.empty())
+            maxMissedCleavages = *boost::range::max_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_missedCleavages()));
 
         // find the minimum specificity
-        int minSpecificity = *boost::range::min_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_specificity()));
+        int minSpecificity = 2;
+        if (!sip.enzymes.enzymes.empty())
+            minSpecificity = *boost::range::min_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_specificity()));
 
         Formula nTerm(Formula_nTerm), cTerm(Formula_cTerm); 
 

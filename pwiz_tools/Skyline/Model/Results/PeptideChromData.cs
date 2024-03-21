@@ -950,25 +950,13 @@ namespace pwiz.Skyline.Model.Results
             // Now that we have times loaded, apply explicit RT filter if any
             if (ExplicitRetentionTime != null)
             {
-                string moleculeText = null;
-
                 double explicitRT = ExplicitRetentionTime.RetentionTime;
                 for (var i = DataSets.Count - 1; i >= 0 ; i--)
                 {
                     var dataSet = DataSets[i];
                     if (explicitRT < dataSet.MinRawTime || dataSet.MaxRawTime < explicitRT)
                     {
-                        moleculeText ??= NodePep.CustomMolecule?.ToString() ?? NodePep.GetCrosslinkedSequence();
-                        string precursorText = moleculeText;
-                        if (NodePep.Children.Count > 1)
-                        {
-                            var transitionGroupDocNode = dataSet.NodeGroup;
-                            if (transitionGroupDocNode != null)
-                            {
-                                precursorText = TextUtil.SpaceSeparate(moleculeText,
-                                    transitionGroupDocNode.TransitionGroup.ToString());
-                            }
-                        }
+                        string precursorText = GetTextForNode(NodePep, dataSet.NodeGroup, null);
                         Trace.TraceWarning(ResultsResources.PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_,
                             precursorText, explicitRT, dataSet.MinRawTime, dataSet.MaxRawTime);
                         DataSets.RemoveAt(i);
@@ -980,6 +968,9 @@ namespace pwiz.Skyline.Model.Results
                             var chrom = dataSet.Chromatograms[j];
                             if (explicitRT < chrom.Times.First() || chrom.Times.Last() < explicitRT)
                             {
+                                string transitionText = GetTextForNode(NodePep, dataSet.NodeGroup, chrom.DocNode);
+                                Trace.TraceWarning(ResultsResources.PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_,
+                                    transitionText, explicitRT, chrom.Times.First(), chrom.Times.Last());
                                 dataSet.Chromatograms.RemoveAt(j);
                             }
                         }
@@ -987,6 +978,25 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
             return DataSets.Any();
+        }
+
+        /// <summary>
+        /// Returns text which can be used to identify a precursor or transition in an error message
+        /// </summary>
+        private string GetTextForNode(PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode,
+            TransitionDocNode transitionDocNode)
+        {
+            string text = NodePep.CustomMolecule?.ToString() ?? NodePep.GetCrosslinkedSequence();
+            if (transitionGroupDocNode != null && peptideDocNode.Children.Count > 1)
+            {
+                text = TextUtil.SpaceSeparate(text,
+                    transitionGroupDocNode.TransitionGroup.ToString());
+            }
+            if (transitionDocNode != null)
+            {
+                text = TextUtil.SpaceSeparate(text, transitionDocNode.Transition.ToString());
+            }
+            return text;
         }
 
         private bool HasEquivalentGroupNode(TransitionGroupDocNode nodeGroup)
