@@ -139,7 +139,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var yTime = peptideTime.RetentionTime;
                 if (PlotType == PlotTypeRT.residuals)
                     yTime = (double) (alignedFile.Regression.GetRetentionTime(xTime) - yTime);
-                var point = new PointPair(xTime, yTime, peptideTime.PeptideSequence.Sequence);
+                var point = new PointPair(xTime, yTime, peptideTime.PeptideSequence.DisplayName);
                 if (alignedFile.OutlierIndexes.Contains(i))
                 {
                     outliers.Add(point);
