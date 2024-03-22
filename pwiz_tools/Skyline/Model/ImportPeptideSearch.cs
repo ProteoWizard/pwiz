@@ -74,15 +74,13 @@ namespace pwiz.Skyline.Model
         public class HardklorSettings
         {
             public HardklorSettings(FullScanMassAnalyzerType instrument, double resolution,
-                double correlationThreshold, double signalToNoise, IEnumerable<int> charges,
-                double? featureRetentionTimeTolerance)
+                double correlationThreshold, double signalToNoise, IEnumerable<int> charges)
             {
                 Instrument = instrument;
                 Resolution = resolution;
                 CorrelationThreshold = correlationThreshold;
                 SignalToNoise = signalToNoise;
                 Charges = charges.ToList();
-                FeatureRetentionTimeTolerance = featureRetentionTimeTolerance;
             }
 
             [Track]
@@ -95,9 +93,7 @@ namespace pwiz.Skyline.Model
             public double Resolution { get; private set; }
             [Track]
             public List<int> Charges { get; set; } // A list of desired charges for BlibBuild
-
-            public double? FeatureRetentionTimeTolerance { get; private set; } // Tolerance for unifying similar IDs across input files
-
+           
         }
 
 

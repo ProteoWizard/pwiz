@@ -379,8 +379,8 @@ namespace TestPerf
             AssertEx.AreEqual(24.407, r.StartRetentionTime, .01);
             AssertEx.AreEqual(27.104, r.EndRetentionTime, .01);
 
-            var expectedFeatures = 906;
-            var expectedFeaturesTransitions = 2718;
+            var expectedFeatures = 1333;
+            var expectedFeaturesTransitions = 3999;
             if (pass == SMALL_MOL_ONLY_PASS)
             {
                 AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, expectedFeatures, expectedFeatures, expectedFeaturesTransitions);

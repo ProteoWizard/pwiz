@@ -392,8 +392,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 // Note the Hardklor settings
                 ImportPeptideSearch.SettingsHardklor = new ImportPeptideSearch.HardklorSettings(HardklorInstument,
                     HardklorResolution,
-                    correlation, signalToNoise, _documentContainer.TransitionSettings.Filter.PeptidePrecursorCharges.Select(a => a.AdductCharge).Distinct().ToArray(),
-                    _documentContainer.TransitionSettings.FullScan.RetentionTimeFilterLength);
+                    correlation, signalToNoise, _documentContainer.TransitionSettings.Filter.PeptidePrecursorCharges.Select(a => a.AdductCharge).Distinct().ToArray());
                 ImportPeptideSearch.CutoffScore = correlation;
                 return true;
             }

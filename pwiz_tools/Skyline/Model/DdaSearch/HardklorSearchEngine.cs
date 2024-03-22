@@ -65,7 +65,6 @@ namespace pwiz.Skyline.Model.DdaSearch
             _searchSettings = searchSettings;
         }
 
-
         private CancellationTokenSource _cancelToken;
         private IProgressStatus _progressStatus;
         private bool _success;
@@ -204,31 +203,42 @@ namespace pwiz.Skyline.Model.DdaSearch
         private class hkFeatureDetail
         {
             public double mzObserved; // Observed mz
-            public string massString; // Original text representation of mono mass
+            public string strMass; // Text representation of mono mass
+            public double parsedMass; // Parsed value of original mono mass text
             public string avergineAndOffset; // The value declared in the avergine column e.g. "H104C54N15O16[+4.761216]"
             public double quality; // Define relative quality for sorting as "Best Correlation" column x "Num of Scans" column (i.e. Points across peak * correlation)
             public double rt; // "Best RTime" column
-            public double rtAligned; // RT of best scoring occurance when found in more than one file
+            public double rtStart; // "First RTime" column
+            public double rtEnd; // "Last RTime" column
+            public double rtAligned; // RT of best scoring occurence when found in more than one file
             public int charge; // Declared z
             public int fileIndex; // Which file it's from
             public int lineIndex; // Which line in that file
-            public bool updated; // Does it need to be written back to the file?
+            public bool redundant; // Set true when a Hardklor feature gets combine into another and should not be passed along to BiblioSpec
+
+            public string strMassAndAlignedRT => FormatMassAndAlignedRT(strMass, rtAligned);
+            public static string FormatMassAndAlignedRT(string strMass, double rtAligned) => $@"mass{strMass}_RT{rtAligned.ToString(@"0.0000", CultureInfo.InvariantCulture)}";
+
+            public override string ToString()
+            {
+                return $@"{strMass} {quality} {rtStart} {rt} {rtEnd} {mzObserved} {avergineAndOffset}";
+            }
         }
+
+        private List<hkFeatureDetail> _featuresAll = new List<hkFeatureDetail>();
+        private Dictionary<string, int[]> _featureMatches;
+        private Dictionary<string, hkFeatureDetail[]> _orderedFeaturesByCNOS;
+        private string[] _bfiles;
+        private List<string[]> _contents = new List<string[]>();
+
 
         private bool FindSimilarFeatures()
         {
             // Final step - try to unify similar features in the various Bullseye result files
-            var bfiles = SpectrumFileNames.Select(GetSearchResultFilepath).ToArray();
-            if (bfiles.Length == 0)
+            _bfiles = SpectrumFileNames.Select(GetSearchResultFilepath).ToArray();
+            if (_bfiles.Length == 0)
             {
                 return false;
-            }
-
-            var ppm = GetPPM();
-            bool SimilarMz(double mzJ, double mzI)
-            {
-                var mzDiff = (Math.Abs(mzJ - mzI) / mzI) * 1.0E6;
-                return mzDiff <= ppm;
             }
 
             _progressStatus = _progressStatus.ChangeMessage(string.Empty);
@@ -236,36 +246,69 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             PerformAllAlignments();
 
+            _contents = new List<string[]>();
+
             // The shape of the isotope distribution is pretty much determined by everything but
             // hydrogen, so create a lookup based on avergine formulas with H removed
-            var featuresByCNOS = new Dictionary<string, List<hkFeatureDetail>>();
-            var featuresAll = new List<hkFeatureDetail>();
-            var contents = new List<string[]>();
-            for (var fileIndex = 0; fileIndex < bfiles.Length; fileIndex++)
+            CreateLookupByCNOS();
+
+            // We have a dictionary of all known isotope distributions (that is, the averagine formulas without H)
+            // and all known masses and intensities. Now to find occurrences of these across the RT-aligned replicates
+           
+            // Look at similar features and combine them into references to a single feature
+            CombineSimilarFeaturesAcrossReplicates();
+
+            // We asked Hardklor to write its mass values at greater than normal precision, let's peel
+            // that back to 4 decimal places - but we have to watch for collisions
+            TrimMassDigits();
+
+            // If a feature appears in the same file more than once, eliminate all but the best
+            EliminateMultipleHitsInSameFile();
+
+            // Write back any adjustments before we hand off the files to BlibBuild, so it understands 
+            // that the IDs we matched are the same things
+            // We'll add a column for feature names, where name consists of mass and aligned RT e.g. mass123.45_RT23.45678
+            UpdateFilesForBiblioSpec();
+
+            return _featuresAll.Count > 0;
+        }
+
+        // The shape of the isotope distribution is pretty much determined by everything but
+        // hydrogen, so create a lookup based on avergine formulas with H removed
+        private void CreateLookupByCNOS()
+        {
+            var  featuresByCNOS = new Dictionary<string, List<hkFeatureDetail>>();
+            for (var fileIndex = 0; fileIndex < _bfiles.Length; fileIndex++)
             {
-                var file = bfiles[fileIndex];
+                var file = _bfiles[fileIndex];
                 var lines = File.ReadAllLines(file);
-                contents.Add(lines);
+                _contents.Add(lines);
                 int l = 1;
                 foreach (var line in lines.Skip(1))
                 {
                     var col = line.Split('\t');
                     var averagine_no_H = col[15].Split('[')[0].Split('C')[1]; // e.g. "H120C119N33O35S1[+0.12]" => "119N33O35S1"
-                    var rtParsed = double.Parse(col[11], CultureInfo.InvariantCulture);
+                    var rtParsed = double.Parse(col[11], CultureInfo.InvariantCulture); // "Best RTime"
+                    var rtFirst = double.Parse(col[9], CultureInfo.InvariantCulture);  // "First RTime"
+                    var rtLast = double.Parse(col[10], CultureInfo.InvariantCulture);  // "Last RTime"
+                    var rtToler = rtLast - rtFirst; // Allow a little wiggle when aligning similar features - within a peak width of the better peak (Hardklor declares absurdly narrow peak bounds)
                     var feature = new hkFeatureDetail()
                     {
                         charge = int.Parse(col[4], CultureInfo.InvariantCulture),
-                        massString = col[5],
+                        strMass = col[5],
+                        parsedMass = double.Parse(col[5], CultureInfo.InvariantCulture),
                         mzObserved = double.Parse(col[6], CultureInfo.InvariantCulture),
                         quality = double.Parse(col[3], CultureInfo.InvariantCulture) * double.Parse(col[12], CultureInfo.InvariantCulture), // Points across peak * correlation, for sorting
                         rt = rtParsed,
                         rtAligned = rtParsed,
+                        rtStart = rtFirst - rtToler,
+                        rtEnd = rtLast + rtToler,
                         avergineAndOffset = col[15],
                         fileIndex = fileIndex,
                         lineIndex = l,
-                        updated = false
+                        redundant = false
                     };
-                    featuresAll.Add(feature);
+                    _featuresAll.Add(feature);
 
                     if (!featuresByCNOS.TryGetValue(averagine_no_H, out var featureList))
                     {
@@ -280,38 +323,91 @@ namespace pwiz.Skyline.Model.DdaSearch
                 }
             }
 
-            // We have a dictionary of all known isotope distributions (that is, the averagine formulas with H)
-            // and all known masses and intensities
-            var rtToler = this._searchSettings.SettingsHardklor.FeatureRetentionTimeTolerance ?? double.MaxValue;
-            foreach (var featureByCNOS in featuresByCNOS)
+            // Now order by Hardklor score
+            _orderedFeaturesByCNOS = featuresByCNOS.ToDictionary(featureByCNOS => featureByCNOS.Key, featureByCNOS => featureByCNOS.Value.OrderByDescending(v => v.quality).ToArray());
+        }
+
+        // Write back any adjustments before we hand off the files to BlibBuild, so it understands 
+        // that the IDs we matched are the same things
+        // We'll add a column for feature names, where name consists of mass and aligned RT e.g. mass123.45_RT23.45678
+        private void UpdateFilesForBiblioSpec()
+        {
+            for (var f = 0; f < _bfiles.Length; f++)
             {
+                _contents[f][0] += $@"{TextUtil.SEPARATOR_TSV_STR}FeatureName"; // This must agree with pwiz_tools\BiblioSpec\src\HardklorReader.cpp
+            }
+            foreach (var feature in _featuresAll)
+            {
+                if (feature.redundant)
+                {
+                    _contents[feature.fileIndex][feature.lineIndex] = string.Empty; // This feature got folded into something else
+                    continue;
+                }
+                var col = _contents[feature.fileIndex][feature.lineIndex].Split('\t');
+                col[5] = feature.strMass;
+                col[15] = feature.avergineAndOffset;
+                _contents[feature.fileIndex][feature.lineIndex] = string.Join(TextUtil.SEPARATOR_TSV_STR, col);
+                // And add a feature name as mass and aligned RT
+                _contents[feature.fileIndex][feature.lineIndex] += $@"{TextUtil.SEPARATOR_TSV_STR}{feature.strMassAndAlignedRT}";
+            }
+
+
+            // And write it all back, preserving a copy of the original
+            for (var f = 0; f < _bfiles.Length; f++)
+            {
+                // Note the original
+                var unaligned = GetBullseyeKronikUnalignedFilename(_bfiles[f]);
+                FileEx.SafeDelete(unaligned);
+                File.Copy(_bfiles[f], unaligned);
+                // Update for handoff to BiblioSpec
+                File.WriteAllLines(_bfiles[f], _contents[f].Where(line => !string.IsNullOrEmpty(line)));  // Update the current file
+            }
+        }
+
+
+        // Look at similar features and combine them into references to a single feature
+        private void CombineSimilarFeaturesAcrossReplicates()
+        {
+            var ppm = GetPPM();
+            bool SimilarMz(double mzJ, double mzI)
+            {
+                var mzDiff = (Math.Abs(mzJ - mzI) / mzI) * 1.0E6;
+                return mzDiff <= ppm;
+            }
+
+
+            _featureMatches = new Dictionary<string, int[]>();
+            foreach (var cnos in _orderedFeaturesByCNOS)
+            {
+                var ordered = cnos.Value;
+                var count = ordered.Length;
+                var matchIndex = Enumerable.Repeat(-1, count).ToArray();
+                var massShift = Enumerable.Repeat(double.MaxValue,count).ToArray();
+                _featureMatches.Add(cnos.Key, matchIndex);
+
                 // Starting with the highest score, see if any other entries from similar RT are similar m/z.
                 // If they are, update the mass information to match the more solid ID.
-                var ordered = featureByCNOS.Value.OrderByDescending(v => v.quality).ToArray();
-                for (var i = 0; i < ordered.Length; i++)
+                for (var i = 0; i < count; i++)
                 {
-                    var hkFeatureDetailI = ordered[i];
-                    if (hkFeatureDetailI.updated)
+                    if (matchIndex[i] >= 0)
                     {
-                        continue;
+                        continue; // Already aligned to something else
                     }
 
+                    var hkFeatureDetailI = ordered[i];
                     var chargeI = hkFeatureDetailI.charge;
-
                     var mzI = hkFeatureDetailI.mzObserved;
+
                     if (mzI == 0)
                     {
                         continue;
                     }
 
-                    for (var j = i + 1; j < ordered.Length; j++)
+                    // Look at lower-quality features and decide if they're actually occurrences of this feature
+                    // Note that we may reassign a precious match it if involves a smaller mass shift
+                    for (var j = i + 1; j < count; j++)
                     {
                         var hkFeatureDetailJ = ordered[j];
-                        if (hkFeatureDetailJ.updated)
-                        {
-                            continue; // Already processed
-                        }
-
                         if (hkFeatureDetailJ.charge != chargeI)
                         {
                             continue;
@@ -320,122 +416,133 @@ namespace pwiz.Skyline.Model.DdaSearch
                         if (SimilarMz(hkFeatureDetailJ.mzObserved, mzI))
                         {
                             // Isotope envelopes agree, m/z is similar, so it's just a tiny mass shift - does RT agree?
-                            var fileI = SpectrumFileNames[hkFeatureDetailI.fileIndex];
-                            var fileJ = SpectrumFileNames[hkFeatureDetailJ.fileIndex];
-                            var rtI = hkFeatureDetailI.rt;
-                            var rtJ = hkFeatureDetailJ.rt;
-                            if (_alignments.TryGetValue(Tuple.Create(fileI, fileJ), out var alignment))
+                            var massAlignmentShift = double.MaxValue;
+                            if (hkFeatureDetailI.fileIndex != hkFeatureDetailJ.fileIndex)
                             {
-                                rtI = alignment.GetValue(rtJ);
+                                var fileI = SpectrumFileNames[hkFeatureDetailI.fileIndex];
+                                var fileJ = SpectrumFileNames[hkFeatureDetailJ.fileIndex];
+                                if (_alignments.TryGetValue(Tuple.Create(fileI, fileJ), out var alignmentI) &&
+                                    _alignments.TryGetValue(Tuple.Create(fileJ, fileI), out var alignmentJ))
+                                {
+                                    var rtJI = alignmentI.GetValue(hkFeatureDetailJ.rt); // Warp rt J into I rt space
+                                    var rtIJ = alignmentJ.GetValue(hkFeatureDetailI.rt); // Warp rt I into J rt space
+                                    if ((hkFeatureDetailI.rtStart <= rtJI && rtJI <= hkFeatureDetailI.rtEnd) ||
+                                        (hkFeatureDetailJ.rtStart <= rtIJ && rtIJ <= hkFeatureDetailJ.rtEnd))
+                                    {
+                                        massAlignmentShift = Math.Min(Math.Abs(rtJI - hkFeatureDetailI.rt),  Math.Abs(rtIJ - hkFeatureDetailJ.rt));
+                                    }
+                                }
                             }
-                            if (Math.Abs(rtI - rtJ) > rtToler)
+                            else if (hkFeatureDetailI.rtStart <= hkFeatureDetailJ.rt && hkFeatureDetailJ.rt <= hkFeatureDetailI.rtEnd)
                             {
-                                continue; // Not an RT match
+                                massAlignmentShift = Math.Abs(hkFeatureDetailI.rt - hkFeatureDetailJ.rt);
                             }
-                            hkFeatureDetailJ.massString = hkFeatureDetailI.massString;
-                            hkFeatureDetailJ.rtAligned = hkFeatureDetailI.rtAligned;
-                            hkFeatureDetailJ.avergineAndOffset = hkFeatureDetailI.avergineAndOffset;
-                            hkFeatureDetailJ.updated = true; // No need to compare to others in this list
+                            if (massAlignmentShift < massShift[j])
+                            {
+                                matchIndex[j] = i; // Possibly the same feature
+                                massShift[j] = massAlignmentShift; // Note the mass shift in case we find a better match
+                            }
                         }
                     }
                 }
             }
 
-            // We asked Hardklor to write its mass values at greater than normal precision, let's peel
-            //  that back to 4 decimal places, but we have to watch for collisions
-            var featuresByRoundedMass = new Dictionary<string, List<hkFeatureDetail>>();
-            foreach (var feature in featuresAll)
+            // Update the features list to indicate matches across replicates
+            if (_featureMatches.Any())
             {
-                var rounded = double.Parse(feature.massString, CultureInfo.InvariantCulture)
-                    .ToString(@"0.0000", CultureInfo.InvariantCulture);
-                if (!featuresByRoundedMass.TryGetValue(rounded, out var featureList))
+                foreach (var ordered in _orderedFeaturesByCNOS)
                 {
-                    featuresByRoundedMass.Add(rounded, new List<hkFeatureDetail>() { feature });
-                }
-                else
-                {
-                    featureList.Add(feature);
+                    var details = ordered.Value;
+                    var matchIndex = _featureMatches[ordered.Key];
+                    for (var j = 0; j < matchIndex.Length; j++)
+                    {
+                        if (matchIndex[j] >= 0) // This feature was aligned to another, unify the descriptions
+                        {
+                            var hkFeatureDetailI = details[matchIndex[j]]; // The feature this aligned to
+                            var hkFeatureDetailJ = details[j];
+                            hkFeatureDetailJ.strMass = hkFeatureDetailI.strMass; // Make the mass descriptions match exactly
+                            hkFeatureDetailJ.parsedMass = hkFeatureDetailI.parsedMass; // Make the mass descriptions match exactly
+                            hkFeatureDetailJ.rtAligned = hkFeatureDetailI.rtAligned; // The RT of the "best" feature
+                            hkFeatureDetailJ.avergineAndOffset = hkFeatureDetailI.avergineAndOffset; // Make the formulas match exactly (but not the observed m/z necessarily)
+                        }
+                    }
                 }
             }
-            foreach (var byRoundedMass in featuresByRoundedMass)
+        }
+
+        // If a feature appears in the same file more than once, eliminate all but the best
+        private void EliminateMultipleHitsInSameFile()
+        {
+            foreach (var CNOS in _featureMatches.Keys)
             {
-                if (byRoundedMass.Value.Count == 1)
+                var features = _orderedFeaturesByCNOS[CNOS]; // In descending order of "quality"
+                var matches = _featureMatches[CNOS]; // Also in  descending order of "quality"
+                for (var i = 0; i < matches.Length; i++)
                 {
-                    var feat = byRoundedMass.Value[0];
-                    feat.massString = byRoundedMass.Key;
-                    feat.updated = true;
-                }
-                else
-                {
-                    var features = byRoundedMass.Value;
-                    var masses = features
-                        .Select(v => double.Parse(v.massString, CultureInfo.InvariantCulture))
-                        .ToArray();
-                    for (var digits = 4; digits < 9; digits++)
+                    if (matches[i] == -1) // This is the one others may have aligned to
                     {
-                        var format = $@"0.{new string('0', digits)}";
-                        var revisedMassStrings = masses.Select(v => v.ToString(format, CultureInfo.InvariantCulture)).ToArray();
-                        var success = true;
-                        // Can use this precision only if there's no conflict in the averagines
-                        for (var i = 0; success && i < masses.Length; i++)
+                        var files = new HashSet<int> { features[i].fileIndex };
+                        for (var j = i + 1; j < matches.Length; j++)
                         {
-                            for (var j = i + 1; j < masses.Length; j++)
+                            if (matches[j] == i)
                             {
-                                if (revisedMassStrings[i] == revisedMassStrings[j] &&
-                                    !features[i].avergineAndOffset.Equals(features[j].avergineAndOffset))
+                                // Feature j was aligned to feature i
+                                if (!files.Add(features[j].fileIndex))
                                 {
-                                    success = false;
-                                    break;
+                                    // An instance of better quality has already been noted for this file
+                                    features[j].redundant = true; // Don't pass it through to BiblioSpec
                                 }
                             }
                         }
+                    }
+                }
+            }
+        }
 
-                        if (success)
+        // We asked Hardklor to write its mass values at greater than normal precision, let's peel
+        // that back to 4 decimal places - but we have to watch for collisions
+        private void TrimMassDigits()
+        {
+            for (var digits = 4; digits < 9; digits++)
+            {
+                var featuresByRoundedMassAndRT = new Dictionary<string, List<hkFeatureDetail>>();
+                var format = $@"0.{new string('0', digits)}";
+                var needsTrim = false;
+                foreach (var feature in _featuresAll)
+                {
+                    var rounded = hkFeatureDetail.FormatMassAndAlignedRT(feature.parsedMass
+                        .ToString(format, CultureInfo.InvariantCulture), feature.rtAligned);
+                    if (feature.strMassAndAlignedRT.Length > rounded.Length)
+                    {
+                        needsTrim = true;
+                        if (!featuresByRoundedMassAndRT.TryGetValue(rounded, out var featureList))
                         {
-                            for (var i = 0; i < features.Count; i++)
-                            {
-                                features[i].massString = revisedMassStrings[i];
-                                features[i].updated = true;
-                            }
-                            break;
+                            featuresByRoundedMassAndRT.Add(rounded, new List<hkFeatureDetail>() { feature });
+                        }
+                        else
+                        {
+                            featureList.Add(feature);
+                        }
+                    }
+                }
+
+                if (!needsTrim)
+                {
+                    break;
+                }
+
+                foreach (var byRoundedMass in featuresByRoundedMassAndRT)
+                {
+                    if (byRoundedMass.Value.Select(f => f.avergineAndOffset).Distinct().Count() == 1)
+                    {
+                        // All describing the same formula, RT, and mass
+                        foreach (var hkFeatureDetail in byRoundedMass.Value)
+                        {
+                            hkFeatureDetail.strMass = hkFeatureDetail.parsedMass.ToString(format, CultureInfo.InvariantCulture); // Update to the abbreviated mass description
                         }
                     }
                 }
             }
-
-            // Now write back any adjustments before we hand off the files to BlibBuild, so it understands 
-            // that the IDs we matched are the same things
-            foreach (var update in featuresAll.Where(u => u.updated))
-            {
-                var col = contents[update.fileIndex][update.lineIndex].Split('\t');
-                col[5] = update.massString;
-                col[15] = update.avergineAndOffset;
-                contents[update.fileIndex][update.lineIndex] = string.Join(TextUtil.SEPARATOR_TSV_STR, col);
-            }
-
-            // Now add the column for feature names, where name consists of mass and aligned RT e.g. mass123.45_RT23.45678
-            for (var f = 0; f < bfiles.Length; f++)
-            {
-                contents[f][0] += $@"{TextUtil.SEPARATOR_TSV_STR}FeatureName"; // This must agree with pwiz_tools\BiblioSpec\src\HardklorReader.cpp
-            }
-            foreach (var hkFeatureDetail in featuresAll)
-            {
-                var featureName =$@"mass{hkFeatureDetail.massString}_RT{hkFeatureDetail.rtAligned.ToString(@"0.0000", CultureInfo.InvariantCulture)}";
-                contents[hkFeatureDetail.fileIndex][hkFeatureDetail.lineIndex] += $@"{TextUtil.SEPARATOR_TSV_STR}{featureName}";
-            }
-
-            // And write it all back, preserving a copy of the original
-            for (var f = 0; f < bfiles.Length; f++)
-            {
-                // Note the original
-                var unaligned = GetBullseyeKronikUnalignedFilename(bfiles[f]);
-                FileEx.SafeDelete(unaligned);
-                File.Copy(bfiles[f], unaligned);
-                // Update for handoff to BiblioSpec
-                File.WriteAllLines(bfiles[f], contents[f]);  // Update the current file
-            }
-
-            return featuresAll.Count > 0;
         }
 
 
