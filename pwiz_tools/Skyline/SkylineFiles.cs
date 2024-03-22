@@ -2958,10 +2958,10 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            if (!doc.Peptides.Where(pepDocNode => null == pepDocNode.GlobalStandardType).Skip(25).Any())
+            if (!doc.Peptides.Where(pepDocNode => null == pepDocNode.GlobalStandardType).Skip(20).Any())
             {
-                // If there are not at least 25 ordinary peptides in the document, then don't offer to
-                // add decoys
+                // If there are not at least 20 ordinary peptides in the document, then don't offer to
+                // add decoys. AutoTrainModelFunctionalTest has 24 peptides and expects to be prompted.
                 return false;
             }
 
