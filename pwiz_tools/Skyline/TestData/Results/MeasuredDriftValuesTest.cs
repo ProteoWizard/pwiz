@@ -102,7 +102,10 @@ namespace pwiz.SkylineTestData.Results
                 var document = docContainer.Document;
 
                 // Clear out any current settings
-                document = document.ChangeSettings(document.Settings.ChangeTransitionIonMobilityFiltering(s => TransitionIonMobilityFiltering.EMPTY));
+                var newFilter =
+                    TransitionIonMobilityFiltering.EMPTY.ChangeFilterWindowWidthCalculator(
+                        new IonMobilityWindowWidthCalculator(30)); // Reset IM window to resolving power 30
+                document = document.ChangeSettings(document.Settings.ChangeTransitionIonMobilityFiltering(s => newFilter));
 
                 // Verify ability to extract predictions from raw data
                 var libraryName0 = "test0";
@@ -117,7 +120,9 @@ namespace pwiz.SkylineTestData.Results
                 {
                     newIMFiltering = document.Settings.TransitionSettings.IonMobilityFiltering.ChangeLibrary(
                         IonMobilityLibrary.CreateFromResults(
-                            document, docContainer.DocumentFilePath, true,
+                            document, docContainer.DocumentFilePath,
+                            document.Settings.TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator,
+                            true,
                             libraryName0, dbPath0));
                 }
                 catch (FileNotFoundException) // If we catch the missing file early, we get this unwrapped exception. If caught deeper in the process it's wrapped in a IOException
@@ -131,7 +136,7 @@ namespace pwiz.SkylineTestData.Results
                 var result = newIMFiltering.IonMobilityLibrary.GetIonMobilityLibKeyMap().AsDictionary();
                 Assert.AreEqual(1, result.Count);
                 var expectedDT = 4.0019;
-                var expectedOffset = -0.137998;
+                var expectedOffset = 0.0;
                 Assert.AreEqual(expectedDT, result.Values.First().First().IonMobility.Mobility.Value, .001);
                 Assert.AreEqual(expectedOffset, result.Values.First().First().HighEnergyIonMobilityValueOffset??0, .001);
 

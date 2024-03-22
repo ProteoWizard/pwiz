@@ -406,24 +406,25 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
 
             var expectedIM = new[,]
             {
-                // Values recorded from master branch - imMS1, imFragment, imWindow
-                {26.47, 26.47, 1.06},
+                // Values recorded with IsRecordMode = true - imMS1, imFragment, imWindow
+                // These utilize the isotope envelope matching code (new as of Jan 2024)
+                {26.47, 26.3, 1.06},
                 {25.65, 25.65, 1.03},
                 {28.75, 28.75, 1.15},
-                {28.26, 28.26, 1.13},
+                {28.26, 28.1, 1.13},
                 {22.87, 22.87, 0.91},
                 {27.77, 27.77, 1.11},
                 {24.51, 24.51, 0.98},
-                {29.41, 29.41, 1.18},
+                {29.41, 29.24, 1.18},
                 {22.22, 22.22, 0.89},
                 {25.81, 25.81, 1.03},
-                {22.71, 22.71, 0.91},
+                {23.04, 22.55, 0.92},
                 {23.36, 23.36, 0.93},
-                {27.77, 27.77, 1.11},
-                {28.43, 28.43, 1.14},
-                {29.41, 27.9373, 1.18},
-                {24.02, 24.02, 0.96},
-                {27.77, 26.957, 1.11},
+                {27.77, 27.28, 1.11},
+                {28.92, 28.43, 1.16},
+                {29.41, 27.61, 1.18},
+                {24.02, 23.85, 0.96},
+                {27.61, 26.63, 1.1},
                 {25, 24.83, 1},
                 {30.39, 30.39, 1.22}
             };
@@ -431,10 +432,9 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             var colMz = FindDocumentGridColumn(documentGrid, "Precursor.Mz");
             var colFragment = FindDocumentGridColumn(documentGrid, "FragmentIon");
             var precursorIndex = -1;
+            var precursorIndexLastRecorded = -1;
             for (var row = 0; row < SkylineWindow.Document.MoleculeTransitions.Count(); row++)
             {
-                if (IsRecordMode)
-                    Console.Write(@"{");
                 var isFragment = false;
                 RunUI(() =>
                 {
@@ -453,19 +453,32 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                 var expectedFragmentIM = unfilteredReplicate ? null : (double?)expectedIM[precursorIndex, isFragment ? 1 : 0];
                 var expectedWindow = unfilteredReplicate ? null : (double?)expectedIM[precursorIndex, 2];
                 var expectedUnits = IonMobilityFilter.IonMobilityUnitsL10NString(unfilteredReplicate ? eIonMobilityUnits.none : eIonMobilityUnits.drift_time_msec);
-                CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityMS1", row, expectedPrecursorIM, msg, IsRecordMode);
-                CheckDocumentResultsGridFieldByName(documentGrid, "TransitionResult.IonMobilityFragment", row, expectedFragmentIM, msg, IsRecordMode); 
-                CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityWindow", row, expectedWindow);
-                CheckDocumentResultsGridFieldByName(documentGrid, "Chromatogram.ChromatogramIonMobility", row, expectedFragmentIM);
-                CheckDocumentResultsGridFieldByName(documentGrid, "Chromatogram.ChromatogramIonMobilityExtractionWidth", row, expectedWindow);
-                CheckDocumentResultsGridFieldByName(documentGrid, "Chromatogram.ChromatogramIonMobilityUnits", row, expectedUnits);
-                if (IsRecordMode)
+                var recordPrecursorValues = IsRecordMode && precursorIndex != precursorIndexLastRecorded && isFragment && !unfilteredReplicate;
+                if (recordPrecursorValues || !IsRecordMode)
                 {
-                    CheckDocumentResultsGridValuesRecordedCount = 0; // We're managing our own newlines
-                    Console.WriteLine(@"},");
+                    if (recordPrecursorValues)
+                    {
+                        Console.Write(@"{");
+                    }
+                    CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityMS1", row, expectedPrecursorIM, msg, recordPrecursorValues);
+                    CheckDocumentResultsGridFieldByName(documentGrid, "TransitionResult.IonMobilityFragment", row, expectedFragmentIM, msg, recordPrecursorValues);
+                    CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityWindow", row, expectedWindow, msg, recordPrecursorValues);
+                    if (recordPrecursorValues)
+                    {
+                        Console.WriteLine(@"},");
+                        CheckDocumentResultsGridValuesRecordedCount = 0; // We're managing our own newlines
+                        precursorIndexLastRecorded = precursorIndex;
+                    }
+                }
+                if (!IsRecordMode)
+                {
+                    CheckDocumentResultsGridFieldByName(documentGrid, "Chromatogram.ChromatogramIonMobility", row, expectedFragmentIM);
+                    CheckDocumentResultsGridFieldByName(documentGrid, "Chromatogram.ChromatogramIonMobilityExtractionWidth", row, expectedWindow);
+                    CheckDocumentResultsGridFieldByName(documentGrid, "Chromatogram.ChromatogramIonMobilityUnits", row, expectedUnits);
                 }
             }
-
+            if (IsRecordMode)
+                PauseForManualTutorialStep("see console for new values");
             // And clean up after ourselves
             RunUI(() => documentGrid.Close());
         }

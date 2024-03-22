@@ -120,6 +120,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 GetArg(CommandArgs.ARG_OUT, outputPath),
                 GetPathArg(CommandArgs.ARG_IMPORT_TRANSITION_LIST, "test_run_1_transition_list.csv"),
                 GetPathArg(CommandArgs.ARG_IMPORT_FILE, RAW_FILE),
+                GetOptionalArg(CommandArgs.ARG_IMS_LIBRARY_RES, "30"),
                 GetOptionalArg(CommandArgs.ARG_IMSDB_CREATE, imsdbPath),
                 GetOptionalArg(CommandArgs.ARG_IMSDB_NAME, imsdbName),
                 GetArg(CommandArgs.ARG_REPORT_NAME, "Precursor CCS"),
@@ -137,7 +138,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 AssertEx.FileExists(imsdbPath);
 
                 // Compare to expected report - may need to localize the expected copy to match the actual copy
-                AssertEx.AreEquivalentDsvFiles(GetTestPath("ImsDbTest_expected.csv"), reportFilePath, true);
+                var expectedCSV = GetTestPath("ImsDbTest_expected.csv");
+                File.WriteAllText(expectedCSV, EXPECTED_CSV);
+                AssertEx.AreEquivalentDsvFiles(expectedCSV, reportFilePath, true);
 
                 // Finally, check the persisted document to make sure it loads the IMS library
                 // information that was just added.
@@ -188,5 +191,61 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         {
             return GetArg(arg, GetTestPath(value));
         }
+
+        private const string EXPECTED_CSV =
+            "Molecule,Precursor,Library Collision Cross Section\n" + 
+            "\"(3,4-dimethylphenyl)(phenyl)methanone\",211.1117[M+H],145.84\n" + 
+            "\"[(2,3-dimethylcyclohexyl)carbamoyl]methyl benzoate\",290.1751[M+H],172.79\n" + 
+            "\"[(2-methoxy-5-methylphenyl)carbamoyl]methyl 2,3-dihydro-1,4-benzodioxine-6-carboxylate\",358.1285[M+H],268.55\n" + 
+            "\"{7-bromo-4-oxopyrido[1,2-a]pyrimidin-2-yl}methyl 2-(difluoromethoxy)benzoate\",424.9943[M+H],178.5\n" + 
+            "\"{cyclopropyl[(4-methoxyphenyl)methyl]carbamoyl}methyl 2,5-dimethyl-1-(5-methyl-1,2-oxazol-3-yl)pyrrole-3-carboxylate\",438.2023[M+H],213.25\n" + 
+            "\"1-(2,5-dimethoxyphenyl)-2-{[5-(thiophen-2-yl)-2H-1,2,4-triazol-3-yl]sulfanyl}ethanone\",362.0628[M+H],181.4\n" + 
+            "\"1-(2-{2,5-dioxo-2',3'-dihydrospiro[imidazolidine-4,1'-inden]-1-yl}acetyl)-3-(2-methylpropyl)urea\",359.1714[M+H],187.66\n" + 
+            "1-(2-chlorobenzenesulfonyl)-4-cyclopropanecarbonylpiperazine,329.0721[M+H],166.2\n" + 
+            "\"1-(2H-1,3-benzodioxol-5-yl)-3-(2-{2',5'-dioxo-2,3-dihydrospiro[1-benzopyran-4,4'-imidazolidin]-1'-yl}acetyl)urea\",439.1248[M+H],189.31\n" + 
+            "\"1-(2H-1,3-benzodioxol-5-ylmethyl)-4-{4-[(methylsulfanyl)methyl]benzoyl}piperazine\",385.1580[M+H],202.05\n" + 
+            "1-(3-chlorobenzenesulfonyl)pyrrolidine-2-carboxamide,289.0408[M+H],157.22\n" + 
+            "1-[(5-chloro-3-methyl-1-phenylpyrazol-4-yl)methyl]-5-(pyrrolidine-1-sulfonyl)pyridin-2-one,433.1096[M+H],203.2\n" + 
+            "\"1-[1-(2H-1,3-benzodioxol-5-ylmethyl)-2,5-dimethylpyrrol-3-yl]-2-{[4-methyl-5-(trifluoromethyl)-1,2,4-triazol-3-yl]sulfanyl}ethanone\",453.1203[M+H],205.79\n" + 
+            "\"1-[2-(8-methyl-octahydro-2H-quinolin-1-yl)-2-oxoethyl]-2',3'-dihydrospiro[imidazolidine-4,1'-indene]-2,5-dione\",396.2282[M+H],193.58\n" + 
+            "1-{4-[4-(azepane-1-carbonyl)piperidine-1-carbonyl]phenyl}pyrrolidin-2-one,398.2438[M+H],203.55\n" + 
+            "\"1-benzyl-N,N-bis(furan-2-ylmethyl)piperidine-4-carboxamide\",379.2016[M+H],187.3\n" + 
+            "\"1-methyl-4-{4-[4-(pyrrolidine-1-sulfonyl)phenyl]-1,3-thiazol-2-yl}piperazine\",393.1413[M+H],200.56\n" + 
+            "\"2-(2-bromo-4,5-dimethoxyphenyl)acetonitrile\",255.9968[M+H],177.56\n" + 
+            "\"2-(2-chlorophenyl)-7-(trifluoromethyl)-3,1-benzoxazin-4-one\",326.0190[M+H],163.12\n" + 
+            "\"2-(4-methylphenyl)-2-oxo-N-(4-phenyl-1,3-thiazol-2-yl)acetamide\",323.0849[M+H],177.1\n" + 
+            "\"2-(6-chloro-3-oxo-2,4-dihydro-1,4-benzothiazin-2-yl)-N-(3-methoxyphenyl)acetamide\",363.0565[M+H],184.68\n" + 
+            "\"2,4-dichloro-N-[5-(trifluoromethyl)-4H-1,2,4-triazol-3-yl]benzamide\",324.9865[M+H],161.37\n" + 
+            "\"2-[({5,7-dimethyl-[1,2,4]triazolo[1,5-a]pyrimidin-2-yl}sulfanyl)methyl]-1-ethyl-N,N-dimethyl-1,3-benzodiazole-5-sulfonamide\",446.1427[M+H],207.22\n" + 
+            "2-[(4-chlorophenyl)sulfanyl]-N-[(4-methoxyphenyl)methyl]acetamide,322.0663[M+H],244.07\n" + 
+            "\"2-[3-cyclopropyl-5-({[4-(trifluoromethoxy)phenyl]methyl}sulfanyl)-1,2,4-triazol-4-yl]acetamide\",373.0941[M+H],177.71\n" + 
+            "\"2-{3-ethyl-5-[(2-methoxyphenyl)methylidene]-4-oxo-1,3-thiazolidin-2-ylidene}-3-(morpholin-4-yl)-3-oxopropanenitrile\",400.1326[M+H],195.45\n" + 
+            "\"3-[(1,1-dioxo-1lambda6,2-benzothiazol-3-yl)amino]-N-[2-(4-isopropylphenyl)ethyl]propanamide\",400.1689[M+H],193.91\n" + 
+            "3-[(4-benzoylpiperazin-1-yl)methyl]benzonitrile,306.1601[M+H],181.6\n" + 
+            "\"3-[3-(2,5-dimethylphenoxy)propyl]-2H-1lambda6,2,3-benzothiadiazine-1,1,4-trione\",361.1217[M+H],183.35\n" + 
+            "3-[cyclopentyl(thiophen-2-yl)methyl]-1-[2-(pyrimidin-2-ylamino)ethyl]urea,346.1696[M+H],183.83\n" + 
+            "\"3-fluoro-N-{[1,2,4]triazolo[4,3-a]pyridin-3-ylmethyl}benzenesulfonamide\",307.0660[M+H],165.29\n" + 
+            "\"3-methoxy-4-{[5-(4-methoxyphenyl)-1,3,4-oxadiazol-2-yl]methoxy}benzonitrile\",338.1135[M+H],183.02\n" + 
+            "3-methoxy-N-(3-methylpentan-2-yl)benzamide,236.1645[M+H],157.17\n" + 
+            "\"3-methyl-2-{[(3-methylphenyl)methyl]sulfanyl}thieno[3,2-d]pyrimidin-4-one\",303.0620[M+H],162.43\n" + 
+            "\"4-(difluoromethoxy)-N-(2,3-dihydro-1,4-benzodioxin-6-ylmethyl)-3-methoxybenzamide\",366.1148[M+H],186.56\n" + 
+            "\"4,5,6-trimethyl-2-({[3-(2-methylphenyl)-1,2,4-oxadiazol-5-yl]methyl}sulfanyl)pyrimidine\",327.1274[M+H],175.45\n" + 
+            "4-ethyl-N-[2-(4-sulfamoylphenyl)ethyl]benzamide,333.1267[M+H],175.72\n" + 
+            "\"7-(4-chlorophenyl)-6-(4-fluorophenyl)-4H-[1,2,4]triazolo[1,5-a]pyrimidin-5-one\",341.0600[M+H],173.8\n" + 
+            "ethyl 4-[(4-ethoxy-3-methoxyphenyl)formamido]butanoate,310.1649[M+H],177.39\n" + 
+            "\"N-(2,4-dibromophenyl)-3,5-dimethyl-1,2-oxazole-4-carboxamide\",372.9182[M+H],168.56\n" + 
+            "\"N-(2,6-dichlorophenyl)-2-{methyl[(2-methylphenyl)methyl]amino}acetamide\",337.0869[M+H],172.7\n" + 
+            "\"N-(2-chloro-4,6-dimethylphenyl)-3,5-dimethyl-1,2-oxazole-4-carboxamide\",279.0895[M+H],160.24\n" + 
+            "N-[(2-methoxyphenyl)methyl]-2-(pyridin-4-yl)quinoline-4-carboxamide,370.1550[M+H],197.7\n" + 
+            "N-[2-(4-methylphenoxy)phenyl]cyclopropanecarboxamide,268.1332[M+H],163.52\n" + 
+            "N-[2-(morpholin-4-yl)phenyl]-2-(phenylsulfanyl)pyridine-3-carboxamide,392.1427[M+H],188.05\n" + 
+            "\"N-{[2-(morpholin-4-yl)pyridin-4-yl]methyl}-5-(pyridin-3-yl)-1,2-oxazole-3-carboxamide\",366.1561[M+H],194.49\n" + 
+            "\"N-{[5-(2-bromophenyl)-1,3,4-oxadiazol-2-yl]methyl}-N-cyclopropylbenzamide\",398.0499[M+H],181.97\n" + 
+            "\"N1-[(tert-butylcarbamoyl)methyl]benzene-1,3-dicarboxamide\",278.1499[M+H],172.13\n" + 
+            "\"N-ethyl-2-[4-methyl-4-(naphthalen-1-yl)-2,5-dioxoimidazolidin-1-yl]-N-(2-methylprop-2-en-1-yl)acetamide\",380.1969[M+H],189.41\n" + 
+            "Tm_118,118.0863[M+H],119.86\n" + 
+            "Tm_322,322.0481[M+H],151.97\n" + 
+            "Tm_622,622.0290[M+H],200.94\n" + 
+            "Tm_922,922.0098[M+H],238.93\n";
     }
 }
