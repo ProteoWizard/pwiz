@@ -484,7 +484,7 @@ namespace pwiz.SkylineTestFunctional
                 };
                 string[] badfields =
                 {
-                    "", "", "", "123", "C6H2O2[M+2H]", "fish", "-345", "cat", "pig", "12", "frog", "hamster", "boston", "",
+                    "", "", "", "123z", "C6H2O2[M+2H]", "fish", "-345", "cat", "pig", "12", "frog", "hamster", "boston", "",
                     "[M+foo]", "wut", "foosballDT", "greasyDTHEO", "mumbleCCS", "gumdropSLEN", "dingleConeV", "dangleCompV",
                     "gorseDP", "AHHHHHRGHinchik", "bananananahndb",
                     "shamble-raft4-inchi", "bags34cas", "flansmile", "boozlekegg", "12-fooim", "bumbleimheo", "dingoimunit",
