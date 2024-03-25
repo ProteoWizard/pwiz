@@ -9,6 +9,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{65831C55-E631-4948-9528-6431637882E3}</ProjectGuid>
     <Keyword>MakeFileProj</Keyword>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'" Label="Configuration">
@@ -44,6 +45,7 @@
     <ClCompile Include="src\CommandLine.cpp" />
     <ClCompile Include="src\DiaNNSpecLibReader.cpp" />
     <ClCompile Include="src\DotProduct.cpp" />
+    <ClCompile Include="src\HardklorReader.cpp" />
     <ClCompile Include="src\IdpXMLreader.cpp" />
     <ClCompile Include="src\LibReader.cpp" />
     <ClCompile Include="src\LibToSqlite3.cpp" />

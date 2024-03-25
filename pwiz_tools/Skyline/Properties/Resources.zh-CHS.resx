@@ -229,9 +229,6 @@
   <data name="AlignmentForm_UpdateGraph_Outliers" xml:space="preserve">
     <value>异常值</value>
   </data>
-  <data name="AlignmentForm_UpdateGraph_Peptides" xml:space="preserve">
-    <value>肽段</value>
-  </data>
   <data name="AlignmentForm_UpdateGraph_Peptides_Refined" xml:space="preserve">
     <value>肽段调整</value>
   </data>

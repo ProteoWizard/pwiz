@@ -47,7 +47,13 @@
             this.label2 = new System.Windows.Forms.Label();
             this.cbMs2Analyzer = new System.Windows.Forms.ComboBox();
             this.lblMs2Analyzer = new System.Windows.Forms.Label();
+            this.groupBoxHardklor = new System.Windows.Forms.GroupBox();
+            this.textHardklorCorrelation = new System.Windows.Forms.TextBox();
+            this.labelHardklorCorrelationThreshold = new System.Windows.Forms.Label();
+            this.textHardklorSignalToNoise = new System.Windows.Forms.TextBox();
+            this.lblHardklorSignalToNoise = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pBLogo)).BeginInit();
+            this.groupBoxHardklor.SuspendLayout();
             this.SuspendLayout();
             // 
             // cbMS1TolUnit
@@ -170,10 +176,41 @@
             resources.ApplyResources(this.lblMs2Analyzer, "lblMs2Analyzer");
             this.lblMs2Analyzer.Name = "lblMs2Analyzer";
             // 
+            // groupBoxHardklor
+            // 
+            this.groupBoxHardklor.Controls.Add(this.textHardklorCorrelation);
+            this.groupBoxHardklor.Controls.Add(this.labelHardklorCorrelationThreshold);
+            this.groupBoxHardklor.Controls.Add(this.textHardklorSignalToNoise);
+            this.groupBoxHardklor.Controls.Add(this.lblHardklorSignalToNoise);
+            resources.ApplyResources(this.groupBoxHardklor, "groupBoxHardklor");
+            this.groupBoxHardklor.Name = "groupBoxHardklor";
+            this.groupBoxHardklor.TabStop = false;
+            // 
+            // textHardklorCorrelation
+            // 
+            resources.ApplyResources(this.textHardklorCorrelation, "textHardklorCorrelation");
+            this.textHardklorCorrelation.Name = "textHardklorCorrelation";
+            // 
+            // labelHardklorCorrelationThreshold
+            // 
+            resources.ApplyResources(this.labelHardklorCorrelationThreshold, "labelHardklorCorrelationThreshold");
+            this.labelHardklorCorrelationThreshold.Name = "labelHardklorCorrelationThreshold";
+            // 
+            // textHardklorSignalToNoise
+            // 
+            resources.ApplyResources(this.textHardklorSignalToNoise, "textHardklorSignalToNoise");
+            this.textHardklorSignalToNoise.Name = "textHardklorSignalToNoise";
+            // 
+            // lblHardklorSignalToNoise
+            // 
+            resources.ApplyResources(this.lblHardklorSignalToNoise, "lblHardklorSignalToNoise");
+            this.lblHardklorSignalToNoise.Name = "lblHardklorSignalToNoise";
+            // 
             // SearchSettingsControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.groupBoxHardklor);
             this.Controls.Add(this.cbMs2Analyzer);
             this.Controls.Add(this.lblMs2Analyzer);
             this.Controls.Add(this.label2);
@@ -194,6 +231,8 @@
             this.Controls.Add(this.cbMS1TolUnit);
             this.Name = "SearchSettingsControl";
             ((System.ComponentModel.ISupportInitialize)(this.pBLogo)).EndInit();
+            this.groupBoxHardklor.ResumeLayout(false);
+            this.groupBoxHardklor.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -218,5 +257,10 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ComboBox cbMs2Analyzer;
         private System.Windows.Forms.Label lblMs2Analyzer;
+        private System.Windows.Forms.GroupBox groupBoxHardklor;
+        private System.Windows.Forms.TextBox textHardklorCorrelation;
+        private System.Windows.Forms.Label labelHardklorCorrelationThreshold;
+        private System.Windows.Forms.TextBox textHardklorSignalToNoise;
+        private System.Windows.Forms.Label lblHardklorSignalToNoise;
     }
 }

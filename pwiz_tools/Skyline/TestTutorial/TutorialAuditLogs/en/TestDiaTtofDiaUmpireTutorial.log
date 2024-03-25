@@ -44,7 +44,6 @@ Import Peptide Search > Extract Chromatograms > Found results files : contains "
 Import Peptide Search > Extract Chromatograms > Found results files : contains "collinsb_I180316_002_SW-B.mzML"
 Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "Many"
 Import Peptide Search > Extract Chromatograms > Removed prefix is "collinsb_I180316_00"
-Import Peptide Search > Extract Chromatograms > Removed suffix is ".mzML"
 Import Peptide Search > Add Modifications > Added modifications : contains "Carbamidomethyl (C) = C[57] (fixed)"
 Import Peptide Search > Add Modifications > Added modifications : contains "Oxidation (M) = M[16] (variable)"
 Import Peptide Search > Import FASTA > FASTA file is "nodecoys_3mixed_human_yeast_ecoli_20140403_iRT.fasta"
@@ -77,8 +76,7 @@ Extra Info: Extract Chromatograms =
         "collinsb_I180316_002_SW-B.mzML"
     ],
     Files to import simultaneously = "Many",
-    Removed prefix = "collinsb_I180316_00",
-    Removed suffix = ".mzML"
+    Removed prefix = "collinsb_I180316_00"
 },
 Add Modifications = 
 {

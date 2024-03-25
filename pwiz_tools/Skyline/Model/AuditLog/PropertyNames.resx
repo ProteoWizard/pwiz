@@ -1103,6 +1103,21 @@
   <data name="ExplicitTransitionValues_SLens" xml:space="preserve">
     <value>S-Lens</value>
   </data>
+  <data name="HardklorSettings_Charges" xml:space="preserve">
+    <value>Charges</value>
+  </data>
+  <data name="HardklorSettings_CorrelationThreshold" xml:space="preserve">
+    <value>Correlation threshold</value>
+  </data>
+  <data name="HardklorSettings_Instrument" xml:space="preserve">
+    <value>Instrument</value>
+  </data>
+  <data name="HardklorSettings_Resolution" xml:space="preserve">
+    <value>Resolution</value>
+  </data>
+  <data name="HardklorSettings_SignalToNoise" xml:space="preserve">
+    <value>Signal to noise</value>
+  </data>
   <data name="ImportFastaSettings_AutoTrain" xml:space="preserve">
     <value>Automatically train mProphet model</value>
   </data>
@@ -1129,6 +1144,9 @@
   </data>
   <data name="ImportPeptideSearchSettings_FullScanSettings" xml:space="preserve">
     <value>Configure Full-Scan Settings</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_HardklorSearchSettings" xml:space="preserve">
+    <value>Hardklor Search Settings</value>
   </data>
   <data name="ImportPeptideSearchSettings_ImportFastaSettings" xml:space="preserve">
     <value>Import FASTA</value>

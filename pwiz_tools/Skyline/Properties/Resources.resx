@@ -812,6 +812,9 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="LabKey" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\LabKey.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="HardklorLogo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\hardklor_logo.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="MProphetPeakScoringModel_CreateTransitionGroups_MProphetScoringModel_was_given_a_peak_with__0__features__but_it_has__1__peak_feature_calculators" xml:space="preserve">
     <value>MProphetScoringModel was given a peak with {0} features, but it has {1} peak feature calculators</value>
   </data>
@@ -2225,9 +2228,6 @@ Most peptide transition lists can be imported with the "File|Import|Transition L
   <data name="ConfigureToolsDlg_CheckPassToolInternal__ToolDir__is_not_a_valid_macro_for_a_tool_that_was_not_installed_and_therefore_does_not_have_a_Tool_Directory_" xml:space="preserve">
     <value>$(ToolDir) is not a valid macro for a tool that was not installed and therefore does not have a Tool Directory.</value>
   </data>
-  <data name="AlignmentForm_UpdateGraph_Peptides" xml:space="preserve">
-    <value>Peptides</value>
-  </data>
   <data name="MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0" xml:space="preserve">
     <value>Downloading {0}</value>
   </data>
@@ -3640,6 +3640,9 @@ Most peptide transition lists can be imported with the "File|Import|Transition L
   </data>
   <data name="RefineListDlgProtein_OkDialog_Of_the_specified__0__proteins__1__are_not_in_the_document__Do_you_want_to_continue_" xml:space="preserve">
     <value>Of the specified {0} proteins {1} are not in the document. Do you want to continue?</value>
+  </data>
+  <data name="DdaSearch_Search_failed__0" xml:space="preserve">
+    <value>Search failed: {0}</value>
   </data>
   <data name="RefineListDlgProtein_OkDialog_The_protein___0___is_not_in_the_document__Do_you_want_to_continue_" xml:space="preserve">
     <value>The protein '{0}' is not in the document. Do you want to continue?</value>

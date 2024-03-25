@@ -189,6 +189,13 @@ void printObserved(vector<string>& outputLines, string& libName){
         outfile << outputLines[i] << endl;
     }
     outfile.close();
+#ifndef BOOST_MSVC
+    cerr << "Observed output written to " << outName << " with these contents:" << endl;
+    for (size_t ii = 0; ii < outputLines.size(); ii++) {
+        cerr << outputLines[ii] << endl;
+    }
+    cerr << "<end>" << endl;
+#endif
 }
 
 // Extract a pre-defined set of queries from the given library and
@@ -231,9 +238,17 @@ int test (const vector<string>& args)
 
     // for now do the stupidest thing, compare line i with line i and
     // report as soon as any do not match
+    //
+    // but if we've gotten to the "id scoreType probabilityType" section,
+    // just enforce that the lines in the expected file match
+    // those in the output file, ignoring any additional entries in the newer file
+
     size_t lineNum = 0;
     string expected;
     getline(compareFile, expected);
+    bool inScoreTypesSection = false;
+    bool inRefSpectraIdSectionExpected = false;
+    bool inRefSpectraIdSectionObserved = false;
 
     while( !compareFile.eof() )
     {
@@ -246,6 +261,19 @@ int test (const vector<string>& args)
 
         string& observed = outputLines[lineNum];
 
+        // Some files have a section beyond ScoreTypes
+        const char* refSpectraHint = "RefSpectraID\tRedundantRefSpectraID\t";
+        while(inRefSpectraIdSectionExpected && !inRefSpectraIdSectionObserved)
+        {
+            if (!(inRefSpectraIdSectionObserved |= (observed.rfind(refSpectraHint, 0) == 0)))
+            {
+                lineNum++;
+                if (lineNum >= outputLines.size())
+                    break;
+                observed = outputLines[lineNum];
+            }
+        }
+
         if( ! linesMatch(expected, observed, compareDetails) )
         {
             cerr << "Line " << lineNum + 1 << " differs." << endl;
@@ -257,13 +285,16 @@ int test (const vector<string>& args)
 
         getline(compareFile, expected);
         lineNum++;
+        inScoreTypesSection |= (expected.find("probabilityType") != string::npos); // Allow the output file to have additional score types
+        inRefSpectraIdSectionExpected |= (expected.rfind(refSpectraHint, 0) == 0); // Handle formats that have a section beyond ScoreTypes
+
     }
 
-    if (lineNum < outputLines.size())
+    if ((lineNum < outputLines.size()) && !inScoreTypesSection) // Allow the output file to have additional score types
     {
         printObserved(outputLines, libName);
         throw runtime_error("Observed output has more lines (" + lexical_cast<string>(outputLines.size()) +
-                            ") than expected (" + lexical_cast<string>(lineNum) + ")");
+                            ") than expected (" + lexical_cast<string>(lineNum) + ") starting at at line \"" + outputLines[lineNum] + "\"");
         }
     cerr << "All output matches" << endl;
 

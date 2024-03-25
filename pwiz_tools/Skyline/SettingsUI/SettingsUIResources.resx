@@ -1143,4 +1143,25 @@
 This library entry only provides precursor
 information, there is no spectrum to show</value>
   </data>
+  <data name="FullScanSettingsControl_Initialize_minutes_of_detected_features" xml:space="preserve">
+    <value>minutes of detected features</value>
+  </data>
+  <data name="FullScanSettingsControl_InitializeFeatureDetectionUI_Hardklor_looks_for_isotope_envelopes_representing_charges_1__0___The_library_will_contain_only_ions_with_the_charges_listed_here_" xml:space="preserve">
+    <value>Hardklor looks for isotope envelopes representing charges 1-{0}. The resulting library will contain only ions with the charges listed here.</value>
+  </data>
+  <data name="FullScanSettingsControl_InitializeFeatureDetectionUI_This_is_the_value_assumed_by_Hardklor__it_cannot_be_adjusted_" xml:space="preserve">
+    <value>This is the value assumed by Hardklor, it cannot be adjusted.</value>
+  </data>
+    <data name="FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_MS_data_type_for_Hardklor_s_FWHM_calculation__Normally_set_to_Centroided_" xml:space="preserve">
+    <value>Sets the MS data type for Hardklor's FWHM calculation. Normally set to Centroided.</value>
+  </data>
+  <data name="FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_mass_analyzer_type_for_Hardklor_s_FWHM_calculation_" xml:space="preserve">
+    <value>Sets the mass analyzer type for Hardklor's FWHM calculation.</value>
+  </data>
+  <data name="FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values" xml:space="preserve">
+    <value>&amp;Instrument values</value>
+  </data>
+  <data name="FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values_from_Full_Scan_Settings" xml:space="preserve">
+    <value>Instrument values (from full-scan settings)</value>
+  </data>
 </root>

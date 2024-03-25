@@ -165,7 +165,7 @@ bool PwizReader::getSpectrum(int identifier,
     specInfo->SpectrumInfo::update(*foundSpec, getPeaks);
     
     // confirm that it's an ms/ms spectrum
-    if( specInfo->msLevel != 2 ){
+    if( getPeaks && specInfo->msLevel != 2 ){
         BiblioSpec::Verbosity::warn("Spectrum %d is level %d, not 2.",
                                     identifier, specInfo->msLevel);
         return false;
@@ -435,7 +435,10 @@ void PwizReader::transferSpec(BiblioSpec::SpecData& returnData,
     
     returnData.id = specInfo->scanNumber;
     returnData.retentionTime = specInfo->retentionTime/60;  // seconds to minutes
-    returnData.mz = specInfo->precursors[0].mz;
+    if (specInfo->msLevel > 1)
+    {
+        returnData.mz = specInfo->precursors[0].mz;
+    }
     returnData.numPeaks = specInfo->data.size();
     
     if( returnData.numPeaks > 0 ){

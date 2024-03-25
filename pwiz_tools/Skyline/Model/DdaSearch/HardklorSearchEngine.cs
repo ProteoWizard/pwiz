@@ -1,0 +1,885 @@
+﻿/*
+ * Original author: Brian Pratt <bspratt .at. uw.edu >
+ *
+ * Copyright 2022 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using pwiz.Common.Chemistry;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Drawing;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using pwiz.Skyline.Util.Extensions;
+using System.Text;
+using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.Results.Spectra.Alignment;
+using pwiz.Skyline.Model.RetentionTimes;
+using Enzyme = pwiz.Skyline.Model.DocSettings.Enzyme;
+
+namespace pwiz.Skyline.Model.DdaSearch
+{
+    public class HardklorSearchEngine : AbstractDdaSearchEngine, IProgressMonitor
+    {
+        private ImportPeptideSearch _searchSettings;
+
+        private bool _keepIntermediateFiles;
+        // Temp files we'll need to clean up at the end the end if !_keepIntermediateFiles
+        private SortedDictionary<MsDataFileUri, string> _inputsAndOutputs; // .hk.bs.kro results files
+        private string _isotopesFilename;
+        private string _paramsFilename;
+        private Dictionary<MsDataFileUri, SpectrumSummaryList> _spectrumSummaryLists = new Dictionary<MsDataFileUri, SpectrumSummaryList>();
+
+        private Dictionary<Tuple<MsDataFileUri, MsDataFileUri>, KdeAligner> _alignments =
+            new Dictionary<Tuple<MsDataFileUri, MsDataFileUri>, KdeAligner>();
+        public static int MaxCharge = 7; // Look for charge states up to and including this
+        public override void SetSpectrumFiles(MsDataFileUri[] searchFilenames)
+        {
+            SpectrumFileNames = searchFilenames;
+            _paramsFilename = null;
+            _searchSettings.RemainingStepsInSearch = searchFilenames.Length + 2; // One step for Hardklor, and one Bullseye per file, then unify the bullseye results
+        }
+        public HardklorSearchEngine(ImportPeptideSearch searchSettings)
+        {
+            _searchSettings = searchSettings;
+        }
+
+        private CancellationTokenSource _cancelToken;
+        private IProgressStatus _progressStatus;
+        private bool _success;
+
+        public override string[] FragmentIons => Array.Empty<string>();
+        public override string[] Ms2Analyzers => Array.Empty<string>();
+        public override string EngineName => @"Hardklor";
+        public override Bitmap SearchEngineLogo => Resources.HardklorLogo;
+
+        public override event NotificationEventHandler SearchProgressChanged;
+
+        public override bool Run(CancellationTokenSource cancelToken, IProgressStatus status)
+        {
+            using var tmpDir = new TempDir(); // Set TMP to a new directory that we'll destroy on exit
+            _cancelToken = cancelToken;
+            _progressStatus = status.ChangePercentComplete(0);
+            _success = true;
+            _isotopesFilename = null;
+
+            var skylineWorkingDirectory = Settings.Default.ActiveDirectory;
+            _keepIntermediateFiles = !string.IsNullOrEmpty(skylineWorkingDirectory);
+
+            try
+            {
+                if (_searchSettings.RemainingStepsInSearch == 2)
+                {
+                    // Final step - try to unify similar features across the various Bullseye result files
+                    _searchSettings.RemainingStepsInSearch--; // More to do after this?
+                    _success = FindSimilarFeatures();
+                    if (!_success)
+                    {
+                        _progressStatus = _progressStatus.ChangeMessage(string.Format(DdaSearchResources.DdaSearch_Search_failed__0, DdaSearchResources.HardklorSearchEngine_Run_See_Hardklor_Bullseye_log_for_details));
+                    }
+                }
+                else
+                {
+                    // Hardklor is not L10N ready, so take care to run its process under InvariantCulture
+                    Func<string> RunHardklor = () =>
+                    {
+                        string exeName;
+                        string args;
+                        if (string.IsNullOrEmpty(_paramsFilename))
+                        {
+                            // First pass - run Hardklor
+                            var paramsFileText = GenerateHardklorConfigFile(skylineWorkingDirectory);
+
+                            RunNumber = 0;
+                            void SetHardklorParamsFileName()
+                            {
+                                var versionString = RunNumber == 0 ? string.Empty : $@"_{RunNumber:000}";
+                                _paramsFilename = string.IsNullOrEmpty(skylineWorkingDirectory)
+                                    ? Path.GetTempFileName()
+                                    : Path.Combine(skylineWorkingDirectory, $@"Hardklor{versionString}.conf");
+                            }
+
+                            for (SetHardklorParamsFileName(); File.Exists(_paramsFilename);)
+                            {
+                                RunNumber++;
+                                SetHardklorParamsFileName(); // Avoid stomping previous runs
+                            }
+                            File.WriteAllText(_paramsFilename, paramsFileText.ToString());
+                            exeName = @"Hardklor";
+                            args = $@"""{_paramsFilename}""";
+                        }
+                        else
+                        {
+                            // Refine the Hardklor results with Bullseye
+                            _searchSettings.RemainingStepsInSearch--; // More to do after this?
+                            var pair = _inputsAndOutputs.ElementAt(_searchSettings.RemainingStepsInSearch - 2); // Last 2 steps are Bullseye then cleanup for blibbuild
+                            var mzFile = pair.Key;
+                            var hkFile = pair.Value;
+                            var matchFile = GetBullseyeMatchFilename(hkFile);
+                            var noMatchFile = GetBullseyeNoMatchFilename(hkFile);
+                            exeName = @"BullseyeSharp";
+                            var ppm = GetPPM();
+                            args = $@"-c 0 " + // Don't eliminate long elutions
+                                   $@"-r {ppm.ToString(CultureInfo.InvariantCulture)} " +
+                                   $@"""{hkFile}"" ""{mzFile}"" ""{matchFile}"" ""{noMatchFile}""";
+                        }
+                        _progressStatus = status.ChangePercentComplete(0);
+                        var pr = new ProcessRunner();
+                        var psi = new ProcessStartInfo(exeName, args)
+                        {
+                            CreateNoWindow = true,
+                            UseShellExecute = false,
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            RedirectStandardInput = false,
+                            StandardOutputEncoding = Encoding.UTF8,
+                            StandardErrorEncoding = Encoding.UTF8
+                        };
+                        pr.ShowCommandAndArgs = true; // Show the commandline
+                        pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal);
+                        return _paramsFilename;
+                    };
+                    LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture, RunHardklor);
+                }
+                _progressStatus = _progressStatus.NextSegment();
+            }
+            catch (Exception ex)
+            {
+                _progressStatus = _progressStatus.ChangeErrorException(ex).ChangeMessage(string.Format(DdaSearchResources.DdaSearch_Search_failed__0, ex.Message));
+                _success = false;
+            }
+
+            if (IsCanceled && !_progressStatus.IsCanceled)
+            {
+                _progressStatus = _progressStatus.Cancel().ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_canceled);
+                _success = false;
+            }
+
+            if (!_success)
+            {
+                _cancelToken.Cancel();
+            }
+
+            if (_success)
+                _progressStatus = _progressStatus.Complete().ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_done);
+            UpdateProgress(_progressStatus);
+
+            if (!_keepIntermediateFiles)
+            {
+                FileEx.SafeDelete(_paramsFilename, true);
+            }
+
+            return _success;
+        }
+
+        private double GetPPM()
+        {
+            var resolution = GetResolution();
+            var ppm = resolution == 0 ? 10 : ((1.0 / resolution) * 1E6); // 10 is the Bullseye default
+            return ppm;
+        }
+
+        private class hkFeatureDetail
+        {
+            public double mzObserved; // Observed mz
+            public string strMass; // Text representation of mono mass
+            public double parsedMass; // Parsed value of original mono mass text
+            public string avergineAndOffset; // The value declared in the avergine column e.g. "H104C54N15O16[+4.761216]"
+            public double quality; // Define relative quality for sorting as "Best Correlation" column x "Num of Scans" column (i.e. Points across peak * correlation)
+            public double rt; // "Best RTime" column
+            public double rtStart; // "First RTime" column
+            public double rtEnd; // "Last RTime" column
+            public double rtAligned; // RT of best scoring occurence when found in more than one file
+            public int charge; // Declared z
+            public int fileIndex; // Which file it's from
+            public int lineIndex; // Which line in that file
+            public bool redundant; // Set true when a Hardklor feature gets combine into another and should not be passed along to BiblioSpec
+
+            public string strMassAndAlignedRT => FormatMassAndAlignedRT(strMass, rtAligned);
+            public static string FormatMassAndAlignedRT(string strMass, double rtAligned) => $@"mass{strMass}_RT{rtAligned.ToString(@"0.0000", CultureInfo.InvariantCulture)}";
+
+            public override string ToString()
+            {
+                return $@"{strMass} {quality} {rtStart} {rt} {rtEnd} {mzObserved} {avergineAndOffset}";
+            }
+        }
+
+        private List<hkFeatureDetail> _featuresAll = new List<hkFeatureDetail>();
+        private Dictionary<string, int[]> _featureMatches;
+        private Dictionary<string, hkFeatureDetail[]> _orderedFeaturesByCNOS;
+        private string[] _bfiles;
+        private List<string[]> _contents = new List<string[]>();
+
+
+        private bool FindSimilarFeatures()
+        {
+            // Final step - try to unify similar features in the various Bullseye result files
+            _bfiles = SpectrumFileNames.Select(GetSearchResultFilepath).ToArray();
+            if (_bfiles.Length == 0)
+            {
+                return false;
+            }
+
+            _progressStatus = _progressStatus.ChangeMessage(string.Empty);
+            _progressStatus = _progressStatus.ChangePercentComplete(0).ChangeMessage(DdaSearchResources.HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_runs);
+
+            PerformAllAlignments();
+
+            _contents = new List<string[]>();
+
+            // The shape of the isotope distribution is pretty much determined by everything but
+            // hydrogen, so create a lookup based on avergine formulas with H removed
+            CreateLookupByCNOS();
+
+            // We have a dictionary of all known isotope distributions (that is, the averagine formulas without H)
+            // and all known masses and intensities. Now to find occurrences of these across the RT-aligned replicates
+           
+            // Look at similar features and combine them into references to a single feature
+            CombineSimilarFeaturesAcrossReplicates();
+
+            // We asked Hardklor to write its mass values at greater than normal precision, let's peel
+            // that back to 4 decimal places - but we have to watch for collisions
+            TrimMassDigits();
+
+            // If a feature appears in the same file more than once, eliminate all but the best
+            EliminateMultipleHitsInSameFile();
+
+            // Write back any adjustments before we hand off the files to BlibBuild, so it understands 
+            // that the IDs we matched are the same things
+            // We'll add a column for feature names, where name consists of mass and aligned RT e.g. mass123.45_RT23.45678
+            UpdateFilesForBiblioSpec();
+
+            return _featuresAll.Count > 0;
+        }
+
+        // The shape of the isotope distribution is pretty much determined by everything but
+        // hydrogen, so create a lookup based on avergine formulas with H removed
+        private void CreateLookupByCNOS()
+        {
+            var  featuresByCNOS = new Dictionary<string, List<hkFeatureDetail>>();
+            for (var fileIndex = 0; fileIndex < _bfiles.Length; fileIndex++)
+            {
+                var file = _bfiles[fileIndex];
+                var lines = File.ReadAllLines(file);
+                _contents.Add(lines);
+                int l = 1;
+                foreach (var line in lines.Skip(1))
+                {
+                    var col = line.Split('\t');
+                    var averagine_no_H = col[15].Split('[')[0].Split('C')[1]; // e.g. "H120C119N33O35S1[+0.12]" => "119N33O35S1"
+                    var rtParsed = double.Parse(col[11], CultureInfo.InvariantCulture); // "Best RTime"
+                    var rtFirst = double.Parse(col[9], CultureInfo.InvariantCulture);  // "First RTime"
+                    var rtLast = double.Parse(col[10], CultureInfo.InvariantCulture);  // "Last RTime"
+                    var rtToler = rtLast - rtFirst; // Allow a little wiggle when aligning similar features - within a peak width of the better peak (Hardklor declares absurdly narrow peak bounds)
+                    var feature = new hkFeatureDetail()
+                    {
+                        charge = int.Parse(col[4], CultureInfo.InvariantCulture),
+                        strMass = col[5],
+                        parsedMass = double.Parse(col[5], CultureInfo.InvariantCulture),
+                        mzObserved = double.Parse(col[6], CultureInfo.InvariantCulture),
+                        quality = double.Parse(col[3], CultureInfo.InvariantCulture) * double.Parse(col[12], CultureInfo.InvariantCulture), // Points across peak * correlation, for sorting
+                        rt = rtParsed,
+                        rtAligned = rtParsed,
+                        rtStart = rtFirst - rtToler,
+                        rtEnd = rtLast + rtToler,
+                        avergineAndOffset = col[15],
+                        fileIndex = fileIndex,
+                        lineIndex = l,
+                        redundant = false
+                    };
+                    _featuresAll.Add(feature);
+
+                    if (!featuresByCNOS.TryGetValue(averagine_no_H, out var featureList))
+                    {
+                        featuresByCNOS.Add(averagine_no_H, new List<hkFeatureDetail>() { feature });
+                    }
+                    else
+                    {
+                        featureList.Add(feature);
+                    }
+
+                    l++;
+                }
+            }
+
+            // Now order by Hardklor score
+            _orderedFeaturesByCNOS = featuresByCNOS.ToDictionary(featureByCNOS => featureByCNOS.Key, featureByCNOS => featureByCNOS.Value.OrderByDescending(v => v.quality).ToArray());
+        }
+
+        // Write back any adjustments before we hand off the files to BlibBuild, so it understands 
+        // that the IDs we matched are the same things
+        // We'll add a column for feature names, where name consists of mass and aligned RT e.g. mass123.45_RT23.45678
+        private void UpdateFilesForBiblioSpec()
+        {
+            for (var f = 0; f < _bfiles.Length; f++)
+            {
+                _contents[f][0] += $@"{TextUtil.SEPARATOR_TSV_STR}FeatureName"; // This must agree with pwiz_tools\BiblioSpec\src\HardklorReader.cpp
+            }
+            foreach (var feature in _featuresAll)
+            {
+                if (feature.redundant)
+                {
+                    _contents[feature.fileIndex][feature.lineIndex] = string.Empty; // This feature got folded into something else
+                    continue;
+                }
+                var col = _contents[feature.fileIndex][feature.lineIndex].Split('\t');
+                col[5] = feature.strMass;
+                col[15] = feature.avergineAndOffset;
+                _contents[feature.fileIndex][feature.lineIndex] = string.Join(TextUtil.SEPARATOR_TSV_STR, col);
+                // And add a feature name as mass and aligned RT
+                _contents[feature.fileIndex][feature.lineIndex] += $@"{TextUtil.SEPARATOR_TSV_STR}{feature.strMassAndAlignedRT}";
+            }
+
+
+            // And write it all back, preserving a copy of the original
+            for (var f = 0; f < _bfiles.Length; f++)
+            {
+                // Note the original
+                var unaligned = GetBullseyeKronikUnalignedFilename(_bfiles[f]);
+                FileEx.SafeDelete(unaligned);
+                File.Copy(_bfiles[f], unaligned);
+                // Update for handoff to BiblioSpec
+                File.WriteAllLines(_bfiles[f], _contents[f].Where(line => !string.IsNullOrEmpty(line)));  // Update the current file
+            }
+        }
+
+
+        // Look at similar features and combine them into references to a single feature
+        private void CombineSimilarFeaturesAcrossReplicates()
+        {
+            var ppm = GetPPM();
+            bool SimilarMz(double mzJ, double mzI)
+            {
+                var mzDiff = (Math.Abs(mzJ - mzI) / mzI) * 1.0E6;
+                return mzDiff <= ppm;
+            }
+
+
+            _featureMatches = new Dictionary<string, int[]>();
+            foreach (var cnos in _orderedFeaturesByCNOS)
+            {
+                var ordered = cnos.Value;
+                var count = ordered.Length;
+                var matchIndex = Enumerable.Repeat(-1, count).ToArray();
+                var massShift = Enumerable.Repeat(double.MaxValue,count).ToArray();
+                _featureMatches.Add(cnos.Key, matchIndex);
+
+                // Starting with the highest score, see if any other entries from similar RT are similar m/z.
+                // If they are, update the mass information to match the more solid ID.
+                for (var i = 0; i < count; i++)
+                {
+                    if (matchIndex[i] >= 0)
+                    {
+                        continue; // Already aligned to something else
+                    }
+
+                    var hkFeatureDetailI = ordered[i];
+                    var chargeI = hkFeatureDetailI.charge;
+                    var mzI = hkFeatureDetailI.mzObserved;
+
+                    if (mzI == 0)
+                    {
+                        continue;
+                    }
+
+                    // Look at lower-quality features and decide if they're actually occurrences of this feature
+                    // Note that we may reassign a precious match it if involves a smaller mass shift
+                    for (var j = i + 1; j < count; j++)
+                    {
+                        var hkFeatureDetailJ = ordered[j];
+                        if (hkFeatureDetailJ.charge != chargeI)
+                        {
+                            continue;
+                        }
+
+                        if (SimilarMz(hkFeatureDetailJ.mzObserved, mzI))
+                        {
+                            // Isotope envelopes agree, m/z is similar, so it's just a tiny mass shift - does RT agree?
+                            var massAlignmentShift = double.MaxValue;
+                            if (hkFeatureDetailI.fileIndex != hkFeatureDetailJ.fileIndex)
+                            {
+                                var fileI = SpectrumFileNames[hkFeatureDetailI.fileIndex];
+                                var fileJ = SpectrumFileNames[hkFeatureDetailJ.fileIndex];
+                                if (_alignments.TryGetValue(Tuple.Create(fileI, fileJ), out var alignmentI) &&
+                                    _alignments.TryGetValue(Tuple.Create(fileJ, fileI), out var alignmentJ))
+                                {
+                                    var rtJI = alignmentI.GetValue(hkFeatureDetailJ.rt); // Warp rt J into I rt space
+                                    var rtIJ = alignmentJ.GetValue(hkFeatureDetailI.rt); // Warp rt I into J rt space
+                                    if ((hkFeatureDetailI.rtStart <= rtJI && rtJI <= hkFeatureDetailI.rtEnd) ||
+                                        (hkFeatureDetailJ.rtStart <= rtIJ && rtIJ <= hkFeatureDetailJ.rtEnd))
+                                    {
+                                        massAlignmentShift = Math.Min(Math.Abs(rtJI - hkFeatureDetailI.rt),  Math.Abs(rtIJ - hkFeatureDetailJ.rt));
+                                    }
+                                }
+                            }
+                            else if (hkFeatureDetailI.rtStart <= hkFeatureDetailJ.rt && hkFeatureDetailJ.rt <= hkFeatureDetailI.rtEnd)
+                            {
+                                massAlignmentShift = Math.Abs(hkFeatureDetailI.rt - hkFeatureDetailJ.rt);
+                            }
+                            if (massAlignmentShift < massShift[j])
+                            {
+                                matchIndex[j] = i; // Possibly the same feature
+                                massShift[j] = massAlignmentShift; // Note the mass shift in case we find a better match
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Update the features list to indicate matches across replicates
+            if (_featureMatches.Any())
+            {
+                foreach (var ordered in _orderedFeaturesByCNOS)
+                {
+                    var details = ordered.Value;
+                    var matchIndex = _featureMatches[ordered.Key];
+                    for (var j = 0; j < matchIndex.Length; j++)
+                    {
+                        if (matchIndex[j] >= 0) // This feature was aligned to another, unify the descriptions
+                        {
+                            var hkFeatureDetailI = details[matchIndex[j]]; // The feature this aligned to
+                            var hkFeatureDetailJ = details[j];
+                            hkFeatureDetailJ.strMass = hkFeatureDetailI.strMass; // Make the mass descriptions match exactly
+                            hkFeatureDetailJ.parsedMass = hkFeatureDetailI.parsedMass; // Make the mass descriptions match exactly
+                            hkFeatureDetailJ.rtAligned = hkFeatureDetailI.rtAligned; // The RT of the "best" feature
+                            hkFeatureDetailJ.avergineAndOffset = hkFeatureDetailI.avergineAndOffset; // Make the formulas match exactly (but not the observed m/z necessarily)
+                        }
+                    }
+                }
+            }
+        }
+
+        // If a feature appears in the same file more than once, eliminate all but the best
+        private void EliminateMultipleHitsInSameFile()
+        {
+            foreach (var CNOS in _featureMatches.Keys)
+            {
+                var features = _orderedFeaturesByCNOS[CNOS]; // In descending order of "quality"
+                var matches = _featureMatches[CNOS]; // Also in  descending order of "quality"
+                for (var i = 0; i < matches.Length; i++)
+                {
+                    if (matches[i] == -1) // This is the one others may have aligned to
+                    {
+                        var files = new HashSet<int> { features[i].fileIndex };
+                        for (var j = i + 1; j < matches.Length; j++)
+                        {
+                            if (matches[j] == i)
+                            {
+                                // Feature j was aligned to feature i
+                                if (!files.Add(features[j].fileIndex))
+                                {
+                                    // An instance of better quality has already been noted for this file
+                                    features[j].redundant = true; // Don't pass it through to BiblioSpec
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // We asked Hardklor to write its mass values at greater than normal precision, let's peel
+        // that back to 4 decimal places - but we have to watch for collisions
+        private void TrimMassDigits()
+        {
+            for (var digits = 4; digits < 9; digits++)
+            {
+                var featuresByRoundedMassAndRT = new Dictionary<string, List<hkFeatureDetail>>();
+                var format = $@"0.{new string('0', digits)}";
+                var needsTrim = false;
+                foreach (var feature in _featuresAll)
+                {
+                    var rounded = hkFeatureDetail.FormatMassAndAlignedRT(feature.parsedMass
+                        .ToString(format, CultureInfo.InvariantCulture), feature.rtAligned);
+                    if (feature.strMassAndAlignedRT.Length > rounded.Length)
+                    {
+                        needsTrim = true;
+                        if (!featuresByRoundedMassAndRT.TryGetValue(rounded, out var featureList))
+                        {
+                            featuresByRoundedMassAndRT.Add(rounded, new List<hkFeatureDetail>() { feature });
+                        }
+                        else
+                        {
+                            featureList.Add(feature);
+                        }
+                    }
+                }
+
+                if (!needsTrim)
+                {
+                    break;
+                }
+
+                foreach (var byRoundedMass in featuresByRoundedMassAndRT)
+                {
+                    if (byRoundedMass.Value.Select(f => f.avergineAndOffset).Distinct().Count() == 1)
+                    {
+                        // All describing the same formula, RT, and mass
+                        foreach (var hkFeatureDetail in byRoundedMass.Value)
+                        {
+                            hkFeatureDetail.strMass = hkFeatureDetail.parsedMass.ToString(format, CultureInfo.InvariantCulture); // Update to the abbreviated mass description
+                        }
+                    }
+                }
+            }
+        }
+
+
+        private static string GetBullseyeKronikFilename(string hkFile)
+        {
+            return hkFile + @".bs.kro";
+        }
+
+        private static string GetBullseyeKronikUnalignedFilename(string kronikFile)
+        {
+            return kronikFile + @".unaligned";
+        }
+
+        private static string GetBullseyeNoMatchFilename(string hkFile)
+        {
+            return Path.ChangeExtension(hkFile, @".nomatch.ms2");
+        }
+
+        private static string GetBullseyeMatchFilename(string hkFile)
+        {
+            return Path.ChangeExtension(hkFile, @".match.ms2");
+        }
+
+
+        public override void SetEnzyme(Enzyme enz, int mmc)
+        {
+            // Not applicable to Hardklor
+        }
+
+        public override void SetFragmentIonMassTolerance(MzTolerance mzTolerance)
+        {
+            // Not applicable to Hardklor
+        }
+
+        public override void SetFragmentIons(string ions)
+        {
+            // Not applicable to Hardklor
+        }
+
+        public override void SetMs2Analyzer(string ms2Analyzer)
+        {
+            // not used by Hardklor
+        }
+
+        public override void SetPrecursorMassTolerance(MzTolerance mzTolerance)
+        {
+            // Not applicable to Hardklor
+        }
+
+        public override string GetSearchResultFilepath(MsDataFileUri searchFilepath)
+        {
+            return GetBullseyeKronikFilename(_inputsAndOutputs[searchFilepath]);
+        }
+
+        private string[] SupportedExtensions = { @".mzml", @".mzxml" }; // TODO - build Hardklor+MSToolkit to use pwiz so we don't have to convert to mzML
+        public override bool GetSearchFileNeedsConversion(MsDataFileUri searchFilepath, out AbstractDdaConverter.MsdataFileFormat requiredFormat)
+        {
+            requiredFormat = AbstractDdaConverter.MsdataFileFormat.mzML;
+            if (!SupportedExtensions.Contains(e => e == searchFilepath.GetExtension().ToLowerInvariant()))
+                return true;
+            return false;
+        }
+
+        public bool IsCanceled => _cancelToken.IsCancellationRequested;
+        public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+        {
+            SearchProgressChanged?.Invoke(this, status);
+            return _cancelToken.IsCancellationRequested ? UpdateProgressResponse.cancel : UpdateProgressResponse.normal;
+        }
+
+        public bool HasUI => false;
+
+        public override void SetModifications(IEnumerable<StaticMod> modifications, int maxVariableMods_)
+        {
+            // Not applicable for Hardklor
+        }
+
+        public override void Dispose()
+        {
+            if (!_keepIntermediateFiles)
+            {
+                FileEx.SafeDelete(_paramsFilename, true);
+                FileEx.SafeDelete(_isotopesFilename, true);
+                if (_inputsAndOutputs != null)
+                {
+                    foreach (var hkFile in _inputsAndOutputs.Values)
+                    {
+                        FileEx.SafeDelete(hkFile, true); // The hardklor .hk file
+                        var bullseyeKronikFilename = GetBullseyeKronikFilename(hkFile);
+                        FileEx.SafeDelete(bullseyeKronikFilename, true); // The Bullseye result file
+                        FileEx.SafeDelete(GetBullseyeKronikUnalignedFilename(bullseyeKronikFilename), true); // The Bullseye result file before we aligned it
+                        FileEx.SafeDelete(GetBullseyeMatchFilename(hkFile), true);
+                        FileEx.SafeDelete(GetBullseyeNoMatchFilename(hkFile), true);
+                    }
+                }
+            }
+        }
+
+        [Localizable(false)]
+        private void InitializeIsotopes()
+        {
+            // Make sure Hardklor is working with the same isotope information as Skyline
+            _isotopesFilename = Path.GetTempFileName();
+            var isotopeValues = new List<string>
+            {
+                // First few lines are particular to Hardklor
+                "X  2", "1  0.9", "2  0.1", string.Empty
+            };
+            var abundances = IsotopeAbundances.Default; // A map of element -> [ mass,abundance, mass, abundance, ...]
+            // These are the elements listed in  CMercury8::DefaultValues() in pwiz_tools\Skyline\Executables\Hardklor\Hardklor\CMercury8.cpp
+            foreach (var element in new [] { 
+                         // "X", ?? appears in standard file, no Skyline equivalent - see hardcoded values above
+                         "H","He","Li","Be","B","C","N","O","F","Ne","Na","Mg","Al","Si","P","S","Cl","Ar",
+                         "K","Ca","Sc","Ti","V","Cr","Mn","Fe","Co","Ni","Cu","Zn","Ga","Ge","As","Se","Br","Kr","Rb","Sr","Y","Zr",
+                         "Nb","Mo","Tc","Ru","Rh","Pd","Ag","Cd","In","Sn","Sb","Te","I","Xe","Cs","Ba","La","Ce","Pr","Nd","Pm","Sm",
+                         "Eu","Gd","Tb","Dy","Ho","Er","Tm","Yb","Lu","Hf","Ta","W","Re","Os","Ir","Pt","Au","Hg","Tl","Pb","Bi","Po",
+                         "At","Rn","Fr","Ra","Ac","Th","Pa","U","Np","Pu","Am","Cm","Bk","Cf","Es","Fm","Md","No","Lr",
+                         "Hx","Cx","Nx", "Ox","Sx"}) // These are just repeats of H, C, N, O, S in the standard file
+            {
+                var massDistribution = abundances[element.EndsWith("x")? element.Substring(0,1) : element];
+                isotopeValues.Add($"{element}  {massDistribution.Values.Count}");
+                for (var i = 0; i < massDistribution.Values.Count; i++)
+                {
+                    isotopeValues.Add($"{massDistribution.Keys[i]}  {massDistribution.Values[i]} ");
+                }
+                isotopeValues.Add(string.Empty);
+            }
+
+            File.AppendAllLines(_isotopesFilename, isotopeValues);
+        }
+
+        private static int RunNumber { get; set; } // Used in filename creation to avoid stomping previous results
+        
+        private string GenerateHardklorConfigFile(string skylineWorkingDirectory)
+        {
+            _inputsAndOutputs = new SortedDictionary<MsDataFileUri, string>();
+            var workingDirectory = string.IsNullOrEmpty(skylineWorkingDirectory) ? Path.GetTempPath() : skylineWorkingDirectory;
+            int? isCentroided = null;
+
+            foreach (var input in SpectrumFileNames)
+            {
+                string outputHardklorFile;
+
+                void SetHardklorOutputFilename()
+                {
+                    var version = RunNumber == 0 ? string.Empty : $@"_{RunNumber:000}";
+                    outputHardklorFile = $@"{Path.Combine(workingDirectory, input.GetFileName())}{version}.hk";
+                }
+
+                for (SetHardklorOutputFilename(); File.Exists(outputHardklorFile);)
+                {
+                    RunNumber++;
+                    SetHardklorOutputFilename(); // Don't stomp existing results
+                }
+                _inputsAndOutputs.Add(input, outputHardklorFile);
+                if (!isCentroided.HasValue)
+                {
+                    // Hardklor wants to know if the data is centroided, we should
+                    // find a clue within the first few hundred lines of mzML.
+                    using var reader = new StreamReader(input.GetFilePath());
+                    for (var lineNum = 0; lineNum < 500; lineNum++)
+                    {
+                        var line = reader.ReadLine();
+                        if (line == null)
+                        {
+                            break; // EOF
+                        }
+                        if (line.Contains(@"MS:1000127") || line.Contains(@"centroid spectrum"))
+                        {
+                            isCentroided = 1;
+                            break;
+                        }
+                        else if (line.Contains(@"MS:1000128") || line.Contains(@"profile spectrum"))
+                        {
+                            isCentroided = 0;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Make sure Hardklor is working with the same isotope information as Skyline
+            InitializeIsotopes();
+
+            var instrument = _searchSettings.SettingsHardklor.Instrument;
+            var resolution = GetResolution();
+
+            return TextUtil.LineSeparate(
+                $@"# comments in ALL CAPS are from a discussion with Danielle Faivre about Skyline integration",
+                $@"",
+                $@"# Please see online documentation for detailed explanations: ",
+                $@"# http://proteome.gs.washington.edu/software/hardklor",
+                $@"",
+                $@"# All parameters are separated from their values by an equals sign ('=')",
+                $@"# Anything after a '#' will be ignored for the remainder of the line.",
+                $@"# All data files (including paths if necessary) to be analyzed are discussed below.",
+                $@"",
+                $@"# Parameters used to described the data being input to Hardklor",
+                $@"instrument	=	{TransitionFullScan.MassAnalyzerToString(instrument).Replace(@"-", string.Empty)}	#Values are: FTICR, Orbitrap, TOF, QIT #NEED UI",
+                $@"resolution	=	{resolution}		#Resolution at 400 m/z #NEED UI",
+                $@"centroided	=	{isCentroided??1}			#0=no, 1=yes",
+                $@"",
+                $@"# Parameters used in preprocessing spectra prior to analysis",
+                $@"ms_level			=	1		#1=MS1, 2=MS2, 3=MS3, 0=all",
+                $@"scan_range_min		=	0		#ignore any spectra lower than this number, 0=off",
+                $@"scan_range_max		=	0		#ignore any spectra higher than this number, 0=off",
+                $@"signal_to_noise		=	{_searchSettings.SettingsHardklor.SignalToNoise}		#set signal-to-noise ratio, 0=off #NEED UI",
+                $@"sn_window			=	250.0	#size in m/z for computing localized noise level in a spectrum.",
+                $@"static_sn			=	0		#0=off, 1=on. Apply lowest localized noise level to entire spectrum.",
+                $@"boxcar_averaging	=	0		#0=off, or specify number of scans to average together, use odd numbers only #MAY NEED UI IN FUTURE",
+                $@"boxcar_filter		=	0		#0=off, when using boxcar_averaging, only keep peaks seen in this number of scans #MAY NEED UI IN FUTURE",
+                $@"								#  currently being averaged together. When on, signal_to_noise is not used.",
+                $@"boxcar_filter_ppm	=	5		#Tolerance in ppm for matching peaks across spectra in boxcar_filter #MAY NEED UI IN FUTURE",
+                $@"mz_min				=	0		#Sets lower bound of spectrum m/z range to analyze, 0=off",
+                $@"mz_max				=	0		#Sets upper bound of spectrum m/z range to analyze, 0=off",
+                $@"smooth				=	0		#Peforms Savitzky-Golay smoothing of peaks data. 0=off",
+                $@"								#  Not recommended for high resolution data.",
+                $@"",
+                $@"# Parameters used to customize the Hardklor analysis. Some of these parameters will drastically",
+                $@"# affect the analysis speed and results. Please consult the documentation and choose carefully!",
+                $@"algorithm			=	Version2	#Algorithms include: Basic, Version1, Version2",
+                $@"charge_algorithm	=	Quick		#Preferred method for feature charge identification.",
+                $@"									#  Values are: Quick, FFT, Patterson, Senko, None",
+                $@"									#  If None is set, all charge states are assumed, slowing Hardklor",
+                $@"charge_min			=	1			#Lowest charge state allowed in the analysis. #MAY NEED UI IN FUTURE",
+                $@"charge_max			=	{MaxCharge}			#Highest charge state allowed in the analysis. #MAY NEED UI IN FUTURE",
+                $@"correlation			=	{_searchSettings.SettingsHardklor.CorrelationThreshold}	#Correlation threshold to accept a peptide feature. #NEED UI",
+                $@"averagine_mod		=	0			#Formula containing modifications to the averagine model.",
+                $@"									#  Read documentation carefully before using! 0=off",
+                $@"mz_window			=	5.25		#Breaks spectrum into windows not larger than this value for Version1 algorithm.",
+                $@"sensitivity			=	1		#Values are 0 (lowest) to 3 (highest). Increasing sensitivity",
+                $@"									#  identifies more features near the noise where the isotope distribution",
+                $@"									#  may not be fully visible. However, these features are also more",
+                $@"									#  likely to be false.",
+                $@"depth				=	2			#Depth of combinatorial analysis. This is the maximum number of overlapping",
+                $@"									#  features allowed in any mz_window. Each increase requires exponential",
+                $@"									#  computation. In other words, keep this as low as necessary!!!",
+                $@"max_features		=	12			#Maximum number of potential features in an mz_window to combinatorially solve.",
+                $@"									#  Setting this too high results in wasted computation time trying to mix-and-match",
+                $@"									#  highly improbable features.",
+                $@"molecule_max_mz 	= 	5000		#Maximum m/z of molecules to detect. Set this higher than largest expected molecule.",
+                $@"",
+                $@"# Parameters used by Skyline",
+                $@"report_averagine		=	1		# include feature's averagine formula and mass shift in report e.g. C12H5[+1.23]",
+                $@"",
+                $@"# Parameters used to customize the Hardklor output",
+                $@"distribution_area	=	1	#Report sum of distribution peaks instead of highest peak only. 0=off, 1=on",
+                $@"xml					=	0	#Output results as XML. 0=off, 1=on #MAY NEED UI IN FUTURE",
+                $@"",
+                $@"isotope_data	=	""{_isotopesFilename}""	# Using Skyline's isotope abundance values",
+                $@"",
+                $@"# Below this point is where files to be analyzed should go. They should be listed contain ",
+                $@"# both the input file name, and the output file name. Each file to be analyzed should begin ",
+                $@"# on a new line. By convention Hardklor output should have this extension: .hk",
+                $@"",
+                TextUtil.LineSeparate(_inputsAndOutputs.Select(kvp => ($@"""{kvp.Key}""	""{kvp.Value}""")))
+            );
+        }
+
+        private double GetResolution()
+        {
+            var resolution = _searchSettings.SettingsHardklor.Resolution;
+            if (Equals(_searchSettings.SettingsHardklor.Instrument, FullScanMassAnalyzerType.qit))
+            {
+                resolution =
+                    resolution / 5000.0; // per Hardklor source code CHardklor2::CalcFWHM(double mz, double res, int iType)
+            }
+            return resolution;
+        }
+
+        public static SpectrumSummaryList LoadSpectrumSummaries(MsDataFileUri msDataFileUri)
+        {
+            var summaries = new List<SpectrumSummary>();
+            MsDataFileImpl dataFile;
+            try
+            {
+                // Only need MS1 for our purposes, and centroided data if possible
+                dataFile = msDataFileUri.OpenMsDataFile(false, true, true, true, false);
+                dataFile.GetSpectrum(0);
+            }
+            catch (Exception)
+            {
+                // Retry on the chance that the failure was inability to do centroiding
+                dataFile = msDataFileUri.OpenMsDataFile(false, true, false, false, false);
+            }
+            using (dataFile)
+            {
+                foreach (var spectrumIndex in Enumerable.Range(0, dataFile.SpectrumCount))
+                {
+                    var spectrum = dataFile.GetSpectrum(spectrumIndex);
+                    summaries.Add(SpectrumSummary.FromSpectrum(spectrum));
+                }
+            }
+
+            return new SpectrumSummaryList(summaries);
+        }
+
+        public KdeAligner PerformAlignment(SpectrumSummaryList spectra1, SpectrumSummaryList spectra2)
+        {
+            var similarityMatrix = spectra1.GetSimilarityMatrix(this, this._progressStatus, spectra2);
+            var kdeAligner = new KdeAligner();
+            var pointsToBeAligned = similarityMatrix.FindBestPath(false).ToList();
+            kdeAligner.Train(pointsToBeAligned.Select(pt=>pt.X).ToArray(), pointsToBeAligned.Select(pt=>pt.Y).ToArray(), CancellationToken.None);
+            return kdeAligner;
+        }
+
+        public void PerformAllAlignments()
+        {
+            foreach (var path in SpectrumFileNames)
+            {
+                _spectrumSummaryLists[path] = LoadSpectrumSummaries(path);
+            }
+
+            foreach (var entry1 in _spectrumSummaryLists)
+            {
+                foreach (var entry2 in _spectrumSummaryLists)
+                {
+                    if (Equals(entry1.Key, entry2.Key))
+                    {
+                        continue;
+                    }
+
+                    _progressStatus = _progressStatus.ChangeMessage(
+                        string.Format(DdaSearchResources.HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_, entry1.Key.GetFileName(), entry2.Key.GetFileName()));
+
+                    try
+                    {
+                        _alignments[Tuple.Create(entry1.Key, entry2.Key)] =
+                            PerformAlignment(entry1.Value, entry2.Value);
+                    }
+                    catch (Exception x)
+                    {
+                        Trace.TraceWarning(@"Error performing alignment between {0} and {1}: {2}", entry1.Key, entry2.Key, x);
+                    }
+                }
+            }
+        }
+    }
+}
+ 

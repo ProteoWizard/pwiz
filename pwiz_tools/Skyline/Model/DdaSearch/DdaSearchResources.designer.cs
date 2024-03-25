@@ -219,6 +219,35 @@ namespace pwiz.Skyline.Model.DdaSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Looking for features occurring in multiple runs.
+        /// </summary>
+        public static string HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_runs {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multip" +
+                        "le_runs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Performing retention time alignment {0} vs {1}.
+        /// </summary>
+        public static string HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_ {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0_" +
+                        "_vs__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to See Hardklor/Bullseye log for details.
+        /// </summary>
+        public static string HardklorSearchEngine_Run_See_Hardklor_Bullseye_log_for_details {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_Run_See_Hardklor_Bullseye_log_for_details", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Starting msconvert conversion..
         /// </summary>
         public static string MsconvertDdaConverter_Run_Starting_msconvert_conversion_ {

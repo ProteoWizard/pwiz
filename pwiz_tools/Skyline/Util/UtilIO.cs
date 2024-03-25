@@ -974,10 +974,13 @@ namespace pwiz.Skyline.Util
         {
             try
             {
-                if (path != null && Directory.Exists(path)) // Don't waste time trying to delete something that's already deleted
-                {
-                    Helpers.TryTwice(() => Directory.Delete(path, true), $@"Directory.Delete({path})");
-                }
+                Helpers.TryTwice(() =>
+                    {
+                        if (path != null && Directory.Exists(path)) // Don't waste time trying to delete something that's already deleted
+                        {
+                            Directory.Delete(path, true);
+                        }
+                    }, $@"Directory.Delete({path})");
             }
 // ReSharper disable EmptyGeneralCatchClause
             catch (Exception) { }

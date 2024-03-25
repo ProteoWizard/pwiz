@@ -70,6 +70,15 @@ namespace pwiz.BiblioSpec.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Hardklor Correlation Score.
+        /// </summary>
+        internal static string BiblioSpecScoreType_DisplayName_Hardklor_Correlation_Score {
+            get {
+                return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_Hardklor_Correlation_Score", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to IDPicker FDR.
         /// </summary>
         internal static string BiblioSpecScoreType_DisplayName_IDPicker_FDR {

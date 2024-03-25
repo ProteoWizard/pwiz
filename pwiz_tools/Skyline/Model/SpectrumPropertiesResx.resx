@@ -121,10 +121,16 @@
   <data name="Description_Charge" xml:space="preserve">
     <value>Precursor charge of the selected ion</value>
   </data>
-  <data name="Description_FileName" xml:space="preserve">
+  <data name="Description_Adduct" xml:space="preserve">
+    <value>Adduct of the selected ion</value>
+  </data>
+    <data name="Description_FileName" xml:space="preserve">
     <value>File name and potentially full path to the file that was the source of the spectrum</value>
   </data>
-  <data name="Description_IdFileName" xml:space="preserve">
+  <data name="Description_Formula" xml:space="preserve">
+    <value>Neutral chemical formula of the selected ion</value>
+  </data>
+    <data name="Description_IdFileName" xml:space="preserve">
     <value>File name and potentially full path to the file that matched the targeted ion to the spectrum</value>
   </data>
   <data name="Description_Ion Mobility" xml:space="preserve">
@@ -151,11 +157,17 @@
   <data name="Description_SpectrumCount" xml:space="preserve">
     <value>Number of measured spectra for this peptide in the library</value>
   </data>
-  <data name="FileName" xml:space="preserve">
+  <data name="Adduct" xml:space="preserve">
+    <value>Adduct</value>
+  </data>
+    <data name="FileName" xml:space="preserve">
     <value>File Name</value>
   </data>
   <data name="FilePath" xml:space="preserve">
     <value>File Path</value>
+  </data>
+  <data name="Formula" xml:space="preserve">
+    <value>Formula</value>
   </data>
   <data name="IdFileName" xml:space="preserve">
     <value>Id File Name</value>

@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{f4f75477-6df1-4ba3-b97c-c52df0fd8623}</ProjectGuid>
+    <RootNamespace>Hardklor</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(SolutionDir)..\libraries\boost_aux;$(SolutionDir)..\libraries\boost_1_76_0\boost;$(SolutionDir)..\libraries\boost_1_76_0;$(SolutionDir)..\..\pwiz\data\msdata;$(SolutionDir)..\..\pwiz\data\msdata\MSToolkit\include;$(SolutionDir)..\..;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(SolutionDir)..\libraries\boost_aux;$(SolutionDir)..\libraries\boost_1_76_0\boost;$(SolutionDir)..\libraries\boost_1_76_0;$(SolutionDir)..\..\pwiz\data\msdata;$(SolutionDir)..\..\pwiz\data\msdata\MSToolkit\include;$(SolutionDir)..\..;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_PROTEOWIZARD;_CRT_SECURE_NO_WARNINGS;_NO_THERMORAW;_NOSQLITE;_LARGEFILE_SOURCE;_FILE_OFFSET_BITS=64;HAVE_MEMMOVE</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>..\..\..\..\libraries\zlib-1.2.3;..\..\..\..\libraries\expat-2.0.1\lib;$(SolutionDir)MSToolKit\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_PROTEOWIZARD;_CRT_SECURE_NO_WARNINGS;_NO_THERMORAW;_NOSQLITE;_LARGEFILE_SOURCE;_FILE_OFFSET_BITS=64;HAVE_MEMMOVE</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>..\..\..\..\libraries\zlib-1.2.3;..\..\..\..\libraries\expat-2.0.1\lib;$(SolutionDir)MSToolKit\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\adler32.c" />
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\compress.c" />
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\crc32.c" />
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\deflate.c" />
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\gzio.c" />
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\infback.c" />
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\inffast.c" />
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\inflate.c" />
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\inftrees.c" />
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\trees.c" />
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\uncompr.c" />
+    <ClCompile Include="..\..\..\..\libraries\zlib-1.2.3\zutil.c" />
+    <ClCompile Include="..\..\..\..\libraries\expat-2.0.1\lib\xmlparse.c" />
+    <ClCompile Include="..\..\..\..\libraries\expat-2.0.1\lib\xmlrole.c" />
+    <ClCompile Include="..\..\..\..\libraries\expat-2.0.1\lib\xmltok.c" />
+    <ClCompile Include="..\..\..\..\libraries\expat-2.0.1\lib\xmltok_impl.c" />
+    <ClCompile Include="..\..\..\..\libraries\expat-2.0.1\lib\xmltok_ns.c" />
+    <ClCompile Include="MSToolKit\src\MSToolkit\MSObject.cpp" />
+    <ClCompile Include="MSToolKit\src\MSToolkit\MSReader.cpp" />
+    <ClCompile Include="MSToolKit\src\MSToolkit\mzMLWriter.cpp" />
+    <ClCompile Include="MSToolKit\src\MSToolkit\pepXMLWriter.cpp" />
+    <ClCompile Include="MSToolKit\src\MSToolkit\Spectrum.cpp" />
+    <ClCompile Include="MSToolKit\src\mzParser\BasicChromatogram.cpp" />
+    <ClCompile Include="MSToolKit\src\mzParser\BasicSpectrum.cpp" />
+    <ClCompile Include="MSToolKit\src\mzParser\Czran.cpp" />
+    <ClCompile Include="MSToolKit\src\mzParser\MSNumpress.cpp" />
+    <ClCompile Include="MSToolKit\src\mzParser\mzParser.cpp" />
+    <ClCompile Include="MSToolKit\src\mzParser\mzp_base64.cpp" />
+    <ClCompile Include="MSToolKit\src\mzParser\PWIZface.cpp" />
+    <ClCompile Include="MSToolKit\src\mzParser\RAMPface.cpp" />
+    <ClCompile Include="MSToolKit\src\mzParser\saxhandler.cpp" />
+    <ClCompile Include="MSToolKit\src\mzParser\saxmzmlhandler.cpp" />
+    <ClCompile Include="MSToolKit\src\mzParser\saxmzxmlhandler.cpp" />
+    <ClCompile Include="Hardklor\CAveragine.cpp" />
+    <ClCompile Include="Hardklor\CHardklor.cpp" />
+    <ClCompile Include="Hardklor\CHardklor2.cpp" />
+    <ClCompile Include="Hardklor\CHardklorFileReader.cpp" />
+    <ClCompile Include="Hardklor\CHardklorOutput.cpp" />
+    <ClCompile Include="Hardklor\CHardklorParser.cpp" />
+    <ClCompile Include="Hardklor\CHardklorProtein.cpp" />
+    <ClCompile Include="Hardklor\CHardklorSetting.cpp" />
+    <ClCompile Include="Hardklor\CHardklorVariant.cpp" />
+    <ClCompile Include="Hardklor\CMercury8.cpp" />
+    <ClCompile Include="Hardklor\CModelLibrary.cpp" />
+    <ClCompile Include="Hardklor\CNoiseReduction.cpp" />
+    <ClCompile Include="Hardklor\CPeriodicTable.cpp" />
+    <ClCompile Include="Hardklor\CSpecAnalyze.cpp" />
+    <ClCompile Include="Hardklor\CSplitSpectrum.cpp" />
+    <ClCompile Include="Hardklor\FFT-HK.cpp" />
+    <ClCompile Include="Hardklor\FFT.cpp" />
+    <ClCompile Include="Hardklor\HardklorApp.cpp" />
+    <ClCompile Include="Hardklor\S2N.cpp" />
+    <ClCompile Include="Hardklor\Smooth.cpp" />
+    <ClCompile Include="Hardklor\SpecAnalyzeSupport.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Hardklor\CAveragine.h" />
+    <ClInclude Include="Hardklor\CHardklor.h" />
+    <ClInclude Include="Hardklor\CHardklor2.h" />
+    <ClInclude Include="Hardklor\CHardklorFileReader.h" />
+    <ClInclude Include="Hardklor\CHardklorOutput.h" />
+    <ClInclude Include="Hardklor\CHardklorParser.h" />
+    <ClInclude Include="Hardklor\CHardklorProtein.h" />
+    <ClInclude Include="Hardklor\CHardklorSetting.h" />
+    <ClInclude Include="Hardklor\CHardklorVariant.h" />
+    <ClInclude Include="Hardklor\CMercury8.h" />
+    <ClInclude Include="Hardklor\CModelLibrary.h" />
+    <ClInclude Include="Hardklor\CNoiseReduction.h" />
+    <ClInclude Include="Hardklor\CPeriodicTable.h" />
+    <ClInclude Include="Hardklor\CSpecAnalyze.h" />
+    <ClInclude Include="Hardklor\CSplitSpectrum.h" />
+    <ClInclude Include="Hardklor\FFT-HK.h" />
+    <ClInclude Include="Hardklor\FFT.h" />
+    <ClInclude Include="Hardklor\HardklorTypes.h" />
+    <ClInclude Include="Hardklor\mercury.h" />
+    <ClInclude Include="Hardklor\S2N.h" />
+    <ClInclude Include="Hardklor\Smooth.h" />
+    <ClInclude Include="Hardklor\SpecAnalyzeSupport.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

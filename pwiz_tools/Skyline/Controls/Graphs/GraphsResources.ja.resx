@@ -712,4 +712,7 @@
   <data name="UnavailableMSGraphItem_UnavailableMSGraphItem_Spectrum_information_unavailable" xml:space="preserve">
     <value>スペクトル情報が利用不可</value>
   </data>
+  <data name="AlignmentForm_UpdateGraph_Peptides" xml:space="preserve">
+    <value>ペプチド</value>
+  </data>
 </root>

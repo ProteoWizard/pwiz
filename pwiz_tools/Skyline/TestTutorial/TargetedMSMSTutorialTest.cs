@@ -1122,6 +1122,8 @@ namespace pwiz.SkylineTestTutorial
                         { "PrecursorMz", 523.7745.ToString( CultureInfo.CurrentCulture) },
                         { "Charge", 2 },
                         { "Label", IsotopeLabelType.LIGHT_NAME },
+                        { "Adduct","[M+2H]"},
+                        { "Formula","C50H71N13O12"},
                         { "RetentionTime", 44.29.ToString( Formats.RETENTION_TIME, CultureInfo.CurrentCulture) },
                         { "Score", 0.0.ToString( @"N1", CultureInfo.CurrentCulture) },
                         { "ScoreType", BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_Percolator_q_value },
@@ -1239,7 +1241,11 @@ namespace pwiz.SkylineTestTutorial
                 { "SpectrumCount", 118 }
             };
             if (isSmallMolecules)
+            {
                 expectedPropertiesDict.Add("LibraryName", "BSA_Protea_label_free_meth3.converted_to_small_molecules");
+                expectedPropertiesDict.Add("Adduct","[M+2H]");
+                expectedPropertiesDict.Add("Formula","C53H86N12O17");
+            }
             else
             {
                 expectedPropertiesDict.Add("LibraryName", "BSA_Protea_label_free_meth3");

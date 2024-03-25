@@ -130,6 +130,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (_progressTextItems.Skip(Math.Max(0, _progressTextItems.Count - 10)).Any(entry => entry.Message == message))
                 return;
 
+            if (message.EndsWith(@"%") && double.TryParse(message.Substring(0, message.Length - 1), out _))
+            {
+                // Don't update text if the message is just a percent complete update (e.g. "13%") - that gets parsed in ProcessRunner.Run
+                return;
+            }
+
             var newEntry = new ProgressEntry(DateTime.Now, message);
             _progressTextItems.Add(newEntry);
             txtSearchProgress.AppendLineWithAutoScroll($@"{newEntry.ToString(showTimestampsCheckbox.Checked)}{Environment.NewLine}");
