@@ -773,7 +773,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 $@"averagine_mod		=	0			#Formula containing modifications to the averagine model.",
                 $@"									#  Read documentation carefully before using! 0=off",
                 $@"mz_window			=	5.25		#Breaks spectrum into windows not larger than this value for Version1 algorithm.",
-                $@"sensitivity			=	2			#Values are 0 (lowest) to 3 (highest). Increasing sensitivity",
+                $@"sensitivity			=	1		#Values are 0 (lowest) to 3 (highest). Increasing sensitivity",
                 $@"									#  identifies more features near the noise where the isotope distribution",
                 $@"									#  may not be fully visible. However, these features are also more",
                 $@"									#  likely to be false.",
