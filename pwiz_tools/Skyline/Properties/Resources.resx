@@ -2228,9 +2228,6 @@ Most peptide transition lists can be imported with the "File|Import|Transition L
   <data name="ConfigureToolsDlg_CheckPassToolInternal__ToolDir__is_not_a_valid_macro_for_a_tool_that_was_not_installed_and_therefore_does_not_have_a_Tool_Directory_" xml:space="preserve">
     <value>$(ToolDir) is not a valid macro for a tool that was not installed and therefore does not have a Tool Directory.</value>
   </data>
-  <data name="AlignmentForm_UpdateGraph_Peptides" xml:space="preserve">
-    <value>Peptides</value>
-  </data>
   <data name="MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0" xml:space="preserve">
     <value>Downloading {0}</value>
   </data>

@@ -318,7 +318,10 @@ namespace pwiz.Skyline.SettingsUI
                 PrecursorResMz = HARDKLOR_PRECURSOR_RES_MZ;
                 textPrecursorAt.Enabled = false;
                 toolTip.SetToolTip(comboPrecursorAnalyzerType,
-                    SettingsUIResources.FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_MS_type_for_Hardklor_s_FWHM_calculation);
+                    _featureDetectionPhase == ImportPeptideSearch.eFeatureDetectionPhase.hardklor_settings ?
+                        SettingsUIResources.FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_mass_analyzer_type_for_Hardklor_s_FWHM_calculation_ :
+                        SettingsUIResources.FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_MS_data_type_for_Hardklor_s_FWHM_calculation__Normally_set_to_Centroided_);
+
             }
         }
 

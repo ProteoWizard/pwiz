@@ -407,15 +407,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Peptides.
-        /// </summary>
-        public static string AlignmentForm_UpdateGraph_Peptides {
-            get {
-                return ResourceManager.GetString("AlignmentForm_UpdateGraph_Peptides", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Peptides Refined.
         /// </summary>
         public static string AlignmentForm_UpdateGraph_Peptides_Refined {

@@ -150,7 +150,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            var goodPointsLineItem = new LineItem(ModeUIAwareStringFormat(Resources.AlignmentForm_UpdateGraph_Peptides), points, Color.Black, SymbolType.Diamond)
+            var goodPointsLineItem = new LineItem(ModeUIAwareStringFormat(GraphsResources.AlignmentForm_UpdateGraph_Peptides), points, Color.Black, SymbolType.Diamond)
                 {
                     Symbol = {Size = 8f},
                     Line = {IsVisible = false}

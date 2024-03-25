@@ -28,6 +28,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 
@@ -367,10 +368,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var allMods = modSettings.StaticModifications.Union(modSettings.AllHeavyModifications);
             ImportPeptideSearch.SearchEngine.SetModifications(allMods, Convert.ToInt32(cbMaxVariableMods.SelectedItem));
 
-            if (ImportPeptideSearch.IsFeatureDetection && _hardklorInstrumentSettingsControl.Enabled)
+            if (ImportPeptideSearch.IsFeatureDetection)
             {
-                // If the fullscan section was enabled, that's because user chose "Centroided" in actual FullScan settings, so set that again
-                _documentContainer.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.centroided;
+                if (_hardklorInstrumentSettingsControl.Enabled)
+                {
+                    // If the fullscan section was enabled, that's because user chose "Centroided" in actual FullScan settings, so set that again
+                    _documentContainer.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.centroided;
+                }
+                Settings.Default.LibraryResultCutOff = ImportPeptideSearch.CutoffScore;
             }
             return true;
         }
