@@ -29,7 +29,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using static Inference.ModelInferRequest.Types;
-using static pwiz.Skyline.Model.Koina.Models.KoinaIntensityModel;
 
 namespace pwiz.Skyline.Model.Koina.Models
 {

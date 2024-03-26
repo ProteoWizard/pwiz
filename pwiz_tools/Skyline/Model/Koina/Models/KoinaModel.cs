@@ -38,7 +38,6 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using static Inference.ModelInferRequest.Types;
-using static pwiz.Skyline.Model.Koina.Models.KoinaIntensityModel;
 using Settings = pwiz.Skyline.Properties.Settings;
 
 namespace pwiz.Skyline.Model.Koina.Models
@@ -462,13 +461,13 @@ namespace pwiz.Skyline.Model.Koina.Models
                 string sequence = values[0];
                 var ce = Convert.ToSingle(values[1], CultureInfo.InvariantCulture);
                 var charge = Convert.ToInt32(values[2], CultureInfo.InvariantCulture);
-                inputRows.Add(CreateKoinaInputRow(sequence, charge, ce, out _));
+                inputRows.Add(KoinaIntensityModel.CreateKoinaInputRow(sequence, charge, ce, out _));
                 peptides.Add(new KoinaIntensityModel.PeptidePrecursorNCE(sequence, charge, new SignedMz(calc.GetPrecursorMass(sequence) / charge),
                     ExplicitMods.EMPTY, IsotopeLabelType.light, (int)ce));
             }
             progressStatus = progressStatus.NextSegment();
 
-            var koinaOutput = Instance.PredictBatches(KoinaPredictionClient.Current,
+            var koinaOutput = KoinaIntensityModel.Instance.PredictBatches(KoinaPredictionClient.Current,
                 progressMonitor, ref progressStatus, defaultSettings, inputRows, token);
             progressStatus = progressStatus.NextSegment();
 

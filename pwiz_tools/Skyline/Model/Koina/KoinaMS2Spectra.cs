@@ -135,7 +135,7 @@ namespace pwiz.Skyline.Model.Koina
                 info.PrecursorMz = precursor.PrecursorMz;
                 info.RetentionTime = null;
                 info.RetentionTimes = null;
-                info.SourceFile = string.Format(@"Koina{0}_{1}", KoinaIntensityModel.Instance.Model, KoinaIntensityModel.SIGNATURE); // TODO: maybe put URL here?
+                info.SourceFile = string.Format(@"Koina-{0}-{1}", KoinaIntensityModel.Instance.Model, KoinaRetentionTimeModel.Instance.Model); // TODO: maybe put URL here?
                 return info;
             }
         }

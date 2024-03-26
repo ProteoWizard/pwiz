@@ -16,7 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.EditUI;
@@ -25,6 +24,7 @@ using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestConnected
@@ -41,6 +41,9 @@ namespace pwiz.SkylineTestConnected
             }
             RunFunctionalTest();
         }
+
+        private string LibraryPathWithoutIrt => TestContext.GetTestPath("TestKoinaBuildLibrary\\LibraryWithoutIrt.blib");
+        private string LibraryPathWithIrt => TestContext.GetTestPath("TestKoinaBuildLibrary\\LibraryWithIrt.blib");
 
         protected override void DoTest()
         {
@@ -69,7 +72,7 @@ namespace pwiz.SkylineTestConnected
             RunUI(() =>
             {
                 buildLibraryDlg.LibraryName = libraryWithoutIrt;
-                buildLibraryDlg.LibraryPath = Path.Combine(TestContext.TestDir, "LibraryWithoutIrt.blib");
+                buildLibraryDlg.LibraryPath = LibraryPathWithoutIrt;
                 buildLibraryDlg.Koina = true;
             });
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
@@ -79,7 +82,7 @@ namespace pwiz.SkylineTestConnected
             RunUI(() =>
             {
                 buildLibraryDlg.LibraryName = libraryWithIrt;
-                buildLibraryDlg.LibraryPath = Path.Combine(TestContext.TestDir, "LibraryWithIrt.blib");
+                buildLibraryDlg.LibraryPath = LibraryPathWithIrt;
                 buildLibraryDlg.Koina = true;
                 buildLibraryDlg.IrtStandard = IrtStandard.PIERCE;
             });
@@ -97,6 +100,11 @@ namespace pwiz.SkylineTestConnected
                 spectralLibraryViewer.ChangeSelectedLibrary(libraryWithIrt);
             });
             OkDialog(spectralLibraryViewer, spectralLibraryViewer.Close);
+        }
+
+        protected override void Cleanup()
+        {
+            DirectoryEx.SafeDelete("TestKoinaBuildLibrary");
         }
     }
 }
