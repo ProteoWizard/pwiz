@@ -1354,6 +1354,9 @@ namespace pwiz.Skyline.Util
                 return Unlabeled.ApplyToMolecule(molecule);
             }
 
+            var monoMassOffset = molecule.MonoMassOffset;
+            var averageMassOffset = molecule.AverageMassOffset;
+
             var resultDict = new Dictionary<string, int>(molecule.Molecule);
 
             // Deal with any mass multiplier (the 2 in "[2M+Na]")
@@ -1363,33 +1366,43 @@ namespace pwiz.Skyline.Util
                 {
                     resultDict[element] *= MassMultiplier;
                 }
+                monoMassOffset *= MassMultiplier;
+                averageMassOffset *= MassMultiplier;
             }
 
-            // Add in the "Na" of [M+Na] (or remove the 4H in [M-4H])
-            foreach (var pair in Composition)
+            if (molecule.IsMassOnly)
             {
-                if (resultDict.TryGetValue(pair.Key, out var count))
+                // Just deal with the mass of the adduct rather than the formula
+                molecule = molecule.Change(Molecule.FromDict(resultDict), monoMassOffset + MonoMassAdduct, averageMassOffset + AverageMassAdduct);
+            }
+            else
+            {
+                // Add in the "Na" of [M+Na] (or remove the 4H in [M-4H])
+                foreach (var pair in Composition)
                 {
-                    count += pair.Value;
-                    if (count == 0)
+                    if (resultDict.TryGetValue(pair.Key, out var count))
                     {
-                        resultDict.Remove(pair.Key);
+                        count += pair.Value;
+                        if (count == 0)
+                        {
+                            resultDict.Remove(pair.Key);
+                        }
+                        else
+                        {
+                            resultDict[pair.Key] = count;
+                        }
                     }
-                    else
+                    else if (pair.Value != 0)
                     {
-                        resultDict[pair.Key] = count;
+                        resultDict.Add(pair.Key, pair.Value);
+                        count = pair.Value;
                     }
-                }
-                else if (pair.Value != 0)
-                {
-                    resultDict.Add(pair.Key, pair.Value);
-                    count = pair.Value;
-                }
-                if (count < 0 && !Equals(pair.Key, BioMassCalc.H)) // Treat H loss as a general proton loss
-                {
-                    throw new InvalidDataException(
-                        string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_,
-                            this, pair.Key, molecule.ToString()));
+                    if (count < 0 && !Equals(pair.Key, BioMassCalc.H)) // Treat H loss as a general proton loss
+                    {
+                        throw new InvalidDataException(
+                            string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_,
+                                this, pair.Key, molecule.ToString()));
+                    }
                 }
             }
 
