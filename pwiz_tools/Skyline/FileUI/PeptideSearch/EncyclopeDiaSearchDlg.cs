@@ -686,7 +686,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 var hasher = new BlockHash(new MD5CryptoServiceProvider());
                 var hashBytes = hasher.HashFile(koinaCsvFilepath);
                 var hashString = string.Join("", hashBytes.Select(b => b.ToString(@"X")));
-                string blibFilepath = koinaBasename + @"-koina-" + hashString + @".blib";
+                string modelSuffix = Properties.Settings.Default.KoinaIntensityModel + @"-" +
+                                     Properties.Settings.Default.KoinaRetentionTimeModel;
+                string blibFilepath = koinaBasename + @"-koina-" + modelSuffix + @"-" + hashString + @".blib";
 
                 if (!File.Exists(blibFilepath))
                 {

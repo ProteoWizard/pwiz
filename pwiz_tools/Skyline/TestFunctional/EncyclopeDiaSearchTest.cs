@@ -63,7 +63,7 @@ namespace pwiz.SkylineTestFunctional
             //PauseTest();
 
             // if UseOriginalURLs, delete the blib so it will have to be freshly predicted from Koina
-            string blibFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-koina-5950B898E945AE52AD86D9CE06220EE.blib");
+            string blibFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-koina-Prosit_2019_intensity-Prosit_2019_irt-5950B898E945AE52AD86D9CE06220EE.blib");
             if (Program.UseOriginalURLs)
                 File.Delete(blibFilepath);
 
