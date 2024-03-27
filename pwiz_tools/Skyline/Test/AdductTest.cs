@@ -304,10 +304,31 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(102.46, isotopeAsMass.ApplyIsotopeLabelsToMass(m100), .005); // Expect increase of 2*1.23
         }
 
+        private void TestMassOnly(IEnumerable<string>[] adductLists)
+        {
+            var formula = @"[456.78]"; // Mass-only molecule description
+            foreach (var adductList in adductLists)
+            {
+                foreach (var adductStr in adductList)
+                {
+                    var adduct = Adduct.FromString(adductStr, Adduct.ADDUCT_TYPE.proteomic, null);
+                    IonInfo.ApplyAdductToFormula(formula, adduct);
+                }
+            }
+        }
 
         [TestMethod]
         public void AdductParserTest()
         {
+            var AllSupportedAdducts = new[] {
+                Adduct.DEFACTO_STANDARD_ADDUCTS,
+                Adduct.COMMON_CHARGEONLY_ADDUCTS,
+                Adduct.COMMON_SMALL_MOL_ADDUCTS.Select(a => a.AdductFormula),
+                Adduct.COMMON_PROTONATED_ADDUCTS.Select(a => a.AdductFormula),
+            };
+
+            TestMassOnly(AllSupportedAdducts);
+
             TestAdductOperators();
 
             var coverage = new HashSet<string>();
@@ -530,12 +551,7 @@ namespace pwiz.SkylineTest
             TestPentaneAdduct("[M+S]2-", "C5H12S", -2, coverage); // We're trusting the user to declare charge
 
             // Did we test all the adducts we claim to support?
-            foreach (var adducts in new[] { 
-                Adduct.DEFACTO_STANDARD_ADDUCTS, 
-                Adduct.COMMON_CHARGEONLY_ADDUCTS, 
-                Adduct.COMMON_SMALL_MOL_ADDUCTS.Select(a => a.AdductFormula),
-                Adduct.COMMON_PROTONATED_ADDUCTS.Select(a => a.AdductFormula),
-            })
+            foreach (var adducts in AllSupportedAdducts)
             {
                 foreach (var adductText in adducts)
                 {
