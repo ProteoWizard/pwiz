@@ -734,6 +734,10 @@ void BuildParser::removeDuplicates() {
         if( psm == NULL ){
             continue;
         }
+        if (psm->isPrecursorOnly())
+        {
+            continue; // There are no spectra to disambiguate
+        }
         // choose the correct id type
         string id = boost::lexical_cast<string>(psm->specKey);
         if( lookUpBy_ == INDEX_ID ){
