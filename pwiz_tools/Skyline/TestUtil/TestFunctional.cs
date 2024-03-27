@@ -1396,6 +1396,12 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static void CancelDialog(Form form, Action cancelAction)
+        {
+            RunUI(cancelAction);
+            WaitForClosedForm(form);
+        }
+
         public static void OkDialog(Form form, Action okAction)
         {
             RunUI(okAction);
@@ -2175,9 +2181,9 @@ namespace pwiz.SkylineTestUtil
             WaitForCondition(() => BackgroundProteomeManager.DocumentHasLoadedBackgroundProteomeOrNone(SkylineWindow.Document, true)); 
         }
 
-        public static void ImportAssayLibrarySkipColumnSelect(string csvPath, List<string> errorList = null, bool proceedWithErrors = true)
+        public static void ImportAssayLibrarySkipColumnSelect(string csvPath, List<string> errorList = null, bool proceedWithErrors = true, bool isDemo = false)
         {
-            ImportAssayLibraryOrTransitionList(csvPath, true, errorList, proceedWithErrors);
+            ImportAssayLibraryOrTransitionList(csvPath, true, errorList, proceedWithErrors, isDemo);
         }
 
         // Determine whether a message was created using the given string format
@@ -2196,10 +2202,21 @@ namespace pwiz.SkylineTestUtil
 
         // Importing a small molecule transition list typically provokes a dialog asking whether or not to automatically manage the resulting transitions
         // The majority of our tests were written before this was an option, so we dismiss the dialog by default and the new nodes are automanage OFF
-        public static void PasteSmallMoleculeListNoAutoManage()
+        public static SrmDocument PasteSmallMoleculeListNoAutoManage(string text = null)
         {
-            var wantAutoManageDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.Paste);
-            OkDialog(wantAutoManageDlg, wantAutoManageDlg.ClickNo); // Just use the transitions as given in the list
+            var docOrig = SkylineWindow.Document;
+            if (!string.IsNullOrEmpty(text))
+            {
+                if (!text.Contains(Environment.NewLine) && File.Exists(text))
+                {
+                    text = File.ReadAllText(text); // That was a filename rather than a transition list
+                }
+                SetClipboardText(text);
+            }
+            var confirmColumnsDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(SkylineWindow.Paste);
+            OkDialog(confirmColumnsDlg, confirmColumnsDlg.OkDialog);
+            DismissAutoManageDialog(docOrig);  // Say no to the offer to set new nodes to automanage
+            return WaitForDocumentChangeLoaded(docOrig);
         }
 
         // Importing a small molecule transition list typically provokes a dialog asking whether or not to automatically manage the resulting transitions
@@ -2220,7 +2237,7 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        private static void ImportAssayLibraryOrTransitionList(string csvPath, bool isAssayLibrary, ICollection<string> errorList, bool proceedWithErrors = true)
+        private static void ImportAssayLibraryOrTransitionList(string csvPath, bool isAssayLibrary, ICollection<string> errorList, bool proceedWithErrors, bool isDemo=false)
         {
             var columnSelectDlg = isAssayLibrary ?
                 ShowDialog<ImportTransitionListColumnSelectDlg>(() =>  SkylineWindow.ImportAssayLibrary(csvPath)) :
@@ -2228,7 +2245,8 @@ namespace pwiz.SkylineTestUtil
 
             VerifyExplicitUseInColumnSelect(isAssayLibrary, columnSelectDlg);
             var currentDoc = SkylineWindow.Document;
-
+            if (isDemo) 
+                PauseTest("user column selection");
             if (errorList == null)
             {
                 OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
@@ -2287,9 +2305,9 @@ namespace pwiz.SkylineTestUtil
             AssertEx.IsTrue(!items.Any(forbidden.Contains));
         }
 
-        public static void ImportTransitionListSkipColumnSelect(string csvPath, ICollection<string> errorList = null, bool proceedWithErrors = true)
+        public static void ImportTransitionListSkipColumnSelect(string csvPath, ICollection<string> errorList = null, bool proceedWithErrors = true, bool pauseTest = false)
         {
-            ImportAssayLibraryOrTransitionList(csvPath, false, errorList, proceedWithErrors);
+            ImportAssayLibraryOrTransitionList(csvPath, false, errorList, proceedWithErrors, pauseTest);
         }
 
         public static void PasteTransitionListSkipColumnSelect(bool expectColumnSelectDialog = true)

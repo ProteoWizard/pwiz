@@ -655,4 +655,7 @@ Would you like to remove some or all of this suffix to shorten the names used in
   <data name="SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document__0__from__1__" xml:space="preserve">
     <value>There was an error downloading the Skyline document {0} from {1}.</value>
   </data>
+  <data name="ChooseIrtStandardPeptidesDlg_ChooseIrtStandardPeptidesDlg_Unavailable__no_matching_iRT_standards_found" xml:space="preserve">
+    <value>Unavailable: no matching iRT standards found</value>
+  </data>
 </root>

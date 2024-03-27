@@ -728,6 +728,13 @@ namespace pwiz.Skyline.Model.DocSettings
                 : EMPTY;
         }
 
+        public static IonMobilityAndCCS GetIonMobilityAndCCS(ExplicitTransitionGroupValues values)
+        {
+            return values.IonMobility.HasValue || values.CollisionalCrossSectionSqA.HasValue
+                ? new IonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(values.IonMobility, values.IonMobilityUnits), values.CollisionalCrossSectionSqA, null)
+                : EMPTY;
+        }
+
         [Track]
         public string Units
         {
