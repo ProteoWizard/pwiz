@@ -141,6 +141,15 @@ namespace pwiz.Skyline.Model
             _defaultMassType = defaultMassType;
         }
 
+        public ModifiedSequence(string modifiedSequence, MassType defaultMassType)
+        {
+            _unmodifiedSequence = FastaSequence.StripModifications(modifiedSequence);
+            var mods = ModificationMatcher.EnumerateMods(modifiedSequence)
+                .Select(i => MakeModification(_unmodifiedSequence, new ExplicitMod(i.IndexInUnmodifiedSequence, i.Mod)));
+            _defaultMassType = defaultMassType;
+            _explicitMods = ImmutableList<Modification>.ValueOf(mods);
+        }
+
         [Browsable(false)]
         public ImmutableList<Modification> ExplicitMods
         {

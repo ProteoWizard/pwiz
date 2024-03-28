@@ -68,8 +68,8 @@ using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
-using pwiz.Skyline.Model.Prosit.Communication;
-using pwiz.Skyline.Model.Prosit.Models;
+using pwiz.Skyline.Model.Koina.Communication;
+using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.SettingsUI;
@@ -4613,14 +4613,14 @@ namespace pwiz.Skyline
         }
 
 
-        private void prositLibMatchItem_Click(object sender, EventArgs e)
+        private void koinaLibMatchItem_Click(object sender, EventArgs e)
         {
-            prositLibMatchItem.Checked = !prositLibMatchItem.Checked;
+            koinaLibMatchItem.Checked = !koinaLibMatchItem.Checked;
 
-            if (prositLibMatchItem.Checked)
-                PrositUIHelpers.CheckPrositSettings(this, this);
+            if (koinaLibMatchItem.Checked)
+                KoinaUIHelpers.CheckKoinaSettings(this, this);
 
-            _graphSpectrumSettings.Prosit = prositLibMatchItem.Checked;
+            _graphSpectrumSettings.Koina = koinaLibMatchItem.Checked;
         }
 
         public bool ValidateSource()
@@ -4633,7 +4633,7 @@ namespace pwiz.Skyline
             var node = Document.Peptides.FirstOrDefault(p => p.ModifiedTarget.Equals(target));
             if (node == null)
                 return null;
-            return PrositRetentionTimeModel.Instance?.PredictSingle(PrositPredictionClient.Current, Document.Settings,
+            return KoinaRetentionTimeModel.Instance?.PredictSingle(KoinaPredictionClient.Current, Document.Settings,
                 node, CancellationToken.None)[node];
         }
 

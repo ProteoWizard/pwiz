@@ -4007,9 +4007,9 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized string similar to could not find EncyclopeDIA.
         /// </summary>
-        public static string EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_could_not_find_EncyclopeDia {
+        public static string EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_could_not_find_EncyclopeDia {
             get {
-                return ResourceManager.GetString("EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_could_not_find_EncyclopeDia", resourceCulture);
+                return ResourceManager.GetString("EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_could_not_find_EncyclopeDia", resourceCulture);
             }
         }
         
@@ -5524,6 +5524,16 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap Keep {
             get {
                 object obj = ResourceManager.GetObject("Keep", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap koina_logo_fdf731d5 {
+            get {
+                object obj = ResourceManager.GetObject("koina_logo_fdf731d5", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -7749,16 +7759,6 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap Properties_Button {
             get {
                 object obj = ResourceManager.GetObject("Properties_Button", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap prosit_logo_dark_blue {
-            get {
-                object obj = ResourceManager.GetObject("prosit_logo_dark_blue", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
