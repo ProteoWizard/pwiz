@@ -132,12 +132,12 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
                 os << " " << intensityParam.valueFixedNotation();
             os << '\n';
 
-            CVParam inverseReduceIonMobility = si.cvParam(MS_inverse_reduced_ion_mobility);
+            CVParam inverseReduceIonMobility = scan->cvParam(MS_inverse_reduced_ion_mobility);
             if (!inverseReduceIonMobility.empty())
                 os << "INVREION=" << inverseReduceIonMobility.valueFixedNotation();
             os << '\n';
 
-            CVParam collisionalCrossSectionalArea = si.cvParam(MS_collisional_cross_sectional_area);
+            CVParam collisionalCrossSectionalArea = scan->cvParam(MS_collisional_cross_sectional_area);
             if (!collisionalCrossSectionalArea.empty())
                 os << "COLLCROSSSA=" << collisionalCrossSectionalArea.valueFixedNotation();
             os << '\n';
