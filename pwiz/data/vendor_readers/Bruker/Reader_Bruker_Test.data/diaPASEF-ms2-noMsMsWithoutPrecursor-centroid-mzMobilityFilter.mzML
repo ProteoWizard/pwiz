@@ -88,7 +88,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.174294409245" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -143,7 +142,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.173178459048" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -198,7 +196,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.1720624554" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -253,7 +250,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.170946398296" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -308,7 +304,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.169830287734" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -363,7 +358,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.168714123708" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -418,7 +412,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.167597906216" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -473,7 +466,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.166481635253" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -528,7 +520,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.165365310815" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -583,7 +574,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.164248932899" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -638,7 +628,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.163132501501" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -693,7 +682,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.162016016617" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -748,7 +736,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.160899478243" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -803,7 +790,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.159782886376" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -858,7 +844,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.158666241011" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -913,7 +898,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.157549542144" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -968,7 +952,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.156432789773" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -1023,7 +1006,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.155315983892" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -1078,7 +1060,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.154199124499" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -1133,7 +1114,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.153082211588" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -1188,7 +1168,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.151965245157" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -1243,7 +1222,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.150848225202" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -1298,7 +1276,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.149731151718" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -1353,7 +1330,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.148614024702" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -1408,7 +1384,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.147496844151" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -1463,7 +1438,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.146379610059" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -1518,7 +1492,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.145262322423" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -1573,7 +1546,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.144144981241" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -1628,7 +1600,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.143027586506" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -1683,7 +1654,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.141910138217" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -1738,7 +1708,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.140792636368" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -1793,7 +1762,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.139675080957" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -1848,7 +1816,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.138557471978" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -1903,7 +1870,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.137439809429" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -1958,7 +1924,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.136322093306" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -2013,7 +1978,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.135204323604" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -2068,7 +2032,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.13408650032" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -2123,7 +2086,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.13296862345" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -2178,7 +2140,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.13185069299" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -2233,7 +2194,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.130732708936" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -2288,7 +2248,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.129614671285" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -2343,7 +2302,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.128496580032" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -2398,7 +2356,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.127378435174" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -2453,7 +2410,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.126260236707" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -2508,7 +2464,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.125141984626" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -2563,7 +2518,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.124023678929" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -2618,7 +2572,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.122905319611" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -2673,7 +2626,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.121786906669" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -2728,7 +2680,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.120668440098" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -2783,7 +2734,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.119549919894" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -2838,7 +2788,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.118431346055" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -2893,7 +2842,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.117312718575" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -2948,7 +2896,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.116194037452" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -3003,7 +2950,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.11507530268" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -3058,7 +3004,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.113956514258" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -3113,7 +3058,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.112837672179" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -3168,7 +3112,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.111718776442" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -3223,7 +3166,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.110599827041" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -3278,7 +3220,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.109480823973" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -3333,7 +3274,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.108361767235" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -3388,7 +3328,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.107242656821" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -3443,7 +3382,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.106123492729" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -3498,7 +3436,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.105004274954" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -3553,7 +3490,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.103885003493" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -3608,7 +3544,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.102765678342" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -3663,7 +3598,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.101646299497" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -3718,7 +3652,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.100526866954" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -3773,7 +3706,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.099407380709" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -3828,7 +3760,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.098287840758" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -3883,7 +3814,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.097168247098" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -3938,7 +3868,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.096048599724" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -3993,7 +3922,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.094928898633" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -4048,7 +3976,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.093809143821" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -4103,7 +4030,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.092689335284" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -4158,7 +4084,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.091569473018" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -4213,7 +4138,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.090449557019" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -4268,7 +4192,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.089329587284" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -4323,7 +4246,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.088209563808" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -4378,7 +4300,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.087089486588" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -4433,7 +4354,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.08596935562" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -4488,7 +4408,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.0848491709" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -4543,7 +4462,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.083728932423" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -4598,7 +4516,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.082608640187" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -4653,7 +4570,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.081488294187" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -4708,7 +4624,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.08036789442" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -4763,7 +4678,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.079247440881" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -4818,7 +4732,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.078126933567" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -4873,7 +4786,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.077006372474" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -4928,7 +4840,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.075885757597" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -4983,7 +4894,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.074765088934" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -5038,7 +4948,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.07364436648" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -5093,7 +5002,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.072523590232" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -5148,7 +5056,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.071402760184" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -5203,7 +5110,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.070281876335" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -5258,7 +5164,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.069160938679" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -5313,7 +5218,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.068039947213" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -5368,7 +5272,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.066918901933" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -5423,7 +5326,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.065797802835" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
@@ -5478,7 +5380,6 @@
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="3866.71217019797" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
             <cvParam cvRef="MS" accession="MS:1002815" name="inverse reduced ion mobility" value="1.064676649915" unitCvRef="MS" unitAccession="MS:1002814" unitName="volt-second per square centimeter"/>
-            <cvParam cvRef="MS" accession="MS:1002954" name="collisional cross sectional area" value="0.0"/>
             <userParam name="windowGroup" value="4"/>
             <scanWindowList count="1">
               <scanWindow>
