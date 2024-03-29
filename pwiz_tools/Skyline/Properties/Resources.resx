@@ -4321,14 +4321,8 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0__" xml:space="preserve">
     <value>Annotations successfully defined from file {0}.</value>
   </data>
-  <data name="SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank" xml:space="preserve">
-    <value>Protein Rank</value>
-  </data>
   <data name="Extensions_CustomToString_Protein_Expression" xml:space="preserve">
     <value>Protein Expression</value>
-  </data>
-  <data name="Extensions_CustomToString_Relative_Abundance" xml:space="preserve">
-    <value>Relative Abundance</value>
   </data>
   <data name="CommandArgs_ParseAnnotationTypes_Error__Attempting_to_exclude_an_unknown_annotation_type__0___Try_one_of_the_following_" xml:space="preserve">
     <value>Error: Attempting to exclude an unknown annotation type '{0}'. Try one of the following:</value>
@@ -4368,15 +4362,6 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   </data>
   <data name="CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_file__0_" xml:space="preserve">
     <value>Error: Could not find background proteome file {0}</value>
-  </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting" xml:space="preserve">
-    <value>Relative Abundance Formatting</value>
-  </data>
-  <data name="AreaPeptideGraphPane_UpdateAxes_Peptide_Rank" xml:space="preserve">
-    <value>Peptide Rank</value>
-  </data>
-  <data name="SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank" xml:space="preserve">
-    <value>Molecule Rank</value>
   </data>
   <data name="PeptideMod_SetTerminus_A_peptide_modification_must_be_added_before_giving_it_a_terminal_or_amino_acid_specificity_" xml:space="preserve">
     <value>A peptide modification must be added before giving it a terminal or amino acid specificity.</value>
