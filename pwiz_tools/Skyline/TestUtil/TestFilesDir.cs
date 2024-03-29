@@ -17,10 +17,13 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -91,6 +94,15 @@ namespace pwiz.SkylineTestUtil
                 PersistentFilesDir = GetExtractDir(Path.GetDirectoryName(relativePathZip), zipBaseName, isExtractHere);
 
             TestContext.ExtractTestFiles(relativePathZip, FullPath, PersistentFiles, PersistentFilesDir);
+
+            // record the size of the persistent directory after extracting
+            var persistentDirInfo = string.IsNullOrEmpty(PersistentFilesDir) ? null : new DirectoryInfo(PersistentFilesDir);
+            if (persistentDirInfo != null && Directory.Exists(PersistentFilesDir))
+            {
+                var persistentFileInfos = persistentDirInfo.EnumerateFiles("*", SearchOption.AllDirectories).ToList();
+                PersistentFilesDirTotalSize = persistentFileInfos.Sum(f => f.Length);
+                PersistentFilesDirFileSet = persistentFileInfos.Select(f => PathEx.RemovePrefix(f.FullName, Path.GetDirectoryName(PersistentFilesDir) + "\\")).ToHashSet();
+            }
         }
 
         private static string GetExtractDir(string directoryName, string zipBaseName, bool isExtractHere)
@@ -109,6 +121,16 @@ namespace pwiz.SkylineTestUtil
         public string PersistentFilesDir { get; private set; }
 
         public string[] PersistentFiles { get; private set; }
+
+        /// <summary>
+        /// The sum of all file sizes in the persistent files dir after extracting the ZIP.
+        /// </summary>
+        public long? PersistentFilesDirTotalSize { get; private set; }
+
+        /// <summary>
+        /// Full list of all file paths in the persistent files dir after extracting the ZIP.
+        /// </summary>
+        public ISet<string> PersistentFilesDirFileSet { get; private set; }
 
         public string RootPath
         {
@@ -252,6 +274,41 @@ namespace pwiz.SkylineTestUtil
             if (!TestContext.Properties.Contains("ParallelTest")) // It is a shared directory in parallel tests, though, so leave it alone in parallel mode
             {
                 CheckForFileLocks(PersistentFilesDir, desiredCleanupLevel != DesiredCleanupLevel.none);
+            }
+
+            // check that persistent files dir has not changed
+            CheckForModifiedPersistentFilesDir();
+        }
+
+        private void CheckForModifiedPersistentFilesDir()
+        {
+            if (!PersistentFilesDirTotalSize.HasValue) return;
+
+            var persistentDirInfo = new DirectoryInfo(PersistentFilesDir);
+            var currentFileInfos = persistentDirInfo.EnumerateFiles("*", SearchOption.AllDirectories).ToList();
+            long currentSize = currentFileInfos.Sum(f => f.Length);
+            var currentFiles = currentFileInfos.Select(f => PathEx.RemovePrefix(f.FullName, Path.GetDirectoryName(PersistentFilesDir) + "\\")).ToHashSet();
+            var newFiles = new HashSet<string>(currentFiles);
+            newFiles.ExceptWith(PersistentFilesDirFileSet);
+            var deletedFiles = new HashSet<string>(PersistentFilesDirFileSet);
+            deletedFiles.ExceptWith(currentFiles);
+            if (newFiles.Any() || deletedFiles.Any() || PersistentFilesDirTotalSize - currentSize > 0)
+            {
+                var changeSummary = new StringBuilder($"PersistentFilesDir ({PersistentFilesDir}) has been modified.\r\n");
+                changeSummary.AppendLine($"  Original size: {PersistentFilesDirTotalSize}");
+                changeSummary.AppendLine($"Size at cleanup: {currentSize}");
+                if (newFiles.Any())
+                {
+                    changeSummary.AppendLine("New files:");
+                    changeSummary.Append(TextUtil.LineSeparate(newFiles));
+                }
+
+                if (deletedFiles.Any())
+                {
+                    changeSummary.Append("Deleted files:");
+                    changeSummary.Append(TextUtil.LineSeparate(deletedFiles));
+                }
+                throw new IOException(changeSummary.ToString());
             }
         }
 
