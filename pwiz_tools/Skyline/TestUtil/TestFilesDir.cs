@@ -19,10 +19,9 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Security.AccessControl;
-using System.Security.Principal;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -253,15 +252,7 @@ namespace pwiz.SkylineTestUtil
             // since it is essentially an extension of the test directory.
             if (!TestContext.Properties.Contains("ParallelTest")) // It is a shared directory in parallel tests, though, so leave it alone in parallel mode
             {
-                // Check for file locks on PersistentFilesDir
-
-                // but only if that folder is owned by the current user
-                var dirInfo = new DirectoryInfo(PersistentFilesDir);
-                DirectorySecurity dirSecurity = dirInfo.GetAccessControl();
-                IdentityReference ownerReference = dirSecurity.GetOwner(typeof(NTAccount));
-                WindowsIdentity currentUser = WindowsIdentity.GetCurrent();
-                
-                if (ownerReference.ToString().Equals(currentUser.Name, StringComparison.OrdinalIgnoreCase))
+                if (!PathEx.IsDownloadsPathShared())
                 {
                     CheckForFileLocks(PersistentFilesDir, desiredCleanupLevel != DesiredCleanupLevel.none);
                 }
