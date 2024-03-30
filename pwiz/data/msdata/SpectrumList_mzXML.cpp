@@ -135,7 +135,7 @@ struct HandlerPrecursor : public SAXParser::Handler
 
         if (name == "precursorMz")
         {
-            string precursorScanNum, precursorIntensity, precursorCharge, possibleCharges, activationMethod, windowWideness, driftTime, collisionalCrossSection, invK0;
+            string precursorScanNum, precursorIntensity, precursorCharge, possibleCharges, activationMethod, windowWideness, driftTime, collisionalCrossSection, invK0, inverseReducedIonMobility, crossSectionalArea;
             getAttribute(attributes, "precursorScanNum", precursorScanNum);
             getAttribute(attributes, "precursorIntensity", precursorIntensity);
             getAttribute(attributes, "precursorCharge", precursorCharge);
@@ -145,6 +145,8 @@ struct HandlerPrecursor : public SAXParser::Handler
             getAttribute(attributes, "DT", driftTime);
             getAttribute(attributes, "CCS", collisionalCrossSection);
             getAttribute(attributes, "invK0", invK0);
+            getAttribute(attributes, "inverseReducedIonMobility", inverseReducedIonMobility);
+            getAttribute(attributes, "crossSectionalArea", crossSectionalArea);
 
             if (!precursorScanNum.empty()) // precursorScanNum is an optional element
                 precursor->spectrumID = id::translateScanNumberToNativeID(nativeIdFormat, precursorScanNum);
@@ -156,6 +158,12 @@ struct HandlerPrecursor : public SAXParser::Handler
 
             if (!precursorCharge.empty())
                 precursor->selectedIons.back().set(MS_charge_state, precursorCharge);
+
+            if(!inverseReducedIonMobility.empty())
+				precursor->selectedIons.back().set(MS_inverse_reduced_ion_mobility, inverseReducedIonMobility, MS_volt_second_per_square_centimeter);
+
+            if (!crossSectionalArea.empty())
+                precursor->selectedIons.back().set(MS_collisional_cross_sectional_area, crossSectionalArea, UO_square_angstrom);
 
             if (!possibleCharges.empty())
             {
