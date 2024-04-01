@@ -101,12 +101,17 @@ namespace pwiz.Common.SystemUtil
             return string.Join(Path.DirectorySeparatorChar.ToString(CultureInfo.InvariantCulture), parts.ToArray());
         }
 
+        /// <summary>
+        /// Environment variable which can be used to override <see cref="GetDownloadsPath"/>.
+        /// </summary>
+        private const string SKYLINE_DOWNLOAD_PATH = @"SKYLINE_DOWNLOAD_PATH";
+
         // From http://stackoverflow.com/questions/3795023/downloads-folder-not-special-enough
         // Get the path for the Downloads directory, avoiding the assumption that it's under the 
         // user's personal directory (it's possible to relocate it under newer versions of Windows)
         public static string GetDownloadsPath()
         {
-            string path = Environment.GetEnvironmentVariable(@"SKYLINE_DOWNLOAD_PATH");
+            string path = Environment.GetEnvironmentVariable(SKYLINE_DOWNLOAD_PATH);
             if (path != null)
             {
                 return path;
@@ -127,6 +132,19 @@ namespace pwiz.Common.SystemUtil
                 path = string.Empty;
             path = Path.Combine(path, @"Downloads");
             return path;
+        }
+
+        /// <summary>
+        /// Returns true if the <see cref="GetDownloadsPath"/> is likely to be a folder
+        /// which is shared with other users on the computer
+        /// </summary>
+        public static bool IsDownloadsPathShared()
+        {
+            // If the "SKYLINE_DOWNLOAD_PATH" environment variable has been set in a system environment
+            // variable and not a user environment variable, then assume the folder is shared
+            // with other users
+            return null != Environment.GetEnvironmentVariable(SKYLINE_DOWNLOAD_PATH)
+                   && null == Environment.GetEnvironmentVariable(SKYLINE_DOWNLOAD_PATH, EnvironmentVariableTarget.User);
         }
 
         private static Guid FolderDownloads = new Guid(@"374DE290-123F-4565-9164-39C4925E467B");
