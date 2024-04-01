@@ -29,6 +29,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using Microsoft.CSharp;
+#nullable enable
 
 namespace AssortResources
 {
