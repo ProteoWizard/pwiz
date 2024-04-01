@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -15,9 +16,10 @@ namespace pwiz.SkylineTest
             TestFilesDir = new TestFilesDir(TestContext, TestFilesZip, TestContext.TestName, TestFilesPersistent);
             string persistentFile = TestFilesDir.GetTestPath("OptimizeCEMzml/CE_Vantage_15mTorr_0001.mzML");
             string persistentFileCopy = persistentFile + ".copy";
-            File.Copy(persistentFile, persistentFileCopy);
             try
             {
+                FileEx.SafeDelete(persistentFileCopy, true);
+                File.Copy(persistentFile, persistentFileCopy);
                 AssertEx.ThrowsException<IOException>(() => TestFilesDir.Cleanup(),
                     ex => StringAssert.Contains(ex.Message, $"PersistentFilesDir ({TestFilesDir.PersistentFilesDir}) has been modified"));
             }

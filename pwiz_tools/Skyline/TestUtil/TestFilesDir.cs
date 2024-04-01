@@ -266,6 +266,9 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public void Cleanup()
         {
+            // check that persistent files dir has not changed
+            CheckForModifiedPersistentFilesDir();
+
             var desiredCleanupLevel = TestContext.GetEnumValue("DesiredCleanupLevel", DesiredCleanupLevel.none);
 
             CheckForFileLocks(RootPath, desiredCleanupLevel == DesiredCleanupLevel.all);
@@ -275,9 +278,6 @@ namespace pwiz.SkylineTestUtil
             {
                 CheckForFileLocks(PersistentFilesDir, desiredCleanupLevel != DesiredCleanupLevel.none);
             }
-
-            // check that persistent files dir has not changed
-            CheckForModifiedPersistentFilesDir();
         }
 
         private void CheckForModifiedPersistentFilesDir()
