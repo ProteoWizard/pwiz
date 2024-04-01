@@ -1085,7 +1085,7 @@ namespace pwiz.Skyline.Util
                 File.Delete(randomFilepath);
                 return true;
             }
-            catch (IOException)
+            catch (Exception)
             {
                 return false;
             }
