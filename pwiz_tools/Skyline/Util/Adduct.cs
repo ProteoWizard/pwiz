@@ -1354,29 +1354,19 @@ namespace pwiz.Skyline.Util
                 return Unlabeled.ApplyToMolecule(molecule);
             }
 
-            var monoMassOffset = molecule.MonoMassOffset;
-            var averageMassOffset = molecule.AverageMassOffset;
-
             var resultDict = new Dictionary<string, int>(molecule.Molecule);
 
-            // Deal with any mass multiplier (the 2 in "[2M+Na]")
-            if (MassMultiplier != 1)
+            if (!molecule.IsMassOnly)
             {
-                foreach (var element in resultDict.Keys.ToArray())
+                // Deal with any mass multiplier (the 2 in "[2M+Na]")
+                if (MassMultiplier != 1)
                 {
-                    resultDict[element] *= MassMultiplier;
+                    foreach (var element in resultDict.Keys.ToArray())
+                    {
+                        resultDict[element] *= MassMultiplier;
+                    }
                 }
-                monoMassOffset *= MassMultiplier;
-                averageMassOffset *= MassMultiplier;
-            }
 
-            if (molecule.IsMassOnly)
-            {
-                // Just deal with the mass of the adduct rather than the formula
-                molecule = molecule.Change(Molecule.FromDict(resultDict), monoMassOffset + MonoMassAdduct, averageMassOffset + AverageMassAdduct);
-            }
-            else
-            {
                 // Add in the "Na" of [M+Na] (or remove the 4H in [M-4H])
                 foreach (var pair in Composition)
                 {
@@ -1414,18 +1404,20 @@ namespace pwiz.Skyline.Util
 
         private ParsedMolecule ApplyIsotopeValues(ParsedMolecule molecule, int massMultiplier, IDictionary<string, int> resultDict)
         {
-            if (!HasIsotopeLabels)
-            {
-                return molecule.ChangeMolecule(Molecule.FromDict(resultDict)); // Nothing to do, but previous caller may have manipulated the formula as represented in resultDict
-            }
-
             TypedMass massModMono;
             TypedMass massModAvg;
-            if (molecule.IsMassOnly)
+
+            if (!HasIsotopeLabels)
             {
-                // Just add the incremental mass of of the declared isotopes
-                massModMono = molecule.MonoMassOffset + IsotopesIncrementalMonoMass;
-                massModAvg = molecule.AverageMassOffset + IsotopesIncrementalAverageMass;
+                // Caller has already multiplied chemical formula, handle mass offsets here
+                massModMono = molecule.MonoMassOffset * massMultiplier;
+                massModAvg = molecule.AverageMassOffset * massMultiplier;
+            }
+            else if (molecule.IsMassOnly)
+            {
+                // Just add the incremental mass of the declared isotopes
+                massModMono = (molecule.MonoMassOffset + IsotopesIncrementalMonoMass) * massMultiplier;
+                massModAvg = (molecule.AverageMassOffset + IsotopesIncrementalAverageMass) * massMultiplier;
             }
             else
             {
