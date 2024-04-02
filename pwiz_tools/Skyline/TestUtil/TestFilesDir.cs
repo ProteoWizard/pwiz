@@ -284,8 +284,18 @@ namespace pwiz.SkylineTestUtil
         {
             if (!PersistentFilesDirTotalSize.HasValue) return;
 
-            var persistentDirInfo = new DirectoryInfo(PersistentFilesDir);
-            var currentFileInfos = persistentDirInfo.EnumerateFiles("*", SearchOption.AllDirectories).ToList();
+            List<FileInfo> currentFileInfos;
+            try
+            {
+                var persistentDirInfo = new DirectoryInfo(PersistentFilesDir);
+                currentFileInfos = persistentDirInfo.EnumerateFiles("*", SearchOption.AllDirectories).ToList();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(@"Warning: while checking for modified persistent files directory, " + ex.Message);
+                return;
+            }
+
             long currentSize = currentFileInfos.Sum(f => f.Length);
             var currentFiles = currentFileInfos.Select(f => PathEx.RemovePrefix(f.FullName, Path.GetDirectoryName(PersistentFilesDir) + "\\")).ToHashSet();
             var newFiles = new HashSet<string>(currentFiles);
@@ -308,6 +318,7 @@ namespace pwiz.SkylineTestUtil
                     changeSummary.Append("Deleted files:");
                     changeSummary.Append(TextUtil.LineSeparate(deletedFiles));
                 }
+
                 throw new IOException(changeSummary.ToString());
             }
         }
