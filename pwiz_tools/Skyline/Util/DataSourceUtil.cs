@@ -24,7 +24,6 @@ using System.Xml;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
@@ -104,7 +103,9 @@ namespace pwiz.Skyline.Util
         public static string GetSourceType(string directoryName, string[] fileNames, string[] subdirectoryNames)
         {
             if (PathEx.HasExtension(directoryName, EXT_WATERS_RAW) &&
-                (fileNames.Count(fn => fn.StartsWith(@"_FUNC") && fn.EndsWith(@".DAT") && fn.Count(ch => ch=='.')==1) > 0))
+                fileNames.Any(fn => fn.StartsWith(@"_FUNC", StringComparison.InvariantCultureIgnoreCase) &&
+                                    fn.EndsWith(@".DAT", StringComparison.InvariantCultureIgnoreCase) &&
+                                    fn.Count(ch => ch == '.') == 1))
                 return TYPE_WATERS_RAW;
             if (PathEx.HasExtension(directoryName, EXT_AGILENT_BRUKER_RAW))
             {
@@ -364,8 +365,8 @@ namespace pwiz.Skyline.Util
             catch (Exception x)
             {
                 var message = TextUtil.LineSeparate(
-                    string.Format(Resources.DataSourceUtil_GetWiffSubPaths_An_error_occurred_attempting_to_read_sample_information_from_the_file__0__,filePath),
-                                    Resources.DataSourceUtil_GetWiffSubPaths_The_file_may_be_corrupted_missing_or_the_correct_libraries_may_not_be_installed,
+                    string.Format(UtilResources.DataSourceUtil_GetWiffSubPaths_An_error_occurred_attempting_to_read_sample_information_from_the_file__0__,filePath),
+                                    UtilResources.DataSourceUtil_GetWiffSubPaths_The_file_may_be_corrupted_missing_or_the_correct_libraries_may_not_be_installed,
                                     x.Message);
                 throw new IOException(message);
             }

@@ -148,7 +148,7 @@ namespace pwiz.Skyline.Model
                 else
                 {
                     StaticMod mod = GetModByMassInSettings(info, (double) info.Mass, false) ??
-                                    UniMod.MassLookup.MatchModificationMass((double) info.Mass, info.AA,
+                                    UniMod.MatchModificationMass((double) info.Mass, info.AA,
                                                                             info.RoundedTo, false, info.Terminus,
                                                                             info.AppearsToBeSpecificMod);
                     match = mod == null ? (AAModMatch?) null : new AAModMatch {HeavyMod = mod};
@@ -222,7 +222,7 @@ namespace pwiz.Skyline.Model
                 if (match != null)
                     continue;
                 // Look in Unimod to complete the match.
-                matchComplete = UniMod.MassLookup.MatchModificationMass(partialMatch.UnexplainedMass, info.AA,
+                matchComplete = UniMod.MatchModificationMass(partialMatch.UnexplainedMass, info.AA,
                                                             info.RoundedTo, !partialMatch.Structural,
                                                             info.Terminus, info.AppearsToBeSpecificMod);
                 if (matchComplete != null)
@@ -438,7 +438,7 @@ namespace pwiz.Skyline.Model
             get
             {
 
-                return TextUtil.LineSeparate(Resources.AbstractModificationMatcher_UninterpretedMods_The_following_modifications_could_not_be_interpreted,
+                return TextUtil.LineSeparate(ModelResources.AbstractModificationMatcher_UninterpretedMods_The_following_modifications_could_not_be_interpreted,
                                      string.Empty,
                                      TextUtil.SpaceSeparate(UnmatchedSequences.OrderBy(s => s)));
             }

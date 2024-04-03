@@ -21,6 +21,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
@@ -156,7 +157,7 @@ namespace pwiz.Skyline.Util
                     if (posClose >= 0 && posClose < posNext)
                     {
                         // This isn't an adduct description, probably actually examining a modified peptide e.g. K[1Ac]IDGFGPMK
-                        throw new InvalidOperationException(
+                        throw new InvalidDataException(
                             string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0__, input));
                     }
                     if (input[posNext] != '+' && input[posNext] != '-') 
@@ -340,7 +341,7 @@ namespace pwiz.Skyline.Util
                     success = int.TryParse(massMultiplierStr, out massMultiplier);
                     if (!success || massMultiplier <= 0)
                     {
-                        throw new InvalidOperationException(
+                        throw new InvalidDataException(
                             string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0__, input));
                     }
                 }
@@ -370,9 +371,9 @@ namespace pwiz.Skyline.Util
                         // ReSharper restore LocalizableElement
                         if (test.Any(t => !char.IsDigit(t) && t != '\0') || test[test.Length - 1] != '\0') // This will catch 2Cl373H -> "2\03H" or 2Cl373H23 -> "2\03\03"
                         {
-                            var errmsg = string.Format(Resources.Adduct_ParseDescription_isotope_error,
+                            var errmsg = string.Format(UtilResources.Adduct_ParseDescription_isotope_error,
                                     match.Groups[@"label"].Value.Split(']')[0], input, string.Join(@" ", DICT_ADDUCT_ISOTOPE_NICKNAMES.Keys));
-                            throw new InvalidOperationException(errmsg);
+                            throw new InvalidDataException(errmsg);
                         }
 
                         label = DICT_ADDUCT_ISOTOPE_NICKNAMES.Aggregate(label, (current, nickname) => current.Replace(nickname.Key, nickname.Value)); // eg Cl37 -> Cl'
@@ -509,7 +510,7 @@ namespace pwiz.Skyline.Util
                         }
                         catch (ArgumentException)
                         {
-                            throw new InvalidOperationException(
+                            throw new InvalidDataException(
                                 string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Unknown_symbol___0___in_adduct_description___1__,
                                     ion, input));
                         }
@@ -519,7 +520,7 @@ namespace pwiz.Skyline.Util
             AdductCharge = calculatedCharge ?? declaredCharge ?? 0;
             if (!composition.Keys.All(k => BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)))
             {
-                throw new InvalidOperationException(
+                throw new InvalidDataException(
                     string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Unknown_symbol___0___in_adduct_description___1__,
                         composition.Keys.First(k => !BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)), input));
             }
@@ -541,15 +542,15 @@ namespace pwiz.Skyline.Util
                 }
                 if (!success)
                 {
-                    throw new InvalidOperationException(
+                    throw new InvalidDataException(
                         string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0__, input));
                 }
             }
             if (declaredCharge.HasValue && calculatedCharge.HasValue && declaredCharge != calculatedCharge)
             {
-                throw new InvalidOperationException(
+                throw new InvalidDataException(
                     string.Format(
-                        Resources
+                        UtilResources
                             .BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0____declared_charge__1__does_not_agree_with_calculated_charge__2_,
                         input, declaredCharge.Value, calculatedCharge));
             }
@@ -962,7 +963,7 @@ namespace pwiz.Skyline.Util
                     }
                 }
             }
-            throw new InvalidOperationException(string.Format(@"Unable to adjust adduct formula {0} to achieve charge state {1}", AdductFormula, newCharge));
+            throw new InvalidDataException(string.Format(@"Unable to adjust adduct formula {0} to achieve charge state {1}", AdductFormula, newCharge));
         }
 
         /// <summary>
@@ -1317,7 +1318,7 @@ namespace pwiz.Skyline.Util
                 var components = DICT_ADDUCT_NICKNAMES.Aggregate<KeyValuePair<string, string>, string>(null, (current, c) => current + (String.IsNullOrEmpty(current) ? "\r\n" : ", ") + String.Format("{0} ({1})", c.Key, c.Value));
                 components += DICT_ADDUCT_ISOTOPE_NICKNAMES.Aggregate<KeyValuePair<string, string>, string>(null, (current, c) => current + ", " + String.Format("{0} ({1})", c.Key, c.Value));
                 var chargers = DICT_ADDUCT_ION_CHARGES.Aggregate<KeyValuePair<string, int>, string>(null, (current, c) => current + (String.IsNullOrEmpty(current) ? "\r\n" : ", ") + String.Format("{0} ({1:+#;-#;+0})", c.Key, c.Value));
-                return string.Format(Resources.IonInfo_AdductTips_, components, chargers);
+                return string.Format(UtilResources.IonInfo_AdductTips_, components, chargers);
             }
         }
         // ReSharper restore LocalizableElement
@@ -1355,40 +1356,43 @@ namespace pwiz.Skyline.Util
 
             var resultDict = new Dictionary<string, int>(molecule.Molecule);
 
-            // Deal with any mass multiplier (the 2 in "[2M+Na]")
-            if (MassMultiplier != 1)
+            if (!molecule.IsMassOnly)
             {
-                foreach (var element in resultDict.Keys.ToArray())
+                // Deal with any mass multiplier (the 2 in "[2M+Na]")
+                if (MassMultiplier != 1)
                 {
-                    resultDict[element] *= MassMultiplier;
+                    foreach (var element in resultDict.Keys.ToArray())
+                    {
+                        resultDict[element] *= MassMultiplier;
+                    }
                 }
-            }
 
-            // Add in the "Na" of [M+Na] (or remove the 4H in [M-4H])
-            foreach (var pair in Composition)
-            {
-                if (resultDict.TryGetValue(pair.Key, out var count))
+                // Add in the "Na" of [M+Na] (or remove the 4H in [M-4H])
+                foreach (var pair in Composition)
                 {
-                    count += pair.Value;
-                    if (count == 0)
+                    if (resultDict.TryGetValue(pair.Key, out var count))
                     {
-                        resultDict.Remove(pair.Key);
+                        count += pair.Value;
+                        if (count == 0)
+                        {
+                            resultDict.Remove(pair.Key);
+                        }
+                        else
+                        {
+                            resultDict[pair.Key] = count;
+                        }
                     }
-                    else
+                    else if (pair.Value != 0)
                     {
-                        resultDict[pair.Key] = count;
+                        resultDict.Add(pair.Key, pair.Value);
+                        count = pair.Value;
                     }
-                }
-                else if (pair.Value != 0)
-                {
-                    resultDict.Add(pair.Key, pair.Value);
-                    count = pair.Value;
-                }
-                if (count < 0 && !Equals(pair.Key, BioMassCalc.H)) // Treat H loss as a general proton loss
-                {
-                    throw new InvalidOperationException(
-                        string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_,
-                            this, pair.Key, molecule.ToString()));
+                    if (count < 0 && !Equals(pair.Key, BioMassCalc.H)) // Treat H loss as a general proton loss
+                    {
+                        throw new InvalidDataException(
+                            string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_,
+                                this, pair.Key, molecule.ToString()));
+                    }
                 }
             }
 
@@ -1400,18 +1404,20 @@ namespace pwiz.Skyline.Util
 
         private ParsedMolecule ApplyIsotopeValues(ParsedMolecule molecule, int massMultiplier, IDictionary<string, int> resultDict)
         {
-            if (!HasIsotopeLabels)
-            {
-                return molecule.ChangeMolecule(Molecule.FromDict(resultDict)); // Nothing to do, but previous caller may have manipulated the formula as represented in resultDict
-            }
-
             TypedMass massModMono;
             TypedMass massModAvg;
-            if (molecule.IsMassOnly)
+
+            if (!HasIsotopeLabels)
             {
-                // Just add the incremental mass of of the declared isotopes
-                massModMono = molecule.MonoMassOffset + IsotopesIncrementalMonoMass;
-                massModAvg = molecule.AverageMassOffset + IsotopesIncrementalAverageMass;
+                // Caller has already multiplied chemical formula, handle mass offsets here
+                massModMono = molecule.MonoMassOffset * massMultiplier;
+                massModAvg = molecule.AverageMassOffset * massMultiplier;
+            }
+            else if (molecule.IsMassOnly)
+            {
+                // Just add the incremental mass of the declared isotopes
+                massModMono = (molecule.MonoMassOffset + IsotopesIncrementalMonoMass) * massMultiplier;
+                massModAvg = (molecule.AverageMassOffset + IsotopesIncrementalAverageMass) * massMultiplier;
             }
             else
             {
@@ -1444,9 +1450,9 @@ namespace pwiz.Skyline.Util
                     }
                     else // Can't remove that which is not there
                     {
-                        throw new InvalidOperationException(
+                        throw new InvalidDataException(
                             string.Format(
-                                Resources
+                                UtilResources
                                     .Adduct_ApplyToMolecule_Adduct___0___calls_for_labeling_more__1__atoms_than_are_found_in_the_molecule__2_,
                                 this, unlabeledSymbol, molecule.ToString()));
                     }

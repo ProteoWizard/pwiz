@@ -29,7 +29,6 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Lists;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Lists
@@ -81,7 +80,7 @@ namespace pwiz.Skyline.Controls.Lists
                 return null;
             }
             ListItemId? listItemId = null;
-            SkylineDataSchema.ModifyDocument(EditDescription.Message(ListRef.PROTOTYPE.ChangeName(ListName), string.Format(Resources.ListViewContext_CommitAddNew_Add_new_item_to_list___0__, ListName)), doc =>
+            SkylineDataSchema.ModifyDocument(EditDescription.Message(ListRef.PROTOTYPE.ChangeName(ListName), string.Format(ListsResources.ListViewContext_CommitAddNew_Add_new_item_to_list___0__, ListName)), doc =>
             {
                 var listData = doc.Settings.DataSettings.FindList(ListName);
                 ListItemId newItemId;
@@ -135,8 +134,8 @@ namespace pwiz.Skyline.Controls.Lists
             catch (Exception exception)
             {
                 if (MultiButtonMsgDlg.Show(BoundDataGridView,
-                        TextUtil.LineSeparate(Resources.ListViewContext_ValidateNewRow_The_new_row_could_not_be_added_because_of_the_following_error_,
-                            exception.Message, Resources.ListViewContext_ValidateNewRow_Press_OK_to_continue_editing_your_row__or_Cancel_to_throw_away_the_new_row_)
+                        TextUtil.LineSeparate(ListsResources.ListViewContext_ValidateNewRow_The_new_row_could_not_be_added_because_of_the_following_error_,
+                            exception.Message, ListsResources.ListViewContext_ValidateNewRow_Press_OK_to_continue_editing_your_row__or_Cancel_to_throw_away_the_new_row_)
                             
                             , MultiButtonMsgDlg.BUTTON_OK) == DialogResult.Cancel)
                 {
@@ -159,12 +158,12 @@ namespace pwiz.Skyline.Controls.Lists
             {
                 return;
             }
-            string message = string.Format(Resources.ListViewContext_Delete_Are_you_sure_you_want_to_delete_the__0__selected_items_from_the_list___1___, selectedItems.Count, ListName);
+            string message = string.Format(ListsResources.ListViewContext_Delete_Are_you_sure_you_want_to_delete_the__0__selected_items_from_the_list___1___, selectedItems.Count, ListName);
             if (MultiButtonMsgDlg.Show(BoundDataGridView, message, MultiButtonMsgDlg.BUTTON_OK) != DialogResult.OK)
             {
                 return;
             }
-            SkylineDataSchema.ModifyDocument(EditDescription.Message(ListRef.PROTOTYPE.ChangeName(ListName), string.Format(Resources.ListViewContext_Delete_Delete_from_list___0__, ListName)),
+            SkylineDataSchema.ModifyDocument(EditDescription.Message(ListRef.PROTOTYPE.ChangeName(ListName), string.Format(ListsResources.ListViewContext_Delete_Delete_from_list___0__, ListName)),
                 doc =>
                 {
                     var listData = doc.Settings.DataSettings.FindList(ListName);

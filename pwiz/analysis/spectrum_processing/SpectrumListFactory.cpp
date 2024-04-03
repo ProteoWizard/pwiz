@@ -42,6 +42,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_DiaUmpire.hpp"
 #include "pwiz/analysis/spectrum_processing/PrecursorMassFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/ThresholdFilter.hpp"
+#include "pwiz/analysis/spectrum_processing/MzShiftFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_ZeroSamplesFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/MS2NoiseFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/MS2Deisotoper.hpp"
@@ -1565,6 +1566,34 @@ UsageInfo usage_thermoScanFilter = { "<exact|contains> <include|exclude> <match 
     "   <match string> specifies the search string to be compared to each scan filter (it may contain spaces)\n"
 };
 
+SpectrumListPtr filterCreator_mzShift(const MSData& msd, const string& carg, pwiz::util::IterationListenerRegistry* ilr)
+{
+    const string msLevelsToken("msLevels=");
+    const string mzNegIonsToken("mzNegIons=");
+    const string toleranceToken("tol=");
+
+    string arg = carg;
+    string msLevels = parseKeyValuePair<string>(arg, msLevelsToken, "");
+    bal::trim(arg);
+
+    MZTolerance mzShift = lexical_cast<MZTolerance>(arg);
+    IntegerSet msLevelSet;
+    if (!msLevels.empty())
+        msLevelSet.parse(msLevels);
+    else
+        msLevelSet = IntegerSet::positive;
+
+    SpectrumDataFilterPtr filter(new MzShiftFilter(mzShift, msLevelSet));
+
+    return boost::make_shared<SpectrumList_PeakFilter>(msd.run.spectrumListPtr, filter);
+}
+UsageInfo usage_mzShift = { "<m/z shift as number and units (e.g. 10ppm or 1Da)> [msLevels=int_set (1-)]",
+    "Shifts all m/z values by the specified amount if a spectrum's ms level is in the msLevels set.\n"
+    "Both metadata (e.g. scan window, base peak m/z) and binary data (m/z array) are shifted.\n"
+    "Precursor metadata is only shifted if the spectrum's precursor ms level (ms level - 1) is in the msLevels set.\n"
+    "This allows applying different shifts for different ms levels."
+};
+
 struct JumpTableEntry
 {
     const char* command;
@@ -1599,6 +1628,7 @@ JumpTableEntry jumpTable_[] =
     {"mzPresent", usage_mzPresent, filterCreator_mzPresent},
     {"scanSumming", usage_scanSummer, filterCreator_scanSummer},
     {"thermoScanFilter", usage_thermoScanFilter, filterCreator_thermoScanFilterFilter},
+    {"mzShift", usage_mzShift, filterCreator_mzShift},
 
     // MSn Spectrum Processing/Filtering
     {"MS2Denoise", usage_MS2Denoise, filterCreator_MS2Denoise},

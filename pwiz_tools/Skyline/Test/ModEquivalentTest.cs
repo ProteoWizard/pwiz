@@ -246,26 +246,20 @@ namespace pwiz.SkylineTest
             int totalCount = 0;
             for (int i = 0; i < dict.Length; i++)
             {
-                int count = 0;
                 StaticMod mod = dict[i].Value;
 
                 if (index != -1 && index == i)
                     Assert.IsTrue(mod.Equivalent(modToMatch));
 
                 if (mod.Equivalent(modToMatch))
-                    count++;
-                if (!equivMods.ContainsKey(mod.Name))
-                    equivMods.Add(mod.Name, count);
-                else
                 {
-                    equivMods[mod.Name] += count;
+                    equivMods.TryGetValue(mod.Name, out int count);
+                    count++;
+                    equivMods[mod.Name] = count;
+                    totalCount++;
                 }
-                totalCount += count;
             }
-
             return totalCount;
         }
-
-       
     }
 }

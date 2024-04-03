@@ -26,7 +26,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Irt;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -156,17 +155,17 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 string message;
                 if (invalidLines.Count == 1)
                 {
-                    message = ModeUIAwareStringFormat(Resources.ChangeIrtPeptidesDlg_OkDialog_The_sequence__0__is_not_currently_in_the_database,
+                    message = ModeUIAwareStringFormat(IrtResources.ChangeIrtPeptidesDlg_OkDialog_The_sequence__0__is_not_currently_in_the_database,
                                             invalidLines[0]);
                     MessageDlg.Show(this, message);
                 }
                 else
                 {
-                    message = TextUtil.LineSeparate(GetModeUIHelper().Translate(Resources.ChangeIrtPeptidesDlg_OkDialog_The_following_sequences_are_not_currently_in_the_database),
+                    message = TextUtil.LineSeparate(GetModeUIHelper().Translate(IrtResources.ChangeIrtPeptidesDlg_OkDialog_The_following_sequences_are_not_currently_in_the_database),
                                                     string.Empty,
                                                     TextUtil.LineSeparate(invalidLines),
                                                     string.Empty,
-                                                    GetModeUIHelper().Translate(Resources.ChangeIrtPeptidesDlg_OkDialog_Standard_peptides_must_exist_in_the_database));
+                                                    GetModeUIHelper().Translate(IrtResources.ChangeIrtPeptidesDlg_OkDialog_Standard_peptides_must_exist_in_the_database));
                     MessageDlg.Show(this, message);
                 }
                 return;
@@ -180,9 +179,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 if (removedPeptides.Any())
                 {
                     switch (MultiButtonMsgDlg.Show(this, TextUtil.LineSeparate(
-                            Resources.ChangeIrtPeptidesDlg_OkDialog_The_following_peptides_were_removed_,
+                            IrtResources.ChangeIrtPeptidesDlg_OkDialog_The_following_peptides_were_removed_,
                             TextUtil.LineSeparate(removedPeptides.Select(nodePep => nodePep.ModifiedSequenceDisplay)),
-                            Resources.ChangeIrtPeptidesDlg_OkDialog_Would_you_like_to_remove_them_from_the_document_),
+                            IrtResources.ChangeIrtPeptidesDlg_OkDialog_Would_you_like_to_remove_them_from_the_document_),
                         MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
                     {
                         case DialogResult.Yes:
@@ -262,7 +261,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             if (!_document.Settings.HasResults)
             {
-                MessageDlg.Show(this, Resources.CalibrateIrtDlg_UseResults_The_document_must_contain_results_to_calibrate_a_standard);
+                MessageDlg.Show(this, IrtResources.CalibrateIrtDlg_UseResults_The_document_must_contain_results_to_calibrate_a_standard);
                 return;
             }
 
@@ -271,7 +270,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 MessageDlg.Show(this,
                     string.Format(
-                        Resources.CalibrateIrtDlg_UseResults_The_document_contains_results_for__0__peptides__which_is_less_than_the_minimum_requirement_of__1__to_calibrate_a_standard_,
+                        IrtResources.CalibrateIrtDlg_UseResults_The_document_contains_results_for__0__peptides__which_is_less_than_the_minimum_requirement_of__1__to_calibrate_a_standard_,
                         count, CalibrateIrtDlg.MIN_STANDARD_PEPTIDES));
                 return;
             }
@@ -279,7 +278,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 if (MultiButtonMsgDlg.Show(this,
                         string.Format(
-                            Resources.CalibrateIrtDlg_UseResults_The_document_contains_results_for__0__peptides__but_using_fewer_than__1__standard_peptides_is_not_recommended__Are_you_sure_you_want_to_continue_,
+                            IrtResources.CalibrateIrtDlg_UseResults_The_document_contains_results_for__0__peptides__but_using_fewer_than__1__standard_peptides_is_not_recommended__Are_you_sure_you_want_to_continue_,
                             count, CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES),
                         MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false) != DialogResult.Yes)
                 {
@@ -300,7 +299,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 using (var longWaitDlg = new LongWaitDlg())
                 {
-                    longWaitDlg.Text = Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculating_scores;
+                    longWaitDlg.Text = IrtResources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculating_scores;
                     longWaitDlg.PerformWork(this, 1000, pm => _picker.ScorePeptides(_document, pm));
                     if (longWaitDlg.IsCanceled)
                         return;
@@ -311,7 +310,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             if (_picker.TryGetCirtRegression(count, out _, out _))
             {
                 switch (MultiButtonMsgDlg.Show(this, string.Format(
-                    Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_This_document_contains__0__CiRT_peptides__Would_you_like_to_use__1__of_them_as_your_iRT_standards_,
+                    IrtResources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_This_document_contains__0__CiRT_peptides__Would_you_like_to_use__1__of_them_as_your_iRT_standards_,
                     _picker.CirtPeptideCount, count), MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
                 {
                     case DialogResult.Yes:

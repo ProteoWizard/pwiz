@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -25,7 +25,6 @@ using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -205,9 +204,8 @@ namespace pwiz.Skyline.Model.Results
             {
                 var scanIdText = _msDataFileScanIds.GetMsDataFileSpectrumId(internalScanIndex);
                 dataFileSpectrumStartIndex = GetDataFile(ignoreZeroIntensityPoints).GetSpectrumIndex(scanIdText);
-                // TODO(brendanx): Improve this error message post-UI freeze
-//                if (dataFileSpectrumStartIndex == -1)
-//                    throw new ArgumentException(string.Format("The stored scan ID {0} was not found in the file {1}.", scanIdText, DataFilePath));
+                if (dataFileSpectrumStartIndex == -1)
+                    throw new ArgumentException(string.Format(ResultsResources.ScanProvider_GetMsDataFileSpectraWithCommonRetentionTime_The_scan_ID___0___could_not_be_found_in_the_file___1___, scanIdText, DataFilePath.RemoveLegacyParameters()));
             }
 
             MsDataSpectrum currentSpectrum;
@@ -266,7 +264,7 @@ namespace pwiz.Skyline.Model.Results
                     var lockMassParameters = DataFilePath.GetLockMassParameters();
                     if (dataFilePath == null)
                         throw new FileNotFoundException(string.Format(
-                            Resources
+                            ResultsResources
                                 .ScanProvider_GetScans_The_data_file__0__could_not_be_found__either_at_its_original_location_or_in_the_document_or_document_parent_folder_,
                             DataFilePath));
                     int sampleIndex = SampleHelp.GetPathSampleIndexPart(dataFilePath);

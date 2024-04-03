@@ -114,6 +114,10 @@ namespace pwiz.Skyline.Model
             int diffOffset = tran1.CleavageOffset - tran2.CleavageOffset;
             if (diffOffset != 0)
                 return diffOffset;
+            if (tran1.IonType == IonType.precursor)
+                return tran1.MassIndex - tran2.MassIndex;
+            if (tran1.IonType == IonType.custom)
+                return tran1.CustomIon.MonoisotopicMassMz.CompareTo(tran2.CustomIon.MonoisotopicMassMz);
             return 0;
         }
 
@@ -942,7 +946,7 @@ namespace pwiz.Skyline.Model
                 else if (MIN_PRECURSOR_CHARGE > charge || charge > MAX_PRECURSOR_CHARGE)
                 {
                     throw new InvalidDataException(
-                        string.Format(Resources.TransitionGroup_Validate_Precursor_charge__0__must_be_between__1__and__2__,
+                        string.Format(ModelResources.TransitionGroup_Validate_Precursor_charge__0__must_be_between__1__and__2__,
                             charge, MIN_PRECURSOR_CHARGE, MAX_PRECURSOR_CHARGE));
                 }
             }
@@ -953,7 +957,7 @@ namespace pwiz.Skyline.Model
                     (DecoyMassShift < MIN_PRECURSOR_DECOY_MASS_SHIFT || DecoyMassShift > MAX_PRECURSOR_DECOY_MASS_SHIFT))
                 {
                     throw new InvalidDataException(
-                        string.Format(Resources.TransitionGroup_Validate_Precursor_decoy_mass_shift__0__must_be_between__1__and__2__,
+                        string.Format(ModelResources.TransitionGroup_Validate_Precursor_decoy_mass_shift__0__must_be_between__1__and__2__,
                                       DecoyMassShift, MIN_PRECURSOR_DECOY_MASS_SHIFT, MAX_PRECURSOR_DECOY_MASS_SHIFT));
                 }
             }

@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -37,6 +38,8 @@ namespace pwiz.SkylineTest
     public class AdductTest : AbstractUnitTest
     {
         private string PENTANE = "C5H12";
+        private string PENTANE_MASS_OFFSET = @"[111.11/111.111]"; // Not a meaningful value, just for testing
+        private string TWO_PENTANE_MASS_OFFSET = @"[222.22/222.222]"; // Not a meaningful value, just for testing
         private readonly double massTaxol = 853.3309;
 
         private void TestPentaneAdduct(string adductText, string expectedFormula, int expectedCharge, HashSet<string> coverage)
@@ -50,6 +53,27 @@ namespace pwiz.SkylineTest
                 var dictActual = IonInfo.ApplyAdductToFormula(PENTANE, adduct);
                 if (dictExpected.Molecule.Count != dictActual.Molecule.Count || 
                     !dictExpected.Molecule.All(kvp => dictActual.Molecule.TryGetValue(kvp.Key, out var v) && v == kvp.Value))
+                {
+                    Assert.AreEqual(expectedFormula, actualFormula, "unexpected formula for adduct " + adduct);
+                }
+            }
+            Assert.AreEqual(expectedCharge, adduct.AdductCharge, "unexpected charge for adduct " + adduct);
+            coverage.Add(adduct.AsFormula());
+        }
+
+        private void TestMassOffsetAdduct(string adductText, string expectedFormula, int expectedCharge, HashSet<string> coverage)
+        {
+            var adduct = Adduct.FromStringAssumeProtonated(adductText);
+            var formulaWithOffset = PENTANE + PENTANE_MASS_OFFSET;
+            var actualFormula = IonInfo.ApplyAdductToFormula(formulaWithOffset, adduct).ToString();
+            if (!Equals(expectedFormula, actualFormula))
+            {
+                // ApplyAdductToFormula doesn't necessarily preserve element order, so check again as dictionary
+                var dictExpected = IonInfo.ApplyAdductToFormula(expectedFormula, Adduct.EMPTY);
+                var dictActual = IonInfo.ApplyAdductToFormula(formulaWithOffset, adduct);
+                if (dictExpected.Molecule.Count != dictActual.Molecule.Count ||
+                    !dictExpected.Molecule.All(kvp => dictActual.Molecule.TryGetValue(kvp.Key, out var v) && v == kvp.Value) ||
+                    dictExpected.AverageMassOffset != dictActual.AverageMassOffset || dictExpected.MonoMassOffset != dictActual.MonoMassOffset)
                 {
                     Assert.AreEqual(expectedFormula, actualFormula, "unexpected formula for adduct " + adduct);
                 }
@@ -77,7 +101,7 @@ namespace pwiz.SkylineTest
 
         private void TestException(string formula, string adductText)
         {
-            AssertEx.ThrowsException<InvalidOperationException>(() =>
+            AssertEx.ThrowsException<InvalidDataException>(() =>
             {
                 var adduct = Adduct.FromStringAssumeProtonated(adductText);
                 IonInfo.ApplyAdductToFormula(formula, adduct);
@@ -171,9 +195,9 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M+2Na"), Adduct.FromStringAssumeProtonated("M+Na").ChangeCharge(2));
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M+2Na"), Adduct.FromStringAssumeProtonated("M+3Na").ChangeCharge(2));
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M2Cl37+2Na"), Adduct.FromStringAssumeProtonated("M2Cl37+3Na").ChangeCharge(2));
-            AssertEx.ThrowsException<InvalidOperationException>(()=>Adduct.FromStringAssumeProtonated("M+2Na-H").ChangeCharge(2)); // Too complex to adjust formula
+            AssertEx.ThrowsException<InvalidDataException>(()=>Adduct.FromStringAssumeProtonated("M+2Na-H").ChangeCharge(2)); // Too complex to adjust formula
 
-            AssertEx.ThrowsException<InvalidOperationException>(() => Adduct.FromStringAssumeProtonatedNonProteomic("[M2")); // Seen in the wild, wasn't handled well
+            AssertEx.ThrowsException<InvalidDataException>(() => Adduct.FromStringAssumeProtonatedNonProteomic("[M2")); // Seen in the wild, wasn't handled well
 
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M++++").AdductCharge,Adduct.FromChargeNoMass(4).AdductCharge);
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M+4"), Adduct.FromChargeNoMass(4));
@@ -303,137 +327,39 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(102.46, isotopeAsMass.ApplyIsotopeLabelsToMass(m100), .005); // Expect increase of 2*1.23
         }
 
+        private void TestMassOnly(IEnumerable<string>[] adductLists)
+        {
+            var formula = @"[456.78]"; // Mass-only molecule description
+            foreach (var adductList in adductLists)
+            {
+                foreach (var adductStr in adductList)
+                {
+                    var adduct = Adduct.FromString(adductStr, Adduct.ADDUCT_TYPE.proteomic, null);
+                    IonInfo.ApplyAdductToFormula(formula, adduct);
+                }
+            }
+        }
 
         [TestMethod]
         public void AdductParserTest()
         {
+            var AllSupportedAdducts = new[] {
+                Adduct.DEFACTO_STANDARD_ADDUCTS,
+                Adduct.COMMON_CHARGEONLY_ADDUCTS,
+                Adduct.COMMON_SMALL_MOL_ADDUCTS.Select(a => a.AdductFormula),
+                Adduct.COMMON_PROTONATED_ADDUCTS.Select(a => a.AdductFormula),
+            };
+
+            TestMassOnly(AllSupportedAdducts);
+
             TestAdductOperators();
 
             var coverage = new HashSet<string>();
-            TestPentaneAdduct("[M+2NH4]", "C5H20N2", 2, coverage); // multiple of a group
-            TestPentaneAdduct("[M+2(NH4)]", "C5H20N2", 2, coverage); // multiple of a group in parenthesis
-            TestPentaneAdduct("[M+2H]", "C5H14", 2, coverage);
-            TestPentaneAdduct("[M+2Cu65+2H]", "C5Cu'2H14", 2, coverage); // With heavy copper as in MaConDa Contaminants DB https://www.maconda.bham.ac.uk/downloads/MaConDa__v1_0__csv.zip 
-            TestPentaneAdduct("[M2C13+2H]", "C3C'2H14", 2, coverage); // Labeled
-            TestPentaneAdduct("[2M2C13+2H]", "C6C'4H26", 2, coverage); // Labeled dimer
-            TestPentaneAdduct("[2M2C14+2H]", "C6C\"4H26", 2, coverage); // Labeled dimer
-            TestPentaneAdduct("[M2C13]", "C3C'2H12", 0, coverage); // Labeled no charge
-            TestPentaneAdduct("[2M2C13]", "C6C'4H24", 0, coverage); // Labeled, dimer, no charge
-            TestPentaneAdduct("[2M]", "C10H24", 0, coverage); // dimer no charge
-            TestPentaneAdduct("[2M2C13+3]", "C6C'4H24", 3, coverage); // Labeled, dimer, charge only
-            TestPentaneAdduct("[2M2C13]+3", "C6C'4H24", 3, coverage); // Labeled, dimer, charge only
-            TestPentaneAdduct("[2M2C13+++]", "C6C'4H24", 3, coverage); // Labeled, dimer, charge only
-            TestPentaneAdduct("[2M2C13]+++", "C6C'4H24", 3, coverage); // Labeled, dimer, charge only
-            TestPentaneAdduct("[2M+3]", "C10H24", 3, coverage); // dimer charge only
-            TestPentaneAdduct("[2M]+3", "C10H24", 3, coverage); // dimer charge only
-            TestPentaneAdduct("[2M+++]", "C10H24", 3, coverage); // dimer charge only
-            TestPentaneAdduct("[2M]+++", "C10H24", 3, coverage); // dimer charge only
-            TestPentaneAdduct("[2M2C13-3]", "C6C'4H24", -3, coverage); // Labeled, dimer, charge only
-            TestPentaneAdduct("[2M2C13---]", "C6C'4H24", -3, coverage); // Labeled, dimer, charge only
-            TestPentaneAdduct("[2M-3]", "C10H24", -3, coverage); // dimer charge only
-            TestPentaneAdduct("[2M---]", "C10H24", -3, coverage); // dimer charge only
-            TestPentaneAdduct("[2M2C133H2+2H]", "C6C'4H20H'6", 2, coverage); // Labeled with some complexity, multiplied
-            TestPentaneAdduct("M+H", "C5H13", 1, coverage);
-            TestPentaneAdduct("M+", PENTANE, 1, coverage);
-            TestPentaneAdduct("M+2", PENTANE, 2, coverage);
-            TestPentaneAdduct("M+3", PENTANE, 3, coverage);
-            TestPentaneAdduct("M-", PENTANE, -1, coverage);
-            TestPentaneAdduct("M-2", PENTANE, -2, coverage);
-            TestPentaneAdduct("M-3", PENTANE, -3, coverage);
-            TestPentaneAdduct("M++", PENTANE, 2, coverage);
-            TestPentaneAdduct("M--", PENTANE, -2, coverage);
-            TestPentaneAdduct("M", PENTANE, 0, coverage); // Trivial non-adduct
-            TestPentaneAdduct("M+CH3COO", "C7H15O2", -1, coverage); // From XCMS
-            TestPentaneAdduct("[M+H]1+", "C5H13", 1, coverage);
-            TestPentaneAdduct("[M-H]1-", "C5H11", -1, coverage);
-            TestPentaneAdduct("[M-2H]", "C5H10", -2, coverage);
-            TestPentaneAdduct("[M-2H]2-", "C5H10", -2, coverage);
-            TestPentaneAdduct("[M+2H]++", "C5H14", 2, coverage);
-            TestPentaneAdduct("[MH2+2H]++", "C5H13H'", 2, coverage); // Isotope
-            TestPentaneAdduct("[MH3+2H]++", "C5H13H\"", 2, coverage);  // Isotope
-            TestPentaneAdduct("[MD+2H]++", "C5H13H'", 2, coverage);  // Isotope
-            TestPentaneAdduct("[MD+DMSO+2H]++", "C7H19H'OS", 2, coverage); // Check handling of Deuterium and DMSO together
-            TestPentaneAdduct("[MT+DMSO+2H]++", "C7H19H\"OS", 2, coverage); // Check handling of Tritium
-            TestPentaneAdduct("[M+DMSO+2H]++", "C7H20OS", 2, coverage);
-            TestPentaneAdduct("[M+DMSO+2H]2+", "C7H20OS", 2, coverage);
-            TestPentaneAdduct("[M+MeOH-H]", "C6H15O", -1, coverage); // Methanol "CH3OH"
-            TestPentaneAdduct("[M+MeOX-H]", "C6H14N", -1, coverage); // Methoxamine "CH3N"
-            TestPentaneAdduct("[M+TMS-H]", "C8H19Si", -1, coverage);  // MSTFA(N-methyl-N-trimethylsilytrifluoroacetamide) "C3H8Si"
-            TestPentaneAdduct("[M+TMS+MeOX]-", "C9H23NSi", -1, coverage);  
-            TestPentaneAdduct("[M+HCOO]", "C6H13O2", -1, coverage);
-            TestPentaneAdduct("[M+NOS]5+", "C5H12NOS", 5, coverage); // Not a real adduct, but be ready for adducts we just don't know about
-            TestPentaneAdduct("[M+NOS]5", "C5H12NOS", 5, coverage); // Not a real adduct, but be ready for adducts we just don't know about
-            TestPentaneAdduct("[M+NOS]5-", "C5H12NOS", -5, coverage); // Not a real adduct, but be ready for adducts we just don't know about
+            TestPentaneAdducts(coverage);
 
-            // See http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator/
-            // There you will find an excel spreadsheet from which I pulled these numbers, which as it turns out has several errors in it.
-            // There is also a table in the web page itself that contains the same values and some unmarked corrections.
-            // Sadly that faulty spreadsheet is copied all over the internet.  I've let the author know what we found. - bspratt
-            TestTaxolAdduct("M+3H", 285.450928, 3, coverage);
-            TestTaxolAdduct("M+2H+Na", 292.778220, 3, coverage);
-            TestTaxolAdduct("M+H+2Na", 300.105557, 3, coverage); // Spreadsheet and table both say 300.209820, but also says adduct "mass" = 15.766190, I get 15.6618987 using their H and Na masses (and this is clearly m/z, not mass)
-            TestTaxolAdduct("M+3Na", 307.432848, 3, coverage);
-            TestTaxolAdduct("M+2H", 427.672721, 2, coverage);
-            TestTaxolAdduct("M+H+NH4", 436.185995, 2, coverage);
-            TestTaxolAdduct("M+H+Na", 438.663692, 2, coverage);
-            TestTaxolAdduct("M+H+K", 446.650662, 2, coverage);
-            TestTaxolAdduct("M+ACN+2H", 448.185995, 2, coverage);
-            TestTaxolAdduct("M+2Na", 449.654663, 2, coverage);
-            TestTaxolAdduct("M+2ACN+2H", 468.699268, 2, coverage);
-            TestTaxolAdduct("M+3ACN+2H", 489.212542, 2, coverage);
-            TestTaxolAdduct("M+H", 854.338166, 1, coverage);
-            TestTaxolAdduct("M+NH4", 871.364713, 1, coverage);
-            TestTaxolAdduct("M+Na", 876.320108, 1, coverage);
-            TestTaxolAdduct("M+CH3OH+H", 886.364379, 1, coverage);
-            TestTaxolAdduct("M+K", 892.294048, 1, coverage);
-            TestTaxolAdduct("M+ACN+H", 895.364713, 1, coverage);
-            TestTaxolAdduct("M+2Na-H", 898.302050, 1, coverage);
-            TestTaxolAdduct("M+IsoProp+H", 914.396230, 1, coverage);
-            TestTaxolAdduct("M+ACN+Na", 917.346655, 1, coverage);
-            TestTaxolAdduct("M+2K-H", 930.249930, 1, coverage);  // Spreadsheet and table disagree - spreadsheet says "M+2K+H" but that's 3+, not 1+, and this fits the mz value
-            TestTaxolAdduct("M+DMSO+H", 932.352110, 1, coverage);
-            TestTaxolAdduct("M+2ACN+H", 936.391260, 1, coverage);
-            TestTaxolAdduct("M+IsoProp+Na+H", 468.692724, 2, coverage); // Spreadsheet and table both say mz=937.386000 z=1 (does Isoprop interact somehow to eliminate half the ionization?)
-            TestTaxolAdduct("2M+H", 1707.669056, 1, coverage);
-            TestTaxolAdduct("2M+NH4", 1724.695603, 1, coverage);
-            TestTaxolAdduct("2M+Na", 1729.650998, 1, coverage);
-            TestTaxolAdduct("2M+3H2O+2H", 881.354, 2, coverage); // Does not appear in table.  Charge agrees but spreadsheet says mz= 1734.684900
-            TestTaxolAdduct("2M+K", 1745.624938, 1, coverage);
-            TestTaxolAdduct("2M+ACN+H", 1748.695603, 1, coverage);
-            TestTaxolAdduct("2M+ACN+Na", 1770.677545, 1, coverage);
-            TestTaxolAdduct("M-3H", 283.436354, -3, coverage);
-            TestTaxolAdduct("M-2H", 425.658169, -2, coverage);
-            TestTaxolAdduct("M-H2O-H", 834.312500, -1, coverage);
-            TestTaxolAdduct("M+-H2O-H", 834.312500, -1, coverage); // Tolerate empty atom description ("+-")
-            TestTaxolAdduct("M-H", 852.323614, -1, coverage);
-            TestTaxolAdduct("M+Na-2H", 874.305556, -1, coverage);
-            TestTaxolAdduct("M+Cl", 888.300292, -1, coverage);
-            TestTaxolAdduct("M+K-2H", 890.279496, -1, coverage);
-            TestTaxolAdduct("M+FA-H", 898.329091, -1, coverage);
-            TestTaxolAdduct("M+Hac-H", 912.344741, -1, coverage);
-            TestTaxolAdduct("M+Br", 932.249775, -1, coverage);
-            TestTaxolAdduct("MT+TFA-H", 968.324767, -1, coverage); // Tritium label + TFA
-            TestTaxolAdduct("M+TFA-H", 966.316476, -1, coverage);
-            TestTaxolAdduct("2M-H", 1705.654504, -1, coverage);
-            TestTaxolAdduct("2M+FA-H", 1751.659981, -1, coverage);
-            TestTaxolAdduct("2M+Hac-H", 1765.675631, -1, coverage);
-            TestTaxolAdduct("3M-H", 2558.985394, -1, coverage); // Spreadsheet and table give mz as 2560.999946 -but also gives adduct "mass" as 1.007276, should be -1.007276
+            TestMassOffsetAdducts(coverage);
 
-            // A couple more simple ones we support with statics
-            TestTaxolAdduct("M+4H", 214.3400149, 4, coverage);
-            TestTaxolAdduct("M+5H", 171.6734671, 5, coverage);
-
-            // And a few of our own to exercise the interaction of multiplier and isotope
-            var dC13 = BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C13) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C);
-            TestTaxolAdduct("M2C13+3H", 285.450928 + (2 * dC13) / 3.0, 3, coverage);
-            TestTaxolAdduct("M2C13+2H+Na", 292.778220 + (2 * dC13) / 3.0, 3, coverage);
-            TestTaxolAdduct("2M2C13+3H", 285.450906 + (massTaxol + 4 * dC13) / 3.0, 3, coverage);
-            TestTaxolAdduct("2M2C13+2H+Na", 292.778220 + (massTaxol + 4 * dC13) / 3.0, 3, coverage);
-            var dC14 = BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C14) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C);
-            TestTaxolAdduct("M2C14+3H", 285.450928 + (2 * dC14) / 3.0, 3, coverage);
-            TestTaxolAdduct("M2C14+2H+Na", 292.778220 + (2 * dC14) / 3.0, 3, coverage);
-            TestTaxolAdduct("2M2C14+3H", 285.450906 + (massTaxol + 4 * dC14) / 3.0, 3, coverage);
-            TestTaxolAdduct("2M2C14+2H+Na", 292.778220 + (massTaxol + 4 * dC14) / 3.0, 3, coverage);
+            TestTaxolAdducts(coverage);
 
             // Using example adducts from
             // https://gnps.ucsd.edu/ProteoSAFe/gnpslibrary.jsp?library=GNPS-LIBRARY#%7B%22Library_Class_input%22%3A%221%7C%7C2%7C%7C3%7C%7CEXACT%22%7D
@@ -529,12 +455,7 @@ namespace pwiz.SkylineTest
             TestPentaneAdduct("[M+S]2-", "C5H12S", -2, coverage); // We're trusting the user to declare charge
 
             // Did we test all the adducts we claim to support?
-            foreach (var adducts in new[] { 
-                Adduct.DEFACTO_STANDARD_ADDUCTS, 
-                Adduct.COMMON_CHARGEONLY_ADDUCTS, 
-                Adduct.COMMON_SMALL_MOL_ADDUCTS.Select(a => a.AdductFormula),
-                Adduct.COMMON_PROTONATED_ADDUCTS.Select(a => a.AdductFormula),
-            })
+            foreach (var adducts in AllSupportedAdducts)
             {
                 foreach (var adductText in adducts)
                 {
@@ -544,6 +465,194 @@ namespace pwiz.SkylineTest
                     }
                 }
             }
+        }
+
+        private void TestTaxolAdducts(HashSet<string> coverage)
+        {
+            // See http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator/
+            // There you will find an excel spreadsheet from which I pulled these numbers, which as it turns out has several errors in it.
+            // There is also a table in the web page itself that contains the same values and some unmarked corrections.
+            // Sadly that faulty spreadsheet is copied all over the internet.  I've let the author know what we found. - bspratt
+            TestTaxolAdduct("M+3H", 285.450928, 3, coverage);
+            TestTaxolAdduct("M+2H+Na", 292.778220, 3, coverage);
+            TestTaxolAdduct("M+H+2Na", 300.105557, 3, coverage); // Spreadsheet and table both say 300.209820, but also says adduct "mass" = 15.766190, I get 15.6618987 using their H and Na masses (and this is clearly m/z, not mass)
+            TestTaxolAdduct("M+3Na", 307.432848, 3, coverage);
+            TestTaxolAdduct("M+2H", 427.672721, 2, coverage);
+            TestTaxolAdduct("M+H+NH4", 436.185995, 2, coverage);
+            TestTaxolAdduct("M+H+Na", 438.663692, 2, coverage);
+            TestTaxolAdduct("M+H+K", 446.650662, 2, coverage);
+            TestTaxolAdduct("M+ACN+2H", 448.185995, 2, coverage);
+            TestTaxolAdduct("M+2Na", 449.654663, 2, coverage);
+            TestTaxolAdduct("M+2ACN+2H", 468.699268, 2, coverage);
+            TestTaxolAdduct("M+3ACN+2H", 489.212542, 2, coverage);
+            TestTaxolAdduct("M+H", 854.338166, 1, coverage);
+            TestTaxolAdduct("M+NH4", 871.364713, 1, coverage);
+            TestTaxolAdduct("M+Na", 876.320108, 1, coverage);
+            TestTaxolAdduct("M+CH3OH+H", 886.364379, 1, coverage);
+            TestTaxolAdduct("M+K", 892.294048, 1, coverage);
+            TestTaxolAdduct("M+ACN+H", 895.364713, 1, coverage);
+            TestTaxolAdduct("M+2Na-H", 898.302050, 1, coverage);
+            TestTaxolAdduct("M+IsoProp+H", 914.396230, 1, coverage);
+            TestTaxolAdduct("M+ACN+Na", 917.346655, 1, coverage);
+            TestTaxolAdduct("M+2K-H", 930.249930, 1, coverage);  // Spreadsheet and table disagree - spreadsheet says "M+2K+H" but that's 3+, not 1+, and this fits the mz value
+            TestTaxolAdduct("M+DMSO+H", 932.352110, 1, coverage);
+            TestTaxolAdduct("M+2ACN+H", 936.391260, 1, coverage);
+            TestTaxolAdduct("M+IsoProp+Na+H", 468.692724, 2, coverage); // Spreadsheet and table both say mz=937.386000 z=1 (does Isoprop interact somehow to eliminate half the ionization?)
+            TestTaxolAdduct("2M+H", 1707.669056, 1, coverage);
+            TestTaxolAdduct("2M+NH4", 1724.695603, 1, coverage);
+            TestTaxolAdduct("2M+Na", 1729.650998, 1, coverage);
+            TestTaxolAdduct("2M+3H2O+2H", 881.354, 2, coverage); // Does not appear in table.  Charge agrees but spreadsheet says mz= 1734.684900
+            TestTaxolAdduct("2M+K", 1745.624938, 1, coverage);
+            TestTaxolAdduct("2M+ACN+H", 1748.695603, 1, coverage);
+            TestTaxolAdduct("2M+ACN+Na", 1770.677545, 1, coverage);
+            TestTaxolAdduct("M-3H", 283.436354, -3, coverage);
+            TestTaxolAdduct("M-2H", 425.658169, -2, coverage);
+            TestTaxolAdduct("M-H2O-H", 834.312500, -1, coverage);
+            TestTaxolAdduct("M+-H2O-H", 834.312500, -1, coverage); // Tolerate empty atom description ("+-")
+            TestTaxolAdduct("M-H", 852.323614, -1, coverage);
+            TestTaxolAdduct("M+Na-2H", 874.305556, -1, coverage);
+            TestTaxolAdduct("M+Cl", 888.300292, -1, coverage);
+            TestTaxolAdduct("M+K-2H", 890.279496, -1, coverage);
+            TestTaxolAdduct("M+FA-H", 898.329091, -1, coverage);
+            TestTaxolAdduct("M+Hac-H", 912.344741, -1, coverage);
+            TestTaxolAdduct("M+Br", 932.249775, -1, coverage);
+            TestTaxolAdduct("MT+TFA-H", 968.324767, -1, coverage); // Tritium label + TFA
+            TestTaxolAdduct("M+TFA-H", 966.316476, -1, coverage);
+            TestTaxolAdduct("2M-H", 1705.654504, -1, coverage);
+            TestTaxolAdduct("2M+FA-H", 1751.659981, -1, coverage);
+            TestTaxolAdduct("2M+Hac-H", 1765.675631, -1, coverage);
+            TestTaxolAdduct("3M-H", 2558.985394, -1, coverage); // Spreadsheet and table give mz as 2560.999946 -but also gives adduct "mass" as 1.007276, should be -1.007276
+
+            // A couple more simple ones we support with statics
+            TestTaxolAdduct("M+4H", 214.3400149, 4, coverage);
+            TestTaxolAdduct("M+5H", 171.6734671, 5, coverage);
+
+            // And a few of our own to exercise the interaction of multiplier and isotope
+            var dC13 = BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C13) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C);
+            TestTaxolAdduct("M2C13+3H", 285.450928 + (2 * dC13) / 3.0, 3, coverage);
+            TestTaxolAdduct("M2C13+2H+Na", 292.778220 + (2 * dC13) / 3.0, 3, coverage);
+            TestTaxolAdduct("2M2C13+3H", 285.450906 + (massTaxol + 4 * dC13) / 3.0, 3, coverage);
+            TestTaxolAdduct("2M2C13+2H+Na", 292.778220 + (massTaxol + 4 * dC13) / 3.0, 3, coverage);
+            var dC14 = BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C14) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C);
+            TestTaxolAdduct("M2C14+3H", 285.450928 + (2 * dC14) / 3.0, 3, coverage);
+            TestTaxolAdduct("M2C14+2H+Na", 292.778220 + (2 * dC14) / 3.0, 3, coverage);
+            TestTaxolAdduct("2M2C14+3H", 285.450906 + (massTaxol + 4 * dC14) / 3.0, 3, coverage);
+            TestTaxolAdduct("2M2C14+2H+Na", 292.778220 + (massTaxol + 4 * dC14) / 3.0, 3, coverage);
+        }
+
+        private void TestPentaneAdducts(HashSet<string> coverage)
+        {
+            TestPentaneAdduct("[M+2NH4]", "C5H20N2", 2, coverage); // multiple of a group
+            TestPentaneAdduct("[M+2(NH4)]", "C5H20N2", 2, coverage); // multiple of a group in parenthesis
+            TestPentaneAdduct("[M+2H]", "C5H14", 2, coverage);
+            TestPentaneAdduct("[M+2Cu65+2H]", "C5Cu'2H14", 2, coverage); // With heavy copper as in MaConDa Contaminants DB https://www.maconda.bham.ac.uk/downloads/MaConDa__v1_0__csv.zip 
+            TestPentaneAdduct("[M2C13+2H]", "C3C'2H14", 2, coverage); // Labeled
+            TestPentaneAdduct("[2M2C13+2H]", "C6C'4H26", 2, coverage); // Labeled dimer
+            TestPentaneAdduct("[2M2C14+2H]", "C6C\"4H26", 2, coverage); // Labeled dimer
+            TestPentaneAdduct("[M2C13]", "C3C'2H12", 0, coverage); // Labeled no charge
+            TestPentaneAdduct("[2M2C13]", "C6C'4H24", 0, coverage); // Labeled, dimer, no charge
+            TestPentaneAdduct("[2M]", "C10H24", 0, coverage); // dimer no charge
+            TestPentaneAdduct("[2M2C13+3]", "C6C'4H24", 3, coverage); // Labeled, dimer, charge only
+            TestPentaneAdduct("[2M2C13]+3", "C6C'4H24", 3, coverage); // Labeled, dimer, charge only
+            TestPentaneAdduct("[2M2C13+++]", "C6C'4H24", 3, coverage); // Labeled, dimer, charge only
+            TestPentaneAdduct("[2M2C13]+++", "C6C'4H24", 3, coverage); // Labeled, dimer, charge only
+            TestPentaneAdduct("[2M+3]", "C10H24", 3, coverage); // dimer charge only
+            TestPentaneAdduct("[2M]+3", "C10H24", 3, coverage); // dimer charge only
+            TestPentaneAdduct("[2M+++]", "C10H24", 3, coverage); // dimer charge only
+            TestPentaneAdduct("[2M]+++", "C10H24", 3, coverage); // dimer charge only
+            TestPentaneAdduct("[2M2C13-3]", "C6C'4H24", -3, coverage); // Labeled, dimer, charge only
+            TestPentaneAdduct("[2M2C13---]", "C6C'4H24", -3, coverage); // Labeled, dimer, charge only
+            TestPentaneAdduct("[2M-3]", "C10H24", -3, coverage); // dimer charge only
+            TestPentaneAdduct("[2M---]", "C10H24", -3, coverage); // dimer charge only
+            TestPentaneAdduct("[2M2C133H2+2H]", "C6C'4H20H'6", 2, coverage); // Labeled with some complexity, multiplied
+            TestPentaneAdduct("M+H", "C5H13", 1, coverage);
+            TestPentaneAdduct("M+", PENTANE, 1, coverage);
+            TestPentaneAdduct("M+2", PENTANE, 2, coverage);
+            TestPentaneAdduct("M+3", PENTANE, 3, coverage);
+            TestPentaneAdduct("M-", PENTANE, -1, coverage);
+            TestPentaneAdduct("M-2", PENTANE, -2, coverage);
+            TestPentaneAdduct("M-3", PENTANE, -3, coverage);
+            TestPentaneAdduct("M++", PENTANE, 2, coverage);
+            TestPentaneAdduct("M--", PENTANE, -2, coverage);
+            TestPentaneAdduct("M", PENTANE, 0, coverage); // Trivial non-adduct
+            TestPentaneAdduct("M+CH3COO", "C7H15O2", -1, coverage); // From XCMS
+            TestPentaneAdduct("[M+H]1+", "C5H13", 1, coverage);
+            TestPentaneAdduct("[M-H]1-", "C5H11", -1, coverage);
+            TestPentaneAdduct("[M-2H]", "C5H10", -2, coverage);
+            TestPentaneAdduct("[M-2H]2-", "C5H10", -2, coverage);
+            TestPentaneAdduct("[M+2H]++", "C5H14", 2, coverage);
+            TestPentaneAdduct("[MH2+2H]++", "C5H13H'", 2, coverage); // Isotope
+            TestPentaneAdduct("[MH3+2H]++", "C5H13H\"", 2, coverage);  // Isotope
+            TestPentaneAdduct("[MD+2H]++", "C5H13H'", 2, coverage);  // Isotope
+            TestPentaneAdduct("[MD+DMSO+2H]++", "C7H19H'OS", 2, coverage); // Check handling of Deuterium and DMSO together
+            TestPentaneAdduct("[MT+DMSO+2H]++", "C7H19H\"OS", 2, coverage); // Check handling of Tritium
+            TestPentaneAdduct("[M+DMSO+2H]++", "C7H20OS", 2, coverage);
+            TestPentaneAdduct("[M+DMSO+2H]2+", "C7H20OS", 2, coverage);
+            TestPentaneAdduct("[M+MeOH-H]", "C6H15O", -1, coverage); // Methanol "CH3OH"
+            TestPentaneAdduct("[M+MeOX-H]", "C6H14N", -1, coverage); // Methoxamine "CH3N"
+            TestPentaneAdduct("[M+TMS-H]", "C8H19Si", -1, coverage);  // MSTFA(N-methyl-N-trimethylsilytrifluoroacetamide) "C3H8Si"
+            TestPentaneAdduct("[M+TMS+MeOX]-", "C9H23NSi", -1, coverage);
+            TestPentaneAdduct("[M+HCOO]", "C6H13O2", -1, coverage);
+            TestPentaneAdduct("[M+NOS]5+", "C5H12NOS", 5, coverage); // Not a real adduct, but be ready for adducts we just don't know about
+            TestPentaneAdduct("[M+NOS]5", "C5H12NOS", 5, coverage); // Not a real adduct, but be ready for adducts we just don't know about
+            TestPentaneAdduct("[M+NOS]5-", "C5H12NOS", -5, coverage); // Not a real adduct, but be ready for adducts we just don't know about
+        }
+        private void TestMassOffsetAdducts(HashSet<string> coverage)
+        {
+            TestMassOffsetAdduct("[M+2NH4]", "C5H20N2" + PENTANE_MASS_OFFSET, 2, coverage); // multiple of a group
+            TestMassOffsetAdduct("[M+2(NH4)]", "C5H20N2" + PENTANE_MASS_OFFSET, 2, coverage); // multiple of a group in parenthesis
+            TestMassOffsetAdduct("[M+2H]", "C5H14" + PENTANE_MASS_OFFSET, 2, coverage);
+            TestMassOffsetAdduct("[M+2Cu65+2H]", "C5Cu'2H14" + PENTANE_MASS_OFFSET, 2, coverage); // With heavy copper as in MaConDa Contaminants DB https://www.maconda.bham.ac.uk/downloads/MaConDa__v1_0__csv.zip 
+            TestMassOffsetAdduct("[M2C13+2H]", "C3C'2H14" + PENTANE_MASS_OFFSET, 2, coverage); // Labeled
+            TestMassOffsetAdduct("[2M2C13+2H]", "C6C'4H26" + TWO_PENTANE_MASS_OFFSET, 2, coverage); // Labeled dimer
+            TestMassOffsetAdduct("[2M2C14+2H]", "C6C\"4H26" + TWO_PENTANE_MASS_OFFSET, 2, coverage); // Labeled dimer
+            TestMassOffsetAdduct("[M2C13]", "C3C'2H12" + PENTANE_MASS_OFFSET, 0, coverage); // Labeled no charge
+            TestMassOffsetAdduct("[2M2C13]", "C6C'4H24" + TWO_PENTANE_MASS_OFFSET, 0, coverage); // Labeled, dimer, no charge
+            TestMassOffsetAdduct("[2M]", "C10H24" + TWO_PENTANE_MASS_OFFSET, 0, coverage); // dimer no charge
+            TestMassOffsetAdduct("[2M2C13+3]", "C6C'4H24" + TWO_PENTANE_MASS_OFFSET, 3, coverage); // Labeled, dimer, charge only
+            TestMassOffsetAdduct("[2M2C13]+3", "C6C'4H24" + TWO_PENTANE_MASS_OFFSET, 3, coverage); // Labeled, dimer, charge only
+            TestMassOffsetAdduct("[2M2C13+++]", "C6C'4H24" + TWO_PENTANE_MASS_OFFSET, 3, coverage); // Labeled, dimer, charge only
+            TestMassOffsetAdduct("[2M2C13]+++", "C6C'4H24" + TWO_PENTANE_MASS_OFFSET, 3, coverage); // Labeled, dimer, charge only
+            TestMassOffsetAdduct("[2M+3]", "C10H24" + TWO_PENTANE_MASS_OFFSET, 3, coverage); // dimer charge only
+            TestMassOffsetAdduct("[2M]+3", "C10H24" + TWO_PENTANE_MASS_OFFSET, 3, coverage); // dimer charge only
+            TestMassOffsetAdduct("[2M+++]", "C10H24" + TWO_PENTANE_MASS_OFFSET, 3, coverage); // dimer charge only
+            TestMassOffsetAdduct("[2M]+++", "C10H24" + TWO_PENTANE_MASS_OFFSET, 3, coverage); // dimer charge only
+            TestMassOffsetAdduct("[2M2C13-3]", "C6C'4H24" + TWO_PENTANE_MASS_OFFSET, -3, coverage); // Labeled, dimer, charge only
+            TestMassOffsetAdduct("[2M2C13---]", "C6C'4H24" + TWO_PENTANE_MASS_OFFSET, -3, coverage); // Labeled, dimer, charge only
+            TestMassOffsetAdduct("[2M-3]", "C10H24" + TWO_PENTANE_MASS_OFFSET,-3, coverage); // dimer charge only
+            TestMassOffsetAdduct("[2M---]", "C10H24" + TWO_PENTANE_MASS_OFFSET,-3, coverage); // dimer charge only
+            TestMassOffsetAdduct("[2M2C133H2+2H]", "C6C'4H20H'6" + TWO_PENTANE_MASS_OFFSET, 2, coverage); // Labeled with some complexity, multiplied
+            TestMassOffsetAdduct("M+H", "C5H13" + PENTANE_MASS_OFFSET, 1, coverage);
+            TestMassOffsetAdduct("M+", PENTANE + PENTANE_MASS_OFFSET, 1, coverage);
+            TestMassOffsetAdduct("M+2", PENTANE + PENTANE_MASS_OFFSET, 2, coverage);
+            TestMassOffsetAdduct("M+3", PENTANE + PENTANE_MASS_OFFSET, 3, coverage);
+            TestMassOffsetAdduct("M-", PENTANE + PENTANE_MASS_OFFSET, -1, coverage);
+            TestMassOffsetAdduct("M-2", PENTANE + PENTANE_MASS_OFFSET, -2, coverage);
+            TestMassOffsetAdduct("M-3", PENTANE + PENTANE_MASS_OFFSET, -3, coverage);
+            TestMassOffsetAdduct("M++", PENTANE + PENTANE_MASS_OFFSET, 2, coverage);
+            TestMassOffsetAdduct("M--", PENTANE + PENTANE_MASS_OFFSET, -2, coverage);
+            TestMassOffsetAdduct("M", PENTANE + PENTANE_MASS_OFFSET, 0, coverage); // Trivial non-adduct
+            TestMassOffsetAdduct("M+CH3COO", "C7H15O2" + PENTANE_MASS_OFFSET, -1, coverage); // From XCMS
+            TestMassOffsetAdduct("[M+H]1+", "C5H13" + PENTANE_MASS_OFFSET, 1, coverage);
+            TestMassOffsetAdduct("[M-H]1-", "C5H11" + PENTANE_MASS_OFFSET, -1, coverage);
+            TestMassOffsetAdduct("[M-2H]", "C5H10" + PENTANE_MASS_OFFSET, -2, coverage);
+            TestMassOffsetAdduct("[M-2H]2-", "C5H10" + PENTANE_MASS_OFFSET, -2, coverage);
+            TestMassOffsetAdduct("[M+2H]++", "C5H14" + PENTANE_MASS_OFFSET, 2, coverage);
+            TestMassOffsetAdduct("[MH2+2H]++", "C5H13H'" + PENTANE_MASS_OFFSET, 2, coverage); // Isotope
+            TestMassOffsetAdduct("[MH3+2H]++", "C5H13H\"" + PENTANE_MASS_OFFSET, 2, coverage);  // Isotope
+            TestMassOffsetAdduct("[MD+2H]++", "C5H13H'" + PENTANE_MASS_OFFSET, 2, coverage);  // Isotope
+            TestMassOffsetAdduct("[MD+DMSO+2H]++", "C7H19H'OS" + PENTANE_MASS_OFFSET, 2, coverage); // Check handling of Deuterium and DMSO together
+            TestMassOffsetAdduct("[MT+DMSO+2H]++", "C7H19H\"OS" + PENTANE_MASS_OFFSET, 2, coverage); // Check handling of Tritium
+            TestMassOffsetAdduct("[M+DMSO+2H]++", "C7H20OS" + PENTANE_MASS_OFFSET, 2, coverage);
+            TestMassOffsetAdduct("[M+DMSO+2H]2+", "C7H20OS" + PENTANE_MASS_OFFSET, 2, coverage);
+            TestMassOffsetAdduct("[M+MeOH-H]", "C6H15O" + PENTANE_MASS_OFFSET, -1, coverage); // Methanol "CH3OH"
+            TestMassOffsetAdduct("[M+MeOX-H]", "C6H14N" + PENTANE_MASS_OFFSET, -1, coverage); // Methoxamine "CH3N"
+            TestMassOffsetAdduct("[M+TMS-H]", "C8H19Si" + PENTANE_MASS_OFFSET, -1, coverage);  // MSTFA(N-methyl-N-trimethylsilytrifluoroacetamide) "C3H8Si"
+            TestMassOffsetAdduct("[M+TMS+MeOX]-", "C9H23NSi" + PENTANE_MASS_OFFSET, -1, coverage);
+            TestMassOffsetAdduct("[M+HCOO]", "C6H13O2" + PENTANE_MASS_OFFSET, -1, coverage);
+            TestMassOffsetAdduct("[M+NOS]5+", "C5H12NOS" + PENTANE_MASS_OFFSET, 5, coverage); // Not a real adduct, but be ready for adducts we just don't know about
+            TestMassOffsetAdduct("[M+NOS]5", "C5H12NOS" + PENTANE_MASS_OFFSET, 5, coverage); // Not a real adduct, but be ready for adducts we just don't know about
+            TestMassOffsetAdduct("[M+NOS]5-", "C5H12NOS" + PENTANE_MASS_OFFSET, -5, coverage); // Not a real adduct, but be ready for adducts we just don't know about
         }
 
         [TestMethod]

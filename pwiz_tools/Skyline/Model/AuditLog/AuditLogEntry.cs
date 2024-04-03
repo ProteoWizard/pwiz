@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 //Make the error dialog a bit more user friendly by showing the full chain of nested exceptions in the message
                 //so they don't have to dig through the stack traces to find the root cause.
                 if (msgStrings.Count > 0)
-                    msgStrings.Add(Resources.ExceptionDialog_Caused_by_____);
+                    msgStrings.Add(AuditLogResources.ExceptionDialog_Caused_by_____);
                 msgStrings.Add(ex.Message);
                 ex = ex.InnerException;
 

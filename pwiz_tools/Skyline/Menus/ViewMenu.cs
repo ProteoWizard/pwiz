@@ -131,6 +131,7 @@ namespace pwiz.Skyline.Menus
 
             CollectionUtil.ForEach(FormUtil.OpenForms.OfType<FoldChangeBarGraph>(), b => b.QueueUpdateGraph());
             CollectionUtil.ForEach(FormUtil.OpenForms.OfType<FoldChangeVolcanoPlot>(), v => v.QueueUpdateGraph());
+            SkylineWindow.UpdatePeakAreaGraph();
         }
 
         private void showTargetsByNameToolStripMenuItem_Click(object sender, EventArgs e)
@@ -757,6 +758,7 @@ namespace pwiz.Skyline.Menus
             var list = SkylineWindow.ListGraphPeakArea;
             areaReplicateComparisonMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.replicate);
             areaPeptideComparisonMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.peptide);
+            areaRelativeAbundanceMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.abundance);
             areaCVHistogramMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.histogram);
             areaCVHistogram2DMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.histogram2d);
         }
@@ -767,6 +769,10 @@ namespace pwiz.Skyline.Menus
         private void areaPeptideComparisonMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.ShowPeakAreaPeptideGraph();
+        }
+        private void areaRelativeAbundanceMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.ShowPeakAreaRelativeAbundanceGraph();
         }
         private void areaCVHistogramToolStripMenuItem1_Click(object sender, EventArgs e)
         {
@@ -965,6 +971,7 @@ namespace pwiz.Skyline.Menus
                 peakAreasMenuItem.Enabled = enable;
                 areaReplicateComparisonMenuItem.Enabled = enable;
                 areaPeptideComparisonMenuItem.Enabled = enable;
+                areaRelativeAbundanceMenuItem.Enabled = enable;
                 areaCVHistogramMenuItem.Enabled = enable;
                 areaCVHistogram2DMenuItem.Enabled = enable;
 

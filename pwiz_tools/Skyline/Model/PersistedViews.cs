@@ -54,9 +54,9 @@ namespace pwiz.Skyline.Model
     public class PersistedViews : SerializableViewGroups
     {
         public static readonly ViewGroup MainGroup = new ViewGroup(@"main",
-            () => Resources.PersistedViews_MainGroup_Main);
+            () => ModelResources.PersistedViews_MainGroup_Main);
         public static readonly ViewGroup ExternalToolsGroup = new ViewGroup(@"external_tools",
-            () => Resources.PersistedViews_ExternalToolsGroup_External_Tools);
+            () => ModelResources.PersistedViews_ExternalToolsGroup_External_Tools);
 
         /// <summary>
         /// Construct a new PersistedViews, migrating over the values from the old ViewSpecList 

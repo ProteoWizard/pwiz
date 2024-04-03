@@ -481,7 +481,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     break;
                 case IonMobilityWindowWidthType.fixed_width:
                     if (FixedWindowWidth < 0)
-                        return Resources.DriftTimeWindowWidthCalculator_Validate_Fixed_window_width_must_be_non_negative_;
+                        return DocSettingsResources.DriftTimeWindowWidthCalculator_Validate_Fixed_window_width_must_be_non_negative_;
                     break;
             }
 
@@ -1020,14 +1020,14 @@ namespace pwiz.Skyline.Model.DocSettings
             switch (units)
             {
                 case eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
-                    return Resources.IonMobilityFilter_IonMobilityUnitsString__1_K0__Vs_cm_2_;
+                    return DocSettingsResources.IonMobilityFilter_IonMobilityUnitsString__1_K0__Vs_cm_2_;
                 case eIonMobilityUnits.drift_time_msec:
                     return Resources.IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_;
                 case eIonMobilityUnits.compensation_V:
-                    return Resources.IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_;
+                    return DocSettingsResources.IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_;
                 case eIonMobilityUnits.waters_sonar: // Not really ion mobility, but uses IMS hardware and our IMS filtering code
                 case eIonMobilityUnits.none:
-                    return Resources.IonMobilityFilter_IonMobilityUnitsL10NString_None;
+                    return DocSettingsResources.IonMobilityFilter_IonMobilityUnitsL10NString_None;
                 default:
                     return null;
             }

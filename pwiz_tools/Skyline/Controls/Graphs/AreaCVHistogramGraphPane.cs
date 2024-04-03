@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -33,12 +34,11 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         int Items { get; }
         AreaCVGraphData CurrentData { get; }
-        AreaCVGraphData.AreaCVGraphDataCache Cache { get; }
     }
 
-    public class AreaCVHistogramGraphPane : SummaryGraphPane, IDisposable, IAreaCVHistogramInfo
+    public class AreaCVHistogramGraphPane : SummaryGraphPane, IAreaCVHistogramInfo
     {
-        private readonly AreaCVGraphData.AreaCVGraphDataCache _cache;
+        private readonly Receiver<AreaCVGraphData.Parameters, AreaCVGraphData> _receiver;
         private AreaCVGraphData _areaCVGraphData = AreaCVGraphData.INVALID;
         private CVData _selectedData;
         private SrmDocument _document;
@@ -51,24 +51,12 @@ namespace pwiz.Skyline.Controls.Graphs
             : base(graphSummary)
         {
             _stickItems = new List<StickItem>(2);
-            _cache = new AreaCVGraphData.AreaCVGraphDataCache();
+            _receiver = AreaCVGraphData.PRODUCER.RegisterCustomer(graphSummary, () => graphSummary.UpdateUI());
         }
-
-        public AreaCVGraphData.AreaCVGraphDataCache Cache { get { return _cache; } }
 
         public int Items { get { return GetTotalBars(); } }
 
         public override bool HasToolbar { get { return true; } }
-
-        public override void OnClose(EventArgs e)
-        {
-            Dispose();
-        }
-
-        public void Dispose()
-        {
-            _cache.Dispose();
-        }
 
         public override bool HandleMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
@@ -117,11 +105,6 @@ namespace pwiz.Skyline.Controls.Graphs
             return height * (YAxis.Scale.Max - YAxis.Scale.Min) / Rect.Height;
         }
 
-        private void DataCallback(AreaCVGraphData data)
-        {
-            GraphSummary.GraphControl.BeginInvoke((Action) (() => { GraphSummary.UpdateUI(); }));
-        }
-
         public override void UpdateGraph(bool selectionChanged)
         {
             if (!GraphSummary.DocumentUIContainer.DocumentUI.Settings.HasResults)
@@ -146,7 +129,9 @@ namespace pwiz.Skyline.Controls.Graphs
             CurveList.Clear();
             _stickItems.Clear();
 
-            var gotData = _cache.TryGet(_document, settings, DataCallback, out _areaCVGraphData);
+            var gotData =
+                _receiver.TryGetProduct(new AreaCVGraphData.Parameters(GraphSummary.DocumentUIContainer.DocumentUI, settings),
+                    out _areaCVGraphData);
 
             if (!gotData || !_areaCVGraphData.IsValid)
                 return;
@@ -198,8 +183,8 @@ namespace pwiz.Skyline.Controls.Graphs
             CurveList.Insert(1, MakeBarItem(selectedPoints, Color.FromArgb(Color.Red.ToArgb() & 0x7FFFFFFF)));
             CurveList.Insert(2, MakeBarItem(otherPoints, Color.FromArgb(180, 220, 255)));
 
-            XAxis.Title.Text = Resources.AreaCVHistogramGraphPane_UpdateGraph_CV + (_percentage ? @" (%)" : string.Empty);
-            YAxis.Title.Text = Resources.AreaCVHistogramGraphPane_UpdateGraph_Frequency;
+            XAxis.Title.Text = GraphsResources.AreaCVHistogramGraphPane_UpdateGraph_CV + (_percentage ? @" (%)" : string.Empty);
+            YAxis.Title.Text = GraphsResources.AreaCVHistogramGraphPane_UpdateGraph_Frequency;
 
             XAxis.Scale.Min = YAxis.Scale.Min = 0;
             XAxis.Scale.MinAuto = XAxis.Scale.MaxAuto = YAxis.Scale.MinAuto = YAxis.Scale.MaxAuto = false;
@@ -226,11 +211,11 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (_areaCVGraphData == null)
             {
-                Title.Text = Resources.AreaCVHistogramGraphPane_AddLabels_Calculating____;
+                Title.Text = GraphsResources.AreaCVHistogramGraphPane_AddLabels_Calculating____;
             }
             else if (!_areaCVGraphData.IsValid)
             {
-                Title.Text = Resources.AreaCVHistogramGraphPane_AddLabels_Not_enough_data;
+                Title.Text = GraphsResources.AreaCVHistogramGraphPane_AddLabels_Not_enough_data;
             }
             else
             {
@@ -249,7 +234,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (Settings.Default.AreaCVShowMedianCV)
                 {
                     _stickItems[index++].Points[1].Y = y;
-                    string text = string.Format(Resources.AreaCVHistogramGraphPane_AddLabels_Median___0_,
+                    string text = string.Format(GraphsResources.AreaCVHistogramGraphPane_AddLabels_Median___0_,
                         HistogramHelper.FormatDouble(_areaCVGraphData.MedianCV * factor, _decimals) + unit);
                     GraphObjList.Add(AddLabel(text, _areaCVGraphData.MedianCV * factor, y, Color.Blue));
                     y += height;      
@@ -258,7 +243,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (Settings.Default.AreaCVShowCVCutoff)
                 {
                     _stickItems[index++].Points[1].Y = y;
-                    string text = string.Format(Resources.AreaCVHistogramGraphPane_UpdateGraph_Below__0____1_,
+                    string text = string.Format(GraphsResources.AreaCVHistogramGraphPane_UpdateGraph_Below__0____1_,
                             Settings.Default.AreaCVCVCutoff + unit, HistogramHelper.FormatDouble(_areaCVGraphData.BelowCVCutoff * factor, _decimals) + unit);
                     GraphObjList.Add(AddLabel(text, Settings.Default.AreaCVCVCutoff, y, Color.Red));
                 }

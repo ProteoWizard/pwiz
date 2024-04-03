@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Yuval Boss <yuval .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -81,9 +81,9 @@ namespace pwiz.Skyline.Controls.Startup
             {
                 using (var longWaitDlg = new LongWaitDlg())
                 {
-                    longWaitDlg.Text = Resources.ActionTutorial_LongWaitDlgAction_Downloading_Tutorial_Zip_File;
+                    longWaitDlg.Text = StartupResources.ActionTutorial_LongWaitDlgAction_Downloading_Tutorial_Zip_File;
                     longWaitDlg.Message = String.Format(
-                        Resources
+                        StartupResources
                             .ActionTutorial_LongWaitDlgAction_Downloading_to___0__1_Tutorial_will_open_in_browser_when_download_is_complete_,
                         getTempPath(), Environment.NewLine);
                     longWaitDlg.ProgressValue = 0;
@@ -95,14 +95,14 @@ namespace pwiz.Skyline.Controls.Startup
                 }
                 using (var longWaitDlg = new LongWaitDlg())
                 {
-                    longWaitDlg.Text = Resources.ActionTutorial_LongWaitDlgAction_Extracting_Tutorial_Zip_File_in_the_same_directory_;
+                    longWaitDlg.Text = StartupResources.ActionTutorial_LongWaitDlgAction_Extracting_Tutorial_Zip_File_in_the_same_directory_;
                     longWaitDlg.ProgressValue = 0;
                     longWaitDlg.PerformWork(skylineWindow, 1000, ExtractTutorial);
                 }
             }
             catch (Exception exception)
             {
-                MessageDlg.ShowWithException(Program.MainWindow, string.Format(Resources.ActionTutorial_DownloadTutorials_Error__0_, exception.Message), exception);
+                MessageDlg.ShowWithException(Program.MainWindow, string.Format(StartupResources.ActionTutorial_DownloadTutorials_Error__0_, exception.Message), exception);
             }
         }
 
@@ -132,12 +132,12 @@ namespace pwiz.Skyline.Controls.Startup
             {
                 if (e.Error != null)
                 {
-                    MessageDlg.ShowWithException(Program.MainWindow,string.Format(Resources.ActionTutorial_DownloadTutorials_Error__0_,e.Error), e.Error);
+                    MessageDlg.ShowWithException(Program.MainWindow,string.Format(StartupResources.ActionTutorial_DownloadTutorials_Error__0_,e.Error), e.Error);
                 }
                 else if(string.IsNullOrEmpty(SkyFileLocationInZip))
                 {
                     MessageDlg.Show(Program.MainWindow,
-                    string.Format(Resources.ActionTutorial_client_DownloadFileCompleted_File_saved_at___0_,getTempPath()));
+                    string.Format(StartupResources.ActionTutorial_client_DownloadFileCompleted_File_saved_at___0_,getTempPath()));
                     Process.Start(PdfFileLocation); // Opens Tutorial PDF in users default browser.
                 }
             }));
@@ -188,7 +188,7 @@ namespace pwiz.Skyline.Controls.Startup
                     if (string.IsNullOrEmpty(SkyFileLocationInZip))
                     {
                         MessageDlg.Show(Program.MainWindow,
-                            string.Format(Resources.ActionTutorial_client_DownloadFileCompleted_File_saved_at___0_, extractDir));
+                            string.Format(StartupResources.ActionTutorial_client_DownloadFileCompleted_File_saved_at___0_, extractDir));
                     }
 
                     try
@@ -197,7 +197,7 @@ namespace pwiz.Skyline.Controls.Startup
                     }
                     catch (Exception e)
                     {
-                        string message = string.Format(Resources
+                        string message = string.Format(StartupResources
                                 .ActionTutorial_ExtractTutorial_An_error_occurred_while_trying_to_display_the_document___0____,
                             PdfFileLocation);
                         MessageDlg.ShowWithException(Program.MainWindow, message, e);
