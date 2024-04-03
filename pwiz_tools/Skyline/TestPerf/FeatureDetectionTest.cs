@@ -37,6 +37,7 @@ using pwiz.SkylineTestUtil;
 // 
 namespace TestPerf
 {
+
     [TestClass]
     public class FeatureDetectionTest : AbstractFunctionalTestEx
     {
@@ -79,27 +80,33 @@ namespace TestPerf
             public bool HasMissingDependencies { get; private set; }
         }
 
-        public bool UseWiff => false; // ExtensionTestContext.CanImportAbWiff; // Wiff reader fails in msconvert step due to brittle embedded DLL load order when run in RunProcess
-
         [TestMethod, NoUnicodeTesting(TestExclusionReason.HARDKLOR_UNICODE_ISSUES), NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestHardklorFeatureDetection()
         {
             TestFilesZipPaths = new[]
             {
-                UseWiff
-                    ? @"https://skyline.ms/tutorials/MS1Filtering_2.zip" 
-                    : @"https://skyline.ms/tutorials/MS1FilteringMzml_2.zip", 
+                GetPerfTestDataURL(@"Label-free.zip"), 
                 @"TestPerf\FeatureDetectionTest.zip"
             };
+            TestFilesPersistent = new []{".RAW"}; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
             TestDirectoryName = "HardklorFeatureDetectionTest";
 
             RunFunctionalTest();
         }
 
+        private string[] _testFiles = new[]
+        {
+            "Orbi3_SA_IP_pHis3_01.RAW",
+            //"Orbi3_SA_IP_pHis3_02.RAW",
+            //"Orbi3_SA_IP_pHis3_03.RAW",
+            "Orbi3_SA_IP_SMC1_01.RAW",
+            //"Orbi3_SA_IP_SMC1_02.RAW",
+            //"Orbi3_SA_IP_SMC1_03.RAW"
+        };
+
         private string GetDataPath(string path)
         {
-            var folderMs1Filtering = UseWiff ? "Ms1Filtering" : "Ms1FilteringMzml";
-            return TestFilesDirs[0].GetTestPath(Path.Combine(folderMs1Filtering, path));
+            return TestFilesDirs[0].GetTestPath(path);
         }
 
         private string GetTestPath(string path)
@@ -111,12 +118,7 @@ namespace TestPerf
         {
             get
             {
-                var ext = UseWiff ? ".wiff" : ".mzML";
-                return new[]
-                {
-                    GetDataPath("100803_0001_MCF7_TiB_L")+ext,
-                    GetDataPath("100803_0005b_MCF7_TiTip3")+ext
-                };
+                return _testFiles.Select(f => GetDataPath(f)).ToArray();
             }
         }
 
@@ -164,8 +166,8 @@ namespace TestPerf
 
             if (pass < SMALL_MOL_ONLY_PASS) 
             {
-                // Load the document that we have at the end of the MS1 fullscan tutorial
-                RunUI(() => SkylineWindow.OpenFile(GetTestPath("Ms1FilteringTutorial-2min.sky")));
+                // Load a data set that was processed by MaxQuant
+                RunUI(() => SkylineWindow.OpenFile(GetDataPath("Label-free.sky")));
             }
             else
             {
@@ -242,16 +244,13 @@ namespace TestPerf
             bool? searchSucceeded = null;
             TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.DDASearchPage));   // Stop to show this form during form testing
 
-            if (UseWiff)
+            // Wait for the mzML conversion to complete before canceling
+            foreach (var searchFile in SearchFiles)
             {
-                // Wait for the mzML conversion to complete before canceling
-                foreach (var searchFile in SearchFiles)
-                {
-                    var converted = Path.Combine(Path.GetDirectoryName(searchFile) ?? string.Empty,
-                        @"converted",
-                        Path.ChangeExtension(Path.GetFileName(searchFile), @"mzML"));
-                    WaitForCondition(() => File.Exists(converted));
-                }
+                var converted = Path.Combine(Path.GetDirectoryName(searchFile) ?? string.Empty,
+                    @"converted",
+                    Path.ChangeExtension(Path.GetFileName(searchFile), @"mzML"));
+                WaitForCondition(() => File.Exists(converted));
             }
 
             RunUI(() =>
@@ -360,6 +359,7 @@ namespace TestPerf
 
             // IsPauseForScreenShots = true; // enable for quick demo
             PauseForScreenShot("complete");
+PauseTest();
 
             // See if Hardklor output is stable
             var expectedHardklorFiles = @"expected_hardklor_files";
@@ -375,9 +375,9 @@ namespace TestPerf
             var doc = SkylineWindow.Document;
             var tg = doc.MoleculeTransitions.First(t => t.Transition.Group.IsCustomIon);
             var r = tg.Results.First().First();
-            AssertEx.AreEqual(25.486, r.RetentionTime, .01);
-            AssertEx.AreEqual(24.407, r.StartRetentionTime, .01);
-            AssertEx.AreEqual(27.104, r.EndRetentionTime, .01);
+            AssertEx.AreEqual(28.741, r.RetentionTime, .01);
+            AssertEx.AreEqual(27.839, r.StartRetentionTime, .01);
+            AssertEx.AreEqual(30.724, r.EndRetentionTime, .01);
 
             var expectedFeatures = 1333;
             var expectedFeaturesTransitions = 3999;
@@ -387,10 +387,10 @@ namespace TestPerf
             }
             else
             {
-                var expectedPeptideGroups = 11;
-                var expectedPeptides = 45;
-                var expectedPeptideTransitionGroups = 46;
-                var expectedPeptideTransitions = 141;
+                var expectedPeptideGroups = 490;
+                var expectedPeptides = 510;
+                var expectedPeptideTransitionGroups = 13456;
+                var expectedPeptideTransitions = 40368;
                 AssertEx.IsDocumentState(SkylineWindow.Document, null, expectedPeptideGroups + 1, expectedPeptides + expectedFeatures, 
                     expectedPeptideTransitionGroups + expectedFeatures, expectedPeptideTransitions + expectedFeaturesTransitions);
 

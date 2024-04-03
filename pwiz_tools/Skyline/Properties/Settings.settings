@@ -869,5 +869,14 @@
     <Setting Name="FullScanPropertySheetVisible" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="FeatureFindingPercentIntensityThreshold" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0.01</Value>
+    </Setting>
+    <Setting Name="FeatureFindingCorrelationThreshold" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0.98</Value>
+    </Setting>
+    <Setting Name="FeatureFindingSignalToNoise" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">3</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -376,6 +376,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     _documentContainer.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.centroided;
                 }
                 Settings.Default.LibraryResultCutOff = ImportPeptideSearch.CutoffScore;
+                Settings.Default.FeatureFindingPercentIntensityThreshold = HardklorPercentIntensityThreshold;
+                Settings.Default.FeatureFindingCorrelationThreshold = HardklorCorrelationThreshold;
+                Settings.Default.FeatureFindingSignalToNoise = HardklorSignalToNoise;
+
             }
             return true;
         }
@@ -394,10 +398,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 {
                     return false;
                 }
+
+                if (!helper.ValidateDecimalTextBox(this.textHardklorIntensityCutoff, 0, 100, out _))
+                {
+                    return false;
+                }
                 // Note the Hardklor settings
-                ImportPeptideSearch.SettingsHardklor = new ImportPeptideSearch.HardklorSettings(HardklorInstument,
+                ImportPeptideSearch.SettingsHardklor = new ImportPeptideSearch.HardklorSettings(HardklorInstrument,
                     HardklorResolution,
-                    correlation, signalToNoise, _documentContainer.TransitionSettings.Filter.PeptidePrecursorCharges.Select(a => a.AdductCharge).Distinct().ToArray());
+                    correlation, signalToNoise, _documentContainer.TransitionSettings.Filter.PeptidePrecursorCharges.Select(a => a.AdductCharge).Distinct().ToArray(),
+                    HardklorPercentIntensityThreshold);
                 ImportPeptideSearch.CutoffScore = correlation;
                 return true;
             }
@@ -441,7 +451,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public bool HardklorInstrumentSettingsAreEditable => _hardklorInstrumentSettingsControl.Enabled;
 
-        public FullScanMassAnalyzerType HardklorInstument
+        public FullScanMassAnalyzerType HardklorInstrument
         {
             get { return _hardklorInstrumentSettingsControl.PrecursorMassAnalyzer; }
             set { _hardklorInstrumentSettingsControl.PrecursorMassAnalyzer = value; }
@@ -451,7 +461,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             get
             {
-                return _hardklorInstrumentSettingsControl.PrecursorRes  ?? 0;
+                return _hardklorInstrumentSettingsControl.PrecursorRes ?? 0;
             }
             set
             {
@@ -463,6 +473,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             get { return double.TryParse(textHardklorCorrelation.Text, out var corr) ? corr : 0; }
             set { textHardklorCorrelation.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+        }
+
+        public double HardklorPercentIntensityThreshold
+        {
+            get { return double.TryParse(textHardklorIntensityCutoff.Text, out var cutoff) ? cutoff : 0; }
+            set { textHardklorIntensityCutoff.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
         public double HardklorSignalToNoise

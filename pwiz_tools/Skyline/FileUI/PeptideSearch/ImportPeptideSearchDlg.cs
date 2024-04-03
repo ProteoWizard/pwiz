@@ -175,8 +175,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         PeptideSearchResources.BuildPeptideSearchLibraryControl_btnAddFile_Click_Select_Files_to_Search; // Was "Spectral Library"
                     lblDDASearch.Text = PeptideSearchResources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection; // Was "DDA Search"
                     // Set some defaults
-                    SearchSettingsControl.HardklorSignalToNoise = 3;
-                    SearchSettingsControl.HardklorCorrelationThreshold = .95;
+                    SearchSettingsControl.HardklorSignalToNoise = Settings.Default.FeatureFindingSignalToNoise;
+                    SearchSettingsControl.HardklorCorrelationThreshold = Settings.Default.FeatureFindingCorrelationThreshold;
+                    SearchSettingsControl.HardklorPercentIntensityThreshold = Settings.Default.FeatureFindingPercentIntensityThreshold;
                 }
 
                 BuildPepSearchLibControl.ForceWorkflow(workflowType.Value);
@@ -862,7 +863,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void AddDetectedFeaturesToDocument(IProgressMonitor progressMonitor)
         {
-            // Add the library molecules to the document
+            // Add the library molecules to the document, in natural sort order
             var status = new ProgressStatus(PeptideSearchResources.ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document);
             progressMonitor.UpdateProgress(status);
             Assume.AreNotEqual(Document.Settings.PeptideSettings.Libraries.LibrarySpecs, _existingLibraries.LibrarySpecs);
@@ -875,39 +876,47 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 {
                     var nodes = new List<PeptideDocNode>();
                     var keyCount = lib.Keys.Count();
-                    var processed = 0;
-                    foreach (var key in lib.Keys)
+                    var keys = lib.Keys.OrderBy(k => new ViewLibraryPepInfo(k), new ViewLibraryPepInfoList.ViewLibraryPepInfoNaturalComparer()).ToArray();
+                    for (var k = 0; k < keyCount;)
                     {
-                        progressMonitor.UpdateProgress(status.ChangePercentComplete(80 * (processed++ / keyCount)));
-                        // Filter on user-requested charge state
-                        if (!TransitionSettings.Filter.PeptidePrecursorCharges.Any(charge => Equals(charge.AdductCharge, key.Adduct.AdductCharge)))
-                        {
-                            continue;
-                        }
-                        Assume.IsTrue(lib.TryLoadSpectrum(key, out SpectrumPeaksInfo spectrum));
-                        var customMolecule =
-                            CustomMolecule.FromSmallMoleculeLibraryAttributes(
-                                key.SmallMoleculeLibraryAttributes);
+                        var key = keys[k];
+                        var customMolecule = CustomMolecule.FromSmallMoleculeLibraryAttributes(key.SmallMoleculeLibraryAttributes);
                         var mass = customMolecule.GetMass(MassType.Monoisotopic);
                         var peptide = new Peptide(customMolecule);
-                        var precursor = new TransitionGroup(peptide, key.Adduct,
-                            IsotopeLabelType.light);
-                        var precursorTransition = new Transition(precursor, key.Adduct, null,
-                            customMolecule,
-                            IonType.precursor);
-                        var precursorTransitionDocNode = new TransitionDocNode(precursorTransition,
-                            Annotations.EMPTY, null, mass,
-                            TransitionDocNode.TransitionQuantInfo.DEFAULT, null,
-                            null);
-                        var precursorDocNode = new TransitionGroupDocNode(precursor, Annotations.EMPTY,
-                            Document.Settings, null, null, null, null,
-                            new[] { precursorTransitionDocNode },
-                            false); // We will turn on autoManage in the next step
-                        var peptideDocNode = new PeptideDocNode(peptide, Document.Settings, null, null,
-                            null,
-                            new[] { precursorDocNode }, false); // We will turn on autoManage in the next step
-                        nodes.Add(peptideDocNode);
-                        adducts.Add(key.Adduct);
+                        var children = new List<TransitionGroupDocNode>();
+                        // Look for multiple charges of same molecule
+                        while (k < keyCount && Equals(key.SmallMoleculeLibraryAttributes, keys[k].SmallMoleculeLibraryAttributes))
+                        {
+                            key = keys[k];
+                            progressMonitor.UpdateProgress(status.ChangePercentComplete(80 * (k++ / keyCount)));
+                            // Filter on user-requested charge state
+                            if (!TransitionSettings.Filter.PeptidePrecursorCharges.Any(charge => Equals(charge.AdductCharge, key.Adduct.AdductCharge)))
+                            {
+                                continue;
+                            }
+                            Assume.IsTrue(lib.TryLoadSpectrum(key, out SpectrumPeaksInfo spectrum));
+                            var precursor = new TransitionGroup(peptide, key.Adduct, IsotopeLabelType.light);
+                            var precursorTransition = new Transition(precursor, key.Adduct, null,
+                                customMolecule, IonType.precursor);
+                            var precursorTransitionDocNode = new TransitionDocNode(precursorTransition,
+                                Annotations.EMPTY, null, mass,
+                                TransitionDocNode.TransitionQuantInfo.DEFAULT, null,
+                                null);
+                            lib.TryGetLibInfo(key, out var libInfo);
+                            var precursorDocNode = new TransitionGroupDocNode(precursor, Annotations.EMPTY,
+                                Document.Settings, null, libInfo, null, null,
+                                new[] { precursorTransitionDocNode },
+                                false); // We will turn on autoManage in the next step
+                            children.Add(precursorDocNode);
+                        }
+                        if (children.Any())
+                        {
+                            var peptideDocNode = new PeptideDocNode(peptide, Document.Settings, null, null,
+                                null,
+                                children.ToArray(), false); // We will turn on autoManage in the next step
+                            nodes.Add(peptideDocNode);
+                            adducts.Add(key.Adduct);
+                        }
                     }
 
                     var newPeptideGroup = new PeptideGroup();

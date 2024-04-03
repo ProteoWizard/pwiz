@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SearchSettingsControl));
             this.cbMS1TolUnit = new System.Windows.Forms.ComboBox();
             this.lblMs1Tolerance = new System.Windows.Forms.Label();
@@ -48,10 +49,14 @@
             this.cbMs2Analyzer = new System.Windows.Forms.ComboBox();
             this.lblMs2Analyzer = new System.Windows.Forms.Label();
             this.groupBoxHardklor = new System.Windows.Forms.GroupBox();
+            this.labellabelPct = new System.Windows.Forms.Label();
+            this.textHardklorIntensityCutoff = new System.Windows.Forms.TextBox();
+            this.labelIntensityCutoff = new System.Windows.Forms.Label();
             this.textHardklorCorrelation = new System.Windows.Forms.TextBox();
             this.labelHardklorCorrelationThreshold = new System.Windows.Forms.Label();
             this.textHardklorSignalToNoise = new System.Windows.Forms.TextBox();
             this.lblHardklorSignalToNoise = new System.Windows.Forms.Label();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.pBLogo)).BeginInit();
             this.groupBoxHardklor.SuspendLayout();
             this.SuspendLayout();
@@ -178,6 +183,9 @@
             // 
             // groupBoxHardklor
             // 
+            this.groupBoxHardklor.Controls.Add(this.labellabelPct);
+            this.groupBoxHardklor.Controls.Add(this.textHardklorIntensityCutoff);
+            this.groupBoxHardklor.Controls.Add(this.labelIntensityCutoff);
             this.groupBoxHardklor.Controls.Add(this.textHardklorCorrelation);
             this.groupBoxHardklor.Controls.Add(this.labelHardklorCorrelationThreshold);
             this.groupBoxHardklor.Controls.Add(this.textHardklorSignalToNoise);
@@ -186,20 +194,39 @@
             this.groupBoxHardklor.Name = "groupBoxHardklor";
             this.groupBoxHardklor.TabStop = false;
             // 
+            // labellabelPct
+            // 
+            resources.ApplyResources(this.labellabelPct, "labellabelPct");
+            this.labellabelPct.Name = "labellabelPct";
+            // 
+            // textHardklorIntensityCutoff
+            // 
+            resources.ApplyResources(this.textHardklorIntensityCutoff, "textHardklorIntensityCutoff");
+            this.textHardklorIntensityCutoff.Name = "textHardklorIntensityCutoff";
+            this.toolTip1.SetToolTip(this.textHardklorIntensityCutoff, resources.GetString("textHardklorIntensityCutoff.ToolTip"));
+            // 
+            // labelIntensityCutoff
+            // 
+            resources.ApplyResources(this.labelIntensityCutoff, "labelIntensityCutoff");
+            this.labelIntensityCutoff.Name = "labelIntensityCutoff";
+            // 
             // textHardklorCorrelation
             // 
             resources.ApplyResources(this.textHardklorCorrelation, "textHardklorCorrelation");
             this.textHardklorCorrelation.Name = "textHardklorCorrelation";
+            this.toolTip1.SetToolTip(this.textHardklorCorrelation, resources.GetString("textHardklorCorrelation.ToolTip"));
             // 
             // labelHardklorCorrelationThreshold
             // 
             resources.ApplyResources(this.labelHardklorCorrelationThreshold, "labelHardklorCorrelationThreshold");
             this.labelHardklorCorrelationThreshold.Name = "labelHardklorCorrelationThreshold";
+            this.toolTip1.SetToolTip(this.labelHardklorCorrelationThreshold, resources.GetString("labelHardklorCorrelationThreshold.ToolTip"));
             // 
             // textHardklorSignalToNoise
             // 
             resources.ApplyResources(this.textHardklorSignalToNoise, "textHardklorSignalToNoise");
             this.textHardklorSignalToNoise.Name = "textHardklorSignalToNoise";
+            this.toolTip1.SetToolTip(this.textHardklorSignalToNoise, resources.GetString("textHardklorSignalToNoise.ToolTip"));
             // 
             // lblHardklorSignalToNoise
             // 
@@ -262,5 +289,9 @@
         private System.Windows.Forms.Label labelHardklorCorrelationThreshold;
         private System.Windows.Forms.TextBox textHardklorSignalToNoise;
         private System.Windows.Forms.Label lblHardklorSignalToNoise;
+        private System.Windows.Forms.Label labelIntensityCutoff;
+        private System.Windows.Forms.TextBox textHardklorIntensityCutoff;
+        private System.Windows.Forms.Label labellabelPct;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }

@@ -74,13 +74,14 @@ namespace pwiz.Skyline.Model
         public class HardklorSettings
         {
             public HardklorSettings(FullScanMassAnalyzerType instrument, double resolution,
-                double correlationThreshold, double signalToNoise, IEnumerable<int> charges)
+                double correlationThreshold, double signalToNoise, IEnumerable<int> charges, double percentIntensityCutoff)
             {
                 Instrument = instrument;
                 Resolution = resolution;
                 CorrelationThreshold = correlationThreshold;
                 SignalToNoise = signalToNoise;
                 Charges = charges.ToList();
+                PercentIntensityCutoff = percentIntensityCutoff;
             }
 
             [Track]
@@ -93,6 +94,8 @@ namespace pwiz.Skyline.Model
             public double Resolution { get; private set; }
             [Track]
             public List<int> Charges { get; set; } // A list of desired charges for BlibBuild
+            [Track]
+            public double PercentIntensityCutoff { get; set; } // Ignore any features whose intensity is less than xxx% of the total of all features in a replicate
            
         }
 
