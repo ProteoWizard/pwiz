@@ -227,13 +227,24 @@ namespace pwiz.Skyline.Model
         public Target ModifiedTarget { get; private set; }
         public string ModifiedSequence { get { return ModifiedTarget.Sequence; } }
 
+        public Target OriginalMoleculeTarget { get; private set; }
+
+        public PeptideDocNode ChangeOriginalMoleculeTarget(Target originalMolecule)
+        {
+            if (Equals(originalMolecule, OriginalMoleculeTarget))
+            {
+                return this;
+            }
+            return ChangeProp(ImClone(this), im => im.OriginalMoleculeTarget = originalMolecule);
+        }
+
         public string ModifiedSequenceDisplay { get; private set; }
 
         public Color Color { get; private set; }
         public static readonly Color UNKNOWN_COLOR = Color.FromArgb(170, 170, 170);
 
         // For robust chromatogram association in the event of user tweaking molecule details like name, CAS etc (but not mass!)
-        public Target ChromatogramTarget => Peptide.OriginalMoleculeTarget ?? ModifiedTarget;
+        public Target ChromatogramTarget => OriginalMoleculeTarget ?? ModifiedTarget;
 
         public Target Target { get { return Peptide.Target; }}
         public string TextId { get { return CustomInvariantNameOrText(Peptide.Sequence); } }
@@ -692,10 +703,7 @@ namespace pwiz.Skyline.Model
         // Note: this potentially returns a node with a different ID, which has to be Inserted rather than Replaced
         public PeptideDocNode ChangeCustomIonValues(SrmSettings settings, CustomMolecule customMolecule, ExplicitRetentionTimeInfo explicitRetentionTime)
         {
-            // Make note of original description for chromatogram association, if nothing has changed to affect the chromatogram, so we can keep the association
-            var sameMass = Equals(customMolecule.AverageMass, Peptide.CustomMolecule.AverageMass) && 
-                           Equals(customMolecule.Formula, Peptide.CustomMolecule.Formula);
-            var newPeptide = new Peptide(customMolecule, sameMass ? Peptide.Target : null);
+            var newPeptide = new Peptide(customMolecule);
             Helpers.AssignIfEquals(ref newPeptide, Peptide);
             if (Equals(Peptide, newPeptide))
             {
@@ -914,6 +922,10 @@ namespace pwiz.Skyline.Model
             if (!ReferenceEquals(sourceKey, SourceKey))
                 nodeResult = nodeResult.ChangeSourceKey(sourceKey);
             nodeResult = nodeResult.UpdateModifiedSequence(settingsNew);
+            if (!settingsNew.HasResults)
+            {
+                nodeResult = nodeResult.ChangeOriginalMoleculeTarget(null);
+            }
 
             if (diff.DiffPeptideProps)
             {
@@ -1980,6 +1992,29 @@ namespace pwiz.Skyline.Model
             #endregion
         }
 
+        public PeptideDocNode RememberOriginalTarget(PeptideDocNode old)
+        {
+            if (OriginalMoleculeTarget != null)
+            {
+                return this;
+            }
+
+            var myCustomMolecule = CustomMolecule;
+            var oldCustomMolecule = old.CustomMolecule;
+            if (myCustomMolecule == null || oldCustomMolecule == null)
+            {
+                return this;
+            }
+            // Make note of original description for chromatogram association, if nothing has changed to affect the chromatogram, so we can keep the association
+            var sameMass = Equals(myCustomMolecule.AverageMass, oldCustomMolecule.AverageMass) &&
+                           Equals(myCustomMolecule.Formula, oldCustomMolecule.Formula);
+            if (!sameMass)
+            {
+                return this;
+            }
+            return ChangeOriginalMoleculeTarget(old.ChromatogramTarget);
+        }
+
         #region object overrides
 
         public bool Equals(PeptideDocNode other)
@@ -1998,7 +2033,8 @@ namespace pwiz.Skyline.Model
                 Equals(other.NormalizationMethod, NormalizationMethod) &&
                 Equals(other.AttributeGroupId, AttributeGroupId) &&
                 Equals(other.GlobalStandardType, GlobalStandardType) &&
-                Equals(other.SurrogateCalibrationCurve, SurrogateCalibrationCurve);
+                Equals(other.SurrogateCalibrationCurve, SurrogateCalibrationCurve) &&
+                Equals(other.OriginalMoleculeTarget, OriginalMoleculeTarget);
             return equal; // For debugging convenience
         }
 
