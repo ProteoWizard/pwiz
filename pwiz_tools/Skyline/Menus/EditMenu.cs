@@ -1530,8 +1530,12 @@ namespace pwiz.Skyline.Menus
                                     // If we didn't change the custom molecule's formula and/or mass, the ID should be unchanged and we can just change any needed transition info.
                                     // But if custom molecule has changed then we can't "Replace", since newNode has a different identity and isn't in the document.  We have to 
                                     // insert and delete instead.  
-                                    var newNode = nodePep.ChangeCustomIonValues(doc.Settings, dlg.ResultCustomMolecule, dlg.ExplicitRetentionTimeInfo)
-                                        .RememberOriginalTarget(nodePep);
+                                    var newNode = nodePep.ChangeCustomIonValues(doc.Settings, dlg.ResultCustomMolecule, dlg.ExplicitRetentionTimeInfo);
+                                    if (doc.Settings.HasResults)
+                                    {
+                                        // If the document has results, remember the original name of the molecule so the chromatograms do not get orphaned
+                                        newNode = newNode.RememberOriginalTarget(nodePep);
+                                    }
                                     // Nothing to do if the node is not changing
                                     if (Equals(nodePep, newNode))
                                         return doc;
