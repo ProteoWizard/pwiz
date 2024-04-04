@@ -1992,23 +1992,33 @@ namespace pwiz.Skyline.Model
             #endregion
         }
 
+        /// <summary>
+        /// For custom molecules, if the molecule's identifying string has changed
+        /// but its mass is still the same, remember its original string so as not
+        /// to lose the connection to the chromatograms in the .skyd file
+        /// </summary>
         public PeptideDocNode RememberOriginalTarget(PeptideDocNode old)
         {
-            if (OriginalMoleculeTarget != null || Equals(ChromatogramTarget, old.ChromatogramTarget))
-            {
-                return this;
-            }
-
             var myCustomMolecule = CustomMolecule;
             var oldCustomMolecule = old.CustomMolecule;
             if (myCustomMolecule == null || oldCustomMolecule == null)
             {
+                // Don't change anything if this is not a custom molecule
                 return this;
             }
-            // Make note of original description for chromatogram association, if nothing has changed to affect the chromatogram, so we can keep the association
             var sameMass = Equals(myCustomMolecule.AverageMass, oldCustomMolecule.AverageMass) &&
                            Equals(myCustomMolecule.Formula, oldCustomMolecule.Formula);
             if (!sameMass)
+            {
+                // If the mass has changed then forget any previously remembered molecule name
+                return ChangeOriginalMoleculeTarget(null);
+            }
+            if (OriginalMoleculeTarget != null)
+            {
+                // Don't change anything if the molecule is still remembering an even older name
+                return this;
+            }
+            if (Equals(ChromatogramTarget, old.ChromatogramTarget))
             {
                 return this;
             }
