@@ -1994,7 +1994,7 @@ namespace pwiz.Skyline.Model
 
         public PeptideDocNode RememberOriginalTarget(PeptideDocNode old)
         {
-            if (OriginalMoleculeTarget != null)
+            if (OriginalMoleculeTarget != null || Equals(ChromatogramTarget, old.ChromatogramTarget))
             {
                 return this;
             }
