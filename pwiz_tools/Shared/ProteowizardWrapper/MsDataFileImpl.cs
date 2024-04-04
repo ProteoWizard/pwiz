@@ -1234,6 +1234,8 @@ namespace pwiz.ProteowizardWrapper
                 metadata = metadata.ChangeScanWindow(scanWindowLowerLimit.Value, scanWindowUpperLimit.Value);
             }
 
+            metadata = metadata.ChangeTotalIonCurrent(GetTotalIonCurrent(spectrum));
+
             return metadata;
         }
 
@@ -1465,6 +1467,17 @@ namespace pwiz.ProteowizardWrapper
             if (param.empty())
                 return null;
             return param.value.ToString().Trim();
+        }
+
+        private double GetTotalIonCurrent(Spectrum spectrum)
+        {
+            double totalIonCurrent = 0;
+            foreach (var scan in spectrum.scanList.scans)
+            {
+                totalIonCurrent += scan.cvParam(CVID.MS_total_ion_current)?.value ?? 0.0;
+            }
+
+            return totalIonCurrent;
         }
 
         private static int GetPresetScanConfiguration(Spectrum spectrum)

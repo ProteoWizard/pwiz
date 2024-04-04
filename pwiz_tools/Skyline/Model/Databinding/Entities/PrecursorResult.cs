@@ -185,6 +185,21 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public string IonMobilityUnits { get { return IonMobilityFilter.IonMobilityUnitsL10NString(ChromInfo.IonMobilityInfo.IonMobilityUnits); } }
 
+        [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
+        public double? TotalIonCurrentAreaMs1
+        {
+            get
+            {
+                return ChromInfo.TotalIonCurrentAreaMs1;
+            }
+        }
+
+        [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
+        public double? TotalIonCurrentAreaFragment
+        {
+            get { return ChromInfo.TotalIonCurrentAreaFragment; }
+        }
+
         public LinkValue<PrecursorQuantificationResult> PrecursorQuantification
         {
             get

@@ -111,6 +111,13 @@ namespace pwiz.Common.Spectra
             return ChangeProp(ImClone(this), im => im.Analyzer = value);
         }
 
+        public double TotalIonCurrent { get; private set; }
+
+        public SpectrumMetadata ChangeTotalIonCurrent(double value)
+        {
+            return ChangeProp(ImClone(this), im => im.TotalIonCurrent = value);
+        }
+
         protected bool Equals(SpectrumMetadata other)
         {
             return _precursorsByMsLevel.Equals(other._precursorsByMsLevel) && Id == other.Id &&
