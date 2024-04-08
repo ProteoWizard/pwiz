@@ -2204,11 +2204,20 @@ namespace pwiz.SkylineTestUtil
 
         // Importing a small molecule transition list typically provokes a dialog asking whether or not to automatically manage the resulting transitions
         // The majority of our tests were written before this was an option, so we dismiss the dialog by default and the new nodes are automanage OFF
-        public static void DismissAutoManageDialog(SrmDocument docCurrent)
+        public static void DismissAutoManageDialog(SrmDocument docCurrent, bool? expectAutoManage = null)
         {
-            var wantAutoManageDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(5000, 
-                () => !ReferenceEquals(docCurrent, SkylineWindow.Document) ||
-                      FindOpenForm<ChooseIrtStandardPeptidesDlg>()!=null);  // May also provoke iRT dialog, don't interfere with that
+            MultiButtonMsgDlg wantAutoManageDlg;
+            if (expectAutoManage ?? false)
+            {
+                wantAutoManageDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+            }
+            else
+            {
+                wantAutoManageDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(5000,
+                    () => !ReferenceEquals(docCurrent, SkylineWindow.Document) ||
+                          FindOpenForm<ChooseIrtStandardPeptidesDlg>() != null);  // May also provoke iRT dialog, don't interfere with that
+
+            }
             if (wantAutoManageDlg != null)
             {
                 // Make sure we haven't intercepted some other dialog

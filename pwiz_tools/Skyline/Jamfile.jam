@@ -25,7 +25,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     path-constant SKYLINE_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Skyline ;
     path-constant PWIZ_WRAPPER_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/ProteowizardWrapper ;
     path-constant BIBLIO_SPEC_PATH :  $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/BiblioSpec ;
-    path-constant PFX_PATH : "$(SKYLINE_PATH)/University of Washington (MacCoss Lab).pfx" ;
+    path-constant CRT_PATH : "$(SKYLINE_PATH)/University of Washington (MacCoss Lab).crt" ;
+    constant CRT_KEY : "key_637015839" ;
     path-constant NUGET_PATH : "C:/Program Files/dotnet/dotnet.exe" ;
     if ! [ path.exists $(NUGET_PATH) ]
     {
@@ -115,12 +116,11 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
         local .msvcSetupScript = [ get-current-msvc-setup-script $(properties) ] ;
         local .msvcSetupScriptX86 = [ regex.replace $(.msvcSetupScript) "amd64" "x86" ] ;
-        local .pfx-password = [ MATCH --pfx-password=(.*) : [ modules.peek : ARGV ] ] ;
-        if [ path.exists $(PFX_PATH) ] && $(.pfx-password)
+        if [ path.exists $(CRT_PATH) ]
         {
-            SHELL "del $(SKYLINE_PATH)\\SignAfterPublishPW.bat" ;
-            local batch-file-text = "$(.msvcSetupScriptX86)\r\nCALL SignAfterPublish.bat $(.pfx-password) %*" ;
-            local batch-file-name = $(SKYLINE_PATH)\\SignAfterPublishPW.bat ;
+            SHELL "del $(SKYLINE_PATH)\\SignAfterPublishKey.bat" ;
+            local batch-file-text = "$(.msvcSetupScriptX86)\r\nCALL SignAfterPublish.bat $(CRT_KEY) %*" ;
+            local batch-file-name = $(SKYLINE_PATH)\\SignAfterPublishKey.bat ;
             local batch-file = @($(batch-file-name):E=$(batch-file-text)) ;
         }
 
