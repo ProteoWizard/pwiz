@@ -1134,10 +1134,7 @@ namespace pwiz.Skyline
                 do
                 {
                     docOriginal = Document;
-                    docNew =
-                        docOriginal.ChangeSettings(
-                            docOriginal.Settings.ChangeDataSettings(
-                                docOriginal.Settings.DataSettings.ChangeDocumentGuid()));
+                    docNew = docOriginal.ChangeDocumentGuid();
                 } while (!SetDocument(docNew, docOriginal));
             }
 
