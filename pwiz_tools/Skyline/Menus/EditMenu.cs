@@ -816,6 +816,7 @@ namespace pwiz.Skyline.Menus
                 using var longWait = new LongWaitDlg(SkylineWindow);
                 longWait.Text = MenusResources.SkylineWindow_ApplyPeak_Applying_Peak;
                 var progressStatus = new ProgressStatus(longWait.Message).ChangeSegments(0, peptidePaths.Count);
+
                 longWait.PerformWork(SkylineWindow, 1000, progressMonitor =>
                 {
                     if (longWait.IsCanceled)
