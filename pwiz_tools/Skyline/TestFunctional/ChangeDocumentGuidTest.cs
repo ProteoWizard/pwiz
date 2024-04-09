@@ -22,7 +22,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
-using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -52,7 +51,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 // DataSettings.AuditLogging always returns "true" unless "IgnoreTestChecks" is turned on
                 AuditLogList.IgnoreTestChecks = true;
-
+                
+                TestFilesZip = @"TestFunctional\ChangeDocumentGuidTest.zip";
                 RunFunctionalTest();
             }
             finally
@@ -63,31 +63,25 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            string testFolder = TestContext.GetTestPath("NewDocumentGuidTest");
-            if (Directory.Exists(testFolder))
-            {
-                Helpers.TryTwice(() => Directory.Delete(testFolder, true));
-            }
-            
             Assert.IsTrue(SkylineWindow.Document.Settings.DataSettings.AuditLogging);
 
-            SaveDocument(Path.Combine(testFolder, "Document.sky"));
+            SaveDocument(TestFilesDir.GetTestPath("Document.sky"));
             var originalDocumentGuid = SkylineWindow.Document.Settings.DataSettings.DocumentGuid;
-            string version1SkyZip = Path.Combine(testFolder, "Version1.sky.zip");
+            string version1SkyZip = TestFilesDir.GetTestPath("Version1.sky.zip");
             ShareDocument(version1SkyZip);
 
             // Saving to a new name should result in a new GUID
-            SaveDocument(Path.Combine(testFolder, "OtherDocument.sky"));
+            SaveDocument(TestFilesDir.GetTestPath("OtherDocument.sky"));
             var otherDocumentGuid = SkylineWindow.Document.Settings.DataSettings.DocumentGuid;
             Assert.AreNotEqual(originalDocumentGuid, otherDocumentGuid);
-            string otherSkyZip = Path.Combine(testFolder, "Other.sky.zip");
+            string otherSkyZip = TestFilesDir.GetTestPath("Other.sky.zip");
             ShareDocument(otherSkyZip);
 
             // Open the original document from the .sky.zip
             OpenSharedFile(version1SkyZip);
             Assert.AreEqual(originalDocumentGuid, SkylineWindow.Document.Settings.DataSettings.DocumentGuid);
             RunUI(()=>SkylineWindow.Paste(@"ELVISK"));
-            string version2SkyZip = Path.Combine(testFolder, "Version2.sky.zip");
+            string version2SkyZip = TestFilesDir.GetTestPath("Version2.sky.zip");
             ShareDocument(version2SkyZip);
 
             OpenSharedFile(version2SkyZip);
@@ -97,7 +91,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(SkylineWindow.Document.Settings.DataSettings.AuditLogging);
             RunDlg<AlertDlg>(()=>auditLogForm.EnableAuditLogging(false), alertDlg=>alertDlg.ClickYes());
             Assert.AreEqual(originalDocumentGuid, SkylineWindow.Document.Settings.DataSettings.DocumentGuid);
-            string noAuditLogSkyZip = Path.Combine(testFolder, "NoAuditLog.sky.zip");
+            string noAuditLogSkyZip = TestFilesDir.GetTestPath("NoAuditLog.sky.zip");
             ShareDocument(noAuditLogSkyZip);
 
             OpenSharedFile(noAuditLogSkyZip);
@@ -106,7 +100,7 @@ namespace pwiz.SkylineTestFunctional
             auditLogForm = FindOpenForm<AuditLogForm>();
             RunUI(() => auditLogForm.EnableAuditLogging(true));
             Assert.AreNotEqual(originalDocumentGuid, SkylineWindow.Document.Settings.DataSettings.DocumentGuid);
-            string restartedAuditLogSkyZip = Path.Combine(testFolder, "RestartedAuditLog.sky.zip");
+            string restartedAuditLogSkyZip = TestFilesDir.GetTestPath("RestartedAuditLog.sky.zip");
             ShareDocument(restartedAuditLogSkyZip);
 
             // Open "version2SkyZip" and "otherSkyZip" and remember the path to the Skyline documents
@@ -118,7 +112,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(otherDocumentGuid, SkylineWindow.Document.Settings.DataSettings.DocumentGuid);
             
             // Create a folder which contains the document from "version2" and the audit log from "other"
-            string frankenFolder = Path.Combine(testFolder, "frankenfolder");
+            string frankenFolder = TestFilesDir.GetTestPath("frankenfolder");
             Directory.CreateDirectory(frankenFolder);
             string frankenDocumentPath = Path.Combine(frankenFolder, "FrankenDocument.sky");
             File.Copy(version2Path, frankenDocumentPath);
@@ -133,7 +127,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreNotEqual(otherDocumentGuid, frankenDocumentGuid);
             RunUI(()=>SkylineWindow.SaveDocument());
             Assert.AreEqual(frankenDocumentGuid, SkylineWindow.Document.Settings.DataSettings.DocumentGuid);
-            string frankendocSkyZip = Path.Combine(testFolder, "Frankendoc.sky.zip");
+            string frankendocSkyZip = TestFilesDir.GetTestPath("Frankendoc.sky.zip");
             ShareDocument(frankendocSkyZip);
         }
         private void SaveDocument(string path)
