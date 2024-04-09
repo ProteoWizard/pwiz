@@ -342,11 +342,14 @@ void BuildParser::OptionalSort(PSM_SCORE_TYPE scoreType)
             {
                 return b != NULL; // Nulls are ultimately ignored, but sort consistency matters
             }
-            const double massA = (a->smallMolMetadata.precursorMzDeclared - PROTON_MASS) * static_cast<double>(a->charge);
-            const double massB = (b->smallMolMetadata.precursorMzDeclared - PROTON_MASS) * static_cast<double>(b->charge);
+            // Pick out the "123.45" from "mass123.45_RT6.78"
+            const double massA = boost::lexical_cast<double>(a->smallMolMetadata.moleculeName.substr(4, a->smallMolMetadata.moleculeName.find("_")));
+            const double massB = boost::lexical_cast<double>(b->smallMolMetadata.moleculeName.substr(4, b->smallMolMetadata.moleculeName.find("_")));
             if (massA == massB)
             {
-                return a->score > b->score; // High score first, so it gets retained in case we're discarding ambiguous
+                if (a->charge == b->charge)
+                    return a->score > b->score; // High score first, so it gets retained in case we're discarding ambiguous
+                return a->charge < b->charge;
             }
             return massA < massB; // Lower mass first
         }
