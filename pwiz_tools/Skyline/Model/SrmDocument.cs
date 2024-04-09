@@ -2195,7 +2195,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
             }
-            else if (Settings.DataSettings.AuditLogging)
+            else if (Settings.DataSettings.IsAuditLoggingEnabled)
             {
                 needNewGuid = true;
             }
