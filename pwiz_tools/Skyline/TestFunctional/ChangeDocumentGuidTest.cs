@@ -21,6 +21,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -42,12 +43,22 @@ namespace pwiz.SkylineTestFunctional
     /// be recognized as different versions of the same document.
     /// </summary>
     [TestClass]
-    public class NewDocumentGuidTest : AbstractFunctionalTest
+    public class ChangeDocumentGuidTest : AbstractFunctionalTest
     {
         [TestMethod]
-        public void TestNewDocumentGuid()
+        public void TestChangeDocumentGuid()
         {
-            RunFunctionalTest();
+            try
+            {
+                // DataSettings.AuditLogging always returns "true" unless "IgnoreTestChecks" is turned on
+                AuditLogList.IgnoreTestChecks = true;
+
+                RunFunctionalTest();
+            }
+            finally
+            {
+                AuditLogList.IgnoreTestChecks = false;
+            }
         }
 
         protected override void DoTest()
@@ -83,6 +94,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(originalDocumentGuid, SkylineWindow.Document.Settings.DataSettings.DocumentGuid);
             RunUI(SkylineWindow.ShowAuditLog);
             var auditLogForm = FindOpenForm<AuditLogForm>();
+            Assert.IsTrue(SkylineWindow.Document.Settings.DataSettings.AuditLogging);
             RunDlg<AlertDlg>(()=>auditLogForm.EnableAuditLogging(false), alertDlg=>alertDlg.ClickYes());
             Assert.AreEqual(originalDocumentGuid, SkylineWindow.Document.Settings.DataSettings.DocumentGuid);
             string noAuditLogSkyZip = Path.Combine(testFolder, "NoAuditLog.sky.zip");
@@ -96,8 +108,6 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreNotEqual(originalDocumentGuid, SkylineWindow.Document.Settings.DataSettings.DocumentGuid);
             string restartedAuditLogSkyZip = Path.Combine(testFolder, "RestartedAuditLog.sky.zip");
             ShareDocument(restartedAuditLogSkyZip);
-
-
 
             // Open "version2SkyZip" and "otherSkyZip" and remember the path to the Skyline documents
             OpenSharedFile(version2SkyZip);

@@ -25,6 +25,7 @@ using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.AuditLog.Databinding;
 using pwiz.Skyline.Model.Databinding;
@@ -92,7 +93,15 @@ namespace pwiz.Skyline.Controls.AuditLog
             }
 
             _skylineWindow.ModifyDocument(string.Empty, // Audit logging takes care of this now
-                doc => AuditLogList.ToggleAuditLogging(doc, enable),
+                doc =>
+                {
+                    if (enable && !doc.Settings.DataSettings.AuditLogging)
+                    {
+                        doc = doc.ChangeDocumentGuid();
+                    }
+                    doc = AuditLogList.ToggleAuditLogging(doc, enable);
+                    return doc;
+                },
                 AuditLogEntry.SettingsLogFunction);
             _skylineWindow.StoreNewSettings(_skylineWindow.DocumentUI.Settings);
             _enableAuditLogging.Checked = enable;
