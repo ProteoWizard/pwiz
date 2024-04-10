@@ -117,7 +117,7 @@ namespace pwiz.Skyline.Model
             var libraryBuildAction = LibraryBuildAction.Create;
             if (libraryExists)
             {
-                if (doc.Settings.HasDocumentLibrary || isFeatureDetection)
+                if (doc.Settings.HasDocumentLibrary && !isFeatureDetection)
                 {
                     libraryBuildAction = LibraryBuildAction.Append;
                 }
