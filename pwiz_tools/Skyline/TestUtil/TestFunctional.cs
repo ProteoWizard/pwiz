@@ -2206,20 +2206,14 @@ namespace pwiz.SkylineTestUtil
         // The majority of our tests were written before this was an option, so we dismiss the dialog by default and the new nodes are automanage OFF
         public static void DismissAutoManageDialog()
         {
-            var autoManageDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+            var autoManageDlg = TryWaitForOpenForm<MultiButtonMsgDlg>();
             if (autoManageDlg == null)
             {
                 AssertEx.Fail($@"Expected dialog with message like ""${Resources.SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions}""");
             }
             // Make sure we haven't intercepted some other dialog
-            else if (IsFormattedMessage(Resources.SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions, autoManageDlg.Message))
-            {
-                OkDialog(autoManageDlg, autoManageDlg.ClickNo); // Just use the transitions as given in the list
-            }
-            else
-            {
-                AssertEx.Fail($@"Expected dialog with message like ""${Resources.SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions}"", got ""${autoManageDlg.Message}"" instead");
-            }
+            AssertEx.IsTrue(IsFormattedMessage(Resources.SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions, autoManageDlg!.Message));
+            OkDialog(autoManageDlg, autoManageDlg.ClickNo); // Just use the transitions as given in the list
         }
 
         private static void ImportAssayLibraryOrTransitionList(string csvPath, bool isAssayLibrary, ICollection<string> errorList, bool proceedWithErrors = true, bool expectAutoManageDialog = false)
