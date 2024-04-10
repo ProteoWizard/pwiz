@@ -670,7 +670,7 @@
     <value>4</value>
   </data>
   <data name="labelIntensityCutoff.Text" xml:space="preserve">
-    <value>&amp;Intensity threshold:</value>
+    <value>Min &amp;intensity proportion:</value>
   </data>
   <data name="&gt;&gt;labelIntensityCutoff.Name" xml:space="preserve">
     <value>labelIntensityCutoff</value>
@@ -697,7 +697,7 @@
     <value>1</value>
   </data>
   <data name="textHardklorCorrelation.ToolTip" xml:space="preserve">
-    <value>Ignore features with correllation ("Normalized Contrast Angle") less than this</value>
+    <value>Ignore features with correlation ("Normalized Contrast Angle") less than this value.</value>
   </data>
   <data name="&gt;&gt;textHardklorCorrelation.Name" xml:space="preserve">
     <value>textHardklorCorrelation</value>
@@ -754,7 +754,7 @@
     <value>3</value>
   </data>
   <data name="textHardklorSignalToNoise.ToolTip" xml:space="preserve">
-    <value>Sets Hardklor configuration's signal-to-noise ratio value</value>
+    <value>Sets Hardklor configuration's signal-to-noise threshold, i.e. the relative abundance a peak must exceed in the spectrum window to be considered in the scoring algorithm. Note that this is a local noise threshold for the area of the spectrum that the peptide was identified in.</value>
   </data>
   <data name="&gt;&gt;textHardklorSignalToNoise.Name" xml:space="preserve">
     <value>textHardklorSignalToNoise</value>
@@ -784,7 +784,7 @@
     <value>2</value>
   </data>
   <data name="lblHardklorSignalToNoise.Text" xml:space="preserve">
-    <value>&amp;Signal to noise:</value>
+    <value>Min &amp;signal to noise:</value>
   </data>
   <data name="&gt;&gt;lblHardklorSignalToNoise.Name" xml:space="preserve">
     <value>lblHardklorSignalToNoise</value>
