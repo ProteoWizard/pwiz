@@ -2706,6 +2706,18 @@ namespace pwiz.Skyline.Model
             return docNodeTuples.Select(tuple => tuple.Item1);
         }
 
+        public SrmDocument ForgetOriginalMoleculeTargets()
+        {
+            var newChildren = MoleculeGroups.Select(peptideDocNode => peptideDocNode.ForgetOriginalMoleculeTargets())
+                .Cast<DocNode>().ToList();
+            if (ArrayUtil.ReferencesEqual(newChildren, Children))
+            {
+                return this;
+            }
+
+            return (SrmDocument) ChangeChildren(newChildren);
+        }
+
         #region object overrides
 
         public bool Equals(SrmDocument obj)

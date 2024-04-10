@@ -834,7 +834,7 @@ namespace pwiz.Skyline
                 // Only align to regressions that are auto-calculated.  Otherwise,
                 // conversion will be the same for all replicates, making this just
                 // a linear unit conversion
-                var predictRT = DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime;
+                var predictRT = Document.Settings.PeptideSettings.Prediction.RetentionTime;
                 if (predictRT != null && predictRT.IsAutoCalculated)
                 {
                     return new GraphValues.RegressionUnconversion(predictRT);
