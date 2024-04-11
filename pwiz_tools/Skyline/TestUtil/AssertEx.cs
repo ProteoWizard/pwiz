@@ -891,28 +891,30 @@ namespace pwiz.SkylineTestUtil
             {
                 return; // Identical
             }
-            var pattern = @"(?:[^,;\t""]*\\+[^,;\t""]*)";
-            for (var matching = true; matching;)
+
+            var splitChars = new[] { '\t', ';', ',' };
+
+            var colsActual = lineActual.Split(splitChars);
+            var colsExpected = lineExpected.Split(splitChars);
+            if (colsExpected.Length != colsActual.Length)
             {
-                matching = false;
-                var matchE = Regex.Match(lineExpected, pattern);
-                if (matchE.Success)
+                return; // No way we're cleaning this up to make a match
+            }
+            for (var col = 0; col < colsActual.Length; col++)
+            {
+                var pathE = colsExpected[col];
+                var pathA = colsActual[col];
+                if (string.Equals(pathE, pathA))
                 {
-                    var matchA = Regex.Match(lineActual, pattern);
-                    if (matchA.Success)
-                    {
-                        var pathE = matchE.Groups[0].Value;
-                        var pathA = matchA.Groups[0].Value;
-                        var fileE = Path.GetFileName(pathE);
-                        var fileA = Path.GetFileName(pathA);
-                        if (string.Equals(fileE, fileA) || 
-                            (Path.GetExtension(fileE) == @".tmp") && Path.GetExtension(fileE) == Path.GetExtension(fileA)) // Tmp file names will always vary
-                        {
-                            lineExpected = lineExpected.Replace(pathE, string.Empty);
-                            lineActual = lineActual.Replace(pathA, string.Empty);
-                            matching = true;
-                        }
-                    }
+                    continue;
+                }
+                var fileE = Path.GetFileName(pathE);
+                var fileA = Path.GetFileName(pathA);
+                if (string.Equals(fileE, fileA) || 
+                    (Path.GetExtension(fileE) == @".tmp") && Path.GetExtension(fileE) == Path.GetExtension(fileA)) // Tmp file names will always vary
+                {
+                    lineExpected = lineExpected.Replace(pathE, string.Empty);
+                    lineActual = lineActual.Replace(pathA, string.Empty);
                 }
             }
         }
