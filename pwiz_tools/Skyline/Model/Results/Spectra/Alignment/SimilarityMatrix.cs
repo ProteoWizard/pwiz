@@ -16,9 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
 namespace pwiz.Skyline.Model.Results.Spectra.Alignment
@@ -33,45 +35,151 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
     /// </summary>
     public class SimilarityMatrix
     {
-        public SimilarityMatrix(IEnumerable<PointPair> points)
+        public SimilarityMatrix(IEnumerable<SubMatrix> scoreMatrices)
         {
-            Points = ImmutableList.ValueOf(points.OrderByDescending(point => point.Z));
+            ScoreMatrices = ImmutableList.ValueOf(scoreMatrices);
+        }
+
+        public ImmutableList<SubMatrix> ScoreMatrices{ get; }
+
+        public IEnumerable<PointPair> Points
+        {
+            get
+            {
+                return ScoreMatrices.SelectMany(matrix => matrix.AsPoints);
+            }
+        }
+
+        public IEnumerable<(double x, double y, double z)> AsTuples
+        {
+            get
+            {
+                return Points.Select(pt => (pt.X, pt.Y, pt.Z));
+            }
         }
 
         /// <summary>
-        /// List of points sorted descending by Z-value.
-        /// </summary>
-        public ImmutableList<PointPair> Points { get; }  // CONSIDER: PointPair seems rather heavy for this purpose - do we really need an object Tag?
-        /// <summary>
         /// Returns points with the highest Z-coordinate values.
         /// The points will have unique X-values and unique Y-values.
-        /// <param name="onlyIncludeBestPoints">If true, the returned points will all have the highest Z-value among all points with the same X-coordinate and all points with the same Y-coordinate</param>
         /// </summary>
-        public IEnumerable<PointPair> FindBestPath(bool onlyIncludeBestPoints)
+        public IList<KeyValuePair<double, double>> FindBestPath()
         {
-            var xValues = new HashSet<double>();
-            var yValues = new HashSet<double>();
-            foreach (var point in Points)
+            return ScoreMatrices.SelectMany(matrix => matrix.GetBestPath())
+                .Select(point => new KeyValuePair<double, double>(point.X, point.Y)).ToList();
+        }
+
+        public string ToTsv()
+        {
+            var lines = new List<string>();
+            var xValues = Points.Select(pt => pt.X).Distinct().OrderBy(x => x).ToList();
+            lines.Add(string.Join(TextUtil.SEPARATOR_TSV_STR, xValues.Cast<object>().Prepend(string.Empty)));
+            foreach (var row in Points.GroupBy(pt => pt.Y).OrderBy(group => group.Key))
             {
-                if (onlyIncludeBestPoints)
+                var values = new List<double?> { row.Key };
+                var dict = row.ToDictionary(pt => pt.X);
+                foreach (var x in xValues)
                 {
-                    if (!xValues.Add(point.X) || !yValues.Add(point.Y)) // CONSIDER: Was bitwise or (| vs ||) - why?
-                    {
-                        continue;
-                    }
+                    dict.TryGetValue(x, out var value);
+                    values.Add(value?.Z);
                 }
-                else
+                lines.Add(string.Join(TextUtil.SEPARATOR_TSV_STR, values));
+            }
+
+            return TextUtil.LineSeparate(lines);
+        }
+
+        public class SubMatrix
+        {
+            public SubMatrix(IEnumerable<double> xValues, IEnumerable<double> yValues,
+                IEnumerable<IEnumerable<double>> scoreRows)
+            {
+                XValues = ImmutableList.ValueOf(xValues);
+                YValues = ImmutableList.ValueOf(yValues);
+                ScoreRows = ImmutableList.ValueOf(scoreRows.Select(ImmutableList.ValueOf));
+            }
+
+            public ImmutableList<double> XValues { get; }
+            public ImmutableList<double> YValues { get; }
+            public ImmutableList<ImmutableList<double>> ScoreRows { get; }
+
+            public IEnumerable<PointPair> GetBestPath()
+            {
+                var excludedColumnIndices = new HashSet<int>();
+                var remainingRowIndices = Enumerable.Range(0, YValues.Count).ToList();
+                var rowDatas = ScoreRows.Select(row => new RowData(row)).ToList();
+                while (true)
                 {
-                    if (xValues.Contains(point.X) || yValues.Contains(point.Y))
+                    int bestRow = -1;
+                    int bestCol = -1;
+                    double? bestScore = null;
+                    foreach (int iRow in remainingRowIndices)
                     {
-                        continue;
+                        var rowData = rowDatas[iRow];
+                        int iCol = rowData.GetBestScoreIndex(excludedColumnIndices);
+                        if (iCol >= 0)
+                        {
+                            var score = ScoreRows[iRow][iCol];
+                            if (bestScore == null || score > bestScore)
+                            {
+                                bestScore = score;
+                                bestRow = iRow;
+                                bestCol = iCol;
+                            }
+                        }
                     }
 
-                    xValues.Add(point.X);
-                    yValues.Add(point.Y);
-                }
+                    if (bestScore == null)
+                    {
+                        yield break;
+                    }
 
-                yield return new PointPair(point.X, point.Y); // CONSIDER: Do we really need to make a copy?
+                    excludedColumnIndices.Add(bestCol);
+                    remainingRowIndices.Remove(bestRow);
+                    yield return new PointPair(XValues[bestCol], YValues[bestRow], bestScore.Value);
+                }
+            }
+
+            public IEnumerable<PointPair> AsPoints
+            {
+                get
+                {
+                    for (int iRow = 0; iRow < YValues.Count; iRow++)
+                    {
+                        var scoreRow = ScoreRows[iRow];
+                        var yValue = YValues[iRow];
+                        for (int iCol = 0; iCol < XValues.Count; iCol++)
+                        {
+                            yield return new PointPair(XValues[iCol], yValue, scoreRow[iRow]);
+                        }
+                    }
+                }
+            }
+
+            private class RowData
+            {
+                public RowData(IList<double> rowScores)
+                {
+                    SortedScoreIndexes = Enumerable.Range(0, rowScores.Count).OrderByDescending(i => rowScores[i])
+                        .ToArray();
+                }
+                public int[] SortedScoreIndexes { get; }
+                public int CurrentScoreIndex { get; set; }
+
+                public int GetBestScoreIndex(HashSet<int> excludedColumnIndexes)
+                {
+                    while (CurrentScoreIndex < SortedScoreIndexes.Length &&
+                           excludedColumnIndexes.Contains(SortedScoreIndexes[CurrentScoreIndex]))
+                    {
+                        CurrentScoreIndex++;
+                    }
+
+                    if (CurrentScoreIndex >= SortedScoreIndexes.Length)
+                    {
+                        return -1;
+                    }
+
+                    return SortedScoreIndexes[CurrentScoreIndex];
+                }
             }
         }
     }
