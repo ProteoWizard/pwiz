@@ -229,6 +229,16 @@ namespace pwiz.Skyline.Model.DdaSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error performing alignment between {0} and {1}: {2}.
+        /// </summary>
+        public static string HardklorSearchEngine_PerformAllAlignments_Error_performing_alignment_between__0__and__1____2_ {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_PerformAllAlignments_Error_performing_alignment_between__0__" +
+                        "and__1____2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Performing retention time alignment {0} vs {1}.
         /// </summary>
         public static string HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_ {

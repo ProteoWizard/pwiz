@@ -93,10 +93,14 @@ namespace pwiz.Skyline.Model.DdaSearch
                 {
                     // Final step - try to unify similar features across the various Bullseye result files
                     _searchSettings.RemainingStepsInSearch--; // More to do after this?
-                    _success = FindSimilarFeatures();
-                    if (!_success)
+                    _success = AlignReplicates();
+                    if (_success)
                     {
-                        _progressStatus = _progressStatus.ChangeMessage(string.Format(DdaSearchResources.DdaSearch_Search_failed__0, DdaSearchResources.HardklorSearchEngine_Run_See_Hardklor_Bullseye_log_for_details));
+                        _success = FindSimilarFeatures();
+                        if (!_success)
+                        {
+                            _progressStatus = _progressStatus.ChangeMessage(string.Format(DdaSearchResources.DdaSearch_Search_failed__0, DdaSearchResources.HardklorSearchEngine_Run_See_Hardklor_Bullseye_log_for_details));
+                        }
                     }
                 }
                 else
@@ -260,7 +264,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         private double[] _summedIntensityPerFile;
         private double _ppm;
 
-        private bool FindSimilarFeatures()
+        private bool AlignReplicates()
         {
             // Final step - try to unify similar features in the various Bullseye result files
             _bfiles = SpectrumFileNames.Select(GetSearchResultFilepath).ToArray();
@@ -270,11 +274,20 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
 
             _progressStatus = _progressStatus.ChangeMessage(string.Empty);
-            _progressStatus = _progressStatus.ChangePercentComplete(0).ChangeMessage(DdaSearchResources.HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_runs);
+            _progressStatus = _progressStatus.ChangePercentComplete(0).ChangeMessage(DdaSearchResources
+                .HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_runs);
 
             // Do retention time alignment on the raw data
-            PerformAllAlignments();
+            if (!PerformAllAlignments())
+            {
+                return false;
+            }
 
+            return true;
+        }
+
+        private bool FindSimilarFeatures()
+        {
             // Parse all the Bullseye output files
             ReadFeatures();
 
@@ -973,7 +986,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             return kdeAligner;
         }
 
-        public void PerformAllAlignments()
+        public bool PerformAllAlignments()
         {
             foreach (var path in SpectrumFileNames)
             {
@@ -994,15 +1007,17 @@ namespace pwiz.Skyline.Model.DdaSearch
 
                     try
                     {
-                        _alignments[Tuple.Create(entry1.Key, entry2.Key)] =
-                            PerformAlignment(entry1.Value, entry2.Value);
+                        _alignments[Tuple.Create(entry1.Key, entry2.Key)] = PerformAlignment(entry1.Value, entry2.Value);
                     }
                     catch (Exception x)
                     {
-                        Trace.TraceWarning(@"Error performing alignment between {0} and {1}: {2}", entry1.Key, entry2.Key, x);
+                        _progressStatus = _progressStatus.ChangeMessage(string.Format(DdaSearchResources.HardklorSearchEngine_PerformAllAlignments_Error_performing_alignment_between__0__and__1____2_, entry1.Key, entry2.Key, x));
+                        return false;
                     }
                 }
             }
+
+            return true;
         }
     }
 }
