@@ -20,6 +20,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
@@ -64,8 +65,7 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
         /// </summary>
         public IList<KeyValuePair<double, double>> FindBestPath()
         {
-            return ScoreMatrices.SelectMany(matrix => matrix.GetBestPath())
-                .Select(point => new KeyValuePair<double, double>(point.X, point.Y)).ToList();
+            return ScoreMatrices.SelectMany(matrix => matrix.GetBestPath()).ToList();
         }
 
         public string ToTsv()
@@ -102,22 +102,41 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
             public ImmutableList<double> YValues { get; }
             public ImmutableList<ImmutableList<double>> ScoreRows { get; }
 
-            public IEnumerable<PointPair> GetBestPath()
+            public IEnumerable<KeyValuePair<double, double>> GetBestPath()
             {
-                var excludedColumnIndices = new HashSet<int>();
-                var remainingRowIndices = Enumerable.Range(0, YValues.Count).ToList();
-                var rowDatas = ScoreRows.Select(row => new RowData(row)).ToList();
+                var excludedColumnIndices = new bool[XValues.Count];
+                var excludedRowIndices = new bool[YValues.Count];
+                var rowDatas = new RowData[ScoreRows.Count];
+                var returnedRows = new List<KeyValuePair<double, double>>();
+                ParallelEx.For(0, ScoreRows.Count, i =>
+                {
+                    var rowData = new RowData(ScoreRows[i]);
+                    rowDatas[i] = rowData;
+                });
                 while (true)
                 {
+                    double? bestScore = null;
                     int bestRow = -1;
                     int bestCol = -1;
-                    double? bestScore = null;
-                    foreach (int iRow in remainingRowIndices)
+                    for (int iRow = 0; iRow < YValues.Count; iRow++)
                     {
-                        var rowData = rowDatas[iRow];
-                        int iCol = rowData.GetBestScoreIndex(excludedColumnIndices);
-                        if (iCol >= 0)
+                        if (excludedRowIndices[iRow])
                         {
+                            continue;
+                        }
+                        var rowData = rowDatas[iRow];
+                        while (rowData.CurrentScoreIndex < rowData.SortedScoreIndexes.Length && excludedColumnIndices[rowData.SortedScoreIndexes[rowData.CurrentScoreIndex]])
+                        {
+                            rowData.CurrentScoreIndex++;
+                        }
+
+                        if (rowData.CurrentScoreIndex >= rowData.SortedScoreIndexes.Length)
+                        {
+                            excludedRowIndices[iRow] = true;
+                        }
+                        else
+                        {
+                            int iCol = rowData.SortedScoreIndexes[rowData.CurrentScoreIndex];
                             var score = ScoreRows[iRow][iCol];
                             if (bestScore == null || score > bestScore)
                             {
@@ -127,15 +146,14 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
                             }
                         }
                     }
-
                     if (bestScore == null)
                     {
-                        yield break;
+                        return returnedRows;
                     }
 
-                    excludedColumnIndices.Add(bestCol);
-                    remainingRowIndices.Remove(bestRow);
-                    yield return new PointPair(XValues[bestCol], YValues[bestRow], bestScore.Value);
+                    excludedColumnIndices[bestCol] = true;
+                    excludedRowIndices[bestRow] = true;
+                    returnedRows.Add(new KeyValuePair<double, double>(XValues[bestCol], YValues[bestRow]));
                 }
             }
 
@@ -164,22 +182,6 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
                 }
                 public int[] SortedScoreIndexes { get; }
                 public int CurrentScoreIndex { get; set; }
-
-                public int GetBestScoreIndex(HashSet<int> excludedColumnIndexes)
-                {
-                    while (CurrentScoreIndex < SortedScoreIndexes.Length &&
-                           excludedColumnIndexes.Contains(SortedScoreIndexes[CurrentScoreIndex]))
-                    {
-                        CurrentScoreIndex++;
-                    }
-
-                    if (CurrentScoreIndex >= SortedScoreIndexes.Length)
-                    {
-                        return -1;
-                    }
-
-                    return SortedScoreIndexes[CurrentScoreIndex];
-                }
             }
         }
     }
