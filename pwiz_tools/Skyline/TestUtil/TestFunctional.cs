@@ -984,16 +984,20 @@ namespace pwiz.SkylineTestUtil
         public static SrmDocument WaitForDocumentLoaded(int millis = WAIT_TIME)
         {
             WaitForConditionUI(millis, () =>
-            {
-                var alertDlg = FindOpenForm<CommonAlertDlg>();
-                if (alertDlg != null)
                 {
-                    AssertEx.Fail("Unexpected alert found: {0}{1}Open forms: {2}",
-                        TextUtil.LineSeparate(alertDlg.Message, alertDlg.DetailMessage),
-                        new string('\n', 3), GetOpenFormsString());
-                }
-                return SkylineWindow.DocumentUI.IsLoaded;
-            });
+                    var alertDlg = FindOpenForm<CommonAlertDlg>();
+                    if (alertDlg != null)
+                    {
+                        AssertEx.Fail("Unexpected alert found: {0}{1}Open forms: {2}",
+                            TextUtil.LineSeparate(alertDlg.Message, alertDlg.DetailMessage),
+                            new string('\n', 3), GetOpenFormsString());
+                    }
+
+                    return SkylineWindow.DocumentUI.IsLoaded;
+                },
+                () => TextUtil.LineSeparate(
+                    $"Expecting loaded document but still not loaded after {millis / 1000} seconds",
+                    TextUtil.LineSeparate(SkylineWindow.DocumentUI.NonLoadedStateDescriptionsFull)));
             WaitForProteinMetadataBackgroundLoaderCompletedUI(millis);  // make sure document is stable
             return SkylineWindow.Document;
         }
@@ -2158,8 +2162,7 @@ namespace pwiz.SkylineTestUtil
         public static SrmDocument WaitForProteinMetadataBackgroundLoaderCompletedUI(int millis = WAIT_TIME)
         {
             // In a functional test we expect the protein metadata search to at least pretend to have gone to the web
-            WaitForCondition(millis, () => ProteinMetadataManager.IsLoadedDocument(SkylineWindow.Document)); // Make sure doc is stable
-            WaitForConditionUI(millis, () => ProteinMetadataManager.IsLoadedDocument(SkylineWindow.DocumentUI)); // Then make sure UI ref is current
+            WaitForConditionUI(millis, () => ProteinMetadataManager.IsLoadedDocument(SkylineWindow.DocumentUI));
             return SkylineWindow.Document;
         }
 
@@ -2180,20 +2183,6 @@ namespace pwiz.SkylineTestUtil
             ImportAssayLibraryOrTransitionList(csvPath, true, errorList, proceedWithErrors);
         }
 
-        // Determine whether a message was created using the given string format
-        public static bool IsFormattedMessage(string format, string actual)
-        {
-            void Simplify(ref string str)
-            {
-                str = str.Replace("\r\n", string.Empty).Replace("\"", string.Empty).Replace(@".", @"_").Replace(@"?", @"_");
-            }
-
-            Simplify(ref format);
-            var regex = Regex.Replace(format, @"\{\d+\}",  match => @".*", RegexOptions.Multiline);
-            Simplify(ref actual);
-            return Regex.IsMatch(actual, regex);
-        }
-
         // Importing a small molecule transition list typically provokes a dialog asking whether or not to automatically manage the resulting transitions
         // The majority of our tests were written before this was an option, so we dismiss the dialog by default and the new nodes are automanage OFF
         public static void PasteSmallMoleculeListNoAutoManage()
@@ -2206,13 +2195,11 @@ namespace pwiz.SkylineTestUtil
         // The majority of our tests were written before this was an option, so we dismiss the dialog by default and the new nodes are automanage OFF
         public static void DismissAutoManageDialog()
         {
-            var autoManageDlg = TryWaitForOpenForm<MultiButtonMsgDlg>();
-            if (autoManageDlg == null)
-            {
-                AssertEx.Fail($@"Expected dialog with message like ""${Resources.SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions}""");
-            }
-            // Make sure we haven't intercepted some other dialog
-            AssertEx.IsTrue(IsFormattedMessage(Resources.SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions, autoManageDlg!.Message));
+            var autoManageDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+            // Make sure it has the right message
+            AssertEx.AreComparableStrings(Resources
+                    .SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions,
+                autoManageDlg.Message, 4);
             OkDialog(autoManageDlg, autoManageDlg.ClickNo); // Just use the transitions as given in the list
         }
 
