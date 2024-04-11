@@ -536,9 +536,9 @@
     <Compile Include="Model\FullScanProperties.cs" />
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\BinnedSpectrum.cs" />
-    <Compile Include="Model\Results\Spectra\Alignment\SpectrumSummaryList.cs" />
-    <Compile Include="Model\Results\Spectra\Alignment\SpectrumSummary.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SimilarityMatrix.cs" />
+    <Compile Include="Model\Results\Spectra\Alignment\SpectrumSummary.cs" />
+    <Compile Include="Model\Results\Spectra\Alignment\SpectrumSummaryList.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassFilter.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
     <Compile Include="Model\RetentionTimes\AlignmentFunction.cs" />

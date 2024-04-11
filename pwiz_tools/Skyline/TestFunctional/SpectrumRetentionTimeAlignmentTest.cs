@@ -46,11 +46,11 @@ namespace pwiz.SkylineTestFunctional
             var spectrumSummaries2 = LoadSpectrumSummaryList(TestFilesDir.GetTestPath("8fmol.mzML"));
             var similarityMatrix = spectrumSummaries1.GetSimilarityMatrix(null, null, spectrumSummaries2);
             Assert.IsNotNull(similarityMatrix);
-            Assert.AreNotEqual(0, similarityMatrix.Points.Count);
-            var pointsToAlign = similarityMatrix.FindBestPath(false).ToList();
+            Assert.AreNotEqual(0, similarityMatrix.Points.Count());
+            var pointsToAlign = similarityMatrix.FindBestPath().ToList();
             Assert.AreNotEqual(0, pointsToAlign.Count);
             var kdeAligner = new KdeAligner();
-            kdeAligner.Train(pointsToAlign.Select(pt=>pt.X).ToArray(), pointsToAlign.Select(pt=>pt.Y).ToArray(), CancellationToken.None);
+            kdeAligner.Train(pointsToAlign.Select(pt=>pt.Key).ToArray(), pointsToAlign.Select(pt=>pt.Value).ToArray(), CancellationToken.None);
             kdeAligner.GetSmoothedValues(out var smoothedX, out var smoothedY);
             Assert.IsTrue(smoothedY.Length > 2, "Length {0} should be greater than 2", smoothedX.Length);
             Assert.AreEqual(smoothedX.Length, smoothedY.Length);

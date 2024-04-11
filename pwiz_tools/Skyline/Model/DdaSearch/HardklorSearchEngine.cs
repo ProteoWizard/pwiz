@@ -981,8 +981,8 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             var similarityMatrix = spectra1.GetSimilarityMatrix(this, this._progressStatus, spectra2);
             var kdeAligner = new KdeAligner();
-            var pointsToBeAligned = similarityMatrix.FindBestPath(false).ToList();
-            kdeAligner.Train(pointsToBeAligned.Select(pt=>pt.X).ToArray(), pointsToBeAligned.Select(pt=>pt.Y).ToArray(), CancellationToken.None);
+            var pointsToBeAligned = similarityMatrix.FindBestPath().ToList();
+            kdeAligner.Train(pointsToBeAligned.Select(pt=>pt.Key).ToArray(), pointsToBeAligned.Select(pt=>pt.Value).ToArray(), CancellationToken.None);
             return kdeAligner;
         }
 

@@ -16,14 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
-using ZedGraph;
 
 namespace pwiz.Skyline.Model.Results.Spectra.Alignment
 {
@@ -50,10 +48,16 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
 
         public SpectrumSummary this[int index] => _summaries[index];
 
-        private static Tuple<double, double, ImmutableList<ImmutableList<SpectrumPrecursor>>> GetSpectrumDigestKey(
+        private static DigestKey GetSpectrumDigestKey(
             SpectrumSummary spectrumSummary)
         {
-            if (spectrumSummary.SummaryValue == null)
+            if (spectrumSummary.SummaryValueLength == 0)
+            {
+                return null;
+            }
+
+            if (!spectrumSummary.SpectrumMetadata.ScanWindowLowerLimit.HasValue ||
+                !spectrumSummary.SpectrumMetadata.ScanWindowUpperLimit.HasValue)
             {
                 return null;
             }
@@ -61,41 +65,48 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
             var precursorsByMsLevel = ImmutableList.ValueOf(Enumerable
                 .Range(1, spectrumSummary.SpectrumMetadata.MsLevel - 1)
                 .Select(level => spectrumSummary.SpectrumMetadata.GetPrecursors(level)));
-            return Tuple.Create(spectrumSummary.SpectrumMetadata.ScanWindowLowerLimit.Value,
-                spectrumSummary.SpectrumMetadata.ScanWindowUpperLimit.Value, precursorsByMsLevel);
+            return new DigestKey(spectrumSummary.SpectrumMetadata.ScanWindowLowerLimit.Value,
+                spectrumSummary.SpectrumMetadata.ScanWindowUpperLimit.Value, spectrumSummary.SummaryValueLength,
+                precursorsByMsLevel);
         }
+
+        /// <summary>
+        /// Minimum number of a spectra with the same key (i.e. same MS Level and Precursor)
+        /// to do an alignment between. (That is, it does not make sense to try to align to
+        /// DDA spectra which happen to have the same precursor m/z-- the same precursor
+        /// needs to have been sampled several times)
+        /// </summary>
+        private const int MIN_SPECTRA_FOR_ALIGNMENT = 20;
 
         public SimilarityMatrix GetSimilarityMatrix(
             IProgressMonitor progressMonitor,
             IProgressStatus status,
-            IEnumerable<SpectrumSummary> listS)
+            IEnumerable<SpectrumSummary> spectrumSummaries)
         {
-            var byDigestKey = listS.ToLookup(GetSpectrumDigestKey);
+            var thatByDigestKey = spectrumSummaries.GroupBy(GetSpectrumDigestKey)
+                .Where(grouping => null != grouping.Key).ToDictionary(grouping => grouping.Key, ImmutableList.ValueOf);
+            var myIndicesByDigestKey = Enumerable.Range(0, Count).GroupBy(i => GetSpectrumDigestKey(this[i]))
+                .Where(grouping => null != grouping.Key).ToDictionary(grouping => grouping.Key, ImmutableList.ValueOf);
+            var scoreLists = new List<double>[Count];
             int completedCount = 0;
-            var lists = new IList<PointPair>[Count];
             ParallelEx.For(0, Count, index =>
             {
                 var spectrum = this[index];
                 var key = GetSpectrumDigestKey(spectrum);
-                if (key != null)
+                if (key != null && myIndicesByDigestKey[key].Count > MIN_SPECTRA_FOR_ALIGNMENT && thatByDigestKey[key].Count > MIN_SPECTRA_FOR_ALIGNMENT)
                 {
-                    var list = new List<PointPair>();
-                    foreach (var otherSpectrum in byDigestKey[key])
+                    var scores = new List<double>();
+                    foreach (var otherSpectrum in thatByDigestKey[key])
                     {
                         if (true == progressMonitor?.IsCanceled)
                         {
                             break;
                         }
 
-                        var score = CalculateSimilarityScore(spectrum.SummaryValue,
-                            otherSpectrum.SummaryValue);
-                        if (score.HasValue)
-                        {
-                            list.Add(new PointPair(spectrum.RetentionTime, otherSpectrum.RetentionTime, score.Value));
-                        }
+                        scores.Add(spectrum.SimilarityScore(otherSpectrum)!.Value);
                     }
 
-                    lists[index] = list;
+                    scoreLists[index] = scores;
                 }
 
                 if (progressMonitor != null)
@@ -103,37 +114,107 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
                     lock (progressMonitor)
                     {
                         completedCount++;
-                        int progressValue = completedCount * 100 / lists.Length;
+                        int progressValue = completedCount * 100 / Count;
                         progressMonitor.UpdateProgress(status = status.ChangePercentComplete(progressValue));
                     }
                 }
             });
-            return new SimilarityMatrix(lists.SelectMany(v=> v ?? Array.Empty<PointPair>()));
+            var scoreMatrices = new List<SimilarityMatrix.SubMatrix>();
+            foreach (var entry in myIndicesByDigestKey)
+            {
+                var scoreColumns = entry.Value.Select(i => scoreLists[i]).ToList();
+                var xValues = ImmutableList.ValueOf(entry.Value.Select(i => this[i].RetentionTime));
+                var yValues = ImmutableList.ValueOf(thatByDigestKey[entry.Key].Select(spectrum => spectrum.RetentionTime));
+                var scoreRows = new List<IEnumerable<double>>();
+                for (int iRow = 0; iRow < yValues.Count; iRow++)
+                {
+                    scoreRows.Add(scoreColumns.Select(col => col[iRow]).ToList());
+                }
+                scoreMatrices.Add(new SimilarityMatrix.SubMatrix(xValues, yValues, scoreRows));
+            }
+
+            return new SimilarityMatrix(scoreMatrices);
         }
-        public static double? CalculateSimilarityScore(IList<double> xList, IList<double> yList)
+        
+        public IEnumerable<SpectrumMetadata> SpectrumMetadatas
         {
-            if (xList.Count != yList.Count)
+            get
             {
-                return null;
+                return this.Select(summary => summary.SpectrumMetadata);
             }
-            double sumXX = 0;
-            double sumXY = 0;
-            double sumYY = 0;
-            for (int i = 0; i < xList.Count; i++)
+        }
+
+        protected bool Equals(SpectrumSummaryList other)
+        {
+            return _summaries.Equals(other._summaries);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((SpectrumSummaryList)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return _summaries.GetHashCode();
+        }
+
+        private class DigestKey
+        {
+            public DigestKey(double scanWindowLowerLimit, double scanWindowUpperLimit, int summaryValueLength, ImmutableList<ImmutableList<SpectrumPrecursor>> precursors)
             {
-                double x = xList[i];
-                double y = yList[i];
-                sumXX += x * x;
-                sumXY += x * y;
-                sumYY += y * y;
+                ScanWindowLowerLimit = scanWindowLowerLimit;
+                ScanWindowUpperLimit = scanWindowUpperLimit;
+                SummaryValueLength = summaryValueLength;
+                Precursors = precursors;
+
             }
 
-            if (sumXX <= 0 || sumYY <= 0)
+            public double ScanWindowLowerLimit { get; }
+            public double ScanWindowUpperLimit { get; }
+            public int SummaryValueLength { get; }
+            public ImmutableList<ImmutableList<SpectrumPrecursor>> Precursors { get; }
+
+            protected bool Equals(DigestKey other)
             {
-                return null;
+                return ScanWindowLowerLimit.Equals(other.ScanWindowLowerLimit) &&
+                       ScanWindowUpperLimit.Equals(other.ScanWindowUpperLimit) && Precursors.Equals(other.Precursors);
             }
 
-            return sumXY / Math.Sqrt(sumXX * sumYY);
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((DigestKey)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = ScanWindowLowerLimit.GetHashCode();
+                    hashCode = (hashCode * 397) ^ ScanWindowUpperLimit.GetHashCode();
+                    hashCode = (hashCode * 397) ^ Precursors.GetHashCode();
+                    return hashCode;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Remove all of the spectra whose scan window or precursors are not common enough to do
+        /// alignment on
+        /// </summary>
+        /// <returns></returns>
+        public SpectrumSummaryList RemoveRareSpectra()
+        {
+            var digestKeysToKeep = this.GroupBy(GetSpectrumDigestKey)
+                .Where(group => group.Count() >= MIN_SPECTRA_FOR_ALIGNMENT).Select(group => group.Key).ToHashSet();
+            return new SpectrumSummaryList(this.Where(spectrum =>
+                digestKeysToKeep.Contains(GetSpectrumDigestKey(spectrum))));
         }
     }
 }
