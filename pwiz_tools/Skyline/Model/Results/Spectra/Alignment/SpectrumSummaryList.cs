@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
         private static DigestKey GetSpectrumDigestKey(
             SpectrumSummary spectrumSummary)
         {
-            if (spectrumSummary.SummaryValueLength == 0)
+            if (spectrumSummary.SummaryValueLength == 0 || spectrumSummary.SummaryValue.All(value=>0 == value))
             {
                 return null;
             }
