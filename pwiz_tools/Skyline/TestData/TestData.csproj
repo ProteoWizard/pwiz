@@ -195,7 +195,6 @@
     <Compile Include="Results\TimeIntensitiesTest.cs" />
     <Compile Include="Results\WatersCalcurveTest.cs" />
     <Compile Include="Results\WatersImsMseTest.cs" />
-    <Compile Include="SpectrumSummaryTest.cs" />
     <Compile Include="XmlValidationTest.cs" />
   </ItemGroup>
   <ItemGroup>
