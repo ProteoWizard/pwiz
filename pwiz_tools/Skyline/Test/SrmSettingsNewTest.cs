@@ -27,7 +27,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTest
 {
     [TestClass]
-    public class SrmSettingsNewTest
+    public class SrmSettingsNewTest : AbstractUnitTest
     {
         [TestMethod]
         public void NewDocumentSettingsTest()
