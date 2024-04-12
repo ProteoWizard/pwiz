@@ -3273,6 +3273,10 @@ namespace pwiz.Skyline
                     {
                         docCurrent = Document;
                         docNew = docCurrent.ChangeMeasuredResults(resultsNew);
+                        if (chromRemaining.Length == 0)
+                        {
+                            docNew = docNew.ForgetOriginalMoleculeTargets();
+                        }
                     } while (!SetDocument(docNew, docCurrent));
                 });
         }
