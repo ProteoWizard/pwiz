@@ -157,8 +157,10 @@ namespace pwiz.Skyline
                 return;
 
             // Create a new document with the default settings.
-            SrmDocument document = ConnectDocument(this, new SrmDocument(Settings.Default.SrmSettingsList[0]), null) ??
-                                   new SrmDocument(SrmSettingsList.GetDefault());
+            var savedSettings = Settings.Default.SrmSettingsList[0];
+            var document = new SrmDocument(SrmSettingsList.GetNewDocumentSettings(savedSettings));
+            document = ConnectDocument(this, document, null) ??
+                       new SrmDocument(SrmSettingsList.GetDefault());
 
             if (document.Settings.DataSettings.AuditLogging)
             {

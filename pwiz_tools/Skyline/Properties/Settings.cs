@@ -3142,6 +3142,35 @@ namespace pwiz.Skyline.Properties
         {
             return new SrmSettingsList();
         }
+
+        /// <summary>
+        /// Returns default settings for a new document based on the current
+        /// default settings.
+        /// </summary>
+        public static SrmSettings GetNewDocumentSettings(SrmSettings newSettings)
+        {
+            // In the current internal standards contain anything but "heavy"
+            var newMods = newSettings.PeptideSettings.Modifications;
+            if (newMods.InternalStandardTypes.Any(it => !it.Equals(IsotopeLabelType.heavy)))
+            {
+                // Remove all modifications from all existing non-light types
+                // This preserves the types but avoids adding any precursors for
+                // them until modifications are added.
+                foreach (var typedMods in newMods.HeavyModifications)
+                {
+                    if (!typedMods.Modifications.Any())
+                        continue;
+                    newSettings = newSettings.ChangePeptideModifications(pm =>
+                        pm.ChangeModifications(typedMods.LabelType, Array.Empty<StaticMod>()));
+                }
+                // Reset standard type to "heavy" which will be a no-op without any
+                // isotope modifications in that label type.
+                newSettings = newSettings.ChangePeptideModifications(pm =>
+                    pm.ChangeInternalStandardTypes(GetDefault().PeptideSettings.Modifications.InternalStandardTypes));
+            }
+            return newSettings;
+        }
+
     }
 
     /// <summary>
