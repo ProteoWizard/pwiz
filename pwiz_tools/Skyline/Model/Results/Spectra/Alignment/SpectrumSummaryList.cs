@@ -19,9 +19,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.RetentionTimes;
 
 namespace pwiz.Skyline.Model.Results.Spectra.Alignment
 {
@@ -51,7 +53,7 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
         private static DigestKey GetSpectrumDigestKey(
             SpectrumSummary spectrumSummary)
         {
-            if (spectrumSummary.SummaryValueLength == 0 || spectrumSummary.SummaryValue.All(value=>0 == value))
+            if (spectrumSummary.SummaryValueLength == 0 || spectrumSummary.SummaryValue.All(v=>0 == v))
             {
                 return null;
             }
@@ -78,64 +80,6 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
         /// </summary>
         private const int MIN_SPECTRA_FOR_ALIGNMENT = 20;
 
-        public SimilarityMatrix GetSimilarityMatrix(
-            IProgressMonitor progressMonitor,
-            IProgressStatus status,
-            IEnumerable<SpectrumSummary> spectrumSummaries)
-        {
-            var thatByDigestKey = spectrumSummaries.GroupBy(GetSpectrumDigestKey)
-                .Where(grouping => null != grouping.Key).ToDictionary(grouping => grouping.Key, ImmutableList.ValueOf);
-            var myIndicesByDigestKey = Enumerable.Range(0, Count).GroupBy(i => GetSpectrumDigestKey(this[i]))
-                .Where(grouping => null != grouping.Key).ToDictionary(grouping => grouping.Key, ImmutableList.ValueOf);
-            var scoreLists = new List<double>[Count];
-            int completedCount = 0;
-            ParallelEx.For(0, Count, index =>
-            {
-                var spectrum = this[index];
-                var key = GetSpectrumDigestKey(spectrum);
-                if (key != null && myIndicesByDigestKey[key].Count > MIN_SPECTRA_FOR_ALIGNMENT && thatByDigestKey[key].Count > MIN_SPECTRA_FOR_ALIGNMENT)
-                {
-                    var scores = new List<double>();
-                    foreach (var otherSpectrum in thatByDigestKey[key])
-                    {
-                        if (true == progressMonitor?.IsCanceled)
-                        {
-                            break;
-                        }
-
-                        scores.Add(spectrum.SimilarityScore(otherSpectrum)!.Value);
-                    }
-
-                    scoreLists[index] = scores;
-                }
-
-                if (progressMonitor != null)
-                {
-                    lock (progressMonitor)
-                    {
-                        completedCount++;
-                        int progressValue = completedCount * 100 / Count;
-                        progressMonitor.UpdateProgress(status = status.ChangePercentComplete(progressValue));
-                    }
-                }
-            });
-            var scoreMatrices = new List<SimilarityMatrix.SubMatrix>();
-            foreach (var entry in myIndicesByDigestKey)
-            {
-                var scoreColumns = entry.Value.Select(i => scoreLists[i]).ToList();
-                var xValues = ImmutableList.ValueOf(entry.Value.Select(i => this[i].RetentionTime));
-                var yValues = ImmutableList.ValueOf(thatByDigestKey[entry.Key].Select(spectrum => spectrum.RetentionTime));
-                var scoreRows = new List<IEnumerable<double>>();
-                for (int iRow = 0; iRow < yValues.Count; iRow++)
-                {
-                    scoreRows.Add(scoreColumns.Select(col => col[iRow]).ToList());
-                }
-                scoreMatrices.Add(new SimilarityMatrix.SubMatrix(xValues, yValues, scoreRows));
-            }
-
-            return new SimilarityMatrix(scoreMatrices);
-        }
-        
         public IEnumerable<SpectrumMetadata> SpectrumMetadatas
         {
             get
@@ -215,6 +159,50 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
                 .Where(group => group.Count() >= MIN_SPECTRA_FOR_ALIGNMENT).Select(group => group.Key).ToHashSet();
             return new SpectrumSummaryList(this.Where(spectrum =>
                 digestKeysToKeep.Contains(GetSpectrumDigestKey(spectrum))));
+        }
+
+        public SimilarityGrid GetSimilarityGrid(SpectrumSummaryList that)
+        {
+            var thisByDigestKey = this.ToLookup(GetSpectrumDigestKey);
+            var thatByDigestKey = that.ToLookup(GetSpectrumDigestKey);
+            int bestCount = 0;
+            DigestKey bestDigestKey = null;
+            foreach (var group in thisByDigestKey)
+            {
+                if (group.Key == null)
+                {
+                    continue;
+                }
+
+                var count = group.Count() * thatByDigestKey[group.Key].Count();
+                if (count > bestCount)
+                {
+                    bestCount = count;
+                    bestDigestKey = group.Key;
+                }
+            }
+
+            if (bestCount == 0)
+            {
+                return null;
+            }
+
+            return new SimilarityGrid(thisByDigestKey[bestDigestKey], thatByDigestKey[bestDigestKey]);
+        }
+
+        public KdeAligner PerformAlignment(IProgressMonitor progressMonitor, IProgressStatus status, SpectrumSummaryList spectra2)
+        {
+            var similarityGrid = GetSimilarityGrid(spectra2);
+            var candidatePoints = similarityGrid.GetBestPointCandidates(progressMonitor, status);
+            if (candidatePoints == null)
+            {
+                return null;
+            }
+
+            var bestPoints = SimilarityGrid.FilterBestPoints(candidatePoints).ToList();
+            var kdeAligner = new KdeAligner();
+            kdeAligner.Train(bestPoints.Select(pt => pt.XRetentionTime).ToArray(), bestPoints.Select(pt=>pt.YRetentionTime).ToArray(), CancellationToken.None);
+            return kdeAligner;
         }
     }
 }

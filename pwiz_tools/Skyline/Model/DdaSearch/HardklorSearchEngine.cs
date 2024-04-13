@@ -979,11 +979,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public KdeAligner PerformAlignment(SpectrumSummaryList spectra1, SpectrumSummaryList spectra2)
         {
-            var similarityMatrix = spectra1.GetSimilarityMatrix(this, this._progressStatus, spectra2);
-            var kdeAligner = new KdeAligner();
-            var pointsToBeAligned = similarityMatrix.FindBestPath().ToList();
-            kdeAligner.Train(pointsToBeAligned.Select(pt=>pt.Key).ToArray(), pointsToBeAligned.Select(pt=>pt.Value).ToArray(), CancellationToken.None);
-            return kdeAligner;
+            return spectra1.PerformAlignment(this, _progressStatus, spectra2);
         }
 
         public bool PerformAllAlignments()
