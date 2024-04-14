@@ -345,6 +345,9 @@
     <Compile Include="Controls\Clustering\DataboundGraph.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Controls\Clustering\DebugZedGraphControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="Controls\Clustering\HeatMapGraph.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -6818,6 +6821,10 @@
   <ItemGroup>
     <PublishFile Include="BaseCommon">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -6828,6 +6835,10 @@
     </PublishFile>
     <PublishFile Include="BaseDataAccess">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -6838,6 +6849,10 @@
     </PublishFile>
     <PublishFile Include="BaseTof">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -6848,6 +6863,10 @@
     </PublishFile>
     <PublishFile Include="BiblioSpec.pdb">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -6858,6 +6877,10 @@
     </PublishFile>
     <PublishFile Include="Clearcore2.Data">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -6868,6 +6891,10 @@
     </PublishFile>
     <PublishFile Include="Clearcore2.Data.CommonInterfaces">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -6878,6 +6905,10 @@
     </PublishFile>
     <PublishFile Include="Clearcore2.RawXYProcessing">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -6888,6 +6919,10 @@
     </PublishFile>
     <PublishFile Include="enzymes.xml">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -6898,6 +6933,10 @@
     </PublishFile>
     <PublishFile Include="Instruments.xml">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -6908,6 +6947,10 @@
     </PublishFile>
     <PublishFile Include="JetBrains.Annotations">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Exclude</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -6918,6 +6961,10 @@
     </PublishFile>
     <PublishFile Include="MassSpecDataReader">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -6928,6 +6975,10 @@
     </PublishFile>
     <PublishFile Include="Microsoft.VC90.CRT">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Exclude</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -6938,6 +6989,10 @@
     </PublishFile>
     <PublishFile Include="Microsoft.VC90.MFC">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Exclude</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -6948,6 +7003,10 @@
     </PublishFile>
     <PublishFile Include="modifications.xml">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -6958,6 +7017,10 @@
     </PublishFile>
     <PublishFile Include="MSGraph.pdb">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -6968,6 +7031,10 @@
     </PublishFile>
     <PublishFile Include="OFX.Core.Contracts">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -6978,6 +7045,10 @@
     </PublishFile>
     <PublishFile Include="PanoramaClient.pdb">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -6988,6 +7059,10 @@
     </PublishFile>
     <PublishFile Include="ProteomeDb.pdb">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -6998,6 +7073,10 @@
     </PublishFile>
     <PublishFile Include="ProteowizardWrapper.pdb">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -7008,6 +7087,10 @@
     </PublishFile>
     <PublishFile Include="pwiz.Common.pdb">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -7018,6 +7101,10 @@
     </PublishFile>
     <PublishFile Include="pwiz.CommonUtil.pdb">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -7028,6 +7115,10 @@
     </PublishFile>
     <PublishFile Include="Sciex.Data.SimpleTypes">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -7038,6 +7129,10 @@
     </PublishFile>
     <PublishFile Include="Skyline-daily.pdb">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -7048,6 +7143,10 @@
     </PublishFile>
     <PublishFile Include="SkylineTool.pdb">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
@@ -7058,6 +7157,10 @@
     </PublishFile>
     <PublishFile Include="unimod.xml">
       <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <Group>
