@@ -166,6 +166,13 @@ namespace pwiz.SkylineTest
             Assert.IsFalse(Adduct.EMPTY.IsProteomic);
             Assert.IsTrue(Adduct.EMPTY.IsEmpty);
 
+            // Honor explicit charges 
+            var mCh3Cl = "[M+2CH3+Cl]+";
+            var adductCH3 = Adduct.FromString(mCh3Cl, Adduct.ADDUCT_TYPE.non_proteomic, null);
+            Assert.AreEqual(1, adductCH3.AdductCharge);
+            Assert.AreEqual(mCh3Cl, adductCH3.ToString());
+            AssertEx.ThrowsException<InvalidDataException>(() => Adduct.FromStringAssumeProtonated("[M+2H]-")); // Try to declare wrong charge on common adduct
+
             // Exercise the ability to work with masses and isotope labels
             Assert.IsTrue(ReferenceEquals(Adduct.SINGLY_PROTONATED, Adduct.SINGLY_PROTONATED.Unlabeled));
             var nolabel = Adduct.FromStringAssumeProtonated("M-2Na");
@@ -409,6 +416,10 @@ namespace pwiz.SkylineTest
             TestException(PENTANE, "M2Cl37H+H"); // nonsense label ("2Cl37H2" would make sense, but regular H doesn't belong)
             TestException(PENTANE, "M+2H+"); // Trailing sign - we now understand this as a charge state declaration, but this one doesn't match described charge
             TestException(PENTANE, "[M-2H]3-"); // Declared charge doesn't match described charge
+            TestException(PENTANE, "[M-]3-"); // Declared charge doesn't match described charge
+            TestException(PENTANE, "[M+]-"); // Declared charge doesn't match described charge
+            TestException(PENTANE, "[M+2]-"); // Declared charge doesn't match described charge
+            TestException(PENTANE, "[M+2]+3"); // Declared charge doesn't match described charge
 
             // Test label stripping
             Assert.AreEqual("C5H9NO2S", (new IonInfo("C5H9H'3NO2S[M-3H]")).UnlabeledFormula.ToString());
