@@ -2410,7 +2410,7 @@ namespace pwiz.Skyline.SettingsUI
         public int SelectedLibIndex
         {
             get { return comboLibrary.SelectedIndex; }
-            set { listPeptide.SelectedIndex = value; }
+            set { comboLibrary.SelectedIndex = value; }
         }
 
         public bool HasSelectedLibrary => _selectedLibrary != null;
