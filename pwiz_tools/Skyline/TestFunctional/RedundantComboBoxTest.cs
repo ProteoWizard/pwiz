@@ -93,11 +93,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => dlg.SelectedIndex = i);
             // The peptide at index one does not have redundant spectra
             int waitMs = 1000;
-            if (!TryWaitForConditionUI(waitMs, () =>
-                {
-                    dlg.SelectedIndex = i; // keep setting the selected index in case it has been changed by "ViewLibraryDlg_Shown"
-                    return IsViewLibraryDlgState(dlg, i, visible, peakCount);
-                }))
+            if (!TryWaitForConditionUI(waitMs, () => IsViewLibraryDlgState(dlg, i, visible, peakCount)))
             {
                 RunUI(() =>
                 {
