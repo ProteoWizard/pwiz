@@ -1087,7 +1087,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => dlg.SelectedIndex = i);
             // The peptide at index one does not have redundant spectra
             int waitMs = IsRecordMode ? 1000 : 10 * 1000;
-            if (!TryWaitForConditionUI(waitMs, () => IsViewLibraryDlgState(dlg, i, visible, peakCount)))
+            if (!TryWaitForConditionUI(waitMs, () => IsViewLibraryDlgState(dlg, i, visible, peakCount)) && !IsRecordMode)
             {
                 RunUI(() =>
                 {
