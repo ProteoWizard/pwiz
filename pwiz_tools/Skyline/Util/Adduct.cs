@@ -1170,7 +1170,8 @@ namespace pwiz.Skyline.Util
                 {BioMassCalc.F, -1},
                 {@"CH3COO", -1}, // Deprotonated Hac
                 {@"HCOO", -1}, // Formate (deprotonated FA)  
-                {@"NH4", 1}
+                {@"NH4", 1},
+                {@"CH3", 1} // Methyl
             };
 
         // Popular adducts (declared way down here because it has to follow some other statics)
