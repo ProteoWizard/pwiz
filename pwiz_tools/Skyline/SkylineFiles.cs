@@ -157,8 +157,10 @@ namespace pwiz.Skyline
                 return;
 
             // Create a new document with the default settings.
-            SrmDocument document = ConnectDocument(this, new SrmDocument(Settings.Default.SrmSettingsList[0]), null) ??
-                                   new SrmDocument(SrmSettingsList.GetDefault());
+            var savedSettings = Settings.Default.SrmSettingsList[0];
+            var document = new SrmDocument(SrmSettingsList.GetNewDocumentSettings(savedSettings));
+            document = ConnectDocument(this, document, null) ??
+                       new SrmDocument(SrmSettingsList.GetDefault());
 
             if (document.Settings.DataSettings.AuditLogging)
             {
@@ -1134,10 +1136,7 @@ namespace pwiz.Skyline
                 do
                 {
                     docOriginal = Document;
-                    docNew =
-                        docOriginal.ChangeSettings(
-                            docOriginal.Settings.ChangeDataSettings(
-                                docOriginal.Settings.DataSettings.ChangeDocumentGuid()));
+                    docNew = docOriginal.ChangeDocumentGuid();
                 } while (!SetDocument(docNew, docOriginal));
             }
 
@@ -2240,6 +2239,42 @@ namespace pwiz.Skyline
                     return;
             }
 
+            RefinementSettings refineAutoPick = null;
+            if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
+            {
+                // We create new nodes with automanage turned off, but it might be interesting to user to have that on for isotopes etc
+                // Try applying auto-pick refinement to see if that changes anything 
+                var refine = new RefinementSettings { AutoPickChildrenAll = PickLevel.precursors | PickLevel.transitions, AutoPickChildrenOff = false };
+                var docUnrefined = docNew ?? docCurrent;
+                var docRefined = refine.Refine(docUnrefined);
+                if (docRefined.MoleculeTransitionCount != 0 && // Automanage would turn everything off, not interesting
+                    !Equals(docRefined.MoleculeTransitionCount, docUnrefined.MoleculeTransitionCount))
+                {
+                    var existingPrecursorCount = docCurrent.MoleculeTransitions?.Where(t => t.IsMs1).Count();
+                    var existingFragmentCount = docCurrent.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
+                    var managedPrecursorCount = docRefined.MoleculeTransitions?.Where(t => t.IsMs1).Count();
+                    var managedFragmentCount = docRefined.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
+                    var docPrecursorCount = docUnrefined.MoleculeTransitions?.Where(t => t.IsMs1).Count();
+                    var docFragmentCount = docUnrefined.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
+                    var prompt = string.Format(
+                        Resources.SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions,
+                        managedPrecursorCount - existingPrecursorCount,
+                        managedFragmentCount - existingFragmentCount,
+                        docPrecursorCount - existingPrecursorCount,
+                        docFragmentCount - existingFragmentCount);
+                    var result = MultiButtonMsgDlg.Show(this, prompt, SkylineResources.SkylineWindow_ImportMassList_Enable, SkylineResources.SkylineWindow_ImportMassList_Disable, true);
+                    if (result == DialogResult.Cancel)
+                    {
+                        return;
+                    }
+                    else if (result != DialogResult.No)
+                    {
+                        docNew = docRefined;
+                        refineAutoPick = refine;
+                    }
+                }
+            }
+
             ModifyDocument(description, doc =>
             {
                 if (ReferenceEquals(doc, docCurrent))
@@ -2269,39 +2304,8 @@ namespace pwiz.Skyline
                     }
                     if (!ReferenceEquals(doc.Settings, newSettings))
                         doc = doc.ChangeSettings(newSettings);
-
-                    if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
-                    {
-                        // We create new nodes with automanage turned off, but it might be interesting to user to have that on for isotopes etc
-                        // Try applying auto-pick refinement to see if that changes anything 
-                        var refine = new RefinementSettings { AutoPickChildrenAll = PickLevel.precursors | PickLevel.transitions, AutoPickChildrenOff = false };
-                        var docManaged = refine.Refine(doc);
-                        if (docManaged.MoleculeTransitionCount != 0 && // Automanage would turn everything off, not interesting
-                            !Equals(docManaged.MoleculeTransitionCount, doc.MoleculeTransitionCount))
-                        {
-                            var existingPrecursorCount = docCurrent.MoleculeTransitions?.Where(t => t.IsMs1).Count();
-                            var existingFragmentCount = docCurrent.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
-                            var managedPrecursorCount = docManaged.MoleculeTransitions?.Where(t => t.IsMs1).Count();
-                            var managedFragmentCount = docManaged.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
-                            var docPrecursorCount = doc.MoleculeTransitions?.Where(t => t.IsMs1).Count();
-                            var docFragmentCount = doc.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
-                            var prompt = string.Format(
-                                Resources.SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions,
-                                managedPrecursorCount - existingPrecursorCount,
-                                managedFragmentCount - existingFragmentCount,
-                                docPrecursorCount - existingPrecursorCount,
-                                docFragmentCount - existingFragmentCount);
-                            var result = MultiButtonMsgDlg.Show(this, prompt, SkylineResources.SkylineWindow_ImportMassList_Enable, SkylineResources.SkylineWindow_ImportMassList_Disable, true);
-                            if (result == DialogResult.Cancel)
-                            {
-                                doc = docCurrent;
-                            }
-                            else if (result != DialogResult.No)
-                            {
-                                doc = docManaged;
-                            }
-                        }
-                    }
+                    if (refineAutoPick != null)
+                        doc = refineAutoPick.Refine(doc);
                 }
                 catch (Exception x)
                 {
@@ -2884,6 +2888,7 @@ namespace pwiz.Skyline
                     SkylineResources.SkylineWindow_ImportResults_This_document_does_not_contain_decoy_peptides__Would_you_like_to_add_decoy_peptides_before_extracting_chromatograms__After_chromatogram_extraction_is_finished__Skyline_will_use_the_decoy_and_target_chromatograms_to_train_a_peak_scoring_model_in_order_to_choose_better_peaks_,
                     MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
                 {
+                    dlg.GetModeUIHelper().IgnoreModeUI = true;
                     switch (dlg.ShowDialog(this))
                     {
                         case DialogResult.Yes:
@@ -2939,9 +2944,32 @@ namespace pwiz.Skyline
 
         public static bool ShouldPromptForDecoys(SrmDocument doc)
         {
-            return Equals(doc.Settings.TransitionSettings.FullScan.AcquisitionMethod, FullScanAcquisitionMethod.DIA) &&
-                   !doc.PeptideGroups.Any(nodePepGroup => nodePepGroup.IsDecoy) &&
-                   !doc.Settings.HasResults;
+            if (!Equals(doc.Settings.TransitionSettings.FullScan.AcquisitionMethod,
+                    FullScanAcquisitionMethod.DIA))
+            {
+                // Only prompt to add decoys if the acquisition method is DIA
+                return false;
+            }
+            if (doc.Settings.HasResults)
+            {
+                // If the document already has results, then it's too late to add decoys
+                return false;
+            }
+
+            if (doc.PeptideGroups.Any(nodePepGroup => nodePepGroup.IsDecoy))
+            {
+                // If the document already has decoys, then don't offer to add decoys
+                return false;
+            }
+
+            if (!doc.Peptides.Where(pepDocNode => null == pepDocNode.GlobalStandardType).Skip(20).Any())
+            {
+                // If there are not at least 20 ordinary peptides in the document, then don't offer to
+                // add decoys. AutoTrainModelFunctionalTest has 24 peptides and expects to be prompted.
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -3305,6 +3333,10 @@ namespace pwiz.Skyline
                     {
                         docCurrent = Document;
                         docNew = docCurrent.ChangeMeasuredResults(resultsNew);
+                        if (chromRemaining.Length == 0)
+                        {
+                            docNew = docNew.ForgetOriginalMoleculeTargets();
+                        }
                     } while (!SetDocument(docNew, docCurrent));
                 });
         }

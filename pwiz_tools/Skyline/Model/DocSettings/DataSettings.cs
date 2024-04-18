@@ -111,6 +111,14 @@ namespace pwiz.Skyline.Model.DocSettings
             private set { _auditLogging = value; }
         }
 
+        /// <summary>
+        /// Returns whether audit logging would be enabled for this document if a unit test were not running
+        /// </summary>
+        public bool IsAuditLoggingEnabled
+        {
+            get { return _auditLogging; }
+        }
+
         public string DocumentGuid { get; private set; }
 
         #region Property change methods
