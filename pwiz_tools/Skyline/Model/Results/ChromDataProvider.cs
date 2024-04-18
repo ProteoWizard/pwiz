@@ -435,6 +435,7 @@ namespace pwiz.Skyline.Model.Results
                         if (!optimizationSpacing)
                         {
                             SetOptStepsForGroup(doc, idToIndex, matchingGroup.Key?.NodePeptide, matchingGroup.Key?.NodeGroup, curGroup);
+                            curGroup.Clear();
                             firstChromKey = null;
                         }
                     }
@@ -484,14 +485,34 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        /// <summary>
+        /// Sets the optimization steps for a group of chromatograms.
+        /// The chromatograms will all have the same Q1 value and the Q3 values will differ by no more than
+        /// <see cref="ChromatogramInfo.OPTIMIZE_SHIFT_SIZE"/>.
+        /// </summary>
         private void SetOptStepsForGroup(SrmDocument document, IReadOnlyDictionary<int, int> idToIndex, PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode, IList<ChromData> chromDatas)
         {
             if (chromDatas.Count <= 1)
             {
-                chromDatas.Clear();
                 return;
             }
 
+            var groupedByProductMz = chromDatas.GroupBy(data => data.Key.Product).ToList();
+            // Check to see whether there is a full set of optimization steps which all have identical Q3 values
+            if (groupedByProductMz.Count > 1 &&
+                groupedByProductMz.Any(g => g.Count() > _optimizableRegression.StepCount * 2))
+            {
+                // If we found a complete set of optimization steps with identical Q3 values then assume that the Q3
+                // value uniquely identifies the transition and process each group with Q3 values separately.
+                foreach (var group in groupedByProductMz)
+                {
+                    SetOptStepsForGroup(document, idToIndex, peptideDocNode, transitionGroupDocNode, group.ToList());
+                }
+                return;
+            }
+
+            // If some of the chromatograms have the same Q3 value, then check whether the CE value is
+            // better able to distinguish the optimization steps
             int uniqueCeCount = 0;
             if (_optimizableRegression.OptType == OptimizationType.collision_energy)
             {
@@ -527,8 +548,6 @@ namespace pwiz.Skyline.Model.Results
             {
                 SetOptimizationStep(idToIndex[chromDatas[i].ProviderId], i - centerIdx, chromDatas[centerIdx].Key.Product);
             }
-
-            chromDatas.Clear();
         }
 
         private float GetCE(int i)
