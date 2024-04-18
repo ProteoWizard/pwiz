@@ -528,7 +528,7 @@ namespace pwiz.Skyline.Model.Results
                 chromDatas.Sort(Comparer<ChromData>.Create((a,b)=>a.Key.CollisionEnergy.CompareTo(b.Key.CollisionEnergy)));
             }
             int centerIdx = (chromDatas.Count + 1) / 2 - 1;
-            if (peptidePrecursorMz.NodeGroup != null)
+            if (peptidePrecursorMz?.NodeGroup != null)
             {
                 var centerMz = chromDatas[centerIdx].Key.Product;
                 var closestTransition = peptidePrecursorMz.NodeGroup.Transitions.OrderBy(t => Math.Abs(t.Mz - centerMz))
