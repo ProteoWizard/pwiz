@@ -434,7 +434,7 @@ namespace pwiz.Skyline.Model.Results
 
                         if (!optimizationSpacing)
                         {
-                            SetOptStepsForGroup(doc, idToIndex, matchingGroup.Key?.NodePeptide, matchingGroup.Key?.NodeGroup, curGroup);
+                            SetOptStepsForGroup(doc, idToIndex, matchingGroup.Key, curGroup);
                             curGroup.Clear();
                             firstChromKey = null;
                         }
@@ -447,7 +447,7 @@ namespace pwiz.Skyline.Model.Results
 
                 if (lastChromKey != null)
                 {
-                    SetOptStepsForGroup(doc, idToIndex, matchingGroup.Key?.NodePeptide, matchingGroup.Key?.NodeGroup, curGroup);
+                    SetOptStepsForGroup(doc, idToIndex, matchingGroup.Key, curGroup);
                 }
             }
         }
@@ -490,7 +490,7 @@ namespace pwiz.Skyline.Model.Results
         /// The chromatograms will all have the same Q1 value and the Q3 values will differ by no more than
         /// <see cref="ChromatogramInfo.OPTIMIZE_SHIFT_SIZE"/>.
         /// </summary>
-        private void SetOptStepsForGroup(SrmDocument document, IReadOnlyDictionary<int, int> idToIndex, PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode, IList<ChromData> chromDatas)
+        private void SetOptStepsForGroup(SrmDocument document, IReadOnlyDictionary<int, int> idToIndex, ChromCacheBuilder.PeptidePrecursorMz peptidePrecursorMz, IList<ChromData> chromDatas)
         {
             if (chromDatas.Count <= 1)
             {
@@ -500,53 +500,57 @@ namespace pwiz.Skyline.Model.Results
             var groupedByProductMz = chromDatas.GroupBy(data => data.Key.Product).ToList();
             // Check to see whether there is a full set of optimization steps which all have identical Q3 values
             if (groupedByProductMz.Count > 1 &&
-                groupedByProductMz.Any(g => g.Count() > _optimizableRegression.StepCount * 2))
+                chromDatas.Count > _optimizableRegression.StepCount * 2 + 1 &&
+                groupedByProductMz.Any(g => g.Count() > _optimizableRegression.StepCount))
             {
-                // If we found a complete set of optimization steps with identical Q3 values then assume that the Q3
-                // value uniquely identifies the transition and process each group with Q3 values separately.
+                // If the total number of chromatograms is more than one complete set of optimization steps (stepCount * 2 + 1)
+                // and there are more than half a complete set with identical Q3 values (stepCount)
+                // then assume that this is more than one group of chromatograms which did not use OPTIMIZE_SHIFT_SIZE
+                // and process each unique Q3 value separately
                 foreach (var group in groupedByProductMz)
                 {
-                    SetOptStepsForGroup(document, idToIndex, peptideDocNode, transitionGroupDocNode, group.ToList());
+                    SetOptStepsForGroup(document, idToIndex, peptidePrecursorMz, group.ToList());
                 }
                 return;
             }
 
-            // If some of the chromatograms have the same Q3 value, then check whether the CE value is
-            // better able to distinguish the optimization steps
             int uniqueCeCount = 0;
             if (_optimizableRegression.OptType == OptimizationType.collision_energy)
             {
                 uniqueCeCount = chromDatas.Select(chromData => chromData.Key.CollisionEnergy).Distinct().Count();
             }
             int uniqueMzCount = chromDatas.Select(chromData => chromData.Key.Product).Distinct().Count();
+            // If some of the chromatograms have the same Q3 value, then the CE value should be used instead
+            // if the CE value uniquely identifies the chromatogram
             bool useCeValues = uniqueCeCount == chromDatas.Count && uniqueCeCount > uniqueMzCount;
             if (useCeValues)
             {
                 chromDatas.Sort(Comparer<ChromData>.Create((a,b)=>a.Key.CollisionEnergy.CompareTo(b.Key.CollisionEnergy)));
             }
             int centerIdx = (chromDatas.Count + 1) / 2 - 1;
-            if (transitionGroupDocNode != null)
+            if (peptidePrecursorMz.NodeGroup != null)
             {
                 var centerMz = chromDatas[centerIdx].Key.Product;
-                var closestTransition = transitionGroupDocNode.Transitions.OrderBy(t => Math.Abs(t.Mz - centerMz))
+                var closestTransition = peptidePrecursorMz.NodeGroup.Transitions.OrderBy(t => Math.Abs(t.Mz - centerMz))
                     .FirstOrDefault();
                 if (useCeValues)
                 {
-                    var centerCe =
-                        document.GetCollisionEnergy(peptideDocNode, transitionGroupDocNode, closestTransition, 0);
+                    var centerCe = document.GetCollisionEnergy(peptidePrecursorMz.NodePeptide,
+                        peptidePrecursorMz.NodeGroup, closestTransition, 0);
                     centerIdx = OptStepChromatograms.IndexOfCenterCe((float)centerCe,
                         chromDatas.Select(chromData => chromData.Key.CollisionEnergy),
                         _optimizableRegression.StepCount);
                 }
                 else if (closestTransition != null)
                 {
-                    centerIdx = OptStepChromatograms.IndexOfCenterMz(closestTransition.Mz, chromDatas.Select(c => c.Key.Product),
-                        _optimizableRegression.StepCount);
+                    centerIdx = OptStepChromatograms.IndexOfCenterMz(closestTransition.Mz,
+                        chromDatas.Select(c => c.Key.Product), _optimizableRegression.StepCount);
                 }
             }
             for (var i = 0; i < chromDatas.Count; i++)
             {
-                SetOptimizationStep(idToIndex[chromDatas[i].ProviderId], i - centerIdx, chromDatas[centerIdx].Key.Product);
+                SetOptimizationStep(idToIndex[chromDatas[i].ProviderId], i - centerIdx,
+                    chromDatas[centerIdx].Key.Product);
             }
         }
 
