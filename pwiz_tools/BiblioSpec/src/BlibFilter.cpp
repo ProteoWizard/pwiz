@@ -348,7 +348,7 @@ void BlibFilter::buildNonRedundantLib() {
                 scoreType == "PEPTIDE PROPHET SOMETHING" ||
                 scoreType == "PROTEIN PILOT CONFIDENCE" ||
                 scoreType == "SCAFFOLD SOMETHING" ||
-                scoreType == "HARDKLOR CORRELATION SCORE" ||
+                scoreType == "HARDKLOR IDOTP" ||
                 scoreType == "PEPTIDE SHAKER CONFIDENCE") {
                 higherIsBetter_[scoreTypeId] = true;
             } else {

@@ -142,7 +142,7 @@ INSERT INTO ScoreTypes(id, scoreType, probabilityType) VALUES(18, 'PEPTIDE SHAKE
 
 INSERT INTO ScoreTypes(id, scoreType, probabilityType) VALUES(19, 'GENERIC Q-VALUE', 'PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT')
 
-INSERT INTO ScoreTypes(id, scoreType, probabilityType) VALUES(20, 'HARDKLOR CORRELATION SCORE', 'PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT')
+INSERT INTO ScoreTypes(id, scoreType, probabilityType) VALUES(20, 'HARDKLOR IDOTP', 'PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT')
 
 CREATE TABLE IonMobilityTypes ( -- table of known ion mobility units
 id INTEGER PRIMARY KEY, -- as used in ionMobilityType field of RefSpectra

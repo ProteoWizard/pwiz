@@ -333,7 +333,7 @@ sqlite3_int64 BuildParser::insertProtein(const Protein* protein) {
 // Optionally sort the psms before writing
 void BuildParser::OptionalSort(PSM_SCORE_TYPE scoreType)
 {
-    if (scoreType == PSM_SCORE_TYPE::HARDKLOR_CORRELATION_SCORE)
+    if (scoreType == PSM_SCORE_TYPE::HARDKLOR_IDOTP)
     {
         // Sort PSMs by mass before writing to library
         std::stable_sort(psms_.begin(), psms_.end(), [](PSM* a, PSM* b)

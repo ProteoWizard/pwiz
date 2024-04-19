@@ -87,7 +87,7 @@ namespace BiblioSpec {
         fileReader.addRequiredColumn("File", sslPSM::setFile); // N.B. the offical BullseyeSharp puts "NULL" in all this column's entries
         fileReader.addRequiredColumn("Charge", setChargeAndAdduct);
         fileReader.addRequiredColumn("Base Isotope Peak", sslPSM::setPrecursorMzDeclared);
-        fileReader.addRequiredColumn("Best Correlation", sslPSM::setScore);
+        fileReader.addRequiredColumn("Best Correlation", setIdotP);
         fileReader.addRequiredColumn("Best RTime", sslPSM::setRetentionTime);
         fileReader.addRequiredColumn("First RTime", sslPSM::setStartTime);
         fileReader.addRequiredColumn("Last RTime", sslPSM::setEndTime);
@@ -100,10 +100,10 @@ namespace BiblioSpec {
         fileReader.defineSeparatorsNoEscape("\t", ""); // Hardklor files are tab delimited, don't use quotes, or escape characters
 
     }
-    
+
     void HardklorReader::addDataLine(sslPSM& data) {
         data.setPrecursorOnly(); // Hardklor files are MS1 only for the moment
-        data.scoreType = HARDKLOR_CORRELATION_SCORE;
+        data.scoreType = HARDKLOR_IDOTP;
         SslReader::addDataLine(data);
     }
 

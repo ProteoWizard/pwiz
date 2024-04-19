@@ -99,7 +99,7 @@ namespace pwiz.BiblioSpec
         private const string BYONIC_SCORE = "BYONIC SCORE";
         private const string PEPTIDE_SHAKER_CONFIDENCE = "PEPTIDE SHAKER CONFIDENCE";
         private const string GENERIC_QVALUE = "GENERIC Q-VALUE";
-        private const string HARDKLOR_CORRELATION_SCORE = "HARDKLOR CORRELATION SCORE"; // Hardklor "The dot-product score of this feature to the theoretical model." PROBABILITY_CORRECT
+        private const string HARDKLOR_IDOTP = "HARDKLOR IDOTP"; // Hardklor "The dot-product score of this feature to the theoretical model." We translate the Hardkloe Cosine Angle Correlation to a Normalized Contrast Angle idotp value
 
         private const string PROBABILITY_CORRECT = "PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT";
         private const string PROBABILITY_INCORRECT = "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT";
@@ -110,7 +110,7 @@ namespace pwiz.BiblioSpec
         public EnumProbabilityType ProbabilityType { get; }
 
         public static ScoreType GenericQValue => new ScoreType(GENERIC_QVALUE, PROBABILITY_INCORRECT);
-        public static ScoreType HardklorCorrelationScore => new ScoreType(HARDKLOR_CORRELATION_SCORE, PROBABILITY_CORRECT);
+        public static ScoreType HardklorIdotp => new ScoreType(HARDKLOR_IDOTP, PROBABILITY_CORRECT);
 
         public ScoreType(string name, string probabilityType)
         {
@@ -260,8 +260,8 @@ namespace pwiz.BiblioSpec
                 case SEQUEST_XCORR:
                 case GENERIC_QVALUE:
                     return Resources.BiblioSpecScoreType_DisplayName_q_value;
-                case HARDKLOR_CORRELATION_SCORE:
-                    return Resources.BiblioSpecScoreType_DisplayName_Hardklor_Correlation_Score;
+                case HARDKLOR_IDOTP:
+                    return Resources.BiblioSpecScoreType_DisplayName_Hardklor_idotp;
                 default:
                     return NameInvariant;
             }

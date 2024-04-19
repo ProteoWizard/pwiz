@@ -22,6 +22,7 @@
 #pragma once
 
 #include "SslReader.h"
+#include <cmath>
 
 namespace BiblioSpec {
 
@@ -67,6 +68,23 @@ private:
     static void setFeatureName(sslPSM& psm, const std::string& value) {
         psm.smallMolMetadata.moleculeName = value;
     }
+
+    static void setIdotP(sslPSM& psm, const std::string& value) {
+        // Hardklor uses "The dot-product score of this feature to the theoretical model" - we convert input Cosine Angle Correlation values to Normalized Contrast Angle for .blib
+        if (value.empty()) {
+            psm.score = 0;
+        }
+        else {
+            try {
+                double cosineAngle = boost::lexical_cast<double>(value);
+                psm.score = 1.0 - (acos(min(1.0, cosineAngle)) * 2.0 / M_PI);
+            }
+            catch (bad_lexical_cast) {
+                throw BlibException(false, "Non-numeric score: %s", value.c_str());
+            }
+        }
+    }
+
 };
 
 } // namespace
