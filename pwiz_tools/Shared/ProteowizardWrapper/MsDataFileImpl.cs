@@ -724,6 +724,12 @@ namespace pwiz.ProteowizardWrapper
 
         private static readonly string[] msLevelOrFunctionArrayNames = { "ms level", "function" };
 
+        public double? GetChromatogramCollisionEnergy(int chromIndex)
+        {
+            using var chrom = ChromatogramList.chromatogram(chromIndex, DetailLevel.FullMetadata);
+            return chrom.precursor?.activation?.cvParam(CVID.MS_collision_energy)?.value;
+        }
+
         public void GetChromatogram(int chromIndex, out string id,
             out float[] timeArray, out float[] intensityArray, bool onlyMs1OrFunction1 = false)
         {
