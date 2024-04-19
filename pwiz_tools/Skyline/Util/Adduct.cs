@@ -517,7 +517,7 @@ namespace pwiz.Skyline.Util
                     }
                 }
             }
-            AdductCharge = calculatedCharge ?? declaredCharge ?? 0;
+            AdductCharge = declaredCharge ?? calculatedCharge ?? 0; // If user supplied a charge (e.g. [M+2CH3+Cl]+) believe them even if our calculation/guess disagrees
             if (!composition.Keys.All(k => BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)))
             {
                 throw new InvalidDataException(
@@ -548,11 +548,21 @@ namespace pwiz.Skyline.Util
             }
             if (declaredCharge.HasValue && calculatedCharge.HasValue && declaredCharge != calculatedCharge)
             {
-                throw new InvalidDataException(
-                    string.Format(
-                        UtilResources
-                            .BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0____declared_charge__1__does_not_agree_with_calculated_charge__2_,
-                        input, declaredCharge.Value, calculatedCharge));
+                // Only complain if this is an obvious error, like "[M+H]-"
+                foreach (var adducts in new[] { COMMON_PROTONATED_ADDUCTS, COMMON_SMALL_MOL_ADDUCTS})
+                {
+                    foreach (var adduct in adducts)
+                    {
+                        if (Equals(Composition, adduct.Composition))
+                        {
+                            throw new InvalidDataException(
+                                string.Format(
+                                    UtilResources
+                                        .BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0____declared_charge__1__does_not_agree_with_calculated_charge__2_,
+                                    input, declaredCharge.Value, calculatedCharge));
+                        }
+                    }
+                }
             }
         }
         public Adduct Unlabeled { get; private set; } // Version of this adduct without any isotope labels
@@ -1160,7 +1170,8 @@ namespace pwiz.Skyline.Util
                 {BioMassCalc.F, -1},
                 {@"CH3COO", -1}, // Deprotonated Hac
                 {@"HCOO", -1}, // Formate (deprotonated FA)  
-                {@"NH4", 1}
+                {@"NH4", 1},
+                {@"CH3", 1} // Methyl
             };
 
         // Popular adducts (declared way down here because it has to follow some other statics)
