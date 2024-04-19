@@ -304,11 +304,11 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                if (Key.OptimizationStep == 0)
+                if (Key.OptimizationStep == 0 && Key.CollisionEnergy == 0)
                 {
                     return Key;
                 }
-                return Key.ChangeOptimizationStep(0, null);
+                return Key.ChangeOptimizationStep(0, null).ChangeCollisionEnergy(0);
             }
         }
 

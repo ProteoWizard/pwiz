@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (!Receiver.TryGetProduct(new DetectionPlotData.WorkOrderParam(GraphSummary.DocumentUIContainer.DocumentUI, Settings.QValueCutoff), out _detectionData))
             {
-                return;
+                _detectionData = DetectionPlotData.INVALID;
             }
             AddLabels();
             if (!_detectionData.IsValid)
