@@ -262,7 +262,7 @@ void testIdentifyFileFormat()
         auto readerTypes = readerList.getTypes();
         set<string> readerTypeSet(readerTypes.begin(), readerTypes.end());
         set<string> expectedTypeSet{ "mzML", "mzMLb", "mzXML", "MS1", "MS2", "Mascot Generic", "Bruker Data Exchange", "MZ5",
-                                     "Sciex WIFF/WIFF2", "AB/Sciex T2D", "Agilent MassHunter", "Bruker FID", "Bruker YEP", "Bruker BAF", "Bruker U2", "Bruker TDF",
+                                     "Sciex WIFF", "Sciex WIFF2", "AB/Sciex T2D", "Agilent MassHunter", "Bruker FID", "Bruker YEP", "Bruker BAF", "Bruker U2", "Bruker TDF",
 #if defined(PWIZ_READER_MOBILION)
                                      "Mobilion MBI",
 #endif
@@ -288,9 +288,10 @@ void testIdentifyFileFormat()
         unit_assert_operator_equal(set<CVID>(), foundButNotExpected);
     }
 
-    unit_assert_operator_equal(2, extByType["Sciex WIFF/WIFF2"].size());
-    unit_assert_operator_equal(".wiff", extByType["Sciex WIFF/WIFF2"][0]);
-    unit_assert_operator_equal(".wiff2", extByType["Sciex WIFF/WIFF2"][1]);
+    unit_assert_operator_equal(1, extByType["Sciex WIFF"].size());
+    unit_assert_operator_equal(1, extByType["Sciex WIFF2"].size());
+    unit_assert_operator_equal(".wiff", extByType["Sciex WIFF"][0]);
+    unit_assert_operator_equal(".wiff2", extByType["Sciex WIFF2"][0]);
     unit_assert_operator_equal(0, extByType["Waters UNIFI"].size());
     unit_assert_operator_equal(2, extByType["Bruker BAF"].size());
     unit_assert_operator_equal(2, extByType["Bruker YEP"].size());

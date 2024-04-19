@@ -2888,6 +2888,7 @@ namespace pwiz.Skyline
                     SkylineResources.SkylineWindow_ImportResults_This_document_does_not_contain_decoy_peptides__Would_you_like_to_add_decoy_peptides_before_extracting_chromatograms__After_chromatogram_extraction_is_finished__Skyline_will_use_the_decoy_and_target_chromatograms_to_train_a_peak_scoring_model_in_order_to_choose_better_peaks_,
                     MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
                 {
+                    dlg.GetModeUIHelper().IgnoreModeUI = true;
                     switch (dlg.ShowDialog(this))
                     {
                         case DialogResult.Yes:
@@ -2943,9 +2944,32 @@ namespace pwiz.Skyline
 
         public static bool ShouldPromptForDecoys(SrmDocument doc)
         {
-            return Equals(doc.Settings.TransitionSettings.FullScan.AcquisitionMethod, FullScanAcquisitionMethod.DIA) &&
-                   !doc.PeptideGroups.Any(nodePepGroup => nodePepGroup.IsDecoy) &&
-                   !doc.Settings.HasResults;
+            if (!Equals(doc.Settings.TransitionSettings.FullScan.AcquisitionMethod,
+                    FullScanAcquisitionMethod.DIA))
+            {
+                // Only prompt to add decoys if the acquisition method is DIA
+                return false;
+            }
+            if (doc.Settings.HasResults)
+            {
+                // If the document already has results, then it's too late to add decoys
+                return false;
+            }
+
+            if (doc.PeptideGroups.Any(nodePepGroup => nodePepGroup.IsDecoy))
+            {
+                // If the document already has decoys, then don't offer to add decoys
+                return false;
+            }
+
+            if (!doc.Peptides.Where(pepDocNode => null == pepDocNode.GlobalStandardType).Skip(20).Any())
+            {
+                // If there are not at least 20 ordinary peptides in the document, then don't offer to
+                // add decoys. AutoTrainModelFunctionalTest has 24 peptides and expects to be prompted.
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
