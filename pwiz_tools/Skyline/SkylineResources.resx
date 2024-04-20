@@ -1151,4 +1151,13 @@
   <data name="CommandLine_SetPeptideModSettings_Error__Failed_attempting_to_change_the_peptide_modification_settings_" xml:space="preserve">
 	  <value>Error: Failed attempting to change the peptide modification settings.</value>
   </data>
+  <data name="SkylineWindow_SaveDocumentBeforeImportingResults" xml:space="preserve">
+    <value>There are some results on disk which are not in the current document.
+Saving the document now will remove those extra results and ensure that the current settings are used to import new results.
+
+Do you want to save the document now?</value>
+  </data>
+  <data name="SkylineWindow_ReimportChromatograms_Error_updating_file___0___" xml:space="preserve">
+    <value>Error updating file '{0}'.</value>
+  </data>
 </root>
