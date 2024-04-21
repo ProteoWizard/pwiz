@@ -335,7 +335,8 @@ namespace pwiz.Skyline.Model.Results
                     continue;
 
                 var chromKey = ChromKey.FromId(id, fixCEOptForShimadzu);
-                if (chromKey.CollisionEnergy == 0)
+                if (_optimizableRegression?.OptType == OptimizationType.collision_energy
+                    && chromKey.CollisionEnergy == 0)
                 {
                     var collisionEnergy = dataFile.GetChromatogramCollisionEnergy(i);
                     if (collisionEnergy.HasValue)
