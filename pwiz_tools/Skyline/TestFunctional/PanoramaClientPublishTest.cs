@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
+using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.Results;
@@ -77,16 +78,17 @@ namespace pwiz.SkylineTestFunctional
 
 
             // Open a new Skyline document, and save it with a name that LabKey would reject.
+            var badFileName = "Bad -file_name.sky";
             RunUI(() =>
             {
                 SkylineWindow.NewDocument(true);
-                SkylineWindow.SaveDocument(TestContext.GetTestResultsPath("Bad -file_name.sky"));
+                SkylineWindow.SaveDocument(TestContext.GetTestResultsPath(badFileName));
             });
             WaitForDocumentLoaded();
 
             // LabKey would return an error in the JSON response if we try to upload a file with name
             // having a space followed by '-', followed by a non-space character (e.g. Bad -file_name.sky).
-            TestBadFileNameLabKeyError();
+            TestBadFileNameLabKeyError(badFileName);
 
             // Give the file a name that LabKey will accept.
             RunUI(() =>
@@ -123,13 +125,22 @@ namespace pwiz.SkylineTestFunctional
             return errorDlg;
         }
 
-        private static void TestBadFileNameLabKeyError()
+        private static void TestBadFileNameLabKeyError(string badFileName)
         {
             var publishClient = new TestLabKeyErrorPublishClient(new Uri(PANORAMA_SERVER), USER_NAME,
-                PASSWORD, ERROR_BAD_FILE_NAME);
-            var errorDlg = PublishError(publishClient, out var shareZipFileName);
-
-            Assert.AreEqual(BadFileNameRequestHelper.GetExpectedUploadError(GetTempZipFileName(shareZipFileName)), errorDlg.Message);
+                PASSWORD, NO_ERROR);
+            // Check for a valid filename is done in Skyline even before the PublishDocumentDlg is displayed.
+            // A MessageDlg with the error is displayed if the filename will be rejected by LabKey Server.
+            var errorDlg = ShowDialog<MessageDlg>(() => SkylineWindow.ShowPublishDlg(publishClient));
+            var expectedError = CommonTextUtil.LineSeparate(
+                string.Format(
+                    SkylineResources
+                        .SkylineWindow_ShowPublishDlg__0__is_not_a_valid_file_name_for_uploading_to_Panorama_,
+                    badFileName),
+                string.Format(Resources.Error___0_,
+                    SkylineResources
+                        .SkylineWindow_LabKeyAllowedFileName_File_name_may_not_contain_space_followed_by_dash));
+            Assert.AreEqual(expectedError, errorDlg.Message);
             OkDialog(errorDlg, errorDlg.OkDialog);
         }
 

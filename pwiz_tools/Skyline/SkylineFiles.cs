@@ -24,6 +24,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
@@ -1442,6 +1443,40 @@ namespace pwiz.Skyline
                 MessageDlg.ShowWithException(this, message, x);
             }
             return false;
+        }
+
+        // From org.labkey.api.util.FileUtil.isAllowedFileName()
+        // Note: To test uploads to LK server running on a dev machine, check "Block file upload with potentially malicious names"
+        // in the Admin Console > Configuration > Files
+        private const string RESTRICTED_CHARS = "\\/:*?\"<>|`";
+        private const string ILLEGAL_START_CHARS = "$-";
+        
+        public static bool LabKeyAllowedFileName(string filePath, out string error)
+        {
+            error = null;
+
+            var fileName = Path.GetFileName(filePath);
+            
+            if (fileName.IndexOfAny(RESTRICTED_CHARS.ToCharArray()) != -1)
+            {
+                error = string.Format(
+                    SkylineResources
+                        .SkylineWindow_LabKeyAllowedFileName_File_name_may_not_contain_any_of_these_characters___0_,
+                    RESTRICTED_CHARS);
+            }
+            else if (ILLEGAL_START_CHARS.Contains(fileName[0]))
+            {
+                error = string.Format(
+                    SkylineResources
+                        .SkylineWindow_LabKeyAllowedFileName_File_name_may_not_begin_with_any_of_these_characters___0_,
+                    ILLEGAL_START_CHARS);
+            }
+            else if (Regex.IsMatch(fileName, @"(.*\s--[^ ].*)|(.*\s-[^- ].*)"))
+            {
+                error = SkylineResources.SkylineWindow_LabKeyAllowedFileName_File_name_may_not_contain_space_followed_by_dash;
+            }
+
+            return error == null;
         }
 
         private void exportTransitionListMenuItem_Click(object sender, EventArgs e)
@@ -3441,6 +3476,14 @@ namespace pwiz.Skyline
                 fileName = DocumentFilePath;
             }
 
+            if (!LabKeyAllowedFileName(fileName, out var error))
+            {
+                MessageDlg.Show(this, TextUtil.LineSeparate(
+                    string.Format(SkylineResources.SkylineWindow_ShowPublishDlg__0__is_not_a_valid_file_name_for_uploading_to_Panorama_, Path.GetFileName(fileName)),
+                    string.Format(Resources.Error___0_, error)));
+                return;
+            }
+
             // Issue 866: Provide option in Skyline to upload a minimized library to Panorama
             // Save the document but only if it is "dirty". If the user is uploading an older document with a newer
             // version of Skyline they may want to preserve the version in the .sky file. The version is preserved only with a 
@@ -3655,7 +3698,7 @@ namespace pwiz.Skyline
             }
 
             var zipFilePath = FileEx.GetTimeStampedFileName(fileName);
-            if (!ShareDocument(zipFilePath, shareType))
+            if (!ShareDocument(zipFilePath, shareType)) 
                 return false;
 
             var serverRelativePath = folders[@"path"].ToString() + '/'; 
