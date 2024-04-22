@@ -122,6 +122,7 @@ namespace pwiz.Skyline.Controls
         public SequenceTree()
         {
             _receiver = NormalizedValueCalculator.PRODUCER.RegisterCustomer(this, UpdateNormalizedValueCalculator);
+            _updateNodeStatesRequired = true;
         }
 
         public void InitializeTree(IDocumentUIContainer documentUIContainer)
