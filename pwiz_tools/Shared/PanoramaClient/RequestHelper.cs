@@ -191,7 +191,7 @@ namespace pwiz.PanoramaClient
             var serverError = PanoramaUtil.GetIfErrorInResponse(jsonResponse);
             if (serverError != null)
             {
-                throw new PanoramaServerException(new ErrorMessageBuilder(messageOnError).LabKeyError(serverError).ToString());
+                throw new PanoramaServerException(new ErrorMessageBuilder(messageOnError).Uri(uri).LabKeyError(serverError).ToString());
             }
 
             return jsonResponse;

@@ -367,6 +367,9 @@ namespace pwiz.PanoramaClient
 
     public class ErrorMessageBuilder
     {
+        // This error from LabKey when there is a 401 (Unauthorized) error is not very useful, and can be confusing to the Skyline user. Ignore it.
+        private const string LABKEY_LOGIN_ERR_MESSAGE_IGNORE = @"You must log in to view this content.";
+
         private readonly string _error;
         private string _errorDetail;
         private string _exceptionMessage;
@@ -385,7 +388,12 @@ namespace pwiz.PanoramaClient
         }
         public ErrorMessageBuilder LabKeyError(LabKeyError labkeyError)
         {
-            _labkeyError = labkeyError;
+            if (!LABKEY_LOGIN_ERR_MESSAGE_IGNORE.Equals(labkeyError?.ErrorMessage,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                _labkeyError = labkeyError;
+            }
+
             return this;
         }
 
