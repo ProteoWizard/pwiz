@@ -440,7 +440,7 @@ namespace pwiz.PanoramaClient
                 sb.AppendLine(Resources.ErrorMessageBuilder_Build_Response__).AppendLine(_responseString);
             }
 
-            return sb.Length > 0 ? TextUtil.LineSeparate(_error, sb.ToString().TrimEnd()) : _error;
+            return sb.Length > 0 ? CommonTextUtil.LineSeparate(_error, sb.ToString().TrimEnd()) : _error;
         }
     }
 

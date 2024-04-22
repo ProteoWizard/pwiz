@@ -4,6 +4,7 @@ using System.Net;
 using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient.Properties;
 
 namespace pwiz.PanoramaClient
@@ -311,7 +312,7 @@ namespace pwiz.PanoramaClient
         {
             var serverError = ErrorMessage;
             if (Status != null)
-                serverError = TextUtil.LineSeparate(serverError,
+                serverError = CommonTextUtil.LineSeparate(serverError,
                     string.Format(Resources.LabKeyError_ToString_Response_status___0_, Status));
             return serverError;
         }

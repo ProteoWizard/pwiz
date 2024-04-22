@@ -663,7 +663,7 @@ namespace pwiz.PanoramaClient
                     progressPercent = (int)(e.BytesReceived * 100 / fileSize);
                 }
                 var downloaded = e.BytesReceived;
-                var message = TextUtil.LineSeparate(
+                var message = CommonTextUtil.LineSeparate(
                     string.Format(Resources.WebPanoramaClient_DownloadFile_Downloading__0_, realName),
                     string.Empty,
                     GetDownloadedSize(downloaded, fileSize > 0 ? fileSize : 0));
