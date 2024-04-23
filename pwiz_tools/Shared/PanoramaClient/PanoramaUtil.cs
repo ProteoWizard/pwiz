@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -269,6 +270,39 @@ namespace pwiz.PanoramaClient
         public static IPanoramaClient CreatePanoramaClient(Uri serverUri, string userName, string password)
         {
             return new WebPanoramaClient(serverUri, userName, password);
+        }
+
+        // From org.labkey.api.util.FileUtil.isAllowedFileName()
+        // Note: To test uploads to LK server running on a dev machine, check "Block file upload with potentially malicious names"
+        // in the Admin Console > Configuration > Files
+        private const string RESTRICTED_CHARS = "\\/:*?\"<>|`";
+        private const string ILLEGAL_START_CHARS = "$-";
+        private const string INVALID_FILE_NAME_PATTERN = "(.*\\s--[^ ].*)|(.*\\s-[^- ].*)";
+
+        public static bool LabKeyAllowedFileName(string filePath, out string error)
+        {
+            error = null;
+
+            var fileName = Path.GetFileName(filePath);
+
+            if (fileName.IndexOfAny(RESTRICTED_CHARS.ToCharArray()) != -1)
+            {
+                error = string.Format(
+                    Resources.PanoramaUtil_LabKeyAllowedFileName_File_name_may_not_contain_any_of_these_characters___0_,
+                    RESTRICTED_CHARS);
+            }
+            else if (ILLEGAL_START_CHARS.Contains(fileName[0]))
+            {
+                error = string.Format(
+                    Resources.PanoramaUtil_LabKeyAllowedFileName_File_name_may_not_begin_with_any_of_these_characters___0_,
+                    ILLEGAL_START_CHARS);
+            }
+            else if (Regex.IsMatch(fileName, INVALID_FILE_NAME_PATTERN))
+            {
+                error = Resources.PanoramaUtil_LabKeyAllowedFileName_File_name_may_not_contain_space_followed_by_dash;
+            }
+
+            return error == null;
         }
     }
 

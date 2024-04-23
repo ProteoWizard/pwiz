@@ -449,6 +449,36 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to File name may not begin with any of these characters: {0}.
+        /// </summary>
+        public static string PanoramaUtil_LabKeyAllowedFileName_File_name_may_not_begin_with_any_of_these_characters___0_ {
+            get {
+                return ResourceManager.GetString("PanoramaUtil_LabKeyAllowedFileName_File_name_may_not_begin_with_any_of_these_char" +
+                        "acters___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File name may not contain any of these characters: {0}.
+        /// </summary>
+        public static string PanoramaUtil_LabKeyAllowedFileName_File_name_may_not_contain_any_of_these_characters___0_ {
+            get {
+                return ResourceManager.GetString("PanoramaUtil_LabKeyAllowedFileName_File_name_may_not_contain_any_of_these_charact" +
+                        "ers___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File name may not contain space followed by dash.
+        /// </summary>
+        public static string PanoramaUtil_LabKeyAllowedFileName_File_name_may_not_contain_space_followed_by_dash {
+            get {
+                return ResourceManager.GetString("PanoramaUtil_LabKeyAllowedFileName_File_name_may_not_contain_space_followed_by_da" +
+                        "sh", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} is not a Panorama folder.
         /// </summary>
         public static string PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder {

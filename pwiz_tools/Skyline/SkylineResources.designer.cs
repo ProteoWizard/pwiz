@@ -2545,36 +2545,6 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to File name may not begin with any of these characters: {0}.
-        /// </summary>
-        public static string SkylineWindow_LabKeyAllowedFileName_File_name_may_not_begin_with_any_of_these_characters___0_ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_LabKeyAllowedFileName_File_name_may_not_begin_with_any_of_these_cha" +
-                        "racters___0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to File name may not contain any of these characters: {0}.
-        /// </summary>
-        public static string SkylineWindow_LabKeyAllowedFileName_File_name_may_not_contain_any_of_these_characters___0_ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_LabKeyAllowedFileName_File_name_may_not_contain_any_of_these_charac" +
-                        "ters___0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to File name may not contain space followed by dash.
-        /// </summary>
-        public static string SkylineWindow_LabKeyAllowedFileName_File_name_may_not_contain_space_followed_by_dash {
-            get {
-                return ResourceManager.GetString("SkylineWindow_LabKeyAllowedFileName_File_name_may_not_contain_space_followed_by_d" +
-                        "ash", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to A failure occurred attempting to re-import results..
         /// </summary>
         public static string SkylineWindow_ManageResults_A_failure_occurred_attempting_to_reimport_results {

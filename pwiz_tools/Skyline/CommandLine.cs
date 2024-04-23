@@ -4371,7 +4371,7 @@ namespace pwiz.Skyline
 
             public bool PublishToPanorama(CommandArgs commandArgs, SrmDocument document, string documentPath)
             {
-                if (!SkylineWindow.LabKeyAllowedFileName(documentPath, out var error))
+                if (!PanoramaUtil.LabKeyAllowedFileName(documentPath, out var error))
                 {
                     _statusWriter.WriteLine(SkylineResources.SkylineWindow_ShowPublishDlg__0__is_not_a_valid_file_name_for_uploading_to_Panorama_, Path.GetFileName(documentPath));
                     _statusWriter.WriteLine(Resources.Error___0_, error);

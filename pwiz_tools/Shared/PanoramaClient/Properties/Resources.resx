@@ -292,4 +292,13 @@
   <data name="FolderStateErrors_Error_Unrecognized_error_trying_to_get_the_status_for_folder__0__" xml:space="preserve">
 	  <value>Unrecognized error trying to get the status for folder {0}.</value>
   </data>
+  <data name="PanoramaUtil_LabKeyAllowedFileName_File_name_may_not_contain_any_of_these_characters___0_" xml:space="preserve">
+	  <value>File name may not contain any of these characters: {0}</value>
+  </data>
+  <data name="PanoramaUtil_LabKeyAllowedFileName_File_name_may_not_begin_with_any_of_these_characters___0_" xml:space="preserve">
+	  <value>File name may not begin with any of these characters: {0}</value>
+  </data>
+  <data name="PanoramaUtil_LabKeyAllowedFileName_File_name_may_not_contain_space_followed_by_dash" xml:space="preserve">
+	  <value>File name may not contain space followed by dash</value>
+  </data>
 </root>

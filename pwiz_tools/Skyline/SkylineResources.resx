@@ -1154,13 +1154,4 @@
   <data name="SkylineWindow_ShowPublishDlg__0__is_not_a_valid_file_name_for_uploading_to_Panorama_" xml:space="preserve">
 	  <value>{0} is not a valid file name for uploading to Panorama.</value>
   </data>
-  <data name="SkylineWindow_LabKeyAllowedFileName_File_name_may_not_contain_space_followed_by_dash" xml:space="preserve">
-	  <value>File name may not contain space followed by dash</value>
-  </data>
-  <data name="SkylineWindow_LabKeyAllowedFileName_File_name_may_not_begin_with_any_of_these_characters___0_" xml:space="preserve">
-	  <value>File name may not begin with any of these characters: {0}</value>
-  </data>
-  <data name="SkylineWindow_LabKeyAllowedFileName_File_name_may_not_contain_any_of_these_characters___0_" xml:space="preserve">
-	  <value>File name may not contain any of these characters: {0}</value>
-  </data>
 </root>
