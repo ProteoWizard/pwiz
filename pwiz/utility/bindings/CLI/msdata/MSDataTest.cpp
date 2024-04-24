@@ -202,7 +202,8 @@ void testCatchAndForward()
 void testReader()
 {
     auto typeSet = gcnew System::Collections::Generic::HashSet<String^>(ReaderList::FullReaderList->getTypes());
-    unit_assert(typeSet->Contains("Sciex WIFF/WIFF2"));
+    unit_assert(typeSet->Contains("Sciex WIFF"));
+    unit_assert(typeSet->Contains("Sciex WIFF2"));
     unit_assert(typeSet->Contains("mzML"));
 
     auto extSet = gcnew System::Collections::Generic::HashSet<String^>(ReaderList::FullReaderList->getFileExtensions());
@@ -211,7 +212,8 @@ void testReader()
     unit_assert(extSet->Contains(".mzml"));
 
     auto typeExtMap = ReaderList::FullReaderList->getFileExtensionsByType();
-    unit_assert(typeExtMap->ContainsKey("Sciex WIFF/WIFF2") && typeExtMap["Sciex WIFF/WIFF2"]->Count == 2 && typeExtMap["Sciex WIFF/WIFF2"][0] == ".wiff" && typeExtMap["Sciex WIFF/WIFF2"][1] == ".wiff2");
+    unit_assert(typeExtMap->ContainsKey("Sciex WIFF") && typeExtMap["Sciex WIFF"]->Count == 1 && typeExtMap["Sciex WIFF"][0] == ".wiff");
+    unit_assert(typeExtMap->ContainsKey("Sciex WIFF2") && typeExtMap["Sciex WIFF2"]->Count == 1 && typeExtMap["Sciex WIFF2"][0] == ".wiff2");
     unit_assert(typeExtMap->ContainsKey("Waters UNIFI") && typeExtMap["Waters UNIFI"]->Count == 0);
 }
 

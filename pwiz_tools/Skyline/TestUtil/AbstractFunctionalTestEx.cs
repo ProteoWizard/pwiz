@@ -174,8 +174,7 @@ namespace pwiz.SkylineTestUtil
         {
             var doc = SkylineWindow.Document;
             ImportResultsDlg importResultsDlg;
-            if (!Equals(doc.Settings.TransitionSettings.FullScan.AcquisitionMethod, FullScanAcquisitionMethod.DIA) ||
-                doc.MoleculeGroups.Any(nodeGroup => nodeGroup.IsDecoy))
+            if (!Skyline.SkylineWindow.ShouldPromptForDecoys(SkylineWindow.Document))
             {
                 importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             }
