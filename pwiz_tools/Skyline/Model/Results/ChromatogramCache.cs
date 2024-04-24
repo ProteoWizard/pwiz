@@ -1466,7 +1466,7 @@ namespace pwiz.Skyline.Model.Results
 
             var productMzs = Enumerable.Range(startIdx, endIdx - startIdx).Select(i =>
                 new SignedMz(transitions[i].Product, transitionDocNode.Mz.IsNegative));
-            int centerIdx = startIdx + OptStepChromatograms.IndexOfCenter(
+            int centerIdx = startIdx + OptStepChromatograms.IndexOfCenterMz(
                 transitionDocNode.Mz, productMzs, optimizableRegression.StepCount);
             // Update optimization steps.
             for (var i = startIdx; i < endIdx; i++)

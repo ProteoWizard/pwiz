@@ -1061,8 +1061,8 @@ importIrt => importIrt.Btn1Click());
 
             // Show we can import data (response to issue preventing data import on assay libraries)
             // Import the raw data
-            var askDecoysDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
-            var importResultsDlg = ShowDialog<ImportResultsDlg>(askDecoysDlg.ClickNo);
+            Assert.IsFalse(Skyline.SkylineWindow.ShouldPromptForDecoys(SkylineWindow.Document));
+            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             RunUI(() =>
             {
                 string fileName = TestFilesDir.GetTestPath("OverlapTest.mzML");

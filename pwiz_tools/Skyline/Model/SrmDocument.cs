@@ -2187,6 +2187,7 @@ namespace pwiz.Skyline.Model
         {
             var auditLog = new AuditLogList();
             var auditLogPath = GetAuditLogPath(documentPath);
+            bool needNewGuid = false;
             if (File.Exists(auditLogPath))
             {
                 if (AuditLogList.ReadFromFile(auditLogPath, out var auditLogList))
@@ -2197,11 +2198,21 @@ namespace pwiz.Skyline.Model
                     {
                         var entry = getDefaultEntry() ?? AuditLogEntry.CreateUndocumentedChangeEntry();
                         auditLog = new AuditLogList(entry.ChangeParent(auditLog.AuditLogEntries));
+                        needNewGuid = true;
                     }
                 }
             }
+            else if (Settings.DataSettings.IsAuditLoggingEnabled)
+            {
+                needNewGuid = true;
+            }
 
-            return ChangeDocumentHash(expectedSkylineDocumentHash).ChangeAuditLog(auditLog);
+            var result = ChangeDocumentHash(expectedSkylineDocumentHash).ChangeAuditLog(auditLog);
+            if (needNewGuid)
+            {
+                result = result.ChangeDocumentGuid();
+            }
+            return result;
         }
 
         public void WriteXml(XmlWriter writer)
@@ -2712,6 +2723,11 @@ namespace pwiz.Skyline.Model
             }
 
             return docNodeTuples.Select(tuple => tuple.Item1);
+        }
+
+        public SrmDocument ChangeDocumentGuid()
+        {
+            return ChangeSettings(Settings.ChangeDataSettings(Settings.DataSettings.ChangeDocumentGuid()));
         }
 
         public SrmDocument ForgetOriginalMoleculeTargets()
