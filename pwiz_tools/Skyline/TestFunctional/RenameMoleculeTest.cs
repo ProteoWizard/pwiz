@@ -50,8 +50,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules);
-                SkylineWindow.Paste(transitionList);
             });
+            PasteSmallMoleculeList(transitionList);
             RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, refineDlg =>
             {
                 refineDlg.AutoTransitions = true;
