@@ -1394,10 +1394,10 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(columnSelectDlg1, columnSelectDlg1.CancelDialog);
         }
 
-        private static SrmDocument PasteNewDocument(string text)
+        private static SrmDocument PasteNewDocument(string text, bool expectAutoManage = true)
         {
             NewDocument();
-            return PasteSmallMoleculeListNoAutoManage(text);
+            return expectAutoManage ? PasteSmallMoleculeListNoAutoManage(text) : PasteSmallMoleculeList(text);
         }
 
         private static string GetAminoAcidsTransitionListText(out string textCSV)
@@ -2292,7 +2292,7 @@ namespace pwiz.SkylineTestFunctional
                 "quant,menthol,C10H20O,[M-H],,-1,,,,,,,,,,HMDB0003352,NOOLISFMXDJSKH-KXUCPTDWSA-N\n";
 
             // Paste directly into targets area
-            var pastedDoc = PasteNewDocument(input);
+            var pastedDoc = PasteNewDocument(input, false);
 
             Assume.AreEqual(1, pastedDoc.MoleculeGroupCount);
             Assume.AreEqual(5, pastedDoc.MoleculeCount);
@@ -2311,7 +2311,7 @@ namespace pwiz.SkylineTestFunctional
                 "\"bob\",\"D-Erythrose 4-phosphate\",\"C4H9O7P\",\"[M-H]\",\"-1\",\"97\",\"-1\",\"\",\"8\",\"NGHMDNPXVRFFGS-IUYQGCFVSA-N\",\"60\"\n" +
                 "\"bob\",\"D-Erythrose 4-phosphate\",\"C4H9O7P\",\"[M+H]\",\"1\",\"99\",\"1\",\"\",\"8\",\"NGHMDNPXVRFFGS-IUYQGCFVSA-L\",\"60\"\n";
             // Paste directly into targets area, which should proceed with no error
-            var doc = PasteNewDocument(input);
+            var doc = PasteNewDocument(input, false);
             AssertEx.IsDocumentState(doc, null, 1, 2, 2, 2);
 
             // Now check that we notice items with some accessions that agree but others that do not 
@@ -2522,7 +2522,10 @@ namespace pwiz.SkylineTestFunctional
             
                 // Import the list
                 OkDialog(testImportDlg, testImportDlg.OkDialog);
-                DismissAutoManageDialog(docOrig);  // Say no to the offer to set new nodes to automanage
+                if (pass == 1)
+                {
+                    DismissAutoManageDialog();  // Say no to the offer to set new nodes to automanage
+                }
 
                 var pastedDoc = WaitForDocumentChange(docOrig);
                 AssertEx.IsDocumentState(pastedDoc, null, 2, 4, 8, 12);

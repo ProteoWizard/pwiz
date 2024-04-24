@@ -1015,7 +1015,7 @@ namespace pwiz.SkylineTestFunctional
                 "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,V',,[M-H]1-,186.1863380499,-1,\n" +
                 "Cer,Cer 12:0;2/12:0,C24H49NO3,[M2C13-H]1-,,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n" +
                 "Cer,Cer 12:0;2/12:0,C24H49NO3,[M2C13-H]1-,,-1,V',,[M-H]1-,186.1863380499,-1,";
-            var doc =    PasteSmallMoleculeListNoAutoManage(transitionList); // Paste the text, dismiss the offer to enable automanage
+            var doc =    PasteSmallMoleculeList(transitionList); // Paste the text
             AssertEx.IsDocumentState(doc, null, 1, 1, 2, 4);
 
             // Now turn on auto manage children, so settings change has an effect on doc structure

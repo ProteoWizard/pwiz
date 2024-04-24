@@ -1180,7 +1180,7 @@ importIrt => importIrt.Btn1Click());
             doc = WaitForDocumentChange(doc);
 
             // Import assay library and choose a protein
-            ImportAssayLibrarySkipColumnSelect(csvFile, null, true, _smallMolDemo);
+            ImportAssayLibrarySkipColumnSelect(csvFile, null, true);
             var chooseIrt = WaitForOpenForm<ChooseIrtStandardPeptidesDlg>();
             const string irtProteinName = "AQUA4SWATH_HMLangeG";
             RunUI(() =>

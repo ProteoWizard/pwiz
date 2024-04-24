@@ -2184,14 +2184,12 @@ namespace pwiz.SkylineTestUtil
             WaitForCondition(() => BackgroundProteomeManager.DocumentHasLoadedBackgroundProteomeOrNone(SkylineWindow.Document, true)); 
         }
 
-        public static void ImportAssayLibrarySkipColumnSelect(string csvPath, List<string> errorList = null, bool proceedWithErrors = true, bool isDemo = false)
+        public static void ImportAssayLibrarySkipColumnSelect(string csvPath, List<string> errorList = null, bool proceedWithErrors = true)
         {
-            ImportAssayLibraryOrTransitionList(csvPath, true, errorList, proceedWithErrors, isDemo);
+            ImportAssayLibraryOrTransitionList(csvPath, true, errorList, proceedWithErrors);
         }
 
-        // Importing a small molecule transition list typically provokes a dialog asking whether or not to automatically manage the resulting transitions
-        // The majority of our tests were written before this was an option, so we dismiss the dialog by default and the new nodes are automanage OFF
-        public static SrmDocument PasteSmallMoleculeListNoAutoManage(string text = null)
+        private static SrmDocument DoSmallMoleculeListPaste(string text)
         {
             var docOrig = SkylineWindow.Document;
             if (!string.IsNullOrEmpty(text))
@@ -2204,7 +2202,22 @@ namespace pwiz.SkylineTestUtil
             }
             var confirmColumnsDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(SkylineWindow.Paste);
             OkDialog(confirmColumnsDlg, confirmColumnsDlg.OkDialog);
-            DismissAutoManageDialog(docOrig);  // Say no to the offer to set new nodes to automanage
+            return docOrig;
+        }
+
+        // Paste a small molecule transition list with no expectation of an offer to automanage
+        public static SrmDocument PasteSmallMoleculeList(string text = null)
+        {
+            var docOrig = DoSmallMoleculeListPaste(text);
+            return WaitForDocumentChangeLoaded(docOrig);
+        }
+
+        // Importing a small molecule transition list typically provokes a dialog asking whether or not to automatically manage the resulting transitions
+        // The majority of our tests were written before this was an option, so we dismiss the dialog by default and the new nodes are automanage OFF
+        public static SrmDocument PasteSmallMoleculeListNoAutoManage(string text = null)
+        {
+            var docOrig = DoSmallMoleculeListPaste(text);
+            DismissAutoManageDialog();  // Say no to the offer to set new nodes to automanage
             return WaitForDocumentChangeLoaded(docOrig);
         }
 
@@ -2228,8 +2241,6 @@ namespace pwiz.SkylineTestUtil
 
             VerifyExplicitUseInColumnSelect(isAssayLibrary, columnSelectDlg);
             var currentDoc = SkylineWindow.Document;
-            if (isDemo) 
-                PauseTest("user column selection");
             if (errorList == null)
             {
                 OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
