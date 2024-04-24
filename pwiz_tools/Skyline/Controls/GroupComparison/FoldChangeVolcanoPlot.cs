@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private LineItem _minPValueLine;
 
         private readonly List<LineItem> _points;
-        private readonly List<DotPlotUtil.LabeledPoint> _labeledPoints;
+        private readonly List<GraphPane.LabeledPoint> _labeledPoints;
 
         private FoldChangeBindingSource.FoldChangeRow _selectedRow;
 
@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             zedGraphControl.IsZoomOnMouseCenter = true;
 
             _points = new List<LineItem>();
-            _labeledPoints = new List<DotPlotUtil.LabeledPoint>();
+            _labeledPoints = new List<GraphPane.LabeledPoint>();
         }
 
         public SrmDocument Document
@@ -139,8 +139,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             if (Settings.Default.GroupComparisonAvoidLabelOverlap)
             {
-                zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints.Select(l => l.Label).ToList(),
-                    _labeledPoints.Select(l => l.Point).ToList());
+                zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints, zedGraphControl);
             }
             else
                 zedGraphControl.GraphPane.EnableLabelLayout = false;
@@ -373,8 +372,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = false;
             if (Settings.Default.GroupComparisonAvoidLabelOverlap)
             {
-                zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints.Select(l => l.Label).ToList(),
-                    _labeledPoints.Select(l => l.Point).ToList());
+                zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints, zedGraphControl);
             }
             zedGraphControl.Invalidate();
         }
@@ -412,7 +410,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                         continue;
                     }
                     var label = DotPlotUtil.CreateLabel(point, row.Protein, row.Peptide, color, size);
-                    _labeledPoints.Add(new DotPlotUtil.LabeledPoint(point, label, selected));
+                    _labeledPoints.Add(new GraphPane.LabeledPoint(selected){Point = point, Label = label, Curve = lineItem}); 
                     zedGraphControl.GraphPane.GraphObjList.Add(label);
                 }
             }
@@ -448,7 +446,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             QueueUpdateGraph();
         }
 
-        private bool zedGraphControl_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
+        private bool  zedGraphControl_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             return MoveMouse(e.Button, e.Location);
         }
@@ -463,6 +461,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             CurveItem nearestCurveItem = null;
             var index = -1;
+            var isSelected = false;
             if (TryGetNearestCurveItem(point, ref nearestCurveItem, ref index))
             {
                 var lineItem = nearestCurveItem as LineItem;
@@ -470,24 +469,30 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     return false;
 
                 _selectedRow = (FoldChangeBindingSource.FoldChangeRow) lineItem[index].Tag;
-                zedGraphControl.Cursor = Cursors.Hand;
+                isSelected = true;
+            }
+            else if (zedGraphControl.GraphPane.IsOverLabel(point, out var labPoint))
+            {
+                _selectedRow = (FoldChangeBindingSource.FoldChangeRow)labPoint.Point.Tag;
+                isSelected = true;
+            }
+
+            if (isSelected)
+            {
+                if (Control.ModifierKeys != zedGraphControl.EditModifierKeys)
+                    zedGraphControl.Cursor = Cursors.Hand;
 
                 if (_tip == null)
                     _tip = new NodeTip(this) { Parent = this };
-
                 _tip.SetTipProvider(new FoldChangeRowTipProvider(_selectedRow), new Rectangle(point, new Size()),
                     point);
-
-                return true;
             }
             else
             {
-                if (_tip != null)
-                    _tip.HideTip();
-
+                _tip?.HideTip();
                 _selectedRow = null;
-                return false;
             }
+            return isSelected;
         }
 
         private bool TryGetNearestCurveItem(Point point, ref CurveItem nearestCurveItem, ref int index)
@@ -550,6 +555,13 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private bool zedGraphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
+            if (Control.ModifierKeys == zedGraphControl.EditModifierKeys)
+            {
+                _tip?.HideTip();
+                _selectedRow = null;
+                return false;
+            }
+
             return e.Button.HasFlag(MouseButtons.Left) && ClickSelectedRow();
         }
 
@@ -909,7 +921,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 outCount, inCount);
         }
 
-        public List<DotPlotUtil.LabeledPoint> LabeledPoints
+        public List<GraphPane.LabeledPoint> LabeledPoints
         {
             get { return _labeledPoints; }
         }

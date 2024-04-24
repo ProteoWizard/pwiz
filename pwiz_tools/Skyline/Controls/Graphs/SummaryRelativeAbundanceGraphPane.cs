@@ -20,7 +20,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -52,7 +51,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool _areaProteinTargets;
         private bool _excludePeptideLists;
         private bool _excludeStandards;
-        private readonly List<DotPlotUtil.LabeledPoint> _labeledPoints;
+        private readonly List<LabeledPoint> _labeledPoints;
         public bool ShowingFormattingDlg { get; set; }
         public IList<MatchRgbHexColor> ColorRows { get; set; }
         protected SummaryRelativeAbundanceGraphPane(GraphSummary graphSummary, IList<MatchRgbHexColor> colorRows)
@@ -74,10 +73,11 @@ namespace pwiz.Skyline.Controls.Graphs
             var container = new MemoryDocumentContainer();
             container.SetDocument(Document, null);
             _schema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
-            _labeledPoints = new List<DotPlotUtil.LabeledPoint>();
+            _labeledPoints = new List<LabeledPoint>();
 
             AxisChangeEvent += this_AxisChangeEvent;
             Settings.Default.PropertyChanged += OnLabelOverlapPropertyChange;
+            graphSummary.GraphControl.EditModifierKeys = Keys.Alt;  // enable label drag with Alt key
         }
 
         public override void OnClose(EventArgs e)
@@ -176,15 +176,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 ChangeSelection(iNearest, GraphSummary.StateProvider.SelectedPath, ctrl);
                 return true;
             }
-            if (!FindNearestPoint(new PointF(mouseEventArgs.X, mouseEventArgs.Y), out var nearestCurve, out iNearest))
+
+            IdentityPath identityPath = null;
+            if (GraphSummary.GraphControl.GraphPane.IsOverLabel(new Point(mouseEventArgs.X, mouseEventArgs.Y),
+                    out var labPoint))
             {
-                return false;
+                var selectedRow = (FoldChangeBindingSource.FoldChangeRow)labPoint.Point.Tag;
+                identityPath = selectedRow.Protein.IdentityPath;
             }
-            var identityPath = GetIdentityPath(nearestCurve, iNearest);
+            if (FindNearestPoint(new PointF(mouseEventArgs.X, mouseEventArgs.Y), out var nearestCurve, out iNearest))
+            {
+                identityPath = GetIdentityPath(nearestCurve, iNearest);
+            }
             if (identityPath == null)
-            {
                 return false;
-            }
             ChangeSelection(iNearest, identityPath, ctrl);
             return true;
         }
@@ -281,12 +286,10 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             AddPoints(new PointPairList(unmatchedPoints), Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
             UpdateAxes();
-            DotPlotUtil.AdjustLabelLocations(_labeledPoints, GraphSummary.GraphControl.GraphPane.YAxis.Scale, GraphSummary.GraphControl.GraphPane.Rect.Height);
             if (Settings.Default.GroupComparisonAvoidLabelOverlap)
-            {
-                AdjustLabelSpacings(_labeledPoints.Select(l => l.Label).ToList(),
-                    _labeledPoints.Select(l => l.Point).ToList());
-            }
+                AdjustLabelSpacings(_labeledPoints, GraphSummary.GraphControl);
+            else
+                DotPlotUtil.AdjustLabelLocations(_labeledPoints, GraphSummary.GraphControl.GraphPane.YAxis.Scale, GraphSummary.GraphControl.GraphPane.Rect.Height);
 
             if (GraphSummary.ShowFormattingDlg && !ShowingFormattingDlg)
             {
@@ -298,8 +301,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (Settings.Default.GroupComparisonAvoidLabelOverlap)
             {
-                AdjustLabelSpacings(_labeledPoints.Select(l => l.Label).ToList(),
-                    _labeledPoints.Select(l => l.Point).ToList());
+                AdjustLabelSpacings(_labeledPoints, GraphSummary.GraphControl);
             }
         }
 
@@ -337,7 +339,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         continue;
                     }
                     var label = DotPlotUtil.CreateLabel(point, pointData.Protein, pointData.Peptide, color, size);
-                    _labeledPoints.Add(new DotPlotUtil.LabeledPoint(point, label, selected));
+                    _labeledPoints.Add(new LabeledPoint(selected) {Point = point, Label = label, Curve = lineItem });
                     GraphObjList.Add(label);
                 }
             }

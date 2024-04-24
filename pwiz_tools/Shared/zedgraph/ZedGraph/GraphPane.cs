@@ -1567,17 +1567,73 @@ namespace ZedGraph
             }
         }
 
+        public class LabeledPoint
+        {
+            public LabeledPoint(bool isSelected)
+            {
+                IsSelected = isSelected;
+            }
+
+            private LineObj _connector;
+            private TextObj _label;
+            public PointPair Point { get;  set; }
+
+            public TextObj Label
+            {
+                get => _label;
+                set
+                {
+                    _label = value;
+                    LabelPosition = _label.Location.TopLeft;
+                }
+            }
+
+            public LineObj Connector { get => _connector;
+                set
+                {
+					_connector = value;
+					ConnectorLoc = new Location(_connector.Location);
+                }
+            }
+			public VectorF LabelVector { get; set; }
+            public CurveItem Curve { get; set; }
+
+            public Location ConnectorLoc { get; private set; }
+			public PointF LabelPosition { get; private set; }
+            public bool IsSelected { get; private set; }
+
+			// This method is used to memorize starting positions during drags
+            public void UpdatePositions()
+            {
+                LabelPosition = _label.Location.TopLeft;
+                ConnectorLoc = new Location(_connector.Location);
+            }
+
+            public void UpdateLabelLocation(double x, double y, GraphPane graph)
+            {
+				Label.Location.X = x;
+				Label.Location.Y = y;
+                using (var g = Graphics.FromHwnd(IntPtr.Zero))
+                {
+                    var newConnectorEnd = LabelLayout.CalculateConnectorSize(this, g, graph);
+                    Connector.Location.Width = newConnectorEnd.Width;
+                    Connector.Location.Height = newConnectorEnd.Height;
+                }
+			}
+		}
+
+
         public class LabelLayout
         {
             private GraphPane _graph;
             private int _cellSize;
 			private Random _randGenerator = new Random(123);
             private PointF _chartOffset;
-            private Dictionary<TextObj, VectorF> _labeledPoints = new Dictionary<TextObj, VectorF>();
+            private Dictionary<TextObj, LabeledPoint> _labeledPoints = new Dictionary<TextObj, LabeledPoint>();
 
-			public Dictionary<TextObj, VectorF> LabeledPoints => _labeledPoints;
+			public Dictionary<TextObj, LabeledPoint> LabeledPoints => _labeledPoints;
 
-			public LabelLayout(GraphPane graph, int cellSize)
+			public LabelLayout(GraphPane graph, int cellSize, Control parentControl)
             {
                 _graph = graph;
                 _cellSize = cellSize;
@@ -1585,7 +1641,7 @@ namespace ZedGraph
                 _chartOffset = new PointF(chartRect.Location.X, chartRect.Location.Y);
 				FillDensityGrid();
             }
-			
+
             private class GridCell
             {
                 public PointF _location;
@@ -1647,7 +1703,11 @@ namespace ZedGraph
                 }
             }
 
-
+            public void ShowToolTip(Point pt)
+            {
+                //var tooltipLabel = new TextObj("Test", pt.X, pt.Y){}
+            }
+			
             /// <summary>
             /// Calculates goal function for a labeled point and a suggested label position.
             /// All coordinates are in screen pixels.
@@ -1729,9 +1789,9 @@ namespace ZedGraph
                 var thisVector = new VectorF(targetPoint, pt);
                 foreach (var point in _labeledPoints)
                 {
-                    if (point.Value.Start.Equals(targetPoint))
+                    if (point.Value.LabelVector.Start.Equals(targetPoint))
                         break;
-                    if (thisVector.DoIntersect(point.Value))
+                    if (thisVector.DoIntersect(point.Value.LabelVector))
                         penalty += 2000;
 
                 }
@@ -1791,10 +1851,10 @@ namespace ZedGraph
              *  The algorighm works in screen coordinates (pixels). There is no need to use user coordinates here.
              *  Returns true if the label has been successfully placed, false otherwise.
              */
-            public bool PlaceLabel(TextObj tbox, PointPair point, Graphics g)
+            public bool PlaceLabel(LabeledPoint labPoint, Graphics g)
             {
-                var labelRect = _graph.GetRectScreen(tbox, g);
-                var targetPoint = _graph.TransformCoord(point.X, point.Y, CoordType.AxisXYScale);
+                var labelRect = _graph.GetRectScreen(labPoint.Label, g);
+                var targetPoint = _graph.TransformCoord(labPoint.Point.X, labPoint.Point.Y, CoordType.AxisXYScale);
                 var labelLength = (int)Math.Ceiling(1.0 * labelRect.Width / _cellSize);
 
                 var pointCell = new Point((int)((targetPoint.X - _chartOffset.X) / _cellSize), (int)((targetPoint.Y - _chartOffset.Y) / _cellSize));
@@ -1842,14 +1902,14 @@ namespace ZedGraph
                 }
 				var labelLocation = new PointF(goalPoint.X, goalPoint.Y + labelRect.Height/2);
 				_graph.ReverseTransform(new PointF(labelLocation.X, labelLocation.Y), out var x, out var y);
-                //_graph.ReverseTransform(targetPoint, out var x, out var y);
+				//_graph.ReverseTransform(targetPoint, out var x, out var y);
 
-				tbox.Location.X = x;
-				tbox.Location.Y = y;
+                labPoint.Label.Location.X = x;
+                labPoint.Label.Location.Y = y;
 
 				// update density grid to prevent overlaps
                 var cellArea = _cellSize * _cellSize;
-                var newScreenRectangle = _graph.GetRectScreen(tbox, g);
+                var newScreenRectangle = _graph.GetRectScreen(labPoint.Label, g);
                 var newLabelRectangle = ToRectangle(newScreenRectangle);
 
                 foreach (var cell in GetRectangleCells(newLabelRectangle))
@@ -1859,15 +1919,25 @@ namespace ZedGraph
                     cell._density = Math.Min(cell._density + (int)(densityIncrement), cellArea);
                 }
 
-                _labeledPoints[tbox] = new VectorF(targetPoint, goalPoint);
+                labPoint.LabelVector = new VectorF(targetPoint, goalPoint);
+				_labeledPoints[labPoint.Label] = labPoint;
                 return true;
             }
-            public void DrawConnector(TextObj obj, PointPair point, Graphics g)
+            public void DrawConnector(LabeledPoint labPoint, Graphics g)
             {
-                var rect = _graph.GetRectScreen(obj, g);
-                GraphPane.InflateRectangle(ref rect, -1);
-                var targetPoint = _graph.TransformCoord(point.X, point.Y, CoordType.AxisXYScale);
+                var endSize = CalculateConnectorSize(labPoint, g, _graph);
 
+                var line = new LineObj(labPoint.Label.FontSpec.FontColor, labPoint.Point.X, labPoint.Point.Y, labPoint.Point.X + endSize.Width, labPoint.Point.Y + endSize.Height);
+                labPoint.Connector = line;
+                _graph.GraphObjList.Add(line);
+            }
+
+            // Used to recalculate label connector attachment point during drag
+            public static SizeF CalculateConnectorSize(LabeledPoint labPoint, Graphics g, GraphPane graph)
+            {
+                var rect = graph.GetRectScreen(labPoint.Label, g);
+                InflateRectangle(ref rect, -1);
+                var targetPoint = graph.TransformCoord(labPoint.Point.X, labPoint.Point.Y, CoordType.AxisXYScale);
 
                 var diag1 = new VectorF(rect.Location, new PointF(rect.X + rect.Width, rect.Y + rect.Height));
                 var diag2 = new VectorF(new PointF(rect.X, rect.Y + rect.Height), new PointF(rect.Right, rect.Y));
@@ -1876,18 +1946,17 @@ namespace ZedGraph
                 var labelVector = new VectorF(new PointF((float)targetPoint.X, (float)targetPoint.Y), center);
 
                 PointF endPoint;
-				// If this multiple >0 then the connector line approaches the label from top or bottom, otherwise from right or left.
+                // If this multiple >0 then the connector line approaches the label from top or bottom, otherwise from right or left.
                 if (VectorF.VectorDeterminant(labelVector, diag1) * VectorF.VectorDeterminant(labelVector, diag2) > 0)
                     endPoint = new PointF(center.X - rect.Height * labelVector.X / (2 * Math.Abs(labelVector.Y)), rect.Top + (labelVector.Y < 0 ? rect.Height : 0));
                 else
                     endPoint = new PointF(rect.Left + (labelVector.X > 0 ? 0 : rect.Width), center.Y - rect.Width * labelVector.Y / (2 * Math.Abs(labelVector.X)));
 
-                _graph.ReverseTransform(new PointF(endPoint.X, endPoint.Y), out var x, out var y);
-
-                var line = new LineObj(obj.FontSpec.FontColor, point.X, point.Y, x, y);
-                _graph.GraphObjList.Add(line);
+                graph.ReverseTransform(new PointF(endPoint.X, endPoint.Y), out var x, out var y);
+                return new SizeF((float)(x - labPoint.Point.X), (float)(y - labPoint.Point.Y));
             }
-            public bool IsPointVisible(PointPair point)
+
+			public bool IsPointVisible(PointPair point)
             {
                 var chartRect = new RectangleF((float)_graph.XAxis.Scale.Min, (float)_graph.YAxis.Scale.Min,
                     (float)(_graph.XAxis.Scale.Max - _graph.XAxis.Scale.Min), (float)(_graph.YAxis.Scale.Max - _graph.YAxis.Scale.Min));
@@ -1895,46 +1964,44 @@ namespace ZedGraph
             }
         }
 
-        public void AdjustLabelSpacings(List<TextObj> objects, List<PointPair> points, int maxIter = 5)
+        public void AdjustLabelSpacings(List<LabeledPoint> labPoints, Control parentControl)
         {
-            if (!objects.Any())
+			if (!labPoints.Any())
                 return;
+			// Need this to make sure the coordinate transforms work correctly.
             XAxis.Scale.SetupScaleData(this, XAxis);
             YAxis.Scale.SetupScaleData(this, YAxis);
 
             using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
             {
-                var minLabelHeight = objects.Min(o => GetRectScreen(o, g).Height);
-                _labelLayout = new LabelLayout(this, (int)Math.Ceiling(minLabelHeight));
+                var minLabelHeight = labPoints.Min(pt => GetRectScreen(pt.Label, g).Height);
+                _labelLayout = new LabelLayout(this, (int)Math.Ceiling(minLabelHeight), parentControl);
 
-                var visiblePoints = new List<PointPair>();
-                var visibleLabels = new List<TextObj>();
-                for (var i = 0; i < objects.Count; i++)
+                var visiblePoints = new List<LabeledPoint>();
+                foreach (var labeledPoint in labPoints)
                 {
-                    if (_labelLayout.IsPointVisible(points[i]))
+                    if (_labelLayout.IsPointVisible(labeledPoint.Point))
                     {
-                        visibleLabels.Add(objects[i]);
-                        visiblePoints.Add(points[i]);
-                        objects[i].IsVisible = true;
+                        visiblePoints.Add(labeledPoint);
+                        labeledPoint.Label.IsVisible = true;
                     }
-					else
-                        objects[i].IsVisible = false;
+                    else
+                        labeledPoint.Label.IsVisible = false;
+                }
 
-				}
-
-				if (visibleLabels.Any())
+				if (visiblePoints.Any())
                 {
                     GraphObjList.RemoveAll(obj => obj is BoxObj || obj is LineObj);
-                    for (var i = 0; i < visiblePoints.Count; i++)
+                    foreach (var point in visiblePoints)
                     {
-                        if (_labelLayout.PlaceLabel(visibleLabels[i], visiblePoints[i], g))
-                            _labelLayout.DrawConnector(visibleLabels[i], visiblePoints[i], g);
+                        if (_labelLayout.PlaceLabel(point, g))
+                            _labelLayout.DrawConnector(point, g);
                     }
                 }
             }
         }
 
-        public bool IsOverLabel(Point mousePt)
+        public LabeledPoint OverLabel(Point mousePt)
         {
             if (_labelLayout != null)
             {
@@ -1942,12 +2009,18 @@ namespace ZedGraph
                 {
                     if (FindNearestObject(mousePt, g, out var nearestObj, out _))
                     {
-                        if (nearestObj is TextObj label && _labelLayout.LabeledPoints.ContainsKey(label))
-                            return true;
+                        if (nearestObj is TextObj label && _labelLayout.LabeledPoints.TryGetValue(label, out var labPoint))
+                            return labPoint;
                     }
                 }
             }
-			return false;
+			return null;
+        }
+
+        public bool IsOverLabel(Point mousePt, out LabeledPoint labPoint)
+        {
+            labPoint = OverLabel(mousePt);
+			return labPoint !=	null;
         }
 		
         public static void InflateRectangle(ref RectangleF rect, float size)

@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Adjust the locations of the labels so that they are slightly above the points
         /// </summary>
-        public static void AdjustLabelLocations(List<LabeledPoint> labeledPoints, Scale scale, double height)
+        public static void AdjustLabelLocations(List<GraphPane.LabeledPoint> labeledPoints, Scale scale, double height)
         {
             foreach (var point in labeledPoints.Where(point => point.Label != null))
             {
@@ -123,20 +123,6 @@ namespace pwiz.Skyline.Controls.Graphs
                         height * (scale.Max - scale.Min);
                 }
             }
-        }
-        public class LabeledPoint
-        {
-            public LabeledPoint(PointPair point, TextObj label, bool isSelected)
-            {
-                Point = point;
-                Label = label;
-                IsSelected = isSelected;
-            }
-
-            public PointPair Point { get; private set; }
-            public TextObj Label { get; private set; }
-
-            public bool IsSelected { get; private set; }
         }
 
         public static bool IsPathSelected(IdentityPath selectedPath, IdentityPath identityPath)
