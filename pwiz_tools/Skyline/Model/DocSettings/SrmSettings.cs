@@ -1014,17 +1014,21 @@ namespace pwiz.Skyline.Model.DocSettings
                     nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge);
                 var imAndCCS = IonMobilityAndCCS.GetIonMobilityAndCCS(im,
                     nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,ExplicitTransitionValues.Get(nodeTran).IonMobilityHighEnergyOffset ?? 0);
-                // Now get the window width
-                var windowIM = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility.Mobility.Value, ionMobilityMax);
-                return IonMobilityFilter.GetIonMobilityFilter(imAndCCS, windowIM);
+                if (imAndCCS.IonMobility.Mobility.HasValue) // Did CCS conversion succeed?
+                {
+                    // Now get the window width
+                    var windowIM = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility.Mobility.Value, ionMobilityMax);
+                    return IonMobilityFilter.GetIonMobilityFilter(imAndCCS, windowIM);
+                }
             }
-            else if (nodeGroup.ExplicitValues.IonMobility.HasValue)
+            if (nodeGroup.ExplicitValues.IonMobility.HasValue)
             {
-                // Use the explicitly specified IM value
+                // Use the explicitly specified IM value if no CCS provided, or if CCS=>IM conversion failed
                 var imAndCCS = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(nodeGroup.ExplicitValues.IonMobility, nodeGroup.ExplicitValues.IonMobilityUnits),
                     nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,
                     ExplicitTransitionValues.Get(nodeTran).IonMobilityHighEnergyOffset ?? 0);
-                if (instrumentInfo != null && instrumentInfo.ProvidesCollisionalCrossSectionConverter)
+                if (!nodeGroup.ExplicitValues.CollisionalCrossSectionSqA.HasValue && // Retain original CCS if CCS=>IM failed
+                    instrumentInfo != null && instrumentInfo.ProvidesCollisionalCrossSectionConverter)
                 {
                     // Try to get a CCS value for this explicitly stated IM value - useful in reports
                     var ccs = instrumentInfo.CCSFromIonMobility(imAndCCS.IonMobility, nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge);
@@ -1034,13 +1038,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 var windowIM = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility.Mobility.Value, ionMobilityMax);
                 return IonMobilityFilter.GetIonMobilityFilter(imAndCCS, windowIM);
             }
-            else
-            {
-                // Use library values
-                return GetIonMobilityHelper(nodePep, nodeGroup,
-                    instrumentInfo,
-                    libraryIonMobilityInfo, ionMobilityMax);
-            }
+            // Use library values
+            return GetIonMobilityHelper(nodePep, nodeGroup,
+                instrumentInfo,
+                libraryIonMobilityInfo, ionMobilityMax);
         }
 
         /// <summary>
