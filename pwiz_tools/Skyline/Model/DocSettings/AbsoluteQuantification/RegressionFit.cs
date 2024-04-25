@@ -172,12 +172,20 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 {
                     return null;
                 }
-                var linearCalibrationCurve = LinearFit(linearPoints) as CalibrationCurve.Linear;
-                if (linearCalibrationCurve == null)
+
+                try
+                {
+                    var linearCalibrationCurve = LinearFit(linearPoints) as CalibrationCurve.Linear;
+                    if (linearCalibrationCurve == null)
+                    {
+                        return null;
+                    }
+                    return new CalibrationCurve.Bilinear(linearCalibrationCurve, lod);
+                }
+                catch (Exception)
                 {
                     return null;
                 }
-                return new CalibrationCurve.Bilinear(linearCalibrationCurve, lod);
             }
 
             /// <summary>
