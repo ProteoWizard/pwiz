@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.SettingsUI;
@@ -38,6 +39,8 @@ namespace pwiz.SkylineTestFunctional
             TestFilesZip = @"TestFunctional\RedundantComboBoxTest.zip";
             RunFunctionalTest();
         }
+        private static bool IsRecordMode { get { return false; } }  // Set to true to get peak counts
+
 
         protected override void DoTest()
         {
@@ -93,7 +96,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => dlg.SelectedIndex = i);
             // The peptide at index one does not have redundant spectra
             int waitMs = 1000;
-            if (!TryWaitForConditionUI(waitMs, () => IsViewLibraryDlgState(dlg, i, visible, peakCount)))
+            if (!TryWaitForConditionUI(waitMs, () => IsViewLibraryDlgState(dlg, i, visible, peakCount)) && !IsRecordMode)
             {
                 RunUI(() =>
                 {
@@ -108,7 +111,10 @@ namespace pwiz.SkylineTestFunctional
                     Assert.Fail(message);
                 });
             }
+            if (IsRecordMode)
+                Console.Write(dlg.GraphItem.PeaksCount + @", ");
         }
+
         private static bool IsViewLibraryDlgState(ViewLibraryDlg dlg, int i, bool visible, int peakCount)
         {
             return dlg.SelectedIndex == i && dlg.IsVisibleRedundantSpectraBox == visible &&
