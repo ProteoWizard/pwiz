@@ -869,7 +869,7 @@
     <Setting Name="FullScanPropertySheetVisible" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="FeatureFindingIntensityThresholdPPM" Type="System.Double" Scope="User">
+    <Setting Name="FeatureFindingMinIntensityPPM" Type="System.Double" Scope="User">
       <Value Profile="(Default)">10.0</Value>
     </Setting>
     <Setting Name="FeatureFindingMinIdotP" Type="System.Double" Scope="User">

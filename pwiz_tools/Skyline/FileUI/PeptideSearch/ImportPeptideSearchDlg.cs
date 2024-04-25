@@ -182,7 +182,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     // Set some defaults
                     SearchSettingsControl.HardklorSignalToNoise = Settings.Default.FeatureFindingSignalToNoise;
                     SearchSettingsControl.HardklorMinIdotP = Settings.Default.FeatureFindingMinIdotP;
-                    SearchSettingsControl.HardklorIntensityThresholdPPM = Settings.Default.FeatureFindingIntensityThresholdPPM;
+                    SearchSettingsControl.HardklorMinIntensityPPM = Settings.Default.FeatureFindingMinIntensityPPM;
                 }
 
                 BuildPepSearchLibControl.ForceWorkflow(workflowType.Value);

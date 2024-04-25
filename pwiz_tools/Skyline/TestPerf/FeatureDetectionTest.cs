@@ -251,7 +251,7 @@ namespace TestPerf
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 importPeptideSearchDlg.SearchSettingsControl.HardklorMinIdotP = 0.98; // Default is 0.9, so this should be a change
                 importPeptideSearchDlg.SearchSettingsControl.HardklorSignalToNoise = 3.01; // Default is 3.0, so this should be a change
-                importPeptideSearchDlg.SearchSettingsControl.HardklorIntensityThresholdPPM = 12.37; // Just a random value
+                importPeptideSearchDlg.SearchSettingsControl.HardklorMinIntensityPPM = 12.37; // Just a random value
                 // The instrument values should be settable since we set "centroided" in Full Scan.
                 AssertEx.IsTrue(importPeptideSearchDlg.SearchSettingsControl.HardklorInstrumentSettingsAreEditable);
                 importPeptideSearchDlg.SearchSettingsControl.HardklorInstrument = FullScanMassAnalyzerType.orbitrap;
@@ -351,10 +351,10 @@ namespace TestPerf
             ExpectError(() => importPeptideSearchDlg.SearchSettingsControl.HardklorSignalToNoise = -1); // Illegal
             ExpectError(() => importPeptideSearchDlg.SearchSettingsControl.HardklorSignalToNoise = 11);
             RunUI(() => importPeptideSearchDlg.SearchSettingsControl.HardklorSignalToNoise = 3.01); // Legal
-            ExpectError(() => importPeptideSearchDlg.SearchSettingsControl.HardklorIntensityThresholdPPM = -1); // Illegal
-            ExpectError(() => importPeptideSearchDlg.SearchSettingsControl.HardklorIntensityThresholdPPM = 200); // Legal - this is ppm, not pct
-            ExpectError(() => importPeptideSearchDlg.SearchSettingsControl.HardklorIntensityThresholdPPM = 2.0E6); // Illegal
-            RunUI(() => importPeptideSearchDlg.SearchSettingsControl.HardklorIntensityThresholdPPM = 5.0); // Legal
+            ExpectError(() => importPeptideSearchDlg.SearchSettingsControl.HardklorMinIntensityPPM = -1); // Illegal
+            ExpectError(() => importPeptideSearchDlg.SearchSettingsControl.HardklorMinIntensityPPM = 200); // Legal - this is ppm, not pct
+            ExpectError(() => importPeptideSearchDlg.SearchSettingsControl.HardklorMinIntensityPPM = 2.0E6); // Illegal
+            RunUI(() => importPeptideSearchDlg.SearchSettingsControl.HardklorMinIntensityPPM = 5.0); // Legal
 
             void ExpectError(Action act)
             {

@@ -379,7 +379,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     _documentContainer.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.centroided;
                 }
                 Settings.Default.LibraryResultCutOff = ImportPeptideSearch.CutoffScore;
-                Settings.Default.FeatureFindingIntensityThresholdPPM = HardklorIntensityThresholdPPM;
+                Settings.Default.FeatureFindingMinIntensityPPM = HardklorMinIntensityPPM;
                 Settings.Default.FeatureFindingMinIdotP = HardklorMinIdotP;
                 Settings.Default.FeatureFindingSignalToNoise = HardklorSignalToNoise;
 
@@ -410,7 +410,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 ImportPeptideSearch.SettingsHardklor = new ImportPeptideSearch.HardklorSettings(HardklorInstrument,
                     HardklorResolution,
                     minIdotP, signalToNoise, _documentContainer.TransitionSettings.Filter.PeptidePrecursorCharges.Select(a => a.AdductCharge).Distinct().ToArray(),
-                    HardklorIntensityThresholdPPM,
+                    HardklorMinIntensityPPM,
                     _documentContainer.FullScanSettingsControl.FullScan.RetentionTimeFilterLength);
                 ImportPeptideSearch.CutoffScore = minIdotP;
                 return true;
@@ -479,7 +479,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { textHardklorMinIdotP.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
-        public double HardklorIntensityThresholdPPM
+        public double HardklorMinIntensityPPM
         {
             get { return double.TryParse(textHardklorMinIntensityPPM.Text, out var cutoff) ? cutoff : 0; }
             set { textHardklorMinIntensityPPM.Text = value.ToString(LocalizationHelper.CurrentCulture); }

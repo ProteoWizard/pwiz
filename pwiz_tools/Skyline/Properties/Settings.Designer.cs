@@ -3480,12 +3480,12 @@ namespace pwiz.Skyline.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("10.0")]
-        public double FeatureFindingIntensityThresholdPPM {
+        public double FeatureFindingMinIntensityPPM {
             get {
-                return ((double)(this["FeatureFindingIntensityThresholdPPM"]));
+                return ((double)(this["FeatureFindingMinIntensityPPM"]));
             }
             set {
-                this["FeatureFindingIntensityThresholdPPM"] = value;
+                this["FeatureFindingMinIntensityPPM"] = value;
             }
         }
         
