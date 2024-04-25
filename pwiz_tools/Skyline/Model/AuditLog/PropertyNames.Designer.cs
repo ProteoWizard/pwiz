@@ -1564,11 +1564,11 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Correlation threshold.
+        ///   Looks up a localized string similar to Charges.
         /// </summary>
-        public static string HardklorSettings_CorrelationThreshold {
+        public static string HardklorSettings_Charges {
             get {
-                return ResourceManager.GetString("HardklorSettings_CorrelationThreshold", resourceCulture);
+                return ResourceManager.GetString("HardklorSettings_Charges", resourceCulture);
             }
         }
         
@@ -1578,6 +1578,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string HardklorSettings_Instrument {
             get {
                 return ResourceManager.GetString("HardklorSettings_Instrument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min idotp.
+        /// </summary>
+        public static string HardklorSettings_MinIdotP {
+            get {
+                return ResourceManager.GetString("HardklorSettings_MinIdotP", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min intensity PPM.
+        /// </summary>
+        public static string HardklorSettings_MinIntensityPPM {
+            get {
+                return ResourceManager.GetString("HardklorSettings_MinIntensityPPM", resourceCulture);
             }
         }
         

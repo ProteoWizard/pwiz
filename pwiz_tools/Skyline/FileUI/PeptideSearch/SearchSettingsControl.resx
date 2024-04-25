@@ -603,145 +603,142 @@
   <data name="&gt;&gt;lblMs2Analyzer.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="labellabelPct.AutoSize" type="System.Boolean, mscorlib">
+  <data name="labelPPM.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="labellabelPct.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="labelPPM.Location" type="System.Drawing.Point, System.Drawing">
     <value>66, 138</value>
   </data>
-  <data name="labellabelPct.Size" type="System.Drawing.Size, System.Drawing">
-    <value>15, 13</value>
+  <data name="labelPPM.Size" type="System.Drawing.Size, System.Drawing">
+    <value>30, 13</value>
   </data>
-  <data name="labellabelPct.TabIndex" type="System.Int32, mscorlib">
+  <data name="labelPPM.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
-  <data name="labellabelPct.Text" xml:space="preserve">
-    <value>%</value>
+  <data name="labelPPM.Text" xml:space="preserve">
+    <value>PPM</value>
   </data>
-  <data name="&gt;&gt;labellabelPct.Name" xml:space="preserve">
-    <value>labellabelPct</value>
+  <data name="&gt;&gt;labelPPM.Name" xml:space="preserve">
+    <value>labelPPM</value>
   </data>
-  <data name="&gt;&gt;labellabelPct.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelPPM.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labellabelPct.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelPPM.Parent" xml:space="preserve">
     <value>groupBoxHardklor</value>
   </data>
-  <data name="&gt;&gt;labellabelPct.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelPPM.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="textHardklorIntensityCutoff.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="textHardklorMinIntensityPPM.Location" type="System.Drawing.Point, System.Drawing">
     <value>17, 135</value>
   </data>
-  <data name="textHardklorIntensityCutoff.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="textHardklorMinIntensityPPM.Size" type="System.Drawing.Size, System.Drawing">
     <value>46, 20</value>
   </data>
-  <data name="textHardklorIntensityCutoff.TabIndex" type="System.Int32, mscorlib">
+  <data name="textHardklorMinIntensityPPM.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
   <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <data name="textHardklorIntensityCutoff.ToolTip" xml:space="preserve">
-    <value>Ignore features with intensity less than this percentage of total of all feature intensities in a sample</value>
+  <data name="textHardklorMinIntensityPPM.ToolTip" xml:space="preserve">
+    <value>Ignore features whose intensity relative to the sum of all detected feature intensities in a sample is less than this</value>
   </data>
-  <data name="&gt;&gt;textHardklorIntensityCutoff.Name" xml:space="preserve">
-    <value>textHardklorIntensityCutoff</value>
+  <data name="&gt;&gt;textHardklorMinIntensityPPM.Name" xml:space="preserve">
+    <value>textHardklorMinIntensityPPM</value>
   </data>
-  <data name="&gt;&gt;textHardklorIntensityCutoff.Type" xml:space="preserve">
+  <data name="&gt;&gt;textHardklorMinIntensityPPM.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textHardklorIntensityCutoff.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textHardklorMinIntensityPPM.Parent" xml:space="preserve">
     <value>groupBoxHardklor</value>
   </data>
-  <data name="&gt;&gt;textHardklorIntensityCutoff.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textHardklorMinIntensityPPM.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="labelIntensityCutoff.AutoSize" type="System.Boolean, mscorlib">
+  <data name="labelMinIntensityPPM.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="labelIntensityCutoff.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="labelMinIntensityPPM.Location" type="System.Drawing.Point, System.Drawing">
     <value>14, 119</value>
   </data>
-  <data name="labelIntensityCutoff.Size" type="System.Drawing.Size, System.Drawing">
-    <value>95, 13</value>
+  <data name="labelMinIntensityPPM.Size" type="System.Drawing.Size, System.Drawing">
+    <value>118, 13</value>
   </data>
-  <data name="labelIntensityCutoff.TabIndex" type="System.Int32, mscorlib">
+  <data name="labelMinIntensityPPM.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name="labelIntensityCutoff.Text" xml:space="preserve">
+  <data name="labelMinIntensityPPM.Text" xml:space="preserve">
     <value>Min &amp;intensity proportion:</value>
   </data>
-  <data name="&gt;&gt;labelIntensityCutoff.Name" xml:space="preserve">
-    <value>labelIntensityCutoff</value>
+  <data name="&gt;&gt;labelMinIntensityPPM.Name" xml:space="preserve">
+    <value>labelMinIntensityPPM</value>
   </data>
-  <data name="&gt;&gt;labelIntensityCutoff.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelMinIntensityPPM.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelIntensityCutoff.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelMinIntensityPPM.Parent" xml:space="preserve">
     <value>groupBoxHardklor</value>
   </data>
-  <data name="&gt;&gt;labelIntensityCutoff.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelMinIntensityPPM.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <data name="textHardklorCorrelation.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="textHardklorMinIdotP.Location" type="System.Drawing.Point, System.Drawing">
     <value>17, 36</value>
   </data>
-  <data name="textHardklorCorrelation.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="textHardklorMinIdotP.Size" type="System.Drawing.Size, System.Drawing">
     <value>76, 20</value>
   </data>
-  <data name="textHardklorCorrelation.TabIndex" type="System.Int32, mscorlib">
+  <data name="textHardklorMinIdotP.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="textHardklorCorrelation.ToolTip" xml:space="preserve">
-    <value>Ignore features with correlation ("Normalized Contrast Angle") less than this value.</value>
+  <data name="textHardklorMinIdotP.ToolTip" xml:space="preserve">
+    <value>Ignore features with idotp (isotope envelope shape correlation, or "Normalized Contrast Angle") less than this value.
+
+Note that internally Hardklor uses Cosine Angle Correlation scoring, this is related to Normalized Contrast Angle as 
+NCA=1.0-(acos(CAC)*2/PI)</value>
   </data>
-  <data name="&gt;&gt;textHardklorCorrelation.Name" xml:space="preserve">
-    <value>textHardklorCorrelation</value>
+  <data name="&gt;&gt;textHardklorMinIdotP.Name" xml:space="preserve">
+    <value>textHardklorMinIdotP</value>
   </data>
-  <data name="&gt;&gt;textHardklorCorrelation.Type" xml:space="preserve">
+  <data name="&gt;&gt;textHardklorMinIdotP.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textHardklorCorrelation.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textHardklorMinIdotP.Parent" xml:space="preserve">
     <value>groupBoxHardklor</value>
   </data>
-  <data name="&gt;&gt;textHardklorCorrelation.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textHardklorMinIdotP.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="labelHardklorCorrelationThreshold.AutoSize" type="System.Boolean, mscorlib">
+  <data name="labelHardklorIdotpThreshold.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="labelHardklorCorrelationThreshold.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+  <data name="labelHardklorIdotpThreshold.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <data name="labelHardklorCorrelationThreshold.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="labelHardklorIdotpThreshold.Location" type="System.Drawing.Point, System.Drawing">
     <value>14, 20</value>
   </data>
-  <data name="labelHardklorCorrelationThreshold.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="labelHardklorIdotpThreshold.Size" type="System.Drawing.Size, System.Drawing">
     <value>121, 13</value>
   </data>
-  <data name="labelHardklorCorrelationThreshold.TabIndex" type="System.Int32, mscorlib">
+  <data name="labelHardklorIdotpThreshold.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="labelHardklorCorrelationThreshold.Text" xml:space="preserve">
+  <data name="labelHardklorIdotpThreshold.Text" xml:space="preserve">
     <value>Min isotope &amp;dot product:</value>
   </data>
-  <data name="labelHardklorCorrelationThreshold.ToolTip" xml:space="preserve">
-    <value>Ignore features with lower isotope envelope correlations than this</value>
+  <data name="&gt;&gt;labelHardklorIdotpThreshold.Name" xml:space="preserve">
+    <value>labelHardklorIdotpThreshold</value>
   </data>
-  <data name="&gt;&gt;labelHardklorCorrelationThreshold.Name" xml:space="preserve">
-    <value>labelHardklorCorrelationThreshold</value>
-  </data>
-  <data name="&gt;&gt;labelHardklorCorrelationThreshold.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelHardklorIdotpThreshold.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelHardklorCorrelationThreshold.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelHardklorIdotpThreshold.Parent" xml:space="preserve">
     <value>groupBoxHardklor</value>
   </data>
-  <data name="&gt;&gt;labelHardklorCorrelationThreshold.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelHardklorIdotpThreshold.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="textHardklorSignalToNoise.Location" type="System.Drawing.Point, System.Drawing">
@@ -754,7 +751,8 @@
     <value>3</value>
   </data>
   <data name="textHardklorSignalToNoise.ToolTip" xml:space="preserve">
-    <value>Sets Hardklor configuration's signal-to-noise threshold, i.e. the relative abundance a peak must exceed in the spectrum window to be considered in the scoring algorithm. Note that this is a local noise threshold for the area of the spectrum that the peptide was identified in.</value>
+    <value>Sets Hardklor configuration's signal-to-noise threshold, i.e. the relative abundance a peak must exceed in the spectrum window to be considered in the scoring algorithm.
+Note that this is a local noise threshold for the area of the spectrum that the peptide was identified in.</value>
   </data>
   <data name="&gt;&gt;textHardklorSignalToNoise.Name" xml:space="preserve">
     <value>textHardklorSignalToNoise</value>
@@ -778,7 +776,7 @@
     <value>14, 69</value>
   </data>
   <data name="lblHardklorSignalToNoise.Size" type="System.Drawing.Size, System.Drawing">
-    <value>79, 13</value>
+    <value>97, 13</value>
   </data>
   <data name="lblHardklorSignalToNoise.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>

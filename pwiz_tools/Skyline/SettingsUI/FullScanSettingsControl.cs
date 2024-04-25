@@ -1089,12 +1089,25 @@ namespace pwiz.Skyline.SettingsUI
 
             if (workflow != ImportPeptideSearchDlg.Workflow.dia)
             {
-                int newRadioTimeAroundTop = radioUseSchedulingWindow.Top;
+                var newRadioTimeAroundTop = workflow == ImportPeptideSearchDlg.Workflow.feature_detection ?
+                    radioTimeAroundMs2Ids.Top :
+                    radioKeepAllTime.Top;
                 int radioTimeAroundTopDifference = radioKeepAllTime.Top - newRadioTimeAroundTop;
                 radioUseSchedulingWindow.Visible = false;
                 flowLayoutPanelUseSchedulingWindow.Visible = false;
                 radioKeepAllTime.Top = newRadioTimeAroundTop;
                 groupBoxRetentionTimeToKeep.Height -= radioTimeAroundTopDifference;
+
+                if (workflow == ImportPeptideSearchDlg.Workflow.feature_detection)
+                {
+                    // Only offer "time around ID" 
+                    radioTimeAroundMs2Ids.Checked = true;
+                    flowLayoutPanelTimeAroundMs2Ids.Left = radioTimeAroundMs2Ids.Left;
+                    radioTimeAroundMs2Ids.Visible = false;
+                    radioUseSchedulingWindow.Visible = label1.Visible = label2.Visible = tbxTimeAroundPrediction.Visible = false;
+                    radioKeepAllTime.Checked = false;
+                    radioKeepAllTime.Visible = false;
+                }
             }
 
             // Select defaults

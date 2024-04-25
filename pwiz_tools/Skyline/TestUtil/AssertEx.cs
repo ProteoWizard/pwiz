@@ -908,13 +908,21 @@ namespace pwiz.SkylineTestUtil
                 {
                     continue;
                 }
-                var fileE = Path.GetFileName(pathE);
-                var fileA = Path.GetFileName(pathA);
-                if (string.Equals(fileE, fileA) || 
-                    (Path.GetExtension(fileE) == @".tmp") && Path.GetExtension(fileE) == Path.GetExtension(fileA)) // Tmp file names will always vary
+
+                try  // Was column a filename?
                 {
-                    lineExpected = lineExpected.Replace(pathE, string.Empty);
-                    lineActual = lineActual.Replace(pathA, string.Empty);
+                    var fileE = Path.GetFileName(pathE.Trim('"')); // Unquote if needed
+                    var fileA = Path.GetFileName(pathA.Trim('"')); // Unquote if needed
+                    if (string.Equals(fileE, fileA) ||
+                        (Path.GetExtension(fileE) == @".tmp") && Path.GetExtension(fileE) == Path.GetExtension(fileA)) // Tmp file names will always vary
+                    {
+                        lineExpected = lineExpected.Replace(pathE, string.Empty);
+                        lineActual = lineActual.Replace(pathA, string.Empty);
+                    }
+                }
+                catch
+                {
+                    // ignored
                 }
             }
         }

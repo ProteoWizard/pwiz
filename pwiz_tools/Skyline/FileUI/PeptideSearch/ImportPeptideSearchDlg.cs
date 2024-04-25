@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.BiblioSpec;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -163,6 +164,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             SearchControl = new DDASearchControl(ImportPeptideSearch);
             AddPageControl(SearchControl, ddaSearchPage, isFeatureDetection ? 3 : 18, 50);
+            if (isFeatureDetection)
+            {
+                SearchControl.SetProgressBarDisplayStyle(ProgressBarDisplayText.CustomText);
+            }
 
             _pagesToSkip = new HashSet<Pages>();
 
@@ -176,8 +181,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     lblDDASearch.Text = PeptideSearchResources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection; // Was "DDA Search"
                     // Set some defaults
                     SearchSettingsControl.HardklorSignalToNoise = Settings.Default.FeatureFindingSignalToNoise;
-                    SearchSettingsControl.HardklorCorrelationThreshold = Settings.Default.FeatureFindingCorrelationThreshold;
-                    SearchSettingsControl.HardklorPercentIntensityThreshold = Settings.Default.FeatureFindingPercentIntensityThreshold;
+                    SearchSettingsControl.HardklorMinIdotP = Settings.Default.FeatureFindingMinIdotP;
+                    SearchSettingsControl.HardklorIntensityThresholdPPM = Settings.Default.FeatureFindingIntensityThresholdPPM;
                 }
 
                 BuildPepSearchLibControl.ForceWorkflow(workflowType.Value);
@@ -809,7 +814,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         ? BuildPepSearchLibControl.CutOffScore ?? 0
                         : (1 - (BuildPepSearchLibControl.CutOffScore ?? 0));
                     var scoreType = IsFeatureDetectionWorkflow
-                        ? ScoreType.HardklorCorrelationScore
+                        ? ScoreType.HardklorIdotp
                         : ScoreType.GenericQValue;
                     BuildPepSearchLibControl.Grid.Files = ImportPeptideSearch.SearchEngine.SpectrumFileNames.Select(f =>
                         new BuildLibraryGridView.File(ImportPeptideSearch.SearchEngine.GetSearchResultFilepath(f), scoreType, scoreThreshold));

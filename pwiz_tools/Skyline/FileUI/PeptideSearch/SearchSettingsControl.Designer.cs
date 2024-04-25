@@ -49,11 +49,11 @@
             this.cbMs2Analyzer = new System.Windows.Forms.ComboBox();
             this.lblMs2Analyzer = new System.Windows.Forms.Label();
             this.groupBoxHardklor = new System.Windows.Forms.GroupBox();
-            this.labellabelPct = new System.Windows.Forms.Label();
-            this.textHardklorIntensityCutoff = new System.Windows.Forms.TextBox();
-            this.labelIntensityCutoff = new System.Windows.Forms.Label();
-            this.textHardklorCorrelation = new System.Windows.Forms.TextBox();
-            this.labelHardklorCorrelationThreshold = new System.Windows.Forms.Label();
+            this.labelPPM = new System.Windows.Forms.Label();
+            this.textHardklorMinIntensityPPM = new System.Windows.Forms.TextBox();
+            this.labelMinIntensityPPM = new System.Windows.Forms.Label();
+            this.textHardklorMinIdotP = new System.Windows.Forms.TextBox();
+            this.labelHardklorIdotpThreshold = new System.Windows.Forms.Label();
             this.textHardklorSignalToNoise = new System.Windows.Forms.TextBox();
             this.lblHardklorSignalToNoise = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
@@ -183,44 +183,43 @@
             // 
             // groupBoxHardklor
             // 
-            this.groupBoxHardklor.Controls.Add(this.labellabelPct);
-            this.groupBoxHardklor.Controls.Add(this.textHardklorIntensityCutoff);
-            this.groupBoxHardklor.Controls.Add(this.labelIntensityCutoff);
-            this.groupBoxHardklor.Controls.Add(this.textHardklorCorrelation);
-            this.groupBoxHardklor.Controls.Add(this.labelHardklorCorrelationThreshold);
+            this.groupBoxHardklor.Controls.Add(this.labelPPM);
+            this.groupBoxHardklor.Controls.Add(this.textHardklorMinIntensityPPM);
+            this.groupBoxHardklor.Controls.Add(this.labelMinIntensityPPM);
+            this.groupBoxHardklor.Controls.Add(this.textHardklorMinIdotP);
+            this.groupBoxHardklor.Controls.Add(this.labelHardklorIdotpThreshold);
             this.groupBoxHardklor.Controls.Add(this.textHardklorSignalToNoise);
             this.groupBoxHardklor.Controls.Add(this.lblHardklorSignalToNoise);
             resources.ApplyResources(this.groupBoxHardklor, "groupBoxHardklor");
             this.groupBoxHardklor.Name = "groupBoxHardklor";
             this.groupBoxHardklor.TabStop = false;
             // 
-            // labellabelPct
+            // labelPPM
             // 
-            resources.ApplyResources(this.labellabelPct, "labellabelPct");
-            this.labellabelPct.Name = "labellabelPct";
+            resources.ApplyResources(this.labelPPM, "labelPPM");
+            this.labelPPM.Name = "labelPPM";
             // 
-            // textHardklorIntensityCutoff
+            // textHardklorMinIntensityPPM
             // 
-            resources.ApplyResources(this.textHardklorIntensityCutoff, "textHardklorIntensityCutoff");
-            this.textHardklorIntensityCutoff.Name = "textHardklorIntensityCutoff";
-            this.toolTip1.SetToolTip(this.textHardklorIntensityCutoff, resources.GetString("textHardklorIntensityCutoff.ToolTip"));
+            resources.ApplyResources(this.textHardklorMinIntensityPPM, "textHardklorMinIntensityPPM");
+            this.textHardklorMinIntensityPPM.Name = "textHardklorMinIntensityPPM";
+            this.toolTip1.SetToolTip(this.textHardklorMinIntensityPPM, resources.GetString("textHardklorMinIntensityPPM.ToolTip"));
             // 
-            // labelIntensityCutoff
+            // labelMinIntensityPPM
             // 
-            resources.ApplyResources(this.labelIntensityCutoff, "labelIntensityCutoff");
-            this.labelIntensityCutoff.Name = "labelIntensityCutoff";
+            resources.ApplyResources(this.labelMinIntensityPPM, "labelMinIntensityPPM");
+            this.labelMinIntensityPPM.Name = "labelMinIntensityPPM";
             // 
-            // textHardklorCorrelation
+            // textHardklorIdotpThreshold
             // 
-            resources.ApplyResources(this.textHardklorCorrelation, "textHardklorCorrelation");
-            this.textHardklorCorrelation.Name = "textHardklorCorrelation";
-            this.toolTip1.SetToolTip(this.textHardklorCorrelation, resources.GetString("textHardklorCorrelation.ToolTip"));
+            resources.ApplyResources(this.textHardklorMinIdotP, "textHardklorMinIdotP");
+            this.textHardklorMinIdotP.Name = "textHardklorMinIdotP";
+            this.toolTip1.SetToolTip(this.textHardklorMinIdotP, resources.GetString("textHardklorIdotpThreshold.ToolTip"));
             // 
-            // labelHardklorCorrelationThreshold
+            // labelHardklorIdotpThreshold
             // 
-            resources.ApplyResources(this.labelHardklorCorrelationThreshold, "labelHardklorCorrelationThreshold");
-            this.labelHardklorCorrelationThreshold.Name = "labelHardklorCorrelationThreshold";
-            this.toolTip1.SetToolTip(this.labelHardklorCorrelationThreshold, resources.GetString("labelHardklorCorrelationThreshold.ToolTip"));
+            resources.ApplyResources(this.labelHardklorIdotpThreshold, "labelHardklorIdotpThreshold");
+            this.labelHardklorIdotpThreshold.Name = "labelHardklorIdotpThreshold";
             // 
             // textHardklorSignalToNoise
             // 
@@ -285,13 +284,13 @@
         private System.Windows.Forms.ComboBox cbMs2Analyzer;
         private System.Windows.Forms.Label lblMs2Analyzer;
         private System.Windows.Forms.GroupBox groupBoxHardklor;
-        private System.Windows.Forms.TextBox textHardklorCorrelation;
-        private System.Windows.Forms.Label labelHardklorCorrelationThreshold;
+        private System.Windows.Forms.TextBox textHardklorMinIdotP;
+        private System.Windows.Forms.Label labelHardklorIdotpThreshold;
         private System.Windows.Forms.TextBox textHardklorSignalToNoise;
         private System.Windows.Forms.Label lblHardklorSignalToNoise;
-        private System.Windows.Forms.Label labelIntensityCutoff;
-        private System.Windows.Forms.TextBox textHardklorIntensityCutoff;
-        private System.Windows.Forms.Label labellabelPct;
+        private System.Windows.Forms.Label labelMinIntensityPPM;
+        private System.Windows.Forms.TextBox textHardklorMinIntensityPPM;
+        private System.Windows.Forms.Label labelPPM;
         private System.Windows.Forms.ToolTip toolTip1;
     }
 }

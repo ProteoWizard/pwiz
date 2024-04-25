@@ -37,6 +37,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Results.Spectra.Alignment;
 using pwiz.Skyline.Model.RetentionTimes;
 using Enzyme = pwiz.Skyline.Model.DocSettings.Enzyme;
+using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {
@@ -110,6 +111,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     {
                         string exeName;
                         string args;
+                        string message;
                         if (string.IsNullOrEmpty(_paramsFilename))
                         {
                             // First pass - run Hardklor
@@ -132,6 +134,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                             File.WriteAllText(_paramsFilename, paramsFileText.ToString());
                             exeName = @"Hardklor";
                             args = $@"""{_paramsFilename}""";
+                            message = string.Format(DdaSearchResources.HardklorSearchEngine_Run_Searching_for_peptide_like_features_with__0_, exeName);
                         }
                         else
                         {
@@ -147,10 +150,11 @@ namespace pwiz.Skyline.Model.DdaSearch
                             args = $@"-c 0 " + // Don't eliminate long elutions
                                    $@"-r {ppm.ToString(CultureInfo.InvariantCulture)} " +
                                    @"--timer " + // Show performance info
-                                   $@"""{hkFile}"" ""{mzFile}"""; 
-                                   // + " ""{matchFile}"" ""{noMatchFile}"""; // We're not messing with MS2 (yet?)
+                                   $@"""{hkFile}"" ""{mzFile}""";
+                            // + " ""{matchFile}"" ""{noMatchFile}"""; // We're not messing with MS2 (yet?)
+                            message = string.Format(DdaSearchResources.HardklorSearchEngine_Run_Searching_for_persistent_features_in_Hardklor_results_with__0_, exeName);
                         }
-                        _progressStatus = status.ChangePercentComplete(0);
+                        UpdateProgress(_progressStatus = _progressStatus.ChangeSegmentName(message));
                         var pr = new ProcessRunner();
                         var psi = new ProcessStartInfo(exeName, args)
                         {
@@ -222,14 +226,14 @@ namespace pwiz.Skyline.Model.DdaSearch
             public int fileIndex; // Which file it's from
             public int lineIndex; // Which line in that file
             public bool discard; // Set true when a Hardklor feature should not be passed along to BiblioSpec
-            public HashSet<hkFeatureDetail> alignsWith; // Set of features determined to also be occurrences of this feature
+            public List<hkFeatureDetail> alignsWith; // Set of features determined to also be occurrences of this feature
 
             public string strMassAndAlignedRT => FormatMassAndAlignedRT(strMass, rtAligned);
             public static string FormatMassAndAlignedRT(string strMass, double rtAligned) => $@"mass{strMass}_RT{rtAligned.ToString(@"0.0000", CultureInfo.InvariantCulture)}";
 
             public override string ToString()
             {
-                return $@"m={strMass} z={charge} q={quality} s={rtStart} t={rt} e={rtEnd} mz={mzObserved} f={fileIndex} {avergineAndOffset}";
+                return $@"f={fileIndex}:{lineIndex} q={quality} m={strMass} z={charge} s={rtStart} t={rt} e={rtEnd} mz={mzObserved} {avergineAndOffset}";
             }
 
             public bool Equals(hkFeatureDetail other)
@@ -251,7 +255,21 @@ namespace pwiz.Skyline.Model.DdaSearch
             {
                 unchecked
                 {
-                    return (fileIndex * 397) ^ lineIndex;
+                    var hashCode = mzObserved.GetHashCode();
+                    hashCode = (hashCode * 397) ^ (strMass != null ? strMass.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ parsedMass.GetHashCode();
+                    hashCode = (hashCode * 397) ^ (avergineAndOffset != null ? avergineAndOffset.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ summedIntensity.GetHashCode();
+                    hashCode = (hashCode * 397) ^ rt.GetHashCode();
+                    hashCode = (hashCode * 397) ^ rtStart.GetHashCode();
+                    hashCode = (hashCode * 397) ^ rtEnd.GetHashCode();
+                    hashCode = (hashCode * 397) ^ rtAligned.GetHashCode();
+                    hashCode = (hashCode * 397) ^ charge;
+                    hashCode = (hashCode * 397) ^ fileIndex;
+                    hashCode = (hashCode * 397) ^ lineIndex;
+                    hashCode = (hashCode * 397) ^ discard.GetHashCode();
+                    hashCode = (hashCode * 397) ^ CollectionUtil.GetHashCodeDeep(alignsWith.Select(a => (a.fileIndex, a.lineIndex)).ToArray());
+                    return hashCode;
                 }
             }
         }
@@ -273,10 +291,6 @@ namespace pwiz.Skyline.Model.DdaSearch
                 return false;
             }
 
-            _progressStatus = _progressStatus.ChangeMessage(string.Empty);
-            _progressStatus = _progressStatus.ChangePercentComplete(0).ChangeMessage(DdaSearchResources
-                .HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_runs);
-
             // Do retention time alignment on the raw data
             if (!PerformAllAlignments())
             {
@@ -288,6 +302,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private bool FindSimilarFeatures()
         {
+            UpdateProgress(_progressStatus = _progressStatus.ChangeSegmentName(string.Format(DdaSearchResources.HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_replicates)));
             // Parse all the Bullseye output files
             ReadFeatures();
 
@@ -431,7 +446,6 @@ namespace pwiz.Skyline.Model.DdaSearch
                         parsedMass = double.Parse(col[5], CultureInfo.InvariantCulture),
                         mzObserved = double.Parse(col[6], CultureInfo.InvariantCulture),
                         summedIntensity = summedIntensity,
-                        // quality = double.Parse(col[3], CultureInfo.InvariantCulture) * double.Parse(col[12], CultureInfo.InvariantCulture), // Points across peak * correlation, for sorting - replaced with summed intensity for now
                         rt = rtParsed,
                         rtAligned = rtParsed,
                         rtStart = rtFirst - rtToler,
@@ -440,7 +454,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         fileIndex = fileIndex,
                         lineIndex = l,
                         discard = false,
-                        alignsWith = new HashSet<hkFeatureDetail>()
+                        alignsWith = new List<hkFeatureDetail>()
                     };
                     _featuresAll.Add(feature);
                     _summedIntensityPerFile[fileIndex] += summedIntensity;
@@ -486,7 +500,11 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
         }
 
-        private static bool Overlap(double s1, double e1, double s2, double e2) => s1 <= e2 && s2 <= e1;
+        private bool RTOverlap(double s1, double e1, double s2, double e2) // RT start, end of peaks
+        {
+            var toler = Math.Max(_searchSettings.SettingsHardklor.RetentionTimeTolerance, Math.Max(e1 - s1, e2 - s2)); // Use Hardklor peak width as a clue for overlap
+            return (s1-toler) <= e2 && (e1+toler) >= s2;
+        }
 
         private bool SimilarMass(double massJ, double massI)
         {
@@ -539,7 +557,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                                 {
                                     var rtJIStart = alignmentJ.GetValue(hkFeatureDetailJ.rtStart); // Warp rt J into I rt space
                                     var rtJIEnd = alignmentJ.GetValue(hkFeatureDetailJ.rtEnd); // Warp rt J into I rt space
-                                    if (Overlap(hkFeatureDetailI.rtStart, hkFeatureDetailI.rtEnd, rtJIStart, rtJIEnd))
+                                    if (RTOverlap(hkFeatureDetailI.rtStart, hkFeatureDetailI.rtEnd, rtJIStart, rtJIEnd))
                                     {
                                         matchIndex[j] = i; // J is the same feature as I
                                     }
@@ -547,14 +565,14 @@ namespace pwiz.Skyline.Model.DdaSearch
                                     {
                                         var rtIJStart = alignmentI.GetValue(hkFeatureDetailI.rtStart); // Warp rt I into J rt space
                                         var rtIJEnd = alignmentI.GetValue(hkFeatureDetailI.rtEnd); // Warp rt I into J rt space
-                                        if (Overlap(hkFeatureDetailJ.rtStart, hkFeatureDetailJ.rtEnd, rtIJStart, rtIJEnd))
+                                        if (RTOverlap(hkFeatureDetailJ.rtStart, hkFeatureDetailJ.rtEnd, rtIJStart, rtIJEnd))
                                         {
                                             matchIndex[j] = i; // J is the same feature as I
                                         }
                                     }
                                 }
                             }
-                            else if (Overlap(hkFeatureDetailI.rtStart, hkFeatureDetailI.rtEnd,  hkFeatureDetailJ.rtStart, hkFeatureDetailJ.rtEnd))
+                            else if (RTOverlap(hkFeatureDetailI.rtStart, hkFeatureDetailI.rtEnd,  hkFeatureDetailJ.rtStart, hkFeatureDetailJ.rtEnd))
                             {
                                 matchIndex[j] = i; // J is the same feature as I
                             }
@@ -576,14 +594,10 @@ namespace pwiz.Skyline.Model.DdaSearch
                         {
                             var hkFeatureDetailI = details[matchIndex[j]]; // The feature this aligned to
                             var hkFeatureDetailJ = details[j];
-                            hkFeatureDetailJ.strMass =
-                                hkFeatureDetailI.strMass; // Make the mass descriptions match exactly
-                            hkFeatureDetailJ.parsedMass =
-                                hkFeatureDetailI.parsedMass; // Make the mass descriptions match exactly
+                            hkFeatureDetailJ.strMass = hkFeatureDetailI.strMass; // Make the mass descriptions match exactly
+                            hkFeatureDetailJ.parsedMass = hkFeatureDetailI.parsedMass; // Make the mass descriptions match exactly
                             hkFeatureDetailJ.rtAligned = hkFeatureDetailI.rtAligned; // The RT of the "best" feature
-                            hkFeatureDetailJ.avergineAndOffset =
-                                hkFeatureDetailI
-                                    .avergineAndOffset; // Make the formulas match exactly (but not the observed m/z necessarily)
+                            hkFeatureDetailJ.avergineAndOffset = hkFeatureDetailI.avergineAndOffset; // Make the formulas match exactly (but not the observed m/z necessarily)
                             hkFeatureDetailJ.alignsWith.Add(hkFeatureDetailI);
                             hkFeatureDetailI.alignsWith.Add(hkFeatureDetailJ);
                         }
@@ -596,7 +610,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         private void DiscardLowQualityFeatures()
         {
             // Remove low quality hits
-            var summedIntensityCutoff = _searchSettings.SettingsHardklor.PercentIntensityCutoff / 100.0;
+            var summedIntensityCutoff = _searchSettings.SettingsHardklor.MinIntensityPPM * 1.0E-6;
             bool BelowIntensityCutoff(hkFeatureDetail hkFeatureDetail)
             {
                 return (hkFeatureDetail.summedIntensity / _summedIntensityPerFile[hkFeatureDetail.fileIndex]) < summedIntensityCutoff;
@@ -906,7 +920,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 $@"									#  If None is set, all charge states are assumed, slowing Hardklor",
                 $@"charge_min			=	1			#Lowest charge state allowed in the analysis. #MAY NEED UI IN FUTURE",
                 $@"charge_max			=	{MaxCharge}			#Highest charge state allowed in the analysis. #MAY NEED UI IN FUTURE",
-                $@"correlation			=	{_searchSettings.SettingsHardklor.CorrelationThreshold}	#Correlation threshold to accept a peptide feature. #NEED UI",
+                $@"correlation			=	{ImportPeptideSearch.HardklorSettings.CosineAngleFromNormalizedContrastAngle(_searchSettings.SettingsHardklor.MinIdotP)}	#Correlation threshold to accept a peptide feature. #NEED UI",
                 $@"averagine_mod		=	0			#Formula containing modifications to the averagine model.",
                 $@"									#  Read documentation carefully before using! 0=off",
                 $@"mz_window			=	5.25		#Breaks spectrum into windows not larger than this value for Version1 algorithm.",
@@ -986,6 +1000,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             foreach (var path in SpectrumFileNames)
             {
+                UpdateProgress(_progressStatus = _progressStatus.ChangeSegmentName(string.Format(DdaSearchResources.HardklorSearchEngine_PerformAllAlignments_Preparing_for_retention_time_alignment_on___0__, path.GetFileName())));
                 _spectrumSummaryLists[path] = LoadSpectrumSummaries(path);
             }
 
@@ -998,8 +1013,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                         continue;
                     }
 
-                    _progressStatus = _progressStatus.ChangeMessage(
-                        string.Format(DdaSearchResources.HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_, entry1.Key.GetFileName(), entry2.Key.GetFileName()));
+                    UpdateProgress(_progressStatus = _progressStatus.NextSegment().ChangeSegmentName(
+                        string.Format(DdaSearchResources.HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_, entry1.Key.GetFileName(), entry2.Key.GetFileName())));
 
                     try
                     {

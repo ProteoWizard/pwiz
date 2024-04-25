@@ -93,6 +93,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         UpdateProgress(status => status.ChangeMessage(string.Format(Resources.MsconvertDdaConverter_Run_Re_using_existing_converted__0__file_for__1__, MsConvertOutputExtension, spectrumSource.GetSampleOrFileName())));
                         continue;
                     }
+                    UpdateProgress(status => status.ChangeSegmentName(string.Format(DdaSearchResources.MsconvertDdaConverter_Run_Converting_file___0___to__1_, spectrumSource.GetSampleOrFileName(), MsConvertOutputExtension)));
 
                     if (File.Exists(outputFilepath))
                         FileEx.SafeDelete(outputFilepath);

@@ -1106,8 +1106,11 @@
   <data name="HardklorSettings_Charges" xml:space="preserve">
     <value>Charges</value>
   </data>
-  <data name="HardklorSettings_CorrelationThreshold" xml:space="preserve">
-    <value>Correlation threshold</value>
+  <data name="HardklorSettings_MinIntensityPPM" xml:space="preserve">
+    <value>Min intensity PPM</value>
+  </data>
+  <data name="HardklorSettings_MinIdotP" xml:space="preserve">
+    <value>Min idotp</value>
   </data>
   <data name="HardklorSettings_Instrument" xml:space="preserve">
     <value>Instrument</value>

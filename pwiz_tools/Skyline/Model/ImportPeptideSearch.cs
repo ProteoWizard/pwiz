@@ -74,18 +74,20 @@ namespace pwiz.Skyline.Model
         public class HardklorSettings
         {
             public HardklorSettings(FullScanMassAnalyzerType instrument, double resolution,
-                double correlationThreshold, double signalToNoise, IEnumerable<int> charges, double percentIntensityCutoff)
+                double idotpMin, double signalToNoise, IEnumerable<int> charges, double intensityCutoffPPM, double rtTolerance)
             {
                 Instrument = instrument;
                 Resolution = resolution;
-                CorrelationThreshold = correlationThreshold;
+                // We think in terms of "normalized contrast angle", Hardklor thinks about "cosine angle" -  we convert when we write the Hardklor config file.
+                MinIdotP = idotpMin; 
                 SignalToNoise = signalToNoise;
                 Charges = charges.ToList();
-                PercentIntensityCutoff = percentIntensityCutoff;
+                MinIntensityPPM = intensityCutoffPPM;
+                RetentionTimeTolerance = rtTolerance;
             }
 
             [Track]
-            public double CorrelationThreshold { get; private set; }
+            public double MinIdotP { get; private set; } // We think in terms of "normalized contrast angle", Hardklor thinks about "cosine angle" -  we convert when we write the Hardklor config file.
             [Track]
             public double SignalToNoise { get; private set; }
             [Track]
@@ -95,8 +97,17 @@ namespace pwiz.Skyline.Model
             [Track]
             public List<int> Charges { get; set; } // A list of desired charges for BlibBuild
             [Track]
-            public double PercentIntensityCutoff { get; set; } // Ignore any features whose intensity is less than xxx% of the total of all features in a replicate
-           
+            public double MinIntensityPPM { get; set; } // Ignore any features whose intensity is less than xxx PPM of the total of all features in a replicate
+
+            public double RetentionTimeTolerance { get; private set; } // For aligning Bullseye output
+
+            // We think in terms of "normalized contrast angle" (NCA), Hardklor thinks about "cosine angle" (CA).
+            // NCA = 1.0 - (acos(CA) * 2 / PI);
+            // so
+            // CA = PI/2 * cos(1-NCA)
+            public static double CosineAngleFromNormalizedContrastAngle(double normalizedContrastAngle) => Statistics.NormalizedContrastAngleToAngle(Math.Min(1.0, normalizedContrastAngle));
+            public static double NormalizedContrastAngleFromCosineAngle(double cosineAngle) => Statistics.AngleToNormalizedContrastAngle(Math.Min(1.0, cosineAngle));
+
         }
 
 

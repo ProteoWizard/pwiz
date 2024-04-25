@@ -67,6 +67,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 groupBoxHardklor.Enabled = groupBoxHardklor.Visible = true;
                 groupBoxHardklor.Location = new System.Drawing.Point(_hardklorInstrumentSettingsControl.GroupBoxMS1Bounds.Left, _hardklorInstrumentSettingsControl.GroupBoxMS1Bounds.Bottom + 10);
                 groupBoxHardklor.Width = _hardklorInstrumentSettingsControl.GroupBoxMS1Bounds.Width;
+                this.toolTip1.SetToolTip(this.labelHardklorIdotpThreshold, this.toolTip1.GetToolTip(this.textHardklorMinIdotP));
+                this.toolTip1.SetToolTip(this.lblHardklorSignalToNoise, this.toolTip1.GetToolTip(this.textHardklorSignalToNoise));
+                this.toolTip1.SetToolTip(this.labelMinIntensityPPM, this.toolTip1.GetToolTip(this.textHardklorMinIntensityPPM));
             }
             else
             {
@@ -376,8 +379,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     _documentContainer.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.centroided;
                 }
                 Settings.Default.LibraryResultCutOff = ImportPeptideSearch.CutoffScore;
-                Settings.Default.FeatureFindingPercentIntensityThreshold = HardklorPercentIntensityThreshold;
-                Settings.Default.FeatureFindingCorrelationThreshold = HardklorCorrelationThreshold;
+                Settings.Default.FeatureFindingIntensityThresholdPPM = HardklorIntensityThresholdPPM;
+                Settings.Default.FeatureFindingMinIdotP = HardklorMinIdotP;
                 Settings.Default.FeatureFindingSignalToNoise = HardklorSignalToNoise;
 
             }
@@ -389,7 +392,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var helper = new MessageBoxHelper(this.ParentForm, interactive);
             if (ImportPeptideSearch.IsFeatureDetection)
             {
-                if (!helper.ValidateDecimalTextBox(this.textHardklorCorrelation, 0, 1, out var correlation))
+                if (!helper.ValidateDecimalTextBox(this.textHardklorMinIdotP, 0, 1, out var minIdotP))
                 {
                     return false;
                 }
@@ -399,16 +402,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return false;
                 }
 
-                if (!helper.ValidateDecimalTextBox(this.textHardklorIntensityCutoff, 0, 100, out _))
+                if (!helper.ValidateDecimalTextBox(this.textHardklorMinIntensityPPM, 0, 100, out _))
                 {
                     return false;
                 }
                 // Note the Hardklor settings
                 ImportPeptideSearch.SettingsHardklor = new ImportPeptideSearch.HardklorSettings(HardklorInstrument,
                     HardklorResolution,
-                    correlation, signalToNoise, _documentContainer.TransitionSettings.Filter.PeptidePrecursorCharges.Select(a => a.AdductCharge).Distinct().ToArray(),
-                    HardklorPercentIntensityThreshold);
-                ImportPeptideSearch.CutoffScore = correlation;
+                    minIdotP, signalToNoise, _documentContainer.TransitionSettings.Filter.PeptidePrecursorCharges.Select(a => a.AdductCharge).Distinct().ToArray(),
+                    HardklorIntensityThresholdPPM,
+                    _documentContainer.FullScanSettingsControl.FullScan.RetentionTimeFilterLength);
+                ImportPeptideSearch.CutoffScore = minIdotP;
                 return true;
             }
 
@@ -469,16 +473,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        public double HardklorCorrelationThreshold
+        public double HardklorMinIdotP
         {
-            get { return double.TryParse(textHardklorCorrelation.Text, out var corr) ? corr : 0; }
-            set { textHardklorCorrelation.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+            get { return double.TryParse(textHardklorMinIdotP.Text, out var corr) ? corr : 0; }
+            set { textHardklorMinIdotP.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
-        public double HardklorPercentIntensityThreshold
+        public double HardklorIntensityThresholdPPM
         {
-            get { return double.TryParse(textHardklorIntensityCutoff.Text, out var cutoff) ? cutoff : 0; }
-            set { textHardklorIntensityCutoff.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+            get { return double.TryParse(textHardklorMinIntensityPPM.Text, out var cutoff) ? cutoff : 0; }
+            set { textHardklorMinIntensityPPM.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
         public double HardklorSignalToNoise
