@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web.UI.WebControls;
 using pwiz.Common.Spectra;
 using pwiz.ProteowizardWrapper;
 
