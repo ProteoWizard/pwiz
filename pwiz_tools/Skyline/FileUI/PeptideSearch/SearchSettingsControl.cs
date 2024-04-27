@@ -67,9 +67,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 groupBoxHardklor.Enabled = groupBoxHardklor.Visible = true;
                 groupBoxHardklor.Location = new System.Drawing.Point(_hardklorInstrumentSettingsControl.GroupBoxMS1Bounds.Left, _hardklorInstrumentSettingsControl.GroupBoxMS1Bounds.Bottom + 10);
                 groupBoxHardklor.Width = _hardklorInstrumentSettingsControl.GroupBoxMS1Bounds.Width;
-                this.toolTip1.SetToolTip(this.labelHardklorIdotpThreshold, this.toolTip1.GetToolTip(this.textHardklorMinIdotP));
-                this.toolTip1.SetToolTip(this.lblHardklorSignalToNoise, this.toolTip1.GetToolTip(this.textHardklorSignalToNoise));
-                this.toolTip1.SetToolTip(this.labelMinIntensityPPM, this.toolTip1.GetToolTip(this.textHardklorMinIntensityPPM));
+                toolTip1.SetToolTip(labelHardklorMinIdotP, toolTip1.GetToolTip(textHardklorMinIdotP));
+                toolTip1.SetToolTip(lblHardklorSignalToNoise, toolTip1.GetToolTip(textHardklorSignalToNoise));
+                toolTip1.SetToolTip(labelMinIntensityPPM, toolTip1.GetToolTip(textHardklorMinIntensityPPM));
             }
             else
             {

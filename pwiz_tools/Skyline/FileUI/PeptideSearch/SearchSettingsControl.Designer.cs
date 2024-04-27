@@ -53,7 +53,7 @@
             this.textHardklorMinIntensityPPM = new System.Windows.Forms.TextBox();
             this.labelMinIntensityPPM = new System.Windows.Forms.Label();
             this.textHardklorMinIdotP = new System.Windows.Forms.TextBox();
-            this.labelHardklorIdotpThreshold = new System.Windows.Forms.Label();
+            this.labelHardklorMinIdotP = new System.Windows.Forms.Label();
             this.textHardklorSignalToNoise = new System.Windows.Forms.TextBox();
             this.lblHardklorSignalToNoise = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
@@ -187,7 +187,7 @@
             this.groupBoxHardklor.Controls.Add(this.textHardklorMinIntensityPPM);
             this.groupBoxHardklor.Controls.Add(this.labelMinIntensityPPM);
             this.groupBoxHardklor.Controls.Add(this.textHardklorMinIdotP);
-            this.groupBoxHardklor.Controls.Add(this.labelHardklorIdotpThreshold);
+            this.groupBoxHardklor.Controls.Add(this.labelHardklorMinIdotP);
             this.groupBoxHardklor.Controls.Add(this.textHardklorSignalToNoise);
             this.groupBoxHardklor.Controls.Add(this.lblHardklorSignalToNoise);
             resources.ApplyResources(this.groupBoxHardklor, "groupBoxHardklor");
@@ -218,8 +218,8 @@
             // 
             // labelHardklorIdotpThreshold
             // 
-            resources.ApplyResources(this.labelHardklorIdotpThreshold, "labelHardklorIdotpThreshold");
-            this.labelHardklorIdotpThreshold.Name = "labelHardklorIdotpThreshold";
+            resources.ApplyResources(this.labelHardklorMinIdotP, "labelHardklorMinIdotP");
+            this.labelHardklorMinIdotP.Name = "labelHardklorMinIdotP";
             // 
             // textHardklorSignalToNoise
             // 
@@ -285,7 +285,7 @@
         private System.Windows.Forms.Label lblMs2Analyzer;
         private System.Windows.Forms.GroupBox groupBoxHardklor;
         private System.Windows.Forms.TextBox textHardklorMinIdotP;
-        private System.Windows.Forms.Label labelHardklorIdotpThreshold;
+        private System.Windows.Forms.Label labelHardklorMinIdotP;
         private System.Windows.Forms.TextBox textHardklorSignalToNoise;
         private System.Windows.Forms.Label lblHardklorSignalToNoise;
         private System.Windows.Forms.Label labelMinIntensityPPM;

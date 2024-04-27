@@ -711,34 +711,34 @@ NCA=1.0-(acos(CAC)*2/PI)</value>
   <data name="&gt;&gt;textHardklorMinIdotP.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="labelHardklorIdotpThreshold.AutoSize" type="System.Boolean, mscorlib">
+  <data name="labelHardklorMinIdotP.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="labelHardklorIdotpThreshold.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+  <data name="labelHardklorMinIdotP.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <data name="labelHardklorIdotpThreshold.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="labelHardklorMinIdotP.Location" type="System.Drawing.Point, System.Drawing">
     <value>14, 20</value>
   </data>
-  <data name="labelHardklorIdotpThreshold.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="labelHardklorMinIdotP.Size" type="System.Drawing.Size, System.Drawing">
     <value>121, 13</value>
   </data>
-  <data name="labelHardklorIdotpThreshold.TabIndex" type="System.Int32, mscorlib">
+  <data name="labelHardklorMinIdotP.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="labelHardklorIdotpThreshold.Text" xml:space="preserve">
+  <data name="labelHardklorMinIdotP.Text" xml:space="preserve">
     <value>Min isotope &amp;dot product:</value>
   </data>
-  <data name="&gt;&gt;labelHardklorIdotpThreshold.Name" xml:space="preserve">
-    <value>labelHardklorIdotpThreshold</value>
+  <data name="&gt;&gt;labelHardklorMinIdotP.Name" xml:space="preserve">
+    <value>labelHardklorMinIdotP</value>
   </data>
-  <data name="&gt;&gt;labelHardklorIdotpThreshold.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelHardklorMinIdotP.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelHardklorIdotpThreshold.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelHardklorMinIdotP.Parent" xml:space="preserve">
     <value>groupBoxHardklor</value>
   </data>
-  <data name="&gt;&gt;labelHardklorIdotpThreshold.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelHardklorMinIdotP.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="textHardklorSignalToNoise.Location" type="System.Drawing.Point, System.Drawing">

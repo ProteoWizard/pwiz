@@ -88,7 +88,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void InitializeFeatureDetectionUI()
         {
-            if (_featureDetectionPhase != ImportPeptideSearch.eFeatureDetectionPhase.none)
+            if (IsFeatureDetection)
             {
                 // Replace "minutes of MS/MS IDs" in "Use only scans within [textbox] minutes of MS/MS IDs"
                 var newText = SettingsUIResources.FullScanSettingsControl_Initialize_minutes_of_detected_features;
@@ -312,7 +312,7 @@ namespace pwiz.Skyline.SettingsUI
             // Update the precursor analyzer type in case the SelectedIndex is still -1
             UpdatePrecursorAnalyzerType();
 
-            if (_featureDetectionPhase != ImportPeptideSearch.eFeatureDetectionPhase.none)
+            if (IsFeatureDetection)
             {
                 // Hardklor assumes 400mz in FWHM calc
                 PrecursorResMz = HARDKLOR_PRECURSOR_RES_MZ;
@@ -325,6 +325,8 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        private bool IsFeatureDetection => _featureDetectionPhase != ImportPeptideSearch.eFeatureDetectionPhase.none;
+
         public void UpdatePrecursorAnalyzerType()
         {
             var precursorMassAnalyzer = PrecursorMassAnalyzer;
@@ -335,7 +337,7 @@ namespace pwiz.Skyline.SettingsUI
             SetAnalyzerType(PrecursorMassAnalyzer,
                 FullScan.PrecursorMassAnalyzer,
                 FullScan.PrecursorRes,
-                _featureDetectionPhase != ImportPeptideSearch.eFeatureDetectionPhase.none ? HARDKLOR_PRECURSOR_RES_MZ : FullScan.PrecursorResMz, // Hardklor assumes resolution value is at 400 m/z
+                IsFeatureDetection ? HARDKLOR_PRECURSOR_RES_MZ : FullScan.PrecursorResMz, // Hardklor assumes resolution value is at 400 m/z
                 labelPrecursorRes,
                 textPrecursorRes,
                 labelPrecursorAt,
@@ -1233,7 +1235,7 @@ namespace pwiz.Skyline.SettingsUI
                 tbxTimeAroundMs2Ids.Enabled = true;
 
                 var document = _documentContainer.Document;
-                if (document.MoleculeCount > 0 && this._featureDetectionPhase != ImportPeptideSearch.eFeatureDetectionPhase.none)
+                if (document.MoleculeCount > 0 && !IsFeatureDetection)
                 {
                     if (!document.Settings.HasLibraries)
                     {
