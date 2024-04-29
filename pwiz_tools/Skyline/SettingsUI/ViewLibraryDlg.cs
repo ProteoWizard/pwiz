@@ -2654,48 +2654,57 @@ namespace pwiz.Skyline.SettingsUI
             private readonly SrmSettings _settings;
             private readonly double _mz;
             private readonly IonMobilityAndCCS _ionMobility;
+            private readonly string _errorMessage;
 
             public PeptideTipProvider(ViewLibraryPepInfo pepInfo, LibKeyModificationMatcher matcher,
                 Library selectedLibrary)
             {
-                ExplicitMods mods;
-                TransitionGroupDocNode transitionGroup;
-                _pepInfo = pepInfo;
-                _matcher = matcher;
-                _pepInfo.GetPeptideInfo(_matcher, out _settings, out transitionGroup, out mods);
-                // build seq parts to draw
-                _seqPartsToDraw = GetSequencePartsToDraw(mods);
-                // Get small molecule info if any
-                _smallMoleculePartsToDraw = null;
-                var smallMolInfo = _pepInfo.GetSmallMoleculeLibraryAttributes();
-                if (smallMolInfo != null && !smallMolInfo.IsEmpty)
+                try
                 {
-                    // Get a list of things like Name:caffeine, Formula:C8H10N4O2, InChIKey:RYYVLZVUVIJVGH-UHFFFAOYSA-N MoleculeIds: CAS:58-08-2\tKEGG:D00528
-                    _smallMoleculePartsToDraw = smallMolInfo.LocalizedKeyValuePairs;
-                }
-
-                if (_pepInfo.Target != null)
-                {
-                    // build mz range parts to draw
-                    _mz = _pepInfo.CalcMz(_settings, transitionGroup, mods);
-                    _mzRangePartsToDraw = GetMzRangeItemsToDraw(_mz);
-                }
-                else
-                {
-                    _mzRangePartsToDraw = new List<TextColor>();
-                    var precursorKey = _pepInfo.Key.LibraryKey as PrecursorLibraryKey;
-                    if (precursorKey != null)
+                    _errorMessage = null;
+                    ExplicitMods mods;
+                    TransitionGroupDocNode transitionGroup;
+                    _pepInfo = pepInfo;
+                    _matcher = matcher;
+                    _pepInfo.GetPeptideInfo(_matcher, out _settings, out transitionGroup, out mods);
+                    // build seq parts to draw
+                    _seqPartsToDraw = GetSequencePartsToDraw(mods);
+                    // Get small molecule info if any
+                    _smallMoleculePartsToDraw = null;
+                    var smallMolInfo = _pepInfo.GetSmallMoleculeLibraryAttributes();
+                    if (smallMolInfo != null && !smallMolInfo.IsEmpty)
                     {
-                        _mz = precursorKey.Mz;
+                        // Get a list of things like Name:caffeine, Formula:C8H10N4O2, InChIKey:RYYVLZVUVIJVGH-UHFFFAOYSA-N MoleculeIds: CAS:58-08-2\tKEGG:D00528
+                        _smallMoleculePartsToDraw = smallMolInfo.LocalizedKeyValuePairs;
+                    }
+
+                    if (_pepInfo.Target != null)
+                    {
+                        // build mz range parts to draw
+                        _mz = _pepInfo.CalcMz(_settings, transitionGroup, mods);
+                        _mzRangePartsToDraw = GetMzRangeItemsToDraw(_mz);
+                    }
+                    else
+                    {
+                        _mzRangePartsToDraw = new List<TextColor>();
+                        var precursorKey = _pepInfo.Key.LibraryKey as PrecursorLibraryKey;
+                        if (precursorKey != null)
+                        {
+                            _mz = precursorKey.Mz;
+                        }
+                    }
+
+                    // Ion mobility
+                    var bestSpectrum = selectedLibrary.GetSpectra(_pepInfo.Key,
+                        IsotopeLabelType.light, LibraryRedundancy.best).FirstOrDefault();
+                    if (bestSpectrum != null)
+                    {
+                        _ionMobility = bestSpectrum.IonMobilityInfo;
                     }
                 }
-
-                // Ion mobility
-                var bestSpectrum = selectedLibrary.GetSpectra(_pepInfo.Key,
-                    IsotopeLabelType.light, LibraryRedundancy.best).FirstOrDefault();
-                if (bestSpectrum != null)
+                catch (Exception e)
                 {
-                    _ionMobility = bestSpectrum.IonMobilityInfo;
+                    _errorMessage = e.Message; // Very annoying to encounter a blocking window in a mouseover, just show error in the tip
                 }
             }
 
@@ -2713,44 +2722,58 @@ namespace pwiz.Skyline.SettingsUI
 
                 using (RenderTools rt = new RenderTools())
                 {
-                    // Draw sequence
-                    sizeSeq = DrawTextParts(g, 0, 0, _seqPartsToDraw, rt);
-
-                    // Draw small mol info
-                    if (_smallMoleculePartsToDraw != null)
+                    if (!string.IsNullOrEmpty(_errorMessage))
                     {
-                        foreach (var item in _smallMoleculePartsToDraw)
+                        // Just show the error message rather than risk cascading errors
+                        sizeSeq = new SizeF(0, 0);
+                        sizeMz = new SizeF(0, 0);
+                        foreach (var line in _errorMessage.ReadLines())
                         {
-                            tableMz.AddDetailRow(item.Key, item.Value, rt);
+                            sizeSeq.Width = Math.Max(sizeSeq.Width, g.MeasureString(line, rt.FontNormal).Width);
+                            g.DrawString(line, rt.FontNormal, Brushes.Red, new PointF(0, sizeSeq.Height));
+                            sizeSeq.Height += (g.MeasureString(line, rt.FontNormal).Height);
                         }
                     }
-                    var heightSmallMol = tableMz.CalcDimensions(g).Height;
-                    
-                    // Draw mz
-                    tableMz.AddDetailRow(Resources.PeptideTipProvider_RenderTip_Precursor_m_z, FormatPrecursorMz(_mz), rt);
-
-                    // Draw ion mobility
-                    if (!IonMobilityAndCCS.IsNullOrEmpty(_ionMobility))
+                    else
                     {
-                        if (_ionMobility.HasIonMobilityValue)
+                        // Draw sequence
+                        sizeSeq = DrawTextParts(g, 0, 0, _seqPartsToDraw, rt);
+
+                        // Draw small mol info
+                        if (_smallMoleculePartsToDraw != null)
                         {
-                            var details = FormatIonMobility(_ionMobility.IonMobility.Mobility.Value, _ionMobility.IonMobility.UnitsString);
-                            tableMz.AddDetailRow(Resources.PeptideTipProvider_RenderTip_Ion_Mobility, details, rt);
+                            foreach (var item in _smallMoleculePartsToDraw)
+                            {
+                                tableMz.AddDetailRow(item.Key, item.Value, rt);
+                            }
                         }
-                        if (_ionMobility.HasCollisionalCrossSection)
+                        var heightSmallMol = tableMz.CalcDimensions(g).Height;
+
+                        // Draw mz
+                        tableMz.AddDetailRow(Resources.PeptideTipProvider_RenderTip_Precursor_m_z, FormatPrecursorMz(_mz), rt);
+
+                        // Draw ion mobility
+                        if (!IonMobilityAndCCS.IsNullOrEmpty(_ionMobility))
                         {
-                            var details = FormatCCS(_ionMobility.CollisionalCrossSectionSqA.Value);
-                            tableMz.AddDetailRow(Resources.PeptideTipProvider_RenderTip_CCS, details, rt);
+                            if (_ionMobility.HasIonMobilityValue)
+                            {
+                                var details = FormatIonMobility(_ionMobility.IonMobility.Mobility.Value, _ionMobility.IonMobility.UnitsString);
+                                tableMz.AddDetailRow(Resources.PeptideTipProvider_RenderTip_Ion_Mobility, details, rt);
+                            }
+                            if (_ionMobility.HasCollisionalCrossSection)
+                            {
+                                var details = FormatCCS(_ionMobility.CollisionalCrossSectionSqA.Value);
+                                tableMz.AddDetailRow(Resources.PeptideTipProvider_RenderTip_CCS, details, rt);
+                            }
                         }
+
+                        sizeMz = tableMz.CalcDimensions(g);
+                        sizeSeq.Height += 2;    // Spacing between details and fragments
+
+                        // Draw mz range out of bounds
+                        if (_mzRangePartsToDraw.Count > 0)
+                            sizeMz.Width = DrawTextParts(g, sizeMz.Width, sizeSeq.Height + heightSmallMol, _mzRangePartsToDraw, rt).Width;
                     }
-
-                    sizeMz = tableMz.CalcDimensions(g);
-                    sizeSeq.Height += 2;    // Spacing between details and fragments
-
-                    // Draw mz range out of bounds
-                    if (_mzRangePartsToDraw.Count > 0)
-                        sizeMz.Width = DrawTextParts(g, sizeMz.Width, sizeSeq.Height + heightSmallMol, _mzRangePartsToDraw, rt).Width;
-
                     if (draw)
                     {
                         table.Draw(g);
