@@ -2704,6 +2704,10 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 catch (Exception e)
                 {
+                    if (ExceptionUtil.IsProgrammingDefect(e))
+                    {
+                        Program.ReportException(e);
+                    }
                     _errorMessage = e.Message; // Very annoying to encounter a blocking window in a mouseover, just show error in the tip
                 }
             }
