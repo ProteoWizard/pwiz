@@ -17,7 +17,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -230,7 +229,11 @@ namespace AutoQC
 
             var state = initialState.Copy()
                 .SetConfigEnabled(initialState.BaseState.GetConfigIndex(iconfig.GetName()), false, this);
-            _configManager.SetState(initialState, state);
+            // Do not update the selected log file
+            // Trying to update the log files in UpdateUiLogFiles() results in a UI freeze since SetState() holds the lock
+            // that the Main thread tries to acquire in SelectLog (via event comboConfigs_SelectedIndexChanged that gets
+            // triggered when the selected index in the logs combo box is changed)
+            _configManager.SetState(initialState, state, false);
         }
 
         private void listViewConfigs_PreventItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
@@ -361,7 +364,9 @@ namespace AutoQC
             {
                 comboConfigs.Items.Clear();
                 comboConfigs.Items.AddRange(_configManager.GetLogNameList());
-                comboConfigs.SelectedIndex = _configManager.SelectedLog;
+                comboConfigs.SelectedIndex = _configManager.SelectedLog; // This will trigger comboConfigs_SelectedIndexChanged()
+                                                                         // -> ConfigManager.SelectLog() will be called on the Main thread
+                                                                         // This can cause a deadlock if another thread is holding the lock
             });
         }
 
@@ -779,12 +784,9 @@ namespace AutoQC
 
         private void ListViewSizeChanged()
         {
-            if (_listViewColumnWidths != null)
-            {
                 listViewConfigs.ColumnWidthChanged -= listViewConfigs_ColumnWidthChanged;
                 _listViewColumnWidths.ListViewContainerResize();
                 listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
-            }
         }
 
         private void listViewConfigs_ColumnWidthChanged(object sender, ColumnWidthChangedEventArgs e)
