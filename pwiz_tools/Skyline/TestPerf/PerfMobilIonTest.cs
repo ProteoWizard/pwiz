@@ -87,14 +87,13 @@ namespace TestPerf
                 // Select the precursor
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].FirstNode.Nodes[precursorIndex];
             });
-            var editMoleculeDlgA = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifySmallMoleculeTransitionGroup);
-            RunUI(() =>
+            RunDlg<EditCustomMoleculeDlg>(SkylineWindow.ModifySmallMoleculeTransitionGroup, editMoleculeDlgA =>
             {
                 editMoleculeDlgA.IonMobility = 308.71;
                 editMoleculeDlgA.IonMobilityUnits = eIonMobilityUnits.drift_time_msec;
                 editMoleculeDlgA.CollisionalCrossSectionSqA = null;
+                editMoleculeDlgA.OkDialog();
             });
-            OkDialog(editMoleculeDlgA, editMoleculeDlgA.OkDialog);
             document = WaitForDocumentChange(document);
             var im = document.MoleculePrecursorPairs.ElementAt(precursorIndex).NodeGroup.ExplicitValues;
             AssertEx.AreEqual(308.71, im.IonMobility, .01); // As set above
