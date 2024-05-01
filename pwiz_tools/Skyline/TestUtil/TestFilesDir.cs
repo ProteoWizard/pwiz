@@ -284,6 +284,11 @@ namespace pwiz.SkylineTestUtil
         {
             if (!PersistentFilesDirTotalSize.HasValue) return;
 
+            // Do a garbage collection in case any finalizer is supposed to release a file handle
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+
             List<FileInfo> currentFileInfos;
             try
             {
