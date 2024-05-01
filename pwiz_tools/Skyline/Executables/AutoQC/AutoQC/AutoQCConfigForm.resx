@@ -587,12 +587,15 @@ Results time window is a rolling window and only results acquired within the las
     <value>SCIEX</value>
   </data>
   <data name="comboBoxInstrumentType.Items3" xml:space="preserve">
-    <value>Agilent</value>
+    <value>SCIEX WIFF2</value>
   </data>
   <data name="comboBoxInstrumentType.Items4" xml:space="preserve">
-    <value>Bruker</value>
+    <value>Agilent</value>
   </data>
   <data name="comboBoxInstrumentType.Items5" xml:space="preserve">
+    <value>Bruker</value>
+  </data>
+  <data name="comboBoxInstrumentType.Items6" xml:space="preserve">
     <value>Shimadzu</value>
   </data>
   <data name="comboBoxInstrumentType.Location" type="System.Drawing.Point, System.Drawing">

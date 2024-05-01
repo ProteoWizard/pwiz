@@ -246,7 +246,8 @@ namespace AutoQC
             resources.GetString("comboBoxInstrumentType.Items2"),
             resources.GetString("comboBoxInstrumentType.Items3"),
             resources.GetString("comboBoxInstrumentType.Items4"),
-            resources.GetString("comboBoxInstrumentType.Items5")});
+            resources.GetString("comboBoxInstrumentType.Items5"),
+            resources.GetString("comboBoxInstrumentType.Items6")});
             resources.ApplyResources(this.comboBoxInstrumentType, "comboBoxInstrumentType");
             this.comboBoxInstrumentType.Name = "comboBoxInstrumentType";
             // 
