@@ -142,7 +142,7 @@ namespace TestPerf
             if (Program.UseOriginalURLs && !HasPrositServer())
                 return;
 
-            TestFilesPersistent = new[] { "23aug2017_hela_serum_timecourse", "z3_nce33-prosit" };
+            TestFilesPersistent = new[] { "z3_nce33-prosit" };
 
             RunFunctionalTest();
 
@@ -200,20 +200,12 @@ namespace TestPerf
             string persistentBlibFilepath = TestFilesDir.GetTestPath(_analysisValues.BlibPath);
             string tempBlibFilepath = TestFilesDir.GetTestPath(fastaFilepath)
                 .Replace(".fasta", $"-z3_nce33-prosit-{_analysisValues.PrositHash}.blib");
-            FileEx.HardLinkOrCopyFile(persistentBlibFilepath, tempBlibFilepath);
 
-            // hard-link the mzMLs to a working directory inside the persistent files directory so the EncyclopeDIA intermediate files can be deleted easily;
-            // NB: some intermediate (demux'd) files are persisted in the ZIP file to speed up the processing
-            string workingDir = Path.Combine(TestFilesDir.PersistentFilesDir, "working");
-            if (Directory.Exists(workingDir))
-                Directory.Delete(workingDir, true);
-            Directory.CreateDirectory(workingDir);
+            string workingDir = TestFilesDir.FullPath;
 
-            foreach (var mzml in Directory.EnumerateFiles(TestFilesDir.PersistentFilesDir, "*.mzML"))
-                FileEx.HardLinkOrCopyFile(mzml, Path.Combine(workingDir, Path.GetFileName(mzml)));
+            if (!Program.UseOriginalURLs)
+                FileEx.HardLinkOrCopyFile(persistentBlibFilepath, tempBlibFilepath);
 
-            if (Program.UseOriginalURLs)
-                FileEx.SafeDelete(tempBlibFilepath, true);
 
             RunUI(searchDlg.NextPage); // now on Prosit settings
 
