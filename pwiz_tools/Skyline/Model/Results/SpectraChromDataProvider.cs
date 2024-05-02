@@ -31,7 +31,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Spectra;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
