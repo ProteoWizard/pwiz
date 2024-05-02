@@ -811,7 +811,7 @@ namespace pwiz.Skyline
                 AuditLogEntry entry;
                 if (modifiedDocument.AuditLogException == null)
                 {
-                    entry = modifiedDocument.AuditLogEntry;
+                    resultEntry = entry = modifiedDocument.AuditLogEntry;
                 }
                 else
                 {
