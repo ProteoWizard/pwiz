@@ -4436,6 +4436,11 @@ namespace pwiz.Skyline
                             _statusWriter.WriteLine(
                                 SkylineResources.PanoramaPublishHelper_PublishDocToPanorama_Error__An_import_error_occurred_on_the_Panorama_server__0__,
                                 panoramaEx.ServerUrl);
+                            if (!string.IsNullOrWhiteSpace(panoramaEx.Error))
+                            {
+                                _statusWriter.WriteLine(Resources.Error___0_, panoramaEx.Error);
+                            }
+
                             _statusWriter.WriteLine(
                                 SkylineResources.PanoramaPublishHelper_PublishDocToPanorama_Error_details_can_be_found_at__0_,
                                 panoramaEx.JobUrl);
