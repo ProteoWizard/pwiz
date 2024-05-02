@@ -47,6 +47,8 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineRunner;
 using pwiz.SkylineTestUtil;
+using System.Xml.Serialization;
+using System.Xml;
 
 namespace pwiz.SkylineTestData
 {
@@ -80,8 +82,24 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleReplicateOutTest()
         {
+            DoConsoleReplicateOutTest(false);
+        }
+
+        [TestMethod]
+        public void ConsoleReplicateOutTestWithAuditLogging()
+        {
+            DoConsoleReplicateOutTest(true);
+        }
+
+        [TestMethod]
+        private void DoConsoleReplicateOutTest(bool auditLogging)
+        {
             TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            if (auditLogging)
+            {
+                EnableAuditLogging(docPath);
+            }
             string outPath = TestFilesDir.GetTestPath("Imported_single.sky");
 
             // Import the first RAW file (or mzML for international)
@@ -98,7 +116,11 @@ namespace pwiz.SkylineTestData
             AssertEx.IsDocumentState(doc, 0, 2, 7, 7, 49);
             AssertResult.IsDocumentResultsState(doc, "Single", 3, 3, 0, 21, 0);
 
-
+            if (auditLogging)
+            {
+                var docWithAuditLog = DeserializeWithAuditLog(outPath);
+                AssertLastEntry(docWithAuditLog.AuditLog, MessageType.imported_result);
+            }
 
             //Test --import-append
             var dataFile2 = TestFilesDir.GetTestPath("ah_20101029r_BSA_CID_FT_centroid_3uscan_3" +
@@ -116,6 +138,12 @@ namespace pwiz.SkylineTestData
             AssertResult.IsDocumentResultsState(doc, "Single", 6, 6, 0, 42, 0);
 
             Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
+
+            if (auditLogging)
+            {
+                var docWithAuditLog = DeserializeWithAuditLog(outPath);
+                AssertLastEntry(docWithAuditLog.AuditLog, MessageType.imported_result);
+            }
         }
 
         [TestMethod]
@@ -1048,9 +1076,26 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleAnnotationsExportToImportTest()
         {
+            DoConsoleAnnotationsExportToImportTest(false);
+        }
+
+        [TestMethod]
+        public void ConsoleAnnotationsExportToImportTestWithAuditLogging()
+        {
+            DoConsoleAnnotationsExportToImportTest(true);
+        }
+
+        [TestMethod]
+        private void DoConsoleAnnotationsExportToImportTest(bool auditLogging)
+        {
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleAnnotationsExportToImportTest.zip");
             var documentWithAnnotations = TestFilesDir.GetTestPath("Study 7ii (site 52)_heavily_annotated.sky");
             var documentWithoutAnnotations = TestFilesDir.GetTestPath("Study 7ii (site 52)_no_annotations.sky");
+            if (auditLogging)
+            {
+                EnableAuditLogging(documentWithoutAnnotations);
+            }
+
             var documentWithImportedAnnotations = TestFilesDir.GetTestPath("Study 7ii (site 52)_imported_annotations.sky");
             var annotationsPath = TestFilesDir.GetTestPath("original_annotations.csv");
             var newAnnotationsPath = TestFilesDir.GetTestPath("annotations_from_new_document.csv");
@@ -1076,6 +1121,13 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(originalDocument.Settings.MeasuredResults.Chromatograms, 
                 outputDocument.MeasuredResults.Chromatograms);
 
+            if (auditLogging)
+            {
+                var outputDocumentWithAuditLog =
+                    DeserializeWithAuditLog(documentWithImportedAnnotations);
+                Assert.IsTrue(outputDocumentWithAuditLog.Settings.DataSettings.IsAuditLoggingEnabled);
+                AssertLastEntry(outputDocumentWithAuditLog.AuditLog, MessageType.imported_annotations);
+            }
         }
 
         private static void CheckRefSpectraAll(IList<DbRefSpectra> refSpectra)
@@ -3962,5 +4014,33 @@ namespace pwiz.SkylineTestData
                 throw new Exception("GetServerState threw an exception");
             }    
         }
+
+        public static void EnableAuditLogging(string path)
+        {
+            var doc = ResultsUtil.DeserializeDocument(path);
+            Assert.IsFalse(doc.Settings.DataSettings.AuditLogging);
+            doc = AuditLogList.ToggleAuditLogging(doc, true);
+            doc.SerializeToFile(path, path, SkylineVersion.CURRENT, new SilentProgressMonitor());
+        }
+
+        public static SrmDocument DeserializeWithAuditLog(string path)
+        {
+            using var hashingStream = (HashingStream)HashingStream.CreateReadStream(path);
+            using var reader = XmlReader.Create(hashingStream, new XmlReaderSettings() { IgnoreWhitespace = true }, path);
+            XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
+            var document = (SrmDocument)ser.Deserialize(reader);
+            var skylineDocumentHash = hashingStream.Done();
+            return document.ReadAuditLog(path, skylineDocumentHash, () => throw new AssertFailedException("Document hash did not match"));
+        }
+
+
+        public static void AssertLastEntry(AuditLogList auditLogList, MessageType messageType)
+        {
+            var lastEntry = auditLogList.AuditLogEntries;
+            Assert.IsFalse(lastEntry.IsRoot);
+            Assert.AreNotEqual(0, lastEntry.AllInfo.Count);
+            Assert.AreEqual(messageType, lastEntry.AllInfo[0].MessageInfo.Type);
+        }
+
     }
 }

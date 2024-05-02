@@ -730,12 +730,10 @@ namespace pwiz.Skyline
             ModifyDocument(description, null, modifier, null, null);
         }
 
-
         public void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc)
         {
             ModifyDocument(description, null, act, null, null, logFunc);
         }
-
 
         public void ModifyDocument(string description, IUndoState undoState, Func<SrmDocument, SrmDocument> act,
             Action onModifying, Action onModified, Func<SrmDocumentPair, AuditLogEntry> logFunc)

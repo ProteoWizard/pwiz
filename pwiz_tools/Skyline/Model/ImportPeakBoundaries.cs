@@ -270,7 +270,6 @@ namespace pwiz.Skyline.Model
             messageInfos.AddRange(items.Select(item => new MessageInfo(type, docType, item)));
         }
 
-
         public bool IsMinutesPeakBoundaries(TextReader reader)
         {
             long linesRead = 0;
