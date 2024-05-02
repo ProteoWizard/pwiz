@@ -1318,6 +1318,21 @@ namespace pwiz.Skyline.Model
                                                         .Select(nodePeptideGroup => nodePeptideGroup.Id.GlobalIndex).ToArray()); 
         }
 
+        public ModifiedDocument ModifyDocumentByGeneratingDecoys(SrmDocument document)
+        {
+            var modifiedDocument = new ModifiedDocument(GenerateDecoys(document));
+            if (ReferenceEquals(document, modifiedDocument.Document))
+            {
+                return null;
+            }
+            var plural = NumberOfDecoys > 1;
+            modifiedDocument = modifiedDocument.ChangeAuditLogEntry(AuditLogEntry.CreateSingleMessageEntry(
+                new MessageInfo(
+                    plural ? MessageType.added_peptide_decoys : MessageType.added_peptide_decoy,
+                    modifiedDocument.Document.DocumentType,
+                    NumberOfDecoys, DecoysMethod)));
+            return modifiedDocument;
+        }
 
         public SrmDocument GenerateDecoys(SrmDocument document)
         {
