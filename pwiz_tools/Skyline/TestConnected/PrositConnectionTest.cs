@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -124,6 +125,11 @@ Even More Stuff
         /// </summary>
         public static bool HasPrositServer()
         {
+            if (DateTime.UtcNow.CompareTo(DateTime.Parse("May 7, 2024", CultureInfo.InvariantCulture)) < 0)
+            {
+                Console.Out.WriteLine("Skipping Prosit tests until May 7 2024 because Prosit server is down");
+                return false;
+            }
             return !string.IsNullOrEmpty(PrositConfig.GetPrositConfig().RootCertificate);
         }
     }
