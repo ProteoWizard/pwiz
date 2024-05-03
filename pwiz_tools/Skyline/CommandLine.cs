@@ -2502,7 +2502,7 @@ namespace pwiz.Skyline
                 if (!commandArgs.DiscardDecoys || !_doc.MoleculeGroups.Contains(g => g.IsDecoy))
                     return true;
 
-                ModifyDocument(RefinementSettings.RemoveDecoys);
+                ModifyDocument(DocumentModifier.Create(RefinementSettings.ModifyDocumentByRemovingDecoys));
                 _out.WriteLine(Resources.CommandLine_AddDecoys_Decoys_discarded);
                 return true;
             }
@@ -2742,7 +2742,9 @@ namespace pwiz.Skyline
                     success = false;
                     return;
                 }
-                ModifyDocument(d => resultsHandler.ChangePeaks(progressMonitor));
+
+                var reintegrateDlgSettings = resultsHandler.GetReintegrateDlgSettings();
+                ModifyDocument(d => resultsHandler.ChangePeaks(progressMonitor), reintegrateDlgSettings.EntryCreator.Create);
 
                 success = true;
             }, SkylineResources.CommandLine_Reintegrate_Error__Failed_to_reintegrate_peaks_successfully_);
@@ -2756,6 +2758,7 @@ namespace pwiz.Skyline
             {
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
                 long lines = Helpers.CountLinesInFile(path);
+                // TODO(nicksh): Audit logging
                 ModifyDocument(d => d.ImportFasta(readerFasta, progressMonitor, lines, false, null, out _, out _));
             }
             
@@ -2799,6 +2802,7 @@ namespace pwiz.Skyline
             }
             if (!commandArgs.IsTransitionListAssayLibrary)
             {
+                // TODO(nicksh): Audit logging
                 ModifyDocument(d => docNew);
                 return true;
             }
@@ -2968,6 +2972,7 @@ namespace pwiz.Skyline
                 }
             }
 
+            // TODO(nicksh): Audit logging
             ModifyDocument(d => docNew);
             return true;
         }
@@ -3231,6 +3236,7 @@ namespace pwiz.Skyline
                 new List<LibrarySpec>{ librarySpec };
 
             SrmSettings newSettings = _doc.Settings.ChangePeptideLibraries(l => l.ChangeLibrarySpecs(librarySpecs));
+            // TODO(nicksh): Audit logging
             ModifyDocument(d => d.ChangeSettings(newSettings));
 
             return true;

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Diagnostics.Contracts;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Properties;
@@ -33,11 +34,13 @@ namespace pwiz.Skyline.Model
             Document = document;
         }
 
+        [Pure]
         public ModifiedDocument ChangeAuditLogEntry(AuditLogEntry auditLogEntry)
         {
             return ChangeProp(ImClone(this), im => im.AuditLogEntry = auditLogEntry);
         }
 
+        [Pure]
         public ModifiedDocument ChangeAuditLogException(Exception auditLogException)
         {
             return ChangeProp(ImClone(this), im => im.AuditLogException = auditLogException);

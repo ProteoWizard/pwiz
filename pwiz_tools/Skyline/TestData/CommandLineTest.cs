@@ -1147,8 +1147,23 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleAddDecoysTest()
         {
+            DoConsoleAddDecoysTest(false);
+        }
+
+        [TestMethod]
+        public void ConsoleAddDecoysTestWithAuditLogging()
+        {
+            DoConsoleAddDecoysTest(true);
+        }
+
+        public void DoConsoleAddDecoysTest(bool auditLogging)
+        {
             TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            if (auditLogging)
+            {
+                EnableAuditLogging(docPath);
+            }
             string outPath = TestFilesDir.GetTestPath("DecoysAdded.sky");
             string output = RunCommand("--in=" + docPath,
                                        "--decoys-add",
@@ -1156,16 +1171,34 @@ namespace pwiz.SkylineTestData
             const int expectedPeptides = 7;
             AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
                 expectedPeptides, DecoyGeneration.REVERSE_SEQUENCE));
+            if (auditLogging)
+            {
+                var outputDocument =
+                    DeserializeWithAuditLog(outPath);
+                AssertLastEntry(outputDocument.AuditLog, MessageType.added_peptide_decoys);
+            }
 
             output = RunCommand("--in=" + docPath,
                                        "--decoys-add=" + CommandArgs.ARG_VALUE_DECOYS_ADD_REVERSE);
             AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
                 expectedPeptides, DecoyGeneration.REVERSE_SEQUENCE));
+            if (auditLogging)
+            {
+                var outputDocument =
+                    DeserializeWithAuditLog(outPath);
+                AssertLastEntry(outputDocument.AuditLog, MessageType.added_peptide_decoys);
+            }
 
             output = RunCommand("--in=" + docPath,
                                        "--decoys-add=" + CommandArgs.ARG_VALUE_DECOYS_ADD_SHUFFLE);
             AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
                 expectedPeptides, DecoyGeneration.SHUFFLE_SEQUENCE));
+            if (auditLogging)
+            {
+                var outputDocument =
+                    DeserializeWithAuditLog(outPath);
+                AssertLastEntry(outputDocument.AuditLog, MessageType.added_peptide_decoys);
+            }
 
             const string badDecoyMethod = "shift";
             output = RunCommand("--in=" + docPath,
@@ -1177,8 +1210,14 @@ namespace pwiz.SkylineTestData
                                        "--decoys-add");
             AssertEx.Contains(output, Resources.CommandLine_AddDecoys_Error__Attempting_to_add_decoys_to_document_with_decoys_);
 
-            output = RunCommand("--in=" + outPath, "--decoys-discard");
+            string discardedDecoysPath = TestFilesDir.GetTestPath("DecoysDiscarded.sky");
+            output = RunCommand("--in=" + outPath, "--decoys-discard", "--out=" + discardedDecoysPath);
             AssertEx.Contains(output, Resources.CommandLine_AddDecoys_Decoys_discarded);
+            if (auditLogging)
+            {
+                var outputDocument = DeserializeWithAuditLog(discardedDecoysPath);
+                AssertLastEntry(outputDocument.AuditLog, MessageType.deleted_target);
+            }
 
             output = RunCommand("--in=" + outPath, "--decoys-add", "--decoys-discard");
             AssertEx.Contains(output, Resources.CommandLine_AddDecoys_Decoys_discarded);
@@ -4013,33 +4052,6 @@ namespace pwiz.SkylineTestData
             {
                 throw new Exception("GetServerState threw an exception");
             }    
-        }
-
-        public static void EnableAuditLogging(string path)
-        {
-            var doc = ResultsUtil.DeserializeDocument(path);
-            Assert.IsFalse(doc.Settings.DataSettings.AuditLogging);
-            doc = AuditLogList.ToggleAuditLogging(doc, true);
-            doc.SerializeToFile(path, path, SkylineVersion.CURRENT, new SilentProgressMonitor());
-        }
-
-        public static SrmDocument DeserializeWithAuditLog(string path)
-        {
-            using var hashingStream = (HashingStream)HashingStream.CreateReadStream(path);
-            using var reader = XmlReader.Create(hashingStream, new XmlReaderSettings() { IgnoreWhitespace = true }, path);
-            XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
-            var document = (SrmDocument)ser.Deserialize(reader);
-            var skylineDocumentHash = hashingStream.Done();
-            return document.ReadAuditLog(path, skylineDocumentHash, () => throw new AssertFailedException("Document hash did not match"));
-        }
-
-
-        public static void AssertLastEntry(AuditLogList auditLogList, MessageType messageType)
-        {
-            var lastEntry = auditLogList.AuditLogEntries;
-            Assert.IsFalse(lastEntry.IsRoot);
-            Assert.AreNotEqual(0, lastEntry.AllInfo.Count);
-            Assert.AreEqual(messageType, lastEntry.AllInfo[0].MessageInfo.Type);
         }
 
     }

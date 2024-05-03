@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Results;
@@ -333,6 +334,12 @@ namespace pwiz.Skyline.Model
         private static string ToFieldString(float f, IFormatProvider cultureInfo)
         {
             return float.IsNaN(f) ? TextUtil.EXCEL_NA : Convert.ToString(f, cultureInfo);
+        }
+
+        public ReintegrateAuditLogOperationSettings GetReintegrateDlgSettings()
+        {
+            return new ReintegrateAuditLogOperationSettings(ScoringModel, QValueCutoff == double.MaxValue,
+                QValueCutoff != double.MaxValue, QValueCutoff, OverrideManual);
         }
     }
 
