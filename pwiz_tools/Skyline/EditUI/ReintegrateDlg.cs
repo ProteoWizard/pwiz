@@ -36,7 +36,7 @@ using static alglib;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class ReintegrateDlg : FormEx, IAuditLogModifier<ReintegrateAuditLogOperationSettings>, IFeatureScoreProvider
+    public partial class ReintegrateDlg : FormEx, IAuditLogModifier<ReintegrateDlgSettings>, IFeatureScoreProvider
     {
         /// <summary>
         /// For performance tests only: add an annotation for combined score?
@@ -152,9 +152,9 @@ namespace pwiz.Skyline.EditUI
             DialogResult = DialogResult.OK;
         }
 
-        public ReintegrateAuditLogOperationSettings FormSettings
+        public ReintegrateDlgSettings FormSettings
         {
-            get { return new ReintegrateAuditLogOperationSettings(_driverPeakScoringModel.SelectedItem, ReintegrateAll, !ReintegrateAll, QValueCutoff, OverwriteManual); }
+            get { return new ReintegrateDlgSettings(_driverPeakScoringModel.SelectedItem, ReintegrateAll, !ReintegrateAll, QValueCutoff, OverwriteManual); }
         }
         public double? QValueCutoff
         {

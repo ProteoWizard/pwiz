@@ -539,7 +539,7 @@
     </Compile>
     <Compile Include="Model\FullScanProperties.cs" />
     <Compile Include="Model\IdPeptideDocNode.cs" />
-    <Compile Include="Model\Results\Scoring\ReintegrateAuditLogOperationSettings.cs" />
+    <Compile Include="Model\Results\Scoring\ReintegrateDlgSettings.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassFilter.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
     <Compile Include="Model\RetentionTimes\AlignmentFunction.cs" />

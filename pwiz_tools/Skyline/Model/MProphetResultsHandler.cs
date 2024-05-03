@@ -336,9 +336,9 @@ namespace pwiz.Skyline.Model
             return float.IsNaN(f) ? TextUtil.EXCEL_NA : Convert.ToString(f, cultureInfo);
         }
 
-        public ReintegrateAuditLogOperationSettings GetReintegrateDlgSettings()
+        public ReintegrateDlgSettings GetReintegrateDlgSettings()
         {
-            return new ReintegrateAuditLogOperationSettings(ScoringModel, QValueCutoff == double.MaxValue,
+            return new ReintegrateDlgSettings(ScoringModel, QValueCutoff == double.MaxValue,
                 QValueCutoff != double.MaxValue, QValueCutoff, OverrideManual);
         }
     }

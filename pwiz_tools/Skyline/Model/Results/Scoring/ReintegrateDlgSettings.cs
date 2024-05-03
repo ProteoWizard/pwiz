@@ -21,7 +21,7 @@ using pwiz.Skyline.Model.AuditLog;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
-    public class ReintegrateAuditLogOperationSettings : AuditLogOperationSettings<ReintegrateAuditLogOperationSettings>,
+    public class ReintegrateDlgSettings : AuditLogOperationSettings<ReintegrateDlgSettings>,
         IAuditLogComparable
     {
         public override MessageInfo MessageInfo
@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
         }
 
-        public ReintegrateAuditLogOperationSettings(IPeakScoringModel peakScoringModel, bool reintegrateAll,
+        public ReintegrateDlgSettings(IPeakScoringModel peakScoringModel, bool reintegrateAll,
             bool reintegrateQCutoff,
             double? cutoff, bool overwriteManualIntegration)
         {
@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public object GetDefaultObject(ObjectInfo<object> info)
         {
-            return new ReintegrateAuditLogOperationSettings(null, false, false, null, false);
+            return new ReintegrateDlgSettings(null, false, false, null, false);
         }
     }
 }
