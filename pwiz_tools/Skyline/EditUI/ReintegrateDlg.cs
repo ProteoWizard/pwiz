@@ -32,7 +32,6 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using static alglib;
 
 namespace pwiz.Skyline.EditUI
 {

@@ -47,8 +47,6 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineRunner;
 using pwiz.SkylineTestUtil;
-using System.Xml.Serialization;
-using System.Xml;
 
 namespace pwiz.SkylineTestData
 {
