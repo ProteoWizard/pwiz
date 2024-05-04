@@ -1456,7 +1456,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 // Use median CCS to calculate an ion mobility value
                 ccs = new Statistics(ionMobilityInfos.Select(im => im.CollisionalCrossSectionSqA.Value)).Median(); // Median is more tolerant of errors than Average
-                ionMobility = IonMobilityValue.GetIonMobilityValue(ionMobilityFunctionsProvider.IonMobilityFromCCS(ccs.Value, mz, chargedPeptide.Charge).Mobility,
+                ionMobility = IonMobilityValue.GetIonMobilityValue(ionMobilityFunctionsProvider.IonMobilityFromCCS(ccs.Value, mz, chargedPeptide.Charge, chargedPeptide).Mobility,
                     ionMobilityFunctionsProvider.IonMobilityUnits);
             }
             else
@@ -1470,7 +1470,7 @@ namespace pwiz.Skyline.Model.Lib
                     ionMobility = IonMobilityValue.GetIonMobilityValue(medianValue, units);
                     if (ionMobilityFunctionsProvider != null && ionMobilityFunctionsProvider.ProvidesCollisionalCrossSectionConverter)
                     {
-                        ccs = ionMobilityFunctionsProvider.CCSFromIonMobility(ionMobility, mz, chargedPeptide.Charge);
+                        ccs = ionMobilityFunctionsProvider.CCSFromIonMobility(ionMobility, mz, chargedPeptide.Charge, chargedPeptide);
                     }
                     else // No mobility -> conversion provided, just return median CCS
                     {
