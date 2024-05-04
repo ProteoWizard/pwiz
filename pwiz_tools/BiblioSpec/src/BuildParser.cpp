@@ -97,8 +97,20 @@ void BuildParser::setSpecFileName(
 
     // if specfileroot has a parent path, try that directory first
     bfs::path specfilepath(specfileroot);
-    if (specfilepath.has_parent_path() && bfs::exists(bfs::complete(specfilepath.parent_path(), filepath_)))
-        localDirectories.insert(localDirectories.begin(), specfilepath.parent_path().string());
+    if (specfilepath.has_parent_path())
+    {
+        try
+        {
+            if (bfs::exists(bfs::complete(specfilepath.parent_path(), filepath_)))
+            {
+                localDirectories.insert(localDirectories.begin(), specfilepath.parent_path().string());
+            }
+        }
+        catch (...)
+        {
+            // ignore any error that might happen checking if the file exists
+        }
+    }
 
     string fileroot = specfilepath.filename().string();
     Verbosity::debug("checking for basename: %s", fileroot.c_str());

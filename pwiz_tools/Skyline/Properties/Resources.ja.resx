@@ -2079,15 +2079,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_" xml:space="preserve">
     <value>サーバーからの予期しないJSON応答：{0}</value>
   </data>
-  <data name="PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder" xml:space="preserve">
-    <value>{0}はPanoramaフォルダではありません</value>
-  </data>
-  <data name="PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_" xml:space="preserve">
-    <value>フォルダ{0}はPanoramaサーバー{1}上に存在しません</value>
-  </data>
-  <data name="PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_" xml:space="preserve">
-    <value>ユーザー{0}には、Panoramaフォルダ{1}にアップロードする権限がありません</value>
-  </data>
   <data name="ParsimonySettings_Validate_The_value__0__for__1__is_not_valid__it_must_be_greater_than_or_equal_to__2__" xml:space="preserve">
     <value>{1}の値{0}が無効です： {2}に等しいかそれ以上でなければなりません。</value>
   </data>
@@ -3722,9 +3713,6 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="ValueInvalidDoubleException_ValueInvalidDoubleException_The_value___0___is_not_valid_for_the_argument__1__which_requires_a_decimal_number_" xml:space="preserve">
     <value>値「{0}」は、十進数を必要とする引数{1}に対して有効ではありません。</value>
-  </data>
-  <data name="ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_" xml:space="preserve">
-    <value>値「{0}」は引数{1}に対して有効ではありません。{2}の1つを使用します。</value>
   </data>
   <data name="ValueInvalidIntException_ValueInvalidIntException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_integer_" xml:space="preserve">
     <value>値「{0}」は、整数を必要とする引数{1}に対して有効ではありません。</value>

@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Model.Find
             var nodePep = bookmarkEnumerator.CurrentDocNode as PeptideDocNode;
             if (nodePep == null)
                 return null;
-            if (bookmarkEnumerator.ResultsIndex < 0)
+            if (bookmarkEnumerator.ResultsIndex < 0 || bookmarkEnumerator.CurrentChromInfo == null)
             {
                 _isLastNodeMatch = IsMatch(nodePep);
                 if (_isLastNodeMatch)

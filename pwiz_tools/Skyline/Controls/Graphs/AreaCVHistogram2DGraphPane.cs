@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -31,9 +32,9 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public class AreaCVHistogram2DGraphPane : SummaryGraphPane, IDisposable, IAreaCVHistogramInfo
+    public class AreaCVHistogram2DGraphPane : SummaryGraphPane, IAreaCVHistogramInfo
     {
-        private readonly AreaCVGraphData.AreaCVGraphDataCache _cache;
+        private readonly Receiver<AreaCVGraphData.Parameters, AreaCVGraphData> _receiver;
         private AreaCVGraphData _areaCVGraphData;
         private SrmDocument _document;
 
@@ -48,24 +49,13 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             _areaCVGraphData = null;
             _lineItems = new LineItem[2];
-            _cache = new AreaCVGraphData.AreaCVGraphDataCache();
+            _receiver = AreaCVGraphData.PRODUCER.RegisterCustomer(graphSummary, OnProductAvailable);
         }
 
-        public AreaCVGraphData.AreaCVGraphDataCache Cache { get { return _cache; } }
 
         public int Items { get; private set; }
 
         public override bool HasToolbar { get { return true; } }
-
-        public override void OnClose(EventArgs e)
-        {
-            Dispose();
-        }
-
-        public void Dispose()
-        {
-            _cache.Dispose();
-        }
 
         public override bool HandleMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
@@ -122,9 +112,9 @@ namespace pwiz.Skyline.Controls.Graphs
             base.Draw(g);
         }
 
-        private void DataCallback(AreaCVGraphData data)
+        private void OnProductAvailable()
         {
-            GraphSummary.GraphControl.BeginInvoke((Action)(() => { GraphSummary.UpdateUI(); }));
+            GraphSummary.UpdateUI();
         }
 
         public override void UpdateGraph(bool selectionChanged)
@@ -136,13 +126,17 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             _document = GraphSummary.DocumentUIContainer.DocumentUI;
+
             var settings = new AreaCVGraphData.AreaCVGraphSettings(_document.Settings, GraphSummary.Type);
             _percentage = !Settings.Default.AreaCVShowDecimals;
             _decimals = _percentage ? 1 : 3;
 
             CurveList.Clear();
 
-            var gotData = _cache.TryGet(_document, settings, DataCallback, out _areaCVGraphData);
+            var gotData =
+                _receiver.TryGetProduct(
+                    new AreaCVGraphData.Parameters(GraphSummary.DocumentUIContainer.DocumentUI, settings),
+                    out _areaCVGraphData);
 
             if (!gotData)
             {

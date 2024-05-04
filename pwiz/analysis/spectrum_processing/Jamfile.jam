@@ -53,6 +53,7 @@ lib pwiz_analysis_spectrum_processing_basic
         MS2NoiseFilter.cpp
         MS2Deisotoper.cpp
         ThresholdFilter.cpp
+        MzShiftFilter.cpp
     : # requirements
         <library>../../data/msdata//pwiz_data_msdata
         <library>../common//pwiz_analysis_common

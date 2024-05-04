@@ -26,6 +26,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -34,6 +35,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using AssortResources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
@@ -158,7 +160,7 @@ namespace pwiz.SkylineTest
                     numberToleratedAsWarnings); // Number of existing known failures that we'll tolerate as warnings instead of errors, so no more get added while we wait to fix the rest
             }
 
-            AddForbiddenUIInspection(@"*.cs", @"namespace pwiz.Skyline.Model", @"Skyline model code must not depend on UI code", 38);
+            AddForbiddenUIInspection(@"*.cs", @"namespace pwiz.Skyline.Model", @"Skyline model code must not depend on UI code", 37);
             // Looking for CommandLine.cs and CommandArgs.cs code depending on UI code
             AddForbiddenUIInspection(@"CommandLine.cs", @"namespace pwiz.Skyline", @"CommandLine code must not depend on UI code", 2);
             AddForbiddenUIInspection(@"CommandArgs.cs", @"namespace pwiz.Skyline", @"CommandArgs code must not depend on UI code");
@@ -374,6 +376,38 @@ namespace pwiz.SkylineTest
             }
         }
 
+        /// <summary>
+        /// Look for strings which have been localized but not moved from main Resources.resx to more appropriate locations 
+        /// </summary>
+        void InspectMisplacedResources(string root, List<string> errors) 
+        {
+            // Look for any .csproj in the immediate subfolder of the main project
+            // Strings which are referenced by these other .csproj files will not get moved
+            var otherProjectPaths = new List<string>();
+            // ReSharper disable once AssignNullToNotNullAttribute
+            foreach (var subfolder in Directory.GetDirectories(root))
+            {
+                var otherProjectPath = Path.Combine(subfolder, Path.GetFileNameWithoutExtension(subfolder) + ".csproj");
+                if (File.Exists(otherProjectPath))
+                {
+                    otherProjectPaths.Add(otherProjectPath);
+                }
+            }
+
+            var resourceFilePath = Path.Combine(root, "Properties\\Resources.resx");
+            var csProjPath = Path.Combine(root, "Skyline.csproj");
+            var resourceAssorter = new ResourceAssorter(csProjPath, resourceFilePath, true, otherProjectPaths.ToArray());
+            var initialErrors = errors.Count;
+            resourceAssorter.DoWork(errors);
+            if (errors.Count > initialErrors)
+            {
+                var exePath = Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule!.FileName)??string.Empty, "AssortResources.exe");
+
+                errors.Add($"\nThis can be done with command:\n\"{exePath}\" --resourcefile \"{resourceFilePath}\" --projectfile \"{csProjPath}\"\nBefore running this command, save all your changes in the IDE.");
+            }
+        }
+
+
         // Looking for uses of Form where we should really be using FormEx
         private static void FindIllegalForms(List<string> results) // Looks for uses of Form rather than FormEx
         {
@@ -495,7 +529,7 @@ namespace pwiz.SkylineTest
 
         private string GetCodeBaseRoot(out string thisFile)
         {
-            thisFile = new System.Diagnostics.StackTrace(true).GetFrame(0).GetFileName();
+            thisFile = new StackTrace(true).GetFrame(0).GetFileName();
             if (string.IsNullOrEmpty(thisFile))
             {
                 AssertEx.Fail("Could not get Skyline directory name for code inspection");
@@ -553,6 +587,8 @@ namespace pwiz.SkylineTest
             InspectConsistentErrorMessages(results);
 
             InspectTutorialAuditLogs(root, results);
+
+            InspectMisplacedResources(root, results); // Look for strings which have been localized but not moved from main Resources.resx to more appropriate locations
 
             var errorCounts = new Dictionary<PatternDetails, int>();
 
@@ -749,7 +785,14 @@ namespace pwiz.SkylineTest
 
             if (results.Any())
             {
-                var resultsCount = results.Count;
+                var commentCues = new[] // Things that may appear in error list that are not themselves errors
+                {
+                    "non-shared resource(s) should be moved from", 
+                    "This can be done with command", 
+                    "AssortResources.exe"
+                };
+
+                var resultsCount = results.Count(r => !string.IsNullOrEmpty(r) && !commentCues.Any(r.Contains));
                 results.Insert(0, string.Empty);
                 results.Insert(0, string.Format("{0} code inspection failures found:", resultsCount));
                 results.Add(string.Empty);

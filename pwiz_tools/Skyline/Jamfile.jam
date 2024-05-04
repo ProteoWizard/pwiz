@@ -25,11 +25,16 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     path-constant SKYLINE_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Skyline ;
     path-constant PWIZ_WRAPPER_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/ProteowizardWrapper ;
     path-constant BIBLIO_SPEC_PATH :  $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/BiblioSpec ;
-    path-constant PFX_PATH : "$(SKYLINE_PATH)/University of Washington (MacCoss Lab).pfx" ;
-    path-constant NUGET_PATH : "C:/Program Files/Microsoft Visual Studio/2022/Community/dotnet/runtime/dotnet.exe" ;
+    path-constant CRT_PATH : "$(SKYLINE_PATH)/University of Washington (MacCoss Lab).crt" ;
+    constant CRT_KEY : "key_637015839" ;
+    path-constant NUGET_PATH : "C:/Program Files/dotnet/dotnet.exe" ;
     if ! [ path.exists $(NUGET_PATH) ]
     {
-        path-constant NUGET_PATH : "C:/Program Files/Microsoft Visual Studio/2022/Community/dotnet/net8.0/runtime/dotnet.exe" ;
+        path-constant NUGET_PATH : "C:/Program Files/Microsoft Visual Studio/2022/Community/dotnet/runtime/dotnet.exe" ;
+        if ! [ path.exists $(NUGET_PATH) ]
+        {
+            path-constant NUGET_PATH : "C:/Program Files/Microsoft Visual Studio/2022/Community/dotnet/net8.0/runtime/dotnet.exe" ;
+        }
     }
 
     local ymd = [ MATCH "([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])" : [ modules.peek : JAMDATE ] ] ;
@@ -111,12 +116,11 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
         local .msvcSetupScript = [ get-current-msvc-setup-script $(properties) ] ;
         local .msvcSetupScriptX86 = [ regex.replace $(.msvcSetupScript) "amd64" "x86" ] ;
-        local .pfx-password = [ MATCH --pfx-password=(.*) : [ modules.peek : ARGV ] ] ;
-        if [ path.exists $(PFX_PATH) ] && $(.pfx-password)
+        if [ path.exists $(CRT_PATH) ]
         {
-            SHELL "del $(SKYLINE_PATH)\\SignAfterPublishPW.bat" ;
-            local batch-file-text = "$(.msvcSetupScriptX86)\r\nCALL SignAfterPublish.bat $(.pfx-password) %*" ;
-            local batch-file-name = $(SKYLINE_PATH)\\SignAfterPublishPW.bat ;
+            SHELL "del $(SKYLINE_PATH)\\SignAfterPublishKey.bat" ;
+            local batch-file-text = "$(.msvcSetupScriptX86)\r\nCALL SignAfterPublish.bat $(CRT_KEY) %*" ;
+            local batch-file-name = $(SKYLINE_PATH)\\SignAfterPublishKey.bat ;
             local batch-file = @($(batch-file-name):E=$(batch-file-text)) ;
         }
 
@@ -150,6 +154,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         echo Building Skyline in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:SkylineCmd /nologo /verbosity:minimal
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:Skyline /t:TestRunner /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Executables/AssortResources/AssortResources.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:AssortResources /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
     }
 
@@ -159,15 +164,6 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
         echo Cleaning Skyline so subsequent builds copy files properly...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:Clean /nologo /verbosity:minimal
-    }
-
-    actions do_Inspect_Code
-    {
-        $(MSVC_CURRENT_SETUP_SCRIPT)
-        chcp 437
-        echo Running Code inspections
-        echo $(SKYLINE_PATH)\Executables\LocalizationHelper\InspectSkylineCode.bat $(PWIZ_ROOT_PATH) $(OUTPUT_PATH) "Configuration=$(CONFIGURATION);Platform=$(PLATFORM)"
-        $(SKYLINE_PATH)\Executables\LocalizationHelper\InspectSkylineCode.bat $(PWIZ_ROOT_PATH) $(OUTPUT_PATH) "Configuration=$(CONFIGURATION);Platform=$(PLATFORM)"
     }
 
     rule do_skyline_batch ( targets + : sources * : properties * )

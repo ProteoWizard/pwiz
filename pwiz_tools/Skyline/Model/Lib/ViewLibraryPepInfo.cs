@@ -371,5 +371,10 @@ namespace pwiz.Skyline.Model.Lib
                 ModifiedMass = modifiedMass;
             }
         }
+
+        public override string ToString()
+        {
+            return KeyString; // For debugging convenience, not user facing
+        }
     }
 }

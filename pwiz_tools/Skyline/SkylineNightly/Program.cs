@@ -149,16 +149,17 @@ namespace SkylineNightly
                     default:
                     {
                         var extension = Path.GetExtension(args[0]).ToLower();
+                        var dir = Path.GetDirectoryName(args[0]);
                         if (extension == @".log")
                         {
-                            nightly = new Nightly(Nightly.RunMode.parse);
+                            nightly = new Nightly(Nightly.RunMode.parse, null, dir);
                             nightly.StartLog(Nightly.RunMode.parse);
                             message = string.Format(@"Parse and post log {0}", args[0]);
                             runMode = nightly.Parse(args[0]); // Create the xml for this log file
                         }
                         else
                         {
-                            nightly = new Nightly(Nightly.RunMode.post);
+                            nightly = new Nightly(Nightly.RunMode.post, null, dir);
                             nightly.StartLog(Nightly.RunMode.post);
                             message = string.Format(@"Post existing XML {0}", args[0]);
                             runMode = nightly.Parse(Path.ChangeExtension(args[0], @".log"), true); // Scan the log file for this XML

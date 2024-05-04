@@ -49,11 +49,15 @@ namespace pwiz.Skyline.Controls.Graphs
             CurveList.Clear();
             Legend.IsVisible = false;
 
-            if (!DetectionPlotData.GetDataCache().TryGet(
-                GraphSummary.DocumentUIContainer.DocumentUI, Settings.QValueCutoff, this.DataCallback,
-                out _detectionData))
-                return;
+            if (!Receiver.TryGetProduct(new DetectionPlotData.WorkOrderParam(GraphSummary.DocumentUIContainer.DocumentUI, Settings.QValueCutoff), out _detectionData))
+            {
+                _detectionData = DetectionPlotData.INVALID;
+            }
             AddLabels();
+            if (!_detectionData.IsValid)
+            {
+                return;
+            }
 
             BarSettings.Type = BarType.SortedOverlay;
             BarSettings.MinClusterGap = 0.3f;

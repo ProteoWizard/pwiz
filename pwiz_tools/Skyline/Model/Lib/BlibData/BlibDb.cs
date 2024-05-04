@@ -302,10 +302,10 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             {
                 var connection = session.Connection as SQLiteConnection;
 
-                _lastSpectraId = (long) new SQLiteCommand(@"SELECT IFNULL(MAX(id), 0) FROM RefSpectra", connection).ExecuteScalar();
-                _lastAnnotationId = (long) new SQLiteCommand(@"SELECT IFNULL(MAX(id), 0) FROM RefSpectraPeakAnnotations", connection).ExecuteScalar();
-                _lastRetentionTimesId = (long) new SQLiteCommand(@"SELECT IFNULL(MAX(id), 0) FROM RetentionTimes", connection).ExecuteScalar();
-                _lastModificationId = (long) new SQLiteCommand(@"SELECT IFNULL(MAX(id), 0) FROM Modifications", connection).ExecuteScalar();
+                _lastSpectraId = (long)ExecuteScalar(@"SELECT IFNULL(MAX(id), 0) FROM RefSpectra", connection);
+                _lastAnnotationId = (long)ExecuteScalar(@"SELECT IFNULL(MAX(id), 0) FROM RefSpectraPeakAnnotations", connection);
+                _lastRetentionTimesId = (long)ExecuteScalar(@"SELECT IFNULL(MAX(id), 0) FROM RetentionTimes", connection);
+                _lastModificationId = (long)ExecuteScalar(@"SELECT IFNULL(MAX(id), 0) FROM Modifications", connection);
 
                 _dbRefSpectraProperties = new List<PropertyInfo>();
                 foreach (var property in typeof(DbRefSpectra).GetProperties())
@@ -391,6 +391,12 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 _insertPeaksCmd?.Dispose();
                 _insertRetentionTimesCmd?.Dispose();
                 _insertModificationsCmd?.Dispose();
+            }
+
+            private static object ExecuteScalar(string commandText, SQLiteConnection connection)
+            {
+                using var cmd = new SQLiteCommand(commandText, connection);
+                return cmd.ExecuteScalar();
             }
         }
 
