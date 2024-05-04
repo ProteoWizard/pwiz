@@ -18,13 +18,11 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
