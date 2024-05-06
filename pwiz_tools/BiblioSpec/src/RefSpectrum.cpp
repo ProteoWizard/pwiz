@@ -232,6 +232,11 @@ int RefSpectrum::getCharge() const
     return charge;
 }
 
+string RefSpectrum::getDisplayName() const
+{
+    return pepSeq.empty() ? smallMolMetadata_.moleculeName : pepSeq;
+}
+
 string RefSpectrum::getSeq() const
 {
     return pepSeq;
@@ -305,6 +310,11 @@ string RefSpectrum::getInchiKey() const
 string RefSpectrum::getotherKeys() const
 {
     return smallMolMetadata_.otherKeys;
+}
+
+const SmallMolMetadata RefSpectrum::getSmallMolMetadata() const // Small molecule stuff
+{
+    return smallMolMetadata_;
 }
 
 // Sets result string to a tab seperated concatenation of molecule name, formula,

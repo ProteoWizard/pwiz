@@ -19,7 +19,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class PeptideSearchResources {
@@ -220,12 +220,40 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Select Files to Search.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_btnAddFile_Click_Select_Files_to_Search {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_btnAddFile_Click_Select_Files_to_Search", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add document spectral library.
         /// </summary>
         public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library {
             get {
                 return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_" +
                         "library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add spectral library.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_spectral_library {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_spectral_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Building detected features library.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Feat" +
+                        "ures_Library", resourceCulture);
             }
         }
         
@@ -505,11 +533,29 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Feature Detection.
+        /// </summary>
+        public static string ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Next &gt;.
         /// </summary>
         public static string ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next {
             get {
                 return ResourceManager.GetString("ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adding detected features to document.
+        /// </summary>
+        public static string ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document", resourceCulture);
             }
         }
         

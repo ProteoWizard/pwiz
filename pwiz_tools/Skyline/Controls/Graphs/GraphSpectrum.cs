@@ -382,7 +382,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 maxIntensity *= YMAX_SCALE;
 
-                GraphPane.YAxis.Scale.Max = !hasDisplayedSpectrumValues ? 0.0 : maxIntensity;
+                GraphPane.YAxis.Scale.Max = maxIntensity;
                 GraphPane.YAxis.Scale.Min = !hasDisplayedMirrorSpectrumValues ? 0.0 : -maxIntensity;
             }
 
