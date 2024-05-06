@@ -1011,7 +1011,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 // Use the explicitly specified CCS value if provided, and if we know how to convert to IM
                 var im = instrumentInfo.IonMobilityFromCCS(nodeGroup.ExplicitValues.CollisionalCrossSectionSqA.Value,
-                    nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge);
+                    nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge, nodeGroup.Peptide);
                 var imAndCCS = IonMobilityAndCCS.GetIonMobilityAndCCS(im,
                     nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,ExplicitTransitionValues.Get(nodeTran).IonMobilityHighEnergyOffset ?? 0);
                 if (imAndCCS.IonMobility.Mobility.HasValue) // Did CCS conversion succeed?
@@ -1031,7 +1031,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     instrumentInfo != null && instrumentInfo.ProvidesCollisionalCrossSectionConverter)
                 {
                     // Try to get a CCS value for this explicitly stated IM value - useful in reports
-                    var ccs = instrumentInfo.CCSFromIonMobility(imAndCCS.IonMobility, nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge);
+                    var ccs = instrumentInfo.CCSFromIonMobility(imAndCCS.IonMobility, nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge, nodeGroup.Peptide);
                     imAndCCS = imAndCCS.ChangeCollisionalCrossSection(ccs);
                 }
                 // Now get the window width
@@ -1093,7 +1093,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 ionMobilityFunctionsProvider != null && ionMobilityFunctionsProvider.ProvidesCollisionalCrossSectionConverter)
             {
                 // Try to get a CCS value for this IM value - useful in reports
-                var ccs = ionMobilityFunctionsProvider.CCSFromIonMobility(result.IonMobility, nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge);
+                var ccs = ionMobilityFunctionsProvider.CCSFromIonMobility(result.IonMobility, nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge, nodeGroup.Peptide);
                 result = result.ChangeCollisionCrossSection(ccs);
             }
             return result ?? IonMobilityFilter.EMPTY;
