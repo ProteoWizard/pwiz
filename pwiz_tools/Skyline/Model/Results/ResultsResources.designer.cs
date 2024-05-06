@@ -382,6 +382,24 @@ namespace pwiz.Skyline.Model.Results {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Vendor-supplied library is unable to determine CCS for {0} with mobility={1:0.###}, mz={2:0.####}, and charge={3}..
+        /// </summary>
+        public static string DataFileInstrumentInfo_CCSFromIonMobility_no_conversion {
+            get {
+                return ResourceManager.GetString("DataFileInstrumentInfo_CCSFromIonMobility_no_conversion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Vendor-supplied library is unable to determine ion mobility for {0} with CCS={1:0.###}, mz={2:0.####}, and charge={3}..
+        /// </summary>
+        public static string DataFileInstrumentInfo_IonMobilityFromCCS_no_conversion {
+            get {
+                return ResourceManager.GetString("DataFileInstrumentInfo_IonMobilityFromCCS_no_conversion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to MS/MS.
         /// </summary>
         public static string GraphFullScan_GraphFullScan_MS_MS {

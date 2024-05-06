@@ -45,8 +45,8 @@ namespace pwiz.Skyline.Model.Results
         bool ProvidesCollisionalCrossSectionConverter { get; }
         eIonMobilityUnits IonMobilityUnits { get; } // Reports ion mobility units in use by the mass spec
         bool HasCombinedIonMobility { get; } // When true, data source provides IMS data in 3-array format, which affects spectrum ID format
-        IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge); // Convert from Collisional Cross Section to ion mobility
-        double CCSFromIonMobility(IonMobilityValue im, double mz, int charge); // Convert from ion mobility to Collisional Cross Section
+        IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge, object obj); // Convert from Collisional Cross Section to ion mobility
+        double CCSFromIonMobility(IonMobilityValue im, double mz, int charge, object obj); // Convert from ion mobility to Collisional Cross Section
         bool IsWatersSonarData { get; } // Returns true if this ion mobility data is actually Waters SONAR data, which filters on precursor mz 
         Tuple<int, int> SonarMzToBinRange(double mz, double tolerance); // Only useful for Waters SONAR data
     }
@@ -379,21 +379,21 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge)
+        public IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge, object obj)
         {
             if (ProvidesCollisionalCrossSectionConverter)
             {
-                return _ionMobilityFunctionsProvider.IonMobilityFromCCS(ccs, mz, charge);
+                return _ionMobilityFunctionsProvider.IonMobilityFromCCS(ccs, mz, charge, obj);
             }
             Assume.IsNotNull(_ionMobilityFunctionsProvider, @"No CCS to ion mobility translation is possible for this data set");
             return IonMobilityValue.EMPTY;
         }
 
-        public double CCSFromIonMobility(IonMobilityValue im, double mz, int charge)
+        public double CCSFromIonMobility(IonMobilityValue im, double mz, int charge, object obj)
         {
             if (ProvidesCollisionalCrossSectionConverter)
             {
-                return _ionMobilityFunctionsProvider.CCSFromIonMobility(im, mz, charge);
+                return _ionMobilityFunctionsProvider.CCSFromIonMobility(im, mz, charge, obj);
             }
             Assume.IsNotNull(_ionMobilityFunctionsProvider, @"No ion mobility to CCS translation is possible for this data set");
             return 0;
