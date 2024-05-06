@@ -1182,7 +1182,16 @@ namespace pwiz.ProteowizardWrapper
                 {
                     if (msPrecursor.IsolationMz.HasValue)
                     {
-                        spectrumPrecursors.Add(new SpectrumPrecursor(msPrecursor.IsolationMz.Value).ChangeCollisionEnergy(msPrecursor.PrecursorCollisionEnergy));
+                        var spectrumPrecursor =
+                            new SpectrumPrecursor(msPrecursor.IsolationMz.Value).ChangeCollisionEnergy(msPrecursor
+                                .PrecursorCollisionEnergy);
+                        if (msPrecursor.IsolationWindowLower.HasValue && msPrecursor.IsolationWindowUpper.HasValue)
+                        {
+                            spectrumPrecursor = spectrumPrecursor.ChangeIsolationWindowWidth(
+                                msPrecursor.IsolationWindowLower.Value,
+                                msPrecursor.IsolationWindowUpper.Value);
+                        }
+                        spectrumPrecursors.Add(spectrumPrecursor);
                     }
                 }
                 precursorsByMsLevel.Add(spectrumPrecursors);
