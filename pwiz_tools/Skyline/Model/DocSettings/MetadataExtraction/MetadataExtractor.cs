@@ -204,16 +204,22 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
             return !IsTarget(column);
         }
 
+        /// <summary>
+        /// Returns true if the column is allowed to be the target of a rule
+        /// </summary>
         public static bool IsTarget(TextColumnWrapper column)
         {
             if (column.IsImportable)
             {
+                // All columns with the [Importable] attribute are valid targets
                 return true;
             }
 
             if (column.ColumnDescriptor.Parent?.PropertyType == typeof(Replicate) &&
                 column.ColumnDescriptor.Name == nameof(Replicate.Name))
             {
+                // Allow the "Replicate Name" to be a target even though it cannot be imported
+                // with "Import Annotations".
                 return true;
             }
 
