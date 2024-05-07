@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using Thermo.TNG.MethodXMLFactory;
 using Thermo.TNG.MethodXMLInterface;
@@ -12,6 +13,7 @@ using XmlCalcium;
 using XmlExploris;
 using XmlFusion;
 using XmlTsq;
+using XmlStellar;
 
 namespace BuildThermoMethod
 {
@@ -82,6 +84,7 @@ namespace BuildThermoMethod
                     "   -p               Exploris method\n" +
                     "   -l               Fusion Lumos method\n" +
                     "   -c               Eclipse method\n" +
+                    "   -t               Stellar method\n" +
                     "   -o <output file> New method is written to the specified output file\n" +
                     "   -x               Export method XML to <basename>.xml file\n" +
                     "   -s               Transition list is read from stdin.\n" +
@@ -169,6 +172,12 @@ namespace BuildThermoMethod
                 if (curHeader.Equals("compound", StringComparison.InvariantCultureIgnoreCase))
                 {
                     item.Compound = curValue;
+                    var match = Regex.Match(curValue, @".+\(([\+|-])\)?(\d+)\).*");
+                    if (match.Success)
+                    {
+                        if(int.TryParse(match.Groups[2].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var res))
+                            item.Charge = (match.Groups[1].Value == "-" ? -1 : 1) * res;
+                    }
                 }
                 else if (curHeader.Equals("retention time (min)", StringComparison.InvariantCultureIgnoreCase))
                 {
@@ -334,6 +343,7 @@ namespace BuildThermoMethod
         private const string InstrumentEndura = "TSQEndura";
         private const string InstrumentQuantiva = "TSQQuantiva";
         private const string InstrumentAltis = "TSQAltis";
+        private const string InstrumentStellar = "Stellar";
 
         private string InstrumentType { get; set; }
         private string InstrumentVersion { get; set; }
@@ -381,6 +391,9 @@ namespace BuildThermoMethod
                         break;
                     case 'c':
                         InstrumentType = InstrumentEclipse;
+                        break;
+                    case 't':
+                        InstrumentType = InstrumentStellar;
                         break;
                     case 'o':
                         if (i >= args.Length)
@@ -560,6 +573,9 @@ namespace BuildThermoMethod
                             // case InstrumentFusion:
                             case InstrumentFusionLumos:
                                 mx.ApplyMethodModificationsFromXML(GetCalciumXml(InstrumentType, listItems, outMeth));
+                                break;
+                            case InstrumentStellar:
+                                mx.ApplyMethodModificationsFromXML(GetStellarXml(listItems, outMeth));
                                 break;
                             default:
                                 mx.ImportMassListFromXML(GetHyperionXml(listItems, outMeth));
@@ -844,6 +860,48 @@ namespace BuildThermoMethod
             };
 
             return Serialize(methodModifications, outMethod);
+        }
+
+        private string GetStellarXml(IList<ListItem> items, string outMethod)
+        {
+            var records = new List<XmlStellar.MassListRecord>();
+            foreach (var item in items)
+            {
+                records.Add(new XmlStellar.MassListRecord()
+                {
+                    MOverZ = item.PrecursorMz.GetValueOrDefault().ToString(CultureInfo.InvariantCulture),
+                    Z = item.Charge.GetValueOrDefault(),
+                    StartTime = item.RetentionStart.GetValueOrDefault(),
+                    EndTime = item.RetentionEnd.GetValueOrDefault(),
+                    CompoundName = item.Compound,
+                    CIDCollisionEnergy = item.CollisionEnergy.GetValueOrDefault(),
+                    ZSpecified = true,
+                    StartTimeSpecified = true,
+                    EndTimeSpecified = true,
+                    CIDCollisionEnergySpecified = true
+                });
+            }
+
+            var xml = new XmlStellar.MethodModifications()
+            {
+                Modification = new[] {new XmlStellar.Modification()
+                {
+                    Order = 1,
+                    Experiment = new []{new XmlStellar.Experiment()
+                        {
+                            ExperimentIndex = 1,
+                            TMSnScan = new XmlStellar.TMSnScan()
+                            {
+                                MassList = new XmlStellar.MassList()
+                                {
+                                    MassListRecord = records.ToArray(),
+                                }
+                            }
+                        }
+                }}
+            }};
+
+            return Serialize(xml, outMethod);
         }
 
         // Get XML for Calcium methods (Fusion, Fusion Lumos, Eclipse)

@@ -190,6 +190,7 @@ namespace pwiz.Skyline.Model
         public const string THERMO_ENDURA = "Thermo Endura";
         public const string THERMO_QUANTIVA = "Thermo Quantiva";
         public const string THERMO_ALTIS = "Thermo Altis";
+        public const string THERMO_STELLAR = "Thermo Stellar";
         public const string THERMO_FUSION = "Thermo Fusion";
         public const string THERMO_LTQ = "Thermo LTQ";
         public const string THERMO_Q_EXACTIVE = "Thermo Q Exactive";
@@ -227,6 +228,7 @@ namespace pwiz.Skyline.Model
                 THERMO_LTQ,
                 THERMO_QUANTIVA,
                 THERMO_ALTIS,
+                THERMO_STELLAR,
                 THERMO_EXPLORIS,
                 THERMO_ECLIPSE,
                 THERMO_FUSION,
@@ -514,6 +516,7 @@ namespace pwiz.Skyline.Model
                         return ExportThermoMethod(doc, path, template);
                 case ExportInstrumentType.THERMO_QUANTIVA:
                 case ExportInstrumentType.THERMO_ALTIS:
+                case ExportInstrumentType.THERMO_STELLAR:
                     if (type == ExportFileType.List)
                         return ExportThermoQuantivaCsv(doc, path);
                     else
@@ -818,6 +821,8 @@ namespace pwiz.Skyline.Model
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
             exporter.RetentionStartAndEnd = RetentionStartAndEnd;
+            if (ExportInstrumentType.THERMO_STELLAR.Equals(instrumentType))
+                exporter.IsolationList = AbstractMassListExporter.IsolationStrategy.precursor;
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, instrumentType, m));
 
             return exporter;
@@ -1207,6 +1212,25 @@ namespace pwiz.Skyline.Model
         }
     }
 
+    public class ThermoStellarMethodExporter : ThermoMethodExporter
+    {
+        public ThermoStellarMethodExporter(SrmDocument doc) : base(doc)
+        {
+            IsolationList = IsolationStrategy.precursor;
+        }
+
+        protected override void WriteHeaders(TextWriter writer)
+        {
+            
+        }
+
+        protected override void WriteTransition(TextWriter writer, int fileNumber, PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep,
+            TransitionGroupDocNode nodeTranGroup, TransitionGroupDocNode nodeTranGroupPrimary, TransitionDocNode nodeTran,
+            int step)
+        {
+            base.WriteTransition(writer, fileNumber, nodePepGroup, nodePep, nodeTranGroup, nodeTranGroupPrimary, nodeTran, step);
+        }
+    }
     public class ThermoQuantivaMassListExporter : ThermoMassListExporter
     {
         // Hack to workaround Quantiva limitation
@@ -1250,8 +1274,11 @@ namespace pwiz.Skyline.Model
             writer.Write(@"Polarity");
             writer.Write(FieldSeparator);
             writer.Write(@"Precursor (m/z)");
-            writer.Write(FieldSeparator);
-            writer.Write(@"Product (m/z)");
+            if(IsolationList == IsolationStrategy.transition)
+            {
+                writer.Write(FieldSeparator);
+                writer.Write(@"Product (m/z)");
+            }
             writer.Write(FieldSeparator);
             writer.Write(@"Collision Energy (V)");
             if (UseSlens)
@@ -1355,9 +1382,12 @@ namespace pwiz.Skyline.Model
 
             writer.Write(nodeTranGroup.PrecursorCharge > 0 ? @"Positive" : @"Negative");
             writer.Write(FieldSeparator);
-            writer.Write((Math.Truncate(1000*nodeTranGroup.PrecursorMz)/1000).ToString(CultureInfo));
-            writer.Write(FieldSeparator);
-            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo));
+            writer.Write((Math.Truncate(1000 * nodeTranGroup.PrecursorMz) / 1000).ToString(CultureInfo));
+            if (IsolationList == IsolationStrategy.transition)
+            {
+                writer.Write(FieldSeparator);
+                writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo));
+            }
             writer.Write(FieldSeparator);
             writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
             if (UseSlens)
@@ -1874,6 +1904,10 @@ namespace pwiz.Skyline.Model
             else if (instrumentType.Equals(ExportInstrumentType.THERMO_ALTIS))
             {
                 argv.Add(@"-a");
+            }
+            else if (instrumentType.Equals(ExportInstrumentType.THERMO_STELLAR))
+            {
+                argv.Add(@"-t");
             }
             MethodExporter.ExportMethod(EXE_BUILD_METHOD, argv, fileName, templateName, MemoryOutput, progressMonitor);
         }
@@ -4891,7 +4925,7 @@ namespace pwiz.Skyline.Model
                     stdinBuilder.Append(pair.Value);
                 }
 
-                string dirWork = Path.GetDirectoryName(fileName) ?? Environment.CurrentDirectory;
+                string dirWork = (Path.GetDirectoryName(fileName) ?? Environment.CurrentDirectory) + "\\";
                 using (var tmpDir = new TemporaryDirectory(Path.Combine(dirWork, PathEx.GetRandomFileName()))) // N.B. FileEx.GetRandomFileName adds unusual characters in test mode
                 {
                     var transitionsFile = Path.Combine(tmpDir.DirPath, @"transitions.txt");
@@ -4901,7 +4935,7 @@ namespace pwiz.Skyline.Model
                     argv.AddRange(new[] { "-m", templateName.Quote(), transitionsFile.Quote() });  // Read from stdin, multi-file format
                     // Resharper restore LocalizableElement
 
-                    var psiExporter = new ProcessStartInfo(exeName)
+                     var psiExporter = new ProcessStartInfo(exeName)
                     {
                         CreateNoWindow = true,
                         UseShellExecute = false,
