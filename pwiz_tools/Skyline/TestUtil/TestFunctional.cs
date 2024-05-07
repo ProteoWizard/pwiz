@@ -2439,7 +2439,7 @@ namespace pwiz.SkylineTestUtil
             if (expectedErrorMessage != null)
             {
                 var dlg = WaitForOpenForm<MessageDlg>();
-                RunUI(() =>
+                OkDialog(dlg, () =>
                 {
                     StringAssert.Contains(dlg.Message, expectedErrorMessage);
                     dlg.CancelButton.PerformClick();
