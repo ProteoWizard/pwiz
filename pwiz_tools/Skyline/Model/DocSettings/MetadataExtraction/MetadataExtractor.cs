@@ -211,6 +211,12 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
                 return true;
             }
 
+            if (column.ColumnDescriptor.Parent?.PropertyType == typeof(Replicate) &&
+                column.ColumnDescriptor.Name == nameof(Replicate.Name))
+            {
+                return true;
+            }
+
             var annotationDef = column.AnnotationDef;
             if (annotationDef != null)
             {
@@ -317,8 +323,16 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
                         continue;
                     }
 
-                    properties.Add(rule.Def.Target);
-                    rule.Target.SetTextValue(CultureInfo.InvariantCulture, resultFile, result.ReplacedValue);
+                    try
+                    {
+                        properties.Add(rule.Def.Target);
+                        rule.Target.SetTextValue(CultureInfo.InvariantCulture, resultFile, result.ReplacedValue);
+                    }
+                    catch (Exception exception)
+                    {
+                        throw CommonException.Create(new RuleError(ruleSetSet.Name, resultFile.ChromFileInfo.FilePath,
+                            exception.Message), exception);
+                    }
                 }
             }
         }
