@@ -2917,6 +2917,11 @@ namespace pwiz.Skyline.Controls.Graphs
             return ScaledRetentionTime.ZERO;
         }
 
+        /// <summary>
+        /// Finds either the left or right boundary of the chosen peak which is closest to
+        /// the point, and within 3 pixels. This method is used to tell whether the mouse
+        /// cursor is in a position to adjust the peak boundaries.
+        /// </summary>
         private ScaledRetentionTime FindBestPeakBoundary(PointF pt, out GraphPane graphPane, out ChromGraphItem graphItem)
         {
             double deltaBest = double.MaxValue;
@@ -2933,11 +2938,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 foreach (var graphItemNext in graphItems)
                 {
-                    var transitionNode = graphItemNext.TransitionNode;
-                    if (!transitionNode.ParticipatesInScoring)
-                    {
-                        continue; // Some ions don't participate in RT calculation, e.g. reporter ions like TMT
-                    }
                     var timeMatch = graphItemNext.GetNearestBestPeakBoundary(time);
                     if (!timeMatch.IsZero)
                     {
