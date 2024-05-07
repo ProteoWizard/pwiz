@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Model.Results.Spectra.Alignment
             private double CalcScore(int x, int y)
             {
                 var key = new KeyValuePair<int, int>(x, y);
-                if (true == _similarityScores?.TryGetValue(key, out var value))
+                if (_similarityScores != null && _similarityScores.TryGetValue(key, out var value))
                 {
                     return value;
                 }
