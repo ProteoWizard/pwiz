@@ -1149,7 +1149,13 @@
 	  <value>Press 'Edit existing' to add user account information for an existing server.</value>
   </data>
   <data name="CommandLine_SetPeptideModSettings_Error__Failed_attempting_to_change_the_peptide_modification_settings_" xml:space="preserve">
-	  <value>Error: Failed attempting to change the peptide modification settings.</value>
+    <value>Error: Failed attempting to change the peptide modification settings.</value>
+  </data>
+  <data name="SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_performing_feature_detection_" xml:space="preserve">
+    <value>The document must be fully loaded before performing feature detection.</value>
+  </data>
+  <data name="SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_performing_feature_detection_" xml:space="preserve">
+    <value>You must save this document before performing feature detection.</value>
   </data>
   <data name="SkylineWindow_ShowPublishDlg__0__is_not_a_valid_file_name_for_uploading_to_Panorama_" xml:space="preserve">
 	  <value>{0} is not a valid file name for uploading to Panorama.</value>
