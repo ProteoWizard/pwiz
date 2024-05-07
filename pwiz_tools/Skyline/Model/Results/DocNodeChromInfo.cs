@@ -201,7 +201,6 @@ namespace pwiz.Skyline.Model.Results
                                         TransitionGroupIonMobilityInfo ionMobilityInfo,
                                         float? fwhm,
                                         float? area,
-                                        float? areaScorable,
                                         float? areaMs1,
                                         float? areaFragment,
                                         float? backgroundArea,
@@ -227,7 +226,6 @@ namespace pwiz.Skyline.Model.Results
             IonMobilityInfo = ionMobilityInfo ?? TransitionGroupIonMobilityInfo.EMPTY;
             Fwhm = fwhm;
             Area = area;
-            AreaScorable = areaScorable; // Total area exclusive of reporter ions etc that do not impact "best" peak selection
             AreaMs1 = areaMs1;
             AreaFragment = areaFragment;
             BackgroundArea = backgroundArea;
@@ -283,13 +281,6 @@ namespace pwiz.Skyline.Model.Results
         {
             get { return GetOptional(_area, Flags.HasArea);}
             private set { _area = SetOptional(value, Flags.HasArea); }
-        }
-
-        private float? _areaScorable;
-        public float? AreaScorable // Total area exclusive of reporter ions etc that do not contribute to determination of "Best" peak
-        {
-            get { return _areaScorable ?? Area; } // Backward compatibility
-            private set { _areaScorable = value; }
         }
 
         private float _areaMs1;
@@ -457,7 +448,6 @@ namespace pwiz.Skyline.Model.Results
                    Equals(other.IonMobilityInfo, IonMobilityInfo) &&
                    other.Fwhm.Equals(Fwhm) &&
                    other.Area.Equals(Area) &&
-                   other.AreaScorable.Equals(AreaScorable) &&
                    other.AreaMs1.Equals(AreaMs1) &&
                    other.AreaFragment.Equals(AreaFragment) &&
                    other.BackgroundArea.Equals(BackgroundArea) &&
@@ -496,7 +486,6 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ IonMobilityInfo.GetHashCode();
                 result = (result*397) ^ (Fwhm.HasValue ? Fwhm.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Area.HasValue ? Area.Value.GetHashCode() : 0);
-                result = (result*397) ^ (AreaScorable.HasValue ? AreaScorable.Value.GetHashCode() : 0);
                 result = (result*397) ^ (AreaMs1.HasValue ? AreaMs1.Value.GetHashCode() : 0);
                 result = (result*397) ^ (AreaFragment.HasValue ? AreaFragment.Value.GetHashCode() : 0);
                 result = (result*397) ^ (BackgroundArea.HasValue ? BackgroundArea.Value.GetHashCode() : 0);

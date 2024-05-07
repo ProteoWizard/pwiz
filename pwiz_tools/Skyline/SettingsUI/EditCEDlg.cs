@@ -495,17 +495,16 @@ namespace pwiz.Skyline.SettingsUI
                 dictOptTotals.Add(regression, optTotals = new Dictionary<int, double>());
             }
 
-            // N.B. Does NOT include areas of transitions that do not contribute to "best peak" determination, e.g. reporter ions
             foreach (var chromInfo in result)
             {
-                if (chromInfo.PeakCountRatio != 1.0 || !chromInfo.AreaScorable.HasValue)
+                if (chromInfo.PeakCountRatio != 1.0 || !chromInfo.Area.HasValue)
                     continue;
 
                 int step = chromInfo.OptimizationStep;
                 if (optTotals.ContainsKey(chromInfo.OptimizationStep))
-                    optTotals[step] += chromInfo.AreaScorable.Value;
+                    optTotals[step] += chromInfo.Area.Value;
                 else
-                    optTotals.Add(step, chromInfo.AreaScorable.Value);
+                    optTotals.Add(step, chromInfo.Area.Value);
             }
         }
     }

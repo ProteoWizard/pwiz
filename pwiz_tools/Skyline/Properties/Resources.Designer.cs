@@ -4530,16 +4530,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Chromatogram information unavailable:
-        ///no scoreable product ions.
-        /// </summary>
-        public static string GraphChromatogram_UpdateUI_no_scoreable_product_ions {
-            get {
-                return ResourceManager.GetString("GraphChromatogram_UpdateUI_no_scoreable_product_ions", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to window.
         /// </summary>
         public static string GraphData_AddRegressionLabel_window {

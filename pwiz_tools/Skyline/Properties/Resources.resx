@@ -4366,19 +4366,6 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_file__0_" xml:space="preserve">
     <value>Error: Could not find background proteome file {0}</value>
   </data>
-  <data name="GraphChromatogram_UpdateUI_no_scoreable_product_ions" xml:space="preserve">
-    <value>Chromatogram information unavailable:
-no scoreable product ions</value>
-  </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting" xml:space="preserve">
-    <value>Relative Abundance Formatting</value>
-  </data>
-  <data name="AreaPeptideGraphPane_UpdateAxes_Peptide_Rank" xml:space="preserve">
-    <value>Peptide Rank</value>
-  </data>
-  <data name="SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank" xml:space="preserve">
-    <value>Molecule Rank</value>
-  </data>
   <data name="PeptideMod_SetTerminus_A_peptide_modification_must_be_added_before_giving_it_a_terminal_or_amino_acid_specificity_" xml:space="preserve">
     <value>A peptide modification must be added before giving it a terminal or amino acid specificity.</value>
   </data>

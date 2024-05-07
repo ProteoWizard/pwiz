@@ -174,7 +174,6 @@ namespace pwiz.Skyline.Model.Results
 
             if (TryGetDenominator(normalizationMethod, replicateIndex, transitionGroupChromInfo.FileId, out double? denominator))
             {
-                // CONSIDER: use only area of transitions that contribute to "best peak" determination - e.g. NOT including reporter ions?
                 return transitionGroupChromInfo.Area / denominator;
             }
 

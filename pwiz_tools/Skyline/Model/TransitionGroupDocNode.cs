@@ -472,7 +472,7 @@ namespace pwiz.Skyline.Model
             {
                 return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep != 0
                                                               ? null
-                                                              : chromInfo.AreaScorable);
+                                                              : chromInfo.Area);
             }
         }
 
@@ -485,7 +485,7 @@ namespace pwiz.Skyline.Model
             var result = GetSafeChromInfo(i);
             if (result.IsEmpty)
                 return null;
-            return result.GetAverageValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.AreaScorable.HasValue
+            return result.GetAverageValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.Area.HasValue
                                                               ? chromInfo.IsotopeDotProduct
                                                               : null);
         }
@@ -494,7 +494,7 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.AreaScorable.HasValue
+                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.Area.HasValue
                                                               ? chromInfo.IsotopeDotProduct
                                                               : null);
             }
@@ -509,7 +509,7 @@ namespace pwiz.Skyline.Model
             var result = GetSafeChromInfo(i);
             if (result.IsEmpty)
                 return null;
-            return result.GetAverageValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.AreaScorable.HasValue
+            return result.GetAverageValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.Area.HasValue
                                                               ? chromInfo.LibraryDotProduct
                                                               : null);
         }
@@ -518,7 +518,7 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.AreaScorable.HasValue
+                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep == 0 && chromInfo.Area.HasValue
                                                               ? chromInfo.LibraryDotProduct
                                                               : null);
             }
@@ -2135,10 +2135,10 @@ namespace pwiz.Skyline.Model
                                 continue;
                             short rank = 0, rankByLevel = 0;
                             if (pair.Info.Area > 0)
-                        {
+                            {
                                 rank = (short) (iRank + 1);
                                 rankByLevel = pair.IsMs1 ? ++iRankMs : ++iRankMsMs;
-                        }
+                            }
                             if (pair.Info.Rank != rank || pair.Info.RankByLevel != rankByLevel)
                                 pair.Result = pair.Info.ChangeRank(false, rank, rankByLevel);
                         }
@@ -2546,7 +2546,6 @@ namespace pwiz.Skyline.Model
             private TransitionGroupIonMobilityInfo IonMobilityInfo { get; set; }
             private float? Fwhm { get; set; }
             private float? Area { get; set; } // Area of all peaks, including non-scoring peaks that don't influence RT determination
-            private float? AreaScorable { get; set; } // Total less the area of non-scoring peaks (e.g. reporter ions like TMT)
             private float? AreaMs1 { get; set; }
             private float? AreaFragment { get; set; }
             private float? BackgroundArea { get; set; }
@@ -2596,15 +2595,11 @@ namespace pwiz.Skyline.Model
                     if (nodeTran.IsQuantitative(Settings))
                     {
                         Area = (Area ?? 0) + info.Area;
-                        if (nodeTran.ParticipatesInScoring)
-                        {
-                            AreaScorable = (AreaScorable ?? 0) + info.Area;
-                        }
                         BackgroundArea = (BackgroundArea ?? 0) + info.BackgroundArea;
                         if (info.MassError.HasValue)
                         {
                             double massError = MassError ?? 0;
-                            massError += (info.MassError.Value - massError) * info.Area / AreaScorable.Value;
+                            massError += (info.MassError.Value - massError) * info.Area / Area.Value;
                             MassError = (float)massError;
                         }
 
@@ -2700,7 +2695,7 @@ namespace pwiz.Skyline.Model
                                                     (float?) retentionTimeValues?.EndRetentionTime,
                                                     IonMobilityInfo,
                                                     Fwhm,
-                                                    Area, AreaScorable, AreaMs1, AreaFragment,
+                                                    Area, AreaMs1, AreaFragment,
                                                     BackgroundArea, BackgroundAreaMs1, BackgroundAreaFragment,
                                                     (float?) BestRetentionTimes?.Height,
                                                     MassError,

@@ -175,7 +175,6 @@ namespace pwiz.Skyline.Model.Serialization
             public const string internal_standard_concentration = "internal_standard_concentration";
             public const string normalization_method = "normalization_method";
             public const string quantitative = "quantitative";
-            public const string non_scoring = "non_scoring"; // Some transitions don't participate in RT calculation, e.g. reporter ions like TMT
             public const string precursor_concentration = "precursor_concentration";
             public const string attribute_group_id = "attribute_group_id";
             public const string peptide_index = "peptide_index";

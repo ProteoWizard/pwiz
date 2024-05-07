@@ -154,7 +154,6 @@ namespace pwiz.Skyline.Model.Serialization
                 transitionGroupIonMobilityInfo,
                 fwhm,
                 area, 
-                null, // Update areaScorable later as we discover reporter ions
                 null, null, // Ms1 and Fragment values calculated later
                 backgroundArea, null, null, // Ms1 and Fragment values calculated later
                 height,

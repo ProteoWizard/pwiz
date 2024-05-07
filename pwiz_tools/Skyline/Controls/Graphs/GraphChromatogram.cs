@@ -1131,11 +1131,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (CurveCount == 0)
                 {
                     string message = null;
-                    if (nodeGroups is { Length: 1 } && nodeGroups[0].Children
-                            .All(n => !((TransitionDocNode)n).ParticipatesInScoring))
-                    {
-                        message = Resources.GraphChromatogram_UpdateUI_no_scoreable_product_ions;
-                    }
                     if (nodePeps == null)
                         message = GraphsResources.GraphChromatogram_UpdateUI_Select_a_peptide__precursor_or_transition_to_view_its_chromatograms;
                     else switch (DisplayType)
@@ -1144,7 +1139,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             message = GraphsResources.GraphChromatogram_UpdateUI_No_precursor_ion_chromatograms_found;
                             break;
                         case DisplayTypeChrom.products:
-                            message = message ?? GraphsResources.GraphChromatogram_UpdateUI_No_product_ion_chromatograms_found;
+                            message = GraphsResources.GraphChromatogram_UpdateUI_No_product_ion_chromatograms_found;
                             break;
                         case DisplayTypeChrom.base_peak:
                             message = GraphsResources.GraphChromatogram_UpdateUI_No_base_peak_chromatogram_found;

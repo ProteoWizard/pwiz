@@ -1825,7 +1825,7 @@ namespace pwiz.Skyline.Model
             return ChangePeak(groupPath, nameSet, filePath,
                 (node, info, tol, iSet, fileId, reg) =>
                     node.ChangePeak(Settings, info, iSet, fileId, reg, transition, startTime, 
-                                    endTime, identified.Value, userSet,  preserveMissingPeaks));
+                                    endTime, identified.Value, userSet, preserveMissingPeaks));
         }
 
         private bool ContainsTime(double[] times, double startTime, double endTime)
