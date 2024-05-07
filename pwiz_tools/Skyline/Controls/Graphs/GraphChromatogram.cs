@@ -736,7 +736,7 @@ namespace pwiz.Skyline.Controls.Graphs
             get
             {
                 // CONSIDER: Is this really the selected file?
-                return ChromGroupInfos.FirstOrDefault(info => info != null);
+                return ChromGroupInfos?.FirstOrDefault(info => info != null);
             }
         }
 
@@ -810,7 +810,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
 
             string xAxisTitle = GraphValues.ToLocalizedString(RTPeptideValue.Retention);
-            RegressionLine timeRegressionFunction = null;
+            AlignmentFunction timeRegressionFunction = null;
             var retentionTimeTransformOp = _stateProvider.GetRetentionTimeTransformOperation();
             if (null != retentionTimeTransformOp && null != _arrayChromInfo)
             {
@@ -1239,7 +1239,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void DisplayAllIonsSummary(RegressionLine timeRegressionFunction,
+        private void DisplayAllIonsSummary(AlignmentFunction timeRegressionFunction,
                                            TransitionDocNode nodeTranSelected,
                                            ChromatogramSet chromatograms,
                                            ChromExtractor extractor,
@@ -1257,6 +1257,10 @@ namespace pwiz.Skyline.Controls.Graphs
             if (nodeGroup == null)
                 nodeTranSelected = null;
             var info = chromGroupInfo.GetTransitionInfo(null, 0, TransformChrom.raw);
+            if (info == null)
+            {
+                return;
+            }
 
             TransitionChromInfo tranPeakInfo = null;
             RetentionTimeValues bestQuantitativePeakTimes = null;
@@ -1334,7 +1338,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _graphHelper.SetErrorGraphItem(graphItem);
         }
 
-        private void DisplayTransitions(RegressionLine timeRegressionFunction,
+        private void DisplayTransitions(AlignmentFunction timeRegressionFunction,
                                         TransitionDocNode nodeTranSelected,
                                         ChromatogramSet chromatograms,
                                         float mzMatchTolerance,
@@ -1640,7 +1644,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private void ShadeGraph(TransitionChromInfo tranPeakInfo, ChromatogramInfo chromatogramInfo,
-            RegressionLine timeRegressionFunction, double[] dotProducts, double bestProduct, bool isFullScanMs,
+            AlignmentFunction timeRegressionFunction, double[] dotProducts, double bestProduct, bool isFullScanMs,
             int? step, float fontSize, int width, DashStyle dashStyle, FullScanInfo fullScanInfo, PaneKey graphPaneKey)
         {
             if (tranPeakInfo == null || chromatogramInfo == null)
@@ -1746,7 +1750,7 @@ namespace pwiz.Skyline.Controls.Graphs
             };
         }
 
-        private void DisplayOptimizationTotals(RegressionLine timeRegressionFunction,
+        private void DisplayOptimizationTotals(AlignmentFunction timeRegressionFunction,
                                                ChromatogramSet chromatograms,
                                                float mzMatchTolerance,
                                                out RetentionTimeValues bestPeakTimes)
@@ -1771,7 +1775,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private List<ChromGraphItem> GetOptimizationTotalGraphItems(
-            RegressionLine timeRegressionFunction,
+            AlignmentFunction timeRegressionFunction,
             ChromatogramSet chromatograms,
             float mzMatchTolerance,
             TransitionGroupDocNode nodeGroup,
@@ -1979,7 +1983,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void DisplayTotals(RegressionLine timeRegressionFunction,
+        private void DisplayTotals(AlignmentFunction timeRegressionFunction,
                                    ChromatogramSet chromatograms,
                                    float mzMatchTolerance,
                                    int countLabelTypes,
@@ -2106,7 +2110,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Display summed transitions for multiple selected peptides.
         /// </summary>
-        private void DisplayPeptides(RegressionLine timeRegressionFunction,
+        private void DisplayPeptides(AlignmentFunction timeRegressionFunction,
                                    ChromatogramSet chromatograms,
                                    float mzMatchTolerance,
                                    int countLabelTypes,

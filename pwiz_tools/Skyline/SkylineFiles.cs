@@ -157,8 +157,10 @@ namespace pwiz.Skyline
                 return;
 
             // Create a new document with the default settings.
-            SrmDocument document = ConnectDocument(this, new SrmDocument(Settings.Default.SrmSettingsList[0]), null) ??
-                                   new SrmDocument(SrmSettingsList.GetDefault());
+            var savedSettings = Settings.Default.SrmSettingsList[0];
+            var document = new SrmDocument(SrmSettingsList.GetNewDocumentSettings(savedSettings));
+            document = ConnectDocument(this, document, null) ??
+                       new SrmDocument(SrmSettingsList.GetDefault());
 
             if (document.Settings.DataSettings.AuditLogging)
             {
@@ -1134,10 +1136,7 @@ namespace pwiz.Skyline
                 do
                 {
                     docOriginal = Document;
-                    docNew =
-                        docOriginal.ChangeSettings(
-                            docOriginal.Settings.ChangeDataSettings(
-                                docOriginal.Settings.DataSettings.ChangeDocumentGuid()));
+                    docNew = docOriginal.ChangeDocumentGuid();
                 } while (!SetDocument(docNew, docOriginal));
             }
 
@@ -2240,6 +2239,42 @@ namespace pwiz.Skyline
                     return;
             }
 
+            RefinementSettings refineAutoPick = null;
+            if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
+            {
+                // We create new nodes with automanage turned off, but it might be interesting to user to have that on for isotopes etc
+                // Try applying auto-pick refinement to see if that changes anything 
+                var refine = new RefinementSettings { AutoPickChildrenAll = PickLevel.precursors | PickLevel.transitions, AutoPickChildrenOff = false };
+                var docUnrefined = docNew ?? docCurrent;
+                var docRefined = refine.Refine(docUnrefined);
+                if (docRefined.MoleculeTransitionCount != 0 && // Automanage would turn everything off, not interesting
+                    !Equals(docRefined.MoleculeTransitionCount, docUnrefined.MoleculeTransitionCount))
+                {
+                    var existingPrecursorCount = docCurrent.MoleculeTransitions?.Where(t => t.IsMs1).Count();
+                    var existingFragmentCount = docCurrent.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
+                    var managedPrecursorCount = docRefined.MoleculeTransitions?.Where(t => t.IsMs1).Count();
+                    var managedFragmentCount = docRefined.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
+                    var docPrecursorCount = docUnrefined.MoleculeTransitions?.Where(t => t.IsMs1).Count();
+                    var docFragmentCount = docUnrefined.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
+                    var prompt = string.Format(
+                        Resources.SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions,
+                        managedPrecursorCount - existingPrecursorCount,
+                        managedFragmentCount - existingFragmentCount,
+                        docPrecursorCount - existingPrecursorCount,
+                        docFragmentCount - existingFragmentCount);
+                    var result = MultiButtonMsgDlg.Show(this, prompt, SkylineResources.SkylineWindow_ImportMassList_Enable, SkylineResources.SkylineWindow_ImportMassList_Disable, true);
+                    if (result == DialogResult.Cancel)
+                    {
+                        return;
+                    }
+                    else if (result != DialogResult.No)
+                    {
+                        docNew = docRefined;
+                        refineAutoPick = refine;
+                    }
+                }
+            }
+
             ModifyDocument(description, doc =>
             {
                 if (ReferenceEquals(doc, docCurrent))
@@ -2269,39 +2304,8 @@ namespace pwiz.Skyline
                     }
                     if (!ReferenceEquals(doc.Settings, newSettings))
                         doc = doc.ChangeSettings(newSettings);
-
-                    if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
-                    {
-                        // We create new nodes with automanage turned off, but it might be interesting to user to have that on for isotopes etc
-                        // Try applying auto-pick refinement to see if that changes anything 
-                        var refine = new RefinementSettings { AutoPickChildrenAll = PickLevel.precursors | PickLevel.transitions, AutoPickChildrenOff = false };
-                        var docManaged = refine.Refine(doc);
-                        if (docManaged.MoleculeTransitionCount != 0 && // Automanage would turn everything off, not interesting
-                            !Equals(docManaged.MoleculeTransitionCount, doc.MoleculeTransitionCount))
-                        {
-                            var existingPrecursorCount = docCurrent.MoleculeTransitions?.Where(t => t.IsMs1).Count();
-                            var existingFragmentCount = docCurrent.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
-                            var managedPrecursorCount = docManaged.MoleculeTransitions?.Where(t => t.IsMs1).Count();
-                            var managedFragmentCount = docManaged.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
-                            var docPrecursorCount = doc.MoleculeTransitions?.Where(t => t.IsMs1).Count();
-                            var docFragmentCount = doc.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
-                            var prompt = string.Format(
-                                Resources.SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions,
-                                managedPrecursorCount - existingPrecursorCount,
-                                managedFragmentCount - existingFragmentCount,
-                                docPrecursorCount - existingPrecursorCount,
-                                docFragmentCount - existingFragmentCount);
-                            var result = MultiButtonMsgDlg.Show(this, prompt, SkylineResources.SkylineWindow_ImportMassList_Enable, SkylineResources.SkylineWindow_ImportMassList_Disable, true);
-                            if (result == DialogResult.Cancel)
-                            {
-                                doc = docCurrent;
-                            }
-                            else if (result != DialogResult.No)
-                            {
-                                doc = docManaged;
-                            }
-                        }
-                    }
+                    if (refineAutoPick != null)
+                        doc = refineAutoPick.Refine(doc);
                 }
                 catch (Exception x)
                 {
@@ -2884,6 +2888,7 @@ namespace pwiz.Skyline
                     SkylineResources.SkylineWindow_ImportResults_This_document_does_not_contain_decoy_peptides__Would_you_like_to_add_decoy_peptides_before_extracting_chromatograms__After_chromatogram_extraction_is_finished__Skyline_will_use_the_decoy_and_target_chromatograms_to_train_a_peak_scoring_model_in_order_to_choose_better_peaks_,
                     MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
                 {
+                    dlg.GetModeUIHelper().IgnoreModeUI = true;
                     switch (dlg.ShowDialog(this))
                     {
                         case DialogResult.Yes:
@@ -2939,9 +2944,32 @@ namespace pwiz.Skyline
 
         public static bool ShouldPromptForDecoys(SrmDocument doc)
         {
-            return Equals(doc.Settings.TransitionSettings.FullScan.AcquisitionMethod, FullScanAcquisitionMethod.DIA) &&
-                   !doc.PeptideGroups.Any(nodePepGroup => nodePepGroup.IsDecoy) &&
-                   !doc.Settings.HasResults;
+            if (!Equals(doc.Settings.TransitionSettings.FullScan.AcquisitionMethod,
+                    FullScanAcquisitionMethod.DIA))
+            {
+                // Only prompt to add decoys if the acquisition method is DIA
+                return false;
+            }
+            if (doc.Settings.HasResults)
+            {
+                // If the document already has results, then it's too late to add decoys
+                return false;
+            }
+
+            if (doc.PeptideGroups.Any(nodePepGroup => nodePepGroup.IsDecoy))
+            {
+                // If the document already has decoys, then don't offer to add decoys
+                return false;
+            }
+
+            if (!doc.Peptides.Where(pepDocNode => null == pepDocNode.GlobalStandardType).Skip(20).Any())
+            {
+                // If there are not at least 20 ordinary peptides in the document, then don't offer to
+                // add decoys. AutoTrainModelFunctionalTest has 24 peptides and expects to be prompted.
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -3305,6 +3333,10 @@ namespace pwiz.Skyline
                     {
                         docCurrent = Document;
                         docNew = docCurrent.ChangeMeasuredResults(resultsNew);
+                        if (chromRemaining.Length == 0)
+                        {
+                            docNew = docNew.ForgetOriginalMoleculeTargets();
+                        }
                     } while (!SetDocument(docNew, docCurrent));
                 });
         }
@@ -3319,21 +3351,29 @@ namespace pwiz.Skyline
             ShowEncyclopeDiaSearchDlg();
         }
 
+        private void importFeatureDetectionMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow.feature_detection);
+        }
+
         public void ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow? workflowType)
         {
-            if (!CheckDocumentExists(SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
+            if (!CheckDocumentExists(workflowType is ImportPeptideSearchDlg.Workflow.feature_detection ?
+                    SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_performing_feature_detection_ :
+                    SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
             {
                 return;
             }
             else if (!Document.IsLoaded)
             {
-                MessageDlg.Show(this, SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_);
+                MessageDlg.Show(this,
+                    workflowType is ImportPeptideSearchDlg.Workflow.feature_detection ?
+                        SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_performing_feature_detection_ :
+                        SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_);
                 return;
             }
 
-            using (var dlg = !workflowType.HasValue
-                   ? new ImportPeptideSearchDlg(this, _libraryManager)
-                   : new ImportPeptideSearchDlg(this, _libraryManager, workflowType.Value))
+            using (var dlg = new ImportPeptideSearchDlg(this, _libraryManager, workflowType))
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
@@ -3369,6 +3409,11 @@ namespace pwiz.Skyline
             }
         }
 
+        public void ShowFeatureDetectionDlg()
+        {
+            ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow.feature_detection);
+        }
+
         private bool CheckDocumentExists(String errorMsg)
         {
             if (string.IsNullOrEmpty(DocumentFilePath))
@@ -3389,9 +3434,6 @@ namespace pwiz.Skyline
 
         public void ShowPublishDlg(IPanoramaPublishClient publishClient)
         {
-            if (publishClient == null)
-                publishClient = new WebPanoramaPublishClient();
-
             var document = DocumentUI;
             if (!document.IsLoaded)
             {
@@ -3410,6 +3452,14 @@ namespace pwiz.Skyline
                     return;
 
                 fileName = DocumentFilePath;
+            }
+
+            if (!PanoramaUtil.LabKeyAllowedFileName(fileName, out var error))
+            {
+                MessageDlg.Show(this, TextUtil.LineSeparate(
+                    string.Format(SkylineResources.SkylineWindow_ShowPublishDlg__0__is_not_a_valid_file_name_for_uploading_to_Panorama_, Path.GetFileName(fileName)),
+                    string.Format(Resources.Error___0_, error)));
+                return;
             }
 
             // Issue 866: Provide option in Skyline to upload a minimized library to Panorama
@@ -3457,7 +3507,7 @@ namespace pwiz.Skyline
                     TextUtil.LineSeparate(
                         Resources.SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_with_a_user_account__To_upload_documents_to_a_server_a_user_account_is_required_,
                         string.Empty,
-                        SkylineResources.SkylineWindow_ShowPublishDlg_Press_Edit_existing_to_add_user_account_information_for_an_existing_server_,
+                        SkylineResources.SkylineWindow_ShowPublishDlg_Press__Edit_existing__to_add_user_account_information_for_an_existing_server_,
                         SkylineResources.SkylineWindow_OpenFromPanorama_Press__Add__to_add_a_new_server_),
                     SkylineResources.SkylineWindow_ShowPublishDlg_Edit_existing, SkylineResources.SkylineWindow_Add,
                     true);
@@ -3549,48 +3599,21 @@ namespace pwiz.Skyline
             if (server == null)
                 return false;
 
+            // If we are given a test publish client use that, otherwise create the default client.
+            publishClient ??= PublishDocumentDlg.GetDefaultPublishClient(server);
+
             JToken folders;
             var folderPath = panoramaSavedUri.AbsolutePath;
             var folderPathNoCtx = PanoramaServer.getFolderPath(server, panoramaSavedUri); // get folder path without the context path
             try
             {
-                folders = publishClient.GetInfoForFolders(server, folderPathNoCtx.TrimEnd('/').TrimStart('/'));
+                folders = publishClient.PanoramaClient.GetInfoForFolders(folderPathNoCtx.TrimEnd('/').TrimStart('/'));
             }
-            catch (WebException ex)
-            {
-                // Handle this only for PanoramaWeb.  For the specific case where Skyline was upgraded
-                // to a version that does not assume the '/labkey' context path, BEFORE PanoramaWeb was
-                // re-configured to run as the ROOT webapp. In this case the panoramaSavedUri will contain '/labkey'
-                // but the server is no longer deployed at that context path.
-                if (!server.URI.Host.Contains(@"panoramaweb") || !folderPath.StartsWith(@"/labkey"))
-                {
-                    return false;
-                }
 
-                var response = ex.Response as HttpWebResponse;
-
-                if (response == null || response.StatusCode != HttpStatusCode.NotFound) // 404
-                {
-                    return false;
-                }
-
-                folderPathNoCtx = folderPath.Remove(0, @"/labkey".Length);
-                try
-                {
-                    folders =
-                        publishClient.GetInfoForFolders(server, folderPathNoCtx.TrimEnd('/').TrimStart('/'));
-                }
-                catch (Exception)
-                {
-                    return false;
-                }
-            }
-            catch (PanoramaServerException)
-            {
-                return false;
-            }
             catch (Exception e)
             {
+                if (e is PanoramaServerException || e is WebException) return false;
+
                 MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.RemoteSession_FetchContents_There_was_an_error_communicating_with_the_server__, e.Message), e);
                 return false;
             }
@@ -3602,12 +3625,11 @@ namespace pwiz.Skyline
             if (!(PanoramaUtil.CheckInsertPermissions(folders) && PanoramaUtil.HasTargetedMsModule(folders)))
                 return false;
 
-            var fileInfo = new FolderInformation(server, true);
             ShareType shareType;
             try
             {
                 var cancelled = false;
-                shareType = publishClient.GetShareType(fileInfo, DocumentUI, DocumentFilePath, GetFileFormatOnDisk(), this, ref cancelled);
+                shareType = publishClient.GetShareType(DocumentUI, DocumentFilePath, GetFileFormatOnDisk(), this, ref cancelled);
                 if (cancelled)
                 {
                     return true;
@@ -3620,12 +3642,12 @@ namespace pwiz.Skyline
             }
 
             var zipFilePath = FileEx.GetTimeStampedFileName(fileName);
-            if (!ShareDocument(zipFilePath, shareType))
+            if (!ShareDocument(zipFilePath, shareType)) 
                 return false;
 
             var serverRelativePath = folders[@"path"].ToString() + '/'; 
             serverRelativePath = serverRelativePath.TrimStart('/'); 
-            publishClient.UploadSharedZipFile(this, server, zipFilePath, serverRelativePath);
+            publishClient.UploadSharedZipFile(this, zipFilePath, serverRelativePath);
             return true; // success!
         }
 

@@ -266,10 +266,7 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 peptide.CustomMolecule.WriteXml(writer, Adduct.EMPTY);
                 // If user changed any molecule details (other than formula or mass) after chromatogram extraction, this info continues the target->chromatogram association
-                if (!Equals(peptide.Target, peptide.OriginalMoleculeTarget))
-                {
-                    writer.WriteAttributeString(ATTR.chromatogram_target, peptide.OriginalMoleculeTarget.ToSerializableString());
-                }
+                writer.WriteAttributeIfString(ATTR.chromatogram_target, node.OriginalMoleculeTarget?.ToSerializableString());
             }
             else
             {

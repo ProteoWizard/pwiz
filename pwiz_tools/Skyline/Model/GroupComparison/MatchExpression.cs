@@ -290,9 +290,10 @@ namespace pwiz.Skyline.Model.GroupComparison
                         break;
                     }
                 }
-                if (foldChangeResult != null)
+
+                if (foldChangeResult.HasValue && !CutoffMatches(match, foldChangeResult.Value, cutoffSettings))
                 {
-                    return CutoffMatches(match, (FoldChangeResult)foldChangeResult, cutoffSettings);
+                    return false;
                 }
             }
 

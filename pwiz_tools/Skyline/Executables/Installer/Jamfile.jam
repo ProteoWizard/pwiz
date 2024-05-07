@@ -71,16 +71,15 @@ rule msbuild_deploy ( targets + : sources * : properties * )
     setup_templates $(targets) : $(sources) : $(properties) ;
     
     local .artifact-name = [ on $(targets) return $(ARTIFACT_NAME) ] ;
-    local .pfx-password = [ MATCH --pfx-password=(.*) : [ modules.peek : ARGV ] ] ;
 
-    if [ path.exists $(PFX_PATH) ] && $(.pfx-password)
+    if [ path.exists $(CRT_PATH) ]
     {
-        echo "NOTE: signing Skyline MSI with key at: $(PFX_PATH)" ;
-        SIGNTOOL_COMMAND on $(targets) = "if %ERRORLEVEL% EQU 0 signtool sign /f \"$(PFX_PATH)\" /p $(.pfx-password) /tr http://timestamp.digicert.com /v \"$(.artifact-name).msi\"" ;
+        echo "NOTE: signing Skyline MSI with key at: $(CRT_PATH)" ;
+        SIGNTOOL_COMMAND on $(targets) = "if %ERRORLEVEL% EQU 0 signtool sign /csp \"DigiCert Signing Manager KSP\" /kc $(CRT_KEY) /f \"$(CRT_PATH)\" /tr http://timestamp.digicert.com /td SHA256 /fd SHA256 /v \"$(.artifact-name).msi\"" ;
     }
     else
     {
-        echo "NOTE: not signing Skyline MSI because $(PFX_PATH) does not exist or --pfx-password not set." ;
+        echo "NOTE: not signing Skyline MSI because $(CRT_PATH) does not exist." ;
     }
 }
 

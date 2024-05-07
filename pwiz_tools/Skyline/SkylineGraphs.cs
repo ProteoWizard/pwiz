@@ -28,6 +28,7 @@ using DigitalRune.Windows.Docking;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -786,7 +787,7 @@ namespace pwiz.Skyline
                     throw new InvalidOperationException(
                         SkylineResources.SkylineWindow_IsGraphUpdatePending_Must_be_called_from_event_thread);
                 }
-                return _timerGraphs.Enabled || (_graphSpectrum != null && _graphSpectrum.IsGraphUpdatePending);
+                return _timerGraphs.Enabled || (_graphSpectrum != null && _graphSpectrum.IsGraphUpdatePending) || ProductionFacility.DEFAULT.IsWaiting();
             }
         }
 
@@ -833,7 +834,7 @@ namespace pwiz.Skyline
                 // Only align to regressions that are auto-calculated.  Otherwise,
                 // conversion will be the same for all replicates, making this just
                 // a linear unit conversion
-                var predictRT = DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime;
+                var predictRT = Document.Settings.PeptideSettings.Prediction.RetentionTime;
                 if (predictRT != null && predictRT.IsAutoCalculated)
                 {
                     return new GraphValues.RegressionUnconversion(predictRT);

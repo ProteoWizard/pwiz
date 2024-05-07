@@ -90,6 +90,7 @@ class PepXMLreader : public BuildParser{
   map<PSM*, double> precursorMap_;
   string fileroot_;
   bool isScoreLookup_;
+  bool isMGF_;
 
   //for each spectrum
   

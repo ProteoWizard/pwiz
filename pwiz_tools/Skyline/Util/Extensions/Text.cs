@@ -382,6 +382,21 @@ namespace pwiz.Skyline.Util.Extensions
         }
 
         /// <summary>
+        /// Utility function for <see cref="string"/> like <see cref="File"/> ReadLines().
+        /// </summary>
+        /// <param name="text">Text possibly multi-line</param>
+        /// <returns>Enumerable lines without line endings</returns>
+        public static IEnumerable<string> ReadLines(this string text)
+        {
+            using var reader = new StringReader(text);
+            var lines = new List<string>();
+            string line;
+            while ((line = reader.ReadLine()) != null)
+                lines.Add(line);
+            return lines;
+        }
+
+        /// <summary>
         /// This function can be used as a replacement for String.Join(" ", ...)
         /// </summary>
         /// <param name="values">A set of strings to be separated by spaces</param>

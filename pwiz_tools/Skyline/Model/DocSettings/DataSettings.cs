@@ -111,6 +111,14 @@ namespace pwiz.Skyline.Model.DocSettings
             private set { _auditLogging = value; }
         }
 
+        /// <summary>
+        /// Returns whether audit logging would be enabled for this document if a unit test were not running
+        /// </summary>
+        public bool IsAuditLoggingEnabled
+        {
+            get { return _auditLogging; }
+        }
+
         public string DocumentGuid { get; private set; }
 
         #region Property change methods
@@ -252,7 +260,7 @@ namespace pwiz.Skyline.Model.DocSettings
 //            Assume.IsFalse(string.IsNullOrEmpty(DocumentGuid)); // Should have a document GUID by this point
             if(!string.IsNullOrEmpty(DocumentGuid))
                 writer.WriteAttributeString(Attr.document_guid, DocumentGuid);
-            writer.WriteAttribute(Attr.audit_logging, AuditLogging);
+            writer.WriteAttribute(Attr.audit_logging, _auditLogging);
             var elements = AnnotationDefs.Cast<IXmlSerializable>()
                 .Concat(GroupComparisonDefs)
                 .Concat(Lists)

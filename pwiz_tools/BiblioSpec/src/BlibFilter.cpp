@@ -348,6 +348,7 @@ void BlibFilter::buildNonRedundantLib() {
                 scoreType == "PEPTIDE PROPHET SOMETHING" ||
                 scoreType == "PROTEIN PILOT CONFIDENCE" ||
                 scoreType == "SCAFFOLD SOMETHING" ||
+                scoreType == "HARDKLOR IDOTP" ||
                 scoreType == "PEPTIDE SHAKER CONFIDENCE") {
                 higherIsBetter_[scoreTypeId] = true;
             } else {
@@ -430,6 +431,8 @@ void BlibFilter::buildNonRedundantLib() {
 
     int lastCharge=0;
 
+    SmallMolMetadata lastMoleculeAndAdduct;
+
     Verbosity::debug("Counting Spectra.");
     ProgressIndicator progress(getSpectrumCount(redundantDbName_));
 
@@ -446,9 +449,9 @@ void BlibFilter::buildNonRedundantLib() {
             "moleculeName, chemicalFormula, inchiKey, otherKeys, precursorAdduct, "
             "startTime, endTime, totalIonCurrent, retentionTime, specIDinFile "
             "FROM RefSpectraTransfer "
-            "WHERE numPeaks >= %i "
+            "WHERE numPeaks >= %i OR SpecIDinFile=\"\"" // Precursor-only entries have empty specIDs, keep those
             "ORDER BY %s", minPeaks_,
-            order_by.c_str());
+            order_by.c_str()); 
 
     smart_stmt pStmt;
     int rc = sqlite3_prepare(getDb(), zSql, -1, &pStmt, 0);
@@ -587,10 +590,10 @@ void BlibFilter::buildNonRedundantLib() {
             // is this slow for copying the peak vector? better to return a ptr?
             vector<PEAK_T> peaks = getUncompressedPeaks(numPeaks, numBytes1, comprM, numBytes2, comprI);
             sqlite3_finalize(peakStmt);
-            if (peaks.empty()) {
+            if (peaks.empty() && numPeaks != 0) { // Precursor-only entries have no MS2 peaks
                 Verbosity::error("Unable to read peaks for redundant library "
                     "spectrum %i, sequence %s, charge %i.",
-                    tmpRef->getLibSpecID(), (tmpRef->getSeq()).c_str(),
+                    tmpRef->getLibSpecID(), tmpRef->getDisplayName().c_str(),
                     tmpRef->getCharge());
             }
             tmpRef->setRawPeaks(peaks);
@@ -598,12 +601,16 @@ void BlibFilter::buildNonRedundantLib() {
         // TODO end nextRefSpec
 
         // if this spec has same seq and charge, add to the collection
-        if(pepModSeq.compare(lastPepModSeq) == 0 && lastCharge == charge) {
+        if(!pepModSeq.empty() ? 
+            pepModSeq == lastPepModSeq && lastCharge == charge : 
+            tmpRef->getSmallMolMetadata() == lastMoleculeAndAdduct)
+        {
             oneIon.push_back(tmpRef);
         } else {// filter & start new collection for a different seq and charge
             if(!oneIon.empty()) {
                 Verbosity::comment(V_DETAIL, "Selecting spec for %s, charge %i from %i spectra.",
-                                   lastPepModSeq.c_str(), lastCharge, oneIon.size());
+                    (lastPepModSeq.empty() ? lastMoleculeAndAdduct.moleculeName : lastPepModSeq).c_str(),
+                    lastCharge, oneIon.size());
                 compAndInsert(oneIon, bestSpectraIdAndCount);
                 clearVector(oneIon);
             }
@@ -611,8 +618,10 @@ void BlibFilter::buildNonRedundantLib() {
             oneIon.push_back(tmpRef);
             lastPepModSeq = pepModSeq;
             lastCharge = charge;
+            lastMoleculeAndAdduct = tmpRef->getSmallMolMetadata();
+
             Verbosity::comment(V_DETAIL, "Collecting spec for %s, charge %i,",
-                               pepModSeq.c_str(), charge);
+                tmpRef->getDisplayName().c_str(), charge);
         }
 
         rc = sqlite3_step(pStmt);
@@ -622,7 +631,7 @@ void BlibFilter::buildNonRedundantLib() {
     if (!oneIon.empty()) {
         progress.increment();
         Verbosity::comment(V_DETAIL, "Selecting spec for %s, charge %i from %i spectra.",
-                           lastPepModSeq.c_str(), lastCharge, oneIon.size());
+            oneIon.front()->getDisplayName().c_str(), lastCharge, oneIon.size());
         compAndInsert(oneIon, bestSpectraIdAndCount);
         clearVector(oneIon);
     }
@@ -833,6 +842,7 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon, vector<pair<int, in
     for (int i = 0; i < num_spec; i++) {
         const RefSpectrum* spectrum = oneIon[i];
         int specIdRedundant = spectrum->getLibSpecID();
+        double retentionTime = spectrum->getRetentionTime();
         double startTime = spectrum->getStartTime();
         double endTime = spectrum->getEndTime();
         sqlite3_bind_int(insertStmt_, 1, specID);
@@ -842,7 +852,12 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon, vector<pair<int, in
         sqlite3_bind_double(insertStmt_, 5, spectrum->getCollisionalCrossSection());
         sqlite3_bind_double(insertStmt_, 6, spectrum->getIonMobilityHighEnergyOffset());
         sqlite3_bind_int(insertStmt_, 7, (int)spectrum->getIonMobilityType());
-        sqlite3_bind_double(insertStmt_, 8, spectrum->getRetentionTime());
+        if (retentionTime != 0)
+        {
+            sqlite3_bind_double(insertStmt_, 8, retentionTime);
+        } else {
+            sqlite3_bind_null(insertStmt_, 8);
+        }
         if (startTime != 0 && endTime != 0) {
             sqlite3_bind_double(insertStmt_, 9, startTime);
             sqlite3_bind_double(insertStmt_, 10, endTime);

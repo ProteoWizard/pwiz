@@ -289,7 +289,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             textPeptide.Focus();
             if (_selectedLibrary is MidasLibrary || MatchModifications())
-                UpdateListPeptide(0);
+                UpdateListPeptide(listPeptide.SelectedIndex);
         }
 
         private void ViewLibraryDlg_Activated(object sender, EventArgs e)
@@ -376,7 +376,6 @@ namespace pwiz.Skyline.SettingsUI
             // Order matters!!
             LoadLibrary();
             InitializePeptides();
-            _currentRange = new RangeList(0, _peptides.Count);
             UpdatePageInfo();
             UpdateStatusArea();
             cbShowModMasses.Checked = Settings.Default.ShowModMassesInExplorer;
@@ -460,7 +459,7 @@ namespace pwiz.Skyline.SettingsUI
 
                         var info = new ViewLibraryPepInfo(key, libInfo);
                         // If there are any, set the ion mobility values of entry
-                        return key.IsSmallMoleculeKey ? SetIonMobilityCCSValues(info) : info; // Don't do this for peptides until we have performance issues worked out
+                        return SetIonMobilityCCSValues(info);
                     });
             }
 
@@ -559,7 +558,7 @@ namespace pwiz.Skyline.SettingsUI
                 string.Format(peptideCountFormat,
                               showStart.ToString(numFormat),
                               showEnd.ToString(numFormat),
-                                _peptides.Count.ToString(numFormat));
+                                _currentRange.Count.ToString(numFormat)); // Count the filtered items
 
             PageCount.Text = string.Format(SettingsUIResources.ViewLibraryDlg_UpdateStatusArea_Page__0__of__1__, _pageInfo.Page,
                                            _pageInfo.Pages);
@@ -1058,7 +1057,10 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private void FilterAndUpdate()
         {
-            _currentRange = _peptides.Filter(textPeptide.Text, comboFilterCategory.SelectedItem.ToString());
+            var filterCategory = comboFilterCategory.SelectedItem.ToString();
+            _currentRange = _peptides.Filter(textPeptide.Text, filterCategory);
+            _filterTextPerFilterType[filterCategory] = textPeptide.Text; // Keep different text for each filter type
+            _previousFilterType = filterCategory;
             UpdatePageInfo();
             UpdateStatusArea();
             UpdateListPeptide(0);
@@ -1328,6 +1330,10 @@ namespace pwiz.Skyline.SettingsUI
             FilterAndUpdate();
         }
 
+        // Don't lose the user's search strings when flipping between filters
+        private Dictionary<string, string> _filterTextPerFilterType = new Dictionary<string, string>();
+        private string _previousFilterType;
+
         private void comboFilterCategory_SelectedIndexChanged(object sender, EventArgs e)
         {
             var cancelled = false;
@@ -1361,7 +1367,24 @@ namespace pwiz.Skyline.SettingsUI
             // when the user begins typing
             _peptides.CreateCachedList(propertyName);
 
-            FilterAndUpdate();
+            // Each filter type has a different search string, swap them in as needed
+            var filterType = comboFilterCategory.SelectedItem.ToString();
+            var needsUpdate = true;
+            if (!Equals(filterType, _previousFilterType))
+            {
+                var newText = _filterTextPerFilterType.TryGetValue(filterType, out var text) ? text : string.Empty;
+                if (!Equals(textPeptide.Text, newText))
+                {
+                    textPeptide.Text = newText;
+                    needsUpdate = false; // Update will file automatically
+                }
+            }
+            if (needsUpdate)
+            {
+                FilterAndUpdate();
+            }
+
+            textPeptide.Focus(); // Assume that the next thing the user wants to do is work with the filter value
         }
         private void listPeptide_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -2387,7 +2410,7 @@ namespace pwiz.Skyline.SettingsUI
         public int SelectedLibIndex
         {
             get { return comboLibrary.SelectedIndex; }
-            set { listPeptide.SelectedIndex = value; }
+            set { comboLibrary.SelectedIndex = value; }
         }
 
         public bool HasSelectedLibrary => _selectedLibrary != null;
@@ -2609,11 +2632,14 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         return string.Format(SettingsUIResources.ViewLibSpectrumGraphItem_Title__0__1_, libraryNamePrefix, _key.PrecursorMz.GetValueOrDefault());
                     }
-                    if (_key.IsSmallMoleculeKey)
+                    var title = _key.IsSmallMoleculeKey ?
+                        string.Format(@"{0}{1}{2}", libraryNamePrefix, TransitionGroup.Peptide.CustomMolecule.DisplayName, TransitionGroup.PrecursorAdduct) :
+                        string.Format(SettingsUIResources.ViewLibSpectrumGraphItem_Title__0__1__Charge__2__, libraryNamePrefix, TransitionGroup.Peptide.Target, TransitionGroup.PrecursorAdduct);
+                    if (this.PeaksCount == 0)
                     {
-                        return string.Format(@"{0}{1}{2}", libraryNamePrefix, TransitionGroup.Peptide.CustomMolecule.DisplayName, TransitionGroup.PrecursorAdduct);
+                        title += SettingsUIResources.SpectrumGraphItem_library_entry_provides_only_precursor_values;
                     }
-                    return string.Format(SettingsUIResources.ViewLibSpectrumGraphItem_Title__0__1__Charge__2__, libraryNamePrefix, TransitionGroup.Peptide.Target, TransitionGroup.PrecursorAdduct);
+                    return title;
                 }
             }
         }
@@ -2962,11 +2988,9 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public IonMobilityAndCCS GetIonMobility(ViewLibraryPepInfo pepInfo)
         {
-            var bestSpectrum = _selectedLibrary.GetSpectra(pepInfo.Key,
-                IsotopeLabelType.light, LibraryRedundancy.best).FirstOrDefault();
-            if (bestSpectrum != null)
+            if (_selectedLibrary.TryGetIonMobilityInfos(new[] { pepInfo.Key }, out var ionMobilities))
             {
-                return bestSpectrum.IonMobilityInfo;
+                return ionMobilities.GetIonMobilityDict().Values.SelectMany(x => x).FirstOrDefault() ?? IonMobilityAndCCS.EMPTY;
             }
             return IonMobilityAndCCS.EMPTY;
         }

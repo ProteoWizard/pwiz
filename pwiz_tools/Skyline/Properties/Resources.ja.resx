@@ -229,9 +229,6 @@
   <data name="AlignmentForm_UpdateGraph_Outliers" xml:space="preserve">
     <value>異常値</value>
   </data>
-  <data name="AlignmentForm_UpdateGraph_Peptides" xml:space="preserve">
-    <value>ペプチド</value>
-  </data>
   <data name="AlignmentForm_UpdateGraph_Peptides_Refined" xml:space="preserve">
     <value>ペプチドの精製</value>
   </data>
@@ -2078,15 +2075,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   </data>
   <data name="PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_" xml:space="preserve">
     <value>サーバーからの予期しないJSON応答：{0}</value>
-  </data>
-  <data name="PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder" xml:space="preserve">
-    <value>{0}はPanoramaフォルダではありません</value>
-  </data>
-  <data name="PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_" xml:space="preserve">
-    <value>フォルダ{0}はPanoramaサーバー{1}上に存在しません</value>
-  </data>
-  <data name="PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_" xml:space="preserve">
-    <value>ユーザー{0}には、Panoramaフォルダ{1}にアップロードする権限がありません</value>
   </data>
   <data name="ParsimonySettings_Validate_The_value__0__for__1__is_not_valid__it_must_be_greater_than_or_equal_to__2__" xml:space="preserve">
     <value>{1}の値{0}が無効です： {2}に等しいかそれ以上でなければなりません。</value>
