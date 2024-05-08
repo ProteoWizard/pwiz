@@ -220,6 +220,7 @@
     <Compile Include="RemoveHeavyModificationTest.cs" />
     <Compile Include="RemoveNeutralLossModificationTest.cs" />
     <Compile Include="RenameMoleculeTest.cs" />
+    <Compile Include="ReplicateNameMetadataRuleTest.cs" />
     <Compile Include="ResultFileMetadataBackCompatTest.cs" />
     <Compile Include="SaveAfterProteinAssociationTest.cs" />
     <Compile Include="SelectSpectrumTest.cs" />
