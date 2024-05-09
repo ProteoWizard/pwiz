@@ -19,6 +19,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -43,7 +45,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestTutorial
 {
     [TestClass]
-    public class PeakPickingTutorialTest : AbstractFunctionalTestEx
+    public class PeakPickingTutorialTest : ScreenshotGeneratingTest
     {
         private readonly string[] _importFiles =
             {
@@ -115,13 +117,17 @@ namespace pwiz.SkylineTestTutorial
                 generateDecoysDlg.DecoysMethod = DecoyGeneration.REVERSE_SEQUENCE;
                 generateDecoysDlg.NumDecoys = 29;
             });
-            PauseForScreenShot<GenerateDecoysDlg>("Add Decoy Peptides form", 2);
-            
+            RunUISaveScreenshot(generateDecoysDlg, "GenerateDecoysDlg");
+
             OkDialog(generateDecoysDlg, generateDecoysDlg.OkDialog);
 
             RestoreViewOnScreen(3);
-            RunUI(() => SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.Nodes[11]);
-            PauseForScreenShot("Targets view clipped from main window", 3);
+            RunUI(() =>
+            {
+                SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.Nodes[11];
+                SkylineWindow.SelectedPath = new IdentityPath(SkylineWindow.DocumentUI.Children.Last().Id);
+            });
+            RunUISaveScreenshot(SkylineWindow.SequenceTree, "SequenceTree");
 
             // Open the file with decoys
             RunUI(() => SkylineWindow.OpenFile(GetTestPath("SRMCourse_DosR-hDP__20130501-tutorial-empty-decoys.sky")));
@@ -142,7 +148,7 @@ namespace pwiz.SkylineTestTutorial
                 importResultsDlg.NamedPathSets = path;
             });
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg.OkDialog);
-            PauseForScreenShot<ImportResultsNameDlg>("Import Results common prefix form", 4);
+            RunUISaveScreenshot(importResultsNameDlg, "ImportResultsCommonPrefix");
             RunUI(() =>
             {
                 string prefix = importResultsNameDlg.Prefix;
@@ -171,7 +177,7 @@ namespace pwiz.SkylineTestTutorial
                     dlg.FontSize = GraphFontSize.LARGE;
                     dlg.OkDialog();
                 });
-            PauseForScreenShot("Main window", 5);
+            RunUISaveScreenshot(SkylineWindow, "MainWindow");
 
             // Test different point types on RTLinearRegressionGraph
             RunUI(() =>
@@ -189,21 +195,21 @@ namespace pwiz.SkylineTestTutorial
 
             // Train the peak scoring model
             var reintegrateDlg = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
-            PauseForScreenShot<ReintegrateDlg>("Reintegrate form", 6);
+            RunUISaveScreenshot(reintegrateDlg, "ReintegrateForm");
             var editDlg = ShowDialog<EditPeakScoringModelDlg>(reintegrateDlg.AddPeakScoringModel);
             RunUI(() => editDlg.TrainModel());
-            PauseForScreenShot<EditPeakScoringModelDlg.ModelTab>("Edit Peak Scoring Model form trained model", 6);
+            RunUISaveScreenshot(editDlg, "EditPeakScoringModelFormTrainedModel");
             RunUI(() => Assert.AreEqual(0.5893, editDlg.PeakCalculatorsGrid.Items[3].PercentContribution ?? 0, 0.005));
 
             RunUI(() => editDlg.SelectedGraphTab = 2);
-            PauseForScreenShot<EditPeakScoringModelDlg.PvalueTab>("Edit Peak Scoring Model form p value graph metafile", 7);
+            RunUISaveScreenshot(editDlg.ZedGraphPValues, "EditPeakScoringModelFormPValueGraph");
 
             RunUI(() => editDlg.SelectedGraphTab = 3);
-            PauseForScreenShot<EditPeakScoringModelDlg.QvalueTab>("Edit Peak Scoring Model form q value graph metafile", 8);
+            RunUISaveScreenshot(editDlg.ZedGraphQValues, "EditPeakScoringModelFormQValueGraph");
 
             RunUI(() => editDlg.SelectedGraphTab = 1);
-            RunUI(() => editDlg.PeakCalculatorsGrid.SelectRow(3));
-            PauseForScreenShot<EditPeakScoringModelDlg.FeaturesTab>("Edit Peak Scoring Model form feature score", 10);
+            RunUI(() => editDlg.PeakCalculatorsGrid.SelectRow(2));
+            RunUISaveScreenshot(editDlg, "EditPeakScoringModelFormFeatureScore");
 
             RunUI(() =>
             {
@@ -217,15 +223,38 @@ namespace pwiz.SkylineTestTutorial
                 editDlg.FindMissingValues(2);   // Retention time
                 editDlg.PeakScoringModelName = "test1";
             });
-            PauseForScreenShot<EditPeakScoringModelDlg.FeaturesTab>("Edit Peak Scoring Model form find missing scores", 11);
+            RunUI(() =>
+            {
+                editDlg.ToolStripFind.Visible = true;
+                SaveScreenshot(editDlg.ToolStripFind, "FindButton");
+                SaveScreenshot(editDlg, "EditPeakScoringModelFormFindMissingScores");
+            });
 
             OkDialog(editDlg, editDlg.OkDialog);
             OkDialog(reintegrateDlg, reintegrateDlg.CancelDialog);
 
-            PauseForScreenShot<FindResultsForm>("Find Results view clipped from main window", 12);
+            var findResultsForm = FindOpenForm<FindResultsForm>();
+            RunUI(() =>
+            {
+                int oldHeight = SkylineWindow.Height;
+                // Make the Skyline window tall enough so that everything in the Find Results window can be seen.
+                // It would be nice if we could just make the Find Results window bigger, but I could not figure out how to do that
+                SkylineWindow.Height = oldHeight * 4 / 3;
+
+                var image = TakeScreenShot(SkylineWindow);
+                
+                // Crop the image so that it starts at the top of the Find Results window
+                int yOffset = findResultsForm.PointToScreen(new Point(0, 0)).Y - SkylineWindow.Location.Y;
+                var cropRect = new Rectangle(0,
+                    yOffset, image.Width,
+                    image.Height - yOffset);
+                var croppedImage = image.Clone(cropRect, image.PixelFormat);
+                
+                SaveImage(croppedImage, ImageFormat.Png, "FindResultsViewClippedFromMainWindow.png");
+                SkylineWindow.Height = oldHeight;
+            });
 
             // Remove the peptide with no library dot product, and train again
-            FindResultsForm findResultsForm = null;
             var missingPeptides = new List<string> { "LGGNEQVTR", "IPVDSIYSPVLK", "YFNDGDIVEGTIVK", 
                                                      "DFDSLGTLR", "GGYAGMLVGSVGETVAQLAR", "GGYAGMLVGSVGETVAQLAR"};
             var isDecoys = new List<bool> {false, false, false, false, false, true};
@@ -287,10 +316,10 @@ namespace pwiz.SkylineTestTutorial
                     }
                     editDlgLibrary.TrainModel(true);
                 });
-            PauseForScreenShot<EditPeakScoringModelDlg.ModelTab>("Edit Peak Scoring Model form with library score", 13);
+            RunUISaveScreenshot(editDlgLibrary, "EditPeakScoringModelFormWithLibraryScore");
 
             RunUI(() => editDlgLibrary.SelectedGraphTab = 3);
-            PauseForScreenShot<EditPeakScoringModelDlg.QvalueTab>("Edit Peak Scoring Model form q value graph with library score metafile", 14);
+            RunUISaveScreenshot(editDlgLibrary.ZedGraphQValues, "EditPeakScoringModelFormQValueGraphWithLibraryScore");
 
             OkDialog(editDlgLibrary, editDlgLibrary.OkDialog);
 
@@ -312,7 +341,7 @@ namespace pwiz.SkylineTestTutorial
                     // Check that these cells are still active even though they've been unchecked
                     Assert.IsTrue(editDlgNew.IsActiveCell(6, 0));
                 });
-            PauseForScreenShot<EditPeakScoringModelDlg.ModelTab>("Edit Peak Scoring Model form with second best", 15);
+            RunUISaveScreenshot(editDlgNew, "EditPeakScoringModelFormWithSecondBest");
 
             OkDialog(editDlgNew, editDlgNew.CancelDialog);
             OkDialog(editListLibrary, editListLibrary.OkDialog);
@@ -324,7 +353,7 @@ namespace pwiz.SkylineTestTutorial
                 reintegrateDlgNew.ReintegrateAll = true;
                 reintegrateDlgNew.OverwriteManual = true;
             });
-            PauseForScreenShot<ReintegrateDlg>("Reintegrate form", 16);
+            RunUISaveScreenshot(reintegrateDlgNew, "ReintegrateFormNew");
 
             OkDialog(reintegrateDlgNew, reintegrateDlgNew.OkDialog);
             RunUI(() =>
@@ -336,7 +365,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(18.0, chromGroupInfo.RetentionTime.Value, 0.1);
             });
             FindNode(peptideSeqHighlight);
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile corrected peak at 18.0", 17);
+            RunUISaveScreenshot(GetActiveGraphChromatogram(), "ChromatogramGraphCorrectedPeakAt18");
 
             // Reintegrate slightly differently, with a q value cutoff
             var reintegrateDlgQ = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
@@ -347,18 +376,19 @@ namespace pwiz.SkylineTestTutorial
                     reintegrateDlgQ.OverwriteManual = true;
                 });
             OkDialog(reintegrateDlgQ, reintegrateDlgQ.OkDialog);
-            PauseForScreenShot("Targets view with some null peaks clipped from main window", 17);
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile with no picked peak", 18);
+            WaitForGraphs();
+            RunUISaveScreenshot(SkylineWindow, "TargetsViewWithSomeNullPeaks");
+            RunUISaveScreenshot(GetActiveGraphChromatogram(), "ChromatogramGraphWithNoPickedPeak");
 
             RestoreViewOnScreen(14);
             FindNode((622.3086).ToString(CultureInfo.CurrentCulture) + "++");
-            PauseForScreenShot("Main window with interference on transition", 19);
+            RunUISaveScreenshot(SkylineWindow, "MainWindowWithInterferenceOnTransition");
 
             // Export the mProphet features
             var mProphetExportDlg = ShowDialog<MProphetFeaturesDlg>(SkylineWindow.ShowMProphetFeaturesDialog);
 
             RunUI(() => mProphetExportDlg.BestScoresOnly = true);
-            PauseForScreenShot<MProphetFeaturesDlg>("Export mProphet Features form", 20);
+            RunUISaveScreenshot(mProphetExportDlg, "ExportMProphetFeaturesForm");
             
             // TODO: actually write the features here using WriteFeatures
             OkDialog(mProphetExportDlg, mProphetExportDlg.CancelDialog);
@@ -370,14 +400,14 @@ namespace pwiz.SkylineTestTutorial
             var reportExportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
             var manageViewsForm = ShowDialog<ManageViewsForm>(reportExportDlg.EditList);
             RunUI(() => manageViewsForm.SelectView(reportName));
-            PauseForScreenShot<ManageViewsForm>("Edit Reports form", 21);
+            RunUISaveScreenshot(manageViewsForm, "ManageReportsForm");
 
             var customizeViewDlg = ShowDialog<ViewEditor>(manageViewsForm.EditView);
-            PauseForScreenShot<ViewEditor.ChooseColumnsView>("Edit Report form", 22);
+            RunUISaveScreenshot(customizeViewDlg, "EditReportForm");
 
             RunUI(() => customizeViewDlg.ChooseColumnsTab.AddColumn(PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value")
                 .Property(AnnotationDef.ANNOTATION_PREFIX + qvalueHeader)));
-            PauseForScreenShot<ViewEditor.ChooseColumnsView>("Edit Report form with selected columns", 23);
+            RunUISaveScreenshot(customizeViewDlg, "EditReportFormWithSelectedColumns");
 
             OkDialog(customizeViewDlg, customizeViewDlg.OkDialog);
             OkDialog(manageViewsForm, manageViewsForm.Close);
@@ -409,10 +439,10 @@ namespace pwiz.SkylineTestTutorial
 
             // Perform re-score of DIA data
             var manageResults = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
-            PauseForScreenShot<ManageResultsDlg>("Manage Results form", 25);
+            RunUISaveScreenshot(manageResults, "ManageResultsForm");
 
             var rescoreResultsDlg = ShowDialog<RescoreResultsDlg>(manageResults.Rescore);
-            PauseForScreenShot<RescoreResultsDlg>("Re-score Results form", 25);
+            RunUISaveScreenshot(rescoreResultsDlg, "ReScoreResultsForm");
 
             RunUI(() => rescoreResultsDlg.Rescore(false));
             WaitForCondition(10 * 60 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);    // 10 minutes (usually needs less, but code coverage analysis can be slow)
@@ -429,7 +459,7 @@ namespace pwiz.SkylineTestTutorial
                     reintegrateDlgDia.EditPeakScoringModel);
             RunUI(() => editListDia.SelectItem("test1"));
             var editDlgFromSrm = ShowDialog<EditPeakScoringModelDlg>(editListDia.EditItem);
-            PauseForScreenShot<EditPeakScoringModelDlg.ModelTab>("Edit Peak Scoring Model form SRM model applied to DIA data", 26);
+            RunUISaveScreenshot(editDlgFromSrm, "EditPeakScoringModelFormSrmModelAppliedToDiaData");
             RunUI(() =>
                 {
                     ValidateCoefficients(editDlgFromSrm, 0);
@@ -467,7 +497,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() => ValidateCoefficients(editDlgDia, 1));
 
-            PauseForScreenShot<EditPeakScoringModelDlg.ModelTab>("Edit Peak Scoring Model form DIA peak scoring dialog with second best", 27);
+            RunUISaveScreenshot(editDlgDia, "EditPeakScoringModelFormDiaPeakScoringDialogWithSecondBest");
             
             RunUI(() =>
                 {
@@ -510,6 +540,24 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(SkylineWindow.RTGraphController.GraphSummary.TryGetGraphPane(out pane));
                 Assert.AreEqual(expectedPoints, pane.StatisticsRefined.ListRetentionTimes.Count);
             });
+        }
+
+        private GraphChromatogram GetActiveGraphChromatogram()
+        {
+            GraphChromatogram result = null;
+            RunUI(() =>
+            {
+                var chromatogramSet =
+                    SkylineWindow.DocumentUI.MeasuredResults.Chromatograms[SkylineWindow.SelectedResultsIndex];
+                foreach (var graph in FormUtil.OpenForms.OfType<GraphChromatogram>())
+                {
+                    if (graph.NameSet == chromatogramSet.Name)
+                    {
+                        result = graph;
+                    }
+                }
+            });
+            return result;
         }
     }
 }
