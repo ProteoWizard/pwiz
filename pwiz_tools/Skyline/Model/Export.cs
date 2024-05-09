@@ -2496,9 +2496,16 @@ namespace pwiz.Skyline.Model
                 : 0.02.ToString(CultureInfo);
             rt = predictedRT.HasValue ? Math.Round(predictedRT.Value, 2).ToString(CultureInfo) : @"0";
 
-            dwellOrRt = AccumulationTime.HasValue
-                ? Math.Round(AccumulationTime.Value, 4).ToString(CultureInfo)
-                : Math.Round(DwellTime.GetValueOrDefault(), 2).ToString(CultureInfo);
+            if (MethodType == ExportMethodType.Standard)
+            {
+                dwellOrRt = AccumulationTime.HasValue
+                    ? Math.Round(AccumulationTime.Value, 4).ToString(CultureInfo)
+                    : Math.Round(DwellTime.GetValueOrDefault(), 2).ToString(CultureInfo);
+            }
+            else
+            {
+                dwellOrRt = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo);
+            }
         }
 
         private void GetValuesFromResults(TransitionDocNode nodeTran, double? predictedRT, out float? averagePeakArea,
