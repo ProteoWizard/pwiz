@@ -1564,6 +1564,60 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Charges.
+        /// </summary>
+        public static string HardklorSettings_Charges {
+            get {
+                return ResourceManager.GetString("HardklorSettings_Charges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Instrument.
+        /// </summary>
+        public static string HardklorSettings_Instrument {
+            get {
+                return ResourceManager.GetString("HardklorSettings_Instrument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min idotp.
+        /// </summary>
+        public static string HardklorSettings_MinIdotP {
+            get {
+                return ResourceManager.GetString("HardklorSettings_MinIdotP", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min intensity PPM.
+        /// </summary>
+        public static string HardklorSettings_MinIntensityPPM {
+            get {
+                return ResourceManager.GetString("HardklorSettings_MinIntensityPPM", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resolution.
+        /// </summary>
+        public static string HardklorSettings_Resolution {
+            get {
+                return ResourceManager.GetString("HardklorSettings_Resolution", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Signal to noise.
+        /// </summary>
+        public static string HardklorSettings_SignalToNoise {
+            get {
+                return ResourceManager.GetString("HardklorSettings_SignalToNoise", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Operation.
         /// </summary>
         public static string IFilterOperation_DisplayName {
@@ -1758,6 +1812,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ImportPeptideSearchSettings_FullScanSettings {
             get {
                 return ResourceManager.GetString("ImportPeptideSearchSettings_FullScanSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hardklor Search Settings.
+        /// </summary>
+        public static string ImportPeptideSearchSettings_HardklorSearchSettings {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchSettings_HardklorSearchSettings", resourceCulture);
             }
         }
         

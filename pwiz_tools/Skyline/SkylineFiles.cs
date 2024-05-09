@@ -3351,21 +3351,29 @@ namespace pwiz.Skyline
             ShowEncyclopeDiaSearchDlg();
         }
 
+        private void importFeatureDetectionMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow.feature_detection);
+        }
+
         public void ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow? workflowType)
         {
-            if (!CheckDocumentExists(SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
+            if (!CheckDocumentExists(workflowType is ImportPeptideSearchDlg.Workflow.feature_detection ?
+                    SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_performing_feature_detection_ :
+                    SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
             {
                 return;
             }
             else if (!Document.IsLoaded)
             {
-                MessageDlg.Show(this, SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_);
+                MessageDlg.Show(this,
+                    workflowType is ImportPeptideSearchDlg.Workflow.feature_detection ?
+                        SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_performing_feature_detection_ :
+                        SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_);
                 return;
             }
 
-            using (var dlg = !workflowType.HasValue
-                   ? new ImportPeptideSearchDlg(this, _libraryManager)
-                   : new ImportPeptideSearchDlg(this, _libraryManager, workflowType.Value))
+            using (var dlg = new ImportPeptideSearchDlg(this, _libraryManager, workflowType))
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
@@ -3399,6 +3407,11 @@ namespace pwiz.Skyline
                     // Nothing to do; the dialog does all the work.
                 }
             }
+        }
+
+        public void ShowFeatureDetectionDlg()
+        {
+            ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow.feature_detection);
         }
 
         private bool CheckDocumentExists(String errorMsg)

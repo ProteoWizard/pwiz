@@ -37,7 +37,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class EncyclopeDiaSearchTest : AbstractFunctionalTestEx
     {
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestEncyclopeDiaSearch()
         {
             TestFilesZip = @"Test\EncyclopeDiaHelpersTest.zip";
@@ -51,7 +51,7 @@ namespace pwiz.SkylineTestFunctional
         {
             if (!HasKoinaServer())
             {
-                Console.Error.WriteLine("NOTE: skipping EncyclopeDIA test because Koina is not configured (replace KoinaConfig.xml in Skyline\\Model\\Koina\\Config)");
+                Console.Error.WriteLine("NOTE: skipping EncyclopeDIA test because Koina is not configured (replace KoinaConfig.xml in Skyline\\Model\\Koina\\Config - see https://skyline.ms/wiki/home/development/page.view?name=Prosit)");
                 return;
             }
 

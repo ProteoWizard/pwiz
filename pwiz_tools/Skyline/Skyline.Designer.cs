@@ -241,6 +241,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator51 = new System.Windows.Forms.ToolStripSeparator();
             this.importPeptideSearchMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.encyclopeDiaSearchMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importFeatureDetectionMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator52 = new System.Windows.Forms.ToolStripSeparator();
             this.importFASTAMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importAssayLibraryMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1811,6 +1812,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator51,
             this.importPeptideSearchMenuItem,
             this.encyclopeDiaSearchMenuItem,
+            this.importFeatureDetectionMenuItem,
             this.toolStripSeparator52,
             this.importFASTAMenuItem,
             this.importAssayLibraryMenuItem,
@@ -1836,7 +1838,6 @@ namespace pwiz.Skyline
             // 
             this.toolStripSeparator51.Name = "toolStripSeparator51";
             resources.ApplyResources(this.toolStripSeparator51, "toolStripSeparator51");
-            this.modeUIHandler.SetUIMode(this.toolStripSeparator51, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // importPeptideSearchMenuItem
             // 
@@ -1849,7 +1850,14 @@ namespace pwiz.Skyline
             // 
             this.encyclopeDiaSearchMenuItem.Name = "encyclopeDiaSearchMenuItem";
             resources.ApplyResources(this.encyclopeDiaSearchMenuItem, "encyclopeDiaSearchMenuItem");
+            this.modeUIHandler.SetUIMode(this.encyclopeDiaSearchMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.encyclopeDiaSearchMenuItem.Click += new System.EventHandler(this.encyclopeDiaSearchMenuItem_Click);
+            // 
+            // importFeatureDetectionMenuItem
+            // 
+            this.importFeatureDetectionMenuItem.Name = "importFeatureDetectionMenuItem";
+            resources.ApplyResources(this.importFeatureDetectionMenuItem, "importFeatureDetectionMenuItem");
+            this.importFeatureDetectionMenuItem.Click += new System.EventHandler(this.importFeatureDetectionMenuItem_Click);
             // 
             // toolStripSeparator52
             // 
@@ -2954,6 +2962,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem crashSkylineMenuItem;
         private System.Windows.Forms.ToolStripMenuItem encyclopeDiaSearchMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openPanoramaMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem importFeatureDetectionMenuItem;
     }
 }
 
