@@ -1408,7 +1408,7 @@ namespace pwiz.Skyline
 
 
         public static readonly Argument ARG_AP_FASTA = new Argument(@"associate-proteins-fasta", PATH_TO_FILE,
-            (c, p) => c.AssociateProteinsFasta = p.Value);
+            (c, p) => c.AssociateProteinsFasta = p.ValueFullPath);
         public static readonly Argument ARG_AP_GROUP_PROTEINS = new Argument(@"associate-proteins-group-proteins",
             (c, p) => c.AssociateProteinsGroupProteins = p.IsNameOnly || bool.Parse(p.Value));
         public static readonly Argument ARG_AP_GENE_LEVEL = new Argument(@"associate-proteins-gene-level-parsimony",
