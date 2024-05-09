@@ -342,7 +342,7 @@ namespace pwiz.Skyline.Controls
                         var cb = new IonSelectorButton(loss)
                         {
                             Text = string.Format(CultureInfo.CurrentCulture, @"-{0:F0}", loss.AverageMass),
-                            Checked = lossButtonStates.Contains(loss.FormulaNoNull)
+                            Checked = lossButtonStates.Contains(loss.PersistentName)
                         };
                         cb.CheckedChanged += LossButton_CheckedChanged;
                         cb.MouseHover += LossButton_MouseHover;
@@ -413,7 +413,7 @@ namespace pwiz.Skyline.Controls
             {
                 //get the list of formulas for the selected losses
                 var losses = Controls.OfType<CheckBox>().ToList().FindAll(cbox => cbox.Tag is FragmentLoss && cbox.Checked)
-                    .Select(cbox => ((FragmentLoss) cbox.Tag).Formula).ToArray();
+                    .Select(cbox => ((FragmentLoss) cbox.Tag).PersistentName).ToArray();
 
                 SetAllLossesButtonState();
                 LossChanged?.Invoke(losses);
@@ -426,7 +426,7 @@ namespace pwiz.Skyline.Controls
             {
                 if(cb.Tag is FragmentLoss loss)
                     _panelToolTip.Show(
-                        string.Format(ControlsResources.IonTypeSelector_LossesTooltip, loss.FormulaNoNull), cb);
+                        string.Format(ControlsResources.IonTypeSelector_LossesTooltip, loss.PersistentName), cb);
                 else if (ReferenceEquals(sender, _allLossesButton))
                 {
                     var msg = _allLossesButton.Checked ? ControlsResources.IonTypeSelector_DeselectAllLossesTooltip
@@ -453,7 +453,7 @@ namespace pwiz.Skyline.Controls
                 checkBox.Checked = state;
                 checkBox.CheckedChanged += LossButton_CheckedChanged;
                 if (state)
-                    res.Add((checkBox.Tag as FragmentLoss)?.FormulaNoNull);
+                    res.Add((checkBox.Tag as FragmentLoss)?.PersistentName);
             }
             return res.ToArray();
         }
