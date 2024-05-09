@@ -1043,4 +1043,7 @@ Useful in sample mixtures including multiple species.</value>
   <data name="ValueInvalidBoolException_ValueInvalidBoolException_The_value___0___is_not_valid_for_the_argument___1____it_must_be__2_" xml:space="preserve">
     <value>The value '{0}' is not valid for the argument '{1}': it must be {2}</value>
   </data>
+  <data name="_associate_proteins_fasta" xml:space="preserve">
+    <value>Associate peptides in the document with proteins from the given FASTA. If this argument is not provided but other --associate-proteins options are, then the FASTA from --import-fasta will be used. If --import-fasta is not provided either, then the last FASTA used for protein association will be used.</value>
+  </data>
 </root>

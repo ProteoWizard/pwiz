@@ -1407,6 +1407,8 @@ namespace pwiz.Skyline
         }
 
 
+        public static readonly Argument ARG_AP_FASTA = new Argument(@"associate-proteins-fasta", PATH_TO_FILE,
+            (c, p) => c.AssociateProteinsFasta = p.Value);
         public static readonly Argument ARG_AP_GROUP_PROTEINS = new Argument(@"associate-proteins-group-proteins",
             (c, p) => c.AssociateProteinsGroupProteins = p.IsNameOnly || bool.Parse(p.Value));
         public static readonly Argument ARG_AP_GENE_LEVEL = new Argument(@"associate-proteins-gene-level-parsimony",
@@ -1418,19 +1420,21 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_AP_REMOVE_SUBSETS = new Argument(@"associate-proteins-remove-subsets",
             (c, p) => c.AssociateProteinsRemoveSubsetProteins = p.IsNameOnly || bool.Parse(p.Value));
         public static readonly Argument ARG_AP_MIN_PEPTIDES = new Argument(@"associate-proteins-min-peptides", INT_VALUE,
-            (c, p) => c.AssociateProteinsMinPeptidesPerProtein = p.ValueInt) { WrapValue = true };
+            (c, p) => c.AssociateProteinsMinPeptidesPerProtein = p.GetValueInt(1, 10000)) { WrapValue = true };
 
         private static readonly ArgumentGroup GROUP_ASSOCIATE_PROTEINS = new ArgumentGroup(() => Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins, false,
-            ARG_AP_GROUP_PROTEINS, ARG_AP_GENE_LEVEL, ARG_AP_SHARED_PEPTIDES, ARG_AP_MINIMAL_LIST, ARG_AP_MIN_PEPTIDES, ARG_AP_REMOVE_SUBSETS)
+                ARG_AP_FASTA, ARG_AP_GROUP_PROTEINS, ARG_AP_GENE_LEVEL, ARG_AP_SHARED_PEPTIDES, ARG_AP_MINIMAL_LIST, ARG_AP_MIN_PEPTIDES, ARG_AP_REMOVE_SUBSETS)
             { LeftColumnWidth = 45 };
 
+        public string AssociateProteinsFasta { get; private set; }
         public bool? AssociateProteinsGroupProteins { get; private set; }
         public bool? AssociateProteinsGeneLevelParsimony { get; private set; }
         public bool? AssociateProteinsFindMinimalProteinList { get; private set; }
         public bool? AssociateProteinsRemoveSubsetProteins { get; private set; }
         public SharedPeptides? AssociateProteinsSharedPeptides { get; private set; }
         public int? AssociateProteinsMinPeptidesPerProtein { get; private set; }
-        public bool AssociatingProteins => AssociateProteinsFindMinimalProteinList.HasValue ||
+        public bool AssociatingProteins => !AssociateProteinsFasta.IsNullOrEmpty() ||
+                                           AssociateProteinsFindMinimalProteinList.HasValue ||
                                            AssociateProteinsGroupProteins.HasValue ||
                                            AssociateProteinsGeneLevelParsimony.HasValue ||
                                            AssociateProteinsMinPeptidesPerProtein.HasValue ||
