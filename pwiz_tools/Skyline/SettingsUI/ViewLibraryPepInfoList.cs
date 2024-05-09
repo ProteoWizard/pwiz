@@ -444,5 +444,13 @@ namespace pwiz.Skyline.SettingsUI
             }
             return result;
         }
+
+        public class ViewLibraryPepInfoNaturalComparer : IComparer<ViewLibraryPepInfo>
+        {
+            public int Compare(ViewLibraryPepInfo x, ViewLibraryPepInfo y)
+            {
+                return ComparePepInfosNatural(x, y);
+            }
+        }
     }
 }

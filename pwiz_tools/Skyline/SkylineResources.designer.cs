@@ -3015,12 +3015,32 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The document must be fully loaded before performing feature detection..
+        /// </summary>
+        public static string SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_performing_feature_detection_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before" +
+                        "_performing_feature_detection_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You must save this document before importing a peptide search..
         /// </summary>
         public static string SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_ {
             get {
                 return ResourceManager.GetString("SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_impor" +
                         "ting_a_peptide_search_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You must save this document before performing feature detection..
+        /// </summary>
+        public static string SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_performing_feature_detection_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_perfo" +
+                        "rming_feature_detection_", resourceCulture);
             }
         }
         
@@ -3041,6 +3061,16 @@ namespace pwiz.Skyline {
             get {
                 return ResourceManager.GetString("SkylineWindow_ShowMProphetFeaturesDialog_The_document_must_have_imported_results_" +
                         "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is not a valid file name for uploading to Panorama..
+        /// </summary>
+        public static string SkylineWindow_ShowPublishDlg__0__is_not_a_valid_file_name_for_uploading_to_Panorama_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg__0__is_not_a_valid_file_name_for_uploading_to_Panora" +
+                        "ma_", resourceCulture);
             }
         }
         
@@ -3073,21 +3103,21 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Press &apos;Edit existing&apos; to add user account information for an existing server..
+        /// </summary>
+        public static string SkylineWindow_ShowPublishDlg_Press__Edit_existing__to_add_user_account_information_for_an_existing_server_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_Press__Edit_existing__to_add_user_account_informatio" +
+                        "n_for_an_existing_server_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Press Continue to use the server of your choice..
         /// </summary>
         public static string SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_ {
             get {
                 return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Press Edit existing to add user account information for an existing server..
-        /// </summary>
-        public static string SkylineWindow_ShowPublishDlg_Press_Edit_existing_to_add_user_account_information_for_an_existing_server_ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_Press_Edit_existing_to_add_user_account_information_" +
-                        "for_an_existing_server_", resourceCulture);
             }
         }
         

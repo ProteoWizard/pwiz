@@ -28,7 +28,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class InteractiveCommandLineToolTest : AbstractFunctionalTest
     {
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.ZIP_INSIDE_ZIP)]
         public void TestInteractiveCommandLineTool()
         {
             TestFilesZip = @"TestFunctional\InteractiveCommandLineToolTest.zip";

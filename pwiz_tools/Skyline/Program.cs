@@ -141,6 +141,8 @@ namespace pwiz.Skyline
                 return 1;
             }
 
+            CommonApplicationSettings.ProgramName = Name;
+            CommonApplicationSettings.ProgramNameAndVersion = Install.ProgramNameAndVersion;
             SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections
 
             // For testing and debugging Skyline command-line interface

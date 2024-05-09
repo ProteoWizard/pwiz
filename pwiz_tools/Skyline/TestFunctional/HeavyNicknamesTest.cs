@@ -89,7 +89,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             OkDialog(colDlg, colDlg.OkDialog);
-            DismissAutoManageDialog(docCurrent, true);
+            DismissAutoManageDialog(); // When asked about automanage, decline it
 
             PeptideGroupDocNode myMoleculeGroup = null;
             WaitForConditionUI(() =>

@@ -834,7 +834,7 @@ namespace pwiz.Skyline
                 // Only align to regressions that are auto-calculated.  Otherwise,
                 // conversion will be the same for all replicates, making this just
                 // a linear unit conversion
-                var predictRT = DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime;
+                var predictRT = Document.Settings.PeptideSettings.Prediction.RetentionTime;
                 if (predictRT != null && predictRT.IsAutoCalculated)
                 {
                     return new GraphValues.RegressionUnconversion(predictRT);
@@ -1191,8 +1191,8 @@ namespace pwiz.Skyline
             // Need to test small mol
             if (isProteomic && control?.ControlType == SpectrumControlType.LibraryMatch)
             {
-                prositLibMatchItem.Checked = Settings.Default.Prosit;
-                menuStrip.Items.Insert(iInsert++, prositLibMatchItem);
+                koinaLibMatchItem.Checked = Settings.Default.Koina;
+                menuStrip.Items.Insert(iInsert++, koinaLibMatchItem);
                 mirrorMenuItem.Checked = Settings.Default.LibMatchMirror;
                 menuStrip.Items.Insert(iInsert++, mirrorMenuItem);
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator61);

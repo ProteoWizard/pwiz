@@ -150,6 +150,8 @@ namespace pwiz.SkylineTestUtil
         public const string MSGFPLUS_UNICODE_ISSUES = "MsgfPlus doesn't handle unicode paths";
         public const string MSFRAGGER_UNICODE_ISSUES = "MsFragger doesn't handle unicode paths";
         public const string JAVA_UNICODE_ISSUES = "Running Java processes with wild unicode temp paths is problematic";
+        public const string HARDKLOR_UNICODE_ISSUES = "Hardklor doesn't handle unicode paths";
+        public const string ZIP_INSIDE_ZIP = "ZIP inside ZIP does not seem to work on MACS2";
     }
 
     /// <summary>
@@ -984,16 +986,20 @@ namespace pwiz.SkylineTestUtil
         public static SrmDocument WaitForDocumentLoaded(int millis = WAIT_TIME)
         {
             WaitForConditionUI(millis, () =>
-            {
-                var alertDlg = FindOpenForm<CommonAlertDlg>();
-                if (alertDlg != null)
                 {
-                    AssertEx.Fail("Unexpected alert found: {0}{1}Open forms: {2}",
-                        TextUtil.LineSeparate(alertDlg.Message, alertDlg.DetailMessage),
-                        new string('\n', 3), GetOpenFormsString());
-                }
-                return SkylineWindow.DocumentUI.IsLoaded;
-            });
+                    var alertDlg = FindOpenForm<CommonAlertDlg>();
+                    if (alertDlg != null)
+                    {
+                        AssertEx.Fail("Unexpected alert found: {0}{1}Open forms: {2}",
+                            TextUtil.LineSeparate(alertDlg.Message, alertDlg.DetailMessage),
+                            new string('\n', 3), GetOpenFormsString());
+                    }
+
+                    return SkylineWindow.DocumentUI.IsLoaded;
+                },
+                () => TextUtil.LineSeparate(
+                    $"Expecting loaded document but still not loaded after {millis / 1000} seconds",
+                    TextUtil.LineSeparate(SkylineWindow.DocumentUI.NonLoadedStateDescriptionsFull)));
             WaitForProteinMetadataBackgroundLoaderCompletedUI(millis);  // make sure document is stable
             return SkylineWindow.Document;
         }
@@ -1489,16 +1495,7 @@ namespace pwiz.SkylineTestUtil
             Program.TestExceptions = new List<Exception>();
             LocalizationHelper.InitThread();
 
-            // Unzip test files.
-            if (TestFilesZipPaths != null)
-            {
-                TestFilesDirs = new TestFilesDir[TestFilesZipPaths.Length];
-                for (int i = 0; i < TestFilesZipPaths.Length; i++)
-                {
-                    TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName,
-                        TestFilesPersistent, IsExtractHere(i));
-                }
-            }
+            UnzipTestFiles();
 
             _shotManager = new ScreenshotManager(TestContext, SkylineWindow);
 
@@ -2158,8 +2155,7 @@ namespace pwiz.SkylineTestUtil
         public static SrmDocument WaitForProteinMetadataBackgroundLoaderCompletedUI(int millis = WAIT_TIME)
         {
             // In a functional test we expect the protein metadata search to at least pretend to have gone to the web
-            WaitForCondition(millis, () => ProteinMetadataManager.IsLoadedDocument(SkylineWindow.Document)); // Make sure doc is stable
-            WaitForConditionUI(millis, () => ProteinMetadataManager.IsLoadedDocument(SkylineWindow.DocumentUI)); // Then make sure UI ref is current
+            WaitForConditionUI(millis, () => ProteinMetadataManager.IsLoadedDocument(SkylineWindow.DocumentUI));
             return SkylineWindow.Document;
         }
 
@@ -2180,20 +2176,6 @@ namespace pwiz.SkylineTestUtil
             ImportAssayLibraryOrTransitionList(csvPath, true, errorList, proceedWithErrors);
         }
 
-        // Determine whether a message was created using the given string format
-        public static bool IsFormattedMessage(string format, string actual)
-        {
-            void Simplify(ref string str)
-            {
-                str = str.Replace("\r\n", string.Empty).Replace("\"", string.Empty).Replace(@".", @"_").Replace(@"?", @"_");
-            }
-
-            Simplify(ref format);
-            var regex = Regex.Replace(format, @"\{\d+\}",  match => @".*", RegexOptions.Multiline);
-            Simplify(ref actual);
-            return Regex.IsMatch(actual, regex);
-        }
-
         // Importing a small molecule transition list typically provokes a dialog asking whether or not to automatically manage the resulting transitions
         // The majority of our tests were written before this was an option, so we dismiss the dialog by default and the new nodes are automanage OFF
         public static void PasteSmallMoleculeListNoAutoManage()
@@ -2204,32 +2186,17 @@ namespace pwiz.SkylineTestUtil
 
         // Importing a small molecule transition list typically provokes a dialog asking whether or not to automatically manage the resulting transitions
         // The majority of our tests were written before this was an option, so we dismiss the dialog by default and the new nodes are automanage OFF
-        public static void DismissAutoManageDialog(SrmDocument docCurrent, bool? expectAutoManage = null)
+        public static void DismissAutoManageDialog()
         {
-            MultiButtonMsgDlg wantAutoManageDlg;
-            if (expectAutoManage ?? false)
-            {
-                wantAutoManageDlg = WaitForOpenForm<MultiButtonMsgDlg>();
-            }
-            else
-            {
-                wantAutoManageDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(5000,
-                    () => !ReferenceEquals(docCurrent, SkylineWindow.Document) ||
-                          FindOpenForm<ChooseIrtStandardPeptidesDlg>() != null);  // May also provoke iRT dialog, don't interfere with that
-
-            }
-            if (wantAutoManageDlg != null)
-            {
-                // Make sure we haven't intercepted some other dialog
-                if (IsFormattedMessage(Resources.SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions, 
-                        wantAutoManageDlg.Message))
-                {
-                    OkDialog(wantAutoManageDlg, wantAutoManageDlg.ClickNo); // Just use the transitions as given in the list
-                }
-            }
+            var autoManageDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+            // Make sure it has the right message
+            AssertEx.AreComparableStrings(Resources
+                    .SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions,
+                autoManageDlg.Message, 4);
+            OkDialog(autoManageDlg, autoManageDlg.ClickNo); // Just use the transitions as given in the list
         }
 
-        private static void ImportAssayLibraryOrTransitionList(string csvPath, bool isAssayLibrary, ICollection<string> errorList, bool proceedWithErrors = true)
+        private static void ImportAssayLibraryOrTransitionList(string csvPath, bool isAssayLibrary, ICollection<string> errorList, bool proceedWithErrors = true, bool expectAutoManageDialog = false)
         {
             var columnSelectDlg = isAssayLibrary ?
                 ShowDialog<ImportTransitionListColumnSelectDlg>(() =>  SkylineWindow.ImportAssayLibrary(csvPath)) :
@@ -2242,8 +2209,11 @@ namespace pwiz.SkylineTestUtil
             {
                 OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
 
-                // If we're asked about automanage, decline
-                DismissAutoManageDialog(currentDoc);
+                // When asked about automanage, decline
+                if (expectAutoManageDialog)
+                {
+                    DismissAutoManageDialog();
+                }
             }
             else
             {
@@ -2274,8 +2244,11 @@ namespace pwiz.SkylineTestUtil
                 {
                     OkDialog(errDlg, errDlg.AcceptButton.PerformClick);
                     WaitForClosedForm(columnSelectDlg);
-                    // If we're asked about automanage, decline
-                    DismissAutoManageDialog(currentDoc);
+                    // When asked about automanage, decline
+                    if (expectAutoManageDialog)
+                    {
+                        DismissAutoManageDialog();
+                    }
                 }
                 else
                 {
@@ -2296,22 +2269,22 @@ namespace pwiz.SkylineTestUtil
             AssertEx.IsTrue(!items.Any(forbidden.Contains));
         }
 
-        public static void ImportTransitionListSkipColumnSelect(string csvPath, ICollection<string> errorList = null, bool proceedWithErrors = true)
+        public static void ImportTransitionListSkipColumnSelect(string csvPath, ICollection<string> errorList = null, bool proceedWithErrors = true, bool expectAutoManageDialog = false)
         {
-            ImportAssayLibraryOrTransitionList(csvPath, false, errorList, proceedWithErrors);
+            ImportAssayLibraryOrTransitionList(csvPath, false, errorList, proceedWithErrors, expectAutoManageDialog);
         }
 
-        public static void PasteTransitionListSkipColumnSelect(bool expectColumnSelectDialog = true)
+        public static void PasteTransitionListSkipColumnSelect(bool expectColumnSelectDialog = true, bool expectAutoManageDialog = false)
         {
-            PasteTransitionListSkipColumnSelect(SkylineWindow.Paste, expectColumnSelectDialog);
+            PasteTransitionListSkipColumnSelect(SkylineWindow.Paste, expectColumnSelectDialog, expectAutoManageDialog);
         }
 
-        public static void PasteTransitionListSkipColumnSelect(string text, bool expectColumnSelectDialog = true)
+        public static void PasteTransitionListSkipColumnSelect(string text, bool expectColumnSelectDialog = true, bool expectAutoManageDialog = false)
         {
-            PasteTransitionListSkipColumnSelect(() => SkylineWindow.Paste(text), expectColumnSelectDialog);
+            PasteTransitionListSkipColumnSelect(() => SkylineWindow.Paste(text), expectColumnSelectDialog, expectAutoManageDialog);
         }
 
-        private static void PasteTransitionListSkipColumnSelect(Action pasteAction, bool expectColumnSelectDialog)
+        private static void PasteTransitionListSkipColumnSelect(Action pasteAction, bool expectColumnSelectDialog, bool expectAutoManageDialog = false)
         {
             if (expectColumnSelectDialog)
             {
@@ -2323,6 +2296,11 @@ namespace pwiz.SkylineTestUtil
             else
             {
                 RunUI(pasteAction);
+            }
+            // When asked about automanage, decline
+            if (expectAutoManageDialog)
+            {
+                DismissAutoManageDialog();
             }
         }
 
@@ -2462,8 +2440,11 @@ namespace pwiz.SkylineTestUtil
             if (expectedErrorMessage != null)
             {
                 var dlg = WaitForOpenForm<MessageDlg>();
-                Assert.IsTrue(dlg.DetailMessage.Contains(expectedErrorMessage));
-                dlg.CancelButton.PerformClick();
+                OkDialog(dlg, () =>
+                {
+                    StringAssert.Contains(dlg.Message, expectedErrorMessage);
+                    dlg.CancelButton.PerformClick();
+                });
             }
             else
             {
