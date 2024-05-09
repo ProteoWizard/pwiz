@@ -39,7 +39,7 @@ using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.ChromLib;
 using pwiz.Skyline.Model.Lib.Midas;
-using pwiz.Skyline.Model.Prosit;
+using pwiz.Skyline.Model.Koina;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
@@ -2658,13 +2658,13 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    public class SpectrumInfoProsit : SpectrumInfo
+    public class SpectrumInfoKoina : SpectrumInfo
     {
-        public static readonly string NAME = @"Prosit";
+        public static readonly string NAME = @"Koina";
 
         private SpectrumPeaksInfo _peaksInfo;
 
-        public SpectrumInfoProsit(PrositMS2Spectra ms2Spectrum, TransitionGroupDocNode precursor, IsotopeLabelType labelType, int nce)
+        public SpectrumInfoKoina(KoinaMS2Spectra ms2Spectrum, TransitionGroupDocNode precursor, IsotopeLabelType labelType, int nce)
             : base(labelType, true)
         {
             _peaksInfo = ms2Spectrum?.GetSpectrum(precursor).SpectrumPeaks;

@@ -36,6 +36,8 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil.Schemas;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Lib;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -1006,6 +1008,48 @@ namespace pwiz.SkylineTestUtil
             string file1 = File.ReadAllText(pathExpectedFile);
             string file2 = File.ReadAllText(pathActualFile);
             NoDiff(file1, file2, null, columnTolerances, ignorePathDifferences);
+        }
+
+        public static void LibraryEquals(LibrarySpec libraryExpected, LibrarySpec libraryActual, double mzTolerance = 1e-8, double intensityTolerance = 1e-5)
+        {
+            Library expectedLoaded = null, actualLoaded = null;
+            try
+            {
+                FileExists(libraryExpected.FilePath);
+                FileExists(libraryActual.FilePath);
+
+                var monitor = new DefaultFileLoadMonitor(new SilentProgressMonitor());
+                expectedLoaded = libraryExpected.LoadLibrary(monitor);
+                actualLoaded = libraryActual.LoadLibrary(monitor);
+                
+                Assert.AreEqual(expectedLoaded.SpectrumCount, actualLoaded.SpectrumCount, "spectrum counts not equal");
+
+                var expectedList = expectedLoaded.Keys.ToList();
+                var actualList = actualLoaded.Keys.ToList();
+
+                for (int i=0; i < expectedList.Count; ++i)
+                {
+                    var expected = expectedList[i];
+                    var actual = actualList[i];
+                    Assert.AreEqual(expected, actual, "spectrum library keys not equal");
+
+                    var expectedSpectra = expectedLoaded.GetSpectra(expected, IsotopeLabelType.light, LibraryRedundancy.best);
+                    var expectedSpectrum = expectedSpectra.First().SpectrumPeaksInfo.Peaks;
+                    var actualSpectra = actualLoaded.GetSpectra(actual, IsotopeLabelType.light, LibraryRedundancy.best);
+                    var actualSpectrum = actualSpectra.First().SpectrumPeaksInfo.Peaks;
+                    Assert.AreEqual(expectedSpectrum.Length, actualSpectrum.Length, "peak counts not equal");
+                    for (int j = 0; j < expectedSpectrum.Length; ++j)
+                    {
+                        Assert.AreEqual(expectedSpectrum[j].Mz, actualSpectrum[j].Mz, mzTolerance, "peak m/z delta exceeded tolerance");
+                        Assert.AreEqual(expectedSpectrum[j].Intensity, actualSpectrum[j].Intensity, intensityTolerance, "peak intensity delta exceeded tolerance");
+                    }
+                }
+            }
+            finally
+            {
+                expectedLoaded?.ReadStream.CloseStream();
+                actualLoaded?.ReadStream.CloseStream();
+            }
         }
 
         /// <summary>

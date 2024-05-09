@@ -38,7 +38,7 @@
             this.textPath = new System.Windows.Forms.TextBox();
             this.iRTPeptidesLabel = new System.Windows.Forms.Label();
             this.panelProperties = new System.Windows.Forms.Panel();
-            this.panelFilesPrositProperties = new System.Windows.Forms.Panel();
+            this.panelFilesKoinaProperties = new System.Windows.Forms.Panel();
             this.ceLabel = new System.Windows.Forms.Label();
             this.ceCombo = new System.Windows.Forms.ComboBox();
             this.panelFilesProps = new System.Windows.Forms.Panel();
@@ -49,8 +49,8 @@
             this.cbFilter = new System.Windows.Forms.CheckBox();
             this.comboStandards = new System.Windows.Forms.ComboBox();
             this.dataSourceGroupBox = new System.Windows.Forms.GroupBox();
-            this.prositInfoSettingsBtn = new System.Windows.Forms.LinkLabel();
-            this.prositDataSourceRadioButton = new System.Windows.Forms.RadioButton();
+            this.koinaInfoSettingsBtn = new System.Windows.Forms.LinkLabel();
+            this.koinaDataSourceRadioButton = new System.Windows.Forms.RadioButton();
             this.dataSourceFilesRadioButton = new System.Windows.Forms.RadioButton();
             this.btnBrowse = new System.Windows.Forms.Button();
             this.panelFiles = new System.Windows.Forms.Panel();
@@ -62,7 +62,7 @@
             this.btnPrevious = new System.Windows.Forms.Button();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.panelProperties.SuspendLayout();
-            this.panelFilesPrositProperties.SuspendLayout();
+            this.panelFilesKoinaProperties.SuspendLayout();
             this.panelFilesProps.SuspendLayout();
             this.dataSourceGroupBox.SuspendLayout();
             this.panelFiles.SuspendLayout();
@@ -115,7 +115,7 @@
             // panelProperties
             // 
             resources.ApplyResources(this.panelProperties, "panelProperties");
-            this.panelProperties.Controls.Add(this.panelFilesPrositProperties);
+            this.panelProperties.Controls.Add(this.panelFilesKoinaProperties);
             this.panelProperties.Controls.Add(this.dataSourceGroupBox);
             this.panelProperties.Controls.Add(this.btnBrowse);
             this.panelProperties.Controls.Add(this.label2);
@@ -124,15 +124,15 @@
             this.panelProperties.Controls.Add(this.label4);
             this.panelProperties.Name = "panelProperties";
             // 
-            // panelFilesPrositProperties
+            // panelFilesKoinaProperties
             // 
-            this.panelFilesPrositProperties.Controls.Add(this.ceLabel);
-            this.panelFilesPrositProperties.Controls.Add(this.ceCombo);
-            this.panelFilesPrositProperties.Controls.Add(this.panelFilesProps);
-            this.panelFilesPrositProperties.Controls.Add(this.comboStandards);
-            this.panelFilesPrositProperties.Controls.Add(this.iRTPeptidesLabel);
-            resources.ApplyResources(this.panelFilesPrositProperties, "panelFilesPrositProperties");
-            this.panelFilesPrositProperties.Name = "panelFilesPrositProperties";
+            this.panelFilesKoinaProperties.Controls.Add(this.ceLabel);
+            this.panelFilesKoinaProperties.Controls.Add(this.ceCombo);
+            this.panelFilesKoinaProperties.Controls.Add(this.panelFilesProps);
+            this.panelFilesKoinaProperties.Controls.Add(this.comboStandards);
+            this.panelFilesKoinaProperties.Controls.Add(this.iRTPeptidesLabel);
+            resources.ApplyResources(this.panelFilesKoinaProperties, "panelFilesKoinaProperties");
+            this.panelFilesKoinaProperties.Name = "panelFilesKoinaProperties";
             // 
             // ceLabel
             // 
@@ -201,26 +201,26 @@
             // 
             // dataSourceGroupBox
             // 
-            this.dataSourceGroupBox.Controls.Add(this.prositInfoSettingsBtn);
-            this.dataSourceGroupBox.Controls.Add(this.prositDataSourceRadioButton);
+            this.dataSourceGroupBox.Controls.Add(this.koinaInfoSettingsBtn);
+            this.dataSourceGroupBox.Controls.Add(this.koinaDataSourceRadioButton);
             this.dataSourceGroupBox.Controls.Add(this.dataSourceFilesRadioButton);
             resources.ApplyResources(this.dataSourceGroupBox, "dataSourceGroupBox");
             this.dataSourceGroupBox.Name = "dataSourceGroupBox";
             this.dataSourceGroupBox.TabStop = false;
             this.modeUIHandler.SetUIMode(this.dataSourceGroupBox, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
-            // prositInfoSettingsBtn
+            // koinaInfoSettingsBtn
             // 
-            resources.ApplyResources(this.prositInfoSettingsBtn, "prositInfoSettingsBtn");
-            this.prositInfoSettingsBtn.Name = "prositInfoSettingsBtn";
-            this.prositInfoSettingsBtn.TabStop = true;
-            this.prositInfoSettingsBtn.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.prositInfoSettingsBtn_LinkClicked);
+            resources.ApplyResources(this.koinaInfoSettingsBtn, "koinaInfoSettingsBtn");
+            this.koinaInfoSettingsBtn.Name = "koinaInfoSettingsBtn";
+            this.koinaInfoSettingsBtn.TabStop = true;
+            this.koinaInfoSettingsBtn.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.koinaInfoSettingsBtn_LinkClicked);
             // 
-            // prositDataSourceRadioButton
+            // koinaDataSourceRadioButton
             // 
-            resources.ApplyResources(this.prositDataSourceRadioButton, "prositDataSourceRadioButton");
-            this.prositDataSourceRadioButton.Name = "prositDataSourceRadioButton";
-            this.prositDataSourceRadioButton.UseVisualStyleBackColor = true;
+            resources.ApplyResources(this.koinaDataSourceRadioButton, "koinaDataSourceRadioButton");
+            this.koinaDataSourceRadioButton.Name = "koinaDataSourceRadioButton";
+            this.koinaDataSourceRadioButton.UseVisualStyleBackColor = true;
             // 
             // dataSourceFilesRadioButton
             // 
@@ -314,8 +314,8 @@
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.BuildLibraryDlg_FormClosing);
             this.panelProperties.ResumeLayout(false);
             this.panelProperties.PerformLayout();
-            this.panelFilesPrositProperties.ResumeLayout(false);
-            this.panelFilesPrositProperties.PerformLayout();
+            this.panelFilesKoinaProperties.ResumeLayout(false);
+            this.panelFilesKoinaProperties.PerformLayout();
             this.panelFilesProps.ResumeLayout(false);
             this.panelFilesProps.PerformLayout();
             this.dataSourceGroupBox.ResumeLayout(false);
@@ -347,10 +347,10 @@
         private System.Windows.Forms.Button btnAddPaths;
         private System.Windows.Forms.ComboBox comboStandards;
         private System.Windows.Forms.GroupBox dataSourceGroupBox;
-        private System.Windows.Forms.RadioButton prositDataSourceRadioButton;
+        private System.Windows.Forms.RadioButton koinaDataSourceRadioButton;
         private System.Windows.Forms.RadioButton dataSourceFilesRadioButton;
-        private System.Windows.Forms.LinkLabel prositInfoSettingsBtn;
-        private System.Windows.Forms.Panel panelFilesPrositProperties;
+        private System.Windows.Forms.LinkLabel koinaInfoSettingsBtn;
+        private System.Windows.Forms.Panel panelFilesKoinaProperties;
         private System.Windows.Forms.Panel panelFilesProps;
         private System.Windows.Forms.Label actionLabel;
         private System.Windows.Forms.ComboBox comboAction;
