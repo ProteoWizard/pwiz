@@ -1161,6 +1161,10 @@ namespace pwiz.ProteowizardWrapper
             return msDataSpectrum;
         }
 
+        // UserParam name that indicates that scan window bounds were obtained
+        // from centroided data and therefore do not represent the entire
+        // range that was monitored
+        private const string CENTROIDED_MIN_MAX = @"centroided min/max";
         private SpectrumMetadata GetSpectrumMetadata(Spectrum spectrum)
         {
             if (spectrum == null)
@@ -1213,6 +1217,11 @@ namespace pwiz.ProteowizardWrapper
             {
                 foreach (var window in scan.scanWindows)
                 {
+                    if (!window.userParam(CENTROIDED_MIN_MAX).empty())
+                    {
+                        // min/max values obtained from centroided data are unreliable
+                        continue;
+                    }
                     var cvParamLowerLimit = window.cvParam(CVID.MS_scan_window_lower_limit);
                     if (cvParamLowerLimit != null)
                     {
@@ -1660,18 +1669,22 @@ namespace pwiz.ProteowizardWrapper
         private static IEnumerable<MsPrecursor> GetMs1Precursors(Spectrum spectrum)
         {
             bool negativePolarity = NegativePolarity(spectrum);
-            return spectrum.scanList.scans[0].scanWindows.Select(s =>
+            foreach (var scanWindow in spectrum.scanList.scans[0].scanWindows)
             {
-                double windowStart = s.cvParam(CVID.MS_scan_window_lower_limit).value;
-                double windowEnd = s.cvParam(CVID.MS_scan_window_upper_limit).value;
+                if (!scanWindow.userParam(CENTROIDED_MIN_MAX).empty())
+                {
+                    continue;
+                }
+                double windowStart = scanWindow.cvParam(CVID.MS_scan_window_lower_limit).value;
+                double windowEnd = scanWindow.cvParam(CVID.MS_scan_window_upper_limit).value;
                 double isolationWidth = (windowEnd - windowStart) / 2;
-                return new MsPrecursor
+                yield return new MsPrecursor
                 {
                     IsolationWindowTargetMz = new SignedMz(windowStart + isolationWidth, negativePolarity),
                     IsolationWindowLower = isolationWidth,
                     IsolationWindowUpper = isolationWidth
                 };
-            });
+            }
         }
 
         private static SignedMz? GetPrecursorMz(Precursor precursor, bool negativePolarity)
