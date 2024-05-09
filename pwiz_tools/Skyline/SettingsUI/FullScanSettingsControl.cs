@@ -21,12 +21,15 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI.PeptideSearch;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
@@ -47,21 +50,26 @@ namespace pwiz.Skyline.SettingsUI
         private IsolationScheme _prevval_comboIsolationScheme;
         private IModifyDocumentContainer _documentContainer { get; set; }
 
-        public FullScanSettingsControl(IModifyDocumentContainer documentContainer)
+        // Sometimes this control is used for getting instrument settings for feature detection
+        private ImportPeptideSearch.eFeatureDetectionPhase _featureDetectionPhase;
+
+        public FullScanSettingsControl(IModifyDocumentContainer documentContainer, ImportPeptideSearch.eFeatureDetectionPhase forFeatureDetection = ImportPeptideSearch.eFeatureDetectionPhase.none)
         {
             _documentContainer = documentContainer;
 
-            Initialize();
+            Initialize(forFeatureDetection);
         }
 
-        public void Initialize()
+        public void Initialize(ImportPeptideSearch.eFeatureDetectionPhase forFeatureDetection)
         {
+            _featureDetectionPhase = forFeatureDetection;
             InitializeComponent();
 
             InitializeMs1FilterUI();
             InitializeMsMsFilterUI();
             InitializeRetentionTimeFilterUI();
             InitializeUseSpectralLibraryIonMobilityUI();
+            InitializeFeatureDetectionUI();
 
             // Update the precursor analyzer type in case the SelectedIndex is still -1
             UpdatePrecursorAnalyzerType();
@@ -78,6 +86,37 @@ namespace pwiz.Skyline.SettingsUI
             toolTip.SetToolTip(cbIgnoreSim, string.Format(toolTip.GetToolTip(cbIgnoreSim), SpectrumFilter.SIM_ISOLATION_CUTOFF));
         }
 
+        private void InitializeFeatureDetectionUI()
+        {
+            if (IsFeatureDetection)
+            {
+                // Replace "minutes of MS/MS IDs" in "Use only scans within [textbox] minutes of MS/MS IDs"
+                var newText = SettingsUIResources.FullScanSettingsControl_Initialize_minutes_of_detected_features;
+                // Note current label text width
+                var w0 = TextRenderer.MeasureText(labelTimeAroundMs2Ids2.Text, labelTimeAroundMs2Ids2.Font).Width;
+                // Resize control to fit new text
+                var w1 = TextRenderer.MeasureText(newText, labelTimeAroundMs2Ids2.Font).Width;
+                // Adjust other controls to match
+                if (w1 > w0)
+                {
+                    var margin = label23.Left;
+                    groupBoxRetentionTimeToKeep.Width = flowLayoutPanelTimeAroundMs2Ids.Left + labelTimeAroundMs2Ids2.Left + w1 + margin;
+                    labelTimeAroundMs2Ids2.Width = w1;
+                    if (groupBoxRetentionTimeToKeep.Width > groupBoxMS1.Width)
+                    {
+                        groupBoxMS1.Width = groupBoxRetentionTimeToKeep.Width;
+                    }
+                }
+                labelTimeAroundMs2Ids2.Text = newText;
+
+                // Share some helpful tips
+                toolTip.SetToolTip(this.PrecursorChargesTextBox, string.Format(SettingsUIResources.FullScanSettingsControl_InitializeFeatureDetectionUI_Hardklor_looks_for_isotope_envelopes_representing_charges_1__0___The_library_will_contain_only_ions_with_the_charges_listed_here_, HardklorSearchEngine.MaxCharge));
+                toolTip.SetToolTip(this.lblPrecursorCharges, string.Format(SettingsUIResources.FullScanSettingsControl_InitializeFeatureDetectionUI_Hardklor_looks_for_isotope_envelopes_representing_charges_1__0___The_library_will_contain_only_ions_with_the_charges_listed_here_, HardklorSearchEngine.MaxCharge));
+                toolTip.SetToolTip(labelPrecursorAt, SettingsUIResources.FullScanSettingsControl_InitializeFeatureDetectionUI_This_is_the_value_assumed_by_Hardklor__it_cannot_be_adjusted_);
+                toolTip.SetToolTip(this.textPrecursorAt, SettingsUIResources.FullScanSettingsControl_InitializeFeatureDetectionUI_This_is_the_value_assumed_by_Hardklor__it_cannot_be_adjusted_);
+            }
+        }
+
         public TransitionSettings TransitionSettings { get { return _documentContainer.Document.Settings.TransitionSettings; } }
         public TransitionFullScan FullScan { get { return TransitionSettings.FullScan; } }
 
@@ -87,7 +126,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return FullScanPrecursorIsotopesExtension.GetEnum(comboPrecursorIsotopes.SelectedItem.ToString(),
+                return FullScanPrecursorIsotopesExtension.GetEnum(comboPrecursorIsotopes.SelectedItem?.ToString(),
                     FullScanPrecursorIsotopes.None);
             }
 
@@ -156,7 +195,7 @@ namespace pwiz.Skyline.SettingsUI
                 double precursorRes;
                 return double.TryParse(textPrecursorRes.Text, out precursorRes) ? (double?)precursorRes : null;
             }
-            set { textPrecursorRes.Text = value.ToString(); }
+            set { textPrecursorRes.Text = FormatPrecursorRes(value, PrecursorMassAnalyzer); }
         }
 
         public double? PrecursorResMz
@@ -250,6 +289,7 @@ namespace pwiz.Skyline.SettingsUI
             set { textPrecursorCharges.Text = value.ToArray().ToString(@", "); }
         }
 
+        public const double HARDKLOR_PRECURSOR_RES_MZ = 400;  // Hardklor feature finding assumes 400mz in FWHM calc
         private void InitializeMs1FilterUI()
         {
             _driverEnrichments = new SettingsListComboDriver<IsotopeEnrichments>(comboEnrichments,
@@ -264,20 +304,40 @@ namespace pwiz.Skyline.SettingsUI
                         FullScanPrecursorIsotopes.Count.GetLocalizedString(),
                         FullScanPrecursorIsotopes.Percent.GetLocalizedString()
                     });
-            comboPrecursorAnalyzerType.Items.AddRange(TransitionFullScan.MASS_ANALYZERS.Cast<object>().ToArray());
-            comboPrecursorIsotopes.SelectedItem = FullScan.PrecursorIsotopes.GetLocalizedString();
+            // For feature detection (Hardklor) don't offer "centroided" as an option. It's always centroided, and needs MS type for FWHM calc
+            comboPrecursorAnalyzerType.Items.AddRange(TransitionFullScan.MASS_ANALYZERS.Cast<object>().Skip(_featureDetectionPhase == ImportPeptideSearch.eFeatureDetectionPhase.hardklor_settings ? 1 : 0).ToArray());
+            var current = FullScan.PrecursorIsotopes.GetLocalizedString();
+            comboPrecursorIsotopes.SelectedItem = comboPrecursorAnalyzerType.Items.Contains(current) ? current : comboPrecursorAnalyzerType.Items[2]; // If it was "centroid", go with "orbitrap"
 
             // Update the precursor analyzer type in case the SelectedIndex is still -1
             UpdatePrecursorAnalyzerType();
+
+            if (IsFeatureDetection)
+            {
+                // Hardklor assumes 400mz in FWHM calc
+                PrecursorResMz = HARDKLOR_PRECURSOR_RES_MZ;
+                textPrecursorAt.Enabled = false;
+                toolTip.SetToolTip(comboPrecursorAnalyzerType,
+                    _featureDetectionPhase == ImportPeptideSearch.eFeatureDetectionPhase.hardklor_settings ?
+                        SettingsUIResources.FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_mass_analyzer_type_for_Hardklor_s_FWHM_calculation_ :
+                        SettingsUIResources.FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_MS_data_type_for_Hardklor_s_FWHM_calculation__Normally_set_to_Centroided_);
+
+            }
         }
+
+        private bool IsFeatureDetection => _featureDetectionPhase != ImportPeptideSearch.eFeatureDetectionPhase.none;
 
         public void UpdatePrecursorAnalyzerType()
         {
             var precursorMassAnalyzer = PrecursorMassAnalyzer;
+            if (_featureDetectionPhase == ImportPeptideSearch.eFeatureDetectionPhase.hardklor_settings && (PrecursorMassAnalyzer == FullScanMassAnalyzerType.centroided || PrecursorMassAnalyzer == FullScanMassAnalyzerType.none))
+            {
+                PrecursorMassAnalyzer = FullScanMassAnalyzerType.orbitrap; // Anything but centroided - that's assumed for Hardklor, we need to know what kind of FWHM calculation is used
+            }
             SetAnalyzerType(PrecursorMassAnalyzer,
                 FullScan.PrecursorMassAnalyzer,
                 FullScan.PrecursorRes,
-                FullScan.PrecursorResMz,
+                IsFeatureDetection ? HARDKLOR_PRECURSOR_RES_MZ : FullScan.PrecursorResMz, // Hardklor assumes resolution value is at 400 m/z
                 labelPrecursorRes,
                 textPrecursorRes,
                 labelPrecursorAt,
@@ -402,21 +462,29 @@ namespace pwiz.Skyline.SettingsUI
             if (!ValidateRetentionTimeFilterLength(out retentionTimeFilterLength))
                 return false;
 
-            fullScanSettings = new TransitionFullScan(AcquisitionMethod,
-                                                  IsolationScheme,
-                                                  ProductMassAnalyzer,
-                                                  productRes,
-                                                  productResMz,
-                                                  PrecursorIsotopesCurrent,
-                                                  precursorIsotopeFilter,
-                                                  PrecursorMassAnalyzer,
-                                                  precursorRes,
-                                                  precursorResMz,
-                                                  IgnoreSimScans,
-                                                  UseSelectiveExtraction,
-                                                  Enrichments,
-                                                  retentionTimeFilterType,
-                                                  retentionTimeFilterLength);
+            try
+            {
+                fullScanSettings = new TransitionFullScan(AcquisitionMethod,
+                    IsolationScheme,
+                    ProductMassAnalyzer,
+                    productRes,
+                    productResMz,
+                    PrecursorIsotopesCurrent,
+                    precursorIsotopeFilter,
+                    PrecursorMassAnalyzer,
+                    precursorRes,
+                    precursorResMz,
+                    IgnoreSimScans,
+                    UseSelectiveExtraction,
+                    Enrichments,
+                    retentionTimeFilterType,
+                    retentionTimeFilterLength);
+            }
+            catch (InvalidDataException e)
+            {
+                MessageDlg.Show(this, e.Message);
+                return false;
+            }
             return true;
         }
 
@@ -508,7 +576,7 @@ namespace pwiz.Skyline.SettingsUI
             return true;
         }
 
-        private static bool IsResMzAnalyzer(FullScanMassAnalyzerType precursorAnalyzerType)
+        public static bool IsResMzAnalyzer(FullScanMassAnalyzerType precursorAnalyzerType)
         {
             return precursorAnalyzerType == FullScanMassAnalyzerType.orbitrap ||
                    precursorAnalyzerType == FullScanMassAnalyzerType.ft_icr;
@@ -830,6 +898,15 @@ namespace pwiz.Skyline.SettingsUI
             get { return double.Parse(tbxTimeAroundPrediction.Text); }
         }
 
+        private static string FormatPrecursorRes(double? resolvingPower, FullScanMassAnalyzerType analyzerType)
+        {
+            if (!resolvingPower.HasValue)
+                return string.Empty;
+            return analyzerType == FullScanMassAnalyzerType.centroided ? 
+                resolvingPower.Value.ToString(CultureInfo.CurrentCulture) :
+                resolvingPower.Value.ToString(@"#,0.####");
+        }
+
         public static void SetAnalyzerType(FullScanMassAnalyzerType analyzerTypeNew,
                                     FullScanMassAnalyzerType analyzerTypeCurrent,
                                     double? resCurrent,
@@ -857,9 +934,11 @@ namespace pwiz.Skyline.SettingsUI
                 labelTh.Visible = false;
                 textAt.Visible = false;
                 textRes.Enabled = true;
-                textRes.Text = resCurrent.HasValue && (analyzerTypeCurrent == analyzerTypeNew)
-                                  ? resCurrent.Value.ToString(LocalizationHelper.CurrentCulture)
-                                  : TransitionFullScan.DEFAULT_CENTROIDED_PPM.ToString(LocalizationHelper.CurrentCulture);
+                textRes.Text = FormatPrecursorRes(
+                    resCurrent.HasValue && (analyzerTypeCurrent == analyzerTypeNew)
+                        ? resCurrent
+                        : TransitionFullScan.DEFAULT_CENTROIDED_PPM,
+                    analyzerTypeCurrent);
                 labelText = SettingsUIResources.FullScanSettingsControl_SetAnalyzerType_Mass__Accuracy_;
                 labelPPM.Visible = true;
                 labelPPM.Left = textRes.Right;
@@ -884,11 +963,10 @@ namespace pwiz.Skyline.SettingsUI
                     }
                 }
 
-                const string resolvingPowerFormat = "#,0.####";
                 if (analyzerTypeNew == analyzerTypeCurrent && resCurrent.HasValue)
-                    textRes.Text = resCurrent.Value.ToString(resolvingPowerFormat);
+                    textRes.Text = FormatPrecursorRes(resCurrent, analyzerTypeNew);
                 else
-                    textRes.Text = TransitionFullScan.DEFAULT_RES_VALUES[(int)analyzerTypeNew].ToString(resolvingPowerFormat);
+                    textRes.Text = FormatPrecursorRes(TransitionFullScan.DEFAULT_RES_VALUES[(int)analyzerTypeNew], analyzerTypeNew);
 
                 labelAt.Visible = variableRes;
                 textAt.Visible = variableRes;
@@ -926,12 +1004,21 @@ namespace pwiz.Skyline.SettingsUI
             usercontrolIonMobilityFiltering.InitializeSettings(_documentContainer);
         }
 
+        public void SetGroupBoxMS1TitleForHardklorUse(bool active)
+        {
+            groupBoxMS1.Text = active
+                ? SettingsUIResources.FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values
+                : SettingsUIResources
+                    .FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values_from_Full_Scan_Settings;
+        }
+
         private ImportPeptideSearchDlg.Workflow? _lastPeptideSearchWorkflow;
-        public void ModifyOptionsForImportPeptideSearchWizard(ImportPeptideSearchDlg.Workflow workflow, bool libIonMobilities)
+        public void ModifyOptionsForImportPeptideSearchWizard(ImportPeptideSearchDlg.Workflow workflow, bool libIonMobilities, 
+            ImportPeptideSearch.eFeatureDetectionPhase featureDetectionPhase = ImportPeptideSearch.eFeatureDetectionPhase.none)
         {
             var settings = _documentContainer.Document.Settings;
 
-            if (_lastPeptideSearchWorkflow == workflow)
+            if (featureDetectionPhase != ImportPeptideSearch.eFeatureDetectionPhase.hardklor_settings && _lastPeptideSearchWorkflow == workflow)
                 return;
             _lastPeptideSearchWorkflow = workflow;
 
@@ -943,7 +1030,47 @@ namespace pwiz.Skyline.SettingsUI
             comboEnrichments.Visible = false;
             groupBoxMS1.Height -= comboEnrichments.Bottom - textPrecursorIsotopeFilter.Bottom;
 
-            if (workflow == ImportPeptideSearchDlg.Workflow.dda)
+            var isWorkflowDda =
+                workflow == ImportPeptideSearchDlg.Workflow.dda ||
+                workflow == ImportPeptideSearchDlg.Workflow.feature_detection;
+
+            if (featureDetectionPhase == ImportPeptideSearch.eFeatureDetectionPhase.hardklor_settings)
+            {
+                // Hide everything not needed for Hardklor config
+                SetGroupBoxMS1TitleForHardklorUse(true);
+
+                foreach (var c in Controls)
+                {
+                    if (c is Control control)
+                    {
+                        if (control != groupBoxMS1)
+                        {
+                            control.Enabled = control.Visible = false;
+                        }
+                    }
+                }
+                var ms1ControlsNeeded = new Control[] { label32, comboPrecursorAnalyzerType, labelPrecursorRes, labelPrecursorAt, 
+                    textPrecursorRes, textPrecursorAt, labelPrecursorPPM, labelPrecursorTh};
+                var leftShift = label32.Left - label23.Left;
+
+                foreach (var cc in groupBoxMS1.Controls)
+                {
+                    if (cc is Control child)
+                    {
+                        if (!ms1ControlsNeeded.Contains(child))
+                        {
+                            child.Enabled = child.Visible = false;
+                        }
+                        else
+                        {
+                            child.Left -= leftShift;
+                        }
+                    }
+                }
+                groupBoxMS1.Left = 0;
+                groupBoxMS1.Top = 12;
+            }
+            else if (isWorkflowDda)
             {
                 // Set up precursor charges input
                 textPrecursorCharges.Text = settings.TransitionSettings.Filter.PeptidePrecursorCharges.ToArray().ToString(@", ");
@@ -964,12 +1091,25 @@ namespace pwiz.Skyline.SettingsUI
 
             if (workflow != ImportPeptideSearchDlg.Workflow.dia)
             {
-                int newRadioTimeAroundTop = radioUseSchedulingWindow.Top;
+                var newRadioTimeAroundTop = workflow == ImportPeptideSearchDlg.Workflow.feature_detection ?
+                    radioTimeAroundMs2Ids.Top :
+                    radioKeepAllTime.Top;
                 int radioTimeAroundTopDifference = radioKeepAllTime.Top - newRadioTimeAroundTop;
                 radioUseSchedulingWindow.Visible = false;
                 flowLayoutPanelUseSchedulingWindow.Visible = false;
                 radioKeepAllTime.Top = newRadioTimeAroundTop;
                 groupBoxRetentionTimeToKeep.Height -= radioTimeAroundTopDifference;
+
+                if (workflow == ImportPeptideSearchDlg.Workflow.feature_detection)
+                {
+                    // Only offer "time around ID" 
+                    radioTimeAroundMs2Ids.Checked = true;
+                    flowLayoutPanelTimeAroundMs2Ids.Left = radioTimeAroundMs2Ids.Left;
+                    radioTimeAroundMs2Ids.Visible = false;
+                    radioUseSchedulingWindow.Visible = label1.Visible = label2.Visible = tbxTimeAroundPrediction.Visible = false;
+                    radioKeepAllTime.Checked = false;
+                    radioKeepAllTime.Visible = false;
+                }
             }
 
             // Select defaults
@@ -985,7 +1125,7 @@ namespace pwiz.Skyline.SettingsUI
                 radioTimeAroundMs2Ids.Checked = true;
             }
 
-            if (workflow != ImportPeptideSearchDlg.Workflow.dda)
+            if (!isWorkflowDda)
             {
                 groupBoxMS2.Top = groupBoxMS1.Bottom + sepMS1FromMS2;
                 cbHighSelectivity.Top = groupBoxMS2.Bottom + sepMS2FromSel;
@@ -1095,7 +1235,7 @@ namespace pwiz.Skyline.SettingsUI
                 tbxTimeAroundMs2Ids.Enabled = true;
 
                 var document = _documentContainer.Document;
-                if (document.MoleculeCount > 0)
+                if (document.MoleculeCount > 0 && !IsFeatureDetection)
                 {
                     if (!document.Settings.HasLibraries)
                     {
@@ -1148,6 +1288,8 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         public int GroupBoxMS2Height { get { return groupBoxMS2.Height; } }
+
+        public Rectangle GroupBoxMS1Bounds => groupBoxMS1.Bounds;
 
         /// <summary>
         /// Returns true if the user selected DIA as acquisition method and used an 

@@ -712,4 +712,7 @@
   <data name="UnavailableMSGraphItem_UnavailableMSGraphItem_Spectrum_information_unavailable" xml:space="preserve">
     <value>谱图信息不可用</value>
   </data>
+  <data name="AlignmentForm_UpdateGraph_Peptides" xml:space="preserve">
+    <value>肽段</value>
+  </data>
 </root>

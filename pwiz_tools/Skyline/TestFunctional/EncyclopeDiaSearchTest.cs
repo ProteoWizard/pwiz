@@ -38,7 +38,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class EncyclopeDiaSearchTest : AbstractFunctionalTestEx
     {
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestEncyclopeDiaSearch()
         {
             TestFilesZip = @"Test\EncyclopeDiaHelpersTest.zip";
@@ -57,7 +57,7 @@ namespace pwiz.SkylineTestFunctional
         {
             if (!HasPrositServer())
             {
-                Console.Error.WriteLine("NOTE: skipping EncyclopeDIA test because Prosit is not configured (replace PrositConfig.xml in Skyline\\Model\\Prosit\\Config)");
+                Console.Error.WriteLine("NOTE: skipping EncyclopeDIA test because Prosit is not configured (replace PrositConfig.xml in Skyline\\Model\\Prosit\\Config - see https://skyline.ms/wiki/home/development/page.view?name=Prosit)");
                 return;
             }
 

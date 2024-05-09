@@ -64,7 +64,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(garbageString, TextUtil.DecryptString(TextUtil.EncryptString(garbageString)));
         }
 
-        [TestMethod]
+         [TestMethod]
         public void TestCommonPrefixAndSuffix()
         {
             string[] baseStrings = {"mediummer", "much, much longer", string.Empty, "short"};

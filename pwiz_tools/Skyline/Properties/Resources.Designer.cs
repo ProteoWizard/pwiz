@@ -407,15 +407,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Peptides.
-        /// </summary>
-        public static string AlignmentForm_UpdateGraph_Peptides {
-            get {
-                return ResourceManager.GetString("AlignmentForm_UpdateGraph_Peptides", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Peptides Refined.
         /// </summary>
         public static string AlignmentForm_UpdateGraph_Peptides_Refined {
@@ -3212,6 +3203,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Search failed: {0}.
+        /// </summary>
+        public static string DdaSearch_Search_failed__0 {
+            get {
+                return ResourceManager.GetString("DdaSearch_Search_failed__0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Search canceled..
         /// </summary>
         public static string DDASearchControl_SearchProgress_Search_canceled {
@@ -4725,6 +4725,16 @@ namespace pwiz.Skyline.Properties {
         public static string GroupByItem_ToString_Replicates {
             get {
                 return ResourceManager.GetString("GroupByItem_ToString_Replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap HardklorLogo {
+            get {
+                object obj = ResourceManager.GetObject("HardklorLogo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
