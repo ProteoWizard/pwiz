@@ -2219,8 +2219,8 @@ namespace pwiz.Skyline
         {
             return HandleExceptions(commandArgs, () => 
             {
-                var fastaPath = commandArgs.FastaPath ?? Settings.Default.LastProteinAssociationFastaFilepath;
-                if (fastaPath == null)
+                var fastaPath = commandArgs.AssociateProteinsFasta ?? commandArgs.FastaPath ?? Settings.Default.LastProteinAssociationFastaFilepath;
+                if (fastaPath.IsNullOrEmpty())
                     throw new ArgumentException(Resources.CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins);
                 _out.WriteLine(Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins);
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
