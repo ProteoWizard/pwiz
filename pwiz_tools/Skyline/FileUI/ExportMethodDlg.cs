@@ -631,7 +631,6 @@ namespace pwiz.Skyline.FileUI
             panelThermoRt.Visible =
                 InstrumentType == ExportInstrumentType.THERMO_QUANTIVA ||
                 InstrumentType == ExportInstrumentType.THERMO_ALTIS ||
-                InstrumentType == ExportInstrumentType.THERMO_STELLAR ||
                 (targetType != ExportMethodType.Standard && InstrumentType == ExportInstrumentType.THERMO);
             if (panelThermoColumns.Visible)
             {
@@ -650,7 +649,6 @@ namespace pwiz.Skyline.FileUI
             cbSlens.Visible = cbSlens.Enabled =
                 InstrumentType == ExportInstrumentType.THERMO_QUANTIVA ||
                 InstrumentType == ExportInstrumentType.THERMO_ALTIS ||
-                InstrumentType == ExportInstrumentType.THERMO_STELLAR ||
                 InstrumentType == ExportInstrumentType.THERMO;  // TODO bspratt is this specific enough?
         }
 

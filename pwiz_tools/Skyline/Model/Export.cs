@@ -287,6 +287,7 @@ namespace pwiz.Skyline.Model
                                        {THERMO_ECLIPSE, EXT_THERMO},
                                        {THERMO_FUSION, EXT_THERMO},
                                        {THERMO_FUSION_LUMOS, EXT_THERMO},
+                                       {THERMO_STELLAR, EXT_THERMO},
                                        {WATERS_XEVO_TQ, EXT_WATERS},
                                        {WATERS_QUATTRO_PREMIER, EXT_WATERS}
                                    };
@@ -338,6 +339,7 @@ namespace pwiz.Skyline.Model
             return Equals(type, THERMO_LTQ) ||
                    Equals(type, THERMO_Q_EXACTIVE) ||
                    Equals(type, THERMO_FUSION) ||
+                   Equals(type, THERMO_STELLAR) ||
                    Equals(type, AGILENT_TOF) ||
                    Equals(type, WATERS_SYNAPT_TRAP) ||
                    Equals(type, WATERS_SYNAPT_TRANSFER) ||
@@ -1838,6 +1840,11 @@ namespace pwiz.Skyline.Model
             RetentionStartAndEnd = true;    // Because the converter depends on this format
             MethodExporter.ExportMethod(EXE_BUILD_TSQ_METHOD, new List<string>(),
                 fileName, templateName, MemoryOutput, progressMonitor);
+        }
+
+        public static bool IsThermoMethod(string instrumentType, string fileName)
+        {
+            return fileName.EndsWith(ExportInstrumentType.MethodExtension(instrumentType));
         }
     }
 
