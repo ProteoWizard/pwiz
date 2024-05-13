@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Results;
