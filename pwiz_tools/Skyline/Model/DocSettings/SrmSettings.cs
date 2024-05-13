@@ -2354,7 +2354,22 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 _store[(int)ionType + OFFSET_I, index] = value;
             }
-        }    
+        }
+
+        public T GetIonValue(IonType ionType, int ionNumber)
+        {
+            if (ionType.IsNTerminal())
+                return this[ionType, ionNumber - 1];
+            return this[ionType, _store.GetLength(1) - ionNumber];
+        }
+
+        public void SetIonValue(IonType ionType, int ionNumber, T value)
+        {
+            if (ionType.IsNTerminal())
+                this[ionType, ionNumber - 1] = value;
+            else
+                this[ionType, _store.GetLength(1) - ionNumber] = value;
+        }
     }
 
 

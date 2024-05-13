@@ -1350,7 +1350,7 @@ Supported values include:
     <value>Invalid model selection.</value>
   </data>
   <data name="GraphFullScan_CreateGraph_CE_" xml:space="preserve">
-    <value>CE:</value>
+    <value>NCE:</value>
   </data>
   <data name="WebPanoramaPublishClient_GetInfoForFolders_Failure_retrieving_folder_information_from__0_" xml:space="preserve">
     <value>Failure retrieving folder information from {0}</value>
@@ -2824,9 +2824,6 @@ Most peptide transition lists can be imported with the "File|Import|Transition L
   <data name="RemoteSession_FetchContents_There_was_an_error_communicating_with_the_server__" xml:space="preserve">
     <value>There was an error communicating with the server: </value>
   </data>
-  <data name="prosit_logo_dark_blue" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\prosit_logo_dark_blue.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="ImportFastaControl_ImportFasta_Change_digestion_settings" xml:space="preserve">
     <value>Change digestion settings</value>
   </data>
@@ -3842,372 +3839,6 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="PanoramaDownload" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\PanoramaDownload.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="RefineDlg_RefineDlg_Precursors" xml:space="preserve">
-    <value>Precursors</value>
-  </data>
-  <data name="RefineDlg_RefineDlg_Products" xml:space="preserve">
-    <value>Products</value>
-  </data>
-  <data name="ValueInvalidNumberListException_ValueInvalidNumberListException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_list_of_decimal_numbers_" xml:space="preserve">
-    <value>The value {0} is not valid for the argument {1} which requires a list of decimal numbers.</value>
-  </data>
-  <data name="CalibrationGridViewDriver_CiRT_option_name" xml:space="preserve">
-    <value>CiRT (discovered)</value>
-  </data>
-  <data name="LibraryBuildNotificationHandler_AddIrts__0__distinct_CiRT_peptides_were_found__How_many_would_you_like_to_use_as_iRT_standards_" xml:space="preserve">
-    <value>{0} distinct CiRT peptides were found. How many would you like to use as iRT standards?</value>
-  </data>
-  <data name="SkypSupport_Download_You_do_not_have_permissions_to_download_this_file_from__0__" xml:space="preserve">
-    <value>You do not have permissions to download this file from {0}.</value>
-  </data>
-  <data name="SkypFile_GetSkyFileUrl_File_does_not_contain_the_URL_of_a_shared_Skyline_archive_file___0___on_a_Panorama_server_" xml:space="preserve">
-    <value>File does not contain the URL of a shared Skyline archive file ({0}) on a Panorama server.</value>
-  </data>
-  <data name="SkypFile_GetSkyFileUrl__0__is_not_a_valid_URL_on_a_Panorama_server_" xml:space="preserve">
-    <value>{0} is not a valid URL on a Panorama server.</value>
-  </data>
-  <data name="SkylineWindow_ImportResults_The_document_contains_decoys_that_do_not_match_the_targets__Out_of__0__decoys_" xml:space="preserve">
-    <value>The document contains decoys that do not match the targets. Out of {0} decoys:</value>
-  </data>
-  <data name="SkylineWindow_ImportResults_1_decoy_does_not_have_a_matching_target" xml:space="preserve">
-    <value>1 decoy does not have a matching target</value>
-  </data>
-  <data name="SkylineWindow_ImportResults__0__decoys_do_not_have_a_matching_target" xml:space="preserve">
-    <value>{0} decoys do not have a matching target</value>
-  </data>
-  <data name="SkylineWindow_ImportResults_1_decoy_does_not_have_the_same_number_of_transitions_as_its_matching_target" xml:space="preserve">
-    <value>1 decoy does not have the same number of transitions as its matching target</value>
-  </data>
-  <data name="SkylineWindow_ImportResults__0__decoys_do_not_have_the_same_number_of_transitions_as_their_matching_targets" xml:space="preserve">
-    <value>{0} decoys do not have the same number of transitions as their matching targets</value>
-  </data>
-  <data name="IrtStandard_DocumentStream_No_document_to_import" xml:space="preserve">
-    <value>No document to import</value>
-  </data>
-  <data name="Skyline_Release" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Skyline_Release.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Skyline_Release1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Skyline_Release.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="SmallMoleculeTransitionListReader_ProcessNeutralLoss_Precursor_molecular_formula__0__does_not_contain_sufficient_atoms_to_be_used_with_neutral_loss__1_" xml:space="preserve">
-    <value>Precursor molecular formula {0} does not contain sufficient atoms to be used with neutral loss {1}</value>
-  </data>
-  <data name="SmallMoleculeTransitionListReader_ProcessNeutralLoss_Cannot_use_product_neutral_loss_chemical_formula_without_a_precursor_chemical_formula" xml:space="preserve">
-    <value>Cannot use product neutral loss chemical formula without a precursor chemical formula</value>
-  </data>
-  <data name="ValidatingIonMobilityPeptide_ValidateHighEnergyIonMobilityOffset_High_energy_ion_mobility_offsets_should_be_empty__or_express_an_offset_value_for_ion_mobility_in_high_collision_energy_scans_which_may_add_velocity_to_ions_" xml:space="preserve">
-    <value>High energy ion mobility offsets should be empty, or express an offset value for ion mobility in high collision energy scans which may add velocity to ions.</value>
-  </data>
-  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_adduct_description_on_line__0_" xml:space="preserve">
-    <value>Missing adduct description on line {0}</value>
-  </data>
-  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Could_not_parse_adduct_description___0___on_line__1_" xml:space="preserve">
-    <value>Could not parse adduct description "{0}" on line {1}</value>
-  </data>
-  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow__0__is_not_a_valid_charge__Precursor_charges_must_be_integers_with_absolute_value_between_1_and__1__" xml:space="preserve">
-    <value>{0} is not a valid charge. Precursor charges must be integers with absolute value between 1 and {1}.</value>
-  </data>
-  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_pasted_text_must_at_a_minimum_contain_columns_for_peptide_and_adduct__along_with_collisional_cross_section_and_or_ion_mobility_" xml:space="preserve">
-    <value>The pasted text must at a minimum contain columns for peptide and adduct, along with collisional cross section and/or ion mobility.</value>
-  </data>
-  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Cannot_read_high_energy_ion_mobility_offset_value___0___on_line__1__" xml:space="preserve">
-    <value>Cannot read high energy ion mobility offset value "{0}" on line {1}.</value>
-  </data>
-  <data name="DisplayEquation_N_A" xml:space="preserve">
-    <value>N/A</value>
-  </data>
-  <data name="EditIonMobilityLibraryDlg_ValidateUniquePrecursors_The_ion__0__has_multiple_ion_mobility_values__Skyline_supports_multiple_conformers__so_this_may_be_intentional_" xml:space="preserve">
-    <value>The ion {0} has multiple ion mobility values. Skyline supports multiple conformers, so this may be intentional.</value>
-  </data>
-  <data name="EditIonMobilityLibraryDlg_ValidateUniquePrecursors_The_following_ions_have_multiple_ion_mobility_values__Skyline_supports_multiple_conformers__so_this_may_be_intentional_" xml:space="preserve">
-    <value>The following ions have multiple ion mobility values. Skyline supports multiple conformers, so this may be intentional.</value>
-  </data>
-  <data name="EditIonMobilityLibraryDlg_ValidateUniquePrecursors_This_list_contains__0__ions_with_multiple_ion_mobility_values__Skyline_supports_multiple_conformers__so_this_may_be_intentional_" xml:space="preserve">
-    <value>This list contains {0} ions with multiple ion mobility values. Skyline supports multiple conformers, so this may be intentional.</value>
-  </data>
-  <data name="IIrtRegression_DisplayEquation_iRT" xml:space="preserve">
-    <value>iRT</value>
-  </data>
-  <data name="IIrtRegression_DisplayEquation_Measured_RT" xml:space="preserve">
-    <value>Measured RT</value>
-  </data>
-  <data name="EditLink" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\EditLink.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="EditLinkedPeptideDlg_TryMakeLinkedPeptide_The_crosslinker___0___cannot_attach_to_the_amino_acid___1___" xml:space="preserve">
-    <value>The crosslinker '{0}' cannot attach to the amino acid '{1}'.</value>
-  </data>
-  <data name="IonMobilityFinder_ProcessMSLevel_Failed_using_results_to_populate_ion_mobility_library_" xml:space="preserve">
-    <value>Failed using results to populate ion mobility library:</value>
-  </data>
-  <data name="CommandLine_AddDecoys_Decoys_discarded" xml:space="preserve">
-    <value>Decoys discarded</value>
-  </data>
-  <data name="BrukerTimsTofMethodExporter_ExportMethod_Error_copying_template_file_" xml:space="preserve">
-    <value>Error copying template file.</value>
-  </data>
-  <data name="CachedLibrary_WarnInvalidEntries_" xml:space="preserve">
-    <value>Invalid entries were found in the library '{0}'.
-{1} of the {2} peptides or molecules were invalid, including:
-{3}</value>
-  </data>
-  <data name="DetectionPlotPane_Tooltip_Replicate" xml:space="preserve">
-    <value>Replicate</value>
-  </data>
-  <data name="DetectionPlotPane_Tooltip_Count" xml:space="preserve">
-    <value>{0} Count</value>
-  </data>
-  <data name="DetectionPlotPane_Tooltip_CumulativeCount" xml:space="preserve">
-    <value>Cumulative Count</value>
-  </data>
-  <data name="DetectionPlotPane_Tooltip_AllCount" xml:space="preserve">
-    <value>All Count</value>
-  </data>
-  <data name="DetectionPlotPane_Tooltip_QMedian" xml:space="preserve">
-    <value>-log10 of Q-Value Median</value>
-  </data>
-  <data name="DetectionHistogramPane_Tooltip_ReplicateCount" xml:space="preserve">
-    <value>Replicate Count</value>
-  </data>
-  <data name="DetectionHistogramPane_Tooltip_Count" xml:space="preserve">
-    <value>{0} Count</value>
-  </data>
-  <data name="DDASearchControl_SearchProgress_Search_canceled" xml:space="preserve">
-    <value>Search canceled.</value>
-  </data>
-  <data name="DDASearchControl_SearchProgress_Search_done" xml:space="preserve">
-    <value>Search done.</value>
-  </data>
-  <data name="RefineDlg_NormalizationMethod_Total_ion_current" xml:space="preserve">
-    <value>Total ion current</value>
-  </data>
-  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name" xml:space="preserve">
-    <value>Fragment Name</value>
-  </data>
-  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge" xml:space="preserve">
-    <value>Precursor Charge</value>
-  </data>
-  <data name="GraphFullScan_CreateGraph_IM__0_" xml:space="preserve">
-    <value>IM={0}</value>
-    <comment>"IM" stands for "Ion Mobility" - used for displaying ion mobility in raw scan view</comment>
-  </data>
-  <data name="DataboundGridControl_GetClusteredResults_An_error_occured_while_performing_clustering_" xml:space="preserve">
-    <value>An error occured while performing clustering.</value>
-  </data>
-  <data name="DataboundGridControl_GetClusteredResults_Unable_to_choose_a_set_of_columns_to_use_for_hierarchical_clustering_" xml:space="preserve">
-    <value>Unable to choose a set of columns to use for hierarchical clustering.</value>
-  </data>
-  <data name="ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_This_transition_list_cannot_be_imported_as_it_does_not_provide_values_for_" xml:space="preserve">
-    <value>This transition list cannot be imported as it does not provide values for:</value>
-  </data>
-  <data name="EditLinkedPeptidesDlg_OkDialog_Some_crosslinked_peptides_are_not_connected_" xml:space="preserve">
-    <value>Some crosslinked peptides are not connected.</value>
-  </data>
-  <data name="SmallMoleculeTransitionListReader_GetMoleculeTransitionGroup_Inconsistent_molecule_description" xml:space="preserve">
-    <value>Inconsistent molecule description</value>
-  </data>
-  <data name="ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__" xml:space="preserve">
-    <value>Current saved file ({0})</value>
-  </data>
-  <data name="MissingFileDlg_ValidateFilePath_You_must_choose_a_file_with_the___0___filename_extension_" xml:space="preserve">
-    <value>You must choose a file with the '{0}' filename extension.</value>
-  </data>
-  <data name="GraphFullScan_CreateIonMobilityHeatmap_Quadrupole_Scan_Range__m_z_" xml:space="preserve">
-    <value>Quadrupole Scan Range (m/z)</value>
-  </data>
-  <data name="HeatMapGraph_RefreshData_Heat_Map" xml:space="preserve">
-    <value>Heat Map</value>
-  </data>
-  <data name="PcaPlot_RefreshData_PCA_Plot" xml:space="preserve">
-    <value>PCA Plot</value>
-  </data>
-  <data name="AnnotatedSpectum" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\AnnotatedSpectum.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="CommandStatusWriter_WriteLine_Error_" xml:space="preserve">
-    <value>Error:</value>
-  </data>
-  <data name="CommandArgs_PanoramaArgsComplete_" xml:space="preserve">
-    <value>Error: A value is required for the following argument to upload the document to Panorama:
-{0}</value>
-  </data>
-  <data name="CommandArgs_PanoramaArgsComplete_plural_" xml:space="preserve">
-    <value>Error: A value is required for the following arguments to upload the document to Panorama:
-{0}</value>
-  </data>
-  <data name="PanoramaHelper_ValidateServer_Exception_" xml:space="preserve">
-    <value>Error: An unknown error occurred trying to verify Panorama server information.
-{0}</value>
-  </data>
-  <data name="CommandLine_ImportSearchInternal_Error___0__must_be_set_when_using_CiRT_peptides_" xml:space="preserve">
-    <value>Error: {0} must be set when using CiRT peptides.</value>
-  </data>
-  <data name="CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_file_name_pattern___0___" xml:space="preserve">
-    <value>Error: No files match the file name pattern '{0}'.</value>
-  </data>
-  <data name="CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_sample_name_pattern___0___" xml:space="preserve">
-    <value>Error: No files match the sample name pattern '{0}'.</value>
-  </data>
-  <data name="CommandLine_ImportResults_Error__No_files_left_to_import_" xml:space="preserve">
-    <value>Error: No files left to import.</value>
-  </data>
-  <data name="CommandLine_ImportDataFilesWithAppend_Error__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_" xml:space="preserve">
-    <value>Error: The replicate {0} already exists in the given document and the --import-append option is not specified.  The replicate will not be added to the document.</value>
-  </data>
-  <data name="PeptideTipProvider_RenderTip_Ion_Mobility" xml:space="preserve">
-    <value>Ion Mobility</value>
-  </data>
-  <data name="PeptideTipProvider_RenderTip_CCS" xml:space="preserve">
-    <value>CCS</value>
-    <comment>compact form of Collision Cross Section</comment>
-  </data>
-  <data name="SkylineWindow_HandleStandardsChanged_An_error_occurred_while_attempting_to_load_the_iRT_database__0___iRT_standards_cannot_be_automatically_added_to_the_document_" xml:space="preserve">
-    <value>An error occurred while attempting to load the iRT database {0}. iRT standards cannot be automatically added to the document.</value>
-  </data>
-  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectrumFilesError" xml:space="preserve">
-    <value>While searching for spectrum files for the MaxQuant input file '{0}', the following basenames could not be found with any of the supported file extensions ({3}):
-
-{1}
-
-In any of the following directories:
-
-{2}
-
-If you do not have the original files, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by a mass spectrometer.
-
-</value>
-  </data>
-  <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectrumFileError" xml:space="preserve">
-    <value>While searching for the spectrum file for the MaxQuant input file '{0}', the following basename could not be found with any of the supported file extensions ({3}):
-
-{1}
-
-In any of the following directories:
-
-{2}
-
-If you do not have the original file, you may build the library with embedded spectra from the input file. However, fragment ions in MaxQuant embedded spectra are charge state deconvoluted, and will contain only singly charged fragment ions which may not be representative of intensities measured by a mass spectrometer.
-
-</value>
-  </data>
-  <data name="PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_" xml:space="preserve">
-    <value>Explicit Collision Cross Section (sq A)</value>
-  </data>
-  <data name="PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_" xml:space="preserve">
-    <value>Collision Cross Section (sq A)</value>
-  </data>
-  <data name="GraphSpectrum_MassErrorFormat_ppm" xml:space="preserve">
-    <value>{0}{1} ppm</value>
-  </data>
-  <data name="PasteDlg_UpdateMoleculeType_iRT" xml:space="preserve">
-    <value>iRT</value>
-  </data>
-  <data name="PasteDlg_UpdateMoleculeType_Decoy" xml:space="preserve">
-    <value>Decoy</value>
-  </data>
-  <data name="PasteDlg_UpdateMoleculeType_Library_Intensity" xml:space="preserve">
-    <value>Library Intensity</value>
-  </data>
-  <data name="PasteDlg_UpdateMoleculeType_Fragment_Name" xml:space="preserve">
-    <value>Fragment Name</value>
-  </data>
-  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential" xml:space="preserve">
-    <value>Explicit Declustering Potential</value>
-  </data>
-  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name" xml:space="preserve">
-    <value>Molecule List Name</value>
-  </data>
-  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name" xml:space="preserve">
-    <value>Molecule Name</value>
-  </data>
-  <data name="ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula" xml:space="preserve">
-    <value>Molecular Formula</value>
-  </data>
-  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Reassigning_the_Protein_Name_column_will_prevent_the_peptides_from_being_associated_with_proteins_from_the_background_proteome." xml:space="preserve">
-    <value>Reassigning the Protein Name column will prevent the peptides from being associated with proteins from the background proteome.</value>
-  </data>
-  <data name="ImportTransitionListColumnSelectDlg_AssociateProteins_These_filters_cannot_be_applied_as_they_would_result_in_an_empty_transition_list." xml:space="preserve">
-    <value>These filters cannot be applied as they would result in an empty transition list.</value>
-  </data>
-  <data name="ZedGraphClipboard_CreateCopyMenuItems_Copy" xml:space="preserve">
-    <value>Copy</value>
-  </data>
-  <data name="GroupByItem_ToString_Replicates" xml:space="preserve">
-    <value>Replicates</value>
-  </data>
-  <data name="MsconvertDdaConverter_Run_Re_using_existing_converted__0__file_for__1__" xml:space="preserve">
-    <value>Re-using existing converted {0} file for {1}.</value>
-  </data>
-  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Ion_mobility_units_not_specified" xml:space="preserve">
-    <value>Ion mobility units not specified</value>
-  </data>
-  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Multiple_ion_mobility_declarations" xml:space="preserve">
-    <value>Multiple ion mobility declarations</value>
-  </data>
-  <data name="AreaChartPropertyDlg_ValidateDotpDecimal__0__must_contain_a_decimal_value" xml:space="preserve">
-    <value>{0} must contain a decimal value.</value>
-  </data>
-  <data name="SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_value_" xml:space="preserve">
-    <value>Precursor m/z {0} does not agree with value {1} as calculated from ion formula and charge state (delta = {2}, Transition Settings | Instrument | Method match tolerance m/z = {3}).  Correct the m/z value in the table, or leave it blank and Skyline will calculate it for you.</value>
-  </data>
-  <data name="SmallMoleculeTransitionListReader_Product_mz_does_not_agree_with_calculated_value_" xml:space="preserve">
-    <value>Product m/z {0} does not agree with value {1} as calculated from ion formula and charge state (delta = {2}, Transition Settings | Instrument | Method match tolerance m/z = {3}).  Correct the m/z value in the table, or leave it blank and Skyline will calculate it for you.</value>
-  </data>
-  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_" xml:space="preserve">
-    <value>Precursor formula and m/z value do not agree for any charge state.</value>
-  </data>
-  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_" xml:space="preserve">
-    <value>Product formula and m/z value do not agree for any charge state.</value>
-  </data>
-  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_" xml:space="preserve">
-    <value>Precursor needs values for any two of: Formula, m/z or Charge.</value>
-  </data>
-  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_" xml:space="preserve">
-    <value>Product needs values for any two of: Formula, m/z or Charge.</value>
-  </data>
-  <data name="PersistedViews_GetDefaults_Molecule_Quantification" xml:space="preserve">
-    <value>Molecule Quantification</value>
-  </data>
-  <data name="PersistedViews_GetDefaults_Molecule_Ratio_Results" xml:space="preserve">
-    <value>Molecule Ratio Results</value>
-  </data>
-  <data name="Properties_Button" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Properties.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="GraphFullScan_CreateGraph_CE_" xml:space="preserve">
-    <value>CE:</value>
-  </data>
-  <data name="ParsimonySettings_Validate_The_value__0__for__1__is_not_valid__it_must_be_greater_than_or_equal_to__2__" xml:space="preserve">
-    <value>The value {0} for {1} is not valid: it must be greater than or equal to {2}.</value>
-  </data>
-  <data name="TextUtil_DeterminDsvSeparator_Unable_to_determine_format_of_delimiter_separated_value_file" xml:space="preserve">
-    <value>Unable to determine format of delimiter separated value file</value>
-  </data>
-  <data name="SkypSupport_Open_Path_to_skyp_file_cannot_be_empty_" xml:space="preserve">
-    <value>Path to skyp file cannot be empty.</value>
-  </data>
-  <data name="SkypDownloadException_GetMessage_Would_you_like_to_add__0__as_a_Panorama_server_in_Skyline_" xml:space="preserve">
-    <value>Would you like to add {0} as a Panorama server in Skyline?</value>
-  </data>
-  <data name="SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_invalid_" xml:space="preserve">
-    <value>Credentials saved in Skyline for the Panorama server {0} are invalid.</value>
-  </data>
-  <data name="SkypDownloadException_GetMessage_Would_you_like_to_update_the_credentials_" xml:space="preserve">
-    <value>Would you like to update the credentials?</value>
-  </data>
-  <data name="SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_for_the_user__1___This_user_does_not_have_permissions_to_download_the_file__The_skyp_file_was_downloaded_by__2__" xml:space="preserve">
-    <value>Credentials saved in Skyline for the Panorama server {0} are for the user {1}. This user does not have permissions to download the file. The skyp file was downloaded by {2}.</value>
-  </data>
-  <data name="SkypDownloadException_GetMessage_The_skyp_file_was_downloaded_by_the_user__0___Credentials_saved_in_Skyline_for_this_server_are_for_the_user__1__" xml:space="preserve">
-    <value>The skyp file was downloaded by the user {0}. Credentials saved in Skyline for this server are for the user {1}.</value>
-  </data>
-  <data name="AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_" xml:space="preserve">
-    <value>An error occurred during protein association.</value>
-  </data>
-  <data name="GenericState_AppendErrorAndUri_URL___0_" xml:space="preserve">
-    <value>URL: {0}</value>
-  </data>
   <data name="PanoramaUtil_EnsureLogin_Could_not_authenticate_user__Response_received_from_server___0___1_" xml:space="preserve">
     <value>Could not authenticate user. Response received from server: {0} {1}</value>
   </data>
@@ -4223,50 +3854,13 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__" xml:space="preserve">
     <value>Unable to connect to the server {0}.</value>
   </data>
-  <data name="SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive_file___0____Found_filename__1__instead_in_the_URL__2__" xml:space="preserve">
-    <value>Expected the URL of a shared Skyline document archive file ({0}). Found filename {1} instead in the URL {2}.</value>
-  </data>
-  <data name="ShareTypeDlg_OkDialog_Including_data_folders_is_not_supported_by_the_currently_selected_version_" xml:space="preserve">
-    <value>Including data folders is not supported by the currently selected version.</value>
-  </data>
   <data name="SpectrumClassFilter_MakePredicate_No_spectrum_column__0_" xml:space="preserve">
     <value>No spectrum column {0}</value>
-  </data>
-  <data name="Close" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Close.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="SpectraGridForm_AddSpectrumFilters__0__spectrum_filters_will_be_added_to_the_document_" xml:space="preserve">
     <value>{0} spectrum filters will be added to the document.</value>
   </data>
-  <data name="CommandLine_NewSkyFile_FileAlreadyExists" xml:space="preserve">
-    <value>File '{0}' already exists; add --overwrite to allow Skyline to overwrite it.</value>
-  </data>
-  <data name="CommandLine_NewSkyFile_Deleting_existing_file___0__" xml:space="preserve">
-    <value>Deleting existing file '{0}'</value>
-  </data>
-  <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins" xml:space="preserve">
-    <value>Associating peptides with proteins</value>
-  </data>
-  <data name="CommandLine_AssociateProteins_Failed_to_associate_proteins" xml:space="preserve">
-    <value>Failed to associate proteins</value>
-  </data>
-  <data name="ValueInvalidMzToleranceException_ValueInvalidMzToleranceException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_value_and_a_unit__For_example___2__" xml:space="preserve">
-    <value>The value {0} is not valid for the argument {1} which requires a value and a unit. For example: {2}.</value>
-  </data>
-  <data name="CommandLine_ProcessDocument_Error_saving_file" xml:space="preserve">
-    <value>Error: saving file</value>
-  </data>
-  <data name="SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions" xml:space="preserve">
-    <value>Do you want to enable Auto-select and use the document settings to manage these new transitions?
-
-Enable Auto-select: {0} precursor and {1} fragment transitions will be added to the current document.
-
-Disable Auto-select: {2} precursor and {3} fragment transitions will be added to the current document.
-
-If you choose Disable, you can enable Auto-select later with the "Refine &gt; Advanced" menu item.
-</value>
-  </data>
-  <data name="EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_could_not_find_EncyclopeDia" xml:space="preserve">
+  <data name="EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_could_not_find_EncyclopeDia" xml:space="preserve">
     <value>could not find EncyclopeDIA</value>
   </data>
   <data name="EncyclopeDiaHelpers_GenerateLibrary_Combining_quantification_libraries" xml:space="preserve">
@@ -4280,9 +3874,6 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   </data>
   <data name="EncyclopeDiaSearchDlg_Browse_For_Wide_Window_Results_Files" xml:space="preserve">
     <value>Browse for Wide Window Results Files</value>
-  </data>
-  <data name="CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins" xml:space="preserve">
-    <value>Error: a FASTA file must be imported before associating proteins</value>
   </data>
   <data name="SpectrumClassFilter_GetAbbreviatedText_OR" xml:space="preserve">
     <value>OR</value>
@@ -4327,9 +3918,6 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="Extensions_CustomToString_Protein_Expression" xml:space="preserve">
     <value>Protein Expression</value>
   </data>
-  <data name="CommandArgs_ParseAnnotationTypes_Error__Attempting_to_exclude_an_unknown_annotation_type__0___Try_one_of_the_following_" xml:space="preserve">
-    <value>Error: Attempting to exclude an unknown annotation type '{0}'. Try one of the following:</value>
-  </data>
   <data name="CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_" xml:space="preserve">
     <value>Annotations file {0} exported successfully.</value>
   </data>
@@ -4354,9 +3942,6 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="CommandLine_AddAnnotationFromEnvironment_Error__Cannot_add_new_annotation___0___without_providing_at_least_one_target_through__1__" xml:space="preserve">
     <value>Error: Cannot add new annotation '{0}' without providing at least one target through {1}.</value>
   </data>
-  <data name="CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_" xml:space="preserve">
-    <value>Annotations file {0} exported successfully.</value>
-  </data>
   <data name="CommandLine_ExportAnnotations_Try_one_of_the_following_" xml:space="preserve">
     <value>Try one of the following:</value>
   </data>
@@ -4368,5 +3953,8 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   </data>
   <data name="PeptideMod_SetTerminus_A_peptide_modification_must_be_added_before_giving_it_a_terminal_or_amino_acid_specificity_" xml:space="preserve">
     <value>A peptide modification must be added before giving it a terminal or amino acid specificity.</value>
+  </data>
+  <data name="koina_logo_fdf731d5" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\koina-logo.fdf731d5.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

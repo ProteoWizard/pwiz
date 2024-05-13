@@ -146,6 +146,31 @@ namespace pwiz.Skyline.Model
             bool isSpecificHeavy = FastaSequence.OPEN_MOD.All(paren => aas.Length > seq.Count(c => c == paren));
             var lossOnlyMods = Settings.PeptideSettings.Modifications.StaticModifications
                 .Where(m =>m.HasLoss && !m.HasMod).ToArray();
+            foreach (var modInfo in EnumerateMods(seq, false))
+            {
+                double? mass = modInfo.Mass;
+                if (mass.HasValue)
+                    mass = Math.Round(mass.Value, modInfo.RoundedTo);
+
+                var key = new AAModKey
+                {
+                    Name = modInfo.Name,
+                    Mass = mass,
+                    AA = modInfo.AA,
+                    Terminus = modInfo.ModTerminus,
+                    UserIndicatedHeavy = modInfo.IsHeavy,
+                    RoundedTo = modInfo.RoundedTo,
+                    AppearsToBeSpecificMod = isSpecificHeavy
+                };
+
+                yield return new AAModInfo
+                {
+                    ModKey = key,
+                    IndexAA = modInfo.IndexInUnmodifiedSequence,
+                    IndexAAInSeq = modInfo.IndexInModifiedSequence,
+                };
+            }
+
             int indexAA = 0;
             int indexAAInSeq = 0;
             int i = 0;
@@ -156,69 +181,9 @@ namespace pwiz.Skyline.Model
                 if (indexBracket < seq.Length && (FastaSequence.OPEN_MOD.Contains(seq[indexBracket])))
                 {
                     char openBracket = seq[indexBracket];
-                    bool isHeavy = openBracket == '{';
                     char closeBracket = FastaSequence.CLOSE_MOD[FastaSequence.OPEN_MOD.IndexOf(c => c == openBracket)];
-                    int indexStart = indexBracket + 1;
                     int indexClose = seq.IndexOf(closeBracket, indexBracket);
-                    string mod = seq.Substring(indexStart, indexClose - indexStart);
                     i = indexClose;
-                    ModTerminus? modTerminus = null;
-                    if (indexAA == 0)
-                        modTerminus = ModTerminus.N;
-                    if (indexAA == aas.Length - 1)
-                        modTerminus = ModTerminus.C;
-                    string name = null;
-                    double? mass = null;
-                    int roundedTo = 0;
-                    // If passed in modification in UniMod notation, look up the id and find the name and mass
-                    int uniModId;
-                    if (TryGetIdFromUnimod(mod, out uniModId))
-                    {
-                        var staticMod = GetStaticMod(uniModId, aa, modTerminus);
-                        if (staticMod == null)
-                        {
-                            throw ThrowUnimodException(seq, uniModId, indexAA, indexBracket, indexClose);
-                        }
-                        name = staticMod.Name;
-                        isHeavy = !UniMod.IsStructuralModification(name);
-                        // CONSIDER: Mass depends on TransitionPrediction settings for precursors
-                        mass = staticMod.MonoisotopicMass;
-                        roundedTo = DEFAULT_ROUNDING_DIGITS;
-                    }
-                    else 
-                    {
-                        MassModification massModification = MassModification.Parse(mod);
-                        if (massModification != null)
-                        {
-                            mass = massModification.Mass;
-                            roundedTo = Math.Min(massModification.Precision, DEFAULT_ROUNDING_DIGITS);
-                        }
-                        else
-                        {
-                           name = mod;
-                        }
-                    }
-                    
-                    if (mass.HasValue)
-                        mass = Math.Round(mass.Value, roundedTo);
- 
-                    var key = new AAModKey
-                    {
-                        Name = name,
-                        Mass = mass,
-                        AA = aa,
-                        Terminus = modTerminus,
-                        UserIndicatedHeavy = isHeavy,
-                        RoundedTo = roundedTo,
-                        AppearsToBeSpecificMod = isSpecificHeavy
-                    };
-
-                    yield return new AAModInfo
-                    {
-                        ModKey = key,
-                        IndexAA = indexAA,
-                        IndexAAInSeq = indexAAInSeq,
-                    };
                 }
                 else
                 {
@@ -253,6 +218,123 @@ namespace pwiz.Skyline.Model
                         };
                     }
                 }
+                // If the next character is a bracket, continue using the same amino
+                // acid and leave i where it is.
+                int iNext = i + 1;
+                if (iNext >= seq.Length || !FastaSequence.OPEN_MOD.Contains(seq[iNext]))
+                {
+                    i = indexAAInSeq = iNext;
+                    indexAA++;
+                }
+            }
+        }
+
+        public class ModInfo
+        {
+            public ModInfo(StaticMod mod, int indexInUnmodifiedSequence, int indexInModifiedSequence,
+                char aa, ModTerminus? modTerminus, int roundedTo, bool isHeavy)
+            {
+                Mod = mod;
+                Name = mod?.Name;
+                Mass = mod?.MonoisotopicMass;
+                IndexInUnmodifiedSequence = indexInUnmodifiedSequence;
+                IndexInModifiedSequence = indexInModifiedSequence;
+                AA = aa;
+                ModTerminus = modTerminus;
+                RoundedTo = roundedTo;
+                IsHeavy = isHeavy;
+            }
+
+            public ModInfo(string name, double? mass, int indexInUnmodifiedSequence, int indexInModifiedSequence,
+                char aa, ModTerminus? modTerminus, int roundedTo, bool isHeavy)
+                : this(null, indexInUnmodifiedSequence, indexInModifiedSequence, aa, modTerminus, roundedTo, isHeavy)
+            {
+                Name = name;
+                Mass = mass;
+            }
+
+            public string Name { get; }
+            public double? Mass { get; }
+            public StaticMod Mod { get; }
+            public int IndexInUnmodifiedSequence { get; }
+            public int IndexInModifiedSequence { get; }
+            public char AA { get; }
+            public ModTerminus? ModTerminus { get; }
+            public int RoundedTo { get; }
+            public bool IsHeavy { get; }
+        }
+
+        public static IEnumerable<ModInfo> EnumerateMods(string modifiedSequence, bool matchUnimodNames = true)
+        {
+            int indexAA = 0;
+            int indexAAInSeq = 0;
+            int i = 0;
+            string seq = modifiedSequence;
+            var unmodifiedSequence = FastaSequence.StripModifications(modifiedSequence);
+            while (i < seq.Length)
+            {
+                var aa = unmodifiedSequence[indexAA];
+                int indexBracket = i + 1;
+                if (indexBracket < seq.Length && (FastaSequence.OPEN_MOD.Contains(seq[indexBracket])))
+                {
+                    char openBracket = seq[indexBracket];
+                    char closeBracket = FastaSequence.CLOSE_MOD[FastaSequence.OPEN_MOD.IndexOf(c => c == openBracket)];
+                    int indexStart = indexBracket + 1;
+                    int indexClose = seq.IndexOf(closeBracket, indexBracket);
+                    string mod = seq.Substring(indexStart, indexClose - indexStart);
+                    i = indexClose;
+                    ModTerminus? modTerminus = null;
+                    if (indexAA == 0)
+                        modTerminus = ModTerminus.N;
+                    if (indexAA == unmodifiedSequence.Length - 1)
+                        modTerminus = ModTerminus.C;
+
+                    bool isHeavy = openBracket == '{';
+                    int roundedTo = 0;
+                    StaticMod staticMod = null;
+                    MassModification massModification = MassModification.Parse(mod);
+                    if (massModification != null)
+                    {
+                        staticMod = new StaticMod(mod, aa.ToString(), modTerminus, null, LabelAtoms.None, massModification.Mass, massModification.Mass);
+                        roundedTo = Math.Min(massModification.Precision, DEFAULT_ROUNDING_DIGITS);
+                    }
+                    else
+                    {
+                        if (matchUnimodNames)
+                        {
+                            try
+                            {
+                                staticMod = GetStaticMod(mod, modTerminus, aa.ToString());
+                            }
+                            catch (ArgumentException)
+                            {
+                                TryGetIdFromUnimod(mod, out int uniModId);
+                                ThrowUnimodException(seq, uniModId, indexAA, indexBracket, indexClose);
+                            }
+                        }
+                        else
+                        {
+                            if (TryGetIdFromUnimod(mod, out int uniModId))
+                            {
+                                staticMod = GetStaticMod(uniModId, aa, modTerminus);
+                                if (staticMod == null)
+                                    throw ThrowUnimodException(seq, uniModId, indexAA, indexBracket, indexClose);
+                            }
+                            else
+                            {
+                                yield return new ModInfo(mod, null, indexAA, indexAAInSeq, aa, modTerminus, roundedTo, false);
+                                continue;
+                            }
+                        }
+
+                        roundedTo = DEFAULT_ROUNDING_DIGITS;
+                        if (staticMod!.UnimodId != null)
+                            isHeavy = !UniMod.IsStructuralModification(staticMod.Name);
+                    }
+
+                    yield return new ModInfo(staticMod, indexAA, indexAAInSeq, aa, modTerminus, roundedTo, isHeavy);
+                }
+
                 // If the next character is a bracket, continue using the same amino
                 // acid and leave i where it is.
                 int iNext = i + 1;
@@ -344,15 +426,9 @@ namespace pwiz.Skyline.Model
         {
             if (TryGetIdFromUnimod(unimodNameOrId, out int uniModId))
             {
-                var key = new UniMod.UniModIdKey
-                {
-                    Id = uniModId,
-                    Aa = modAAs?[0] ?? 'A', // any AA will work for terminal mods due to how UniMod.AddMod handles "all AA" mods
-                    AllAas = modAAs == null,
-                    Terminus = modTerminus
-                };
-                if (UniMod.DictUniModIds.TryGetValue(key, out var mod))
-                    return mod;
+                var mod = GetStaticMod(uniModId, modAAs?[0] ?? 'A', modTerminus);
+                if (mod != null) return mod;
+
                 var id = uniModId;
                 int idMatches = UniMod.DictUniModIds.Count(kvp => kvp.Key.Id == id);
                 if (idMatches == 1) // key didn't match because terminus and AAs weren't needed for specificity
@@ -434,7 +510,7 @@ namespace pwiz.Skyline.Model
             return sb.ToString();
         }
 
-        private static Exception ThrowUnimodException(string seq, int uniModId, int indexAA, int indexBracket, int indexClose)
+        public static Exception ThrowUnimodException(string seq, int uniModId, int indexAA, int indexBracket, int indexClose)
         {
             int indexFirst = Math.Max(0, indexBracket - 1);
             int indexLast = Math.Min(seq.Length, indexClose + 1);

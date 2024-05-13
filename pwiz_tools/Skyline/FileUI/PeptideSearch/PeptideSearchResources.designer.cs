@@ -397,11 +397,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reusing Prosit predictions from: {0}.
+        ///   Looks up a localized string similar to Reusing Koina predictions from: {0}.
         /// </summary>
-        public static string EncyclopeDiaSearchControl_Search_Reusing_Prosit_predictions_from___0_ {
+        public static string EncyclopeDiaSearchControl_Search_Reusing_Koina_predictions_from___0_ {
             get {
-                return ResourceManager.GetString("EncyclopeDiaSearchControl_Search_Reusing_Prosit_predictions_from___0_", resourceCulture);
+                return ResourceManager.GetString("EncyclopeDiaSearchControl_Search_Reusing_Koina_predictions_from___0_", resourceCulture);
             }
         }
         
@@ -415,9 +415,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A FASTA file is required for an EncyclopeDIA Prosit search..
+        ///   Looks up a localized string similar to A FASTA file is required for an EncyclopeDIA Koina search..
         /// </summary>
-        public static string EncyclopeDiaSearchDlg_NextPage_A_FASTA_file_is_required_for_an_EncyclopeDia_Prosit_search_ {
+        public static string EncyclopeDiaSearchDlg_NextPage_A_FASTA_file_is_required_for_an_EncyclopeDia_Koina_search_ {
             get {
                 return ResourceManager.GetString("EncyclopeDiaSearchDlg_NextPage_A_FASTA_file_is_required_for_an_EncyclopeDia_Prosi" +
                         "t_search_", resourceCulture);

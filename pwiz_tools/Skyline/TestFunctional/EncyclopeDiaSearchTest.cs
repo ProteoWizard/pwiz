@@ -25,8 +25,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
-using pwiz.Skyline.Model.Prosit.Config;
-using pwiz.Skyline.Model.Prosit.Models;
+using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Util;
@@ -45,19 +44,14 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        public static bool HasPrositServer()
-        {
-            return !string.IsNullOrEmpty(PrositConfig.GetPrositConfig().RootCertificate);
-        }
-
         private bool IsRecordMode => false;
-        private int[] FinalTargetCounts = { 34, 36, 36, 144 };
+        private int[] FinalTargetCounts = { 33, 35, 35, 140 };
 
         protected override void DoTest()
         {
-            if (!HasPrositServer())
+            if (!HasKoinaServer())
             {
-                Console.Error.WriteLine("NOTE: skipping EncyclopeDIA test because Prosit is not configured (replace PrositConfig.xml in Skyline\\Model\\Prosit\\Config - see https://skyline.ms/wiki/home/development/page.view?name=Prosit)");
+                Console.Error.WriteLine("NOTE: skipping EncyclopeDIA test because Koina is not configured (replace KoinaConfig.xml in Skyline\\Model\\Koina\\Config - see https://skyline.ms/wiki/home/development/page.view?name=Prosit)");
                 return;
             }
 
@@ -68,14 +62,15 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => searchDlg.ImportFastaControl.SetFastaContent(fastaFilepath));
             //PauseTest();
 
-            // if UseOriginalURLs, delete the blib so it will have to be freshly predicted from Prosit
+            // if UseOriginalURLs, delete the blib so it will have to be freshly predicted from Koina
+            string blibFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-koina-Prosit_2019_intensity-Prosit_2019_irt-5950B898E945AE52AD86D9CE06220EE.blib");
             if (Program.UseOriginalURLs)
-                File.Delete(TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-prosit-5950B898E945AE52AD86D9CE06220EE.blib"));
+                File.Delete(blibFilepath);
 
-            RunUI(searchDlg.NextPage); // now on Prosit settings
+            RunUI(searchDlg.NextPage); // now on Koina settings
 
-            Settings.Default.PrositIntensityModel = PrositIntensityModel.Models.First();
-            Settings.Default.PrositRetentionTimeModel = PrositRetentionTimeModel.Models.First();
+            Settings.Default.KoinaIntensityModel = KoinaIntensityModel.Models.First();
+            Settings.Default.KoinaRetentionTimeModel = KoinaRetentionTimeModel.Models.First();
             RunUI(() =>
             {
                 searchDlg.DefaultCharge = 3;
@@ -220,7 +215,7 @@ namespace pwiz.SkylineTestFunctional
                 targetCounts[1] = peptideCount;
                 targetCounts[2] = precursorCount;
                 targetCounts[3] = transitionCount;
-                Console.WriteLine(@"{0} = new[] {{ {1}, {2}, {3}, {4} }},", propName, proteinCount, peptideCount, precursorCount, transitionCount);
+                Console.WriteLine(@"{0} = {{ {1}, {2}, {3}, {4} }},", propName, proteinCount, peptideCount, precursorCount, transitionCount);
                 return;
             }
 

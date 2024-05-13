@@ -1315,7 +1315,7 @@
   <data name="EmptyList" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\EmptyList.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_could_not_find_EncyclopeDia" xml:space="preserve">
+  <data name="EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_could_not_find_EncyclopeDia" xml:space="preserve">
     <value>EncyclopeDIAを見つけられませんでした</value>
   </data>
   <data name="EncyclopeDiaHelpers_GenerateLibrary_Combining_chromatogram_libraries" xml:space="preserve">
@@ -1490,7 +1490,7 @@
     <comment>"min" stands for "minutes"</comment>
   </data>
   <data name="GraphFullScan_CreateGraph_CE_" xml:space="preserve">
-    <value>CE：</value>
+    <value>NCE：</value>
   </data>
   <data name="GraphFullScan_CreateGraph_IM__0_" xml:space="preserve">
     <value>イオン移動度={0}</value>

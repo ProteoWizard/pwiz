@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -1278,6 +1279,36 @@ namespace pwiz.Skyline.Model.Lib
                 PrimitiveArrays.WriteOneValue(stream, entry.Value.StartTime);
                 PrimitiveArrays.WriteOneValue(stream, entry.Value.EndTime);
                 PrimitiveArrays.WriteOneValue(stream, entry.Value.Score);
+            }
+        }
+
+        public void WriteDebugMgf(string filepath, int? precision = null)
+        {
+            using var mgf = new StreamWriter(filepath);
+            var emc = new SequenceMassCalc(MassType.Monoisotopic);
+
+            string formatMgfDouble(double value)
+            {
+                if (precision.HasValue)
+                    return value.ToString(@"F" + precision.Value, CultureInfo.InvariantCulture);
+                return value.ToString(CultureInfo.InvariantCulture);
+            }
+
+            foreach (PeptideLibraryKey key in Keys)
+            {
+                var spectra = GetSpectra(key, IsotopeLabelType.light, LibraryRedundancy.best);
+                var spectrum = spectra.First();
+                double mass = emc.GetPrecursorMass(key.UnmodifiedSequence) +
+                              key.GetModifications().Sum(mod => MassModification.Parse(mod.Value).Mass);
+                mgf.WriteLine(@"BEGIN IONS");
+                mgf.WriteLine(@"TITLE=" + key.ModifiedSequence);
+                mgf.WriteLine(@"RTINSECONDS=" + formatMgfDouble(spectrum.RetentionTime.GetValueOrDefault(0) * 60));
+                mgf.WriteLine(@"CHARGE=" + key.Charge + @"+");
+                mgf.WriteLine(@"PEPMASS=" + formatMgfDouble(key.Adduct.MzFromNeutralMass(new TypedMass(mass, MassType.Monoisotopic))));
+                foreach (var peak in spectrum.SpectrumPeaksInfo.Peaks.OrderBy(peak => peak.Mz))
+                    if (peak.Intensity > 0)
+                        mgf.WriteLine(@"{0}	{1}", formatMgfDouble(peak.Mz), formatMgfDouble(peak.Intensity));
+                mgf.WriteLine(@"END IONS");
             }
         }
 
