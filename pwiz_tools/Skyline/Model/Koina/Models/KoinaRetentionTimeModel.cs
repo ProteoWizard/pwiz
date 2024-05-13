@@ -99,7 +99,7 @@ namespace pwiz.Skyline.Model.Koina.Models
         {
             @"Prosit_2019_irt",
             //@"Prosit_2020_irt_TMT",
-            @"Deeplc_hela_hf",
+            //@"Deeplc_hela_hf",
             @"AlphaPept_rt_generic"
         };
 
