@@ -298,8 +298,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     DocumentUI.Settings.PeptideSettings.Modifications.StaticModifications,
                     e.DocumentPrevious.Settings.PeptideSettings.Modifications.StaticModifications))
             {
-                var newMods = DocumentUI.Settings.PeptideSettings.Modifications.StaticModsFormulae;
-                var oldMods = e.DocumentPrevious.Settings.PeptideSettings.Modifications.StaticModsFormulae;
+                var newMods = DocumentUI.Settings.PeptideSettings.Modifications.StaticModsLosses;
+                var oldMods = e.DocumentPrevious.Settings.PeptideSettings.Modifications.StaticModsLosses;
                 var addedMods = newMods.ToList().FindAll(newMod => !oldMods.Contains(newMod)).ToList();
                 if (addedMods.Any())
                     Settings.Default.ShowLosses = Settings.Default.ShowLosses + @"," + addedMods.ToString(@",");
@@ -315,7 +315,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                  e.DocumentPrevious.Settings.PeptideSettings.Libraries.Libraries))
             {
                 ZoomSpectrumToSettings();
-                Settings.Default.ShowLosses = DocumentUI.Settings.PeptideSettings.Modifications.StaticModsFormulae.ToString(@",");
+                Settings.Default.ShowLosses = DocumentUI.Settings.PeptideSettings.Modifications.StaticModsLosses.ToString(@",");
                 _updateManager.ClearPrecursors();
                 UpdateUI();
             }
@@ -1829,7 +1829,10 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return Set.ShowLosses.IsNullOrEmpty() ? new string[] {} : Set.ShowLosses.Split(',');
             }
-            set { ActAndUpdate(() => Set.ShowLosses = value.ToList().ToString(@","));}
+            set
+            {
+                ActAndUpdate(() => Set.ShowLosses = value.ToList().ToString(@","));
+            }
         }
 
         public bool Koina
