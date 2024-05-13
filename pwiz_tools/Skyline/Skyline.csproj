@@ -412,7 +412,7 @@
     </Compile>
     <Compile Include="Controls\Lists\ListViewContext.cs" />
     <Compile Include="Controls\SeqNode\PeptideFormatter.cs" />
-    <Compile Include="Controls\PrositUIHelpers.cs" />
+    <Compile Include="Controls\KoinaUIHelpers.cs" />
     <Compile Include="Controls\Spectra\PrecursorClass.cs" />
     <Compile Include="Controls\Spectra\MatchingPrecursors.cs" />
     <Compile Include="Controls\Spectra\SpectrumGridForm.cs">
@@ -540,6 +540,10 @@
     <Compile Include="Model\FullScanProperties.cs" />
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Results\Scoring\ReintegrateDlgSettings.cs" />
+    <Compile Include="Model\Results\Spectra\Alignment\BinnedSpectrum.cs" />
+    <Compile Include="Model\Results\Spectra\Alignment\SimilarityGrid.cs" />
+    <Compile Include="Model\Results\Spectra\Alignment\SpectrumSummary.cs" />
+    <Compile Include="Model\Results\Spectra\Alignment\SpectrumSummaryList.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassFilter.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
     <Compile Include="Model\RetentionTimes\AlignmentFunction.cs" />
@@ -548,6 +552,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>SpectrumPropertiesResx.resx</DependentUpon>
     </Compile>
+    <Compile Include="Model\DdaSearch\HardklorSearchEngine.cs" />
     <Compile Include="Model\DdaSearch\MsconvertDdaConverter.cs" />
     <Compile Include="FileUI\SkypSupport.cs" />
     <Compile Include="Menus\ChromatogramContextMenu.cs">
@@ -746,11 +751,6 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>RetentionTimesResources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Model\Prosit\PrositResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>PrositResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Lib\ChromLib\ChromLibResources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -1017,11 +1017,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>UnifiResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\Prosit\Models\ModelsResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ModelsResources.resx</DependentUpon>
-    </Compile>
     <Compile Include="Controls\Spectra\SpectraResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -1034,6 +1029,9 @@
     <Compile Include="Controls\Graphs\MsGraphExtension.Designer.cs">
       <DependentUpon>MsGraphExtension.cs</DependentUpon>
     </Compile>
+    <Compile Include="ProtocolBuffers\GeneratedCode\GrpcService.cs" />
+    <Compile Include="ProtocolBuffers\GeneratedCode\GrpcServiceGrpc.cs" />
+    <Compile Include="ProtocolBuffers\GeneratedCode\ModelConfig.cs" />
     <Compile Include="SettingsUI\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
     <Compile Include="Model\Lib\LibraryKey.cs" />
@@ -1047,16 +1045,21 @@
     <Compile Include="Model\IsotopeModificationPermuter.cs" />
     <Compile Include="Model\Optimization\OptimizationDictionary.cs" />
     <Compile Include="Model\ProgressMonitor.cs" />
-    <Compile Include="Model\Prosit\Config\PrositConfig.cs" />
-    <Compile Include="Model\Prosit\Models\PrositIntensityModel.cs" />
-    <Compile Include="Model\Prosit\Models\PrositModel.cs" />
-    <Compile Include="Model\Prosit\PrositConstants.cs" />
-    <Compile Include="Model\Prosit\Communication\PrositPredictionClient.cs" />
-    <Compile Include="Model\Prosit\Models\PrositRetentionTimeModel.cs" />
-    <Compile Include="Model\Prosit\PrositExceptions.cs" />
-    <Compile Include="Model\Prosit\PrositLibraryBuilder.cs" />
-    <Compile Include="Model\Prosit\PrositMS2Spectra.cs" />
-    <Compile Include="Model\Prosit\PrositRetentionScoreCalculator.cs" />
+    <Compile Include="Model\Koina\Config\KoinaConfig.cs" />
+    <Compile Include="Model\Koina\Models\KoinaIntensityModel.cs" />
+    <Compile Include="Model\Koina\Models\KoinaModel.cs" />
+    <Compile Include="Model\Koina\KoinaConstants.cs" />
+    <Compile Include="Model\Koina\Communication\KoinaPredictionClient.cs" />
+    <Compile Include="Model\Koina\Models\KoinaRetentionTimeModel.cs" />
+    <Compile Include="Model\Koina\KoinaExceptions.cs" />
+    <Compile Include="Model\Koina\KoinaLibraryBuilder.cs" />
+    <Compile Include="Model\Koina\KoinaMS2Spectra.cs" />
+    <Compile Include="Model\Koina\KoinaResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>KoinaResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Koina\KoinaRetentionScoreCalculator.cs" />
     <Compile Include="Model\Results\PeakIntegrator.cs" />
     <Compile Include="Model\Results\NormalizedValueCalculator.cs" />
     <Compile Include="Model\Results\NormalizeOption.cs" />
@@ -1124,14 +1127,6 @@
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiUrl.cs" />
     <Compile Include="Model\TargetResolver.cs" />
     <Compile Include="Model\TransitionGroupIonMobilityInfo.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\Model.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\Predict.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\PredictionService.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\PredictionServiceGrpc.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\ResourceHandle.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\Tensor.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\TensorShape.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\Types.cs" />
     <Compile Include="SettingsUI\MetadataRuleEditor.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -3121,6 +3116,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\SearchSettingsControl.resx">
       <DependentUpon>SearchSettingsControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\SearchSettingsControl.zh-CHS.resx">
       <DependentUpon>SearchSettingsControl.cs</DependentUpon>
@@ -3683,17 +3679,17 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\GroupComparison\GroupComparisonStrings.zh-CHS.resx" />
-    <EmbeddedResource Include="Model\Prosit\PrositResources.ja.resx">
-      <DependentUpon>PrositResources.resx</DependentUpon>
+    <EmbeddedResource Include="Model\Koina\KoinaResources.ja.resx">
+      <DependentUpon>KoinaResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\Prosit\PrositResources.resx">
+    <EmbeddedResource Include="Model\Koina\KoinaResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>PrositResources.Designer.cs</LastGenOutput>
+      <LastGenOutput>KoinaResources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\Prosit\PrositResources.zh-CHS.resx">
-      <DependentUpon>PrositResources.resx</DependentUpon>
+    <EmbeddedResource Include="Model\Koina\KoinaResources.zh-CHS.resx">
+      <DependentUpon>KoinaResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Results\Scoring\FeatureTooltips.ja.resx">
@@ -3975,14 +3971,7 @@
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchPRM.png" />
     <EmbeddedResource Include="Resources\Ions_fragments.bmp" />
     <EmbeddedResource Include="Resources\Edit_Undo_Multiple.bmp" />
-    <Protobuf Include="ProtocolBuffers\model.proto" />
-    <Protobuf Include="ProtocolBuffers\predict.proto" />
-    <Protobuf Include="ProtocolBuffers\prediction_service.proto" />
-    <Protobuf Include="ProtocolBuffers\resource_handle.proto" />
-    <Protobuf Include="ProtocolBuffers\tensor.proto" />
-    <Protobuf Include="ProtocolBuffers\tensor_shape.proto" />
-    <Protobuf Include="ProtocolBuffers\types.proto" />
-    <EmbeddedResource Include="Model\Prosit\Config\PrositConfig.xml">
+    <EmbeddedResource Include="Model\Koina\Config\KoinaConfig.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <Content Include="..\..\pwiz\data\common\psi-ms.obo">
@@ -4008,9 +3997,11 @@
     <None Include="Method\Agilent\MH12\BuildAgilentMH12Method.exe.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Model\Prosit\Config\PrositConfig_development.xml" />
+    <None Include="Model\Koina\Config\KoinaConfig_development.xml" />
     <None Include="ProtocolBuffers\google\protobuf\wrappers.proto" />
     <None Include="PreBuildEvents.bat" />
+    <Protobuf Include="ProtocolBuffers\grpc_service.proto" />
+    <Protobuf Include="ProtocolBuffers\model_config.proto" />
     <None Include="Resources\Locked.bmp" />
     <EmbeddedResource Include="Resources\MoleculeLib.bmp" />
     <None Include="Resources\MoleculeStandard.bmp" />
@@ -4134,9 +4125,10 @@
     <None Include="Resources\AnnotatedSpectum.png" />
     <None Include="Resources\Cluster.ico" />
     <None Include="Resources\Close.bmp" />
+    <Content Include="Resources\hardklor_logo.png" />
     <None Include="Resources\PanoramaDownload.bmp" />
+    <EmbeddedResource Include="Resources\koina-logo.fdf731d5.png" />
     <Content Include="SkylineDocPointer.ico" />
-    <EmbeddedResource Include="Resources\prosit_logo_dark_blue.png" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -5708,19 +5700,24 @@
       <DependentUpon>UnifiResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\Prosit\Models\ModelsResources.resx">
+    <EmbeddedResource Include="Model\Koina\Models\ModelsResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <LastGenOutput>ModelsResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\Prosit\Models\ModelsResources.ja.resx">
+    <EmbeddedResource Include="Model\Koina\Models\ModelsResources.ja.resx">
       <DependentUpon>ModelsResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\Prosit\Models\ModelsResources.zh-CHS.resx">
+    <EmbeddedResource Include="Model\Koina\Models\ModelsResources.zh-CHS.resx">
       <DependentUpon>ModelsResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <Compile Include="Model\Koina\Models\ModelsResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ModelsResources.resx</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="Controls\Spectra\SpectraResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -6247,6 +6244,14 @@
       <Link>vcruntime140_1.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="Executables\Hardklor\obj\x86\Hardklor.exe">
+      <Link>Hardklor.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="Executables\Hardklor\obj\x64\Hardklor.exe">
+      <Link>Hardklor.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Waters\vc12_x86\cdt.dll">
       <Link>cdt.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -6731,6 +6736,10 @@
       <Link>SkylineCmd.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="bin\$(Platform)\$(Configuration)\BullseyeSharp.exe">
+      <Link>BullseyeSharp.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="SkylineLog4Net.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -6810,6 +6819,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="BaseDataAccess">
@@ -6820,6 +6833,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="BaseTof">
@@ -6830,6 +6847,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="BiblioSpec.pdb">
@@ -6840,6 +6861,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="Clearcore2.Data">
@@ -6850,6 +6875,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Clearcore2.Data.CommonInterfaces">
@@ -6860,6 +6889,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Clearcore2.RawXYProcessing">
@@ -6870,6 +6903,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="enzymes.xml">
@@ -6880,6 +6917,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="Instruments.xml">
@@ -6890,6 +6931,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="JetBrains.Annotations">
@@ -6900,6 +6945,10 @@
       </TargetPath>
       <PublishState>Exclude</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="MassSpecDataReader">
@@ -6910,6 +6959,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Microsoft.VC90.CRT">
@@ -6920,6 +6973,10 @@
       </TargetPath>
       <PublishState>Exclude</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Microsoft.VC90.MFC">
@@ -6930,6 +6987,10 @@
       </TargetPath>
       <PublishState>Exclude</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="modifications.xml">
@@ -6940,6 +7001,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="MSGraph.pdb">
@@ -6950,6 +7015,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="OFX.Core.Contracts">
@@ -6960,6 +7029,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="PanoramaClient.pdb">
@@ -6970,6 +7043,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="ProteomeDb.pdb">
@@ -6980,6 +7057,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="ProteowizardWrapper.pdb">
@@ -6990,6 +7071,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="pwiz.Common.pdb">
@@ -7000,6 +7085,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="pwiz.CommonUtil.pdb">
@@ -7010,6 +7099,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="Sciex.Data.SimpleTypes">
@@ -7020,6 +7113,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Skyline-daily.pdb">
@@ -7030,6 +7127,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="SkylineTool.pdb">
@@ -7040,6 +7141,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="unimod.xml">
@@ -7050,6 +7155,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
   </ItemGroup>

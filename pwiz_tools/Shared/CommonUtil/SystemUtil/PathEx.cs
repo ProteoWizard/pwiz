@@ -22,6 +22,7 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -253,6 +254,23 @@ namespace pwiz.Common.SystemUtil
                 path = Regex.Replace(path, @"&(?!(?:apos|quot|[gl]t|amp);|#)", @"&amp;");
             }
             return path;
+        }
+
+        /// <summary>
+        /// Returns true iff c is a valid filename character (e.g. isn't one of \/*:?&lt;>|" nor a non-printable chars).
+        /// </summary>
+        public static bool IsValidFilenameChar(char c)
+        {
+            const string illegalFilename = "\\/*:?<>|\"";
+            return !(c < 0x20 || c == 0x7f || illegalFilename.Contains(c));
+        }
+
+        /// <summary>
+        /// Replaces invalid filename characters (\/*:?&lt;>|" and non-printable chars) with a replacement character (default '_').
+        /// </summary>
+        public static string ReplaceInvalidFilenameCharacters(string filename, char replacementChar = '_')
+        {
+            return filename.All(IsValidFilenameChar) ? filename : new string(filename.Select(c => IsValidFilenameChar(c) ? c : '_').ToArray());
         }
 
         /// <summary>

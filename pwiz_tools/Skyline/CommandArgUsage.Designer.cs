@@ -133,6 +133,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Associate peptides in the document with proteins from the given FASTA. If this argument is not provided but other --associate-proteins options are, then the FASTA from --import-fasta will be used. If --import-fasta is not provided either, then the last FASTA used for protein association will be used..
+        /// </summary>
+        public static string _associate_proteins_fasta {
+            get {
+                return ResourceManager.GetString("_associate_proteins_fasta", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Associate peptides with genes (or gene groups) instead of proteins, and apply parsimony options to that association..
         /// </summary>
         public static string _associate_proteins_gene_level_parsimony {

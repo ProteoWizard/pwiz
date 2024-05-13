@@ -39,7 +39,7 @@ using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.ChromLib;
 using pwiz.Skyline.Model.Lib.Midas;
-using pwiz.Skyline.Model.Prosit;
+using pwiz.Skyline.Model.Koina;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
@@ -1525,11 +1525,11 @@ namespace pwiz.Skyline.Model.Lib
             return null;
         }
 
-        protected LibrarySpec(string name, string path)
+        protected LibrarySpec(string name, string path, bool useExplicitPeakBounds = true)
             : base(name)
         {
             FilePath = path;
-            UseExplicitPeakBounds = true;
+            UseExplicitPeakBounds = useExplicitPeakBounds;
         }
 
         [Track]
@@ -2201,6 +2201,11 @@ namespace pwiz.Skyline.Model.Lib
             return new MoleculeAccessionNumbers(OtherKeys, InChiKey);
         }
 
+        internal static string FormatMass(double mass)
+        {
+            return string.Format(@"{0:F04}", mass);
+        }
+
         public List<KeyValuePair<string,string>> LocalizedKeyValuePairs
         {
             get
@@ -2218,12 +2223,12 @@ namespace pwiz.Skyline.Model.Lib
                 var massMono = BioMassCalc.MONOISOTOPIC.CalculateMass(ChemicalFormulaOrMasses);
                 if (massMono != 0)
                 {
-                    smallMolLines.Add(new KeyValuePair<string, string>(LibResources.SmallMoleculeLibraryAttributes_KeyValuePairs_Monoisotopic_mass, massMono.ToString()));
+                    smallMolLines.Add(new KeyValuePair<string, string>(LibResources.SmallMoleculeLibraryAttributes_KeyValuePairs_Monoisotopic_mass, FormatMass(massMono)));
                 }
                 var massAverage = BioMassCalc.AVERAGE.CalculateMass(ChemicalFormulaOrMasses);
                 if (massAverage != 0)
                 {
-                    smallMolLines.Add(new KeyValuePair<string, string>(LibResources.SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass, chemicalFormula));
+                    smallMolLines.Add(new KeyValuePair<string, string>(LibResources.SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass, FormatMass(massAverage)));
                 }
                 if (!string.IsNullOrEmpty(InChiKey))
                 {
@@ -2487,7 +2492,7 @@ namespace pwiz.Skyline.Model.Lib
         public abstract LibraryChromGroup ChromatogramData { get; }
     }
 
-    public class SpectrumInfoLibrary : SpectrumInfo
+    public class SpectrumInfoLibrary : SpectrumInfo, IEquatable<SpectrumInfoLibrary>
     {
         private Library _library;
         // Cache peaks and chromatograms to avoid loading every time
@@ -2551,6 +2556,39 @@ namespace pwiz.Skyline.Model.Lib
         public IonMobilityAndCCS IonMobilityInfo { get; private set; }
         public string Protein { get; private set; } // Also used as Molecule List Name for small molecules
 
+        public bool Equals(SpectrumInfoLibrary other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return base.Equals(other) && 
+                   Equals(_library, other._library) && 
+                   Equals(_peaksInfo, other._peaksInfo) && 
+                   Equals(_chromGroup, other._chromGroup) && 
+                   Equals(SpectrumKey, other.SpectrumKey) && 
+                   Equals(SpectrumHeaderInfo, other.SpectrumHeaderInfo) && 
+                   FilePath == other.FilePath && Nullable.Equals(RetentionTime, other.RetentionTime) && 
+                   Equals(IonMobilityInfo, other.IonMobilityInfo) && 
+                   Protein == other.Protein;
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hashCode = base.GetHashCode();
+                hashCode = (hashCode * 397) ^ (_library != null ? _library.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (_peaksInfo != null ? _peaksInfo.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (_chromGroup != null ? _chromGroup.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (SpectrumKey != null ? SpectrumKey.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (SpectrumHeaderInfo != null ? SpectrumHeaderInfo.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (FilePath != null ? FilePath.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ RetentionTime.GetHashCode();
+                hashCode = (hashCode * 397) ^ (IonMobilityInfo != null ? IonMobilityInfo.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Protein != null ? Protein.GetHashCode() : 0);
+                return hashCode;
+            }
+        }
+
         public SpectrumProperties CreateProperties(ViewLibraryPepInfo pepInfo, TransitionGroupDocNode precursorInfo, LibKeyModificationMatcher matcher, SpectrumProperties currentProperties = null)
         {
             string baseCCS = null;
@@ -2573,12 +2611,16 @@ namespace pwiz.Skyline.Model.Lib
                     baseIM = string.Format(@"{0:F2} {1}", IonMobilityInfo.IonMobility.Mobility, IonMobilityInfo.IonMobility.UnitsString);
             }
 
+            var isMolecule = pepInfo.Target != null && !pepInfo.Target.IsProteomic;
+
             var res = new SpectrumProperties()
             {
                 LibraryName = Name,
                 PrecursorMz = precursorInfo.PrecursorMz.Value.ToString(Formats.Mz),
                 Score = SpectrumHeaderInfo?.Score,
                 Charge = pepInfo.Charge,
+                Formula = isMolecule ? pepInfo.Formula : null,
+                Adduct = isMolecule ? pepInfo.AdductAsFormula : null,
                 RetentionTime = baseRT,
                 CCS = baseCCS,
                 IonMobility = baseIM,
@@ -2616,13 +2658,13 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    public class SpectrumInfoProsit : SpectrumInfo
+    public class SpectrumInfoKoina : SpectrumInfo
     {
-        public static readonly string NAME = @"Prosit";
+        public static readonly string NAME = @"Koina";
 
         private SpectrumPeaksInfo _peaksInfo;
 
-        public SpectrumInfoProsit(PrositMS2Spectra ms2Spectrum, TransitionGroupDocNode precursor, IsotopeLabelType labelType, int nce)
+        public SpectrumInfoKoina(KoinaMS2Spectra ms2Spectrum, TransitionGroupDocNode precursor, IsotopeLabelType labelType, int nce)
             : base(labelType, true)
         {
             _peaksInfo = ms2Spectrum?.GetSpectrum(precursor).SpectrumPeaks;

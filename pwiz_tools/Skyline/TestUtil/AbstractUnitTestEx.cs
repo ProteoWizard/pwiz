@@ -28,6 +28,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Koina.Config;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
 
@@ -190,5 +191,13 @@ namespace pwiz.SkylineTestUtil
             Assert.AreEqual(messageType, lastEntry.AllInfo[0].MessageInfo.Type);
         }
 
+
+        /// <summary>
+        /// Returns true if Skyline was compiled with a Koina config file that enables connecting to a real server.
+        /// </summary>
+        public static bool HasKoinaServer()
+        {
+            return !string.IsNullOrEmpty(KoinaConfig.GetKoinaConfig().Server);
+        }
     }
 }

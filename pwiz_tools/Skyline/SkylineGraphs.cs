@@ -1191,8 +1191,8 @@ namespace pwiz.Skyline
             // Need to test small mol
             if (isProteomic && control?.ControlType == SpectrumControlType.LibraryMatch)
             {
-                prositLibMatchItem.Checked = Settings.Default.Prosit;
-                menuStrip.Items.Insert(iInsert++, prositLibMatchItem);
+                koinaLibMatchItem.Checked = Settings.Default.Koina;
+                menuStrip.Items.Insert(iInsert++, koinaLibMatchItem);
                 mirrorMenuItem.Checked = Settings.Default.LibMatchMirror;
                 menuStrip.Items.Insert(iInsert++, mirrorMenuItem);
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator61);
