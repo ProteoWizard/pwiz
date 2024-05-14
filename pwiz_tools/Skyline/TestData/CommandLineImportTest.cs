@@ -207,5 +207,131 @@ namespace pwiz.SkylineTestData
                 TextUtil.LineSeparate(SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Keys));
             AssertEx.Contains(output, smallMoleculeErrorMessage);
         }
+
+        [TestMethod]
+        public void ConsoleImportPeptideListTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            var docPath = TestFilesDir.GetTestPath("blank.sky");
+            var outPath = TestFilesDir.GetTestPath("import-fasta-file.sky");
+            var fastaPath = TestFilesDir.GetTestPath("bov-5-prot.fasta");
+            var listPath = TestFilesDir.GetTestPath("peplist.txt");
+            var listPath3 = TestFilesDir.GetTestPath("peplist3.txt");
+            var listsPath = TestFilesDir.GetTestPath("peplists.txt");
+
+            // Create initial document for comparisons by importing a FASTA file
+            var output = RunCommand("--in=" + docPath,
+                "--out=" + outPath,
+                "--import-fasta=" + fastaPath);
+            var docFasta = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(5, docFasta.PeptideGroupCount);
+            Assert.AreEqual(40, docFasta.PeptideCount);
+
+            // Test simply importing the modified sequences to create charge precursors
+            // in a single peptide list with a default name
+            outPath = TestFilesDir.GetTestPath("import-peplist.sky");
+            File.WriteAllLines(listPath, docFasta.Peptides.Select(p => p.ModifiedSequence));
+            output = RunCommand("--in=" + docPath,
+                "--out=" + outPath,
+                "--import-pep-list=" + listPath);
+            var listName = docFasta.GetPeptideGroupId(true);    // Strictly speaking this should be using the doc for docPath
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_ImportPeptideList_Importing_peptide_list__0__from_file__1____,
+                listName, Path.GetFileName(listPath)));
+            var doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(1, doc.PeptideGroupCount);
+            Assert.AreEqual(listName, doc.PeptideGroups.First().Name);
+            Assert.AreEqual(40, doc.PeptideCount);
+            foreach (var nodePep in doc.Peptides)
+            {
+                Assert.AreEqual(1, nodePep.Children.Count);
+                Assert.AreEqual(2, nodePep.TransitionGroups.First().PrecursorCharge);
+            }
+
+            // Add charge 3 specifiers to all the peptide sequences to create charge 3 precursors
+            outPath = TestFilesDir.GetTestPath("import-peplist3.sky");
+            const string listName3 = "Peptide-precursors-charge3";
+            File.WriteAllLines(listPath3, doc.Peptides.Select(p => p.ModifiedSequence + "+++"));
+            output = RunCommand("--in=" + docPath,
+                "--out=" + outPath,
+                "--import-pep-list-name=" + listName3,
+                "--import-pep-list=" + listPath3);
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_ImportPeptideList_Importing_peptide_list__0__from_file__1____,
+                listName3, Path.GetFileName(listPath3)));
+            var doc3 = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(1, doc3.PeptideGroupCount);
+            Assert.AreEqual(listName3, doc3.PeptideGroups.First().Name);
+            Assert.AreEqual(40, doc3.PeptideCount);
+            foreach (var nodePep in doc3.Peptides)
+            {
+                Assert.AreEqual(1, nodePep.Children.Count);
+                Assert.AreEqual(3, nodePep.TransitionGroups.First().PrecursorCharge);
+            }
+
+            // Test using --associate-proteins-fasta to reconstitute the same protein
+            // structure as the original FASTA import
+            output = RunCommand("--in=" + outPath,
+                "--save",
+                "--associate-proteins-fasta=" + fastaPath);
+            AssertEx.Contains(output, 
+                string.Format(Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file__0_, Path.GetFileName(fastaPath)));
+            var docAssoc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(5, docAssoc.PeptideGroupCount);
+            Assert.AreEqual(40, docAssoc.PeptideCount);
+            var origProteins = docFasta.PeptideGroups.ToArray();
+            var assocProteins = docAssoc.PeptideGroups.ToArray();
+            for (int i = 0; i < 5; i++)
+            {
+                Assert.IsTrue(assocProteins[i].IsProtein);
+                Assert.AreEqual(origProteins[i].Name, assocProteins[i].Name);
+                Assert.AreEqual(origProteins[i].Description, assocProteins[i].Description);
+            }
+
+            // Write the original peptide group structure out as a set of lists
+            // and test that this can be imported into a document
+            using (var writerList = new StreamWriter(listsPath))
+            {
+                foreach (var protein in origProteins)
+                {
+                    writerList.WriteLine(">>" + protein.Name);
+                    foreach (var nodePep in protein.Peptides)
+                    {
+                        writerList.WriteLine(nodePep.ModifiedSequence +
+                                             Transition.GetChargeIndicator(nodePep.TransitionGroups.First().PrecursorCharge));
+                    }
+                }
+            }
+
+            outPath = TestFilesDir.GetTestPath("import-peplists.sky");
+            output = RunCommand("--in=" + docPath,
+                "--out=" + outPath,
+                "--import-pep-list=" + listsPath);
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_ImportPeptideList_Importing_peptide_lists_from_file__0____,
+                Path.GetFileName(listsPath)));
+            AssertEx.DoesNotContain(output, Resources.CommandLine_ImportPeptideList_Warning__peptide_list_file_contains_lines_with_____Ignoring_provided_list_name_);
+            var docMulti = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(5, docMulti.PeptideGroupCount);
+            Assert.AreEqual(40, docMulti.PeptideCount);
+            var multiLists = docMulti.PeptideGroups.ToArray();
+            for (int i = 0; i < 5; i++)
+            {
+                Assert.IsFalse(multiLists[i].IsProtein);
+                Assert.AreEqual(origProteins[i].Name, multiLists[i].Name);
+                Assert.IsNull(multiLists[i].Description);
+            }
+
+            // Test that attempting to specify a list name with a file that
+            // has list names causes a warning message
+            outPath = TestFilesDir.GetTestPath("import-peplists-warn.sky");
+            output = RunCommand("--in=" + docPath,
+                "--out=" + outPath,
+                "--import-pep-list=" + listsPath,
+                "--import-pep-list-name=cause_warning");
+            AssertEx.Contains(output, Resources.CommandLine_ImportPeptideList_Warning__peptide_list_file_contains_lines_with_____Ignoring_provided_list_name_);
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_ImportPeptideList_Importing_peptide_lists_from_file__0____,
+                Path.GetFileName(listsPath)));
+            var docMultiWarn = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(5, docMultiWarn.PeptideGroupCount);
+            Assert.AreEqual(40, docMultiWarn.PeptideCount);
+        }
     }
 }
