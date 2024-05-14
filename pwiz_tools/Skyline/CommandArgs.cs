@@ -550,7 +550,11 @@ namespace pwiz.Skyline
         public string FastaPath { get; private set; }
         public bool KeepEmptyProteins { get; private set; }
 
-        // Transition list and assay library import
+        // Peptide list, transition list and assay library import
+        public static readonly Argument ARG_IMPORT_PEP_LIST = new DocArgument(@"import-pep-list", PATH_TO_FILE,
+            (c, p) => c.PeptideListPath = p.ValueFullPath);
+        public static readonly Argument ARG_IMPORT_PEP_LIST_NAME = new DocArgument(@"import-pep-list-name", NAME_VALUE,
+            (c, p) => c.PeptideListName = p.Value);
         public static readonly Argument ARG_IMPORT_TRANSITION_LIST = new DocArgument(@"import-transition-list", PATH_TO_FILE,
             (c, p) => c.ParseListPath(p, false));
         public static readonly Argument ARG_IMPORT_ASSAY_LIBRARY = new DocArgument(@"import-assay-library", PATH_TO_FILE,
@@ -567,11 +571,13 @@ namespace pwiz.Skyline
             (c, p) => c.IrtCalcName = p.Value);
 
         private static readonly ArgumentGroup GROUP_IMPORT_LIST = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_IMPORT_LIST_Importing_transition_lists_and_assay_libraries, false,
-            ARG_IMPORT_TRANSITION_LIST, ARG_IMPORT_ASSAY_LIBRARY, ARG_IGNORE_TRANSITION_ERRORS, ARG_IRT_STANDARDS_GROUP_NAME,
-            ARG_IRT_STANDARDS_FILE, ARG_IRT_DATABASE_PATH, ARG_IRT_CALC_NAME)
+            ARG_IMPORT_PEP_LIST, ARG_IMPORT_PEP_LIST_NAME, ARG_IMPORT_TRANSITION_LIST, ARG_IMPORT_ASSAY_LIBRARY,
+            ARG_IGNORE_TRANSITION_ERRORS, ARG_IRT_STANDARDS_GROUP_NAME, ARG_IRT_STANDARDS_FILE, ARG_IRT_DATABASE_PATH,
+            ARG_IRT_CALC_NAME)
         {
             Dependencies =
             {
+                { ARG_IMPORT_PEP_LIST_NAME, ARG_IMPORT_PEP_LIST },
                 { ARG_IRT_STANDARDS_GROUP_NAME, ARG_IMPORT_ASSAY_LIBRARY },
                 { ARG_IRT_STANDARDS_FILE, ARG_IMPORT_ASSAY_LIBRARY },
             },
@@ -586,6 +592,8 @@ namespace pwiz.Skyline
             }
         };
 
+        public string PeptideListPath { get; private set; }
+        public string PeptideListName { get; private set; }
         public string TransitionListPath { get; private set; }
         public bool IsTransitionListAssayLibrary { get; private set; }
         public bool IsIgnoreTransitionErrors { get; private set; }
@@ -663,6 +671,11 @@ namespace pwiz.Skyline
         public bool ImportingFasta
         {
             get { return !string.IsNullOrWhiteSpace(FastaPath); }
+        }
+
+        public bool ImportingPeptideList
+        {
+            get { return !string.IsNullOrWhiteSpace(PeptideListPath); }
         }
 
         public bool ImportingTransitionList

@@ -343,6 +343,17 @@ namespace pwiz.Skyline
                 }
             }
 
+            if (commandArgs.ImportingPeptideList)
+            {
+                if (!HandleExceptions(commandArgs,
+                        () => { ImportPeptideList(commandArgs.PeptideListName, commandArgs.PeptideListPath); },
+                        Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_,
+                        commandArgs.PeptideListPath, true))
+                {
+                    return false;
+                }
+            }
+
             if (commandArgs.ImportingTransitionList)
             {
                 bool failure = false;
@@ -2222,7 +2233,7 @@ namespace pwiz.Skyline
                 var fastaPath = commandArgs.AssociateProteinsFasta ?? commandArgs.FastaPath ?? Settings.Default.LastProteinAssociationFastaFilepath;
                 if (fastaPath.IsNullOrEmpty())
                     throw new ArgumentException(Resources.CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins);
-                _out.WriteLine(Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins);
+                _out.WriteLine(Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file__0_, Path.GetFileName(fastaPath));
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
                 var proteinAssociation = new ProteinAssociation(Document, progressMonitor);
                 proteinAssociation.UseFastaFile(fastaPath, DigestProteinToPeptides, progressMonitor);
@@ -2742,6 +2753,26 @@ namespace pwiz.Skyline
             if (!keepEmptyProteins)
                 ModifyDocument(d => new RefinementSettings { MinPeptidesPerProtein = 1 }.Refine(d));
  
+        }
+
+        public void ImportPeptideList(string name, string path)
+        {
+            var lineList = new List<string>(File.ReadAllLines(PathEx.SafePath(path)));
+            if (!lineList.Any(l => l.StartsWith(@">>")))
+            {
+                if (string.IsNullOrEmpty(name))
+                    name = _doc.GetPeptideGroupId(true);
+                lineList.Insert(0, @">>" + name);
+                _out.WriteLine(Resources.CommandLine_ImportPeptideList_Importing_peptide_list__0__from_file__1____, name, Path.GetFileName(path));
+            }
+            else
+            {
+                _out.WriteLine(Resources.CommandLine_ImportPeptideList_Importing_peptide_lists_from_file__0____, Path.GetFileName(path));
+                if (!string.IsNullOrEmpty(name))
+                    _out.WriteLine(Resources.CommandLine_ImportPeptideList_Warning__peptide_list_file_contains_lines_with_____Ignoring_provided_list_name_);
+            }
+            var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
+            ModifyDocument(d => d.ImportFasta(new StringListReader(lineList), progressMonitor, lineList.Count, true, null, out _, out _));
         }
 
         private bool ImportTransitionList(CommandArgs commandArgs)

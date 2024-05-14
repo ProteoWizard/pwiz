@@ -431,7 +431,8 @@ namespace pwiz.SkylineTestData
                 "--associate-proteins-fasta=" + fastaPath,
             };
             output = RunCommand(settings);
-            StringAssert.Contains(output, Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins);
+            StringAssert.Contains(output, 
+                string.Format(Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file__0_, Path.GetFileName(fastaPath)));
 
             // test importing FASTA and associating proteins and adding special ions
             settings = new[]
@@ -450,7 +451,8 @@ namespace pwiz.SkylineTestData
             };
             output = RunCommand(settings);
             doc = ResultsUtil.DeserializeDocument(docPath);
-            StringAssert.Contains(output, Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins);
+            StringAssert.Contains(output, 
+                string.Format(Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file__0_, Path.GetFileName(fastaPath)));
             Assert.AreEqual(true, doc.Settings.PeptideSettings.ProteinAssociationSettings.GroupProteins);
             Assert.AreEqual(ProteinAssociation.SharedPeptides.AssignedToBestProtein, doc.Settings.PeptideSettings.ProteinAssociationSettings.SharedPeptides);
             Assert.AreEqual(true, doc.Settings.PeptideSettings.ProteinAssociationSettings.FindMinimalProteinList);
@@ -471,7 +473,8 @@ namespace pwiz.SkylineTestData
 
             output = RunCommand(settings);
             doc = ResultsUtil.DeserializeDocument(docPath);
-            StringAssert.Contains(output, Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins);
+            StringAssert.Contains(output, 
+                string.Format(Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file__0_, Path.GetFileName(fastaPath)));
             Assert.AreEqual(false, doc.Settings.PeptideSettings.ProteinAssociationSettings.GroupProteins);
             Assert.AreEqual(ProteinAssociation.SharedPeptides.Removed, doc.Settings.PeptideSettings.ProteinAssociationSettings.SharedPeptides);
             Assert.AreEqual(false, doc.Settings.PeptideSettings.ProteinAssociationSettings.FindMinimalProteinList);
