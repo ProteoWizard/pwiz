@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model.Koina.Config
                 if (RequireSsl)
                 {
                     // use all certificates from system's root store
-                    var certStore = new X509Store(StoreName.Root, StoreLocation.CurrentUser);
+                    using var certStore = new X509Store(StoreName.Root, StoreLocation.CurrentUser);
                     certStore.Open(OpenFlags.ReadOnly);
                     var rootCertificates = new StringBuilder();
                     foreach (var rootCert in certStore.Certificates)
