@@ -1435,7 +1435,7 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_AP_MIN_PEPTIDES = new Argument(@"associate-proteins-min-peptides", INT_VALUE,
             (c, p) => c.AssociateProteinsMinPeptidesPerProtein = p.GetValueInt(1, 10000)) { WrapValue = true };
 
-        private static readonly ArgumentGroup GROUP_ASSOCIATE_PROTEINS = new ArgumentGroup(() => Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins, false,
+        private static readonly ArgumentGroup GROUP_ASSOCIATE_PROTEINS = new ArgumentGroup(() => SkylineResources.CommandLine_AssociateProteins_Associating_peptides_with_proteins, false,
                 ARG_AP_FASTA, ARG_AP_GROUP_PROTEINS, ARG_AP_GENE_LEVEL, ARG_AP_SHARED_PEPTIDES, ARG_AP_MINIMAL_LIST, ARG_AP_MIN_PEPTIDES, ARG_AP_REMOVE_SUBSETS)
             { LeftColumnWidth = 45 };
 

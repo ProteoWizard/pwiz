@@ -3767,9 +3767,6 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="SkylineWindow_importMassListMenuItem_Click_Transition_List" xml:space="preserve">
     <value>Transition List</value>
   </data>
-  <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins" xml:space="preserve">
-    <value>Associating peptides with proteins</value>
-  </data>
   <data name="PasteDlg_UpdateMoleculeType_Product_Name" xml:space="preserve">
     <value>Product Name</value>
   </data>
