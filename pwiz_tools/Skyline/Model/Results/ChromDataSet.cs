@@ -84,7 +84,11 @@ namespace pwiz.Skyline.Model.Results
                 chromData.DocNode = null;
         }
 
-        public ChromData BestChromatogram { get { return _listChromData.FirstOrDefault(c=>c.ParticipatesInScoring)?? _listChromData[0]; } }
+        public ChromData BestChromatogram
+        {
+            get { return _listChromData.FirstOrDefault(c => c.ParticipatesInScoring) ?? _listChromData[0]; }
+        }
+
         public IList<ChromData> Chromatograms { get { return _listChromData; } }
 
         /// <summary>

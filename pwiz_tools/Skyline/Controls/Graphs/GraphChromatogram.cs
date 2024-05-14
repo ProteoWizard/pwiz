@@ -715,8 +715,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                var graphItem = GetGraphItems(graphControl.GraphPane).FirstOrDefault(g => g.BestPeakTime > 0);
-                return graphItem?.BestPeakTime;
+                var graphItem = GetGraphItems(graphControl.GraphPane).First(g => g.BestPeakTime > 0);
+                return graphItem.BestPeakTime;
             }
         }
 
@@ -1385,7 +1385,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             bool anyQuantitative = displayTrans.Any(IsQuantitative);
-            var anyParticipatesInScoring = displayTrans.Any(t => t.ParticipatesInScoring);
             int bestPeakTran = -1;
             TransitionChromInfo tranPeakInfo = null;
             float maxPeakHeight = float.MinValue;
@@ -1419,7 +1418,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (transitionChromInfo == null)
                     continue;
                 bool quantitative = IsQuantitative(nodeTran);
-                if ((quantitative || !anyQuantitative) && (nodeTran.ParticipatesInScoring || !anyParticipatesInScoring))
+                if (quantitative || !anyQuantitative)
                 {
                     if (maxPeakHeight < transitionChromInfo.Height)
                     {
@@ -1599,7 +1598,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
 
                 DashStyle dashStyle = IsQuantitative(nodeTran) ? DashStyle.Solid : DashStyle.Dot;
-                // CONSIDER(bspratt) dashStyle for !nodeTran.ParticipatesInScoring?
                 var graphItem = new ChromGraphItem(nodeGroup,
                     nodeTran,
                     info,
@@ -2167,12 +2165,12 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
 
                         // Keep track of which chromatogram owns the tallest member of
-                        // the peak on the document tree. Don't include non-scoring (e.g. reporter ions like TMT) items.
+                        // the peak on the document tree.
                         var transitionChromInfo = GetTransitionChromInfo(nodeTran, _chromIndex, fileId, 0);
                         if (transitionChromInfo == null)
                             continue;
 
-                        if (nodeTran.ParticipatesInScoring && transitionChromInfo.Height > maxPeakHeight)
+                        if (transitionChromInfo.Height > maxPeakHeight)
                         {
                             maxPeakHeight = transitionChromInfo.Height;
                             bestPeakInfo = transitionChromInfo;
@@ -2866,14 +2864,8 @@ namespace pwiz.Skyline.Controls.Graphs
             double maxInten = 0;
             ChromGraphItem maxItem = null;
 
-            var items = GetGraphItems(graphPane).ToArray();
-
-            foreach (ChromGraphItem graphItemCurr in items)
+            foreach (ChromGraphItem graphItemCurr in GetGraphItems(graphPane))
             {
-                if (graphItemCurr.ParticipatesInScoring)
-                {
-                    continue; // Some ions don't participate in RT determination, e.g. reporter ions like TMT
-                }
                 double inten = graphItemCurr.GetMaxIntensity(startTime.MeasuredTime, endTime.MeasuredTime);
                 if (inten > maxInten)
                 {
@@ -2917,11 +2909,6 @@ namespace pwiz.Skyline.Controls.Graphs
             return ScaledRetentionTime.ZERO;
         }
 
-        /// <summary>
-        /// Finds either the left or right boundary of the chosen peak which is closest to
-        /// the point, and within 3 pixels. This method is used to tell whether the mouse
-        /// cursor is in a position to adjust the peak boundaries.
-        /// </summary>
         private ScaledRetentionTime FindBestPeakBoundary(PointF pt, out GraphPane graphPane, out ChromGraphItem graphItem)
         {
             double deltaBest = double.MaxValue;
@@ -2934,10 +2921,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 double time;
                 graphPane.ReverseTransform(pt, out time, out _);
 
-                var graphItems = GetGraphItems(graphPane).Where(gi => gi.TransitionChromInfo != null).ToArray();
-
-                foreach (var graphItemNext in graphItems)
+                foreach (var graphItemNext in GetGraphItems(graphPane))
                 {
+                    var transitionChromInfo = graphItemNext.TransitionChromInfo;
+                    if (transitionChromInfo == null)
+                    {
+                        continue;
+                    }
                     var timeMatch = graphItemNext.GetNearestBestPeakBoundary(time);
                     if (!timeMatch.IsZero)
                     {

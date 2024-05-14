@@ -667,7 +667,6 @@ namespace pwiz.Skyline.Model.Results
         public double MS2Area { get; private set; }
         public double ScorableMS2Area { get; private set; } // MS2Area exclusive of chromatograms marked as not participating in scoring (e.g. reporter ions)
         public double CombinedScore { get; private set; }
-        // public double MaxHeight { get; private set; }
 
         private const int MIN_TOLERANCE_LEN = 4;
         private const int MIN_TOLERANCE_SMOOTH_FWHM = 3;
@@ -852,10 +851,6 @@ namespace pwiz.Skyline.Model.Results
             // Avoid using optimization data from other optimization steps in scoring
             if (dataPeak.Peak != null && (PeakCount == 0 || this[0].Data.OptimizationStep == dataPeak.Data.OptimizationStep))
             {
-                //if (dataPeak.Peak.ParticipatesInScoring) // Some ion types don't participate in retention time determination e.g. reporter ions
-                //{
-                //    MaxHeight = Math.Max(MaxHeight, dataPeak.Peak.Height);
-                //}
                 double area = dataPeak.Peak.Area;
                 var participatesInScoring = dataPeak.ParticipatesInScoring;
                 if (IsMs1(dataPeak.Data.Key.Source))
@@ -923,7 +918,6 @@ namespace pwiz.Skyline.Model.Results
             MS2Area = 0;
             ScorableMS2Area = 0; 
             CombinedScore = 0;
-            //MaxHeight = 0;
 
             base.ClearItems();
         }

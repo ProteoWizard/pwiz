@@ -693,7 +693,6 @@ namespace pwiz.Skyline.Model.Serialization
             Transition transition = nodeTransition.Transition;
             writer.WriteAttribute(ATTR.fragment_type, transition.IonType);
             writer.WriteAttribute(ATTR.quantitative, nodeTransition.ExplicitQuantitative, true);
-
             WriteExplicitTransitionValuesAttributes(writer, nodeTransition.ExplicitValues);
             if (transition.IsCustom())
             {

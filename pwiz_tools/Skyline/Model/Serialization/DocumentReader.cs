@@ -153,8 +153,7 @@ namespace pwiz.Skyline.Model.Serialization
                 endTime,
                 transitionGroupIonMobilityInfo,
                 fwhm,
-                area, 
-                null, null, // Ms1 and Fragment values calculated later
+                area, null, null, // Ms1 and Fragment values calculated later
                 backgroundArea, null, null, // Ms1 and Fragment values calculated later
                 height,
                 massError,

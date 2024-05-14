@@ -2701,8 +2701,6 @@ namespace pwiz.Skyline.Model
             Note = note;
         }
 
-        // CONSIDER: handle IsQuantitive, ParticipatesInScoring
-
         public string ProteinName { get; private set; }
         public Target PeptideTarget { get; private set; }
         public string PeptideSequence { get { return PeptideTarget.Sequence; } }
