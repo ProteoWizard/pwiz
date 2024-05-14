@@ -1658,11 +1658,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Associating peptides with proteins.
+        ///   Looks up a localized string similar to Associating peptides with proteins from FASTA file {0}.
         /// </summary>
-        public static string CommandLine_AssociateProteins_Associating_peptides_with_proteins {
+        public static string CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file__0_ {
             get {
-                return ResourceManager.GetString("CommandLine_AssociateProteins_Associating_peptides_with_proteins", resourceCulture);
+                return ResourceManager.GetString("CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file_" +
+                        "_0_", resourceCulture);
             }
         }
         
@@ -1997,6 +1998,34 @@ namespace pwiz.Skyline.Properties {
         public static string CommandLine_ImportFasta_Importing_FASTA_file__0____ {
             get {
                 return ResourceManager.GetString("CommandLine_ImportFasta_Importing_FASTA_file__0____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Importing peptide list {0} from file {1}....
+        /// </summary>
+        public static string CommandLine_ImportPeptideList_Importing_peptide_list__0__from_file__1____ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportPeptideList_Importing_peptide_list__0__from_file__1____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Importing peptide lists from file {0}....
+        /// </summary>
+        public static string CommandLine_ImportPeptideList_Importing_peptide_lists_from_file__0____ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportPeptideList_Importing_peptide_lists_from_file__0____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: peptide list file contains lines with &gt;&gt;. Ignoring provided list name..
+        /// </summary>
+        public static string CommandLine_ImportPeptideList_Warning__peptide_list_file_contains_lines_with_____Ignoring_provided_list_name_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportPeptideList_Warning__peptide_list_file_contains_lines_with_____" +
+                        "Ignoring_provided_list_name_", resourceCulture);
             }
         }
         
@@ -4354,15 +4383,6 @@ namespace pwiz.Skyline.Properties {
         public static string Extensions_CustomToString_Protein_Expression {
             get {
                 return ResourceManager.GetString("Extensions_CustomToString_Protein_Expression", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Relative Abundance.
-        /// </summary>
-        public static string Extensions_CustomToString_Relative_Abundance {
-            get {
-                return ResourceManager.GetString("Extensions_CustomToString_Relative_Abundance", resourceCulture);
             }
         }
         
