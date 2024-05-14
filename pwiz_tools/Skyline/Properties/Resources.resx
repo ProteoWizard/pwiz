@@ -3966,4 +3966,7 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file__0_" xml:space="preserve">
     <value>Associating peptides with proteins from FASTA file {0}</value>
   </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_Koina_predictions_" xml:space="preserve">
+    <value>Add peptide precursors to the document to build a library from Koina predictions.</value>
+  </data>
 </root>

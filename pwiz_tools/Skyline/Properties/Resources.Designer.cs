@@ -852,6 +852,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add peptide precursors to the document to build a library from Koina predictions..
+        /// </summary>
+        public static string BuildLibraryDlg_ValidateBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_Koina_predictions_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_ValidateBuilder_Add_peptide_precursors_to_the_document_to_build_a" +
+                        "_library_from_Koina_predictions_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The lab authority name {0} is not valid. This should look like an internet server address (e.g. mylab.myu.edu), and be unlikely to be used by any other lab, but need not refer to an actual server..
         /// </summary>
         public static string BuildLibraryDlg_ValidateBuilder_The_lab_authority_name__0__is_not_valid_This_should_look_like_an_internet_server_address_e_g_mylab_myu_edu_and_be_unlikely_to_be_used_by_any_other_lab_but_need_not_refer_to_an_actual_server {

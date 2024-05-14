@@ -269,7 +269,13 @@ namespace pwiz.Skyline.SettingsUI
                         Array.Copy(groups, 0, precursors, index, groups.Length);
                         index += groups.Length;
                     }
-                    
+
+                    if (index == 0)
+                    {
+                        MessageDlg.Show(this, Resources.BuildLibraryDlg_ValidateBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_Koina_predictions_);
+                        return false;
+                    }
+
                     try
                     {
                         KoinaUIHelpers.CheckKoinaSettings(this, _skylineWindow);
@@ -280,7 +286,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     catch (Exception ex)
                     {
-                        _helper.ShowTextBoxError(this, ex.Message);
+                        MessageDlg.ShowWithException(this, ex.Message, ex);
                         return false;
                     }
                 }
