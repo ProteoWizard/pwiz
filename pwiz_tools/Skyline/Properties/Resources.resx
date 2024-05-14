@@ -3767,9 +3767,6 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="SkylineWindow_importMassListMenuItem_Click_Transition_List" xml:space="preserve">
     <value>Transition List</value>
   </data>
-  <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins" xml:space="preserve">
-    <value>Associating peptides with proteins</value>
-  </data>
   <data name="PasteDlg_UpdateMoleculeType_Product_Name" xml:space="preserve">
     <value>Product Name</value>
   </data>
@@ -3956,5 +3953,17 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   </data>
   <data name="koina_logo_fdf731d5" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\koina-logo.fdf731d5.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="CommandLine_ImportPeptideList_Importing_peptide_list__0__from_file__1____" xml:space="preserve">
+    <value>Importing peptide list {0} from file {1}...</value>
+  </data>
+  <data name="CommandLine_ImportPeptideList_Importing_peptide_lists_from_file__0____" xml:space="preserve">
+    <value>Importing peptide lists from file {0}...</value>
+  </data>
+  <data name="CommandLine_ImportPeptideList_Warning__peptide_list_file_contains_lines_with_____Ignoring_provided_list_name_" xml:space="preserve">
+    <value>Warning: peptide list file contains lines with &gt;&gt;. Ignoring provided list name.</value>
+  </data>
+  <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file__0_" xml:space="preserve">
+    <value>Associating peptides with proteins from FASTA file {0}</value>
   </data>
 </root>

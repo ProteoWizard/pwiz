@@ -604,9 +604,6 @@
   <data name="CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins" xml:space="preserve">
     <value>错误：必须先导入 FASTA 文件，然后才能关联蛋白质</value>
   </data>
-  <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins" xml:space="preserve">
-    <value>正在关联肽段与蛋白质</value>
-  </data>
   <data name="CommandLine_AssociateProteins_Failed_to_associate_proteins" xml:space="preserve">
     <value>未能关联蛋白质</value>
   </data>
