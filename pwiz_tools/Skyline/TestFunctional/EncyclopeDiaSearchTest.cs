@@ -28,7 +28,6 @@ using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
-using pwiz.Skyline.Util;
 using System;
 using System.Globalization;
 
