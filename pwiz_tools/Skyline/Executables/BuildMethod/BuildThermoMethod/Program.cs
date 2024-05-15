@@ -890,6 +890,7 @@ namespace BuildThermoMethod
                     Experiment = new []{new XmlStellar.Experiment()
                         {
                             ExperimentIndex = 1,
+                            ExperimentIndexSpecified = true,
                             TMSnScan = new XmlStellar.TMSnScan()
                             {
                                 MassList = new XmlStellar.MassList()

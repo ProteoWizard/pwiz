@@ -259,6 +259,7 @@ namespace pwiz.Skyline.Model
                 BRUKER_TIMSTOF,
                 THERMO_Q_EXACTIVE,
                 THERMO_FUSION,
+                THERMO_STELLAR,
                 WATERS_SYNAPT_TRAP,
                 WATERS_SYNAPT_TRANSFER,
                 WATERS_XEVO_QTOF,
@@ -522,7 +523,11 @@ namespace pwiz.Skyline.Model
                     if (type == ExportFileType.List)
                         return ExportThermoQuantivaCsv(doc, path);
                     else
+                    {
+                        if(type == ExportFileType.IsolationList)
+                            return ExportThermoFusionIsolationList(doc, path, template);
                         return ExportThermoQuantivaMethod(doc, path, template, instrumentType);
+                    }
                 case ExportInstrumentType.THERMO_FUSION:
                     if (type == ExportFileType.IsolationList)
                     {
