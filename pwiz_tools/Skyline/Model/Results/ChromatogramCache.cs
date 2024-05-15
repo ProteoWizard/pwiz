@@ -449,6 +449,10 @@ namespace pwiz.Skyline.Model.Results
             }
             else
             {
+                if (chromatogramGroupId.Target.Sequence == null)
+                {
+                    return false;
+                }
                 var key1 = new PeptideLibraryKey(nodePep.ModifiedSequence, 0);
                 var key2 = new PeptideLibraryKey(chromatogramGroupId.Target.Sequence, 0);
                 return LibKeyIndex.KeysMatch(key1, key2);
