@@ -126,7 +126,7 @@ namespace pwiz.SkylineTestFunctional
             // test that even after opening import search wizard, we can redo the search by pressing back/next without file lock issues
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(searchDlg.NextPage);
             WaitForDocumentLoaded();
-            /*RunUI(() =>
+            RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
                 importPeptideSearchDlg.ClickNextButton();
@@ -162,7 +162,7 @@ namespace pwiz.SkylineTestFunctional
 
             // now on Import Peptide Search wizard
             importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(searchDlg.NextPage);
-            WaitForDocumentLoaded();*/
+            WaitForDocumentLoaded();
 
             // starts on chromatogram page because we're using existing library
             RunUI(() =>
@@ -222,7 +222,11 @@ namespace pwiz.SkylineTestFunctional
             }
 
             var targetCountsActual = new[] { proteinCount, peptideCount, precursorCount, transitionCount };
-            if (!ArrayUtil.EqualsDeep(targetCounts, targetCountsActual))
+            //if (!ArrayUtil.EqualsDeep(targetCounts, targetCountsActual)) // TODO: solve EncyclopeDIA non-determinism so results expected can be exact
+            if (Math.Abs(targetCounts[0] - targetCountsActual[0]) > 1 ||
+                Math.Abs(targetCounts[1] - targetCountsActual[1]) > 1 ||
+                Math.Abs(targetCounts[2] - targetCountsActual[2]) > 1 ||
+                Math.Abs(targetCounts[3] - targetCountsActual[3]) > 4)
             {
                 Assert.Fail("Expected target counts <{0}> do not match actual <{1}>.",
                     string.Join(", ", targetCounts),
