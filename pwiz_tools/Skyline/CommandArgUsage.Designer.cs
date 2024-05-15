@@ -889,6 +889,24 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Import a list of peptides or peptide precursors (with charge state) with an optional list name specified by --import-pep-list-name..
+        /// </summary>
+        public static string _import_pep_list {
+            get {
+                return ResourceManager.GetString("_import_pep_list", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name of imported peptide list specified by --import-pep-list..
+        /// </summary>
+        public static string _import_pep_list_name {
+            get {
+                return ResourceManager.GetString("_import_pep_list_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A number of sub-processes will be run for single-file import, after which the results from each single file will be joined by the main process. This can produce 10x performance gains on 24-core NUMA servers and 3-4x even on i7 processors, under the right conditions. Be sure to test with your system..
         /// </summary>
         public static string _import_process_count {
