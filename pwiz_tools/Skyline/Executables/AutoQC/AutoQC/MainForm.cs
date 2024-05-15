@@ -189,17 +189,11 @@ namespace AutoQC
 
         public void DoImport(string filePath)
         {
-            _configManager.Import(filePath, ShowDownloadedFileForm);
+            // AutoQC Loader .qcfg files can be imported from the Downloads folder. Pass null for showDownloadedFileForm
+            // so that we don't see the dialog to "...specify a root folder for the configurations".
+            _configManager.Import(filePath, null);
             UpdateUiConfigurations();
             UpdateUiLogFiles();
-        }
-
-        public DialogResult ShowDownloadedFileForm(string filePath, out string newRootDirectory)
-        {
-            var fileOpenedForm = new FileOpenedForm(this, filePath, Program.Icon());
-            var dialogResult = fileOpenedForm.ShowDialog(this);
-            newRootDirectory = fileOpenedForm.NewRootDirectory;
-            return dialogResult;
         }
 
         private void btnExport_Click(object sender, EventArgs e)
