@@ -4123,7 +4123,7 @@
     <None Include="Resources\AnnotatedSpectum.png" />
     <None Include="Resources\Cluster.ico" />
     <None Include="Resources\Close.bmp" />
-    <Content Include="Resources\hardklor_logo.png" />
+    <None Include="Resources\hardklor_logo.png" />
     <None Include="Resources\PanoramaDownload.bmp" />
     <EmbeddedResource Include="Resources\koina-logo.fdf731d5.png" />
     <Content Include="SkylineDocPointer.ico" />
@@ -6817,10 +6817,6 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="BaseDataAccess">
@@ -6831,10 +6827,6 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="BaseTof">
@@ -6845,10 +6837,6 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="BiblioSpec.pdb">
@@ -6859,10 +6847,6 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="Clearcore2.Data">
@@ -6873,10 +6857,6 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Clearcore2.Data.CommonInterfaces">
@@ -6887,10 +6867,6 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Clearcore2.RawXYProcessing">
@@ -6901,10 +6877,6 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="enzymes.xml">
@@ -6915,10 +6887,6 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="Instruments.xml">
@@ -6929,10 +6897,6 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="JetBrains.Annotations">
@@ -6943,10 +6907,6 @@
       </TargetPath>
       <PublishState>Exclude</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="MassSpecDataReader">
@@ -6957,10 +6917,6 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Microsoft.VC90.CRT">
@@ -6971,10 +6927,6 @@
       </TargetPath>
       <PublishState>Exclude</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Microsoft.VC90.MFC">
@@ -6985,10 +6937,6 @@
       </TargetPath>
       <PublishState>Exclude</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="modifications.xml">
@@ -6999,10 +6947,6 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="MSGraph.pdb">
@@ -7013,10 +6957,6 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="OFX.Core.Contracts">
@@ -7027,10 +6967,6 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="PanoramaClient.pdb">
@@ -7041,10 +6977,6 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="ProteomeDb.pdb">
@@ -7055,10 +6987,6 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="ProteowizardWrapper.pdb">
@@ -7069,10 +6997,6 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="pwiz.Common.pdb">
@@ -7083,10 +7007,6 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="pwiz.CommonUtil.pdb">
@@ -7097,10 +7017,6 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="Sciex.Data.SimpleTypes">
@@ -7111,10 +7027,6 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Skyline-daily.pdb">
@@ -7125,10 +7037,6 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="SkylineTool.pdb">
@@ -7139,10 +7047,6 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="unimod.xml">
@@ -7153,10 +7057,6 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
   </ItemGroup>
