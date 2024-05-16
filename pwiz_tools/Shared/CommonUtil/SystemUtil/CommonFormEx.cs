@@ -20,7 +20,9 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.GUI;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -76,9 +78,15 @@ namespace pwiz.Common.SystemUtil
         {
             if (_undisposedForms.Count != 0)
             {
-                var formType = _undisposedForms[0].GetType().Name;
+                string message = null;
+                if (_undisposedForms.FirstOrDefault(f => f is CommonAlertDlg) is CommonAlertDlg undisposedAlert)
+                    message = undisposedAlert.Message;
+                var formType = _undisposedForms[0].GetType();
                 _undisposedForms.Clear();
-                throw new ApplicationException(formType + @" was not disposed");
+                string exceptionMessage = formType + @" was not disposed";
+                if (message != null)
+                    exceptionMessage = CommonTextUtil.LineSeparate(exceptionMessage, "message: " + message);
+                throw new ApplicationException(exceptionMessage);
             }
         }
 

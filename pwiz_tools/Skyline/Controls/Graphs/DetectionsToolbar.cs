@@ -76,8 +76,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             IntLabeledValue.PopulateCombo(cbLevel, Settings.TargetType);
             if (!_graphSummary.TryGetGraphPane(out DetectionsPlotPane pane)) return;
-            if (pane.CurrentData.IsValid &&
-                DetectionPlotData.GetDataCache().Status != DetectionPlotData.DetectionDataCache.CacheStatus.error)
+            if (true == pane.CurrentData?.IsValid)
             {
                 EnableControls(true);
                 IntLabeledValue.PopulateCombo(cbLevel, Settings.TargetType);

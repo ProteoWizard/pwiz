@@ -1188,14 +1188,14 @@ namespace pwiz.Skyline.Controls.Graphs
                     curveOut.Symbol.Size = 8f;
                 }
 
-                string labelPoints = GraphsResources.GraphData_Graph_Peptides;
+                string labelPoints = Helpers.PeptideToMoleculeTextMapper.Translate(GraphsResources.GraphData_Graph_Peptides, _document.DocumentType);
                 if (!_refine)
                 {
                     GraphRegression(graphPane, _statisticsAll, _regressionAll, GraphsResources.GraphData_Graph_Regression, COLOR_LINE_REFINED);
                 }
                 else
                 {
-                    labelPoints = GraphsResources.GraphData_Graph_Peptides_Refined;
+                    labelPoints = Helpers.PeptideToMoleculeTextMapper.Translate(GraphsResources.GraphData_Graph_Peptides_Refined, _document.DocumentType);
                     GraphRegression(graphPane, _statisticsRefined, _regressionAll, GraphsResources.GraphData_Graph_Regression_Refined, COLOR_LINE_REFINED);
                     GraphRegression(graphPane, _statisticsAll, _regressionAll, GraphsResources.GraphData_Graph_Regression, COLOR_LINE_ALL);
                 }
@@ -1246,7 +1246,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     curveOut.Symbol.Size = 8f;
                 }
 
-                string labelPoints = _refine ? GraphsResources.GraphData_Graph_Peptides_Refined : GraphsResources.GraphData_Graph_Peptides;
+                string labelPoints =
+                    Helpers.PeptideToMoleculeTextMapper.Translate(_refine ? GraphsResources.GraphData_Graph_Peptides_Refined : GraphsResources.GraphData_Graph_Peptides, _document.DocumentType); 
                 var curve = graphPane.AddCurve(labelPoints, _scoresRefined, GetResiduals(regression, _scoresRefined, _timesRefined),
                                                Color.Black, SymbolType.Diamond);
                 curve.Line.IsVisible = false;

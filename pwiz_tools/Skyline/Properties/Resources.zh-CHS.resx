@@ -229,9 +229,6 @@
   <data name="AlignmentForm_UpdateGraph_Outliers" xml:space="preserve">
     <value>异常值</value>
   </data>
-  <data name="AlignmentForm_UpdateGraph_Peptides" xml:space="preserve">
-    <value>肽段</value>
-  </data>
   <data name="AlignmentForm_UpdateGraph_Peptides_Refined" xml:space="preserve">
     <value>肽段调整</value>
   </data>
@@ -606,9 +603,6 @@
   </data>
   <data name="CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins" xml:space="preserve">
     <value>错误：必须先导入 FASTA 文件，然后才能关联蛋白质</value>
-  </data>
-  <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins" xml:space="preserve">
-    <value>正在关联肽段与蛋白质</value>
   </data>
   <data name="CommandLine_AssociateProteins_Failed_to_associate_proteins" xml:space="preserve">
     <value>未能关联蛋白质</value>
@@ -1318,7 +1312,7 @@
   <data name="EmptyList" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\EmptyList.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_could_not_find_EncyclopeDia" xml:space="preserve">
+  <data name="EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_could_not_find_EncyclopeDia" xml:space="preserve">
     <value>找不到 EncyclopeDIA</value>
   </data>
   <data name="EncyclopeDiaHelpers_GenerateLibrary_Combining_chromatogram_libraries" xml:space="preserve">
@@ -1493,7 +1487,7 @@
     <comment>"min" stands for "minutes"</comment>
   </data>
   <data name="GraphFullScan_CreateGraph_CE_" xml:space="preserve">
-    <value>CE：</value>
+    <value>NCE：</value>
   </data>
   <data name="GraphFullScan_CreateGraph_IM__0_" xml:space="preserve">
     <value>IM={0}</value>
@@ -2081,15 +2075,6 @@
   </data>
   <data name="PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_" xml:space="preserve">
     <value>服务器 {0} 的响应异常</value>
-  </data>
-  <data name="PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder" xml:space="preserve">
-    <value>{0}不是 Panorama 文件夹</value>
-  </data>
-  <data name="PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_" xml:space="preserve">
-    <value>文件夹{0}不存在于 Panorama 服务器{1}中</value>
-  </data>
-  <data name="PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_" xml:space="preserve">
-    <value>用户{0}没有权限上传至 Panorama 文件夹{1}</value>
   </data>
   <data name="ParsimonySettings_Validate_The_value__0__for__1__is_not_valid__it_must_be_greater_than_or_equal_to__2__" xml:space="preserve">
     <value>{1} 的 {0} 值无效：必须大于或等于 {2}。</value>
@@ -3725,9 +3710,6 @@
   </data>
   <data name="ValueInvalidDoubleException_ValueInvalidDoubleException_The_value___0___is_not_valid_for_the_argument__1__which_requires_a_decimal_number_" xml:space="preserve">
     <value>值“{0}”对于必须是十进制数的参数 {1} 无效。</value>
-  </data>
-  <data name="ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_" xml:space="preserve">
-    <value>值“{0}”对于参数 {1} 无效。使用 {2} 中的一个</value>
   </data>
   <data name="ValueInvalidIntException_ValueInvalidIntException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_integer_" xml:space="preserve">
     <value>值“{0}”对于参数 {1} 无效，该参数必须是整数。</value>

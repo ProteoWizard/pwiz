@@ -141,6 +141,8 @@ namespace pwiz.Skyline
                 return 1;
             }
 
+            CommonApplicationSettings.ProgramName = Name;
+            CommonApplicationSettings.ProgramNameAndVersion = Install.ProgramNameAndVersion;
             SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections
 
             // For testing and debugging Skyline command-line interface
@@ -362,7 +364,7 @@ namespace pwiz.Skyline
                     }
                     catch (Exception ex)
                     {
-                        Trace.TraceWarning(@"Exception sending analytics hit {0}", ex);
+                        Trace.TraceInformation(@"Exception sending analytics hit {0}", ex);
                     }
                 });
             }
@@ -603,7 +605,6 @@ namespace pwiz.Skyline
                 return;
             }
 
-            Trace.TraceError(@"Unhandled exception: {0}", exception);
             var stackTrace = new StackTrace(1, true);
             var mainWindow = MainWindow;
             try

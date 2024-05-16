@@ -27,6 +27,9 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DdaSearch;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
@@ -34,19 +37,49 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
     public partial class SearchSettingsControl : UserControl
     {
         private ImportPeptideSearch ImportPeptideSearch { get; set; }
-        private readonly IModifyDocumentContainer _documentContainer;
-    
-        public SearchSettingsControl(IModifyDocumentContainer documentContainer, ImportPeptideSearch importPeptideSearch)
+        private readonly ImportPeptideSearchDlg _documentContainer;
+        private readonly FullScanSettingsControl _hardklorInstrumentSettingsControl;
+
+        public SearchSettingsControl(ImportPeptideSearchDlg documentContainer, ImportPeptideSearch importPeptideSearch)
         {
             InitializeComponent();
             ImportPeptideSearch = importPeptideSearch;
             _documentContainer = documentContainer;
 
-            searchEngineComboBox.SelectedIndexChanged += SearchEngineComboBox_SelectedIndexChanged;
-            txtMS1Tolerance.LostFocus += txtMS1Tolerance_LostFocus;
-            txtMS2Tolerance.LostFocus += txtMS2Tolerance_LostFocus;
+            if (importPeptideSearch.IsFeatureDetection)
+            {
+                SearchEngineComboBox_SelectedIndexChanged(null, null); // Initialize
+                // Hide all controls other than the logo picture box
+                foreach (Control control in Controls)
+                {
+                    control.Enabled = control.Visible = false;
+                }
+                pBLogo.Visible = true;
+                pBLogo.SizeMode = PictureBoxSizeMode.AutoSize;
 
-            searchEngineComboBox.SelectedIndex = 0;
+                // Add the Hardklor full scan settings control, used only when the user set FullScan analyzer to "Centroided"
+                // Otherwise just displays the previously designated Full Scan settings
+                _hardklorInstrumentSettingsControl = new FullScanSettingsControl(documentContainer, ImportPeptideSearch.eFeatureDetectionPhase.hardklor_settings);
+                _hardklorInstrumentSettingsControl.ModifyOptionsForImportPeptideSearchWizard(ImportPeptideSearchDlg.Workflow.feature_detection, false, ImportPeptideSearch.eFeatureDetectionPhase.hardklor_settings);
+                Controls.Add(_hardklorInstrumentSettingsControl);
+                _hardklorInstrumentSettingsControl.Location = new System.Drawing.Point(0, 0);
+                // And adjust location of the other settings controls
+                groupBoxHardklor.Enabled = groupBoxHardklor.Visible = true;
+                groupBoxHardklor.Location = new System.Drawing.Point(_hardklorInstrumentSettingsControl.GroupBoxMS1Bounds.Left, _hardklorInstrumentSettingsControl.GroupBoxMS1Bounds.Bottom + 10);
+                groupBoxHardklor.Width = _hardklorInstrumentSettingsControl.GroupBoxMS1Bounds.Width;
+                toolTip1.SetToolTip(labelHardklorMinIdotP, toolTip1.GetToolTip(textHardklorMinIdotP));
+                toolTip1.SetToolTip(lblHardklorSignalToNoise, toolTip1.GetToolTip(textHardklorSignalToNoise));
+                toolTip1.SetToolTip(labelMinIntensityPPM, toolTip1.GetToolTip(textHardklorMinIntensityPPM));
+            }
+            else
+            {
+                searchEngineComboBox.SelectedIndexChanged += SearchEngineComboBox_SelectedIndexChanged;
+                txtMS1Tolerance.LostFocus += txtMS1Tolerance_LostFocus;
+                txtMS2Tolerance.LostFocus += txtMS2Tolerance_LostFocus;
+
+                searchEngineComboBox.SelectedIndex = 0;
+                groupBoxHardklor.Enabled = groupBoxHardklor.Visible = false;
+            }
 
             LoadMassUnitEntries();
         }
@@ -58,18 +91,43 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             InitializeEngine();
         }
 
+        public void UpdateControls()
+        {
+            if (ImportPeptideSearch.IsFeatureDetection)
+            {
+                // If user has set FullScan.PrecursorMassAnalyzer to Centroided, remember that and allow instrument details setup
+                // Otherwise, show the setup but don't allow changes
+                var needHardklorInstrumentSettings =
+                    _documentContainer.Document.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer ==
+                    FullScanMassAnalyzerType.centroided;
+                _hardklorInstrumentSettingsControl.Enabled = needHardklorInstrumentSettings;
+                _hardklorInstrumentSettingsControl.SetGroupBoxMS1TitleForHardklorUse(needHardklorInstrumentSettings);
+                if (!needHardklorInstrumentSettings)
+                {
+                    // Just show what the user selected in the full scan settings
+                    _hardklorInstrumentSettingsControl.PrecursorMassAnalyzer = 
+                        _documentContainer.Document.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer;
+                    _hardklorInstrumentSettingsControl.PrecursorRes = 
+                        _documentContainer.Document.Settings.TransitionSettings.FullScan.PrecursorRes;
+                    _hardklorInstrumentSettingsControl.PrecursorResMz = 
+                        _documentContainer.Document.Settings.TransitionSettings.FullScan.PrecursorResMz;
+                }
+            }
+        }
+
         public enum SearchEngine
         {
             MSAmanda,
             MSGFPlus,
-            MSFragger
+            MSFragger,
+            Hardklor
         }
 
         public SearchEngine SelectedSearchEngine
         {
             get
             {
-                return (SearchEngine) searchEngineComboBox.SelectedIndex;
+                return ImportPeptideSearch.IsFeatureDetection ? SearchEngine.Hardklor : (SearchEngine) searchEngineComboBox.SelectedIndex;
             }
 
             set
@@ -126,6 +184,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             FileDownloadInfo[] fileDownloadInfo;
             switch (searchEngine)
             {
+                case SearchEngine.Hardklor:
                 case SearchEngine.MSAmanda:
                     return true;
                 case SearchEngine.MSGFPlus:
@@ -156,6 +215,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     if (!EnsureRequiredFilesDownloaded(MsFraggerSearchEngine.FilesToDownload, ShowDownloadMsFraggerDialog))
                         SelectedSearchEngine = SearchEngine.MSAmanda;
                     return new MsFraggerSearchEngine(1 - ImportPeptideSearch.CutoffScore);
+                case SearchEngine.Hardklor:
+                    return new HardklorSearchEngine(ImportPeptideSearch);
                 default:
                     throw new NotImplementedException();
             }
@@ -217,7 +278,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             [Track(defaultValues:typeof(DefaultValuesNull))]
             public string Ms2Analyzer { get; private set; }
         }
-
+        
         private void txtMS1Tolerance_LostFocus(object sender, EventArgs e)
         {
             if (cbMS1TolUnit.SelectedItem != null)
@@ -242,10 +303,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             LoadComboboxEntries();
             pBLogo.Image = ImportPeptideSearch.SearchEngine.SearchEngineLogo;
             btnAdditionalSettings.Enabled = ImportPeptideSearch.SearchEngine.AdditionalSettings != null;
+            ImportPeptideSearch.RemainingStepsInSearch = ImportPeptideSearch.IsFeatureDetection ? 2 : 1; // Hardklor is followed by one or more BullseyeSharp calls
         }
 
         private void LoadComboboxEntries()
         {
+            if (ImportPeptideSearch.IsFeatureDetection)
+            {
+                return;
+            }
             LoadFragmentIonEntries();
             LoadMs2AnalyzerEntries();
 
@@ -295,21 +361,61 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return true;
         }
    
-        public bool SaveAllSettings()
+        public bool SaveAllSettings(bool interactive)
         {
-            bool valid = ValidateEntries();
+            bool valid = ValidateEntries(interactive);
             if (!valid)
                 return false;
 
             var modSettings = _documentContainer.Document.Settings.PeptideSettings.Modifications;
             var allMods = modSettings.StaticModifications.Union(modSettings.AllHeavyModifications);
             ImportPeptideSearch.SearchEngine.SetModifications(allMods, Convert.ToInt32(cbMaxVariableMods.SelectedItem));
+
+            if (ImportPeptideSearch.IsFeatureDetection)
+            {
+                if (_hardklorInstrumentSettingsControl.Enabled)
+                {
+                    // If the fullscan section was enabled, that's because user chose "Centroided" in actual FullScan settings, so set that again
+                    _documentContainer.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.centroided;
+                }
+                Settings.Default.LibraryResultCutOff = ImportPeptideSearch.CutoffScore;
+                Settings.Default.FeatureFindingMinIntensityPPM = HardklorMinIntensityPPM;
+                Settings.Default.FeatureFindingMinIdotP = HardklorMinIdotP;
+                Settings.Default.FeatureFindingSignalToNoise = HardklorSignalToNoise;
+
+            }
             return true;
         }
 
-        private bool ValidateEntries()
+        private bool ValidateEntries(bool interactive)
         {
-            var helper = new MessageBoxHelper(this.ParentForm);
+            var helper = new MessageBoxHelper(this.ParentForm, interactive);
+            if (ImportPeptideSearch.IsFeatureDetection)
+            {
+                if (!helper.ValidateDecimalTextBox(this.textHardklorMinIdotP, 0, 1, out var minIdotP))
+                {
+                    return false;
+                }
+
+                if (!helper.ValidateDecimalTextBox(this.textHardklorSignalToNoise, 0, 10, out var signalToNoise))
+                {
+                    return false;
+                }
+
+                if (!helper.ValidateDecimalTextBox(this.textHardklorMinIntensityPPM, 0, 100, out _))
+                {
+                    return false;
+                }
+                // Note the Hardklor settings
+                ImportPeptideSearch.SettingsHardklor = new ImportPeptideSearch.HardklorSettings(HardklorInstrument,
+                    HardklorResolution,
+                    minIdotP, signalToNoise, _documentContainer.TransitionSettings.Filter.PeptidePrecursorCharges.Select(a => a.AdductCharge).Distinct().ToArray(),
+                    HardklorMinIntensityPPM,
+                    _documentContainer.FullScanSettingsControl.FullScan.RetentionTimeFilterLength);
+                ImportPeptideSearch.CutoffScore = minIdotP;
+                return true;
+            }
+
             if (!helper.ValidateDecimalTextBox(txtMS1Tolerance, 0, 100, out _))
             {
                 helper.ShowTextBoxError(txtMS1Tolerance, 
@@ -345,6 +451,44 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ImportPeptideSearch.SearchEngine.SetMs2Analyzer(ms2Analyzer);
 
             return true;
+        }
+
+        public bool HardklorInstrumentSettingsAreEditable => _hardklorInstrumentSettingsControl.Enabled;
+
+        public FullScanMassAnalyzerType HardklorInstrument
+        {
+            get { return _hardklorInstrumentSettingsControl.PrecursorMassAnalyzer; }
+            set { _hardklorInstrumentSettingsControl.PrecursorMassAnalyzer = value; }
+        }
+
+        public double HardklorResolution
+        {
+            get
+            {
+                return _hardklorInstrumentSettingsControl.PrecursorRes ?? 0;
+            }
+            set
+            {
+                _hardklorInstrumentSettingsControl.PrecursorRes = value;
+            }
+        }
+
+        public double HardklorMinIdotP
+        {
+            get { return double.TryParse(textHardklorMinIdotP.Text, out var corr) ? corr : 0; }
+            set { textHardklorMinIdotP.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+        }
+
+        public double HardklorMinIntensityPPM
+        {
+            get { return double.TryParse(textHardklorMinIntensityPPM.Text, out var cutoff) ? cutoff : 0; }
+            set { textHardklorMinIntensityPPM.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+        }
+
+        public double HardklorSignalToNoise
+        {
+            get { return double.TryParse(textHardklorSignalToNoise.Text, out var sn) ? sn : 0; }
+            set { textHardklorSignalToNoise.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
         public MzTolerance PrecursorTolerance

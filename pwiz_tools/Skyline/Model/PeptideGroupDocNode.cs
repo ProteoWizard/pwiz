@@ -154,14 +154,17 @@ namespace pwiz.Skyline.Model
         public PeptideGroupDocNode ChangeProteinMetadata(ProteinMetadata proteinMetadata)
         {
             var newMetadata = proteinMetadata;
-            if (Equals(PeptideGroup.Name, newMetadata.Name))
-                newMetadata = newMetadata.ChangeName(null); // no actual override
-            if (Equals(PeptideGroup.Description, newMetadata.Description))
-                newMetadata = newMetadata.ChangeDescription(null); // no actual override
             var group = PeptideGroup as FastaSequenceGroup;
             if (group != null)
             {
                 Assume.AreEqual(group.FastaSequenceList.Count, proteinMetadata.ProteinMetadataList.Count);
+            }
+            else
+            {
+                if (Equals(PeptideGroup.Name, newMetadata.Name))
+                    newMetadata = newMetadata.ChangeName(null); // no actual override
+                if (Equals(PeptideGroup.Description, newMetadata.Description))
+                    newMetadata = newMetadata.ChangeDescription(null); // no actual override
             }
             return ChangeProp(ImClone(this), im => im._proteinMetadata = newMetadata);
         }
@@ -520,6 +523,17 @@ namespace pwiz.Skyline.Model
         public static int CompareGenes(PeptideGroupDocNode p1, PeptideGroupDocNode p2)
         {
             return string.Compare(p1.ProteinMetadata.Gene ?? String.Empty, p2.ProteinMetadata.Gene ?? String.Empty, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        public PeptideGroupDocNode ForgetOriginalMoleculeTargets()
+        {
+            var newChildren = Molecules.Select(mol => mol.ChangeOriginalMoleculeTarget(null)).Cast<DocNode>().ToList();
+            if (ArrayUtil.ReferencesEqual(newChildren, Children))
+            {
+                return this;
+            }
+
+            return (PeptideGroupDocNode) ChangeChildren(newChildren);
         }
 
         #region object overrides

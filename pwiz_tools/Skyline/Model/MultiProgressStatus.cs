@@ -70,6 +70,11 @@ namespace pwiz.Skyline.Model
             throw new NotImplementedException();
         }
 
+        public IProgressStatus ChangeSegmentName(string prop)
+        {
+            throw new NotImplementedException();
+        }
+
         public IProgressStatus ChangeSegments(int segment, int segmentCount)
         {
             throw new NotImplementedException();
@@ -91,6 +96,7 @@ namespace pwiz.Skyline.Model
         }
 
         public string Message { get { return string.Empty; } }
+        public string SegmentName { get { return string.Empty; } }
         public ImmutableList<ChromatogramLoadingStatus> ProgressList { get; private set; }
 
         public Exception ErrorException

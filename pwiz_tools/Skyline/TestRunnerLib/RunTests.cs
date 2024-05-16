@@ -622,7 +622,7 @@ namespace TestRunnerLib
             // MSAmanda intentionally leaves tempfiles behind (as caches in case of repeat runs)
             // But our test system wants a clean finish
             // TODO(MattC): tidy up MSAmanda implementation so that we can distinguish intentional uses of tmp dir (caching potentially re-used files) from accidental directory creation and/or not-reused files within
-            var msAmandaTmpDir = Path.Combine(Path.GetTempPath(), @"~SK_MSAmanda" /* must match MSAmandaSearchWrapper.MS_AMANDA_TMP */);
+            var msAmandaTmpDir = Path.Combine(Path.GetTempPath(), "~SK" /* must match MSAmandaSearchWrapper.MS_AMANDA_TMP */);
             try
             {
                 if (Directory.Exists(msAmandaTmpDir))
@@ -1029,13 +1029,21 @@ namespace TestRunnerLib
         {
             lock (_logLock)
             {
-                Console.Write(info, args);
-                Console.Out.Flush(); // Get this info to TeamCity or SkylineTester ASAP
-                if (_log != null)
-                {
-                    _log.Write(info, args);
-                    _log.Flush();
-                }
+                Log(_log, info, args);
+            }
+        }
+
+        [StringFormatMethod("info")]
+
+        // N.B. not thread safe, use the non-static version (which calls this) from any RunTests object
+        public static void Log(StreamWriter log, string info, params object[] args) 
+        {
+            Console.Write(info, args);
+            Console.Out.Flush(); // Get this info to TeamCity or SkylineTester ASAP
+            if (log != null)
+            {
+                log.Write(info, args);
+                log.Flush();
             }
         }
 

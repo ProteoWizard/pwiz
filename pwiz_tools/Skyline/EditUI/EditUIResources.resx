@@ -462,4 +462,13 @@ Example: Looplink: T [4]
   <data name="UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_These_proteins_include_" xml:space="preserve">
     <value>These proteins include:</value>
   </data>
+  <data name="AssociateProteinsDlg_Find_minimal_gene_group_list_that_explains_all_peptides" xml:space="preserve">
+    <value>Find &amp;minimal gene group list that explains all peptides</value>
+  </data>
+  <data name="AssociateProteinsDlg_Min_peptides_per_gene" xml:space="preserve">
+    <value>Mi&amp;n peptides per gene</value>
+  </data>
+  <data name="AssociateProteinsDlg_Remove_subset_genes" xml:space="preserve">
+    <value>&amp;Remove subset genes</value>
+  </data>
 </root>

@@ -449,6 +449,10 @@ namespace pwiz.Skyline.Model.Results
             }
             else
             {
+                if (chromatogramGroupId.Target.Sequence == null)
+                {
+                    return false;
+                }
                 var key1 = new PeptideLibraryKey(nodePep.ModifiedSequence, 0);
                 var key2 = new PeptideLibraryKey(chromatogramGroupId.Target.Sequence, 0);
                 return LibKeyIndex.KeysMatch(key1, key2);
@@ -1466,7 +1470,7 @@ namespace pwiz.Skyline.Model.Results
 
             var productMzs = Enumerable.Range(startIdx, endIdx - startIdx).Select(i =>
                 new SignedMz(transitions[i].Product, transitionDocNode.Mz.IsNegative));
-            int centerIdx = startIdx + OptStepChromatograms.IndexOfCenter(
+            int centerIdx = startIdx + OptStepChromatograms.IndexOfCenterMz(
                 transitionDocNode.Mz, productMzs, optimizableRegression.StepCount);
             // Update optimization steps.
             for (var i = startIdx; i < endIdx; i++)

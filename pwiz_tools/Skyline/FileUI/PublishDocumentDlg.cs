@@ -120,8 +120,6 @@ namespace pwiz.Skyline.FileUI
 
         private void PublishDocumentDlgLoad(List<ServerFolders> listServerFolders)
         {
-            if (PanoramaPublishClient == null)
-                PanoramaPublishClient = new WebPanoramaPublishClient();
             var listErrorServers = new List<ServerError>();
             foreach (var server in _panoramaServers)
             {
@@ -134,7 +132,11 @@ namespace pwiz.Skyline.FileUI
                 JToken folders = null;
                 try
                 {
-                    folders = PanoramaPublishClient.GetInfoForFolders(server, null);
+                    // Create a client for the server if we were not given one in SkylineWindow.ShowPublishDlg(IPanoramaPublishClient publishClient).
+                    var panoramaClient = PanoramaPublishClient != null
+                        ? PanoramaPublishClient.PanoramaClient
+                        : GetDefaultPublishClient(server).PanoramaClient;
+                    folders = panoramaClient.GetInfoForFolders(null);
                 }
                 catch (Exception ex)
                 {
@@ -296,10 +298,14 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
+            // If a test client was provided in SkylineWindow.ShowPublishDlg(IPanoramaPublishClient publishClient), use that.
+            // Otherwise, create a client for the selected server.
+            PanoramaPublishClient ??= GetDefaultPublishClient(folderInfo.Server); 
+
             try
             {
                 var cancelled = false;
-                ShareType = PanoramaPublishClient.GetShareType(folderInfo, _docContainer.DocumentUI,
+                ShareType = PanoramaPublishClient.GetShareType(_docContainer.DocumentUI,
                     _docContainer.DocumentFilePath, _fileFormatOnDisk, this, ref cancelled);
                 if (cancelled)
                 {
@@ -321,8 +327,16 @@ namespace pwiz.Skyline.FileUI
             string folderPath = GetFolderPath(treeViewFolders.SelectedNode);
             var zipFilePath = tbFilePath.Text;
             FolderInformation folderInfo = treeViewFolders.SelectedNode.Tag as FolderInformation;
-            if(folderInfo != null)
-                PanoramaPublishClient.UploadSharedZipFile(parent,folderInfo.Server, zipFilePath, folderPath);
+            if (folderInfo != null)
+            {
+                PanoramaPublishClient ??= GetDefaultPublishClient(folderInfo.Server);
+                PanoramaPublishClient.UploadSharedZipFile(parent, zipFilePath, folderPath);
+            }
+        }
+
+        public static IPanoramaPublishClient GetDefaultPublishClient(PanoramaServer server)
+        {
+            return new WebPanoramaPublishClient(server.URI, server.Username, server.Password);
         }
 
         private string GetFolderPath(TreeNode folderNode)

@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -403,15 +403,6 @@ namespace pwiz.Skyline.Properties {
         public static string AlignmentForm_UpdateGraph_Outliers {
             get {
                 return ResourceManager.GetString("AlignmentForm_UpdateGraph_Outliers", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Peptides.
-        /// </summary>
-        public static string AlignmentForm_UpdateGraph_Peptides {
-            get {
-                return ResourceManager.GetString("AlignmentForm_UpdateGraph_Peptides", resourceCulture);
             }
         }
         
@@ -857,6 +848,16 @@ namespace pwiz.Skyline.Properties {
         public static string BuildLibraryDlg_OkWizardPage_Finish {
             get {
                 return ResourceManager.GetString("BuildLibraryDlg_OkWizardPage_Finish", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add peptide precursors to the document to build a library from Koina predictions..
+        /// </summary>
+        public static string BuildLibraryDlg_ValidateBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_Koina_predictions_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_ValidateBuilder_Add_peptide_precursors_to_the_document_to_build_a" +
+                        "_library_from_Koina_predictions_", resourceCulture);
             }
         }
         
@@ -1657,11 +1658,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Associating peptides with proteins.
+        ///   Looks up a localized string similar to Associating peptides with proteins from FASTA file {0}.
         /// </summary>
-        public static string CommandLine_AssociateProteins_Associating_peptides_with_proteins {
+        public static string CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file__0_ {
             get {
-                return ResourceManager.GetString("CommandLine_AssociateProteins_Associating_peptides_with_proteins", resourceCulture);
+                return ResourceManager.GetString("CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file_" +
+                        "_0_", resourceCulture);
             }
         }
         
@@ -1996,6 +1998,34 @@ namespace pwiz.Skyline.Properties {
         public static string CommandLine_ImportFasta_Importing_FASTA_file__0____ {
             get {
                 return ResourceManager.GetString("CommandLine_ImportFasta_Importing_FASTA_file__0____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Importing peptide list {0} from file {1}....
+        /// </summary>
+        public static string CommandLine_ImportPeptideList_Importing_peptide_list__0__from_file__1____ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportPeptideList_Importing_peptide_list__0__from_file__1____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Importing peptide lists from file {0}....
+        /// </summary>
+        public static string CommandLine_ImportPeptideList_Importing_peptide_lists_from_file__0____ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportPeptideList_Importing_peptide_lists_from_file__0____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: peptide list file contains lines with &gt;&gt;. Ignoring provided list name..
+        /// </summary>
+        public static string CommandLine_ImportPeptideList_Warning__peptide_list_file_contains_lines_with_____Ignoring_provided_list_name_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportPeptideList_Warning__peptide_list_file_contains_lines_with_____" +
+                        "Ignoring_provided_list_name_", resourceCulture);
             }
         }
         
@@ -3212,6 +3242,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Search failed: {0}.
+        /// </summary>
+        public static string DdaSearch_Search_failed__0 {
+            get {
+                return ResourceManager.GetString("DdaSearch_Search_failed__0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Search canceled..
         /// </summary>
         public static string DDASearchControl_SearchProgress_Search_canceled {
@@ -4007,9 +4046,9 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized string similar to could not find EncyclopeDIA.
         /// </summary>
-        public static string EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_could_not_find_EncyclopeDia {
+        public static string EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_could_not_find_EncyclopeDia {
             get {
-                return ResourceManager.GetString("EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_could_not_find_EncyclopeDia", resourceCulture);
+                return ResourceManager.GetString("EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_could_not_find_EncyclopeDia", resourceCulture);
             }
         }
         
@@ -4339,6 +4378,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Protein Expression.
+        /// </summary>
+        public static string Extensions_CustomToString_Protein_Expression {
+            get {
+                return ResourceManager.GetString("Extensions_CustomToString_Protein_Expression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap ExternalTool {
@@ -4548,7 +4596,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to CE:.
+        ///   Looks up a localized string similar to NCE:.
         /// </summary>
         public static string GraphFullScan_CreateGraph_CE_ {
             get {
@@ -4716,6 +4764,16 @@ namespace pwiz.Skyline.Properties {
         public static string GroupByItem_ToString_Replicates {
             get {
                 return ResourceManager.GetString("GroupByItem_ToString_Replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap HardklorLogo {
+            get {
+                object obj = ResourceManager.GetObject("HardklorLogo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -5515,6 +5573,16 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap Keep {
             get {
                 object obj = ResourceManager.GetObject("Keep", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap koina_logo_fdf731d5 {
+            get {
+                object obj = ResourceManager.GetObject("koina_logo_fdf731d5", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -7394,6 +7462,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A peptide modification must be added before giving it a terminal or amino acid specificity..
+        /// </summary>
+        public static string PeptideMod_SetTerminus_A_peptide_modification_must_be_added_before_giving_it_a_terminal_or_amino_acid_specificity_ {
+            get {
+                return ResourceManager.GetString("PeptideMod_SetTerminus_A_peptide_modification_must_be_added_before_giving_it_a_te" +
+                        "rminal_or_amino_acid_specificity_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap PeptideQc {
@@ -7730,16 +7808,6 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap Properties_Button {
             get {
                 object obj = ResourceManager.GetObject("Properties_Button", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap prosit_logo_dark_blue {
-            get {
-                object obj = ResourceManager.GetObject("prosit_logo_dark_blue", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -11463,16 +11531,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ValueInvalidDoubleException_ValueInvalidDoubleException_The_value___0___is_not_va" +
                         "lid_for_the_argument__1__which_requires_a_decimal_number_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The value &apos;{0}&apos; is not valid for the argument {1}. Use one of {2}.
-        /// </summary>
-        public static string ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_ {
-            get {
-                return ResourceManager.GetString("ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_" +
-                        "argument__1___Use_one_of__2_", resourceCulture);
             }
         }
         

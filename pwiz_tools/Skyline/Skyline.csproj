@@ -14,7 +14,7 @@
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>Skyline.ico</ApplicationIcon>
     <IsWebBootstrapper>true</IsWebBootstrapper>
-    <ManifestCertificateThumbprint>1FF0D460A5DD19CBE0417A8B54285FB233C23079</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>586806A1F7B1C85AD63BC46CA599EC4142EBE84A</ManifestCertificateThumbprint>
     <ManifestKeyFile>
     </ManifestKeyFile>
     <GenerateManifests>true</GenerateManifests>
@@ -52,8 +52,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>347</ApplicationRevision>
-    <ApplicationVersion>23.1.1.347</ApplicationVersion>
+    <ApplicationRevision>459</ApplicationRevision>
+    <ApplicationVersion>23.1.1.459</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -345,6 +345,9 @@
     <Compile Include="Controls\Clustering\DataboundGraph.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Controls\Clustering\DebugZedGraphControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="Controls\Clustering\HeatMapGraph.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -368,6 +371,8 @@
     <Compile Include="Controls\Databinding\IDataboundGridForm.cs" />
     <Compile Include="Controls\Databinding\SkylineViewContext.cs" />
     <Compile Include="Controls\Databinding\SkylineWindowDataSchema.cs" />
+    <Compile Include="Controls\Graphs\AreaRelativeAbundanceGraphPane.cs" />
+    <Compile Include="Controls\Graphs\DotPlotUtil.cs" />
     <Compile Include="Controls\Graphs\ExportMethodScheduleGraph.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -392,15 +397,22 @@
       <DependentUpon>DetectionToolbarProperties.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\GraphDataCalculator.cs" />
+    <Compile Include="Controls\Graphs\MatchExpressionListDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\MatchExpressionListDlg.Designer.cs">
+      <DependentUpon>MatchExpressionListDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Graphs\PaneProgressBar.cs" />
     <Compile Include="Controls\Graphs\ReplicateGroupOp.cs" />
     <Compile Include="Controls\Graphs\ReplicateValue.cs" />
+    <Compile Include="Controls\Graphs\SummaryRelativeAbundanceGraphPane.cs" />
     <Compile Include="Controls\ImageListBox.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Controls\Lists\ListViewContext.cs" />
     <Compile Include="Controls\SeqNode\PeptideFormatter.cs" />
-    <Compile Include="Controls\PrositUIHelpers.cs" />
+    <Compile Include="Controls\KoinaUIHelpers.cs" />
     <Compile Include="Controls\Spectra\PrecursorClass.cs" />
     <Compile Include="Controls\Spectra\MatchingPrecursors.cs" />
     <Compile Include="Controls\Spectra\SpectrumGridForm.cs">
@@ -421,6 +433,7 @@
       <DependentUpon>TutorialTextResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Controls\TargetColumn.cs" />
+    <Compile Include="Controls\ImmediateWindowWarningListener.cs" />
     <Compile Include="Controls\TreeViewMSStateRestorer.cs" />
     <Compile Include="EditUI\EditLinkedPeptidesDlg.cs">
       <SubType>Form</SubType>
@@ -525,13 +538,19 @@
     </Compile>
     <Compile Include="Model\FullScanProperties.cs" />
     <Compile Include="Model\IdPeptideDocNode.cs" />
+    <Compile Include="Model\Results\Spectra\Alignment\BinnedSpectrum.cs" />
+    <Compile Include="Model\Results\Spectra\Alignment\SimilarityGrid.cs" />
+    <Compile Include="Model\Results\Spectra\Alignment\SpectrumSummary.cs" />
+    <Compile Include="Model\Results\Spectra\Alignment\SpectrumSummaryList.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassFilter.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
+    <Compile Include="Model\RetentionTimes\AlignmentFunction.cs" />
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>SpectrumPropertiesResx.resx</DependentUpon>
     </Compile>
+    <Compile Include="Model\DdaSearch\HardklorSearchEngine.cs" />
     <Compile Include="Model\DdaSearch\MsconvertDdaConverter.cs" />
     <Compile Include="FileUI\SkypSupport.cs" />
     <Compile Include="Menus\ChromatogramContextMenu.cs">
@@ -721,6 +740,286 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Model\Results\Spectra\SpectraResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SpectraResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\RetentionTimes\RetentionTimesResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>RetentionTimesResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Lib\ChromLib\ChromLibResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ChromLibResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\SettingsUIResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SettingsUIResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\SeqNode\SeqNodeResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SeqNodeResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Results\Scoring\ScoringResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ScoringResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\GroupComparison\GroupComparisonResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>GroupComparisonResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="SkylineResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SkylineResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\DocSettings\MetadataExtraction\MetadataExtractionResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>MetadataExtractionResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Graphs\GraphsResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>GraphsResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Menus\MenusResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>MenusResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\AlertsResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AlertsResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\PeptideSearchResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>PeptideSearchResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\EditUIResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>EditUIResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Lists\ListsResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ListsResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Tools\ToolsResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ToolsResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\ModelResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ModelResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\FileUIResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FileUIResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Util\UtilResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>UtilResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Lib\LibResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>LibResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\PropertiesResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>PropertiesResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\DocSettings\DocSettingsResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DocSettingsResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Clustering\ClusteringResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ClusteringResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Find\FindResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FindResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Databinding\DatabindingResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DatabindingResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Results\ResultsResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ResultsResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Irt\IrtResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>IrtResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ControlsResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ControlsResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Databinding\Entities\EntitiesResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>EntitiesResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="ToolsUI\ToolsUIResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ToolsUIResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Optimization\OptimizationResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>OptimizationResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Startup\StartupResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>StartupResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\IrtResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>IrtResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Hibernate\HibernateResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>HibernateResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Lib\Midas\MidasResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>MidasResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Lists\ListsResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ListsResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Util\Extensions\ExtensionsResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ExtensionsResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Databinding\RowActions\RowActionsResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>RowActionsResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\IonMobility\IonMobilityResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>IonMobilityResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\V01\V01Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>V01Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Databinding\DatabindingResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DatabindingResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Proteome\ProteomeResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ProteomeResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\DdaSearch\DdaSearchResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DdaSearchResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\ElementLocators\ExportAnnotations\ExportAnnotationsResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ExportAnnotationsResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Serialization\SerializationResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SerializationResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\GroupComparison\GroupComparisonResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>GroupComparisonResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Results\RemoteApi\RemoteApiResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>RemoteApiResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\Optimization\OptimizationResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>OptimizationResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\AbsoluteQuantificationResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AbsoluteQuantificationResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\AuditLog\AuditLogResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AuditLogResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Crosslinking\CrosslinkingResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>CrosslinkingResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\ElementLocators\ElementLocatorsResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ElementLocatorsResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Lib\BlibData\BlibDataResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>BlibDataResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\IonMobility\IonMobilityResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>IonMobilityResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>UnifiResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Spectra\SpectraResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SpectraResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="GenericFormClassNames.cs" />
     <Compile Include="Controls\Graphs\MsGraphExtension.cs">
       <SubType>UserControl</SubType>
@@ -728,6 +1027,9 @@
     <Compile Include="Controls\Graphs\MsGraphExtension.Designer.cs">
       <DependentUpon>MsGraphExtension.cs</DependentUpon>
     </Compile>
+    <Compile Include="ProtocolBuffers\GeneratedCode\GrpcService.cs" />
+    <Compile Include="ProtocolBuffers\GeneratedCode\GrpcServiceGrpc.cs" />
+    <Compile Include="ProtocolBuffers\GeneratedCode\ModelConfig.cs" />
     <Compile Include="SettingsUI\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
     <Compile Include="Model\Lib\LibraryKey.cs" />
@@ -741,21 +1043,21 @@
     <Compile Include="Model\IsotopeModificationPermuter.cs" />
     <Compile Include="Model\Optimization\OptimizationDictionary.cs" />
     <Compile Include="Model\ProgressMonitor.cs" />
-    <Compile Include="Model\Prosit\Config\PrositConfig.cs" />
-    <Compile Include="Model\Prosit\Models\PrositIntensityModel.cs" />
-    <Compile Include="Model\Prosit\Models\PrositModel.cs" />
-    <Compile Include="Model\Prosit\PrositConstants.cs" />
-    <Compile Include="Model\Prosit\Communication\PrositPredictionClient.cs" />
-    <Compile Include="Model\Prosit\Models\PrositRetentionTimeModel.cs" />
-    <Compile Include="Model\Prosit\PrositExceptions.cs" />
-    <Compile Include="Model\Prosit\PrositLibraryBuilder.cs" />
-    <Compile Include="Model\Prosit\PrositMS2Spectra.cs" />
-    <Compile Include="Model\Prosit\PrositResources.Designer.cs">
+    <Compile Include="Model\Koina\Config\KoinaConfig.cs" />
+    <Compile Include="Model\Koina\Models\KoinaIntensityModel.cs" />
+    <Compile Include="Model\Koina\Models\KoinaModel.cs" />
+    <Compile Include="Model\Koina\KoinaConstants.cs" />
+    <Compile Include="Model\Koina\Communication\KoinaPredictionClient.cs" />
+    <Compile Include="Model\Koina\Models\KoinaRetentionTimeModel.cs" />
+    <Compile Include="Model\Koina\KoinaExceptions.cs" />
+    <Compile Include="Model\Koina\KoinaLibraryBuilder.cs" />
+    <Compile Include="Model\Koina\KoinaMS2Spectra.cs" />
+    <Compile Include="Model\Koina\KoinaResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>PrositResources.resx</DependentUpon>
+      <DependentUpon>KoinaResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\Prosit\PrositRetentionScoreCalculator.cs" />
+    <Compile Include="Model\Koina\KoinaRetentionScoreCalculator.cs" />
     <Compile Include="Model\Results\PeakIntegrator.cs" />
     <Compile Include="Model\Results\NormalizedValueCalculator.cs" />
     <Compile Include="Model\Results\NormalizeOption.cs" />
@@ -823,14 +1125,6 @@
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiUrl.cs" />
     <Compile Include="Model\TargetResolver.cs" />
     <Compile Include="Model\TransitionGroupIonMobilityInfo.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\Model.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\Predict.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\PredictionService.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\PredictionServiceGrpc.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\ResourceHandle.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\Tensor.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\TensorShape.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\Types.cs" />
     <Compile Include="SettingsUI\MetadataRuleEditor.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -875,6 +1169,7 @@
     <Compile Include="Util\HillSystemOrdering.cs" />
     <Compile Include="Util\ParsedMolecule.cs" />
     <Compile Include="Util\PersistentString.cs" />
+    <Compile Include="Util\TraceWarningListener.cs" />
     <Compile Include="Util\TypedMass.cs" />
     <Compile Include="Util\UiModes.cs" />
     <Compile Include="ToolsUI\ColorGrid.cs">
@@ -896,7 +1191,6 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Util\AnnotationHelper.cs" />
-    <Compile Include="Controls\Graphs\AreaCVGraphDataCache.cs" />
     <Compile Include="Controls\Graphs\AreaCVToolbar.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2268,7 +2562,7 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="CommandArgUsage.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>CommandArgUsage.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
@@ -2456,6 +2750,9 @@
     <EmbeddedResource Include="Controls\Graphs\ImportResultsRetryCountdownDlg.zh-CHS.resx">
       <DependentUpon>ImportResultsRetryCountdownDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\MatchExpressionListDlg.resx">
+      <DependentUpon>MatchExpressionListDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\MsGraphExtension.ja.resx">
       <DependentUpon>MsGraphExtension.cs</DependentUpon>
     </EmbeddedResource>
@@ -2544,6 +2841,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\VolcanoPlotFormattingDlg.resx">
       <DependentUpon>VolcanoPlotFormattingDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\VolcanoPlotFormattingDlg.zh-CHS.resx">
       <DependentUpon>VolcanoPlotFormattingDlg.cs</DependentUpon>
@@ -2816,6 +3114,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\SearchSettingsControl.resx">
       <DependentUpon>SearchSettingsControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\SearchSettingsControl.zh-CHS.resx">
       <DependentUpon>SearchSettingsControl.cs</DependentUpon>
@@ -2835,9 +3134,11 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\ChromatogramContextMenu.ja.resx">
       <DependentUpon>ChromatogramContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\ChromatogramContextMenu.resx">
       <DependentUpon>ChromatogramContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\ChromatogramContextMenu.zh-CHS.resx">
       <DependentUpon>ChromatogramContextMenu.cs</DependentUpon>
@@ -3345,6 +3646,10 @@
       <DependentUpon>FullScanPropertiesRes.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\RetentionTimes\RetentionTimesResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>RetentionTimesResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\SpectrumPropertiesResx.ja.resx">
       <DependentUpon>SpectrumPropertiesResx.resx</DependentUpon>
       <SubType>Designer</SubType>
@@ -3372,17 +3677,17 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\GroupComparison\GroupComparisonStrings.zh-CHS.resx" />
-    <EmbeddedResource Include="Model\Prosit\PrositResources.ja.resx">
-      <DependentUpon>PrositResources.resx</DependentUpon>
+    <EmbeddedResource Include="Model\Koina\KoinaResources.ja.resx">
+      <DependentUpon>KoinaResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\Prosit\PrositResources.resx">
+    <EmbeddedResource Include="Model\Koina\KoinaResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>PrositResources.Designer.cs</LastGenOutput>
+      <LastGenOutput>KoinaResources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\Prosit\PrositResources.zh-CHS.resx">
-      <DependentUpon>PrositResources.resx</DependentUpon>
+    <EmbeddedResource Include="Model\Koina\KoinaResources.zh-CHS.resx">
+      <DependentUpon>KoinaResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Results\Scoring\FeatureTooltips.ja.resx">
@@ -3664,14 +3969,7 @@
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchPRM.png" />
     <EmbeddedResource Include="Resources\Ions_fragments.bmp" />
     <EmbeddedResource Include="Resources\Edit_Undo_Multiple.bmp" />
-    <Protobuf Include="ProtocolBuffers\model.proto" />
-    <Protobuf Include="ProtocolBuffers\predict.proto" />
-    <Protobuf Include="ProtocolBuffers\prediction_service.proto" />
-    <Protobuf Include="ProtocolBuffers\resource_handle.proto" />
-    <Protobuf Include="ProtocolBuffers\tensor.proto" />
-    <Protobuf Include="ProtocolBuffers\tensor_shape.proto" />
-    <Protobuf Include="ProtocolBuffers\types.proto" />
-    <EmbeddedResource Include="Model\Prosit\Config\PrositConfig.xml">
+    <EmbeddedResource Include="Model\Koina\Config\KoinaConfig.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <Content Include="..\..\pwiz\data\common\psi-ms.obo">
@@ -3697,9 +3995,11 @@
     <None Include="Method\Agilent\MH12\BuildAgilentMH12Method.exe.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Model\Prosit\Config\PrositConfig_development.xml" />
+    <None Include="Model\Koina\Config\KoinaConfig_development.xml" />
     <None Include="ProtocolBuffers\google\protobuf\wrappers.proto" />
     <None Include="PreBuildEvents.bat" />
+    <Protobuf Include="ProtocolBuffers\grpc_service.proto" />
+    <Protobuf Include="ProtocolBuffers\model_config.proto" />
     <None Include="Resources\Locked.bmp" />
     <EmbeddedResource Include="Resources\MoleculeLib.bmp" />
     <None Include="Resources\MoleculeStandard.bmp" />
@@ -3823,9 +4123,10 @@
     <None Include="Resources\AnnotatedSpectum.png" />
     <None Include="Resources\Cluster.ico" />
     <None Include="Resources\Close.bmp" />
+    <Content Include="Resources\hardklor_logo.png" />
     <None Include="Resources\PanoramaDownload.bmp" />
+    <EmbeddedResource Include="Resources\koina-logo.fdf731d5.png" />
     <Content Include="SkylineDocPointer.ico" />
-    <EmbeddedResource Include="Resources\prosit_logo_dark_blue.png" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -4721,11 +5022,6 @@
       <DependentUpon>ChromLibResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Lib\ChromLib\ChromLibResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ChromLibResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="SettingsUI\SettingsUIResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -4739,11 +5035,6 @@
       <DependentUpon>SettingsUIResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="SettingsUI\SettingsUIResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>SettingsUIResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Controls\SeqNode\SeqNodeResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -4757,11 +5048,6 @@
       <DependentUpon>SeqNodeResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Controls\SeqNode\SeqNodeResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>SeqNodeResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\Results\Scoring\ScoringResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -4775,11 +5061,6 @@
       <DependentUpon>ScoringResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Results\Scoring\ScoringResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ScoringResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Controls\GroupComparison\GroupComparisonResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -4793,11 +5074,6 @@
       <DependentUpon>GroupComparisonResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Controls\GroupComparison\GroupComparisonResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>GroupComparisonResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="SkylineResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -4811,11 +5087,6 @@
       <DependentUpon>SkylineResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="SkylineResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>SkylineResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\DocSettings\MetadataExtraction\MetadataExtractionResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -4829,11 +5100,6 @@
       <DependentUpon>MetadataExtractionResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\DocSettings\MetadataExtraction\MetadataExtractionResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>MetadataExtractionResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Controls\Graphs\GraphsResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -4847,11 +5113,6 @@
       <DependentUpon>GraphsResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Controls\Graphs\GraphsResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>GraphsResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Menus\MenusResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -4865,11 +5126,6 @@
       <DependentUpon>MenusResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Menus\MenusResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>MenusResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Alerts\AlertsResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -4883,11 +5139,6 @@
       <DependentUpon>AlertsResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Alerts\AlertsResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>AlertsResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="FileUI\PeptideSearch\PeptideSearchResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -4901,11 +5152,6 @@
       <DependentUpon>PeptideSearchResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="FileUI\PeptideSearch\PeptideSearchResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>PeptideSearchResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="EditUI\EditUIResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -4919,11 +5165,6 @@
       <DependentUpon>EditUIResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="EditUI\EditUIResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>EditUIResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Controls\Lists\ListsResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -4937,11 +5178,6 @@
       <DependentUpon>ListsResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Controls\Lists\ListsResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ListsResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\Tools\ToolsResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -4955,11 +5191,6 @@
       <DependentUpon>ToolsResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Tools\ToolsResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ToolsResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\ModelResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -4973,11 +5204,6 @@
       <DependentUpon>ModelResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\ModelResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ModelResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="FileUI\FileUIResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -4991,11 +5217,6 @@
       <DependentUpon>FileUIResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="FileUI\FileUIResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>FileUIResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Util\UtilResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5009,11 +5230,6 @@
       <DependentUpon>UtilResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Util\UtilResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>UtilResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\Lib\LibResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5027,11 +5243,6 @@
       <DependentUpon>LibResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Lib\LibResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>LibResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Properties\PropertiesResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5045,11 +5256,6 @@
       <DependentUpon>PropertiesResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Properties\PropertiesResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>PropertiesResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\DocSettings\DocSettingsResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5063,11 +5269,6 @@
       <DependentUpon>DocSettingsResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\DocSettings\DocSettingsResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DocSettingsResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Controls\Clustering\ClusteringResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5081,11 +5282,6 @@
       <DependentUpon>ClusteringResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Controls\Clustering\ClusteringResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ClusteringResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\Find\FindResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5099,11 +5295,6 @@
       <DependentUpon>FindResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Find\FindResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>FindResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\Databinding\DatabindingResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5117,11 +5308,6 @@
       <DependentUpon>DatabindingResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Databinding\DatabindingResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DatabindingResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\Results\ResultsResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5135,11 +5321,6 @@
       <DependentUpon>ResultsResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Results\ResultsResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ResultsResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\Irt\IrtResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5153,11 +5334,6 @@
       <DependentUpon>IrtResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Irt\IrtResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>IrtResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Controls\ControlsResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5171,11 +5347,6 @@
       <DependentUpon>ControlsResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Controls\ControlsResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ControlsResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\Databinding\Entities\EntitiesResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5189,11 +5360,6 @@
       <DependentUpon>EntitiesResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Databinding\Entities\EntitiesResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>EntitiesResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="ToolsUI\ToolsUIResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5207,11 +5373,6 @@
       <DependentUpon>ToolsUIResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="ToolsUI\ToolsUIResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ToolsUIResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\Optimization\OptimizationResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5225,11 +5386,6 @@
       <DependentUpon>OptimizationResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Optimization\OptimizationResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>OptimizationResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Controls\Startup\StartupResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5243,11 +5399,6 @@
       <DependentUpon>StartupResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Controls\Startup\StartupResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>StartupResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="SettingsUI\Irt\IrtResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5261,11 +5412,6 @@
       <DependentUpon>IrtResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="SettingsUI\Irt\IrtResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>IrtResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\Hibernate\HibernateResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5279,11 +5425,6 @@
       <DependentUpon>HibernateResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Hibernate\HibernateResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>HibernateResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\Lib\Midas\MidasResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5297,11 +5438,6 @@
       <DependentUpon>MidasResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Lib\Midas\MidasResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>MidasResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\Lists\ListsResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5315,11 +5451,6 @@
       <DependentUpon>ListsResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Lists\ListsResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ListsResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Util\Extensions\ExtensionsResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5333,11 +5464,6 @@
       <DependentUpon>ExtensionsResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Util\Extensions\ExtensionsResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ExtensionsResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Controls\Databinding\RowActions\RowActionsResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5351,11 +5477,6 @@
       <DependentUpon>RowActionsResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Controls\Databinding\RowActions\RowActionsResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>RowActionsResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="SettingsUI\IonMobility\IonMobilityResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5369,11 +5490,6 @@
       <DependentUpon>IonMobilityResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="SettingsUI\IonMobility\IonMobilityResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>IonMobilityResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\V01\V01Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5387,11 +5503,6 @@
       <DependentUpon>V01Resources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\V01\V01Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>V01Resources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Controls\Databinding\DatabindingResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5405,11 +5516,6 @@
       <DependentUpon>DatabindingResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Controls\Databinding\DatabindingResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DatabindingResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\Proteome\ProteomeResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5423,11 +5529,6 @@
       <DependentUpon>ProteomeResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Proteome\ProteomeResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ProteomeResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\DdaSearch\DdaSearchResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5441,11 +5542,6 @@
       <DependentUpon>DdaSearchResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\DdaSearch\DdaSearchResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DdaSearchResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\ElementLocators\ExportAnnotations\ExportAnnotationsResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5459,11 +5555,6 @@
       <DependentUpon>ExportAnnotationsResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\ElementLocators\ExportAnnotations\ExportAnnotationsResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ExportAnnotationsResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\Serialization\SerializationResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5477,11 +5568,6 @@
       <DependentUpon>SerializationResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Serialization\SerializationResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>SerializationResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\GroupComparison\GroupComparisonResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5495,11 +5581,6 @@
       <DependentUpon>GroupComparisonResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\GroupComparison\GroupComparisonResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>GroupComparisonResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\Results\RemoteApi\RemoteApiResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5513,11 +5594,6 @@
       <DependentUpon>RemoteApiResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Results\RemoteApi\RemoteApiResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>RemoteApiResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="SettingsUI\Optimization\OptimizationResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5531,11 +5607,6 @@
       <DependentUpon>OptimizationResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="SettingsUI\Optimization\OptimizationResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>OptimizationResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\AbsoluteQuantificationResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5549,11 +5620,6 @@
       <DependentUpon>AbsoluteQuantificationResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\DocSettings\AbsoluteQuantification\AbsoluteQuantificationResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>AbsoluteQuantificationResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\AuditLog\AuditLogResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5567,11 +5633,6 @@
       <DependentUpon>AuditLogResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\AuditLog\AuditLogResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>AuditLogResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\Crosslinking\CrosslinkingResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5585,11 +5646,6 @@
       <DependentUpon>CrosslinkingResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Crosslinking\CrosslinkingResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>CrosslinkingResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\ElementLocators\ElementLocatorsResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5603,11 +5659,6 @@
       <DependentUpon>ElementLocatorsResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\ElementLocators\ElementLocatorsResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ElementLocatorsResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\Lib\BlibData\BlibDataResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5621,11 +5672,6 @@
       <DependentUpon>BlibDataResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Lib\BlibData\BlibDataResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>BlibDataResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\IonMobility\IonMobilityResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5639,11 +5685,6 @@
       <DependentUpon>IonMobilityResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\IonMobility\IonMobilityResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>IonMobilityResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\Results\RemoteApi\Unifi\UnifiResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5657,25 +5698,20 @@
       <DependentUpon>UnifiResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>UnifiResources.resx</DependentUpon>
-    </Compile>
-    <EmbeddedResource Include="Model\Prosit\Models\ModelsResources.resx">
+    <EmbeddedResource Include="Model\Koina\Models\ModelsResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <LastGenOutput>ModelsResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\Prosit\Models\ModelsResources.ja.resx">
+    <EmbeddedResource Include="Model\Koina\Models\ModelsResources.ja.resx">
       <DependentUpon>ModelsResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\Prosit\Models\ModelsResources.zh-CHS.resx">
+    <EmbeddedResource Include="Model\Koina\Models\ModelsResources.zh-CHS.resx">
       <DependentUpon>ModelsResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Prosit\Models\ModelsResources.Designer.cs">
+    <Compile Include="Model\Koina\Models\ModelsResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>ModelsResources.resx</DependentUpon>
@@ -5693,11 +5729,6 @@
       <DependentUpon>SpectraResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Controls\Spectra\SpectraResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>SpectraResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Model\Results\Spectra\SpectraResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5711,11 +5742,6 @@
       <DependentUpon>SpectraResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Results\Spectra\SpectraResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>SpectraResources.resx</DependentUpon>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Properties\app.manifest">
@@ -6216,6 +6242,14 @@
       <Link>vcruntime140_1.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="Executables\Hardklor\obj\x86\Hardklor.exe">
+      <Link>Hardklor.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="Executables\Hardklor\obj\x64\Hardklor.exe">
+      <Link>Hardklor.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Waters\vc12_x86\cdt.dll">
       <Link>cdt.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -6700,6 +6734,10 @@
       <Link>SkylineCmd.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="bin\$(Platform)\$(Configuration)\BullseyeSharp.exe">
+      <Link>BullseyeSharp.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="SkylineLog4Net.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -6779,6 +6817,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="BaseDataAccess">
@@ -6789,6 +6831,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="BaseTof">
@@ -6799,6 +6845,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="BiblioSpec.pdb">
@@ -6809,6 +6859,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="Clearcore2.Data">
@@ -6819,6 +6873,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Clearcore2.Data.CommonInterfaces">
@@ -6829,6 +6887,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Clearcore2.RawXYProcessing">
@@ -6839,6 +6901,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="enzymes.xml">
@@ -6849,6 +6915,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="Instruments.xml">
@@ -6859,6 +6929,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="JetBrains.Annotations">
@@ -6869,6 +6943,10 @@
       </TargetPath>
       <PublishState>Exclude</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="MassSpecDataReader">
@@ -6879,6 +6957,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Microsoft.VC90.CRT">
@@ -6889,6 +6971,10 @@
       </TargetPath>
       <PublishState>Exclude</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Microsoft.VC90.MFC">
@@ -6899,6 +6985,10 @@
       </TargetPath>
       <PublishState>Exclude</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="modifications.xml">
@@ -6909,6 +6999,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="MSGraph.pdb">
@@ -6919,6 +7013,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="OFX.Core.Contracts">
@@ -6929,6 +7027,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="PanoramaClient.pdb">
@@ -6939,6 +7041,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="ProteomeDb.pdb">
@@ -6949,6 +7055,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="ProteowizardWrapper.pdb">
@@ -6959,6 +7069,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="pwiz.Common.pdb">
@@ -6969,6 +7083,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="pwiz.CommonUtil.pdb">
@@ -6979,6 +7097,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="Sciex.Data.SimpleTypes">
@@ -6989,6 +7111,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Skyline-daily.pdb">
@@ -6999,6 +7125,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="SkylineTool.pdb">
@@ -7009,6 +7139,10 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="unimod.xml">
@@ -7019,13 +7153,17 @@
       </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">
-    <Exec Command="SignAfterPublishPW.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
+    <Exec Command="SignAfterPublishKey.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).crt&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
   </Target>
   <PropertyGroup>
     <PreBuildEvent>$(ProjectDir)PreBuildEvents.bat</PreBuildEvent>
