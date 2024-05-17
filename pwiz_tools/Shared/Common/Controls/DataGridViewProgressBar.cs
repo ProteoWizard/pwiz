@@ -38,6 +38,12 @@ namespace CustomProgressCell
         {
             CellTemplate = new DataGridViewProgressCell();
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            CellTemplate.Dispose();
+            base.Dispose(disposing);
+        }
     }
 }
 
@@ -133,6 +139,14 @@ namespace CustomProgressCell
             Warning = 3 // yellow
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            _progressBar.Dispose();
+            _animationStepTimer.Dispose();
+            _animationStopTimer.Dispose();
+            base.Dispose(disposing);
+        }
+
         private void SetProgressBarState(ProgressBarState state)
         {
             SendMessage(_progressBar.Handle, PBM_SETSTATE, (IntPtr)state, IntPtr.Zero);
@@ -179,7 +193,7 @@ namespace CustomProgressCell
             try
             {
                 // Draw the ProgressBar to an in-memory bitmap
-                Bitmap bmp = new Bitmap(cellBounds.Width, cellBounds.Height);
+                using Bitmap bmp = new Bitmap(cellBounds.Width, cellBounds.Height);
                 Rectangle bmpBounds = new Rectangle(0, 0, cellBounds.Width, cellBounds.Height);
                 _progressBar.Size = cellBounds.Size;
                 _progressBar.DrawToBitmap(bmp, bmpBounds);
