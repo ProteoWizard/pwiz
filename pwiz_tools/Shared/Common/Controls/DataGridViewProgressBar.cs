@@ -41,7 +41,8 @@ namespace CustomProgressCell
 
         protected override void Dispose(bool disposing)
         {
-            CellTemplate.Dispose();
+            if (disposing)
+                CellTemplate.Dispose();
             base.Dispose(disposing);
         }
     }
@@ -141,9 +142,12 @@ namespace CustomProgressCell
 
         protected override void Dispose(bool disposing)
         {
-            _progressBar.Dispose();
-            _animationStepTimer.Dispose();
-            _animationStopTimer.Dispose();
+            if (disposing)
+            {
+                _progressBar.Dispose();
+                _animationStepTimer.Dispose();
+                _animationStopTimer.Dispose();
+            }
             base.Dispose(disposing);
         }
 
