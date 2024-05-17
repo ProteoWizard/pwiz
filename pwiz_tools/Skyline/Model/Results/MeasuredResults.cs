@@ -651,6 +651,7 @@ namespace pwiz.Skyline.Model.Results
             return ChromatogramSetForIndex(index, out chromatogramSet);
         }
 
+
         private bool ChromatogramSetForIndex(int index, out ChromatogramSet chromatogramSet)
         {
             chromatogramSet = (index != -1 ? _chromatograms[index] : null);

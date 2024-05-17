@@ -447,6 +447,12 @@
     <Compile Include="EditUI\EditSpectrumFilterDlg.Designer.cs">
       <DependentUpon>EditSpectrumFilterDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="EditUI\PeakImputationForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\PeakImputationForm.Designer.cs">
+      <DependentUpon>PeakImputationForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="EditUI\PermuteIsotopeModificationsDlg.designer.cs">
       <DependentUpon>PermuteIsotopeModificationsDlg.cs</DependentUpon>
     </Compile>
@@ -538,6 +544,15 @@
     </Compile>
     <Compile Include="Model\FullScanProperties.cs" />
     <Compile Include="Model\IdPeptideDocNode.cs" />
+    <Compile Include="Model\Results\Imputation\ConsensusAlignment.cs" />
+    <Compile Include="Model\Results\Imputation\CutoffScoreType.cs" />
+    <Compile Include="Model\Results\Imputation\LongestCommonSequenceFinder.cs" />
+    <Compile Include="Model\Results\Imputation\PeakImputationData.cs" />
+    <Compile Include="Model\Results\Imputation\RtValueType.cs" />
+    <Compile Include="Model\Results\Imputation\ImputationParameters.cs" />
+    <Compile Include="Model\Results\Imputation\ScoringResults.cs" />
+    <Compile Include="Model\Results\Imputation\TargetKey.cs" />
+    <Compile Include="Model\Results\ReplicateFileId.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\BinnedSpectrum.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SimilarityGrid.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SpectrumSummary.cs" />
@@ -2982,6 +2997,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\MassErrorChartPropertyDlg.zh-CHS.resx">
       <DependentUpon>MassErrorChartPropertyDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\PeakImputationForm.resx">
+      <DependentUpon>PeakImputationForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\PermuteIsotopeModificationsDlg.ja.resx">
       <DependentUpon>PermuteIsotopeModificationsDlg.cs</DependentUpon>

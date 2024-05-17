@@ -73,9 +73,7 @@
   <ItemGroup>
     <Compile Include="RequestHelper.cs" />
     <Compile Include="PanoramaClient.cs" />
-    <Compile Include="PanoramaDirectoryPicker.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="PanoramaDirectoryPicker.cs" />
     <Compile Include="PanoramaDirectoryPicker.Designer.cs">
       <DependentUpon>PanoramaDirectoryPicker.cs</DependentUpon>
     </Compile>
