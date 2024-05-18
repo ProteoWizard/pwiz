@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using MathNet.Numerics.Statistics;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.SystemUtil.Caching;
@@ -64,7 +65,7 @@ namespace pwiz.Skyline.EditUI
                 }
                 else
                 {
-                    tbxAvgRtShift.Text = rtShifts.ToString(Formats.RETENTION_TIME);
+                    tbxAvgRtShift.Text = rtShifts.Mean().ToString(Formats.RETENTION_TIME);
                 }
 
                 progressBar1.Visible = false;
@@ -154,11 +155,14 @@ namespace pwiz.Skyline.EditUI
                 Peaks = new Dictionary<ResultKey, Peak>();
                 foreach (var scoredPeak in moleculePeaks.Peaks)
                 {
-                    var replicate = dataSchema.ReplicateList.Values[scoredPeak.ReplicateFileInfo.ReplicateIndex];
-                    var resultKey = new ResultKey(replicate,
-                        replicate.ChromatogramSet.IndexOfId(scoredPeak.ReplicateFileInfo.ReplicateFileId.FileId));
-                    var peak = new Peak(dataSchema, scoredPeak);
-                    Peaks[resultKey] = peak;
+                    var replicate = dataSchema.ReplicateList.Values.ElementAtOrDefault(scoredPeak.ReplicateFileInfo.ReplicateIndex);
+                    if (replicate != null)
+                    {
+                        var resultKey = new ResultKey(replicate,
+                            replicate.ChromatogramSet.IndexOfId(scoredPeak.ReplicateFileInfo.ReplicateFileId.FileId));
+                        var peak = new Peak(dataSchema, scoredPeak);
+                        Peaks[resultKey] = peak;
+                    }
                 }
                     
                 BestPeak = Peaks.Values.FirstOrDefault(peak=>peak.Best);

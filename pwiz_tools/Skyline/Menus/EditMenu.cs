@@ -735,33 +735,25 @@ namespace pwiz.Skyline.Menus
         {
             var synchronizedIntegration = DocumentUI.GetSynchronizeIntegrationChromatogramSets().Any();
             CanApplyOrRemovePeak(null, null, out var canApply, out var canRemove);
-            if (!canApply && !canRemove)
+            applyPeakAllToolStripMenuItem.Enabled = canApply;
+            applyPeakSubsequentToolStripMenuItem.Enabled = canApply && !synchronizedIntegration;
+            applyPeakGroupToolStripMenuItem.Text = MenusResources.SkylineWindow_editToolStripMenuItem_DropDownOpening_Apply_Peak_to_Group;
+            groupApplyToByToolStripMenuItem.DropDownItems.Clear();
+            applyPeakGroupToolStripMenuItem.Enabled = groupApplyToByToolStripMenuItem.Enabled = false;
+            if (ReplicateValue.GetGroupableReplicateValues(DocumentUI).Any())
             {
-                integrationToolStripMenuItem.Enabled = false;
-            }
-            else
-            {
-
-                applyPeakAllToolStripMenuItem.Enabled = canApply;
-                applyPeakSubsequentToolStripMenuItem.Enabled = canApply && !synchronizedIntegration;
-                applyPeakGroupToolStripMenuItem.Text = MenusResources.SkylineWindow_editToolStripMenuItem_DropDownOpening_Apply_Peak_to_Group;
-                groupApplyToByToolStripMenuItem.DropDownItems.Clear();
-                applyPeakGroupToolStripMenuItem.Enabled = groupApplyToByToolStripMenuItem.Enabled = false;
-                if (ReplicateValue.GetGroupableReplicateValues(DocumentUI).Any())
+                groupApplyToByToolStripMenuItem.Enabled = !synchronizedIntegration;
+                var selectedAnnotation = GetGroupApplyToDescription();
+                if (selectedAnnotation != null)
                 {
-                    groupApplyToByToolStripMenuItem.Enabled = !synchronizedIntegration;
-                    var selectedAnnotation = GetGroupApplyToDescription();
-                    if (selectedAnnotation != null)
-                    {
-                        applyPeakGroupToolStripMenuItem.Text = MenusResources.SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_ + selectedAnnotation;
-                        applyPeakGroupToolStripMenuItem.Enabled = !synchronizedIntegration;
-                    }
-                    var i = 0;
-                    AddGroupByMenuItems(null, groupApplyToByToolStripMenuItem, replicateValue => Settings.Default.GroupApplyToBy = replicateValue?.ToPersistedString(), false, Settings.Default.GroupApplyToBy, ref i);
+                    applyPeakGroupToolStripMenuItem.Text = MenusResources.SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_ + selectedAnnotation;
+                    applyPeakGroupToolStripMenuItem.Enabled = !synchronizedIntegration;
                 }
-                removePeakToolStripMenuItem.Enabled = canRemove;
-                integrationToolStripMenuItem.Enabled = true;
+                var i = 0;
+                AddGroupByMenuItems(null, groupApplyToByToolStripMenuItem, replicateValue => Settings.Default.GroupApplyToBy = replicateValue?.ToPersistedString(), false, Settings.Default.GroupApplyToBy, ref i);
             }
+            removePeakToolStripMenuItem.Enabled = canRemove;
+            integrationToolStripMenuItem.Enabled = true;
             synchronizedIntegrationToolStripMenuItem.Checked = synchronizedIntegration;
         }
 

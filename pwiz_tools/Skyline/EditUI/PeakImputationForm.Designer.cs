@@ -236,6 +236,7 @@
             // radioScore
             // 
             this.radioScore.AutoSize = true;
+            this.radioScore.Checked = true;
             this.radioScore.Location = new System.Drawing.Point(6, 19);
             this.radioScore.Name = "radioScore";
             this.radioScore.Size = new System.Drawing.Size(53, 17);

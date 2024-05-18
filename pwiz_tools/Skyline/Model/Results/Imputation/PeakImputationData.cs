@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
+using pwiz.Skyline.Model.Koina;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;
 
@@ -258,7 +259,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 var resultFileInfos = ReplicateFileInfo.List(document.MeasuredResults);
                 var resultFileInfoDict =
                     resultFileInfos.ToDictionary(resultFileInfo => ReferenceValue.Of(resultFileInfo.ReplicateFileId.FileId));
-                bool mustRecalculateScores = document.MeasuredResults.CountChromatogramsWithMultipleCandidatePeaks() < 100;
+                bool mustRecalculateScores = false && document.MeasuredResults.CountChromatogramsWithMultipleCandidatePeaks() < 100;
                 int moleculeIndex = 0;
                 foreach (var moleculeGroup in document.MoleculeGroups)
                 {
@@ -274,9 +275,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                             foreach (var peptideChromInfo in molecule.GetSafeChromInfo(replicateIndex))
                             {
                                 productionMonitor.CancellationToken.ThrowIfCancellationRequested();
-                                if (!resultFileInfoDict.TryGetValue(peptideChromInfo.FileId
-                                        ,
-                                        out var peakResultFile))
+                                if (!resultFileInfoDict.TryGetValue(peptideChromInfo.FileId, out var peakResultFile))
                                 {
                                     // Shouldn't happen
                                     continue;
@@ -310,8 +309,14 @@ namespace pwiz.Skyline.Model.Results.Imputation
                                 else
                                 {
                                     score = EnumerateTransitionGroupChromInfos(molecule, replicateIndex,
-                                            peptideChromInfo.FileId).Select(tgci => tgci.ZScore).OfType<float>()
-                                        .FirstOrDefault();
+                                            peptideChromInfo.FileId).Select(chromInfo => chromInfo.ZScore)
+                                        .FirstOrDefault(value => value.HasValue);
+                                    if (score == null)
+                                    {
+                                        score = -EnumerateTransitionGroupChromInfos(molecule, replicateIndex,
+                                                peptideChromInfo.FileId).Select(chromInfo => chromInfo.QValue)
+                                            .FirstOrDefault(value => value.HasValue);
+                                    }
                                 }
                                 var peak = new RatedPeak(peakResultFile, alignments?.GetAlignment(peakResultFile.ReplicateFileId), rawPeakBounds, score,
                                     manuallyIntegrated);
@@ -351,6 +356,11 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     return list;
                 }
 
+                var uniqueScoreCount = list.Select(peak => peak.Score).Distinct().Count();
+                if (uniqueScoreCount <= 1 && list.Count > 1)
+                {
+                    return list;
+                }
                 list[0] = list[0].ChangeBest(true).ChangeAccepted(true);
                 var bestPeak = list[0];
                 for (int i = 1; i < list.Count; i++)
