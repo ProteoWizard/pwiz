@@ -30,6 +30,7 @@
         {
             this.components = new System.ComponentModel.Container();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.groupBoxResults = new System.Windows.Forms.GroupBox();
             this.tbxAvgRtShift = new System.Windows.Forms.TextBox();
             this.lblAvgRtShift = new System.Windows.Forms.Label();
@@ -50,7 +51,6 @@
             this.comboRetentionTimeAlignment = new System.Windows.Forms.ComboBox();
             this.lblRetentionTimeAlignment = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.panel1.SuspendLayout();
             this.groupBoxResults.SuspendLayout();
             this.groupBoxCutoff.SuspendLayout();
@@ -77,6 +77,13 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(800, 163);
             this.panel1.TabIndex = 1;
+            // 
+            // progressBar1
+            // 
+            this.progressBar1.Location = new System.Drawing.Point(3, 140);
+            this.progressBar1.Name = "progressBar1";
+            this.progressBar1.Size = new System.Drawing.Size(311, 23);
+            this.progressBar1.TabIndex = 19;
             // 
             // groupBoxResults
             // 
@@ -153,6 +160,7 @@
             this.btnImputeBoundaries.TabIndex = 17;
             this.btnImputeBoundaries.Text = "Impute Boundaries";
             this.btnImputeBoundaries.UseVisualStyleBackColor = true;
+            this.btnImputeBoundaries.Click += new System.EventHandler(this.btnImputeBoundaries_Click);
             // 
             // cbxOverwriteManual
             // 
@@ -272,13 +280,6 @@
             this.lblRetentionTimeAlignment.Size = new System.Drawing.Size(126, 13);
             this.lblRetentionTimeAlignment.TabIndex = 0;
             this.lblRetentionTimeAlignment.Text = "Retention time alignment:";
-            // 
-            // progressBar1
-            // 
-            this.progressBar1.Location = new System.Drawing.Point(3, 140);
-            this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(311, 23);
-            this.progressBar1.TabIndex = 19;
             // 
             // PeakImputationForm
             // 

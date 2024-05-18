@@ -544,6 +544,7 @@
     </Compile>
     <Compile Include="Model\FullScanProperties.cs" />
     <Compile Include="Model\IdPeptideDocNode.cs" />
+    <Compile Include="Model\Results\Imputation\PeakImputer.cs" />
     <Compile Include="Model\Results\Imputation\RatedPeak.cs" />
     <Compile Include="Model\Results\Imputation\ConsensusAlignment.cs" />
     <Compile Include="Model\Results\Imputation\CutoffScoreType.cs" />

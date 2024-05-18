@@ -9,14 +9,18 @@ using MathNet.Numerics.Statistics;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.SystemUtil.Caching;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Imputation;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -126,11 +130,7 @@ namespace pwiz.Skyline.EditUI
         {
             var document = SkylineWindow.DocumentUI;
             ComboHelper.ReplaceItems(comboRetentionTimeAlignment, RtValueType.ForDocument(document).Prepend(null), 1);
-            var scoringModel = document.Settings.PeptideSettings.Integration.PeakScoringModel;
-            if (true != scoringModel?.IsTrained)
-            {
-                scoringModel = LegacyScoringModel.DEFAULT_MODEL;
-            }
+            var scoringModel = GetScoringModelToUse(document);
 
             radioPValue.Enabled = !Equals(scoringModel, LegacyScoringModel.DEFAULT_MODEL);
             var scoreQValueMap = document.Settings.PeptideSettings.Integration.ScoreQValueMap;
@@ -145,6 +145,16 @@ namespace pwiz.Skyline.EditUI
             {
                 ProductAvailableAction();
             }
+        }
+
+        private PeakScoringModelSpec GetScoringModelToUse(SrmDocument document)
+        {
+            var scoringModel = document.Settings.PeptideSettings.Integration.PeakScoringModel;
+            if (true == scoringModel?.IsTrained)
+            {
+                return scoringModel;
+            }
+            return LegacyScoringModel.DEFAULT_MODEL;
         }
 
 
@@ -167,11 +177,15 @@ namespace pwiz.Skyline.EditUI
                 }
                     
                 BestPeak = Peaks.Values.FirstOrDefault(peak=>peak.Best);
+                CountAccepted = Peaks.Values.Count(peak => peak.Accepted);
+                CountRejected = Peaks.Values.Count(peak => !peak.Accepted);
             }
 
             public Model.Databinding.Entities.Peptide Peptide { get; }
             public Dictionary<ResultKey, Peak> Peaks { get; }
             public Peak BestPeak { get; }
+            public int CountAccepted { get; }
+            public int CountRejected { get; }
         }
 
         public class Peak : IFormattable
@@ -263,6 +277,11 @@ namespace pwiz.Skyline.EditUI
             {
                 return TextUtil.ColonSeparate(ResultFile.Replicate.ToString(),
                     _ratedPeak.AlignedPeakBounds?.ToString(format, formatProvider));
+            }
+
+            public RatedPeak GetRatedPeak()
+            {
+                return _ratedPeak;
             }
         }
 
@@ -373,6 +392,108 @@ namespace pwiz.Skyline.EditUI
             return value;
         }
 
+        private SrmDocument ImputeBoundaries(SrmDocument document, Row row, ref int changeCount)
+        {
+            var bestPeakBounds = row.BestPeak?.AlignedBounds;
+            if (bestPeakBounds == null)
+            {
+                return document;
+            }
 
+            foreach (var outlierPeak in row.Peaks.Values.Where(peak => !peak.Accepted))
+            {
+                var replicateFileInfo = outlierPeak.GetRatedPeak().ReplicateFileInfo;
+                var alignmentFunction = outlierPeak.GetRatedPeak().AlignmentFunction;
+                var newStartTime = alignmentFunction.GetX(bestPeakBounds.StartTime);
+                var newEndTime = alignmentFunction.GetX(bestPeakBounds.EndTime);
+                foreach (var transitionGroupDocNode in row.Peptide.DocNode.TransitionGroups)
+                {
+                    var identityPath =
+                        new IdentityPath(row.Peptide.IdentityPath, transitionGroupDocNode.TransitionGroup);
+                    var chromatogramSet =
+                        document.MeasuredResults.Chromatograms[replicateFileInfo.ReplicateIndex];
+                    document = document.ChangePeak(identityPath, chromatogramSet.Name,
+                        replicateFileInfo.MsDataFileUri, null, newStartTime, newEndTime, UserSet.MATCHED, null,
+                        false);
+                    changeCount++;
+                }
+            }
+
+            return document;
+        }
+
+        private void btnImputeBoundaries_Click(object sender, EventArgs e)
+        {
+            ImputeBoundaries(true);
+        }
+
+        public void ImputeBoundaries(bool allRows)
+        {
+            lock (SkylineWindow.GetDocumentChangeLock())
+            {
+                var originalDocument = SkylineWindow.DocumentUI;
+                var peakImputer = new PeakImputer()
+                {
+                    CutoffScore = GetDoubleValue(tbxCoreScoreCutoff),
+                    MaxRtShift = GetDoubleValue(tbxRtDeviationCutoff),
+                    OverwriteManualPeaks = cbxOverwriteManual.Checked,
+                    ScoringModel = GetScoringModelToUse(originalDocument)
+                };
+                var newDoc = originalDocument.BeginDeferSettingsChanges();
+                var rows = BindingListSource.OfType<RowItem>().Select(rowItem => rowItem.Value).OfType<Row>().ToList();
+                using (var longWaitDlg = new LongWaitDlg())
+                {
+                    int changeCount = 0;
+                    longWaitDlg.PerformWork(this, 1000, () =>
+                    {
+                        for (int iRow = 0; iRow < rows.Count; iRow++)
+                        {
+                            if (longWaitDlg.IsCanceled)
+                            {
+                                return;
+                            }
+
+                            longWaitDlg.ProgressValue = 100 * iRow / rows.Count;
+                            var row = rows[iRow];
+                            var bestPeak = row.BestPeak?.GetRatedPeak();
+                            if (bestPeak == null)
+                            {
+                                continue;
+                            }
+
+                            var rejectedPeaks = row.Peaks.Values.Where(peak => !peak.Accepted)
+                                .Select(peak => peak.GetRatedPeak()).ToList();
+                            if (rejectedPeaks.Count == 0)
+                            {
+                                continue;
+                            }
+                            newDoc = peakImputer.ImputeBoundaries(newDoc, row.Peptide.IdentityPath, bestPeak, rejectedPeaks);
+                            changeCount += rejectedPeaks.Count;
+                        }
+                    });
+                    if (longWaitDlg.IsCanceled)
+                    {
+                        return;
+                    }
+
+                    if (changeCount == 0)
+                    {
+                        return;
+                    }
+
+                    newDoc = newDoc.EndDeferSettingsChanges(originalDocument, null);
+                    SkylineWindow.ModifyDocument("Impute peak boundaries", doc =>
+                    {
+                        if (!ReferenceEquals(doc, originalDocument))
+                        {
+                            throw new InvalidOperationException(Resources.SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
+                        }
+
+                        return newDoc;
+                    }, docPair => AuditLogEntry.CreateSimpleEntry(MessageType.applied_peak_all, docPair.NewDocumentType, MessageArgs.Create(changeCount)));
+                }
+            }
+
+        }
     }
 }

@@ -10,6 +10,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
         public RatedPeak(ReplicateFileInfo resultFileInfo, AlignmentFunction alignmentFunction, PeakBounds rawPeakBounds, double? score, bool manuallyIntegrated)
         {
             ReplicateFileInfo = resultFileInfo;
+            AlignmentFunction = alignmentFunction;
             RawPeakBounds = rawPeakBounds;
             AlignedPeakBounds = rawPeakBounds?.Align(alignmentFunction);
             ManuallyIntegrated = manuallyIntegrated;
@@ -71,6 +72,8 @@ namespace pwiz.Skyline.Model.Results.Imputation
             return ChangeProp(ImClone(this), im => im.RtShift = value);
         }
 
+        public AlignmentFunction AlignmentFunction { get; }
+
         public class PeakBounds : IFormattable
         {
             public PeakBounds(double startTime, double endTime)
@@ -119,6 +122,16 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 }
 
                 return new PeakBounds(alignmentFunction.GetY(StartTime), alignmentFunction.GetY(EndTime));
+            }
+
+            public PeakBounds ReverseAlign(AlignmentFunction alignmentFunction)
+            {
+                if (alignmentFunction == null)
+                {
+                    return this;
+                }
+
+                return new PeakBounds(alignmentFunction.GetX(StartTime), alignmentFunction.GetX(EndTime));
             }
 
             public override string ToString()
