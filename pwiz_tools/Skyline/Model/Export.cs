@@ -525,7 +525,7 @@ namespace pwiz.Skyline.Model
                     else
                     {
                         if(type == ExportFileType.IsolationList)
-                            return ExportThermoFusionIsolationList(doc, path, template);
+                            return ExportThermoFusionIsolationList(doc, path, template, instrumentType);
                         return ExportThermoQuantivaMethod(doc, path, template, instrumentType);
                     }
                 case ExportInstrumentType.THERMO_FUSION:
@@ -541,7 +541,7 @@ namespace pwiz.Skyline.Model
                                 DebugCycles);
                             return null;
                         }
-                        return ExportThermoFusionIsolationList(doc, path, template);
+                        return ExportThermoFusionIsolationList(doc, path, template, instrumentType);
                     }
                     else
                         return ExportThermoSureQuantMethod(doc, path, template, instrumentType);
@@ -835,12 +835,14 @@ namespace pwiz.Skyline.Model
             return exporter;
         }
 
-        public AbstractMassListExporter ExportThermoFusionIsolationList(SrmDocument document, string fileName, string templateName)
+        public AbstractMassListExporter ExportThermoFusionIsolationList(SrmDocument document, string fileName, string templateName, string instrumentType)
         {
-            var exporter = InitExporter(new ThermoFusionMassListExporter(document));
+            var exporter = InitExporter(new ThermoFusionMassListExporter(document, instrumentType));
             exporter.UseSlens = UseSlens;
             exporter.WriteFaimsCv = WriteCompensationVoltages;
             exporter.Tune3 = Tune3;
+            if (MethodType == ExportMethodType.Standard)
+                exporter.RunLength = RunLength;
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
 
             return exporter;
@@ -4197,17 +4199,21 @@ namespace pwiz.Skyline.Model
     {
         public const double NARROW_NCE = 27.0;
         public const double WIDE_NCE = 30.0;
+        private string _instrumentType;
 
         public bool Tune3 { get; set; }
         public bool Tune3Columns { get { return IsolationList == IsolationStrategy.precursor && Tune3; } }
 
         public bool WriteFaimsCv { get; set; }
 
-        public ThermoFusionMassListExporter(SrmDocument document)
+        protected override string InstrumentType =>_instrumentType;
+
+        public ThermoFusionMassListExporter(SrmDocument document, string instrumentType)
             : base(document)
         {
             IsolationList = IsolationStrategy.precursor;
             IsPrecursorLimited = true;
+            _instrumentType = instrumentType;
         }
 
         public string GetHeader(char fieldSeparator)
@@ -4276,6 +4282,14 @@ namespace pwiz.Skyline.Model
                 {
                     start = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT.Value - windowRT / 2) ?? 0).ToString(CultureInfo);
                     end = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT.Value + windowRT / 2) ?? 0).ToString(CultureInfo);
+                }
+            }
+            else if (InstrumentType == ExportInstrumentType.THERMO_STELLAR)
+            {
+                if(RunLength.HasValue)
+                {
+                    start = 0.ToString(CultureInfo);
+                    end = RunLength.Value.ToString(CultureInfo);
                 }
             }
             writer.Write(start);
