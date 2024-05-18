@@ -50,6 +50,7 @@
             this.comboRetentionTimeAlignment = new System.Windows.Forms.ComboBox();
             this.lblRetentionTimeAlignment = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.panel1.SuspendLayout();
             this.groupBoxResults.SuspendLayout();
             this.groupBoxCutoff.SuspendLayout();
@@ -62,6 +63,7 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.progressBar1);
             this.panel1.Controls.Add(this.groupBoxResults);
             this.panel1.Controls.Add(this.btnImputeBoundaries);
             this.panel1.Controls.Add(this.cbxOverwriteManual);
@@ -270,6 +272,13 @@
             this.lblRetentionTimeAlignment.TabIndex = 0;
             this.lblRetentionTimeAlignment.Text = "Retention time alignment:";
             // 
+            // progressBar1
+            // 
+            this.progressBar1.Location = new System.Drawing.Point(3, 140);
+            this.progressBar1.Name = "progressBar1";
+            this.progressBar1.Size = new System.Drawing.Size(311, 23);
+            this.progressBar1.TabIndex = 19;
+            // 
             // PeakImputationForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -314,5 +323,6 @@
         private System.Windows.Forms.TextBox tbxAccepted;
         private System.Windows.Forms.Label lblAccepted;
         private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.ProgressBar progressBar1;
     }
 }

@@ -40,6 +40,12 @@ namespace pwiz.Skyline.EditUI
             var viewContext = new SkylineViewContext(ColumnDescriptor.RootColumn(_dataSchema, typeof(Row)), rowSource);
             BindingListSource.SetViewContext(viewContext);
             _receiver = PeakImputationData.PRODUCER.RegisterCustomer(this, ProductAvailableAction);
+            _receiver.ProgressChange += ReceiverOnProgressChange;
+        }
+
+        private void ReceiverOnProgressChange()
+        {
+            ProductAvailableAction();
         }
 
         private void ProductAvailableAction()
@@ -60,6 +66,13 @@ namespace pwiz.Skyline.EditUI
                 {
                     tbxAvgRtShift.Text = rtShifts.ToString(Formats.RETENTION_TIME);
                 }
+
+                progressBar1.Visible = false;
+            }
+            else
+            {
+                progressBar1.Visible = true;
+                progressBar1.Value = _receiver.GetProgressValue();
             }
 
             var error = _receiver.GetError();
@@ -317,10 +330,10 @@ namespace pwiz.Skyline.EditUI
                 var cutoffValue = GetDoubleValue(tbxCoreScoreCutoff);
                 if (cutoffValue.HasValue)
                 {
-                    var score = _cutoffType.ToRawScore(_data?.ScoringResults, cutoffValue.Value);
+                    var score = _cutoffType.ToRawScore(_data, cutoffValue.Value);
                     if (score.HasValue && !double.IsNaN(score.Value))
                     {
-                        var newCutoff = newCutoffType.FromRawScore(_data?.ScoringResults, score.Value);
+                        var newCutoff = newCutoffType.FromRawScore(_data, score.Value);
                         if (newCutoff.HasValue && !double.IsNaN(newCutoff.Value))
                         {
                             tbxCoreScoreCutoff.Text = newCutoff.ToString();

@@ -16,28 +16,20 @@ namespace pwiz.Skyline.Model.Results.Imputation
         {
             ResultsHandler = resultsHandler;
             ReintegratedDocument = reintegratedDocument;
-            SortedScores = ImmutableList.ValueOf(reintegratedDocument.MoleculeTransitionGroups
+            SortedScores = ImmutableList.ValueOf(reintegratedDocument?.MoleculeTransitionGroups
                 .SelectMany(tg => tg.Results.SelectMany(chromInfoList => chromInfoList))
                 .Select(transitionGroupChromInfo => transitionGroupChromInfo.ZScore).OfType<float>()
                 .OrderBy(score => score));
-            if (SortedScores.Count == 0)
-            {
-                SortedScores = ImmutableList.ValueOf(reintegratedDocument.MoleculeTransitionGroups
-                    .SelectMany(tg => tg.Results.SelectMany(chromInfoList => chromInfoList))
-                    .Select(transitionGroupChromInfo => transitionGroupChromInfo.QValue).OfType<float>()
-                    .OrderBy(qValue => -qValue));
-            }
         }
         public MProphetResultsHandler ResultsHandler { get; }
         public SrmDocument ReintegratedDocument { get; }
         public ImmutableList<float> SortedScores { get; }
-        public ImmutableList<float> SortedQValues { get; }
 
         public ScoreQValueMap ScoreQValueMap
         {
             get
             {
-                return ReintegratedDocument.Settings.PeptideSettings.Integration.ScoreQValueMap;
+                return ReintegratedDocument?.Settings.PeptideSettings.Integration.ScoreQValueMap ?? ScoreQValueMap.EMPTY;
             }
         }
 
@@ -86,6 +78,10 @@ namespace pwiz.Skyline.Model.Results.Imputation
             public override ScoringResults ProduceResult(ProductionMonitor productionMonitor, Parameters parameter,
                 IDictionary<WorkOrder, object> inputs)
             {
+                if (parameter.Document.MeasuredResults?.CountChromatogramsWithMultipleCandidatePeaks() < 100)
+                {
+                    return new ScoringResults(null, null);
+                }
                 var featureSet = (PeakTransitionGroupFeatureSet)inputs.FirstOrDefault().Value;
                 MProphetResultsHandler resultsHandler = null;
                 SrmDocument reintegratedDocument = null;
@@ -105,6 +101,11 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
             public override IEnumerable<WorkOrder> GetInputs(Parameters parameter)
             {
+                if (parameter.Document.MeasuredResults?.CountChromatogramsWithMultipleCandidatePeaks() < 100)
+                {
+                    yield break;
+                }
+
                 if (parameter.Document.MeasuredResults?.CountChromatogramsWithMultipleCandidatePeaks() > 0)
                 {
                     yield return FEATURE_SET_PRODUCER.MakeWorkOrder(new FeatureSetParameters(
@@ -160,81 +161,5 @@ namespace pwiz.Skyline.Model.Results.Imputation
             }
         }
 
-        public double? GetPercentileOfScore(double score)
-        {
-            return GetPercentile(score, SortedScores);
-        }
-
-        // public double? GetPercentileOfQValue(double qValue)
-        // {
-        //     return 1 - GetPercentile(qValue, SortedQValues);
-        // }
-
-        public double? GetScoreAtPercentile(double percentile)
-        {
-            return GetValueAtPercentile(percentile, SortedScores);
-        }
-
-        // public double? GetQValueAtPercentile(double percentile)
-        // {
-        //     return 1 - GetValueAtPercentile(percentile, SortedQValues);
-        // }
-
-        private static double? GetPercentile(double value, IList<float> list)
-        {
-            if (list.Count == 0)
-            {
-                return null;
-            }
-            var index = CollectionUtil.BinarySearch(list, (float)value);
-            if (index >= 0)
-            {
-                return (double)index / list.Count;
-            }
-            index = ~index;
-
-            if (index <= 0)
-            {
-                return list[0];
-            }
-
-            if (index >= list.Count - 1)
-            {
-                return list[list.Count - 1];
-            }
-
-            double prev = list[index];
-            double next = list[index + 1];
-            return (index + (value - prev) / (next - prev)) / list.Count;
-        }
-
-        private static double? GetValueAtPercentile(double percentile, IList<float> list)
-        {
-            if (list.Count == 0)
-            {
-                return null;
-            }
-
-            double doubleIndex = percentile * list.Count;
-            if (doubleIndex <= 0)
-            {
-                return list[0];
-            }
-
-            if (doubleIndex >= list.Count - 1)
-            {
-                return list[list.Count - 1];
-            }
-
-            int prevIndex = (int)Math.Floor(doubleIndex);
-            int nextIndex = (int)Math.Ceiling(doubleIndex);
-            var prevValue = list[prevIndex];
-            if (prevIndex == nextIndex)
-            {
-                return prevValue;
-            }
-            var nextValue = list[nextIndex];
-            return prevValue * (nextIndex - doubleIndex) + nextValue * (doubleIndex - prevIndex);
-        }
     }
 }

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
@@ -14,17 +13,27 @@ namespace pwiz.Skyline.Model.Results.Imputation
     public class PeakImputationData
     {
         public static readonly Producer<Parameters, PeakImputationData> PRODUCER = new DataProducer();
-        public PeakImputationData(Parameters parameters, ConsensusAlignment consensusAlignment, ScoringResults scoringResults, IEnumerable<MoleculePeaks> moleculePeaks)
+        public PeakImputationData(Parameters parameters, ConsensusAlignment consensusAlignment, ScoringResults scoringResults, IList<MoleculePeaks> moleculePeaks)
         {
             Params = parameters;
             ConsensusAlignment = consensusAlignment;
             ScoringResults = scoringResults;
+
+            SortedScores = ScoringResults.SortedScores;
+            if (SortedScores == null)
+            {
+                SortedScores = ImmutableList.ValueOf(moleculePeaks
+                    .SelectMany(molecule => molecule.Peaks.Select(peak => peak.Score)).OfType<double>()
+                    .Select(score => (float)score));
+            }
             MoleculePeaks = ImmutableList.ValueOf(moleculePeaks.Select(FillInScores));
         }
 
         public Parameters Params { get; }
         public ConsensusAlignment ConsensusAlignment { get; }
         public ScoringResults ScoringResults { get; }
+
+        public ImmutableList<float> SortedScores { get; }
 
         public ImmutableList<MoleculePeaks> MoleculePeaks { get; }
 
@@ -43,11 +52,11 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     continue;
                 }
 
-                peak = peak.ChangePercentile(ScoringResults.GetPercentileOfScore(peak.Score.Value));
+                peak = peak.ChangePercentile(GetPercentileOfScore(peak.Score.Value));
                 peak = peak.ChangeQValue(ScoringResults.ScoreQValueMap?.GetQValue(peak.Score));
                 if (CutoffScoreType.PVALUE.IsEnabled(Params.ScoringModel))
                 {
-                    peak = peak.ChangePValue(CutoffScoreType.PVALUE.FromRawScore(ScoringResults, peak.Score.Value));
+                    peak = peak.ChangePValue(CutoffScoreType.PVALUE.FromRawScore(this, peak.Score.Value));
                 }
                 newPeaks[iPeak] = peak;
             }
@@ -195,7 +204,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 ScoringResults scoringResults = ScoringResults.PRODUCER.GetResult(inputs, parameter.GetScoringResultsParameters());
                 var consensusAlignment =
                     ConsensusAlignment.PRODUCER.GetResult(inputs, parameter.GetAlignmentParameters());
-                var rows = ImmutableList.ValueOf(GetRows(productionMonitor.CancellationToken, parameter, scoringResults, consensusAlignment));
+                var rows = ImmutableList.ValueOf(GetRows(productionMonitor, parameter, scoringResults, consensusAlignment));
                 // rows = EnsureScores(rows);
                 return new PeakImputationData(parameter, consensusAlignment, scoringResults, rows);
             }
@@ -237,7 +246,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 }
             }
 
-            private IEnumerable<MoleculePeaks> GetRows(CancellationToken cancellationToken, Parameters parameters, ScoringResults scoringResults, ConsensusAlignment alignments)
+            private IEnumerable<MoleculePeaks> GetRows(ProductionMonitor productionMonitor, Parameters parameters, ScoringResults scoringResults, ConsensusAlignment alignments)
             {
                 var document = scoringResults?.ReintegratedDocument ?? parameters.Document;
                 var measuredResults = document.MeasuredResults;
@@ -249,24 +258,22 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 var resultFileInfos = ReplicateFileInfo.List(document.MeasuredResults);
                 var resultFileInfoDict =
                     resultFileInfos.ToDictionary(resultFileInfo => ReferenceValue.Of(resultFileInfo.ReplicateFileId.FileId));
-                bool useQValuesAsScores = scoringResults?.ResultsHandler == null && !HasAnyScores(document) &&
-                                          HasAnyQValues(document);
+                bool mustRecalculateScores = document.MeasuredResults.CountChromatogramsWithMultipleCandidatePeaks() < 100;
+                int moleculeIndex = 0;
                 foreach (var moleculeGroup in document.MoleculeGroups)
                 {
                     foreach (var molecule in moleculeGroup.Molecules)
                     {
-                        if (molecule.GlobalStandardType != null)
-                        {
-                            continue;
-                        }
-                        cancellationToken.ThrowIfCancellationRequested();
+                        productionMonitor.CancellationToken.ThrowIfCancellationRequested();
+                        productionMonitor.SetProgress(moleculeIndex * 100 / document.MoleculeCount);
+                        moleculeIndex++;
                         var peptideIdentityPath = new IdentityPath(moleculeGroup.PeptideGroup, molecule.Peptide);
                         var peaks = new List<RatedPeak>();
                         for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
                         {
                             foreach (var peptideChromInfo in molecule.GetSafeChromInfo(replicateIndex))
                             {
-                                cancellationToken.ThrowIfCancellationRequested();
+                                productionMonitor.CancellationToken.ThrowIfCancellationRequested();
                                 if (!resultFileInfoDict.TryGetValue(peptideChromInfo.FileId
                                         ,
                                         out var peakResultFile))
@@ -288,15 +295,23 @@ namespace pwiz.Skyline.Model.Results.Imputation
                                     replicateIndex,
                                     peptideChromInfo.FileId);
                                 double? score;
-                                if (useQValuesAsScores)
+                                if (mustRecalculateScores)
                                 {
-                                    score = -GetQValue(molecule, replicateIndex, peptideChromInfo.FileId);
+                                    var chromFileInfo = document.MeasuredResults.Chromatograms[replicateIndex]
+                                        .GetFileInfo(peptideChromInfo.FileId);
+                                    var onDemandFeatureCalculator =
+                                        new OnDemandFeatureCalculator(
+                                            LegacyScoringModel.DEFAULT_MODEL.PeakFeatureCalculators, document.Settings,
+                                            molecule, replicateIndex, chromFileInfo);
+                                    score = onDemandFeatureCalculator.GetChosenPeakGroupDataForAllComparableGroups()
+                                        .Select(tuple => tuple.Item2?.Score?.ModelScore).OfType<double>()
+                                        .FirstOrDefault();
                                 }
                                 else
                                 {
-                                    var peakFeatureStatistics = scoringResults?.ResultsHandler?.GetPeakFeatureStatistics(molecule.Peptide,
-                                        peptideChromInfo.FileId);
-                                    score = peakFeatureStatistics?.BestScore;
+                                    score = EnumerateTransitionGroupChromInfos(molecule, replicateIndex,
+                                            peptideChromInfo.FileId).Select(tgci => tgci.ZScore).OfType<float>()
+                                        .FirstOrDefault();
                                 }
                                 var peak = new RatedPeak(peakResultFile, alignments?.GetAlignment(peakResultFile.ReplicateFileId), rawPeakBounds, score,
                                     manuallyIntegrated);
@@ -408,6 +423,71 @@ namespace pwiz.Skyline.Model.Results.Imputation
             return new RatedPeak.PeakBounds(startTime, endTime);
         }
 
+        public static double? GetValueAtPercentile(double percentile, IList<float> list)
+        {
+            if (list.Count == 0)
+            {
+                return null;
+            }
+
+            double doubleIndex = percentile * list.Count;
+            if (doubleIndex <= 0)
+            {
+                return list[0];
+            }
+
+            if (doubleIndex >= list.Count - 1)
+            {
+                return list[list.Count - 1];
+            }
+
+            int prevIndex = (int)Math.Floor(doubleIndex);
+            int nextIndex = (int)Math.Ceiling(doubleIndex);
+            var prevValue = list[prevIndex];
+            if (prevIndex == nextIndex)
+            {
+                return prevValue;
+            }
+            var nextValue = list[nextIndex];
+            return prevValue * (nextIndex - doubleIndex) + nextValue * (doubleIndex - prevIndex);
+        }
+        public static double? GetPercentileOfValue(double value, IList<float> list)
+        {
+            if (list.Count == 0)
+            {
+                return null;
+            }
+            var index = CollectionUtil.BinarySearch(list, (float)value);
+            if (index >= 0)
+            {
+                return (double)index / list.Count;
+            }
+            index = ~index;
+
+            if (index <= 0)
+            {
+                return list[0];
+            }
+
+            if (index >= list.Count - 1)
+            {
+                return list[list.Count - 1];
+            }
+
+            double prev = list[index];
+            double next = list[index + 1];
+            return (index + (value - prev) / (next - prev)) / list.Count;
+        }
+
+        public double? GetPercentileOfScore(double score)
+        {
+            return GetPercentileOfValue(score, SortedScores);
+        }
+
+        public double? GetScoreAtPercentile(double percentile)
+        {
+            return GetValueAtPercentile(percentile, SortedScores);
+        }
 
     }
 }

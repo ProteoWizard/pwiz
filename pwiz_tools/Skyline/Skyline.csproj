@@ -554,7 +554,6 @@
     <Compile Include="Model\Results\Imputation\RtValueType.cs" />
     <Compile Include="Model\Results\Imputation\ImputationParameters.cs" />
     <Compile Include="Model\Results\Imputation\ScoringResults.cs" />
-    <Compile Include="Model\Results\Imputation\TargetKey.cs" />
     <Compile Include="Model\Results\ReplicateFileId.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\BinnedSpectrum.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SimilarityGrid.cs" />
