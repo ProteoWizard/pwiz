@@ -1221,25 +1221,6 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    public class ThermoStellarMethodExporter : ThermoMethodExporter
-    {
-        public ThermoStellarMethodExporter(SrmDocument doc) : base(doc)
-        {
-            IsolationList = IsolationStrategy.precursor;
-        }
-
-        protected override void WriteHeaders(TextWriter writer)
-        {
-            
-        }
-
-        protected override void WriteTransition(TextWriter writer, int fileNumber, PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep,
-            TransitionGroupDocNode nodeTranGroup, TransitionGroupDocNode nodeTranGroupPrimary, TransitionDocNode nodeTran,
-            int step)
-        {
-            base.WriteTransition(writer, fileNumber, nodePepGroup, nodePep, nodeTranGroup, nodeTranGroupPrimary, nodeTran, step);
-        }
-    }
     public class ThermoQuantivaMassListExporter : ThermoMassListExporter
     {
         // Hack to workaround Quantiva limitation
@@ -4951,7 +4932,7 @@ namespace pwiz.Skyline.Model
                     stdinBuilder.Append(pair.Value);
                 }
 
-                string dirWork = (Path.GetDirectoryName(fileName) ?? Environment.CurrentDirectory) + "\\";
+                string dirWork = (Path.GetDirectoryName(fileName) ?? Environment.CurrentDirectory) + @"\\";
                 using (var tmpDir = new TemporaryDirectory(Path.Combine(dirWork, PathEx.GetRandomFileName()))) // N.B. FileEx.GetRandomFileName adds unusual characters in test mode
                 {
                     var transitionsFile = Path.Combine(tmpDir.DirPath, @"transitions.txt");
