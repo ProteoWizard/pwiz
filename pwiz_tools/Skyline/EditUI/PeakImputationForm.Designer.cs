@@ -28,7 +28,15 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.groupBoxResults = new System.Windows.Forms.GroupBox();
+            this.tbxAvgRtShift = new System.Windows.Forms.TextBox();
+            this.lblAvgRtShift = new System.Windows.Forms.Label();
+            this.tbxRejected = new System.Windows.Forms.TextBox();
+            this.lblRejected = new System.Windows.Forms.Label();
+            this.tbxAccepted = new System.Windows.Forms.TextBox();
+            this.lblAccepted = new System.Windows.Forms.Label();
             this.btnImputeBoundaries = new System.Windows.Forms.Button();
             this.cbxOverwriteManual = new System.Windows.Forms.CheckBox();
             this.tbxRtDeviationCutoff = new System.Windows.Forms.TextBox();
@@ -41,16 +49,10 @@
             this.tbxCoreScoreCutoff = new System.Windows.Forms.TextBox();
             this.comboRetentionTimeAlignment = new System.Windows.Forms.ComboBox();
             this.lblRetentionTimeAlignment = new System.Windows.Forms.Label();
-            this.groupBoxResults = new System.Windows.Forms.GroupBox();
-            this.lblAccepted = new System.Windows.Forms.Label();
-            this.tbxAccepted = new System.Windows.Forms.TextBox();
-            this.lblRejected = new System.Windows.Forms.Label();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.lblAvgRtShift = new System.Windows.Forms.Label();
-            this.tbxAvgRtShift = new System.Windows.Forms.TextBox();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.panel1.SuspendLayout();
-            this.groupBoxCutoff.SuspendLayout();
             this.groupBoxResults.SuspendLayout();
+            this.groupBoxCutoff.SuspendLayout();
             this.SuspendLayout();
             // 
             // databoundGridControl
@@ -73,6 +75,72 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(800, 163);
             this.panel1.TabIndex = 1;
+            // 
+            // groupBoxResults
+            // 
+            this.groupBoxResults.Controls.Add(this.tbxAvgRtShift);
+            this.groupBoxResults.Controls.Add(this.lblAvgRtShift);
+            this.groupBoxResults.Controls.Add(this.tbxRejected);
+            this.groupBoxResults.Controls.Add(this.lblRejected);
+            this.groupBoxResults.Controls.Add(this.tbxAccepted);
+            this.groupBoxResults.Controls.Add(this.lblAccepted);
+            this.groupBoxResults.Location = new System.Drawing.Point(336, 9);
+            this.groupBoxResults.Name = "groupBoxResults";
+            this.groupBoxResults.Size = new System.Drawing.Size(200, 148);
+            this.groupBoxResults.TabIndex = 18;
+            this.groupBoxResults.TabStop = false;
+            this.groupBoxResults.Text = "Results";
+            // 
+            // tbxAvgRtShift
+            // 
+            this.tbxAvgRtShift.Location = new System.Drawing.Point(18, 118);
+            this.tbxAvgRtShift.Name = "tbxAvgRtShift";
+            this.tbxAvgRtShift.ReadOnly = true;
+            this.tbxAvgRtShift.Size = new System.Drawing.Size(100, 20);
+            this.tbxAvgRtShift.TabIndex = 5;
+            // 
+            // lblAvgRtShift
+            // 
+            this.lblAvgRtShift.AutoSize = true;
+            this.lblAvgRtShift.Location = new System.Drawing.Point(15, 102);
+            this.lblAvgRtShift.Name = "lblAvgRtShift";
+            this.lblAvgRtShift.Size = new System.Drawing.Size(166, 13);
+            this.lblAvgRtShift.TabIndex = 4;
+            this.lblAvgRtShift.Text = "Average distance from best peak:";
+            // 
+            // tbxRejected
+            // 
+            this.tbxRejected.Location = new System.Drawing.Point(18, 75);
+            this.tbxRejected.Name = "tbxRejected";
+            this.tbxRejected.ReadOnly = true;
+            this.tbxRejected.Size = new System.Drawing.Size(84, 20);
+            this.tbxRejected.TabIndex = 3;
+            // 
+            // lblRejected
+            // 
+            this.lblRejected.AutoSize = true;
+            this.lblRejected.Location = new System.Drawing.Point(15, 59);
+            this.lblRejected.Name = "lblRejected";
+            this.lblRejected.Size = new System.Drawing.Size(53, 13);
+            this.lblRejected.TabIndex = 2;
+            this.lblRejected.Text = "Rejected:";
+            // 
+            // tbxAccepted
+            // 
+            this.tbxAccepted.Location = new System.Drawing.Point(18, 36);
+            this.tbxAccepted.Name = "tbxAccepted";
+            this.tbxAccepted.ReadOnly = true;
+            this.tbxAccepted.Size = new System.Drawing.Size(84, 20);
+            this.tbxAccepted.TabIndex = 1;
+            // 
+            // lblAccepted
+            // 
+            this.lblAccepted.AutoSize = true;
+            this.lblAccepted.Location = new System.Drawing.Point(15, 19);
+            this.lblAccepted.Name = "lblAccepted";
+            this.lblAccepted.Size = new System.Drawing.Size(56, 13);
+            this.lblAccepted.TabIndex = 0;
+            this.lblAccepted.Text = "Accepted:";
             // 
             // btnImputeBoundaries
             // 
@@ -202,72 +270,6 @@
             this.lblRetentionTimeAlignment.TabIndex = 0;
             this.lblRetentionTimeAlignment.Text = "Retention time alignment:";
             // 
-            // groupBoxResults
-            // 
-            this.groupBoxResults.Controls.Add(this.tbxAvgRtShift);
-            this.groupBoxResults.Controls.Add(this.lblAvgRtShift);
-            this.groupBoxResults.Controls.Add(this.textBox1);
-            this.groupBoxResults.Controls.Add(this.lblRejected);
-            this.groupBoxResults.Controls.Add(this.tbxAccepted);
-            this.groupBoxResults.Controls.Add(this.lblAccepted);
-            this.groupBoxResults.Location = new System.Drawing.Point(336, 9);
-            this.groupBoxResults.Name = "groupBoxResults";
-            this.groupBoxResults.Size = new System.Drawing.Size(200, 148);
-            this.groupBoxResults.TabIndex = 18;
-            this.groupBoxResults.TabStop = false;
-            this.groupBoxResults.Text = "Results";
-            // 
-            // lblAccepted
-            // 
-            this.lblAccepted.AutoSize = true;
-            this.lblAccepted.Location = new System.Drawing.Point(15, 19);
-            this.lblAccepted.Name = "lblAccepted";
-            this.lblAccepted.Size = new System.Drawing.Size(56, 13);
-            this.lblAccepted.TabIndex = 0;
-            this.lblAccepted.Text = "Accepted:";
-            // 
-            // tbxAccepted
-            // 
-            this.tbxAccepted.Location = new System.Drawing.Point(18, 36);
-            this.tbxAccepted.Name = "tbxAccepted";
-            this.tbxAccepted.ReadOnly = true;
-            this.tbxAccepted.Size = new System.Drawing.Size(84, 20);
-            this.tbxAccepted.TabIndex = 1;
-            // 
-            // lblRejected
-            // 
-            this.lblRejected.AutoSize = true;
-            this.lblRejected.Location = new System.Drawing.Point(15, 59);
-            this.lblRejected.Name = "lblRejected";
-            this.lblRejected.Size = new System.Drawing.Size(53, 13);
-            this.lblRejected.TabIndex = 2;
-            this.lblRejected.Text = "Rejected:";
-            // 
-            // textBox1
-            // 
-            this.textBox1.Location = new System.Drawing.Point(18, 75);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.ReadOnly = true;
-            this.textBox1.Size = new System.Drawing.Size(84, 20);
-            this.textBox1.TabIndex = 3;
-            // 
-            // lblAvgRtShift
-            // 
-            this.lblAvgRtShift.AutoSize = true;
-            this.lblAvgRtShift.Location = new System.Drawing.Point(15, 102);
-            this.lblAvgRtShift.Name = "lblAvgRtShift";
-            this.lblAvgRtShift.Size = new System.Drawing.Size(125, 13);
-            this.lblAvgRtShift.TabIndex = 4;
-            this.lblAvgRtShift.Text = "Mean retention time shift:";
-            // 
-            // tbxAvgRtShift
-            // 
-            this.tbxAvgRtShift.Location = new System.Drawing.Point(18, 118);
-            this.tbxAvgRtShift.Name = "tbxAvgRtShift";
-            this.tbxAvgRtShift.ReadOnly = true;
-            this.tbxAvgRtShift.Size = new System.Drawing.Size(100, 20);
-            this.tbxAvgRtShift.TabIndex = 5;
-            // 
             // PeakImputationForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -275,15 +277,16 @@
             this.ClientSize = new System.Drawing.Size(800, 450);
             this.Controls.Add(this.panel1);
             this.Name = "PeakImputationForm";
-            this.Text = "PeakImputationForm";
+            this.TabText = "Peak Imputation";
+            this.Text = "Peak Imputation";
             this.Controls.SetChildIndex(this.panel1, 0);
             this.Controls.SetChildIndex(this.databoundGridControl, 0);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
-            this.groupBoxCutoff.ResumeLayout(false);
-            this.groupBoxCutoff.PerformLayout();
             this.groupBoxResults.ResumeLayout(false);
             this.groupBoxResults.PerformLayout();
+            this.groupBoxCutoff.ResumeLayout(false);
+            this.groupBoxCutoff.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -306,9 +309,10 @@
         private System.Windows.Forms.GroupBox groupBoxResults;
         private System.Windows.Forms.TextBox tbxAvgRtShift;
         private System.Windows.Forms.Label lblAvgRtShift;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox tbxRejected;
         private System.Windows.Forms.Label lblRejected;
         private System.Windows.Forms.TextBox tbxAccepted;
         private System.Windows.Forms.Label lblAccepted;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }

@@ -791,6 +791,16 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        /// <summary>
+        /// Returns the number of chromatogram groups that have more than one peak.
+        /// This is used to decide whether Skyline did the peak picking or the peak boundaries
+        /// came from a library.
+        /// </summary>
+        public int CountChromatogramsWithMultipleCandidatePeaks()
+        {
+            return Caches.Sum(cache => cache.ChromGroupHeaderInfos.Count(header => header.NumPeaks > 1));
+        }
+
         public bool TryLoadAllIonsChromatogram(int index,
                                                ChromExtractor extractor,
                                                bool loadPoints,

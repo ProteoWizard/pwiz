@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
         {
             public override double? FromRawScore(ScoringResults scoringResults, double value)
             {
-                return scoringResults?.ScoreQValueMap?.GetQValue(value);
+                return scoringResults?.ScoreQValueMap?.GetQValue(value) ?? -value;
             }
 
             public override bool IsEnabled(PeakScoringModelSpec scoringModelSpec)
@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
             public override double? ToRawScore(ScoringResults scoringResults, double value)
             {
-                return scoringResults?.ScoreQValueMap?.GetZScore(value);
+                return scoringResults?.ScoreQValueMap?.GetZScore(value) ?? -value;
             }
 
             public override string ToString()

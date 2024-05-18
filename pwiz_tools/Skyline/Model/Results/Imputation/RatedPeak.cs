@@ -21,7 +21,13 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
         public PeakBounds AlignedPeakBounds { get; private set; }
 
-        public double? Score { get; }
+        public double? Score { get; private set; }
+
+        public RatedPeak ChangeScore(double? value)
+        {
+            return ChangeProp(ImClone(this), im => im.Score = value);
+        }
+
         public bool ManuallyIntegrated { get; }
         public double? Percentile { get; private set; }
 

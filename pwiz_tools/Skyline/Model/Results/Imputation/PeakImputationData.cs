@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
@@ -60,6 +60,15 @@ namespace pwiz.Skyline.Model.Results.Imputation
             return new MoleculePeaks(row.PeptideIdentityPath, newPeaks);
         }
 
+        public bool HasAnyScores()
+        {
+            return MoleculePeaks.SelectMany(peaks => peaks.Peaks).Any(peak => peak.Score.HasValue);
+        }
+
+        public bool HasAnyQValues()
+        {
+            return MoleculePeaks.SelectMany(peaks => peaks.Peaks).Any(peak => peak.QValue.HasValue);
+        }
 
         public class Parameters : Immutable
         {
@@ -127,24 +136,57 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 return ChangeProp(ImClone(this), im => im.AllowableRtShift = value);
             }
 
-            
+            protected bool Equals(Parameters other)
+            {
+                return ReferenceEquals(Document, other.Document) && OverwriteManualPeaks == other.OverwriteManualPeaks &&
+                       Nullable.Equals(CutoffScore, other.CutoffScore) &&
+                       Equals(CutoffScoreType, other.CutoffScoreType) && Equals(ScoringModel, other.ScoringModel) &&
+                       Equals(AlignmentType, other.AlignmentType) &&
+                       Nullable.Equals(AllowableRtShift, other.AllowableRtShift);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((Parameters)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = (Document != null ? RuntimeHelpers.GetHashCode(Document) : 0);
+                    hashCode = (hashCode * 397) ^ OverwriteManualPeaks.GetHashCode();
+                    hashCode = (hashCode * 397) ^ CutoffScore.GetHashCode();
+                    hashCode = (hashCode * 397) ^ (CutoffScoreType != null ? CutoffScoreType.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (ScoringModel != null ? ScoringModel.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (AlignmentType != null ? AlignmentType.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ AllowableRtShift.GetHashCode();
+                    return hashCode;
+                }
+            }
         }
         public static bool IsManualIntegrated(PeptideDocNode peptideDocNode, int replicateIndex,
             ChromFileInfoId fileId)
         {
-            foreach (var transitionGroupDocNode in peptideDocNode.TransitionGroups)
-            {
-                foreach (var transitionGroupChromInfo in transitionGroupDocNode.GetSafeChromInfo(replicateIndex))
-                {
-                    if (ReferenceEquals(fileId, transitionGroupChromInfo.FileId) &&
-                        transitionGroupChromInfo.UserSet == UserSet.TRUE)
-                    {
-                        return true;
-                    }
-                }
-            }
+            return EnumerateTransitionGroupChromInfos(peptideDocNode, replicateIndex, fileId)
+                .Any(transitionGroupChromInfo => transitionGroupChromInfo.UserSet == UserSet.TRUE);
+        }
 
-            return false;
+        public static float? GetQValue(PeptideDocNode peptideDocNode, int replicateIndex, ChromFileInfoId fileId)
+        {
+            return EnumerateTransitionGroupChromInfos(peptideDocNode, replicateIndex, fileId)
+                .Select(transitionGroupInfo=>transitionGroupInfo.QValue).FirstOrDefault();
+        }
+
+        private static IEnumerable<TransitionGroupChromInfo> EnumerateTransitionGroupChromInfos(
+            PeptideDocNode peptideDocNode, int replicateIndex,
+            ChromFileInfoId fileId)
+        {
+            return peptideDocNode.TransitionGroups.SelectMany(tg => tg.GetSafeChromInfo(replicateIndex))
+                .Where(tgci => ReferenceEquals(tgci.FileId, fileId));
         }
         private class DataProducer : Producer<Parameters, PeakImputationData>
         {
@@ -154,9 +196,25 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 var consensusAlignment =
                     ConsensusAlignment.PRODUCER.GetResult(inputs, parameter.GetAlignmentParameters());
                 var rows = ImmutableList.ValueOf(GetRows(productionMonitor.CancellationToken, parameter, scoringResults, consensusAlignment));
+                // rows = EnsureScores(rows);
                 return new PeakImputationData(parameter, consensusAlignment, scoringResults, rows);
             }
-           
+
+            // private ImmutableList<MoleculePeaks> EnsureScores(ImmutableList<MoleculePeaks> rows)
+            // {
+            //     if (rows.Any(row => row.Peaks.Any(peak => peak.Score.HasValue)))
+            //     {
+            //         return rows;
+            //     }
+            //
+            //     if (!rows.Any(row => row.Peaks.Any(peak => peak.QValue.HasValue)))
+            //     {
+            //         return rows;
+            //     }
+            //
+            //     return ImmutableList.ValueOf(rows.Select(row => new MoleculePeaks(row.PeptideIdentityPath,
+            //         row.Peaks.Select(peak => peak.ChangeScore(-peak.QValue)))));
+            // }
 
             public override IEnumerable<WorkOrder> GetInputs(Parameters parameter)
             {
@@ -166,7 +224,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     yield break;
                 }
 
-                if (parameter.GetScoringResultsParameters() != null)
+                if (parameter.AlignmentType != null)
                 {
                     yield return ConsensusAlignment.PRODUCER.MakeWorkOrder(
                         new ConsensusAlignment.Parameters(document, parameter.AlignmentType));
@@ -191,6 +249,8 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 var resultFileInfos = ReplicateFileInfo.List(document.MeasuredResults);
                 var resultFileInfoDict =
                     resultFileInfos.ToDictionary(resultFileInfo => ReferenceValue.Of(resultFileInfo.ReplicateFileId.FileId));
+                bool useQValuesAsScores = scoringResults?.ResultsHandler == null && !HasAnyScores(document) &&
+                                          HasAnyQValues(document);
                 foreach (var moleculeGroup in document.MoleculeGroups)
                 {
                     foreach (var molecule in moleculeGroup.Molecules)
@@ -227,10 +287,18 @@ namespace pwiz.Skyline.Model.Results.Imputation
                                 var rawPeakBounds = GetRawPeakBounds(molecule,
                                     replicateIndex,
                                     peptideChromInfo.FileId);
-
-                                var peakFeatureStatistics = scoringResults?.ResultsHandler?.GetPeakFeatureStatistics(molecule.Peptide,
-                                    peptideChromInfo.FileId);
-                                var peak = new RatedPeak(peakResultFile, alignments?.GetAlignment(peakResultFile.ReplicateFileId), rawPeakBounds, peakFeatureStatistics?.BestScore,
+                                double? score;
+                                if (useQValuesAsScores)
+                                {
+                                    score = -GetQValue(molecule, replicateIndex, peptideChromInfo.FileId);
+                                }
+                                else
+                                {
+                                    var peakFeatureStatistics = scoringResults?.ResultsHandler?.GetPeakFeatureStatistics(molecule.Peptide,
+                                        peptideChromInfo.FileId);
+                                    score = peakFeatureStatistics?.BestScore;
+                                }
+                                var peak = new RatedPeak(peakResultFile, alignments?.GetAlignment(peakResultFile.ReplicateFileId), rawPeakBounds, score,
                                     manuallyIntegrated);
                                 peaks.Add(peak);
                             }
@@ -239,6 +307,25 @@ namespace pwiz.Skyline.Model.Results.Imputation
                         yield return new MoleculePeaks(peptideIdentityPath, RatePeaks(parameters, peaks));
                     }
                 }
+            }
+
+            private bool HasAnyScores(SrmDocument document)
+            {
+                return document.MoleculeTransitionGroups
+                    .Where(tg => tg.Results != null)
+                    .SelectMany(tg => tg.Results)
+                    .SelectMany(chromInfoList => chromInfoList)
+                    .Any(transitionGroupChromInfo =>
+                        transitionGroupChromInfo.ZScore.HasValue);
+            }
+
+            private bool HasAnyQValues(SrmDocument document)
+            {
+                return document.MoleculeTransitionGroups.Where(tg => tg.Results != null)
+                    .SelectMany(tg => tg.Results)
+                    .SelectMany(chromInfoList => chromInfoList)
+                    .Any(transitionGroupChromInfo =>
+                        transitionGroupChromInfo.QValue.HasValue);
             }
 
             private IEnumerable<RatedPeak> RatePeaks(Parameters parameters, IEnumerable<RatedPeak> peaks)

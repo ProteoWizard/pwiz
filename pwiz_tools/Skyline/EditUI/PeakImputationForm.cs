@@ -49,6 +49,17 @@ namespace pwiz.Skyline.EditUI
                 _rows.Clear();
                 _rows.AddRange(_data.MoleculePeaks.Select(peak=>new Row(_dataSchema, peak)));
                 _rowsBindingList.ResetBindings();
+                tbxAccepted.Text = _rows.SelectMany(row => row.Peaks.Values).Count(peak => peak.Accepted).ToString();
+                tbxRejected.Text = _rows.SelectMany(row => row.Peaks.Values).Count(peak => !peak.Accepted).ToString();
+                var rtShifts = _rows.SelectMany(row => row.Peaks.Values).Where(peak => !peak.Best).Select(peak=>Math.Abs(peak.ShiftFromBestPeak)).ToList();
+                if (rtShifts.Count == 0)
+                {
+                    tbxAvgRtShift.Text = "";
+                }
+                else
+                {
+                    tbxAvgRtShift.Text = rtShifts.ToString(Formats.RETENTION_TIME);
+                }
             }
 
             var error = _receiver.GetError();
@@ -107,7 +118,9 @@ namespace pwiz.Skyline.EditUI
                 scoringModel = LegacyScoringModel.DEFAULT_MODEL;
             }
 
-            radioQValue.Enabled = radioPValue.Enabled = !Equals(scoringModel, LegacyScoringModel.DEFAULT_MODEL);
+            radioPValue.Enabled = !Equals(scoringModel, LegacyScoringModel.DEFAULT_MODEL);
+            var scoreQValueMap = document.Settings.PeptideSettings.Integration.ScoreQValueMap;
+            radioQValue.Enabled = scoreQValueMap != null && !Equals(scoreQValueMap, ScoreQValueMap.EMPTY);
             var parameters = new PeakImputationData.Parameters(document)
                 .ChangeAlignmentType(comboRetentionTimeAlignment.SelectedItem as RtValueType)
                 .ChangeOverwriteManualPeaks(cbxOverwriteManual.Checked)
@@ -135,7 +148,7 @@ namespace pwiz.Skyline.EditUI
                     Peaks[resultKey] = peak;
                 }
                     
-                BestPeak = Peaks.Values.OrderByDescending(peak => peak.Score).FirstOrDefault();
+                BestPeak = Peaks.Values.FirstOrDefault(peak=>peak.Best);
             }
 
             public Model.Databinding.Entities.Peptide Peptide { get; }
@@ -213,6 +226,14 @@ namespace pwiz.Skyline.EditUI
             public bool Accepted
             {
                 get { return _ratedPeak.Accepted; }
+            }
+
+            public double ShiftFromBestPeak
+            {
+                get
+                {
+                    return _ratedPeak.RtShift;
+                }
             }
 
             public override string ToString()
