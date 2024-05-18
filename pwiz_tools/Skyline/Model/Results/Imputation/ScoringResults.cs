@@ -78,10 +78,6 @@ namespace pwiz.Skyline.Model.Results.Imputation
             public override ScoringResults ProduceResult(ProductionMonitor productionMonitor, Parameters parameter,
                 IDictionary<WorkOrder, object> inputs)
             {
-                if (parameter.Document.MeasuredResults?.CountChromatogramsWithMultipleCandidatePeaks() < 100)
-                {
-                    return new ScoringResults(null, null);
-                }
                 var featureSet = (PeakTransitionGroupFeatureSet)inputs.FirstOrDefault().Value;
                 MProphetResultsHandler resultsHandler = null;
                 SrmDocument reintegratedDocument = null;
@@ -101,17 +97,9 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
             public override IEnumerable<WorkOrder> GetInputs(Parameters parameter)
             {
-                if (parameter.Document.MeasuredResults?.CountChromatogramsWithMultipleCandidatePeaks() < 100)
-                {
-                    yield break;
-                }
-
-                if (parameter.Document.MeasuredResults?.CountChromatogramsWithMultipleCandidatePeaks() > 0)
-                {
-                    yield return FEATURE_SET_PRODUCER.MakeWorkOrder(new FeatureSetParameters(
-                        parameter.Document,
-                        parameter.ScoringModel.PeakFeatureCalculators));
-                }
+                yield return FEATURE_SET_PRODUCER.MakeWorkOrder(new FeatureSetParameters(
+                    parameter.Document,
+                    parameter.ScoringModel.PeakFeatureCalculators));
             }
 
             private class FeatureSetProducer : Producer<FeatureSetParameters, PeakTransitionGroupFeatureSet>

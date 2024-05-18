@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
-using pwiz.Skyline.Model.Koina;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;
 
@@ -259,7 +258,6 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 var resultFileInfos = ReplicateFileInfo.List(document.MeasuredResults);
                 var resultFileInfoDict =
                     resultFileInfos.ToDictionary(resultFileInfo => ReferenceValue.Of(resultFileInfo.ReplicateFileId.FileId));
-                bool mustRecalculateScores = false && document.MeasuredResults.CountChromatogramsWithMultipleCandidatePeaks() < 100;
                 int moleculeIndex = 0;
                 foreach (var moleculeGroup in document.MoleculeGroups)
                 {
@@ -293,30 +291,14 @@ namespace pwiz.Skyline.Model.Results.Imputation
                                 var rawPeakBounds = GetRawPeakBounds(molecule,
                                     replicateIndex,
                                     peptideChromInfo.FileId);
-                                double? score;
-                                if (mustRecalculateScores)
+                                double? score = EnumerateTransitionGroupChromInfos(molecule, replicateIndex,
+                                        peptideChromInfo.FileId).Select(chromInfo => chromInfo.ZScore)
+                                    .FirstOrDefault(value => value.HasValue);
+                                if (score == null)
                                 {
-                                    var chromFileInfo = document.MeasuredResults.Chromatograms[replicateIndex]
-                                        .GetFileInfo(peptideChromInfo.FileId);
-                                    var onDemandFeatureCalculator =
-                                        new OnDemandFeatureCalculator(
-                                            LegacyScoringModel.DEFAULT_MODEL.PeakFeatureCalculators, document.Settings,
-                                            molecule, replicateIndex, chromFileInfo);
-                                    score = onDemandFeatureCalculator.GetChosenPeakGroupDataForAllComparableGroups()
-                                        .Select(tuple => tuple.Item2?.Score?.ModelScore).OfType<double>()
-                                        .FirstOrDefault();
-                                }
-                                else
-                                {
-                                    score = EnumerateTransitionGroupChromInfos(molecule, replicateIndex,
-                                            peptideChromInfo.FileId).Select(chromInfo => chromInfo.ZScore)
+                                    score = -EnumerateTransitionGroupChromInfos(molecule, replicateIndex,
+                                            peptideChromInfo.FileId).Select(chromInfo => chromInfo.QValue)
                                         .FirstOrDefault(value => value.HasValue);
-                                    if (score == null)
-                                    {
-                                        score = -EnumerateTransitionGroupChromInfos(molecule, replicateIndex,
-                                                peptideChromInfo.FileId).Select(chromInfo => chromInfo.QValue)
-                                            .FirstOrDefault(value => value.HasValue);
-                                    }
                                 }
                                 var peak = new RatedPeak(peakResultFile, alignments?.GetAlignment(peakResultFile.ReplicateFileId), rawPeakBounds, score,
                                     manuallyIntegrated);
@@ -361,38 +343,54 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 {
                     return list;
                 }
-                list[0] = list[0].ChangeBest(true).ChangeAccepted(true);
+
                 var bestPeak = list[0];
+                if (!IsAccepted(parameters, bestPeak, bestPeak))
+                {
+                    return list;
+                }
+
+                list[0] = list[0].ChangeBest(true).ChangeAccepted(true);
                 for (int i = 1; i < list.Count; i++)
                 {
                     var peak = list[i];
-                    peak = peak.ChangeRtShift(peak.AlignedPeakBounds.MidTime - bestPeak.AlignedPeakBounds.MidTime);
-                    bool accepted = Math.Abs(peak.RtShift) > parameters.AllowableRtShift;
-                    if (parameters.CutoffScoreType == CutoffScoreType.RAW && peak.Score < parameters.CutoffScore)
-                    {
-                        accepted = false;
-                    }
-
-                    if (parameters.CutoffScoreType == CutoffScoreType.PERCENTILE &&
-                        peak.Percentile < parameters.CutoffScore)
-                    {
-                        accepted = false;
-                    }
-
-                    if (parameters.CutoffScoreType == CutoffScoreType.PVALUE && peak.PValue > parameters.CutoffScore)
-                    {
-                        accepted = false;
-                    }
-
-                    if (parameters.CutoffScoreType == CutoffScoreType.QVALUE && peak.QValue > parameters.CutoffScore)
-                    {
-                        accepted = false;
-                    }
-                    peak = peak.ChangeAccepted(accepted);
+                    peak = peak.ChangeRtShift(peak.AlignedPeakBounds.MidTime - bestPeak.AlignedPeakBounds.MidTime)
+                        .ChangeAccepted(IsAccepted(parameters, bestPeak, peak));
                     list[i] = peak;
                 }
 
                 return list;
+            }
+
+            private bool IsAccepted(Parameters parameters, RatedPeak bestPeak, RatedPeak peak)
+            {
+                if (parameters.CutoffScoreType == CutoffScoreType.RAW && peak.Score < parameters.CutoffScore)
+                {
+                    return false;
+                }
+
+                if (parameters.CutoffScoreType == CutoffScoreType.PERCENTILE &&
+                    peak.Percentile < parameters.CutoffScore)
+                {
+                    return false;
+                }
+
+                if (parameters.CutoffScoreType == CutoffScoreType.PVALUE && peak.PValue > parameters.CutoffScore)
+                {
+                    return false;
+                }
+
+                if (parameters.CutoffScoreType == CutoffScoreType.QVALUE && peak.QValue > parameters.CutoffScore)
+                {
+                    return false;
+                }
+
+                if (peak.AlignedPeakBounds.MidTime - bestPeak.AlignedPeakBounds.MidTime > parameters.AllowableRtShift)
+                {
+                    return false;
+                }
+
+                return true;
             }
         }
 

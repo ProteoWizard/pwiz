@@ -97,6 +97,7 @@ namespace pwiz.Skyline.Model.Lib
         private const int FORMAT_VERSION_CACHE = 5;
         private const double MIN_QUANTITATIVE_INTENSITY = 1.0;
         private ImmutableList<string> _sourceFiles;
+        private Dictionary<MsDataFileUri, int> _msDataFileUriLookup;
         private readonly PooledSqliteConnection _pooledSqliteConnection;
         // List of entries which includes items which do not have a spectrum but which do have peak boundaries
         private LibKeyMap<ElibSpectrumInfo> _allLibraryEntries;
@@ -369,6 +370,7 @@ on one.SourceFile = two.SourceFile";
                     .Select(entry => MakeSpectrumInfo(entry.Key, entry.Value, sourceFileIds));
                 SetLibraryEntries(FilterInvalidLibraryEntries(ref status, spectrumInfos));
                 _sourceFiles = ImmutableList.ValueOf(sourceFiles);
+                _msDataFileUriLookup = new Dictionary<MsDataFileUri, int>();
                 // ReSharper restore PossibleMultipleEnumeration
                 loader.UpdateProgress(status.Complete());
                 return true;
@@ -455,6 +457,7 @@ on one.SourceFile = two.SourceFile";
                     }
                     int spectrumInfoCount = PrimitiveArrays.ReadOneValue<int>(stream);
                     _sourceFiles = ImmutableList.ValueOf(sourceFiles);
+                    _msDataFileUriLookup = new Dictionary<MsDataFileUri, int>();
                     List<ElibSpectrumInfo> spectrumInfos = new List<ElibSpectrumInfo>();
                     while (spectrumInfos.Count < spectrumInfoCount)
                     {
@@ -670,7 +673,7 @@ on one.SourceFile = two.SourceFile";
 
         public override ExplicitPeakBounds GetExplicitPeakBounds(MsDataFileUri filePath, IEnumerable<Target> peptideSequences)
         {
-            int fileId = FindFileInList(filePath, _sourceFiles);
+            int fileId = FindSource(filePath);
             if (fileId < 0)
             {
                 return null;
@@ -751,7 +754,7 @@ on one.SourceFile = two.SourceFile";
 
         public override bool TryGetRetentionTimes(MsDataFileUri filePath, out LibraryRetentionTimes retentionTimes)
         {
-            return TryGetRetentionTimes(FindFileInList(filePath, _sourceFiles), filePath.ToString(), out retentionTimes);
+            return TryGetRetentionTimes(FindSource(filePath), filePath.ToString(), out retentionTimes);
         }
 
         private bool TryGetRetentionTimes(int fileId, string filePath, out LibraryRetentionTimes retentionTimes)
@@ -779,6 +782,63 @@ on one.SourceFile = two.SourceFile";
             return true;
         }
 
+        // ReSharper disable PossibleMultipleEnumeration
+        private int FindSource(MsDataFileUri sourceFile)
+        {
+            
+            if (_sourceFiles == null || _sourceFiles.Count == 0)
+            {
+                return -1;
+            }
+            Assume.IsNotNull(_msDataFileUriLookup);
+            lock (_msDataFileUriLookup)
+            {
+                if (_msDataFileUriLookup.TryGetValue(sourceFile, out int index))
+                {
+                    return index;
+                }
+            }
+
+            string sourceFileToString = sourceFile.ToString();
+            int iFileFound = -1;
+            for (int iFile = 0; iFile < _sourceFiles.Count; iFile++)
+            {
+                if (_sourceFiles[iFile].Equals(sourceFileToString))
+                {
+                    iFileFound = iFile;
+                    break;
+                }
+            }
+
+            if (iFileFound == -1)
+            {
+                string baseName = sourceFile.GetFileNameWithoutExtension();
+
+                for (int iFile = 0; iFile < _sourceFiles.Count; iFile++)
+                {
+                    var fileName = _sourceFiles[iFile];
+                    try
+                    {
+                        if (MeasuredResults.IsBaseNameMatch(baseName, Path.GetFileNameWithoutExtension(fileName)))
+                        {
+                            iFileFound = iFile;
+                            break;
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // Ignore: Invalid filename
+                    }
+                }
+            }
+
+            lock (_msDataFileUriLookup)
+            {
+                _msDataFileUriLookup[sourceFile] = iFileFound;
+            }
+            return iFileFound;
+        }
+
         public override bool TryGetRetentionTimes(LibKey key, MsDataFileUri filePath, out double[] retentionTimes)
         {
             retentionTimes = null;
@@ -787,7 +847,7 @@ on one.SourceFile = two.SourceFile";
             {
                 return false;
             }
-            int fileId = FindFileInList(filePath, _sourceFiles);
+            int fileId = FindSource(filePath);
             if (fileId < 0)
             {
                 return false;
@@ -809,7 +869,7 @@ on one.SourceFile = two.SourceFile";
         public override IEnumerable<double> GetRetentionTimesWithSequences(string filePath, IEnumerable<Target> peptideSequences, ref int? iFile)
         {
             if (!iFile.HasValue)
-                iFile = FindFileInList(MsDataFileUri.Parse(filePath), _sourceFiles);
+                iFile = FindSource(MsDataFileUri.Parse(filePath));
             if (iFile.Value < 0)
             {
                 return new double[0];

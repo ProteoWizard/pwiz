@@ -138,7 +138,8 @@ namespace pwiz.Skyline.EditUI
             var parameters = new PeakImputationData.Parameters(document)
                 .ChangeAlignmentType(comboRetentionTimeAlignment.SelectedItem as RtValueType)
                 .ChangeOverwriteManualPeaks(cbxOverwriteManual.Checked)
-                .ChangeScoringModel(scoringModel);
+                .ChangeScoringModel(scoringModel)
+                .ChangeAllowableRtShift(GetDoubleValue(tbxRtDeviationCutoff));
 
             if (true == _receiver?.TryGetProduct(parameters, out _))
             {

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using MathNet.Numerics.Statistics;
@@ -68,12 +69,92 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     }
                 }
 
-                var forwardFunction = new PiecewiseLinearRegressionFunction(xValues.ToArray(), yValues.ToArray(), 0);
-                var reverseFunction = new PiecewiseLinearRegressionFunction(yValues.ToArray(), xValues.ToArray(), 0);
-                alignmentFunctions.Add(entry.Key, AlignmentFunction.Define(forwardFunction.GetY, reverseFunction.GetY));
+                alignmentFunctions.Add(entry.Key, new InterpolatingAlignmentFunction(xValues, yValues));
             }
 
             return new ConsensusAlignment(consensusTimes, alignmentFunctions);
+        }
+
+        private class InterpolatingAlignmentFunction : AlignmentFunction
+        {
+            public InterpolatingAlignmentFunction(IEnumerable<double> xValues, IEnumerable<double> yValues)
+            {
+                XValues = ImmutableList.ValueOf(xValues);
+                YValues = ImmutableList.ValueOf(yValues);
+            }
+
+            public override double GetY(double x)
+            {
+                return Interpolate(x, XValues, YValues);
+            }
+
+            public override double GetX(double y)
+            {
+                return Interpolate(y, YValues, XValues);
+            }
+
+            public ImmutableList<double> XValues { get; }
+            public ImmutableList<double> YValues { get; }
+
+            private double Interpolate(double key, IList<double> keys, IList<double> values)
+            {
+                if (keys.Count == 0)
+                {
+                    return key;
+                }
+
+                if (key <= keys[0])
+                {
+                    return values[0] + key - keys[0];
+                }
+
+                if (key >= keys[keys.Count - 1])
+                {
+                    return values[keys.Count - 1] + key - keys[keys.Count - 1];
+                }
+
+                int i = CollectionUtil.BinarySearch(keys, key);
+                if (i >= 0)
+                {
+                    return values[i];
+                }
+
+                i = ~i;
+                var prevKey = keys[i - 1];
+                var nextKey = keys[i];
+                if (nextKey - prevKey <= 0)
+                {
+                    Trace.TraceWarning("{0} - {1} <= 0", nextKey, prevKey);
+                    return values[i];
+                }
+                double result = (values[i - 1] * (nextKey - key) + values[i] * (key - prevKey)) / (nextKey - prevKey);
+                if (double.IsNaN(result))
+                {
+                    Trace.TraceWarning("NaN looking for {0}", key);
+                }
+                return result;
+            }
+
+            protected bool Equals(InterpolatingAlignmentFunction other)
+            {
+                return Equals(XValues, other.XValues) && Equals(YValues, other.YValues);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((InterpolatingAlignmentFunction)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (XValues.GetHashCode()* 397) ^ YValues.GetHashCode();
+                }
+            }
         }
 
         public class Parameters : Immutable
