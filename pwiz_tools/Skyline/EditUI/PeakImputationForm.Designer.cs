@@ -29,20 +29,28 @@
         private void InitializeComponent()
         {
             this.panel1 = new System.Windows.Forms.Panel();
-            this.lblRetentionTimeAlignment = new System.Windows.Forms.Label();
-            this.comboRetentionTimeAlignment = new System.Windows.Forms.ComboBox();
+            this.btnImputeBoundaries = new System.Windows.Forms.Button();
+            this.cbxOverwriteManual = new System.Windows.Forms.CheckBox();
+            this.tbxRtDeviationCutoff = new System.Windows.Forms.TextBox();
+            this.lblSdCutoff = new System.Windows.Forms.Label();
             this.groupBoxCutoff = new System.Windows.Forms.GroupBox();
             this.radioPValue = new System.Windows.Forms.RadioButton();
             this.radioPercentile = new System.Windows.Forms.RadioButton();
             this.radioQValue = new System.Windows.Forms.RadioButton();
             this.radioScore = new System.Windows.Forms.RadioButton();
             this.tbxCoreScoreCutoff = new System.Windows.Forms.TextBox();
-            this.tbxRtDeviationCutoff = new System.Windows.Forms.TextBox();
-            this.lblSdCutoff = new System.Windows.Forms.Label();
-            this.cbxOverwriteManual = new System.Windows.Forms.CheckBox();
-            this.btnImputeBoundaries = new System.Windows.Forms.Button();
+            this.comboRetentionTimeAlignment = new System.Windows.Forms.ComboBox();
+            this.lblRetentionTimeAlignment = new System.Windows.Forms.Label();
+            this.groupBoxResults = new System.Windows.Forms.GroupBox();
+            this.lblAccepted = new System.Windows.Forms.Label();
+            this.tbxAccepted = new System.Windows.Forms.TextBox();
+            this.lblRejected = new System.Windows.Forms.Label();
+            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.lblAvgRtShift = new System.Windows.Forms.Label();
+            this.tbxAvgRtShift = new System.Windows.Forms.TextBox();
             this.panel1.SuspendLayout();
             this.groupBoxCutoff.SuspendLayout();
+            this.groupBoxResults.SuspendLayout();
             this.SuspendLayout();
             // 
             // databoundGridControl
@@ -52,6 +60,7 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.groupBoxResults);
             this.panel1.Controls.Add(this.btnImputeBoundaries);
             this.panel1.Controls.Add(this.cbxOverwriteManual);
             this.panel1.Controls.Add(this.tbxRtDeviationCutoff);
@@ -65,23 +74,44 @@
             this.panel1.Size = new System.Drawing.Size(800, 163);
             this.panel1.TabIndex = 1;
             // 
-            // lblRetentionTimeAlignment
+            // btnImputeBoundaries
             // 
-            this.lblRetentionTimeAlignment.AutoSize = true;
-            this.lblRetentionTimeAlignment.Location = new System.Drawing.Point(12, 9);
-            this.lblRetentionTimeAlignment.Name = "lblRetentionTimeAlignment";
-            this.lblRetentionTimeAlignment.Size = new System.Drawing.Size(126, 13);
-            this.lblRetentionTimeAlignment.TabIndex = 0;
-            this.lblRetentionTimeAlignment.Text = "Retention time alignment:";
+            this.btnImputeBoundaries.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnImputeBoundaries.Location = new System.Drawing.Point(648, 12);
+            this.btnImputeBoundaries.Name = "btnImputeBoundaries";
+            this.btnImputeBoundaries.Size = new System.Drawing.Size(140, 23);
+            this.btnImputeBoundaries.TabIndex = 17;
+            this.btnImputeBoundaries.Text = "Impute Boundaries";
+            this.btnImputeBoundaries.UseVisualStyleBackColor = true;
             // 
-            // comboRetentionTimeAlignment
+            // cbxOverwriteManual
             // 
-            this.comboRetentionTimeAlignment.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboRetentionTimeAlignment.FormattingEnabled = true;
-            this.comboRetentionTimeAlignment.Location = new System.Drawing.Point(15, 25);
-            this.comboRetentionTimeAlignment.Name = "comboRetentionTimeAlignment";
-            this.comboRetentionTimeAlignment.Size = new System.Drawing.Size(127, 21);
-            this.comboRetentionTimeAlignment.TabIndex = 1;
+            this.cbxOverwriteManual.AutoSize = true;
+            this.cbxOverwriteManual.Location = new System.Drawing.Point(15, 111);
+            this.cbxOverwriteManual.Name = "cbxOverwriteManual";
+            this.cbxOverwriteManual.Size = new System.Drawing.Size(140, 17);
+            this.cbxOverwriteManual.TabIndex = 16;
+            this.cbxOverwriteManual.Text = "Overwrite manual peaks";
+            this.cbxOverwriteManual.UseVisualStyleBackColor = true;
+            this.cbxOverwriteManual.CheckedChanged += new System.EventHandler(this.SettingsControlChanged);
+            // 
+            // tbxRtDeviationCutoff
+            // 
+            this.tbxRtDeviationCutoff.Location = new System.Drawing.Point(14, 74);
+            this.tbxRtDeviationCutoff.Name = "tbxRtDeviationCutoff";
+            this.tbxRtDeviationCutoff.Size = new System.Drawing.Size(128, 20);
+            this.tbxRtDeviationCutoff.TabIndex = 15;
+            this.tbxRtDeviationCutoff.Text = "1";
+            this.tbxRtDeviationCutoff.Leave += new System.EventHandler(this.SettingsControlChanged);
+            // 
+            // lblSdCutoff
+            // 
+            this.lblSdCutoff.AutoSize = true;
+            this.lblSdCutoff.Location = new System.Drawing.Point(11, 58);
+            this.lblSdCutoff.Name = "lblSdCutoff";
+            this.lblSdCutoff.Size = new System.Drawing.Size(67, 13);
+            this.lblSdCutoff.TabIndex = 14;
+            this.lblSdCutoff.Text = "Max RT shift";
             // 
             // groupBoxCutoff
             // 
@@ -107,6 +137,7 @@
             this.radioPValue.TabStop = true;
             this.radioPValue.Text = "P-value";
             this.radioPValue.UseVisualStyleBackColor = true;
+            this.radioPValue.CheckedChanged += new System.EventHandler(this.CutoffTypeChanged);
             // 
             // radioPercentile
             // 
@@ -118,6 +149,7 @@
             this.radioPercentile.TabStop = true;
             this.radioPercentile.Text = "Percentile";
             this.radioPercentile.UseVisualStyleBackColor = true;
+            this.radioPercentile.CheckedChanged += new System.EventHandler(this.CutoffTypeChanged);
             // 
             // radioQValue
             // 
@@ -129,6 +161,7 @@
             this.radioQValue.TabStop = true;
             this.radioQValue.Text = "Q-value";
             this.radioQValue.UseVisualStyleBackColor = true;
+            this.radioQValue.CheckedChanged += new System.EventHandler(this.CutoffTypeChanged);
             // 
             // radioScore
             // 
@@ -140,6 +173,7 @@
             this.radioScore.TabStop = true;
             this.radioScore.Text = "Score";
             this.radioScore.UseVisualStyleBackColor = true;
+            this.radioScore.CheckedChanged += new System.EventHandler(this.CutoffTypeChanged);
             // 
             // tbxCoreScoreCutoff
             // 
@@ -147,43 +181,92 @@
             this.tbxCoreScoreCutoff.Name = "tbxCoreScoreCutoff";
             this.tbxCoreScoreCutoff.Size = new System.Drawing.Size(128, 20);
             this.tbxCoreScoreCutoff.TabIndex = 9;
+            this.tbxCoreScoreCutoff.Leave += new System.EventHandler(this.SettingsControlChanged);
             // 
-            // tbxRtDeviationCutoff
+            // comboRetentionTimeAlignment
             // 
-            this.tbxRtDeviationCutoff.Location = new System.Drawing.Point(14, 74);
-            this.tbxRtDeviationCutoff.Name = "tbxRtDeviationCutoff";
-            this.tbxRtDeviationCutoff.Size = new System.Drawing.Size(128, 20);
-            this.tbxRtDeviationCutoff.TabIndex = 15;
-            this.tbxRtDeviationCutoff.Text = "1";
+            this.comboRetentionTimeAlignment.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboRetentionTimeAlignment.FormattingEnabled = true;
+            this.comboRetentionTimeAlignment.Location = new System.Drawing.Point(15, 25);
+            this.comboRetentionTimeAlignment.Name = "comboRetentionTimeAlignment";
+            this.comboRetentionTimeAlignment.Size = new System.Drawing.Size(127, 21);
+            this.comboRetentionTimeAlignment.TabIndex = 1;
+            this.comboRetentionTimeAlignment.SelectedIndexChanged += new System.EventHandler(this.SettingsControlChanged);
             // 
-            // lblSdCutoff
+            // lblRetentionTimeAlignment
             // 
-            this.lblSdCutoff.AutoSize = true;
-            this.lblSdCutoff.Location = new System.Drawing.Point(11, 58);
-            this.lblSdCutoff.Name = "lblSdCutoff";
-            this.lblSdCutoff.Size = new System.Drawing.Size(67, 13);
-            this.lblSdCutoff.TabIndex = 14;
-            this.lblSdCutoff.Text = "Max RT shift";
+            this.lblRetentionTimeAlignment.AutoSize = true;
+            this.lblRetentionTimeAlignment.Location = new System.Drawing.Point(12, 9);
+            this.lblRetentionTimeAlignment.Name = "lblRetentionTimeAlignment";
+            this.lblRetentionTimeAlignment.Size = new System.Drawing.Size(126, 13);
+            this.lblRetentionTimeAlignment.TabIndex = 0;
+            this.lblRetentionTimeAlignment.Text = "Retention time alignment:";
             // 
-            // cbxOverwriteManual
+            // groupBoxResults
             // 
-            this.cbxOverwriteManual.AutoSize = true;
-            this.cbxOverwriteManual.Location = new System.Drawing.Point(15, 111);
-            this.cbxOverwriteManual.Name = "cbxOverwriteManual";
-            this.cbxOverwriteManual.Size = new System.Drawing.Size(140, 17);
-            this.cbxOverwriteManual.TabIndex = 16;
-            this.cbxOverwriteManual.Text = "Overwrite manual peaks";
-            this.cbxOverwriteManual.UseVisualStyleBackColor = true;
+            this.groupBoxResults.Controls.Add(this.tbxAvgRtShift);
+            this.groupBoxResults.Controls.Add(this.lblAvgRtShift);
+            this.groupBoxResults.Controls.Add(this.textBox1);
+            this.groupBoxResults.Controls.Add(this.lblRejected);
+            this.groupBoxResults.Controls.Add(this.tbxAccepted);
+            this.groupBoxResults.Controls.Add(this.lblAccepted);
+            this.groupBoxResults.Location = new System.Drawing.Point(336, 9);
+            this.groupBoxResults.Name = "groupBoxResults";
+            this.groupBoxResults.Size = new System.Drawing.Size(200, 148);
+            this.groupBoxResults.TabIndex = 18;
+            this.groupBoxResults.TabStop = false;
+            this.groupBoxResults.Text = "Results";
             // 
-            // btnImputeBoundaries
+            // lblAccepted
             // 
-            this.btnImputeBoundaries.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnImputeBoundaries.Location = new System.Drawing.Point(648, 12);
-            this.btnImputeBoundaries.Name = "btnImputeBoundaries";
-            this.btnImputeBoundaries.Size = new System.Drawing.Size(140, 23);
-            this.btnImputeBoundaries.TabIndex = 17;
-            this.btnImputeBoundaries.Text = "Impute Boundaries";
-            this.btnImputeBoundaries.UseVisualStyleBackColor = true;
+            this.lblAccepted.AutoSize = true;
+            this.lblAccepted.Location = new System.Drawing.Point(15, 19);
+            this.lblAccepted.Name = "lblAccepted";
+            this.lblAccepted.Size = new System.Drawing.Size(56, 13);
+            this.lblAccepted.TabIndex = 0;
+            this.lblAccepted.Text = "Accepted:";
+            // 
+            // tbxAccepted
+            // 
+            this.tbxAccepted.Location = new System.Drawing.Point(18, 36);
+            this.tbxAccepted.Name = "tbxAccepted";
+            this.tbxAccepted.ReadOnly = true;
+            this.tbxAccepted.Size = new System.Drawing.Size(84, 20);
+            this.tbxAccepted.TabIndex = 1;
+            // 
+            // lblRejected
+            // 
+            this.lblRejected.AutoSize = true;
+            this.lblRejected.Location = new System.Drawing.Point(15, 59);
+            this.lblRejected.Name = "lblRejected";
+            this.lblRejected.Size = new System.Drawing.Size(53, 13);
+            this.lblRejected.TabIndex = 2;
+            this.lblRejected.Text = "Rejected:";
+            // 
+            // textBox1
+            // 
+            this.textBox1.Location = new System.Drawing.Point(18, 75);
+            this.textBox1.Name = "textBox1";
+            this.textBox1.ReadOnly = true;
+            this.textBox1.Size = new System.Drawing.Size(84, 20);
+            this.textBox1.TabIndex = 3;
+            // 
+            // lblAvgRtShift
+            // 
+            this.lblAvgRtShift.AutoSize = true;
+            this.lblAvgRtShift.Location = new System.Drawing.Point(15, 102);
+            this.lblAvgRtShift.Name = "lblAvgRtShift";
+            this.lblAvgRtShift.Size = new System.Drawing.Size(125, 13);
+            this.lblAvgRtShift.TabIndex = 4;
+            this.lblAvgRtShift.Text = "Mean retention time shift:";
+            // 
+            // tbxAvgRtShift
+            // 
+            this.tbxAvgRtShift.Location = new System.Drawing.Point(18, 118);
+            this.tbxAvgRtShift.Name = "tbxAvgRtShift";
+            this.tbxAvgRtShift.ReadOnly = true;
+            this.tbxAvgRtShift.Size = new System.Drawing.Size(100, 20);
+            this.tbxAvgRtShift.TabIndex = 5;
             // 
             // PeakImputationForm
             // 
@@ -199,6 +282,8 @@
             this.panel1.PerformLayout();
             this.groupBoxCutoff.ResumeLayout(false);
             this.groupBoxCutoff.PerformLayout();
+            this.groupBoxResults.ResumeLayout(false);
+            this.groupBoxResults.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -218,5 +303,12 @@
         private System.Windows.Forms.TextBox tbxCoreScoreCutoff;
         private System.Windows.Forms.CheckBox cbxOverwriteManual;
         private System.Windows.Forms.Button btnImputeBoundaries;
+        private System.Windows.Forms.GroupBox groupBoxResults;
+        private System.Windows.Forms.TextBox tbxAvgRtShift;
+        private System.Windows.Forms.Label lblAvgRtShift;
+        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.Label lblRejected;
+        private System.Windows.Forms.TextBox tbxAccepted;
+        private System.Windows.Forms.Label lblAccepted;
     }
 }

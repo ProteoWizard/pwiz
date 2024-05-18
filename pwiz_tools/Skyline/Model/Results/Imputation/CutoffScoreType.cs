@@ -1,4 +1,5 @@
-﻿using MathNet.Numerics.Distributions;
+﻿using JetBrains.Annotations;
+using MathNet.Numerics.Distributions;
 using pwiz.Skyline.Model.Results.Scoring;
 
 namespace pwiz.Skyline.Model.Results.Imputation
@@ -10,8 +11,8 @@ namespace pwiz.Skyline.Model.Results.Imputation
         public static readonly CutoffScoreType QVALUE = new QValue();
         public static readonly CutoffScoreType PERCENTILE = new Percentile();
 
-        public abstract double? ToRawScore(ScoringResults scoringResults, double value);
-        public abstract double? FromRawScore(ScoringResults scoringResults, double value);
+        public abstract double? ToRawScore([CanBeNull] ScoringResults scoringResults, double value);
+        public abstract double? FromRawScore([CanBeNull] ScoringResults scoringResults, double value);
         public abstract bool IsEnabled(PeakScoringModelSpec scoringModelSpec);
 
         private class RawScore : CutoffScoreType

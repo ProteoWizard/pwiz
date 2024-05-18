@@ -1913,5 +1913,10 @@ namespace pwiz.Skyline.Menus
 
             return document;
         }
+
+        private void peakImputationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.ShowPeakImputation();
+        }
     }
 }
