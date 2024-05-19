@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using MathNet.Numerics.Statistics;
+using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Model.Results.Imputation
 {
@@ -10,10 +11,11 @@ namespace pwiz.Skyline.Model.Results.Imputation
         public static readonly RtValueType PEAK_APEXES = new PeakApexes();
         public static readonly RtValueType PSM_TIMES = new PsmTimes();
 
-        public static IEnumerable<RtValueType> ForDocument(SrmDocument document)
+        public static readonly ImmutableList<RtValueType> All = ImmutableList.ValueOf(new []{PEAK_APEXES, PSM_TIMES});
+
+        public virtual bool IsValidFor(SrmDocument document)
         {
-            yield return PEAK_APEXES;
-            yield return PSM_TIMES;
+            return true;
         }
 
         public Dictionary<Target, double> GetRetentionTimes(SrmDocument document,
@@ -88,6 +90,32 @@ namespace pwiz.Skyline.Model.Results.Imputation
             public override string ToString()
             {
                 return "PSM Times";
+            }
+
+            public override bool IsValidFor(SrmDocument document)
+            {
+                var measuredResults = document.MeasuredResults;
+                if (measuredResults == null)
+                {
+                    return true;
+                }
+
+                foreach (var chromatogramSet in measuredResults.Chromatograms)
+                {
+                    foreach (var chromFileInfo in chromatogramSet.MSDataFileInfos)
+                    {
+                        if (document.Settings.PeptideSettings.Libraries.TryGetRetentionTimes(chromFileInfo.FilePath,
+                                out var libraryRetentionTimes))
+                        {
+                            if (libraryRetentionTimes.PeptideRetentionTimes.Any())
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+
+                return false;
             }
         }
     }

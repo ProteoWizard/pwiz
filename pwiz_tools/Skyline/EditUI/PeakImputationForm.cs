@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using MathNet.Numerics.Statistics;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.SystemUtil.Caching;
@@ -34,6 +35,7 @@ namespace pwiz.Skyline.EditUI
         private Receiver<PeakImputationData.Parameters, PeakImputationData> _receiver;
         private SkylineDataSchema _dataSchema;
         private PeakImputationData _data;
+        private SequenceTree _sequenceTree;
 
         public PeakImputationForm(SkylineWindow skylineWindow)
         {
@@ -102,6 +104,11 @@ namespace pwiz.Skyline.EditUI
             OnDocumentChanged();
         }
 
+        private void SequenceTreeOnAfterSelect(object sender, TreeViewEventArgs e)
+        {
+            OnDocumentChanged();
+        }
+
         protected override void OnHandleDestroyed(EventArgs e)
         {
             SkylineWindow.DocumentUIChangedEvent -= SkylineWindow_OnDocumentUIChangedEvent;
@@ -111,6 +118,24 @@ namespace pwiz.Skyline.EditUI
         {
             OnDocumentChanged();
         }
+
+        private void SetSequenceTree(SequenceTree sequenceTree)
+        {
+            if (ReferenceEquals(_sequenceTree, sequenceTree))
+            {
+                return;
+            }
+            if (null != _sequenceTree)
+            {
+                _sequenceTree.AfterSelect -= SequenceTreeOnAfterSelect;
+            }
+            _sequenceTree = sequenceTree;
+            if (null != _sequenceTree)
+            {
+                _sequenceTree.AfterSelect += SequenceTreeOnAfterSelect;
+            }
+        }
+
 
         private bool _inChange;
         private void OnDocumentChanged()
@@ -134,14 +159,16 @@ namespace pwiz.Skyline.EditUI
 
         public void UpdateUi()
         {
+            SetSequenceTree(SkylineWindow.SequenceTree);
             var document = SkylineWindow.DocumentUI;
-            ComboHelper.ReplaceItems(comboRetentionTimeAlignment, RtValueType.ForDocument(document).Prepend(null), 1);
+            ComboHelper.ReplaceItems(comboRetentionTimeAlignment, RtValueType.All.Where(rtValueType=>rtValueType.IsValidFor(document)).Prepend(null), 1);
             var scoringModel = GetScoringModelToUse(document);
             tbxScoringModel.Text = scoringModel.Name;
 
             radioPValue.Enabled = !Equals(scoringModel, LegacyScoringModel.DEFAULT_MODEL);
             var scoreQValueMap = document.Settings.PeptideSettings.Integration.ScoreQValueMap;
-            radioQValue.Enabled = scoreQValueMap != null && !Equals(scoreQValueMap, ScoreQValueMap.EMPTY);
+            radioQValue.Enabled = radioPValue.Enabled && scoreQValueMap != null && !Equals(scoreQValueMap, ScoreQValueMap.EMPTY);
+            radioPercentile.Enabled = DocumentWide;
             var parameters = new PeakImputationData.Parameters(document)
                 .ChangeAlignmentType(comboRetentionTimeAlignment.SelectedItem as RtValueType)
                 .ChangeOverwriteManualPeaks(cbxOverwriteManual.Checked)
@@ -151,6 +178,16 @@ namespace pwiz.Skyline.EditUI
             if (scoreCutoff.HasValue)
             {
                 parameters = parameters.ChangeCutoffScore(CutoffType, scoreCutoff);
+            }
+            if (!DocumentWide)
+            {
+                var peptideIdentityPaths =
+                    ImmutableList.ValueOf(SkylineWindow.SequenceTree.SelectedPaths.SelectMany(path =>
+                        document.EnumeratePathsAtLevel(path, SrmDocument.Level.Molecules)));
+                if (peptideIdentityPaths.Count != 0)
+                {
+                    parameters = parameters.ChangePeptideIdentityPaths(peptideIdentityPaths);
+                }
             }
             _receiver?.TryGetProduct(parameters, out _);
             ProductAvailableAction();
@@ -550,9 +587,17 @@ namespace pwiz.Skyline.EditUI
             return false;
         }
 
-        private void updateProgressTimer_Tick(object sender, EventArgs e)
+        public bool DocumentWide
         {
-            ReceiverOnProgressChange();
+            get
+            {
+                return radioScopeDocument.Checked;
+            }
+            set
+            {
+                radioScopeDocument.Checked = value;
+                radioScopeSelection.Checked = !value;
+            }
         }
     }
 }

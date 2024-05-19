@@ -36,19 +36,23 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
         public class Parameters
         {
-            public Parameters(SrmDocument document, PeakScoringModelSpec scoringModel, bool overwriteManual)
+            public Parameters(SrmDocument document, PeakScoringModelSpec scoringModel, bool overwriteManual, ImmutableList<IdentityPath> peptideIdentityPaths)
             {
                 Document = document;
                 ScoringModel = scoringModel;
                 OverwriteManual = overwriteManual;
+                PeptideIdentityPaths = peptideIdentityPaths;
             }
             public SrmDocument Document { get; }
             public PeakScoringModelSpec ScoringModel { get; }
             public bool OverwriteManual { get; }
+            public ImmutableList<IdentityPath> PeptideIdentityPaths { get; }
 
             protected bool Equals(Parameters other)
             {
-                return ReferenceEquals(Document, other.Document) && Equals(ScoringModel, other.ScoringModel) && OverwriteManual == other.OverwriteManual;
+                return ReferenceEquals(Document, other.Document) && Equals(ScoringModel, other.ScoringModel) &&
+                       OverwriteManual == other.OverwriteManual &&
+                       Equals(PeptideIdentityPaths, other.PeptideIdentityPaths);
             }
 
             public override bool Equals(object obj)
@@ -66,6 +70,8 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     var hashCode = Document == null ? 0 : RuntimeHelpers.GetHashCode(Document);
                     hashCode = (hashCode * 397) ^ (ScoringModel != null ? ScoringModel.GetHashCode() : 0);
                     hashCode = (hashCode * 397) ^ OverwriteManual.GetHashCode();
+                    hashCode = (hashCode * 397) ^
+                               (PeptideIdentityPaths != null ? PeptideIdentityPaths.GetHashCode() : 0);
                     return hashCode;
                 }
             }
@@ -102,7 +108,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
             {
                 yield return FEATURE_SET_PRODUCER.MakeWorkOrder(new FeatureSetParameters(
                     parameter.Document,
-                    parameter.ScoringModel.PeakFeatureCalculators));
+                    parameter.ScoringModel.PeakFeatureCalculators, parameter.PeptideIdentityPaths));
             }
 
             private class FeatureSetProducer : Producer<FeatureSetParameters, PeakTransitionGroupFeatureSet>
@@ -113,20 +119,24 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     IDictionary<WorkOrder, object> inputs)
                 {
                     return parameter.Document.Value.GetPeakFeatures(parameter.FeatureCalculators,
-                        productionMonitor.AsProgressMonitor(), includeStandards:true);
+                        productionMonitor.AsProgressMonitor(),
+                        includedPeptidePaths: parameter.PeptideIdentityPaths?.ToHashSet());
                 }
             }
 
-            private class FeatureSetParameters
+            private class FeatureSetParameters : Immutable
             {
-                public FeatureSetParameters(SrmDocument document, FeatureCalculators featureCalculators)
+                public FeatureSetParameters(SrmDocument document, FeatureCalculators featureCalculators, ImmutableList<IdentityPath> peptideIdentityPaths)
                 {
                     Document = document;
                     FeatureCalculators = featureCalculators;
+                    PeptideIdentityPaths = peptideIdentityPaths;
                 }
 
                 public ReferenceValue<SrmDocument> Document { get; }
                 public FeatureCalculators FeatureCalculators { get; }
+
+                public ImmutableList<IdentityPath> PeptideIdentityPaths { get; }
 
                 protected bool Equals(FeatureSetParameters other)
                 {
@@ -137,7 +147,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 {
                     if (ReferenceEquals(null, obj)) return false;
                     if (ReferenceEquals(this, obj)) return true;
-                    if (obj.GetType() != this.GetType()) return false;
+                    if (obj.GetType() != GetType()) return false;
                     return Equals((FeatureSetParameters)obj);
                 }
 
@@ -145,12 +155,14 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 {
                     unchecked
                     {
-                        return (Document.GetHashCode() * 397) ^
-                               (FeatureCalculators != null ? FeatureCalculators.GetHashCode() : 0);
+                        int result = Document.GetHashCode();
+                        result = (result * 397) ^ (FeatureCalculators != null ? FeatureCalculators.GetHashCode() : 0);
+                        result = (result * 397) ^
+                                 (PeptideIdentityPaths != null ? PeptideIdentityPaths.GetHashCode() : 0);
+                        return result;
                     }
                 }
             }
         }
-
     }
 }

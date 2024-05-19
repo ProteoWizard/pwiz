@@ -31,7 +31,11 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PeakImputationForm));
             this.panel1 = new System.Windows.Forms.Panel();
-            this.btnImputeForCurrentRow = new System.Windows.Forms.Button();
+            this.groupBoxScope = new System.Windows.Forms.GroupBox();
+            this.radioScopeDocument = new System.Windows.Forms.RadioButton();
+            this.radioScopeSelection = new System.Windows.Forms.RadioButton();
+            this.tbxScoringModel = new System.Windows.Forms.TextBox();
+            this.lblScoringModel = new System.Windows.Forms.Label();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.groupBoxResults = new System.Windows.Forms.GroupBox();
             this.tbxExemplary = new System.Windows.Forms.TextBox();
@@ -55,9 +59,8 @@
             this.comboRetentionTimeAlignment = new System.Windows.Forms.ComboBox();
             this.lblRetentionTimeAlignment = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.lblScoringModel = new System.Windows.Forms.Label();
-            this.tbxScoringModel = new System.Windows.Forms.TextBox();
             this.panel1.SuspendLayout();
+            this.groupBoxScope.SuspendLayout();
             this.groupBoxResults.SuspendLayout();
             this.groupBoxCutoff.SuspendLayout();
             this.SuspendLayout();
@@ -69,9 +72,9 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.groupBoxScope);
             this.panel1.Controls.Add(this.tbxScoringModel);
             this.panel1.Controls.Add(this.lblScoringModel);
-            this.panel1.Controls.Add(this.btnImputeForCurrentRow);
             this.panel1.Controls.Add(this.progressBar1);
             this.panel1.Controls.Add(this.groupBoxResults);
             this.panel1.Controls.Add(this.btnImputeBoundaries);
@@ -87,16 +90,60 @@
             this.panel1.Size = new System.Drawing.Size(800, 193);
             this.panel1.TabIndex = 1;
             // 
-            // btnImputeForCurrentRow
+            // groupBoxScope
             // 
-            this.btnImputeForCurrentRow.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnImputeForCurrentRow.Location = new System.Drawing.Point(589, 43);
-            this.btnImputeForCurrentRow.Name = "btnImputeForCurrentRow";
-            this.btnImputeForCurrentRow.Size = new System.Drawing.Size(199, 23);
-            this.btnImputeForCurrentRow.TabIndex = 20;
-            this.btnImputeForCurrentRow.Text = "Impute Boundaries for Current Row";
-            this.btnImputeForCurrentRow.UseVisualStyleBackColor = true;
-            this.btnImputeForCurrentRow.Click += new System.EventHandler(this.btnImputeForCurrentRow_Click);
+            this.groupBoxScope.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBoxScope.Controls.Add(this.radioScopeDocument);
+            this.groupBoxScope.Controls.Add(this.radioScopeSelection);
+            this.groupBoxScope.Location = new System.Drawing.Point(656, 43);
+            this.groupBoxScope.Name = "groupBoxScope";
+            this.groupBoxScope.Size = new System.Drawing.Size(141, 68);
+            this.groupBoxScope.TabIndex = 23;
+            this.groupBoxScope.TabStop = false;
+            this.groupBoxScope.Text = "Scope";
+            // 
+            // radioScopeDocument
+            // 
+            this.radioScopeDocument.AutoSize = true;
+            this.radioScopeDocument.Location = new System.Drawing.Point(10, 39);
+            this.radioScopeDocument.Name = "radioScopeDocument";
+            this.radioScopeDocument.Size = new System.Drawing.Size(74, 17);
+            this.radioScopeDocument.TabIndex = 1;
+            this.radioScopeDocument.Text = "Document";
+            this.radioScopeDocument.UseVisualStyleBackColor = true;
+            this.radioScopeDocument.Click += new System.EventHandler(this.SettingsControlChanged);
+            // 
+            // radioScopeSelection
+            // 
+            this.radioScopeSelection.AutoSize = true;
+            this.radioScopeSelection.Checked = true;
+            this.radioScopeSelection.Location = new System.Drawing.Point(10, 16);
+            this.radioScopeSelection.Name = "radioScopeSelection";
+            this.radioScopeSelection.Size = new System.Drawing.Size(69, 17);
+            this.radioScopeSelection.TabIndex = 0;
+            this.radioScopeSelection.TabStop = true;
+            this.radioScopeSelection.Text = "Selection";
+            this.radioScopeSelection.UseVisualStyleBackColor = true;
+            this.radioScopeSelection.Click += new System.EventHandler(this.SettingsControlChanged);
+            // 
+            // tbxScoringModel
+            // 
+            this.tbxScoringModel.Location = new System.Drawing.Point(12, 26);
+            this.tbxScoringModel.Name = "tbxScoringModel";
+            this.tbxScoringModel.ReadOnly = true;
+            this.tbxScoringModel.Size = new System.Drawing.Size(142, 20);
+            this.tbxScoringModel.TabIndex = 22;
+            this.toolTip1.SetToolTip(this.tbxScoringModel, "Scoring model used to determine best peaks.\r\nUse the \"Refine > Reintegrate\" menu " +
+        "item to choose a different model.");
+            // 
+            // lblScoringModel
+            // 
+            this.lblScoringModel.AutoSize = true;
+            this.lblScoringModel.Location = new System.Drawing.Point(12, 9);
+            this.lblScoringModel.Name = "lblScoringModel";
+            this.lblScoringModel.Size = new System.Drawing.Size(77, 13);
+            this.lblScoringModel.TabIndex = 21;
+            this.lblScoringModel.Text = "Scoring model:";
             // 
             // progressBar1
             // 
@@ -196,18 +243,19 @@
             // btnImputeBoundaries
             // 
             this.btnImputeBoundaries.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnImputeBoundaries.Location = new System.Drawing.Point(589, 12);
+            this.btnImputeBoundaries.Location = new System.Drawing.Point(656, 12);
             this.btnImputeBoundaries.Name = "btnImputeBoundaries";
-            this.btnImputeBoundaries.Size = new System.Drawing.Size(199, 23);
+            this.btnImputeBoundaries.Size = new System.Drawing.Size(132, 23);
             this.btnImputeBoundaries.TabIndex = 17;
-            this.btnImputeBoundaries.Text = "Impute Boundaries for All Rows";
+            this.btnImputeBoundaries.Text = "Impute Boundaries";
+            this.toolTip1.SetToolTip(this.btnImputeBoundaries, "Choose new peak boundaries for the rejected peaks in the displayed rows");
             this.btnImputeBoundaries.UseVisualStyleBackColor = true;
             this.btnImputeBoundaries.Click += new System.EventHandler(this.btnImputeBoundaries_Click);
             // 
             // cbxOverwriteManual
             // 
             this.cbxOverwriteManual.AutoSize = true;
-            this.cbxOverwriteManual.Location = new System.Drawing.Point(181, 121);
+            this.cbxOverwriteManual.Location = new System.Drawing.Point(181, 106);
             this.cbxOverwriteManual.Name = "cbxOverwriteManual";
             this.cbxOverwriteManual.Size = new System.Drawing.Size(140, 17);
             this.cbxOverwriteManual.TabIndex = 16;
@@ -328,25 +376,6 @@
             this.lblRetentionTimeAlignment.TabIndex = 0;
             this.lblRetentionTimeAlignment.Text = "Retention time alignment:";
             // 
-            // lblScoringModel
-            // 
-            this.lblScoringModel.AutoSize = true;
-            this.lblScoringModel.Location = new System.Drawing.Point(12, 9);
-            this.lblScoringModel.Name = "lblScoringModel";
-            this.lblScoringModel.Size = new System.Drawing.Size(77, 13);
-            this.lblScoringModel.TabIndex = 21;
-            this.lblScoringModel.Text = "Scoring model:";
-            // 
-            // tbxScoringModel
-            // 
-            this.tbxScoringModel.Location = new System.Drawing.Point(12, 26);
-            this.tbxScoringModel.Name = "tbxScoringModel";
-            this.tbxScoringModel.ReadOnly = true;
-            this.tbxScoringModel.Size = new System.Drawing.Size(142, 20);
-            this.tbxScoringModel.TabIndex = 22;
-            this.toolTip1.SetToolTip(this.tbxScoringModel, "Scoring model used to determine best peaks.\r\nUse the \"Refine > Reintegrate\" menu " +
-        "item to choose a different model.");
-            // 
             // PeakImputationForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -360,6 +389,8 @@
             this.Controls.SetChildIndex(this.databoundGridControl, 0);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
+            this.groupBoxScope.ResumeLayout(false);
+            this.groupBoxScope.PerformLayout();
             this.groupBoxResults.ResumeLayout(false);
             this.groupBoxResults.PerformLayout();
             this.groupBoxCutoff.ResumeLayout(false);
@@ -392,10 +423,12 @@
         private System.Windows.Forms.Label lblAccepted;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.ProgressBar progressBar1;
-        private System.Windows.Forms.Button btnImputeForCurrentRow;
         private System.Windows.Forms.Label lblExemplary;
         private System.Windows.Forms.TextBox tbxExemplary;
         private System.Windows.Forms.TextBox tbxScoringModel;
         private System.Windows.Forms.Label lblScoringModel;
+        private System.Windows.Forms.GroupBox groupBoxScope;
+        private System.Windows.Forms.RadioButton radioScopeDocument;
+        private System.Windows.Forms.RadioButton radioScopeSelection;
     }
 }
