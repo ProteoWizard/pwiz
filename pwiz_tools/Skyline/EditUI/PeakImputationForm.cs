@@ -35,6 +35,7 @@ namespace pwiz.Skyline.EditUI
         private Receiver<PeakImputationData.Parameters, PeakImputationData> _receiver;
         private SkylineDataSchema _dataSchema;
         private PeakImputationData _data;
+        private ScoreConversionData _scoreConversionData = ScoreConversionData.EMPTY;
         private SequenceTree _sequenceTree;
 
         public PeakImputationForm(SkylineWindow skylineWindow)
@@ -45,7 +46,10 @@ namespace pwiz.Skyline.EditUI
             _rowsBindingList = new BindingList<Row>(_rows);
             _dataSchema = new SkylineWindowDataSchema(skylineWindow);
             var rowSource = BindingListRowSource.Create(_rowsBindingList);
-            var viewContext = new SkylineViewContext(ColumnDescriptor.RootColumn(_dataSchema, typeof(Row)), rowSource);
+            var rowSourceInfo = new RowSourceInfo(
+                typeof(Row),
+                rowSource, GetDefaultViewSpecs().Select(viewSpec=>new ViewInfo(_dataSchema, typeof(Row), viewSpec)));
+            var viewContext = new SkylineViewContext(_dataSchema, new[] { rowSourceInfo });
             BindingListSource.SetViewContext(viewContext);
             _receiver = PeakImputationData.PRODUCER.RegisterCustomer(this, ProductAvailableAction);
             _receiver.ProgressChange += ReceiverOnProgressChange;
@@ -60,6 +64,7 @@ namespace pwiz.Skyline.EditUI
         {
             if (_receiver.TryGetCurrentProduct(out _data))
             {
+                _scoreConversionData = _data.ScoreConversionData;
                 _rows.Clear();
                 _rows.AddRange(_data.MoleculePeaks.Select(peak=>new Row(_dataSchema, peak)));
                 _rowsBindingList.ResetBindings();
@@ -244,6 +249,8 @@ namespace pwiz.Skyline.EditUI
             public int CountRejected { get; }
         }
 
+        [InvariantDisplayName("Peak")]
+
         public class Peak : IFormattable, ILinkValue
         {
             private Model.Databinding.Entities.Peptide _peptide;
@@ -289,6 +296,11 @@ namespace pwiz.Skyline.EditUI
                 {
                     return _ratedPeak.PeakVerdict;
                 }
+            }
+
+            public string Opinion
+            {
+                get { return _ratedPeak.Opinion; }
             }
 
             [Format(Formats.PEAK_SCORE)]
@@ -366,7 +378,7 @@ namespace pwiz.Skyline.EditUI
         {
             OnDocumentChanged();
         }
-        private CutoffScoreType _cutoffType;
+        private CutoffScoreType _oldCutoffType = CutoffScoreType.RAW;
 
         public CutoffScoreType CutoffType
         {
@@ -415,8 +427,13 @@ namespace pwiz.Skyline.EditUI
 
         private void CutoffTypeChanged(object sender, EventArgs e)
         {
+            UpdateCutoffValue();
+        }
+
+        private void UpdateCutoffValue()
+        {
             var newCutoffType = CutoffType;
-            if (newCutoffType == _cutoffType)
+            if (newCutoffType == _oldCutoffType)
             {
                 return;
             }
@@ -424,25 +441,24 @@ namespace pwiz.Skyline.EditUI
             {
                 return;
             }
-
             try
             {
                 _inChange = true;
                 var cutoffValue = GetDoubleValue(tbxCoreScoreCutoff);
                 if (cutoffValue.HasValue)
                 {
-                    var score = _cutoffType.ToRawScore(_data, cutoffValue.Value);
+                    var score = _oldCutoffType.ToRawScore(_scoreConversionData, cutoffValue.Value);
                     if (score.HasValue && !double.IsNaN(score.Value))
                     {
-                        var newCutoff = newCutoffType.FromRawScore(_data, score.Value);
+                        var newCutoff = newCutoffType.FromRawScore(_scoreConversionData, score.Value);
                         if (newCutoff.HasValue && !double.IsNaN(newCutoff.Value))
                         {
                             tbxCoreScoreCutoff.Text = newCutoff.ToString();
                         }
                     }
                 }
-                _cutoffType = newCutoffType;
-                OnDocumentChanged();
+                _oldCutoffType = newCutoffType;
+                UpdateUi();
             }
             finally
             {
@@ -598,6 +614,27 @@ namespace pwiz.Skyline.EditUI
                 radioScopeDocument.Checked = value;
                 radioScopeSelection.Checked = !value;
             }
+        }
+
+        private IEnumerable<ViewSpec> GetDefaultViewSpecs()
+        {
+            yield return new ViewSpec().SetRowType(typeof(Row)).SetColumns(new []
+            {
+                nameof(Row.Peptide),
+                nameof(Row.BestPeak),
+                nameof(Row.CountExemplary),
+                nameof(Row.CountAccepted),
+                nameof(Row.CountRejected),
+            }.Select(name=>new ColumnSpec(PropertyPath.Root.Property(name)))).SetName("Default");
+            var ppPeaks = PropertyPath.Root.Property(nameof(Row.Peaks)).DictionaryValues();
+            yield return new ViewSpec().SetRowType(typeof(Row)).SetColumns(new[]
+                {
+                    PropertyPath.Root.Property(nameof(Row.Peptide)),
+                    ppPeaks,
+                    ppPeaks.Property(nameof(Peak.Verdict)),
+                    ppPeaks.Property(nameof(Peak.Opinion))
+                }.Select(pp => new ColumnSpec(pp)))
+                .SetSublistId(ppPeaks).SetName("Details");
         }
     }
 }

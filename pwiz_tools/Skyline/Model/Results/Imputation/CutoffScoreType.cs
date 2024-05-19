@@ -11,18 +11,18 @@ namespace pwiz.Skyline.Model.Results.Imputation
         public static readonly CutoffScoreType QVALUE = new QValue();
         public static readonly CutoffScoreType PERCENTILE = new Percentile();
 
-        public abstract double? ToRawScore([CanBeNull] PeakImputationData peakImputationData, double value);
-        public abstract double? FromRawScore([CanBeNull] PeakImputationData peakImputationData, double value);
+        public abstract double? ToRawScore(ScoreConversionData peakImputationData, double value);
+        public abstract double? FromRawScore(ScoreConversionData peakImputationData, double value);
         public abstract bool IsEnabled(PeakScoringModelSpec scoringModelSpec);
 
         private class RawScore : CutoffScoreType
         {
-            public override double? ToRawScore(PeakImputationData peakImputationData, double value)
+            public override double? ToRawScore(ScoreConversionData peakImputationData, double value)
             {
                 return value;
             }
 
-            public override double? FromRawScore(PeakImputationData peakImputationData, double value)
+            public override double? FromRawScore(ScoreConversionData peakImputationData, double value)
             {
                 return value;
             }
@@ -40,12 +40,12 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
         private class Percentile : CutoffScoreType
         {
-            public override double? ToRawScore(PeakImputationData peakImputationData, double value)
+            public override double? ToRawScore(ScoreConversionData peakImputationData, double value)
             {
                 return peakImputationData?.GetScoreAtPercentile(value);
             }
 
-            public override double? FromRawScore(PeakImputationData peakImputationData, double value)
+            public override double? FromRawScore(ScoreConversionData peakImputationData, double value)
             {
                 return peakImputationData?.GetPercentileOfScore(value);
             }
@@ -63,12 +63,12 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
         private class PValue : CutoffScoreType
         {
-            public override double? ToRawScore(PeakImputationData peakImputationData, double value)
+            public override double? ToRawScore(ScoreConversionData peakImputationData, double value)
             {
                 return Normal.InvCDF(0, 1, 1 - value);
             }
 
-            public override double? FromRawScore(PeakImputationData peakImputationData, double value)
+            public override double? FromRawScore(ScoreConversionData peakImputationData, double value)
             {
                 return 1 - Normal.CDF(0, 1, value);
             }
@@ -86,9 +86,9 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
         private class QValue : CutoffScoreType
         {
-            public override double? FromRawScore(PeakImputationData peakImputationData, double value)
+            public override double? FromRawScore(ScoreConversionData peakImputationData, double value)
             {
-                return peakImputationData?.ScoringResults?.ScoreQValueMap?.GetQValue(value);
+                return peakImputationData.ScoreQValueMap?.GetQValue(value);
             }
 
             public override bool IsEnabled(PeakScoringModelSpec scoringModelSpec)
@@ -96,9 +96,9 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 return !Equals(scoringModelSpec, LegacyScoringModel.DEFAULT_MODEL);
             }
 
-            public override double? ToRawScore(PeakImputationData peakImputationData, double value)
+            public override double? ToRawScore(ScoreConversionData peakImputationData, double value)
             {
-                return peakImputationData?.ScoringResults?.ScoreQValueMap?.GetZScore(value);
+                return peakImputationData.ScoreQValueMap?.GetZScore(value);
             }
 
             public override string ToString()

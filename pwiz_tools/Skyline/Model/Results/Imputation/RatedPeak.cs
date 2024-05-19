@@ -53,9 +53,15 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
         public Verdict PeakVerdict { get; private set; }
 
-        public RatedPeak ChangeVerdict(Verdict verdict)
+        public string Opinion { get; private set; }
+
+        public RatedPeak ChangeVerdict(Verdict verdict, string opinion)
         {
-            return ChangeProp(ImClone(this), im => im.PeakVerdict = verdict);
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.PeakVerdict = verdict;
+                im.Opinion = opinion;
+            });
         }
 
         public double? RtShift { get; private set; }
@@ -164,6 +170,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
         public enum Verdict
         {
+            Unknown,
             Rejected,
             Accepted,
             Exemplary
