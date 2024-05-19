@@ -30,6 +30,7 @@
         {
             this.components = new System.ComponentModel.Container();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.btnImputeForCurrentRow = new System.Windows.Forms.Button();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.groupBoxResults = new System.Windows.Forms.GroupBox();
             this.tbxAvgRtShift = new System.Windows.Forms.TextBox();
@@ -51,6 +52,7 @@
             this.comboRetentionTimeAlignment = new System.Windows.Forms.ComboBox();
             this.lblRetentionTimeAlignment = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.updateProgressTimer = new System.Windows.Forms.Timer(this.components);
             this.panel1.SuspendLayout();
             this.groupBoxResults.SuspendLayout();
             this.groupBoxCutoff.SuspendLayout();
@@ -63,6 +65,7 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.btnImputeForCurrentRow);
             this.panel1.Controls.Add(this.progressBar1);
             this.panel1.Controls.Add(this.groupBoxResults);
             this.panel1.Controls.Add(this.btnImputeBoundaries);
@@ -78,9 +81,21 @@
             this.panel1.Size = new System.Drawing.Size(800, 163);
             this.panel1.TabIndex = 1;
             // 
+            // btnImputeForCurrentRow
+            // 
+            this.btnImputeForCurrentRow.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnImputeForCurrentRow.Location = new System.Drawing.Point(589, 43);
+            this.btnImputeForCurrentRow.Name = "btnImputeForCurrentRow";
+            this.btnImputeForCurrentRow.Size = new System.Drawing.Size(199, 23);
+            this.btnImputeForCurrentRow.TabIndex = 20;
+            this.btnImputeForCurrentRow.Text = "Impute Boundaries for Current Row";
+            this.btnImputeForCurrentRow.UseVisualStyleBackColor = true;
+            this.btnImputeForCurrentRow.Click += new System.EventHandler(this.btnImputeForCurrentRow_Click);
+            // 
             // progressBar1
             // 
             this.progressBar1.Location = new System.Drawing.Point(3, 140);
+            this.progressBar1.Maximum = 10000;
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(311, 23);
             this.progressBar1.TabIndex = 19;
@@ -154,11 +169,11 @@
             // btnImputeBoundaries
             // 
             this.btnImputeBoundaries.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnImputeBoundaries.Location = new System.Drawing.Point(648, 12);
+            this.btnImputeBoundaries.Location = new System.Drawing.Point(589, 12);
             this.btnImputeBoundaries.Name = "btnImputeBoundaries";
-            this.btnImputeBoundaries.Size = new System.Drawing.Size(140, 23);
+            this.btnImputeBoundaries.Size = new System.Drawing.Size(199, 23);
             this.btnImputeBoundaries.TabIndex = 17;
-            this.btnImputeBoundaries.Text = "Impute Boundaries";
+            this.btnImputeBoundaries.Text = "Impute Boundaries for All Rows";
             this.btnImputeBoundaries.UseVisualStyleBackColor = true;
             this.btnImputeBoundaries.Click += new System.EventHandler(this.btnImputeBoundaries_Click);
             // 
@@ -281,6 +296,11 @@
             this.lblRetentionTimeAlignment.TabIndex = 0;
             this.lblRetentionTimeAlignment.Text = "Retention time alignment:";
             // 
+            // updateProgressTimer
+            // 
+            this.updateProgressTimer.Interval = 2000;
+            this.updateProgressTimer.Tick += new System.EventHandler(this.updateProgressTimer_Tick);
+            // 
             // PeakImputationForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -326,5 +346,7 @@
         private System.Windows.Forms.Label lblAccepted;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.ProgressBar progressBar1;
+        private System.Windows.Forms.Button btnImputeForCurrentRow;
+        private System.Windows.Forms.Timer updateProgressTimer;
     }
 }

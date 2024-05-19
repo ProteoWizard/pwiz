@@ -48,7 +48,26 @@ namespace pwiz.Common.SystemUtil.Caching
             lock (this)
             {
                 _entries.TryGetValue(key, out var entry);
+                if (entry?.Result != null)
+                {
+                    return 100;
+                }
                 return entry?.ProgressValue??0;
+            }
+        }
+
+        public double GetDeepProgressValue(WorkOrder key)
+        {
+            lock (this)
+            {
+                var selfProgress = (double) GetProgressValue(key);
+                var inputProgressValues = key.GetInputs().Select(GetDeepProgressValue).ToList();
+                if (inputProgressValues.Count == 0)
+                {
+                    return selfProgress;
+                }
+
+                return selfProgress / 2 + inputProgressValues.Average() / 2;
             }
         }
 

@@ -9,20 +9,22 @@ using MathNet.Numerics.Statistics;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.SystemUtil.Caching;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Hibernate;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Imputation;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using Peptide = pwiz.Skyline.Model.Peptide;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -73,11 +75,14 @@ namespace pwiz.Skyline.EditUI
                 }
 
                 progressBar1.Visible = false;
+                updateProgressTimer.Stop();
+                SkylineWindow.ConsensusAlignment = _data.ConsensusAlignment;
             }
             else
             {
                 progressBar1.Visible = true;
-                progressBar1.Value = _receiver.GetProgressValue();
+                progressBar1.Value = (int) (_receiver.GetDeepProgressValue() * 100);
+                updateProgressTimer.Start();
             }
 
             var error = _receiver.GetError();
@@ -141,10 +146,8 @@ namespace pwiz.Skyline.EditUI
                 .ChangeScoringModel(scoringModel)
                 .ChangeAllowableRtShift(GetDoubleValue(tbxRtDeviationCutoff));
 
-            if (true == _receiver?.TryGetProduct(parameters, out _))
-            {
-                ProductAvailableAction();
-            }
+            _receiver?.TryGetProduct(parameters, out _);
+            ProductAvailableAction();
         }
 
         private PeakScoringModelSpec GetScoringModelToUse(SrmDocument document)
@@ -171,7 +174,7 @@ namespace pwiz.Skyline.EditUI
                     {
                         var resultKey = new ResultKey(replicate,
                             replicate.ChromatogramSet.IndexOfId(scoredPeak.ReplicateFileInfo.ReplicateFileId.FileId));
-                        var peak = new Peak(dataSchema, scoredPeak);
+                        var peak = new Peak(Peptide, scoredPeak);
                         Peaks[resultKey] = peak;
                     }
                 }
@@ -188,11 +191,14 @@ namespace pwiz.Skyline.EditUI
             public int CountRejected { get; }
         }
 
-        public class Peak : IFormattable
+        public class Peak : IFormattable, ILinkValue
         {
+            private Model.Databinding.Entities.Peptide _peptide;
             private RatedPeak _ratedPeak;
-            public Peak(SkylineDataSchema dataSchema, RatedPeak peak)
+            public Peak(Model.Databinding.Entities.Peptide peptide, RatedPeak peak)
             {
+                _peptide = peptide;
+                var dataSchema = peptide.DataSchema;
                 if (dataSchema.ResultFileList.TryGetValue(new ResultFileKey(peak.ReplicateFileInfo.ReplicateIndex,
                         peak.ReplicateFileInfo.ReplicateFileId.FileId, 0), out var resultFile))
                 {
@@ -270,7 +276,7 @@ namespace pwiz.Skyline.EditUI
 
             public override string ToString()
             {
-                return TextUtil.ColonSeparate(ResultFile.Replicate.ToString(), _ratedPeak.AlignedPeakBounds?.ToString());
+                return TextUtil.ColonSeparate(ResultFile?.Replicate.ToString(), _ratedPeak.AlignedPeakBounds?.ToString());
             }
 
             public string ToString(string format, IFormatProvider formatProvider)
@@ -282,6 +288,25 @@ namespace pwiz.Skyline.EditUI
             public RatedPeak GetRatedPeak()
             {
                 return _ratedPeak;
+            }
+
+            public EventHandler ClickEventHandler
+            {
+                get
+                {
+                    return LinkValueOnClick;
+                }
+            }
+
+            public object Value
+            {
+                get { return this; }
+            }
+
+            public void LinkValueOnClick(object sender, EventArgs args)
+            {
+                _peptide.LinkValueOnClick(sender, args);
+                (ResultFile.Replicate as ILinkValue)?.ClickEventHandler(sender, args);
             }
         }
 
@@ -392,110 +417,127 @@ namespace pwiz.Skyline.EditUI
             return value;
         }
 
-        private SrmDocument ImputeBoundaries(SrmDocument document, Row row, ref int changeCount)
-        {
-            var bestPeakBounds = row.BestPeak?.AlignedBounds;
-            if (bestPeakBounds == null)
-            {
-                return document;
-            }
-
-            foreach (var outlierPeak in row.Peaks.Values.Where(peak => !peak.Accepted))
-            {
-                var replicateFileInfo = outlierPeak.GetRatedPeak().ReplicateFileInfo;
-                var alignmentFunction = outlierPeak.GetRatedPeak().AlignmentFunction;
-                var newStartTime = alignmentFunction.GetX(bestPeakBounds.StartTime);
-                var newEndTime = alignmentFunction.GetX(bestPeakBounds.EndTime);
-                foreach (var transitionGroupDocNode in row.Peptide.DocNode.TransitionGroups)
-                {
-                    var identityPath =
-                        new IdentityPath(row.Peptide.IdentityPath, transitionGroupDocNode.TransitionGroup);
-                    var chromatogramSet =
-                        document.MeasuredResults.Chromatograms[replicateFileInfo.ReplicateIndex];
-                    document = document.ChangePeak(identityPath, chromatogramSet.Name,
-                        replicateFileInfo.MsDataFileUri, null, newStartTime, newEndTime, UserSet.MATCHED, null,
-                        false);
-                    changeCount++;
-                }
-            }
-
-            return document;
-        }
-
         private void btnImputeBoundaries_Click(object sender, EventArgs e)
         {
-            ImputeBoundaries(true);
+            ImputeBoundariesForAllRows();
         }
 
-        public void ImputeBoundaries(bool allRows)
+        public void ImputeBoundariesForAllRows()
+        {
+            var rows = BindingListSource.OfType<RowItem>().Select(rowItem => rowItem.Value).OfType<Row>().ToList();
+            if (rows.Count == 0)
+            {
+                MessageDlg.Show(this, "There are no rows");
+                return;
+            }
+            ImputeBoundaries(rows);
+        }
+
+        public int ImputeBoundaries(IList<Row> rows)
         {
             lock (SkylineWindow.GetDocumentChangeLock())
             {
                 var originalDocument = SkylineWindow.DocumentUI;
                 var newDoc = originalDocument.BeginDeferSettingsChanges();
                 var scoringModel = GetScoringModelToUse(originalDocument);
-                var rows = BindingListSource.OfType<RowItem>().Select(rowItem => rowItem.Value).OfType<Row>().ToList();
-                using (var longWaitDlg = new LongWaitDlg())
+                using var longWaitDlg = new LongWaitDlg();
+                int changeCount = 0;
+                longWaitDlg.PerformWork(this, 1000, () =>
                 {
-                    int changeCount = 0;
-                    longWaitDlg.PerformWork(this, 1000, () =>
+                    for (int iRow = 0; iRow < rows.Count; iRow++)
                     {
-                        for (int iRow = 0; iRow < rows.Count; iRow++)
+                        if (longWaitDlg.IsCanceled)
                         {
-                            if (longWaitDlg.IsCanceled)
-                            {
-                                return;
-                            }
+                            return;
+                        }
 
-                            longWaitDlg.ProgressValue = 100 * iRow / rows.Count;
-                            var row = rows[iRow];
-                            var bestPeak = row.BestPeak?.GetRatedPeak();
-                            if (bestPeak == null)
+                        longWaitDlg.ProgressValue = 100 * iRow / rows.Count;
+                        var row = rows[iRow];
+                        var bestPeak = row.BestPeak?.GetRatedPeak();
+                        if (bestPeak == null)
+                        {
+                            continue;
+                        }
+
+                        var rejectedPeaks = row.Peaks.Values.Where(peak => !peak.Accepted)
+                            .Select(peak => peak.GetRatedPeak()).ToList();
+                        foreach (var rejectedPeak in rejectedPeaks)
+                        {
+                            var peakImputer = new PeakImputer(newDoc, row.Peptide.IdentityPath, scoringModel,
+                                rejectedPeak.ReplicateFileInfo);
+                            var bestPeakBounds =
+                                bestPeak.AlignedPeakBounds.ReverseAlign(rejectedPeak.AlignmentFunction);
+                            if (bestPeakBounds == null)
                             {
                                 continue;
                             }
 
-                            var rejectedPeaks = row.Peaks.Values.Where(peak => !peak.Accepted)
-                                .Select(peak => peak.GetRatedPeak()).ToList();
-                            foreach (var rejectedPeak in rejectedPeaks)
-                            {
-                                var peakImputer = new PeakImputer(newDoc, row.Peptide.IdentityPath, scoringModel,
-                                    rejectedPeak.ReplicateFileInfo);
-                                var bestPeakBounds =
-                                    bestPeak.AlignedPeakBounds.ReverseAlign(rejectedPeak.AlignmentFunction);
-                                if (bestPeakBounds == null)
-                                {
-                                    continue;
-                                }
-
-                                newDoc = peakImputer.ImputeBoundaries(newDoc, bestPeakBounds);
-                                changeCount++;
-                            }
+                            newDoc = peakImputer.ImputeBoundaries(newDoc, bestPeakBounds);
+                            changeCount++;
                         }
-                    });
-                    if (longWaitDlg.IsCanceled)
+                    }
+                });
+                if (longWaitDlg.IsCanceled)
+                {
+                    return 0;
+                }
+
+                if (changeCount == 0)
+                {
+                    return 0;
+                }
+
+                newDoc = newDoc.EndDeferSettingsChanges(originalDocument, null);
+                SkylineWindow.ModifyDocument("Impute peak boundaries", doc =>
+                {
+                    if (!ReferenceEquals(doc, originalDocument))
                     {
-                        return;
+                        throw new InvalidOperationException(Resources.SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
                     }
 
-                    if (changeCount == 0)
-                    {
-                        return;
-                    }
+                    return newDoc;
+                }, docPair => AuditLogEntry.CreateSimpleEntry(MessageType.applied_peak_all, docPair.NewDocumentType, MessageArgs.Create(changeCount)));
+                return changeCount;
+            }
+        }
 
-                    newDoc = newDoc.EndDeferSettingsChanges(originalDocument, null);
-                    SkylineWindow.ModifyDocument("Impute peak boundaries", doc =>
-                    {
-                        if (!ReferenceEquals(doc, originalDocument))
-                        {
-                            throw new InvalidOperationException(Resources.SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
-                        }
+        private void btnImputeForCurrentRow_Click(object sender, EventArgs e)
+        {
+            var row = BindingListSource.OfType<RowItem>().ElementAtOrDefault(BindingListSource.Position)?.Value as Row;
+            if (row == null)
+            {
+                MessageDlg.Show(this, "There is no current row");
+                return;
+            }
 
-                        return newDoc;
-                    }, docPair => AuditLogEntry.CreateSimpleEntry(MessageType.applied_peak_all, docPair.NewDocumentType, MessageArgs.Create(changeCount)));
+            int changeCount = ImputeBoundaries(new[] { row });
+            if (changeCount > 0 && !IsPathSelected(row.Peptide.IdentityPath))
+            {
+                SkylineWindow.SelectPath(row.Peptide.IdentityPath);
+            }
+        }
+
+        private bool IsPathSelected(IdentityPath identityPath)
+        {
+            foreach (var node in SkylineWindow.SelectedNodes.Prepend(SkylineWindow.SelectedNode).OfType<SrmTreeNode>())
+            {
+                if (Equals(node.Path, identityPath))
+                {
+                    return true;
+                }
+
+                if (node.Path.Depth > identityPath.Depth && node.Path.GetPathTo(identityPath.Depth).Equals(identityPath))
+                {
+                    return true;
                 }
             }
 
+            return false;
+        }
+
+        private void updateProgressTimer_Tick(object sender, EventArgs e)
+        {
+            ReceiverOnProgressChange();
         }
     }
 }

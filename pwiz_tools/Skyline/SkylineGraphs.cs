@@ -48,6 +48,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Results.Imputation;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -515,6 +516,7 @@ namespace pwiz.Skyline
             DestroyAuditLogForm();
             DestroyCalibrationForm();
             DestroyCandidatePeakForm();
+            DestroyPeakImputationForm();
 
             DestroyImmediateWindow();
             HideFindResults(true);
@@ -806,6 +808,20 @@ namespace pwiz.Skyline
             }
         }
 
+        private ConsensusAlignment _consensusAlignment;
+        public ConsensusAlignment ConsensusAlignment
+        {
+            get
+            {
+                return _consensusAlignment;
+            }
+            set
+            {
+                _consensusAlignment = value;
+                UpdateGraphPanes();
+            }
+        }
+
         public bool AlignToRtPrediction
         {
             get { return null == AlignToFile && _alignToPrediction; }
@@ -826,6 +842,10 @@ namespace pwiz.Skyline
 
         public GraphValues.IRetentionTimeTransformOp GetRetentionTimeTransformOperation()
         {
+            if (null != ConsensusAlignment)
+            {
+                return ConsensusAlignment.AsRetentionTimeTransformOp();
+            }
             if (null != AlignToFile)
             {
                 return GraphValues.AlignToFileOp.GetAlignmentToFile(AlignToFile, Document.Settings);

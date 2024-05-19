@@ -25,7 +25,6 @@ using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;
-using static alglib;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -126,62 +125,6 @@ namespace pwiz.Skyline.Model.Results
 
                 var candidatePeakData = new CandidatePeakGroupData(null, apexTime, minStartTime, maxEndTime, true, MakePeakScore(scores), false);
                 list.Add(Tuple.Create(groupNodes, candidatePeakData));
-            }
-
-            return list;
-        }
-
-        public List<Tuple<ImmutableList<TransitionGroupDocNode>, ImmutableList<CandidatePeakGroupData>>> DetectPeaks()
-        {
-            var list = new List<Tuple<ImmutableList<TransitionGroupDocNode>, ImmutableList<CandidatePeakGroupData>>>();
-            var peptideChromDataSets = MakePeptideChromDataSets();
-            peptideChromDataSets.PickChromatogramPeaks(null);
-            foreach (var comparableSet in peptideChromDataSets.ComparableDataSets.Select(ImmutableList.ValueOf))
-            {
-                var groupNodes = ImmutableList.ValueOf(comparableSet.Select(dataSet => dataSet.NodeGroup));
-                if (groupNodes.Contains(null))
-                {
-                    continue;
-                }
-
-                var chromatogramGroupInfos = peptideChromDataSets.MakeChromatogramGroupInfos(comparableSet).ToList();
-                if (chromatogramGroupInfos.Count == 0)
-                {
-                    continue;
-                }
-                var scoresList = CalculateScoresForComparableGroup(peptideChromDataSets, comparableSet).ToList();
-                var candidatePeakGroupDatas = new List<CandidatePeakGroupData>();
-                for (int peakIndex = 0; peakIndex < chromatogramGroupInfos[0].NumPeaks; peakIndex++)
-                {
-                    double minStartTime = double.MaxValue;
-                    double maxEndTime = double.MinValue;
-                    double apexTime = double.MinValue;
-                    double apexHeight = 0;
-                    foreach (var chromatogramGroupInfo in chromatogramGroupInfos)
-                    {
-                        for (int iTransition = 0; iTransition < chromatogramGroupInfo.NumTransitions; iTransition++)
-                        {
-                            var chromPeak = chromatogramGroupInfo.GetTransitionPeak(iTransition, peakIndex);
-                            if (chromPeak.IsEmpty)
-                            {
-                                continue;
-                            }
-
-                            minStartTime = Math.Min(chromPeak.StartTime, minStartTime);
-                            maxEndTime = Math.Max(chromPeak.EndTime, maxEndTime);
-                            if (chromPeak.Height > apexHeight)
-                            {
-                                apexTime = chromPeak.RetentionTime;
-                                apexHeight = chromPeak.Height;
-                            }
-                        }
-                    }
-
-                    candidatePeakGroupDatas.Add(CandidatePeakGroupData.FoundPeak(peakIndex, apexTime, minStartTime, maxEndTime, false,
-                        MakePeakScore(scoresList[peakIndex]), false));
-                }
-                list.Add(Tuple.Create(groupNodes, ImmutableList.ValueOf(candidatePeakGroupDatas)));
-
             }
 
             return list;

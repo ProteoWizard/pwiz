@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
@@ -84,11 +85,13 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 if (featureSet != null)
                 {
                     resultsHandler = new MProphetResultsHandler(parameter.Document, parameter.ScoringModel, featureSet);
-                    resultsHandler.ScoreFeatures();
+                    resultsHandler.ScoreFeatures(new ProductionMonitor(productionMonitor.CancellationToken,
+                        v => productionMonitor.SetProgress(v / 2)).AsProgressMonitor());
                     if (!resultsHandler.IsMissingScores())
                     {
                         reintegratedDocument =
-                            resultsHandler.ChangePeaks(new SilentProgressMonitor(productionMonitor.CancellationToken));
+                            resultsHandler.ChangePeaks(new ProductionMonitor(productionMonitor.CancellationToken,
+                                v => productionMonitor.SetProgress(50 + v / 2)).AsProgressMonitor());
                     }
                 }
 
@@ -110,7 +113,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     IDictionary<WorkOrder, object> inputs)
                 {
                     return parameter.Document.Value.GetPeakFeatures(parameter.FeatureCalculators,
-                        new SilentProgressMonitor(productionMonitor.CancellationToken));
+                        productionMonitor.AsProgressMonitor(), includeStandards:true);
                 }
             }
 

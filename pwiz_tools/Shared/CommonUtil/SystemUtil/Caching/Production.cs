@@ -112,5 +112,34 @@ namespace pwiz.Common.SystemUtil.Caching
         {
             _progressChange?.Invoke(progress);
         }
+
+        public IProgressMonitor AsProgressMonitor()
+        {
+            return new ProgressMonitorImpl(this);
+        }
+
+        private class ProgressMonitorImpl : IProgressMonitor
+        {
+            private ProductionMonitor _productionMonitor;
+            public ProgressMonitorImpl(ProductionMonitor productionMonitor)
+            {
+                _productionMonitor = productionMonitor;
+            }
+
+            public bool IsCanceled
+            {
+                get { return _productionMonitor.CancellationToken.IsCancellationRequested; }
+            }
+            public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+            {
+                _productionMonitor.SetProgress(status.PercentComplete);
+                return IsCanceled ? UpdateProgressResponse.cancel : UpdateProgressResponse.normal;
+            }
+
+            public bool HasUI
+            {
+                get { return false; }
+            }
+        }
     }
 }
