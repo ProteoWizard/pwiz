@@ -61,10 +61,12 @@ namespace pwiz.Skyline.EditUI
                 _rows.Clear();
                 _rows.AddRange(_data.MoleculePeaks.Select(peak=>new Row(_dataSchema, peak)));
                 _rowsBindingList.ResetBindings();
-                tbxAccepted.Text = _rows.SelectMany(row => row.Peaks.Values).Count(peak => peak.Accepted).ToString();
-                tbxRejected.Text = _rows.SelectMany(row => row.Peaks.Values).Count(peak => !peak.Accepted).ToString();
+                tbxExemplary.Text = _rows.SelectMany(row => row.Peaks.Values)
+                    .Count(peak => peak.Verdict == RatedPeak.Verdict.Exemplary).ToString();
+                tbxAccepted.Text = _rows.SelectMany(row => row.Peaks.Values).Count(peak => peak.Verdict == RatedPeak.Verdict.Accepted).ToString();
+                tbxRejected.Text = _rows.SelectMany(row => row.Peaks.Values).Count(peak => peak.Verdict == RatedPeak.Verdict.Rejected).ToString();
                 var rtShifts = _rows.SelectMany(row => row.Peaks.Values)
-                    .Where(peak => !peak.Best && peak.ShiftFromBestPeak.HasValue)
+                    .Where(peak => peak.ShiftFromBestPeak.HasValue)
                     .Select(peak => Math.Abs(peak.ShiftFromBestPeak.Value)).ToList();
                 if (rtShifts.Count == 0)
                 {
@@ -135,6 +137,7 @@ namespace pwiz.Skyline.EditUI
             var document = SkylineWindow.DocumentUI;
             ComboHelper.ReplaceItems(comboRetentionTimeAlignment, RtValueType.ForDocument(document).Prepend(null), 1);
             var scoringModel = GetScoringModelToUse(document);
+            tbxScoringModel.Text = scoringModel.Name;
 
             radioPValue.Enabled = !Equals(scoringModel, LegacyScoringModel.DEFAULT_MODEL);
             var scoreQValueMap = document.Settings.PeptideSettings.Integration.ScoreQValueMap;
@@ -144,7 +147,11 @@ namespace pwiz.Skyline.EditUI
                 .ChangeOverwriteManualPeaks(cbxOverwriteManual.Checked)
                 .ChangeScoringModel(scoringModel)
                 .ChangeAllowableRtShift(GetDoubleValue(tbxRtDeviationCutoff));
-
+            var scoreCutoff = GetDoubleValue(tbxCoreScoreCutoff);
+            if (scoreCutoff.HasValue)
+            {
+                parameters = parameters.ChangeCutoffScore(CutoffType, scoreCutoff);
+            }
             _receiver?.TryGetProduct(parameters, out _);
             ProductAvailableAction();
         }
@@ -175,17 +182,27 @@ namespace pwiz.Skyline.EditUI
                             replicate.ChromatogramSet.IndexOfId(scoredPeak.ReplicateFileInfo.ReplicateFileId.FileId));
                         var peak = new Peak(Peptide, scoredPeak);
                         Peaks[resultKey] = peak;
+                        if (moleculePeaks.BestPeak != null &&
+                            Equals(moleculePeaks.BestPeak.ReplicateFileInfo.ReplicateFileId,
+                                scoredPeak.ReplicateFileInfo.ReplicateFileId))
+                        {
+                            BestPeak = peak;
+                        }
                     }
                 }
-                    
-                BestPeak = Peaks.Values.FirstOrDefault(peak=>peak.Best);
-                CountAccepted = Peaks.Values.Count(peak => peak.Accepted);
-                CountRejected = Peaks.Values.Count(peak => !peak.Accepted);
+
+                ExemplaryPeakBounds = moleculePeaks.ExemplaryPeakBounds;
+                CountExemplary = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.Exemplary);
+                CountAccepted = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.Accepted);
+                CountRejected = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.Rejected);
             }
 
             public Model.Databinding.Entities.Peptide Peptide { get; }
             public Dictionary<ResultKey, Peak> Peaks { get; }
             public Peak BestPeak { get; }
+            [ChildDisplayName("Exemplary{0}")]
+            public RatedPeak.PeakBounds ExemplaryPeakBounds { get; }
+            public int CountExemplary { get; }
             public int CountAccepted { get; }
             public int CountRejected { get; }
         }
@@ -229,6 +246,14 @@ namespace pwiz.Skyline.EditUI
                 }
             }
 
+            public RatedPeak.Verdict Verdict
+            {
+                get
+                {
+                    return _ratedPeak.PeakVerdict;
+                }
+            }
+
             [Format(Formats.PEAK_SCORE)]
             public double? Score
             {
@@ -254,15 +279,6 @@ namespace pwiz.Skyline.EditUI
             public double? QValue
             {
                 get { return _ratedPeak.QValue; }
-            }
-
-            public bool Best
-            {
-                get { return _ratedPeak.Best; }
-            }
-            public bool Accepted
-            {
-                get { return _ratedPeak.Accepted; }
             }
 
             public double? ShiftFromBestPeak
@@ -452,20 +468,20 @@ namespace pwiz.Skyline.EditUI
 
                         longWaitDlg.ProgressValue = 100 * iRow / rows.Count;
                         var row = rows[iRow];
-                        var bestPeak = row.BestPeak?.GetRatedPeak();
-                        if (bestPeak == null)
+                        var exemplaryBounds = row.ExemplaryPeakBounds;
+                        if (exemplaryBounds == null)
                         {
                             continue;
                         }
 
-                        var rejectedPeaks = row.Peaks.Values.Where(peak => !peak.Accepted)
+                        var rejectedPeaks = row.Peaks.Values.Where(peak => peak.Verdict == RatedPeak.Verdict.Rejected)
                             .Select(peak => peak.GetRatedPeak()).ToList();
                         foreach (var rejectedPeak in rejectedPeaks)
                         {
                             var peakImputer = new PeakImputer(newDoc, row.Peptide.IdentityPath, scoringModel,
                                 rejectedPeak.ReplicateFileInfo);
                             var bestPeakBounds =
-                                bestPeak.AlignedPeakBounds.ReverseAlign(rejectedPeak.AlignmentFunction);
+                                exemplaryBounds.ReverseAlignPreservingWidth(rejectedPeak.AlignmentFunction);
                             if (bestPeakBounds == null)
                             {
                                 continue;

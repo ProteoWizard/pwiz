@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -27,7 +26,6 @@ namespace pwiz.Skyline.Model.Results.Imputation
         public IdentityPath PeptideIdentityPath { get; }
         public PeptideDocNode PeptideDocNode { get; }
         public double? CutoffScore { get; set; }
-        public double? MaxRtShift { get; set; }
 
         public PeakScoringModelSpec ScoringModel { get; }
 

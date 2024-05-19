@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Results.Imputation
 {
-    public class MoleculePeaks
+    public class MoleculePeaks : Immutable
     {
         public MoleculePeaks(IdentityPath identityPath, IEnumerable<RatedPeak> peaks)
         {
@@ -12,7 +13,19 @@ namespace pwiz.Skyline.Model.Results.Imputation
         }
 
         public IdentityPath PeptideIdentityPath { get; }
+        public ImmutableList<RatedPeak> Peaks { get; private set; }
 
-        public ImmutableList<RatedPeak> Peaks { get; }
+        public MoleculePeaks ChangePeaks(IEnumerable<RatedPeak> peaks, RatedPeak bestPeak,
+            RatedPeak.PeakBounds exemplaryPeakBounds)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.Peaks = ImmutableList.ValueOf(peaks);
+                im.BestPeak = bestPeak;
+                im.ExemplaryPeakBounds = exemplaryPeakBounds;
+            });
+        }
+        public RatedPeak BestPeak { get; private set; }
+        public RatedPeak.PeakBounds ExemplaryPeakBounds { get; private set; }
     }
 }

@@ -12,7 +12,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
             ReplicateFileInfo = resultFileInfo;
             AlignmentFunction = alignmentFunction;
             RawPeakBounds = rawPeakBounds;
-            AlignedPeakBounds = rawPeakBounds?.Align(alignmentFunction);
+            AlignedPeakBounds = rawPeakBounds?.AlignPreservingWidth(alignmentFunction);
             ManuallyIntegrated = manuallyIntegrated;
             Score = score;
         }
@@ -51,18 +51,11 @@ namespace pwiz.Skyline.Model.Results.Imputation
             return ChangeProp(ImClone(this), im => im.QValue = value);
         }
 
-        public bool Best { get; private set; }
+        public Verdict PeakVerdict { get; private set; }
 
-        public RatedPeak ChangeBest(bool value)
+        public RatedPeak ChangeVerdict(Verdict verdict)
         {
-            return ChangeProp(ImClone(this), im => im.Best = value);
-        }
-
-        public bool Accepted { get; private set; }
-
-        public RatedPeak ChangeAccepted(bool value)
-        {
-            return ChangeProp(ImClone(this), im => im.Accepted = value);
+            return ChangeProp(ImClone(this), im => im.PeakVerdict = verdict);
         }
 
         public double? RtShift { get; private set; }
@@ -124,6 +117,17 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 return new PeakBounds(alignmentFunction.GetY(StartTime), alignmentFunction.GetY(EndTime));
             }
 
+            public PeakBounds AlignPreservingWidth(AlignmentFunction alignmentFunction)
+            {
+                if (alignmentFunction == null)
+                {
+                    return this;
+                }
+
+                var newMidPoint = alignmentFunction.GetY(MidTime);
+                return new PeakBounds(newMidPoint - Width / 2, newMidPoint + Width / 2);
+            }
+
             public PeakBounds ReverseAlign(AlignmentFunction alignmentFunction)
             {
                 if (alignmentFunction == null)
@@ -132,6 +136,17 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 }
 
                 return new PeakBounds(alignmentFunction.GetX(StartTime), alignmentFunction.GetX(EndTime));
+            }
+
+            public PeakBounds ReverseAlignPreservingWidth(AlignmentFunction alignmentFunction)
+            {
+                if (alignmentFunction == null)
+                {
+                    return this;
+                }
+
+                var newMidPoint = alignmentFunction.GetX(MidTime);
+                return new PeakBounds(newMidPoint - Width / 2, newMidPoint + Width / 2);
             }
 
             public override string ToString()
@@ -145,6 +160,13 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 return string.Format(@"[{0},{1}]", StartTime.ToString(format, formatProvider),
                     EndTime.ToString(format, formatProvider));
             }
+        }
+
+        public enum Verdict
+        {
+            Rejected,
+            Accepted,
+            Exemplary
         }
     }
 }
