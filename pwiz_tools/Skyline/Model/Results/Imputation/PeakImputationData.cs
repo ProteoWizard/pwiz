@@ -354,8 +354,11 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 for (int i = 1; i < list.Count; i++)
                 {
                     var peak = list[i];
-                    peak = peak.ChangeRtShift(peak.AlignedPeakBounds.MidTime - bestPeak.AlignedPeakBounds.MidTime)
-                        .ChangeAccepted(IsAccepted(parameters, bestPeak, peak));
+                    if (peak.AlignedPeakBounds != null)
+                    {
+                        peak = peak.ChangeRtShift(peak.AlignedPeakBounds.MidTime - bestPeak.AlignedPeakBounds.MidTime)
+                            .ChangeAccepted(IsAccepted(parameters, bestPeak, peak));
+                    }
                     list[i] = peak;
                 }
 
@@ -364,6 +367,10 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
             private bool IsAccepted(Parameters parameters, RatedPeak bestPeak, RatedPeak peak)
             {
+                if (peak.AlignedPeakBounds == null)
+                {
+                    return false;
+                }
                 if (parameters.CutoffScoreType == CutoffScoreType.RAW && peak.Score < parameters.CutoffScore)
                 {
                     return false;

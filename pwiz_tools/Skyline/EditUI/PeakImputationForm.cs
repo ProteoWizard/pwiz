@@ -64,7 +64,9 @@ namespace pwiz.Skyline.EditUI
                 _rowsBindingList.ResetBindings();
                 tbxAccepted.Text = _rows.SelectMany(row => row.Peaks.Values).Count(peak => peak.Accepted).ToString();
                 tbxRejected.Text = _rows.SelectMany(row => row.Peaks.Values).Count(peak => !peak.Accepted).ToString();
-                var rtShifts = _rows.SelectMany(row => row.Peaks.Values).Where(peak => !peak.Best).Select(peak=>Math.Abs(peak.ShiftFromBestPeak)).ToList();
+                var rtShifts = _rows.SelectMany(row => row.Peaks.Values)
+                    .Where(peak => !peak.Best && peak.ShiftFromBestPeak.HasValue)
+                    .Select(peak => Math.Abs(peak.ShiftFromBestPeak.Value)).ToList();
                 if (rtShifts.Count == 0)
                 {
                     tbxAvgRtShift.Text = "";
@@ -266,7 +268,7 @@ namespace pwiz.Skyline.EditUI
                 get { return _ratedPeak.Accepted; }
             }
 
-            public double ShiftFromBestPeak
+            public double? ShiftFromBestPeak
             {
                 get
                 {

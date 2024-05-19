@@ -65,9 +65,9 @@ namespace pwiz.Skyline.Model.Results.Imputation
             return ChangeProp(ImClone(this), im => im.Accepted = value);
         }
 
-        public double RtShift { get; private set; }
+        public double? RtShift { get; private set; }
 
-        public RatedPeak ChangeRtShift(double value)
+        public RatedPeak ChangeRtShift(double? value)
         {
             return ChangeProp(ImClone(this), im => im.RtShift = value);
         }

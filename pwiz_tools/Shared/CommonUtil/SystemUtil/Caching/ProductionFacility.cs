@@ -288,7 +288,10 @@ namespace pwiz.Common.SystemUtil.Caching
                 IProductionListener[] listeners;
                 lock (Cache)
                 {
-                    ProgressValue = progress;
+                    if (Equals(key, Key))
+                    {
+                        ProgressValue = progress;
+                    }
                     listeners = _listeners.ToArray();
                 }
 
