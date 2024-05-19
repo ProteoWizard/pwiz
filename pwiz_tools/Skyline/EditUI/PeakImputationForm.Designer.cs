@@ -52,7 +52,6 @@
             this.comboRetentionTimeAlignment = new System.Windows.Forms.ComboBox();
             this.lblRetentionTimeAlignment = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.updateProgressTimer = new System.Windows.Forms.Timer(this.components);
             this.panel1.SuspendLayout();
             this.groupBoxResults.SuspendLayout();
             this.groupBoxCutoff.SuspendLayout();
@@ -296,11 +295,6 @@
             this.lblRetentionTimeAlignment.TabIndex = 0;
             this.lblRetentionTimeAlignment.Text = "Retention time alignment:";
             // 
-            // updateProgressTimer
-            // 
-            this.updateProgressTimer.Interval = 2000;
-            this.updateProgressTimer.Tick += new System.EventHandler(this.updateProgressTimer_Tick);
-            // 
             // PeakImputationForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -347,6 +341,5 @@
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.Button btnImputeForCurrentRow;
-        private System.Windows.Forms.Timer updateProgressTimer;
     }
 }

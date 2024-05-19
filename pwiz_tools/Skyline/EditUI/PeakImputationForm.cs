@@ -24,7 +24,6 @@ using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using Peptide = pwiz.Skyline.Model.Peptide;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -77,14 +76,12 @@ namespace pwiz.Skyline.EditUI
                 }
 
                 progressBar1.Visible = false;
-                updateProgressTimer.Stop();
                 SkylineWindow.ConsensusAlignment = _data.ConsensusAlignment;
             }
             else
             {
                 progressBar1.Visible = true;
                 progressBar1.Value = (int) (_receiver.GetDeepProgressValue() * 100);
-                updateProgressTimer.Start();
             }
 
             var error = _receiver.GetError();
