@@ -432,14 +432,8 @@ namespace pwiz.Skyline.EditUI
             lock (SkylineWindow.GetDocumentChangeLock())
             {
                 var originalDocument = SkylineWindow.DocumentUI;
-                var peakImputer = new PeakImputer()
-                {
-                    CutoffScore = GetDoubleValue(tbxCoreScoreCutoff),
-                    MaxRtShift = GetDoubleValue(tbxRtDeviationCutoff),
-                    OverwriteManualPeaks = cbxOverwriteManual.Checked,
-                    ScoringModel = GetScoringModelToUse(originalDocument)
-                };
                 var newDoc = originalDocument.BeginDeferSettingsChanges();
+                var scoringModel = GetScoringModelToUse(originalDocument);
                 var rows = BindingListSource.OfType<RowItem>().Select(rowItem => rowItem.Value).OfType<Row>().ToList();
                 using (var longWaitDlg = new LongWaitDlg())
                 {
@@ -463,12 +457,20 @@ namespace pwiz.Skyline.EditUI
 
                             var rejectedPeaks = row.Peaks.Values.Where(peak => !peak.Accepted)
                                 .Select(peak => peak.GetRatedPeak()).ToList();
-                            if (rejectedPeaks.Count == 0)
+                            foreach (var rejectedPeak in rejectedPeaks)
                             {
-                                continue;
+                                var peakImputer = new PeakImputer(newDoc, row.Peptide.IdentityPath, scoringModel,
+                                    rejectedPeak.ReplicateFileInfo);
+                                var bestPeakBounds =
+                                    bestPeak.AlignedPeakBounds.ReverseAlign(rejectedPeak.AlignmentFunction);
+                                if (bestPeakBounds == null)
+                                {
+                                    continue;
+                                }
+
+                                newDoc = peakImputer.ImputeBoundaries(newDoc, bestPeakBounds);
+                                changeCount++;
                             }
-                            newDoc = peakImputer.ImputeBoundaries(newDoc, row.Peptide.IdentityPath, bestPeak, rejectedPeaks);
-                            changeCount += rejectedPeaks.Count;
                         }
                     });
                     if (longWaitDlg.IsCanceled)

@@ -1,58 +1,59 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
 
 namespace pwiz.Skyline.Model.Results.Imputation
 {
     public class PeakImputer
     {
+        private OnDemandFeatureCalculator _onDemandFeatureCalculator;
+        public PeakImputer(SrmDocument document, IdentityPath peptideIdentityPath, PeakScoringModelSpec scoringModel, ReplicateFileInfo replicateFileInfo)
+        {
+            SrmSettings  = document.Settings;
+            ReplicateFileInfo = replicateFileInfo;
+            PeptideIdentityPath = peptideIdentityPath;
+            ScoringModel = scoringModel;
+            var chromFileInfo = document.MeasuredResults.Chromatograms[replicateFileInfo.ReplicateIndex]
+                .GetFileInfo(replicateFileInfo.ReplicateFileId.FileId);
+            PeptideDocNode = (PeptideDocNode)document.FindNode(peptideIdentityPath);
+            _onDemandFeatureCalculator = new OnDemandFeatureCalculator(scoringModel.PeakFeatureCalculators,
+                document.Settings, PeptideDocNode, replicateFileInfo.ReplicateIndex, chromFileInfo);
+        }
+
+        public SrmSettings SrmSettings { get; }
+        private ReplicateFileInfo ReplicateFileInfo { get; }
+        public IdentityPath PeptideIdentityPath { get; }
+        public PeptideDocNode PeptideDocNode { get; }
         public double? CutoffScore { get; set; }
         public double? MaxRtShift { get; set; }
-        public bool OverwriteManualPeaks { get; set; }
 
-        public PeakScoringModelSpec ScoringModel { get; set; }
+        public PeakScoringModelSpec ScoringModel { get; }
 
-        public SrmDocument ImputeBoundaries(SrmDocument document, IdentityPath peptideIdentityPath, RatedPeak bestPeak,
-            IEnumerable<RatedPeak> rejectedPeaks)
+        public SrmDocument ImputeBoundaries(SrmDocument document, RatedPeak.PeakBounds bestPeakBounds)
         {
-            if (bestPeak?.AlignedPeakBounds == null)
+            var peptideDocNode = (PeptideDocNode)document.FindNode(PeptideIdentityPath);
+            var newPeakBounds = GetNewPeakBounds(document, peptideDocNode, bestPeakBounds);
+            foreach (var transitionGroupDocNode in peptideDocNode.TransitionGroups)
             {
-                return document;
-            }
-
-            foreach (var outlierPeak in rejectedPeaks)
-            {
-                var bestPeakBounds = bestPeak.AlignedPeakBounds.ReverseAlign(outlierPeak.AlignmentFunction);
-                if (bestPeakBounds == null)
-                {
-                    continue;
-                }
-
-                var replicateFileInfo = outlierPeak.ReplicateFileInfo;
-                var peptideDocNode = (PeptideDocNode)document.FindNode(peptideIdentityPath);
-                var newPeakBounds = GetNewPeakBounds(document, peptideDocNode, replicateFileInfo,
-                    bestPeakBounds);
-                foreach (var transitionGroupDocNode in peptideDocNode.TransitionGroups)
-                {
-                    var identityPath =
-                        new IdentityPath(peptideIdentityPath, transitionGroupDocNode.TransitionGroup);
-                    var chromatogramSet =
-                        document.MeasuredResults.Chromatograms[replicateFileInfo.ReplicateIndex];
-                    document = document.ChangePeak(identityPath, chromatogramSet.Name,
-                        replicateFileInfo.MsDataFileUri, null, newPeakBounds?.StartTime ?? 0, newPeakBounds?.EndTime ?? 0,
-                        UserSet.MATCHED, null,
-                        false);
-                }
+                var identityPath =
+                    new IdentityPath(PeptideIdentityPath, transitionGroupDocNode.TransitionGroup);
+                var chromatogramSet =
+                    document.MeasuredResults.Chromatograms[ReplicateFileInfo.ReplicateIndex];
+                document = document.ChangePeak(identityPath, chromatogramSet.Name,
+                    ReplicateFileInfo.MsDataFileUri, null, newPeakBounds?.StartTime ?? 0, newPeakBounds?.EndTime ?? 0,
+                    UserSet.MATCHED, null,
+                    false);
             }
 
             return document;
         }
 
         public RatedPeak.PeakBounds GetNewPeakBounds(SrmDocument document, PeptideDocNode peptideDocNode,
-            ReplicateFileInfo replicateFileInfo, RatedPeak.PeakBounds bestPeakBounds)
+            RatedPeak.PeakBounds bestPeakBounds)
         {
-            var chromatogramGroupInfos = LoadChromatogramGroupInfos(document, peptideDocNode, replicateFileInfo).ToList();
+            var chromatogramGroupInfos = LoadChromatogramGroupInfos(document, peptideDocNode).ToList();
 
             var candidateBoundaries = GetCandidatePeakBounds(chromatogramGroupInfos).OrderBy(peakBounds=>Math.Abs(peakBounds.MidTime - bestPeakBounds.MidTime));
             foreach (var candidateBoundary in candidateBoundaries)
@@ -80,8 +81,14 @@ namespace pwiz.Skyline.Model.Results.Imputation
             return null;
         }
 
-        private IEnumerable<RatedPeak.PeakBounds> GetCandidatePeakBounds(IEnumerable<ChromatogramGroupInfo> chromatogramGroupInfos)
+        private IEnumerable<RatedPeak.PeakBounds> GetCandidatePeakBounds(IList<ChromatogramGroupInfo> chromatogramGroupInfos)
         {
+            if (NeedToPickPeaksAgain(chromatogramGroupInfos))
+            {
+                PeptideChromDataSets peptideChromDataSets = _onDemandFeatureCalculator.MakePeptideChromDataSets();
+                peptideChromDataSets.PickChromatogramPeaks(null);
+                chromatogramGroupInfos = peptideChromDataSets.MakeChromatogramGroupInfos().ToList();
+            }
             foreach (var chromatogramGroupInfo in chromatogramGroupInfos)
             {
                 for (int iPeak = 0; iPeak < chromatogramGroupInfo.NumPeaks; iPeak++)
@@ -100,17 +107,10 @@ namespace pwiz.Skyline.Model.Results.Imputation
         }
 
         private IEnumerable<ChromatogramGroupInfo> LoadChromatogramGroupInfos(SrmDocument document,
-            PeptideDocNode peptideDocNode, ReplicateFileInfo replicateFileInfo)
+            PeptideDocNode peptideDocNode)
         {
-            if (!document.MeasuredResults.TryLoadChromatogram(replicateFileInfo.ReplicateIndex, peptideDocNode, null,
-                    (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance,
-                    out var chromatogramGroupInfos))
-            {
-                return Array.Empty<ChromatogramGroupInfo>();
-            }
-
-            return chromatogramGroupInfos.Where(chromatogramGroupInfo =>
-                Equals(chromatogramGroupInfo.FilePath, replicateFileInfo.MsDataFileUri));
+            return peptideDocNode.TransitionGroups.Select(tg =>
+                _onDemandFeatureCalculator.GetChromatogramGroupInfo(tg.TransitionGroup));
         }
 
         private bool IsValidPeakBounds(IEnumerable<ChromatogramGroupInfo> chromatogramGroupInfos, RatedPeak.PeakBounds peakBounds)
@@ -127,6 +127,21 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     continue;
                 }
 
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool NeedToPickPeaksAgain(IEnumerable<ChromatogramGroupInfo> chromatogramGroupInfos)
+        {
+            if (chromatogramGroupInfos.Any(info => info.NumPeaks > 1))
+            {
+                return false;
+            }
+
+            if (null != SrmSettings.GetExplicitPeakBounds(PeptideDocNode, ReplicateFileInfo.MsDataFileUri))
+            {
                 return true;
             }
 
