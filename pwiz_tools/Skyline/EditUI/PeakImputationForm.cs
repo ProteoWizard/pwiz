@@ -171,8 +171,7 @@ namespace pwiz.Skyline.EditUI
             tbxScoringModel.Text = scoringModel.Name;
 
             radioPValue.Enabled = !Equals(scoringModel, LegacyScoringModel.DEFAULT_MODEL);
-            var scoreQValueMap = document.Settings.PeptideSettings.Integration.ScoreQValueMap;
-            radioQValue.Enabled = scoreQValueMap != null && !Equals(scoreQValueMap, ScoreQValueMap.EMPTY);
+            radioQValue.Enabled = HasQValues(document);
             radioPercentile.Enabled = DocumentWide;
             var parameters = new PeakImputationData.Parameters(document)
                 .ChangeAlignmentType(comboRetentionTimeAlignment.SelectedItem as RtValueType)
@@ -189,10 +188,7 @@ namespace pwiz.Skyline.EditUI
                 scoreCutoff = GetDoubleValue(tbxCoreScoreCutoff, 0, 1);
             }
            
-            if (scoreCutoff.HasValue)
-            {
-                parameters = parameters.ChangeCutoffScore(CutoffType, scoreCutoff);
-            }
+            parameters = parameters.ChangeCutoffScore(CutoffType, scoreCutoff);
             if (!DocumentWide)
             {
                 var peptideIdentityPaths =
@@ -217,6 +213,27 @@ namespace pwiz.Skyline.EditUI
             return LegacyScoringModel.DEFAULT_MODEL;
         }
 
+        private bool HasQValues(SrmDocument document)
+        {
+            var scoreQValueMap = document.Settings.PeptideSettings.Integration.ScoreQValueMap;
+            if (false == scoreQValueMap?.Equals(ScoreQValueMap.EMPTY))
+            {
+                return true;
+            }
+            foreach (var transitionGroup in document.MoleculeTransitionGroups.Take(100))
+            {
+                if (transitionGroup.Results != null)
+                {
+                    if (transitionGroup.Results.SelectMany(chromInfoList => chromInfoList)
+                        .Any(transitionGroupChromInfo => transitionGroupChromInfo.QValue.HasValue))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
 
         public class Row
         {
@@ -683,14 +700,23 @@ namespace pwiz.Skyline.EditUI
                 nameof(Row.CountAccepted),
                 nameof(Row.CountRejected),
             }.Select(name=>new ColumnSpec(PropertyPath.Root.Property(name)))).SetName("Default");
+
             var ppPeaks = PropertyPath.Root.Property(nameof(Row.Peaks)).DictionaryValues();
-            yield return new ViewSpec().SetRowType(typeof(Row)).SetColumns(new[]
-                {
-                    PropertyPath.Root.Property(nameof(Row.Peptide)),
-                    ppPeaks,
-                    ppPeaks.Property(nameof(Peak.Verdict)),
-                    ppPeaks.Property(nameof(Peak.Opinion))
-                }.Select(pp => new ColumnSpec(pp)))
+            var propertyPaths = new List<PropertyPath>
+            {
+                PropertyPath.Root.Property(nameof(Row.Peptide)),
+                ppPeaks,
+                ppPeaks.Property(nameof(Peak.Score))
+            };
+            if (HasQValues(SkylineWindow.Document))
+            {
+                propertyPaths.Add(ppPeaks.Property(nameof(Peak.QValue)));
+            }
+
+            propertyPaths.Add(ppPeaks.Property(nameof(Peak.Verdict)));
+            propertyPaths.Add(ppPeaks.Property(nameof(Peak.Opinion)));
+            yield return new ViewSpec().SetRowType(typeof(Row))
+                .SetColumns(propertyPaths.Select(pp => new ColumnSpec(pp)))
                 .SetSublistId(ppPeaks).SetName("Details");
         }
     }

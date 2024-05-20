@@ -338,7 +338,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
         private MoleculePeaks RatePeaks(Parameters parameters, MoleculePeaks moleculePeaks)
         {
             var peaks = new List<RatedPeak>();
-            peaks.AddRange(MarkExemplaryPeaks(parameters, moleculePeaks.Peaks.Select(FillInScores)));
+            peaks.AddRange(MarkExemplaryPeaks(parameters, moleculePeaks.Peaks.Select(FillInScores).ToList()));
             var exemplaryPeaks = peaks.Where(peak => peak.PeakVerdict == RatedPeak.Verdict.Exemplary).ToList();
             if (exemplaryPeaks.Count == 0)
             {
@@ -351,10 +351,19 @@ namespace pwiz.Skyline.Model.Results.Imputation
             return moleculePeaks.ChangePeaks(peaks, bestPeak, exemplaryPeakBounds);
         }
 
-        private IEnumerable<RatedPeak> MarkExemplaryPeaks(Parameters parameters, IEnumerable<RatedPeak> peaks)
+        private IEnumerable<RatedPeak> MarkExemplaryPeaks(Parameters parameters, IList<RatedPeak> peaks)
         {
             bool firstExemplary = true;
-            foreach (var peak in peaks.OrderByDescending(peak => peak.Score))
+            IEnumerable<RatedPeak> orderedPeaks;
+            if (parameters.CutoffScoreType == CutoffScoreType.QVALUE)
+            {
+                orderedPeaks = peaks.OrderBy(peak => Tuple.Create(peak.QValue, -peak.Score));
+            }
+            else
+            {
+                orderedPeaks = peaks.OrderByDescending(peak => peak.Score);
+            }
+            foreach (var peak in orderedPeaks)
             {
                 if (peak.AlignedPeakBounds == null || !peak.Score.HasValue)
                 {
@@ -365,8 +374,26 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 if (firstExemplary)
                 {
                     firstExemplary = false;
-                    yield return peak.ChangeVerdict(RatedPeak.Verdict.Exemplary,
-                        string.Format("Peak score {0} is higher than all other replicates", peak.Score?.ToString(Formats.PEAK_SCORE)));
+                    string opinion;
+                    if (parameters.CutoffScoreType == CutoffScoreType.QVALUE)
+                    {
+                        if (peaks.Select(p => p.QValue).Distinct().Count() == 1 && peaks.Select(p=>p.Score).Distinct().Count() > 1)
+                        {
+                            opinion =
+                                string.Format("All of the q-values were the same but this one had a better {0} score.", parameters.ScoringModel.Name);
+                        }
+                        else
+                        {
+                            opinion = string.Format("Peak q-value {0} is lower than all other replicates", peak.QValue);
+                        }
+                    }
+                    else
+                    {
+                        opinion = string.Format("Peak score {0} is higher than all other replicates",
+                            peak.Score?.ToString(Formats.PEAK_SCORE));
+                    }
+
+                    yield return peak.ChangeVerdict(RatedPeak.Verdict.Exemplary, opinion);
                     continue;
                 }
 
