@@ -724,4 +724,7 @@ Here are the last 3 errors:
   <data name="SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank" xml:space="preserve">
     <value>Molecule Rank</value>
   </data>
+  <data name="AlignmentForm_UpdateGraph_Peptides" xml:space="preserve">
+    <value>Peptides</value>
+  </data>
 </root>

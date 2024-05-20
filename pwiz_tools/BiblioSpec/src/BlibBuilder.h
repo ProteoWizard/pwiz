@@ -106,6 +106,7 @@ class BlibBuilder : public BlibMaker
   const set<string>* getTargetSequencesModified();
   virtual int parseCommandArgs(int argc, char* argv[]);
   virtual void attachAll();
+  bool keepCharge(int z) const; // when -z commandline option is used, checks a psm's charge against list of desired charges
   int transferLibrary(int iLib, const ProgressIndicator* parentProgress);
   void collapseSources();
   virtual void commit();

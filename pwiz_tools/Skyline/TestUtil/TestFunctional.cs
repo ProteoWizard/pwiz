@@ -150,6 +150,8 @@ namespace pwiz.SkylineTestUtil
         public const string MSGFPLUS_UNICODE_ISSUES = "MsgfPlus doesn't handle unicode paths";
         public const string MSFRAGGER_UNICODE_ISSUES = "MsFragger doesn't handle unicode paths";
         public const string JAVA_UNICODE_ISSUES = "Running Java processes with wild unicode temp paths is problematic";
+        public const string HARDKLOR_UNICODE_ISSUES = "Hardklor doesn't handle unicode paths";
+        public const string ZIP_INSIDE_ZIP = "ZIP inside ZIP does not seem to work on MACS2";
     }
 
     /// <summary>
@@ -1493,16 +1495,7 @@ namespace pwiz.SkylineTestUtil
             Program.TestExceptions = new List<Exception>();
             LocalizationHelper.InitThread();
 
-            // Unzip test files.
-            if (TestFilesZipPaths != null)
-            {
-                TestFilesDirs = new TestFilesDir[TestFilesZipPaths.Length];
-                for (int i = 0; i < TestFilesZipPaths.Length; i++)
-                {
-                    TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName,
-                        TestFilesPersistent, IsExtractHere(i));
-                }
-            }
+            UnzipTestFiles();
 
             _shotManager = new ScreenshotManager(TestContext, SkylineWindow);
 
@@ -2447,8 +2440,11 @@ namespace pwiz.SkylineTestUtil
             if (expectedErrorMessage != null)
             {
                 var dlg = WaitForOpenForm<MessageDlg>();
-                Assert.IsTrue(dlg.DetailMessage.Contains(expectedErrorMessage));
-                dlg.CancelButton.PerformClick();
+                OkDialog(dlg, () =>
+                {
+                    StringAssert.Contains(dlg.Message, expectedErrorMessage);
+                    dlg.CancelButton.PerformClick();
+                });
             }
             else
             {

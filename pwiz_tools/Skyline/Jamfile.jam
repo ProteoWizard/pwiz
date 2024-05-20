@@ -37,6 +37,12 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         }
     }
 
+    if ! --incremental in [ modules.peek : ARGV ]
+    {
+       echo "Updating submodules for Hardklor etc..." ;
+       SHELL "git submodule update --init --recursive" ;
+    }
+
     local ymd = [ MATCH "([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])" : [ modules.peek : JAMDATE ] ] ;
     local year_2digit = [ MATCH "[0-9][0-9]([0-9][0-9])" : $(ymd) ] ;
 
@@ -343,20 +349,9 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         ) > "$(<)"
     }
 
-    constant SKYLINE_PROSIT_CONFIG : "$(SKYLINE_PATH)/Model/Prosit/Config/PrositConfig_production.xml" ;
-    if --official in [ modules.peek : ARGV ]
-    {
-        if ! [ path.exists $(SKYLINE_PROSIT_CONFIG) ]
-        {
-            errors.user-error "PrositConfig_production.xml must be present for an official build" ;
-        }
-    }
-    else if ! [ path.exists $(SKYLINE_PROSIT_CONFIG) ]
-    {
-        constant SKYLINE_PROSIT_CONFIG : "$(SKYLINE_PATH)/Model/Prosit/Config/PrositConfig_development.xml" ;
-    }
 
-    make PrositConfig.xml : $(SKYLINE_PROSIT_CONFIG) : @common.copy : <location>$(SKYLINE_PATH)/Model/Prosit/Config ;
+    constant SKYLINE_KOINA_CONFIG : "$(SKYLINE_PATH)/Model/Koina/Config/KoinaConfig_development.xml" ;
+    make KoinaConfig.xml : $(SKYLINE_KOINA_CONFIG) : @common.copy : <location>$(SKYLINE_PATH)/Model/Koina/Config ;
 
     rule build-location ( properties * )
     {
@@ -420,11 +415,12 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>../../pwiz/utility/bindings/CLI/timstof_prm_scheduler//PrmPasefScheduler/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz/utility/bindings/CLI/timstof_prm_scheduler//PrmPasefScheduler.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>TestDiagnostics//TestDiagnostics/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>Executables/Hardklor//Hardklor/<location>$(SKYLINE_PATH)/Executables/Hardklor/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibBuild/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibFilter/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibToMs2/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
             <dependency>$(PWIZ_ROOT_PATH)//INSTALLER_VENDOR_FILES.txt
-            <dependency>PrositConfig.xml
+            <dependency>KoinaConfig.xml
     ;
     explicit Skyline.exe ;
 
