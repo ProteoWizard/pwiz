@@ -140,6 +140,9 @@ namespace pwiz.Skyline.Model.Koina
             // Build library
             var librarySpectra = SpectrumMzInfo.RemoveDuplicateSpectra(standardSpectra.Concat(specMzInfo).ToList());
 
+            // Avoid leaving status around if returning early
+            progressStatus = progressStatus.NextSegment();
+
             // Delete if already exists, no merging with Koina
             var libraryExists = File.Exists(LibrarySpec.FilePath);
             if (libraryExists)
@@ -150,10 +153,12 @@ namespace pwiz.Skyline.Model.Koina
                 FileEx.SafeDelete(LibrarySpec.FilePath);
             }
 
+            // CONSIDER: Counting this as success seems odd, since it doesn't create a library
             if (!librarySpectra.Any())
                 return true;
 
-            progressStatus = progressStatus.NextSegment().ChangeMessage(Resources.SkylineWindow_SaveDocument_Saving___);
+            progressStatus = progressStatus.ChangeMessage(Resources.SkylineWindow_SaveDocument_Saving___);
+
             // Build the library
             using (var blibDb = BlibDb.CreateBlibDb(LibrarySpec.FilePath))
             {

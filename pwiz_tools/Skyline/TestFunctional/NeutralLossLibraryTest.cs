@@ -273,13 +273,15 @@ namespace pwiz.SkylineTestFunctional
             {
                 menuControl = new MenuControl<IonTypeSelectionPanel>(SkylineWindow.GraphSpectrumSettings,
                     SkylineWindow.DocumentUI.Settings.PeptideSettings);
-                //Make sure losses are visible by default after the document load
-                AssertLossLabelCount(12, 13);
+                // Make sure losses are visible by default after the document load
+                // This tests the mass-only loss of 20. If the counts go down by 1, then
+                // mass-only loss annotation may be broken.
+                AssertLossLabelCount(13, 14);
                 AssertLossControlButtonCount(menuControl, 13, 7);
             });
             RunUI(() =>
             {
-                SkylineWindow.ShowLosses(new[] { "H2O" });
+                SkylineWindow.ShowLosses(new[] { new FragmentLoss("H2O").PersistentName });
             });
             WaitForGraphs();
             RunUI(() =>

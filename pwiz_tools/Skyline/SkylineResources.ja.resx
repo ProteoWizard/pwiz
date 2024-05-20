@@ -1094,4 +1094,7 @@
   <data name="UpgradeManager_updateCheck_Complete_Upgrading__0_" xml:space="preserve">
     <value>{0}をアップグレードしています</value>
   </data>
+  <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins" xml:space="preserve">
+    <value>ペプチドをタンパク質と関連付け</value>
+  </data>
 </root>

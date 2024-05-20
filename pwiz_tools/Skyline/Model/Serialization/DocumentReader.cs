@@ -257,7 +257,7 @@ namespace pwiz.Skyline.Model.Serialization
             public bool Quantitative { get; private set; }
             public ExplicitTransitionValues ExplicitValues { get; private set; }
 
-        public void ReadXml(XmlReader reader, DocumentFormat formatVersion, out double? declaredMz, ExplicitTransitionValues pre422ExplicitTransitionValues)
+            public void ReadXml(XmlReader reader, DocumentFormat formatVersion, out double? declaredMz, ExplicitTransitionValues pre422ExplicitTransitionValues)
             {
                 ReadXmlAttributes(reader, formatVersion, pre422ExplicitTransitionValues);
                 ReadXmlElements(reader, out declaredMz);

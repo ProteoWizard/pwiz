@@ -282,6 +282,9 @@ namespace pwiz.Skyline.Model.Lib
 
                     GenerateChromatogramLibrary(_encyclopeDiaDlibInputFilepath, _encyclopeDiaElibOutputFilepath, _fastaFilepath, diaFile, progressMonitorForFile, ref statusForFile, _config);
 
+                    if (_config.LogProgressForIndividualFiles)
+                        File.WriteAllText(originalFilename + ".log", progressMonitorForFile.LogText);
+
                     lock (narrowFileQueue)
                     {
                         ++convertedNarrowFiles;
@@ -325,6 +328,9 @@ namespace pwiz.Skyline.Model.Lib
                     progressMonitorForFile.UpdateProgress(statusForFile);
                     chromLibraryCreated.Wait(_cancelToken); // wait until the chromatogram library has been merged
                     GenerateQuantLibrary(_encyclopeDiaElibOutputFilepath, _encyclopeDiaQuantElibOutputFilepath, _fastaFilepath, diaFile, progressMonitorForFile, ref statusForFile, _config);
+
+                    if (_config.LogProgressForIndividualFiles)
+                        File.WriteAllText(originalFilename + ".log", progressMonitorForFile.LogText);
 
                     lock (wideFileQueue)
                     {
@@ -502,6 +508,7 @@ namespace pwiz.Skyline.Model.Lib
                 private int _processedWindows;
                 private StringBuilder _logText = new StringBuilder();
 
+                public string Filename => _filename;
                 public string LogText => _logText.ToString();
 
                 public ProgressMonitorForFile(string filename, bool processAllMessages, int isolationWindowCount, IProgressMonitor multiProgressMonitor)
@@ -580,9 +587,11 @@ namespace pwiz.Skyline.Model.Lib
                 foreach(var kvp in DefaultParameters)
                     Parameters[kvp.Key] = new AbstractDdaSearchEngine.Setting(kvp.Value);
                 V2scoring = true; // EncyclopeDIA defaults to V1 but we want to default to V2
+                LogProgressForIndividualFiles = false;
             }
 
             public IDictionary<string, AbstractDdaSearchEngine.Setting> Parameters { get; }
+            public bool LogProgressForIndividualFiles { get; set; }
 
             // ReSharper disable LocalizableElement
             public static readonly ImmutableDictionary<string, AbstractDdaSearchEngine.Setting> DefaultParameters =

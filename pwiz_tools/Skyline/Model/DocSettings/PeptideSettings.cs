@@ -1311,9 +1311,9 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public ImmutableList<string> StaticModsFormulae
+        public ImmutableList<string> StaticModsLosses
         {
-            get { return ImmutableList.ValueOf(StaticModsDeduped.Select(loss => loss.FormulaNoNull)); }
+            get { return ImmutableList.ValueOf(StaticModsDeduped.Select(loss => loss.PersistentName)); }
         }
 
         public bool HasVariableModifications

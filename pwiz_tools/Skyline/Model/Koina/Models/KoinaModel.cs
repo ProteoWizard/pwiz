@@ -429,7 +429,6 @@ namespace pwiz.Skyline.Model.Koina.Models
                             processed.ToString(), @"/", totalCount.ToString()))
                         .ChangePercentComplete(REQUESTING_INPUTS_FRACTION * processed / totalCount);
                     progressMonitor.UpdateProgress(localProgressStatus);
-                    Console.WriteLine(localProgressStatus.Message);
                 }
             }, maxThreads: KoinaConstants.MAX_THREADS);
 

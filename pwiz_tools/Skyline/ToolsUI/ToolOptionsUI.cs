@@ -126,14 +126,20 @@ namespace pwiz.Skyline.ToolsUI
 
         private class KoinaPingRequest : KoinaHelpers.KoinaRequest
         {
-            private Channel _channel;
+            private static KoinaConfig _koinaConfig;
+            private static Channel _channel;
+
+            static KoinaPingRequest()
+            {
+                _koinaConfig = KoinaConfig.GetKoinaConfig();
+                _channel = _koinaConfig.CreateChannel();
+            }
+
             public KoinaPingRequest(string ms2Model, string rtModel, SrmSettings settings,
                 PeptideDocNode peptide, TransitionGroupDocNode precursor, int nce, Action updateCallback) : base(null,
                 null, null, settings, peptide, precursor, null, nce, updateCallback)
             {
-                var koinaConfig = KoinaConfig.GetKoinaConfig();
-                _channel = koinaConfig.CreateChannel();
-                Client = KoinaPredictionClient.CreateClient(_channel, koinaConfig.Server);
+                Client = KoinaPredictionClient.CreateClient(_channel, _koinaConfig.Server);
                 IntensityModel = KoinaIntensityModel.GetInstance(ms2Model);
                 RTModel = KoinaRetentionTimeModel.GetInstance(rtModel);
 
@@ -169,10 +175,6 @@ namespace pwiz.Skyline.ToolsUI
                         // so don't even update UI
                         if (ex.InnerException is RpcException rpcEx && rpcEx.StatusCode == StatusCode.Cancelled)
                             return;
-                    }
-                    finally
-                    {
-                        _channel.ShutdownAsync().Wait();
                     }
                     
                     // Bad timing could cause the ping to finish right when we cancel as the form closes
