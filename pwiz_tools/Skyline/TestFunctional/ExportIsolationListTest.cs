@@ -236,7 +236,7 @@ namespace pwiz.SkylineTestFunctional
                 FieldSeparate(mzLast, string.Empty, string.Empty, Math.Abs(zLast), polarity, t39 - halfWin, t39 + halfWin, nce, peptideB));
 
             // Export Thermo Fusion unscheduled Targeted list.
-            var thermoFusionMassListExporter = new ThermoFusionMassListExporter(SkylineWindow.Document);
+            var thermoFusionMassListExporter = new ThermoFusionMassListExporter(SkylineWindow.Document, ExportInstrumentType.THERMO_FUSION);
             ExportIsolationList(
                 "FusionUnscheduledTargeted.csv",
                 ExportInstrumentType.THERMO_FUSION, FullScanAcquisitionMethod.Targeted, ExportMethodType.Standard,
