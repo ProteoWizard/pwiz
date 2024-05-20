@@ -35,12 +35,36 @@ namespace pwiz.Skyline.Alerts
         public ArdiaAccount Account { get; private set; }
         public Func<HttpClient> AuthenticatedHttpClientFactory { get; private set; }
 
-        public ArdiaLoginDlg(ArdiaAccount account)
+        public ArdiaLoginDlg(ArdiaAccount account/*, bool headless = false*/)
         {
             InitializeComponent();
 
             Account = account;
             _tempUserDataFolder = new TemporaryDirectory(null, @"~SK_WebView2");
+
+            /*if (headless)
+            {
+                if (account.Username.IsNullOrEmpty() || account.Password.IsNullOrEmpty())
+                {
+                    throw new ArgumentException("importing an Ardia file from command-line requires the account to have username and password set up in Skyline (Tools > Options > Remote Accounts)");
+                }
+                var uiThread = new Thread(() =>
+                {
+                    System.Windows.Threading.Dispatcher.CurrentDispatcher.Invoke(async () =>
+                    {
+                        var environment = await CoreWebView2Environment.CreateAsync(null, null, null);
+                        var controller = await environment.CreateCoreWebView2ControllerAsync(HWND_MESSAGE);
+                        controller.CoreWebView2.Navigate("https://microsoft.com");
+                    });
+
+                    Dispatcher.Run();
+                });
+
+                uiThread.SetApartmentState(ApartmentState.STA);
+                uiThread.Start();
+                uiThread.Join();
+                Visible = false;
+            }*/
         }
 
         private TemporaryDirectory _tempUserDataFolder;
@@ -185,9 +209,13 @@ namespace pwiz.Skyline.Alerts
             await CheckForBffHostCookie();
         }
 
+        private bool _doAutomatedLogin = true;
         private async void CoreWebView2_NavigationCompleted(object sender, CoreWebView2DOMContentLoadedEventArgs e)
         {
             await CheckForBffHostCookie();
+
+            if (!_doAutomatedLogin)
+                return;
 
             const string usernameSelector = "document.querySelector(\"#applogin\").shadowRoot.querySelector(\"#username\")";
             const string passwordSelector = "document.querySelector(\"#applogin\").shadowRoot.querySelector(\"#password\")";
@@ -203,7 +231,7 @@ namespace pwiz.Skyline.Alerts
                 return;
 
             // stop listening (we may start again later depending on results below)
-            webView.CoreWebView2.DOMContentLoaded -= CoreWebView2_NavigationCompleted;
+            _doAutomatedLogin = false;
 
             string buttonSelector = location.EndsWith(@"/login") ? signinSelector : nextSelector;
             string buttonText = await ExecuteScriptAsyncUntil(buttonSelector + @".textContent", s => Task.FromResult(s != null && s != @"null"));
@@ -223,7 +251,7 @@ namespace pwiz.Skyline.Alerts
                 }
 
                 // start listening again
-                webView.CoreWebView2.DOMContentLoaded += CoreWebView2_NavigationCompleted;
+                _doAutomatedLogin = true;
 
                 if (hasUsername)
                     await ExecuteScriptAsync(signinSelector + @".click()");
@@ -237,7 +265,7 @@ namespace pwiz.Skyline.Alerts
                 }
 
                 // start listening again
-                webView.CoreWebView2.DOMContentLoaded += CoreWebView2_NavigationCompleted;
+                _doAutomatedLogin = true;
 
                 if (hasPassword)
                     await ExecuteScriptAsync(signinSelector + @".click()");
