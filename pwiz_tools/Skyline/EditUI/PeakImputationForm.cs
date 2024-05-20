@@ -172,14 +172,23 @@ namespace pwiz.Skyline.EditUI
 
             radioPValue.Enabled = !Equals(scoringModel, LegacyScoringModel.DEFAULT_MODEL);
             var scoreQValueMap = document.Settings.PeptideSettings.Integration.ScoreQValueMap;
-            radioQValue.Enabled = radioPValue.Enabled && scoreQValueMap != null && !Equals(scoreQValueMap, ScoreQValueMap.EMPTY);
+            radioQValue.Enabled = scoreQValueMap != null && !Equals(scoreQValueMap, ScoreQValueMap.EMPTY);
             radioPercentile.Enabled = DocumentWide;
             var parameters = new PeakImputationData.Parameters(document)
                 .ChangeAlignmentType(comboRetentionTimeAlignment.SelectedItem as RtValueType)
                 .ChangeOverwriteManualPeaks(cbxOverwriteManual.Checked)
                 .ChangeScoringModel(scoringModel)
-                .ChangeAllowableRtShift(GetDoubleValue(tbxRtDeviationCutoff));
-            var scoreCutoff = GetDoubleValue(tbxCoreScoreCutoff);
+                .ChangeAllowableRtShift(GetDoubleValue(tbxRtDeviationCutoff, 0, null));
+            double? scoreCutoff;
+            if (CutoffType == CutoffScoreType.RAW)
+            {
+                scoreCutoff = GetDoubleValue(tbxCoreScoreCutoff, null, null);
+            }
+            else
+            {
+                scoreCutoff = GetDoubleValue(tbxCoreScoreCutoff, 0, 1);
+            }
+           
             if (scoreCutoff.HasValue)
             {
                 parameters = parameters.ChangeCutoffScore(CutoffType, scoreCutoff);
@@ -444,7 +453,7 @@ namespace pwiz.Skyline.EditUI
             try
             {
                 _inChange = true;
-                var cutoffValue = GetDoubleValue(tbxCoreScoreCutoff);
+                var cutoffValue = GetDoubleValue(tbxCoreScoreCutoff, null, null);
                 if (cutoffValue.HasValue)
                 {
                     var score = _oldCutoffType.ToRawScore(_scoreConversionData, cutoffValue.Value);
@@ -467,15 +476,36 @@ namespace pwiz.Skyline.EditUI
 
         }
 
-        private double? GetDoubleValue(TextBox textBox)
+        private double? GetDoubleValue(TextBox textBox, double? min, double? max)
         {
             var text = textBox.Text.Trim();
             double? value = null;
             if (!string.IsNullOrEmpty(text))
             {
-                if (!double.TryParse(text, out var doubleValue))
+                if (!double.TryParse(text, out var doubleValue) || double.IsNaN(doubleValue))
                 {
-                    textBox.BackColor = Color.Red;
+                    SetError(textBox, "Error: Must be a number");
+                    return null;
+                }
+
+                if (min.HasValue && max.HasValue)
+                {
+                    if (min > doubleValue || max < doubleValue)
+                    {
+                        SetError(textBox, string.Format("Error: must be between {0} and {1}", min, max));
+                        return null;
+                    }
+                }
+
+                if (min > doubleValue)
+                {
+                    SetError(textBox, "Error: Must not be below " + min);
+                    return null;
+                }
+
+                if (max < doubleValue)
+                {
+                    SetError(textBox, "Error: Must not be above " + max);
                     return null;
                 }
 
@@ -483,6 +513,33 @@ namespace pwiz.Skyline.EditUI
             }
             textBox.BackColor = Color.White;
             return value;
+        }
+
+        private Dictionary<Control, string> _originalTooltips = new Dictionary<Control, string>();
+
+        private void SetError(TextBox textBox, string message)
+        {
+            if (!_originalTooltips.TryGetValue(textBox, out var originalTooltip))
+            {
+                originalTooltip = toolTip1.GetToolTip(textBox);
+                _originalTooltips.Add(textBox, originalTooltip);
+            }
+
+            if (message == null)
+            {
+                textBox.BackColor = Color.White;
+                toolTip1.SetToolTip(textBox, originalTooltip);
+            }
+            else
+            {
+                textBox.BackColor = Color.Red;
+                var newTooltip = message;
+                if (!string.IsNullOrEmpty(originalTooltip))
+                {
+                    newTooltip = TextUtil.LineSeparate(newTooltip, string.Empty, originalTooltip);
+                }
+                toolTip1.SetToolTip(textBox, newTooltip);
+            }
         }
 
         private void btnImputeBoundaries_Click(object sender, EventArgs e)

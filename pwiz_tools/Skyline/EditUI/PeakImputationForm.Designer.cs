@@ -59,6 +59,7 @@
             this.comboRetentionTimeAlignment = new System.Windows.Forms.ComboBox();
             this.lblRetentionTimeAlignment = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.lblPercent = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.groupBoxScope.SuspendLayout();
             this.groupBoxResults.SuspendLayout();
@@ -285,6 +286,7 @@
             // 
             // groupBoxCutoff
             // 
+            this.groupBoxCutoff.Controls.Add(this.lblPercent);
             this.groupBoxCutoff.Controls.Add(this.radioPValue);
             this.groupBoxCutoff.Controls.Add(this.radioPercentile);
             this.groupBoxCutoff.Controls.Add(this.radioQValue);
@@ -350,7 +352,7 @@
             // 
             this.tbxCoreScoreCutoff.Location = new System.Drawing.Point(6, 112);
             this.tbxCoreScoreCutoff.Name = "tbxCoreScoreCutoff";
-            this.tbxCoreScoreCutoff.Size = new System.Drawing.Size(128, 20);
+            this.tbxCoreScoreCutoff.Size = new System.Drawing.Size(106, 20);
             this.tbxCoreScoreCutoff.TabIndex = 9;
             this.toolTip1.SetToolTip(this.tbxCoreScoreCutoff, resources.GetString("tbxCoreScoreCutoff.ToolTip"));
             this.tbxCoreScoreCutoff.Leave += new System.EventHandler(this.SettingsControlChanged);
@@ -375,6 +377,16 @@
             this.lblRetentionTimeAlignment.Size = new System.Drawing.Size(126, 13);
             this.lblRetentionTimeAlignment.TabIndex = 0;
             this.lblRetentionTimeAlignment.Text = "Retention time alignment:";
+            // 
+            // lblPercent
+            // 
+            this.lblPercent.AutoSize = true;
+            this.lblPercent.Location = new System.Drawing.Point(118, 116);
+            this.lblPercent.Name = "lblPercent";
+            this.lblPercent.Size = new System.Drawing.Size(15, 13);
+            this.lblPercent.TabIndex = 11;
+            this.lblPercent.Text = "%";
+            this.lblPercent.Visible = false;
             // 
             // PeakImputationForm
             // 
@@ -430,5 +442,6 @@
         private System.Windows.Forms.GroupBox groupBoxScope;
         private System.Windows.Forms.RadioButton radioScopeDocument;
         private System.Windows.Forms.RadioButton radioScopeSelection;
+        private System.Windows.Forms.Label lblPercent;
     }
 }

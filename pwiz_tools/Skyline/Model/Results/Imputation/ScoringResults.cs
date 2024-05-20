@@ -90,7 +90,9 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 SrmDocument reintegratedDocument = null;
                 if (featureSet != null)
                 {
-                    resultsHandler = new MProphetResultsHandler(parameter.Document, parameter.ScoringModel, featureSet);
+                    resultsHandler = new MProphetResultsHandler(
+                        RemoveExceptPeptides(parameter.Document, parameter.PeptideIdentityPaths?.ToHashSet()),
+                        parameter.ScoringModel, featureSet);
                     resultsHandler.ScoreFeatures(new ProductionMonitor(productionMonitor.CancellationToken,
                         v => productionMonitor.SetProgress(v / 2)).AsProgressMonitor());
                     if (!resultsHandler.IsMissingScores())
@@ -109,6 +111,42 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 yield return FEATURE_SET_PRODUCER.MakeWorkOrder(new FeatureSetParameters(
                     parameter.Document,
                     parameter.ScoringModel.PeakFeatureCalculators, parameter.PeptideIdentityPaths));
+            }
+
+            private SrmDocument RemoveExceptPeptides(SrmDocument document, HashSet<IdentityPath> peptideIdentityPaths)
+            {
+                if (peptideIdentityPaths == null)
+                {
+                    return document;
+                }
+                var moleculeGroups = new List<PeptideGroupDocNode>();
+                foreach (var moleculeGroup in document.MoleculeGroups)
+                {
+                    var molecules = new List<PeptideDocNode>();
+                    foreach (var molecule in moleculeGroup.Molecules)
+                    {
+                        if (molecule.GlobalStandardType != null ||
+                            peptideIdentityPaths.Contains(
+                                new IdentityPath(moleculeGroup.PeptideGroup, molecule.Peptide)))
+                        {
+                            molecules.Add(molecule);
+                        }
+                    }
+
+                    if (molecules.Count > 0)
+                    {
+                        if (molecules.Count == moleculeGroup.Children.Count)
+                        {
+                            moleculeGroups.Add(moleculeGroup);
+                        }
+                        else
+                        {
+                            moleculeGroups.Add((PeptideGroupDocNode) moleculeGroup.ChangeChildren(molecules.ToArray()));
+                        }
+                    }
+                }
+
+                return (SrmDocument)document.ChangeChildren(moleculeGroups.ToArray());
             }
 
             private class FeatureSetProducer : Producer<FeatureSetParameters, PeakTransitionGroupFeatureSet>

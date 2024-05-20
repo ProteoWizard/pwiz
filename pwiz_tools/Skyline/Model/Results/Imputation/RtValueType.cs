@@ -77,6 +77,10 @@ namespace pwiz.Skyline.Model.Results.Imputation
         {
             protected override IEnumerable<KeyValuePair<Target, IEnumerable<double>>> GetAllRetentionTimes(SrmDocument document, ReplicateFileInfo fileInfo)
             {
+                if (!document.Settings.PeptideSettings.Libraries.IsLoaded)
+                {
+                    return Array.Empty<KeyValuePair<Target, IEnumerable<double>>>();
+                }
                 var retentionTimes = document.Settings.GetRetentionTimes(fileInfo.MsDataFileUri);
                 if (retentionTimes == null)
                 {
@@ -100,6 +104,10 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     return true;
                 }
 
+                if (!document.Settings.PeptideSettings.Libraries.IsLoaded)
+                {
+                    return true;
+                }
                 foreach (var chromatogramSet in measuredResults.Chromatograms)
                 {
                     foreach (var chromFileInfo in chromatogramSet.MSDataFileInfos)
