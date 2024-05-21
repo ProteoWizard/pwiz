@@ -2075,7 +2075,7 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write(nodeTran != null ? GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo) : string.Empty);
             writer.Write(FieldSeparator);
-            writer.Write(ThermoFusionMassListExporter.GetCE(Document, nodePep, nodeTranGroup, nodeTran).ToString(CultureInfo));
+            writer.Write(ThermoFusionMassListExporter.GetCE(Document, nodePep, nodeTranGroup, nodeTran, InstrumentType).ToString(CultureInfo));
 
             if (UseSlens)
             {
@@ -4199,14 +4199,20 @@ namespace pwiz.Skyline.Model
 
         public string GetHeader(char fieldSeparator)
         {
-            var hdr = !Tune3Columns
-                ? @"m/z,z,t start (min),t end (min),CID Collision Energy (%)"
-                : @"Compound,Formula,Adduct,m/z,z,Polarity,t start (min),t stop (min),CID Collision Energy (%)";
+            var hdr = new StringBuilder(!Tune3Columns
+                ? @"m/z,z,t start (min),t end (min)"
+                : @"Compound,Formula,Adduct,m/z,z,Polarity,t start (min),t stop (min)");
+            
+            if (ExportInstrumentType.THERMO_STELLAR == InstrumentType)
+                hdr.Append(@",HCD Collision Energy/Energies (%)");
+            else
+                hdr.Append(@",CID Collision Energy (%)");
+
             if (UseSlens)
-                hdr += @",S-lens";
+                hdr.Append(@",S-lens");
             if (WriteFaimsCv)
-                hdr += @",FAIMS CV (V)";
-            return hdr.Replace(',', fieldSeparator);
+                hdr.Append(@",FAIMS CV (V)");
+            return hdr.ToString().Replace(',', fieldSeparator);
         }
 
         protected override void WriteHeaders(TextWriter writer)
@@ -4277,7 +4283,7 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write(end);
             writer.Write(FieldSeparator);
-            writer.Write(GetCE(Document, nodePep, nodeTranGroup, nodeTran).ToString(CultureInfo));
+            writer.Write(GetCE(Document, nodePep, nodeTranGroup, nodeTran, InstrumentType).ToString(CultureInfo));
 
             if (UseSlens)
             {
@@ -4293,12 +4299,14 @@ namespace pwiz.Skyline.Model
             writer.WriteLine();
         }
 
-        public static double GetCE(SrmDocument doc, PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTransition)
+        public static double GetCE(SrmDocument doc, PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTransition, string instrumentType)
         {
             var optCe = doc.GetOptimizedCollisionEnergy(nodePep, nodeGroup, nodeTransition);
             if (optCe.HasValue)
                 return optCe.Value;
-
+            // Requested by Thermo for this instrument type.
+            if (instrumentType == ExportInstrumentType.THERMO_STELLAR)
+                return WIDE_NCE;
             // Note that this is normalized CE (not absolute)
             var fullScan = doc.Settings.TransitionSettings.FullScan;
             var wideWindowDia = false;
