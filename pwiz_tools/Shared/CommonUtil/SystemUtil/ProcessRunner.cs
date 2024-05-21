@@ -298,8 +298,7 @@ namespace pwiz.Common.SystemUtil
             {
                 try
                 {
-                    tmpDirForCleanup = Path.GetTempFileName(); // Creates a file
-                    File.Delete(tmpDirForCleanup); // But we want a directory
+                    tmpDirForCleanup = psi.Environment.TryGetValue(@"TMP", out var value) ? value : Path.GetTempPath();
                     var exeName = string.Empty;
                     if (!string.IsNullOrEmpty(psi.FileName))
                     {
@@ -307,7 +306,7 @@ namespace pwiz.Common.SystemUtil
                         exeName = Path.GetFileNameWithoutExtension(psi.FileName);
                         if (!string.IsNullOrEmpty(exeName))
                         {
-                            tmpDirForCleanup = Path.ChangeExtension(tmpDirForCleanup, exeName);
+                            tmpDirForCleanup = Path.Combine(tmpDirForCleanup, exeName + "_" + Path.GetRandomFileName());
                         }
                     }
 
