@@ -22,7 +22,7 @@ namespace pwiz.SkylineTestConnected
     {
         const string TEST_ZIP_PATH = @"Test\PredictionBuildLibraryFromCsvTest.zip";
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.DOCKER_ROOT_CERTS)]
         public void TestKoinaBuildLibraryFromCsv()
         {
             if (!HasKoinaServer())
