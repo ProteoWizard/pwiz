@@ -31,6 +31,7 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PeakImputationForm));
             this.panel1 = new System.Windows.Forms.Panel();
+            this.cbxAlignAllGraphs = new System.Windows.Forms.CheckBox();
             this.groupBoxDocumentStatistics = new System.Windows.Forms.GroupBox();
             this.tbxAlignedDocRtStdDev = new System.Windows.Forms.TextBox();
             this.lblAligned = new System.Windows.Forms.Label();
@@ -44,6 +45,8 @@
             this.lblScoringModel = new System.Windows.Forms.Label();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.groupBoxResults = new System.Windows.Forms.GroupBox();
+            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.lblNeedRemoval = new System.Windows.Forms.Label();
             this.tbxMeanRtStdDev = new System.Windows.Forms.TextBox();
             this.lblMeanRtStdDev = new System.Windows.Forms.Label();
             this.tbxExemplary = new System.Windows.Forms.TextBox();
@@ -66,8 +69,6 @@
             this.comboRetentionTimeAlignment = new System.Windows.Forms.ComboBox();
             this.lblRetentionTimeAlignment = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.lblNeedRemoval = new System.Windows.Forms.Label();
-            this.textBox1 = new System.Windows.Forms.TextBox();
             this.panel1.SuspendLayout();
             this.groupBoxDocumentStatistics.SuspendLayout();
             this.groupBoxScope.SuspendLayout();
@@ -82,6 +83,7 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.cbxAlignAllGraphs);
             this.panel1.Controls.Add(this.groupBoxDocumentStatistics);
             this.panel1.Controls.Add(this.groupBoxScope);
             this.panel1.Controls.Add(this.tbxScoringModel);
@@ -100,6 +102,17 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(800, 223);
             this.panel1.TabIndex = 1;
+            // 
+            // cbxAlignAllGraphs
+            // 
+            this.cbxAlignAllGraphs.AutoSize = true;
+            this.cbxAlignAllGraphs.Location = new System.Drawing.Point(181, 52);
+            this.cbxAlignAllGraphs.Name = "cbxAlignAllGraphs";
+            this.cbxAlignAllGraphs.Size = new System.Drawing.Size(97, 17);
+            this.cbxAlignAllGraphs.TabIndex = 25;
+            this.cbxAlignAllGraphs.Text = "Align all graphs";
+            this.cbxAlignAllGraphs.UseVisualStyleBackColor = true;
+            this.cbxAlignAllGraphs.CheckedChanged += new System.EventHandler(this.SettingsControlChanged);
             // 
             // groupBoxDocumentStatistics
             // 
@@ -241,6 +254,23 @@
             this.groupBoxResults.TabStop = false;
             this.groupBoxResults.Text = "Results";
             // 
+            // textBox1
+            // 
+            this.textBox1.Location = new System.Drawing.Point(6, 149);
+            this.textBox1.Name = "textBox1";
+            this.textBox1.ReadOnly = true;
+            this.textBox1.Size = new System.Drawing.Size(84, 20);
+            this.textBox1.TabIndex = 11;
+            // 
+            // lblNeedRemoval
+            // 
+            this.lblNeedRemoval.AutoSize = true;
+            this.lblNeedRemoval.Location = new System.Drawing.Point(6, 133);
+            this.lblNeedRemoval.Name = "lblNeedRemoval";
+            this.lblNeedRemoval.Size = new System.Drawing.Size(76, 13);
+            this.lblNeedRemoval.TabIndex = 10;
+            this.lblNeedRemoval.Text = "Need removal:";
+            // 
             // tbxMeanRtStdDev
             // 
             this.tbxMeanRtStdDev.Location = new System.Drawing.Point(6, 184);
@@ -324,7 +354,7 @@
             // cbxOverwriteManual
             // 
             this.cbxOverwriteManual.AutoSize = true;
-            this.cbxOverwriteManual.Location = new System.Drawing.Point(181, 106);
+            this.cbxOverwriteManual.Location = new System.Drawing.Point(181, 142);
             this.cbxOverwriteManual.Name = "cbxOverwriteManual";
             this.cbxOverwriteManual.Size = new System.Drawing.Size(140, 17);
             this.cbxOverwriteManual.TabIndex = 16;
@@ -334,7 +364,7 @@
             // 
             // tbxRtDeviationCutoff
             // 
-            this.tbxRtDeviationCutoff.Location = new System.Drawing.Point(181, 75);
+            this.tbxRtDeviationCutoff.Location = new System.Drawing.Point(181, 111);
             this.tbxRtDeviationCutoff.Name = "tbxRtDeviationCutoff";
             this.tbxRtDeviationCutoff.Size = new System.Drawing.Size(127, 20);
             this.tbxRtDeviationCutoff.TabIndex = 15;
@@ -346,7 +376,7 @@
             // lblSdCutoff
             // 
             this.lblSdCutoff.AutoSize = true;
-            this.lblSdCutoff.Location = new System.Drawing.Point(178, 55);
+            this.lblSdCutoff.Location = new System.Drawing.Point(178, 91);
             this.lblSdCutoff.Name = "lblSdCutoff";
             this.lblSdCutoff.Size = new System.Drawing.Size(106, 13);
             this.lblSdCutoff.TabIndex = 14;
@@ -456,23 +486,6 @@
             this.lblRetentionTimeAlignment.TabIndex = 0;
             this.lblRetentionTimeAlignment.Text = "Retention time alignment:";
             // 
-            // lblNeedRemoval
-            // 
-            this.lblNeedRemoval.AutoSize = true;
-            this.lblNeedRemoval.Location = new System.Drawing.Point(6, 133);
-            this.lblNeedRemoval.Name = "lblNeedRemoval";
-            this.lblNeedRemoval.Size = new System.Drawing.Size(76, 13);
-            this.lblNeedRemoval.TabIndex = 10;
-            this.lblNeedRemoval.Text = "Need removal:";
-            // 
-            // textBox1
-            // 
-            this.textBox1.Location = new System.Drawing.Point(6, 149);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.ReadOnly = true;
-            this.textBox1.Size = new System.Drawing.Size(84, 20);
-            this.textBox1.TabIndex = 11;
-            // 
             // PeakImputationForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -538,5 +551,6 @@
         private System.Windows.Forms.Label lblMeanRtStdDev;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Label lblNeedRemoval;
+        private System.Windows.Forms.CheckBox cbxAlignAllGraphs;
     }
 }

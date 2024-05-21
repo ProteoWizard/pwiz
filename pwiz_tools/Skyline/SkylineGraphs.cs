@@ -48,7 +48,6 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.GroupComparison;
-using pwiz.Skyline.Model.Results.Imputation;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -808,16 +807,16 @@ namespace pwiz.Skyline
             }
         }
 
-        private ConsensusAlignment _consensusAlignment;
-        public ConsensusAlignment ConsensusAlignment
+        private GraphValues.IRetentionTimeTransformOp _retentionTimeTransformOp;
+        public GraphValues.IRetentionTimeTransformOp RetentionTimeTransformOp
         {
             get
             {
-                return _consensusAlignment;
+                return _retentionTimeTransformOp;
             }
             set
             {
-                _consensusAlignment = value;
+                _retentionTimeTransformOp = value;
                 UpdateGraphPanes();
             }
         }
@@ -842,9 +841,9 @@ namespace pwiz.Skyline
 
         public GraphValues.IRetentionTimeTransformOp GetRetentionTimeTransformOperation()
         {
-            if (null != ConsensusAlignment)
+            if (null != RetentionTimeTransformOp)
             {
-                return ConsensusAlignment.AsRetentionTimeTransformOp();
+                return RetentionTimeTransformOp;
             }
             if (null != AlignToFile)
             {

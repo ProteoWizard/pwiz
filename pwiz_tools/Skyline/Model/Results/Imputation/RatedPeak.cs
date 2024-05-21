@@ -12,7 +12,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
             ReplicateFileInfo = resultFileInfo;
             AlignmentFunction = alignmentFunction;
             RawPeakBounds = rawPeakBounds;
-            AlignedPeakBounds = rawPeakBounds?.AlignPreservingWidth(alignmentFunction);
+            AlignedPeakBounds = rawPeakBounds?.Align(alignmentFunction);
             ManuallyIntegrated = manuallyIntegrated;
             Score = score;
         }

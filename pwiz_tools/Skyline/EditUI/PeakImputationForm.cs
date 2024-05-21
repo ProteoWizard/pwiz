@@ -20,8 +20,10 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Imputation;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -100,7 +102,26 @@ namespace pwiz.Skyline.EditUI
                         ?.ToString(Formats.RETENTION_TIME) ?? string.Empty;
 
                 progressBar1.Visible = false;
-                SkylineWindow.ConsensusAlignment = _data.ConsensusAlignment;
+                if (_data.ConsensusAlignment != null && cbxAlignAllGraphs.Checked)
+                {
+                    var alignments = new Dictionary<ReferenceValue<ChromFileInfoId>, AlignmentFunction>();
+                    foreach (var replicateFileInfo in ReplicateFileInfo.List(document.MeasuredResults))
+                    {
+                        var alignmentFunction =
+                            _data.ConsensusAlignment.GetAlignment(replicateFileInfo.ReplicateFileId);
+                        if (alignmentFunction != null)
+                        {
+                            alignments[replicateFileInfo.ReplicateFileId.FileId] = alignmentFunction;
+                        }
+                    }
+
+                    SkylineWindow.RetentionTimeTransformOp =
+                        new ConsensusAlignmentTransformOp(_data.Params.AlignmentType.ToString(), alignments);
+                }
+                else
+                {
+                    SkylineWindow.RetentionTimeTransformOp = null;
+                }
             }
             else
             {
@@ -612,7 +633,8 @@ namespace pwiz.Skyline.EditUI
                             continue;
                         }
 
-                        var rejectedPeaks = row.Peaks.Values.Where(peak => peak.Verdict == RatedPeak.Verdict.NeedsAdjustment)
+                        var rejectedPeaks = row.Peaks.Values
+                            .Where(peak => peak.Verdict == RatedPeak.Verdict.NeedsAdjustment || peak.Verdict == RatedPeak.Verdict.NeedsRemoval)
                             .Select(peak => peak.GetRatedPeak()).ToList();
                         foreach (var rejectedPeak in rejectedPeaks)
                         {

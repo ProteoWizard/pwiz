@@ -7,7 +7,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.RetentionTimes;
 
 namespace pwiz.Skyline.Model.Results.Imputation
@@ -221,26 +220,28 @@ namespace pwiz.Skyline.Model.Results.Imputation
         {
             return new RetentionTimeTransformOpImpl(this);
         }
+    }
 
-        private class RetentionTimeTransformOpImpl : GraphValues.IRetentionTimeTransformOp
+    public class ConsensusAlignmentTransformOp : GraphValues.IRetentionTimeTransformOp
+    {
+        private Dictionary<ReferenceValue<ChromFileInfoId>, AlignmentFunction> _alignmentFunctions;
+        public ConsensusAlignmentTransformOp(string name, Dictionary<ReferenceValue<ChromFileInfoId>, AlignmentFunction> alignmentFunctions)
         {
-            private ConsensusAlignment _alignment;
-            public RetentionTimeTransformOpImpl(ConsensusAlignment alignment)
-            {
-                _alignment = alignment;
-            }
-            public string GetAxisTitle(RTPeptideValue rtPeptideValue)
-            {
-                return string.Format(GraphsResources.RtAlignment_AxisTitleAlignedTo,
-                    GraphValues.ToLocalizedString(rtPeptideValue), "Consensus");
-            }
-
-            public bool TryGetRegressionFunction(ChromFileInfoId chromFileInfoId, out AlignmentFunction regressionFunction)
-            {
-                regressionFunction = _alignment._alignmentFunctions
-                    .FirstOrDefault(kvp => ReferenceEquals(kvp.Key.FileId, chromFileInfoId)).Value;
-                return regressionFunction != null;
-            }
+            _alignmentFunctions = alignmentFunctions;
+            Name = name;
         }
+
+        public string Name { get; }
+        public string GetAxisTitle(RTPeptideValue rtPeptideValue)
+        {
+            return string.Format(GraphsResources.RtAlignment_AxisTitleAlignedTo,
+                GraphValues.ToLocalizedString(rtPeptideValue), Name);
+        }
+
+        public bool TryGetRegressionFunction(ChromFileInfoId chromFileInfoId, out AlignmentFunction regressionFunction)
+        {
+            return _alignmentFunctions.TryGetValue(chromFileInfoId, out regressionFunction);
+        }
+
     }
 }

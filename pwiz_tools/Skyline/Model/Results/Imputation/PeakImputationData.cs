@@ -359,7 +359,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
             var bestPeak = exemplaryPeaks.First();
             var exemplaryPeakBounds = GetExemplaryPeakBounds(exemplaryPeaks);
             var peptideDocNode = (PeptideDocNode) parameters.Document.FindNode(moleculePeaks.PeptideIdentityPath);
-            peaks = peaks.Select(peak => MarkAcceptedPeak(parameters, peptideDocNode, exemplaryPeakBounds.ReverseAlign(peak.AlignmentFunction), peak)).ToList();
+            peaks = peaks.Select(peak => MarkAcceptedPeak(parameters, peptideDocNode, exemplaryPeakBounds.ReverseAlignPreservingWidth(peak.AlignmentFunction), peak)).ToList();
             var peaksByFile = peaks.ToLookup(peak => peak.ReplicateFileInfo.ReplicateFileId);
             var peaksInOriginalOrder = moleculePeaks.Peaks.GroupBy(peak => peak.ReplicateFileInfo.ReplicateFileId)
                 .SelectMany(group => peaksByFile[group.Key]);
@@ -459,8 +459,15 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 return null;
             }
 
-            return new RatedPeak.PeakBounds(exemplaryPeaks.Average(peak => peak.AlignedPeakBounds.StartTime),
-                exemplaryPeaks.Average(peak => peak.AlignedPeakBounds.EndTime));
+            var alignedPeakBounds =
+                exemplaryPeaks.Select(peak => peak.RawPeakBounds.AlignPreservingWidth(peak.AlignmentFunction)).ToList();
+            if (alignedPeakBounds.Count == 0)
+            {
+                return null;
+            }
+
+            return new RatedPeak.PeakBounds(alignedPeakBounds.Average(peak => peak.StartTime),
+                alignedPeakBounds.Average(peak => peak.EndTime));
         }
 
         private RatedPeak MarkExemplary(Parameters parameters, RatedPeak peak)
