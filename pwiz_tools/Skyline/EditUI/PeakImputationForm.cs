@@ -222,11 +222,8 @@ namespace pwiz.Skyline.EditUI
 
         private bool HasQValues(SrmDocument document)
         {
-            var scoreQValueMap = document.Settings.PeptideSettings.Integration.ScoreQValueMap;
-            if (false == scoreQValueMap?.Equals(ScoreQValueMap.EMPTY))
-            {
-                return true;
-            }
+            // TODO
+            return true;
             foreach (var transitionGroup in document.MoleculeTransitionGroups.Take(100))
             {
                 if (transitionGroup.Results != null)
@@ -358,7 +355,7 @@ namespace pwiz.Skyline.EditUI
             }
 
             [Format(Formats.PValue)]
-            public double? QValue
+            public double? LibraryQValue
             {
                 get { return _ratedPeak.QValue; }
             }
@@ -387,7 +384,7 @@ namespace pwiz.Skyline.EditUI
                 return _ratedPeak;
             }
 
-            public EventHandler ClickEventHandler
+            EventHandler ILinkValue.ClickEventHandler
             {
                 get
                 {
@@ -395,7 +392,7 @@ namespace pwiz.Skyline.EditUI
                 }
             }
 
-            public object Value
+            object ILinkValue.Value
             {
                 get { return this; }
             }
@@ -717,7 +714,7 @@ namespace pwiz.Skyline.EditUI
             };
             if (HasQValues(SkylineWindow.Document))
             {
-                propertyPaths.Add(ppPeaks.Property(nameof(Peak.QValue)));
+                propertyPaths.Add(ppPeaks.Property(nameof(Peak.LibraryQValue)));
             }
 
             propertyPaths.Add(ppPeaks.Property(nameof(Peak.Verdict)));

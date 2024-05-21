@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
-using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results.Scoring;
 
@@ -14,20 +13,15 @@ namespace pwiz.Skyline.Model.Results.Imputation
     public class PeakImputationData
     {
         public static readonly Producer<Parameters, PeakImputationData> PRODUCER = new DataProducer();
-        public PeakImputationData(Parameters parameters, ConsensusAlignment consensusAlignment, ScoringResults scoringResults, IList<MoleculePeaks> moleculePeaksList)
+        public PeakImputationData(Parameters parameters, ConsensusAlignment consensusAlignment, IList<MoleculePeaks> moleculePeaksList)
         {
             Params = parameters;
             ConsensusAlignment = consensusAlignment;
-            ScoringResults = scoringResults;
-            var sortedScores = ScoringResults.SortedScores;
-            if (sortedScores == null)
-            {
-                sortedScores = ImmutableList.ValueOf(moleculePeaksList
-                    .SelectMany(molecule => molecule.Peaks.Select(peak => peak.Score)).OfType<double>()
-                    .Select(score => (float)score));
-            }
+            var sortedScores = ImmutableList.ValueOf(moleculePeaksList
+                .SelectMany(molecule => molecule.Peaks.Select(peak => peak.Score)).OfType<double>()
+                .Select(score => (float)score));
 
-            ScoreConversionData = new ScoreConversionData(ScoringResults.ScoreQValueMap, sortedScores);
+            ScoreConversionData = new ScoreConversionData(sortedScores);
 
             var ratedMoleculePeaks = new List<MoleculePeaks>();
             foreach (var moleculePeaks in moleculePeaksList)
@@ -39,7 +33,6 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
         public Parameters Params { get; }
         public ConsensusAlignment ConsensusAlignment { get; }
-        public ScoringResults ScoringResults { get; }
 
         public ScoreConversionData ScoreConversionData { get; }
         public ImmutableList<MoleculePeaks> MoleculePeaks { get; }
@@ -107,16 +100,6 @@ namespace pwiz.Skyline.Model.Results.Imputation
             public Parameters ChangePeptideIdentityPaths(ImmutableList<IdentityPath> value)
             {
                 return ChangeProp(ImClone(this), im => im.PeptideIdentityPaths = value);
-            }
-
-            public ScoringResults.Parameters GetScoringResultsParameters()
-            {
-                if (ScoringModel == null)
-                {
-                    return null;
-                }
-
-                return new ScoringResults.Parameters(Document, ScoringModel, OverwriteManualPeaks, PeptideIdentityPaths);
             }
 
             public ConsensusAlignment.Parameters GetAlignmentParameters()
@@ -195,12 +178,11 @@ namespace pwiz.Skyline.Model.Results.Imputation
         {
             public override PeakImputationData ProduceResult(ProductionMonitor productionMonitor, Parameters parameter, IDictionary<WorkOrder, object> inputs)
             {
-                ScoringResults scoringResults = ScoringResults.PRODUCER.GetResult(inputs, parameter.GetScoringResultsParameters());
                 var consensusAlignment =
                     ConsensusAlignment.PRODUCER.GetResult(inputs, parameter.GetAlignmentParameters());
-                var rows = ImmutableList.ValueOf(GetRows(productionMonitor, parameter, scoringResults, consensusAlignment));
+                var rows = ImmutableList.ValueOf(GetRows(productionMonitor, parameter, consensusAlignment));
                 // rows = EnsureScores(rows);
-                return new PeakImputationData(parameter, consensusAlignment, scoringResults, rows);
+                return new PeakImputationData(parameter, consensusAlignment, rows);
             }
 
             public override IEnumerable<WorkOrder> GetInputs(Parameters parameter)
@@ -216,15 +198,9 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     yield return ConsensusAlignment.PRODUCER.MakeWorkOrder(
                         new ConsensusAlignment.Parameters(document, parameter.AlignmentType));
                 }
-
-                if (parameter.ScoringModel != null)
-                {
-                    yield return ScoringResults.PRODUCER.MakeWorkOrder(
-                        new ScoringResults.Parameters(parameter.Document, parameter.ScoringModel, parameter.OverwriteManualPeaks, parameter.PeptideIdentityPaths));
-                }
             }
 
-            private IEnumerable<MoleculePeaks> GetRows(ProductionMonitor productionMonitor, Parameters parameters, ScoringResults scoringResults, ConsensusAlignment alignments)
+            private IEnumerable<MoleculePeaks> GetRows(ProductionMonitor productionMonitor, Parameters parameters, ConsensusAlignment alignments)
             {
                 var peptideIdentityPaths = parameters.PeptideIdentityPaths?.ToHashSet();
                 var document = parameters.Document;
@@ -315,7 +291,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                                     manuallyIntegrated);
                                 var explicitPeakBounds =
                                     document.Settings.GetExplicitPeakBounds(molecule, chromFileInfo.FilePath);
-                                if (explicitPeakBounds?.Score != null)
+                                if (explicitPeakBounds?.Score != null && explicitPeakBounds.StartTime < rawPeakBounds.EndTime && explicitPeakBounds.EndTime > rawPeakBounds.StartTime)
                                 {
                                     peak = peak.ChangeQValue(explicitPeakBounds.Score);
                                 }

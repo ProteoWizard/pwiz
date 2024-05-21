@@ -545,7 +545,6 @@
     <Compile Include="Model\FullScanProperties.cs" />
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Results\Imputation\PeakImputer.cs" />
-    <Compile Include="Model\Results\Imputation\PeakScores.cs" />
     <Compile Include="Model\Results\Imputation\RatedPeak.cs" />
     <Compile Include="Model\Results\Imputation\ConsensusAlignment.cs" />
     <Compile Include="Model\Results\Imputation\CutoffScoreType.cs" />
@@ -556,7 +555,6 @@
     <Compile Include="Model\Results\Imputation\RtValueType.cs" />
     <Compile Include="Model\Results\Imputation\ImputationParameters.cs" />
     <Compile Include="Model\Results\Imputation\ScoreConversionData.cs" />
-    <Compile Include="Model\Results\Imputation\ScoringResults.cs" />
     <Compile Include="Model\Results\ReplicateFileId.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\BinnedSpectrum.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SimilarityGrid.cs" />

@@ -1,21 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.Results.Scoring;
 
 namespace pwiz.Skyline.Model.Results.Imputation
 {
     public class ScoreConversionData : Immutable
     {
         public static readonly ScoreConversionData EMPTY =
-            new ScoreConversionData(ScoreQValueMap.EMPTY, ImmutableList.Empty<float>());
+            new ScoreConversionData(ImmutableList.Empty<float>());
 
-        public ScoreConversionData(ScoreQValueMap scoreQValueMap, IEnumerable<float> sortedScores)
+        public ScoreConversionData(IEnumerable<float> sortedScores)
         {
-            ScoreQValueMap = scoreQValueMap;
             SortedScores = ImmutableList.ValueOf(sortedScores);
         }
         public ImmutableList<float> SortedScores { get; private set; }
@@ -23,13 +19,6 @@ namespace pwiz.Skyline.Model.Results.Imputation
         public ScoreConversionData ChangeSortedScores(ImmutableList<float> value)
         {
             return ChangeProp(ImClone(this), im => im.SortedScores = value);
-        }
-
-        public ScoreQValueMap ScoreQValueMap { get; private set; }
-
-        public ScoreConversionData ChangeScoreQValueMap(ScoreQValueMap value)
-        {
-            return ChangeProp(ImClone(this), im => im.ScoreQValueMap = value);
         }
 
         public double? GetScoreAtPercentile(double value)
