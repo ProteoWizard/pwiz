@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     document.MeasuredResults.Chromatograms[ReplicateFileInfo.ReplicateIndex];
                 document = document.ChangePeak(identityPath, chromatogramSet.Name,
                     ReplicateFileInfo.MsDataFileUri, null, newPeakBounds?.StartTime ?? 0, newPeakBounds?.EndTime ?? 0,
-                    UserSet.MATCHED, null,
+                    UserSet.IMPUTED, null,
                     false);
             }
 

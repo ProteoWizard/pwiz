@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using MathNet.Numerics.Distributions;
+﻿using MathNet.Numerics.Distributions;
 using pwiz.Skyline.Model.Results.Scoring;
 
 namespace pwiz.Skyline.Model.Results.Imputation
@@ -88,22 +87,25 @@ namespace pwiz.Skyline.Model.Results.Imputation
         {
             public override double? FromRawScore(ScoreConversionData peakImputationData, double value)
             {
-                return peakImputationData.ScoreQValueMap?.GetQValue(value);
+                return null;
+                // return peakImputationData.ScoreQValueMap?.GetQValue(value);
             }
 
             public override bool IsEnabled(PeakScoringModelSpec scoringModelSpec)
             {
-                return !Equals(scoringModelSpec, LegacyScoringModel.DEFAULT_MODEL);
+                return true;
+//                return !Equals(scoringModelSpec, LegacyScoringModel.DEFAULT_MODEL);
             }
 
             public override double? ToRawScore(ScoreConversionData peakImputationData, double value)
             {
-                return peakImputationData.ScoreQValueMap?.GetZScore(value);
+                return null;
+                //return peakImputationData.ScoreQValueMap?.GetZScore(value);
             }
 
             public override string ToString()
             {
-                return "Q-Value";
+                return "Q-Value from library";
             }
         }
     }

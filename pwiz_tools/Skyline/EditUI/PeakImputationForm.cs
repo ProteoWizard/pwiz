@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using JetBrains.Annotations;
 using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -53,6 +54,12 @@ namespace pwiz.Skyline.EditUI
             BindingListSource.SetViewContext(viewContext);
             _receiver = PeakImputationData.PRODUCER.RegisterCustomer(this, ProductAvailableAction);
             _receiver.ProgressChange += ReceiverOnProgressChange;
+            var meanStandardDeviation = GetMeanStandardDeviation(SkylineWindow.Document);
+            if (meanStandardDeviation.HasValue)
+            {
+                string format = meanStandardDeviation > 0.05 ? Formats.RETENTION_TIME : Formats.RoundTrip;
+                tbxRtDeviationCutoff.Text = meanStandardDeviation.Value.ToString(format);
+            }
         }
 
         private void ReceiverOnProgressChange()
@@ -718,6 +725,45 @@ namespace pwiz.Skyline.EditUI
             yield return new ViewSpec().SetRowType(typeof(Row))
                 .SetColumns(propertyPaths.Select(pp => new ColumnSpec(pp)))
                 .SetSublistId(ppPeaks).SetName("Details");
+        }
+
+        public double? GetMeanStandardDeviation(SrmDocument document)
+        {
+            var standardDeviations = new List<double>();
+            foreach (var molecule in document.Molecules)
+            {
+                if (!molecule.HasResults)
+                {
+                    continue;
+                }
+
+                var times = new List<double>();
+                for (int i = 0; i < molecule.Results.Count; i++)
+                {
+                    foreach (var fileGroup in molecule.GetSafeChromInfo(i)
+                                 .GroupBy(peptideChromInfo => ReferenceValue.Of(peptideChromInfo.FileId)))
+                    {
+                        var fileTimes = fileGroup.Select(peptideChromInfo => (double?) peptideChromInfo.RetentionTime)
+                            .OfType<double>().ToList();
+                        if (fileTimes.Count > 0)
+                        {
+                            times.Add(fileTimes.Average());
+                        }
+                    }
+                }
+
+                if (times.Count > 0)
+                {
+                    standardDeviations.Add(times.StandardDeviation());
+                }
+            }
+
+            if (standardDeviations.Count == 0)
+            {
+                return null;
+            }
+
+            return standardDeviations.Average();
         }
     }
 }

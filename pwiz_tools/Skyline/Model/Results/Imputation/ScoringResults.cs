@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
@@ -16,21 +14,19 @@ namespace pwiz.Skyline.Model.Results.Imputation
         public ScoringResults(MProphetResultsHandler resultsHandler, SrmDocument reintegratedDocument)
         {
             ResultsHandler = resultsHandler;
-            ReintegratedDocument = reintegratedDocument;
             SortedScores = ImmutableList.ValueOf(reintegratedDocument?.MoleculeTransitionGroups
                 .SelectMany(tg => tg.Results.SelectMany(chromInfoList => chromInfoList))
                 .Select(transitionGroupChromInfo => transitionGroupChromInfo.ZScore).OfType<float>()
                 .OrderBy(score => score));
         }
         public MProphetResultsHandler ResultsHandler { get; }
-        public SrmDocument ReintegratedDocument { get; }
         public ImmutableList<float> SortedScores { get; }
 
         public ScoreQValueMap ScoreQValueMap
         {
             get
             {
-                return ReintegratedDocument?.Settings.PeptideSettings.Integration.ScoreQValueMap ?? ScoreQValueMap.EMPTY;
+                return ScoreQValueMap.EMPTY;
             }
         }
 
@@ -151,7 +147,6 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
             private class FeatureSetProducer : Producer<FeatureSetParameters, PeakTransitionGroupFeatureSet>
             {
-
                 public override PeakTransitionGroupFeatureSet ProduceResult(ProductionMonitor productionMonitor,
                     FeatureSetParameters parameter,
                     IDictionary<WorkOrder, object> inputs)

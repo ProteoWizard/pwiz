@@ -51,6 +51,7 @@
             this.tbxRtDeviationCutoff = new System.Windows.Forms.TextBox();
             this.lblSdCutoff = new System.Windows.Forms.Label();
             this.groupBoxCutoff = new System.Windows.Forms.GroupBox();
+            this.lblPercent = new System.Windows.Forms.Label();
             this.radioPValue = new System.Windows.Forms.RadioButton();
             this.radioPercentile = new System.Windows.Forms.RadioButton();
             this.radioQValue = new System.Windows.Forms.RadioButton();
@@ -59,7 +60,6 @@
             this.comboRetentionTimeAlignment = new System.Windows.Forms.ComboBox();
             this.lblRetentionTimeAlignment = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.lblPercent = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.groupBoxScope.SuspendLayout();
             this.groupBoxResults.SuspendLayout();
@@ -299,6 +299,16 @@
             this.groupBoxCutoff.TabStop = false;
             this.groupBoxCutoff.Text = "Exemplary Cutoff";
             // 
+            // lblPercent
+            // 
+            this.lblPercent.AutoSize = true;
+            this.lblPercent.Location = new System.Drawing.Point(118, 116);
+            this.lblPercent.Name = "lblPercent";
+            this.lblPercent.Size = new System.Drawing.Size(15, 13);
+            this.lblPercent.TabIndex = 11;
+            this.lblPercent.Text = "%";
+            this.lblPercent.Visible = false;
+            // 
             // radioPValue
             // 
             this.radioPValue.AutoSize = true;
@@ -328,10 +338,10 @@
             this.radioQValue.AutoSize = true;
             this.radioQValue.Location = new System.Drawing.Point(6, 66);
             this.radioQValue.Name = "radioQValue";
-            this.radioQValue.Size = new System.Drawing.Size(62, 17);
+            this.radioQValue.Size = new System.Drawing.Size(94, 17);
             this.radioQValue.TabIndex = 1;
             this.radioQValue.TabStop = true;
-            this.radioQValue.Text = "Q-value";
+            this.radioQValue.Text = "Library q-value";
             this.radioQValue.UseVisualStyleBackColor = true;
             this.radioQValue.CheckedChanged += new System.EventHandler(this.CutoffTypeChanged);
             // 
@@ -377,16 +387,6 @@
             this.lblRetentionTimeAlignment.Size = new System.Drawing.Size(126, 13);
             this.lblRetentionTimeAlignment.TabIndex = 0;
             this.lblRetentionTimeAlignment.Text = "Retention time alignment:";
-            // 
-            // lblPercent
-            // 
-            this.lblPercent.AutoSize = true;
-            this.lblPercent.Location = new System.Drawing.Point(118, 116);
-            this.lblPercent.Name = "lblPercent";
-            this.lblPercent.Size = new System.Drawing.Size(15, 13);
-            this.lblPercent.TabIndex = 11;
-            this.lblPercent.Text = "%";
-            this.lblPercent.Visible = false;
             // 
             // PeakImputationForm
             // 

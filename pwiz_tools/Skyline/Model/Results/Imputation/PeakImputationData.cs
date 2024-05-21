@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results.Scoring;
 
@@ -48,8 +49,8 @@ namespace pwiz.Skyline.Model.Results.Imputation
             if (peak.Score.HasValue)
             {
                 peak = peak.ChangePercentile(ScoreConversionData.GetPercentileOfScore(peak.Score.Value));
-                peak = peak.ChangeQValue(ScoringResults.ScoreQValueMap?.GetQValue(peak.Score));
-                if (CutoffScoreType.PVALUE.IsEnabled(Params.ScoringModel))
+                // peak = peak.ChangeQValue(ScoringResults.ScoreQValueMap?.GetQValue(peak.Score));
+                if (!Equals(Params.ScoringModel, LegacyScoringModel.DEFAULT_MODEL))
                 {
                     peak = peak.ChangePValue(CutoffScoreType.PVALUE.FromRawScore(ScoreConversionData, peak.Score.Value));
                 }
@@ -226,7 +227,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
             private IEnumerable<MoleculePeaks> GetRows(ProductionMonitor productionMonitor, Parameters parameters, ScoringResults scoringResults, ConsensusAlignment alignments)
             {
                 var peptideIdentityPaths = parameters.PeptideIdentityPaths?.ToHashSet();
-                var document = scoringResults?.ReintegratedDocument ?? parameters.Document;
+                var document = parameters.Document;
                 var measuredResults = document.MeasuredResults;
                 if (measuredResults == null)
                 {
@@ -254,6 +255,11 @@ namespace pwiz.Skyline.Model.Results.Imputation
                         {
                             continue;
                         }
+
+                        if (molecule.Children.Count == 0)
+                        {
+                            continue;
+                        }
                         var peaks = new List<RatedPeak>();
                         for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
                         {
@@ -265,8 +271,11 @@ namespace pwiz.Skyline.Model.Results.Imputation
                                     // Shouldn't happen
                                     continue;
                                 }
-                                bool manuallyIntegrated = IsManualIntegrated(molecule, replicateIndex, peptideChromInfo.FileId);
 
+                                var chromFileInfo = document.MeasuredResults.Chromatograms[replicateIndex]
+                                    .GetFileInfo(peptideChromInfo.FileId);
+                                PeptideDocNode scoredMolecule = molecule;
+                                bool manuallyIntegrated = IsManualIntegrated(molecule, replicateIndex, peptideChromInfo.FileId);
                                 if (manuallyIntegrated)
                                 {
                                     if (!parameters.OverwriteManualPeaks)
@@ -274,21 +283,43 @@ namespace pwiz.Skyline.Model.Results.Imputation
                                         continue;
                                     }
                                 }
-
-                                var rawPeakBounds = GetRawPeakBounds(molecule,
+                                
+                                var rawPeakBounds = GetRawPeakBounds(scoredMolecule,
                                     replicateIndex,
                                     peptideChromInfo.FileId);
-                                double? score = EnumerateTransitionGroupChromInfos(molecule, replicateIndex,
-                                        peptideChromInfo.FileId).Select(chromInfo => chromInfo.ZScore)
-                                    .FirstOrDefault(value => value.HasValue);
-                                if (score == null)
+                                var onDemandFeatureCalculator = new OnDemandFeatureCalculator(
+                                    parameters.ScoringModel.PeakFeatureCalculators, parameters.Document.Settings,
+                                    molecule, replicateIndex, chromFileInfo);
+                                var candidatePeakGroups = molecule.TransitionGroups.SelectMany(tg =>
+                                    onDemandFeatureCalculator.GetCandidatePeakGroups(tg.TransitionGroup)).ToList();
+                                CandidatePeakGroupData matchingPeakGroup;
+                                if (manuallyIntegrated)
                                 {
-                                    score = -EnumerateTransitionGroupChromInfos(molecule, replicateIndex,
-                                            peptideChromInfo.FileId).Select(chromInfo => chromInfo.QValue)
-                                        .FirstOrDefault(value => value.HasValue);
+                                    matchingPeakGroup = candidatePeakGroups
+                                        .OrderByDescending(group => group.Score.ModelScore).FirstOrDefault();
                                 }
+                                else
+                                {
+                                    matchingPeakGroup = candidatePeakGroups.FirstOrDefault(peakGroupData =>
+                                        peakGroupData.MinStartTime == rawPeakBounds.StartTime &&
+                                        peakGroupData.MaxEndTime == rawPeakBounds.EndTime);
+                                    if (matchingPeakGroup == null)
+                                    {
+                                        matchingPeakGroup =
+                                            onDemandFeatureCalculator.GetChosenPeakGroupData(molecule.TransitionGroups
+                                                .First().TransitionGroup);
+                                    }
+                                }
+                                double? score = matchingPeakGroup?.Score.ModelScore;
                                 var peak = new RatedPeak(peakResultFile, alignments?.GetAlignment(peakResultFile.ReplicateFileId), rawPeakBounds, score,
                                     manuallyIntegrated);
+                                var explicitPeakBounds =
+                                    document.Settings.GetExplicitPeakBounds(molecule, chromFileInfo.FilePath);
+                                if (explicitPeakBounds?.Score != null)
+                                {
+                                    peak = peak.ChangeQValue(explicitPeakBounds.Score);
+                                }
+
                                 peaks.Add(peak);
                             }
                         }

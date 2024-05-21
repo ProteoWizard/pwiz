@@ -2368,7 +2368,7 @@ namespace pwiz.Skyline.Model
             {
                 if (ReintegrateResults != null && step == 0)
                 {
-                    int i = ReintegrateFileIds.IndexOf(id => id.GlobalIndex == fileId.GlobalIndex);
+                    int i = ReintegrateFileIds.IndexOf(id => ReferenceEquals(id, fileId));
                     if (i != -1)
                         return ReintegratePeaks[i];
                 }
