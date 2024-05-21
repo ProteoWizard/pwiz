@@ -359,7 +359,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
             var bestPeak = exemplaryPeaks.First();
             var exemplaryPeakBounds = GetExemplaryPeakBounds(exemplaryPeaks);
             var peptideDocNode = (PeptideDocNode) parameters.Document.FindNode(moleculePeaks.PeptideIdentityPath);
-            peaks = peaks.Select(peak => MarkAcceptedPeak(parameters, peptideDocNode, exemplaryPeakBounds, peak)).ToList();
+            peaks = peaks.Select(peak => MarkAcceptedPeak(parameters, peptideDocNode, exemplaryPeakBounds.ReverseAlign(peak.AlignmentFunction), peak)).ToList();
             var peaksByFile = peaks.ToLookup(peak => peak.ReplicateFileInfo.ReplicateFileId);
             var peaksInOriginalOrder = moleculePeaks.Peaks.GroupBy(peak => peak.ReplicateFileInfo.ReplicateFileId)
                 .SelectMany(group => peaksByFile[group.Key]);
@@ -416,7 +416,8 @@ namespace pwiz.Skyline.Model.Results.Imputation
             }
         }
 
-        private RatedPeak MarkAcceptedPeak(Parameters parameters, PeptideDocNode peptideDocNode, RatedPeak.PeakBounds exemplaryPeakBounds,
+        private RatedPeak MarkAcceptedPeak(Parameters parameters, PeptideDocNode peptideDocNode, 
+            RatedPeak.PeakBounds exemplaryPeakBounds,
             RatedPeak peak)
         {
             if (exemplaryPeakBounds == null)
@@ -425,7 +426,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     "Adjustment not possible because no exemplary peaks found.");
             }
 
-            peak = peak.ChangeRtShift(peak.AlignedPeakBounds?.MidTime - exemplaryPeakBounds.MidTime);
+            peak = peak.ChangeRtShift(peak.RawPeakBounds?.MidTime - exemplaryPeakBounds.MidTime);
             if (peak.PeakVerdict != RatedPeak.Verdict.Unknown)
             {
                 return peak;
@@ -434,22 +435,21 @@ namespace pwiz.Skyline.Model.Results.Imputation
             if (peak.RtShift.HasValue && Math.Abs(peak.RtShift.Value) <= parameters.AllowableRtShift)
             {
                 return peak.ChangeVerdict(RatedPeak.Verdict.Accepted,
-                    string.Format("Retention time {0} is within {1} of {2}", peak.AlignedPeakBounds.MidTime.ToString(Formats.RETENTION_TIME),
-                        parameters.AllowableRtShift, exemplaryPeakBounds?.MidTime.ToString(Formats.RETENTION_TIME)));
+                    string.Format("Retention time {0} is within {1} of {2}", peak.RawPeakBounds.MidTime.ToString(Formats.RETENTION_TIME),
+                        parameters.AllowableRtShift, exemplaryPeakBounds.MidTime.ToString(Formats.RETENTION_TIME)));
             }
 
-            var imputedPosition = peak.AlignmentFunction.GetX(exemplaryPeakBounds.MidTime);
             GetChromatogramTimeMinMax(parameters.Document, peptideDocNode, peak.ReplicateFileInfo.ReplicateIndex,
                 peak.ReplicateFileInfo.MsDataFileUri, out var minTime, out var maxTime);
-            if (minTime.HasValue && minTime > imputedPosition + parameters.AllowableRtShift.GetValueOrDefault()
-                || maxTime.HasValue && maxTime < imputedPosition - parameters.AllowableRtShift.GetValueOrDefault())
+            if (minTime.HasValue && minTime > exemplaryPeakBounds.MidTime + parameters.AllowableRtShift.GetValueOrDefault()
+                || maxTime.HasValue && maxTime < exemplaryPeakBounds.MidTime - parameters.AllowableRtShift.GetValueOrDefault())
             {
                 return peak.ChangeVerdict(RatedPeak.Verdict.NeedsRemoval,
-                    string.Format("Imputed retention time {0} is outside the acquired chromatogram.", imputedPosition.ToString(Formats.RETENTION_TIME)));
+                    string.Format("Imputed retention time {0} is outside the chromatogram.", exemplaryPeakBounds.MidTime.ToString(Formats.RETENTION_TIME)));
             }
 
             return peak.ChangeVerdict(RatedPeak.Verdict.NeedsAdjustment,
-                string.Format("Peak should be moved to {0}", imputedPosition.ToString(Formats.RETENTION_TIME)));
+                string.Format("Peak should be moved to {0}", exemplaryPeakBounds.MidTime.ToString(Formats.RETENTION_TIME)));
         }
 
         private RatedPeak.PeakBounds GetExemplaryPeakBounds(IList<RatedPeak> exemplaryPeaks)
@@ -549,10 +549,14 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 return;
             }
 
-            if (measuredResults.TryLoadChromatogram(measuredResults.Chromatograms[replicateIndex], peptideDocNode,
-                    null, (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance,
-                    out var chromatogramInfos))
+            foreach (var transitionGroupDocNode in peptideDocNode.TransitionGroups)
             {
+                if (!measuredResults.TryLoadChromatogram(measuredResults.Chromatograms[replicateIndex], peptideDocNode,
+                        transitionGroupDocNode, (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance,
+                        out var chromatogramInfos))
+                {
+                    continue;
+                }
                 foreach (var chromatogramInfo in chromatogramInfos)
                 {
                     var header = chromatogramInfo.Header;
