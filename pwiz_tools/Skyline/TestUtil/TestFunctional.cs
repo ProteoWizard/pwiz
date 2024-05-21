@@ -152,6 +152,7 @@ namespace pwiz.SkylineTestUtil
         public const string JAVA_UNICODE_ISSUES = "Running Java processes with wild unicode temp paths is problematic";
         public const string HARDKLOR_UNICODE_ISSUES = "Hardklor doesn't handle unicode paths";
         public const string ZIP_INSIDE_ZIP = "ZIP inside ZIP does not seem to work on MACS2";
+        public const string DOCKER_ROOT_CERTS = "Docker runners do not yet have access to the root certificates needed for Koina";
     }
 
     /// <summary>
