@@ -57,7 +57,7 @@ namespace pwiz.SkylineTestConnected
             OkDialog(toolsOptionsUi, toolsOptionsUi.OkDialog);
             RunDlg<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg, pasteDlg =>
             {
-                SetClipboardText("ELVIS\r\nLIVES");
+                SetClipboardText("ELVIS\r\nLIVES\r\nFISANLPC[+57.02146]NKFC[+57.02146]K");
                 pasteDlg.PastePeptides();
                 pasteDlg.OkDialog();
             });
