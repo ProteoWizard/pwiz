@@ -760,8 +760,7 @@ namespace pwiz.Skyline.Model.Koina.Models
         private const string UNIMOD_FORMAT = "[UNIMOD:{0}]";
 
         /// <summary>
-        /// Sequences are passed to Koina as an array of indices mapping into an array
-        /// of amino acids (with modifications). Actually throwing exceptions in this method
+        /// Sequences are passed to Koina as AA strings (with modifications). Actually throwing exceptions in this method
         /// slows down constructing inputs (for larger data sets with unknown mods (and aa's)significantly,
         /// which is why KoinaExceptions (only) are set as an output parameter and null is returned.
         /// </summary>
@@ -776,7 +775,16 @@ namespace pwiz.Skyline.Model.Koina.Models
                 return null;
             }
 
-            var modifiedSequence = ModifiedSequence.GetModifiedSequence(settings, peptide.ModifiedTarget.Sequence, peptide.ExplicitMods, label);
+            if (true == peptide.ExplicitMods?.HasCrosslinks)
+            {
+                var crosslink = peptide.ExplicitMods.CrosslinkStructure.Crosslinks.First(
+                    c => c.Sites.Any(site => site.AaIndex == 0));
+                var siteOnFirstPeptide = crosslink.Sites.First(site => site.AaIndex == 0);
+                exception = new KoinaUnsupportedModificationException(peptide.Target, crosslink.Crosslinker, siteOnFirstPeptide.AaIndex);
+                return null;
+            }
+
+            var modifiedSequence = ModifiedSequence.GetModifiedSequence(settings, peptide.Target.Sequence, peptide.ExplicitMods, label);
             var result = new StringBuilder(KoinaConstants.PEPTIDE_SEQ_LEN);
 
             for (var i = 0; i < sequence.Length; ++i) {
@@ -812,8 +820,7 @@ namespace pwiz.Skyline.Model.Koina.Models
         }
 
         /// <summary>
-        /// Sequences are passed to Koina as an array of indices mapping into an array
-        /// of amino acids (with modifications). Actually throwing exceptions in this method
+        /// Sequences are passed to Koina as AA strings (with modifications). Actually throwing exceptions in this method
         /// slows down constructing inputs (for larger data sets with unknown mods (and aa's)significantly,
         /// which is why KoinaExceptions (only) are set as an output parameter and null is returned.
         /// </summary>
