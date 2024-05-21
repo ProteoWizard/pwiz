@@ -171,7 +171,8 @@ namespace pwiz.Skyline.Model.Results.Imputation
         public enum Verdict
         {
             Unknown,
-            Rejected,
+            NeedsRemoval,
+            NeedsAdjustment,
             Accepted,
             Exemplary
         }

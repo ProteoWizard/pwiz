@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using JetBrains.Annotations;
 using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -54,11 +53,12 @@ namespace pwiz.Skyline.EditUI
             BindingListSource.SetViewContext(viewContext);
             _receiver = PeakImputationData.PRODUCER.RegisterCustomer(this, ProductAvailableAction);
             _receiver.ProgressChange += ReceiverOnProgressChange;
-            var meanStandardDeviation = GetMeanStandardDeviation(SkylineWindow.Document);
+            var meanStandardDeviation = PeakImputationData.GetMeanRtStandardDeviation(SkylineWindow.Document, null);
             if (meanStandardDeviation.HasValue)
             {
                 string format = meanStandardDeviation > 0.05 ? Formats.RETENTION_TIME : Formats.RoundTrip;
                 tbxRtDeviationCutoff.Text = meanStandardDeviation.Value.ToString(format);
+                tbxUnalignedDocRtStdDev.Text = meanStandardDeviation.Value.ToString(Formats.RETENTION_TIME);
             }
         }
 
@@ -78,18 +78,26 @@ namespace pwiz.Skyline.EditUI
                 tbxExemplary.Text = _rows.SelectMany(row => row.Peaks.Values)
                     .Count(peak => peak.Verdict == RatedPeak.Verdict.Exemplary).ToString();
                 tbxAccepted.Text = _rows.SelectMany(row => row.Peaks.Values).Count(peak => peak.Verdict == RatedPeak.Verdict.Accepted).ToString();
-                tbxRejected.Text = _rows.SelectMany(row => row.Peaks.Values).Count(peak => peak.Verdict == RatedPeak.Verdict.Rejected).ToString();
+                tbxRejected.Text = _rows.SelectMany(row => row.Peaks.Values).Count(peak => peak.Verdict == RatedPeak.Verdict.NeedsAdjustment).ToString();
                 var rtShifts = _rows.SelectMany(row => row.Peaks.Values)
                     .Where(peak => peak.ShiftFromBestPeak.HasValue)
                     .Select(peak => Math.Abs(peak.ShiftFromBestPeak.Value)).ToList();
                 if (rtShifts.Count == 0)
                 {
-                    tbxAvgRtShift.Text = "";
+                    tbxMeanRtStdDev.Text = "";
                 }
                 else
                 {
-                    tbxAvgRtShift.Text = rtShifts.Mean().ToString(Formats.RETENTION_TIME);
+                    tbxMeanRtStdDev.Text = rtShifts.Mean().ToString(Formats.RETENTION_TIME);
                 }
+
+                var document = _data.Params.Document;
+                tbxUnalignedDocRtStdDev.Text =
+                    PeakImputationData.GetMeanRtStandardDeviation(document, null)
+                        ?.ToString(Formats.RETENTION_TIME) ?? string.Empty;
+                tbxAlignedDocRtStdDev.Text =
+                    PeakImputationData.GetMeanRtStandardDeviation(document, _data.ConsensusAlignment)
+                        ?.ToString(Formats.RETENTION_TIME) ?? string.Empty;
 
                 progressBar1.Visible = false;
                 SkylineWindow.ConsensusAlignment = _data.ConsensusAlignment;
@@ -222,21 +230,20 @@ namespace pwiz.Skyline.EditUI
 
         private bool HasQValues(SrmDocument document)
         {
-            // TODO
-            return true;
-            foreach (var transitionGroup in document.MoleculeTransitionGroups.Take(100))
+            var libraries = document.Settings.PeptideSettings.Libraries;
+            if (!libraries.LibrarySpecs.Any(spec => spec.UseExplicitPeakBounds))
             {
-                if (transitionGroup.Results != null)
-                {
-                    if (transitionGroup.Results.SelectMany(chromInfoList => chromInfoList)
-                        .Any(transitionGroupChromInfo => transitionGroupChromInfo.QValue.HasValue))
-                    {
-                        return true;
-                    }
-                }
+                return false;
             }
 
-            return false;
+            if (!libraries.IsLoaded)
+            {
+                // If the libraries haven't been loaded yet, assume they have q-values
+                return true;
+            }
+
+            return libraries.Libraries.Any(lib =>
+                lib is { UseExplicitPeakBounds: true, HasExplicitBoundsQValues: true });
         }
 
         public class Row
@@ -266,7 +273,7 @@ namespace pwiz.Skyline.EditUI
                 ExemplaryPeakBounds = moleculePeaks.ExemplaryPeakBounds;
                 CountExemplary = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.Exemplary);
                 CountAccepted = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.Accepted);
-                CountRejected = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.Rejected);
+                CountNeedAdjustment = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.NeedsAdjustment);
             }
 
             public Model.Databinding.Entities.Peptide Peptide { get; }
@@ -276,7 +283,7 @@ namespace pwiz.Skyline.EditUI
             public RatedPeak.PeakBounds ExemplaryPeakBounds { get; }
             public int CountExemplary { get; }
             public int CountAccepted { get; }
-            public int CountRejected { get; }
+            public int CountNeedAdjustment { get; }
         }
 
         [InvariantDisplayName("Peak")]
@@ -605,7 +612,7 @@ namespace pwiz.Skyline.EditUI
                             continue;
                         }
 
-                        var rejectedPeaks = row.Peaks.Values.Where(peak => peak.Verdict == RatedPeak.Verdict.Rejected)
+                        var rejectedPeaks = row.Peaks.Values.Where(peak => peak.Verdict == RatedPeak.Verdict.NeedsAdjustment)
                             .Select(peak => peak.GetRatedPeak()).ToList();
                         foreach (var rejectedPeak in rejectedPeaks)
                         {
@@ -702,7 +709,7 @@ namespace pwiz.Skyline.EditUI
                 nameof(Row.BestPeak),
                 nameof(Row.CountExemplary),
                 nameof(Row.CountAccepted),
-                nameof(Row.CountRejected),
+                nameof(Row.CountNeedAdjustment),
             }.Select(name=>new ColumnSpec(PropertyPath.Root.Property(name)))).SetName("Default");
 
             var ppPeaks = PropertyPath.Root.Property(nameof(Row.Peaks)).DictionaryValues();
@@ -722,45 +729,6 @@ namespace pwiz.Skyline.EditUI
             yield return new ViewSpec().SetRowType(typeof(Row))
                 .SetColumns(propertyPaths.Select(pp => new ColumnSpec(pp)))
                 .SetSublistId(ppPeaks).SetName("Details");
-        }
-
-        public double? GetMeanStandardDeviation(SrmDocument document)
-        {
-            var standardDeviations = new List<double>();
-            foreach (var molecule in document.Molecules)
-            {
-                if (!molecule.HasResults)
-                {
-                    continue;
-                }
-
-                var times = new List<double>();
-                for (int i = 0; i < molecule.Results.Count; i++)
-                {
-                    foreach (var fileGroup in molecule.GetSafeChromInfo(i)
-                                 .GroupBy(peptideChromInfo => ReferenceValue.Of(peptideChromInfo.FileId)))
-                    {
-                        var fileTimes = fileGroup.Select(peptideChromInfo => (double?) peptideChromInfo.RetentionTime)
-                            .OfType<double>().ToList();
-                        if (fileTimes.Count > 0)
-                        {
-                            times.Add(fileTimes.Average());
-                        }
-                    }
-                }
-
-                if (times.Count > 0)
-                {
-                    standardDeviations.Add(times.StandardDeviation());
-                }
-            }
-
-            if (standardDeviations.Count == 0)
-            {
-                return null;
-            }
-
-            return standardDeviations.Average();
         }
     }
 }

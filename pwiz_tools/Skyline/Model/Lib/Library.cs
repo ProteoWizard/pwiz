@@ -939,6 +939,15 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
+        /// <summary>
+        /// Returns true if the library has explicit bounds and also if the q-values
+        /// are different for different files (i.e. not peptide-level q-values).
+        /// </summary>
+        public virtual bool HasExplicitBoundsQValues
+        {
+            get { return false; }
+        }
+
         #region Implementation of IXmlSerializable
 
         /// <summary>

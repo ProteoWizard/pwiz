@@ -101,6 +101,7 @@ namespace pwiz.Skyline.Model.Lib
         private readonly PooledSqliteConnection _pooledSqliteConnection;
         // List of entries which includes items which do not have a spectrum but which do have peak boundaries
         private LibKeyMap<ElibSpectrumInfo> _allLibraryEntries;
+        private bool _hasExplicitBoundsQValues;
 
         private EncyclopeDiaLibrary()
         {
@@ -397,6 +398,12 @@ on one.SourceFile = two.SourceFile";
             {
                 _allLibraryEntries = new LibKeyMap<ElibSpectrumInfo>(allEntries, allEntries.Select(entry => entry.Key.LibraryKey));
             }
+
+            // Some EncyclopeDIA libraries assign the same q-value to all the replicates for a given peptide
+            // so we only want to say we have q-values if the numbers are sometimes different.
+            _hasExplicitBoundsQValues = _allLibraryEntries.Any(entry =>
+                entry.FileDatas.Values.Select(fileData => fileData.PeakBounds?.Score)
+                    .OfType<double>().Distinct().Count() > 1);
         }
 
         private void WriteCache(ILoadMonitor loader)
@@ -702,6 +709,11 @@ on one.SourceFile = two.SourceFile";
                 return ExplicitPeakBounds.EMPTY;
             }
             return null;
+        }
+
+        public override bool HasExplicitBoundsQValues
+        {
+            get { return _hasExplicitBoundsQValues; }
         }
 
         public override IEnumerable<SpectrumInfoLibrary> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)

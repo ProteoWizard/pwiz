@@ -143,6 +143,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private BiblioLiteSourceInfo[] _librarySourceFiles;
         private bool _anyExplicitPeakBounds;
+        private bool _hasExplicitBoundsQValues;
         private Dictionary<MsDataFileUri, int> msDataFileUriLookup;
 
         public static string GetLibraryCachePath(string libraryPath)
@@ -1193,6 +1194,7 @@ namespace pwiz.Skyline.Model.Lib
                         ImmutableSortedList<int, ExplicitPeakBounds> peakBoundaries =
                             ReadPeakBoundaries(stream);
                         _anyExplicitPeakBounds = _anyExplicitPeakBounds || peakBoundaries.Count > 0;
+                        _hasExplicitBoundsQValues |= peakBoundaries.Values.Select(v => v.Score).Distinct().Count() > 1;
                         libraryEntries[i] = new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, proteinOrMoleculeList,
                             retentionTimesByFileId, driftTimesByFileId, peakBoundaries, score, scoreType);
                     }
@@ -1553,6 +1555,11 @@ namespace pwiz.Skyline.Model.Lib
                 return ExplicitPeakBounds.EMPTY;
             }
             return null;
+        }
+
+        public override bool HasExplicitBoundsQValues
+        {
+            get { return _hasExplicitBoundsQValues; }
         }
 
         public override bool TryGetRetentionTimes(int fileIndex, out LibraryRetentionTimes retentionTimes)

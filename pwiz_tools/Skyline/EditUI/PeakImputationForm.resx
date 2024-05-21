@@ -123,9 +123,6 @@
   <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>159, 17</value>
   </metadata>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>159, 17</value>
-  </metadata>
   <data name="tbxCoreScoreCutoff.ToolTip" xml:space="preserve">
     <value>The peaks whose score is above the value specified here will be assumed to be correct and their boundaries will be used to choose peaks in the rejected replicates.
 The peaks meeting this criteria are considered "exemplary".

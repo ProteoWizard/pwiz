@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -26,6 +27,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
         public IdentityPath PeptideIdentityPath { get; }
         public PeptideDocNode PeptideDocNode { get; }
         public double? CutoffScore { get; set; }
+        public double? MaxRtShift { get; set; }
 
         public PeakScoringModelSpec ScoringModel { get; }
 
@@ -52,6 +54,15 @@ namespace pwiz.Skyline.Model.Results.Imputation
             RatedPeak.PeakBounds bestPeakBounds)
         {
             var chromatogramGroupInfos = LoadChromatogramGroupInfos(document, peptideDocNode).ToList();
+            if (!MaxRtShift.HasValue)
+            {
+                if (IsValidPeakBounds(chromatogramGroupInfos, bestPeakBounds))
+                {
+                    return bestPeakBounds;
+                }
+
+                return null;
+            }
 
             var candidateBoundaries = GetCandidatePeakBounds(chromatogramGroupInfos).Where(peak=>peak.MidTime >= bestPeakBounds.StartTime && peak.MidTime <= bestPeakBounds.EndTime).ToList();
             if (candidateBoundaries.Any())
@@ -65,7 +76,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                         peakBounds.EndTime + halfDifference);
                 }
 
-                if (IsValidPeakBounds(chromatogramGroupInfos, peakBounds))
+                if (Math.Abs(peakBounds.MidTime - bestPeakBounds.MidTime) <= MaxRtShift.Value && IsValidPeakBounds(chromatogramGroupInfos, peakBounds))
                 {
                     return peakBounds;
                 }
