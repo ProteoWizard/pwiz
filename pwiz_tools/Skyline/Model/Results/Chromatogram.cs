@@ -242,29 +242,28 @@ namespace pwiz.Skyline.Model.Results
 
             private void FinishLoad(string documentPath, MeasuredResults resultsLoad, MeasuredResults resultsPrevious)
             {
-                try
+                // Only one finisher at a time, otherwise guaranteed wasted work
+                // CONSIDER: In theory this should be a lock per document container, but in
+                //           practice we have only one document container per process
+                lock (_finishLock)
                 {
-                    // Only one finisher at a time, otherwise guaranteed wasted work
-                    // CONSIDER: In theory this should be a lock per document container, but in
-                    //           practice we have only one document container per process
-                    lock (_finishLock)
+                    try
                     {
                         FinishLoadSynch(documentPath, resultsLoad, resultsPrevious);
                     }
-                }
-                catch (Exception ex)
-                {
-                    if (ExceptionUtil.IsProgrammingDefect(ex))
+                    catch (Exception ex)
                     {
-                        throw;
-                    }
+                        if (ExceptionUtil.IsProgrammingDefect(ex))
+                        {
+                            throw;
+                        }
+                        foreach (var chromatogramStatus in _multiFileLoader.Status.ProgressList)
+                        {
+                            _multiFileLoader.ChangeStatus((ChromatogramLoadingStatus)chromatogramStatus.ChangeErrorException(ex));
+                        }
 
-                    var status = _multiFileLoader.Status;
-                    foreach (var chromatogramStatus in status.ProgressList)
-                    {
-                        status = status.ChangeStatus((ChromatogramLoadingStatus) chromatogramStatus.ChangeErrorException(ex));
+                        _loadMonitor.UpdateProgress(_multiFileLoader.Status);
                     }
-                    _loadMonitor.UpdateProgress(status);
                 }
             }
 
