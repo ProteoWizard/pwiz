@@ -517,7 +517,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
             return peak;
         }
 
-        public static double? GetMeanRtStandardDeviation(SrmDocument document, AlignmentResults consensusAlignment)
+        public static double? GetMeanRtStandardDeviation(SrmDocument document, AlignmentResults alignmentResults)
         {
             var standardDeviations = new List<double>();
             foreach (var molecule in document.Molecules)
@@ -534,9 +534,9 @@ namespace pwiz.Skyline.Model.Results.Imputation
                                  .GroupBy(peptideChromInfo => ReferenceValue.Of(peptideChromInfo.FileId)))
                     {
                         AlignmentFunction alignmentFunction = AlignmentFunction.IDENTITY;
-                        if (consensusAlignment != null)
+                        if (alignmentResults != null)
                         {
-                            alignmentFunction = consensusAlignment.GetAlignment(
+                            alignmentFunction = alignmentResults.GetAlignment(
                                 new ReplicateFileId((ChromatogramSetId)document.MeasuredResults.Chromatograms[i].Id,
                                     fileGroup.Key));
                         }
@@ -545,14 +545,19 @@ namespace pwiz.Skyline.Model.Results.Imputation
                             .OfType<double>().Select(alignmentFunction.GetY).ToList();
                         if (fileTimes.Count > 0)
                         {
+                            var average = fileTimes.Average();
                             times.Add(fileTimes.Average());
                         }
                     }
                 }
 
-                if (times.Count > 0)
+                if (times.Count > 1)
                 {
-                    standardDeviations.Add(times.StandardDeviation());
+                    var standardDeviation = times.StandardDeviation();
+                    if (!double.IsNaN(standardDeviation))
+                    {
+                        standardDeviations.Add(standardDeviation);
+                    }
                 }
             }
 

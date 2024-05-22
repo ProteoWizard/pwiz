@@ -698,22 +698,6 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        private void btnImputeForCurrentRow_Click(object sender, EventArgs e)
-        {
-            var row = BindingListSource.OfType<RowItem>().ElementAtOrDefault(BindingListSource.Position)?.Value as Row;
-            if (row == null)
-            {
-                MessageDlg.Show(this, "There is no current row");
-                return;
-            }
-
-            int changeCount = ImputeBoundaries(new[] { row });
-            if (changeCount > 0 && !IsPathSelected(row.Peptide.IdentityPath))
-            {
-                SkylineWindow.SelectPath(row.Peptide.IdentityPath);
-            }
-        }
-
         private bool IsPathSelected(IdentityPath identityPath)
         {
             foreach (var node in SkylineWindow.SelectedNodes.Prepend(SkylineWindow.SelectedNode).OfType<SrmTreeNode>())
@@ -822,14 +806,14 @@ namespace pwiz.Skyline.EditUI
         private static IEnumerable<AlignmentOption> GetAlignmentOptions(SrmDocument document)
         {
             yield return new AlignmentOption(string.Empty, null, null);
-            yield return new AlignmentOption("Peak Apex Consensus", RtValueType.PEAK_APEXES, AlignmentType.CONSENSUS);
-            yield return new AlignmentOption("Good peak apex consensus", RtValueType.HIGH_SCORING_PEAK_APEXES,
-                AlignmentType.CONSENSUS);
-            yield return new AlignmentOption("Peak Apex KDE", RtValueType.PEAK_APEXES, AlignmentType.KDE);
+            yield return new AlignmentOption("Peak Apexes", RtValueType.PEAK_APEXES, AlignmentType.CONSENSUS);
+            // yield return new AlignmentOption("Good peak apex consensus", RtValueType.HIGH_SCORING_PEAK_APEXES,
+            //     AlignmentType.CONSENSUS);
+            // yield return new AlignmentOption("Peak Apex KDE", RtValueType.PEAK_APEXES, AlignmentType.KDE);
             if (RtValueType.PSM_TIMES.IsValidFor(document))
             {
-                yield return new AlignmentOption("PSM Time Consensus", RtValueType.PSM_TIMES, AlignmentType.CONSENSUS);
-                yield return new AlignmentOption("PSM Times KDE", RtValueType.PSM_TIMES, AlignmentType.KDE);
+                yield return new AlignmentOption("PSM Times", RtValueType.PSM_TIMES, AlignmentType.CONSENSUS);
+//                yield return new AlignmentOption("PSM Times KDE", RtValueType.PSM_TIMES, AlignmentType.KDE);
             }
         }
 

@@ -665,6 +665,11 @@ namespace pwiz.Skyline
             {
                 return _immediateWindow ?? CreateImmediateWindow();
             }
+
+            if (Equals(persistentString, typeof(PeakImputationForm).ToString()))
+            {
+                return _peakImputationForm ?? CreatePeakImputationForm();
+            }
             if (persistentString.StartsWith(typeof(GraphChromatogram).ToString()))
             {
                 if (_listGraphChrom.Count >= MAX_GRAPH_CHROM)
@@ -6054,6 +6059,8 @@ namespace pwiz.Skyline
                 _peakImputationForm ??= CreatePeakImputationForm();
                 if (_peakImputationForm != null)
                 {
+                    var rect = GetFloatingRectangleForNewWindow();
+                    rect.Width = Math.Max(800, rect.Width);
                     _peakImputationForm.Show(dockPanel, GetFloatingRectangleForNewWindow());
                 }
             }
