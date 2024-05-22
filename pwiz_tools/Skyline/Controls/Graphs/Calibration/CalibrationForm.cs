@@ -117,24 +117,22 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 DisplayError(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_No_results_available);
                 return;
             }
-            PeptideDocNode peptide;
-            PeptideGroupDocNode peptideGroup;
 
-            if (!TryGetSelectedPeptide(out peptideGroup,out peptide))
+            IdPeptideDocNode idPeptideDocNode = GetSelectedPeptide();
+            if (idPeptideDocNode == null)
             {
                 DisplayError(ModeUIAwareStringFormat(QuantificationStrings
                     .CalibrationForm_DisplayCalibrationCurve_Select_a_peptide_to_see_its_calibration_curve));
                 return;
             }
-            if (-1 == document.Children.IndexOf(peptideGroup))
+            if (document.FindNodeIndex(idPeptideDocNode.PeptideGroup) < 0)
             {
                 DisplayError(ModeUIAwareStringFormat(QuantificationStrings
                     .CalibrationForm_DisplayCalibrationCurve_The_selected_peptide_is_no_longer_part_of_the_Skyline_document_));
                 return;
             }
-            PeptideQuantifier peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(document, peptideGroup,
-                peptide);
-            CalibrationCurveFitter curveFitter = new CalibrationCurveFitter(peptideQuantifier, document.Settings);
+            CalibrationCurveFitter curveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(document, idPeptideDocNode);
+            var mainPeptideQuantifier = curveFitter.PeptideQuantifier;
             if (curveFitter.IsEnableSingleBatch && Settings.Default.CalibrationCurveOptions.SingleBatch)
             {
                 curveFitter.SingleBatchReplicateIndex = _skylineWindow.SelectedResultsIndex;
@@ -179,25 +177,16 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             return title;
         }
 
-        private bool TryGetSelectedPeptide(out PeptideGroupDocNode peptideGroup, out PeptideDocNode peptide)
+        private IdPeptideDocNode GetSelectedPeptide()
         {
-            peptide = null;
-            peptideGroup = null;
             SequenceTree sequenceTree = _skylineWindow.SequenceTree;
-            if (null != sequenceTree)
+            PeptideTreeNode peptideTreeNode = sequenceTree?.GetNodeOfType<PeptideTreeNode>();
+            PeptideGroupTreeNode peptideGroupTreeNode = sequenceTree?.GetNodeOfType<PeptideGroupTreeNode>();
+            if (peptideGroupTreeNode != null && peptideTreeNode != null)
             {
-                PeptideTreeNode peptideTreeNode = sequenceTree.GetNodeOfType<PeptideTreeNode>();
-                if (null != peptideTreeNode)
-                {
-                    peptide = peptideTreeNode.DocNode;
-                }
-                PeptideGroupTreeNode peptideGroupTreeNode = sequenceTree.GetNodeOfType<PeptideGroupTreeNode>();
-                if (null != peptideGroupTreeNode)
-                {
-                    peptideGroup = peptideGroupTreeNode.DocNode;
-                }
+                return new IdPeptideDocNode(peptideGroupTreeNode.DocNode.PeptideGroup, peptideTreeNode.DocNode);
             }
-            return peptide != null;
+            return null;
         }
 
         protected override void OnClosed(EventArgs e)
@@ -274,6 +263,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     }
                 }
             }
+        }
+
+        public static string QualifyCurveNameWithSurrogate(string curveName, PeptideDocNode surrogateMolecule)
+        {
+            return string.Format(@"{0} ({1})", curveName, surrogateMolecule.ModifiedSequenceDisplay);
         }
     }
 }

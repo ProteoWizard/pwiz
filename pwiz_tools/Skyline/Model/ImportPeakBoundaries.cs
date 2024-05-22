@@ -275,10 +275,10 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument Import(TextReader reader, IProgressMonitor progressMonitor, long lineCount, bool isMinutes, bool removeMissing = false, bool changePeaks = true)
         {
-            IProgressStatus status = new ProgressStatus(Resources.PeakBoundaryImporter_Import_Importing_Peak_Boundaries);
+            IProgressStatus status = new ProgressStatus(ModelResources.PeakBoundaryImporter_Import_Importing_Peak_Boundaries);
             double timeConversionFactor = isMinutes ? 1.0 : 60.0;
             int linesRead = 0;
-            int progressPercent = 0;
+            int progressPercent = -1;
             var docNew = (SrmDocument) Document.ChangeIgnoreChangingChildren(true);
             var docReference = docNew;
             var sequenceToNode = MakeSequenceDictionary(Document);
@@ -351,14 +351,29 @@ namespace pwiz.Skyline.Model
                     {
                         if (modifiedPeptideString.Any(c => c < 'A' || c > 'Z'))
                         {
-                            modMatcher.CreateMatches(Document.Settings,
-                                new List<string> { modifiedPeptideString },
-                                Settings.Default.StaticModList,
-                                Settings.Default.HeavyModList);
-                            var nodeForModPep = modMatcher.GetModifiedNode(modifiedPeptideString);
+                            Exception modificationException = null;
+                            PeptideDocNode nodeForModPep = null; 
+                            try
+                            {
+                                modMatcher.CreateMatches(Document.Settings,
+                                    new List<string> { modifiedPeptideString },
+                                    Settings.Default.StaticModList,
+                                    Settings.Default.HeavyModList);
+                                nodeForModPep = modMatcher.GetModifiedNode(modifiedPeptideString);
+                            }
+                            catch (Exception e)
+                            {
+                                modificationException = e;
+                            }
+                                
                             if (nodeForModPep == null)
                             {
-                                throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Peptide_has_unrecognized_modifications__0__at_line__1_, modifiedPeptideString, linesRead));
+                                string message =
+                                    string.Format(
+                                        ModelResources
+                                            .PeakBoundaryImporter_Import_Peptide_has_unrecognized_modifications__0__at_line__1_,
+                                        modifiedPeptideString, linesRead);
+                                throw new IOException(message, modificationException);
                             }
                             nodeForModPep = nodeForModPep.ChangeSettings(Document.Settings, SrmSettingsDiff.ALL);
                             // Convert the modified peptide string into a standardized form that 

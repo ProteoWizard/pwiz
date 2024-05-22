@@ -125,14 +125,14 @@ namespace pwiz.Skyline.Model
 
         #region Test suppport
 
-        public bool IsSameAs(GlobalizedObject other)
+        public List<string> GetDifference(GlobalizedObject other)
         {
             if(other == null)
-                return false;
-            if(this.GetType() != other.GetType())
-                return false;
-            if(GetPropertiesForComparison().Count != other.GetPropertiesForComparison().Count)
-                return false;
+                return new List<string> { @"The other object is null." };
+            if (this.GetType() != other.GetType())
+                return new List<string> { string.Format(@"The other object of of type {0}.", other.GetType().Name) };
+            if (GetPropertiesForComparison().Count != other.GetPropertiesForComparison().Count)
+                return new List<string>{string.Format(@"This count is {0}, but other count is {1}", GetPropertiesForComparison().Count,  other.GetPropertiesForComparison().Count)};
             var thisProps = GetPropertiesForComparison()
                 .ToDictionary(prop => prop.Name, prop => prop.GetValue(this));
             var otherProps = other.GetPropertiesForComparison()
@@ -140,16 +140,21 @@ namespace pwiz.Skyline.Model
 
             var joinedValues = (from t in thisProps
                 join o in otherProps on t.Key equals o.Key
-                select new { t = t.Value, o = o.Value }).ToList();
+                select new {k = t.Key, t = t.Value, o = o.Value }).ToList();
             if (joinedValues.Count != thisProps.Count)
-                return false;
+                return new List<string> { @"The two objects have different sets of properties." };
             var res = joinedValues.Where(tuple =>
             {
                 if(tuple.t is GlobalizedObject tg && tuple.o is GlobalizedObject to)
                     return !tg.IsSameAs(to);
                 return !tuple.t.Equals(tuple.o);
             });
-            return !res.Any();
+            return res.Select(r => string.Format(@"Key:{0}, this value:{1}, other value:{2}", r.k, r.t, r.o)).ToList();
+        }
+
+        public bool IsSameAs(GlobalizedObject other)
+        {
+            return !GetDifference(other).Any();
         }
 
         public List<PropertyDescriptor> GetPropertiesForComparison()
@@ -246,7 +251,7 @@ namespace pwiz.Skyline.Model
                 }
             }
         }
-#endregion
+        #endregion
     }
 
     /// <summary>

@@ -31,6 +31,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using log4net.Config;
+using pwiz.Common;
 using SkylineBatch.Properties;
 using SharedBatch;
 
@@ -54,6 +55,8 @@ namespace SkylineBatch
         [STAThread]
         public static void Main(string[] args)
         {
+            CommonApplicationSettings.ProgramName = @"Skyline Batch";
+            CommonApplicationSettings.ProgramNameAndVersion = Version();
             ProgramLog.Init("SkylineBatch");
             Application.EnableVisualStyles();
             InitializeVersion();
@@ -304,7 +307,7 @@ namespace SkylineBatch
 
         public static string AppName()
         {
-            return "Skyline Batch";
+            return CommonApplicationSettings.ProgramName;
         }
 
         public static Icon Icon()

@@ -89,18 +89,19 @@ namespace pwiz.SkylineTestFunctional
             });
 
             OkDialog(colDlg, colDlg.OkDialog);
-            DismissAutoManageDialog(docCurrent); // If we're asked about automanage, decline it
+            DismissAutoManageDialog(); // When asked about automanage, decline it
 
-            var myMoleculeGroup =
-                SkylineWindow.Document.MoleculeGroups.FirstOrDefault(group => group.Name == moleculeGroupName);
-            //Assert.IsNotNull(myMoleculeGroup);
+            PeptideGroupDocNode myMoleculeGroup = null;
+            WaitForConditionUI(() =>
+                (myMoleculeGroup = SkylineWindow.Document.MoleculeGroups.FirstOrDefault(group => group.Name == moleculeGroupName)) != null);
+            Assert.IsNotNull(myMoleculeGroup);
             const string nameHPrime = "H-prime";
             const string nameDeuterium = "Deuterium";
             const string nameHDoublePrime = "H-double-prime";
             const string nameTritium = "Tritium";
 
             // Add a molecule which has H' in its formula
-            RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(myMoleculeGroup?.Id));
+            RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(myMoleculeGroup.Id));
             RunDlg<EditCustomMoleculeDlg>(SkylineWindow.AddSmallMolecule, dlg =>
             {
                 dlg.NameText = nameHPrime;
@@ -109,7 +110,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Add a molecule that has D in its formula
-            RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(myMoleculeGroup?.Id));
+            RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(myMoleculeGroup.Id));
             RunDlg<EditCustomMoleculeDlg>(SkylineWindow.AddSmallMolecule, dlg =>
             {
                 dlg.NameText = nameDeuterium;
@@ -118,7 +119,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Add a molecule that has H" in its formula
-            RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(myMoleculeGroup?.Id));
+            RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(myMoleculeGroup.Id));
             RunDlg<EditCustomMoleculeDlg>(SkylineWindow.AddSmallMolecule, dlg =>
             {
                 dlg.NameText = nameHDoublePrime;
@@ -133,12 +134,17 @@ namespace pwiz.SkylineTestFunctional
                 dlg.FormulaBox.Formula = "T10C10[M+H]";
                 dlg.OkDialog();
             });
+            WaitForConditionUI(() => SkylineWindow.DocumentUI.MoleculeCount == 6);
+            var doc = SkylineWindow.Document;
+            AssertEx.IsDocumentState(doc, null, 2, 6, 7 , 5);
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
             {
                 transitionSettingsUI.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
                 transitionSettingsUI.Peaks = 2;
                 transitionSettingsUI.OkDialog();
             });
+            doc = WaitForDocumentChange(doc);
+            AssertEx.IsDocumentState(doc, null, 2, 6, 7, 17);
 
             // Verify that the molecules with H' and D have the same precursor masses
             var hPrime = SkylineWindow.Document.Molecules.FirstOrDefault(mol =>

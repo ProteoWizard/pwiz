@@ -280,6 +280,15 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} ({1}).
+        /// </summary>
+        public static string CalibrationForm_DisplayCalibrationCurve_QualifiedSampleType {
+            get {
+                return ResourceManager.GetString("CalibrationForm_DisplayCalibrationCurve_QualifiedSampleType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Select a peptide to see its calibration curve.
         /// </summary>
         public static string CalibrationForm_DisplayCalibrationCurve_Select_a_peptide_to_see_its_calibration_curve {

@@ -56,16 +56,11 @@ namespace pwiz.Skyline.Model
             Validate();
         }
 
-        public Peptide(CustomMolecule customMolecule, Target originalMoleculeDescription = null)
+        public Peptide(CustomMolecule customMolecule)
         {
             Target = new Target(customMolecule);
 
             Validate();
-            if (originalMoleculeDescription != null)
-            {
-                // As when user changes molecule name, CAS etc, but not mass or formula, so we still want to associate chromatograms
-                OriginalMoleculeTarget = originalMoleculeDescription;
-            }
         }
 
         public Peptide(Target pepOrMol)
@@ -88,9 +83,6 @@ namespace pwiz.Skyline.Model
         public bool IsCustomMolecule { get { return !Target.IsProteomic; }}
         public int Length { get { return Target.IsProteomic ? Target.Sequence.Length : 0; }}
         public string TextId { get { return IsCustomMolecule ? Target.Molecule.InvariantName : Target.Sequence; } }
-
-        // For robust chromatogram association in the event of user tweaking molecule details like name, CAS etc (but not mass!)
-        public Target OriginalMoleculeTarget;
 
         public SmallMoleculeLibraryAttributes GetSmallMoleculeLibraryAttributes()
         {
@@ -354,12 +346,11 @@ namespace pwiz.Skyline.Model
                 Assume.IsNull(_fastaSequence);
                 Assume.IsNull(Sequence);
                 CustomMolecule.Validate();
-                OriginalMoleculeTarget = Target;
             }
             else if (_fastaSequence == null)
             {
                 if (Begin.HasValue || End.HasValue)
-                    throw new InvalidDataException(Resources.Peptide_Validate_Peptides_without_a_protein_sequence_do_not_support_the_start_and_end_properties);
+                    throw new InvalidDataException(ModelResources.Peptide_Validate_Peptides_without_a_protein_sequence_do_not_support_the_start_and_end_properties);
 
                 // No FastaSequence checked the sequence, so check it here.
                 FastaSequence.ValidateSequence(Target.Sequence);
@@ -368,9 +359,9 @@ namespace pwiz.Skyline.Model
             {
                 // Otherwise, validate the peptide sequence against the group sequence
                 if (!Begin.HasValue || !End.HasValue)
-                    throw new InvalidDataException(Resources.Peptide_Validate_Peptides_from_protein_sequences_must_have_start_and_end_values);
+                    throw new InvalidDataException(ModelResources.Peptide_Validate_Peptides_from_protein_sequences_must_have_start_and_end_values);
                 if (0 > Begin.Value || End.Value > _fastaSequence.Sequence.Length)
-                    throw new InvalidDataException(Resources.Peptide_Validate_Peptide_sequence_exceeds_the_bounds_of_the_protein_sequence);
+                    throw new InvalidDataException(ModelResources.Peptide_Validate_Peptide_sequence_exceeds_the_bounds_of_the_protein_sequence);
 
                 var j = 0;
                 for (var i = Begin.Value; i < End.Value;)
@@ -379,7 +370,7 @@ namespace pwiz.Skyline.Model
                     {
                         string sequenceCheck = _fastaSequence.Sequence.Substring(Begin.Value, End.Value - Begin.Value);
                         throw new InvalidDataException(
-                            string.Format(Resources.Peptide_Validate_The_peptide_sequence__0__does_not_agree_with_the_protein_sequence__1__at__2__3__,
+                            string.Format(ModelResources.Peptide_Validate_The_peptide_sequence__0__does_not_agree_with_the_protein_sequence__1__at__2__3__,
                                 Target, sequenceCheck, Begin.Value, End.Value));
                     }
                 }
@@ -395,7 +386,6 @@ namespace pwiz.Skyline.Model
             if (ReferenceEquals(this, obj)) return true;
             var equal = Equals(obj._fastaSequence, _fastaSequence) &&
                 Equals(obj.Target, Target) &&
-                Equals(obj.OriginalMoleculeTarget, OriginalMoleculeTarget) &&
                 obj.Begin.Equals(Begin) &&
                 obj.End.Equals(End) &&
                 obj.MissedCleavages == MissedCleavages &&
@@ -417,7 +407,6 @@ namespace pwiz.Skyline.Model
             {
                 int result = (_fastaSequence != null ? _fastaSequence.GetHashCode() : 0);
                 result = (result*397) ^ (Target != null ? Target.GetHashCode() : 0);
-                result = (result*397) ^ (OriginalMoleculeTarget != null ? OriginalMoleculeTarget.GetHashCode() : 0);
                 result = (result*397) ^ (Begin.HasValue ? Begin.Value : 0);
                 result = (result*397) ^ (End.HasValue ? End.Value : 0);
                 result = (result*397) ^ MissedCleavages;
@@ -436,7 +425,7 @@ namespace pwiz.Skyline.Model
                 if (MissedCleavages == 0)
                     return Target.Sequence;
                 else
-                    return string.Format(TextUtil.SpaceSeparate(Target.Sequence, Resources.Peptide_ToString_missed__0__), MissedCleavages);
+                    return string.Format(TextUtil.SpaceSeparate(Target.Sequence, ModelResources.Peptide_ToString_missed__0__), MissedCleavages);
             }
             else
             {

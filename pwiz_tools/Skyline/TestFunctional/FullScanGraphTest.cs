@@ -61,6 +61,77 @@ namespace pwiz.SkylineTestFunctional
                 "y11" + TextUtil.SEPARATOR_SPACE + string.Format(@"({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, 21))
             };
 
+            var expectedPropertiesPrecursor = new Dictionary<string, object> {
+                {"FileName","ID12692_01_UCA168_3727_040714.mzML"},
+                {"ReplicateName","ID12692_01_UCA168_3727_040714"},
+                {"RetentionTime",33.05.ToString(CultureInfo.CurrentCulture)},
+                {"IonMobility",3.477.ToString(CultureInfo.CurrentCulture) + " msec"},
+                {"IsolationWindow","50:2000 (-975:+975)"},
+                {"IonMobilityRange",TextUtil.AppendColon(0.069.ToString(CultureInfo.CurrentCulture)) + 13.8.ToString(CultureInfo.CurrentCulture)},
+                {"IonMobilityFilterRange",TextUtil.AppendColon(3.152.ToString(CultureInfo.CurrentCulture)) + 3.651.ToString(CultureInfo.CurrentCulture)},
+                {"ScanId","1.0.309201 - 1.0.309400"},
+                {"MSLevel","1"},
+                {"Instrument",new Dictionary<string, object> {
+                        {"InstrumentModel","Waters instrument model"},
+                        {"InstrumentManufacturer","Waters"}
+                    }
+                },
+                {"DataPoints",105373.ToString(@"N0", CultureInfo.CurrentCulture)},
+                {"MzCount",45751.ToString(@"N0", CultureInfo.CurrentCulture)},
+                {"IsCentroided","False"},
+                {"idotp",0.84.ToString(CultureInfo.CurrentCulture)}
+            };
+            var expectedPropertiesProduct = new Dictionary<string, object> {
+                {"FileName","ID12692_01_UCA168_3727_040714.mzML"},
+                {"ReplicateName","ID12692_01_UCA168_3727_040714"},
+                {"RetentionTime", (33.1).ToString(CultureInfo.CurrentCulture)},
+                {"IonMobility", (3.326).ToString(CultureInfo.CurrentCulture) + " msec"},
+                {"IsolationWindow","50:2000 (-975:+975)"},
+                {"IonMobilityRange", TextUtil.AppendColon(0.069.ToString(CultureInfo.CurrentCulture)) + 13.8.ToString(CultureInfo.CurrentCulture)},
+                {"IonMobilityFilterRange",TextUtil.AppendColon(3.152.ToString(CultureInfo.CurrentCulture)) + 3.651.ToString(CultureInfo.CurrentCulture)},
+                {"ScanId","2.0.309601 - 2.0.309800"},
+                {"MSLevel","1"},
+                {"Instrument",new Dictionary<string, object> {
+                        {"InstrumentModel","Waters instrument model"},
+                        {"InstrumentManufacturer","Waters"}
+                    }
+                },
+                {"DataPoints",67630.ToString(@"N0", CultureInfo.CurrentCulture)},
+                {"MzCount",31378.ToString(@"N0", CultureInfo.CurrentCulture)},
+                {"IsCentroided","False"},
+                { "dotp", 0.81.ToString(CultureInfo.CurrentCulture) }
+            };
+
+            var expectedPropertiesProduct2 = new Dictionary<string, object>
+            {
+                { "FileName", "ID12692_01_UCA168_3727_040714.mzML" },
+                { "ReplicateName", "ID12692_01_UCA168_3727_040714" },
+                { "RetentionTime", (32.96).ToString(CultureInfo.CurrentCulture) },
+                { "IonMobility", (5.716).ToString(CultureInfo.CurrentCulture) + " msec" },
+                { "IsolationWindow", "50:2000 (-975:+975)" },
+                {
+                    "IonMobilityRange",
+                    TextUtil.AppendColon((0.069).ToString(CultureInfo.CurrentCulture)) + (13.8).ToString(CultureInfo.CurrentCulture)
+                },
+                {
+                    "IonMobilityFilterRange",
+                    TextUtil.AppendColon((5.423).ToString(CultureInfo.CurrentCulture)) +
+                    (6.161).ToString(CultureInfo.CurrentCulture)
+                },
+                { "ScanId", "2.0.308201 - 2.0.308400" },
+                { "MSLevel", "1" },
+                {
+                    "Instrument", new Dictionary<string, object>
+                    {
+                        { "InstrumentModel", "Waters instrument model" },
+                        { "InstrumentManufacturer", "Waters" }
+                    }
+                },
+                { "DataPoints", 60587.ToString(@"N0", CultureInfo.CurrentCulture) },
+                { "MzCount", 29876.ToString(@"N0", CultureInfo.CurrentCulture) },
+                { "IsCentroided", "False" },
+                { "dotp", 0.51.ToString(CultureInfo.CurrentCulture) }
+            };
 
             Settings.Default.TransformTypeChromatogram = TransformChrom.interpolated.ToString();
             OpenDocument("BlibDriftTimeTest.sky");
@@ -175,9 +246,10 @@ namespace pwiz.SkylineTestFunctional
 
             ClickChromatogram(33.11, 15.055, PaneKey.PRODUCTS);
             TestScale(529, 533, 0, 50);
+            TestPropertySheet(expectedPropertiesProduct);
             ClickChromatogram(33.06, 68.8, PaneKey.PRECURSORS);
             TestScale(452, 456, 0, 300);
-            TestPropertySheet();
+            TestPropertySheet(expectedPropertiesPrecursor);
 
             //test sync m/z scale
             RunUI(() => SkylineWindow.ShowGraphSpectrum(true));
@@ -196,6 +268,22 @@ namespace pwiz.SkylineTestFunctional
             //annotations are not shown in the offscreen mode
             TestSpecialIonsAnnotations();
             TestIonMatchToleranceUnitSetting();
+
+            // we need to increase the ion match tolerance to have sufficient number of peaks for dotp calculation.
+            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            RunUI(() => transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Library);
+
+            RunUI(() =>
+            {
+                transitionSettingsUI.IonMatchToleranceUnits = MzTolerance.Units.ppm;
+                transitionSettingsUI.IonMatchTolerance = 50.0;
+            });
+            OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
+            WaitForDocumentLoaded();
+            FindNode(679.38.ToString(CultureInfo.CurrentCulture));
+            WaitForGraphs();
+            ClickChromatogram(32.96, 17, PaneKey.PRODUCTS);
+            TestPropertySheet(expectedPropertiesProduct2);
         }
 
         private static void ClickFullScan(double x, double y)
@@ -316,8 +404,9 @@ namespace pwiz.SkylineTestFunctional
             SetZoom(false);
             ClickChromatogram(33.11, 15.055, PaneKey.PRODUCTS);
             WaitForGraphs();
+
             //Labels are not created in offscreen mode, so we just validate total number of ions matching the show settings
-            Assert.AreEqual(Skyline.Program.SkylineOffscreen? 70 : 20, SkylineWindow.GraphFullScan.IonLabels.Count());
+            Assert.AreEqual(ExpectedLabelCount(70, 20, 15), SkylineWindow.GraphFullScan.IonLabels.Count());
 
             var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() => transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Library);
@@ -344,30 +433,23 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForGraphs();
             var graphLabels = SkylineWindow.GraphFullScan.IonLabels;
-            Assert.AreEqual(Skyline.Program.SkylineOffscreen ? 48 : 1, graphLabels.Count());
+            Assert.AreEqual(ExpectedLabelCount(48, 1, 2), graphLabels.Count());
         }
 
-        private void TestPropertySheet()
+        private static int ExpectedLabelCount(int offscreenCount, int onscreenEnCount, int onscreenJaCount)
         {
-            var expectedPropertiesDict = new Dictionary<string, object> {
-                {"FileName","ID12692_01_UCA168_3727_040714.mzML"},
-                {"ReplicateName","ID12692_01_UCA168_3727_040714"},
-                {"RetentionTime",33.05.ToString(CultureInfo.CurrentCulture)},
-                {"IonMobility",3.477.ToString(CultureInfo.CurrentCulture) + " msec"},
-                {"IsolationWindow","50:2000 (-975:+975)"},
-                {"IonMobilityRange",0.069.ToString(CultureInfo.CurrentCulture) + ":" + 13.8.ToString(CultureInfo.CurrentCulture)},
-                {"IonMobilityFilterRange",3.152.ToString(CultureInfo.CurrentCulture) + ":"+ 3.651.ToString(CultureInfo.CurrentCulture)},
-                {"ScanId","1.0.309201 - 1.0.309400"},
-                {"MSLevel","1"},
-                {"Instrument",new Dictionary<string, object> {
-                        {"InstrumentModel","Waters instrument model"},
-                        {"InstrumentManufacturer","Waters"}
-                    }
-                },
-                {"DataPoints",105373.ToString(@"N0", CultureInfo.CurrentCulture)},
-                {"MzCount",45751.ToString(@"N0", CultureInfo.CurrentCulture)},
-                {"IsCentroided","False"}
-            };
+            if (Skyline.Program.SkylineOffscreen)
+                return offscreenCount;
+
+            var cultureShort = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+            if (Equals(cultureShort, "ja") || Equals(cultureShort, "zh"))
+                return onscreenJaCount;
+
+            return onscreenEnCount;
+        }
+
+        private void TestPropertySheet(Dictionary<string, object> expectedPropertiesDict)
+        {
             var expectedProperties = new FullScanProperties();
             expectedProperties.Deserialize(expectedPropertiesDict);
 
@@ -391,6 +473,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(currentProperties);
             // To write new json string for the expected property values into the output stream uncomment the next line
             //Trace.Write(currentProperties.Serialize());
+            AssertEx.NoDiff(expectedProperties.Serialize(), currentProperties.Serialize());
             Assert.IsTrue(expectedProperties.IsSameAs(currentProperties));
             Assert.IsTrue(propertiesButton.Checked);
 

@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Model.DdaSearch
     public class MsconvertDdaConverter : AbstractDdaConverter, IProgressMonitor
     {
         private const string MSCONVERT_EXE = "msconvert";
-        private const string OUTPUT_SUBDIRECTORY = "converted";
+        public const string OUTPUT_SUBDIRECTORY = "converted";
 
         private IProgressMonitor _parentProgressMonitor;
         private IProgressStatus _progressStatus;
@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             try
             {
-                UpdateProgress(status => status.ChangeMessage(Resources.MsconvertDdaConverter_Run_Starting_msconvert_conversion_));
+                UpdateProgress(status => status.ChangeMessage(DdaSearchResources.MsconvertDdaConverter_Run_Starting_msconvert_conversion_));
 
                 int sourceIndex = 0;
                 foreach (var spectrumSource in OriginalSpectrumSources)
@@ -93,6 +93,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         UpdateProgress(status => status.ChangeMessage(string.Format(Resources.MsconvertDdaConverter_Run_Re_using_existing_converted__0__file_for__1__, MsConvertOutputExtension, spectrumSource.GetSampleOrFileName())));
                         continue;
                     }
+                    UpdateProgress(status => status.ChangeSegmentName(string.Format(DdaSearchResources.MsconvertDdaConverter_Run_Converting_file___0___to__1_, spectrumSource.GetSampleOrFileName(), MsConvertOutputExtension)));
 
                     if (File.Exists(outputFilepath))
                         FileEx.SafeDelete(outputFilepath);
@@ -109,8 +110,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                             $"-o {Path.GetDirectoryName(tmpFilepath).Quote()} " +
                             $"--outfile {Path.GetFileName(tmpFilepath).Quote()} " +
                             " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +
-                            " --filter \"peakPicking true 1-\" " +
-                            " --filter \"msLevel 2-\" " +
+                            @" --filter ""peakPicking true 1-"" " +
+                            FilterMslevel() +
                             spectrumSource.ToString().Quote()
                     };
 
@@ -144,6 +145,11 @@ namespace pwiz.Skyline.Model.DdaSearch
                 UpdateProgress(status => status.ChangeErrorException(e));
                 return false;
             }
+        }
+
+        public virtual string FilterMslevel()
+        {
+            return @" --filter ""msLevel 2-"" ";
         }
 
         private void UpdateProgress(Func<IProgressStatus, IProgressStatus> updater)
@@ -183,17 +189,40 @@ namespace pwiz.Skyline.Model.DdaSearch
                     _stepCount = Convert.ToInt32(stepMatcher.Groups["count"].Value) + 1; // writing spectra is an extra step to consider
                 stepProgress = (Convert.ToInt32(stepMatcher.Groups["step"].Value) - 1) * 100 / _stepCount;
             }
-            //else if (status.Message.StartsWith(@"writing chromatograms"))
+            //else if (status.Message.Contains(@"writing chromatograms"))
             //    stepProgress = stepCount * 100 / (stepCount + 2);
-            else if (status.Message.StartsWith(@"writing spectra"))
-                stepProgress = (_stepCount - 1) * 100 / _stepCount;
+            else if (status.Message.Contains(@"writing spectra"))
+            {
+                var stepCount = Math.Max(_stepCount, 1);
+                stepProgress = (stepCount - 1) * 100 / stepCount;
+            }
             else
+            {
                 return _parentProgressMonitor.UpdateProgress(status.ChangePercentComplete(_lastPercentComplete)); // no change to percentComplete
+            }
 
-            _lastPercentComplete = stepProgress + (iterationIndex * 100 / iterationCount) / _stepCount;
+            _lastPercentComplete = stepProgress + (iterationIndex * 100 / iterationCount) / Math.Max(_stepCount, 1);
             status = status.ChangePercentComplete(_lastPercentComplete);
 
             return _parentProgressMonitor.UpdateProgress(status);
         }
+    }
+
+    /// <summary>
+    /// Just an Msconvert caller with slightly different settings, for Hardklor purposes
+    /// </summary>
+    public class HardklorDdaConverter : MsconvertDdaConverter
+    {
+
+        public HardklorDdaConverter(ImportPeptideSearch importPeptideSearch) : base(importPeptideSearch)
+        {
+            // Hardklor prefers to do its own peak picking, but that's a performance issue so we just do it ourselves
+        }
+
+        public override string FilterMslevel()
+        {
+            return @" --filter ""msLevel 1"" ";
+        }
+
     }
 }

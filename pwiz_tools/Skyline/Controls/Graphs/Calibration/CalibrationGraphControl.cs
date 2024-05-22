@@ -133,11 +133,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 return;
             }
             CalibrationCurveFitter curveFitter = displaySettings.CalibrationCurveFitter;
-            var peptideQuantifier = curveFitter.PeptideQuantifier;
-            var peptide = peptideQuantifier.PeptideDocNode;
-            if (peptideQuantifier.QuantificationSettings.RegressionFit == RegressionFit.NONE)
+            var mainPeptideQuantifier = curveFitter.PeptideQuantifier;
+            if (mainPeptideQuantifier.QuantificationSettings.RegressionFit == RegressionFit.NONE)
             {
-                if (!(peptideQuantifier.NormalizationMethod is NormalizationMethod.RatioToLabel))
+                var peptide = mainPeptideQuantifier.PeptideDocNode;
+                if (!(peptide.NormalizationMethod is NormalizationMethod.RatioToLabel))
                 {
                     zedGraphControl.GraphPane.Title.Text =
                         TextUtil.LineSeparate(displaySettings.GraphTitle,
@@ -189,6 +189,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 .Where(options.DisplaySampleType);
             foreach (var sampleType in sampleTypes)
             {
+                var samplePeptideQuantifier = curveFitter.GetPeptideQuantifier(sampleType);
                 PointPairList pointPairList = new PointPairList();
                 PointPairList pointPairListExcluded = new PointPairList();
                 foreach (var standardIdentifier in curveFitter.EnumerateCalibrationPoints())
@@ -205,7 +206,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     if (y.HasValue && x.HasValue)
                     {
                         PointPair point = new PointPair(x.Value, y.Value) { Tag = standardIdentifier };
-                        if (sampleType.AllowExclude && null == standardIdentifier.LabelType && peptide.IsExcludeFromCalibration(standardIdentifier.ReplicateIndex))
+                        if (sampleType.AllowExclude && null == standardIdentifier.LabelType && samplePeptideQuantifier.PeptideDocNode.IsExcludeFromCalibration(standardIdentifier.ReplicateIndex))
                         {
                             pointPairListExcluded.Add(point);
                         }
@@ -671,29 +672,20 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         }
         private bool IsEnableIsotopologResponseCurve()
         {
-            return TryGetSelectedPeptide(out _, out var peptide) &&
-                   peptide.TransitionGroups.Any(tg => tg.PrecursorConcentration.HasValue);
+            return true == GetSelectedPeptide()?.PeptideDocNode.TransitionGroups
+                .Any(tg => tg.PrecursorConcentration.HasValue);
         }
 
-        private bool TryGetSelectedPeptide(out PeptideGroupDocNode peptideGroup, out PeptideDocNode peptide)
+        private IdPeptideDocNode GetSelectedPeptide()
         {
-            peptide = null;
-            peptideGroup = null;
-            SequenceTree sequenceTree = SkylineWindow?.SequenceTree;
-            if (null != sequenceTree)
+            SequenceTree sequenceTree = SkylineWindow.SequenceTree;
+            PeptideTreeNode peptideTreeNode = sequenceTree?.GetNodeOfType<PeptideTreeNode>();
+            PeptideGroupTreeNode peptideGroupTreeNode = sequenceTree?.GetNodeOfType<PeptideGroupTreeNode>();
+            if (peptideGroupTreeNode != null && peptideTreeNode != null)
             {
-                PeptideTreeNode peptideTreeNode = sequenceTree.GetNodeOfType<PeptideTreeNode>();
-                if (null != peptideTreeNode)
-                {
-                    peptide = peptideTreeNode.DocNode;
-                }
-                PeptideGroupTreeNode peptideGroupTreeNode = sequenceTree.GetNodeOfType<PeptideGroupTreeNode>();
-                if (null != peptideGroupTreeNode)
-                {
-                    peptideGroup = peptideGroupTreeNode.DocNode;
-                }
+                return new IdPeptideDocNode(peptideGroupTreeNode.DocNode.PeptideGroup, peptideTreeNode.DocNode);
             }
-            return peptide != null;
+            return null;
         }
 
 
@@ -718,16 +710,18 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             {
                 return null;
             }
-            PeptideDocNode peptideDocNode;
-            PeptideGroupDocNode peptideGroupDocNode;
-            if (!TryGetSelectedPeptide(out peptideGroupDocNode, out peptideDocNode))
+
+            var idPeptideDocNode = GetSelectedPeptide();
+            if (idPeptideDocNode == null)
             {
                 return null;
             }
+
+            var peptideDocNode = idPeptideDocNode.PeptideDocNode;
             bool isExcluded = peptideDocNode.IsExcludeFromCalibration(replicateIndex);
             var menuItemText = isExcluded ? QuantificationStrings.CalibrationForm_MakeExcludeStandardMenuItem_Include_Standard
                 : QuantificationStrings.CalibrationForm_MakeExcludeStandardMenuItem_Exclude_Standard;
-            var peptideIdPath = new IdentityPath(peptideGroupDocNode.Id, peptideDocNode.Id);
+            var peptideIdPath = idPeptideDocNode.IdentityPath;
             var menuItem = new ToolStripMenuItem(menuItemText, null, (sender, args) =>
             {
                 SkylineWindow.ModifyDocument(menuItemText,

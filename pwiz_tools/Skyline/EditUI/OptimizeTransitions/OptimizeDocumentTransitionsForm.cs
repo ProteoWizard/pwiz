@@ -38,7 +38,7 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
             BindingListSource.QueryLock = _dataSchema.QueryLock;
             _bindingList = new BindingList<Row>(_rowList);
             UpdateViewContext();
-            Text = TabText = Resources.OptimizeDocumentTransitionsForm_OptimizeDocumentTransitionsForm_Optimize_Document_Transitions;
+            Text = TabText = OptimizeTransitionsResources.OptimizeDocumentTransitionsForm_OptimizeDocumentTransitionsForm_Optimize_Document_Transitions;
             Icon = Resources.Skyline;
         }
 
@@ -392,7 +392,8 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
                 return PeptideQuantifier.GetPeptideQuantifier(document, moleculeList, molecule)
                     .WithQuantificationSettings(quantificationSettings);
             }
-            return new PeptideQuantifier(() => normalizationData, moleculeList, molecule,
+
+            return new PeptideQuantifier(new Lazy<NormalizationData>(()=>normalizationData), moleculeList, molecule,
                 quantificationSettings);
         }
 

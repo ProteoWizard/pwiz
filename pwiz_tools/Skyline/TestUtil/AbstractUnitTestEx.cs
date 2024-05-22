@@ -24,6 +24,7 @@ using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Koina.Config;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
 
@@ -54,6 +55,12 @@ namespace pwiz.SkylineTestUtil
             ValidateRunExitStatus(expectSuccess, exitStatus, errorReported, consoleOutput);
 
             return consoleOutput;
+        }
+
+        protected static void CheckRunCommandOutputContains(string expectedMessage, string actualMessage)
+        {
+            Assert.IsTrue(actualMessage.Contains(expectedMessage),
+                string.Format("Expected RunCommand result message containing \n\"{0}\",\ngot\n\"{1}\"\ninstead.", expectedMessage, actualMessage));
         }
 
         private static void ValidateRunExitStatus(bool? expectSuccess, int exitStatus, bool errorReported, string consoleOutput)
@@ -152,6 +159,14 @@ namespace pwiz.SkylineTestUtil
             }
             AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(docOriginal, doc, Path.GetDirectoryName(docPath), mode);
             return doc;
+        }
+
+        /// <summary>
+        /// Returns true if Skyline was compiled with a Koina config file that enables connecting to a real server.
+        /// </summary>
+        public static bool HasKoinaServer()
+        {
+            return !string.IsNullOrEmpty(KoinaConfig.GetKoinaConfig().Server);
         }
     }
 }

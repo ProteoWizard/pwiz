@@ -355,4 +355,8 @@
     <value>LOD: {0} LLOQ: {1}</value>
     <comment>"LOD" stands for "Limit of detection" and "LLOQ" stands for "Lower limit of quantification"</comment>
   </data>
+  <data name="CalibrationForm_DisplayCalibrationCurve_QualifiedSampleType" xml:space="preserve">
+    <value>{0} ({1})</value>
+    <comment>Example: Standard (MyMolecule)</comment>
+  </data>
 </root>

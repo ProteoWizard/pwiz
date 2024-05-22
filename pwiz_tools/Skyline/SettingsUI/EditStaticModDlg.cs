@@ -66,9 +66,9 @@ namespace pwiz.Skyline.SettingsUI
             var location = heavy
                 ? new Point(panelAtoms.Location.X + cb13C.Location.X, panelAtoms.Location.Y + cb13C.Location.Y)
                 : cbChemicalFormula.Location;
-            _formulaBox = new FormulaBox(Resources.EditStaticModDlg_EditStaticModDlg_Chemical_formula_,
-                Resources.EditMeasuredIonDlg_EditMeasuredIonDlg_A_verage_mass_,
-                Resources.EditMeasuredIonDlg_EditMeasuredIonDlg__Monoisotopic_mass_)
+            _formulaBox = new FormulaBox(SettingsUIResources.EditStaticModDlg_EditStaticModDlg_Chemical_formula_,
+                SettingsUIResources.EditMeasuredIonDlg_EditMeasuredIonDlg_A_verage_mass_,
+                SettingsUIResources.EditMeasuredIonDlg_EditMeasuredIonDlg__Monoisotopic_mass_)
             {
                 Location = location,
                 TabIndex = cbVariableMod.TabIndex+1
@@ -298,7 +298,7 @@ namespace pwiz.Skyline.SettingsUI
                 if(!ModNameAvailable(name))
                 {
                     helper.ShowTextBoxError(_editing ? (Control)textName : comboMod, 
-                        Resources.EditStaticModDlg_OkDialog_The_modification__0__already_exists, name);
+                        SettingsUIResources.EditStaticModDlg_OkDialog_The_modification__0__already_exists, name);
                     return;
                 }
             }
@@ -328,7 +328,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (cbVariableMod.Checked && aas == null && term == null)
             {
-                MessageDlg.Show(this, Resources.EditStaticModDlg_OkDialog_Variable_modifications_must_specify_amino_acid_or_terminus);
+                MessageDlg.Show(this, SettingsUIResources.EditStaticModDlg_OkDialog_Variable_modifications_must_specify_amino_acid_or_terminus);
                 comboAA.Focus();
                 return;
             }
@@ -380,14 +380,14 @@ namespace pwiz.Skyline.SettingsUI
                 // Loss-only modifications may not be variable
                 else if (cbVariableMod.Checked)
                 {
-                    MessageDlg.Show(this, Resources.EditStaticModDlg_OkDialog_The_variable_checkbox_only_applies_to_precursor_modification_Product_ion_losses_are_inherently_variable);
+                    MessageDlg.Show(this, SettingsUIResources.EditStaticModDlg_OkDialog_The_variable_checkbox_only_applies_to_precursor_modification_Product_ion_losses_are_inherently_variable);
                     cbVariableMod.Focus();
                     return;
                 }
             }
             else if (aas == null && term.HasValue)
             {
-                MessageDlg.Show(this, Resources.EditStaticModDlg_OkDialog_Labeled_atoms_on_terminal_modification_are_not_valid);
+                MessageDlg.Show(this, SettingsUIResources.EditStaticModDlg_OkDialog_Labeled_atoms_on_terminal_modification_are_not_valid);
                 return;
             }
 
@@ -417,10 +417,10 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (DialogResult.OK == MultiButtonMsgDlg.Show(
                         this,
-                        TextUtil.LineSeparate(Resources.EditStaticModDlg_OkDialog_There_is_an_existing_modification_with_the_same_settings,
+                        TextUtil.LineSeparate(SettingsUIResources.EditStaticModDlg_OkDialog_There_is_an_existing_modification_with_the_same_settings,
                                               string.Format(@"'{0}'.", mod.Name),
                                               string.Empty,
-                                              Resources.EditStaticModDlg_OkDialog_Continue),
+                                              SettingsUIResources.EditStaticModDlg_OkDialog_Continue),
                         MultiButtonMsgDlg.BUTTON_OK))
                     {
                         Modification = newMod;
@@ -447,12 +447,12 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     var result = MultiButtonMsgDlg.Show(
                         this,
-                        TextUtil.LineSeparate(Resources.EditStaticModDlg_OkDialog_There_is_a_Unimod_modification_with_the_same_settings,
+                        TextUtil.LineSeparate(SettingsUIResources.EditStaticModDlg_OkDialog_There_is_a_Unimod_modification_with_the_same_settings,
                                                 string.Empty,
-                                                string.Format(Resources.EditStaticModDlg_OkDialog_Click__Unimod__to_use_the_name___0___, matchingMod.Name),
-                                                string.Format(Resources.EditStaticModDlg_OkDialog_Click__Custom__to_use_the_name___0___, name)),
-                        Resources.EditStaticModDlg_OkDialog_Unimod,
-                        Resources.EditStaticModDlg_OkDialog_Custom,
+                                                string.Format(SettingsUIResources.EditStaticModDlg_OkDialog_Click__Unimod__to_use_the_name___0___, matchingMod.Name),
+                                                string.Format(SettingsUIResources.EditStaticModDlg_OkDialog_Click__Custom__to_use_the_name___0___, name)),
+                        SettingsUIResources.EditStaticModDlg_OkDialog_Unimod,
+                        SettingsUIResources.EditStaticModDlg_OkDialog_Custom,
                         true);
                     if (result == DialogResult.Yes)
                         newMod = matchingMod.MatchVariableAndLossInclusion(newMod);   // Unimod
@@ -472,9 +472,9 @@ namespace pwiz.Skyline.SettingsUI
                     // match the dialog modification, prompt the user to use the Unimod modification definition instead.
                     if (DialogResult.OK != MultiButtonMsgDlg.Show(
                         this,
-                        TextUtil.LineSeparate(string.Format(Resources.EditStaticModDlg_OkDialog_This_modification_does_not_match_the_Unimod_specifications_for___0___, name),
+                        TextUtil.LineSeparate(string.Format(SettingsUIResources.EditStaticModDlg_OkDialog_This_modification_does_not_match_the_Unimod_specifications_for___0___, name),
                                                 string.Empty,
-                                                Resources.EditStaticModDlg_OkDialog_Use_non_standard_settings_for_this_name),
+                                                SettingsUIResources.EditStaticModDlg_OkDialog_Use_non_standard_settings_for_this_name),
                         MultiButtonMsgDlg.BUTTON_OK))
                     {
                         return;
@@ -741,8 +741,8 @@ namespace pwiz.Skyline.SettingsUI
         {
             comboMod.Items.Clear();
             comboMod.Items.Add(Settings.Default.StaticModsShowMore
-                                   ? Resources.EditStaticModDlg_UpdateListAvailableMods_Show_common
-                                   : Resources.EditStaticModDlg_UpdateListAvailableMods_Show_all);
+                                   ? SettingsUIResources.EditStaticModDlg_UpdateListAvailableMods_Show_common
+                                   : SettingsUIResources.EditStaticModDlg_UpdateListAvailableMods_Show_all);
             comboMod.Items.AddRange(ListAvailableMods().Cast<object>().ToArray());
         }
 
@@ -772,7 +772,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             var modification = UniMod.GetModification(modName, IsStructural);
             if (modification == null)
-                throw new ArgumentException(string.Format(Resources.EditStaticModDlg_SetModification___0___is_not_a_recognized_Unimod_name_, modName));
+                throw new ArgumentException(string.Format(SettingsUIResources.EditStaticModDlg_SetModification___0___is_not_a_recognized_Unimod_name_, modName));
 
             // Avoid setting loss-only modifications to variable, since losses themselves act as variable
             if (modification.HasLoss && !modification.HasMod)

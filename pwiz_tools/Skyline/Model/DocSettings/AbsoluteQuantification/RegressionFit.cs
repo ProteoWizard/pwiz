@@ -23,7 +23,6 @@ using MathNet.Numerics.LinearRegression;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding.Entities;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
@@ -139,7 +138,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         private class LinearInLogSpace : RegressionFit
         {
-            public LinearInLogSpace() : base(@"linear_in_log_space", () => Resources.LinearInLogSpace_Label_Linear_in_Log_Space)
+            public LinearInLogSpace() : base(@"linear_in_log_space", () => AbsoluteQuantificationResources.LinearInLogSpace_Label_Linear_in_Log_Space)
             {
                 
             }
@@ -148,7 +147,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 if (points.Any(pt => pt.Y <= 0 || pt.X <= 0))
                 {
-                    return new CalibrationCurve.Error(Resources.LinearInLogSpace_FitPoints_Unable_to_do_a_regression_in_log_space_because_one_or_more_points_are_non_positive_);
+                    return new CalibrationCurve.Error(AbsoluteQuantificationResources.LinearInLogSpace_FitPoints_Unable_to_do_a_regression_in_log_space_because_one_or_more_points_are_non_positive_);
                 }
                 var logPoints = points.Select(LogOfPoint).ToList();
                 var calibrationCurve = (CalibrationCurve.Linear) LinearFit(logPoints);

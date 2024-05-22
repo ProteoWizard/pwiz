@@ -122,6 +122,22 @@ void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
     }
 
+    for (int function : rawdata->FunctionIndexList())
+    {
+        try
+        {
+            int msLevel;
+            CVID spectrumType;
+            translateFunctionType(WatersToPwizFunctionType(rawdata->Info.GetFunctionType(function)), msLevel, spectrumType);
+            if (spectrumType != CVID_Unknown)
+                msd.fileDescription.fileContent.set(spectrumType);
+        }
+        catch (...) // unable to translate function type
+        {
+            cerr << "[Reader_Waters::fillInMetadata] Unable to translate function type \"" + rawdata->Info.GetFunctionTypeString(rawdata->Info.GetFunctionType(function)) + "\"" << endl;
+        }
+    }
+
     SoftwarePtr softwareMassLynx(new Software);
     softwareMassLynx->id = "MassLynx";
     softwareMassLynx->set(MS_MassLynx);

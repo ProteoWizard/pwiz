@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.Results
         public TimeIntervals InferTimeIntervals(IEnumerable<IList<float>> timesList)
         {
             TimeIntervals result = null;
-            var timesSet = new HashSet<object>(new IdentityEqualityComparer<object>());
+            var timesSet = new HashSet<object>(ReferenceValue.EQUALITY_COMPARER);
             foreach (var times in timesList)
             {
                 if (!timesSet.Add(times))

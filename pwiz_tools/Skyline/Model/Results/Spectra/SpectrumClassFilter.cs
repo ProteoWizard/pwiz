@@ -34,15 +34,15 @@ namespace pwiz.Skyline.Model.Results.Spectra
 {
     public struct SpectrumClassFilter : IEquatable<SpectrumClassFilter>, IComparable, IComparable<SpectrumClassFilter>
     {
-        public static readonly FilterPage Ms1FilterPage = new FilterPage(() => Resources.SpectrumClassFilter_Ms1FilterPage_MS1,
-            ()=>Resources.SpectrumClassFilter_Ms1FilterPage_Criteria_which_MS1_spectra_must_satisfy_to_be_included_in_extracted_chromatogram,
+        public static readonly FilterPage Ms1FilterPage = new FilterPage(() => SpectraResources.SpectrumClassFilter_Ms1FilterPage_MS1,
+            ()=>SpectraResources.SpectrumClassFilter_Ms1FilterPage_Criteria_which_MS1_spectra_must_satisfy_to_be_included_in_extracted_chromatogram,
             new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.MsLevel)),
                 FilterPredicate.CreateFilterPredicate(FilterOperations.OP_EQUALS, 1))
             ,
             SpectrumClassColumn.MS1.Select(col => col.PropertyPath));
 
-        public static readonly FilterPage Ms2FilterPage = new FilterPage(() => Resources.SpectrumClassFilter_Ms2FilterPage_MS2_,
-            ()=>Resources.SpectrumClassFilter_Ms2FilterPage_Criteria_which_spectra_with_MS_level_2_or_higher_must_satisfy_to_be_included_in_extracted_chromatogram,
+        public static readonly FilterPage Ms2FilterPage = new FilterPage(() => SpectraResources.SpectrumClassFilter_Ms2FilterPage_MS2_,
+            ()=>SpectraResources.SpectrumClassFilter_Ms2FilterPage_Criteria_which_spectra_with_MS_level_2_or_higher_must_satisfy_to_be_included_in_extracted_chromatogram,
             new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.MsLevel)),
                 FilterPredicate.CreateFilterPredicate(FilterOperations.OP_IS_GREATER_THAN, 1)),
             SpectrumClassColumn.ALL.Select(col => col.PropertyPath));
@@ -286,7 +286,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 }
             }
 
-            return string.Join(Resources.SpectrumClassFilter_GetAbbreviatedText__AND_, clauses);
+            return string.Join(SpectraResources.SpectrumClassFilter_GetAbbreviatedText__AND_, clauses);
         }
 
         public static SpectrumClassFilter ReadXml(XmlReader reader)

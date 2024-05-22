@@ -134,9 +134,9 @@ namespace pwiz.Skyline.FileUI
 
             graphData = new RegressionGraphData
             {
-                Title = Resources.ChooseIrtStandardPeptidesDlg_OkDialog_Linear_regression,
-                LabelX = Resources.ChooseIrtStandardPeptidesDlg_OkDialog_Library_iRTs,
-                LabelY = Resources.ChooseIrtStandardPeptidesDlg_OkDialog_Known_iRTs,
+                Title = FileUIResources.ChooseIrtStandardPeptidesDlg_OkDialog_Linear_regression,
+                LabelX = FileUIResources.ChooseIrtStandardPeptidesDlg_OkDialog_Library_iRTs,
+                LabelY = FileUIResources.ChooseIrtStandardPeptidesDlg_OkDialog_Known_iRTs,
                 XValues = listX.ToArray(),
                 YValues = listY.ToArray(),
                 Tooltips = targets.ToDictionary(target => target.Key, target => target.Value.ToString()),
@@ -198,7 +198,7 @@ namespace pwiz.Skyline.FileUI
         {
             if (comboProteins.SelectedIndex == -1)
             {
-                MessageDlg.Show(this, Resources.ChooseIrtStandardPeptidesDlg_OkDialog_Please_select_a_protein_containing_the_list_of_standard_peptides_for_the_iRT_calculator_);
+                MessageDlg.Show(this, FileUIResources.ChooseIrtStandardPeptidesDlg_OkDialog_Please_select_a_protein_containing_the_list_of_standard_peptides_for_the_iRT_calculator_);
                 comboProteins.Focus();
                 return false;
             }
@@ -221,7 +221,7 @@ namespace pwiz.Skyline.FileUI
         {
             if (!File.Exists(txtTransitionList.Text))
             {
-                MessageDlg.Show(this, Resources.ChooseIrtStandardPeptides_OkDialog_Transition_list_field_must_contain_a_path_to_a_valid_file_);
+                MessageDlg.Show(this, FileUIResources.ChooseIrtStandardPeptides_OkDialog_Transition_list_field_must_contain_a_path_to_a_valid_file_);
                 txtTransitionList.Focus();
                 return false;
             }
@@ -263,10 +263,10 @@ namespace pwiz.Skyline.FileUI
         {
             using (var dlg = new OpenFileDialog())
             {
-                dlg.Title = Resources.ChooseIrtStandardPeptides_ImportTextFile_Import_Transition_List__iRT_standards_;
+                dlg.Title = FileUIResources.ChooseIrtStandardPeptides_ImportTextFile_Import_Transition_List__iRT_standards_;
                 dlg.InitialDirectory = Path.GetDirectoryName(_documentFilePath);
                 dlg.DefaultExt = TextUtil.EXT_CSV;
-                dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(Resources.ChooseIrtStandardPeptides_ImportTextFile_Transition_List, TextUtil.EXT_CSV, TextUtil.EXT_TSV));
+                dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(FileUIResources.ChooseIrtStandardPeptides_ImportTextFile_Transition_List, TextUtil.EXT_CSV, TextUtil.EXT_TSV));
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);

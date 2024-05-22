@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -52,7 +53,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public static string FILTER_BLIB
         {
-            get { return TextUtil.FileDialogFilter(Resources.BiblioSpecLiteSpec_FILTER_BLIB_BiblioSpec_Library, EXT); }
+            get { return TextUtil.FileDialogFilter(LibResources.BiblioSpecLiteSpec_FILTER_BLIB_BiblioSpec_Library, EXT); }
         }
 
         public const string EXT_REDUNDANT = ".redundant.blib";
@@ -76,8 +77,8 @@ namespace pwiz.Skyline.Model.Lib
 
         private static readonly PeptideRankId[] RANK_IDS = { PEP_RANK_COPIES, PEP_RANK_PICKED_INTENSITY };
 
-        public BiblioSpecLiteSpec(string name, string path)
-            : base(name, path)
+        public BiblioSpecLiteSpec(string name, string path, bool useExplicitPeakBounds = true)
+            : base(name, path, useExplicitPeakBounds)
         {
         }
 
@@ -98,7 +99,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string GetLibraryTypeName()
         {
-            return Resources.BiblioSpecLiteSpec_FILTER_BLIB_BiblioSpec_Library;
+            return LibResources.BiblioSpecLiteSpec_FILTER_BLIB_BiblioSpec_Library;
         }
 
         #region Implementation of IXmlSerializable
@@ -142,6 +143,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private BiblioLiteSourceInfo[] _librarySourceFiles;
         private bool _anyExplicitPeakBounds;
+        private Dictionary<MsDataFileUri, int> msDataFileUriLookup;
 
         public static string GetLibraryCachePath(string libraryPath)
         {
@@ -203,7 +205,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string SpecFilter
         {
-            get { return TextUtil.FileDialogFilterAll(Resources.BiblioSpecLiteLibrary_SpecFilter_BiblioSpec_Library, BiblioSpecLiteSpec.EXT); }
+            get { return TextUtil.FileDialogFilterAll(LibResources.BiblioSpecLiteLibrary_SpecFilter_BiblioSpec_Library, BiblioSpecLiteSpec.EXT); }
         }
 
         public override IList<RetentionTimeSource> ListRetentionTimeSources()
@@ -266,7 +268,7 @@ namespace pwiz.Skyline.Model.Lib
             get
             {
                 var dataFiles = GetDataFileDetails();
-                var uniquePeptideCount = Keys.Select(entry => entry.Target.Sequence).Distinct().Count();
+                var uniquePeptideCount = Keys.Select(entry => entry.Target.IsProteomic ? entry.Target.Sequence : entry.Target.Molecule.ToSerializableString()).Distinct().Count();
 
                 LibraryDetails details = new LibraryDetails
                                              {
@@ -648,7 +650,7 @@ namespace pwiz.Skyline.Model.Lib
                 using (SQLiteDataReader reader = select.ExecuteReader())
                 {
                     if (!reader.Read())
-                        throw new IOException(string.Format(Resources.BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__, FilePath));
+                        throw new IOException(string.Format(LibResources.BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__, FilePath));
 
                     rows = reader.GetInt32(LibInfo.numSpecs);
 
@@ -670,7 +672,7 @@ namespace pwiz.Skyline.Model.Lib
                     using (SQLiteDataReader reader = select.ExecuteReader())
                     {
                         if (!reader.Read())
-                            throw new InvalidDataException(string.Format(Resources.BiblioSpecLiteLibrary_CreateCache_Unable_to_get_a_valid_count_of_spectra_in_the_library__0__, FilePath));
+                            throw new InvalidDataException(string.Format(LibResources.BiblioSpecLiteLibrary_CreateCache_Unable_to_get_a_valid_count_of_spectra_in_the_library__0__, FilePath));
                         rows = reader.GetInt32(0);
                     }
                 }
@@ -1055,7 +1057,7 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     // Building the cache will take 95% of the load time.
                     loadPercent = 5;
-                    status = status.ChangeMessage(string.Format(Resources.BiblioSpecLiteLibrary_Load_Building_binary_cache_for__0__library,
+                    status = status.ChangeMessage(string.Format(LibResources.BiblioSpecLiteLibrary_Load_Building_binary_cache_for__0__library,
                                                            Path.GetFileName(FilePath)));
                     status = status.ChangePercentComplete(0);
                     loader.UpdateProgress(status);
@@ -1068,7 +1070,7 @@ namespace pwiz.Skyline.Model.Lib
 
                 }
 
-                status = status.ChangeMessage(string.Format(Resources.BiblioSpecLiteLibraryLoadLoading__0__library,
+                status = status.ChangeMessage(string.Format(LibResources.BiblioSpecLiteLibraryLoadLoading__0__library,
                                                             Path.GetFileName(FilePath)));
                 loader.UpdateProgress(status);
 
@@ -1133,6 +1135,7 @@ namespace pwiz.Skyline.Model.Lib
                     }
 
                     _librarySourceFiles = librarySourceFiles.ToArray();
+                    msDataFileUriLookup = new Dictionary<MsDataFileUri, int>();
 
                     var scoreTypes = new Dictionary<int, string>();
                     if (locationScoreTypes != 0)
@@ -1279,6 +1282,36 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
+        public void WriteDebugMgf(string filepath, int? precision = null)
+        {
+            using var mgf = new StreamWriter(filepath);
+            var emc = new SequenceMassCalc(MassType.Monoisotopic);
+
+            string formatMgfDouble(double value)
+            {
+                if (precision.HasValue)
+                    return value.ToString(@"F" + precision.Value, CultureInfo.InvariantCulture);
+                return value.ToString(CultureInfo.InvariantCulture);
+            }
+
+            foreach (PeptideLibraryKey key in Keys)
+            {
+                var spectra = GetSpectra(key, IsotopeLabelType.light, LibraryRedundancy.best);
+                var spectrum = spectra.First();
+                double mass = emc.GetPrecursorMass(key.UnmodifiedSequence) +
+                              key.GetModifications().Sum(mod => MassModification.Parse(mod.Value).Mass);
+                mgf.WriteLine(@"BEGIN IONS");
+                mgf.WriteLine(@"TITLE=" + key.ModifiedSequence);
+                mgf.WriteLine(@"RTINSECONDS=" + formatMgfDouble(spectrum.RetentionTime.GetValueOrDefault(0) * 60));
+                mgf.WriteLine(@"CHARGE=" + key.Charge + @"+");
+                mgf.WriteLine(@"PEPMASS=" + formatMgfDouble(key.Adduct.MzFromNeutralMass(new TypedMass(mass, MassType.Monoisotopic))));
+                foreach (var peak in spectrum.SpectrumPeaksInfo.Peaks.OrderBy(peak => peak.Mz))
+                    if (peak.Intensity > 0)
+                        mgf.WriteLine(@"{0}	{1}", formatMgfDouble(peak.Mz), formatMgfDouble(peak.Intensity));
+                mgf.WriteLine(@"END IONS");
+            }
+        }
+
         public override LibraryChromGroup LoadChromatogramData(object spectrumKey)
         {
             return null;
@@ -1290,7 +1323,10 @@ namespace pwiz.Skyline.Model.Lib
             if (spectrumLiteKey != null)
             {
                 if (!spectrumLiteKey.IsBest)
-                    return new SpectrumPeaksInfo(ReadRedundantSpectrum(spectrumLiteKey.RedundantId));
+                {
+                    var redundantSpectrum = ReadRedundantSpectrum(spectrumLiteKey.RedundantId);
+                    return redundantSpectrum == null ? SpectrumPeaksInfo.EMPTY : new SpectrumPeaksInfo(redundantSpectrum);
+                }
 
                 // Always get the best spectrum from the non-redundant library
                 spectrumKey = spectrumLiteKey.NonRedundantId;
@@ -1396,7 +1432,7 @@ namespace pwiz.Skyline.Model.Lib
         private SpectrumPeaksInfo.MI[] ReadRedundantSpectrum(int spectrumId)
         {
             if (_sqliteConnectionRedundant == null)
-                throw new IOException(string.Format(Resources.BiblioSpecLiteLibrary_ReadRedundantSpectrum_The_redundant_library__0__does_not_exist, FilePathRedundant));
+                throw new IOException(string.Format(LibResources.BiblioSpecLiteLibrary_ReadRedundantSpectrum_The_redundant_library__0__does_not_exist, FilePathRedundant));
 
             try
             {
@@ -1610,7 +1646,7 @@ namespace pwiz.Skyline.Model.Lib
 
             new LongOperationRunner
             {
-                JobTitle = Resources.BiblioSpecLiteLibrary_CalculateFileRetentionTimeAlignments_Aligning_library_retention_times
+                JobTitle = LibResources.BiblioSpecLiteLibrary_CalculateFileRetentionTimeAlignments_Aligning_library_retention_times
             }.Run(longWaitBroker =>
             {
                 var targetTimes = libraryRetentionTimes.Find(dataFileName);
@@ -1825,16 +1861,27 @@ namespace pwiz.Skyline.Model.Lib
 
         private int FindSource(MsDataFileUri filePath)
         {
-            if (filePath == null)
+            if (filePath == null || _librarySourceFiles.Length == 0)
             {
                 return -1;
+            }
+            Assume.IsNotNull(msDataFileUriLookup);
+            lock (msDataFileUriLookup)
+            {
+                if (msDataFileUriLookup.TryGetValue(filePath, out int index))
+                {
+                    return index;
+                }
             }
             string filePathToString = filePath.ToString();
             // First look for an exact path match
             int i = _librarySourceFiles.IndexOf(info => Equals(filePathToString, info.FilePath));
             // filePath.ToString may include decorators e.g. "C:\\data\\mydata.raw?centroid_ms1=true", try unadorned name ("mydata.raw")
             if (i == -1)
-                i = _librarySourceFiles.IndexOf(info => Equals(filePath.GetFileName(), info.FilePath));
+            {
+                string fileName = filePath.GetFileName();
+                i = _librarySourceFiles.IndexOf(info => Equals(fileName, info.FilePath));
+            }
             // Or a straight basename match, which we sometimes use internally
             if (i == -1)
                 i = _librarySourceFiles.IndexOf(info => Equals(filePathToString, info.BaseName));
@@ -1851,6 +1898,11 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     // Handle: Illegal characters in path
                 }
+            }
+
+            lock (msDataFileUriLookup)
+            {
+                msDataFileUriLookup[filePath] = i;
             }
             return i;
         }
@@ -2029,7 +2081,7 @@ namespace pwiz.Skyline.Model.Lib
                 using (SQLiteDataReader reader = select.ExecuteReader())
                 {
                         if (!reader.Read())
-                        throw new InvalidDataException(string.Format(Resources.BiblioSpecLiteLibrary_RetentionTimesPsmCount_Unable_to_get_a_valid_count_of_all_spectra_in_the_library__0__, FilePath));
+                        throw new InvalidDataException(string.Format(LibResources.BiblioSpecLiteLibrary_RetentionTimesPsmCount_Unable_to_get_a_valid_count_of_all_spectra_in_the_library__0__, FilePath));
                     int rows = reader.GetInt32(0);
                     return rows;
                 }
@@ -2216,9 +2268,9 @@ namespace pwiz.Skyline.Model.Lib
             using (var saver = new FileSaver(FilePath))
             {
                 var blibFilter = new BlibFilter();
-                IProgressStatus status = new ProgressStatus(Resources.BiblioSpecLiteLibrary_DeleteDataFiles_Removing_library_runs_from_document_library_);
+                IProgressStatus status = new ProgressStatus(LibResources.BiblioSpecLiteLibrary_DeleteDataFiles_Removing_library_runs_from_document_library_);
                 if (!blibFilter.Filter(FilePathRedundant, saver.SafeName, monitor, ref status))
-                    throw new IOException(string.Format(Resources.BiblioSpecLiteLibrary_DeleteDataFiles_Failed_attempting_to_filter_redundant_library__0__to__1_, FilePathRedundant, FilePath));
+                    throw new IOException(string.Format(LibResources.BiblioSpecLiteLibrary_DeleteDataFiles_Failed_attempting_to_filter_redundant_library__0__to__1_, FilePathRedundant, FilePath));
 
                 _sqliteConnectionRedundant.CloseStream();
                 _sqliteConnection.CloseStream();
@@ -2580,7 +2632,7 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    public sealed class SpectrumLiteKey
+    public sealed class SpectrumLiteKey : IEquatable<SpectrumLiteKey>
     {
         public SpectrumLiteKey(int nonRedundantId, int redundantId, bool isBest)
         {
@@ -2592,6 +2644,29 @@ namespace pwiz.Skyline.Model.Lib
         public int NonRedundantId { get; private set; }
         public int RedundantId { get; private set; }
         public bool IsBest { get; private set; }
+
+        public bool Equals(SpectrumLiteKey other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return NonRedundantId == other.NonRedundantId && RedundantId == other.RedundantId && IsBest == other.IsBest;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return ReferenceEquals(this, obj) || obj is SpectrumLiteKey other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = NonRedundantId;
+                hashCode = (hashCode * 397) ^ RedundantId;
+                hashCode = (hashCode * 397) ^ IsBest.GetHashCode();
+                return hashCode;
+            }
+        }
     }
 
     public struct IndexedRetentionTimes

@@ -21,10 +21,13 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Results.Spectra;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -112,52 +115,38 @@ namespace pwiz.Skyline.Model.Results
         public abstract void Dispose();
     }
 
+
+    /// <summary>
+    /// Keeps track of the Total Ion Current chromatogram, the base peak chromatogram, and the QC Trace chromatograms.
+    /// When this class is used by ChromDataProvider, the chromatograms are identified by the chromatogram index
+    /// in the data file.
+    /// When this class is used by SpectraChromDataProvider, the chromatograms are identified by an integer which is
+    /// an index into the list returned by <see cref="ListChromKeys"/>.
+    /// </summary>
     public sealed class GlobalChromatogramExtractor
     {
         private MsDataFileImpl _dataFile;
         private const string TIC_CHROMATOGRAM_ID = @"TIC";
         private const string BPC_CHROMATOGRAM_ID = @"BPC";
+        private Dictionary<int, MsDataFileImpl.QcTrace> _qcTracesByChromatogramIndex;
+
 
         public GlobalChromatogramExtractor(MsDataFileImpl dataFile)
         {
             _dataFile = dataFile;
-            IndexOffset = 0;
 
             if (dataFile.ChromatogramCount > 0 && dataFile.GetChromatogramId(0, out _) == TIC_CHROMATOGRAM_ID)
                 TicChromatogramIndex = 0;
             if (dataFile.ChromatogramCount > 1 && dataFile.GetChromatogramId(1, out _) == BPC_CHROMATOGRAM_ID)
                 BpcChromatogramIndex = 1;
-
-            QcTraceByIndex = new SortedDictionary<int, MsDataFileImpl.QcTrace>();
-            foreach (var qcTrace in dataFile.GetQcTraces() ?? new List<MsDataFileImpl.QcTrace>())
-            {
-                QcTraceByIndex[qcTrace.Index] = qcTrace;
-            }
+            QcTraces = ImmutableList.ValueOfOrEmpty(dataFile.GetQcTraces());
+            _qcTracesByChromatogramIndex = QcTraces.ToDictionary(qcTrace => qcTrace.Index);
         }
-
-        /// <summary>
-        /// Since global chromatograms can share the same index as Skyline's target chromatograms (they both start at 0),
-        /// the global chromatograms are given an index offset starting after the last target chromatogram
-        /// </summary>
-        public int IndexOffset { get; set; }
 
         public int? TicChromatogramIndex { get; set; }
         public int? BpcChromatogramIndex { get; }
 
-        public IList<int> GlobalChromatogramIndexes
-        {
-            get
-            {
-                var result = new List<int>();
-                if (TicChromatogramIndex.HasValue)
-                    result.Add(TicChromatogramIndex.Value);
-                if (BpcChromatogramIndex.HasValue)
-                    result.Add(BpcChromatogramIndex.Value);
-                return result;
-            }
-        }
-
-        public IDictionary<int, MsDataFileImpl.QcTrace> QcTraceByIndex { get; }
+        public ImmutableList<MsDataFileImpl.QcTrace> QcTraces { get; }
 
         public string GetChromatogramId(int index, out int indexId)
         {
@@ -166,22 +155,24 @@ namespace pwiz.Skyline.Model.Results
 
         public bool GetChromatogram(int index, out float[] times, out float[] intensities)
         {
-            index -= IndexOffset;
+            if (index == TicChromatogramIndex || index == BpcChromatogramIndex)
+            {
+                return ReadChromatogramFromDataFile(index, out times, out intensities);
+            }
 
-            if (QcTraceByIndex.TryGetValue(index, out MsDataFileImpl.QcTrace qcTrace))
+            if (_qcTracesByChromatogramIndex.TryGetValue(index, out var qcTrace))
             {
                 times = MsDataFileImpl.ToFloatArray(qcTrace.Times);
                 intensities = MsDataFileImpl.ToFloatArray(qcTrace.Intensities);
-            }
-            else if (index == TicChromatogramIndex || index == BpcChromatogramIndex)
-            {
-                _dataFile.GetChromatogram(index, out _, out times, out intensities, true);
-            }
-            else
-            {
-                times = intensities = null;
+                return true;
             }
 
+            times = intensities = null;
+            return false;
+        }
+        private bool ReadChromatogramFromDataFile(int chromatogramIndex, out float[] times, out float[] intensities)
+        {
+            _dataFile.GetChromatogram(chromatogramIndex, out _, out times, out intensities, true);
             return times != null;
         }
 
@@ -208,6 +199,89 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return true;
+        }
+
+        public int ChromatogramCount
+        {
+            get
+            {
+                int count = QcTraces.Count;
+                if (TicChromatogramIndex.HasValue)
+                {
+                    count++;
+                }
+
+                if (BpcChromatogramIndex.HasValue)
+                {
+                    count++;
+                }
+
+                return count;
+            }
+        }
+
+        /// <summary>
+        /// Returns a flat list of the global chromatograms.
+        /// This list is always in the following order:
+        /// Total Ion Current
+        /// Base Peak
+        /// all qc traces
+        /// </summary>
+        public IList<ChromKey> ListChromKeys()
+        {
+            var list = new List<ChromKey>();
+            foreach (var possibleGlobalIndex in new[] { TicChromatogramIndex, BpcChromatogramIndex })
+            {
+                if (!possibleGlobalIndex.HasValue)
+                    continue;
+                int globalIndex = possibleGlobalIndex.Value;
+                list.Add(ChromKey.FromId(GetChromatogramId(globalIndex, out _), false));
+            }
+
+            foreach (var qcTrace in QcTraces)
+            {
+                list.Add(ChromKey.FromQcTrace(qcTrace));
+            }
+            Assume.AreEqual(list.Count, ChromatogramCount);
+            return list;
+        }
+
+        /// <summary>
+        /// Gets the chromatogram data for the chromatogram at a particular position in the list
+        /// returned by <see cref="ListChromKeys"/>
+        /// </summary>
+        public bool GetChromatogramAt(int index, out float[] times, out float[] intensities)
+        {
+            if (TicChromatogramIndex.HasValue)
+            {
+                if (index == 0)
+                {
+                    return ReadChromatogramFromDataFile(TicChromatogramIndex.Value, out times, out intensities);
+                }
+
+                index--;
+            }
+
+            if (BpcChromatogramIndex.HasValue)
+            {
+                if (index == 0)
+                {
+                    return ReadChromatogramFromDataFile(BpcChromatogramIndex.Value, out times, out intensities);
+                }
+
+                index--;
+            }
+
+            if (index >= 0 && index < QcTraces.Count)
+            {
+                var qcTrace = QcTraces[index];
+                times = MsDataFileImpl.ToFloatArray(qcTrace.Times);
+                intensities = MsDataFileImpl.ToFloatArray(qcTrace.Intensities);
+                return true;
+            }
+
+            times = intensities = null;
+            return false;
         }
     }
 
@@ -261,6 +335,15 @@ namespace pwiz.Skyline.Model.Results
                     continue;
 
                 var chromKey = ChromKey.FromId(id, fixCEOptForShimadzu);
+                if (_optimizableRegression?.OptType == OptimizationType.collision_energy
+                    && chromKey.CollisionEnergy == 0)
+                {
+                    var collisionEnergy = dataFile.GetChromatogramCollisionEnergy(i);
+                    if (collisionEnergy.HasValue)
+                    {
+                        chromKey = chromKey.ChangeCollisionEnergy((float)collisionEnergy);
+                    }
+                }
                 if (chromKey.Precursor != lastPrecursor)
                 {
                     lastPrecursor = chromKey.Precursor;
@@ -299,10 +382,10 @@ namespace pwiz.Skyline.Model.Results
 //                _chromIds.Add(new ChromKeyProviderIdPair(ChromKey.FromId(_globalChromatogramExtractor.GetChromatogramId(globalIndex, out int indexId), false), globalIndex));
 //            }
 
-            foreach (var qcTracePair in _globalChromatogramExtractor.QcTraceByIndex)
+            foreach (var qcTrace in _globalChromatogramExtractor.QcTraces)
             {
-                _chromIndices[qcTracePair.Key] = qcTracePair.Key;
-                _chromIds.Add(new ChromKeyProviderIdPair(ChromKey.FromQcTrace(qcTracePair.Value), qcTracePair.Key));
+                _chromIndices[qcTrace.Index] = qcTrace.Index;
+                _chromIds.Add(new ChromKeyProviderIdPair(ChromKey.FromQcTrace(qcTrace), qcTrace.Index));
             }
 
             // CONSIDER(kaipot): Some way to support mzML files converted from MIDAS wiff files
@@ -323,24 +406,49 @@ namespace pwiz.Skyline.Model.Results
 
             foreach (var matchingGroup in ChromCacheBuilder.GetMatchingGroups(doc, this))
             {
-                SignedMz? lastProduct = null;
+                ChromKey lastChromKey = null;
+                ChromKey firstChromKey = null;
                 var curGroup = new List<ChromData>();
                 foreach (var chromData in matchingGroup.Value.Chromatograms.OrderBy(chromData =>
                              chromData.Key.Product))
                 {
-                    if (lastProduct.HasValue)
+                    if (lastChromKey != null)
                     {
-                        if (!ChromatogramInfo.IsOptimizationSpacing(lastProduct.Value, chromData.Key.Product))
-                            SetOptStepsForGroup(idToIndex, matchingGroup.Key?.NodeGroup, curGroup);
+                        bool optimizationSpacing =
+                            ChromatogramInfo.IsOptimizationSpacing(lastChromKey.Product, chromData.Key.Product);
+                        if (!optimizationSpacing)
+                        {
+                            if (_dataFile.IsAgilentFile)
+                            {
+                                // Agilent files sometimes round off the Q3 values, so if we consider all chromatograms
+                                // within mzMatchTolerance of the document transition product m/z to be part of the same group of optimization steps
+
+                                // We do not know what the document transition product m/z is at this point, so if the m/z is within twice the tolerance
+                                // of the first product m/z in the series, that is good enough
+                                double tolerance = doc.Settings.TransitionSettings.Instrument.MzMatchTolerance * 2;
+                                if (chromData.Key.Product.CompareTolerant(firstChromKey.Product, tolerance) == 0)
+                                {
+                                    optimizationSpacing = true;
+                                }
+                            }
+                        }
+
+                        if (!optimizationSpacing)
+                        {
+                            SetOptStepsForGroup(doc, idToIndex, matchingGroup.Key, curGroup);
+                            curGroup.Clear();
+                            firstChromKey = null;
+                        }
                     }
 
                     curGroup.Add(chromData);
-                    lastProduct = chromData.Key.Product;
+                    lastChromKey = chromData.Key;
+                    firstChromKey ??= lastChromKey;
                 }
 
-                if (lastProduct.HasValue)
+                if (lastChromKey != null)
                 {
-                    SetOptStepsForGroup(idToIndex, matchingGroup.Key?.NodeGroup, curGroup);
+                    SetOptStepsForGroup(doc, idToIndex, matchingGroup.Key, curGroup);
                 }
             }
         }
@@ -378,32 +486,73 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private void SetOptStepsForGroup(IReadOnlyDictionary<int, int> idToIndex, TransitionGroupDocNode transitionGroupDocNode, IList<ChromData> chromDatas)
+        /// <summary>
+        /// Sets the optimization steps for a group of chromatograms.
+        /// The chromatograms will all have the same Q1 value and the Q3 values will differ by no more than
+        /// <see cref="ChromatogramInfo.OPTIMIZE_SHIFT_SIZE"/>.
+        /// </summary>
+        private void SetOptStepsForGroup(SrmDocument document, IReadOnlyDictionary<int, int> idToIndex, ChromCacheBuilder.PeptidePrecursorMz peptidePrecursorMz, IList<ChromData> chromDatas)
         {
             if (chromDatas.Count <= 1)
             {
-                chromDatas.Clear();
                 return;
             }
 
+            var groupedByProductMz = chromDatas.GroupBy(data => data.Key.Product).ToList();
+            // Check to see whether there is a full set of optimization steps which all have identical Q3 values
+            if (groupedByProductMz.Count > 1 &&
+                chromDatas.Count > _optimizableRegression.StepCount * 2 + 1 &&
+                groupedByProductMz.Any(g => g.Count() > _optimizableRegression.StepCount))
+            {
+                // If the total number of chromatograms is more than one complete set of optimization steps (stepCount * 2 + 1)
+                // and there are more than half a complete set with identical Q3 values (stepCount)
+                // then assume that this is more than one group of chromatograms which did not use OPTIMIZE_SHIFT_SIZE
+                // and process each unique Q3 value separately
+                foreach (var group in groupedByProductMz)
+                {
+                    SetOptStepsForGroup(document, idToIndex, peptidePrecursorMz, group.ToList());
+                }
+                return;
+            }
+
+            int uniqueCeCount = 0;
+            if (_optimizableRegression.OptType == OptimizationType.collision_energy)
+            {
+                uniqueCeCount = chromDatas.Select(chromData => chromData.Key.CollisionEnergy).Distinct().Count();
+            }
+            int uniqueMzCount = chromDatas.Select(chromData => chromData.Key.Product).Distinct().Count();
+            // If some of the chromatograms have the same Q3 value, then the CE value should be used instead
+            // if the CE value uniquely identifies the chromatogram
+            bool useCeValues = uniqueCeCount == chromDatas.Count && uniqueCeCount > uniqueMzCount;
+            if (useCeValues)
+            {
+                chromDatas.Sort(Comparer<ChromData>.Create((a,b)=>a.Key.CollisionEnergy.CompareTo(b.Key.CollisionEnergy)));
+            }
             int centerIdx = (chromDatas.Count + 1) / 2 - 1;
-            if (transitionGroupDocNode != null)
+            if (peptidePrecursorMz?.NodeGroup != null)
             {
                 var centerMz = chromDatas[centerIdx].Key.Product;
-                var closestTransition = transitionGroupDocNode.Transitions.OrderBy(t => Math.Abs(t.Mz - centerMz))
+                var closestTransition = peptidePrecursorMz.NodeGroup.Transitions.OrderBy(t => Math.Abs(t.Mz - centerMz))
                     .FirstOrDefault();
-                if (closestTransition != null)
+                if (useCeValues)
                 {
-                    centerIdx = OptStepChromatograms.IndexOfCenter(closestTransition.Mz, chromDatas.Select(c => c.Key.Product),
+                    var centerCe = document.GetCollisionEnergy(peptidePrecursorMz.NodePeptide,
+                        peptidePrecursorMz.NodeGroup, closestTransition, 0);
+                    centerIdx = OptStepChromatograms.IndexOfCenterCe((float)centerCe,
+                        chromDatas.Select(chromData => chromData.Key.CollisionEnergy),
                         _optimizableRegression.StepCount);
+                }
+                else if (closestTransition != null)
+                {
+                    centerIdx = OptStepChromatograms.IndexOfCenterMz(closestTransition.Mz,
+                        chromDatas.Select(c => c.Key.Product), _optimizableRegression.StepCount);
                 }
             }
             for (var i = 0; i < chromDatas.Count; i++)
             {
-                SetOptimizationStep(idToIndex[chromDatas[i].ProviderId], i - centerIdx, chromDatas[centerIdx].Key.Product);
+                SetOptimizationStep(idToIndex[chromDatas[i].ProviderId], i - centerIdx,
+                    chromDatas[centerIdx].Key.Product);
             }
-
-            chromDatas.Clear();
         }
 
         private float GetCE(int i)

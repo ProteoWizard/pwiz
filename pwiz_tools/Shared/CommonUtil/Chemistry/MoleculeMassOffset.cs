@@ -93,62 +93,6 @@ namespace pwiz.Common.Chemistry
             return Create(Formula<Molecule>.Sum(parts.Select(mol => mol.Molecule)), monoMassOffset, averageMassOffset);
         }
 
-        /// <summary>
-        /// Separate the formula and mass offset declarations in a string presumed to describe a chemical formula and/or mass offsets.
-        /// Is aware of simple math, e.g. "C12H5[-1.2/1.21]-C2H[-1.1]" => "C12H5-C2H", 0.1, 0.11
-        /// </summary>
-        /// <param name="formulaAndMasses">input string  e.g. "C12H5", "C12H5[-1.2/1.21]", "[+1.3/1.31]", "1.3/1.31", "C12H5[-1.2/1.21]-C2H[-1.1]"</param>
-        /// <param name="formula">string with any mass modifiers stripped out e.g.  "C12H5[-1.2/1.21]-C2H[-1.1]" ->  "C12H5-C2H" </param>
-        /// <param name="modMassMono">effect of any mono mass modifiers e.g. "C12H5[-1.2/1.21]-C2H[-1.1]" => 0.1 </param>
-        /// <param name="modMassAverage">effect of any avg mass modifiers e.g. "C12H5[-1.2/1.21]-C2H[-1.1]" => 0.11</param>
-        public static void SplitFormulaAndMasses(string formulaAndMasses, out string formula, out double? modMassMono, out double? modMassAverage)
-        {
-            modMassMono = null;
-            modMassAverage = null;
-            formula = formulaAndMasses?.Trim();
-            if (string.IsNullOrEmpty(formula))
-            {
-                return;
-            }
-            // A few different possibilities here, e.g. "C12H5", "C12H5[-1.2/1.21]", "[+1.3/1.31]", "1.3/1.31"
-            // Also possibly  "C12H5[-1.2/1.21]-C2H[-1.1]"
-            var position = 0;
-            while (MoleculeMassOffset.StringContainsMassOffsetCue(formula))
-            {
-                var cuePlus = formula.IndexOf(MoleculeMassOffset.MASS_MOD_CUE_PLUS, position, StringComparison.InvariantCulture);
-                var cueMinus = formula.IndexOf(MoleculeMassOffset.MASS_MOD_CUE_MINUS, position, StringComparison.InvariantCulture);
-                if (cuePlus < 0)
-                {
-                    cuePlus = int.MaxValue;
-                }
-                if (cueMinus < 0)
-                {
-                    cueMinus = int.MaxValue;
-                }
-                // e.g. "C12H5[-1.2/1.21]", "{+1.3/1.31]",  "{-1.3]"
-                position = Math.Min(cuePlus, cueMinus);
-                var close = formula.IndexOf(']', position);
-                var parts = formula.Substring(position, close - position).Split('/');
-                double negate = Equals(cueMinus, position) ? -1 : 1;
-                if (formula.Substring(0, position).Contains('-'))
-                {
-                    negate *= -1;
-                }
-                var monoMass = negate * double.Parse(parts[0].Substring(2).Trim(), CultureInfo.InvariantCulture);
-                modMassMono = (modMassMono??0) + monoMass;
-                modMassAverage = (modMassAverage??0) + (parts.Length > 1 ? negate * double.Parse(parts[1].Trim(), CultureInfo.InvariantCulture) : monoMass);
-                formula = formula.Substring(0, position) + formula.Substring(close + 1);
-            }
-            if (formula.Contains(@"/"))
-            {
-                // e.g.  "1.3/1.31"
-                var parts = formula.Split(new[] { '/' });
-                modMassMono = double.Parse(parts[0], CultureInfo.InvariantCulture);
-                modMassAverage = double.Parse(parts[1], CultureInfo.InvariantCulture);
-                formula = string.Empty;
-            }
-        }
-
 
         public override string ToString()
         {

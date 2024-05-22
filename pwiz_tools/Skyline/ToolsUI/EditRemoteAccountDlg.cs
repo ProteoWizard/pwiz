@@ -27,7 +27,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -122,7 +121,7 @@ namespace pwiz.Skyline.ToolsUI
                     if (tokenResponse.IsError)
                     {
                         string error = tokenResponse.ErrorDescription ?? tokenResponse.Error;
-                        MessageDlg.Show(this, TextUtil.LineSeparate(Resources.EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_, error));
+                        MessageDlg.Show(this, TextUtil.LineSeparate(ToolsUIResources.EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_, error));
                         if (tokenResponse.Error == @"invalid_scope")
                         {
                             tbxClientScope.Focus();
@@ -144,7 +143,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 catch (Exception e)
                 {
-                    MessageDlg.ShowWithException(this, Resources.EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_, e);
+                    MessageDlg.ShowWithException(this, ToolsUIResources.EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_, e);
                     tbxIdentityServer.Focus();
                     return false;
                 }
@@ -191,7 +190,7 @@ namespace pwiz.Skyline.ToolsUI
                     }
                     catch (Exception e)
                     {
-                        MessageDlg.ShowWithException(this, Resources.EditRemoteAccountDlg_TestUnifiAccount_An_exception_occurred_while_trying_to_fetch_the_directory_listing_, e);
+                        MessageDlg.ShowWithException(this, ToolsUIResources.EditRemoteAccountDlg_TestUnifiAccount_An_exception_occurred_while_trying_to_fetch_the_directory_listing_, e);
                         textServerURL.Focus();
                         return false;
                     }
@@ -201,7 +200,7 @@ namespace pwiz.Skyline.ToolsUI
                     }
                 }
             } 
-            MessageDlg.Show(this, Resources.EditRemoteAccountDlg_TestSettings_Settings_are_correct);
+            MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_TestSettings_Settings_are_correct);
             return true;
         }
 
@@ -210,13 +209,13 @@ namespace pwiz.Skyline.ToolsUI
             var remoteAccount = GetRemoteAccount();
             if (string.IsNullOrEmpty(remoteAccount.Username))
             {
-                MessageDlg.Show(this, Resources.EditRemoteAccountDlg_ValidateValues_Username_cannot_be_blank);
+                MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_ValidateValues_Username_cannot_be_blank);
                 textUsername.Focus();
                 return false;
             }
             if (string.IsNullOrEmpty(remoteAccount.ServerUrl))
             {
-                MessageDlg.Show(this, Resources.EditRemoteAccountDlg_ValidateValues_Server_cannot_be_blank);
+                MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_ValidateValues_Server_cannot_be_blank);
                 textServerURL.Focus();
                 return false;
             }
@@ -224,7 +223,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 if (_existing.Select(existing => existing.GetKey()).Contains(remoteAccount.GetKey()))
                 {
-                    MessageDlg.Show(this, string.Format(Resources.EditRemoteAccountDlg_ValidateValues_There_is_already_an_account_defined_for_the_user__0__on_the_server__1_, remoteAccount.Username, remoteAccount.ServerUrl));
+                    MessageDlg.Show(this, string.Format(ToolsUIResources.EditRemoteAccountDlg_ValidateValues_There_is_already_an_account_defined_for_the_user__0__on_the_server__1_, remoteAccount.Username, remoteAccount.ServerUrl));
                 }
             }
             try
@@ -232,14 +231,14 @@ namespace pwiz.Skyline.ToolsUI
                 var uri = new Uri(remoteAccount.ServerUrl, UriKind.Absolute);
                 if (uri.Scheme != @"https" && uri.Scheme != @"http")
                 {
-                    MessageDlg.Show(this, Resources.EditRemoteAccountDlg_ValidateValues_Server_URL_must_start_with_https____or_http___);
+                    MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_ValidateValues_Server_URL_must_start_with_https____or_http___);
                     textServerURL.Focus();
                     return false;
                 }
             }
             catch
             {
-                MessageDlg.Show(this, Resources.EditRemoteAccountDlg_ValidateValues_Invalid_server_URL_);
+                MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_ValidateValues_Invalid_server_URL_);
                 textServerURL.Focus();
                 return false;
             }

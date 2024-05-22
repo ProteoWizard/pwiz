@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -30,7 +30,6 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -112,6 +111,14 @@ namespace pwiz.Skyline.Model.DocSettings
             private set { _auditLogging = value; }
         }
 
+        /// <summary>
+        /// Returns whether audit logging would be enabled for this document if a unit test were not running
+        /// </summary>
+        public bool IsAuditLoggingEnabled
+        {
+            get { return _auditLogging; }
+        }
+
         public string DocumentGuid { get; private set; }
 
         #region Property change methods
@@ -133,7 +140,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public DataSettings ChangePanoramaPublishUri(Uri newUri)
         {
             if (!newUri.IsWellFormedOriginalString()) // https://msdn.microsoft.com/en-us/library/system.uri.iswellformedoriginalstring
-                throw new ArgumentException(string.Format(Resources.DataSettings_ChangePanoramaPublishUri_The_URI__0__is_not_well_formed_, newUri));
+                throw new ArgumentException(string.Format(DocSettingsResources.DataSettings_ChangePanoramaPublishUri_The_URI__0__is_not_well_formed_, newUri));
             return ChangeProp(ImClone(this), im => im.PanoramaPublishUri = newUri);
         }
 
@@ -253,7 +260,7 @@ namespace pwiz.Skyline.Model.DocSettings
 //            Assume.IsFalse(string.IsNullOrEmpty(DocumentGuid)); // Should have a document GUID by this point
             if(!string.IsNullOrEmpty(DocumentGuid))
                 writer.WriteAttributeString(Attr.document_guid, DocumentGuid);
-            writer.WriteAttribute(Attr.audit_logging, AuditLogging);
+            writer.WriteAttribute(Attr.audit_logging, _auditLogging);
             var elements = AnnotationDefs.Cast<IXmlSerializable>()
                 .Concat(GroupComparisonDefs)
                 .Concat(Lists)

@@ -33,6 +33,7 @@ using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -57,9 +58,13 @@ namespace pwiz.SkylineTestFunctional
             TestUseFasta();
             TestInvalidFasta();
             TestUseBackgroundProteome();
-            TestParsimonyOptions();
             TestFastaOverride();
+            TestParsimonyOptions();
+
+            Assert.IsFalse(IsRecordMode);
         }
+
+        public bool IsRecordMode => false;
 
         private void TestInvalidFasta()
         {
@@ -71,11 +76,10 @@ namespace pwiz.SkylineTestFunctional
             // ReSharper disable LocalizableElement
             File.WriteAllLines(invalidFastaFilepath, new[]
             {
-                ">FOOBAR\tThe first header line\x01",
-                "The second header line that I've never seen in a protein FASTA",
+                ">FOOBAR\tThe first header line",
                 "ELVISLIVES",
-                ">BAZ|Another header. Where did it g\x02 wrong?",
-                "PEPTIDEK"
+                ">BAZ|Another header. Where did it go wrong?",
+                "PEPTID\u0002EK"
             });
             // ReSharper restore LocalizableElement
             var errorDlg = ShowDialog<MessageDlg>(() => associateProteinsDlg.FastaFileName = invalidFastaFilepath);
@@ -158,21 +162,25 @@ namespace pwiz.SkylineTestFunctional
             //IsPauseForAuditLog = true;
             //PauseForAuditLog();
 
+            List<PeptideGroupDocNode> proteins = new List<PeptideGroupDocNode>();
+            List<PeptideGroupDocNode> peptideLists = new List<PeptideGroupDocNode>();
+            List<PeptideGroupDocNode> nonProteins = new List<PeptideGroupDocNode>();
             RunUI(() => {
-                List<PeptideGroupDocNode> proteins = new List<PeptideGroupDocNode>();
-                List<PeptideGroupDocNode> nonProteins = new List<PeptideGroupDocNode>();
                 foreach (var docNode in SkylineWindow.Document.MoleculeGroups)
                 {
                     if (docNode.IsProtein)
                         proteins.Add(docNode);
+                    else if (docNode.IsProteomic && docNode.IsPeptideList)
+                        peptideLists.Add(docNode);
                     else
                         nonProteins.Add(docNode);
                 }
-                Assert.AreEqual(5, proteins.Count);
-                Assert.AreEqual(1, nonProteins.Count);
-                // +4 because peptides that associate with two proteins get duplicated and there are 4 in this test data file
-                Assert.AreEqual(initialPeptideCount + 4, SkylineWindow.Document.PeptideCount);
             });
+            Assert.AreEqual(5, proteins.Count);
+            Assert.AreEqual(2, peptideLists.Count);
+            Assert.AreEqual(1, nonProteins.Count);
+            // +4 because peptides that associate with two proteins get duplicated and there are 4 in this test data file
+            Assert.AreEqual(initialPeptideCount + 4, SkylineWindow.Document.PeptideCount);
         }
 
         /// <summary>
@@ -188,6 +196,7 @@ namespace pwiz.SkylineTestFunctional
         private class ParsimonyTestCase
         {
             public string[] Proteins;
+            public string[] ProteinDescriptions;
             public string[] Peptides;
             public int ExpectedPeptidesMapped, ExpectedPeptidesUnmapped;
             public int ExpectedProteinsMapped, ExpectedProteinsUnmapped;
@@ -196,6 +205,7 @@ namespace pwiz.SkylineTestFunctional
             public class OptionsAndResult
             {
                 public bool GroupProteins;
+                public bool GeneLevelParsimony;
                 public bool FindMinimalProteinList;
                 public ProteinAssociation.SharedPeptides SharedPeptides;
                 public int MinPeptidesPerProtein = 1;
@@ -214,6 +224,185 @@ namespace pwiz.SkylineTestFunctional
 
         private static ParsimonyTestCase[] _parsimonyTestCases = new[]
         {
+            new ParsimonyTestCase
+            {
+                Proteins = new[]
+                {
+                    // two homolog proteins from different genes
+                    "SAMESAME",
+                    "SAMESAME",
+
+                    // two partial homolog proteins from different genes, each with a distinct peptide
+                    "AAAACCCC",
+                    "AAADCCCD",
+
+                    // two partial homolog proteins from different genes, no distinct peptide to distinguish them
+                    "DDDDEEEE",
+                    "DDDFEEEF",
+
+                    // isoforms of the same gene, each with a distinct peptide
+                    "FFFFGGGGHHHH",
+                    "FFFFGGHHHH",
+
+                    // isoforms of the same gene, no distinct peptide to distinguish them
+                    "IIIIKKKK",
+                    "IIIGKKKG",
+
+                    // isoforms of the same gene, some with distinct peptides and some without
+                    "LLLLNNNN",
+                    "LLLGNNNG",
+                    "LLGGNNNG",
+                },
+                ProteinDescriptions = new []
+                {
+                    "GN=Same",
+                    "GN=Same",
+
+                    "GN=PartialHomologsDistinctA",
+                    "GN=PartialHomologsDistinctB",
+
+                    "GN=PartialHomologsNonDistinctA",
+                    "GN=PartialHomologsNonDistinctB",
+
+                    "GN=IsoformsDistinct",
+                    "GN=IsoformsDistinct",
+
+                    "GN=IsoformsNonDistinct",
+                    "GN=IsoformsNonDistinct",
+
+                    "accession:ISD1 GN=IsoformsSomeDistinct",
+                    "accession:ISD2 GN=IsoformsSomeDistinct",
+                    "accession:ISD3_NonDistinct GN=IsoformsSomeDistinct",
+                },
+                Peptides = new[]
+                {
+                    "SAM", "SAMES", "AMES", // M will be generated with and without +16
+
+                    "AAA", "CCC",
+                    "AACC", "AAACCC",
+                    "AAD", "CCCD",
+
+                    "DD", "EE", "DDD", "EEE",
+
+                    "FFFFGG", "FFGG", "GGHHHH",
+                    "FGGGGH", "GGGGH",
+                    "FGGH", "FGGHHHH",
+
+                    "II", "KK", "III", "KKK",
+
+                    "NNN", // all 3
+                    "LLLL", // only ISD1
+                    "LLLG", // only ISD2
+                    "GNNNG", // ISD2 and ISD3
+                },
+                ExpectedPeptidesMapped = 28,
+                ExpectedPeptidesUnmapped = 0,
+                ExpectedProteinsMapped = 13,
+                ExpectedProteinsUnmapped = 0,
+                OptionsAndResults = new []
+                {
+                    new ParsimonyTestCase.OptionsAndResult
+                    {
+                        GeneLevelParsimony = true,
+                        SharedPeptides = ProteinAssociation.SharedPeptides.Removed,
+                        ExpectedFinalPeptides = 29,
+                        ExpectedFinalProteins = 7,
+                        ExpectedMappedSharedPeptides = 4,
+                        ExpectedFinalSharedPeptides = 0,
+                    },
+                    new ParsimonyTestCase.OptionsAndResult
+                    {
+                        GroupProteins = true,
+                        SharedPeptides = ProteinAssociation.SharedPeptides.Removed,
+                        ExpectedFinalPeptides = 24,
+                        ExpectedFinalProteins = 9,
+                        ExpectedMappedSharedPeptides = 15,
+                        ExpectedFinalSharedPeptides = 0,
+                    },
+                    new ParsimonyTestCase.OptionsAndResult
+                    {
+                        GeneLevelParsimony = true,
+                        SharedPeptides = ProteinAssociation.SharedPeptides.AssignedToBestProtein,
+                        ExpectedFinalPeptides = 33,
+                        ExpectedFinalProteins = 7,
+                        ExpectedMappedSharedPeptides = 4,
+                        ExpectedFinalSharedPeptides = 4,
+                    },
+                    new ParsimonyTestCase.OptionsAndResult
+                    {
+                        GroupProteins = true,
+                        SharedPeptides = ProteinAssociation.SharedPeptides.AssignedToBestProtein,
+                        ExpectedFinalPeptides = 36,
+                        ExpectedFinalProteins = 9,
+                        ExpectedMappedSharedPeptides = 15,
+                        ExpectedFinalSharedPeptides = 10,
+                    },
+                    new ParsimonyTestCase.OptionsAndResult
+                    {
+                        GeneLevelParsimony = true,
+                        SharedPeptides = ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins,
+                        ExpectedFinalPeptides = 33,
+                        ExpectedFinalProteins = 7,
+                        ExpectedMappedSharedPeptides = 4,
+                        ExpectedFinalSharedPeptides = 4,
+                    },
+                    new ParsimonyTestCase.OptionsAndResult
+                    {
+                        GroupProteins = true,
+                        SharedPeptides = ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins,
+                        ExpectedFinalPeptides = 39,
+                        ExpectedFinalProteins = 10,
+                        ExpectedMappedSharedPeptides = 15,
+                        ExpectedFinalSharedPeptides = 15,
+                    },
+                }
+            },
+            new ParsimonyTestCase
+            {
+                Proteins = new[]
+                {
+                    // histone isoforms
+                    "KSAPATGGVKKPHRYRPGTVALREIRRYQKSTELLIRKLPFQRLMREIAQDFKTDLRFQSSAVMALQEACE",
+                    "KSAPATGGVKKPHRYRPGTVALREIRRYQKSTELLIRKLPFQRLVREIAQDFKTDLRFQSSAVMALQEACE",
+                    "KSAPATGGVKKPHRYRPGTVALREIRRYQKSTELLIRKLPFQRLVREIAQDFKTDLRFQSSAVMALQEASE"
+                },
+                ProteinDescriptions = new []
+                {
+                    "accession:Q16695 GN=HIST3H3",
+                    "accession:P68431 GN=HIST1H3A",
+                    "accession:Q71DI3 GN=HIST2H3A",
+                },
+                Peptides = new[]
+                {
+                    "SAPATGGVK",
+                    "YRPGTVALR",
+                },
+                ExpectedPeptidesMapped = 2,
+                ExpectedPeptidesUnmapped = 0,
+                ExpectedProteinsMapped = 3,
+                ExpectedProteinsUnmapped = 0,
+                OptionsAndResults = new []
+                {
+                    new ParsimonyTestCase.OptionsAndResult
+                    {
+                        GeneLevelParsimony = true,
+                        SharedPeptides = ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins,
+                        ExpectedFinalPeptides = 2,
+                        ExpectedFinalProteins = 1,
+                        ExpectedMappedSharedPeptides = 0,
+                        ExpectedFinalSharedPeptides = 0,
+                    },
+                    new ParsimonyTestCase.OptionsAndResult
+                    {
+                        GroupProteins = true,
+                        SharedPeptides = ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins,
+                        ExpectedFinalPeptides = 2,
+                        ExpectedFinalProteins = 1,
+                        ExpectedMappedSharedPeptides = 0,
+                        ExpectedFinalSharedPeptides = 0,
+                    },
+                }
+            },
             new ParsimonyTestCase
             {
                 Proteins = new[] {"AKAAK", "AKAAKAAAK", "ARAAR", "ARAARAAAR", "ELVISWASHERE" },
@@ -275,6 +464,7 @@ namespace pwiz.SkylineTestFunctional
             new ParsimonyTestCase
             {
                 Proteins = new[] {"AKAAK", "AKAAKAAAK", "ARAAR", "ARAARAAAR", "ARVK", "ARVKR",  "FFFFGGGGHH", "FFGG", "FFGGHH", "FFFGGGHHH", "FGGHHII", "HHHIIII", "ELVISWASHERE" },
+                ProteinDescriptions = new [] {"GN=AAK", "GN=AAK", "GN=Pirate", "GN=Pirate", "GN=Aardvark", "GN=Aardvark", "GN=FGH", "GN=FG", "GN=FGH", "GN=FGH", "GN=FGHI", "GN=HI", "RockandrollNotAGene"},
                 Peptides = new[] {"AK", "AAK", "AAAK", "AAR", "AR", "VK", "FFFF", "FG", "GH", "HI", "HII", "HIII", "HIIII", "IIII", "PEPTIDE" },
                 ExpectedPeptidesMapped = 14,
                 ExpectedPeptidesUnmapped = 1,
@@ -297,11 +487,35 @@ namespace pwiz.SkylineTestFunctional
                     new ParsimonyTestCase.OptionsAndResult
                     {
                         GroupProteins = true,
+                        GeneLevelParsimony = true,
+                        FindMinimalProteinList = false,
+                        SharedPeptides = ProteinAssociation.SharedPeptides.AssignedToFirstProtein,
+                        ExpectedFinalPeptides = 14,
+                        ExpectedFinalProteins = 6,
+                        ExpectedMappedSharedPeptides = 11,
+                        ExpectedFinalSharedPeptides = 0,
+                    },
+
+                    new ParsimonyTestCase.OptionsAndResult
+                    {
+                        GroupProteins = true,
                         FindMinimalProteinList = false,
                         SharedPeptides = ProteinAssociation.SharedPeptides.AssignedToBestProtein,
                         ExpectedFinalPeptides = 15,
                         ExpectedFinalProteins = 6,
                         ExpectedMappedSharedPeptides = 17,
+                        ExpectedFinalSharedPeptides = 2,
+                    },
+
+                    new ParsimonyTestCase.OptionsAndResult
+                    {
+                        GroupProteins = true,
+                        GeneLevelParsimony = true,
+                        FindMinimalProteinList = false,
+                        SharedPeptides = ProteinAssociation.SharedPeptides.AssignedToBestProtein,
+                        ExpectedFinalPeptides = 15,
+                        ExpectedFinalProteins = 6,
+                        ExpectedMappedSharedPeptides = 11,
                         ExpectedFinalSharedPeptides = 2,
                     },
 
@@ -319,6 +533,18 @@ namespace pwiz.SkylineTestFunctional
                     new ParsimonyTestCase.OptionsAndResult
                     {
                         GroupProteins = true,
+                        GeneLevelParsimony = true,
+                        FindMinimalProteinList = false,
+                        SharedPeptides = ProteinAssociation.SharedPeptides.Removed,
+                        ExpectedFinalPeptides = 9,
+                        ExpectedFinalProteins = 5,
+                        ExpectedMappedSharedPeptides = 11,
+                        ExpectedFinalSharedPeptides = 0,
+                    },
+
+                    new ParsimonyTestCase.OptionsAndResult
+                    {
+                        GroupProteins = true,
                         FindMinimalProteinList = false,
                         RemoveSubsetProteins = true,
                         SharedPeptides = ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins,
@@ -327,8 +553,20 @@ namespace pwiz.SkylineTestFunctional
                         ExpectedMappedSharedPeptides = 17,
                         ExpectedFinalSharedPeptides = 10,
                     },
-                    
-                    // DuplicatedBetweenProteins should be last option so that all peptides are kept in order to test a second round of protein association
+
+                    new ParsimonyTestCase.OptionsAndResult
+                    {
+                        GroupProteins = true,
+                        GeneLevelParsimony = true,
+                        FindMinimalProteinList = false,
+                        RemoveSubsetProteins = true,
+                        SharedPeptides = ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins,
+                        ExpectedFinalPeptides = 19,
+                        ExpectedFinalProteins = 6,
+                        ExpectedMappedSharedPeptides = 11,
+                        ExpectedFinalSharedPeptides = 10,
+                    },
+
                     new ParsimonyTestCase.OptionsAndResult
                     {
                         GroupProteins = true,
@@ -339,6 +577,19 @@ namespace pwiz.SkylineTestFunctional
                         ExpectedMappedSharedPeptides = 17,
                         ExpectedFinalSharedPeptides = 17,
                     },
+                    
+                    // DuplicatedBetweenProteins should be last option so that all peptides are kept in order to test a second round of protein association
+                    new ParsimonyTestCase.OptionsAndResult
+                    {
+                        GroupProteins = true,
+                        GeneLevelParsimony = true,
+                        FindMinimalProteinList = false,
+                        SharedPeptides = ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins,
+                        ExpectedFinalPeptides = 20,
+                        ExpectedFinalProteins = 7,
+                        ExpectedMappedSharedPeptides = 11,
+                        ExpectedFinalSharedPeptides = 11,
+                    },
                 }
             },
 
@@ -346,7 +597,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 Proteins = new[] {"AKKAA", "AKAAK", "AKAAKAAAK", "AKAAKAMAK", "ARAMR", "ARAMRAAAR", "ARVK", "AMRVKR", "ELVISWASHERE" },
                 Peptides = new[] {"AK", "KAA", "AAK", "AMAK", "AM[16]AK", "AR", "AM[16]R", "AMR", "VK", "PEPTIDE" },
-                ExpectedPeptidesMapped = 9,
+                ExpectedPeptidesMapped = 7,
                 ExpectedPeptidesUnmapped = 1,
                 ExpectedProteinsMapped = 8,
                 ExpectedProteinsUnmapped = 1,
@@ -444,8 +695,17 @@ namespace pwiz.SkylineTestFunctional
                 string fastaFilePath = TestFilesDir.GetTestPath("testProteins.fasta");
                 using (var fastaFile = new StreamWriter(fastaFilePath))
                 {
-                    for (int j = 0; j < testCase.Proteins.Length; ++j)
-                        fastaFile.WriteLine($">Protein{j + 1}{Environment.NewLine}{testCase.Proteins[j]}");
+                    Assume.IsTrue(testCase.ProteinDescriptions.IsNullOrEmpty() || testCase.Proteins.Length == testCase.ProteinDescriptions.Length);
+                    if (testCase.ProteinDescriptions != null && testCase.ProteinDescriptions.Length > 0)
+                    {
+                        for (int j = 0; j < testCase.Proteins.Length; ++j)
+                            fastaFile.WriteLine($">Protein{j + 1} {testCase.ProteinDescriptions[j]}{Environment.NewLine}{testCase.Proteins[j]}");
+                    }
+                    else
+                    {
+                        for (int j = 0; j < testCase.Proteins.Length; ++j)
+                            fastaFile.WriteLine($">Protein{j + 1}{Environment.NewLine}{testCase.Proteins[j]}");
+                    }
                 }
 
                 modificationMatcher.CreateMatches(srmSettings, testCase.Peptides, Settings.Default.StaticModList, Settings.Default.HeavyModList);
@@ -471,8 +731,9 @@ namespace pwiz.SkylineTestFunctional
 
                     var peptideList = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, "Peptides", string.Empty, peptideNodes.ToArray());
                     var peptideList2 = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, "DuplicatePeptideNodes", string.Empty, peptideNodes.ToArray());
+                    var peptideList3 = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, "EmptyPeptideList", string.Empty, Array.Empty<PeptideDocNode>());
                     SkylineWindow.ModifyDocument("Set peptides",
-                        doc => (SkylineWindow.Document.ChangeChildren(new DocNode[] { peptideList, peptideList2 }) as SrmDocument)
+                        doc => (SkylineWindow.Document.ChangeChildren(new DocNode[] { peptideList, peptideList2, peptideList3 }) as SrmDocument)
                             ?.ChangeSettings(srmSettings));
                 });
 
@@ -487,6 +748,74 @@ namespace pwiz.SkylineTestFunctional
                         RunUI(() =>
                         {
                             dlg.GroupProteins = optionsAndResult.GroupProteins;
+                            dlg.GeneLevelParsimony = optionsAndResult.GeneLevelParsimony;
+                            dlg.FindMinimalProteinList = optionsAndResult.FindMinimalProteinList;
+                            dlg.RemoveSubsetProteins = optionsAndResult.RemoveSubsetProteins;
+                            dlg.SelectedSharedPeptides = optionsAndResult.SharedPeptides;
+                            dlg.MinPeptidesPerProtein = optionsAndResult.MinPeptidesPerProtein;
+                        });
+
+                        RunUI(() =>
+                        {
+                            if (IsRecordMode)
+                            {
+                                Console.WriteLine();
+                                Console.WriteLine(string.Join(", ", testCase.Proteins));
+                                Console.WriteLine(string.Join(", ", testCase.ProteinDescriptions ?? Array.Empty<string>()));
+                                Console.WriteLine(string.Join(", ", testCase.Peptides));
+                                Console.WriteLine();
+
+                                Settings.Default.ShowPeptidesDisplayMode = optionsAndResult.GeneLevelParsimony ? "ByGene" : "ByName";
+
+                                // print mapping of peptide group nodes to peptide nodes
+                                foreach (var pg in dlg.DocumentFinal.PeptideGroups)
+                                {
+                                    var webSearchCompleted = pg.ProteinMetadata.SetWebSearchCompleted();
+                                    var peptideGroupDocNode = pg.ChangeProteinMetadata(webSearchCompleted);
+                                    var text = ProteinMetadataManager.ProteinModalDisplayText(peptideGroupDocNode);
+                                    Console.WriteLine($@"{text} -> {string.Join(", ", pg.Peptides.Select(p => p.SourceTextId))}");
+                                }
+                                Console.WriteLine();
+                                if (optionsAndResult.GroupProteins) Console.WriteLine(@"GroupProteins = true,");
+                                if (optionsAndResult.GeneLevelParsimony) Console.WriteLine(@"GeneLevelParsimony = true,");
+                                if (optionsAndResult.FindMinimalProteinList) Console.WriteLine(@"FindMinimalProteinList = true,");
+                                if (optionsAndResult.RemoveSubsetProteins) Console.WriteLine(@"RemoveSubsetProteins = true,");
+                                Console.WriteLine($@"SharedPeptides = ProteinAssociation.SharedPeptides.{Enum.GetName(typeof(ProteinAssociation.SharedPeptides), optionsAndResult.SharedPeptides)},");
+                                Console.WriteLine($@"ExpectedFinalPeptides = {dlg.FinalResults.FinalPeptideCount},");
+                                Console.WriteLine($@"ExpectedFinalProteins = {dlg.FinalResults.FinalProteinCount},");
+                                Console.WriteLine($@"ExpectedMappedSharedPeptides = {dlg.FinalResults.TotalSharedPeptideCount},");
+                                Console.WriteLine($@"ExpectedFinalSharedPeptides = {dlg.FinalResults.FinalSharedPeptideCount},");
+                            }
+                            else
+                            {
+                                Assert.AreEqual(optionsAndResult.ExpectedFinalProteins, dlg.FinalResults.FinalProteinCount, $"Test case {i + 1}.{j + 1} FinalProteinCount");
+                                Assert.AreEqual(optionsAndResult.ExpectedFinalPeptides, dlg.FinalResults.FinalPeptideCount, $"Test case {i + 1}.{j + 1} FinalPeptideCount");
+                                Assert.AreEqual(optionsAndResult.ExpectedMappedSharedPeptides, dlg.FinalResults.TotalSharedPeptideCount, $"Test case {i + 1}.{j + 1} TotalSharedPeptideCount");
+                                Assert.AreEqual(optionsAndResult.ExpectedFinalSharedPeptides, dlg.FinalResults.FinalSharedPeptideCount, $"Test case {i + 1}.{j + 1} FinalSharedPeptideCount");
+
+                                Assert.AreEqual(testCase.ExpectedPeptidesMapped, dlg.FinalResults.PeptidesMapped, $"Test case {i + 1}.{j + 1} PeptidesMapped");
+                                Assert.AreEqual(testCase.ExpectedPeptidesUnmapped, dlg.FinalResults.PeptidesUnmapped, $"Test case {i + 1}.{j + 1} PeptidesUnmapped");
+                                Assert.AreEqual(testCase.ExpectedProteinsMapped, dlg.FinalResults.ProteinsMapped, $"Test case {i + 1}.{j + 1} ProteinsMapped");
+                                Assert.AreEqual(testCase.ExpectedProteinsUnmapped, dlg.FinalResults.ProteinsUnmapped, $"Test case {i + 1}.{j + 1} ProteinsUnmapped");
+                            }
+                        });
+                    }
+                    OkAssociateProteinsDialog(dlg);
+                }
+
+                // test all cases again after an association has already been applied (all peptides should have been kept so the results should be the same)
+                if (!IsRecordMode)
+                { 
+                    var dlg = ShowDialog<AssociateProteinsDlg>(SkylineWindow.ShowAssociateProteinsDlg);
+                    RunUI(() => { dlg.FastaFileName = fastaFilePath; });
+
+                    for (int j = 0; j < testCase.OptionsAndResults.Length; ++j)
+                    {
+                        var optionsAndResult = testCase.OptionsAndResults[j];
+                        RunUI(() =>
+                        {
+                            dlg.GroupProteins = optionsAndResult.GroupProteins;
+                            dlg.GeneLevelParsimony = optionsAndResult.GeneLevelParsimony;
                             dlg.FindMinimalProteinList = optionsAndResult.FindMinimalProteinList;
                             dlg.RemoveSubsetProteins = optionsAndResult.RemoveSubsetProteins;
                             dlg.SelectedSharedPeptides = optionsAndResult.SharedPeptides;
@@ -506,39 +835,6 @@ namespace pwiz.SkylineTestFunctional
                             Assert.AreEqual(testCase.ExpectedProteinsUnmapped, dlg.FinalResults.ProteinsUnmapped, $"Test case {i + 1}.{j + 1} ProteinsUnmapped");
                         });
                     }
-                    OkAssociateProteinsDialog(dlg);
-                }
-
-                // test all cases again after an association has already been applied (all peptides should have been kept so the results should be the same)
-                { 
-                    var dlg = ShowDialog<AssociateProteinsDlg>(SkylineWindow.ShowAssociateProteinsDlg);
-                    RunUI(() => { dlg.FastaFileName = fastaFilePath; });
-
-                    for (int j = 0; j < testCase.OptionsAndResults.Length; ++j)
-                    {
-                        var optionsAndResult = testCase.OptionsAndResults[j];
-                        RunUI(() =>
-                        {
-                            dlg.GroupProteins = optionsAndResult.GroupProteins;
-                            dlg.FindMinimalProteinList = optionsAndResult.FindMinimalProteinList;
-                            dlg.RemoveSubsetProteins = optionsAndResult.RemoveSubsetProteins;
-                            dlg.SelectedSharedPeptides = optionsAndResult.SharedPeptides;
-                            dlg.MinPeptidesPerProtein = optionsAndResult.MinPeptidesPerProtein;
-                        });
-                        //PauseTest();
-                        RunUI(() =>
-                        {
-                            Assert.AreEqual(optionsAndResult.ExpectedFinalProteins, dlg.FinalResults.FinalProteinCount, $"Test case {i + 1}.{j + 1} FinalProteinCount");
-                            Assert.AreEqual(optionsAndResult.ExpectedFinalPeptides, dlg.FinalResults.FinalPeptideCount, $"Test case {i + 1}.{j + 1} FinalPeptideCount");
-                            Assert.AreEqual(optionsAndResult.ExpectedMappedSharedPeptides, dlg.FinalResults.TotalSharedPeptideCount, $"Test case {i + 1}.{j + 1} TotalSharedPeptideCount");
-                            Assert.AreEqual(optionsAndResult.ExpectedFinalSharedPeptides, dlg.FinalResults.FinalSharedPeptideCount, $"Test case {i + 1}.{j + 1} FinalSharedPeptideCount");
-
-                            Assert.AreEqual(testCase.ExpectedPeptidesMapped, dlg.FinalResults.PeptidesMapped, $"Test case {i + 1}.{j + 1} PeptidesMapped");
-                            Assert.AreEqual(0, dlg.FinalResults.PeptidesUnmapped, $"Test case {i + 1}.{j + 1} PeptidesUnmapped");
-                            Assert.AreEqual(testCase.ExpectedProteinsMapped, dlg.FinalResults.ProteinsMapped, $"Test case {i + 1}.{j + 1} ProteinsMapped");
-                            Assert.AreEqual(testCase.ExpectedProteinsUnmapped, dlg.FinalResults.ProteinsUnmapped, $"Test case {i + 1}.{j + 1} ProteinsUnmapped");
-                        });
-                    }
 
                     OkAssociateProteinsDialog(dlg);
 
@@ -547,40 +843,43 @@ namespace pwiz.SkylineTestFunctional
                         AssertEx.Serializable(SkylineWindow.Document);
                     }
 
-                    var findNodeDlg = ShowDialog<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg);
-                    int expectedItems = testCase.OptionsAndResults.Last().ExpectedFinalSharedPeptides;
-                    RunUI(() =>
+                    int extraUnmappedPeptides = testCase.ExpectedPeptidesUnmapped * 2;
+                    int expectedItems = testCase.OptionsAndResults.Last().ExpectedFinalSharedPeptides + extraUnmappedPeptides;
+                    if (expectedItems > 0)
                     {
-                        findNodeDlg.AdvancedVisible = true;
-                        findNodeDlg.FindOptions = new FindOptions().ChangeCustomFinders(Finders.ListAllFinders().Where(f => f is DuplicatedPeptideFinder));
-                        var duplicatePeptideNodes = new List<TreeNodeMS>();
-                        for (int k = 0; k < expectedItems; ++k)
+                        var findNodeDlg = ShowDialog<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg);
+                        RunUI(() =>
                         {
-                            findNodeDlg.FindNext();
-                            duplicatePeptideNodes.Add(SkylineWindow.SelectedNode);
+                            findNodeDlg.AdvancedVisible = true;
+                            findNodeDlg.FindOptions = new FindOptions().ChangeCustomFinders(Finders.ListAllFinders().Where(f => f is DuplicatedPeptideFinder));
+                            var duplicatePeptideNodes = new List<TreeNodeMS>();
+                            for (int k = 0; k < expectedItems; ++k)
+                            {
+                                findNodeDlg.FindNext();
+                                duplicatePeptideNodes.Add(SkylineWindow.SelectedNode);
+                            }
+                            Assert.AreEqual(expectedItems, duplicatePeptideNodes.Count);
+
+                            findNodeDlg.FindAll();
+                        });
+                        OkDialog(findNodeDlg, findNodeDlg.Close);
+
+                        var findView = WaitForOpenForm<FindResultsForm>();
+                        try
+                        {
+                            WaitForConditionUI(1000, () => findView.ItemCount == expectedItems);
                         }
-                        Assert.AreEqual(expectedItems, duplicatePeptideNodes.Count);
-
-                        findNodeDlg.FindAll();
-                    });
-                    OkDialog(findNodeDlg, findNodeDlg.Close);
-
-                    var findView = WaitForOpenForm<FindResultsForm>();
-                    try
-                    {
-                        WaitForConditionUI(1000, () => findView.ItemCount == expectedItems);
+                        catch (AssertFailedException)
+                        {
+                            RunUI(() => Assert.AreEqual(expectedItems, findView.ItemCount));
+                        }
+                        OkDialog(findView, findView.Close);
                     }
-                    catch (AssertFailedException)
-                    {
-                        RunUI(() => Assert.AreEqual(expectedItems, findView.ItemCount));
-                    }
-                    OkDialog(findView, findView.Close);
-
 
                     RunUI(() =>
                     {
-                        Assert.AreEqual(dlg.FinalResults.FinalProteinCount, SkylineWindow.Document.MoleculeGroups.Count(), $"Test case {i + 1} Document.MoleculeGroups.Count");
-                        Assert.AreEqual(dlg.FinalResults.FinalPeptideCount, SkylineWindow.Document.PeptideCount, $"Test case {i + 1} Document.PeptideCount");
+                        Assert.AreEqual(dlg.FinalResults.FinalProteinCount + extraUnmappedPeptides, SkylineWindow.Document.MoleculeGroups.Count(), $"Test case {i + 1} Document.MoleculeGroups.Count");
+                        Assert.AreEqual(dlg.FinalResults.FinalPeptideCount + extraUnmappedPeptides, SkylineWindow.Document.PeptideCount, $"Test case {i + 1} Document.PeptideCount");
                     });
                 }
             }

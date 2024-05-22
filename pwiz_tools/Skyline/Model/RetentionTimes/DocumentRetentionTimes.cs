@@ -20,11 +20,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
@@ -34,13 +37,14 @@ namespace pwiz.Skyline.Model.RetentionTimes
     public enum RegressionMethodRT { linear, kde, log, loess }
 
     /// <summary>
-    /// Contains all of the retention time alignments that are relevant for a <see cref="SrmDocument"/>
+    /// Contains all the retention time alignments that are relevant for a <see cref="SrmDocument"/>
     /// </summary>
     [XmlRoot("doc_rt_alignments")]
     public class DocumentRetentionTimes : IXmlSerializable
     {
-        public static readonly DocumentRetentionTimes EMPTY = new DocumentRetentionTimes(new RetentionTimeSource[0], new FileRetentionTimeAlignments[0]);
-        public const double REFINEMENT_THRESHHOLD = .99;
+        public static readonly DocumentRetentionTimes EMPTY =
+            new DocumentRetentionTimes(Array.Empty<RetentionTimeSource>(), Array.Empty<FileRetentionTimeAlignments>());
+        public const double REFINEMENT_THRESHOLD = .99;
         public DocumentRetentionTimes(IEnumerable<RetentionTimeSource> sources, IEnumerable<FileRetentionTimeAlignments> fileAlignments)
             : this()
         {
@@ -98,24 +102,43 @@ namespace pwiz.Skyline.Model.RetentionTimes
             var newSources = ListAvailableRetentionTimeSources(document.Settings);
             var newResultsSources = ListSourcesForResults(document.Settings.MeasuredResults, newSources);
             var allLibraryRetentionTimes = ReadAllRetentionTimes(document, newSources);
-            var newFileAlignments = new List<FileRetentionTimeAlignments>();
-            IProgressStatus progressStatus = new ProgressStatus(@"Aligning retention times"); // CONSIDER: localize?  Will users see this?
-            foreach (var retentionTimeSource in newResultsSources.Values)
+            var newFileAlignments = new List<KeyValuePair<int, FileRetentionTimeAlignments>>();
+            var pairsToAlign = GetPairsToAlign(newResultsSources, document.MeasuredResults, newSources);
+            using var cancellationTokenSource = new PollingCancellationToken(() => progressMonitor.IsCanceled);
+            IProgressStatus progressStatus = new ProgressStatus(RetentionTimesResources.DocumentRetentionTimes_RecalculateAlignments_Aligning_retention_times);
+            ParallelEx.ForEach(newResultsSources.Values.Select(Tuple.Create<RetentionTimeSource, int>), tuple =>
             {
-                progressStatus = progressStatus.ChangePercentComplete(100*newFileAlignments.Count/newResultsSources.Count);
-                progressMonitor.UpdateProgress(progressStatus);
-                try
                 {
-                    var fileAlignments = CalculateFileRetentionTimeAlignments(retentionTimeSource.Name, allLibraryRetentionTimes, progressMonitor);
-                    newFileAlignments.Add(fileAlignments);
+                    if (progressMonitor.IsCanceled)
+                    {
+                        return;
+                    }
+                    try
+                    {
+                        var retentionTimeSource = tuple.Item1;
+                        var fileAlignments = CalculateFileRetentionTimeAlignments(retentionTimeSource.Name,
+                            allLibraryRetentionTimes, pairsToAlign, cancellationTokenSource.Token);
+                        lock (newFileAlignments)
+                        {
+                            newFileAlignments.Add(new KeyValuePair<int, FileRetentionTimeAlignments>(tuple.Item2, fileAlignments));
+                            progressStatus =
+                                progressStatus.ChangePercentComplete(100 * newFileAlignments.Count / newResultsSources.Count);
+                            progressMonitor.UpdateProgress(progressStatus);
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // ignore
+                    }
                 }
-                catch (OperationCanceledException)
-                {
-                    progressMonitor.UpdateProgress(progressStatus.Cancel());
-                    return null;
-                }
+            });
+            if (progressMonitor.IsCanceled)
+            {
+                return null;
             }
-            var newDocRt = new DocumentRetentionTimes(newSources.Values, newFileAlignments);
+
+            var newDocRt = new DocumentRetentionTimes(newSources.Values,
+                newFileAlignments.OrderBy(kvp => kvp.Key).Select(kvp => kvp.Value));
             var newDocument = document.ChangeSettings(document.Settings.ChangeDocumentRetentionTimes(newDocRt));
             Debug.Assert(IsLoaded(newDocument));
             progressMonitor.UpdateProgress(progressStatus.Complete());
@@ -123,7 +146,9 @@ namespace pwiz.Skyline.Model.RetentionTimes
         }
 
         private static FileRetentionTimeAlignments CalculateFileRetentionTimeAlignments(
-            string dataFileName, ResultNameMap<IDictionary<Target, MeasuredRetentionTime>> libraryRetentionTimes, IProgressMonitor progressMonitor)
+            string dataFileName, ResultNameMap<IDictionary<Target, MeasuredRetentionTime>> libraryRetentionTimes, 
+            HashSet<Tuple<string, string>> pairsToAlign,
+            CancellationToken cancellationToken)
         {
             var targetTimes = libraryRetentionTimes.Find(dataFileName);
             if (targetTimes == null)
@@ -138,19 +163,21 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     continue;
                 }
 
-                using (var tokenSource = new PollingCancellationToken(() => progressMonitor.IsCanceled))
+                if (!pairsToAlign.Contains(Tuple.Create(dataFileName, entry.Key)) &&
+                    !pairsToAlign.Contains(Tuple.Create(entry.Key, dataFileName)))
                 {
-                    var alignedFile = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimes, entry.Value,
-                        REFINEMENT_THRESHHOLD, RegressionMethodRT.linear, tokenSource.Token);
-                    if (alignedFile == null || alignedFile.RegressionRefinedStatistics == null ||
-                        !RetentionTimeRegression.IsAboveThreshold(alignedFile.RegressionRefinedStatistics.R, REFINEMENT_THRESHHOLD))
-                    {
-                        continue;
-                    }
-                    var regressionLine = alignedFile.RegressionRefined.Conversion as RegressionLineElement;
-                    if (regressionLine != null)
-                        alignments.Add(new RetentionTimeAlignment(entry.Key, regressionLine));
+                    continue;
                 }
+                var alignedFile = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimes, entry.Value,
+                    REFINEMENT_THRESHOLD, RegressionMethodRT.linear, cancellationToken);
+                if (alignedFile == null || alignedFile.RegressionRefinedStatistics == null ||
+                    !RetentionTimeRegression.IsAboveThreshold(alignedFile.RegressionRefinedStatistics.R, REFINEMENT_THRESHOLD))
+                {
+                    continue;
+                }
+                var regressionLine = alignedFile.RegressionRefined.Conversion as RegressionLineElement;
+                if (regressionLine != null)
+                    alignments.Add(new RetentionTimeAlignment(entry.Key, regressionLine));
             }
             return new FileRetentionTimeAlignments(dataFileName, alignments);
         }
@@ -251,7 +278,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 return ResultNameMap<RetentionTimeSource>.EMPTY;
             }
-            IEnumerable<RetentionTimeSource> sources = new RetentionTimeSource[0];
+            IEnumerable<RetentionTimeSource> sources = Array.Empty<RetentionTimeSource>();
             foreach (var library in settings.PeptideSettings.Libraries.Libraries)
             {
                 if (library == null || !library.IsLoaded)
@@ -301,6 +328,134 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
 
             return dictionary;
+        }
+
+        /// <summary>
+        /// Returns the set of things that should be aligned against each other.
+        /// This function figures out the "Primary Replicate" which is the first replicate in
+        /// the document when ordered by <see cref="_alignmentPriorities"/>.
+        /// (That is, the first internal standard, or, if there are no internal standards then the first
+        /// ordinary replicate).
+        /// All retention times are aligned against the primary replicate.
+        /// In addition, within each <see cref="ChromatogramSet.BatchName"/>, all retention times within that
+        /// batch are aligned against the primary replicate of that batch.
+        /// </summary>
+        public static HashSet<Tuple<string, string>> GetPairsToAlign(ResultNameMap<RetentionTimeSource> sourcesInDocument,
+            MeasuredResults measuredResults, ResultNameMap<RetentionTimeSource> allSources)
+        {
+            var alignmentPairs = new HashSet<Tuple<string, string>>();
+            if (measuredResults == null)
+            {
+                return alignmentPairs;
+            }
+            var replicateRetentionTimeSources = measuredResults.Chromatograms.ToDictionary(
+                chromatogramSet => chromatogramSet,
+                chromatogramSet => chromatogramSet.MSDataFileInfos.Select(sourcesInDocument.Find)
+                    .Where(source => null != source)
+                    .ToList());
+            foreach (var tuple in GetReplicateAlignmentPairs(measuredResults.Chromatograms))
+            {
+                if (!replicateRetentionTimeSources.TryGetValue(tuple.Item1, out var sources1))
+                {
+                    continue;
+                }
+
+                if (!replicateRetentionTimeSources.TryGetValue(tuple.Item2, out var sources2))
+                {
+                    continue;
+                }
+                alignmentPairs.UnionWith(sources1.SelectMany(source1=>sources2.Select(source2=>Tuple.Create(source1.Name, source2.Name))));
+            }
+
+            // Also, align against the first replicate the things that are not in the document
+            var primaryReplicate = measuredResults.Chromatograms
+                .OrderBy(c => _alignmentPriorities[c.SampleType]).FirstOrDefault();
+            if (primaryReplicate != null)
+            {
+                alignmentPairs.UnionWith(replicateRetentionTimeSources[primaryReplicate].SelectMany(source1 =>
+                    allSources.Select(source2 => Tuple.Create(source1.Name, source2.Key))));
+            }
+
+            return alignmentPairs;
+        }
+
+        public static IEnumerable<Tuple<ChromatogramSet, ChromatogramSet>> GetReplicateAlignmentPairs(
+            IEnumerable<ChromatogramSet> chromatogramSets)
+        {
+            List<ChromatogramSet> batchLeaders = new List<ChromatogramSet>();
+            foreach (var batch in chromatogramSets.GroupBy(chromatogramSet => chromatogramSet.BatchName))
+            {
+                ChromatogramSet batchLeader = null;
+                foreach (var chromatogramSet in batch.OrderBy(chromatogramSet => _alignmentPriorities[chromatogramSet.SampleType]))
+                {
+                    if (batchLeader == null)
+                    {
+                        batchLeader = chromatogramSet;
+                        foreach (var otherLeader in batchLeaders)
+                        {
+                            yield return Tuple.Create(otherLeader, batchLeader);
+                        }
+                        batchLeaders.Add(batchLeader);
+                    }
+                    else
+                    {
+                        yield return Tuple.Create(batchLeader, chromatogramSet);
+                    }
+                }
+            }
+        }
+
+        private static readonly Dictionary<SampleType, int> _alignmentPriorities = new Dictionary<SampleType, int>
+        {
+            {SampleType.STANDARD, 1},
+            {SampleType.UNKNOWN, 2},
+            {SampleType.QC, 2},
+            {SampleType.BLANK, 3},
+            {SampleType.DOUBLE_BLANK, 4},
+            {SampleType.SOLVENT, 4}
+        };
+
+        public AlignmentFunction GetMappingFunction(string alignTo, string alignFrom, int maxStopovers)
+        {
+            var queue = new Queue<ImmutableList<KeyValuePair<string, RetentionTimeAlignment>>>();
+            queue.Enqueue(ImmutableList<KeyValuePair<string, RetentionTimeAlignment>>.EMPTY);
+            while (queue.Count > 0)
+            {
+                var list = queue.Dequeue();
+                var name = list.LastOrDefault().Key ?? alignTo;
+                var fileAlignment = FileAlignments.Find(name);
+                if (fileAlignment == null)
+                {
+                    continue;
+                }
+
+                var endAlignment = fileAlignment.RetentionTimeAlignments.Find(alignFrom);
+                if (endAlignment != null)
+                {
+                    return MakeAlignmentFunc(list.Select(tuple => tuple.Value.RegressionLine).Prepend(endAlignment.RegressionLine));
+                }
+
+                if (list.Count < maxStopovers)
+                {
+                    var excludeNames = list.Select(tuple => tuple.Key).ToHashSet();
+                    foreach (var availableAlignment in fileAlignment.RetentionTimeAlignments)
+                    {
+                        if (!excludeNames.Contains(availableAlignment.Key))
+                        {
+                            queue.Enqueue(ImmutableList.ValueOf(list.Prepend(availableAlignment)));
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public static AlignmentFunction MakeAlignmentFunc(IEnumerable<RegressionLine> regressionLines)
+        {
+
+            return AlignmentFunction.FromParts(regressionLines.Select(line =>
+                AlignmentFunction.Define(line.GetY, line.GetX)));
         }
     }
 }

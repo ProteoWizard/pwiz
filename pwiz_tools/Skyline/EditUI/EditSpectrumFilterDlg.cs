@@ -25,7 +25,6 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -200,10 +199,14 @@ namespace pwiz.Skyline.EditUI
             AutoCompleteStringCollection autoCompleteStringCollection = null;
             if (AutoComplete != null && columnIndex == valueColumn.Index && rowIndex >= 0 && rowIndex < _rowBindingList.Count)
             {
-                _propertyColumns.TryGetValue(_rowBindingList[rowIndex].Property, out var propertyColumnDescriptor);
-                if (propertyColumnDescriptor != null)
+                var row = _rowBindingList[rowIndex];
+                if (row.Property != null)
                 {
-                    autoCompleteStringCollection = AutoComplete.GetAutoCompleteValues(propertyColumnDescriptor.PropertyPath);
+                    _propertyColumns.TryGetValue(row.Property, out var propertyColumnDescriptor);
+                    if (propertyColumnDescriptor != null)
+                    {
+                        autoCompleteStringCollection = AutoComplete.GetAutoCompleteValues(propertyColumnDescriptor.PropertyPath);
+                    }
                 }
             }
             TextBox textBox = e.Control as TextBox;
@@ -228,7 +231,7 @@ namespace pwiz.Skyline.EditUI
         {
             var radioButton = new RadioButton
             {
-                Text = page.Caption ?? string.Format(Resources.EditSpectrumFilterDlg_MakePageButton_Case__0_, index + 1),
+                Text = page.Caption ?? string.Format(EditUIResources.EditSpectrumFilterDlg_MakePageButton_Case__0_, index + 1),
                 AutoCheck = false
             };
             radioButton.Click += (sender, args)=>SelectPage(index);

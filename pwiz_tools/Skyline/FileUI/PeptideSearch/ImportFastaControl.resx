@@ -175,7 +175,7 @@
     <value>6</value>
   </data>
   <data name="browseFastaBtn.Text" xml:space="preserve">
-    <value>Br&amp;owse...</value>
+    <value>&amp;Browse...</value>
   </data>
   <data name="&gt;&gt;browseFastaBtn.Name" xml:space="preserve">
     <value>browseFastaBtn</value>
@@ -344,7 +344,7 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>2</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>Max missed cleavages:</value>
+    <value>Ma&amp;x missed cleavages:</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -422,7 +422,7 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>0</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>Enzyme:</value>
+    <value>&amp;Enzyme:</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -473,7 +473,7 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>2</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>Decoys per target:</value>
+    <value>Dec&amp;oys per target:</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -503,7 +503,7 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>0</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-    <value>Decoy generation method:</value>
+    <value>&amp;Decoy generation method:</value>
   </data>
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
@@ -557,7 +557,7 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>4</value>
   </data>
   <data name="cbAutoTrain.Text" xml:space="preserve">
-    <value>Automatically train mProphet model</value>
+    <value>&amp;Automatically train mProphet model</value>
   </data>
   <data name="&gt;&gt;cbAutoTrain.Name" xml:space="preserve">
     <value>cbAutoTrain</value>

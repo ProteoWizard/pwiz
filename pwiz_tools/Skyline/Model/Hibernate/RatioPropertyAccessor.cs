@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Hibernate
@@ -37,12 +36,12 @@ namespace pwiz.Skyline.Model.Hibernate
                 if (labelType.IsLight)
                 {
                     propertyKey = @"RatioToGlobalStandards";
-                    headerText = Resources.RatioPropertyAccessor_PeptideRatioProperty_Ratio_To_Global_Standards;
+                    headerText = HibernateResources.RatioPropertyAccessor_PeptideRatioProperty_Ratio_To_Global_Standards;
                 }
                 else
                 {
                     propertyKey = string.Format(@"Ratio{0}ToGlobalStandards", Helpers.MakeId(labelType.Name, true));
-                    headerText = string.Format(Resources.RatioPropertyAccessor_PeptideRatioProperty_Ratio__0__To_Global_Standards, labelType.Title);
+                    headerText = string.Format(HibernateResources.RatioPropertyAccessor_PeptideRatioProperty_Ratio__0__To_Global_Standards, labelType.Title);
                 }
             }
             else
@@ -51,7 +50,7 @@ namespace pwiz.Skyline.Model.Hibernate
                 propertyKey = string.Format(@"Ratio{0}To{1}",
                     Helpers.MakeId(labelType.Name, true),
                     Helpers.MakeId(standardType.Name, true));
-                headerText = string.Format(Resources.RatioPropertyAccessor_PeptideProperty_Ratio__0__To__1_,
+                headerText = string.Format(HibernateResources.RatioPropertyAccessor_PeptideProperty_Ratio__0__To__1_,
                     labelType.Title, standardType.Title);
             }
 
@@ -65,13 +64,13 @@ namespace pwiz.Skyline.Model.Hibernate
             {
                 prefix = RATIO_GS_PREFIX;
                 key = @"TotalAreaRatioToGlobalStandards";
-                header = Resources.RatioPropertyAccessor_PrecursorRatioProperty_Total_Area_Ratio_To_Global_Standards;
+                header = HibernateResources.RatioPropertyAccessor_PrecursorRatioProperty_Total_Area_Ratio_To_Global_Standards;
             }
             else
             {
                 prefix = RATIO_PREFIX;
                 key = @"TotalAreaRatioTo" + Helpers.MakeId(standardType.Name, true);
-                header = string.Format(Resources.RatioPropertyAccessor_PrecursorRatioProperty_Total_Area_Ratio_To__0_, standardType.Title);
+                header = string.Format(HibernateResources.RatioPropertyAccessor_PrecursorRatioProperty_Total_Area_Ratio_To__0_, standardType.Title);
             }
             return new RatioPropertyName(prefix, key, header);
         }
@@ -83,13 +82,13 @@ namespace pwiz.Skyline.Model.Hibernate
             {
                 prefix = RATIO_GS_PREFIX;
                 key = @"AreaRatioToGlobalStandards";
-                header = Resources.RatioPropertyAccessor_TransitionRatioProperty_Area_Ratio_To_Global_Standards;
+                header = HibernateResources.RatioPropertyAccessor_TransitionRatioProperty_Area_Ratio_To_Global_Standards;
             }
             else
             {
                 prefix = RATIO_PREFIX;
                 key = @"AreaRatioTo" + Helpers.MakeId(standardType.Name, true);
-                header = string.Format(Resources.RatioPropertyAccessor_TransitionRatioProperty_Area_Ratio_To__0_, standardType.Title);
+                header = string.Format(HibernateResources.RatioPropertyAccessor_TransitionRatioProperty_Area_Ratio_To__0_, standardType.Title);
             }
             return new RatioPropertyName(prefix, key, header);
         }
@@ -99,7 +98,7 @@ namespace pwiz.Skyline.Model.Hibernate
             string key = string.Format(@"DotProduct{0}To{1}",
                 Helpers.MakeId(labelType.Name, true),
                 Helpers.MakeId(standardType.Name, true));
-            string headerText = string.Format(Resources.RDotPPropertyAccessor_PeptideProperty_Dot_Product__0__To__1_,
+            string headerText = string.Format(HibernateResources.RDotPPropertyAccessor_PeptideProperty_Dot_Product__0__To__1_,
                 labelType.Title, standardType.Title);
             return new RatioPropertyName(RDOTP_PREFIX, key, headerText);
         }
@@ -107,7 +106,7 @@ namespace pwiz.Skyline.Model.Hibernate
         public static RatioPropertyName PrecursorRdotpProperty(IsotopeLabelType standardType)
         {
             string key = string.Format(@"DotProductTo{0}", Helpers.MakeId(standardType.Name, true));
-            string headerText = string.Format(Resources.RDotPPropertyAccessor_PrecursorProperty_Dot_Product_To__0_, standardType.Title);
+            string headerText = string.Format(HibernateResources.RDotPPropertyAccessor_PrecursorProperty_Dot_Product_To__0_, standardType.Title);
             return new RatioPropertyName(RDOTP_PREFIX, key, headerText);
         }
 

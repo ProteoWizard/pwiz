@@ -104,7 +104,10 @@ namespace TestPerf
                 Assert.AreEqual(0, proteinsDlg.FinalResults.PeptidesUnmapped);
                 Assert.AreEqual(84198, proteinsDlg.FinalResults.ProteinsMapped);
                 Assert.AreEqual(4281, proteinsDlg.FinalResults.ProteinsUnmapped);
-
+            });
+            
+            RunUI(() =>
+            {
                 proteinsDlg.GroupProteins = true;
                 proteinsDlg.FindMinimalProteinList = false;
                 proteinsDlg.SelectedSharedPeptides = ProteinAssociation.SharedPeptides.AssignedToBestProtein;
@@ -124,12 +127,17 @@ namespace TestPerf
                 Assert.AreEqual(167189, proteinsDlg.FinalResults.FinalPeptideCount);
                 Assert.AreEqual(41606, proteinsDlg.FinalResults.FinalProteinCount);
 
-                proteinsDlg.MinPeptidesPerProtein = 10;
+                proteinsDlg.GeneLevelParsimony = true;
+                //Console.WriteLine($"GeneLevelParsimony {proteinsDlg.FinalResults.FinalProteinCount} {proteinsDlg.FinalResults.FinalPeptideCount}");
+                Assert.AreEqual(408175, proteinsDlg.FinalResults.FinalPeptideCount);
+                Assert.AreEqual(20649, proteinsDlg.FinalResults.FinalProteinCount);
+
+                //proteinsDlg.MinPeptidesPerProtein = 10;
                 //Console.WriteLine($"MinPeptidesPerProtein 10 {proteinsDlg.FinalResults.FinalProteinCount} {proteinsDlg.FinalResults.FinalPeptideCount}");
-                Assert.AreEqual(88242, proteinsDlg.FinalResults.FinalPeptideCount);
-                Assert.AreEqual(3987, proteinsDlg.FinalResults.FinalProteinCount);
+                //Assert.AreEqual(88242, proteinsDlg.FinalResults.FinalPeptideCount);
+                //Assert.AreEqual(3987, proteinsDlg.FinalResults.FinalProteinCount);
             });
-            // PauseTest();
+
             using (new WaitDocumentChange(null, true))
             {
                 OkDialog(proteinsDlg, proteinsDlg.OkDialog);
@@ -147,8 +155,8 @@ namespace TestPerf
                     else
                         nonProteins.Add(docNode);
                 }
-                Assert.AreEqual(3987, proteins.Count);
-                Assert.AreEqual(0, nonProteins.Count);
+                Assert.AreEqual(20649, proteins.Count);
+                Assert.AreEqual(0, nonProteins.Count); // Unmapped Peptides
             });
         }
     }

@@ -125,7 +125,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public CalibrationCurveFitter GetCalibrationCurveFitter(PeptideQuantifier peptideQuantifier, SrmSettings srmSettings)
         {
-            return new CalibrationCurveFitter(peptideQuantifier, srmSettings)
+            return new CalibrationCurveFitter(peptideQuantifier, null, srmSettings)
             {
                 CombinePointsWithSameConcentration = CombinePointsWithSameConcentration
             };

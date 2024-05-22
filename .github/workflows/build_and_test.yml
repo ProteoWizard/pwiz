@@ -59,7 +59,7 @@ jobs:
 #          }
         - {
             name: "macOS Latest Clang",
-            os: macos-latest,
+            os:	macos-12,
             compiler: 'latest clang',
             toolset: 'toolset=darwin'
           }
@@ -69,7 +69,7 @@ jobs:
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Get number of CPU cores
         id: cpu-count
@@ -112,4 +112,5 @@ jobs:
         shell: bash
         run: |
           unset JAVA_HOME
-          ./quickbuild.sh --abbreviate-paths --i-agree-to-the-vendor-licenses -j${{ steps.cpu-count.outputs.count }} address-model=64 pwiz pwiz_tools/BiblioSpec executables ${{ matrix.config.toolset }}
+          ./quickbuild.sh --abbreviate-paths --i-agree-to-the-vendor-licenses -j${{ steps.cpu-count.outputs.count }} address-model=64 pwiz executables ${{ matrix.config.toolset }}
+          ./quickbuild.sh --abbreviate-paths --i-agree-to-the-vendor-licenses -j${{ steps.cpu-count.outputs.count }} address-model=64 pwiz_tools/BiblioSpec ${{ matrix.config.toolset }}

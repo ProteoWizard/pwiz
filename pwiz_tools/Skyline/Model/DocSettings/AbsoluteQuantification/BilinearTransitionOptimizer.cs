@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                         continue;
                     }
                     var identityPath = new IdentityPath(
-                        calibrationCurveFitter.PeptideQuantifier.PeptideGroupDocNode.PeptideGroup,
+                        calibrationCurveFitter.PeptideQuantifier.PeptideGroup,
                         calibrationCurveFitter.PeptideQuantifier.PeptideDocNode.Peptide,
                         transitionGroupDocNode.TransitionGroup, transitionDocNode.Transition);
                     var quantLimit = ComputeTransitionQuantLimit(calibrationCurveFitter, identityPath);

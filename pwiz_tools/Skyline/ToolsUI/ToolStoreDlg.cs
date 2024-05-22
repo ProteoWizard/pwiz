@@ -22,8 +22,8 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Ionic.Zip;
 using JetBrains.Annotations;
@@ -102,29 +102,29 @@ namespace pwiz.Skyline.ToolsUI
             textBoxDescription.Text = FormatDescriptionText(toolStoreItem.Description);
 
             if (toolStoreItem.Installed && toolStoreItem.IsMostRecentVersion)
-                buttonInstallUpdate.Text = Resources.ToolStoreDlg_UpdateDisplayedTool_Reinstall;
+                buttonInstallUpdate.Text = ToolsUIResources.ToolStoreDlg_UpdateDisplayedTool_Reinstall;
             else if (toolStoreItem.Installed)
-                buttonInstallUpdate.Text = Resources.ToolStoreDlg_UpdateDisplayedTool_Update;
+                buttonInstallUpdate.Text = ToolsUIResources.ToolStoreDlg_UpdateDisplayedTool_Update;
             else
-                buttonInstallUpdate.Text = Resources.ToolStoreDlg_UpdateDisplayedTool_Install;
+                buttonInstallUpdate.Text = ToolsUIResources.ToolStoreDlg_UpdateDisplayedTool_Install;
         }
 
         private static string FormatVersionText(ToolStoreItem tool)
         {
             if (!tool.Installed && !tool.IsMostRecentVersion)
             {
-                return string.Format(Resources.ToolStoreDlg_FormatVersionText_Not_currently_installed__Version___0__is_available, tool.Version);
+                return string.Format(ToolsUIResources.ToolStoreDlg_FormatVersionText_Not_currently_installed__Version___0__is_available, tool.Version);
             } 
             else if (!tool.IsMostRecentVersion)
             {
                 return
                     string.Format(
-                        Resources.ToolStoreDlg_FormatVersionText_Version__0__currently_installed__Version__1__is_available_,
+                        ToolsUIResources.ToolStoreDlg_FormatVersionText_Version__0__currently_installed__Version__1__is_available_,
                         ToolStoreUtil.GetCurrentVersion(tool.Identifier), tool.Version);
             }
             else
             {
-                return string.Format(Resources.ToolStoreDlg_FormatVersionText_Currently_installed_and_fully_updated__Version___0___,
+                return string.Format(ToolsUIResources.ToolStoreDlg_FormatVersionText_Currently_installed_and_fully_updated__Version___0___,
                                  ToolStoreUtil.GetCurrentVersion(tool.Identifier));
             }
         }
@@ -165,7 +165,7 @@ namespace pwiz.Skyline.ToolsUI
                 using (var dlg = new LongWaitDlg())
                 {
                     dlg.ProgressValue = 0;
-                    dlg.Message = string.Format(Resources.ToolStoreDlg_DownloadSelectedTool_Downloading__0_, _tools[listBoxTools.SelectedIndex].Name);
+                    dlg.Message = string.Format(ToolsUIResources.ToolStoreDlg_DownloadSelectedTool_Downloading__0_, _tools[listBoxTools.SelectedIndex].Name);
                     dlg.PerformWork(this, 500, progressMonitor => DownloadPath = _toolStoreClient.GetToolZipFile(progressMonitor, identifier, Path.GetTempPath()));
                     if (!dlg.IsCanceled)
                         DialogResult = DialogResult.OK;
@@ -339,7 +339,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
             }
 
-            throw new ToolExecutionException(Resources.TestToolStoreClient_GetToolZipFile_Cannot_find_a_file_with_that_identifier_);
+            throw new ToolExecutionException(ToolsUIResources.TestToolStoreClient_GetToolZipFile_Cannot_find_a_file_with_that_identifier_);
         }
 
         public bool IsToolUpdateAvailable(string identifier, Version version)
@@ -359,10 +359,10 @@ namespace pwiz.Skyline.ToolsUI
 
     public class WebToolStoreClient : IToolStoreClient
     {
-        public static readonly Uri TOOL_STORE_URI = new Uri(@"https://skyline.gs.washington.edu");
-        protected const string GET_TOOLS_URL = "/labkey/skyts/home/getToolsApi.view";
-        protected const string DOWNLOAD_TOOL_URL = "/labkey/skyts/home/downloadTool.view";
-        public const string TOOL_DETAILS_URL = "/labkey/skyts/home/details.view";
+        public static readonly Uri TOOL_STORE_URI = new Uri(@"https://skyline.ms");
+        protected const string GET_TOOLS_URL = "/skyts/home/getToolsApi.view";
+        protected const string DOWNLOAD_TOOL_URL = "/skyts/home/downloadTool.view";
+        public const string TOOL_DETAILS_URL = "/skyts/home/details.view";
 
         protected Dictionary<String, Version> latestVersions_;
 
@@ -387,12 +387,30 @@ namespace pwiz.Skyline.ToolsUI
                 Query = @"lsid=" + Uri.EscapeDataString(packageIdentifier)
             };
             byte[] toolZip = webClient.DownloadData(uri.Uri.AbsoluteUri);
-            string contentDisposition = webClient.ResponseHeaders.Get(@"Content-Disposition");
-            // contentDisposition is filename="ToolBasename.zip"
-            // ReSharper disable LocalizableElement
-            Match match = Regex.Match(contentDisposition, "^filename=\"(.+)\"$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-            // ReSharper restore LocalizableElement
-            string downloadedFile = directory + match.Groups[1].Value;
+            string contentDispositionString = webClient.ResponseHeaders.Get(@"Content-Disposition");
+            string downloadedFile = null;
+            ContentDispositionHeaderValue.TryParse(contentDispositionString, out var contentDispositionHeaderValue);
+            try
+            {
+                if (contentDispositionHeaderValue?.FileNameStar != null)
+                {
+                    downloadedFile = Path.Combine(directory, contentDispositionHeaderValue.FileNameStar);
+                }
+                else if (contentDispositionHeaderValue?.FileName != null)
+                {
+                    downloadedFile = Path.Combine(directory, contentDispositionHeaderValue.FileName);
+                }
+            }
+            catch (Exception)
+            {
+                // ignore
+            }
+
+            if (downloadedFile == null)
+            {
+                // Something went wrong trying to decide the filename. Fall back to using a temp file name.
+                downloadedFile = FileStreamManager.Default.GetTempFileName(directory, @"Sky");
+            }
             File.WriteAllBytes(downloadedFile, toolZip);
             return downloadedFile;
         }

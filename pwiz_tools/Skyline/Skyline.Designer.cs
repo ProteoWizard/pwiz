@@ -82,7 +82,7 @@ namespace pwiz.Skyline
             this.showLibSpectrumPropertiesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showFullScanSpectrumPropertiesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator14 = new System.Windows.Forms.ToolStripSeparator();
-            this.prositLibMatchItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.koinaLibMatchItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mirrorMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator61 = new System.Windows.Forms.ToolStripSeparator();
             this.spectrumGraphPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -146,6 +146,7 @@ namespace pwiz.Skyline
             this.areaGraphContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaReplicateComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaPeptideComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaRelativeAbundanceContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVHistogramContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVHistogram2DContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.graphTypeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -168,6 +169,12 @@ namespace pwiz.Skyline
             this.showDotProductToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideLogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideCvsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.abundanceTargetsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.abundanceTargetsProteinsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.abundanceTargetsPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.excludeTargetsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.excludeTargetsPeptideListMenuItem= new System.Windows.Forms.ToolStripMenuItem();
+            this.excludeTargetsStandardsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator28 = new System.Windows.Forms.ToolStripSeparator();
             this.areaPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupReplicatesByContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -234,6 +241,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator51 = new System.Windows.Forms.ToolStripSeparator();
             this.importPeptideSearchMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.encyclopeDiaSearchMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importFeatureDetectionMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator52 = new System.Windows.Forms.ToolStripSeparator();
             this.importFASTAMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importAssayLibraryMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -577,7 +585,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator13,
             this.lockYaxisContextMenuItem,
             this.toolStripSeparator14,
-            this.prositLibMatchItem,
+            this.koinaLibMatchItem,
             this.mirrorMenuItem,
             this.toolStripSeparator61,
             this.spectrumGraphPropsContextMenuItem,
@@ -692,11 +700,11 @@ namespace pwiz.Skyline
             this.toolStripSeparator14.Name = "toolStripSeparator14";
             resources.ApplyResources(this.toolStripSeparator14, "toolStripSeparator14");
             // 
-            // prositLibMatchItem
+            // koinaLibMatchItem
             // 
-            this.prositLibMatchItem.Name = "prositLibMatchItem";
-            resources.ApplyResources(this.prositLibMatchItem, "prositLibMatchItem");
-            this.prositLibMatchItem.Click += new System.EventHandler(this.prositLibMatchItem_Click);
+            this.koinaLibMatchItem.Name = "koinaLibMatchItem";
+            resources.ApplyResources(this.koinaLibMatchItem, "koinaLibMatchItem");
+            this.koinaLibMatchItem.Click += new System.EventHandler(this.koinaLibMatchItem_Click);
             // 
             // mirrorMenuItem
             // 
@@ -1123,6 +1131,8 @@ namespace pwiz.Skyline
             this.replicateOrderContextMenuItem,
             this.areaNormalizeContextMenuItem,
             this.scopeContextMenuItem,
+            this.abundanceTargetsMenuItem,
+            this.excludeTargetsMenuItem,
             this.showPeakAreaLegendContextMenuItem,
             this.showLibraryPeakAreaContextMenuItem,
             this.showDotProductToolStripMenuItem,
@@ -1146,6 +1156,7 @@ namespace pwiz.Skyline
             this.areaGraphContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.areaReplicateComparisonContextMenuItem,
             this.areaPeptideComparisonContextMenuItem,
+            this.areaRelativeAbundanceContextMenuItem,
             this.areaCVHistogramContextMenuItem,
             this.areaCVHistogram2DContextMenuItem});
             this.areaGraphContextMenuItem.Name = "areaGraphContextMenuItem";
@@ -1163,6 +1174,12 @@ namespace pwiz.Skyline
             this.areaPeptideComparisonContextMenuItem.Name = "areaPeptideComparisonContextMenuItem";
             resources.ApplyResources(this.areaPeptideComparisonContextMenuItem, "areaPeptideComparisonContextMenuItem");
             this.areaPeptideComparisonContextMenuItem.Click += new System.EventHandler(this.areaPeptideComparisonMenuItem_Click);
+            // 
+            // areaRelativeAbundanceContextMenuItem
+            // 
+            this.areaRelativeAbundanceContextMenuItem.Name = "areaRelativeAbundanceContextMenuItem";
+            resources.ApplyResources(this.areaRelativeAbundanceContextMenuItem, "areaRelativeAbundanceContextMenuItem");
+            this.areaRelativeAbundanceContextMenuItem.Click += new System.EventHandler(this.areaRelativeAbundanceMenuItem_Click);
             // 
             // areaCVHistogramContextMenuItem
             // 
@@ -1310,6 +1327,44 @@ namespace pwiz.Skyline
             this.peptideCvsContextMenuItem.Name = "peptideCvsContextMenuItem";
             resources.ApplyResources(this.peptideCvsContextMenuItem, "peptideCvsContextMenuItem");
             this.peptideCvsContextMenuItem.Click += new System.EventHandler(this.peptideCvsContextMenuItem_Click);
+            // 
+            // abundanceTargetsProteinsMenuItem
+            // 
+            this.abundanceTargetsProteinsMenuItem.Name = "abundanceTargetsProteinsMenuItem";
+            resources.ApplyResources(this.abundanceTargetsProteinsMenuItem, "abundanceTargetsProteinsMenuItem");
+            this.abundanceTargetsProteinsMenuItem.Click += new System.EventHandler(this.abundanceTargetsProteinsMenuItem_Click);
+            // 
+            // abundanceTargetsPeptidesMenuItem
+            // 
+            this.abundanceTargetsPeptidesMenuItem.Name = "abundanceTargetsPeptidesMenuItem";
+            resources.ApplyResources(this.abundanceTargetsPeptidesMenuItem, "abundanceTargetsPeptidesMenuItem");
+            this.abundanceTargetsPeptidesMenuItem.Click += new System.EventHandler(this.abundanceTargetsPeptidesMenuItem_Click);
+            // 
+            // abundanceTargetsMenuItem
+            // 
+            this.abundanceTargetsMenuItem.Name = "abundanceTargetsMenuItem";
+            resources.ApplyResources(this.abundanceTargetsMenuItem, "abundanceTargetsMenuItem");
+            // 
+            // excludeTargetsMenuItem
+            // 
+            this.excludeTargetsMenuItem.Name = "excludeTargetsMenuItem";
+            resources.ApplyResources(this.excludeTargetsMenuItem, "excludeTargetsMenuItem");
+            // 
+            // excludeTargetsPeptideListMenuItem
+            // 
+            this.excludeTargetsPeptideListMenuItem.CheckOnClick = true;
+            this.excludeTargetsPeptideListMenuItem.Checked = Settings.Default.ExcludePeptideListsFromAbundanceGraph;
+            this.excludeTargetsPeptideListMenuItem.Name = "excludeTargetsPeptideListMenuItem";
+            resources.ApplyResources(this.excludeTargetsPeptideListMenuItem, "excludeTargetsPeptideListMenuItem");
+            this.excludeTargetsPeptideListMenuItem.Click += new System.EventHandler(this.excludeTargetsPeptideListMenuItem_Click);
+            // 
+            // excludeTargetsStandardsMenuItem
+            // 
+            this.excludeTargetsStandardsMenuItem.CheckOnClick = true;
+            this.excludeTargetsStandardsMenuItem.Checked = Settings.Default.ExcludeStandardsFromAbundanceGraph;
+            this.excludeTargetsStandardsMenuItem.Name = "excludeTargetsStandardsMenuItem";
+            resources.ApplyResources(this.excludeTargetsStandardsMenuItem, "excludeTargetsStandardsMenuItem");
+            this.excludeTargetsStandardsMenuItem.Click += new System.EventHandler(this.excludeTargetsStandardsMenuItem_Click);
             // 
             // toolStripSeparator28
             // 
@@ -1755,6 +1810,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator51,
             this.importPeptideSearchMenuItem,
             this.encyclopeDiaSearchMenuItem,
+            this.importFeatureDetectionMenuItem,
             this.toolStripSeparator52,
             this.importFASTAMenuItem,
             this.importAssayLibraryMenuItem,
@@ -1780,7 +1836,6 @@ namespace pwiz.Skyline
             // 
             this.toolStripSeparator51.Name = "toolStripSeparator51";
             resources.ApplyResources(this.toolStripSeparator51, "toolStripSeparator51");
-            this.modeUIHandler.SetUIMode(this.toolStripSeparator51, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             // 
             // importPeptideSearchMenuItem
             // 
@@ -1793,7 +1848,14 @@ namespace pwiz.Skyline
             // 
             this.encyclopeDiaSearchMenuItem.Name = "encyclopeDiaSearchMenuItem";
             resources.ApplyResources(this.encyclopeDiaSearchMenuItem, "encyclopeDiaSearchMenuItem");
+            this.modeUIHandler.SetUIMode(this.encyclopeDiaSearchMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.encyclopeDiaSearchMenuItem.Click += new System.EventHandler(this.encyclopeDiaSearchMenuItem_Click);
+            // 
+            // importFeatureDetectionMenuItem
+            // 
+            this.importFeatureDetectionMenuItem.Name = "importFeatureDetectionMenuItem";
+            resources.ApplyResources(this.importFeatureDetectionMenuItem, "importFeatureDetectionMenuItem");
+            this.importFeatureDetectionMenuItem.Click += new System.EventHandler(this.importFeatureDetectionMenuItem_Click);
             // 
             // toolStripSeparator52
             // 
@@ -1840,7 +1902,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator49,
             this.exportReportMenuItem,
             this.toolStripSeparator50,
-            this.eSPFeaturesMenuItem,
+            //this.eSPFeaturesMenuItem, this menu item has been removed
             this.exportSpectralLibraryMenuItem,
             this.chromatogramsToolStripMenuItem,
             this.mProphetFeaturesMenuItem,
@@ -2683,6 +2745,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem areaGraphContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaReplicateComparisonContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaPeptideComparisonContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaRelativeAbundanceContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaNormalizeContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem peptideLogScaleContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem peptideOrderContextMenuItem;
@@ -2690,6 +2753,12 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem peptideOrderRTContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem peptideOrderAreaContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem peptideCvsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem abundanceTargetsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem abundanceTargetsProteinsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem abundanceTargetsPeptidesMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem excludeTargetsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem excludeTargetsPeptideListMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem excludeTargetsStandardsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem documentSettingsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem refineToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem selectionContextMenuItem;
@@ -2862,7 +2931,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem markTransitionsQuantitativeContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem scoreContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator61;
-        private System.Windows.Forms.ToolStripMenuItem prositLibMatchItem;
+        private System.Windows.Forms.ToolStripMenuItem koinaLibMatchItem;
         private System.Windows.Forms.ToolStripMenuItem mirrorMenuItem;
         private System.Windows.Forms.ToolStripMenuItem logRegressionContextMenuItem;
         private System.Windows.Forms.ContextMenuStrip contextMenuDetections;
@@ -2891,6 +2960,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem crashSkylineMenuItem;
         private System.Windows.Forms.ToolStripMenuItem encyclopeDiaSearchMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openPanoramaMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem importFeatureDetectionMenuItem;
     }
 }
 

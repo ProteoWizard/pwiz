@@ -126,7 +126,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var alignedFile = currentRow.AlignedRetentionTimes;
             if (alignedFile == null)
             {
-                zedGraphControl.GraphPane.Title.Text = Resources.AlignmentForm_UpdateGraph_Waiting_for_retention_time_alignment;
+                zedGraphControl.GraphPane.Title.Text = GraphsResources.AlignmentForm_UpdateGraph_Waiting_for_retention_time_alignment;
                 return;
             }
             var points = new PointPairList();
@@ -139,7 +139,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var yTime = peptideTime.RetentionTime;
                 if (PlotType == PlotTypeRT.residuals)
                     yTime = (double) (alignedFile.Regression.GetRetentionTime(xTime) - yTime);
-                var point = new PointPair(xTime, yTime, peptideTime.PeptideSequence.Sequence);
+                var point = new PointPair(xTime, yTime, peptideTime.PeptideSequence.DisplayName);
                 if (alignedFile.OutlierIndexes.Contains(i))
                 {
                     outliers.Add(point);
@@ -150,7 +150,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            var goodPointsLineItem = new LineItem(@"Peptides", points, Color.Black, SymbolType.Diamond) // CONSIDER: localize?
+            var goodPointsLineItem = new LineItem(ModeUIAwareStringFormat(GraphsResources.AlignmentForm_UpdateGraph_Peptides), points, Color.Black, SymbolType.Diamond)
                 {
                     Symbol = {Size = 8f},
                     Line = {IsVisible = false}
@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 outlierLineItem.Line.IsVisible = false;
                 outlierLineItem.Symbol.Border.IsVisible = false;
                 outlierLineItem.Symbol.Fill = new Fill(RTLinearRegressionGraphPane.COLOR_OUTLIERS);
-                goodPointsLineItem.Label.Text = Resources.AlignmentForm_UpdateGraph_Peptides_Refined;
+                goodPointsLineItem.Label.Text = ModeUIAwareStringFormat(GraphsResources.GraphData_Graph_Peptides_Refined);
             }
             zedGraphControl.GraphPane.CurveList.Add(goodPointsLineItem);
             if (points.Count > 0 && PlotType == PlotTypeRT.correlation)
@@ -175,18 +175,18 @@ namespace pwiz.Skyline.Controls.Graphs
                 double xMax = points.Select(p => p.X).Max();
                 var regression = alignedFile.RegressionRefined ?? alignedFile.Regression;
                 var regressionLine = zedGraphControl.GraphPane
-                        .AddCurve(Resources.AlignmentForm_UpdateGraph_Regression_line, new[] { xMin, xMax },
+                        .AddCurve(GraphsResources.AlignmentForm_UpdateGraph_Regression_line, new[] { xMin, xMax },
                         new[] { regression.Conversion.GetY(xMin), regression.Conversion.GetY(xMax) },
                         Color.Black);
                 regressionLine.Symbol.IsVisible = false;
             }
-            zedGraphControl.GraphPane.Title.Text = string.Format(Resources.AlignmentForm_UpdateGraph_Alignment_of__0__to__1_,
+            zedGraphControl.GraphPane.Title.Text = string.Format(GraphsResources.AlignmentForm_UpdateGraph_Alignment_of__0__to__1_,
                 currentRow.DataFile, currentRow.Target.Name);
             zedGraphControl.GraphPane.XAxis.Title.Text = string.Format(Resources.AlignmentForm_UpdateGraph_Time_from__0__, 
                 currentRow.DataFile);
             zedGraphControl.GraphPane.YAxis.Title.Text = PlotType == PlotTypeRT.correlation
-                ? Resources.AlignmentForm_UpdateGraph_Aligned_Time
-                : Resources.AlignmentForm_UpdateGraph_Time_from_Regression;
+                ? GraphsResources.AlignmentForm_UpdateGraph_Aligned_Time
+                : GraphsResources.AlignmentForm_UpdateGraph_Time_from_Regression;
             zedGraphControl.GraphPane.AxisChange();
             zedGraphControl.Invalidate();
         }
@@ -208,7 +208,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var alignedTimes = AlignedRetentionTimes.AlignLibraryRetentionTimes(
                     dataRow.TargetTimes, dataRow.SourceTimes,
-                    DocumentRetentionTimes.REFINEMENT_THRESHHOLD,
+                    DocumentRetentionTimes.REFINEMENT_THRESHOLD,
                     RegressionMethodRT.linear,
                     cancellationToken);
 

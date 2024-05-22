@@ -20,7 +20,6 @@ using System.Drawing;
 using System.Globalization;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Properties;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -50,7 +49,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var table = new TableDesc();
             using (var rt = new RenderTools())
             {
-                table.AddDetailRow(Resources.PeptideRegressionTipProvider_RenderTip_Peptide, DocNode.ModifiedSequence, rt);
+                table.AddDetailRow(GraphsResources.PeptideRegressionTipProvider_RenderTip_Peptide, DocNode.ModifiedSequence, rt);
 
                 table.AddDetailRow(XLabel, Point.X.ToString(CultureInfo.CurrentCulture), rt);
                 table.AddDetailRow(YLabel, Point.Y.ToString(CultureInfo.CurrentCulture), rt);
