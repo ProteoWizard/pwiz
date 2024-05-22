@@ -15,10 +15,10 @@ namespace pwiz.Skyline.Model.Results.Imputation
     public class PeakImputationData
     {
         public static readonly Producer<Parameters, PeakImputationData> PRODUCER = new DataProducer();
-        public PeakImputationData(Parameters parameters, ConsensusAlignment consensusAlignment, IList<MoleculePeaks> moleculePeaksList)
+        public PeakImputationData(Parameters parameters, AlignmentResults alignmentResults, IList<MoleculePeaks> moleculePeaksList)
         {
             Params = parameters;
-            ConsensusAlignment = consensusAlignment;
+            Alignments = alignmentResults;
             var sortedScores = ImmutableList.ValueOf(moleculePeaksList
                 .SelectMany(molecule => molecule.Peaks.Select(peak => peak.Score)).OfType<double>()
                 .Select(score => (float)score));
@@ -31,11 +31,11 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 ratedMoleculePeaks.Add(RatePeaks(parameters, moleculePeaks));
             }
             MoleculePeaks = ImmutableList.ValueOf(ratedMoleculePeaks);
-            MeanRtStdDev = GetMeanRtStandardDeviation(parameters.Document, consensusAlignment);
+            MeanRtStdDev = GetMeanRtStandardDeviation(parameters.Document, alignmentResults);
         }
 
         public Parameters Params { get; }
-        public ConsensusAlignment ConsensusAlignment { get; }
+        public AlignmentResults Alignments { get; }
 
         public ScoreConversionData ScoreConversionData { get; }
         public ImmutableList<MoleculePeaks> MoleculePeaks { get; }
@@ -92,12 +92,21 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 return ChangeProp(ImClone(this), im => im.ScoringModel = value);
             }
 
-            public RtValueType AlignmentType { get; private set; }
+            public RtValueType RtValueType { get; private set; }
 
-            public Parameters ChangeAlignmentType(RtValueType value)
+            public Parameters ChangeRtValueType(RtValueType value)
+            {
+                return ChangeProp(ImClone(this), im => im.RtValueType = value);
+            }
+
+            public AlignmentType AlignmentType { get; private set; }
+
+            public Parameters ChangeAlignmentType(AlignmentType value)
             {
                 return ChangeProp(ImClone(this), im => im.AlignmentType = value);
             }
+
+            
 
             public ImmutableList<IdentityPath> PeptideIdentityPaths { get; private set; }
 
@@ -106,14 +115,14 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 return ChangeProp(ImClone(this), im => im.PeptideIdentityPaths = value);
             }
 
-            public ConsensusAlignment.Parameters GetAlignmentParameters()
+            public AlignmentParameters GetAlignmentParameters()
             {
-                if (AlignmentType == null)
+                if (RtValueType == null || AlignmentType == null)
                 {
                     return null;
                 }
 
-                return new ConsensusAlignment.Parameters(Document, AlignmentType);
+                return new AlignmentParameters(Document, RtValueType, AlignmentType);
             }
 
             public double? AllowableRtShift { get; private set; }
@@ -128,6 +137,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 return ReferenceEquals(Document, other.Document) && OverwriteManualPeaks == other.OverwriteManualPeaks &&
                        Nullable.Equals(CutoffScore, other.CutoffScore) &&
                        Equals(CutoffScoreType, other.CutoffScoreType) && Equals(ScoringModel, other.ScoringModel) &&
+                       Equals(RtValueType, other.RtValueType) && 
                        Equals(AlignmentType, other.AlignmentType) &&
                        Nullable.Equals(AllowableRtShift, other.AllowableRtShift) && 
                        Equals(PeptideIdentityPaths, other.PeptideIdentityPaths);
@@ -183,7 +193,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
             public override PeakImputationData ProduceResult(ProductionMonitor productionMonitor, Parameters parameter, IDictionary<WorkOrder, object> inputs)
             {
                 var consensusAlignment =
-                    ConsensusAlignment.PRODUCER.GetResult(inputs, parameter.GetAlignmentParameters());
+                    AlignmentParameters.ALIGNMENT_PRODUCER.GetResult(inputs, parameter.GetAlignmentParameters());
                 var rows = ImmutableList.ValueOf(GetRows(productionMonitor, parameter, consensusAlignment));
                 // rows = EnsureScores(rows);
                 return new PeakImputationData(parameter, consensusAlignment, rows);
@@ -197,14 +207,13 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     yield break;
                 }
 
-                if (parameter.AlignmentType != null)
+                if (parameter.GetAlignmentParameters() != null)
                 {
-                    yield return ConsensusAlignment.PRODUCER.MakeWorkOrder(
-                        new ConsensusAlignment.Parameters(document, parameter.AlignmentType));
+                    yield return parameter.GetAlignmentParameters().MakeWorkOrder();
                 }
             }
 
-            private IEnumerable<MoleculePeaks> GetRows(ProductionMonitor productionMonitor, Parameters parameters, ConsensusAlignment alignments)
+            private IEnumerable<MoleculePeaks> GetRows(ProductionMonitor productionMonitor, Parameters parameters, AlignmentResults alignments)
             {
                 var peptideIdentityPaths = parameters.PeptideIdentityPaths?.ToHashSet();
                 var document = parameters.Document;
@@ -272,7 +281,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                                     molecule, replicateIndex, chromFileInfo);
                                 var candidatePeakGroups = molecule.TransitionGroups.SelectMany(tg =>
                                     onDemandFeatureCalculator.GetCandidatePeakGroups(tg.TransitionGroup)).ToList();
-                                CandidatePeakGroupData matchingPeakGroup;
+                                CandidatePeakGroupData matchingPeakGroup = null;
                                 if (manuallyIntegrated)
                                 {
                                     matchingPeakGroup = candidatePeakGroups
@@ -280,9 +289,12 @@ namespace pwiz.Skyline.Model.Results.Imputation
                                 }
                                 else
                                 {
-                                    matchingPeakGroup = candidatePeakGroups.FirstOrDefault(peakGroupData =>
-                                        peakGroupData.MinStartTime == rawPeakBounds.StartTime &&
-                                        peakGroupData.MaxEndTime == rawPeakBounds.EndTime);
+                                    if (rawPeakBounds != null)
+                                    {
+                                        matchingPeakGroup = candidatePeakGroups.FirstOrDefault(peakGroupData =>
+                                            peakGroupData.MinStartTime == rawPeakBounds.StartTime &&
+                                            peakGroupData.MaxEndTime == rawPeakBounds.EndTime);
+                                    }
                                     if (matchingPeakGroup == null)
                                     {
                                         matchingPeakGroup =
@@ -295,7 +307,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                                     manuallyIntegrated);
                                 var explicitPeakBounds =
                                     document.Settings.GetExplicitPeakBounds(molecule, chromFileInfo.FilePath);
-                                if (explicitPeakBounds?.Score != null && explicitPeakBounds.StartTime < rawPeakBounds.EndTime && explicitPeakBounds.EndTime > rawPeakBounds.StartTime)
+                                if (rawPeakBounds != null && explicitPeakBounds?.Score != null && explicitPeakBounds.StartTime < rawPeakBounds.EndTime && explicitPeakBounds.EndTime > rawPeakBounds.StartTime)
                                 {
                                     peak = peak.ChangeQValue(explicitPeakBounds.Score);
                                 }
@@ -444,8 +456,13 @@ namespace pwiz.Skyline.Model.Results.Imputation
             if (minTime.HasValue && minTime > exemplaryPeakBounds.MidTime + parameters.AllowableRtShift.GetValueOrDefault()
                 || maxTime.HasValue && maxTime < exemplaryPeakBounds.MidTime - parameters.AllowableRtShift.GetValueOrDefault())
             {
-                return peak.ChangeVerdict(RatedPeak.Verdict.NeedsRemoval,
-                    string.Format("Imputed retention time {0} is outside the chromatogram.", exemplaryPeakBounds.MidTime.ToString(Formats.RETENTION_TIME)));
+                var opinion = string.Format("Imputed retention time {0} is outside the chromatogram.", exemplaryPeakBounds.MidTime.ToString(Formats.RETENTION_TIME));
+                if (peak.RawPeakBounds == null)
+                {
+                    return peak.ChangeVerdict(RatedPeak.Verdict.Accepted, opinion);
+                }
+
+                return peak.ChangeVerdict(RatedPeak.Verdict.NeedsRemoval, opinion);
             }
 
             return peak.ChangeVerdict(RatedPeak.Verdict.NeedsAdjustment,
@@ -500,7 +517,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
             return peak;
         }
 
-        public static double? GetMeanRtStandardDeviation(SrmDocument document, ConsensusAlignment consensusAlignment)
+        public static double? GetMeanRtStandardDeviation(SrmDocument document, AlignmentResults consensusAlignment)
         {
             var standardDeviations = new List<double>();
             foreach (var molecule in document.Molecules)

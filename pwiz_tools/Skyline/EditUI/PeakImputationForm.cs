@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -9,6 +10,7 @@ using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -23,7 +25,6 @@ using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Imputation;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -71,26 +72,30 @@ namespace pwiz.Skyline.EditUI
 
         private void ProductAvailableAction()
         {
-            if (_receiver.TryGetCurrentProduct(out _data))
+            if (_receiver.TryGetCurrentProduct(out var newData))
             {
-                _scoreConversionData = _data.ScoreConversionData;
-                _rows.Clear();
-                _rows.AddRange(_data.MoleculePeaks.Select(peak=>new Row(_dataSchema, peak)));
-                _rowsBindingList.ResetBindings();
-                tbxExemplary.Text = _rows.SelectMany(row => row.Peaks.Values)
-                    .Count(peak => peak.Verdict == RatedPeak.Verdict.Exemplary).ToString();
-                tbxAccepted.Text = _rows.SelectMany(row => row.Peaks.Values).Count(peak => peak.Verdict == RatedPeak.Verdict.Accepted).ToString();
-                tbxRejected.Text = _rows.SelectMany(row => row.Peaks.Values).Count(peak => peak.Verdict == RatedPeak.Verdict.NeedsAdjustment).ToString();
-                var rtShifts = _rows.SelectMany(row => row.Peaks.Values)
-                    .Where(peak => peak.ShiftFromBestPeak.HasValue)
-                    .Select(peak => Math.Abs(peak.ShiftFromBestPeak.Value)).ToList();
-                if (rtShifts.Count == 0)
+                if (!Equals(_data, newData))
                 {
-                    tbxMeanRtStdDev.Text = "";
-                }
-                else
-                {
-                    tbxMeanRtStdDev.Text = rtShifts.Mean().ToString(Formats.RETENTION_TIME);
+                    _data = newData;
+                    _scoreConversionData = _data.ScoreConversionData;
+                    _rows.Clear();
+                    _rows.AddRange(_data.MoleculePeaks.Select(peak => new Row(_dataSchema, peak)));
+                    _rowsBindingList.ResetBindings();
+                    tbxExemplary.Text = _rows.SelectMany(row => row.Peaks.Values)
+                        .Count(peak => peak.Verdict == RatedPeak.Verdict.Exemplary).ToString();
+                    tbxAccepted.Text = _rows.SelectMany(row => row.Peaks.Values).Count(peak => peak.Verdict == RatedPeak.Verdict.Accepted).ToString();
+                    tbxRejected.Text = _rows.SelectMany(row => row.Peaks.Values).Count(peak => peak.Verdict == RatedPeak.Verdict.NeedsAdjustment).ToString();
+                    var rtShifts = _rows.SelectMany(row => row.Peaks.Values)
+                        .Where(peak => peak.ShiftFromBestPeak.HasValue)
+                        .Select(peak => Math.Abs(peak.ShiftFromBestPeak.Value)).ToList();
+                    if (rtShifts.Count == 0)
+                    {
+                        tbxMeanRtStdDev.Text = "";
+                    }
+                    else
+                    {
+                        tbxMeanRtStdDev.Text = rtShifts.Mean().ToString(Formats.RETENTION_TIME);
+                    }
                 }
 
                 var document = _data.Params.Document;
@@ -98,25 +103,14 @@ namespace pwiz.Skyline.EditUI
                     PeakImputationData.GetMeanRtStandardDeviation(document, null)
                         ?.ToString(Formats.RETENTION_TIME) ?? string.Empty;
                 tbxAlignedDocRtStdDev.Text =
-                    PeakImputationData.GetMeanRtStandardDeviation(document, _data.ConsensusAlignment)
+                    PeakImputationData.GetMeanRtStandardDeviation(document, _data.Alignments)
                         ?.ToString(Formats.RETENTION_TIME) ?? string.Empty;
 
                 progressBar1.Visible = false;
-                if (_data.ConsensusAlignment != null && cbxAlignAllGraphs.Checked)
+                if (_data.Alignments != null && cbxAlignAllGraphs.Checked)
                 {
-                    var alignments = new Dictionary<ReferenceValue<ChromFileInfoId>, AlignmentFunction>();
-                    foreach (var replicateFileInfo in ReplicateFileInfo.List(document.MeasuredResults))
-                    {
-                        var alignmentFunction =
-                            _data.ConsensusAlignment.GetAlignment(replicateFileInfo.ReplicateFileId);
-                        if (alignmentFunction != null)
-                        {
-                            alignments[replicateFileInfo.ReplicateFileId.FileId] = alignmentFunction;
-                        }
-                    }
-
                     SkylineWindow.RetentionTimeTransformOp =
-                        new ConsensusAlignmentTransformOp(_data.Params.AlignmentType.ToString(), alignments);
+                        _data.Alignments.ChangeName(comboRetentionTimeAlignment.SelectedItem.ToString());
                 }
                 else
                 {
@@ -202,15 +196,17 @@ namespace pwiz.Skyline.EditUI
         {
             SetSequenceTree(SkylineWindow.SequenceTree);
             var document = SkylineWindow.DocumentUI;
-            ComboHelper.ReplaceItems(comboRetentionTimeAlignment, RtValueType.All.Where(rtValueType=>rtValueType.IsValidFor(document)).Prepend(null), 1);
+            ComboHelper.ReplaceItems(comboRetentionTimeAlignment, GetAlignmentOptions(document), 1);
             var scoringModel = GetScoringModelToUse(document);
             tbxScoringModel.Text = scoringModel.Name;
 
             radioPValue.Enabled = !Equals(scoringModel, LegacyScoringModel.DEFAULT_MODEL);
             radioQValue.Enabled = HasQValues(document);
             radioPercentile.Enabled = DocumentWide;
+            var alignmentOption = comboRetentionTimeAlignment.SelectedItem as AlignmentOption;
             var parameters = new PeakImputationData.Parameters(document)
-                .ChangeAlignmentType(comboRetentionTimeAlignment.SelectedItem as RtValueType)
+                .ChangeRtValueType(alignmentOption?.RtValueType)
+                .ChangeAlignmentType(alignmentOption?.AlignmentType)
                 .ChangeOverwriteManualPeaks(cbxOverwriteManual.Checked)
                 .ChangeScoringModel(scoringModel)
                 .ChangeAllowableRtShift(GetDoubleValue(tbxRtDeviationCutoff, 0, null));
@@ -430,6 +426,23 @@ namespace pwiz.Skyline.EditUI
                 _peptide.LinkValueOnClick(sender, args);
                 (ResultFile.Replicate as ILinkValue)?.ClickEventHandler(sender, args);
             }
+
+            [DataGridViewColumnType(typeof(ImputeButtonColumn))]
+            public string Action
+            {
+                get 
+                {
+                    switch (Verdict)
+                    {
+                        case RatedPeak.Verdict.NeedsAdjustment:
+                            return "Adjust Peak";
+                        case RatedPeak.Verdict.NeedsRemoval:
+                            return "Remove Peak";
+                        default:
+                            return string.Empty;
+                    }
+                }
+            }
         }
 
         private void SettingsControlChanged(object sender, EventArgs e)
@@ -609,6 +622,11 @@ namespace pwiz.Skyline.EditUI
 
         public int ImputeBoundaries(IList<Row> rows)
         {
+            return ImputeBoundaries(rows, null);
+        }
+
+        public int ImputeBoundaries(IList<Row> rows, ICollection<ReplicateFileId> replicateFileIds)
+        {
             lock (SkylineWindow.GetDocumentChangeLock())
             {
                 var originalDocument = SkylineWindow.DocumentUI;
@@ -638,6 +656,10 @@ namespace pwiz.Skyline.EditUI
                             .Select(peak => peak.GetRatedPeak()).ToList();
                         foreach (var rejectedPeak in rejectedPeaks)
                         {
+                            if (false == replicateFileIds?.Contains(rejectedPeak.ReplicateFileInfo.ReplicateFileId))
+                            {
+                                continue;
+                            }
                             var peakImputer = new PeakImputer(newDoc, row.Peptide.IdentityPath, scoringModel,
                                 rejectedPeak.ReplicateFileInfo);
                             var bestPeakBounds =
@@ -748,9 +770,152 @@ namespace pwiz.Skyline.EditUI
 
             propertyPaths.Add(ppPeaks.Property(nameof(Peak.Verdict)));
             propertyPaths.Add(ppPeaks.Property(nameof(Peak.Opinion)));
+            propertyPaths.Add(ppPeaks.Property(nameof(Peak.Action)));
             yield return new ViewSpec().SetRowType(typeof(Row))
                 .SetColumns(propertyPaths.Select(pp => new ColumnSpec(pp)))
                 .SetSublistId(ppPeaks).SetName("Details");
+        }
+
+        private class AlignmentOption
+        {
+            public AlignmentOption(string name, RtValueType rtValueType, AlignmentType alignmentType)
+            {
+                Name = name;
+                RtValueType = rtValueType;
+                AlignmentType = alignmentType;
+            }
+
+            public string Name { get; }
+            public override string ToString()
+            {
+                return Name;
+            }
+
+            public RtValueType RtValueType { get; }
+            public AlignmentType AlignmentType { get; }
+
+            protected bool Equals(AlignmentOption other)
+            {
+                return Name == other.Name && Equals(RtValueType, other.RtValueType) && Equals(AlignmentType, other.AlignmentType);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((AlignmentOption)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = (Name != null ? Name.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (RtValueType != null ? RtValueType.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (AlignmentType != null ? AlignmentType.GetHashCode() : 0);
+                    return hashCode;
+                }
+            }
+        }
+
+        private static IEnumerable<AlignmentOption> GetAlignmentOptions(SrmDocument document)
+        {
+            yield return new AlignmentOption(string.Empty, null, null);
+            yield return new AlignmentOption("Peak Apex Consensus", RtValueType.PEAK_APEXES, AlignmentType.CONSENSUS);
+            yield return new AlignmentOption("Good peak apex consensus", RtValueType.HIGH_SCORING_PEAK_APEXES,
+                AlignmentType.CONSENSUS);
+            yield return new AlignmentOption("Peak Apex KDE", RtValueType.PEAK_APEXES, AlignmentType.KDE);
+            if (RtValueType.PSM_TIMES.IsValidFor(document))
+            {
+                yield return new AlignmentOption("PSM Time Consensus", RtValueType.PSM_TIMES, AlignmentType.CONSENSUS);
+                yield return new AlignmentOption("PSM Times KDE", RtValueType.PSM_TIMES, AlignmentType.KDE);
+            }
+        }
+
+        public class ImputeButtonCell : DataGridViewButtonCell
+        {
+            protected override void OnClick(DataGridViewCellEventArgs e)
+            {
+                var peakImputationForm = DataGridView?.FindForm() as PeakImputationForm;
+                if (peakImputationForm == null)
+                {
+                    return;
+                }
+
+                var bindingListSource = DataGridView.DataSource as BindingListSource;
+                if (bindingListSource == null)
+                {
+                    return;
+                }
+
+                var rowItem = bindingListSource[RowIndex] as RowItem;
+                if (rowItem == null)
+                {
+                    return;
+                }
+
+                var row = rowItem.Value as Row;
+                if (row == null)
+                {
+                    return;
+                }
+
+                var replicateFileId = GetReplicateFileId(rowItem);
+                if (replicateFileId == null)
+                {
+                    return;
+                }
+
+                peakImputationForm.ImputeBoundaries(new[] { row }, new[] { replicateFileId });
+            }
+
+            private ReplicateFileId GetReplicateFileId(RowItem rowItem)
+            {
+                var columnPropertyDescriptor = GetColumnPropertyDescriptor();
+                if (columnPropertyDescriptor == null)
+                {
+                    return null;
+                }
+
+                var parentColumnDescriptor = columnPropertyDescriptor.DisplayColumn.ColumnDescriptor?.Parent;
+                if (parentColumnDescriptor == null)
+                {
+                    return null;
+                }
+
+                var value = parentColumnDescriptor.GetPropertyValue(rowItem, columnPropertyDescriptor.PivotKey);
+                if (value == null)
+                {
+                    return null;
+                }
+
+                var peak = value as Peak;
+                return peak?.GetRatedPeak().ReplicateFileInfo.ReplicateFileId;
+            }
+
+            private ColumnPropertyDescriptor GetColumnPropertyDescriptor()
+            {
+                var dataPropertyName = DataGridView.Columns[ColumnIndex].DataPropertyName;
+                if (dataPropertyName == null)
+                {
+                    return null;
+                }
+                var bindingListSource = DataGridView.DataSource as BindingListSource;
+                if (bindingListSource == null)
+                {
+                    return null;
+                }
+                return bindingListSource.ItemProperties.FindByName(dataPropertyName) as ColumnPropertyDescriptor;
+            }
+        }
+
+        public sealed class ImputeButtonColumn : DataGridViewButtonColumn
+        {
+            public ImputeButtonColumn()
+            {
+                CellTemplate = new ImputeButtonCell();
+            }
         }
     }
 }

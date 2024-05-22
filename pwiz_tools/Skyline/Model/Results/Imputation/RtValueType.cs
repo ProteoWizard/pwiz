@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Imputation
 {
@@ -10,6 +11,8 @@ namespace pwiz.Skyline.Model.Results.Imputation
     {
         public static readonly RtValueType PEAK_APEXES = new PeakApexes();
         public static readonly RtValueType PSM_TIMES = new PsmTimes();
+        public static readonly RtValueType HIGH_SCORING_PEAK_APEXES = new HighScoringPeakApexes();
+
 
         public static readonly ImmutableList<RtValueType> All = ImmutableList.ValueOf(new []{PEAK_APEXES, PSM_TIMES});
 
@@ -71,6 +74,73 @@ namespace pwiz.Skyline.Model.Results.Imputation
             {
                 return "Peak Apexes";
             }
+        }
+
+        class HighScoringPeakApexes : RtValueType
+        {
+            protected override IEnumerable<KeyValuePair<Target, IEnumerable<double>>> GetAllRetentionTimes(SrmDocument document, ReplicateFileInfo fileInfo)
+            {
+                var scoreCutoff = GetScoreAtPercentile(document, .5);
+                foreach (var peptideGroup in document.Molecules.GroupBy(peptideDocNode => peptideDocNode.ModifiedTarget))
+                {
+                    var times = new List<double>();
+                    foreach (var peptideDocNode in peptideGroup)
+                    {
+                        if (GetScore(peptideDocNode, fileInfo.ReplicateIndex, fileInfo.ReplicateFileId.FileId) >=
+                            scoreCutoff)
+                        {
+                            foreach (var peptideChromInfo in peptideDocNode.GetSafeChromInfo(fileInfo.ReplicateIndex))
+                            {
+                                if (ReferenceEquals(peptideChromInfo.FileId, fileInfo.ReplicateFileId.FileId))
+                                {
+                                    if (peptideChromInfo.RetentionTime.HasValue)
+                                    {
+                                        times.Add(peptideChromInfo.RetentionTime.Value);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (times.Count > 0)
+                    {
+                        yield return new KeyValuePair<Target, IEnumerable<double>>(peptideGroup.Key, times);
+                    }
+                }
+            }
+
+            private float? GetScore(PeptideDocNode peptideDocNode, int replicateIndex, ChromFileInfoId fileId)
+            {
+                foreach (var transitionGroup in peptideDocNode.TransitionGroups)
+                {
+                    foreach (var chromInfo in transitionGroup.GetSafeChromInfo(replicateIndex))
+                    {
+                        if (ReferenceEquals(chromInfo.FileId, fileId))
+                        {
+                            return chromInfo.ZScore;
+                        }
+                    }
+                }
+
+                return null;
+            }
+
+            public override string ToString()
+            {
+                return "High Scoring Peak Apexes";
+            }
+
+            public double GetScoreAtPercentile(SrmDocument document, double percentile)
+            {
+                int replicateCount = document.MeasuredResults?.Chromatograms.Count ?? 0;
+                var allScores = document.MoleculeTransitionGroups
+                    .SelectMany(tg => Enumerable.Range(0, replicateCount).SelectMany(i=>tg.GetSafeChromInfo(i)))
+                    .Select(chromInfo => (double?) chromInfo.ZScore).OfType<double>();
+                var statistics = new pwiz.Skyline.Util.Statistics(allScores);
+                return statistics.Percentile(percentile);
+            }
+
+
         }
 
         private class PsmTimes : RtValueType

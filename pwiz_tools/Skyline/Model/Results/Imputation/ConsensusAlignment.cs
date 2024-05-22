@@ -6,32 +6,13 @@ using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.RetentionTimes;
 
 namespace pwiz.Skyline.Model.Results.Imputation
 {
     public class ConsensusAlignment
     {
-        public static readonly ConsensusAlignment EMPTY = new ConsensusAlignment(
-            ImmutableSortedList<double, Target>.EMPTY, new Dictionary<ReplicateFileId, AlignmentFunction>());
-        private Dictionary<ReplicateFileId, AlignmentFunction> _alignmentFunctions;
-        public AlignmentFunction GetAlignment(ReplicateFileId replicateFileId)
-        {
-            _alignmentFunctions.TryGetValue(replicateFileId, out var result);
-            return result;
-        }
-
-        private ConsensusAlignment(ImmutableSortedList<double, Target> consensusValues,
-            Dictionary<ReplicateFileId, AlignmentFunction> alignmentFunctions)
-        {
-            ConsensusValues = consensusValues;
-            _alignmentFunctions = alignmentFunctions;
-        }
-
-        public ImmutableSortedList<double, Target> ConsensusValues { get; }
-
-        public static ConsensusAlignment MakeConsensusAlignment(IDictionary<ReplicateFileId, Dictionary<Target, double>> fileTimesDictionaries)
+        public static Dictionary<ReplicateFileId, AlignmentFunction> PerformAlignment(ProductionMonitor productionMonitor, IDictionary<ReplicateFileId, Dictionary<Target, double>> fileTimesDictionaries)
         {
             var lcsFinder = new LongestCommonSequenceFinder<Target>(fileTimesDictionaries.Values.Select(dictionary =>
                 dictionary.OrderBy(kvp => kvp.Value).Select(kvp => kvp.Key).ToList()));
@@ -72,7 +53,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 alignmentFunctions.Add(entry.Key, new InterpolatingAlignmentFunction(xValues, yValues));
             }
 
-            return new ConsensusAlignment(consensusTimes, alignmentFunctions);
+            return alignmentFunctions;
         }
 
         private class InterpolatingAlignmentFunction : AlignmentFunction
@@ -189,59 +170,5 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 }
             }
         }
-
-        public static readonly Producer<Parameters, ConsensusAlignment> PRODUCER = new Producer();
-
-        private class Producer : Producer<Parameters, ConsensusAlignment>
-        {
-            public override ConsensusAlignment ProduceResult(ProductionMonitor productionMonitor, Parameters parameter, IDictionary<WorkOrder, object> inputs)
-            {
-                var fileTimesDictionaries = new Dictionary<ReplicateFileId, Dictionary<Target, double>>();
-                foreach (var replicateFileInfo in ReplicateFileInfo.List(parameter.Document.MeasuredResults))
-                {
-                    var times = parameter.RtValueType.GetRetentionTimes(parameter.Document,
-                        replicateFileInfo.ReplicateFileId);
-                    if (times.Count > 0)
-                    {
-                        fileTimesDictionaries.Add(replicateFileInfo.ReplicateFileId, times);
-                    }
-                }
-
-                if (fileTimesDictionaries.Count == 0)
-                {
-                    return EMPTY;
-                }
-
-                return MakeConsensusAlignment(fileTimesDictionaries);
-            }
-        }
-
-        public GraphValues.IRetentionTimeTransformOp AsRetentionTimeTransformOp()
-        {
-            return new RetentionTimeTransformOpImpl(this);
-        }
-    }
-
-    public class ConsensusAlignmentTransformOp : GraphValues.IRetentionTimeTransformOp
-    {
-        private Dictionary<ReferenceValue<ChromFileInfoId>, AlignmentFunction> _alignmentFunctions;
-        public ConsensusAlignmentTransformOp(string name, Dictionary<ReferenceValue<ChromFileInfoId>, AlignmentFunction> alignmentFunctions)
-        {
-            _alignmentFunctions = alignmentFunctions;
-            Name = name;
-        }
-
-        public string Name { get; }
-        public string GetAxisTitle(RTPeptideValue rtPeptideValue)
-        {
-            return string.Format(GraphsResources.RtAlignment_AxisTitleAlignedTo,
-                GraphValues.ToLocalizedString(rtPeptideValue), Name);
-        }
-
-        public bool TryGetRegressionFunction(ChromFileInfoId chromFileInfoId, out AlignmentFunction regressionFunction)
-        {
-            return _alignmentFunctions.TryGetValue(chromFileInfoId, out regressionFunction);
-        }
-
     }
 }

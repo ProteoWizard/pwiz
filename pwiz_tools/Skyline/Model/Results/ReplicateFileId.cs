@@ -85,6 +85,12 @@ namespace pwiz.Skyline.Model.Results
 
             return new ReplicateFileInfo(replicateIndex, chromatogramSet, chromatogramSet.MSDataFileInfos[fileIndex]);
         }
+
+        public static IEnumerable<ReplicateFileId> List(MeasuredResults measuredResults)
+        {
+            return ReplicateFileInfo.List(measuredResults)
+                .Select(replicateFileInfo => replicateFileInfo.ReplicateFileId);
+        }
     }
 
     public class ReplicateFileInfo
