@@ -2322,6 +2322,11 @@ namespace pwiz.SkylineTestUtil
             return ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
         }
 
+        public static PeptideSettingsUI ShowPeptideSettings(PeptideSettingsUI.TABS settingsTab)
+        {
+            return ShowDialog<PeptideSettingsUI>(() => SkylineWindow.ShowPeptideSettingsUI(settingsTab));
+        }
+
         public static EditListDlg<SettingsListBase<StaticMod>, StaticMod> ShowEditStaticModsDlg(PeptideSettingsUI peptideSettingsUI)
         {
             return ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettingsUI.EditStaticMods);
