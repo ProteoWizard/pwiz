@@ -242,12 +242,29 @@ namespace pwiz.Skyline.Model.Results
 
             private void FinishLoad(string documentPath, MeasuredResults resultsLoad, MeasuredResults resultsPrevious)
             {
-                // Only one finisher at a time, otherwise guaranteed wasted work
-                // CONSIDER: In theory this should be a lock per document container, but in
-                //           practice we have only one document container per process
-                lock (_finishLock)
+                try
                 {
-                    FinishLoadSynch(documentPath, resultsLoad, resultsPrevious);
+                    // Only one finisher at a time, otherwise guaranteed wasted work
+                    // CONSIDER: In theory this should be a lock per document container, but in
+                    //           practice we have only one document container per process
+                    lock (_finishLock)
+                    {
+                        FinishLoadSynch(documentPath, resultsLoad, resultsPrevious);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (ExceptionUtil.IsProgrammingDefect(ex))
+                    {
+                        throw;
+                    }
+
+                    var status = _multiFileLoader.Status;
+                    foreach (var chromatogramStatus in status.ProgressList)
+                    {
+                        status = status.ChangeStatus((ChromatogramLoadingStatus) chromatogramStatus.ChangeErrorException(ex));
+                    }
+                    _loadMonitor.UpdateProgress(status);
                 }
             }
 
