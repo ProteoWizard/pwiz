@@ -384,7 +384,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
             IEnumerable<RatedPeak> orderedPeaks;
             if (parameters.CutoffScoreType == CutoffScoreType.QVALUE)
             {
-                orderedPeaks = peaks.OrderBy(peak => Tuple.Create(peak.QValue, -peak.Score));
+                orderedPeaks = peaks.OrderBy(peak => Tuple.Create(peak.QValue ?? double.PositiveInfinity, -peak.Score));
             }
             else
             {
