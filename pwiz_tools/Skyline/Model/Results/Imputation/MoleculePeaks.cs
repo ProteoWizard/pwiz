@@ -26,6 +26,13 @@ namespace pwiz.Skyline.Model.Results.Imputation
             });
         }
         public RatedPeak BestPeak { get; private set; }
+        public double? AlignmentStandardTime { get; private set; }
+
+        public MoleculePeaks ChangeAlignmentStandardTime(double? value)
+        {
+            return ChangeProp(ImClone(this), im => im.AlignmentStandardTime = value);
+        }
+        
         public RatedPeak.PeakBounds ExemplaryPeakBounds { get; private set; }
     }
 }

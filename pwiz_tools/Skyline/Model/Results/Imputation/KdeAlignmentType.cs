@@ -8,7 +8,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
 {
     public class KdeAlignmentType
     {
-        public static Dictionary<ReplicateFileId, AlignmentFunction> PerformAlignment(ProductionMonitor productionMonitor,
+        public static ConsensusAlignmentResults PerformAlignment(ProductionMonitor productionMonitor,
             IDictionary<ReplicateFileId, Dictionary<Target, double>> fileTimesDictionaries)
         {
             var averageTimes = new Dictionary<Target, double>();
@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 completedCount++;
             }
 
-            return alignmentFunctions;
+            return new ConsensusAlignmentResults(alignmentFunctions, averageTimes);
         }
 
         private static KdeAligner PerformKdeAlignment(CancellationToken cancellationToken,

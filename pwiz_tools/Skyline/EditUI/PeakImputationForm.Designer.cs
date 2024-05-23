@@ -33,6 +33,8 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.cbxAlignAllGraphs = new System.Windows.Forms.CheckBox();
             this.groupBoxDocumentStatistics = new System.Windows.Forms.GroupBox();
+            this.tbxAvgPeakWidthCV = new System.Windows.Forms.TextBox();
+            this.lblAvgPeakWidthCV = new System.Windows.Forms.Label();
             this.tbxAlignedDocRtStdDev = new System.Windows.Forms.TextBox();
             this.lblAligned = new System.Windows.Forms.Label();
             this.tbxUnalignedDocRtStdDev = new System.Windows.Forms.TextBox();
@@ -60,7 +62,7 @@
             this.tbxRtDeviationCutoff = new System.Windows.Forms.TextBox();
             this.lblSdCutoff = new System.Windows.Forms.Label();
             this.groupBoxCutoff = new System.Windows.Forms.GroupBox();
-            this.lblPercent = new System.Windows.Forms.Label();
+            this.lblCutoffPercent = new System.Windows.Forms.Label();
             this.radioPValue = new System.Windows.Forms.RadioButton();
             this.radioPercentile = new System.Windows.Forms.RadioButton();
             this.radioQValue = new System.Windows.Forms.RadioButton();
@@ -70,8 +72,10 @@
             this.lblRetentionTimeAlignment = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
-            this.lblAvgPeakWidthCV = new System.Windows.Forms.Label();
-            this.tbxAvgPeakWidthCV = new System.Windows.Forms.TextBox();
+            this.tbxMaxPeakWidthVariation = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.lblMinutes = new System.Windows.Forms.Label();
+            this.lblPercentPeakWidth = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.groupBoxDocumentStatistics.SuspendLayout();
             this.groupBoxScope.SuspendLayout();
@@ -86,6 +90,10 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.lblPercentPeakWidth);
+            this.panel1.Controls.Add(this.lblMinutes);
+            this.panel1.Controls.Add(this.tbxMaxPeakWidthVariation);
+            this.panel1.Controls.Add(this.label2);
             this.panel1.Controls.Add(this.cbxAlignAllGraphs);
             this.panel1.Controls.Add(this.groupBoxDocumentStatistics);
             this.panel1.Controls.Add(this.groupBoxScope);
@@ -132,6 +140,23 @@
             this.groupBoxDocumentStatistics.TabIndex = 24;
             this.groupBoxDocumentStatistics.TabStop = false;
             this.groupBoxDocumentStatistics.Text = "Document-wide statistics";
+            // 
+            // tbxAvgPeakWidthCV
+            // 
+            this.tbxAvgPeakWidthCV.Location = new System.Drawing.Point(9, 150);
+            this.tbxAvgPeakWidthCV.Name = "tbxAvgPeakWidthCV";
+            this.tbxAvgPeakWidthCV.ReadOnly = true;
+            this.tbxAvgPeakWidthCV.Size = new System.Drawing.Size(100, 20);
+            this.tbxAvgPeakWidthCV.TabIndex = 6;
+            // 
+            // lblAvgPeakWidthCV
+            // 
+            this.lblAvgPeakWidthCV.AutoSize = true;
+            this.lblAvgPeakWidthCV.Location = new System.Drawing.Point(6, 134);
+            this.lblAvgPeakWidthCV.Name = "lblAvgPeakWidthCV";
+            this.lblAvgPeakWidthCV.Size = new System.Drawing.Size(119, 13);
+            this.lblAvgPeakWidthCV.TabIndex = 5;
+            this.lblAvgPeakWidthCV.Text = "Average peak width CV";
             // 
             // tbxAlignedDocRtStdDev
             // 
@@ -359,7 +384,7 @@
             // cbxOverwriteManual
             // 
             this.cbxOverwriteManual.AutoSize = true;
-            this.cbxOverwriteManual.Location = new System.Drawing.Point(181, 142);
+            this.cbxOverwriteManual.Location = new System.Drawing.Point(181, 193);
             this.cbxOverwriteManual.Name = "cbxOverwriteManual";
             this.cbxOverwriteManual.Size = new System.Drawing.Size(140, 17);
             this.cbxOverwriteManual.TabIndex = 16;
@@ -371,7 +396,7 @@
             // 
             this.tbxRtDeviationCutoff.Location = new System.Drawing.Point(181, 111);
             this.tbxRtDeviationCutoff.Name = "tbxRtDeviationCutoff";
-            this.tbxRtDeviationCutoff.Size = new System.Drawing.Size(127, 20);
+            this.tbxRtDeviationCutoff.Size = new System.Drawing.Size(70, 20);
             this.tbxRtDeviationCutoff.TabIndex = 15;
             this.tbxRtDeviationCutoff.Text = "1";
             this.toolTip1.SetToolTip(this.tbxRtDeviationCutoff, "Peaks whose retention time is less than this distance from the accepted peaks wil" +
@@ -381,15 +406,15 @@
             // lblSdCutoff
             // 
             this.lblSdCutoff.AutoSize = true;
-            this.lblSdCutoff.Location = new System.Drawing.Point(178, 91);
+            this.lblSdCutoff.Location = new System.Drawing.Point(178, 94);
             this.lblSdCutoff.Name = "lblSdCutoff";
-            this.lblSdCutoff.Size = new System.Drawing.Size(106, 13);
+            this.lblSdCutoff.Size = new System.Drawing.Size(67, 13);
             this.lblSdCutoff.TabIndex = 14;
-            this.lblSdCutoff.Text = "Max RT shift minutes";
+            this.lblSdCutoff.Text = "Max RT shift";
             // 
             // groupBoxCutoff
             // 
-            this.groupBoxCutoff.Controls.Add(this.lblPercent);
+            this.groupBoxCutoff.Controls.Add(this.lblCutoffPercent);
             this.groupBoxCutoff.Controls.Add(this.radioPValue);
             this.groupBoxCutoff.Controls.Add(this.radioPercentile);
             this.groupBoxCutoff.Controls.Add(this.radioQValue);
@@ -404,13 +429,13 @@
             // 
             // lblPercent
             // 
-            this.lblPercent.AutoSize = true;
-            this.lblPercent.Location = new System.Drawing.Point(118, 116);
-            this.lblPercent.Name = "lblPercent";
-            this.lblPercent.Size = new System.Drawing.Size(15, 13);
-            this.lblPercent.TabIndex = 11;
-            this.lblPercent.Text = "%";
-            this.lblPercent.Visible = false;
+            this.lblCutoffPercent.AutoSize = true;
+            this.lblCutoffPercent.Location = new System.Drawing.Point(118, 116);
+            this.lblCutoffPercent.Name = "lblCutoffPercent";
+            this.lblCutoffPercent.Size = new System.Drawing.Size(15, 13);
+            this.lblCutoffPercent.TabIndex = 11;
+            this.lblCutoffPercent.Text = "%";
+            this.lblCutoffPercent.Visible = false;
             // 
             // radioPValue
             // 
@@ -491,22 +516,43 @@
             this.lblRetentionTimeAlignment.TabIndex = 0;
             this.lblRetentionTimeAlignment.Text = "Retention time alignment:";
             // 
-            // lblAvgPeakWidthCV
+            // tbxMaxPeakWidthVariation
             // 
-            this.lblAvgPeakWidthCV.AutoSize = true;
-            this.lblAvgPeakWidthCV.Location = new System.Drawing.Point(6, 134);
-            this.lblAvgPeakWidthCV.Name = "lblAvgPeakWidthCV";
-            this.lblAvgPeakWidthCV.Size = new System.Drawing.Size(119, 13);
-            this.lblAvgPeakWidthCV.TabIndex = 5;
-            this.lblAvgPeakWidthCV.Text = "Average peak width CV";
+            this.tbxMaxPeakWidthVariation.Location = new System.Drawing.Point(181, 158);
+            this.tbxMaxPeakWidthVariation.Name = "tbxMaxPeakWidthVariation";
+            this.tbxMaxPeakWidthVariation.Size = new System.Drawing.Size(70, 20);
+            this.tbxMaxPeakWidthVariation.TabIndex = 27;
+            this.tbxMaxPeakWidthVariation.Text = "20";
+            this.toolTip1.SetToolTip(this.tbxMaxPeakWidthVariation, "Peaks whose retention time is less than this distance from the accepted peaks wil" +
+        "l also be assumed to be correct.");
+            this.tbxMaxPeakWidthVariation.TextChanged += new System.EventHandler(this.SettingsControlChanged);
             // 
-            // tbxAvgPeakWidthCV
+            // label2
             // 
-            this.tbxAvgPeakWidthCV.Location = new System.Drawing.Point(9, 150);
-            this.tbxAvgPeakWidthCV.Name = "tbxAvgPeakWidthCV";
-            this.tbxAvgPeakWidthCV.ReadOnly = true;
-            this.tbxAvgPeakWidthCV.Size = new System.Drawing.Size(100, 20);
-            this.tbxAvgPeakWidthCV.TabIndex = 6;
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(178, 138);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(125, 13);
+            this.label2.TabIndex = 26;
+            this.label2.Text = "Max peak width variation";
+            // 
+            // lblMinutes
+            // 
+            this.lblMinutes.AutoSize = true;
+            this.lblMinutes.Location = new System.Drawing.Point(257, 114);
+            this.lblMinutes.Name = "lblMinutes";
+            this.lblMinutes.Size = new System.Drawing.Size(43, 13);
+            this.lblMinutes.TabIndex = 28;
+            this.lblMinutes.Text = "minutes";
+            // 
+            // lblPercentPeakWidth
+            // 
+            this.lblPercentPeakWidth.AutoSize = true;
+            this.lblPercentPeakWidth.Location = new System.Drawing.Point(257, 161);
+            this.lblPercentPeakWidth.Name = "lblPercentPeakWidth";
+            this.lblPercentPeakWidth.Size = new System.Drawing.Size(15, 13);
+            this.lblPercentPeakWidth.TabIndex = 29;
+            this.lblPercentPeakWidth.Text = "%";
             // 
             // PeakImputationForm
             // 
@@ -562,7 +608,7 @@
         private System.Windows.Forms.GroupBox groupBoxScope;
         private System.Windows.Forms.RadioButton radioScopeDocument;
         private System.Windows.Forms.RadioButton radioScopeSelection;
-        private System.Windows.Forms.Label lblPercent;
+        private System.Windows.Forms.Label lblCutoffPercent;
         private System.Windows.Forms.GroupBox groupBoxDocumentStatistics;
         private System.Windows.Forms.Label lblUnaligned;
         private System.Windows.Forms.Label label1;
@@ -577,5 +623,9 @@
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
         private System.Windows.Forms.Label lblAvgPeakWidthCV;
         private System.Windows.Forms.TextBox tbxAvgPeakWidthCV;
+        private System.Windows.Forms.Label lblPercentPeakWidth;
+        private System.Windows.Forms.Label lblMinutes;
+        private System.Windows.Forms.TextBox tbxMaxPeakWidthVariation;
+        private System.Windows.Forms.Label label2;
     }
 }

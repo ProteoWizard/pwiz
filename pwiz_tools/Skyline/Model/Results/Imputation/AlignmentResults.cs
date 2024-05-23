@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
@@ -10,10 +11,12 @@ namespace pwiz.Skyline.Model.Results.Imputation
     {
         private Dictionary<ReplicateFileId, AlignmentFunction> _alignmentFunctions;
         private Dictionary<ReferenceValue<ChromFileInfoId>, ReplicateFileId> _replicateFileIds;
-        public AlignmentResults(Dictionary<ReplicateFileId, AlignmentFunction> alignmentFunctions)
+        private ConsensusAlignmentResults _consensusAlignmentResults;
+        public AlignmentResults(ConsensusAlignmentResults consensusAlignmentResults)
         {
-            _alignmentFunctions = alignmentFunctions;
+            _alignmentFunctions = consensusAlignmentResults.AlignmentFunctions.ToDictionary(kvp=>kvp.Key, kvp=>kvp.Value);
             _replicateFileIds = new Dictionary<ReferenceValue<ChromFileInfoId>, ReplicateFileId>();
+            _consensusAlignmentResults = consensusAlignmentResults;
             foreach (var entry in _alignmentFunctions)
             {
                 _replicateFileIds[entry.Key.FileId] = entry.Key;
@@ -48,6 +51,11 @@ namespace pwiz.Skyline.Model.Results.Imputation
         {
             _alignmentFunctions.TryGetValue(replicateFileId, out var alignmentFunction);
             return alignmentFunction;
+        }
+
+        public ImmutableList<KeyValuePair<Target, double>> StandardTimes
+        {
+            get { return _consensusAlignmentResults.StandardTimes; }
         }
     }
 }

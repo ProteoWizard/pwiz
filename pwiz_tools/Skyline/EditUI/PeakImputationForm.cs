@@ -211,7 +211,8 @@ namespace pwiz.Skyline.EditUI
                 .ChangeAlignmentType(alignmentOption?.AlignmentType)
                 .ChangeOverwriteManualPeaks(cbxOverwriteManual.Checked)
                 .ChangeScoringModel(scoringModel)
-                .ChangeAllowableRtShift(GetDoubleValue(tbxRtDeviationCutoff, 0, null));
+                .ChangeAllowableRtShift(GetDoubleValue(tbxRtDeviationCutoff, 0, null))
+                .ChangeMaxPeakWidthVariation(GetDoubleValue(tbxMaxPeakWidthVariation, 0, null) / 100);
             double? scoreCutoff;
             if (CutoffType == CutoffScoreType.RAW)
             {
@@ -219,9 +220,15 @@ namespace pwiz.Skyline.EditUI
             }
             else
             {
-                scoreCutoff = GetDoubleValue(tbxCoreScoreCutoff, 0, 1);
+                scoreCutoff = GetDoubleValue(tbxCoreScoreCutoff, 0, 100);
+                if (CutoffType == CutoffScoreType.PERCENTILE)
+                {
+                    scoreCutoff /= 100;
+                }
             }
-           
+
+            lblCutoffPercent.Visible = CutoffType == CutoffScoreType.PERCENTILE;
+
             parameters = parameters.ChangeCutoffScore(CutoffType, scoreCutoff);
             if (!DocumentWide)
             {
@@ -293,16 +300,20 @@ namespace pwiz.Skyline.EditUI
                 CountExemplary = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.Exemplary);
                 CountAccepted = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.Accepted);
                 CountNeedAdjustment = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.NeedsAdjustment);
+                AlignmentStandardTime = moleculePeaks.AlignmentStandardTime;
             }
 
             public Model.Databinding.Entities.Peptide Peptide { get; }
             public Dictionary<ResultKey, Peak> Peaks { get; }
+            [InvariantDisplayName("BestPeak")]
             public Peak BestPeak { get; }
             [ChildDisplayName("Exemplary{0}")]
             public RatedPeak.PeakBounds ExemplaryPeakBounds { get; }
             public int CountExemplary { get; }
             public int CountAccepted { get; }
             public int CountNeedAdjustment { get; }
+            [Format(Formats.RETENTION_TIME)]
+            public double? AlignmentStandardTime { get; private set; }
         }
 
         [InvariantDisplayName("Peak")]
@@ -526,6 +537,10 @@ namespace pwiz.Skyline.EditUI
                         var newCutoff = newCutoffType.FromRawScore(_scoreConversionData, score.Value);
                         if (newCutoff.HasValue && !double.IsNaN(newCutoff.Value))
                         {
+                            if (newCutoffType == CutoffScoreType.PERCENTILE)
+                            {
+                                newCutoff *= 100;
+                            }
                             tbxCoreScoreCutoff.Text = newCutoff.ToString();
                         }
                     }

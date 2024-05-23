@@ -12,7 +12,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
 {
     public class ConsensusAlignment
     {
-        public static Dictionary<ReplicateFileId, AlignmentFunction> PerformAlignment(ProductionMonitor productionMonitor, IDictionary<ReplicateFileId, Dictionary<Target, double>> fileTimesDictionaries)
+        public static ConsensusAlignmentResults PerformAlignment(ProductionMonitor productionMonitor, IDictionary<ReplicateFileId, Dictionary<Target, double>> fileTimesDictionaries)
         {
             var lcsFinder = new LongestCommonSequenceFinder<Target>(fileTimesDictionaries.Values.Select(dictionary =>
                 dictionary.OrderBy(kvp => kvp.Value).Select(kvp => kvp.Key).ToList()));
@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 alignmentFunctions.Add(entry.Key, new InterpolatingAlignmentFunction(xValues, yValues));
             }
 
-            return alignmentFunctions;
+            return new ConsensusAlignmentResults(alignmentFunctions, unsortedConsensusTimes.ToDictionary(kvp=>kvp.Value, kvp=>kvp.Key));
         }
 
         private class InterpolatingAlignmentFunction : AlignmentFunction
@@ -170,5 +170,18 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 }
             }
         }
+    }
+
+    public class ConsensusAlignmentResults
+    {
+        public ConsensusAlignmentResults(IEnumerable<KeyValuePair<ReplicateFileId, AlignmentFunction>> alignmentFunctions,
+            IEnumerable<KeyValuePair<Target, double>> standardTimes)
+        {
+            AlignmentFunctions = ImmutableList.ValueOf(alignmentFunctions);
+            StandardTimes = ImmutableList.ValueOf(standardTimes);
+        }
+
+        public ImmutableList<KeyValuePair<Target, double>> StandardTimes { get; }
+        public ImmutableList<KeyValuePair<ReplicateFileId, AlignmentFunction>> AlignmentFunctions { get; }
     }
 }

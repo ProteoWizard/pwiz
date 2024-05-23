@@ -10,6 +10,7 @@ using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Imputation
 {
@@ -109,7 +110,12 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 return ChangeProp(ImClone(this), im => im.AlignmentType = value);
             }
 
-            
+            public double? MaxPeakWidthVariation { get; private set; }
+
+            public Parameters ChangeMaxPeakWidthVariation(double? value)
+            {
+                return ChangeProp(ImClone(this), im => im.MaxPeakWidthVariation = value);
+            }
 
             public ImmutableList<IdentityPath> PeptideIdentityPaths { get; private set; }
 
@@ -143,7 +149,8 @@ namespace pwiz.Skyline.Model.Results.Imputation
                        Equals(RtValueType, other.RtValueType) && 
                        Equals(AlignmentType, other.AlignmentType) &&
                        Nullable.Equals(AllowableRtShift, other.AllowableRtShift) && 
-                       Equals(PeptideIdentityPaths, other.PeptideIdentityPaths);
+                       Equals(PeptideIdentityPaths, other.PeptideIdentityPaths) &&
+                       Equals(MaxPeakWidthVariation, other.MaxPeakWidthVariation);
             }
 
             public override bool Equals(object obj)
@@ -167,6 +174,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     hashCode = (hashCode * 397) ^ AllowableRtShift.GetHashCode();
                     hashCode = (hashCode * 397) ^
                                (PeptideIdentityPaths != null ? PeptideIdentityPaths.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ MaxPeakWidthVariation.GetHashCode();
                     return hashCode;
                 }
             }
@@ -230,6 +238,11 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     yield break;
                 }
 
+                Dictionary<Target, double> standardTimes = null;
+                if (alignments?.StandardTimes != null)
+                {
+                    standardTimes = CollectionUtil.SafeToDictionary(alignments.StandardTimes);
+                }
                 var resultFileInfos = ReplicateFileInfo.List(document.MeasuredResults);
                 var resultFileInfoDict =
                     resultFileInfos.ToDictionary(resultFileInfo => ReferenceValue.Of(resultFileInfo.ReplicateFileId.FileId));
@@ -324,7 +337,12 @@ namespace pwiz.Skyline.Model.Results.Imputation
                                 peaks.Add(peak);
                             }
                         }
-                        yield return new MoleculePeaks(peptideIdentityPath, peaks);
+                        var moleculePeaks = new MoleculePeaks(peptideIdentityPath, peaks);
+                        if (true == standardTimes?.TryGetValue(molecule.ModifiedTarget, out var standardTime))
+                        {
+                            moleculePeaks = moleculePeaks.ChangeAlignmentStandardTime(standardTime);
+                        }
+                        yield return moleculePeaks;
                     }
                 }
             }
@@ -453,6 +471,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoOptimization)]
         private RatedPeak MarkAcceptedPeak(Parameters parameters, PeptideDocNode peptideDocNode, 
             RatedPeak.PeakBounds exemplaryPeakBounds,
             RatedPeak peak)
@@ -469,7 +488,12 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 return peak;
             }
 
-            if (peak.RtShift.HasValue && Math.Abs(peak.RtShift.Value) <= parameters.AllowableRtShift)
+            bool needsMoving = !peak.RtShift.HasValue || Math.Abs(peak.RtShift.Value) > parameters.AllowableRtShift;
+            bool needsWidthChanged =
+                !needsMoving && parameters.MaxPeakWidthVariation.HasValue &&
+                Math.Abs(exemplaryPeakBounds.Width - peak.RawPeakBounds.Width) >
+                parameters.MaxPeakWidthVariation * exemplaryPeakBounds.Width;
+            if (!needsMoving && !needsWidthChanged)
             {
                 return peak.ChangeVerdict(RatedPeak.Verdict.Accepted,
                     string.Format("Retention time {0} is within {1} of {2}", peak.RawPeakBounds.MidTime.ToString(Formats.RETENTION_TIME),
@@ -487,6 +511,14 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 return peak.ChangeVerdict(RatedPeak.Verdict.NeedsRemoval, opinion);
             }
 
+            if (needsWidthChanged)
+            {
+                var opinion = string.Format("Width {0} should be changed because more than {1} different from {2}",
+                    peak.RawPeakBounds.Width.ToString(Formats.RETENTION_TIME),
+                    parameters.MaxPeakWidthVariation.Value.ToString(Formats.Percent),
+                    exemplaryPeakBounds.Width.ToString(Formats.RETENTION_TIME));
+                return peak.ChangeVerdict(RatedPeak.Verdict.NeedsAdjustment, opinion);
+            }
             return peak.ChangeVerdict(RatedPeak.Verdict.NeedsAdjustment,
                 string.Format("Peak should be moved to {0}", exemplaryPeakBounds.MidTime.ToString(Formats.RETENTION_TIME)));
         }
@@ -634,45 +666,6 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
             return cvs.Average();
 
-        }
-
-        public static void GetChromatogramTimeMinMax(SrmDocument document, PeptideDocNode peptideDocNode, int replicateIndex, MsDataFileUri msDataFileUri, out double? minTime, out double? maxTime)
-        {
-            minTime = maxTime = null;
-            var measuredResults = document.Settings.MeasuredResults;
-            if (measuredResults == null)
-            {
-                return;
-            }
-
-            foreach (var transitionGroupDocNode in peptideDocNode.TransitionGroups)
-            {
-                if (!measuredResults.TryLoadChromatogram(measuredResults.Chromatograms[replicateIndex], peptideDocNode,
-                        transitionGroupDocNode, (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance,
-                        out var chromatogramInfos))
-                {
-                    continue;
-                }
-                foreach (var chromatogramInfo in chromatogramInfos)
-                {
-                    var header = chromatogramInfo.Header;
-                    if (header.StartTime.HasValue)
-                    {
-                        if (!minTime.HasValue || minTime > header.StartTime)
-                        {
-                            minTime = header.StartTime;
-                        }
-                    }
-
-                    if (header.EndTime.HasValue)
-                    {
-                        if (!maxTime.HasValue || maxTime < header.EndTime)
-                        {
-                            maxTime = header.EndTime;
-                        }
-                    }
-                }
-            }
         }
     }
 }
