@@ -20,11 +20,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Results.Imputation;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -1941,6 +1943,11 @@ namespace pwiz.Skyline.Model.Results
         public double? GetMedianTicArea()
         {
             return _medianTicArea;
+        }
+
+        public ChromatogramTimeRanges GetChromatogramTimeRanges(CancellationToken cancellationToken, bool inferFromPoints)
+        {
+            return ChromatogramTimeRanges.ReadChromatogramTimeRanges(cancellationToken, Caches, inferFromPoints);
         }
     }
 

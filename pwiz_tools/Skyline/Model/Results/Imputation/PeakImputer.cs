@@ -54,14 +54,13 @@ namespace pwiz.Skyline.Model.Results.Imputation
             RatedPeak.PeakBounds bestPeakBounds)
         {
             var chromatogramGroupInfos = LoadChromatogramGroupInfos(document, peptideDocNode).ToList();
+            var timeIntervals = new TriggeredAcquisition().InferTimeIntervals(
+                chromatogramGroupInfos.SelectMany(chromatogramGroupInfo =>
+                    Enumerable.Range(0, chromatogramGroupInfo.NumTransitions).Select(i =>
+                        chromatogramGroupInfo.GetTransitionInfo(i, TransformChrom.raw).Times)));
             if (!MaxRtShift.HasValue)
             {
-                if (IsValidPeakBounds(chromatogramGroupInfos, bestPeakBounds))
-                {
-                    return bestPeakBounds;
-                }
-
-                return null;
+                return RatedPeak.MakeValidPeakBounds(timeIntervals, bestPeakBounds);
             }
 
             var candidateBoundaries = GetCandidatePeakBounds(chromatogramGroupInfos).Where(peak=>peak.MidTime >= bestPeakBounds.StartTime && peak.MidTime <= bestPeakBounds.EndTime).ToList();
@@ -76,17 +75,17 @@ namespace pwiz.Skyline.Model.Results.Imputation
                         peakBounds.EndTime + halfDifference);
                 }
 
-                if (Math.Abs(peakBounds.MidTime - bestPeakBounds.MidTime) <= MaxRtShift.Value && IsValidPeakBounds(chromatogramGroupInfos, peakBounds))
+                if (Math.Abs(peakBounds.MidTime - bestPeakBounds.MidTime) <= MaxRtShift.Value)
                 {
-                    return peakBounds;
+                    var validPeakBounds = RatedPeak.MakeValidPeakBounds(timeIntervals, peakBounds);
+                    if (validPeakBounds != null)
+                    {
+                        return validPeakBounds;
+                    }
                 }
             }
 
-            if (IsValidPeakBounds(chromatogramGroupInfos, bestPeakBounds))
-            {
-                return bestPeakBounds;
-            }
-            return null;
+            return RatedPeak.MakeValidPeakBounds(timeIntervals, bestPeakBounds);
         }
 
         private IEnumerable<RatedPeak.PeakBounds> GetCandidatePeakBounds(IList<ChromatogramGroupInfo> chromatogramGroupInfos)
@@ -121,25 +120,6 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 _onDemandFeatureCalculator.GetChromatogramGroupInfo(tg.TransitionGroup));
         }
 
-        private bool IsValidPeakBounds(IEnumerable<ChromatogramGroupInfo> chromatogramGroupInfos, RatedPeak.PeakBounds peakBounds)
-        {
-            foreach (var chromatogramGroupInfo in chromatogramGroupInfos)
-            {
-                if (chromatogramGroupInfo.Header.StartTime > peakBounds.MidTime)
-                {
-                    continue;
-                }
-
-                if (chromatogramGroupInfo.Header.EndTime < peakBounds.MidTime)
-                {
-                    continue;
-                }
-
-                return true;
-            }
-
-            return false;
-        }
 
         private bool NeedToPickPeaksAgain(IEnumerable<ChromatogramGroupInfo> chromatogramGroupInfos)
         {

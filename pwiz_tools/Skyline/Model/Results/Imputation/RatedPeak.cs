@@ -7,12 +7,13 @@ namespace pwiz.Skyline.Model.Results.Imputation
 {
     public class RatedPeak : Immutable
     {
-        public RatedPeak(ReplicateFileInfo resultFileInfo, AlignmentFunction alignmentFunction, PeakBounds rawPeakBounds, double? score, bool manuallyIntegrated)
+        public RatedPeak(ReplicateFileInfo resultFileInfo, AlignmentFunction alignmentFunction, TimeIntervals chromatogramTimeIntervals, PeakBounds rawPeakBounds, double? score, bool manuallyIntegrated)
         {
             ReplicateFileInfo = resultFileInfo;
             AlignmentFunction = alignmentFunction;
-            RawPeakBounds = rawPeakBounds;
-            AlignedPeakBounds = rawPeakBounds?.Align(alignmentFunction);
+            TimeIntervals = chromatogramTimeIntervals;
+            RawPeakBounds = MakeValidPeakBounds(TimeIntervals, rawPeakBounds);
+            AlignedPeakBounds = RawPeakBounds?.Align(alignmentFunction);
             ManuallyIntegrated = manuallyIntegrated;
             Score = score;
         }
@@ -21,6 +22,8 @@ namespace pwiz.Skyline.Model.Results.Imputation
         public PeakBounds RawPeakBounds { get; }
 
         public PeakBounds AlignedPeakBounds { get; private set; }
+
+        public TimeIntervals TimeIntervals { get; }
 
         public double? Score { get; private set; }
 
@@ -175,6 +178,36 @@ namespace pwiz.Skyline.Model.Results.Imputation
             NeedsAdjustment,
             Accepted,
             Exemplary
+        }
+
+        public static PeakBounds MakeValidPeakBounds(TimeIntervals timeIntervals, PeakBounds peakBounds)
+        {
+            if (timeIntervals == null)
+            {
+                return peakBounds;
+            }
+            if (peakBounds == null)
+            {
+                return null;
+            }
+
+            int? intervalIndex = timeIntervals.IndexOfIntervalContaining((float)peakBounds.MidTime);
+            if (!intervalIndex.HasValue)
+            {
+                return null;
+            }
+            var newStartTime = Math.Max(peakBounds.StartTime, timeIntervals.Starts[intervalIndex.Value]);
+            var newEndTime = Math.Min(peakBounds.EndTime, timeIntervals.Ends[intervalIndex.Value]);
+            if (newStartTime >= newEndTime)
+            {
+                return null;
+            }
+
+            if (newEndTime - newStartTime < Math.Max(0, peakBounds.Width / 2))
+            {
+                return null;
+            }
+            return new PeakBounds(newStartTime, newEndTime);
         }
     }
 }

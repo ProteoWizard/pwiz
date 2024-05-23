@@ -69,6 +69,9 @@
             this.comboRetentionTimeAlignment = new System.Windows.Forms.ComboBox();
             this.lblRetentionTimeAlignment = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.lblAvgPeakWidthCV = new System.Windows.Forms.Label();
+            this.tbxAvgPeakWidthCV = new System.Windows.Forms.TextBox();
             this.panel1.SuspendLayout();
             this.groupBoxDocumentStatistics.SuspendLayout();
             this.groupBoxScope.SuspendLayout();
@@ -116,6 +119,8 @@
             // 
             // groupBoxDocumentStatistics
             // 
+            this.groupBoxDocumentStatistics.Controls.Add(this.tbxAvgPeakWidthCV);
+            this.groupBoxDocumentStatistics.Controls.Add(this.lblAvgPeakWidthCV);
             this.groupBoxDocumentStatistics.Controls.Add(this.tbxAlignedDocRtStdDev);
             this.groupBoxDocumentStatistics.Controls.Add(this.lblAligned);
             this.groupBoxDocumentStatistics.Controls.Add(this.tbxUnalignedDocRtStdDev);
@@ -123,7 +128,7 @@
             this.groupBoxDocumentStatistics.Controls.Add(this.label1);
             this.groupBoxDocumentStatistics.Location = new System.Drawing.Point(463, 9);
             this.groupBoxDocumentStatistics.Name = "groupBoxDocumentStatistics";
-            this.groupBoxDocumentStatistics.Size = new System.Drawing.Size(164, 149);
+            this.groupBoxDocumentStatistics.Size = new System.Drawing.Size(164, 179);
             this.groupBoxDocumentStatistics.TabIndex = 24;
             this.groupBoxDocumentStatistics.TabStop = false;
             this.groupBoxDocumentStatistics.Text = "Document-wide statistics";
@@ -486,6 +491,23 @@
             this.lblRetentionTimeAlignment.TabIndex = 0;
             this.lblRetentionTimeAlignment.Text = "Retention time alignment:";
             // 
+            // lblAvgPeakWidthCV
+            // 
+            this.lblAvgPeakWidthCV.AutoSize = true;
+            this.lblAvgPeakWidthCV.Location = new System.Drawing.Point(6, 134);
+            this.lblAvgPeakWidthCV.Name = "lblAvgPeakWidthCV";
+            this.lblAvgPeakWidthCV.Size = new System.Drawing.Size(119, 13);
+            this.lblAvgPeakWidthCV.TabIndex = 5;
+            this.lblAvgPeakWidthCV.Text = "Average peak width CV";
+            // 
+            // tbxAvgPeakWidthCV
+            // 
+            this.tbxAvgPeakWidthCV.Location = new System.Drawing.Point(9, 150);
+            this.tbxAvgPeakWidthCV.Name = "tbxAvgPeakWidthCV";
+            this.tbxAvgPeakWidthCV.ReadOnly = true;
+            this.tbxAvgPeakWidthCV.Size = new System.Drawing.Size(100, 20);
+            this.tbxAvgPeakWidthCV.TabIndex = 6;
+            // 
             // PeakImputationForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -552,5 +574,8 @@
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Label lblNeedRemoval;
         private System.Windows.Forms.CheckBox cbxAlignAllGraphs;
+        private System.Windows.Forms.SaveFileDialog saveFileDialog1;
+        private System.Windows.Forms.Label lblAvgPeakWidthCV;
+        private System.Windows.Forms.TextBox tbxAvgPeakWidthCV;
     }
 }

@@ -105,6 +105,8 @@ namespace pwiz.Skyline.EditUI
                 tbxAlignedDocRtStdDev.Text =
                     PeakImputationData.GetMeanRtStandardDeviation(document, _data.Alignments)
                         ?.ToString(Formats.RETENTION_TIME) ?? string.Empty;
+                tbxAvgPeakWidthCV.Text = PeakImputationData.GetAveragePeakWidthCV(document)?.ToString(Formats.CV) ??
+                                         string.Empty;
 
                 progressBar1.Visible = false;
                 if (_data.Alignments != null && cbxAlignAllGraphs.Checked)

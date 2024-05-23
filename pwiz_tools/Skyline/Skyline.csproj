@@ -548,6 +548,7 @@
     <Compile Include="Model\Results\Imputation\AlignmentResults.cs" />
     <Compile Include="Model\Results\Imputation\AlignmentType.cs" />
     <Compile Include="Model\Results\Imputation\KdeAlignmentType.cs" />
+    <Compile Include="Model\Results\Imputation\ChromatogramTimeRanges.cs" />
     <Compile Include="Model\Results\Imputation\PeakImputer.cs" />
     <Compile Include="Model\Results\Imputation\RatedPeak.cs" />
     <Compile Include="Model\Results\Imputation\ConsensusAlignment.cs" />

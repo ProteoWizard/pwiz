@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using EnvDTE;
 using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -15,7 +16,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
     public class PeakImputationData
     {
         public static readonly Producer<Parameters, PeakImputationData> PRODUCER = new DataProducer();
-        public PeakImputationData(Parameters parameters, AlignmentResults alignmentResults, IList<MoleculePeaks> moleculePeaksList)
+        public PeakImputationData(Parameters parameters, AlignmentResults alignmentResults, ChromatogramTimeRanges chromatogramTimeRanges, IList<MoleculePeaks> moleculePeaksList)
         {
             Params = parameters;
             Alignments = alignmentResults;
@@ -24,6 +25,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 .Select(score => (float)score));
 
             ScoreConversionData = new ScoreConversionData(sortedScores);
+            ChromatogramTimeRanges = chromatogramTimeRanges;
 
             var ratedMoleculePeaks = new List<MoleculePeaks>();
             foreach (var moleculePeaks in moleculePeaksList)
@@ -36,6 +38,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
         public Parameters Params { get; }
         public AlignmentResults Alignments { get; }
+        public ChromatogramTimeRanges ChromatogramTimeRanges { get; }
 
         public ScoreConversionData ScoreConversionData { get; }
         public ImmutableList<MoleculePeaks> MoleculePeaks { get; }
@@ -194,9 +197,11 @@ namespace pwiz.Skyline.Model.Results.Imputation
             {
                 var consensusAlignment =
                     AlignmentParameters.ALIGNMENT_PRODUCER.GetResult(inputs, parameter.GetAlignmentParameters());
-                var rows = ImmutableList.ValueOf(GetRows(productionMonitor, parameter, consensusAlignment));
+                var chromatogramTimeRanges = ChromatogramTimeRanges.PRODUCER.GetResult(inputs,
+                    new ChromatogramTimeRanges.Parameter(parameter.Document.MeasuredResults, true));
+                var rows = ImmutableList.ValueOf(GetRows(productionMonitor, parameter, consensusAlignment, chromatogramTimeRanges));
                 // rows = EnsureScores(rows);
-                return new PeakImputationData(parameter, consensusAlignment, rows);
+                return new PeakImputationData(parameter, consensusAlignment, chromatogramTimeRanges, rows);
             }
 
             public override IEnumerable<WorkOrder> GetInputs(Parameters parameter)
@@ -207,13 +212,15 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     yield break;
                 }
 
+                yield return Imputation.ChromatogramTimeRanges.PRODUCER.MakeWorkOrder(
+                    new ChromatogramTimeRanges.Parameter(document.MeasuredResults, true));
                 if (parameter.GetAlignmentParameters() != null)
                 {
                     yield return parameter.GetAlignmentParameters().MakeWorkOrder();
                 }
             }
 
-            private IEnumerable<MoleculePeaks> GetRows(ProductionMonitor productionMonitor, Parameters parameters, AlignmentResults alignments)
+            private IEnumerable<MoleculePeaks> GetRows(ProductionMonitor productionMonitor, Parameters parameters, AlignmentResults alignments, ChromatogramTimeRanges chromatogramTimeRanges)
             {
                 var peptideIdentityPaths = parameters.PeptideIdentityPaths?.ToHashSet();
                 var document = parameters.Document;
@@ -233,6 +240,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     foreach (var molecule in moleculeGroup.Molecules)
                     {
                         productionMonitor.CancellationToken.ThrowIfCancellationRequested();
+                        var timeRanges = chromatogramTimeRanges?.GetTimeRanges(molecule);
                         var peptideIdentityPath = new IdentityPath(moleculeGroup.PeptideGroup, molecule.Peptide);
                         if (false == peptideIdentityPaths?.Contains(peptideIdentityPath))
                         {
@@ -303,7 +311,8 @@ namespace pwiz.Skyline.Model.Results.Imputation
                                     }
                                 }
                                 double? score = matchingPeakGroup?.Score.ModelScore;
-                                var peak = new RatedPeak(peakResultFile, alignments?.GetAlignment(peakResultFile.ReplicateFileId), rawPeakBounds, score,
+                                var timeIntervals = timeRanges?.GetTimeIntervals(peakResultFile.MsDataFileUri);
+                                var peak = new RatedPeak(peakResultFile, alignments?.GetAlignment(peakResultFile.ReplicateFileId), timeIntervals, rawPeakBounds, score,
                                     manuallyIntegrated);
                                 var explicitPeakBounds =
                                     document.Settings.GetExplicitPeakBounds(molecule, chromFileInfo.FilePath);
@@ -350,7 +359,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
                     if (chromInfo.EndRetentionTime.HasValue)
                     {
-                        endTime = Math.Min(endTime, chromInfo.EndRetentionTime.Value);
+                        endTime = Math.Max(endTime, chromInfo.EndRetentionTime.Value);
                     }
                 }
             }
@@ -358,9 +367,25 @@ namespace pwiz.Skyline.Model.Results.Imputation
             return new RatedPeak.PeakBounds(startTime, endTime);
         }
 
+        private ChromatogramTimeRanges.TimeRangeDict GetTimeIntervals(MoleculePeaks moleculePeaks)
+        {
+            if (ChromatogramTimeRanges == null)
+            {
+                return null;
+            }
+            var peptideDocNode = (PeptideDocNode) Params.Document.FindNode(moleculePeaks.PeptideIdentityPath);
+            if (peptideDocNode == null)
+            {
+                return null;
+            }
+
+            return ChromatogramTimeRanges.GetTimeRanges(peptideDocNode);
+        }
+
         private MoleculePeaks RatePeaks(Parameters parameters, MoleculePeaks moleculePeaks)
         {
             var peaks = new List<RatedPeak>();
+            var timeRanges = GetTimeIntervals(moleculePeaks);
             peaks.AddRange(MarkExemplaryPeaks(parameters, moleculePeaks.Peaks.Select(FillInScores).ToList()));
             var exemplaryPeaks = peaks.Where(peak => peak.PeakVerdict == RatedPeak.Verdict.Exemplary).ToList();
             if (exemplaryPeaks.Count == 0)
@@ -451,10 +476,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                         parameters.AllowableRtShift, exemplaryPeakBounds.MidTime.ToString(Formats.RETENTION_TIME)));
             }
 
-            GetChromatogramTimeMinMax(parameters.Document, peptideDocNode, peak.ReplicateFileInfo.ReplicateIndex,
-                peak.ReplicateFileInfo.MsDataFileUri, out var minTime, out var maxTime);
-            if (minTime.HasValue && minTime > exemplaryPeakBounds.MidTime + parameters.AllowableRtShift.GetValueOrDefault()
-                || maxTime.HasValue && maxTime < exemplaryPeakBounds.MidTime - parameters.AllowableRtShift.GetValueOrDefault())
+            if (!peak.TimeIntervals.ContainsTime((float) exemplaryPeakBounds.MidTime))
             {
                 var opinion = string.Format("Imputed retention time {0} is outside the chromatogram.", exemplaryPeakBounds.MidTime.ToString(Formats.RETENTION_TIME));
                 if (peak.RawPeakBounds == null)
@@ -545,7 +567,6 @@ namespace pwiz.Skyline.Model.Results.Imputation
                             .OfType<double>().Select(alignmentFunction.GetY).ToList();
                         if (fileTimes.Count > 0)
                         {
-                            var average = fileTimes.Average();
                             times.Add(fileTimes.Average());
                         }
                     }
@@ -567,6 +588,52 @@ namespace pwiz.Skyline.Model.Results.Imputation
             }
 
             return standardDeviations.Average();
+        }
+
+        public static double? GetAveragePeakWidthCV(SrmDocument document)
+        {
+            var cvs= new List<double>();
+            foreach (var molecule in document.Molecules)
+            {
+                if (!molecule.HasResults)
+                {
+                    continue;
+                }
+
+                var widths = new List<double>();
+                for (int i = 0; i < molecule.Results.Count; i++)
+                {
+                    foreach (var group in molecule.TransitionGroups.SelectMany(tg => tg.GetSafeChromInfo(i))
+                                 .GroupBy(chromInfo => ReferenceValue.Of(chromInfo.FileId)))
+                    {
+                        var fileWidths = group
+                            .Select(chromInfo => (double?)chromInfo.EndRetentionTime - chromInfo.StartRetentionTime)
+                            .OfType<double>().ToList();
+                        if (fileWidths.Count > 0)
+                        {
+                            widths.Add(fileWidths.Average());
+                        }
+                    }
+                }
+
+                if (widths.Count > 1)
+                {
+                    var cv = widths.Variance() / widths.Mean();
+
+                    if (!double.IsNaN(cv))
+                    {
+                        cvs.Add(cv);
+                    }
+                }
+            }
+
+            if (cvs.Count == 0)
+            {
+                return null;
+            }
+
+            return cvs.Average();
+
         }
 
         public static void GetChromatogramTimeMinMax(SrmDocument document, PeptideDocNode peptideDocNode, int replicateIndex, MsDataFileUri msDataFileUri, out double? minTime, out double? maxTime)
