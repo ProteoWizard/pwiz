@@ -154,8 +154,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 }
                 catch (OperationCanceledException)
                 {
-                    // Another loader probably modified the document. Return an unchanged document for now
-                    // and this loader will be called again later.
+                    // Document probably changed while we were auto-training
+                    // Do nothing right now and if the current document still needs to
+                    // be auto-trained we will do it again later.
                     docNew = docCurrent;
                 }
             }
