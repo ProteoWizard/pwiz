@@ -236,7 +236,7 @@ namespace pwiz.SkylineTestUtil
             IsOpen = false;
         }
 
-        public QueryLock QueryLock
+        public QueryLock ReaderWriterLock
         {
             get { return new QueryLock(CancellationToken.None); }
         }

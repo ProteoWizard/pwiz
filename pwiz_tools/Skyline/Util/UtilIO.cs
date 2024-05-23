@@ -255,8 +255,11 @@ namespace pwiz.Skyline.Util
         {
             lock (this)
             {
-                stream.CloseStream();
-                act();
+                using (stream.ReaderWriterLock.CancelAndGetWriteLock())
+                {
+                    stream.CloseStream();
+                    act();
+                }
             }
         }
 
@@ -304,7 +307,7 @@ namespace pwiz.Skyline.Util
         where TDisp : IDisposable
     {
         private readonly ConnectionPool _connectionPool;
-        private QueryLock _queryLock = new QueryLock(CancellationToken.None);
+        private QueryLock _readerWriterLock = new QueryLock(CancellationToken.None);
 
         /// <summary>
         /// Creates the immutable identifier for a long-lived connection.
@@ -340,17 +343,17 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public void Disconnect()
         {
-            using (QueryLock.CancelAndGetWriteLock())
+            using (ReaderWriterLock.CancelAndGetWriteLock())
             {
                 _connectionPool.Disconnect(this);
             }
         }
 
-        public QueryLock QueryLock 
+        public QueryLock ReaderWriterLock 
         {
             get
             {
-                return _queryLock;
+                return _readerWriterLock;
             }
         }
     }
@@ -397,7 +400,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         void CloseStream();
 
-        QueryLock QueryLock { get; }
+        QueryLock ReaderWriterLock { get; }
     }
 
     /// <summary>

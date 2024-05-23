@@ -1926,8 +1926,9 @@ namespace pwiz.Skyline.Model.Results
                 Assume.AreEqual(chromGroupHeaderInfos.Count, scores.Length);
             }
 
-            using (ReadStream.QueryLock.GetReadLock())
+            using (ReadStream.ReaderWriterLock.GetReadLock())
             {
+                var cancellationToken = ReadStream.ReaderWriterLock.CancellationToken;
                 using (var stream = new FileStream(CachePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     if (peaks != null)
@@ -1938,6 +1939,7 @@ namespace pwiz.Skyline.Model.Results
                         foreach (var index in Enumerable.Range(0, chromGroupHeaderInfos.Count)
                                      .OrderBy(i => chromGroupHeaderInfos[i].StartPeakIndex))
                         {
+                            cancellationToken.ThrowIfCancellationRequested();
                             peaks[index] = ReadPeaks(stream, chromGroupHeaderInfos[index]);
                         }
                     }
@@ -1951,6 +1953,7 @@ namespace pwiz.Skyline.Model.Results
                                          chromGroupHeaderInfos[i].NumPeaks))
                                      .OrderBy(group => group.Key.Item1))
                         {
+                            cancellationToken.ThrowIfCancellationRequested();
                             var groupScores = ReadScoresStartingAt(stream, indexGroup.Key.Item1,
                                 indexGroup.Key.Item2 * ScoreTypesCount);
                             foreach (var index in indexGroup)
