@@ -1838,6 +1838,8 @@ namespace pwiz.Skyline
             public string NameOrUniModId { get; }
             public string AAs { get; set; }
             public ModTerminus? Terminus { get; set; }
+            // TODO: Need a way to set this - currently variable by default for structural if not set
+            public bool? IsVariable { get; set; }
 
             public static void SetAA(PeptideMod[] mods, string aas)
             {
@@ -2703,6 +2705,11 @@ namespace pwiz.Skyline
                     throw new ValueInvalidException(this, value, Values);
 
                 return ArgumentText + '=' + value;
+            }
+
+            public static string operator +(Argument arg, string value)
+            {
+                return arg.GetArgumentTextWithValue(value);
             }
 
             public string ArgumentDescription

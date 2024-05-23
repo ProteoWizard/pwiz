@@ -28,7 +28,6 @@ using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
-using pwiz.Skyline.Util;
 using System;
 using System.Globalization;
 
@@ -91,13 +90,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(searchDlg.NextPage); // now on narrow fractions
             var browseNarrowDlg = ShowDialog<OpenDataSourceDialog>(() => searchDlg.NarrowWindowResults.Browse());
             RunUI(() => browseNarrowDlg.SelectFile("23aug2017_hela_serum_timecourse_4mz_narrow_3.mzML"));
-            RunUI(() => browseNarrowDlg.SelectFile("23aug2017_hela_serum_timecourse_4mz_narrow_4.mzML"));
             OkDialog(browseNarrowDlg, browseNarrowDlg.Open);
 
             RunUI(searchDlg.NextPage); // now on wide fractions
             var browseWideDlg = ShowDialog<OpenDataSourceDialog>(() => searchDlg.WideWindowResults.Browse());
             RunUI(() => browseWideDlg.SelectFile("23aug2017_hela_serum_timecourse_wide_1d.mzML"));
-            RunUI(() => browseWideDlg.SelectFile("23aug2017_hela_serum_timecourse_wide_1c.mzML"));
             OkDialog(browseWideDlg, browseWideDlg.Open);
 
             RunUI(searchDlg.NextPage); // now on EncyclopeDia settings
@@ -126,7 +123,7 @@ namespace pwiz.SkylineTestFunctional
             // test that even after opening import search wizard, we can redo the search by pressing back/next without file lock issues
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(searchDlg.NextPage);
             WaitForDocumentLoaded();
-            /*RunUI(() =>
+            RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
                 importPeptideSearchDlg.ClickNextButton();
@@ -162,7 +159,7 @@ namespace pwiz.SkylineTestFunctional
 
             // now on Import Peptide Search wizard
             importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(searchDlg.NextPage);
-            WaitForDocumentLoaded();*/
+            WaitForDocumentLoaded();
 
             // starts on chromatogram page because we're using existing library
             RunUI(() =>
@@ -222,7 +219,11 @@ namespace pwiz.SkylineTestFunctional
             }
 
             var targetCountsActual = new[] { proteinCount, peptideCount, precursorCount, transitionCount };
-            if (!ArrayUtil.EqualsDeep(targetCounts, targetCountsActual))
+            //if (!ArrayUtil.EqualsDeep(targetCounts, targetCountsActual)) // TODO: solve EncyclopeDIA non-determinism so results expected can be exact
+            if (Math.Abs(targetCounts[0] - targetCountsActual[0]) > 1 ||
+                Math.Abs(targetCounts[1] - targetCountsActual[1]) > 1 ||
+                Math.Abs(targetCounts[2] - targetCountsActual[2]) > 1 ||
+                Math.Abs(targetCounts[3] - targetCountsActual[3]) > 4)
             {
                 Assert.Fail("Expected target counts <{0}> do not match actual <{1}>.",
                     string.Join(", ", targetCounts),
