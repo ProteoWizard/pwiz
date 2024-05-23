@@ -294,6 +294,16 @@ void testWrapActivation()
         SpectrumListFactory::wrap(msd, "msLevel 2-");
         SpectrumListFactory::wrap(msd, "activation CID");
         unit_assert(msd.run.spectrumListPtr->size() == 1);
+        unit_assert(!msd.run.spectrumListPtr->spectrum(0)->precursors.at(0).activation.hasCVParamChild(MS_ETD));
+    }
+    // test filter by NOT ETD activation
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+        SpectrumListFactory::wrap(msd, "msLevel 2-");
+        SpectrumListFactory::wrap(msd, "activation ETD mode=exclude");
+        unit_assert(msd.run.spectrumListPtr->size() == 1);
+        unit_assert(!msd.run.spectrumListPtr->spectrum(0)->precursors.at(0).activation.hasCVParamChild(MS_ETD));
     }
     // test filter by ETD activation
     {
@@ -302,13 +312,14 @@ void testWrapActivation()
         SpectrumListFactory::wrap(msd, "msLevel 2-");
         SpectrumListFactory::wrap(msd, "activation ETD");
         unit_assert(msd.run.spectrumListPtr->size() == 1);
+        unit_assert(msd.run.spectrumListPtr->spectrum(0)->precursors.at(0).activation.hasCVParamChild(MS_ETD));
     }
     // test filter by HCD activation
     {
         MSData msd;
         examples::initializeTiny(msd);
         SpectrumListFactory::wrap(msd, "msLevel 2-");
-        SpectrumListFactory::wrap(msd, "activation HCD");
+        SpectrumListFactory::wrap(msd, "activation HCD mode=include");
         unit_assert(msd.run.spectrumListPtr->size() == 0);
     }
     // test filter by IRMPD activation
@@ -318,6 +329,14 @@ void testWrapActivation()
         SpectrumListFactory::wrap(msd, "msLevel 2-");
         SpectrumListFactory::wrap(msd, "activation IRMPD");
         unit_assert(msd.run.spectrumListPtr->size() == 0);
+    }
+    // test filter by NOT IRMPD activation
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+        SpectrumListFactory::wrap(msd, "msLevel 2-");
+        SpectrumListFactory::wrap(msd, "activation IRMPD mode=exclude");
+        unit_assert(msd.run.spectrumListPtr->size() == 2);
     }
     // test invalid argument
     {
