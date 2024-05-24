@@ -92,7 +92,7 @@ namespace pwiz.SkylineTestFunctional
                 peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Modifications;
             });
             const string phosphoModName = "Phospho (ST)";
-            AddStaticMod(phosphoModName, true, peptideSettingsUi);
+            AddStaticMod(phosphoModName, peptideSettingsUi);
             RunUI(() => peptideSettingsUi.PickedStaticMods =
                 peptideSettingsUi.PickedStaticMods.Append(phosphoModName).ToArray());
             OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);

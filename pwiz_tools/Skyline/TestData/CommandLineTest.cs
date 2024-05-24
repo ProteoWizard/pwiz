@@ -687,6 +687,8 @@ namespace pwiz.SkylineTestData
                     {"Acetyl (N-term)", null},
                     {"Phospho (ST)", null},
                     {"Acetyl:13C(2) (K)", null},
+                    {"Water Loss (D, E, S, T)", null},
+                    {(4, "C", ""), UniMod.GetModification("Carbamidomethyl (C)", out _)},
                     {("Oxi", "M", ""), UniMod.GetModification("Oxidation (M)", out _)},
                     {(258, "", "C"), UniMod.GetModification("Label:18O(1) (C-term)", out _)},
                     {("Ach", "", ""), UniMod.GetModification("Archaeol (C)", out _)},
@@ -795,6 +797,15 @@ namespace pwiz.SkylineTestData
                 
                 RunCommandAndValidateError(new[] { "--pep-add-unimod-term=N" },
                     Resources.PeptideMod_SetTerminus_A_peptide_modification_must_be_added_before_giving_it_a_terminal_or_amino_acid_specificity_, printErrors);
+
+                RunCommandAndValidateError(new[] { "--pep-add-mod-variable=True" },
+                    Resources.PeptideMod_SetVariable_A_peptide_modification_must_be_added_before_assigning_its_variable_status_, printErrors);
+
+                RunCommandAndValidateError(new[] { "--pep-add-mod=Oxi", "--pep-add-mod-variable=X" },
+                    new CommandArgs.ValueInvalidBoolException(CommandArgs.ARG_PEPTIDE_ADD_MOD_VARIABLE, "X").Message, printErrors);
+
+                RunCommandAndValidateError(new[] { "--pep-add-mod=Water Loss (D, E, S, T)", "--pep-add-mod-variable=true" },
+                    DocSettingsResources.StaticMod_Validate_Loss_only_modifications_may_not_be_variable, printErrors);
 
                 RunCommandAndValidateError(new[] { "--pep-add-mod=Oxi", "--pep-add-unimod-term=Z" },
                     new CommandArgs.ValueInvalidModTerminusException(CommandArgs.ARG_PEPTIDE_ADD_MOD_TERM, "Z").Message, printErrors);

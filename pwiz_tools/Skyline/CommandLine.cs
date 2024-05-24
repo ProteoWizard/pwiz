@@ -1258,10 +1258,9 @@ namespace pwiz.Skyline
                                 {
                                     var mod = ModificationMatcher.GetStaticMod(modName, peptideMod.Terminus, peptideMod.AAs);
                                     bool structural = UniMod.IsStructuralModification(mod.Name);
-                                    // Structural modifications default to variable unless set otherwise
-                                    if (structural && (peptideMod.IsVariable ?? true))
+                                    if (peptideMod.IsVariable.HasValue)
                                     {
-                                        mod = mod.ChangeVariable(true);
+                                        mod = mod.ChangeVariable(peptideMod.IsVariable.Value);
                                     }
                                     
                                     SettingsList<StaticMod> modListSettings = Settings.Default.StaticModList;
