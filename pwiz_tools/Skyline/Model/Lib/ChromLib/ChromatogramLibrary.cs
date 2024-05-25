@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         public const string EXT_CACHE = ".clc";
 
         private ChromatogramLibrarySourceInfo[] _librarySourceFiles;
-        private LibraryFiles _libraryFiles;
+        private LibraryFiles _libraryFiles = LibraryFiles.EMPTY;
         private ChromatogramLibraryIrt[] _libraryIrts;
 
         public ChromatogramLibrary(ChromatogramLibrarySpec chromatogramLibrarySpec) : base(chromatogramLibrarySpec)

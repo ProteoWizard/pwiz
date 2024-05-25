@@ -142,7 +142,7 @@ namespace pwiz.Skyline.Model.Lib
         private PooledSqliteConnection _sqliteConnectionRedundant;
 
         private BiblioLiteSourceInfo[] _librarySourceFiles;
-        private LibraryFiles _libraryFiles;
+        private LibraryFiles _libraryFiles = LibraryFiles.EMPTY;
         private bool _anyExplicitPeakBounds;
 
         public static string GetLibraryCachePath(string libraryPath)

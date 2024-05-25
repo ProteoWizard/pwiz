@@ -1276,7 +1276,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
-            var editModel = new EditPeakScoringModelDlg(existing);
+            using var editModel = new EditPeakScoringModelDlg(existing);
             if (editModel.SetScoringModel(owner, item, featureScoreProvider))
             {
                 if (editModel.ShowDialog(owner) == DialogResult.OK)

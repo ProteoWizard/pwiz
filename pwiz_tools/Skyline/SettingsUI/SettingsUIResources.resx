@@ -1165,9 +1165,9 @@ information, there is no spectrum to show</value>
     <value>Instrument values (from full-scan settings)</value>
   </data>
   <data name="FullScanSettingsControl_GetRetentionTimeFilterWarning_EncourageFullGradient" xml:space="preserve">
-    <value>In {0} experiments the mass spectrometer has already been told the time range to acquire spectra.
-Further filtering in Skyline is usually unnecessary and may result in truncated extracted ion chromatograms.
-Use this option only if your method acquisition method has multiple targets with the same m/z.</value>
+    <value>{0} methods tell the mass spectrometer the time range over which to acquire spectra.
+Retention time filtering in Skyline is usually unnecessary and may result in truncated extracted ion chromatograms.
+Use this option only if your acquisition method has multiple targets with the same m/z.</value>
   </data>
   <data name="EditPeakScoringModel_AreYouSureYouWantToTrainAModel" xml:space="preserve">
     <value>Are you sure you want to train a peak scoring model for this document?</value>
@@ -1177,6 +1177,6 @@ Use this option only if your method acquisition method has multiple targets with
 When peak boundaries from spectral libraries are used, Skyline does not perform its own peak detection.
 
 If you would like to train a peak scoring model, it is recommended that you edit the items in your library list and uncheck the 'Use explicit bounds' checkbox.
-Then you should use the 'Rescore' button at 'Edit &gt; Manage Results' and Skyline will detect some candidate peaks which can be used for model training.</value>
+Then you should use the 'Re-score' button at 'Edit &gt; Manage Results' and Skyline will detect some candidate peaks which can be used for model training.</value>
   </data>
 </root>

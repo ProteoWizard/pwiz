@@ -1404,7 +1404,7 @@ namespace pwiz.Skyline.SettingsUI {
         ///When peak boundaries from spectral libraries are used, Skyline does not perform its own peak detection.
         ///
         ///If you would like to train a peak scoring model, it is recommended that you edit the items in your library list and uncheck the &apos;Use explicit bounds&apos; checkbox.
-        ///Then you should use the &apos;Rescore&apos; button at &apos;Edit &gt; Manage Results&apos; and Skyline will detect some candidate peaks which can be used for model training..
+        ///Then you should use the &apos;Re-score&apos; button at &apos;Edit &gt; Manage Results&apos; and Skyline will detect some candidate peaks which can be used for model training..
         /// </summary>
         public static string EditPeakScoringModel_ExplictPeakBoundsWarning {
             get {
@@ -1984,9 +1984,9 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to In {0} experiments the mass spectrometer has already been told the time range to acquire spectra.
-        ///Further filtering in Skyline is usually unnecessary and may result in truncated extracted ion chromatograms.
-        ///Use this option only if your method acquisition method has multiple targets with the same m/z..
+        ///   Looks up a localized string similar to {0} methods tell the mass spectrometer the time range over which to acquire spectra.
+        ///Retention time filtering in Skyline is usually unnecessary and may result in truncated extracted ion chromatograms.
+        ///Use this option only if your acquisition method has multiple targets with the same m/z..
         /// </summary>
         public static string FullScanSettingsControl_GetRetentionTimeFilterWarning_EncourageFullGradient {
             get {
