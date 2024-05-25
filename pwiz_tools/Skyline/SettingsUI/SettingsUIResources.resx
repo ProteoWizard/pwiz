@@ -1165,18 +1165,24 @@ information, there is no spectrum to show</value>
     <value>Instrument values (from full-scan settings)</value>
   </data>
   <data name="FullScanSettingsControl_GetRetentionTimeFilterWarning_EncourageFullGradient" xml:space="preserve">
-    <value>{0} methods tell the mass spectrometer the time range over which to acquire spectra.
-Retention time filtering in Skyline is usually unnecessary and may result in truncated extracted ion chromatograms.
-Use this option only if your acquisition method has multiple targets with the same m/z.</value>
+    <value>{0} methods usually specify the time range for the mass spectrometer to acquire spectra.
+
+Applying retention time filtering in Skyline is typically unnecessary and may lead to truncated extracted ion chromatograms.
+
+Use this option only if your acquisition method includes multiple targets with the same m/z.</value>
   </data>
   <data name="EditPeakScoringModel_AreYouSureYouWantToTrainAModel" xml:space="preserve">
     <value>Are you sure you want to train a peak scoring model for this document?</value>
   </data>
   <data name="EditPeakScoringModel_ExplictPeakBoundsWarning" xml:space="preserve">
-    <value>This document uses peak boundaries from spectral libraries.
-When peak boundaries from spectral libraries are used, Skyline does not perform its own peak detection.
+    <value>This document currently uses peak boundaries from spectral libraries. When these boundaries are used, Skyline does not perform its own peak detection.
 
-If you would like to train a peak scoring model, it is recommended that you edit the items in your library list and uncheck the 'Use explicit bounds' checkbox.
-Then you should use the 'Re-score' button at 'Edit &gt; Manage Results' and Skyline will detect some candidate peaks which can be used for model training.</value>
+To train a peak scoring model effectively, please follow these steps:
+
+1. Navigate to the "Libraries" tab at "Settings > Peptide Settings" and edit the library list.
+2. Edit the library items and uncheck the "Use explicit peak bounds" checkbox.
+3. Navigate to 'Edit > Manage Results' and click the 'Re-score' button.
+
+By doing this, Skyline will detect candidate peaks that can be used for model training.</value>
   </data>
 </root>
