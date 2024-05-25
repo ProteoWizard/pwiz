@@ -1260,7 +1260,7 @@ namespace pwiz.Skyline.SettingsUI
             ZedGraphHelper.BuildContextMenu(graphControl, menuStrip);
         }
 
-        public static PeakScoringModelSpec EditPeakScoringModel(Control owner, PeakScoringModelSpec item,
+        public static PeakScoringModelSpec ShowEditPeakScoringModelDlg(Control owner, PeakScoringModelSpec item,
             IEnumerable<PeakScoringModelSpec> existing, IFeatureScoreProvider featureScoreProvider)
         {
             var document = Program.MainWindow.Document;

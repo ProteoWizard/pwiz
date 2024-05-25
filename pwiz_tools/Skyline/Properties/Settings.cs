@@ -48,7 +48,6 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Menus;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
@@ -2431,7 +2430,7 @@ namespace pwiz.Skyline.Properties
         public override PeakScoringModelSpec EditItem(Control owner, PeakScoringModelSpec item,
             IEnumerable<PeakScoringModelSpec> existing, object tag)
         {
-            return EditPeakScoringModelDlg.EditPeakScoringModel(owner, item, existing ?? this,
+            return EditPeakScoringModelDlg.ShowEditPeakScoringModelDlg(owner, item, existing ?? this,
                 tag as IFeatureScoreProvider);
         }
 

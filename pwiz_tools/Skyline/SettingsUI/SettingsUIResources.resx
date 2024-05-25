@@ -1175,7 +1175,7 @@ Use this option only if your acquisition method includes multiple targets with t
     <value>Are you sure you want to train a peak scoring model for this document?</value>
   </data>
   <data name="EditPeakScoringModel_ExplictPeakBoundsWarning" xml:space="preserve">
-    <value>This document currently uses peak boundaries from spectral libraries. When these boundaries are used, Skyline does not perform its own peak detection.
+    <value>This document uses peak boundaries from spectral libraries. When these boundaries are used, Skyline does not perform its own peak detection.
 
 To train a peak scoring model effectively, please follow these steps:
 

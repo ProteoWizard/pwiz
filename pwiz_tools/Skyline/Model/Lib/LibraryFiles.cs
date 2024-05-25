@@ -1,4 +1,23 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2024 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -9,6 +28,10 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Lib
 {
+    /// <summary>
+    /// Maintains a list of the names of the spectrum files (or equivalent)
+    /// that a library contains results from.
+    /// </summary>
     public class LibraryFiles : IReadOnlyList<string>
     {
         public static LibraryFiles EMPTY = new LibraryFiles(Array.Empty<string>());
@@ -40,6 +63,10 @@ namespace pwiz.Skyline.Model.Lib
 
         public string this[int index] => FilePaths[index];
 
+        /// <summary>
+        /// Returns the index of the file which matches the MsDataFileUri or -1 if
+        /// there is no match.
+        /// </summary>
         public int FindIndexOf(MsDataFileUri filePath)
         {
             if (filePath == null || FilePaths.Count == 0)
@@ -83,6 +110,7 @@ namespace pwiz.Skyline.Model.Lib
 
             lock (_msDataFileUriLookup)
             {
+                // remember the result for faster lookup when asked again
                 _msDataFileUriLookup[filePath] = i;
             }
             return i;

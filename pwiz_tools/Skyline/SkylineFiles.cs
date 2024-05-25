@@ -2971,7 +2971,8 @@ namespace pwiz.Skyline
 
             if (doc.Settings.PeptideSettings.Libraries.AnyExplicitPeakBounds())
             {
-                // If the document is using 
+                // Training a peak scoring model does not work if Skyline did not do its own
+                // peak detection
                 return false;
             }
 

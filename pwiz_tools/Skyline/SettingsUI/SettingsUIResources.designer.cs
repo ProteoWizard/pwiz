@@ -1400,7 +1400,7 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This document currently uses peak boundaries from spectral libraries. When these boundaries are used, Skyline does not perform its own peak detection.
+        ///   Looks up a localized string similar to This document uses peak boundaries from spectral libraries. When these boundaries are used, Skyline does not perform its own peak detection.
         ///
         ///To train a peak scoring model effectively, please follow these steps:
         ///
@@ -1408,7 +1408,7 @@ namespace pwiz.Skyline.SettingsUI {
         ///2. Edit the library items and uncheck the &quot;Use explicit peak bounds&quot; checkbox.
         ///3. Navigate to &apos;Edit &gt; Manage Results&apos; and click the &apos;Re-score&apos; button.
         ///
-        ///By doing this, Skyline will detect [rest of string was truncated]&quot;;.
+        ///By doing this, Skyline will detect candidate [rest of string was truncated]&quot;;.
         /// </summary>
         public static string EditPeakScoringModel_ExplictPeakBoundsWarning {
             get {

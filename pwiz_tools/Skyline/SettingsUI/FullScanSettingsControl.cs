@@ -1222,7 +1222,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 radioKeepAllTime.ForeColor = Color.Red;
                 toolTip.SetToolTip(radioKeepAllTime,
-                    SettingsUIResources.FullScanSettingsControl_UpdateRetentionTimeFilterUi_Full_gradient_chromatograms_will_take_longer_to_import__consume_more_disk_space__and_may_make_peak_picking_less_effective_);
+                    SettingsUIResources
+                        .FullScanSettingsControl_UpdateRetentionTimeFilterUi_Full_gradient_chromatograms_will_take_longer_to_import__consume_more_disk_space__and_may_make_peak_picking_less_effective_);
             }
             else
             {
@@ -1241,26 +1242,19 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (!document.Settings.HasLibraries)
                     {
-                        strTimeAroundMs2IdsWarning = SettingsUIResources.FullScanSettingsControl_UpdateRetentionTimeFilterUi_This_document_does_not_contain_any_spectral_libraries_;
+                        strTimeAroundMs2IdsWarning = SettingsUIResources
+                            .FullScanSettingsControl_UpdateRetentionTimeFilterUi_This_document_does_not_contain_any_spectral_libraries_;
                     }
-                    else if (document.Molecules.All(
-                        peptide => document.Settings.GetUnalignedRetentionTimes(peptide.SourceUnmodifiedTarget, peptide.SourceExplicitMods).Length == 0))
+                    else if (document.Molecules.All(peptide =>
+                                 document.Settings.GetUnalignedRetentionTimes(peptide.SourceUnmodifiedTarget,
+                                     peptide.SourceExplicitMods).Length == 0))
                     {
-                        strTimeAroundMs2IdsWarning = SettingsUIResources.FullScanSettingsControl_UpdateRetentionTimeFilterUi_None_of_the_spectral_libraries_in_this_document_contain_any_retention_times_for_any_of_the_peptides_in_this_document_;
+                        strTimeAroundMs2IdsWarning = SettingsUIResources
+                            .FullScanSettingsControl_UpdateRetentionTimeFilterUi_None_of_the_spectral_libraries_in_this_document_contain_any_retention_times_for_any_of_the_peptides_in_this_document_;
                     }
                 }
 
-                if (filterTypeWarning != null)
-                {
-                    if (strTimeAroundMs2IdsWarning == null)
-                    {
-                        strTimeAroundMs2IdsWarning = filterTypeWarning;
-                    }
-                    else
-                    {
-                        strTimeAroundMs2IdsWarning = TextUtil.LineSeparate(strTimeAroundMs2IdsWarning, filterTypeWarning);
-                    }
-                }
+                strTimeAroundMs2IdsWarning ??= filterTypeWarning;
             }
             else
             {
@@ -1275,7 +1269,8 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             tbxTimeAroundPrediction.Enabled = radioUseSchedulingWindow.Checked && !disabled;
-            foreach (Control control in flowLayoutPanelUseSchedulingWindow.Controls)
+            foreach (var control in flowLayoutPanelUseSchedulingWindow.Controls.Cast<Control>()
+                         .Append(radioUseSchedulingWindow))
             {
                 if (radioUseSchedulingWindow.Checked && filterTypeWarning != null)
                 {
@@ -1290,6 +1285,11 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        /// <summary>
+        /// Returns a warning to show based on acquisition method and retention time filtering.
+        /// Retention time filtering is encouraged for untargeted methods and discouraged
+        /// for targeted methods.
+        /// </summary>
         private string GetRetentionTimeFilterWarning()
         {
             if (AcquisitionMethod == FullScanAcquisitionMethod.PRM ||
