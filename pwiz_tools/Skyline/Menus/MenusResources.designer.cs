@@ -162,7 +162,14 @@ namespace pwiz.Skyline.Menus {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Are you sure you want to add decoys to this document?.
+        ///   Looks up a localized string similar to Are you sure you want to add decoys to this document?
+        ///    
+        ///This document uses peak boundaries from spectral libraries. When these boundaries are used, Skyline does not perform its own peak detection.
+        ///
+        ///To be ready to train a peak scoring model effectively, follow these steps:
+        ///
+        ///1. Navigate to the &quot;Libraries&quot; tab at &quot;Settings &gt; Peptide Settings&quot; and edit the library list.
+        ///2. Edit the library items and uncheck the &quot;Use explicit peak bounds&quot; checkbox..
         /// </summary>
         public static string RefineMenu_ShowGenerateDecoysDlg_Are_you_sure_you_want_to_add_decoys_to_this_document_ {
             get {

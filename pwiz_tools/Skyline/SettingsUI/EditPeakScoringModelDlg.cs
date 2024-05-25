@@ -1266,11 +1266,8 @@ namespace pwiz.Skyline.SettingsUI
             var document = Program.MainWindow.Document;
             if (document.Settings.PeptideSettings.Libraries.AnyExplicitPeakBounds())
             {
-                var message = TextUtil.LineSeparate(
-                    SettingsUIResources.EditPeakScoringModel_AreYouSureYouWantToTrainAModel,
-                    string.Empty, 
-                    SettingsUIResources.EditPeakScoringModel_ExplictPeakBoundsWarning);
-                if (MultiButtonMsgDlg.Show(owner, message, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                if (MultiButtonMsgDlg.Show(owner, SettingsUIResources.EditPeakScoringModel_ExplictPeakBoundsWarning,
+                        MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                 {
                     return null;
                 }

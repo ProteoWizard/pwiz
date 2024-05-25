@@ -1171,18 +1171,17 @@ Applying retention time filtering in Skyline is typically unnecessary and may le
 
 Use this option only if your acquisition method includes multiple targets with the same m/z.</value>
   </data>
-  <data name="EditPeakScoringModel_AreYouSureYouWantToTrainAModel" xml:space="preserve">
-    <value>Are you sure you want to train a peak scoring model for this document?</value>
-  </data>
   <data name="EditPeakScoringModel_ExplictPeakBoundsWarning" xml:space="preserve">
-    <value>This document uses peak boundaries from spectral libraries. When these boundaries are used, Skyline does not perform its own peak detection.
+    <value>Are you sure you want to train a peak scoring model for this document?
+      
+This document uses peak boundaries from spectral libraries. When these boundaries are used, Skyline does not perform its own peak detection.
 
-To train a peak scoring model effectively, please follow these steps:
+Before training a peak scoring model, it is recommended that you follow these steps:
 
 1. Navigate to the "Libraries" tab at "Settings > Peptide Settings" and edit the library list.
 2. Edit the library items and uncheck the "Use explicit peak bounds" checkbox.
 3. Navigate to 'Edit > Manage Results' and click the 'Re-score' button.
 
-By doing this, Skyline will detect candidate peaks that can be used for model training.</value>
+This will provide Skyline with a variety of candidate peaks to evaluate peak quality.</value>
   </data>
 </root>
