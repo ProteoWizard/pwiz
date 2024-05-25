@@ -1391,6 +1391,28 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to train a peak scoring model for this document?.
+        /// </summary>
+        public static string EditPeakScoringModel_AreYouSureYouWantToTrainAModel {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModel_AreYouSureYouWantToTrainAModel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This document uses peak boundaries from spectral libraries.
+        ///When peak boundaries from spectral libraries are used, Skyline does not perform its own peak detection.
+        ///
+        ///If you would like to train a peak scoring model, it is recommended that you edit the items in your library list and uncheck the &apos;Use explicit bounds&apos; checkbox.
+        ///Then you should use the &apos;Rescore&apos; button at &apos;Edit &gt; Manage Results&apos; and Skyline will detect some candidate peaks which can be used for model training..
+        /// </summary>
+        public static string EditPeakScoringModel_ExplictPeakBoundsWarning {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModel_ExplictPeakBoundsWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed training the model:.
         /// </summary>
         public static string EditPeakScoringModelDlg_btnTrainModel_Click_Failed_training_the_model_ {
@@ -1958,6 +1980,17 @@ namespace pwiz.Skyline.SettingsUI {
         public static string FormulaBox_helpToolStripMenuItem_Click_Formula_Help {
             get {
                 return ResourceManager.GetString("FormulaBox_helpToolStripMenuItem_Click_Formula_Help", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to In {0} experiments the mass spectrometer has already been told the time range to acquire spectra.
+        ///Further filtering in Skyline is usually unnecessary and may result in truncated extracted ion chromatograms.
+        ///Use this option only if your method acquisition method has multiple targets with the same m/z..
+        /// </summary>
+        public static string FullScanSettingsControl_GetRetentionTimeFilterWarning_EncourageFullGradient {
+            get {
+                return ResourceManager.GetString("FullScanSettingsControl_GetRetentionTimeFilterWarning_EncourageFullGradient", resourceCulture);
             }
         }
         

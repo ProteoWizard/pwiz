@@ -1259,5 +1259,30 @@ namespace pwiz.Skyline.SettingsUI
         {
             ZedGraphHelper.BuildContextMenu(graphControl, menuStrip);
         }
+
+        public static PeakScoringModelSpec EditPeakScoringModel(Control owner, PeakScoringModelSpec item,
+            IEnumerable<PeakScoringModelSpec> existing, IFeatureScoreProvider featureScoreProvider)
+        {
+            var document = Program.MainWindow.Document;
+            if (document.Settings.PeptideSettings.Libraries.AnyExplicitPeakBounds())
+            {
+                var message = TextUtil.LineSeparate(
+                    SettingsUIResources.EditPeakScoringModel_AreYouSureYouWantToTrainAModel,
+                    string.Empty, 
+                    SettingsUIResources.EditPeakScoringModel_ExplictPeakBoundsWarning);
+                if (MultiButtonMsgDlg.Show(owner, message, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                {
+                    return null;
+                }
+            }
+
+            var editModel = new EditPeakScoringModelDlg(existing);
+            if (editModel.SetScoringModel(owner, item, featureScoreProvider))
+            {
+                if (editModel.ShowDialog(owner) == DialogResult.OK)
+                    return (PeakScoringModelSpec)editModel.PeakScoringModel;
+            }
+            return null;
+        }
     }
 }

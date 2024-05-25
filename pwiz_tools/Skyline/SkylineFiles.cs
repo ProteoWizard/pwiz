@@ -2969,6 +2969,12 @@ namespace pwiz.Skyline
                 return false;
             }
 
+            if (doc.Settings.PeptideSettings.Libraries.AnyExplicitPeakBounds())
+            {
+                // If the document is using 
+                return false;
+            }
+
             return true;
         }
 

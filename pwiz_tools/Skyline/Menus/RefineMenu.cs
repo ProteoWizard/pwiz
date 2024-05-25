@@ -29,6 +29,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Menus
@@ -103,6 +104,15 @@ namespace pwiz.Skyline.Menus
 
         public bool ShowGenerateDecoysDlg(IWin32Window owner = null)
         {
+            if (DocumentUI.Settings.PeptideSettings.Libraries.AnyExplicitPeakBounds())
+            {
+                var message = TextUtil.LineSeparate("Are you sure you want to add decoys to this document?",
+                    string.Empty, SettingsUIResources.EditPeakScoringModel_ExplictPeakBoundsWarning);
+                if (MultiButtonMsgDlg.Show(owner ?? SkylineWindow, message, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                {
+                    return false;
+                }
+            }
             using (var decoysDlg = new GenerateDecoysDlg(DocumentUI))
             {
                 if (decoysDlg.ShowDialog(owner ?? SkylineWindow) == DialogResult.OK)
