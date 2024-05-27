@@ -902,6 +902,18 @@ namespace pwiz.SkylineTestUtil
             {
                 return; // No way we're cleaning this up to make a match
             }
+
+            if (colsExpected.Length == 1 && lineActual.Contains(@"""")) // Is path embedded in a simple string?
+            {
+                // e.g. 'Import Molecule Search > Extract Chromatograms > Found results files : contains "C:\Users\bspratt\Downloads\Perftests\Label-free\Orbi3_SA_IP_pHis3_01.RAW"'
+                colsActual = lineActual.Split('\"');
+                colsExpected = lineExpected.Split('\"');
+                if (colsExpected.Length != colsActual.Length)
+                {
+                    return; // No way we're cleaning this up to make a match
+                }
+            }
+
             for (var col = 0; col < colsActual.Length; col++)
             {
                 var pathE = colsExpected[col];
@@ -913,8 +925,8 @@ namespace pwiz.SkylineTestUtil
 
                 try  // Was column a filename?
                 {
-                    var fileE = Path.GetFileName(pathE.Trim('"')); // Unquote if needed
-                    var fileA = Path.GetFileName(pathA.Trim('"')); // Unquote if needed
+                    var fileE = Path.GetFileName(pathE.Trim().Trim('"')); // Unquote if needed
+                    var fileA = Path.GetFileName(pathA.Trim().Trim('"')); // Unquote if needed
                     if (string.Equals(fileE, fileA) ||
                         (Path.GetExtension(fileE) == @".tmp") && Path.GetExtension(fileE) == Path.GetExtension(fileA)) // Tmp file names will always vary
                     {
