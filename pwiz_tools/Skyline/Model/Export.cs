@@ -524,8 +524,8 @@ namespace pwiz.Skyline.Model
                         return ExportThermoQuantivaCsv(doc, path);
                     else
                     {
-                        if(type == ExportFileType.IsolationList)
-                            return ExportThermoFusionIsolationList(doc, path, template, instrumentType);
+                        if(type == ExportFileType.IsolationList && ExportInstrumentType.THERMO_STELLAR == instrumentType)
+                            return ExportThermoStellarIsolationList(doc, path, template, instrumentType);
                         return ExportThermoQuantivaMethod(doc, path, template, instrumentType);
                     }
                 case ExportInstrumentType.THERMO_FUSION:
@@ -829,7 +829,10 @@ namespace pwiz.Skyline.Model
                 exporter.RunLength = RunLength;
             exporter.RetentionStartAndEnd = RetentionStartAndEnd;
             if (ExportInstrumentType.THERMO_STELLAR.Equals(instrumentType))
+            {
                 exporter.IsolationList = AbstractMassListExporter.IsolationStrategy.precursor;
+                exporter.IsPrecursorLimited = true;
+            }
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, instrumentType, m));
 
             return exporter;
@@ -837,10 +840,19 @@ namespace pwiz.Skyline.Model
 
         public AbstractMassListExporter ExportThermoFusionIsolationList(SrmDocument document, string fileName, string templateName, string instrumentType)
         {
-            var exporter = InitExporter(new ThermoFusionMassListExporter(document, instrumentType));
+            var exporter = InitExporter(new ThermoFusionMassListExporter(document));
             exporter.UseSlens = UseSlens;
             exporter.WriteFaimsCv = WriteCompensationVoltages;
             exporter.Tune3 = Tune3;
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+
+            return exporter;
+        }
+
+        public AbstractMassListExporter ExportThermoStellarIsolationList(SrmDocument document, string fileName, string templateName, string instrumentType)
+        {
+            var exporter = InitExporter(new ThermoStellarMassListExporter(document));
+            exporter.WriteFaimsCv = WriteCompensationVoltages;
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
@@ -999,6 +1011,21 @@ namespace pwiz.Skyline.Model
             get { return ExportInstrumentType.THERMO; }
         }
 
+        protected void GetRetentionStartAndEnd(PeptideDocNode peptide, TransitionGroupDocNode precursor,
+            out string start, out string end)
+        {
+            start = string.Empty;
+            end = string.Empty;
+            var prediction = Document.Settings.PeptideSettings.Prediction;
+            double? predictedRT = prediction.PredictRetentionTime(Document, peptide, precursor,
+                SchedulingReplicateIndex, SchedulingAlgorithm, false, out var windowRT);
+            // Start Time and End Time
+            if (predictedRT.HasValue)
+            {
+                start = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT.Value - windowRT / 2) ?? 0).ToString(CultureInfo);
+                end = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT.Value + windowRT / 2) ?? 0).ToString(CultureInfo);
+            }
+         }
         protected override void WriteTransition(TextWriter writer,
                                                 int fileNumber,
                                                 PeptideGroupDocNode nodePepGroup,
@@ -4176,25 +4203,97 @@ namespace pwiz.Skyline.Model
         }
     }
 
+    public class ThermoStellarMassListExporter : ThermoMassListExporter
+    {
+        public const double WIDE_NCE = 30.0;
+
+        protected override string InstrumentType => ExportInstrumentType.THERMO_STELLAR;
+        public bool WriteFaimsCv { get; set; }
+
+        public ThermoStellarMassListExporter(SrmDocument document)
+            :base(document)
+        {
+            IsolationList = IsolationStrategy.precursor;
+            IsPrecursorLimited = true;
+        }
+
+        protected override void WriteHeaders(TextWriter writer)
+        {
+            writer.Write(@"m/z");
+            writer.Write(FieldSeparator);
+            writer.Write(@"z");
+            writer.Write(FieldSeparator);
+            writer.Write(@"t start (min)");
+            writer.Write(FieldSeparator);
+            writer.Write(@"t stop (min)");
+            writer.Write(FieldSeparator);
+            writer.Write(@"HCD Collision Energy/Energies (%)");
+            if (WriteFaimsCv)
+            {
+                writer.Write(FieldSeparator);
+                writer.Write(@"FAIMS CV (V)");
+            }
+            writer.WriteLine();
+        }
+
+        protected override void WriteTransition(TextWriter writer, int fileNumber, PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep,
+            TransitionGroupDocNode nodeTranGroup, TransitionGroupDocNode nodeTranGroupPrimary, TransitionDocNode nodeTran,
+            int step)
+        {
+            writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+
+            writer.Write(nodeTranGroup.TransitionGroup.PrecursorCharge.ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+
+            var start = string.Empty;
+            var end = string.Empty;
+            if (MethodType == ExportMethodType.Scheduled)
+            {
+                GetRetentionStartAndEnd(nodePep, nodeTranGroup, out start, out end);
+            }
+            else if (RunLength.HasValue)
+            {
+                start = 0.ToString(CultureInfo);
+                end = RunLength.Value.ToString(CultureInfo);
+            }
+                
+            writer.Write(start);
+            writer.Write(FieldSeparator);
+            writer.Write(end);
+            writer.Write(FieldSeparator);
+            writer.Write(WIDE_NCE);
+            if (WriteFaimsCv)
+            {
+                var cv = GetCompensationVoltage(nodePep, nodeTranGroup, nodeTran, step);
+                writer.Write(FieldSeparator);
+                writer.Write(cv.HasValue ? cv.Value.ToString(CultureInfo) : string.Empty);
+            }
+            writer.WriteLine();
+        }
+        public virtual void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
+        {
+            if (!InitExport(fileName, progressMonitor))
+                return;
+            Export(fileName);
+        }
+    }
+
     public class ThermoFusionMassListExporter : ThermoMassListExporter
     {
         public const double NARROW_NCE = 27.0;
         public const double WIDE_NCE = 30.0;
-        private string _instrumentType;
 
         public bool Tune3 { get; set; }
         public bool Tune3Columns { get { return IsolationList == IsolationStrategy.precursor && Tune3; } }
 
         public bool WriteFaimsCv { get; set; }
 
-        protected override string InstrumentType =>_instrumentType;
-
-        public ThermoFusionMassListExporter(SrmDocument document, string instrumentType)
+        public ThermoFusionMassListExporter(SrmDocument document)
             : base(document)
         {
             IsolationList = IsolationStrategy.precursor;
             IsPrecursorLimited = true;
-            _instrumentType = instrumentType;
         }
 
         public string GetHeader(char fieldSeparator)
@@ -4203,10 +4302,7 @@ namespace pwiz.Skyline.Model
                 ? @"m/z,z,t start (min),t end (min)"
                 : @"Compound,Formula,Adduct,m/z,z,Polarity,t start (min),t stop (min)");
             
-            if (ExportInstrumentType.THERMO_STELLAR == InstrumentType)
-                hdr.Append(@",HCD Collision Energy/Energies (%)");
-            else
-                hdr.Append(@",CID Collision Energy (%)");
+            hdr.Append(@",CID Collision Energy (%)");
 
             if (UseSlens)
                 hdr.Append(@",S-lens");
@@ -4261,23 +4357,7 @@ namespace pwiz.Skyline.Model
             var end = string.Empty;
             if (MethodType == ExportMethodType.Scheduled)
             {
-                var prediction = Document.Settings.PeptideSettings.Prediction;
-                double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
-                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out var windowRT);
-                // Start Time and End Time
-                if (predictedRT.HasValue)
-                {
-                    start = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT.Value - windowRT / 2) ?? 0).ToString(CultureInfo);
-                    end = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT.Value + windowRT / 2) ?? 0).ToString(CultureInfo);
-                }
-            }
-            else if (InstrumentType == ExportInstrumentType.THERMO_STELLAR)
-            {
-                if(RunLength.HasValue)
-                {
-                    start = 0.ToString(CultureInfo);
-                    end = RunLength.Value.ToString(CultureInfo);
-                }
+                GetRetentionStartAndEnd(nodePep, nodeTranGroup, out start, out end);
             }
             writer.Write(start);
             writer.Write(FieldSeparator);
