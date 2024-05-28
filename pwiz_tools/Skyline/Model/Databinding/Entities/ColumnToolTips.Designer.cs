@@ -1391,7 +1391,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The dot-product calculation described above, but between the
+        ///   Looks up a localized string similar to Equivalent to &quot;idotp&quot; displayed in the user interface. The dot-product calculation described for Library Dot Product, but between the
         ///individual precursor (M, M+1, M+2, etc.) peak areas of the precursor and the intensities
         ///of the predicted isotope distribution, or #N/A if the transition is not a precursor isotope,
         ///or the chromatogram was not extracted from high resolution MS1 data..
@@ -1459,13 +1459,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The dot-product between the individual transition peak areas
+        ///   Looks up a localized string similar to Equivalent to &quot;dotp&quot; displayed in the user interface. The dot-product between the individual transition peak areas
         ///of the precursor and the intensities of the matching ion peaks in the matched MS/MS
         ///spectral library spectrum (Note: as of v1.4, this is now 1 – Arcos(dotp)/(Pi/2) where dotp
         ///is the value described above. a.k.a. Normalize Spectrum Contrast Angle), or #N/A if the
         ///precursor has not matching library spectrum or has fewer than 4 transitions. This is a 35
-        ///useful value for method refinement. It works best when 6 or more transitions are
-        ///present..
+        ///useful value for method refinement. It  [rest of string was truncated]&quot;;.
         /// </summary>
         public static string LibraryDotProduct {
             get {
@@ -1654,7 +1653,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Mass Error PPM.
+        ///   Looks up a localized string similar to The difference between the expected and measured m/z values expressed in parts per million (PPM).
         /// </summary>
         public static string MassErrorPPM {
             get {
@@ -2250,7 +2249,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Next Aa.
+        ///   Looks up a localized string similar to The amino acid residue found immediately after the peptide in the protein sequence..
         /// </summary>
         public static string NextAa {
             get {
@@ -2646,9 +2645,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///      The charge associated with the precursor ion.
-        ///    .
+        ///   Looks up a localized string similar to The charge associated with the precursor ion..
         /// </summary>
         public static string PrecursorCharge {
             get {
@@ -3158,7 +3155,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ratio Dot Product.
+        ///   Looks up a localized string similar to Equivalent to &quot;rdotp&quot; displayed in the user interface. The dot-product calculation described for Library Dot Product, but between the peak areas of the precursor (e.g. light) and the peak areas of the standard type precursor (e.g. heavy), or #N/A if there is either no standard type or the precursor is the standard type..
         /// </summary>
         public static string RatioDotProduct {
             get {

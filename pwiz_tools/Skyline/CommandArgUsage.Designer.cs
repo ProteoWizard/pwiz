@@ -1324,6 +1324,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adds a modification as variable if &apos;true&apos; or static if &apos;false&apos;. Only valid for structural modifications except for loss-only modifications(e.g. Ammonia and Water Loss)..
+        /// </summary>
+        public static string _pep_add_mod_variable {
+            get {
+                return ResourceManager.GetString("_pep_add_mod_variable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add a UniMod modification to the document by its UniMod ID. If the modification has multiple specificities, you must use --pep-add-unimod-aa or --pep-add-unimod-term to choose which specificity you want to add to the document..
         /// </summary>
         public static string _pep_add_unimod {

@@ -57,7 +57,7 @@ namespace pwiz.SkylineTestConnected
             OkDialog(toolsOptionsUi, toolsOptionsUi.OkDialog);
             var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Modifications);
             const string OXIDATION_M = "Oxidation (M)";
-            AddStaticMod(OXIDATION_M, true, peptideSettings);
+            AddStaticMod(OXIDATION_M, peptideSettings);
             RunUI(() =>
             {
                 peptideSettings.PickedStaticMods = peptideSettings.PickedStaticMods.Union(new[] { OXIDATION_M }).ToArray();
