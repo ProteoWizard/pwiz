@@ -369,7 +369,8 @@ namespace pwiz.SkylineTestData
             // Settings should already contain these modifications by virtue of adding
             // them above.
             AssertEx.DoesNotContain(output, Resources.CommandLine_ImportPeptideList_Using_the_Unimod_definitions_for_the_following_modifications_);
-            Assert.AreEqual(3, docListMods.Settings.PeptideSettings.Modifications.StaticModifications.Count);
+            Assert.AreEqual(3, docListMods.Settings.PeptideSettings.Modifications.StaticModifications.Count, 
+                "Incorrect modifications: {0}", string.Join(",", docListMods.Settings.PeptideSettings.Modifications.StaticModifications));
             Assert.AreEqual(expectedProtCount, docListMods.PeptideGroupCount);
             Assert.AreEqual(expectedPepCount + expectedVarModPepCount, docListMods.PeptideCount);
             Assert.AreEqual(expectedVarModPepCount, docListMods.Peptides.Count(HasVarMod));
