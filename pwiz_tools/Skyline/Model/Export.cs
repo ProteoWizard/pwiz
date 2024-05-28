@@ -4236,6 +4236,15 @@ namespace pwiz.Skyline.Model
             writer.WriteLine();
         }
 
+        public string GetHeader()
+        {
+            var writer = new StringWriter();
+            WriteHeaders(writer);
+            var str = writer.ToString();
+
+            return str.Substring(0, str.Length - 2);
+        }
+
         protected override void WriteTransition(TextWriter writer, int fileNumber, PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep,
             TransitionGroupDocNode nodeTranGroup, TransitionGroupDocNode nodeTranGroupPrimary, TransitionDocNode nodeTran,
             int step)

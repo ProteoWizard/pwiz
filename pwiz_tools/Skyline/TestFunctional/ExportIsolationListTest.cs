@@ -240,7 +240,7 @@ namespace pwiz.SkylineTestFunctional
             ExportIsolationList(
                 "FusionUnscheduledTargeted.csv",
                 ExportInstrumentType.THERMO_FUSION, FullScanAcquisitionMethod.Targeted, ExportMethodType.Standard,
-                thermoFusionMassListExporter.GetHeader(_fieldSeparator),
+                thermoFusionMassListExporter.GetHeader(_fieldSeparator), 
                 FieldSeparate(mzFirst, zFirst, string.Empty, string.Empty, nce),
                 FieldSeparate(mzLast, zLast, string.Empty, string.Empty, nce));
 
@@ -253,6 +253,24 @@ namespace pwiz.SkylineTestFunctional
                 FieldSeparate(mzFirst, zFirst, t46 - halfWin, t46 + halfWin, nce),
                 FieldSeparate(mzLast, zLast, t39 - halfWin, t39 + halfWin, nce));
 
+            // Export Thermo Stellar unscheduled isolation list
+            var runStart = "0";
+            var runEnd = "30";
+            var thermoStellarMassListExporter = new ThermoStellarMassListExporter(SkylineWindow.Document);
+            ExportIsolationList(
+                "StellarIsolationList.csv",
+                ExportInstrumentType.THERMO_STELLAR, FullScanAcquisitionMethod.PRM, ExportMethodType.Standard,
+                thermoStellarMassListExporter.GetHeader(),
+                FieldSeparate(mzFirst, zFirst, runStart, runEnd, ThermoStellarMassListExporter.WIDE_NCE),
+                FieldSeparate(mzLast, zLast, runStart, runEnd, ThermoStellarMassListExporter.WIDE_NCE)
+                );
+            ExportIsolationList(
+                "StellarIsolationList.csv",
+                ExportInstrumentType.THERMO_STELLAR, FullScanAcquisitionMethod.PRM, ExportMethodType.Scheduled,
+                thermoStellarMassListExporter.GetHeader(),
+                FieldSeparate(mzFirst, zFirst, t46 - halfWin, t46 + halfWin, ThermoStellarMassListExporter.WIDE_NCE),
+                FieldSeparate(mzLast, zLast, t39 - halfWin, t39 + halfWin, ThermoStellarMassListExporter.WIDE_NCE)
+            );
             string fragmentsFirst;
             if (!AsSmallMoleculesNegative)
                 fragmentsFirst = FieldSeparate("582.3190", "951.4782", "595.3086", "708.3927", "837.4353", "1017.5251");
