@@ -114,7 +114,22 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private static void AddMod(UniModModificationData data)
         {
-            var newMod = new StaticMod(data.Name, data.AAs, data.Terminus, false, data.Formula, data.LabelAtoms,
+            bool isVariable = data.Structural; // Most structural modifications are variable by default
+            if (isVariable)
+            {
+                // Except all Cysteine modifications
+                if (Equals(data.AAs, @"C"))
+                    isVariable = false;
+                // And loss-only modifications like Ammonia and Water Loss
+                if (data.Losses != null && data.Losses.Length > 0 && data.Formula == null)
+                    isVariable = false;
+                // And isobaric tagging modifications like TMT, iTRAQ, mTRAQ (unclear this is the right default)
+                // Jimmy says many people search with the mods on variable to assess labeling efficiency
+                // if (data.Name.StartsWith(@"TMT") || data.Name.StartsWith(@"iTRAQ") || data.Name.StartsWith(@"mTRAQ"))
+                //     isVariable = false;
+            }
+
+            var newMod = new StaticMod(data.Name, data.AAs, data.Terminus, isVariable, data.Formula, data.LabelAtoms,
                                        RelativeRT.Matching, null, null, data.Losses, data.ID,
                                        data.ShortName);
             if (data.ID.HasValue && data.ShortName != null)
