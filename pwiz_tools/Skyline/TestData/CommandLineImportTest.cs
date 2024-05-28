@@ -225,7 +225,7 @@ namespace pwiz.SkylineTestData
             var listsPath = TestFilesDir.GetTestPath("peplists.txt");
 
             // Create initial document for comparisons by importing a FASTA file
-            var output = RunCommand(CommandArgs.ARG_IN + docPath,
+            var output = RunCommand(true, CommandArgs.ARG_IN + docPath,
                 CommandArgs.ARG_OUT + outPath,
                 CommandArgs.ARG_IMPORT_FASTA + fastaPath);
             var docFasta = ResultsUtil.DeserializeDocument(outPath);
@@ -236,7 +236,7 @@ namespace pwiz.SkylineTestData
             // in a single peptide list with a default name
             outPath = TestFilesDir.GetTestPath("import-peplist.sky");
             File.WriteAllLines(listPath, docFasta.Peptides.Select(p => p.ModifiedSequence));
-            output = RunCommand(CommandArgs.ARG_IN + docPath,
+            output = RunCommand(true, CommandArgs.ARG_IN + docPath,
                 CommandArgs.ARG_OUT + outPath,
                 CommandArgs.ARG_IMPORT_PEP_LIST + listPath);
             var listName = docFasta.GetPeptideGroupId(true);    // Strictly speaking this should be using the doc for docPath
@@ -256,7 +256,7 @@ namespace pwiz.SkylineTestData
             outPath = TestFilesDir.GetTestPath("import-peplist3.sky");
             const string listName3 = "Peptide-precursors-charge3";
             File.WriteAllLines(listPath3, doc.Peptides.Select(p => p.ModifiedSequence + "+++"));
-            output = RunCommand(CommandArgs.ARG_IN + docPath,
+            output = RunCommand(true, CommandArgs.ARG_IN + docPath,
                 CommandArgs.ARG_OUT + outPath,
                 CommandArgs.ARG_IMPORT_PEP_LIST_NAME + listName3,
                 CommandArgs.ARG_IMPORT_PEP_LIST + listPath3);
@@ -274,7 +274,7 @@ namespace pwiz.SkylineTestData
 
             // Test using --associate-proteins-fasta to reconstitute the same protein
             // structure as the original FASTA import
-            output = RunCommand(CommandArgs.ARG_IN + outPath,
+            output = RunCommand(true, CommandArgs.ARG_IN + outPath,
                 CommandArgs.ARG_SAVE.ArgumentText,
                 CommandArgs.ARG_AP_FASTA + fastaPath);
             AssertEx.Contains(output, 
@@ -289,7 +289,7 @@ namespace pwiz.SkylineTestData
             WritePeptideList(listsPath, docFasta, false);
 
             outPath = TestFilesDir.GetTestPath("import-peplists.sky");
-            output = RunCommand(CommandArgs.ARG_IN + docPath,
+            output = RunCommand(true, CommandArgs.ARG_IN + docPath,
                 CommandArgs.ARG_OUT + outPath,
                 CommandArgs.ARG_IMPORT_PEP_LIST + listsPath);
             AssertEx.Contains(output, string.Format(Resources.CommandLine_ImportPeptideList_Importing_peptide_lists_from_file__0____,
@@ -303,7 +303,7 @@ namespace pwiz.SkylineTestData
             // Test that attempting to specify a list name with a file that
             // has list names causes a warning message
             outPath = TestFilesDir.GetTestPath("import-peplists-warn.sky");
-            output = RunCommand(CommandArgs.ARG_IN + docPath,
+            output = RunCommand(true, CommandArgs.ARG_IN + docPath,
                 CommandArgs.ARG_OUT + outPath,
                 CommandArgs.ARG_IMPORT_PEP_LIST + listsPath,
                 CommandArgs.ARG_IMPORT_PEP_LIST_NAME + "cause_warning");
@@ -318,7 +318,7 @@ namespace pwiz.SkylineTestData
             outPath = TestFilesDir.GetTestPath("import-fasta-mods.sky");
             var oxMod = UniMod.DictUniModIds[new UniMod.UniModIdKey { Id = 35, Aa = 'M' }];
             var phosMod = UniMod.DictUniModIds[new UniMod.UniModIdKey { Id = 21, Aa = 'S' }];
-            output = RunCommand(CommandArgs.ARG_NEW.GetArgumentTextWithValue(outPath),
+            output = RunCommand(true, CommandArgs.ARG_NEW.GetArgumentTextWithValue(outPath),
                 CommandArgs.ARG_SAVE.ArgumentText,
                 CommandArgs.ARG_PEPTIDE_ADD_MOD + oxMod.UnimodId.ToString(),
                 CommandArgs.ARG_PEPTIDE_ADD_MOD_AA + oxMod.AAs,
@@ -333,19 +333,44 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(expectedPepCount + expectedVarModPepCount, docFastaMods.PeptideCount);
             Assert.AreEqual(expectedVarModPepCount, docFastaMods.Peptides.Count(HasVarMod));
 
+            // Try this again with mods flipped to make Carbamidomethyl (C) variable
+            // and others static
+            outPath = TestFilesDir.GetTestPath("import-fasta-flipped-mods.sky");
+            var carbMod = UniMod.DictUniModIds[new UniMod.UniModIdKey { Id = 4, Aa = 'C' }];
+            output = RunCommand(true, CommandArgs.ARG_NEW.GetArgumentTextWithValue(outPath),
+                CommandArgs.ARG_SAVE.ArgumentText,
+                CommandArgs.ARG_PEPTIDE_CLEAR_MODS.ArgumentText,
+                CommandArgs.ARG_PEPTIDE_ADD_MOD + carbMod.Name,
+                CommandArgs.ARG_PEPTIDE_ADD_MOD_VARIABLE + true.ToString(),
+                CommandArgs.ARG_PEPTIDE_ADD_MOD + oxMod.UnimodId.ToString(),
+                CommandArgs.ARG_PEPTIDE_ADD_MOD_VARIABLE + false.ToString(),
+                CommandArgs.ARG_PEPTIDE_ADD_MOD_AA + oxMod.AAs,
+                CommandArgs.ARG_PEPTIDE_ADD_MOD + phosMod.UnimodId.ToString(),
+                CommandArgs.ARG_PEPTIDE_ADD_MOD_VARIABLE + false.ToString(),
+                CommandArgs.ARG_PEPTIDE_ADD_MOD_AA + phosMod.AAs.Remove(1, 2),  // Remove ", " from "S, T"
+                CommandArgs.ARG_IMPORT_FASTA + fastaPath);
+            Assert.AreEqual(6, output.Split(new[] { carbMod.Name }, StringSplitOptions.None).Length - 1);
+            Assert.AreEqual(6, output.Split(new[] { oxMod.Name }, StringSplitOptions.None).Length - 1);
+            Assert.AreEqual(6, output.Split(new[] { phosMod.Name }, StringSplitOptions.None).Length - 1);
+            var docFastaFlippedMods = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(expectedProtCount, docFastaFlippedMods.PeptideGroupCount);
+            Assert.AreEqual(47, docFastaFlippedMods.PeptideCount);
+            Assert.AreEqual(35, docFastaFlippedMods.Peptides.Count(HasVarMod));
+
             // Import this as a set of peptide lists and test that ModificationMatcher
             // automatically creates the right modifications
             outPath = TestFilesDir.GetTestPath("import-list-mods.sky");
             listsPath = TestFilesDir.GetTestPath("peplists-mods.txt");
             WritePeptideList(listsPath, docFastaMods, true);
-            output = RunCommand(CommandArgs.ARG_NEW.GetArgumentTextWithValue(outPath),
+            output = RunCommand(true, CommandArgs.ARG_NEW.GetArgumentTextWithValue(outPath),
                 CommandArgs.ARG_SAVE.ArgumentText,
                 CommandArgs.ARG_IMPORT_PEP_LIST + listsPath);
             var docListMods = ResultsUtil.DeserializeDocument(outPath);
             // Settings should already contain these modifications by virtue of adding
             // them above.
             AssertEx.DoesNotContain(output, Resources.CommandLine_ImportPeptideList_Using_the_Unimod_definitions_for_the_following_modifications_);
-            Assert.AreEqual(3, docListMods.Settings.PeptideSettings.Modifications.StaticModifications.Count);
+            Assert.AreEqual(3, docListMods.Settings.PeptideSettings.Modifications.StaticModifications.Count, 
+                "Incorrect modifications: {0}", string.Join(",", docListMods.Settings.PeptideSettings.Modifications.StaticModifications));
             Assert.AreEqual(expectedProtCount, docListMods.PeptideGroupCount);
             Assert.AreEqual(expectedPepCount + expectedVarModPepCount, docListMods.PeptideCount);
             Assert.AreEqual(expectedVarModPepCount, docListMods.Peptides.Count(HasVarMod));
@@ -354,7 +379,7 @@ namespace pwiz.SkylineTestData
             // Clear settings and make sure the Unimod modifications still work
             Settings.Default.StaticModList.Clear();
             Settings.Default.StaticModList.AddDefaults();
-            output = RunCommand(CommandArgs.ARG_NEW.GetArgumentTextWithValue(outPath),
+            output = RunCommand(true, CommandArgs.ARG_NEW.GetArgumentTextWithValue(outPath),
                 CommandArgs.ARG_OVERWRITE.ArgumentText,
                 CommandArgs.ARG_SAVE.ArgumentText,
                 CommandArgs.ARG_IMPORT_PEP_LIST + listsPath);
@@ -372,7 +397,7 @@ namespace pwiz.SkylineTestData
             var listPathBadMod = TestFilesDir.GetTestPath("peplist-bad-mod.txt");
             outPath = TestFilesDir.GetTestPath("import-bad-mod.sky");
             File.WriteAllLines(listPathBadMod, doc.Peptides.Select(MungeMod));
-            output = RunCommand(CommandArgs.ARG_IN + docPath,
+            output = RunCommand(false, CommandArgs.ARG_IN + docPath,
                 CommandArgs.ARG_OUT + outPath,
                 CommandArgs.ARG_IMPORT_PEP_LIST + listPathBadMod);
             AssertEx.Contains(output, ModelResources.AbstractModificationMatcher_UninterpretedMods_The_following_modifications_could_not_be_interpreted);
