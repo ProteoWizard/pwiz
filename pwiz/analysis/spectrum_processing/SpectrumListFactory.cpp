@@ -1284,8 +1284,15 @@ UsageInfo usage_chargeFromIsotope = {"[minCharge=<minCharge>] [maxCharge=<maxCha
   *   output files containing only ETD or CID MSn data where both activation modes have been
   *   interleaved within a given input vendor data file (eg: Thermo's Decision Tree acquisition mode).
   */ 
-SpectrumListPtr filterCreator_ActivationType(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
+SpectrumListPtr filterCreator_ActivationType(const MSData& msd, const string& carg, pwiz::util::IterationListenerRegistry* ilr)
 {
+    const string modeToken("mode=");
+
+    string arg = carg;
+
+    auto mode = parseKeyValuePair<SpectrumList_Filter::Predicate::FilterMode>(arg, modeToken, SpectrumList_Filter::Predicate::FilterMode_Include);
+    bool hasNot = mode == SpectrumList_Filter::Predicate::FilterMode_Exclude;
+
     istringstream parser(arg);
     string activationType;
     parser >> activationType;
@@ -1305,13 +1312,11 @@ SpectrumListPtr filterCreator_ActivationType(const MSData& msd, const string& ar
 
     set<CVID> cvIDs;
 
-    bool hasNot = false;
-
     // TODO: replace hand-written code with CVTranslator
 
     if (activationType == "CID") // HACK: CID means neither of HCD or ETD
     {
-        hasNot = true;
+        hasNot = !hasNot;
         cvIDs.insert(MS_higher_energy_beam_type_collision_induced_dissociation);
         cvIDs.insert(MS_HCD);
         cvIDs.insert(MS_BIRD);
@@ -1346,11 +1351,12 @@ SpectrumListPtr filterCreator_ActivationType(const MSData& msd, const string& ar
     return SpectrumListPtr(new SpectrumList_Filter(msd.run.spectrumListPtr, 
                                                    SpectrumList_FilterPredicate_ActivationType(cvIDs, hasNot), ilr));
 }
-UsageInfo usage_activation = { "<precursor_activation_type>",
-    "Keeps only spectra whose precursors have the specifed activation type.  It doesn't affect non-MS spectra, and doesn't "
+UsageInfo usage_activation = { "<precursor_activation_type> [mode=<include|exclude (include)>]",
+    "Keeps only spectra whose precursors have the specified activation type. It doesn't affect non-MS spectra, and doesn't "
     "affect MS1 spectra. Use it to create output files containing only ETD or CID MSn data where both activation modes "
     "have been interleaved within a given input vendor data file (eg: Thermo's Decision Tree acquisition mode).\n"
-    "   <precursor_activation_type> is any one of: ETD CID SA HCD HECID BIRD ECD IRMPD PD PSD PQD SID or SORI."
+    "   <precursor_activation_type> is any one of: ETD CID SA HCD HECID BIRD ECD IRMPD PD PSD PQD SID or SORI.\n"
+    "   <mode> is optional and must be either \"include\" (the default) or \"exclude\". If \"exclude\" is used, the filter drops spectra that match the activation type instead of keeping them."
     };
 
 SpectrumListPtr filterCreator_AnalyzerType(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)

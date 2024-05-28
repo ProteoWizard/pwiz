@@ -52,17 +52,25 @@ namespace pwiz.SkylineTest
             foreach (StaticMod mod in UniMod.DictUniModIds.Values)
             {
                 // UniModCompiler should not set the masses.
-                if (ParsedMolecule.IsNullOrEmpty(mod.ParsedMolecule))
+                if (!ParsedMolecule.IsNullOrEmpty(mod.ParsedMolecule))
                 {
-                    Assert.IsNull(mod.MonoisotopicMass);
-                    Assert.IsNull(mod.AverageMass);
+                    Assert.AreEqual(mod.MonoisotopicMass,
+                        SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, mod.ParsedMolecule, SequenceMassCalc.MassPrecision));
+                    Assert.AreEqual(mod.AverageMass,
+                        SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, mod.ParsedMolecule, SequenceMassCalc.MassPrecision));
+                }
+                else if (mod.LabelAtoms != LabelAtoms.None && mod.AAs is { Length: 1 })
+                {
+                    char aa = mod.AAs[0];
+                    Assert.AreEqual(mod.MonoisotopicMass,
+                        new SequenceMassCalc(MassType.Monoisotopic).GetModMass(aa, mod));
+                    Assert.AreEqual(mod.AverageMass,
+                        new SequenceMassCalc(MassType.Average).GetModMass(aa, mod));
                 }
                 else
                 {
-                    Assert.AreEqual(mod.MonoisotopicMass,
-                                    SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, mod.ParsedMolecule, SequenceMassCalc.MassPrecision));
-                    Assert.AreEqual(mod.AverageMass,
-                                    SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, mod.ParsedMolecule, SequenceMassCalc.MassPrecision));
+                    Assert.IsNull(mod.MonoisotopicMass);
+                    Assert.IsNull(mod.AverageMass);
                 }
                 // Everything amino acid/terminus that is part of the modification should be present in   
                 // the name of the modification.

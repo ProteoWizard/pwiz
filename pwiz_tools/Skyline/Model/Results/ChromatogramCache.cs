@@ -449,7 +449,7 @@ namespace pwiz.Skyline.Model.Results
             }
             else
             {
-                if (chromatogramGroupId.Target.Sequence == null)
+                if (chromatogramGroupId.Target?.Sequence == null)
                 {
                     return false;
                 }

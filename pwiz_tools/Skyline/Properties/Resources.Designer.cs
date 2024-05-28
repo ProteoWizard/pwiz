@@ -7482,6 +7482,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A peptide modification must be added before assigning its variable status..
+        /// </summary>
+        public static string PeptideMod_SetVariable_A_peptide_modification_must_be_added_before_assigning_its_variable_status_ {
+            get {
+                return ResourceManager.GetString("PeptideMod_SetVariable_A_peptide_modification_must_be_added_before_assigning_its_" +
+                        "variable_status_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap PeptideQc {

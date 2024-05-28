@@ -39,7 +39,7 @@ namespace pwiz.SkylineTestConnected
         /// <summary>
         /// Tests that a connection can successfully be made to the server specified in KoinaConfig.GetKoinaConfig().
         /// </summary>
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.DOCKER_ROOT_CERTS)]
         public void TestKoinaConnection()
         {
             if (!HasKoinaServer())

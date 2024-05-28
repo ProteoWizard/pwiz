@@ -291,7 +291,7 @@ namespace pwiz.SkylineTestFunctional
                     ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(importPeptideSearchDlg.MatchModificationsControl.ClickAddStructuralModification);
                 RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
                 {
-                    editModDlg.SetModification("Oxidation (M)", true); // Not L10N
+                    editModDlg.SetModification("Oxidation (M)"); // Not L10N
                     editModDlg.OkDialog();
                 });
 
