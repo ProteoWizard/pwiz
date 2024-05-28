@@ -47,6 +47,13 @@ namespace pwiz.SkylineTestUtil
                 string.Compare(value.ToString(), "true", true, CultureInfo.InvariantCulture) == 0;
         }
 
+        public static int? GetIntValue(this TestContext testContext, string property, int? defaultValue)
+        {
+            var value = testContext.Properties[property];
+            return (value == null) ? defaultValue :
+                int.TryParse(value as string, NumberStyles.Any, CultureInfo.InvariantCulture, out var result) ? result : defaultValue;
+        }
+
         public static TValue GetEnumValue<TValue>(this TestContext testContext, string property, TValue defaultValue)
         {
             var value = testContext.Properties[property];

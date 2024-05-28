@@ -90,6 +90,15 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
+        /// When set, fail if test does not complete within the allotted time in msec
+        /// </summary>
+        protected int? Timeout
+        {
+            get { return TestContext.GetIntValue("Timeout", null); }  // Return null if unspecified
+            set { TestContext.Properties["Timeout"] = value; }
+        }
+
+        /// <summary>
         /// When true, re-download data sets on test failure in case it's due to stale data.
         /// </summary>
         protected bool RetryDataDownloads

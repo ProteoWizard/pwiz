@@ -37,7 +37,9 @@ namespace TestRunnerLib
 
         public bool HasPassed { get; set; }
 
-        public override UnitTestOutcome CurrentTestOutcome => HasPassed ? UnitTestOutcome.Passed : base.CurrentTestOutcome;
+        public bool TimedOut { get; set; }
+
+        public override UnitTestOutcome CurrentTestOutcome => TimedOut ? UnitTestOutcome.Timeout : HasPassed ? UnitTestOutcome.Passed : base.CurrentTestOutcome;
 
         public override void WriteLine(string format, params object[] args)
         {

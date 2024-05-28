@@ -53,6 +53,7 @@ namespace TestRunnerLib
         public readonly bool DoNotUseUnicode; // If true, test is known to have trouble with unicode (3rd party tool, mz5, etc)
         public readonly bool DoNotTestOddTmpPath; // If true, test is known to have trouble with odd characters in TMP path (Java)
         public readonly DateTime? SkipTestUntil; // If set, test will be skipped if the current (UTC) date is before the SkipTestUntil date
+        public readonly int? Timeout; // If set, fail if test does not complete within the given timeout in msec
 
         public TestInfo(Type testClass, MethodInfo testMethod, MethodInfo testInitializeMethod, MethodInfo testCleanupMethod)
         {
@@ -77,6 +78,9 @@ namespace TestRunnerLib
 
             var skipTestUntilAttr = RunTests.GetAttribute(testMethod, "SkipTestUntilAttribute") as SkipTestUntilAttribute;
             SkipTestUntil = skipTestUntilAttr?.SkipTestUntil;
+
+            var testTimeoutAttr = RunTests.GetAttribute(testMethod, "TimeoutAttribute") as TimeoutAttribute;
+            Timeout = testTimeoutAttr?.Timeout;
 
             var minidumpAttr = RunTests.GetAttribute(testMethod, "MinidumpLeakThresholdAttribute");
             MinidumpLeakThreshold = minidumpAttr != null
@@ -271,6 +275,53 @@ namespace TestRunnerLib
             return Path.Combine(runnerExeDirectory, assembly);
         }
 
+        private void RunTestWithTimeout(TestInfo test, object testObject)
+        {
+            // Signals completion of the test
+            var taskCompletedEvent = new ManualResetEvent(false);
+
+            // Run the test on a thread
+            Thread testThread = new Thread(() =>
+            {
+                try
+                {
+                    test.TestMethod.Invoke(testObject, null);
+                    taskCompletedEvent.Set(); // Test is complete
+                }
+                catch (ThreadAbortException)
+                {
+                    TestContext.TimedOut = true;
+                }
+            });
+            testThread.Start();
+
+            // Start a timeout
+            Thread timeoutThread = new Thread(() =>
+            {
+                try
+                {
+                    Thread.Sleep(test.Timeout.Value);
+                }
+                catch (ThreadInterruptedException)
+                {
+                }
+                if (!taskCompletedEvent.WaitOne(0))
+                {
+                    testThread.Abort();
+                }
+            });
+            timeoutThread.Start();
+
+            // Wait for the test thread to finish
+            testThread.Join();
+
+            // If the test completes first, terminate the timer thread
+            if (timeoutThread.IsAlive)
+            {
+                timeoutThread.Interrupt();
+            }
+        }
+
         public bool Run(TestInfo test, int pass, int testNumber, string dmpDir, bool heapOutput)
         {
             TeamCityStartTest(test);
@@ -349,6 +400,10 @@ namespace TestRunnerLib
                 TestContext.Properties["RunSmallMoleculeTestVersions"] = RunsSmallMoleculeVersions.ToString(); // Run the AsSmallMolecule version of tests when available?
                 TestContext.Properties["TestName"] = test.TestMethod.Name;
                 TestContext.Properties["RecordAuditLogs"] = RecordAuditLogs.ToString();
+                if (test.Timeout.HasValue)
+                {
+                    TestContext.Properties["Timeout"] = test.Timeout.ToString();
+                }
                 if (IsParallelClient)
                 {
                     Environment.SetEnvironmentVariable(@"SKYLINE_TESTER_PARALLEL_CLIENT_ID", ParallelClientId); // Accessed in pwiz_tools\Skyline\Util\Util.cs
@@ -391,7 +446,15 @@ namespace TestRunnerLib
                         // to put this in.
                         //CrtDebugHeap.Checkpoint();
                     }
-                    test.TestMethod.Invoke(testObject, null);
+
+                    if (test.Timeout.HasValue && test.Timeout != Timeout.Infinite) // Was a timeout set?
+                    {
+                        RunTestWithTimeout(test, testObject);
+                    }
+                    else
+                    {
+                        test.TestMethod.Invoke(testObject, null);
+                    }
                     if (CheckCrtLeaks > 0)
                     {
                         //crtLeakedBytes = CrtDebugHeap.DumpLeaks(true);
@@ -509,7 +572,7 @@ namespace TestRunnerLib
 //            var handleInfos = HandleEnumeratorWrapper.GetHandleInfos();
 //            var handleCounts = handleInfos.GroupBy(h => h.Type).OrderBy(g => g.Key);
 
-            if (exception == null)
+            if (exception == null && !TestContext.TimedOut)
             {
                 // Test succeeded.
                 Log(ReportSystemHeaps
@@ -561,10 +624,10 @@ namespace TestRunnerLib
                 FailureCounts[test.TestMethod.Name]++;
             else
                 FailureCounts[test.TestMethod.Name] = 1;
-            var message = exception.InnerException == null ? exception.Message : exception.InnerException.Message;
+            var message = TestContext.TimedOut ? $"Exceeded {test.Timeout/1000} second timeout" : exception.InnerException == null ? exception.Message : exception.InnerException.Message;
             if (!string.IsNullOrEmpty(ParallelClientId))
                 message += $"\nOn parallel client {ParallelClientId}";
-            var stackTrace = exception.InnerException == null ? exception.StackTrace : exception.InnerException.StackTrace;
+            var stackTrace = TestContext.TimedOut ? string.Empty : exception.InnerException == null ? exception.StackTrace : exception.InnerException.StackTrace;
             var failureInfo = "# " + test.TestMethod.Name + "FAILED:\n" +
                 message + "\n" +
                 stackTrace;
