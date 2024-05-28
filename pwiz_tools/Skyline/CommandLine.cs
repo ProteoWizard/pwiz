@@ -1260,6 +1260,9 @@ namespace pwiz.Skyline
                                     bool structural = UniMod.IsStructuralModification(mod.Name);
                                     if (peptideMod.IsVariable.HasValue)
                                     {
+                                        if (!structural)
+                                            throw new InvalidDataException(DocSettingsResources.StaticMod_DoValidate_Isotope_modifications_may_not_be_variable_);
+
                                         mod = mod.ChangeVariable(peptideMod.IsVariable.Value);
                                     }
                                     

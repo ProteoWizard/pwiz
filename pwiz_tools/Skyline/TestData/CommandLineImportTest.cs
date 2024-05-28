@@ -333,6 +333,30 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(expectedPepCount + expectedVarModPepCount, docFastaMods.PeptideCount);
             Assert.AreEqual(expectedVarModPepCount, docFastaMods.Peptides.Count(HasVarMod));
 
+            // Try this again with mods flipped to make Carbamidomethyl (C) variable
+            // and others static
+            outPath = TestFilesDir.GetTestPath("import-fasta-flipped-mods.sky");
+            var carbMod = UniMod.DictUniModIds[new UniMod.UniModIdKey { Id = 4, Aa = 'C' }];
+            output = RunCommand(true, CommandArgs.ARG_NEW.GetArgumentTextWithValue(outPath),
+                CommandArgs.ARG_SAVE.ArgumentText,
+                CommandArgs.ARG_PEPTIDE_CLEAR_MODS.ArgumentText,
+                CommandArgs.ARG_PEPTIDE_ADD_MOD + carbMod.Name,
+                CommandArgs.ARG_PEPTIDE_ADD_MOD_VARIABLE + true.ToString(),
+                CommandArgs.ARG_PEPTIDE_ADD_MOD + oxMod.UnimodId.ToString(),
+                CommandArgs.ARG_PEPTIDE_ADD_MOD_VARIABLE + false.ToString(),
+                CommandArgs.ARG_PEPTIDE_ADD_MOD_AA + oxMod.AAs,
+                CommandArgs.ARG_PEPTIDE_ADD_MOD + phosMod.UnimodId.ToString(),
+                CommandArgs.ARG_PEPTIDE_ADD_MOD_VARIABLE + false.ToString(),
+                CommandArgs.ARG_PEPTIDE_ADD_MOD_AA + phosMod.AAs.Remove(1, 2),  // Remove ", " from "S, T"
+                CommandArgs.ARG_IMPORT_FASTA + fastaPath);
+            Assert.AreEqual(6, output.Split(new[] { carbMod.Name }, StringSplitOptions.None).Length - 1);
+            Assert.AreEqual(6, output.Split(new[] { oxMod.Name }, StringSplitOptions.None).Length - 1);
+            Assert.AreEqual(6, output.Split(new[] { phosMod.Name }, StringSplitOptions.None).Length - 1);
+            var docFastaFlippedMods = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(expectedProtCount, docFastaFlippedMods.PeptideGroupCount);
+            Assert.AreEqual(47, docFastaFlippedMods.PeptideCount);
+            Assert.AreEqual(35, docFastaFlippedMods.Peptides.Count(HasVarMod));
+
             // Import this as a set of peptide lists and test that ModificationMatcher
             // automatically creates the right modifications
             outPath = TestFilesDir.GetTestPath("import-list-mods.sky");

@@ -804,8 +804,17 @@ namespace pwiz.SkylineTestData
                 RunCommandAndValidateError(new[] { "--pep-add-mod=Oxi", "--pep-add-mod-variable=X" },
                     new CommandArgs.ValueInvalidBoolException(CommandArgs.ARG_PEPTIDE_ADD_MOD_VARIABLE, "X").Message, printErrors);
 
+                // Variable failure on loss-only modification
                 RunCommandAndValidateError(new[] { "--pep-add-mod=Water Loss (D, E, S, T)", "--pep-add-mod-variable=true" },
                     DocSettingsResources.StaticMod_Validate_Loss_only_modifications_may_not_be_variable, printErrors);
+
+                // Variable failure for amino acid labeling modification
+                RunCommandAndValidateError(new[] { "--pep-add-mod=Label:13C(6)15N(2) (K)", "--pep-add-mod-variable=true" },
+                    DocSettingsResources.StaticMod_DoValidate_Isotope_modifications_may_not_be_variable_, printErrors);
+
+                // Variable failure for formulaic isotope labeling modification
+                RunCommandAndValidateError(new[] { "--pep-add-mod=Label:18O(1) (C-term)", "--pep-add-mod-variable=true" },
+                    DocSettingsResources.StaticMod_DoValidate_Isotope_modifications_may_not_be_variable_, printErrors);
 
                 RunCommandAndValidateError(new[] { "--pep-add-mod=Oxi", "--pep-add-unimod-term=Z" },
                     new CommandArgs.ValueInvalidModTerminusException(CommandArgs.ARG_PEPTIDE_ADD_MOD_TERM, "Z").Message, printErrors);

@@ -706,11 +706,18 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private void DoValidate()
         {
-            // It is now valid to specify modifications that apply to every amino acid.
-            // This is important for 15N labeling, and reasonable for an explicit
-            // static modification... but not for variable modifications.
-            if (IsVariable && !Terminus.HasValue && AAs == null)
-                throw new InvalidDataException(DocSettingsResources.StaticMod_Validate_Variable_modifications_must_specify_amino_acid_or_terminus);
+            if (IsVariable)
+            {
+                // It is now valid to specify modifications that apply to every amino acid.
+                // This is important for 15N labeling, and reasonable for an explicit
+                // static modification... but not for variable modifications.
+                if (!Terminus.HasValue && AAs == null)
+                    throw new InvalidDataException(DocSettingsResources.StaticMod_Validate_Variable_modifications_must_specify_amino_acid_or_terminus);
+                // Nor can isotope modifications be variable. Though, isotope labeled amino acids are the only type
+                // that can be detected here
+                if (LabelAtoms != LabelAtoms.None)
+                    throw new InvalidDataException(DocSettingsResources.StaticMod_DoValidate_Isotope_modifications_may_not_be_variable_);
+            }
             if (AAs != null)
             {
                 foreach (string aaPart in AAs.Split(','))

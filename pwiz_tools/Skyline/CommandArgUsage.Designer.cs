@@ -1324,7 +1324,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adds a modification as variable if &apos;true&apos; or static if &apos;false&apos;. Only valid for structural modifications with mass..
+        ///   Looks up a localized string similar to Adds a modification as variable if &apos;true&apos; or static if &apos;false&apos;. Only valid for structural modifications except for loss-only modifications(e.g. Ammonia and Water Loss)..
         /// </summary>
         public static string _pep_add_mod_variable {
             get {
