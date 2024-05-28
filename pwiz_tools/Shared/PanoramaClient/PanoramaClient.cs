@@ -460,7 +460,7 @@ namespace pwiz.PanoramaClient
             catch (Exception ex)
             {
                 // Asynchronous file upload runs on a worker thread. Handle any exceptions that are thrown otherwise the Skyline window will crash.
-                return new LabKeyError(CommonTextUtil.SpaceSeparate(
+                return new LabKeyError(CommonTextUtil.LineSeparate(
                     Resources
                         .AbstractPanoramaClient_ParseUploadFileCompletedEventArgs_There_was_an_error_reading_the_server_response_,
                     ex.ToString()), null);
