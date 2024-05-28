@@ -1163,4 +1163,10 @@
   <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins" xml:space="preserve">
     <value>Associating peptides with proteins</value>
   </data>
+  <data name="SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_performing_run_peptide_search_" xml:space="preserve">
+	  <value>You must save this document before performing run peptide search.</value>
+  </data>
+  <data name="SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_performing_run_peptide_search_" xml:space="preserve">
+	  <value>The document must be fully loaded before performing run peptide search.</value>
+  </data>
 </root>

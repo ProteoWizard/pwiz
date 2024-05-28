@@ -117,21 +117,84 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="&gt;&gt;radioDIA.Name" xml:space="preserve">
+    <value>radioDIA</value>
+  </data>
+  <data name="&gt;&gt;radioDIA.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioDIA.Parent" xml:space="preserve">
+    <value>grpWorkflow</value>
+  </data>
+  <data name="&gt;&gt;radioDIA.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;radioPRM.Name" xml:space="preserve">
+    <value>radioPRM</value>
+  </data>
+  <data name="&gt;&gt;radioPRM.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioPRM.Parent" xml:space="preserve">
+    <value>grpWorkflow</value>
+  </data>
+  <data name="&gt;&gt;radioPRM.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;radioDDA.Name" xml:space="preserve">
+    <value>radioDDA</value>
+  </data>
+  <data name="&gt;&gt;radioDDA.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioDDA.Parent" xml:space="preserve">
+    <value>grpWorkflow</value>
+  </data>
+  <data name="&gt;&gt;radioDDA.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="grpWorkflow.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Bottom</value>
+  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="grpWorkflow.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 529</value>
+  </data>
+  <data name="grpWorkflow.Size" type="System.Drawing.Size, System.Drawing">
+    <value>381, 93</value>
+  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="grpWorkflow.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="grpWorkflow.Text" xml:space="preserve">
+    <value>Workflow</value>
+  </data>
+  <data name="&gt;&gt;grpWorkflow.Name" xml:space="preserve">
+    <value>grpWorkflow</value>
+  </data>
+  <data name="&gt;&gt;grpWorkflow.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;grpWorkflow.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;grpWorkflow.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
   <data name="radioDIA.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
   <data name="radioDIA.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="radioDIA.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 42</value>
   </data>
   <data name="radioDIA.Size" type="System.Drawing.Size, System.Drawing">
     <value>369, 17</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="radioDIA.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
@@ -210,31 +273,52 @@
   <data name="&gt;&gt;radioDDA.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="grpWorkflow.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Bottom</value>
+  <data name="&gt;&gt;radioButtonNewLibrary.Name" xml:space="preserve">
+    <value>radioButtonNewLibrary</value>
   </data>
-  <data name="grpWorkflow.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 529</value>
+  <data name="&gt;&gt;radioButtonNewLibrary.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="grpWorkflow.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 93</value>
+  <data name="&gt;&gt;radioButtonNewLibrary.Parent" xml:space="preserve">
+    <value>panel1</value>
   </data>
-  <data name="grpWorkflow.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+  <data name="&gt;&gt;radioButtonNewLibrary.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
-  <data name="grpWorkflow.Text" xml:space="preserve">
-    <value>Workflow</value>
+  <data name="&gt;&gt;radioExistingLibrary.Name" xml:space="preserve">
+    <value>radioExistingLibrary</value>
   </data>
-  <data name="&gt;&gt;grpWorkflow.Name" xml:space="preserve">
-    <value>grpWorkflow</value>
+  <data name="&gt;&gt;radioExistingLibrary.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;grpWorkflow.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;radioExistingLibrary.Parent" xml:space="preserve">
+    <value>panel1</value>
   </data>
-  <data name="&gt;&gt;grpWorkflow.Parent" xml:space="preserve">
+  <data name="&gt;&gt;radioExistingLibrary.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="panel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Top</value>
+  </data>
+  <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>381, 45</value>
+  </data>
+  <data name="panel1.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;grpWorkflow.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="radioButtonNewLibrary.AutoSize" type="System.Boolean, mscorlib">
@@ -297,28 +381,67 @@
   <data name="&gt;&gt;radioExistingLibrary.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="panel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
+  <data name="&gt;&gt;tbxLibraryPath.Name" xml:space="preserve">
+    <value>tbxLibraryPath</value>
   </data>
-  <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
+  <data name="&gt;&gt;tbxLibraryPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 45</value>
+  <data name="&gt;&gt;tbxLibraryPath.Parent" xml:space="preserve">
+    <value>panelChooseFile</value>
   </data>
-  <data name="panel1.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;tbxLibraryPath.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
-    <value>panel1</value>
+  <data name="&gt;&gt;btnBrowse.Name" xml:space="preserve">
+    <value>btnBrowse</value>
   </data>
-  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnBrowse.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.Parent" xml:space="preserve">
+    <value>panelChooseFile</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;lblLibraryPath.Name" xml:space="preserve">
+    <value>lblLibraryPath</value>
+  </data>
+  <data name="&gt;&gt;lblLibraryPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblLibraryPath.Parent" xml:space="preserve">
+    <value>panelChooseFile</value>
+  </data>
+  <data name="&gt;&gt;lblLibraryPath.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="panelChooseFile.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Top</value>
+  </data>
+  <data name="panelChooseFile.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 45</value>
+  </data>
+  <data name="panelChooseFile.Size" type="System.Drawing.Size, System.Drawing">
+    <value>381, 95</value>
+  </data>
+  <data name="panelChooseFile.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="panelChooseFile.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;panelChooseFile.Name" xml:space="preserve">
+    <value>panelChooseFile</value>
+  </data>
+  <data name="&gt;&gt;panelChooseFile.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;panelChooseFile.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;panelChooseFile.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="tbxLibraryPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -405,33 +528,6 @@
   <data name="&gt;&gt;lblLibraryPath.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="panelChooseFile.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
-  </data>
-  <data name="panelChooseFile.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 45</value>
-  </data>
-  <data name="panelChooseFile.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 95</value>
-  </data>
-  <data name="panelChooseFile.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="panelChooseFile.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="&gt;&gt;panelChooseFile.Name" xml:space="preserve">
-    <value>panelChooseFile</value>
-  </data>
-  <data name="&gt;&gt;panelChooseFile.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelChooseFile.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panelChooseFile.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <data name="gridSearchFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
@@ -439,7 +535,7 @@
     <value>11, 70</value>
   </data>
   <data name="gridSearchFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>261, 147</value>
+    <value>261, 117</value>
   </data>
   <data name="gridSearchFiles.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -448,7 +544,7 @@
     <value>gridSearchFiles</value>
   </data>
   <data name="&gt;&gt;gridSearchFiles.Type" xml:space="preserve">
-    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline-daily, Version=23.1.1.509, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridSearchFiles.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
@@ -474,6 +570,9 @@
   <data name="label2.Text" xml:space="preserve">
     <value>Start fro&amp;m:</value>
   </data>
+  <data name="label2.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
@@ -494,6 +593,9 @@
   </data>
   <data name="comboInputFileType.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="comboInputFileType.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
   </data>
   <data name="&gt;&gt;comboInputFileType.Name" xml:space="preserve">
     <value>comboInputFileType</value>
@@ -517,7 +619,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblStandardPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 242</value>
+    <value>11, 212</value>
   </data>
   <data name="lblStandardPeptides.Size" type="System.Drawing.Size, System.Drawing">
     <value>114, 13</value>
@@ -544,7 +646,7 @@
     <value>Bottom, Left</value>
   </data>
   <data name="comboStandards.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 258</value>
+    <value>11, 228</value>
   </data>
   <data name="comboStandards.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 21</value>
@@ -574,7 +676,7 @@
     <value>NoControl</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 285</value>
+    <value>11, 255</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Size" type="System.Drawing.Size, System.Drawing">
     <value>158, 17</value>
@@ -607,7 +709,7 @@
     <value>NoControl</value>
   </data>
   <data name="cbFilterForDocumentPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 308</value>
+    <value>11, 278</value>
   </data>
   <data name="cbFilterForDocumentPeptides.Size" type="System.Drawing.Size, System.Drawing">
     <value>156, 17</value>
@@ -723,101 +825,14 @@
   <data name="&gt;&gt;btnAddFile.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
-  <data name="panelSearchThreshold.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="panelSearchThreshold.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="panelSearchThreshold.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
-    <value>GrowAndShrink</value>
-  </data>
-  <data name="label1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 6</value>
-  </data>
-  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>70, 13</value>
-  </data>
-  <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label1.Text" xml:space="preserve">
-    <value>&amp;Cut-off score:</value>
-  </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>panelSearchThreshold</value>
-  </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="textCutoff.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="textCutoff.Location" type="System.Drawing.Point, System.Drawing">
-    <value>79, 3</value>
-  </data>
-  <data name="textCutoff.Size" type="System.Drawing.Size, System.Drawing">
-    <value>40, 20</value>
-  </data>
-  <data name="textCutoff.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;textCutoff.Name" xml:space="preserve">
-    <value>textCutoff</value>
-  </data>
-  <data name="&gt;&gt;textCutoff.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textCutoff.Parent" xml:space="preserve">
-    <value>panelSearchThreshold</value>
-  </data>
-  <data name="&gt;&gt;textCutoff.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="panelSearchThreshold.Location" type="System.Drawing.Point, System.Drawing">
-    <value>160, 46</value>
-  </data>
-  <data name="panelSearchThreshold.Size" type="System.Drawing.Size, System.Drawing">
-    <value>122, 26</value>
-  </data>
-  <data name="panelSearchThreshold.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;panelSearchThreshold.Name" xml:space="preserve">
-    <value>panelSearchThreshold</value>
-  </data>
-  <data name="&gt;&gt;panelSearchThreshold.Type" xml:space="preserve">
-    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelSearchThreshold.Parent" xml:space="preserve">
-    <value>panelPeptideSearch</value>
-  </data>
-  <data name="&gt;&gt;panelSearchThreshold.ZOrder" xml:space="preserve">
-    <value>10</value>
-  </data>
   <data name="panelPeptideSearch.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
   <data name="panelPeptideSearch.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 140</value>
+    <value>0, 170</value>
   </data>
   <data name="panelPeptideSearch.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 389</value>
+    <value>381, 359</value>
   </data>
   <data name="panelPeptideSearch.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -845,6 +860,114 @@
   </data>
   <data name="dataGridViewTextBoxColumn4.HeaderText" xml:space="preserve">
     <value>Score Threshold</value>
+  </data>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>panelSearchThreshold</value>
+  </data>
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;textCutoff.Name" xml:space="preserve">
+    <value>textCutoff</value>
+  </data>
+  <data name="&gt;&gt;textCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textCutoff.Parent" xml:space="preserve">
+    <value>panelSearchThreshold</value>
+  </data>
+  <data name="&gt;&gt;textCutoff.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="panelSearchThreshold.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Top</value>
+  </data>
+  <data name="panelSearchThreshold.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 140</value>
+  </data>
+  <data name="panelSearchThreshold.Size" type="System.Drawing.Size, System.Drawing">
+    <value>381, 30</value>
+  </data>
+  <data name="panelSearchThreshold.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="panelSearchThreshold.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;panelSearchThreshold.Name" xml:space="preserve">
+    <value>panelSearchThreshold</value>
+  </data>
+  <data name="&gt;&gt;panelSearchThreshold.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelSearchThreshold.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelSearchThreshold.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="label1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 8</value>
+  </data>
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>70, 13</value>
+  </data>
+  <data name="label1.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="label1.Text" xml:space="preserve">
+    <value>&amp;Cut-off score:</value>
+  </data>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>panelSearchThreshold</value>
+  </data>
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="textCutoff.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="textCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>89, 5</value>
+  </data>
+  <data name="textCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>40, 20</value>
+  </data>
+  <data name="textCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;textCutoff.Name" xml:space="preserve">
+    <value>textCutoff</value>
+  </data>
+  <data name="&gt;&gt;textCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textCutoff.Parent" xml:space="preserve">
+    <value>panelSearchThreshold</value>
+  </data>
+  <data name="&gt;&gt;textCutoff.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

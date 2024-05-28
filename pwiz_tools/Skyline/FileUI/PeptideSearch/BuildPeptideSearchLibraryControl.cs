@@ -48,12 +48,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private readonly SettingsListComboDriver<IrtStandard> _driverStandards;
         private MsDataFileUri[] _ddaSearchDataSources = Array.Empty<MsDataFileUri>();
         private bool _isFeatureDetectionWorkflow;
+        private bool _isRunPeptideSearch;
 
-        public BuildPeptideSearchLibraryControl(IModifyDocumentContainer documentContainer, ImportPeptideSearch importPeptideSearch, LibraryManager libraryManager)
+        public BuildPeptideSearchLibraryControl(IModifyDocumentContainer documentContainer, ImportPeptideSearch importPeptideSearch, LibraryManager libraryManager, bool isRunPeptideSearch)
         {
             DocumentContainer = documentContainer;
             ImportPeptideSearch = importPeptideSearch;
             LibraryManager = libraryManager;
+            _isRunPeptideSearch = isRunPeptideSearch;
 
             InitializeComponent();
 
@@ -76,6 +78,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
 
             comboInputFileType.SelectedIndex = 0;
+
+            if (isRunPeptideSearch)
+            {
+                panel1.Hide();
+                panelSearchThreshold.Show();
+            }
         }
 
         private BuildPeptideSearchLibrarySettings _buildPeptideSearchLibrarySettings;
@@ -308,7 +316,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { textCutoff.Text = value; } // Can be a null or empty string under some circumstances
         }
 
-        public bool NeedsCutoffScore => comboInputFileType.SelectedIndex > 0; // Only needed if Skyline is conducting the search
+        public bool NeedsCutoffScore => _isRunPeptideSearch; // Only needed if Skyline is conducting the search
 
         private double? _cutoffScore; // May be null when Skyline is not doing the search
 
@@ -736,5 +744,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             UpdatePerformDDASearch();
         }
 
+        private void grpWorkflow_Enter(object sender, EventArgs e)
+        {
+
+        }
     }
 }

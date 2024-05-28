@@ -4648,6 +4648,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\BuildPeptideSearchLibraryControl.resx">
       <DependentUpon>BuildPeptideSearchLibraryControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ImportFastaControl.resx">
       <DependentUpon>ImportFastaControl.cs</DependentUpon>

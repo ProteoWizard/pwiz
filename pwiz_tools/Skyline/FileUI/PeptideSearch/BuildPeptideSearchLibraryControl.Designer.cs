@@ -51,13 +51,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnRemFile = new System.Windows.Forms.Button();
             this.lblFileCaption = new System.Windows.Forms.Label();
             this.btnAddFile = new System.Windows.Forms.Button();
-            this.panelSearchThreshold = new System.Windows.Forms.FlowLayoutPanel();
-            this.label1 = new System.Windows.Forms.Label();
-            this.textCutoff = new System.Windows.Forms.TextBox();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.panelSearchThreshold = new System.Windows.Forms.Panel();
+            this.label1 = new System.Windows.Forms.Label();
+            this.textCutoff = new System.Windows.Forms.TextBox();
             this.grpWorkflow.SuspendLayout();
             this.panel1.SuspendLayout();
             this.panelChooseFile.SuspendLayout();
@@ -74,6 +74,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resources.ApplyResources(this.grpWorkflow, "grpWorkflow");
             this.grpWorkflow.Name = "grpWorkflow";
             this.grpWorkflow.TabStop = false;
+            this.grpWorkflow.Enter += new System.EventHandler(this.grpWorkflow_Enter);
             // 
             // radioDIA
             // 
@@ -156,7 +157,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.panelPeptideSearch.Controls.Add(this.btnRemFile);
             this.panelPeptideSearch.Controls.Add(this.lblFileCaption);
             this.panelPeptideSearch.Controls.Add(this.btnAddFile);
-            this.panelPeptideSearch.Controls.Add(this.panelSearchThreshold);
             resources.ApplyResources(this.panelPeptideSearch, "panelPeptideSearch");
             this.panelPeptideSearch.Name = "panelPeptideSearch";
             // 
@@ -225,23 +225,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnAddFile.UseVisualStyleBackColor = true;
             this.btnAddFile.Click += new System.EventHandler(this.btnAddFile_Click);
             // 
-            // panelSearchThreshold
-            // 
-            resources.ApplyResources(this.panelSearchThreshold, "panelSearchThreshold");
-            this.panelSearchThreshold.Controls.Add(this.label1);
-            this.panelSearchThreshold.Controls.Add(this.textCutoff);
-            this.panelSearchThreshold.Name = "panelSearchThreshold";
-            // 
-            // label1
-            // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
-            // 
-            // textCutoff
-            // 
-            resources.ApplyResources(this.textCutoff, "textCutoff");
-            this.textCutoff.Name = "textCutoff";
-            // 
             // dataGridViewTextBoxColumn1
             // 
             this.dataGridViewTextBoxColumn1.Frozen = true;
@@ -271,12 +254,30 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resources.ApplyResources(this.dataGridViewTextBoxColumn4, "dataGridViewTextBoxColumn4");
             this.dataGridViewTextBoxColumn4.Name = "dataGridViewTextBoxColumn4";
             // 
+            // panelSearchThreshold
+            // 
+            this.panelSearchThreshold.Controls.Add(this.label1);
+            this.panelSearchThreshold.Controls.Add(this.textCutoff);
+            resources.ApplyResources(this.panelSearchThreshold, "panelSearchThreshold");
+            this.panelSearchThreshold.Name = "panelSearchThreshold";
+            // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.Name = "label1";
+            // 
+            // textCutoff
+            // 
+            resources.ApplyResources(this.textCutoff, "textCutoff");
+            this.textCutoff.Name = "textCutoff";
+            // 
             // BuildPeptideSearchLibraryControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.Controls.Add(this.panelPeptideSearch);
+            this.Controls.Add(this.panelSearchThreshold);
             this.Controls.Add(this.panelChooseFile);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.grpWorkflow);
@@ -322,8 +323,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn3;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn4;
-        private System.Windows.Forms.TextBox textCutoff;
+        private System.Windows.Forms.Panel panelSearchThreshold;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.FlowLayoutPanel panelSearchThreshold;
+        private System.Windows.Forms.TextBox textCutoff;
     }
 }

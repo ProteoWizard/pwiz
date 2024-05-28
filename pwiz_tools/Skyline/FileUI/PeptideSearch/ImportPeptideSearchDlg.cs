@@ -99,7 +99,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private readonly Stack<SrmDocument> _documents;
         public bool IsAutomatedTest; // Testing support
 
-        public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager, Workflow? workflowType, bool useExistingLibrary = false)
+        public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager,
+            Workflow? workflowType, bool useExistingLibrary = false) : this(skylineWindow, libraryManager, false, workflowType, useExistingLibrary) { }
+
+        public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager, bool isRunPeptideSearch, Workflow? workflowType, bool useExistingLibrary = false)
         {
             SkylineWindow = skylineWindow;
             _documents = new Stack<SrmDocument>();
@@ -128,7 +131,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             btnNext.Enabled = HasUnmatchedLibraryRuns(Document);
 
             // Create and add wizard pages
-            BuildPepSearchLibControl = new BuildPeptideSearchLibraryControl(this, ImportPeptideSearch, libraryManager)
+            BuildPepSearchLibControl = new BuildPeptideSearchLibraryControl(this, ImportPeptideSearch, libraryManager, isRunPeptideSearch)
             {
                 Dock = DockStyle.Fill,
             };
