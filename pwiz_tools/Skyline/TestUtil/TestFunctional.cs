@@ -2372,24 +2372,24 @@ namespace pwiz.SkylineTestUtil
             OkDialog(editModsDlg, editModsDlg.OkDialog);
         }
 
-        public static void AddStaticMod(string uniModName, bool isVariable, PeptideSettingsUI peptideSettingsUI)
+        public static void AddStaticMod(string uniModName, PeptideSettingsUI peptideSettingsUI)
         {
             var editStaticModsDlg = ShowEditStaticModsDlg(peptideSettingsUI);
             RunUI(editStaticModsDlg.SelectLastItem);
-            AddMod(uniModName, isVariable, editStaticModsDlg);
+            AddMod(uniModName, editStaticModsDlg);
         }
 
         public static void AddHeavyMod(string uniModName, PeptideSettingsUI peptideSettingsUI)
         {
             var editStaticModsDlg = ShowEditHeavyModsDlg(peptideSettingsUI);
             RunUI(editStaticModsDlg.SelectLastItem);
-            AddMod(uniModName, false, editStaticModsDlg);
+            AddMod(uniModName, editStaticModsDlg);
         }
 
-        private static void AddMod(string uniModName, bool isVariable, EditListDlg<SettingsListBase<StaticMod>, StaticMod> editModsDlg)
+        private static void AddMod(string uniModName, EditListDlg<SettingsListBase<StaticMod>, StaticMod> editModsDlg)
         {
             var addStaticModDlg = ShowAddModDlg(editModsDlg);
-            RunUI(() => addStaticModDlg.SetModification(uniModName, isVariable));
+            RunUI(() => addStaticModDlg.SetModification(uniModName));
             OkDialog(addStaticModDlg, addStaticModDlg.OkDialog);
 
             OkDialog(editModsDlg, editModsDlg.OkDialog);
