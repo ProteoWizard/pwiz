@@ -947,6 +947,10 @@ namespace pwiz.Skyline.Model.Lib
         {
             get { return false; }
         }
+        public virtual bool HasExplicitBounds
+        {
+            get { return false; }
+        }
 
         #region Implementation of IXmlSerializable
 
@@ -1244,6 +1248,14 @@ namespace pwiz.Skyline.Model.Lib
         {
             return _libraryEntries.ItemsMatching(new LibKey(target, Adduct.EMPTY).LibraryKey, false);
         }
+<<<<<<< HEAD
+=======
+
+        protected int FindFileInList(MsDataFileUri sourceFile, LibraryFiles fileNames)
+        {
+            return fileNames.FindIndexOf(sourceFile);
+        }
+>>>>>>> remotes/origin/master
     }
 
     public sealed class LibraryRetentionTimes : IRetentionTimeProvider
@@ -2778,17 +2790,6 @@ namespace pwiz.Skyline.Model.Lib
             if (!string.IsNullOrEmpty(Link))
                 result.Add($@"LinkURL: {Link} ");
             return TextUtil.LineSeparate(result);
-        }
-    }
-
-    public sealed class LibraryFiles
-    {
-        private IEnumerable<string> _filePaths;
-
-        public IEnumerable<string> FilePaths
-        {
-            get { return _filePaths ?? (_filePaths = new List<string>()); }
-            set { _filePaths = value; }
         }
     }
 

@@ -19,6 +19,7 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
@@ -81,6 +82,15 @@ namespace pwiz.SkylineTestFunctional
                 .Where(score => null != score)
                 .ToArray();
             Assert.AreNotEqual(0, scores.Length);
+
+            // Verify that attempting to train a peak scoring model generates a warning about explicit peak boundaries.
+            var reintegrateDlg = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
+            RunDlg<MultiButtonMsgDlg>(reintegrateDlg.AddPeakScoringModel, dlg =>
+            {
+                Assert.AreEqual(SettingsUIResources.EditPeakScoringModel_ExplictPeakBoundsWarning, dlg.Message);
+                dlg.ClickCancel();
+            });
+            OkDialog(reintegrateDlg, reintegrateDlg.Close);
         }
     }
 }

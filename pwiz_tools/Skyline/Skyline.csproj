@@ -52,8 +52,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>459</ApplicationRevision>
-    <ApplicationVersion>23.1.1.459</ApplicationVersion>
+    <ApplicationRevision>503</ApplicationRevision>
+    <ApplicationVersion>23.1.1.503</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -533,6 +533,7 @@
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Databinding\SurrogateStandardDataGridViewColumn.cs" />
+    <Compile Include="Model\DocumentModifier.cs" />
     <Compile Include="Model\FullScanPropertiesRes.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -561,6 +562,8 @@
     <Compile Include="Model\Results\Imputation\ImputationParameters.cs" />
     <Compile Include="Model\Results\Imputation\ScoreConversionData.cs" />
     <Compile Include="Model\Results\ReplicateFileId.cs" />
+    <Compile Include="Model\Lib\LibraryFiles.cs" />
+    <Compile Include="Model\Results\Scoring\ReintegrateDlgSettings.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\BinnedSpectrum.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SimilarityGrid.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SpectrumSummary.cs" />
@@ -778,11 +781,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ChromLibResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="SettingsUI\SettingsUIResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>SettingsUIResources.resx</DependentUpon>
-    </Compile>
     <Compile Include="Controls\SeqNode\SeqNodeResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -797,6 +795,11 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>GroupComparisonResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\SettingsUIResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>SettingsUIResources.resx</DependentUpon>
     </Compile>
     <Compile Include="SkylineResources.Designer.cs">
       <AutoGen>True</AutoGen>
