@@ -1574,6 +1574,9 @@ namespace pwiz.Skyline
             { WrapValue = true };
         public static readonly Argument ARG_PEPTIDE_ADD_MOD_TERM = new DocArgument(@"pep-add-unimod-term", MOD_TERMINUS_VALUE,
             (c, p) => PeptideMod.SetTerminus(c.PeptideMods, p.Value));
+        public static readonly Argument ARG_PEPTIDE_ADD_MOD_VARIABLE = new DocArgument(@"pep-add-mod-variable", BOOL_VALUE,
+            (c, p) => PeptideMod.SetVariable(c.PeptideMods, p.ValueBool));
+
         public static readonly Argument ARG_PEPTIDE_MAX_VAR_MODS = new DocArgument(@"pep-max-variable-mods", INT_VALUE,
             (c, p) => c.PeptideMaxVariableMods = p.GetValueInt(PeptideModifications.MIN_MAX_VARIABLE_MODS, PeptideModifications.MAX_MAX_VARIABLE_MODS));
         public static readonly Argument ARG_PEPTIDE_MAX_LOSSES = new DocArgument(@"pep-max-losses", INT_VALUE,
@@ -1641,7 +1644,7 @@ namespace pwiz.Skyline
         private static readonly ArgumentGroup GROUP_PEPTIDE_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_SETTINGS_Peptide_Settings, false,
             ARG_PEPTIDE_ENZYME_NAME, ARG_PEPTIDE_MAX_MISSED_CLEAVAGES, ARG_PEPTIDE_UNIQUE_BY, ARG_BGPROTEOME_NAME, ARG_BGPROTEOME_PATH,
             ARG_PEPTIDE_MIN_LENGTH, ARG_PEPTIDE_MAX_LENGTH, ARG_PEPTIDE_EXCLUDE_NTERMINAL_AAS, ARG_PEPTIDE_EXCLUDE_POTENTIAL_RAGGED_ENDS,
-            ARG_PEPTIDE_ADD_MOD, ARG_PEPTIDE_ADD_UNIMOD, ARG_PEPTIDE_ADD_MOD_AA, ARG_PEPTIDE_ADD_MOD_TERM,
+            ARG_PEPTIDE_ADD_MOD, ARG_PEPTIDE_ADD_UNIMOD, ARG_PEPTIDE_ADD_MOD_AA, ARG_PEPTIDE_ADD_MOD_TERM, ARG_PEPTIDE_ADD_MOD_VARIABLE,
             ARG_PEPTIDE_CLEAR_MODS, ARG_PEPTIDE_MAX_VAR_MODS, ARG_PEPTIDE_MAX_LOSSES)
         {
             LeftColumnWidth = 40,
@@ -1838,7 +1841,6 @@ namespace pwiz.Skyline
             public string NameOrUniModId { get; }
             public string AAs { get; set; }
             public ModTerminus? Terminus { get; set; }
-            // TODO: Need a way to set this - currently variable by default for structural if not set
             public bool? IsVariable { get; set; }
 
             public static void SetAA(PeptideMod[] mods, string aas)
@@ -1863,6 +1865,14 @@ namespace pwiz.Skyline
                     "c" => ModTerminus.C,
                     _ => throw new ValueInvalidModTerminusException(ARG_PEPTIDE_ADD_MOD_TERM, terminus)
                 };
+            }
+
+            public static void SetVariable(PeptideMod[] mods, bool variable)
+            {
+                if (mods.IsNullOrEmpty())
+                    throw new ArgumentException(Resources.PeptideMod_SetVariable_A_peptide_modification_must_be_added_before_assigning_its_variable_status_);
+
+                mods.Last().IsVariable = variable;
             }
         }
 
