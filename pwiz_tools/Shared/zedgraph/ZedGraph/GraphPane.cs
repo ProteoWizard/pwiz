@@ -1795,7 +1795,7 @@ namespace ZedGraph
                         penalty += 2000;
 
                 }
-                return (float)((0.035 * dist + totalOverlap) + penalty + 0.2 * pathDensity);
+                return (float)((0.025 * dist + totalOverlap) + penalty + 0.2 * pathDensity);
             }
 
             private IEnumerable<GridCell> GetRectangleCells(RectangleF rect)
@@ -1916,7 +1916,7 @@ namespace ZedGraph
                 {
                     var cellOverlap = RectangleF.Intersect(newLabelRectangle, cell._bounds);
                     var densityIncrement = cellOverlap.Height * cellOverlap.Width;
-                    cell._density = Math.Min(cell._density + (int)(densityIncrement), cellArea);
+                    cell._density += 2.0f * densityIncrement;
                 }
 
                 labPoint.LabelVector = new VectorF(targetPoint, goalPoint);
