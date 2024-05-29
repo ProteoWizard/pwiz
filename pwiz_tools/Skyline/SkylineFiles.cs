@@ -2947,6 +2947,13 @@ namespace pwiz.Skyline
                 return false;
             }
 
+            if (doc.Settings.PeptideSettings.Libraries.AnyExplicitPeakBounds())
+            {
+                // Training a peak scoring model does not work if Skyline did not do its own
+                // peak detection
+                return false;
+            }
+
             return true;
         }
 
