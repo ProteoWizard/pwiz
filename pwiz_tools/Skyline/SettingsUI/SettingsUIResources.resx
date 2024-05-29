@@ -1178,10 +1178,13 @@ This document uses peak boundaries from spectral libraries. When these boundarie
 
 Before training a peak scoring model, it is recommended that you follow these steps:
 
-1. Navigate to the "Libraries" tab at "Settings > Peptide Settings" and edit the library list.
-2. Edit the library items and uncheck the "Use explicit peak bounds" checkbox.
-3. Navigate to 'Edit > Manage Results' and click the 'Re-score' button.
+1. Navigate to "Settings > Peptide Settings - Libraries" tab and click "Edit List".
+2. Select a library item, click "Edit", and uncheck the "Use explicit peak bounds" checkbox.
+3. Navigate to "Edit > Manage Results" and click the "Re-score" button.
 
 This will provide Skyline with a variety of candidate peaks to evaluate peak quality.</value>
+  </data>
+  <data name="EditPeakScoringModelDlg_ShowEditPeakScoringModelDlg_Train_Model" xml:space="preserve">
+    <value>Train Model</value>
   </data>
 </root>

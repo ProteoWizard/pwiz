@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Menus
             {
                 if (MultiButtonMsgDlg.Show(owner ?? SkylineWindow, MenusResources
                             .RefineMenu_ShowGenerateDecoysDlg_Are_you_sure_you_want_to_add_decoys_to_this_document_,
-                        MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                        MenusResources.RefineMenu_ShowGenerateDecoysDlg_Add_Decoys) == DialogResult.Cancel)
                 {
                     return false;
                 }

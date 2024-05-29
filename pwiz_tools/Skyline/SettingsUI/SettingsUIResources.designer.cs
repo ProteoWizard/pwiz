@@ -1397,9 +1397,9 @@ namespace pwiz.Skyline.SettingsUI {
         ///
         ///Before training a peak scoring model, it is recommended that you follow these steps:
         ///
-        ///1. Navigate to the &quot;Libraries&quot; tab at &quot;Settings &gt; Peptide Settings&quot; and edit the library list.
-        ///2. Edit the library items and uncheck the &quot;Use explicit peak bounds&quot; checkbox.
-        ///3. Navigate to &apos;Edit &gt; M [rest of string was truncated]&quot;;.
+        ///1. Navigate to &quot;Settings &gt; Peptide Settings - Libraries&quot; tab and click &quot;Edit List&quot;.
+        ///2. Select a library item, click &quot;Edit&quot;, and uncheck the &quot;Use explicit peak bounds&quot; checkbox.
+        ///3. Navigate to &quot;Edit  [rest of string was truncated]&quot;;.
         /// </summary>
         public static string EditPeakScoringModel_ExplictPeakBoundsWarning {
             get {
@@ -1497,6 +1497,15 @@ namespace pwiz.Skyline.SettingsUI {
         public static string EditPeakScoringModelDlg_OnDataBindingComplete_Unexpected_Coefficient_Sign {
             get {
                 return ResourceManager.GetString("EditPeakScoringModelDlg_OnDataBindingComplete_Unexpected_Coefficient_Sign", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Train Model.
+        /// </summary>
+        public static string EditPeakScoringModelDlg_ShowEditPeakScoringModelDlg_Train_Model {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_ShowEditPeakScoringModelDlg_Train_Model", resourceCulture);
             }
         }
         
