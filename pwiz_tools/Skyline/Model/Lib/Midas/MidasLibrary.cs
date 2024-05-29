@@ -113,15 +113,10 @@ namespace pwiz.Skyline.Model.Lib.Midas
             {
                 if (_spectra == null)
                 {
-                    return new LibraryFiles();
+                    return LibraryFiles.EMPTY;
                 }
-                else
-                {
-                    return new LibraryFiles
-                    {
-                        FilePaths = _spectra.Keys.Select(key => key.FilePath).Distinct()
-                    };
-                }
+
+                return new LibraryFiles(_spectra.Keys.Select(key => key.FilePath).Distinct());
             }
         }
 

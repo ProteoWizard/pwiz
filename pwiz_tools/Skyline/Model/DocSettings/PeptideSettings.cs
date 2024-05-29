@@ -1311,9 +1311,9 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public ImmutableList<string> StaticModsFormulae
+        public ImmutableList<string> StaticModsLosses
         {
-            get { return ImmutableList.ValueOf(StaticModsDeduped.Select(loss => loss.FormulaNoNull)); }
+            get { return ImmutableList.ValueOf(StaticModsDeduped.Select(loss => loss.PersistentName)); }
         }
 
         public bool HasVariableModifications
@@ -2410,6 +2410,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 return this;
 
             return ChangeLibrarySpecs(librarySpecs);
+        }
+
+        public bool AnyExplicitPeakBounds()
+        {
+            return Libraries.Any(lib => lib is { UseExplicitPeakBounds: true, HasExplicitBounds: true });
         }
 
         #endregion

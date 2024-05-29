@@ -44,7 +44,7 @@ namespace pwiz.SkylineTestFunctional
         public void TestAccessServer()
         {
             TestFilesZip = @"TestFunctional\AccessServerTest.zip";
-            using (new FakeProsit(null))
+            using (new FakeKoina(null))
             {
                 RunFunctionalTest();
             }

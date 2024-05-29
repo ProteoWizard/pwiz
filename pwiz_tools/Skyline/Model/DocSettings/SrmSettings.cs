@@ -1927,7 +1927,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     (!defSet.StaticModList.Contains(mod.ChangeExplicit(false)) || (mod.IsVariable && allowVariableOverwrite)) &&
                     // A variable modification set explicitly, can show up as explicit only in a document.
                     // This condition makes sure it doesn't overwrite the existing variable mod.
-                    (!mod.IsExplicit || !defSet.StaticModList.Contains(mod.ChangeVariable(true))))
+                    // Carefully because not all mods can be made variable without throwing
+                    (!mod.IsExplicit || !defSet.StaticModList.Contains(m => Equals(mod.ChangeVariable(false), m.ChangeVariable(false)))))
                 {
                     newStaticMods.Add(mod.IsUserSet ? mod.ChangeExplicit(false) : mod);
                     if (!overwrite)
@@ -2354,7 +2355,22 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 _store[(int)ionType + OFFSET_I, index] = value;
             }
-        }    
+        }
+
+        public T GetIonValue(IonType ionType, int ionNumber)
+        {
+            if (ionType.IsNTerminal())
+                return this[ionType, ionNumber - 1];
+            return this[ionType, _store.GetLength(1) - ionNumber];
+        }
+
+        public void SetIonValue(IonType ionType, int ionNumber, T value)
+        {
+            if (ionType.IsNTerminal())
+                this[ionType, ionNumber - 1] = value;
+            else
+                this[ionType, _store.GetLength(1) - ionNumber] = value;
+        }
     }
 
 

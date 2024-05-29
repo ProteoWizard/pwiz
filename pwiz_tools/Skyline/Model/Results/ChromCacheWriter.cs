@@ -118,7 +118,7 @@ namespace pwiz.Skyline.Model.Results
                             }
                             catch (Exception xWrite)
                             {
-                                throw new IOException(TextUtil.LineSeparate(string.Format(ResultsResources.ChromCacheWriter_Complete_Failure_attempting_to_write_the_file__0_, _fs.RealName), xWrite.Message));
+                                throw new IOException(TextUtil.LineSeparate(string.Format(ResultsResources.ChromCacheWriter_Complete_Failure_attempting_to_write_the_file__0_, _fs.RealName), xWrite.Message), xWrite);
                             }
                         }
 
