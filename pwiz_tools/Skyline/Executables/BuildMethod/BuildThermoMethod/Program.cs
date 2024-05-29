@@ -175,7 +175,7 @@ namespace BuildThermoMethod
                     var match = Regex.Match(curValue, @".+\(([\+|-])\)?(\d+)\).*");
                     if (match.Success)
                     {
-                        if(int.TryParse(match.Groups[2].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var res))
+                        if (int.TryParse(match.Groups[2].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var res))
                             item.Charge = (match.Groups[1].Value == "-" ? -1 : 1) * res;
                     }
                 }
