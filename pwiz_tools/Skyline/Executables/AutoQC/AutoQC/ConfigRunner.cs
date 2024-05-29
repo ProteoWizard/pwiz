@@ -38,6 +38,26 @@ namespace AutoQC
         private BackgroundWorker _worker;
 
         private AutoQCFileSystemWatcher _fileWatcher;
+        private AnnotationsFileWatcher _annotationsFileWatcher;
+        private bool _annotationsFileUpdated;
+        readonly object _annotationsFileLock = new object();
+        public bool AnnotationsFileUpdated
+        {
+            get
+            {
+                lock (_annotationsFileLock)
+                {
+                    return _annotationsFileUpdated;
+                }
+            }
+            set
+            {
+                lock (_annotationsFileLock)
+                {
+                    _annotationsFileUpdated = value;
+                }
+            }
+        }
 
         private readonly IMainUiControl _uiControl;
         private readonly Logger _logger;
@@ -58,6 +78,8 @@ namespace AutoQC
         private bool _panoramaUploadError;
         private DateTime _panoramaErrorOccurred = DateTime.MinValue;
         private DateTime _lastUploadAt = DateTime.MinValue;
+
+        private bool _annotationsImportError;
 
         public DateTime LastAcquiredFileDate;
         public DateTime LastArchivalDate; 
@@ -223,6 +245,10 @@ namespace AutoQC
                 LogStartMessage();
 
                 _fileWatcher = new AutoQCFileSystemWatcher(_logger, this);
+                if (Config.MainSettings.AnnotationsFilePath != null)
+                {
+                    _annotationsFileWatcher = new AnnotationsFileWatcher(_logger, this);
+                }
 
                 // Make sure "Integrate all" is checked in the Skyline settings
                 if (!IsIntegrateAllChecked(_logger, Config.MainSettings))
@@ -247,12 +273,14 @@ namespace AutoQC
                 }
 
                 _fileWatcher.Init(Config);
+                _annotationsFileWatcher?.Init(Config);
 
                 Log("Running configuration...");
                 ChangeStatus(RunnerStatus.Running);
 
                 if (ProcessExistingFiles(e))
                 {
+                    ImportAnnotationsFileIfWatching();
                     ProcessNewFiles(e);
                 }
                 e.Result = COMPLETED;
@@ -293,6 +321,9 @@ namespace AutoQC
                     break;
                 }
 
+                // Import the annotations file if it has changed
+                ImportAnnotationsFileIfChanged();
+
                 var filePath = _fileWatcher.GetFile();
                
                 if (filePath != null)
@@ -306,6 +337,18 @@ namespace AutoQC
                         // Any files that still do not import successfully
                         // will be removed from the re-import queue.
                         TryReimportOldFiles(e, true);
+
+                        if (_annotationsImportError)
+                        {
+                            // If the annotations file could not be imported earlier, try again after importing a raw file, and
+                            // re-trying previously failed raw files. 
+                            ImportAnnotationsFileIfWatching("Trying to import the annotations file again.");
+                            if (_annotationsImportError)
+                            {
+                                LogError("There were errors importing the annotations file. Stopping configuration.");
+                                break;
+                            }
+                        }
                     }
 
                     inWait = false;
@@ -427,6 +470,7 @@ namespace AutoQC
 
             // Enable notifications on new files that get added to the folder.
             _fileWatcher.StartWatching();
+            _annotationsFileWatcher?.StartWatching();
 
             if (files.Count == 0)
             {
@@ -619,6 +663,34 @@ namespace AutoQC
             }
         }
 
+        private void ImportAnnotationsFileIfWatching(string logMessage = null)
+        {
+            if (_annotationsFileWatcher != null)
+            {
+                Log(logMessage ?? "Importing annotations file");
+                ImportAnnotationsFile();
+            }
+        }
+
+        private void ImportAnnotationsFileIfChanged()
+        {
+            if (AnnotationsFileUpdated)
+            {
+                AnnotationsFileUpdated = false;
+                ImportAnnotationsFileIfWatching();
+            }
+        }
+
+        private void ImportAnnotationsFile()
+        {
+            var args = string.Format("--in=\"{0}\" --import-annotations=\"{1}\" --save", Config.MainSettings.SkylineFilePath, Config.MainSettings.AnnotationsFilePath);
+            
+            var procInfo = new ProcessInfo(Config.SkylineSettings.CmdPath, args, args);
+
+            var status = RunProcess(procInfo);
+            _annotationsImportError = status == ProcStatus.Error;
+        }
+
         public void Cancel()
         {
             Stop();
@@ -632,6 +704,7 @@ namespace AutoQC
             Task.Run(() =>
             {
                 _fileWatcher?.Stop();
+                _annotationsFileWatcher?.Stop();
 
                 if (_worker != null && _worker.IsBusy)
                 {

@@ -60,10 +60,12 @@ namespace AutoQC
         public readonly int ResultsWindow;
         public readonly string InstrumentType;
         public readonly int AcquisitionTime;
+        public readonly string AnnotationsFilePath;
 
 
         public MainSettings(string skylineFilePath, string folderToWatch, bool includeSubFolders, FileFilter qcFileFilter, 
-            bool removeResults, string resultsWindowString, string instrumentType, string acquisitionTimeString)
+            bool removeResults, string resultsWindowString, string instrumentType, string acquisitionTimeString, 
+            string annotationsFilePath = null)
         {
             SkylineFilePath = skylineFilePath;
             FolderToWatch = folderToWatch;
@@ -73,6 +75,7 @@ namespace AutoQC
             ResultsWindow = ValidateIntTextField(resultsWindowString, Resources.MainSettings_MainSettings_results_window);
             InstrumentType = instrumentType;
             AcquisitionTime = ValidateIntTextField(acquisitionTimeString, Resources.MainSettings_MainSettings_acquisition_time);
+            AnnotationsFilePath = annotationsFilePath;
         }
 
         public virtual bool IsSelected()
@@ -97,6 +100,10 @@ namespace AutoQC
                 sb.AppendLine("Remove older results: No");
             }
             sb.Append("Acquisition time: ").Append(AcquisitionTime.ToString()).AppendLine(" minutes");
+            if (AnnotationsFilePath != null)
+            {
+                sb.Append("Annotations file: ").AppendLine(AnnotationsFilePath);
+            }
             return sb.ToString();
         }
 
@@ -153,6 +160,9 @@ namespace AutoQC
                 throw new ArgumentException(Resources.MainSettings_ValidateSettings__Expected_acquisition_time__cannot_be_less_than_0_minutes_ +Environment.NewLine +
                       string.Format(Resources.MainSettings_ValidateSettings_Please_enter_a_value_greater_than_or_equal_to__0__, 0));
             }
+
+            // Path to the annotations csv file.
+            ValidateAnnotationsFile(AnnotationsFilePath);
         }
 
         public static void ValidateSkylineFile(string skylineFile)
@@ -181,6 +191,21 @@ namespace AutoQC
             }
         }
 
+        public static void ValidateAnnotationsFile(string annotationsFile)
+        {
+            if (!string.IsNullOrWhiteSpace(annotationsFile))
+            {
+                if (!File.Exists(annotationsFile))
+                {
+                    throw new ArgumentException(string.Format("Annotations file does not exist: {0}", annotationsFile));
+                }
+                if (!Path.GetExtension(annotationsFile).Equals(".CSV", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    throw new ArgumentException(string.Format("Annotations file must be a CSV file. Given file is {0}", annotationsFile));
+                }
+            }
+        }
+
         public void Validate()
         {
             ValidateSettings();
@@ -199,7 +224,8 @@ namespace AutoQC
             remove_results,
             results_window,
             instrument_type,
-            acquisition_time
+            acquisition_time,
+            annotations_file_path
         };
 
         public XmlSchema GetSchema()
@@ -225,11 +251,13 @@ namespace AutoQC
             var instrumentType = reader.GetAttribute(Attr.instrument_type);
             var acquisitionTime = reader.GetAttribute(Attr.acquisition_time);
 
+            var annotationsFilePath = reader.GetAttribute(Attr.annotations_file_path);
+
             // Return unvalidated settings. Validation can throw an exception that will cause the config to not get read fully and it will not be added to the config list
             // We want the user to be able to fix invalid configs.
             return new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, 
                 qcFileFilter, removeResults, resultsWindow, instrumentType, 
-                acquisitionTime);
+                acquisitionTime, annotationsFilePath);
         }
 
         public void WriteXml(XmlWriter writer)
@@ -244,6 +272,7 @@ namespace AutoQC
             writer.WriteAttributeNullable(Attr.results_window, ResultsWindow);
             writer.WriteAttributeIfString(Attr.instrument_type, InstrumentType);
             writer.WriteAttributeNullable(Attr.acquisition_time, AcquisitionTime);
+            writer.WriteAttributeIfString(Attr.annotations_file_path, AnnotationsFilePath);
             writer.WriteEndElement();
         }
         #endregion
@@ -255,7 +284,8 @@ namespace AutoQC
             return SkylineFilePath == other.SkylineFilePath && FolderToWatch == other.FolderToWatch &&
                    IncludeSubfolders == other.IncludeSubfolders && Equals(QcFileFilter, other.QcFileFilter) &&
                    RemoveResults == other.RemoveResults && ResultsWindow == other.ResultsWindow &&
-                   InstrumentType == other.InstrumentType && AcquisitionTime == other.AcquisitionTime;
+                   InstrumentType == other.InstrumentType && AcquisitionTime == other.AcquisitionTime &&
+                   AnnotationsFilePath == other.AnnotationsFilePath;
         }
 
         public override bool Equals(object obj)
@@ -278,6 +308,7 @@ namespace AutoQC
                 hashCode = (hashCode * 397) ^ ResultsWindow;
                 hashCode = (hashCode * 397) ^ (InstrumentType != null ? InstrumentType.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ AcquisitionTime;
+                hashCode = (hashCode * 397) ^ (AnnotationsFilePath != null ? AnnotationsFilePath.GetHashCode() : 0);
                 return hashCode;
             }
         }

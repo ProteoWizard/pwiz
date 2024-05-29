@@ -13,7 +13,7 @@
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>true</IsWebBootstrapper>
     <TargetFrameworkProfile />
-    <PublishUrl>Z:\labkey\static\software\AutoQC-test\</PublishUrl>
+    <PublishUrl>Z:\www\site\skyline.ms\html\software\AutoQC-test\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
@@ -123,6 +123,7 @@
   <ItemGroup>
     <Compile Include="AutoQcConfig.cs" />
     <Compile Include="AutoQcConfigManager.cs" />
+    <Compile Include="AnnotationsFileWatcher.cs" />
     <Compile Include="InvalidConfigSetupForm.cs">
       <SubType>Form</SubType>
     </Compile>
