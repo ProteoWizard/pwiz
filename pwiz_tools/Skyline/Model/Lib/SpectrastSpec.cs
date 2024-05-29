@@ -163,7 +163,7 @@ namespace pwiz.Skyline.Model.Lib
         public override LibraryFiles LibraryFiles
         {
             // This library doesn't have source file information
-            get { return new LibraryFiles();}
+            get { return LibraryFiles.EMPTY;}
         }
 
         protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(NistSpectrumInfo info)

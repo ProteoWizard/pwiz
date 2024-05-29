@@ -103,6 +103,15 @@ namespace pwiz.Skyline.Menus
 
         public bool ShowGenerateDecoysDlg(IWin32Window owner = null)
         {
+            if (DocumentUI.Settings.PeptideSettings.Libraries.AnyExplicitPeakBounds())
+            {
+                if (MultiButtonMsgDlg.Show(owner ?? SkylineWindow, MenusResources
+                            .RefineMenu_ShowGenerateDecoysDlg_Are_you_sure_you_want_to_add_decoys_to_this_document_,
+                        MenusResources.RefineMenu_ShowGenerateDecoysDlg_Add_Decoys) == DialogResult.Cancel)
+                {
+                    return false;
+                }
+            }
             using (var decoysDlg = new GenerateDecoysDlg(DocumentUI))
             {
                 if (decoysDlg.ShowDialog(owner ?? SkylineWindow) == DialogResult.OK)
