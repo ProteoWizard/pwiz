@@ -220,10 +220,13 @@
     <Compile Include="RemoveHeavyModificationTest.cs" />
     <Compile Include="RemoveNeutralLossModificationTest.cs" />
     <Compile Include="RenameMoleculeTest.cs" />
+    <Compile Include="ReplicateNameMetadataRuleTest.cs" />
+    <Compile Include="RescoreInPlaceTest.cs" />
     <Compile Include="ResultFileMetadataBackCompatTest.cs" />
     <Compile Include="SaveAfterProteinAssociationTest.cs" />
     <Compile Include="SelectSpectrumTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
+    <Compile Include="SpectrumRetentionTimeAlignmentTest.cs" />
     <Compile Include="SurrogateCalibrationCurveTest.cs" />
     <Compile Include="TestPanoramaClient.cs" />
     <Compile Include="SkydFileModifiedTest.cs" />
@@ -391,7 +394,7 @@
     <Compile Include="PrecursorTest.cs" />
     <Compile Include="ProfileImport.cs" />
     <Compile Include="ProfileMemory.cs" />
-    <Compile Include="PrositSkylineIntegrationTest.cs" />
+    <Compile Include="KoinaSkylineIntegrationTest.cs" />
     <Compile Include="ProteinMetadataFunctionalTest.cs" />
     <Compile Include="ProteinMetadataBackgroundLoaderTest.cs" />
     <Compile Include="PythonInstallerTest.cs" />
@@ -631,7 +634,7 @@
     <None Include="PermuteIsotopeModificationsTest.zip" />
     <None Include="PivotEditorTest.zip" />
     <None Include="PrecursorTest.zip" />
-    <None Include="PrositSkylineIntegrationTest.zip" />
+    <None Include="KoinaSkylineIntegrationTest.zip" />
     <None Include="ProteinMetadataBackgroundLoaderTest.zip" />
     <None Include="ProteinMetadataFunctionalTest.zip" />
     <None Include="ProxlTest.zip" />

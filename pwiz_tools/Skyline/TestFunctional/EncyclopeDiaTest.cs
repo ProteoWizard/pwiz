@@ -19,6 +19,8 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.EditUI;
+using pwiz.Skyline.Menus;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -65,6 +67,21 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreNotEqual(0, transitionGroup.TransitionCount, "Transition group {0} has no transitions", transitionGroup);
             }
             OkDialog(libraryViewer, libraryViewer.Close);
+
+            var library = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries[0];
+            Assert.IsNotNull(library);
+            Assert.IsInstanceOfType(library, typeof(EncyclopeDiaLibrary));
+            Assert.IsTrue(library.HasExplicitBounds);
+            Assert.IsTrue(library.UseExplicitPeakBounds);
+
+            // Verify that trying to generate decoys generates a warning about explicit peak bounds
+            RunDlg<MultiButtonMsgDlg>(()=>SkylineWindow.ShowGenerateDecoysDlg(), dlg=>
+            {
+                Assert.AreEqual(MenusResources.RefineMenu_ShowGenerateDecoysDlg_Are_you_sure_you_want_to_add_decoys_to_this_document_, dlg.Message);
+                dlg.ClickCancel();
+            });
+            var multiButtonMsgDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowGenerateDecoysDlg());
+            RunDlg<GenerateDecoysDlg>(multiButtonMsgDlg.BtnYesClick, generateDecoysDlg => generateDecoysDlg.Close());
         }
     }
 }

@@ -190,7 +190,7 @@ namespace TestPerf
                 ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(importPeptideSearchDlg.MatchModificationsControl.ClickAddStructuralModification);
             RunDlg<EditStaticModDlg>(editStructModListUI.AddItem, editModDlg =>
             {
-                editModDlg.SetModification(OXIDATION_M, true); // Not L10N
+                editModDlg.SetModification(OXIDATION_M); // Not L10N
                 editModDlg.OkDialog();
             });
             OkDialog(editStructModListUI, editStructModListUI.OkDialog);

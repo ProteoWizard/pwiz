@@ -288,6 +288,12 @@
   <data name="_import_threads" xml:space="preserve">
     <value>A number of files will be imported in parallel using threads in the main process (equivalent to “Files to import simultaneously” in the user interface), after which the results from each single file will be joined. This can produce 2-4x performance gains under the right conditions. Be sure to test with your system.</value>
   </data>
+  <data name="_import_pep_list" xml:space="preserve">
+    <value>Import a list of peptides or peptide precursors (with charge state) with an optional list name specified by --import-pep-list-name.</value>
+  </data>
+  <data name="_import_pep_list_name" xml:space="preserve">
+    <value>Name of imported peptide list specified by --import-pep-list.</value>
+  </data>
   <data name="_import_transition_list" xml:space="preserve">
     <value>Import a simple transition list with Q1, Q3 and peptide sequence.  Also supports molecule transition lists in CSV format with suitable headers.</value>
   </data>
@@ -1042,5 +1048,11 @@ Useful in sample mixtures including multiple species.</value>
   </data>
   <data name="ValueInvalidBoolException_ValueInvalidBoolException_The_value___0___is_not_valid_for_the_argument___1____it_must_be__2_" xml:space="preserve">
     <value>The value '{0}' is not valid for the argument '{1}': it must be {2}</value>
+  </data>
+  <data name="_associate_proteins_fasta" xml:space="preserve">
+    <value>Associate peptides in the document with proteins from the given FASTA. If this argument is not provided but other --associate-proteins options are, then the FASTA from --import-fasta will be used. If --import-fasta is not provided either, then the last FASTA used for protein association will be used.</value>
+  </data>
+  <data name="_pep_add_mod_variable" xml:space="preserve">
+    <value>Adds a modification as variable if 'true' or static if 'false'. Only valid for structural modifications except for loss-only modifications(e.g. Ammonia and Water Loss).</value>
   </data>
 </root>

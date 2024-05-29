@@ -289,13 +289,13 @@ namespace pwiz.SkylineTestUtil
             return documentGrid.FindColumn(PropertyPath.Parse(colName));
         }
 
-        public void EnableDocumentGridColumns(DocumentGridForm documentGrid, string viewName, int expectedRowsInitial, 
+        public void EnableDocumentGridColumns(DocumentGridForm documentGrid, string viewName, int? expectedRowsInitial, 
             string[] additionalColNames = null,
             string newViewName = null,
             int? expectedRowsFinal = null)
         {
             RunUI(() => documentGrid.ChooseView(viewName));
-            WaitForCondition(() => (documentGrid.RowCount >= expectedRowsInitial)); // Let it initialize
+            WaitForCondition(() => (documentGrid.RowCount >= (expectedRowsInitial??0))); // Let it initialize
             if (additionalColNames != null)
             {
                 RunDlg<ViewEditor>(documentGrid.NavBar.CustomizeView,
@@ -309,7 +309,7 @@ namespace pwiz.SkylineTestUtil
                         viewEditor.ViewName = newViewName ?? viewName;
                         viewEditor.OkDialog();
                     });
-                WaitForCondition(() => (documentGrid.RowCount == (expectedRowsFinal??expectedRowsInitial))); // Let it initialize
+                WaitForCondition(() => (documentGrid.RowCount == (expectedRowsFinal??expectedRowsInitial??0))); // Let it initialize
             }
         }
 

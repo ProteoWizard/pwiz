@@ -1,6 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="BlibBuild|x64">
+      <Configuration>BlibBuild</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="BlibFilter|x64">
+      <Configuration>BlibFilter</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="BrowseOnly|x64">
       <Configuration>BrowseOnly</Configuration>
       <Platform>x64</Platform>
@@ -9,10 +17,21 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{65831C55-E631-4948-9528-6431637882E3}</ProjectGuid>
     <Keyword>MakeFileProj</Keyword>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='BlibFilter|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='BlibBuild|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
@@ -22,12 +41,33 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='BlibFilter|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='BlibBuild|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">
-    <NMakeBuildCommandLine>b64_all .</NMakeBuildCommandLine>
+    <NMakeBuildCommandLine>cd $(ProjectDir)..\.. &amp;&amp; quickbuild.bat -j24 --abbreviate-paths --verbose-test address-model=64 --i-agree-to-the-vendor-licenses --without-compassxtract  variant=debug debug-symbols=on iterator-debugging=off  --incremental pwiz_tools/BiblioSpec//src</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>CleanBiblioSpec.bat</NMakeCleanCommandLine>
     <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <IncludePath>$(ProjectDir)..\..;$(ProjectDir)..\..\libraries\zlib-1.2.3;$(ProjectDir)..\..\libraries\boost_1_76_0;$(ProjectDir)..\..\libraries\boost_aux;$(ProjectDir)..\..\libraries\SQLite;$(ProjectDir)..\..\libraries\expat-2.0.1;$(IncludePath)</IncludePath>
+    <NMakeReBuildCommandLine>cd $(ProjectDir)..\.. &amp;&amp; quickbuild.bat -j24 --abbreviate-paths --verbose-test address-model=64 --i-agree-to-the-vendor-licenses --without-compassxtract  variant=debug debug-symbols=on iterator-debugging=off  --incremental pwiz_tools/BiblioSpec//src</NMakeReBuildCommandLine>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='BlibFilter|x64'">
+    <NMakeBuildCommandLine>cd $(ProjectDir)..\.. &amp;&amp; quickbuild.bat -j24 --abbreviate-paths --verbose-test address-model=64 --i-agree-to-the-vendor-licenses --without-compassxtract  variant=debug debug-symbols=on iterator-debugging=off  --incremental pwiz_tools/BiblioSpec//src</NMakeBuildCommandLine>
+    <NMakeCleanCommandLine>CleanBiblioSpec.bat</NMakeCleanCommandLine>
+    <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <IncludePath>$(ProjectDir)..\..;$(ProjectDir)..\..\libraries\zlib-1.2.3;$(ProjectDir)..\..\libraries\boost_1_76_0;$(ProjectDir)..\..\libraries\boost_aux;$(ProjectDir)..\..\libraries\SQLite;$(ProjectDir)..\..\libraries\expat-2.0.1;$(IncludePath)</IncludePath>
+    <NMakeReBuildCommandLine>cd $(ProjectDir)..\.. &amp;&amp; quickbuild.bat -j24 --abbreviate-paths --verbose-test address-model=64 --i-agree-to-the-vendor-licenses --without-compassxtract  variant=debug debug-symbols=on iterator-debugging=off  --incremental pwiz_tools/BiblioSpec//src</NMakeReBuildCommandLine>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='BlibBuild|x64'">
+    <NMakeBuildCommandLine>cd $(ProjectDir)..\.. &amp;&amp; quickbuild.bat -j24 --abbreviate-paths --verbose-test address-model=64 --i-agree-to-the-vendor-licenses --without-compassxtract  variant=debug debug-symbols=on iterator-debugging=off  --incremental pwiz_tools/BiblioSpec//src</NMakeBuildCommandLine>
+    <NMakeCleanCommandLine>CleanBiblioSpec.bat</NMakeCleanCommandLine>
+    <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <IncludePath>$(ProjectDir)..\..;$(ProjectDir)..\..\libraries\zlib-1.2.3;$(ProjectDir)..\..\libraries\boost_1_76_0;$(ProjectDir)..\..\libraries\boost_aux;$(ProjectDir)..\..\libraries\SQLite;$(ProjectDir)..\..\libraries\expat-2.0.1;$(IncludePath)</IncludePath>
+    <NMakeReBuildCommandLine>cd $(ProjectDir)..\.. &amp;&amp; quickbuild.bat -j24 --abbreviate-paths --verbose-test address-model=64 --i-agree-to-the-vendor-licenses --without-compassxtract  variant=debug debug-symbols=on iterator-debugging=off  --incremental pwiz_tools/BiblioSpec//src</NMakeReBuildCommandLine>
   </PropertyGroup>
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
@@ -44,6 +84,7 @@
     <ClCompile Include="src\CommandLine.cpp" />
     <ClCompile Include="src\DiaNNSpecLibReader.cpp" />
     <ClCompile Include="src\DotProduct.cpp" />
+    <ClCompile Include="src\HardklorReader.cpp" />
     <ClCompile Include="src\IdpXMLreader.cpp" />
     <ClCompile Include="src\LibReader.cpp" />
     <ClCompile Include="src\LibToSqlite3.cpp" />
