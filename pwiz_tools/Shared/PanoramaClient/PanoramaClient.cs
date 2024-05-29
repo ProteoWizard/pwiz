@@ -183,6 +183,7 @@ namespace pwiz.PanoramaClient
 
             // Wait for import to finish before returning.
             var startTime = DateTime.UtcNow;
+            var importFailed = false;
             while (true)
             {
                 if (progressMonitor.IsCanceled)
@@ -196,6 +197,7 @@ namespace pwiz.PanoramaClient
                 if (row == null)
                     continue;
 
+                var jobUrl = new Uri(ServerUri, (string)row[@"_labkeyurl_RowId"]);
                 var status = new ImportStatus((string)row[@"Status"]);
                 if (status.IsComplete)
                 {
@@ -203,13 +205,29 @@ namespace pwiz.PanoramaClient
                     return new Uri(ServerUri, (string)row[@"_labkeyurl_Description"]);
                 }
 
-                else if (status.IsError || status.IsCancelled)
+                else if (status.IsCancelled)
                 {
-                    var jobUrl = new Uri(ServerUri, (string)row[@"_labkeyurl_RowId"]);
-                    var e = new PanoramaImportErrorException(ServerUri, jobUrl, status.IsCancelled);
+                    var e = new PanoramaImportErrorException(ServerUri, jobUrl, null, status.IsCancelled);
                     progressMonitor.UpdateProgress(
                         _progressStatus = _progressStatus.ChangeErrorException(e));
                     throw e;
+                }
+                else if (status.IsError )
+                {
+                    var error = (string)row[@"Info"];
+                    if (@"Import failed".Equals(error) && !importFailed)
+                    {
+                        // We will see "Import failed" if we happen to query the status before the actual error message is set on job on the Panorama server.
+                        // Check the status one more time.
+                        importFailed = true;
+                    }
+                    else
+                    {
+                        var e = new PanoramaImportErrorException(ServerUri, jobUrl, error, status.IsCancelled);
+                        progressMonitor.UpdateProgress(
+                            _progressStatus = _progressStatus.ChangeErrorException(e));
+                        throw e;
+                    }
                 }
 
                 UpdateProgressAndWait(status, progressMonitor, startTime);
