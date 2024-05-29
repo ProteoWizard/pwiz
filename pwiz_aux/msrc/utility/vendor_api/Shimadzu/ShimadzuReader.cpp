@@ -457,7 +457,7 @@ TOFChromatogramImpl::TOFChromatogramImpl(const ShimadzuReaderImpl& reader, DataO
     mzTransition.StartMassRaw = transition.startMz;
     mzTransition.EndMassRaw = transition.endMz;
 
-    auto result = chromatogramMng->GetChromatogrambyEvent(tofChromatogram, %mzTransition, true, true);
+    auto result = chromatogramMng->GetChromatogrambyEvent(tofChromatogram, %mzTransition, true, false);
     if (ShimadzuUtil::Failed(result))
         throw gcnew System::Exception(ToSystemString("failed to get TOF chromatogram for segment " + lexical_cast<string>(transition.segment) + ", event " + lexical_cast<string>(transition.event)));
 
