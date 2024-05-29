@@ -64,7 +64,8 @@ namespace pwiz.Skyline.Model
     /// <summary>
     /// Helper functions for creating <see cref="IDocumentModifier"/> from functions
     /// </summary>
-    public static class DocumentModifier {
+    public static class DocumentModifier 
+    {
         /// <summary>
         /// Creates an IDocumentModifier from separate functions for modifying the document
         /// and creating the audit log entry
