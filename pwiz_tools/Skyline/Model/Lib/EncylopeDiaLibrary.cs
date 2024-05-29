@@ -706,7 +706,6 @@ on one.SourceFile = two.SourceFile";
                 return ExplicitPeakBounds.EMPTY;
             }
             return null;
-        {
         }
 
         public override bool HasExplicitBoundsQValues
@@ -802,58 +801,7 @@ on one.SourceFile = two.SourceFile";
         // ReSharper disable PossibleMultipleEnumeration
         private int FindSource(MsDataFileUri sourceFile)
         {
-            
-            if (_sourceFiles == null || _sourceFiles.Count == 0)
-            {
-                return -1;
-            }
-            Assume.IsNotNull(_msDataFileUriLookup);
-            lock (_msDataFileUriLookup)
-            {
-                if (_msDataFileUriLookup.TryGetValue(sourceFile, out int index))
-                {
-                    return index;
-                }
-            }
-
-            string sourceFileToString = sourceFile.ToString();
-            int iFileFound = -1;
-            for (int iFile = 0; iFile < _sourceFiles.Count; iFile++)
-            {
-                if (_sourceFiles[iFile].Equals(sourceFileToString))
-                {
-                    iFileFound = iFile;
-                    break;
-                }
-            }
-
-            if (iFileFound == -1)
-            {
-                string baseName = sourceFile.GetFileNameWithoutExtension();
-
-                for (int iFile = 0; iFile < _sourceFiles.Count; iFile++)
-                {
-                    var fileName = _sourceFiles[iFile];
-                    try
-                    {
-                        if (MeasuredResults.IsBaseNameMatch(baseName, Path.GetFileNameWithoutExtension(fileName)))
-                        {
-                            iFileFound = iFile;
-                            break;
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        // Ignore: Invalid filename
-                    }
-                }
-            }
-
-            lock (_msDataFileUriLookup)
-            {
-                _msDataFileUriLookup[sourceFile] = iFileFound;
-            }
-            return iFileFound;
+            return FindFileInList(sourceFile, _sourceFiles);
         }
 
         public override bool TryGetRetentionTimes(LibKey key, MsDataFileUri filePath, out double[] retentionTimes)

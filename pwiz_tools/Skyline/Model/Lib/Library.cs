@@ -1248,14 +1248,11 @@ namespace pwiz.Skyline.Model.Lib
         {
             return _libraryEntries.ItemsMatching(new LibKey(target, Adduct.EMPTY).LibraryKey, false);
         }
-<<<<<<< HEAD
-=======
 
         protected int FindFileInList(MsDataFileUri sourceFile, LibraryFiles fileNames)
         {
             return fileNames.FindIndexOf(sourceFile);
         }
->>>>>>> remotes/origin/master
     }
 
     public sealed class LibraryRetentionTimes : IRetentionTimeProvider
