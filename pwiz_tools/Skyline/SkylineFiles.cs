@@ -30,7 +30,6 @@ using System.Xml.Serialization;
 using Ionic.Zip;
 using Newtonsoft.Json.Linq;
 using pwiz.PanoramaClient;
-using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
@@ -1666,25 +1665,20 @@ namespace pwiz.Skyline
             }
         }
 
-        private static void AddMessageInfo<T>(IList<MessageInfo> messageInfos, MessageType type, SrmDocument.DOCUMENT_TYPE docType, IEnumerable<T> items)
-        {
-            messageInfos.AddRange(items.Select(item => new MessageInfo(type, docType, item)));
-        }
-
         private void ImportPeakBoundaries(string fileName, long lineCount, string description)
         {
             var docCurrent = DocumentUI;
-            SrmDocument docNew = null;
+            ModifiedDocument modifiedDocument = null;
 
             var peakBoundaryImporter = new PeakBoundaryImporter(docCurrent);
             using (var longWaitDlg = new LongWaitDlg(this))
             {
                 longWaitDlg.Text = description;
                 longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
-                           docNew = peakBoundaryImporter.Import(fileName, longWaitBroker, lineCount));
+                    modifiedDocument =
+                        peakBoundaryImporter.ModifyDocument(ModeUI, fileName, longWaitBroker, lineCount));
 
-
-                if (docNew == null)
+                if (modifiedDocument == null)
                     return;
                 if (longWaitDlg.IsCanceled)
                     return;
@@ -1697,23 +1691,7 @@ namespace pwiz.Skyline
                 }                
             }
 
-            ModifyDocument(description, doc =>
-            {
-                if (!ReferenceEquals(doc, docCurrent))
-                    throw new InvalidDataException(SkylineResources.SkylineWindow_ImportPeakBoundaries_Unexpected_document_change_during_operation);
-                return docNew;
-            }, docPair =>
-            {
-                var allInfo = new List<MessageInfo>();
-                AddMessageInfo(allInfo, MessageType.removed_unrecognized_peptide, docPair.OldDocumentType, peakBoundaryImporter.UnrecognizedPeptides);
-                AddMessageInfo(allInfo, MessageType.removed_unrecognized_file, docPair.OldDocumentType,
-                    peakBoundaryImporter.UnrecognizedFiles.Select(AuditLogPath.Create));
-                AddMessageInfo(allInfo, MessageType.removed_unrecognized_charge_state, docPair.OldDocumentType, peakBoundaryImporter.UnrecognizedChargeStates);
-
-                return AuditLogEntry.CreateSimpleEntry(MessageType.imported_peak_boundaries, docPair.OldDocumentType,
-                        Path.GetFileName(fileName))
-                    .AppendAllInfo(allInfo);
-            });
+            ModifyDocument(description, DocumentModifier.FromResult(docCurrent, modifiedDocument));
         }
 
         private void importFASTAMenuItem_Click(object sender, EventArgs e)
@@ -3680,7 +3658,7 @@ namespace pwiz.Skyline
                 lock (GetDocumentChangeLock())
                 {
                     var originalDocument = Document;
-                    SrmDocument newDocument = null;
+                    ModifiedDocument newDocument = null;
                     using (var longWaitDlg = new LongWaitDlg(this))
                     {
                         longWaitDlg.PerformWork(this, 1000, broker =>
@@ -3691,29 +3669,14 @@ namespace pwiz.Skyline
                     }
                     if (newDocument != null)
                     {
-                        ModifyDocument(SkylineResources.SkylineWindow_ImportAnnotations_Import_Annotations, doc =>
-                        {
-                            if (!ReferenceEquals(doc, originalDocument))
-                            {
-                                throw new ApplicationException(Resources
-                                    .SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
-                            }
-                            return newDocument;
-                        }, docPair => AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(MessageType.imported_annotations, docPair.NewDocumentType, filename)));
+                        ModifyDocument(SkylineResources.SkylineWindow_ImportAnnotations_Import_Annotations,
+                            DocumentModifier.FromResult(originalDocument, newDocument));
                     }
                 }
             }
             catch (Exception exception)
             {
                 MessageDlg.ShowException(this, exception);
-            }
-        }
-
-        public void ImportAnnotationsFromFile(string filename)
-        {
-            using (var reader = new StreamReader(filename))
-            {
-                ImportAnnotations(reader, new MessageInfo(MessageType.imported_annotations, Document.DocumentType, filename));
             }
         }
 

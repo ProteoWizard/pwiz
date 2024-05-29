@@ -117,15 +117,8 @@ namespace pwiz.Skyline.Menus
                 if (decoysDlg.ShowDialog(owner ?? SkylineWindow) == DialogResult.OK)
                 {
                     var refinementSettings = new RefinementSettings { NumberOfDecoys = decoysDlg.NumDecoys, DecoysMethod = decoysDlg.DecoysMethod };
-                    ModifyDocument(MenusResources.SkylineWindow_ShowGenerateDecoysDlg_Generate_Decoys, refinementSettings.GenerateDecoys,
-                        docPair =>
-                        {
-                            var plural = refinementSettings.NumberOfDecoys > 1;
-                            return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(
-                                plural ? MessageType.added_peptide_decoys : MessageType.added_peptide_decoy,
-                                DocumentUI.DocumentType,
-                                refinementSettings.NumberOfDecoys, refinementSettings.DecoysMethod));
-                        });
+                    SkylineWindow.ModifyDocument(MenusResources.SkylineWindow_ShowGenerateDecoysDlg_Generate_Decoys, 
+                        DocumentModifier.Create(refinementSettings.ModifyDocumentByGeneratingDecoys));
 
                     var nodePepGroup = DocumentUI.PeptideGroups.First(nodePeptideGroup => nodePeptideGroup.IsDecoy);
                     SelectedPath = DocumentUI.GetPathTo((int)SrmDocument.Level.MoleculeGroups, DocumentUI.FindNodeIndex(nodePepGroup.Id));
