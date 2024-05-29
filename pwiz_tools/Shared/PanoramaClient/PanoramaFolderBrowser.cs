@@ -308,13 +308,16 @@ namespace pwiz.PanoramaClient
             return node is { IsSelected: true };
         }
 
-        public void SelectNode(string nodeName)
+        public bool SelectNode(string nodeName)
         {
             var node = SearchTree(treeView.Nodes, nodeName);
             if (node?.Tag is FolderInformation)
             {
                 UpdateNavButtons(node);
+                return true;
             }
+
+            return false;
         }
 
         public string SelectedNodeText => _selectedNode.Text;
@@ -392,7 +395,7 @@ public class LKContainerBrowser : PanoramaFolderBrowser
         }
         if (listErrorServers.Count > 0)
         {
-            throw new Exception(TextUtil.LineSeparate(Resources.PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers,
+            throw new Exception(CommonTextUtil.LineSeparate(Resources.PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers,
                 string.Empty,
                 ServersToString(listErrorServers)));
         }
@@ -400,7 +403,7 @@ public class LKContainerBrowser : PanoramaFolderBrowser
 
     private static string ServersToString(IEnumerable<Tuple<PanoramaServer, string>> servers)
     {
-        return TextUtil.LineSeparate(servers.Select(t => TextUtil.LineSeparate(t.Item1.URI.ToString(), t.Item2)));
+        return CommonTextUtil.LineSeparate(servers.Select(t => CommonTextUtil.LineSeparate(t.Item1.URI.ToString(), t.Item2)));
     }
 
     /// <summary>
@@ -538,8 +541,8 @@ public class WebDavBrowser : PanoramaFolderBrowser
             try
             {
                 query = new Uri(string.Concat(folderInfo.Server.URI, PanoramaUtil.WEBDAV, folderInfo.FolderPath, "?method=json"));
-                using var webClient = new WebClientWithCredentials(query, folderInfo.Server.Username, folderInfo.Server.Password);
-                JToken json = webClient.Get(query);
+                using var requestHelper = new PanoramaRequestHelper(new WebClientWithCredentials(query, folderInfo.Server.Username, folderInfo.Server.Password));
+                JToken json = requestHelper.Get(query);
                 if ((int)json[@"fileCount"] != 0)
                 {
                     var files = json[@"files"];
@@ -577,7 +580,11 @@ public class WebDavBrowser : PanoramaFolderBrowser
         
         if (listErrors.Count > 0)
         {
-            throw new Exception(TextUtil.LineSeparate(Resources.WebDavBrowser_AddWebDavFolders_Failed_attempting_to_retrieve_information_from_the_following_folders_, TextUtil.LineSeparate(listErrors.Select(t => TextUtil.LineSeparate(t.Item1, t.Item2, t.Item3)))));
+            throw new Exception(CommonTextUtil.LineSeparate(
+                Resources
+                    .WebDavBrowser_AddWebDavFolders_Failed_attempting_to_retrieve_information_from_the_following_folders_,
+                CommonTextUtil.LineSeparate(listErrors.Select(t =>
+                    CommonTextUtil.LineSeparate(t.Item1, t.Item2, t.Item3)))));
         }
     }
 

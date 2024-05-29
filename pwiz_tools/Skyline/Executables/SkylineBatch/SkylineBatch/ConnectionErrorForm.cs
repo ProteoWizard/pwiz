@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using pwiz.Common.GUI;
 using SharedBatch;
 
 namespace SkylineBatch
@@ -123,7 +124,7 @@ namespace SkylineBatch
                     if (((config.MainSettings.Server).Equals(server) || config.MainSettings.Template.PanoramaFile.Equals(server)) &&
                         _disconnectedConfigs[config.Name] != null)
                     {
-                        RunUi(() => { AlertDlg.ShowError(this, Program.AppName(), _disconnectedConfigs[config.Name].Message); });
+                        RunUi(() => { CommonAlertDlg.ShowException(this, _disconnectedConfigs[config.Name]); });
                         return;
                     }
                 }

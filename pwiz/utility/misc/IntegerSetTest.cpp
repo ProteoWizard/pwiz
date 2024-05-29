@@ -204,6 +204,11 @@ void testParse()
     unit_assert(b[6] == 5);
     unit_assert(b[7] == 8);
     unit_assert(b[8] == 9);
+
+    // test parsing into an existing set
+    IntegerSet positiveCopy = IntegerSet::positive;
+    positiveCopy.parse("2");
+    unit_assert(positiveCopy.intervalCount() == 1);
 }
 
 

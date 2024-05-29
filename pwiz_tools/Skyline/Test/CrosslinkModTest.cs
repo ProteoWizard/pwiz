@@ -547,6 +547,11 @@ namespace pwiz.SkylineTest
             var transitionGroup = new TransitionGroup(mainPeptide, Adduct.DOUBLY_PROTONATED, IsotopeLabelType.heavy);
             var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, settings,
                 explicitMods, null, null, null, Array.Empty<TransitionDocNode>(), false);
+            // Make sure this produces a heavy precursor that is 8 Da or 4 m/z heavier than the light version
+            var transitionGroupLight = new TransitionGroup(mainPeptide, Adduct.DOUBLY_PROTONATED, IsotopeLabelType.light);
+            var transitionGroupDocNodeLight = new TransitionGroupDocNode(transitionGroupLight, Annotations.EMPTY, settings,
+                explicitMods, null, null, null, Array.Empty<TransitionDocNode>(), false);
+            Assert.AreEqual(transitionGroupDocNodeLight.PrecursorMz, transitionGroupDocNode.PrecursorMz - 4, 0.01);
             var allTransitions = transitionGroupDocNode.GetPrecursorChoices(settings, explicitMods, true).Cast<TransitionDocNode>().ToList();
             var precursorTransitions = allTransitions.Where(transition => transition.IsMs1).ToList();
             Assert.AreEqual(3, precursorTransitions.Count);

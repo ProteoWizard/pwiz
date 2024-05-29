@@ -58,20 +58,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 convertSuccess = ImportPeptideSearch.DdaConverter.Run(this, status) && !_cancelToken.IsCancellationRequested;
 
                 Invoke(new MethodInvoker(() => status = UpdateSearchEngineProgressMilestone(status, convertSuccess, filesCount,
-                    Resources.DDASearchControl_RunSearch_Conversion_cancelled_,
-                    Resources.DDASearchControl_RunSearch_Conversion_failed_,
-                    Resources.DDASearchControl_SearchProgress_Starting_search)));
+                    PeptideSearchResources.DDASearchControl_RunSearch_Conversion_cancelled_,
+                    PeptideSearchResources.DDASearchControl_RunSearch_Conversion_failed_,
+                    PeptideSearchResources.DDASearchControl_SearchProgress_Starting_search)));
             }
 
             bool searchSuccess = convertSuccess;
-            if (convertSuccess)
+            while (searchSuccess)
             {
                 searchSuccess = ImportPeptideSearch.SearchEngine.Run(_cancelToken, status) && !_cancelToken.IsCancellationRequested;
 
-                Invoke(new MethodInvoker(() => UpdateSearchEngineProgressMilestone(status, searchSuccess, status.SegmentCount,
+                Invoke(new MethodInvoker(() => UpdateSearchEngineProgressMilestone(status, true, status.SegmentCount,
                     Resources.DDASearchControl_SearchProgress_Search_canceled,
-                    Resources.DDASearchControl_SearchProgress_Search_failed,
+                    PeptideSearchResources.DDASearchControl_SearchProgress_Search_failed,
                     Resources.DDASearchControl_SearchProgress_Search_done)));
+                if (ImportPeptideSearch.RemainingStepsInSearch <= 1)
+                {
+                    break;
+                }
             }
 
             Invoke(new MethodInvoker(() =>

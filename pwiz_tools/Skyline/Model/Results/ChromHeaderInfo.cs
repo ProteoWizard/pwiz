@@ -1934,6 +1934,11 @@ namespace pwiz.Skyline.Model.Results
             });
         }
 
+        public ChromKey ChangeCollisionEnergy(float collisionEnergy)
+        {
+            return ChangeProp(ImClone(this), im => im.CollisionEnergy = collisionEnergy);
+        }
+
         /// <summary>
         /// For debugging only
         /// </summary>
@@ -2062,7 +2067,7 @@ namespace pwiz.Skyline.Model.Results
                         if (mzs.Length != 2)
                         {
                             throw new InvalidDataException(
-                                string.Format(Resources.ChromKey_FromId_Invalid_chromatogram_ID__0__found_The_ID_must_include_both_precursor_and_product_mz_values,
+                                string.Format(ResultsResources.ChromKey_FromId_Invalid_chromatogram_ID__0__found_The_ID_must_include_both_precursor_and_product_mz_values,
                                               id));
                         }
                     }
@@ -2072,7 +2077,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else
                 {
-                    throw new ArgumentException(string.Format(Resources.ChromKey_FromId_The_value__0__is_not_a_valid_chromatogram_ID, id));
+                    throw new ArgumentException(string.Format(ResultsResources.ChromKey_FromId_The_value__0__is_not_a_valid_chromatogram_ID, id));
                 }
                 float ceValue = 0;
                 if (parseCE)
@@ -2093,7 +2098,7 @@ namespace pwiz.Skyline.Model.Results
             }
             catch (FormatException)
             {
-                throw new InvalidDataException(string.Format(Resources.ChromKey_FromId_Invalid_chromatogram_ID__0__found_Failure_parsing_mz_values, idIn));
+                throw new InvalidDataException(string.Format(ResultsResources.ChromKey_FromId_Invalid_chromatogram_ID__0__found_Failure_parsing_mz_values, idIn));
             }
         }
 
@@ -2246,18 +2251,9 @@ namespace pwiz.Skyline.Model.Results
 
         internal ChromGroupHeaderInfo Header { get { return _groupHeaderInfo; } }
         public SignedMz PrecursorMz { get { return new SignedMz(_groupHeaderInfo.Precursor, _groupHeaderInfo.NegativeCharge); } }
-        public ChromatogramGroupId ChromatogramGroupId
-        {
-            get; private set;
-        }
-
-        public string QcTraceName
-        {
-            get
-            {
-                return ChromatogramGroupId?.QcTraceName;
-            }
-        }
+        [CanBeNull]
+        public ChromatogramGroupId ChromatogramGroupId { get; private set; }
+        public string QcTraceName { get { return ChromatogramGroupId?.QcTraceName; } }
         public double? PrecursorCollisionalCrossSection { get { return _groupHeaderInfo.CollisionalCrossSection; } }
         public ChromCachedFile CachedFile { get { return _allFiles[_groupHeaderInfo.FileIndex]; } }
         public MsDataFileUri FilePath { get { return _allFiles[_groupHeaderInfo.FileIndex].FilePath; } }
@@ -2608,7 +2604,7 @@ namespace pwiz.Skyline.Model.Results
             if (transitionIndex >= groupInfo.NumTransitions)
             {
                 throw new IndexOutOfRangeException(
-                    string.Format(Resources.ChromatogramInfo_ChromatogramInfo_The_index__0__must_be_between_0_and__1__,
+                    string.Format(ResultsResources.ChromatogramInfo_ChromatogramInfo_The_index__0__must_be_between_0_and__1__,
                                   transitionIndex, groupInfo.NumTransitions));
             }
             _groupInfo = groupInfo;
@@ -2816,7 +2812,7 @@ namespace pwiz.Skyline.Model.Results
             if (0 > peakIndex || peakIndex > NumPeaks)
             {
                 throw new IndexOutOfRangeException(
-                    string.Format(Resources.ChromatogramInfo_ChromatogramInfo_The_index__0__must_be_between_0_and__1__,
+                    string.Format(ResultsResources.ChromatogramInfo_ChromatogramInfo_The_index__0__must_be_between_0_and__1__,
                                   peakIndex, NumPeaks));
             }
             return _groupInfo.GetTransitionPeak(_transitionIndex, peakIndex);
@@ -3004,7 +3000,7 @@ namespace pwiz.Skyline.Model.Results
     public class BulkReadException : IOException
     {
         public BulkReadException()
-            : base(Resources.BulkReadException_BulkReadException_Failed_reading_block_from_file)
+            : base(ResultsResources.BulkReadException_BulkReadException_Failed_reading_block_from_file)
         {
         }
     }

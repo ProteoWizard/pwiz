@@ -944,8 +944,8 @@ namespace pwiz.SkylineTestFunctional
 
             // Show we can import data (response to issue preventing data import on assay libraries)
             // Import the raw data
-            var askDecoysDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
-            var importResultsDlg = ShowDialog<ImportResultsDlg>(askDecoysDlg.ClickNo);
+            Assert.IsFalse(Skyline.SkylineWindow.ShouldPromptForDecoys(SkylineWindow.Document));
+            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             RunUI(() =>
             {
                 string fileName = TestFilesDir.GetTestPath("OverlapTest.mzML");
@@ -1228,7 +1228,7 @@ namespace pwiz.SkylineTestFunctional
 
         // Expects a message dialog after import window closes
         public static void ImportTransitionListSkipColumnSelectWithMessage<TDlg>(string csvPath, Action<TDlg> messageAction)
-            where TDlg : FormEx
+            where TDlg : Form
         {
             ImportTransitionListSkipColumnSelect(csvPath);
             var messageDlg = WaitForOpenForm<TDlg>();

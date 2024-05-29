@@ -121,7 +121,7 @@ namespace pwiz.Skyline.Model
                     case bool b:
                         if (!bool.TryParse(value.ToString(), out bool tmpb))
                             throw new ArgumentException(string.Format(
-                                Resources.Setting_Validate_The_value___0___is_not_valid_for_the_argument__1__which_must_be_either__True__or__False__,
+                                ModelResources.Setting_Validate_The_value___0___is_not_valid_for_the_argument__1__which_must_be_either__True__or__False__,
                                 value, Name));
                         return tmpb;
 
@@ -190,7 +190,7 @@ namespace pwiz.Skyline.Model
 
         public abstract bool Run(CancellationTokenSource cancelToken, IProgressStatus status);
 
-        public void SetSpectrumFiles(MsDataFileUri[] searchFilenames)
+        public virtual void SetSpectrumFiles(MsDataFileUri[] searchFilenames)
         {
             SpectrumFileNames = searchFilenames;
         }

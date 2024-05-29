@@ -207,8 +207,8 @@ namespace pwiz.Skyline.Model.Lib
             TransitionSettings = settings.TransitionSettings;
 
             // Get potential losses to all fragments in this peptide
-            PotentialLosses = TransitionGroup.CalcPotentialLosses(Sequence, settings.PeptideSettings.Modifications,
-                lookupMods, MassType);
+            TransitionLossMap =
+                TransitionLossMap.ForTarget(Sequence, settings.PeptideSettings.Modifications, lookupMods, MassType);
         }
 
         public TargetInfo TargetInfoObj { get; private set; }
@@ -267,7 +267,7 @@ namespace pwiz.Skyline.Model.Lib
             get { return FragmentFilterObj.UseFilter; }
         }
 
-        public IList<IList<ExplicitLoss>> PotentialLosses { get; }
+        public TransitionLossMap TransitionLossMap { get; }
 
         public LibraryRankedSpectrumInfo RankSpectrum(SpectrumPeaksInfo info, int minPeaks, double? score)
         {
@@ -609,7 +609,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public bool HasLosses
         {
-            get { return PotentialLosses != null && PotentialLosses.Count > 0; }
+            get { return TransitionLossMap.PotentialLosses.Count > 0; }
         }
 
         private class RankingState
@@ -699,7 +699,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 if (Transition.IsPrecursor(type))
                 {
-                    foreach (var losses in TransitionGroup.CalcTransitionLosses(type, 0, MassType, PotentialLosses))
+                    foreach (var losses in TransitionLossMap.CalcTransitionLosses(type, 0))
                     {
                         var matchedFragmentIon =
                             MakeMatchedFragmentIon(type, 0, PrecursorAdduct, losses, out double matchMz);
@@ -746,7 +746,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         for (int i = len - 1; i >= 0; i--)
                         {
-                            foreach (var losses in TransitionGroup.CalcTransitionLosses(type, i, MassType, PotentialLosses))
+                            foreach (var losses in TransitionLossMap.CalcTransitionLosses(type, i))
                             {
                                 var matchedFragmentIon =
                                     MakeMatchedFragmentIon(type, i, adduct, losses, out double matchMz);
@@ -767,7 +767,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         for (int i = 0; i < len; i++)
                         {
-                            foreach (var losses in TransitionGroup.CalcTransitionLosses(type, i, MassType, PotentialLosses))
+                            foreach (var losses in TransitionLossMap.CalcTransitionLosses(type, i))
                             {
                                 var matchedFragmentIon =
                                     MakeMatchedFragmentIon(type, i, adduct, losses, out double matchMz);

@@ -94,7 +94,7 @@ namespace pwiz.Skyline.FileUI
             {
                 using (var waitDlg = new LongWaitDlg())
                 {
-                    waitDlg.Text = Resources.PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers;
+                    waitDlg.Text = FileUIResources.PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers;
                     waitDlg.PerformWork(this, 800, () => PublishDocumentDlgLoad(listServerFolders));
                 }
             }
@@ -120,8 +120,6 @@ namespace pwiz.Skyline.FileUI
 
         private void PublishDocumentDlgLoad(List<ServerFolders> listServerFolders)
         {
-            if (PanoramaPublishClient == null)
-                PanoramaPublishClient = new WebPanoramaPublishClient();
             var listErrorServers = new List<ServerError>();
             foreach (var server in _panoramaServers)
             {
@@ -134,7 +132,11 @@ namespace pwiz.Skyline.FileUI
                 JToken folders = null;
                 try
                 {
-                    folders = PanoramaPublishClient.GetInfoForFolders(server, null);
+                    // Create a client for the server if we were not given one in SkylineWindow.ShowPublishDlg(IPanoramaPublishClient publishClient).
+                    var panoramaClient = PanoramaPublishClient != null
+                        ? PanoramaPublishClient.PanoramaClient
+                        : GetDefaultPublishClient(server).PanoramaClient;
+                    folders = panoramaClient.GetInfoForFolders(null);
                 }
                 catch (Exception ex)
                 {
@@ -144,7 +146,7 @@ namespace pwiz.Skyline.FileUI
                         if (error != null && error.Contains(PanoramaClient.Properties.Resources
                                 .UserState_GetErrorMessage_The_username_and_password_could_not_be_authenticated_with_the_panorama_server_))
                         {
-                            error = TextUtil.LineSeparate(error, Resources
+                            error = TextUtil.LineSeparate(error, FileUIResources
                                 .PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password_);
 
                         }
@@ -161,7 +163,7 @@ namespace pwiz.Skyline.FileUI
             }
             if (listErrorServers.Count > 0)
             {
-                throw new Exception(TextUtil.LineSeparate(Resources.PublishDocumentDlg_PublishDocumentDlgLoad_Failed_attempting_to_retrieve_information_from_the_following_servers_,
+                throw new Exception(TextUtil.LineSeparate(FileUIResources.PublishDocumentDlg_PublishDocumentDlgLoad_Failed_attempting_to_retrieve_information_from_the_following_servers_,
                                                           string.Empty,
                                                           ServersToString(listErrorServers)));
             }
@@ -216,7 +218,7 @@ namespace pwiz.Skyline.FileUI
             }
             catch (Exception x)
             {
-                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.PublishDocumentDlg_addSubFolders_Error_retrieving_server_folders,
+                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(FileUIResources.PublishDocumentDlg_addSubFolders_Error_retrieving_server_folders,
                                                             x.Message), x);
             }
         }
@@ -287,7 +289,7 @@ namespace pwiz.Skyline.FileUI
             FolderInformation folderInfo = treeViewFolders.SelectedNode.Tag as FolderInformation;
             if (folderInfo == null)
             {
-                MessageDlg.Show(this, Resources.PublishDocumentDlg_UploadSharedZipFile_Error_obtaining_server_information);
+                MessageDlg.Show(this, FileUIResources.PublishDocumentDlg_UploadSharedZipFile_Error_obtaining_server_information);
                 return;
             }
             if (!folderInfo.HasWritePermission)
@@ -296,10 +298,14 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
+            // If a test client was provided in SkylineWindow.ShowPublishDlg(IPanoramaPublishClient publishClient), use that.
+            // Otherwise, create a client for the selected server.
+            PanoramaPublishClient ??= GetDefaultPublishClient(folderInfo.Server); 
+
             try
             {
                 var cancelled = false;
-                ShareType = PanoramaPublishClient.GetShareType(folderInfo, _docContainer.DocumentUI,
+                ShareType = PanoramaPublishClient.GetShareType(_docContainer.DocumentUI,
                     _docContainer.DocumentFilePath, _fileFormatOnDisk, this, ref cancelled);
                 if (cancelled)
                 {
@@ -321,8 +327,16 @@ namespace pwiz.Skyline.FileUI
             string folderPath = GetFolderPath(treeViewFolders.SelectedNode);
             var zipFilePath = tbFilePath.Text;
             FolderInformation folderInfo = treeViewFolders.SelectedNode.Tag as FolderInformation;
-            if(folderInfo != null)
-                PanoramaPublishClient.UploadSharedZipFile(parent,folderInfo.Server, zipFilePath, folderPath);
+            if (folderInfo != null)
+            {
+                PanoramaPublishClient ??= GetDefaultPublishClient(folderInfo.Server);
+                PanoramaPublishClient.UploadSharedZipFile(parent, zipFilePath, folderPath);
+            }
+        }
+
+        public static IPanoramaPublishClient GetDefaultPublishClient(PanoramaServer server)
+        {
+            return new WebPanoramaPublishClient(server.URI, server.Username, server.Password);
         }
 
         private string GetFolderPath(TreeNode folderNode)
@@ -349,10 +363,10 @@ namespace pwiz.Skyline.FileUI
                 dlg.SupportMultiDottedExtensions = true;
                 dlg.DefaultExt = SrmDocumentSharing.EXT_SKY_ZIP;
                 dlg.Filter = TextUtil.FileDialogFiltersAll(
-                    Resources.PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents,
+                    FileUIResources.PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents,
                     SrmDocumentSharing.EXT);
                 dlg.FileName = tbFilePath.Text;
-                dlg.Title = Resources.PublishDocumentDlg_btnBrowse_Click_Upload_Document;
+                dlg.Title = FileUIResources.PublishDocumentDlg_btnBrowse_Click_Upload_Document;
                 if (dlg.ShowDialog(Parent) == DialogResult.OK)
                 {
                     tbFilePath.Text = dlg.FileName;

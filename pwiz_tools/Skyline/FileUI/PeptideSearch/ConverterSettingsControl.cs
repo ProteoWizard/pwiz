@@ -25,7 +25,6 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DdaSearch;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 
@@ -195,7 +194,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!ValidateCombobox(cbInstrumentPreset, out fragmentIons))
             {
                 helper.ShowTextBoxError(cbInstrumentPreset, 
-                    Resources.DdaSearch_SearchSettingsControl_Fragment_ions_must_be_selected);
+                    PeptideSearchResources.DdaSearch_SearchSettingsControl_Fragment_ions_must_be_selected);
                 return false;
             }
             ImportPeptideSearch.SearchEngine.SetFragmentIons(fragmentIons);*/
@@ -259,7 +258,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             stringToValueIfNonDefault(EstimateBackground.ToString(), defaultDiaUmpireSettings[ESTIMATEBG]);
 
-            KeyValueGridDlg.Show(Resources.SearchSettingsControl_Additional_Settings,
+            KeyValueGridDlg.Show(PeptideSearchResources.SearchSettingsControl_Additional_Settings,
                 allDiaUmpireSettings, valueToString, stringToValueIfNonDefault,
                 (value, setting) => setting.Validate(value));
         }
@@ -318,6 +317,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public MsconvertDdaConverter GetMsconvertConverter()
         {
             return new MsconvertDdaConverter(ImportPeptideSearch);
+        }
+
+        public HardklorDdaConverter GetHardklorConverter()
+        {
+            return new HardklorDdaConverter(ImportPeptideSearch);
         }
     }
 }

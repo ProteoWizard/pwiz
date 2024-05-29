@@ -102,11 +102,14 @@ namespace pwiz.SkylineTestConnected
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
             RunUI(() =>
             {
-                remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER);
-                remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER);
+                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER), "Unable to select {0}", TEST_FOLDER);
+                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER), "Unable to select {0}", PANORAMA_FOLDER);
             });
-            OkDialog(remoteDlg, () => remoteDlg.ClickFile(TEST_FILE));
+            var doc = SkylineWindow.Document;
+            OkDialog(remoteDlg, () => Assert.IsTrue(remoteDlg.ClickFile(TEST_FILE), "Unable to click file {0}", TEST_FILE));
             WaitForCondition(() => File.Exists(path));
+            var docLoaded = WaitForDocumentChangeLoaded(doc);
+            AssertEx.IsDocumentState(docLoaded, null, 7, 22, 23, 115);
             FileEx.SafeDelete(path, true);
             Assert.IsFalse(File.Exists(path));
         }
@@ -170,8 +173,8 @@ namespace pwiz.SkylineTestConnected
 
             RunUI(() =>
             {
-                remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER);
-                remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER);
+                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER), "Unable to select {0}", TEST_FOLDER);
+                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER), "Unable to select {0}", PANORAMA_FOLDER);
                 remoteDlg.Close();
                 state = remoteDlg.FolderBrowser.TreeState;
             });
@@ -200,9 +203,9 @@ namespace pwiz.SkylineTestConnected
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
             RunUI(() =>
             {
-                remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER);
-                remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER);
-                remoteDlg.ClickFile(DELETED_FILE);
+                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER), "Unable to select {0}", TEST_FOLDER);
+                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER), "Unable to select {0}", PANORAMA_FOLDER);
+                Assert.IsTrue(remoteDlg.ClickFile(DELETED_FILE), "Unable to click file {0}", DELETED_FILE);
             });
             var errorDlg = ShowDialog<MessageDlg>(remoteDlg.ClickOpen);
             Assert.IsFalse(File.Exists(path));
@@ -220,15 +223,18 @@ namespace pwiz.SkylineTestConnected
             var remoteDlg = ShowDialog<PanoramaFilePicker>(() => SkylineWindow.OpenFromPanorama(path));
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
 
+            var doc = SkylineWindow.Document;
             RunUI(() =>
             {
-                remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER);
-                remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER);
-                remoteDlg.ClickFile(RENAMED_FILE);
+                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER), "Unable to select {0}", TEST_FOLDER);
+                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER), "Unable to select {0}", PANORAMA_FOLDER);
+                Assert.IsTrue(remoteDlg.ClickFile(RENAMED_FILE), "Unable to click file {0}", RENAMED_FILE);
                 Assert.AreNotEqual(RENAMED_FILE, remoteDlg.GetItemName(0));
             });
             WaitForClosedForm(remoteDlg);
             WaitForCondition(() => File.Exists(path));
+            var docLoaded = WaitForDocumentChangeLoaded(doc);
+            AssertEx.IsDocumentState(docLoaded, null, 12, 68, 126, 576);
             FileEx.SafeDelete(path, true);
             Assert.IsFalse(File.Exists(path));
         }
@@ -265,9 +271,9 @@ namespace pwiz.SkylineTestConnected
 
             var remoteDlg = ShowDialog<PanoramaFilePicker>(() => ShowPanoramaFilePicker(serverList, selectedPath));
             WaitForConditionUI(() => remoteDlg.IsLoaded);
-            RunUI(() => remoteDlg.FolderBrowser.SelectNode("@files")); 
+            RunUI(() => Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode("@files"), "Unable to select @files")); 
             WaitForConditionUI(() => remoteDlg.FileNumber == 13);
-            RunUI(() => remoteDlg.FolderBrowser.SelectNode("FileRenamedOnServer"));
+            RunUI(() => Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode("FileRenamedOnServer"), "Unable to select FileRenamedOnServer"));
             WaitForConditionUI(() => remoteDlg.FileNumber == 6);
             OkDialog(remoteDlg, remoteDlg.Close);
         }

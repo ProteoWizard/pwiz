@@ -266,7 +266,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             return GetRowString(document, protein, peptide, false);
         }
 
-        public bool Matches(SrmDocument document, Protein protein, Databinding.Entities.Peptide peptide, FoldChangeResult foldChangeResult, ICutoffSettings cutoffSettings)
+        public bool Matches(SrmDocument document, Protein protein, Databinding.Entities.Peptide peptide, FoldChangeResult? foldChangeResult, ICutoffSettings cutoffSettings)
         {
             foreach (var match in matchOptions)
             {
@@ -289,36 +289,48 @@ namespace pwiz.Skyline.Model.GroupComparison
                             return false;
                         break;
                     }
-                    case MatchOption.BelowLeftCutoff:
-                    {
-                        if (!cutoffSettings.FoldChangeCutoffValid || foldChangeResult.Log2FoldChange >= -cutoffSettings.Log2FoldChangeCutoff)
-                            return false;
-                        break;
-                    }
-                    case MatchOption.AboveRightCutoff:
-                    {
-                        if (!cutoffSettings.FoldChangeCutoffValid || foldChangeResult.Log2FoldChange <= cutoffSettings.Log2FoldChangeCutoff)
-                            return false;
-                        break;
-                    }
-                    case MatchOption.BelowPValueCutoff:
-                    {
-                        if (!cutoffSettings.PValueCutoffValid || foldChangeResult.AdjustedPValue <= Math.Pow(10, -cutoffSettings.PValueCutoff))
-                            return false;
-                        break;
-                    }
-                    case MatchOption.AbovePValueCutoff:
-                    {
-                        if (!cutoffSettings.PValueCutoffValid || foldChangeResult.AdjustedPValue >= Math.Pow(10, -cutoffSettings.PValueCutoff))
-                            return false;
-                        break;
-                    }
+                }
+
+                if (foldChangeResult.HasValue && !CutoffMatches(match, foldChangeResult.Value, cutoffSettings))
+                {
+                    return false;
                 }
             }
 
             return true;
         }
 
+        private bool CutoffMatches(MatchOption match, FoldChangeResult foldChangeResult, ICutoffSettings cutoffSettings)
+        {
+            switch (match)
+            {
+                case MatchOption.BelowLeftCutoff:
+                {
+                    if (!cutoffSettings.FoldChangeCutoffValid || foldChangeResult.Log2FoldChange >= -cutoffSettings.Log2FoldChangeCutoff)
+                        return false;
+                    break;
+                }
+                case MatchOption.AboveRightCutoff:
+                {
+                    if (!cutoffSettings.FoldChangeCutoffValid || foldChangeResult.Log2FoldChange <= cutoffSettings.Log2FoldChangeCutoff)
+                        return false;
+                    break;
+                }
+                case MatchOption.BelowPValueCutoff:
+                {
+                    if (!cutoffSettings.PValueCutoffValid || foldChangeResult.AdjustedPValue <= Math.Pow(10, -cutoffSettings.PValueCutoff))
+                        return false;
+                    break;
+                }
+                case MatchOption.AbovePValueCutoff:
+                {
+                    if (!cutoffSettings.PValueCutoffValid || foldChangeResult.AdjustedPValue >= Math.Pow(10, -cutoffSettings.PValueCutoff))
+                        return false;
+                    break;
+                }
+            }
+            return true;
+        }
         protected bool Equals(MatchExpression other)
         {
             return ArrayUtil.EqualsDeep(matchOptions, other.matchOptions) && string.Equals(RegExpr, other.RegExpr);

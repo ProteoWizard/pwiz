@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -141,7 +140,7 @@ namespace pwiz.Skyline.Model
     {
         // CONSIDER: Put useful info in Identity.ToString(), and have a better message.
         public IdentityNotFoundException(Identity id)
-            : base(Resources.IdentityNotFoundException_IdentityNotFoundException_Failed_to_find_document_node)
+            : base(ModelResources.IdentityNotFoundException_IdentityNotFoundException_Failed_to_find_document_node)
         {
             Id = id;
         }
@@ -264,7 +263,7 @@ namespace pwiz.Skyline.Model
         public IdentityPath GetPathTo(int depth)
         {
             if (-1 > depth || depth > Depth)
-                throw new IndexOutOfRangeException(string.Format(Resources.IdentityPath_GetPathTo_Index__0__out_of_range_1_to__1__, depth, Depth));
+                throw new IndexOutOfRangeException(string.Format(ModelResources.IdentityPath_GetPathTo_Index__0__out_of_range_1_to__1__, depth, Depth));
             return new IdentityPath(_identities.Take(depth + 1));
         }
 
@@ -428,7 +427,7 @@ namespace pwiz.Skyline.Model
                 {
                     DocNodeParent subParent = nodeNext as DocNodeParent;
                     if (subParent == null)
-                        throw new InvalidOperationException(Resources.IdentityPathTraversal_Traverse_Invalid_attempt_to_perform_parent_operation_on_leaf_node);
+                        throw new InvalidOperationException(ModelResources.IdentityPathTraversal_Traverse_Invalid_attempt_to_perform_parent_operation_on_leaf_node);
 
                     // Make recursive call into the specified child
                     return parent.ReplaceChild(recurse(subParent, this, tag));

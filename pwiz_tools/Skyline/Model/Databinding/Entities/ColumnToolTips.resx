@@ -591,7 +591,7 @@ containing protein sequence, or #N/A if no protein sequence is available</value>
     <value>The collision cross section for the precursor from the ion mobility library</value>
   </data>
   <data name="LibraryDotProduct">
-    <value>The dot-product between the individual transition peak areas
+    <value>Equivalent to "dotp" displayed in the user interface. The dot-product between the individual transition peak areas
 of the precursor and the intensities of the matching ion peaks in the matched MS/MS
 spectral library spectrum (Note: as of v1.4, this is now 1 – Arcos(dotp)/(Pi/2) where dotp
 is the value described above. a.k.a. Normalize Spectrum Contrast Angle), or #N/A if the
@@ -666,7 +666,7 @@ The options for determining this value can be specified on the Quantification ta
     <value>The total mass of all neutral losses from this fragment.</value>
   </data>
   <data name="MassErrorPPM">
-    <value>Mass Error PPM</value>
+    <value>The difference between the expected and measured m/z values expressed in parts per million (PPM)</value>
   </data>
   <data name="MassErrors">
     <value>The mass errors of the chromatogram.</value>
@@ -875,7 +875,7 @@ The Molecule List Abundance will be blank if any transitions have missing values
     <value>Indicates whether the result was obtained using only precursor intensities (MS Level 1) or product intensities (MS Level 2).</value>
   </data>
   <data name="NextAa">
-    <value>Next Aa</value>
+    <value>The amino acid residue found immediately after the peptide in the protein sequence.</value>
   </data>
   <data name="NormalizationDivisor">
     <value>Number which observed values are divided by when using the default normalization method.
@@ -1015,9 +1015,7 @@ Edit menu</value>
     <value>The concentration of the Precursor Result calculated using the isotopolog response curve.</value>
   </data>
   <data name="PrecursorCharge">
-    <value>
-      The charge associated with the precursor ion.
-    </value>
+    <value>The charge associated with the precursor ion.</value>
   </data>
   <data name="PrecursorConcentration">
     <value>The concentration at which this precursor was spiked into the sample. This is used for generating Isotopolog Response Curves.</value>
@@ -1206,7 +1204,7 @@ MinRetentionTime, which can be used to gauge the spread of retention times
 measured.</value>
   </data>
   <data name="RatioDotProduct">
-    <value>Ratio Dot Product</value>
+    <value>Equivalent to "rdotp" displayed in the user interface. The dot-product calculation described for Library Dot Product, but between the peak areas of the precursor (e.g. light) and the peak areas of the standard type precursor (e.g. heavy), or #N/A if there is either no standard type or the precursor is the standard type.</value>
   </data>
   <data name="RatioToStandard">
     <value>Peptide area ratio of light to heavy</value>
@@ -1409,6 +1407,9 @@ values.</value>
   </data>
   <data name="SummaryMessage">
     <value>Description of the change</value>
+  </data>
+  <data name="SurrogateExternalStandard">
+    <value>Name of another peptide or molecule whose fitted calibration curve will be used for quantification of this peptide or molecule</value>
   </data>
   <data name="TargetQualitativeIonRatio">
     <value>The average of the Qualitative Ion Ratio values across all of the external standard replicates that have not been excluded from calibration.</value>

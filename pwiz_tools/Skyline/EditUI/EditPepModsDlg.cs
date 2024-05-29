@@ -76,7 +76,7 @@ namespace pwiz.Skyline.EditUI
 
         private static string GetIsotopeLabelText(IsotopeLabelType labelType)
         {
-            return string.Format(Resources.EditPepModsDlg_GetIsotopeLabelText_Isotope__0__, labelType);
+            return string.Format(EditUIResources.EditPepModsDlg_GetIsotopeLabelText_Isotope__0__, labelType);
         }
 
         public EditPepModsDlg(SrmSettings settings, PeptideDocNode nodePeptide, bool allowCopy)
@@ -419,6 +419,7 @@ namespace pwiz.Skyline.EditUI
             if (!EqualsItems(combo, listItems))
             {
                 combo.Items.Clear();
+                combo.SelectedIndex = -1;   // And reset selection - normal combos would do this
                 listItems.ForEach(item => combo.Items.Add(item));
             }
             if (select)
@@ -799,7 +800,7 @@ namespace pwiz.Skyline.EditUI
             ExplicitMods = GetCurrentExplicitMods();
             if (ExplicitMods != null && !ExplicitMods.CrosslinkStructure.IsConnected())
             {
-                MessageDlg.Show(this, Resources.EditPepModsDlg_OkDialog_One_or_more_of_the_crosslinked_peptides_are_no_longer_attached_to_this_peptide__);
+                MessageDlg.Show(this, EditUIResources.EditPepModsDlg_OkDialog_One_or_more_of_the_crosslinked_peptides_are_no_longer_attached_to_this_peptide__);
                 ShowEditLinkedPeptidesDlg(null, null);
             }
 
@@ -863,7 +864,7 @@ namespace pwiz.Skyline.EditUI
                 .Cast<CrosslinkSite?>().FirstOrDefault();
             if (!nullableOtherSite.HasValue)
             {
-                return string.Format(Resources.EditPepModsDlg_GetTooltip_Invalid_crosslink___0_, crosslink);
+                return string.Format(EditUIResources.EditPepModsDlg_GetTooltip_Invalid_crosslink___0_, crosslink);
             }
 
             var otherSite = nullableOtherSite.Value;
@@ -871,12 +872,12 @@ namespace pwiz.Skyline.EditUI
             if (otherSite.PeptideIndex == 0)
             {
                 peptide = NodePeptide.Peptide;
-                return string.Format(Resources.EditPepModsDlg_GetTooltip_Looplink___0____1__, peptide.Sequence[otherSite.AaIndex], otherSite.AaIndex + 1);
+                return string.Format(EditUIResources.EditPepModsDlg_GetTooltip_Looplink___0____1__, peptide.Sequence[otherSite.AaIndex], otherSite.AaIndex + 1);
             }
             else
             {
                 peptide = CrosslinkStructure.LinkedPeptides[otherSite.PeptideIndex - 1];
-                return string.Format(Resources.EditPepModsDlg_GetTooltip_Crosslink_to__0____1____2__, peptide.Sequence,
+                return string.Format(EditUIResources.EditPepModsDlg_GetTooltip_Crosslink_to__0____1____2__, peptide.Sequence,
                     peptide.Sequence[otherSite.AaIndex], otherSite.AaIndex + 1);
             }
         }
@@ -903,8 +904,8 @@ namespace pwiz.Skyline.EditUI
                 }
 
                 switch (MultiButtonMsgDlg.Show(this,
-                    Resources.EditPepModsDlg_EnsureLinkedPeptide_Discard_or_edit_disconnected_crosslinks,
-                    Resources.EditPepModsDlg_EnsureLinkedPeptide_ButtonText_Edit_Crosslinks, Resources.EditPepModsDlg_EnsureLinkedPeptide_ButtonText_Discard, true))
+                    EditUIResources.EditPepModsDlg_EnsureLinkedPeptide_Discard_or_edit_disconnected_crosslinks,
+                    EditUIResources.EditPepModsDlg_EnsureLinkedPeptide_ButtonText_Edit_Crosslinks, EditUIResources.EditPepModsDlg_EnsureLinkedPeptide_ButtonText_Discard, true))
                 {
                     case DialogResult.Cancel:
                         return false;
