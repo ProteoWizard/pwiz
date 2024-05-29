@@ -2376,8 +2376,8 @@ namespace pwiz.Skyline.Model
                                           string averagePeakAreaText,
                                           string variableRtWindowText,
                                           string primaryOrSecondary,
-                                          string xic,
-                                          string rt)
+                                          string xic,   // used for method export only
+                                          string rt)    // used for method export only
         {
             if (MethodType == ExportMethodType.Triggered) // CSV for triggered
             {
