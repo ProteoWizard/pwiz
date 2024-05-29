@@ -157,6 +157,9 @@
       <Component Id="BlibFilter.exe">
         <File Source="$(var.Skyline.TargetDir)/BlibFilter.exe" KeyPath="yes"/>
       </Component>
+      <Component Id="BullseyeSharp.exe">
+        <File Source="$(var.Skyline.TargetDir)/BullseyeSharp.exe" KeyPath="yes"/>
+      </Component>
       <Component Id="DigitalRune.Windows.Docking.dll">
         <File Source="$(var.Skyline.TargetDir)/DigitalRune.Windows.Docking.dll" KeyPath="yes"/>
       </Component>

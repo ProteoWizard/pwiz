@@ -43,6 +43,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
+using pwiz.Skyline.Alerts;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -1528,6 +1529,9 @@ namespace pwiz.SkylineTestFunctional
 
             var doc = SkylineWindow.Document;
 
+            FileEx.SafeDelete(outBlib);
+            FileEx.SafeDelete(Path.ChangeExtension(outBlib, BiblioSpecLiteLibrary.EXT_CACHE));
+
             // Open Peptide Settings -- Library
             var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var buildLibrary = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
@@ -1550,8 +1554,19 @@ namespace pwiz.SkylineTestFunctional
                 buildLibrary.LibraryPath = outBlib;
                 // buildLibrary.IrtStandard = IrtStandard.BIOGNOSYS_11;
             });
+            if (newDocument)
+            {
+                RunDlg<MessageDlg>(buildLibrary.OkWizardPage, dlg =>
+                {
+                    Assert.AreEqual(Resources.BuildLibraryDlg_ValidateBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_Koina_predictions_,
+                        dlg.Message);
+                    dlg.OkDialog();
+                });
+                OkDialog(buildLibrary, buildLibrary.CancelButton.PerformClick);
+                OkDialog(peptideSettings, peptideSettings.OkDialog);
+                return;
+            }
 
-            // Other tests do this too, but why?
             OkDialog(buildLibrary, buildLibrary.OkWizardPage);
 
             // Wait for library build
@@ -1563,11 +1578,10 @@ namespace pwiz.SkylineTestFunctional
             // Close pep settings
             OkDialog(peptideSettings, peptideSettings.OkDialog);
 
+            // Wait for existing library
+            WaitForCondition(() => File.Exists(outBlib));
             // Wait for stable document
             WaitForDocumentChangeLoaded(doc);
-
-            if (newDocument)
-                return;
 
             var precursorCount = SkylineWindow.Document.PeptideTransitionGroupCount;
             var distinctPrecursorCount = 
