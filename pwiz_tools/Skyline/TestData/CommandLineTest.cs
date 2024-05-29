@@ -80,8 +80,24 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleReplicateOutTest()
         {
+            DoConsoleReplicateOutTest(false);
+        }
+
+        [TestMethod]
+        public void ConsoleReplicateOutTestWithAuditLogging()
+        {
+            DoConsoleReplicateOutTest(true);
+        }
+
+        [TestMethod]
+        private void DoConsoleReplicateOutTest(bool auditLogging)
+        {
             TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            if (auditLogging)
+            {
+                EnableAuditLogging(docPath);
+            }
             string outPath = TestFilesDir.GetTestPath("Imported_single.sky");
 
             // Import the first RAW file (or mzML for international)
@@ -98,7 +114,11 @@ namespace pwiz.SkylineTestData
             AssertEx.IsDocumentState(doc, 0, 2, 7, 7, 49);
             AssertResult.IsDocumentResultsState(doc, "Single", 3, 3, 0, 21, 0);
 
-
+            if (auditLogging)
+            {
+                var docWithAuditLog = DeserializeWithAuditLog(outPath);
+                AssertLastEntry(docWithAuditLog.AuditLog, MessageType.imported_result);
+            }
 
             //Test --import-append
             var dataFile2 = TestFilesDir.GetTestPath("ah_20101029r_BSA_CID_FT_centroid_3uscan_3" +
@@ -116,6 +136,12 @@ namespace pwiz.SkylineTestData
             AssertResult.IsDocumentResultsState(doc, "Single", 6, 6, 0, 42, 0);
 
             Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
+
+            if (auditLogging)
+            {
+                var docWithAuditLog = DeserializeWithAuditLog(outPath);
+                AssertLastEntry(docWithAuditLog.AuditLog, MessageType.imported_result);
+            }
         }
 
         [TestMethod]
@@ -1080,9 +1106,26 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleAnnotationsExportToImportTest()
         {
+            DoConsoleAnnotationsExportToImportTest(false);
+        }
+
+        [TestMethod]
+        public void ConsoleAnnotationsExportToImportTestWithAuditLogging()
+        {
+            DoConsoleAnnotationsExportToImportTest(true);
+        }
+
+        [TestMethod]
+        private void DoConsoleAnnotationsExportToImportTest(bool auditLogging)
+        {
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleAnnotationsExportToImportTest.zip");
             var documentWithAnnotations = TestFilesDir.GetTestPath("Study 7ii (site 52)_heavily_annotated.sky");
             var documentWithoutAnnotations = TestFilesDir.GetTestPath("Study 7ii (site 52)_no_annotations.sky");
+            if (auditLogging)
+            {
+                EnableAuditLogging(documentWithoutAnnotations);
+            }
+
             var documentWithImportedAnnotations = TestFilesDir.GetTestPath("Study 7ii (site 52)_imported_annotations.sky");
             var annotationsPath = TestFilesDir.GetTestPath("original_annotations.csv");
             var newAnnotationsPath = TestFilesDir.GetTestPath("annotations_from_new_document.csv");
@@ -1108,6 +1151,13 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(originalDocument.Settings.MeasuredResults.Chromatograms, 
                 outputDocument.MeasuredResults.Chromatograms);
 
+            if (auditLogging)
+            {
+                var outputDocumentWithAuditLog =
+                    DeserializeWithAuditLog(documentWithImportedAnnotations);
+                Assert.IsTrue(outputDocumentWithAuditLog.Settings.DataSettings.IsAuditLoggingEnabled);
+                AssertLastEntry(outputDocumentWithAuditLog.AuditLog, MessageType.imported_annotations);
+            }
         }
 
         private static void CheckRefSpectraAll(IList<DbRefSpectra> refSpectra)
@@ -1127,8 +1177,23 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleAddDecoysTest()
         {
+            DoConsoleAddDecoysTest(false);
+        }
+
+        [TestMethod]
+        public void ConsoleAddDecoysTestWithAuditLogging()
+        {
+            DoConsoleAddDecoysTest(true);
+        }
+
+        public void DoConsoleAddDecoysTest(bool auditLogging)
+        {
             TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            if (auditLogging)
+            {
+                EnableAuditLogging(docPath);
+            }
             string outPath = TestFilesDir.GetTestPath("DecoysAdded.sky");
             string output = RunCommand("--in=" + docPath,
                                        "--decoys-add",
@@ -1136,16 +1201,34 @@ namespace pwiz.SkylineTestData
             const int expectedPeptides = 7;
             AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
                 expectedPeptides, DecoyGeneration.REVERSE_SEQUENCE));
+            if (auditLogging)
+            {
+                var outputDocument =
+                    DeserializeWithAuditLog(outPath);
+                AssertLastEntry(outputDocument.AuditLog, MessageType.added_peptide_decoys);
+            }
 
             output = RunCommand("--in=" + docPath,
                                        "--decoys-add=" + CommandArgs.ARG_VALUE_DECOYS_ADD_REVERSE);
             AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
                 expectedPeptides, DecoyGeneration.REVERSE_SEQUENCE));
+            if (auditLogging)
+            {
+                var outputDocument =
+                    DeserializeWithAuditLog(outPath);
+                AssertLastEntry(outputDocument.AuditLog, MessageType.added_peptide_decoys);
+            }
 
             output = RunCommand("--in=" + docPath,
                                        "--decoys-add=" + CommandArgs.ARG_VALUE_DECOYS_ADD_SHUFFLE);
             AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
                 expectedPeptides, DecoyGeneration.SHUFFLE_SEQUENCE));
+            if (auditLogging)
+            {
+                var outputDocument =
+                    DeserializeWithAuditLog(outPath);
+                AssertLastEntry(outputDocument.AuditLog, MessageType.added_peptide_decoys);
+            }
 
             const string badDecoyMethod = "shift";
             output = RunCommand("--in=" + docPath,
@@ -1157,8 +1240,14 @@ namespace pwiz.SkylineTestData
                                        "--decoys-add");
             AssertEx.Contains(output, Resources.CommandLine_AddDecoys_Error__Attempting_to_add_decoys_to_document_with_decoys_);
 
-            output = RunCommand("--in=" + outPath, "--decoys-discard");
+            string discardedDecoysPath = TestFilesDir.GetTestPath("DecoysDiscarded.sky");
+            output = RunCommand("--in=" + outPath, "--decoys-discard", "--out=" + discardedDecoysPath);
             AssertEx.Contains(output, Resources.CommandLine_AddDecoys_Decoys_discarded);
+            if (auditLogging)
+            {
+                var outputDocument = DeserializeWithAuditLog(discardedDecoysPath);
+                AssertLastEntry(outputDocument.AuditLog, MessageType.deleted_target);
+            }
 
             output = RunCommand("--in=" + outPath, "--decoys-add", "--decoys-discard");
             AssertEx.Contains(output, Resources.CommandLine_AddDecoys_Decoys_discarded);
@@ -3994,5 +4083,6 @@ namespace pwiz.SkylineTestData
                 throw new Exception("GetServerState threw an exception");
             }    
         }
+
     }
 }
