@@ -2488,23 +2488,26 @@ namespace pwiz.Skyline.Model
             var prediction = Document.Settings.PeptideSettings.Prediction;
             predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
                 SchedulingReplicateIndex, SchedulingAlgorithm, Document.Settings.HasResults, out var rtWindow);
-            if(MethodType != ExportMethodType.Standard)
-                RTWindow = rtWindow; // Store for later use
 
             xic = XICWidth.HasValue
                 ? Math.Round(XICWidth.Value, 4).ToString(CultureInfo)
                 : 0.02.ToString(CultureInfo);
-            rt = predictedRT.HasValue ? Math.Round(predictedRT.Value, 2).ToString(CultureInfo) : @"0";
 
+            rt = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo);
+
+            // SCIEX transition lists have a column order q1,q3,<dwell-time|predicted-rt>
             if (MethodType == ExportMethodType.Standard)
             {
+                // Use dwell time for unscheduled methods
                 dwellOrRt = AccumulationTime.HasValue
                     ? Math.Round(AccumulationTime.Value, 4).ToString(CultureInfo)
                     : Math.Round(DwellTime.GetValueOrDefault(), 2).ToString(CultureInfo);
             }
             else
             {
-                dwellOrRt = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo);
+                // Use retention time for scheduled methods
+                dwellOrRt = rt;
+                RTWindow = rtWindow; // Store for later use
             }
         }
 
