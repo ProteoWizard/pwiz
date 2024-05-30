@@ -667,7 +667,9 @@ namespace pwiz.Skyline
                 {
                     var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(message));
                     var lib = IonMobilityLibrary.CreateFromResults(
-                        doc, null, false, libName, commandArgs.ImsDbFile,
+                        doc, null,
+                        doc.Settings.TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator,
+                        false, libName, commandArgs.ImsDbFile,
                         progressMonitor);
 
                     return ionMobilityFiltering.ChangeLibrary(lib);

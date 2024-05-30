@@ -44,6 +44,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
     {
         private readonly IEnumerable<IonMobilityLibrarySpec> _existingLibs;
 
+        private readonly IonMobilityWindowWidthCalculator _ionMobilityWindowWidthCalculator;
+
         public IonMobilityLibrary IonMobilityLibrary { get; private set; }
 
         private ValidatingIonMobilityPrecursor[] _originalMobilitiesFlat;
@@ -61,9 +63,11 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         public const int COLUMN_HIGH_ENERGY_OFFSET = 5;
 
 
-        public EditIonMobilityLibraryDlg(IonMobilityLibrarySpec library, IEnumerable<IonMobilityLibrarySpec> existingLibs)
+        public EditIonMobilityLibraryDlg(IonMobilityLibrarySpec library, IEnumerable<IonMobilityLibrarySpec> existingLibs,
+            IonMobilityWindowWidthCalculator ionMobilityWindowWidthCalculator)
         {
             _existingLibs = existingLibs;
+            _ionMobilityWindowWidthCalculator = ionMobilityWindowWidthCalculator;
 
             InitializeComponent();
 
@@ -586,7 +590,9 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     longWaitDlg.PerformWork(this, 100, broker =>
                     {
                         dict = IonMobilityLibrary.CreateFromResults(
-                            document, documentFilePath, useHighEnergyOffset,
+                            document, documentFilePath, 
+                            _ionMobilityWindowWidthCalculator,
+                            useHighEnergyOffset,
                             broker);
                     });
                     if (!longWaitDlg.IsCanceled && dict != null)
