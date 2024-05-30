@@ -172,4 +172,28 @@
   <data name="MsconvertDdaConverter_Run_Starting_msconvert_conversion_" xml:space="preserve">
     <value>Starting msconvert conversion.</value>
   </data>
+  <data name="HardklorSearchEngine_PerformAllAlignments_Performing_retention_time_alignment__0__vs__1_" xml:space="preserve">
+      <value>Retention time alignment: {0} vs {1}</value>
+  </data>
+  <data name="HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_replicates" xml:space="preserve">
+      <value>Looking for features occurring in multiple replicates</value>
+  </data>
+  <data name="HardklorSearchEngine_Run_See_Hardklor_Bullseye_log_for_details" xml:space="preserve">
+      <value>See Hardklor/Bullseye log for details</value>
+  </data>
+  <data name="HardklorSearchEngine_PerformAllAlignments_Error_performing_alignment_between__0__and__1____2_" xml:space="preserve">
+    <value>Error performing alignment between {0} and {1}: {2}</value>
+  </data>
+  <data name="HardklorSearchEngine_PerformAllAlignments_Preparing_for_retention_time_alignment_on___0__" xml:space="preserve">
+    <value>Preparing for retention time alignment on "{0}"</value>
+  </data>
+  <data name="HardklorSearchEngine_Run_Searching_for_peptide_like_features_with__0_" xml:space="preserve">
+    <value>Searching for peptide-like features with {0}</value>
+  </data>
+  <data name="HardklorSearchEngine_Run_Searching_for_persistent_features_in_Hardklor_results_with__0_" xml:space="preserve">
+    <value>Searching for persistent features in Hardklor results with {0}</value>
+  </data>
+  <data name="MsconvertDdaConverter_Run_Converting_file___0___to__1_" xml:space="preserve">
+    <value>Converting file "{0}" to {1}</value>
+  </data>
 </root>

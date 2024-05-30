@@ -20,6 +20,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestUtil
@@ -232,6 +234,16 @@ namespace pwiz.SkylineTestUtil
         {
             // Do nothing for in-memory read-only streams.
             IsOpen = false;
+        }
+
+        public QueryLock ReaderWriterLock
+        {
+            get
+            {
+                // Memory streams do not do any sort of locking, so just return a
+                // new QueryLock whenever requested.
+                return new QueryLock(CancellationToken.None);
+            }
         }
     }
 }

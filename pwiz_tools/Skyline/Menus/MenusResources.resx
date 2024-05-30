@@ -319,4 +319,17 @@
   <data name="SkylineWindow_Unexpected_character__0__found_on_line__1__" xml:space="preserve">
     <value>Unexpected character '{0}' found on line {1}.</value>
   </data>
+  <data name="RefineMenu_ShowGenerateDecoysDlg_Are_you_sure_you_want_to_add_decoys_to_this_document_" xml:space="preserve">
+    <value>Are you sure you want to add decoys to this document?
+    
+This document uses peak boundaries from spectral libraries. When these boundaries are used, Skyline does not perform its own peak detection.
+
+To be ready to train a peak scoring model effectively, follow these steps:
+
+1. Navigate to the "Settings > Peptide Settings - Libraries" tab and click "Edit List".
+2. Select a library item, click "Edit", and uncheck the "Use explicit peak bounds" checkbox.</value>
+  </data>
+  <data name="RefineMenu_ShowGenerateDecoysDlg_Add_Decoys" xml:space="preserve">
+    <value>Add Decoys</value>
+  </data>
 </root>

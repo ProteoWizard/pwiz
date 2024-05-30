@@ -25,6 +25,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 
@@ -334,6 +335,15 @@ namespace pwiz.Skyline.Model.Results
                     continue;
 
                 var chromKey = ChromKey.FromId(id, fixCEOptForShimadzu);
+                if (_optimizableRegression?.OptType == OptimizationType.collision_energy
+                    && chromKey.CollisionEnergy == 0)
+                {
+                    var collisionEnergy = dataFile.GetChromatogramCollisionEnergy(i);
+                    if (collisionEnergy.HasValue)
+                    {
+                        chromKey = chromKey.ChangeCollisionEnergy((float)collisionEnergy);
+                    }
+                }
                 if (chromKey.Precursor != lastPrecursor)
                 {
                     lastPrecursor = chromKey.Precursor;
@@ -420,14 +430,13 @@ namespace pwiz.Skyline.Model.Results
                                 {
                                     optimizationSpacing = true;
                                 }
-                                // TODO(nicksh): Populate ChromKey.CollisionEnergy so that we can guarantee that these
-                                // ChromKeys are sorted correctly by collision energy
                             }
                         }
 
                         if (!optimizationSpacing)
                         {
-                            SetOptStepsForGroup(idToIndex, matchingGroup.Key?.NodeGroup, curGroup);
+                            SetOptStepsForGroup(doc, idToIndex, matchingGroup.Key, curGroup);
+                            curGroup.Clear();
                             firstChromKey = null;
                         }
                     }
@@ -439,7 +448,7 @@ namespace pwiz.Skyline.Model.Results
 
                 if (lastChromKey != null)
                 {
-                    SetOptStepsForGroup(idToIndex, matchingGroup.Key?.NodeGroup, curGroup);
+                    SetOptStepsForGroup(doc, idToIndex, matchingGroup.Key, curGroup);
                 }
             }
         }
@@ -477,32 +486,73 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private void SetOptStepsForGroup(IReadOnlyDictionary<int, int> idToIndex, TransitionGroupDocNode transitionGroupDocNode, IList<ChromData> chromDatas)
+        /// <summary>
+        /// Sets the optimization steps for a group of chromatograms.
+        /// The chromatograms will all have the same Q1 value and the Q3 values will differ by no more than
+        /// <see cref="ChromatogramInfo.OPTIMIZE_SHIFT_SIZE"/>.
+        /// </summary>
+        private void SetOptStepsForGroup(SrmDocument document, IReadOnlyDictionary<int, int> idToIndex, ChromCacheBuilder.PeptidePrecursorMz peptidePrecursorMz, IList<ChromData> chromDatas)
         {
             if (chromDatas.Count <= 1)
             {
-                chromDatas.Clear();
                 return;
             }
 
+            var groupedByProductMz = chromDatas.GroupBy(data => data.Key.Product).ToList();
+            // Check to see whether there is a full set of optimization steps which all have identical Q3 values
+            if (groupedByProductMz.Count > 1 &&
+                chromDatas.Count > _optimizableRegression.StepCount * 2 + 1 &&
+                groupedByProductMz.Any(g => g.Count() > _optimizableRegression.StepCount))
+            {
+                // If the total number of chromatograms is more than one complete set of optimization steps (stepCount * 2 + 1)
+                // and there are more than half a complete set with identical Q3 values (stepCount)
+                // then assume that this is more than one group of chromatograms which did not use OPTIMIZE_SHIFT_SIZE
+                // and process each unique Q3 value separately
+                foreach (var group in groupedByProductMz)
+                {
+                    SetOptStepsForGroup(document, idToIndex, peptidePrecursorMz, group.ToList());
+                }
+                return;
+            }
+
+            int uniqueCeCount = 0;
+            if (_optimizableRegression.OptType == OptimizationType.collision_energy)
+            {
+                uniqueCeCount = chromDatas.Select(chromData => chromData.Key.CollisionEnergy).Distinct().Count();
+            }
+            int uniqueMzCount = chromDatas.Select(chromData => chromData.Key.Product).Distinct().Count();
+            // If some of the chromatograms have the same Q3 value, then the CE value should be used instead
+            // if the CE value uniquely identifies the chromatogram
+            bool useCeValues = uniqueCeCount == chromDatas.Count && uniqueCeCount > uniqueMzCount;
+            if (useCeValues)
+            {
+                chromDatas.Sort(Comparer<ChromData>.Create((a,b)=>a.Key.CollisionEnergy.CompareTo(b.Key.CollisionEnergy)));
+            }
             int centerIdx = (chromDatas.Count + 1) / 2 - 1;
-            if (transitionGroupDocNode != null)
+            if (peptidePrecursorMz?.NodeGroup != null)
             {
                 var centerMz = chromDatas[centerIdx].Key.Product;
-                var closestTransition = transitionGroupDocNode.Transitions.OrderBy(t => Math.Abs(t.Mz - centerMz))
+                var closestTransition = peptidePrecursorMz.NodeGroup.Transitions.OrderBy(t => Math.Abs(t.Mz - centerMz))
                     .FirstOrDefault();
-                if (closestTransition != null)
+                if (useCeValues)
                 {
-                    centerIdx = OptStepChromatograms.IndexOfCenter(closestTransition.Mz, chromDatas.Select(c => c.Key.Product),
+                    var centerCe = document.GetCollisionEnergy(peptidePrecursorMz.NodePeptide,
+                        peptidePrecursorMz.NodeGroup, closestTransition, 0);
+                    centerIdx = OptStepChromatograms.IndexOfCenterCe((float)centerCe,
+                        chromDatas.Select(chromData => chromData.Key.CollisionEnergy),
                         _optimizableRegression.StepCount);
+                }
+                else if (closestTransition != null)
+                {
+                    centerIdx = OptStepChromatograms.IndexOfCenterMz(closestTransition.Mz,
+                        chromDatas.Select(c => c.Key.Product), _optimizableRegression.StepCount);
                 }
             }
             for (var i = 0; i < chromDatas.Count; i++)
             {
-                SetOptimizationStep(idToIndex[chromDatas[i].ProviderId], i - centerIdx, chromDatas[centerIdx].Key.Product);
+                SetOptimizationStep(idToIndex[chromDatas[i].ProviderId], i - centerIdx,
+                    chromDatas[centerIdx].Key.Product);
             }
-
-            chromDatas.Clear();
         }
 
         private float GetCE(int i)

@@ -1438,6 +1438,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Hardklör.
+        /// </summary>
+        public static string SearchEngine_Hardklor {
+            get {
+                return ResourceManager.GetString("SearchEngine_Hardklor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to MS Amanda.
         /// </summary>
         public static string SearchEngine_MSAmanda {
@@ -1875,6 +1884,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string Workflow_dia {
             get {
                 return ResourceManager.GetString("Workflow_dia", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Feature Detection.
+        /// </summary>
+        public static string Workflow_feature_detection {
+            get {
+                return ResourceManager.GetString("Workflow_feature_detection", resourceCulture);
             }
         }
         

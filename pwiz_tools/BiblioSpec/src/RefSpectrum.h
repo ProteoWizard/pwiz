@@ -106,6 +106,7 @@ class RefSpectrum : public Spectrum
   //getters
   int getCharge() const;
   string getSeq() const;
+  string getDisplayName() const;
   string getMods() const;
   int getLibID() const;
   int getLibSpecID() const;
@@ -120,6 +121,7 @@ class RefSpectrum : public Spectrum
   string getAdduct() const;
   string getInchiKey() const;
   string getotherKeys() const;
+  const SmallMolMetadata getSmallMolMetadata() const; // Small molecule stuff
   
   // Sets result string to a tab seperated concatenation of molecule name, formula,
   // inchikey, otherkeys and adduct when this is non-proteomic (has no mods).

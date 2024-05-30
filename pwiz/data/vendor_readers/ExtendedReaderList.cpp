@@ -44,6 +44,7 @@ namespace msdata {
 PWIZ_API_DECL ExtendedReaderList::ExtendedReaderList()
 {
     push_back(ReaderPtr(new Reader_ABI));
+    push_back(ReaderPtr(new Reader_ABI_WIFF2));
     push_back(ReaderPtr(new Reader_ABI_T2D));
     push_back(ReaderPtr(new Reader_Agilent));
     push_back(ReaderPtr(new Reader_Bruker_BAF));

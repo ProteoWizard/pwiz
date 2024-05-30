@@ -1733,34 +1733,34 @@
   <data name="EncyclopeDiaSettings_NarrowWindowResults" xml:space="preserve">
     <value>窄窗口结果</value>
   </data>
-  <data name="EncyclopeDiaSettings_PrositSettings" xml:space="preserve">
-    <value>Prosit 设置</value>
+  <data name="EncyclopeDiaSettings_KoinaSettings" xml:space="preserve">
+    <value>Koina 设置</value>
   </data>
   <data name="EncyclopeDiaSettings_WideWindowResults" xml:space="preserve">
     <value>宽窗口结果</value>
   </data>
-  <data name="FastaToPrositInputCsvConfig_DefaultCharge" xml:space="preserve">
+  <data name="FastaToKoinaInputCsvConfig_DefaultCharge" xml:space="preserve">
     <value>默认电荷</value>
   </data>
-  <data name="FastaToPrositInputCsvConfig_DefaultNCE" xml:space="preserve">
+  <data name="FastaToKoinaInputCsvConfig_DefaultNCE" xml:space="preserve">
     <value>默认 NCE</value>
   </data>
-  <data name="FastaToPrositInputCsvConfig_MaxCharge" xml:space="preserve">
+  <data name="FastaToKoinaInputCsvConfig_MaxCharge" xml:space="preserve">
     <value>最大电荷</value>
   </data>
-  <data name="FastaToPrositInputCsvConfig_MaxMissedCleavage" xml:space="preserve">
+  <data name="FastaToKoinaInputCsvConfig_MaxMissedCleavage" xml:space="preserve">
     <value>最大的漏切酶解位点数</value>
   </data>
-  <data name="FastaToPrositInputCsvConfig_MinCharge" xml:space="preserve">
+  <data name="FastaToKoinaInputCsvConfig_MinCharge" xml:space="preserve">
     <value>最小电荷</value>
   </data>
-  <data name="FastaToPrositInputCsvConfig_Enzyme" xml:space="preserve">
+  <data name="FastaToKoinaInputCsvConfig_Enzyme" xml:space="preserve">
     <value>酶</value>
   </data>
-  <data name="FastaToPrositInputCsvConfig_MaxMz" xml:space="preserve">
+  <data name="FastaToKoinaInputCsvConfig_MaxMz" xml:space="preserve">
     <value>最大质荷比</value>
   </data>
-  <data name="FastaToPrositInputCsvConfig_MinMz" xml:space="preserve">
+  <data name="FastaToKoinaInputCsvConfig_MinMz" xml:space="preserve">
     <value>最小质荷比</value>
   </data>
 </root>

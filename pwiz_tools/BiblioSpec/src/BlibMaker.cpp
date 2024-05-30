@@ -29,6 +29,7 @@
 #include <boost/log/detail/snprintf.hpp>
 #include "SmallMolMetadata.h"
 #include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string.hpp>
 
 namespace BiblioSpec {
 
@@ -130,6 +131,21 @@ int BlibMaker::parseNextSwitch(int i, int argc, char* argv[])
         exit(0);
     } else if (switchName == 't') {
         scoreLookupMode_ = true;
+    }
+    else if (switchName == 'z' && ++i < argc) {
+        string charges(argv[i]);
+        vector<string> result;
+        boost::split(result, charges, boost::is_any_of(","));
+        for (int c = 0; c < result.size(); c++) {
+            int z;
+            try {
+                z = boost::lexical_cast<int>(result[c]);
+                precursorCharges_.insert(z);
+            }
+            catch (bad_lexical_cast) {
+                throw BlibException(true, "the -z argument '%s' was not understood, expected a list of charges like \"2,3\" or \"1,2,4\" etc", charges.c_str());
+            }
+        }
     } else {
         usage();
     }
@@ -1057,6 +1073,9 @@ int BlibMaker::addFile(const string& specFile, double cutoffScore, const string&
 void BlibMaker::insertPeaks(int spectraID, int levelCompress, int peaksCount, 
                             double* pM, float* pI)
 {
+    if (peaksCount == 0)
+        return;
+
     const uLong sizeM = (uLong) peaksCount*sizeof(double);
     const uLong sizeI = (uLong) peaksCount*sizeof(float);
 

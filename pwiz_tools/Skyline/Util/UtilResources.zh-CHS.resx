@@ -118,9 +118,6 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_uploading_to_Panorama__would_you_like_to_go_to_Panorama_" xml:space="preserve">
-    <value>上传到 Panorama 时发生错误，您想要前往 Panorama 吗？</value>
-  </data>
   <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_Document_import_was_cancelled_on_the_server__Would_you_like_to_go_to_Panorama_" xml:space="preserve">
     <value>服务器中取消了文档导入。您是否想前往 Panorama 服务器？</value>
   </data>
@@ -316,33 +313,6 @@
   </data>
   <data name="WebHelpers_PostToLink_Failure_saving_temporary_post_data_to_disk_" xml:space="preserve">
     <value>将临时发布数据保存至磁盘失败。</value>
-  </data>
-  <data name="WebPanoramaPublishClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_" xml:space="preserve">
-    <value>文件未上传至服务器。请重试，如果问题持续出现，请联络您的 Panorama 服务器管理员。</value>
-  </data>
-  <data name="WebPanoramaPublishClient_DeleteTempZipFile_Error_deleting_temporary_zip_file__" xml:space="preserve">
-    <value>删除临时压缩文件出错：</value>
-  </data>
-  <data name="WebPanoramaPublishClient_RenameTempZipFile_Error_renaming_temporary_zip_file__" xml:space="preserve">
-    <value>重新命名临时压缩文件出错：</value>
-  </data>
-  <data name="WebPanoramaPublishClient_SendZipFile_Deleting_temporary_file_on_server" xml:space="preserve">
-    <value>在服务器上删除临时文件</value>
-  </data>
-  <data name="WebPanoramaPublishClient_SendZipFile_Renaming_temporary_file_on_server" xml:space="preserve">
-    <value>在服务器上重新命名临时文件</value>
-  </data>
-  <data name="WebPanoramaPublishClient_SendZipFile_Status_on_server_is___0_" xml:space="preserve">
-    <value>服务器上状态为：{0}</value>
-  </data>
-  <data name="WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___" xml:space="preserve">
-    <value>正在等待数据导入完成…</value>
-  </data>
-  <data name="WebPanoramaPublishClient_updateProgressAndWait_Importing_data___0___complete_" xml:space="preserve">
-    <value>完成 {0}% 数据导入。</value>
-  </data>
-  <data name="WebPanoramaPublishClient_webClient_UploadProgressChanged_Uploaded__0_fs__of__1_fs_" xml:space="preserve">
-    <value>上传 {0:fs}，共 {1:fs}</value>
   </data>
   <data name="XmlElementHelper_XmlElementHelper_The_class__0__has_no__1__" xml:space="preserve">
     <value>分类{0}没有{1}。</value>

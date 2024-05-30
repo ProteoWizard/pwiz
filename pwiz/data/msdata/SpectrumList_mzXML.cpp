@@ -171,27 +171,27 @@ struct HandlerPrecursor : public SAXParser::Handler
             if (activationMethod.empty() || activationMethod == "CID")
             {
                 // TODO: is it reasonable to assume CID if activation method is unspecified (i.e. older mzXMLs)?
-                precursor->activation.set(MS_CID);
+                precursor->activation.cvParams.emplace(precursor->activation.cvParams.begin(), MS_CID);
             }
             else if (activationMethod == "ETD")
-                precursor->activation.set(MS_ETD);
+                precursor->activation.cvParams.emplace(precursor->activation.cvParams.begin(), MS_ETD);
             else if (activationMethod == "ETD+SA")
             {
-                precursor->activation.set(MS_ETD);
-                precursor->activation.set(MS_CID);
+                precursor->activation.cvParams.emplace(precursor->activation.cvParams.begin(), MS_ETD);
+                precursor->activation.cvParams.emplace(precursor->activation.cvParams.begin(), MS_CID);
             }
             else if (activationMethod == "ECD")
-                precursor->activation.set(MS_ECD);
+                precursor->activation.cvParams.emplace(precursor->activation.cvParams.begin(), MS_ECD);
             else if (activationMethod == "HCD")
-                precursor->activation.set(MS_HCD);
+                precursor->activation.cvParams.emplace(precursor->activation.cvParams.begin(), MS_HCD);
             //else
                 // TODO: log about invalid attribute value
 
             if (!windowWideness.empty())
             {
                 double isolationWindowWidth = lexical_cast<double>(windowWideness) / 2.0;
-                precursor->isolationWindow.set(MS_isolation_window_lower_offset, isolationWindowWidth);
-                precursor->isolationWindow.set(MS_isolation_window_upper_offset, isolationWindowWidth);
+                precursor->isolationWindow.set(MS_isolation_window_lower_offset, isolationWindowWidth, MS_m_z);
+                precursor->isolationWindow.set(MS_isolation_window_upper_offset, isolationWindowWidth, MS_m_z);
             }
 
             if (!driftTime.empty())
@@ -214,7 +214,8 @@ struct HandlerPrecursor : public SAXParser::Handler
         if (!precursor)
             throw runtime_error("[SpectrumList_mzXML::HandlerPrecursor] Null precursor."); 
 
-        precursor->selectedIons.back().set(MS_selected_ion_m_z, text, MS_m_z);
+        precursor->selectedIons.back().cvParams.emplace(precursor->selectedIons.back().cvParams.begin(), MS_selected_ion_m_z, text.c_str(), MS_m_z);
+        precursor->isolationWindow.cvParams.emplace(precursor->isolationWindow.cvParams.begin(), MS_isolation_window_target_m_z, text.c_str(), MS_m_z);
 
         return Status::Ok;
     }
@@ -485,16 +486,16 @@ class HandlerScan : public SAXParser::Handler
             if (endMz > 0)
                 scan.scanWindows.push_back(ScanWindow(startMz, endMz, MS_m_z));
             
-            if (!lowMz.empty())
-                spectrum_.set(MS_lowest_observed_m_z, lowMz);
-            if (!highMz.empty())
-                spectrum_.set(MS_highest_observed_m_z, highMz);
             if (!basePeakMz.empty())
-                spectrum_.set(MS_base_peak_m_z, basePeakMz);
+                spectrum_.set(MS_base_peak_m_z, basePeakMz, MS_m_z);
             if (!basePeakIntensity.empty())
-                spectrum_.set(MS_base_peak_intensity, basePeakIntensity);
+                spectrum_.set(MS_base_peak_intensity, basePeakIntensity, MS_number_of_detector_counts);
             if (!totIonCurrent.empty()) 
                 spectrum_.set(MS_total_ion_current, totIonCurrent);
+            if (!lowMz.empty())
+                spectrum_.set(MS_lowest_observed_m_z, lowMz, MS_m_z);
+            if (!highMz.empty())
+                spectrum_.set(MS_highest_observed_m_z, highMz, MS_m_z);
 
             return Status::Ok;
         }

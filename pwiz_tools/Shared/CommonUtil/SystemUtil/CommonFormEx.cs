@@ -20,7 +20,9 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.GUI;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -51,7 +53,12 @@ namespace pwiz.Common.SystemUtil
 
             // Track undisposed forms.
             if (TestMode)
-                _undisposedForms.Add(this);
+            {
+                lock (_undisposedForms)
+                {
+                    _undisposedForms.Add(this);
+                }
+            }
 
 // ReSharper disable LocalizableElement
             if (ShowFormNames)
@@ -69,16 +76,28 @@ namespace pwiz.Common.SystemUtil
             base.Dispose(disposing);
 
             if (TestMode && disposing)
-                _undisposedForms.Remove(this);
+            {
+                lock (_undisposedForms)
+                {
+                    _undisposedForms.Remove(this);
+                }
+            }
         }
 
         public static void CheckAllFormsDisposed()
         {
-            if (_undisposedForms.Count != 0)
+            lock (_undisposedForms)
             {
-                var formType = _undisposedForms[0].GetType().Name;
-                _undisposedForms.Clear();
-                throw new ApplicationException(formType + @" was not disposed");
+                if (_undisposedForms.Count != 0)
+                {
+                    var formType = _undisposedForms[0].GetType();
+                    string exceptionMessage = formType + @" was not disposed";
+                    string message = _undisposedForms.OfType<CommonAlertDlg>().FirstOrDefault()?.Message;
+                    if (message != null)
+                        exceptionMessage = CommonTextUtil.LineSeparate(exceptionMessage, @"message: " + message);
+                    _undisposedForms.Clear();
+                    throw new ApplicationException(exceptionMessage);
+                }
             }
         }
 
@@ -112,7 +131,7 @@ namespace pwiz.Common.SystemUtil
         {
             // Parentless dialogs should always be shown in the taskbar because:
             // 1. If not shown in the taskbar it will be a leak in Windows 10
-            // 2. It is difficult to switch to Skyline if there is a modal dialog which is not in the tasbar
+            // 2. It is difficult to switch to Skyline if there is a modal dialog which is not in the taskbar
             ShowInTaskbar = true;
 
             return ShowDialog();

@@ -47,6 +47,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         public const string EXT_CACHE = ".clc";
 
         private ChromatogramLibrarySourceInfo[] _librarySourceFiles;
+        private LibraryFiles _libraryFiles = LibraryFiles.EMPTY;
         private ChromatogramLibraryIrt[] _libraryIrts;
 
         public ChromatogramLibrary(ChromatogramLibrarySpec chromatogramLibrarySpec) : base(chromatogramLibrarySpec)
@@ -248,16 +249,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
 
         public override LibraryFiles LibraryFiles
         {
-            get
-            {
-                return new LibraryFiles
-                {
-                    FilePaths = from sourceFile in _librarySourceFiles
-                                let fileName = sourceFile.FilePath
-                                where fileName != null
-                                select fileName
-                };
-            }
+            get { return _libraryFiles;}
         }
 
         public override int? FileCount
@@ -267,34 +259,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
 
         private int FindSource(MsDataFileUri filePath)
         {
-            if (filePath == null)
-            {
-                return -1;
-            }
-            string filePathToString = filePath.ToString();
-            // First look for an exact path match
-            int i = _librarySourceFiles.IndexOf(info => Equals(filePathToString, info.FilePath));
-            // filePath.ToString may include decorators e.g. "C:\\data\\mydata.raw?centroid_ms1=true", try unadorned name ("mydata.raw")
-            if (i == -1)
-                i = _librarySourceFiles.IndexOf(info => Equals(filePath.GetFileName(), info.FilePath));
-            // Or a straight basename match, which we sometimes use internally
-            if (i == -1)
-                i = _librarySourceFiles.IndexOf(info => Equals(filePathToString, info.BaseName));
-            // NOTE: We don't expect multi-part wiff files to appear in a library
-            if (i == -1 && null == filePath.GetSampleName())
-            {
-                try
-                {
-                    // Failing an exact path match, look for a basename match
-                    string baseName = filePath.GetFileNameWithoutExtension();
-                    i = _librarySourceFiles.IndexOf(info => MeasuredResults.IsBaseNameMatch(baseName, info.BaseName));
-                }
-                catch (ArgumentException)
-                {
-                    // Handle: Illegal characters in path
-                }
-            }
-            return i;
+            return _libraryFiles.FindIndexOf(filePath);
         }
         
         public override bool TryGetIonMobilityInfos(LibKey key, MsDataFileUri filePath, out IonMobilityAndCCS[] ionMobilities)

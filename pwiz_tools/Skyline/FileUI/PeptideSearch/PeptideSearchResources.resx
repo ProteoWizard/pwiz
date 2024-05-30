@@ -217,14 +217,14 @@
   <data name="DDASearchControl_SearchProgress_Starting_search" xml:space="preserve">
     <value>Starting search...</value>
   </data>
-  <data name="EncyclopeDiaSearchControl_Search_Reusing_Prosit_predictions_from___0_" xml:space="preserve">
-    <value>Reusing Prosit predictions from: {0}</value>
+  <data name="EncyclopeDiaSearchControl_Search_Reusing_Koina_predictions_from___0_" xml:space="preserve">
+    <value>Reusing Koina predictions from: {0}</value>
   </data>
   <data name="EncyclopeDiaSearchDlg_ImportEncyclopediaLibrary_Ran_EncyclopeDIA_Search" xml:space="preserve">
     <value>Ran EncyclopeDIA Search</value>
   </data>
-  <data name="EncyclopeDiaSearchDlg_NextPage_A_FASTA_file_is_required_for_an_EncyclopeDia_Prosit_search_" xml:space="preserve">
-    <value>A FASTA file is required for an EncyclopeDIA Prosit search.</value>
+  <data name="EncyclopeDiaSearchDlg_NextPage_A_FASTA_file_is_required_for_an_EncyclopeDia_Koina_search_" xml:space="preserve">
+    <value>A FASTA file is required for an EncyclopeDIA Koina search.</value>
   </data>
   <data name="EncyclopeDiaSearchDlg_NextPage_Run" xml:space="preserve">
     <value>Run</value>
@@ -286,6 +286,9 @@
   <data name="ImportPeptideSearchDlg_NextPage_Some_results_files_are_still_missing__Are_you_sure_you_want_to_continue_" xml:space="preserve">
     <value>Some results files are still missing. Are you sure you want to continue?</value>
   </data>
+  <data name="ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection" xml:space="preserve">
+    <value>Feature Detection</value>
+  </data>
   <data name="ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_filtering_must_be_enabled_in_order_to_import_a_peptide_search_" xml:space="preserve">
     <value>Full-scan MS1 filtering must be enabled in order to import a peptide search.</value>
   </data>
@@ -295,6 +298,9 @@
   <data name="ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search" xml:space="preserve">
     <value>Import Peptide Search</value>
   </data>
+  <data name="BuildPeptideSearchLibraryControl_btnAddFile_Click_Select_Files_to_Search" xml:space="preserve">
+      <value>Select Files to Search</value>
+   </data>
   <data name="ImportResultsControl_findResultsFilesButton_Click_Could_not_find_all_the_missing_results_files_" xml:space="preserve">
     <value>Could not find all the missing results files.</value>
   </data>
@@ -346,5 +352,14 @@
   <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptions" xml:space="preserve">
     <value>Click 'Embedded' to use embedded spectra.
 Click 'Retry' to try building again after placing the original spectrum files in one of the directories listed above.</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_spectral_library" xml:space="preserve">
+    <value>Add spectral library</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library" xml:space="preserve">
+    <value>Building detected features library</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document" xml:space="preserve">
+    <value>Adding detected features to document</value>
   </data>
 </root>

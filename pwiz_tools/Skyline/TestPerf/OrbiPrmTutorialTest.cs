@@ -866,10 +866,12 @@ namespace TestPerf
             PauseForScreenShot<FoldChangeBarGraph>(comparisonName1 + ":Graph metafile", 38);
 
             foldChangeGridWithGraph = WaitForOpenForm<FoldChangeGrid>();
+            WaitForConditionUI(() => foldChangeGridWithGraph.IsComplete);
             RunUI(() =>
             {
                 var foldChangeResultColumn =
                     foldChangeGridWithGraph.DataboundGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult"));
+                Assert.IsNotNull(foldChangeResultColumn, "Could not find FoldChangeResultColumn");
                 foldChangeGridWithGraph.DataboundGridControl.DataGridView.Sort(foldChangeResultColumn, ListSortDirection.Ascending);
             });
             RestoreViewOnScreen(39);

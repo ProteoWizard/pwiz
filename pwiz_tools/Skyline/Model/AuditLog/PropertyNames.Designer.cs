@@ -979,11 +979,11 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Prosit settings.
+        ///   Looks up a localized string similar to Koina settings.
         /// </summary>
-        public static string EncyclopeDiaSettings_PrositSettings {
+        public static string EncyclopeDiaSettings_KoinaSettings {
             get {
-                return ResourceManager.GetString("EncyclopeDiaSettings_PrositSettings", resourceCulture);
+                return ResourceManager.GetString("EncyclopeDiaSettings_KoinaSettings", resourceCulture);
             }
         }
         
@@ -1224,72 +1224,72 @@ namespace pwiz.Skyline.Model.AuditLog {
         /// <summary>
         ///   Looks up a localized string similar to Default charge.
         /// </summary>
-        public static string FastaToPrositInputCsvConfig_DefaultCharge {
+        public static string FastaToKoinaInputCsvConfig_DefaultCharge {
             get {
-                return ResourceManager.GetString("FastaToPrositInputCsvConfig_DefaultCharge", resourceCulture);
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_DefaultCharge", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Default NCE.
         /// </summary>
-        public static string FastaToPrositInputCsvConfig_DefaultNCE {
+        public static string FastaToKoinaInputCsvConfig_DefaultNCE {
             get {
-                return ResourceManager.GetString("FastaToPrositInputCsvConfig_DefaultNCE", resourceCulture);
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_DefaultNCE", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Enzyme.
         /// </summary>
-        public static string FastaToPrositInputCsvConfig_Enzyme {
+        public static string FastaToKoinaInputCsvConfig_Enzyme {
             get {
-                return ResourceManager.GetString("FastaToPrositInputCsvConfig_Enzyme", resourceCulture);
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_Enzyme", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Max charge.
         /// </summary>
-        public static string FastaToPrositInputCsvConfig_MaxCharge {
+        public static string FastaToKoinaInputCsvConfig_MaxCharge {
             get {
-                return ResourceManager.GetString("FastaToPrositInputCsvConfig_MaxCharge", resourceCulture);
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_MaxCharge", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Max missed cleavages.
         /// </summary>
-        public static string FastaToPrositInputCsvConfig_MaxMissedCleavage {
+        public static string FastaToKoinaInputCsvConfig_MaxMissedCleavage {
             get {
-                return ResourceManager.GetString("FastaToPrositInputCsvConfig_MaxMissedCleavage", resourceCulture);
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_MaxMissedCleavage", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Max m/z.
         /// </summary>
-        public static string FastaToPrositInputCsvConfig_MaxMz {
+        public static string FastaToKoinaInputCsvConfig_MaxMz {
             get {
-                return ResourceManager.GetString("FastaToPrositInputCsvConfig_MaxMz", resourceCulture);
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_MaxMz", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Min charge.
         /// </summary>
-        public static string FastaToPrositInputCsvConfig_MinCharge {
+        public static string FastaToKoinaInputCsvConfig_MinCharge {
             get {
-                return ResourceManager.GetString("FastaToPrositInputCsvConfig_MinCharge", resourceCulture);
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_MinCharge", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Min m/z.
         /// </summary>
-        public static string FastaToPrositInputCsvConfig_MinMz {
+        public static string FastaToKoinaInputCsvConfig_MinMz {
             get {
-                return ResourceManager.GetString("FastaToPrositInputCsvConfig_MinMz", resourceCulture);
+                return ResourceManager.GetString("FastaToKoinaInputCsvConfig_MinMz", resourceCulture);
             }
         }
         
@@ -1564,6 +1564,60 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Charges.
+        /// </summary>
+        public static string HardklorSettings_Charges {
+            get {
+                return ResourceManager.GetString("HardklorSettings_Charges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Instrument.
+        /// </summary>
+        public static string HardklorSettings_Instrument {
+            get {
+                return ResourceManager.GetString("HardklorSettings_Instrument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min idotp.
+        /// </summary>
+        public static string HardklorSettings_MinIdotP {
+            get {
+                return ResourceManager.GetString("HardklorSettings_MinIdotP", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min intensity PPM.
+        /// </summary>
+        public static string HardklorSettings_MinIntensityPPM {
+            get {
+                return ResourceManager.GetString("HardklorSettings_MinIntensityPPM", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resolution.
+        /// </summary>
+        public static string HardklorSettings_Resolution {
+            get {
+                return ResourceManager.GetString("HardklorSettings_Resolution", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Signal to noise.
+        /// </summary>
+        public static string HardklorSettings_SignalToNoise {
+            get {
+                return ResourceManager.GetString("HardklorSettings_SignalToNoise", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Operation.
         /// </summary>
         public static string IFilterOperation_DisplayName {
@@ -1758,6 +1812,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ImportPeptideSearchSettings_FullScanSettings {
             get {
                 return ResourceManager.GetString("ImportPeptideSearchSettings_FullScanSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hardklor Search Settings.
+        /// </summary>
+        public static string ImportPeptideSearchSettings_HardklorSearchSettings {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchSettings_HardklorSearchSettings", resourceCulture);
             }
         }
         

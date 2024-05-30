@@ -162,7 +162,7 @@
     <value>24, 15</value>
   </data>
   <data name="ceLabel.Text" xml:space="preserve">
-    <value>CE:</value>
+    <value>NCE:</value>
   </data>
   <data name="comboCE.Size" type="System.Drawing.Size, System.Drawing">
     <value>92, 25</value>

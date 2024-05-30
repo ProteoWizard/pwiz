@@ -82,14 +82,14 @@ namespace pwiz.SkylineTestFunctional
 
             var unlocalizedMessageTypes = GetUnlocalizedMessageTypes();
             if (unlocalizedMessageTypes.Any())
-                Assert.Fail("The following properties are unlocalized:\n" + string.Join("\n", unlocalizedMessageTypes));
+                Assert.Fail("The following message types are unlocalized (not found in AuditLogStrings.ResourceManager):\n" + string.Join("\n", unlocalizedMessageTypes));
 
             //var unlocalized = GetUnlocalizedProperties(RootProperty.Create(typeof(SrmSettings), "Settings"), PropertyPath.Root);
             var unlocalized = GetAllUnlocalizedProperties(typeof(AuditLogEntry))
                 .Concat(GetAllUnlocalizedProperties(typeof(RowItem)))
                 .Concat(GetAllUnlocalizedProperties(typeof(ImmutableList))).ToList();
             if (unlocalized.Any())
-                Assert.Fail("The following properties are unlocalized:\n" + string.Join("\n", unlocalized));
+                Assert.Fail("The following properties are unlocalized (not found in PropertyNames.ResourceManager or EnumNames.ResourceManager):\n" + string.Join("\n", unlocalized));
         }
 
         private void VerifyStringLocalization(string expected, string unlocalized, SrmDocument.DOCUMENT_TYPE modeUI = SrmDocument.DOCUMENT_TYPE.none)

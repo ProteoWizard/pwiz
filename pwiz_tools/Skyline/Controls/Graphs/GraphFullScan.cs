@@ -638,7 +638,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 {
                                     var dotpList = (
                                         from peakDoc in _precursor.DocNode.Transitions
-                                        join peakSpec in thisSpectrumHash on peakDoc.Id equals peakSpec.Key
+                                        join peakSpec in thisSpectrumHash on ReferenceValue.Of(peakDoc.Id) equals peakSpec.Key
                                         where peakDoc.IsMs1 == isMs1 && (peakDoc.HasLibInfo || peakDoc.IsMs1)
                                         select new
                                         {
@@ -669,7 +669,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 graphControlExtension.PropertiesSheet.SelectedObject = spectrumProperties;
         }
 
-        private Dictionary<Identity, double> GetPeakIntensities(
+        private Dictionary<ReferenceValue<Identity>, double> GetPeakIntensities(
             List<TransitionFullScanInfo> transitions, SrmDocument document)
         {
             
@@ -695,7 +695,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var thisSpectrumHash = Enumerable.Range(0, expectedSpectrum.ProductFilters.Length)
                 .Select(i => new { mz = expectedSpectrum.ProductFilters[i].TargetMz, intensity = (double)expectedSpectrum.Intensities[i] })
                 .Where(d => docTransitions.ContainsKey(d.mz) && docTransitions[d.mz]?.Id is Transition)
-                .ToDictionary(d => docTransitions[d.mz].Id, d => d.intensity);
+                .ToDictionary(d => ReferenceValue.Of(docTransitions[d.mz].Id), d => d.intensity);
 
             return thisSpectrumHash;
         }

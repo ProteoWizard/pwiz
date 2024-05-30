@@ -217,14 +217,14 @@
   <data name="DDASearchControl_SearchProgress_Starting_search" xml:space="preserve">
     <value>正在启动搜索...</value>
   </data>
-  <data name="EncyclopeDiaSearchControl_Search_Reusing_Prosit_predictions_from___0_" xml:space="preserve">
-    <value>再次使用来自 {0} 的 Prosit 预测</value>
+  <data name="EncyclopeDiaSearchControl_Search_Reusing_Koina_predictions_from___0_" xml:space="preserve">
+    <value>再次使用来自 {0} 的 Koina 预测</value>
   </data>
   <data name="EncyclopeDiaSearchDlg_ImportEncyclopediaLibrary_Ran_EncyclopeDIA_Search" xml:space="preserve">
     <value>运行  EncyclopeDIA 搜索</value>
   </data>
-  <data name="EncyclopeDiaSearchDlg_NextPage_A_FASTA_file_is_required_for_an_EncyclopeDia_Prosit_search_" xml:space="preserve">
-    <value>执行 EncyclopeDIA Prosit 搜索需要用到 FASTA 文件。</value>
+  <data name="EncyclopeDiaSearchDlg_NextPage_A_FASTA_file_is_required_for_an_EncyclopeDia_Koina_search_" xml:space="preserve">
+    <value>执行 EncyclopeDIA Koina 搜索需要用到 FASTA 文件。</value>
   </data>
   <data name="EncyclopeDiaSearchDlg_NextPage_Run" xml:space="preserve">
     <value>运行</value>

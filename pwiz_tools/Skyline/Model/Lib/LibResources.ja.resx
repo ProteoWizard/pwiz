@@ -190,11 +190,11 @@
   <data name="CachedLibrary_LoadSpectrum_Library_entry_not_found__0__" xml:space="preserve">
     <value>ライブラリエントリが見つかりません{0}。</value>
   </data>
-  <data name="EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_Converting_FASTA_to_Prosit_input" xml:space="preserve">
-    <value>FASTAのProsit入力への変換</value>
+  <data name="EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_Converting_FASTA_to_Koina_input" xml:space="preserve">
+    <value>FASTAのKoina入力への変換</value>
   </data>
-  <data name="EncyclopeDiaHelpers_ConvertPrositOutputToDlib_Converting_Prosit_output_to_EncyclopeDia_library" xml:space="preserve">
-    <value>Prosit出力のEncyclopeDIAライブラリへの変換</value>
+  <data name="EncyclopeDiaHelpers_ConvertKoinaOutputToDlib_Converting_Koina_output_to_EncyclopeDia_library" xml:space="preserve">
+    <value>Koina出力のEncyclopeDIAライブラリへの変換</value>
   </data>
   <data name="EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2" xml:space="preserve">
     <value>クロマトグラムライブラリ({1}の{0})：{2}の生成</value>
@@ -211,7 +211,7 @@
   <data name="EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library" xml:space="preserve">
     <value>EncyclopeDIAライブラリ</value>
   </data>
-  <data name="FastaToProsit_Enzyme_unsupported_enzyme___0____allowed_values_are___1_" xml:space="preserve">
+  <data name="FastaToKoina_Enzyme_unsupported_enzyme___0____allowed_values_are___1_" xml:space="preserve">
     <value>対応していない酵素「{0}」、許可されている値：{1}</value>
   </data>
   <data name="Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted" xml:space="preserve">

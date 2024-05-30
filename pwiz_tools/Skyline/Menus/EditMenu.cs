@@ -1858,7 +1858,7 @@ namespace pwiz.Skyline.Menus
                 bool changed = false;
                 var idPathSet = peptidePathGroup.ToHashSet();
                 var precursorGroups = peptideDocNode.TransitionGroups.GroupBy(tg =>
-                    tg.PrecursorKey.ChangeSpectrumClassFilter(default)).ToList();
+                    Tuple.Create(tg.LabelType, tg.PrecursorAdduct)).ToList();
                 var newTransitionGroups = new List<DocNode>();
                 foreach (var precursorGroup in precursorGroups)
                 {

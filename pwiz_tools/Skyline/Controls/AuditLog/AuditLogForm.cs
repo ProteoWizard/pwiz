@@ -92,7 +92,16 @@ namespace pwiz.Skyline.Controls.AuditLog
             }
 
             _skylineWindow.ModifyDocument(string.Empty, // Audit logging takes care of this now
-                doc => AuditLogList.ToggleAuditLogging(doc, enable),
+                doc =>
+                {
+                    var dataSettings = doc.Settings.DataSettings;
+                    dataSettings = dataSettings.ChangeAuditLogging(enable);
+                    if (enable)
+                    {
+                        dataSettings = dataSettings.ChangeDocumentGuid();
+                    }
+                    return doc.ChangeSettings(doc.Settings.ChangeDataSettings(dataSettings));
+                },
                 AuditLogEntry.SettingsLogFunction);
             _skylineWindow.StoreNewSettings(_skylineWindow.DocumentUI.Settings);
             _enableAuditLogging.Checked = enable;

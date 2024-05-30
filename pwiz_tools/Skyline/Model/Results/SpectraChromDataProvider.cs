@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -1587,13 +1588,23 @@ namespace pwiz.Skyline.Model.Results
         public eIonMobilityUnits IonMobilityUnits { get { return _dataFile.IonMobilityUnits; } }
         public bool HasCombinedIonMobility { get { return _dataFile.HasCombinedIonMobilitySpectra; } } // When true, data source provides IMS data in 3-array format, which affects spectrum ID format
 
-        public IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge)
+        public IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge, object obj)
         {
-            return _dataFile.IonMobilityFromCCS(ccs, mz, charge);
+            var im = _dataFile.IonMobilityFromCCS(ccs, mz, charge);
+            if (!im.HasValue)
+            {
+                Trace.TraceWarning(ResultsResources.DataFileInstrumentInfo_IonMobilityFromCCS_no_conversion, obj, ccs, mz, charge);
+            }
+            return im;
         }
-        public double CCSFromIonMobility(IonMobilityValue im, double mz, int charge)
+        public double CCSFromIonMobility(IonMobilityValue im, double mz, int charge, object obj)
         {
-            return _dataFile.CCSFromIonMobilityValue(im, mz, charge);
+            var ccs = _dataFile.CCSFromIonMobilityValue(im, mz, charge);
+            if (double.IsNaN(ccs))
+            {
+                Trace.TraceWarning(ResultsResources.DataFileInstrumentInfo_CCSFromIonMobility_no_conversion, obj, im, mz, charge);
+            }
+            return ccs;
         }
 
         public bool IsWatersSonarData { get { return _dataFile.IsWatersSonarData(); } }

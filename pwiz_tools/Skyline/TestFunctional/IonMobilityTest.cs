@@ -48,7 +48,8 @@ namespace pwiz.SkylineTestFunctional
             TestFilesZipPaths = new[]
             {
                 @"TestFunctional\IonMobilityTest.zip",
-                @"TestData\Results\BlibDriftTimeTest.zip" // Re-used from BlibDriftTimeTest
+                @"TestData\Results\BlibDriftTimeTest.zip", // Re-used from BlibDriftTimeTest
+                @"TestFunctional\TestBadCalibrationCCS.zip",
             };
             RunFunctionalTest();
         }
@@ -76,6 +77,9 @@ namespace pwiz.SkylineTestFunctional
                     AssertEx.IsNotNull(IonMobilityFilter.IonMobilityUnitsL10NString(units));
                 }
             }
+
+            // Verify fix for handling vendor files with bad CCS calibrations
+            TestBadCalibrationCCS();
 
             // Verify fix for issue where we would not preserve a simple change to IM window width
             TestMobilityWindowWidth();
@@ -464,6 +468,20 @@ namespace pwiz.SkylineTestFunctional
         private void SetUiDocument(SrmDocument newDocument)
         {
             RunUI(() => AssertEx.IsTrue(SkylineWindow.SetDocument(newDocument, SkylineWindow.DocumentUI)));
+        }
+
+        // Verify fix for handling vendor files with bad CCS calibrations
+        private void TestBadCalibrationCCS()
+        {
+            var testFilesDir = TestFilesDirs[2]; //TestBadCalibrationCCS.zip
+            // Open document with some molecules with explicit IM values but no results yet
+            var documentFile = testFilesDir.GetTestPath(@"Tune Mix Test_LR22Apredit.sky");
+            WaitForCondition(() => File.Exists(documentFile));
+            RunUI(() => SkylineWindow.OpenFile(documentFile));
+            WaitForDocumentLoaded();
+            var doc = SkylineWindow.Document;
+            ImportResultsFile(testFilesDir.GetTestPath(@"2024-04-18 14.12.29-Tune Mix _1000 ms drift_.d")); // This will throw due to bad CCS calibration in .d file, if bug isn't fixed
+            LoadNewDocument(true); // Clean up
         }
 
         // Verify fix for issue where we would not preserve a simple change to IM window width
