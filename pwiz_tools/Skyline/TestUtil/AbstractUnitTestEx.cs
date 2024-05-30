@@ -167,7 +167,7 @@ namespace pwiz.SkylineTestUtil
         public static void EnableAuditLogging(string path)
         {
             var doc = ResultsUtil.DeserializeDocument(path);
-            Assert.IsFalse(doc.Settings.DataSettings.AuditLogging);
+            Assert.IsFalse(doc.Settings.DataSettings.IsAuditLoggingEnabled);
             doc = AuditLogList.ToggleAuditLogging(doc, true);
             doc.SerializeToFile(path, path, SkylineVersion.CURRENT, new SilentProgressMonitor());
         }
