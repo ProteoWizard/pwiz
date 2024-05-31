@@ -19,6 +19,7 @@
 
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
@@ -33,9 +34,23 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void ConsoleMProphetModelTest()
         {
+            DoConsoleMProphetModelTest(false);
+        }
+        [TestMethod]
+        public void ConsoleMProphetModelTestWithAuditLogging()
+        {
+            DoConsoleMProphetModelTest(true);
+        }
+
+        public void DoConsoleMProphetModelTest(bool auditLogging)
+        {
             TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             const string docName = "mProphetModel.sky";
             var docPath = TestFilesDir.GetTestPath(docName);
+            if (auditLogging)
+            {
+                EnableAuditLogging(docPath);
+            }
             const string modelName = "testModel";
 
             var args = new List<string>
@@ -72,6 +87,11 @@ namespace pwiz.SkylineTest
                 AssertEx.Contains(output, peakFeatureCalculator.Name);
             }
             AssertEx.Contains(output, string.Format(Resources.CommandLine_SaveFile_File__0__saved_, docName));
+            if (auditLogging)
+            {
+                var docWithAuditLog = DeserializeWithAuditLog(docPath);
+                AssertLastEntry(docWithAuditLog.AuditLog, MessageType.reintegrated_peaks);
+            }
         }
     }
 }

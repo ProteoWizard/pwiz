@@ -61,12 +61,12 @@ namespace pwiz.Skyline.Util {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occured while uploading to Panorama, would you like to go to Panorama?.
+        ///   Looks up a localized string similar to An import error occurred on the Panorama server {0}..
         /// </summary>
-        public static string AbstractPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_uploading_to_Panorama__would_you_like_to_go_to_Panorama_ {
+        public static string AbstractPanoramaPublishClient_UploadSharedZipFile_An_import_error_occurred_on_the_Panorama_server__0__ {
             get {
-                return ResourceManager.GetString("AbstractPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_uploadin" +
-                        "g_to_Panorama__would_you_like_to_go_to_Panorama_", resourceCulture);
+                return ResourceManager.GetString("AbstractPanoramaPublishClient_UploadSharedZipFile_An_import_error_occurred_on_the" +
+                        "_Panorama_server__0__", resourceCulture);
             }
         }
         
@@ -87,6 +87,16 @@ namespace pwiz.Skyline.Util {
             get {
                 return ResourceManager.GetString("AbstractPanoramaPublishClient_UploadSharedZipFile_Upload_succeeded__would_you_lik" +
                         "e_to_view_the_file_in_Panorama_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Would you like to go to Panorama?.
+        /// </summary>
+        public static string AbstractPanoramaPublishClient_UploadSharedZipFile_Would_you_like_to_go_to_Panorama_ {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaPublishClient_UploadSharedZipFile_Would_you_like_to_go_to_Panoram" +
+                        "a_", resourceCulture);
             }
         }
         

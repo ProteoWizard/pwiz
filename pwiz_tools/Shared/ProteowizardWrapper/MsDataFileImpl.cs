@@ -577,6 +577,11 @@ namespace pwiz.ProteowizardWrapper
             return ionMobilityValue.Mobility.HasValue ? IonMobilitySpectrumList.ionMobilityToCCS(ionMobilityValue.Mobility.Value, mz, charge) : 0;
         }
 
+        public double CCSFromIonMobility(double ionMobility, double mz, int charge)
+        {
+            return IonMobilitySpectrumList.ionMobilityToCCS(ionMobility, mz, charge);
+        }
+
         public eIonMobilityUnits IonMobilityUnits
         {
             get

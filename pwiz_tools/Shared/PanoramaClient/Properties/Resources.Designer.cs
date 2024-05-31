@@ -111,6 +111,25 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Request cancelled.
+        /// </summary>
+        public static string AbstractPanoramaClient_ParseUploadFileCompletedEventArgs_Request_cancelled {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_ParseUploadFileCompletedEventArgs_Request_cancelled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error reading the server response..
+        /// </summary>
+        public static string AbstractPanoramaClient_ParseUploadFileCompletedEventArgs_There_was_an_error_reading_the_server_response_ {
+            get {
+                return ResourceManager.GetString("AbstractPanoramaClient_ParseUploadFileCompletedEventArgs_There_was_an_error_readi" +
+                        "ng_the_server_response_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There was an error adding the document import job on the server..
         /// </summary>
         public static string AbstractPanoramaClient_QueueDocUploadPipelineJob_There_was_an_error_adding_the_document_import_job_on_the_server_ {

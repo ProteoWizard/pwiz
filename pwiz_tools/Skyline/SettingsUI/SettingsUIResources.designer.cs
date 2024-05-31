@@ -1391,6 +1391,23 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to train a peak scoring model for this document?
+        ///      
+        ///This document uses peak boundaries from spectral libraries. When these boundaries are used, Skyline does not perform its own peak detection.
+        ///
+        ///Before training a peak scoring model, it is recommended that you follow these steps:
+        ///
+        ///1. Navigate to &quot;Settings &gt; Peptide Settings - Libraries&quot; tab and click &quot;Edit List&quot;.
+        ///2. Select a library item, click &quot;Edit&quot;, and uncheck the &quot;Use explicit peak bounds&quot; checkbox.
+        ///3. Navigate to &quot;Edit  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string EditPeakScoringModel_ExplictPeakBoundsWarning {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModel_ExplictPeakBoundsWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed training the model:.
         /// </summary>
         public static string EditPeakScoringModelDlg_btnTrainModel_Click_Failed_training_the_model_ {
@@ -1480,6 +1497,15 @@ namespace pwiz.Skyline.SettingsUI {
         public static string EditPeakScoringModelDlg_OnDataBindingComplete_Unexpected_Coefficient_Sign {
             get {
                 return ResourceManager.GetString("EditPeakScoringModelDlg_OnDataBindingComplete_Unexpected_Coefficient_Sign", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Train Model.
+        /// </summary>
+        public static string EditPeakScoringModelDlg_ShowEditPeakScoringModelDlg_Train_Model {
+            get {
+                return ResourceManager.GetString("EditPeakScoringModelDlg_ShowEditPeakScoringModelDlg_Train_Model", resourceCulture);
             }
         }
         
@@ -1958,6 +1984,19 @@ namespace pwiz.Skyline.SettingsUI {
         public static string FormulaBox_helpToolStripMenuItem_Click_Formula_Help {
             get {
                 return ResourceManager.GetString("FormulaBox_helpToolStripMenuItem_Click_Formula_Help", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} methods usually specify the time range for the mass spectrometer to acquire spectra.
+        ///
+        ///Applying retention time filtering in Skyline is typically unnecessary and may lead to truncated extracted ion chromatograms.
+        ///
+        ///Use this option only if your acquisition method includes multiple targets with the same m/z..
+        /// </summary>
+        public static string FullScanSettingsControl_GetRetentionTimeFilterWarning_EncourageFullGradient {
+            get {
+                return ResourceManager.GetString("FullScanSettingsControl_GetRetentionTimeFilterWarning_EncourageFullGradient", resourceCulture);
             }
         }
         

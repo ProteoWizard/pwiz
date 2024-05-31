@@ -488,16 +488,19 @@ namespace pwiz.PanoramaClient
 
     public class PanoramaImportErrorException : Exception
     {
-        public PanoramaImportErrorException(Uri serverUrl, Uri jobUrl, bool jobCancelled = false)
+        public PanoramaImportErrorException(Uri serverUrl, Uri jobUrl, string error, bool jobCancelled = false)
         {
             ServerUrl = serverUrl;
             JobUrl = jobUrl;
             JobCancelled = jobCancelled;
+            Error = error;
         }
 
         public Uri ServerUrl { get; private set; }
         public Uri JobUrl { get; private set; }
         public bool JobCancelled { get; private set; }
+
+        public string Error { get; private set; }
     }
 
     public class FolderInformation

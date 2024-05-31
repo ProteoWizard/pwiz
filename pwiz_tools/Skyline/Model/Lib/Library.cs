@@ -939,6 +939,11 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
+        public virtual bool HasExplicitBounds
+        {
+            get { return false; }
+        }
+
         #region Implementation of IXmlSerializable
 
         /// <summary>
@@ -1236,43 +1241,10 @@ namespace pwiz.Skyline.Model.Lib
             return _libraryEntries.ItemsMatching(new LibKey(target, Adduct.EMPTY).LibraryKey, false);
         }
 
-        // ReSharper disable PossibleMultipleEnumeration
-        protected int FindFileInList(MsDataFileUri sourceFile, IEnumerable<string> fileNames)
+        protected int FindFileInList(MsDataFileUri sourceFile, LibraryFiles fileNames)
         {
-            if (fileNames == null)
-            {
-                return -1;
-            }
-            string sourceFileToString = sourceFile.ToString();
-            int iFile = 0;
-            foreach (var fileName in fileNames)
-            {
-                if (fileName.Equals(sourceFileToString))
-                {
-                    return iFile;
-                }
-                iFile++;
-            }
-            string baseName = sourceFile.GetFileNameWithoutExtension();
-            iFile = 0;
-            foreach (var fileName in fileNames)
-            {
-                try
-                {
-                    if (MeasuredResults.IsBaseNameMatch(baseName, Path.GetFileNameWithoutExtension(fileName)))
-                    {
-                        return iFile;
-                    }
-                }
-                catch (Exception)
-                {
-                    // Ignore: Invalid filename
-                }
-                iFile++;
-            }
-            return -1;
+            return fileNames.FindIndexOf(sourceFile);
         }
-        // ReSharper restore PossibleMultipleEnumeration
     }
 
     public sealed class LibraryRetentionTimes : IRetentionTimeProvider
@@ -2807,17 +2779,6 @@ namespace pwiz.Skyline.Model.Lib
             if (!string.IsNullOrEmpty(Link))
                 result.Add($@"LinkURL: {Link} ");
             return TextUtil.LineSeparate(result);
-        }
-    }
-
-    public sealed class LibraryFiles
-    {
-        private IEnumerable<string> _filePaths;
-
-        public IEnumerable<string> FilePaths
-        {
-            get { return _filePaths ?? (_filePaths = new List<string>()); }
-            set { _filePaths = value; }
         }
     }
 

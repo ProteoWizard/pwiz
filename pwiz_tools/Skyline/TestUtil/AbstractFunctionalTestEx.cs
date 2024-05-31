@@ -69,7 +69,7 @@ namespace pwiz.SkylineTestUtil
         /// Open a document and wait for loading completion.
         /// </summary>
         /// <param name="documentPath">File path of document</param>
-        public void OpenDocument(string documentPath)
+        public SrmDocument OpenDocument(string documentPath)
         {
             string documentFile = null;
             foreach (var testFileDir in TestFilesDirs)
@@ -89,7 +89,7 @@ namespace pwiz.SkylineTestUtil
             {
                 RunUI(() => SkylineWindow.OpenFile(documentFile));
             }
-            WaitForDocumentLoaded();
+            return WaitForDocumentLoaded();
         }
 
         public void OpenDocumentNoWait(string documentPath)
@@ -705,14 +705,22 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public void CheckDocumentResultsGridFieldByName(DocumentGridForm documentGrid, string name, int row, string expected, string msg = null)
+        public void CheckDocumentResultsGridFieldByName(DocumentGridForm documentGrid, string name, int row, string expected, string msg = null, bool recordValues = false)
         {
             var col = FindDocumentGridColumn(documentGrid, "Results!*.Value." + name);
+            string actual = null;
             RunUI(() =>
             {
-                var val = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as string;
-                AssertEx.AreEqual(expected, val, name + (msg ?? string.Empty));
+                actual = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as string;
             });
+            if (recordValues)
+            {
+                Console.Write($@",{actual}");
+            }
+            else
+            {
+                AssertEx.AreEqual(expected, actual, name + (msg ?? string.Empty));
+            }
         }
 
         protected const string MIXED_TRANSITION_LIST_REPORT_NAME = "Mixed Transition List";
@@ -793,7 +801,18 @@ namespace pwiz.SkylineTestUtil
                 expectedRowCount ?? SkylineWindow.Document.MoleculeTransitionCount * (SkylineWindow.Document.MeasuredResults?.Chromatograms.Count ?? 1));
             return documentGrid;
         }
-        
+
+        public static void SetIonMobilityResolvingPowerUI(TransitionSettingsUI transitionSettingsUi, double rp)
+        {
+            RunUI(() =>
+            {
+                transitionSettingsUi.SelectedTab = TransitionSettingsUI.TABS.IonMobility;
+                transitionSettingsUi.IonMobilityControl.WindowWidthType =
+                    IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power;
+                transitionSettingsUi.IonMobilityControl.IonMobilityFilterResolvingPower = rp;
+            });
+        }
+
         protected static void RenameReplicate(ManageResultsDlg manageResultsDlg, int replicateIndex, string newName)
         {
             RunUI(() => manageResultsDlg.SelectedChromatograms = new[]

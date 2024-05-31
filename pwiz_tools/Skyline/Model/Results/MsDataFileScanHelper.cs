@@ -240,6 +240,15 @@ namespace pwiz.Skyline.Model.Results
             return ScanProvider.CCSFromIonMobility(ionMobility, mz, charge);
         }
 
+        public double? CCSFromIonMobility(double ionMobility, double mz, int charge)
+        {
+            if (ScanProvider == null)
+            {
+                return null;
+            }
+            return ScanProvider.CCSFromIonMobility(ionMobility, mz, charge);
+        }
+
         public bool IsWatersSonarData { get {  return ScanProvider?. IsWatersSonarData ?? false; } } // For SONAR the drift dimension is actually precursor m/z filter dimension
 
         public bool ProvidesCollisionalCrossSectionConverter
@@ -376,6 +385,15 @@ namespace pwiz.Skyline.Model.Results
             /// Return a collisional cross section for this ion mobility at this mz, if reader supports this
             /// </summary>
             public double? CCSFromIonMobility(IonMobilityValue ionMobility, double mz, int charge)
+            {
+                if (_scanProvider == null)
+                {
+                    return null;
+                }
+                return _scanProvider.CCSFromIonMobility(ionMobility, mz, charge);
+            }
+
+            public double? CCSFromIonMobility(double ionMobility, double mz, int charge)
             {
                 if (_scanProvider == null)
                 {
