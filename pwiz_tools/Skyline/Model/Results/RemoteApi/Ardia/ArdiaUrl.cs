@@ -34,6 +34,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
         public string ServerApiUrl => ServerUrl.Replace(@"https://", @"https://api.");
         public string NavigationBaseUrl => $@"{ServerApiUrl}/session-management/bff/navigation/api/v1/navigation";
         public string SequenceBaseUrl => $@"{ServerApiUrl}/session-management/bff/standard-sequence/api/v1/";
+        public string SynchronizedSequenceBaseUrl => $@"{ServerApiUrl}/session-management/bff/sequence/api/v1/";
         private string RawDataUrl => $@"{ServerApiUrl}/session-management/bff/raw-data/api/v1/rawdata/";
 
         public ArdiaUrl(string ardiaUrl) : base(ardiaUrl)
@@ -100,6 +101,18 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
             result.SetValue(@"rawName", RawName);
             result.SetLongValue(@"rawSize", RawSize);
             return result;
+        }
+
+        public string SequenceUrl
+        {
+            get
+            {
+                Assume.IsNotNull(SequenceKey);
+                if (SequenceKey.Contains(@"synchronized"))
+                    return SynchronizedSequenceBaseUrl + SequenceKey;
+                else
+                    return SequenceBaseUrl + SequenceKey;
+            }
         }
 
         // Retrieves a presigned download URL for raw file from the Ardia platform.

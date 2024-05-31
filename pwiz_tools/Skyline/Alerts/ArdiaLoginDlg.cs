@@ -226,80 +226,91 @@ namespace pwiz.Skyline.Alerts
             if (webView == null)
                 return;
 
-            string location = webView.Source.AbsolutePath.ToLower();
-            if (!location.EndsWith(@"/login") && !location.EndsWith(@"/roleselection"))
-                return;
-
-            // stop listening (we may start again later depending on results below)
-            _doAutomatedLogin = false;
-
-            string buttonSelector = location.EndsWith(@"/login") ? signinSelector : nextSelector;
-            string buttonText = await ExecuteScriptAsyncUntil(buttonSelector + @".textContent", s => Task.FromResult(s != null && s != @"null"));
-            if (buttonText == null)
-                return;
-
-            bool hasUsername = Account.Username?.Any() ?? false;
-            bool hasPassword = Account.Password?.Any() ?? false;
-            bool hasRole = Account.Role?.Any() ?? false;
-
-            if (buttonText == @"Continue")
+            try
             {
-                if (hasUsername)
+                string location = webView.Source.AbsolutePath.ToLower();
+                if (!location.EndsWith(@"/login") && !location.EndsWith(@"/roleselection"))
+                    return;
+
+                // stop listening (we may start again later depending on results below)
+                _doAutomatedLogin = false;
+
+                string buttonSelector = location.EndsWith(@"/login") ? signinSelector : nextSelector;
+                string buttonText = await ExecuteScriptAsyncUntil(buttonSelector + @".textContent", s => Task.FromResult(s != null && s != @"null"));
+                if (buttonText == null)
+                    return;
+
+                bool hasUsername = Account.Username?.Any() ?? false;
+                bool hasPassword = Account.Password?.Any() ?? false;
+                bool hasRole = Account.Role?.Any() ?? false;
+
+                if (buttonText == @"Continue")
                 {
-                    await ExecuteScriptAsync(usernameSelector + @".value=" + Account.Username.Quote());
-                    await ExecuteScriptAsync(usernameSelector + triggerInputEvent);
-                }
-
-                // start listening again
-                _doAutomatedLogin = true;
-
-                if (hasUsername)
-                    await ExecuteScriptAsync(signinSelector + @".click()");
-            }
-            else if (buttonText == @"Sign In")
-            {
-                if (hasPassword)
-                {
-                    await ExecuteScriptAsync(passwordSelector + @".value=" + Account.Password.Quote());
-                    await ExecuteScriptAsync(passwordSelector + triggerInputEvent);
-                }
-
-                // start listening again
-                _doAutomatedLogin = true;
-
-                if (hasPassword)
-                    await ExecuteScriptAsync(signinSelector + @".click()");
-            }
-            else if (buttonText == @"Next") // select role
-            {
-                if (hasRole)
-                {
-                    const string clickDropDownBox = "document.querySelector(\"#selectRole\").shadowRoot.querySelector(\"#roleSelection\").shadowRoot.firstChild.click()";
-                    const string selectPopper = "document.querySelector(\"body > tf-popper\")";
-                    //const string selectFirstRole = "document.querySelector(\"body > tf-popper > div\").shadowRoot.querySelector(\"div > tf-dropdown-item:nth-child(1)\").click()";
-                    string roleNotFoundMsg = string.Format(AlertsResources.ArdiaLoginDlg_Role___0___is_not_an_available_option__Pick_your_role_manually_, Account.Role);
-
-                    // loop through popper items to find one that matches the user's role name
-                    string selectNamedRole = @"(function() {" +
-                                             @"for (role of document.querySelector(""body > tf-popper > div"").shadowRoot.querySelectorAll(""tf-dropdown-item"")) {" +
-                                             @$"if (role.shadowRoot.textContent == ""{Account.Role}"") {{" +
-                                             @"role.click(); return; }" +
-                                             @$"}} alert(""{roleNotFoundMsg}""); }})()";
-                    await ExecuteScriptAsyncUntil(clickDropDownBox, async s => await ExecuteScriptAsync(selectPopper) != @"null");
-                    await ExecuteScriptAsync(selectNamedRole);
-                }
-
-                // listening for navigation to start
-                webView.CoreWebView2.NavigationStarting += CoreWebView2_NavigationStarting;
-
-                if (hasRole)
-                {
-                    var nextEnabled = await ExecuteScriptAsyncUntil(nextSelector + @".disabled", s => Task.FromResult(s == @"false"), 4);
-                    if (nextEnabled == @"false")
+                    if (hasUsername)
                     {
-                        await ExecuteScriptAsync(nextSelector + @".click()");
+                        await ExecuteScriptAsync(usernameSelector + @".value=" + Account.Username.Quote());
+                        await ExecuteScriptAsync(usernameSelector + triggerInputEvent);
+                    }
+
+                    // start listening again
+                    _doAutomatedLogin = true;
+
+                    if (hasUsername)
+                        await ExecuteScriptAsync(signinSelector + @".click()");
+                }
+                else if (buttonText == @"Sign In")
+                {
+                    if (hasPassword)
+                    {
+                        await ExecuteScriptAsync(passwordSelector + @".value=" + Account.Password.Quote());
+                        await ExecuteScriptAsync(passwordSelector + triggerInputEvent);
+                    }
+
+                    // start listening again
+                    _doAutomatedLogin = true;
+
+                    if (hasPassword)
+                        await ExecuteScriptAsync(signinSelector + @".click()");
+                }
+                else if (buttonText == @"Next") // select role
+                {
+                    if (hasRole)
+                    {
+                        const string clickDropDownBox = "document.querySelector(\"#selectRole\").shadowRoot.querySelector(\"#roleSelection\").shadowRoot.firstChild.click()";
+                        const string selectPopper = "document.querySelector(\"body > tf-popper\")";
+                        //const string selectFirstRole = "document.querySelector(\"body > tf-popper > div\").shadowRoot.querySelector(\"div > tf-dropdown-item:nth-child(1)\").click()";
+                        string roleNotFoundMsg = string.Format(AlertsResources.ArdiaLoginDlg_Role___0___is_not_an_available_option__Pick_your_role_manually_, Account.Role);
+
+                        // loop through popper items to find one that matches the user's role name
+                        string selectNamedRole = @"(function() {" +
+                                                 @"for (role of document.querySelector(""body > tf-popper > div"").shadowRoot.querySelectorAll(""tf-dropdown-item"")) {" +
+                                                 @$"if (role.shadowRoot.textContent == ""{Account.Role}"") {{" +
+                                                 @"role.click(); return; }" +
+                                                 @$"}} alert(""{roleNotFoundMsg}""); }})()";
+                        await ExecuteScriptAsyncUntil(clickDropDownBox, async s => await ExecuteScriptAsync(selectPopper) != @"null");
+                        await ExecuteScriptAsync(selectNamedRole);
+                    }
+
+                    // listening for navigation to start
+                    webView.CoreWebView2.NavigationStarting += CoreWebView2_NavigationStarting;
+
+                    if (hasRole)
+                    {
+                        var nextEnabled = await ExecuteScriptAsyncUntil(nextSelector + @".disabled", s => Task.FromResult(s == @"false"), 4);
+                        if (nextEnabled == @"false")
+                        {
+                            await ExecuteScriptAsync(nextSelector + @".click()");
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                // only throw automated login exceptions when testing: users can just login manually
+                if (Program.FunctionalTest)
+                    throw;
+                else
+                    Console.Error.WriteLine(ex.ToString());
             }
         }
     }

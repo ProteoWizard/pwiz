@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
         public string GetFolderContentsUrl(ArdiaUrl ardiaUrl)
         {
             if (ardiaUrl.SequenceKey != null)
-                return GetRootArdiaUrl().SequenceBaseUrl + ardiaUrl.SequenceKey;
+                return ardiaUrl.SequenceUrl;
             else if (ardiaUrl.EncodedPath != null)
                 return GetRootArdiaUrl().NavigationBaseUrl + $@"/path?itemPath=/{ardiaUrl.EncodedPath}";
             return GetRootArdiaUrl().NavigationBaseUrl;
