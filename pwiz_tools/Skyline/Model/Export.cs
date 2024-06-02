@@ -2432,8 +2432,8 @@ namespace pwiz.Skyline.Model
                                           string averagePeakAreaText,
                                           string variableRtWindowText,
                                           string primaryOrSecondary,
-                                          string xic,
-                                          string rt)
+                                          string xic,   // used for method export only
+                                          string rt)    // used for method export only
         {
             if (MethodType == ExportMethodType.Triggered) // CSV for triggered
             {
@@ -2544,17 +2544,27 @@ namespace pwiz.Skyline.Model
             var prediction = Document.Settings.PeptideSettings.Prediction;
             predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
                 SchedulingReplicateIndex, SchedulingAlgorithm, Document.Settings.HasResults, out var rtWindow);
-            if(MethodType != ExportMethodType.Standard)
-                RTWindow = rtWindow; // Store for later use
 
             xic = XICWidth.HasValue
                 ? Math.Round(XICWidth.Value, 4).ToString(CultureInfo)
                 : 0.02.ToString(CultureInfo);
-            rt = predictedRT.HasValue ? Math.Round(predictedRT.Value, 2).ToString(CultureInfo) : @"0";
 
-            dwellOrRt = AccumulationTime.HasValue
-                ? Math.Round(AccumulationTime.Value, 4).ToString(CultureInfo)
-                : Math.Round(DwellTime.GetValueOrDefault(), 2).ToString(CultureInfo);
+            rt = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo);
+
+            // SCIEX transition lists have a column order q1,q3,<dwell-time|predicted-rt>
+            if (MethodType == ExportMethodType.Standard)
+            {
+                // Use dwell time for unscheduled methods
+                dwellOrRt = AccumulationTime.HasValue
+                    ? Math.Round(AccumulationTime.Value, 4).ToString(CultureInfo)
+                    : Math.Round(DwellTime.GetValueOrDefault(), 2).ToString(CultureInfo);
+            }
+            else
+            {
+                // Use retention time for scheduled methods
+                dwellOrRt = rt;
+                RTWindow = rtWindow; // Store for later use
+            }
         }
 
         private void GetValuesFromResults(TransitionDocNode nodeTran, double? predictedRT, out float? averagePeakArea,

@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="pepXML_std.xsl"?>
+<msms_pipeline_analysis date="2024-05-05T11:10:38" xmlns="http://regis-web.systemsbiology.net/pepXML" summary_xml="A:\DDA_data\peptideprophet-msfragger-bruker-mzml-nativeid.pepXML" xsi:schemaLocation="http://sashimi.sourceforge.net/schema_revision/pepXML/pepXML_v122.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<analysis_summary analysis="Percolator" time="2024-05-05T11:14:54">
+<peptideprophet_summary min_prob="0.50">
+<inputfile name="A:\DDA_data\fragpipe_output\peptideprophet-msfragger-bruker-mzml-nativeid.pepXML"/>
+</peptideprophet_summary>
+</analysis_summary>
+<analysis_summary analysis="database_refresh" time="2024-05-05T11:14:54"/>
+<analysis_summary analysis="interact" time="2024-05-05T11:14:54">
+<interact_summary filename="A:\DDA_data\fragpipe_output\interact-peptideprophet-msfragger-bruker-mzml-nativeid.pep.xml" directory="">
+<inputfile name="A:\DDA_data\fragpipe_output\peptideprophet-msfragger-bruker-mzml-nativeid.pepXML"/>
+</interact_summary>
+</analysis_summary>
+<dataset_derivation generation_no="0"/>
+<msms_run_summary base_name="A:\DDA_data\peptideprophet-msfragger-bruker-mzml-nativeid_calibrated" raw_data_type="mzML" comment="This pepXML was from calibrated spectra." raw_data="mzML">
+<sample_enzyme name="stricttrypsin">
+<specificity cut="KR" no_cut="" sense="C"/>
+</sample_enzyme>
+<search_summary base_name="A:\DDA_data\peptideprophet-msfragger-bruker-mzml-nativeid" precursor_mass_type="monoisotopic" search_engine="X! Tandem" search_engine_version="MSFragger-3.6" fragment_mass_type="monoisotopic" search_id="1">
+<search_database local_path="A:\DDA_data\2024-05-05-decoys-uniprotkb_proteome_UP000005640_AND_revi_2024_05_05.fasta.fas" type="AA"/>
+<enzymatic_search_constraint enzyme="default" min_number_termini="2" max_num_internal_cleavages="2"/>
+<aminoacid_modification aminoacid="C" massdiff="71.03712" mass="174.04631" variable="N"/>
+<aminoacid_modification aminoacid="M" massdiff="15.9949" mass="147.0354" variable="Y"/>
+<terminal_modification massdiff="42.0106" protein_terminus="Y" mass="43.018425" terminus="N" variable="Y"/>
+<aminoacid_modification aminoacid="S" massdiff="79.96633" mass="166.99835" variable="Y"/>
+<aminoacid_modification aminoacid="T" massdiff="79.96633" mass="181.014" variable="Y"/>
+<aminoacid_modification aminoacid="Y" massdiff="79.96633" mass="243.02966" variable="Y"/>
+<parameter name="# MSFragger.build" value="MSFragger-3.6"/>
+<parameter name="database_name" value="A:\DDA_data\2024-05-05-decoys-uniprotkb_proteome_UP000005640_AND_revi_2024_05_05.fasta.fas"/>
+<parameter name="decoy_prefix" value="rev_"/>
+<parameter name="num_threads" value="31"/>
+<parameter name="precursor_mass_lower" value="-20.0"/>
+<parameter name="precursor_mass_upper" value="20.0"/>
+<parameter name="precursor_mass_units" value="1"/>
+<parameter name="precursor_true_tolerance" value="20.0"/>
+<parameter name="data_type" value="0"/>
+<parameter name="precursor_true_units" value="1"/>
+<parameter name="fragment_mass_tolerance" value="15.0"/>
+<parameter name="fragment_mass_units" value="1"/>
+<parameter name="calibrate_mass" value="2"/>
+<parameter name="use_all_mods_in_first_search" value="0"/>
+<parameter name="write_calibrated_mzml" value="1"/>
+<parameter name="isotope_error" value="0/1/2"/>
+<parameter name="mass_offsets" value="0.0"/>
+<parameter name="labile_search_mode" value="OFF"/>
+<parameter name="restrict_deltamass_to" value="all"/>
+<parameter name="precursor_mass_mode" value="SELECTED"/>
+<parameter name="intensity_transform" value="1"/>
+<parameter name="activation_types" value="all"/>
+<parameter name="remove_precursor_peak" value="1"/>
+<parameter name="remove_precursor_range" value="-1.500000,1.500000"/>
+<parameter name="localize_delta_mass" value="0"/>
+<parameter name="delta_mass_exclude_ranges" value="(-1.5,3.5)"/>
+<parameter name="fragment_ion_series" value="b,y"/>
+<parameter name="ion_series_definitions" value=""/>
+<parameter name="search_enzyme_name" value="stricttrypsin"/>
+<parameter name="min_sequence_matches" value="2"/>
+<parameter name="check_spectral_files" value="1"/>
+<parameter name="search_enzyme_cut_1" value="KR"/>
+<parameter name="search_enzyme_nocut_1" value=""/>
+<parameter name="num_enzyme_termini" value="2"/>
+<parameter name="allowed_missed_cleavage_1" value="2"/>
+<parameter name="search_enzyme_sense_1" value="C"/>
+<parameter name="clip_nTerm_M" value="1"/>
+<parameter name="allow_multiple_variable_mods_on_residue" value="0"/>
+<parameter name="max_variable_mods_per_peptide" value="4"/>
+<parameter name="max_variable_mods_combinations" value="5000"/>
+<parameter name="mass_diff_to_variable_mod" value="0"/>
+<parameter name="output_format" value="pepxml_pin"/>
+<parameter name="output_report_topN" value="1"/>
+<parameter name="output_max_expect" value="50.0"/>
+<parameter name="report_alternative_proteins" value="1"/>
+<parameter name="override_charge" value="0"/>
+<parameter name="precursor_charge" value="1 4"/>
+<parameter name="digest_min_length" value="7"/>
+<parameter name="digest_max_length" value="50"/>
+<parameter name="digest_mass_range" value="500.0 5000.0"/>
+<parameter name="max_fragment_charge" value="1"/>
+<parameter name="deisotope" value="1"/>
+<parameter name="deneutralloss" value="1"/>
+<parameter name="track_zero_topN" value="0"/>
+<parameter name="zero_bin_accept_expect" value="0.0"/>
+<parameter name="zero_bin_mult_expect" value="1.0"/>
+<parameter name="add_topN_complementary" value="0"/>
+<parameter name="minimum_peaks" value="15"/>
+<parameter name="use_topN_peaks" value="100"/>
+<parameter name="min_fragments_modelling" value="2"/>
+<parameter name="min_matched_fragments" value="4"/>
+<parameter name="minimum_ratio" value="0.01"/>
+<parameter name="clear_mz_range" value="0.0 0.0"/>
+<parameter name="excluded_scan_list_file" value=""/>
+<parameter name="variable_mod_01" value="15.9949 M 3"/>
+<parameter name="variable_mod_02" value="42.0106 [^ 1"/>
+<parameter name="variable_mod_03" value="79.96633 STY 3"/>
+<parameter name="add_A_alanine" value="0.0"/>
+<parameter name="add_B_user_amino_acid" value="0.0"/>
+<parameter name="add_C_cysteine" value="71.03712"/>
+<parameter name="add_Cterm_peptide" value="0.0"/>
+<parameter name="add_Cterm_protein" value="0.0"/>
+<parameter name="add_D_aspartic_acid" value="0.0"/>
+<parameter name="add_E_glutamic_acid" value="0.0"/>
+<parameter name="add_F_phenylalanine" value="0.0"/>
+<parameter name="add_G_glycine" value="0.0"/>
+<parameter name="add_H_histidine" value="0.0"/>
+<parameter name="add_I_isoleucine" value="0.0"/>
+<parameter name="add_J_user_amino_acid" value="0.0"/>
+<parameter name="add_K_lysine" value="0.0"/>
+<parameter name="add_L_leucine" value="0.0"/>
+<parameter name="add_M_methionine" value="0.0"/>
+<parameter name="add_N_asparagine" value="0.0"/>
+<parameter name="add_Nterm_peptide" value="0.0"/>
+<parameter name="add_Nterm_protein" value="0.0"/>
+<parameter name="add_O_user_amino_acid" value="0.0"/>
+<parameter name="add_P_proline" value="0.0"/>
+<parameter name="add_Q_glutamine" value="0.0"/>
+<parameter name="add_R_arginine" value="0.0"/>
+<parameter name="add_S_serine" value="0.0"/>
+<parameter name="add_T_threonine" value="0.0"/>
+<parameter name="add_U_user_amino_acid" value="0.0"/>
+<parameter name="add_V_valine" value="0.0"/>
+<parameter name="add_W_tryptophan" value="0.0"/>
+<parameter name="add_X_user_amino_acid" value="0.0"/>
+<parameter name="add_Y_tyrosine" value="0.0"/>
+<parameter name="add_Z_user_amino_acid" value="0.0"/>
+</search_summary>
+<spectrum_query start_scan="24" ion_mobility="0.88538516" uncalibrated_precursor_neutral_mass="1271.6777" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mzml-nativeid.00024.00024.2" spectrumNativeID="24" end_scan="24" index="15" precursor_neutral_mass="1271.6746" retention_time_sec="78.34996461868286">
+<search_result>
+<search_hit peptide="EGVVQGVASVAEK" massdiff="0.0025634765625" calc_neutral_pep_mass="1271.672" peptide_next_aa="T" num_missed_cleavages="0" num_tol_term="2" protein_descr="Beta-synuclein OS=Homo sapiens OX=9606 GN=SNCB PE=1 SV=1" num_tot_proteins="1" tot_num_ions="24" hit_rank="1" num_matched_ions="19" protein="sp|Q16143|SYUB_HUMAN" peptide_prev_aa="R" is_rejected="0">
+<search_score name="hyperscore" value="39.529"/>
+<search_score name="nextscore" value="14.602"/>
+<search_score name="expect" value="2.156936e-07"/>
+<search_score name="spectralsim" value="0.946330"/>
+<search_score name="rtscore" value="1.390545"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.998433" all_ntt_prob="(0.998433,0.998433,0.998433)">
+<search_score_summary>
+<parameter name="fval" value="0.786884"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="2.015832"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="67" ion_mobility="0.853642" uncalibrated_precursor_neutral_mass="1160.6028" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mzml-nativeid.00067.00067.2" spectrumNativeID="67" end_scan="67" index="39" precursor_neutral_mass="1160.5994" retention_time_sec="92.36050844192505">
+<search_result>
+<search_hit peptide="TKQGVTEAAEK" massdiff="-0.0042724609375" calc_neutral_pep_mass="1160.6036" peptide_next_aa="T" num_missed_cleavages="1" num_tol_term="2" protein_descr="Gamma-synuclein OS=Homo sapiens OX=9606 GN=SNCG PE=1 SV=2" num_tot_proteins="2" tot_num_ions="20" hit_rank="1" num_matched_ions="7" protein="sp|O76070|SYUG_HUMAN" peptide_prev_aa="K" is_rejected="0">
+<alternative_protein protein_descr="Beta-synuclein OS=Homo sapiens OX=9606 GN=SNCB PE=1 SV=1" protein="sp|Q16143|SYUB_HUMAN" peptide_prev_aa="K" peptide_next_aa="T" num_tol_term="2"/>
+<search_score name="hyperscore" value="16.106"/>
+<search_score name="nextscore" value="0.0"/>
+<search_score name="expect" value="3.967343e-02"/>
+<search_score name="spectralsim" value="0.886351"/>
+<search_score name="rtscore" value="-1.032120"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.983521" all_ntt_prob="(0.983521,0.983521,0.983521)">
+<search_score_summary>
+<parameter name="fval" value="0.425593"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="1"/>
+<parameter name="massd" value="-3.681240"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="69" ion_mobility="0.77711236" uncalibrated_precursor_neutral_mass="1389.7561" assumed_charge="3" spectrum="peptideprophet-msfragger-bruker-mzml-nativeid.00069.00069.3" spectrumNativeID="69" end_scan="69" index="41" precursor_neutral_mass="1389.7513" retention_time_sec="97.6989197731018">
+<search_result>
+<search_hit peptide="TKQGVTEAAEKTK" massdiff="0.005126953125" calc_neutral_pep_mass="1389.7462" peptide_next_aa="E" num_missed_cleavages="2" num_tol_term="2" protein_descr="Gamma-synuclein OS=Homo sapiens OX=9606 GN=SNCG PE=1 SV=2" num_tot_proteins="2" tot_num_ions="24" hit_rank="1" num_matched_ions="6" protein="sp|O76070|SYUG_HUMAN" peptide_prev_aa="K" is_rejected="0">
+<alternative_protein protein_descr="Beta-synuclein OS=Homo sapiens OX=9606 GN=SNCB PE=1 SV=1" protein="sp|Q16143|SYUB_HUMAN" peptide_prev_aa="K" peptide_next_aa="E" num_tol_term="2"/>
+<search_score name="hyperscore" value="13.645"/>
+<search_score name="nextscore" value="0.0"/>
+<search_score name="expect" value="9.199196e-02"/>
+<search_score name="spectralsim" value="0.695476"/>
+<search_score name="rtscore" value="-1.017762"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.956585" all_ntt_prob="(0.956585,0.956585,0.956585)">
+<search_score_summary>
+<parameter name="fval" value="0.275373"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="2"/>
+<parameter name="massd" value="3.689129"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="81" ion_mobility="0.8547348" uncalibrated_precursor_neutral_mass="1161.6019" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mzml-nativeid.00081.00081.2" spectrumNativeID="81" end_scan="81" index="52" precursor_neutral_mass="1161.5986" retention_time_sec="109.68189239501953">
+<search_result>
+<search_hit peptide="TKQGVTEAAEK" massdiff="0.9949951171875" calc_neutral_pep_mass="1160.6036" peptide_next_aa="T" num_missed_cleavages="1" num_tol_term="2" protein_descr="Gamma-synuclein OS=Homo sapiens OX=9606 GN=SNCG PE=1 SV=2" num_tot_proteins="2" tot_num_ions="20" hit_rank="1" num_matched_ions="5" protein="sp|O76070|SYUG_HUMAN" peptide_prev_aa="K" is_rejected="0">
+<alternative_protein protein_descr="Beta-synuclein OS=Homo sapiens OX=9606 GN=SNCB PE=1 SV=1" protein="sp|Q16143|SYUB_HUMAN" peptide_prev_aa="K" peptide_next_aa="T" num_tol_term="2"/>
+<search_score name="hyperscore" value="11.952"/>
+<search_score name="nextscore" value="0.0"/>
+<search_score name="expect" value="2.437811e-01"/>
+<search_score name="spectralsim" value="0.785954"/>
+<search_score name="rtscore" value="-0.979650"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.681844" all_ntt_prob="(0.681844,0.681844,0.681844)">
+<search_score_summary>
+<parameter name="fval" value="-0.067644"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="1"/>
+<parameter name="massd" value="-7.202908"/>
+<parameter name="isomassd" value="1"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="83" ion_mobility="0.88618195" uncalibrated_precursor_neutral_mass="1271.6752" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mzml-nativeid.00083.00083.2" spectrumNativeID="83" end_scan="83" index="54" precursor_neutral_mass="1271.672" retention_time_sec="111.7029619216919">
+<search_result>
+<search_hit peptide="EGVVQGVASVAEK" massdiff="0.0" calc_neutral_pep_mass="1271.672" peptide_next_aa="T" num_missed_cleavages="0" num_tol_term="2" protein_descr="Beta-synuclein OS=Homo sapiens OX=9606 GN=SNCB PE=1 SV=1" num_tot_proteins="1" tot_num_ions="24" hit_rank="1" num_matched_ions="13" protein="sp|Q16143|SYUB_HUMAN" peptide_prev_aa="R" is_rejected="0">
+<search_score name="hyperscore" value="26.357"/>
+<search_score name="nextscore" value="12.564"/>
+<search_score name="expect" value="3.433602e-04"/>
+<search_score name="spectralsim" value="0.897395"/>
+<search_score name="rtscore" value="1.150487"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.999107" all_ntt_prob="(0.999107,0.999107,0.999107)">
+<search_score_summary>
+<parameter name="fval" value="0.873088"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="0.000000"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="87" ion_mobility="0.8056626" uncalibrated_precursor_neutral_mass="950.5111" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mzml-nativeid.00087.00087.2" spectrumNativeID="87" end_scan="87" index="58" precursor_neutral_mass="950.50793" retention_time_sec="112.56463050842285">
+<search_result>
+<search_hit peptide="EGVLYVGSK" massdiff="6.7138671875E-4" calc_neutral_pep_mass="950.50726" peptide_next_aa="T" num_missed_cleavages="0" num_tol_term="2" protein_descr="Isoform 2-4 of Alpha-synuclein OS=Homo sapiens OX=9606 GN=SNCA" num_tot_proteins="3" tot_num_ions="16" hit_rank="1" num_matched_ions="5" protein="sp|P37840-2|SYUA_HUMAN" peptide_prev_aa="K" is_rejected="0">
+<alternative_protein protein_descr="Alpha-synuclein OS=Homo sapiens OX=9606 GN=SNCA PE=1 SV=1" protein="sp|P37840|SYUA_HUMAN" peptide_prev_aa="K" peptide_next_aa="T" num_tol_term="2"/>
+<alternative_protein protein_descr="Beta-synuclein OS=Homo sapiens OX=9606 GN=SNCB PE=1 SV=1" protein="sp|Q16143|SYUB_HUMAN" peptide_prev_aa="K" peptide_next_aa="T" num_tol_term="2"/>
+<search_score name="hyperscore" value="10.511"/>
+<search_score name="nextscore" value="0.0"/>
+<search_score name="expect" value="5.587919e-03"/>
+<search_score name="spectralsim" value="0.928738"/>
+<search_score name="rtscore" value="0.712579"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.985383" all_ntt_prob="(0.985383,0.985383,0.985383)">
+<search_score_summary>
+<parameter name="fval" value="0.444046"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="0.706346"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+<spectrum_query start_scan="89" ion_mobility="0.7569969" uncalibrated_precursor_neutral_mass="829.43164" assumed_charge="2" spectrum="peptideprophet-msfragger-bruker-mzml-nativeid.00089.00089.2" spectrumNativeID="89" end_scan="89" index="60" precursor_neutral_mass="829.4286" retention_time_sec="113.58805418014526">
+<search_result>
+<search_hit peptide="QGVAEAAGK" massdiff="-7.32421875E-4" calc_neutral_pep_mass="829.4293" peptide_next_aa="T" num_missed_cleavages="0" num_tol_term="2" protein_descr="Isoform 2-4 of Alpha-synuclein OS=Homo sapiens OX=9606 GN=SNCA" num_tot_proteins="3" tot_num_ions="16" hit_rank="1" num_matched_ions="8" protein="sp|P37840-2|SYUA_HUMAN" peptide_prev_aa="K" is_rejected="0">
+<alternative_protein protein_descr="Isoform 2-5 of Alpha-synuclein OS=Homo sapiens OX=9606 GN=SNCA" protein="sp|P37840-3|SYUA_HUMAN" peptide_prev_aa="K" peptide_next_aa="T" num_tol_term="2"/>
+<alternative_protein protein_descr="Alpha-synuclein OS=Homo sapiens OX=9606 GN=SNCA PE=1 SV=1" protein="sp|P37840|SYUA_HUMAN" peptide_prev_aa="K" peptide_next_aa="T" num_tol_term="2"/>
+<search_score name="hyperscore" value="17.049"/>
+<search_score name="nextscore" value="11.723"/>
+<search_score name="expect" value="7.290378e-02"/>
+<search_score name="spectralsim" value="0.949983"/>
+<search_score name="rtscore" value="-1.020562"/>
+<analysis_result analysis="peptideprophet">
+<peptideprophet_result probability="0.995375" all_ntt_prob="(0.995375,0.995375,0.995375)">
+<search_score_summary>
+<parameter name="fval" value="0.620755"/>
+<parameter name="ntt" value="2"/>
+<parameter name="nmc" value="0"/>
+<parameter name="massd" value="-0.883043"/>
+<parameter name="isomassd" value="0"/>
+</search_score_summary>
+</peptideprophet_result>
+</analysis_result>
+</search_hit>
+</search_result>
+</spectrum_query>
+</msms_run_summary>
+</msms_pipeline_analysis>

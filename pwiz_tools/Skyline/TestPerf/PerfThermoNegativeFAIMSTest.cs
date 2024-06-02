@@ -130,9 +130,17 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
             RunUI(errDlg2.ClickOk); 
 
             WaitForCondition(() => File.Exists(filePathActual));
-
             var actual = File.ReadAllLines(filePathActual);
             var expected = File.ReadAllLines(GetTestPath("expected.csv"));
+
+            // Echitovenine is a poor match regardless of CV, with isotope envelope match -40 is better than -10
+            for (var line = 0; line < expected.Length; line++)
+            {
+                if (expected[line].StartsWith("Echitovenine"))
+                {
+                    expected[line] = expected[line].Replace("-10", "-40");
+                }
+            }
 
             for (var i = 0; i < Math.Min(expected.Length, actual.Length); i++)
             {
@@ -155,8 +163,8 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
                 -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
                 -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
                 -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
-                -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -50, -50, -50, -10, -10, -10, -10, -10,
-                -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
+                -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -50, -50, -50, -10, -10, -10, -40, -40,
+                -40, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
                 -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
                 -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
                 -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
@@ -174,6 +182,11 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
             {
                 var expectedPrecursorIM = IsRecordMode ? null : expectedIM[row];
                 CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityMS1", row, expectedPrecursorIM, msg, IsRecordMode);
+            }
+
+            if (IsRecordMode)
+            {
+                PauseForScreenShot("See Console for recorded values");
             }
 
             // And clean up after ourselves
