@@ -3948,6 +3948,15 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_file__0_" xml:space="preserve">
     <value>Error: Could not find background proteome file {0}</value>
   </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting" xml:space="preserve">
+    <value>Relative Abundance Formatting</value>
+  </data>
+  <data name="AreaPeptideGraphPane_UpdateAxes_Peptide_Rank" xml:space="preserve">
+    <value>Peptide Rank</value>
+  </data>
+  <data name="SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank" xml:space="preserve">
+    <value>Molecule Rank</value>
+  </data>
   <data name="PeptideMod_SetTerminus_A_peptide_modification_must_be_added_before_giving_it_a_terminal_or_amino_acid_specificity_" xml:space="preserve">
     <value>A peptide modification must be added before giving it a terminal or amino acid specificity.</value>
   </data>
@@ -3971,5 +3980,8 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   </data>
   <data name="CommandLine_ImportPeptideList_Using_the_Unimod_definitions_for_the_following_modifications_" xml:space="preserve">
     <value>Using the Unimod definitions for the following modifications:</value>
+  </data>
+  <data name="PeptideMod_SetVariable_A_peptide_modification_must_be_added_before_assigning_its_variable_status_" xml:space="preserve">
+    <value>A peptide modification must be added before assigning its variable status.</value>
   </data>
 </root>

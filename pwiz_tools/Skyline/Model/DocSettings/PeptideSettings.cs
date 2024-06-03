@@ -2412,6 +2412,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeLibrarySpecs(librarySpecs);
         }
 
+        public bool AnyExplicitPeakBounds()
+        {
+            return Libraries.Any(lib => lib is { UseExplicitPeakBounds: true, HasExplicitBounds: true });
+        }
+
         #endregion
 
         #region Implementation of IXmlSerializable

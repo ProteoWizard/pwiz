@@ -3,7 +3,7 @@
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2015 University of Washington - Seattle, WA
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,11 +18,11 @@
  */
 
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
-using pwiz.Skyline;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.IonMobility;
@@ -34,127 +34,138 @@ using pwiz.SkylineTestUtil;
 namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
 {
     /// <summary>
-    /// Verify measured drift time derviation against a curated set of drift times
+    /// Verify measured drift time derivation against a curated set of drift times
     /// </summary>
     [TestClass]
-    public class MeasuredDriftTimesPerfTest : AbstractFunctionalTest
+    public class MeasuredDriftTimesPerfTest : AbstractFunctionalTestEx
     {
 
         [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)] 
         public void MeasuredDriftValuesPerfTest()
         {
-            TestFilesZip = GetPerfTestDataURL(@"PerfMeauredDriftTimes.zip");
+            TestFilesZipPaths = new[] {
+                GetPerfTestDataURL(@"PerfMeauredDriftTimes.zip"), // Get the .d files
+                @"http://skyline.ms/tutorials/IMSFiltering.zip", // Get the Skyline document
+            };
             TestFilesPersistent = new[] { "BSA_Frag_100nM_18May15_Fir_15-04-02.d", "Yeast_0pt1ug_BSA_50nM_18May15_Fir_15-04-01.d" }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
 
             RunFunctionalTest();
             
         }
 
+
         protected override void DoTest()
         {
             // IsPauseForScreenShots = true; // For a quick demo when you need it
-            string skyFile = TestFilesDir.GetTestPath("test_measured_drift_times_perf.sky");
-            Program.ExtraRawFileSearchFolder = TestFilesDir.PersistentFilesDir; // So we don't have to reload the raw files, which have moved relative to skyd file 
-            RunUI(() => SkylineWindow.OpenFile(skyFile));
-
-            var document = WaitForDocumentLoaded(240000);  // If it decides to remake chromatograms this can take awhile
-            AssertEx.IsDocumentState(document, null, 1, 34, 38, 398);
-            RunUI(() =>
-            {
-                SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("local.sky")); // Avoid "document changed since last edit" message
-                document = SkylineWindow.DocumentUI;
-            });
-            List<ValidatingIonMobilityPrecursor> curatedDTs = null;
-            var measuredDTs = new List<List<ValidatingIonMobilityPrecursor>>();
-            var precursors = new LibKeyIndex(document.MoleculePrecursorPairs.Select(
-                p => p.NodePep.ModifiedTarget.GetLibKey(p.NodeGroup.PrecursorAdduct).LibraryKey));
-            PauseForScreenShot(@"Legacy ion mobility values loaded, placed in .imsdb database file"); // For a quick demo when you need it
+            var errors = new List<string>();
+            var measuredMobilities = new List<List<ValidatingIonMobilityPrecursor>>();
+            var document = OpenDocument("IMSFiltering\\BSA-Training.sky");
+            AssertEx.IsDocumentState(document, null, 1, 34, 38, 404);
             for (var pass = 0; pass < 2; pass++)
             {
-                // Verify ability to extract predictions from raw data
-                var transitionSettingsDlg = ShowDialog<TransitionSettingsUI>(
-                    () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
-                PauseForScreenShot("new Transition Settings tab"); // For a quick demo when you need it
-                // Simulate user picking Edit Current from the Ion Mobility Library combo control
-                var ionMobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg.IonMobilityControl.EditIonMobilityLibrary);
-                PauseForScreenShot("next, we'll update values with 'Use Results' button"); // For a quick demo when you need it
+                document = SkylineWindow.Document;
+                if (pass > 0)
+                {
+                    // Remove the clean BSA file so we're only looking at messy mix for IM re-extraction
+                    // Reimport data for a replicate - without the fix this will throw
+                    RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
+                    {
+                        var chromatograms = document.Settings.MeasuredResults.Chromatograms;
+                        dlg.SelectedChromatograms = new[] { chromatograms[0] };
+                        dlg.RemoveReplicates();
+                        dlg.OkDialog();
+                    });
+                    document = WaitForDocumentChange(document);
+                }
+
                 RunUI(() =>
                 {
-                    if (curatedDTs == null)
-                        curatedDTs = ionMobilityLibraryDlg.LibraryMobilitiesFlat.ToList();
+                    SkylineWindow.SaveDocument(TestFilesDirs[1]
+                        .GetTestPath($"local{pass}.sky")); // Avoid "document changed since last edit" message
+                });
+
+                // Verify ability to extract predictions from raw data - first pass, use the clean BSA sample
+                // N.B. second pass gets benefit of first pass IM findings so we get similar peaks picked
+                ImportResultsAsync(TestFilesDirs[0].GetTestPath(TestFilesPersistent[pass]));
+                document = WaitForDocumentChangeLoaded(document);
+                var transitionSettingsDlg = ShowDialog<TransitionSettingsUI>(
+                    () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
+                // Simulate user setting ion mobility resolving power then picking Edit New from the Ion Mobility Library combo control
+                RunUI(() =>
+                {
+                    transitionSettingsDlg.IonMobilityControl.WindowWidthType = IonMobilityWindowWidthCalculator
+                        .IonMobilityWindowWidthType.resolving_power;
+                    transitionSettingsDlg.IonMobilityControl.IonMobilityFilterResolvingPower = 30;
+                });
+                var ionMobilityLibraryDlg =
+                    ShowDialog<EditIonMobilityLibraryDlg>(
+                        transitionSettingsDlg.IonMobilityControl.AddIonMobilityLibrary);
+                RunUI(() =>
+                {
+                    ionMobilityLibraryDlg.CreateDatabaseFile(TestFilesDirs[1]
+                        .GetTestPath($"local{pass}{IonMobilityDb.EXT}"));
                     ionMobilityLibraryDlg.SetOffsetHighEnergySpectraCheckbox(true);
                     ionMobilityLibraryDlg.GetIonMobilitiesFromResults();
+                    measuredMobilities.Add(ionMobilityLibraryDlg.LibraryMobilitiesFlat.ToList());
                 });
-                PauseForScreenShot("values updated");// For a quick demo when you need it
-                RunUI(() => measuredDTs.Add(ionMobilityLibraryDlg.LibraryMobilitiesFlat.ToList()));
                 OkDialog(ionMobilityLibraryDlg, ionMobilityLibraryDlg.OkDialog);
                 OkDialog(transitionSettingsDlg, transitionSettingsDlg.OkDialog);
-                
-                document = SkylineWindow.Document;
-                var count = 0;
-                for (var n = 0; n < curatedDTs.Count; n++)
-                {
-                    var cdt = curatedDTs[n];
-                    var key = cdt.Precursor;
-                    var indexM = measuredDTs[pass].FindIndex(m => m.Precursor.Equals(key));
-                    var measured = measuredDTs[pass][indexM];
-                    var measuredDT = measured.IonMobility;
-                    var measuredHEO = measured.HighEnergyIonMobilityOffset;
-                    if (precursors.ItemsMatching(key, true).Any())
-                    {
-                        count++;
-                        AssertEx.AreNotEqual(cdt.IonMobility, measuredDT, "measured drift time should differ somewhat for "+measured.Precursor);
-                    }
-
-                    AssertEx.AreEqual(cdt.IonMobility, measuredDT, 1.0, "measured drift time differs too much for " + key);
-                    AssertEx.AreEqual(cdt.HighEnergyIonMobilityOffset, measuredHEO, 2.0, "measured drift time high energy offset differs too much for " + key);
-                }
-                AssertEx.AreEqual(document.MoleculeTransitionGroupCount, count, "did not find drift times for all precursors"); // Expect to find a value for each precursor
-
-                if (pass == 1)
-                    break;
-
-                // Verify that we select based on strongest results by removing the training set and relying on the other noisier set
-                RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
-                {
-                    var chromatograms = document.Settings.MeasuredResults.Chromatograms;
-                    var chromTraining = chromatograms[0];
-                    var chroms = new[] { chromTraining };
-                    dlg.SelectedChromatograms = chroms; // Passing this chromatograms[0] results in the other set being deleted - compiler problem?
-                    dlg.RemoveReplicates();
-                    dlg.OkDialog();
-                });
-
-                document = WaitForDocumentChange(document);
-                AssertEx.AreEqual(1, document.Settings.MeasuredResults.Chromatograms.Count);
             }
-            // Results should be slightly different without the training set of chromatograms to contain a potentially stronger peak
-            var ccount = 0;
-            var noChange = new List<LibKey>();
-            for (var n = 0; n < measuredDTs[0].Count; n++)
+
+            // Now compare the derived mobilities
+            var expectedMobilityBSA = new[]
             {
-                var validatingIonMobilityPeptide0 = measuredDTs[0][n];
-                var validatingIonMobilityPeptide1 = measuredDTs[1][n];
-                var key = measuredDTs[0][n].Precursor;
+                26.46691, 25.65003, 28.75418, 28.26405, 22.87264, 27.77392, 24.5064, 29.40768, 22.21914,
+                25.81341,  // NB this one looks like it has a strong conformer at about 24.8
+                23.19939, 23.36277,
+                27.77392,  // NB this one looks like it has a strong conformer at about 26
+                29.2443, 29.40768, 24.01627,
+                27.61054, 24.99653, 30.38794, 29.2443,
+                23.19939, 27.28379, 27.77392, 29.57106, 27.44717, 29.08093,
+                22.87264,  // NB this one looks like it has a strong conformer at about 24.5
+                28.75418, 24.01627, 23.19939,
+                26.14016, 24.99653, 23.8529, 25.65003, 24.99653, 28.26405, 25.97678, 24.66978,
+            };
+
+            document = SkylineWindow.Document;
+            var precursors = new LibKeyIndex(document.MoleculePrecursorPairs.Select(
+                p => p.NodePep.ModifiedTarget.GetLibKey(p.NodeGroup.PrecursorAdduct).LibraryKey));
+            var count = 0;
+            for (var n = 0; n < measuredMobilities[0]?.Count; n++)
+            {
+                var mobilityBSA = measuredMobilities[0][n];
+                if (Math.Abs(mobilityBSA.IonMobility - expectedMobilityBSA[n]) > .01)
+                {
+                    errors.Add($"BSA measured drift time {mobilityBSA.IonMobility} differs from expected {expectedMobilityBSA[n]} for {mobilityBSA.Precursor}");
+                }
+                var key = mobilityBSA.Precursor;
+                var indexYeastMix = measuredMobilities[1].FindIndex(m => m.Precursor.Equals(key));
+                var mobilityYeastMix = measuredMobilities[1][indexYeastMix].IonMobility;
+                var heoYeastMix = measuredMobilities[1][indexYeastMix].HighEnergyIonMobilityOffset;
                 if (precursors.ItemsMatching(key, true).Any())
                 {
-                    ccount++;
-                    if (validatingIonMobilityPeptide0.HighEnergyIonMobilityOffset == validatingIonMobilityPeptide1.HighEnergyIonMobilityOffset)
-                        noChange.Add(key);
+                    count++;
                 }
-                AssertEx.AreEqual(validatingIonMobilityPeptide0.IonMobility, validatingIonMobilityPeptide1.IonMobility, 1.0, "averaged measured drift time differs for " + key);
-                AssertEx.AreEqual(validatingIonMobilityPeptide0.HighEnergyIonMobilityOffset, validatingIonMobilityPeptide1.HighEnergyIonMobilityOffset, 2.0, "averaged measured drift time high energy offset differs for " + key);
-                AssertEx.AreEqual(validatingIonMobilityPeptide0.CollisionalCrossSectionSqA, validatingIonMobilityPeptide1.CollisionalCrossSectionSqA, 1.0, "averaged measured CCS differs for " + key);
-            }
-            AssertEx.AreEqual(document.MoleculeTransitionGroupCount, ccount, "did not find drift times for all precursors"); // Expect to find a value for each precursor
-            AssertEx.IsTrue(noChange.Count < .75*ccount,"expected a few values to shift a little without the nice clean training data");
 
+                var tolerance = 1.0;
+                var expected = mobilityBSA.IonMobility;
+                if (Math.Abs(expected - mobilityYeastMix) > tolerance)
+                {
+                    errors.Add( string.Format(
+                        $"{key} measured BSA drift time is {expected} but YeastMix measurement is {mobilityYeastMix} #{n}"));
+                    
+                }
+                if (Math.Abs(mobilityBSA.HighEnergyIonMobilityOffset - heoYeastMix) > 2.0)
+                    errors.Add($"measured drift time high energy offset {mobilityBSA.HighEnergyIonMobilityOffset} vs {heoYeastMix} differs too much for " + key);
+            }
+            if (!Equals(document.MoleculeTransitionGroupCount, count))
+                errors.Add("did not find drift times for all precursors"); // Expect to find a value for each precursor
+            AssertEx.AreEqual(0, errors.Count, string.Join("\n", errors));
 
             // And finally verify ability to reimport with altered drift filter (would formerly fail on an erroneous Assume)
-
             // Simulate user picking Edit Current from the Ion Mobility Library combo control, and messing with all the measured drift time values
             var transitionSettingsDlg2 = ShowDialog<TransitionSettingsUI>(
-                () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.Prediction));
+                () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
             var editIonMobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg2.IonMobilityControl.EditIonMobilityLibrary);
             RunUI(() =>
             {
