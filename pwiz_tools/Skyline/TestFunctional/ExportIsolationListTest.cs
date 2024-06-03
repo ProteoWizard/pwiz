@@ -264,7 +264,8 @@ namespace pwiz.SkylineTestFunctional
                 FieldSeparate(mzFirst, zFirst, runStart, runEnd, ThermoStellarMassListExporter.WIDE_NCE),
                 FieldSeparate(mzLast, zLast, runStart, runEnd, ThermoStellarMassListExporter.WIDE_NCE)
                 );
-            ExportIsolationList(
+            if (!AsSmallMoleculesNegative || AsExplicitRetentionTimes)
+                ExportIsolationList(
                 "StellarIsolationList.csv",
                 ExportInstrumentType.THERMO_STELLAR, FullScanAcquisitionMethod.PRM, ExportMethodType.Scheduled,
                 thermoStellarMassListExporter.GetHeader(),
