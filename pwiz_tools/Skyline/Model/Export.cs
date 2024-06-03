@@ -519,15 +519,16 @@ namespace pwiz.Skyline.Model
                         return ExportThermoMethod(doc, path, template);
                 case ExportInstrumentType.THERMO_QUANTIVA:
                 case ExportInstrumentType.THERMO_ALTIS:
-                case ExportInstrumentType.THERMO_STELLAR:
                     if (type == ExportFileType.List)
                         return ExportThermoQuantivaCsv(doc, path);
                     else
-                    {
-                        if (type == ExportFileType.IsolationList && ExportInstrumentType.THERMO_STELLAR == instrumentType)
-                            return ExportThermoStellarIsolationList(doc, path, template, instrumentType);
                         return ExportThermoQuantivaMethod(doc, path, template, instrumentType);
-                    }
+                case ExportInstrumentType.THERMO_STELLAR:
+                    if (type == ExportFileType.IsolationList)
+                        return ExportThermoStellarIsolationList(doc, path, template, instrumentType);
+                    else
+                        return ExportThermoStellarMethod(doc, path, template, instrumentType);
+
                 case ExportInstrumentType.THERMO_FUSION:
                     if (type == ExportFileType.IsolationList)
                     {
@@ -859,6 +860,19 @@ namespace pwiz.Skyline.Model
 
             return exporter;
         }
+
+        public AbstractMassListExporter ExportThermoStellarMethod(SrmDocument document, string fileName,
+            string templateName, string instrumentType)
+        {
+            var exporter = InitExporter(new ThermoStellarMethodExporter(document));
+            exporter.WriteFaimsCv = WriteCompensationVoltages;
+            if (MethodType == ExportMethodType.Standard)
+                exporter.RunLength = RunLength;
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+
+            return exporter;
+        }
+
 
         public void ExportThermoFusionDiaList(IsolationScheme isolationScheme, int? maxInclusions, string fileName,
             int calculationTime, bool debugCycles)
@@ -1930,10 +1944,24 @@ namespace pwiz.Skyline.Model
             {
                 argv.Add(@"-a");
             }
-            else if (instrumentType.Equals(ExportInstrumentType.THERMO_STELLAR))
-            {
-                argv.Add(@"-t");
-            }
+            MethodExporter.ExportMethod(EXE_BUILD_METHOD, argv, fileName, templateName, MemoryOutput, progressMonitor);
+        }
+    }
+
+    public class ThermoStellarMethodExporter : ThermoStellarMassListExporter
+    {
+        public ThermoStellarMethodExporter(SrmDocument document) : base(document){ }
+
+        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
+        {
+            if (fileName != null)
+                EnsureLibraries();
+
+            if (!InitExport(fileName, progressMonitor))
+                return;
+
+            var argv = new List<string>();
+            argv.Add(@"-t");
             MethodExporter.ExportMethod(EXE_BUILD_METHOD, argv, fileName, templateName, MemoryOutput, progressMonitor);
         }
     }
