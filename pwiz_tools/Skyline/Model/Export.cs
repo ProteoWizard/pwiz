@@ -3173,6 +3173,10 @@ namespace pwiz.Skyline.Model
             var prediction = c.parent.Document.Settings.PeptideSettings.Prediction;
             double? predictedRT = prediction.PredictRetentionTime(c.parent.Document, c.nodePep, c.nodeTranGroup,
                 c.parent.SchedulingReplicateIndex, c.parent.SchedulingAlgorithm, false, out var windowRT);
+            if (predictedRT.HasValue)
+            {
+                predictedRT = Math.Max(predictedRT.Value, windowRT.Window + 0.1);
+            }
 
             return predictedRT.HasValue
                 ? (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(c.parent.CultureInfo) +
@@ -3231,7 +3235,7 @@ namespace pwiz.Skyline.Model
                     }
                     AddField(writer, @"Threshold", TRIGGER_THRESHOLD_FIELD);
 
-                    AddField(writer, @"Ret Time (min)" + FieldSeparator + @"Delta Ret Time", RT_FIELD);
+                    AddField(writer, @"Ret Time (min)" + FieldSeparator + @"Delta Ret Time",  RT_FIELD);
                 }
                 AddField(writer, @"Fragmentor", FRAGMENTOR_FIELD);
                 AddField(writer, @"Collision Energy", CE_FIELD);
@@ -3504,6 +3508,7 @@ namespace pwiz.Skyline.Model
                     SchedulingReplicateIndex, SchedulingAlgorithm, false, out var windowRT);
                 if (predictedRT.HasValue)
                 {
+                    predictedRT = Math.Max(predictedRT.Value, windowRT + 0.1);
                     retentionTime = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo);  // Ret. Time (min)
                     deltaRetentionTime = Math.Round(windowRT, 1).ToString(CultureInfo); // Delta Ret. Time (min)
                 }
