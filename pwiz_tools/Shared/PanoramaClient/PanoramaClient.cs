@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
@@ -6,6 +7,7 @@ using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient.Properties;
@@ -505,6 +507,72 @@ namespace pwiz.PanoramaClient
                 }
             }
         }
+
+        public void CreateTargetedMsFolder(string parentFolderPath, string folderName)
+        {
+            var folderToCreate = $@"{parentFolderPath}/{folderName}";
+
+            if (FolderExists(folderToCreate))
+            {
+                // Folder exists on the server at the given path. Cannot create a folder with the same name
+                throw new PanoramaServerException(string.Format(
+                    Resources.AbstractPanoramaClient_CreateTargetedMsFolder_Folder_already_exists___0__,
+                    folderToCreate));
+            }
+
+            ValidateFolder(parentFolderPath, FolderPermission.admin, false); // Parent folder should exist and have admin permissions.
+
+
+            //Create JSON body for the request
+            var requestData = new Dictionary<string, string>
+            {
+                [@"name"] = folderName,
+                [@"title"] = folderName,
+                [@"description"] = folderName,
+                [@"type"] = @"normal",
+                [@"folderType"] = @"Targeted MS"
+            };
+            string createRequest = JsonConvert.SerializeObject(requestData);
+
+            using (var requestHelper = GetRequestHelper())
+            {
+                var requestUri = PanoramaUtil.CallNewInterface(ServerUri, @"core", parentFolderPath, @"createContainer", string.Empty, true);
+                requestHelper.Post(requestUri, createRequest,
+                    string.Format(
+                        Resources.AbstractPanoramaClient_CreateTargetedMsFolder_Error_creating_Panorama_folder__0__,
+                        folderToCreate));
+            }
+        }
+
+        public  bool FolderExists(string folderPath)
+        {
+            try
+            {
+                ValidateFolder(folderPath, null);
+                return true;
+            }
+            catch (PanoramaServerException)
+            {
+                // We expect this exception if the folder does not exist
+            }
+
+            return false;
+        }
+
+        public void DeleteFolderIfExists(string folderPath)
+        {
+            if (FolderExists(folderPath))
+            {
+                using (var requestHelper = GetRequestHelper())
+                {
+                    var requestUri = PanoramaUtil.CallNewInterface(ServerUri, @"core", folderPath, @"deleteContainer", string.Empty, true);
+                    requestHelper.Post(requestUri, "",
+                        string.Format(
+                            Resources.AbstractPanoramaClient_DeleteFolderIfExists_Error_deleting_Panorama_folder__0__,
+                            folderPath));
+                }
+            }
+        }
     }
 
     public class WebPanoramaClient : AbstractPanoramaClient
@@ -756,6 +824,41 @@ namespace pwiz.PanoramaClient
                 ? string.Format(@"{0} / {1}", string.Format(formatProvider, @"{0:fs1}", downloaded),
                     string.Format(formatProvider, @"{0:fs1}", fileSize))
                 : string.Format(formatProvider, @"{0:fs1}", downloaded);
+        }
+
+        public string DownloadStringAsync(Uri queryUri, CancellationToken cancelToken)
+        {
+            string data = null;
+            Exception error = null;
+            using (var webClient = new WebClientWithCredentials(ServerUri, Username, Password))
+            {
+                bool finishedDownloading = false;
+                webClient.DownloadStringAsync(queryUri);
+                webClient.DownloadStringCompleted += (sender, e) =>
+                {
+                    error = e.Error;
+                    if (error == null)
+                        data = e.Result;
+                    finishedDownloading = true;
+                };
+                while (!finishedDownloading)
+                {
+                    if (cancelToken.IsCancellationRequested)
+                        webClient.CancelAsync();
+                }
+            }
+
+            if (error != null)
+                throw error;
+            return data;
+        }
+
+        public string DownloadString(Uri queryUri)
+        {
+            using (var webClient = new WebClientWithCredentials(ServerUri, Username, Password))
+            {
+                return webClient.DownloadString(queryUri);
+            }
         }
     }
 

@@ -249,7 +249,21 @@ namespace pwiz.PanoramaClient
                 throw new PanoramaServerException(new ErrorMessageBuilder(Resources.PanoramaRequestHelper_Post_There_was_an_error_getting_a_CSRF_token_from_the_server_)
                     .Uri(uri).ExceptionMessage(e.Message).LabKeyError(GetErrorFromException(e)).ToString(), e);
             }
-            return base.Post(uri, postData, postDataString, messageOnError);
+
+            try
+            {
+                return base.Post(uri, postData, postDataString, messageOnError);
+            }
+            catch (PanoramaServerException e)
+            {
+                if (e.HttpStatus == HttpStatusCode.Unauthorized)
+                {
+                    // Clear the CSRF token if there is an authentication error. We may need to just get a new token and try the request again.
+                    // An example is the PanoramaPinger class in the AutoQC project that sends a POST request to the Panorama server every few minutes.
+                    _client.ClearCsrfToken();
+                }
+                throw;
+            }
         }
 
         public override string GetResponse(HttpWebRequest request)
