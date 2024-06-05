@@ -852,14 +852,6 @@ namespace pwiz.PanoramaClient
                 throw error;
             return data;
         }
-
-        public string DownloadString(Uri queryUri)
-        {
-            using (var webClient = new WebClientWithCredentials(ServerUri, Username, Password))
-            {
-                return webClient.DownloadString(queryUri);
-            }
-        }
     }
 
     /// <summary>

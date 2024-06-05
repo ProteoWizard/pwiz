@@ -71,7 +71,8 @@ namespace AutoQC
             var panoramaClient = new WebPanoramaClient(panoramaServer.URI, PanoramaUserEmail, PanoramaPassword);
             try
             {
-                // If the server URI was fixed during validation - e.g. protocol changed from http to https OR the context path (/labkey) was added or removed.
+                // Get the validated server. The server URI may have been fixed during validation - e.g. protocol changed from http to https
+                // OR the context path (/labkey) added or removed.
                 panoramaServer = panoramaClient.ValidateServer();
             }
             catch (Exception ex)
@@ -310,42 +311,10 @@ namespace AutoQC
             }
         }
 
-        public bool PingPanorama()
+        public void PingPanorama()
         {
-            try
-            {
-                var uri = PanoramaUtil.Call(_panoramaSettings.PanoramaServerUri, @"targetedms", _panoramaSettings.PanoramaFolder, @"autoQCPing", string.Empty, true);
-
-                _requestHelper.Post(uri, string.Empty, null);
-
-        
-                // using (var webClient = new WebClientWithCredentials(ServerUri, username, password))
-                // {
-                //     if (_csrfToken == null)
-                //     {
-                //         // Look at CSRFUtil.validate() in the LabKey code.
-                //         // We need both a X-LABKEY-CSRF header and a cookie
-                //         _csrfToken = webClient.GetCsrfToken();
-                //     }
-                //     webClient.Post(uri, "", _csrfToken); // Try to reuse the CSRF token
-                // }
-            }
-            catch (Exception ex)
-            {
-                if (ex is PanoramaServerException)
-                {
-                    // Create a new request helper. This will get a new CSRF token for the next request.
-                    // _requestHelper = new PanoramaRequestHelper(new WebClientWithCredentials(_panoramaSettings.PanoramaServerUri,
-                    //     _panoramaSettings.PanoramaUserEmail, _panoramaSettings.PanoramaPassword));
-                }
-                // var response = ex.Response as HttpWebResponse;
-                // if (response != null && response.StatusCode == HttpStatusCode.Unauthorized)
-                // {
-                //     _csrfToken = null;  // Get a new CSRF token for the next request
-                // }
-                throw;
-            }
-            return true;
+           var uri = PanoramaUtil.Call(_panoramaSettings.PanoramaServerUri, @"targetedms", _panoramaSettings.PanoramaFolder, @"autoQCPing", string.Empty, true);
+           _requestHelper.Post(uri, string.Empty, null);
         }
 
         public void Init()

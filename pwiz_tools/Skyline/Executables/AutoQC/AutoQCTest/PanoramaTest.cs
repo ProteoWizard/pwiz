@@ -123,12 +123,14 @@ namespace AutoQCTest
             var panoramaServerUri = PanoramaUtil.ServerNameToUri(SERVER_URL);
             var labKeyQuery = PanoramaUtil.CallNewInterface(panoramaServerUri, "query", $"{PANORAMA_PARENT_PATH}/{uniqueFolder}",
                 "selectRows", "schemaName=targetedms&queryName=runs", true);
-            var webClient = new WebPanoramaClient(panoramaServerUri, PANORAMA_USER_NAME, PANORAMA_PASSWORD);
+            var requestHelper =
+                new PanoramaRequestHelper(new WebClientWithCredentials(panoramaServerUri, PANORAMA_USER_NAME,
+                    PANORAMA_PASSWORD));
             var startTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
             var x = startTime;
             while (x < startTime + TIMEOUT_80SEC)
             {
-                var jsonAsString = webClient.DownloadString(labKeyQuery);
+                var jsonAsString = requestHelper.DoGet(labKeyQuery);
                 var json = JsonConvert.DeserializeObject<PanoramaJsonObject>(jsonAsString);
                 if (json.rowCount > 0) return true;
                 await Task.Delay(WAIT_3SEC);

@@ -102,8 +102,8 @@ namespace SkylineBatch
                         string userName = server.FileSource.Username, password = server.FileSource.Password;
                         if (!string.IsNullOrEmpty(userName) || !string.IsNullOrEmpty(password))
                         {
-                            var validatePanoramaServer = new WebPanoramaClient(uri, userName, password).ValidateServer();
-                            uri = validatePanoramaServer.URI;
+                            var validatedPanoramaServer = new WebPanoramaClient(uri, userName, password).ValidateServer();
+                            uri = validatedPanoramaServer.URI;
                         }
 
                         var chosenServer = Uri.UnescapeDataString(uri.GetLeftPart(UriPartial.Authority));

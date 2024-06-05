@@ -629,7 +629,7 @@ namespace pwiz.SkylineTestTutorial
             // https://panoramaweb.org/SkylineTest/project-begin.view 
             // Make the test user (PANORAMA_USER_NAME) a folder administrator so that the
             // user is able to create and delete folders in the "SkylineTest" project.
-            WebPanoramaClient panoramaClient = (WebPanoramaClient)PanoramaUtil.CreatePanoramaClient(new Uri(SERVER_URL), PANORAMA_USER_NAME, PANORAMA_PASSWORD);
+            var panoramaClient = (WebPanoramaClient)PanoramaUtil.CreatePanoramaClient(new Uri(SERVER_URL), PANORAMA_USER_NAME, PANORAMA_PASSWORD);
 
             try
             {
