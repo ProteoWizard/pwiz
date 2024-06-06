@@ -778,9 +778,12 @@ namespace AutoQC
 
         private void ListViewSizeChanged()
         {
+            if (_listViewColumnWidths != null)
+            {
                 listViewConfigs.ColumnWidthChanged -= listViewConfigs_ColumnWidthChanged;
                 _listViewColumnWidths.ListViewContainerResize();
                 listViewConfigs.ColumnWidthChanged += listViewConfigs_ColumnWidthChanged;
+            }
         }
 
         private void listViewConfigs_ColumnWidthChanged(object sender, ColumnWidthChangedEventArgs e)
