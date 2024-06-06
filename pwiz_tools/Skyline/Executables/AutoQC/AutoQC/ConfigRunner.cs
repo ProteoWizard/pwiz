@@ -611,8 +611,9 @@ namespace AutoQC
             var panoramaUploadArgs = PanoramaArgs(importContext);
             if (!string.IsNullOrEmpty(panoramaUploadArgs))
             {
-                if (importContext.ImportCount == 0)
+                if (importContext.ImportCount == 0 && DateTime.MinValue.Equals(LastAcquiredFileDate))
                 {
+                    // Nothing was imported, and the Skyline document did not have any imported results when the configuration was started.
                     LogError("No results were imported. Skipping upload to Panorama.");
                 }
                 else
