@@ -594,10 +594,9 @@ namespace pwiz.Skyline
             return HandleExceptions(commandArgs, ()=>
             {
                 var documentAnnotations = new DocumentAnnotations(_doc);
-                using (var streamReader = new StreamReader(commandArgs.ImportAnnotations))
-                {
-                    ModifyDocument(d => documentAnnotations.ReadAnnotationsFromFile(CancellationToken.None, commandArgs.ImportAnnotations));
-                }
+                var modifiedDocument =
+                    documentAnnotations.ReadAnnotationsFromFile(CancellationToken.None, commandArgs.ImportAnnotations);
+                ModifyDocument(DocumentModifier.FromResult(_doc, modifiedDocument));
             }, SkylineResources.CommandLine_ImportAnnotations_Error__Failed_while_reading_annotations_);
         }
 
@@ -610,7 +609,9 @@ namespace pwiz.Skyline
                 long lineCount = Helpers.CountLinesInFile(commandArgs.ImportPeakBoundariesPath);
                 PeakBoundaryImporter importer = new PeakBoundaryImporter(_doc);
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
-                ModifyDocument(d => importer.Import(commandArgs.ImportPeakBoundariesPath, progressMonitor, lineCount));
+                var modifiedDocument = importer.ModifyDocument(SrmDocument.DOCUMENT_TYPE.none,
+                    commandArgs.ImportPeakBoundariesPath, progressMonitor, lineCount);
+                ModifyDocument(DocumentModifier.FromResult(_doc, modifiedDocument));
             }, SkylineResources.CommandLine_ImportPeakBoundaries_Error__Failed_importing_peak_boundaries_);
         }
 
@@ -666,7 +667,9 @@ namespace pwiz.Skyline
                 {
                     var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(message));
                     var lib = IonMobilityLibrary.CreateFromResults(
-                        doc, null, false, libName, commandArgs.ImsDbFile,
+                        doc, null,
+                        doc.Settings.TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator,
+                        false, libName, commandArgs.ImsDbFile,
                         progressMonitor);
 
                     return ionMobilityFiltering.ChangeLibrary(lib);
@@ -932,15 +935,25 @@ namespace pwiz.Skyline
 
         public void ModifyDocument(Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc)
         {
+            ModifyDocument(DocumentModifier.Create(act, logFunc));
+        }
+
+        public void ModifyDocument(IDocumentModifier documentModifier)
+        {
             var docOriginal = _doc;
-            _doc = act(_doc);
+            var modifiedDocument = documentModifier.ModifyDocument(docOriginal, SrmDocument.DOCUMENT_TYPE.none);
             // If nothing changed, don't create a new audit log entry, just like SkylineWindow.ModifyDocument
-            if (ReferenceEquals(_doc, docOriginal))
+            if (modifiedDocument == null)
                 return;
-            var docPair = SrmDocumentPair.Create(docOriginal, _doc, SrmDocument.DOCUMENT_TYPE.none);
-            var logEntry = logFunc?.Invoke(docPair);
-            if (logEntry != null)
-                _doc = AuditLogEntry.UpdateDocument(logEntry, docPair);
+            _doc = modifiedDocument.Document;
+            if (modifiedDocument.AuditLogException != null)
+            {
+                throw new AggregateException(modifiedDocument.AuditLogException);
+            }
+
+            if (modifiedDocument.AuditLogEntry != null)
+                _doc = AuditLogEntry.UpdateDocument(modifiedDocument.AuditLogEntry,
+                    SrmDocumentPair.Create(docOriginal, _doc, SrmDocument.DOCUMENT_TYPE.none));
         }
 
         public void ModifyDocumentWithLogging(Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc)
@@ -1258,6 +1271,20 @@ namespace pwiz.Skyline
                                 {
                                     var mod = ModificationMatcher.GetStaticMod(modName, peptideMod.Terminus, peptideMod.AAs);
                                     bool structural = UniMod.IsStructuralModification(mod.Name);
+                                    if (peptideMod.IsVariable.HasValue)
+                                    {
+                                        if (!structural)
+                                            throw new InvalidDataException(DocSettingsResources.StaticMod_DoValidate_Isotope_modifications_may_not_be_variable_);
+
+                                        mod = mod.ChangeVariable(peptideMod.IsVariable.Value);
+                                    }
+                                    
+                                    SettingsList<StaticMod> modListSettings = Settings.Default.StaticModList;
+                                    if (!structural)
+                                        modListSettings = Settings.Default.HeavyModList;
+                                    if (!modListSettings.Contains(mod))
+                                        modListSettings.Add(mod);
+
                                     var modList = structural ? strMods : isoMods;
                                     if (modList.Contains(mod))
                                         continue;
@@ -1820,7 +1847,7 @@ namespace pwiz.Skyline
                 multiStatus = lastProgress as MultiProgressStatus;
             }
 
-            SetDocument(DocContainer.Document);
+            ModifyDocument(doc=>DocContainer.Document, docPair=>AuditLogImportResults(docPair, listNamedPaths));
             DocContainer.ResetProgress();
 
             if (_doc.Settings.HasResults)
@@ -1868,7 +1895,7 @@ namespace pwiz.Skyline
                 if (!_doc.IsLoaded)
                 {
                     DocContainer.SetDocument(_doc, DocContainer.Document, true);
-                    SetDocument(DocContainer.Document);
+                    ModifyDocument(doc => DocContainer.Document, docPair => AuditLogImportResults(docPair, listNamedPaths));
                     DocContainer.ResetProgress();
                     // If not fully loaded now, there must have been an error.
                     if (!_doc.IsLoaded)
@@ -1877,6 +1904,16 @@ namespace pwiz.Skyline
             }
 
             return true;
+        }
+
+        private AuditLogEntry AuditLogImportResults(SrmDocumentPair docPair,
+            IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths)
+        {
+            var auditLogPaths = listNamedPaths.SelectMany(entry =>
+                entry.Value.Select(path => AuditLogPath.Create(path.ToString()))).ToList();
+            return AuditLogEntry.CreateCountChangeEntry(MessageType.imported_result,
+                MessageType.imported_results, docPair.NewDocumentType, auditLogPaths,
+                MessageArgs.DefaultSingular, null);
         }
 
         private ChromatogramSet RemoveErrors(ChromatogramSet set, MultiProgressStatus multiStatus)
@@ -2492,7 +2529,7 @@ namespace pwiz.Skyline
                 if (!commandArgs.DiscardDecoys || !_doc.MoleculeGroups.Contains(g => g.IsDecoy))
                     return true;
 
-                ModifyDocument(RefinementSettings.RemoveDecoys);
+                ModifyDocument(DocumentModifier.Create(RefinementSettings.ModifyDocumentByRemovingDecoys));
                 _out.WriteLine(Resources.CommandLine_AddDecoys_Decoys_discarded);
                 return true;
             }
@@ -2524,7 +2561,7 @@ namespace pwiz.Skyline
             if (commandArgs.DiscardDecoys)
                 decoyPeptideCount = _doc.MoleculeGroups.Where(g => g.IsDecoy).Sum(g => g.MoleculeCount);
 
-            ModifyDocument(d => refineAddDecoys.GenerateDecoys(d));
+            ModifyDocument(DocumentModifier.Create(doc=>refineAddDecoys.ModifyDocumentByGeneratingDecoys(doc)));
 
             if (decoyPeptideCount > 0)
                 _out.WriteLine(Resources.CommandLine_AddDecoys_Decoys_discarded);
@@ -2732,7 +2769,9 @@ namespace pwiz.Skyline
                     success = false;
                     return;
                 }
-                ModifyDocument(d => resultsHandler.ChangePeaks(progressMonitor));
+
+                var reintegrateDlgSettings = resultsHandler.GetReintegrateDlgSettings();
+                ModifyDocument(d => resultsHandler.ChangePeaks(progressMonitor), reintegrateDlgSettings.EntryCreator.Create);
 
                 success = true;
             }, SkylineResources.CommandLine_Reintegrate_Error__Failed_to_reintegrate_peaks_successfully_);
@@ -2746,6 +2785,7 @@ namespace pwiz.Skyline
             {
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
                 long lines = Helpers.CountLinesInFile(path);
+                // TODO(nicksh): Audit logging
                 ModifyDocument(d => d.ImportFasta(readerFasta, progressMonitor, lines, false, null, out _, out _));
             }
             
@@ -2771,8 +2811,36 @@ namespace pwiz.Skyline
                 if (!string.IsNullOrEmpty(name))
                     _out.WriteLine(Resources.CommandLine_ImportPeptideList_Warning__peptide_list_file_contains_lines_with_____Ignoring_provided_list_name_);
             }
+
+            var matcher = new ModificationMatcher();
+            var sequences = new List<string>();
+            foreach (var line in lineList)
+            {
+                string sequence = FastaSequence.NormalizeNTerminalMod(line.Trim());
+                sequences.Add(sequence);
+            }
+            matcher.CreateMatches(_doc.Settings, sequences, Settings.Default.StaticModList, Settings.Default.HeavyModList);
+            var strNameMatches = matcher.FoundMatches;
+            if (!string.IsNullOrEmpty(strNameMatches))
+            {
+                _out.WriteLine(Resources.CommandLine_ImportPeptideList_Using_the_Unimod_definitions_for_the_following_modifications_);
+                _out.Write(strNameMatches);
+            }
+
             var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
-            ModifyDocument(d => d.ImportFasta(new StringListReader(lineList), progressMonitor, lineList.Count, true, null, out _, out _));
+            ModifyDocument(d =>
+            {
+                d = d.ImportFasta(new StringListReader(lineList), progressMonitor, lineList.Count, matcher,
+                    null, out _, out _, out _);
+
+                var pepModsNew = matcher.GetDocModifications(d);
+                if (!ReferenceEquals(pepModsNew, d.Settings.PeptideSettings.Modifications))
+                {
+                    d = d.ChangeSettings(d.Settings.ChangePeptideModifications(mods => pepModsNew));
+                    d.Settings.UpdateDefaultModifications(false);
+                }
+                return d;
+            });
         }
 
         private bool ImportTransitionList(CommandArgs commandArgs)
@@ -2809,6 +2877,7 @@ namespace pwiz.Skyline
             }
             if (!commandArgs.IsTransitionListAssayLibrary)
             {
+                // TODO(nicksh): Audit logging
                 ModifyDocument(d => docNew);
                 return true;
             }
@@ -2978,6 +3047,7 @@ namespace pwiz.Skyline
                 }
             }
 
+            // TODO(nicksh): Audit logging
             ModifyDocument(d => docNew);
             return true;
         }
@@ -3241,6 +3311,7 @@ namespace pwiz.Skyline
                 new List<LibrarySpec>{ librarySpec };
 
             SrmSettings newSettings = _doc.Settings.ChangePeptideLibraries(l => l.ChangeLibrarySpecs(librarySpecs));
+            // TODO(nicksh): Audit logging
             ModifyDocument(d => d.ChangeSettings(newSettings));
 
             return true;
@@ -4467,6 +4538,11 @@ namespace pwiz.Skyline
                             _statusWriter.WriteLine(
                                 SkylineResources.PanoramaPublishHelper_PublishDocToPanorama_Error__An_import_error_occurred_on_the_Panorama_server__0__,
                                 panoramaEx.ServerUrl);
+                            if (!string.IsNullOrWhiteSpace(panoramaEx.Error))
+                            {
+                                _statusWriter.WriteLine(Resources.Error___0_, panoramaEx.Error);
+                            }
+
                             _statusWriter.WriteLine(
                                 SkylineResources.PanoramaPublishHelper_PublishDocToPanorama_Error_details_can_be_found_at__0_,
                                 panoramaEx.JobUrl);

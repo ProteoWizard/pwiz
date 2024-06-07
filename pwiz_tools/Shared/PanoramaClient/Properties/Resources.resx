@@ -301,4 +301,10 @@
   <data name="PanoramaUtil_LabKeyAllowedFileName_File_name_may_not_contain_space_followed_by_dash" xml:space="preserve">
 	  <value>File name may not contain space followed by dash</value>
   </data>
+  <data name="AbstractPanoramaClient_ParseUploadFileCompletedEventArgs_Request_cancelled" xml:space="preserve">
+	  <value>Request cancelled</value>
+  </data>
+  <data name="AbstractPanoramaClient_ParseUploadFileCompletedEventArgs_There_was_an_error_reading_the_server_response_" xml:space="preserve">
+	  <value>There was an error reading the server response.</value>
+  </data>
 </root>

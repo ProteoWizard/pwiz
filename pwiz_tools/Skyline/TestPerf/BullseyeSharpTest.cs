@@ -40,6 +40,9 @@ namespace TestPerf
         [TestMethod, NoUnicodeTesting(TestExclusionReason.HARDKLOR_UNICODE_ISSUES), NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestBullseyeSharp()
         {
+            if (!RunPerfTests)
+                return; // PerfTests only run when the global RunPerfTests flag is set
+
             TestFilesZip = GetPerfTestDataURL(@"BullseyeSharpTest.zip"); // Files produced by the official (non-forked) BullseyeSharp
             TestFilesPersistent = new[] { "2021_0810_Eclipse_LiPExp_05_SS3.raw" }; // List of files that we'd like to unzip alongside parent zipFile, and (re)use in place
             UnzipTestFiles();
