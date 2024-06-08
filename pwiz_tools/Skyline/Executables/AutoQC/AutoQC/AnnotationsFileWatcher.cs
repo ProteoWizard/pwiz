@@ -74,6 +74,7 @@ namespace AutoQC
 
         private void FileChanged()
         {
+            _logger.Log("Annotations file was updated.");
             _configRunner.AnnotationsFileUpdated = true;
         }
 
