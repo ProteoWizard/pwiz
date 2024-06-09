@@ -133,6 +133,26 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to DIA with deconvolution.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibraryControl_DIA_with_deconvolution {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibraryControl_DIA_with_deconv" +
+                        "olution", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DIA with DIA-Umpire.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_RunPeptideSearchRadioDIAText_DIA_with_DIA_Umpire {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_RunPeptideSearchRadioDIAText_DIA_with_DIA_Umpire" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to name to give protdb imported by --background-proteome-file.
         /// </summary>
         public static string CommandArgs_ARG_BGPROTEOME_NAME_name_to_give_protdb_imported_by___background_proteome_file {
@@ -3185,6 +3205,15 @@ namespace pwiz.Skyline {
         public static string SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to {
             get {
                 return ResourceManager.GetString("SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Run Peptide Search.
+        /// </summary>
+        public static string SkylineWindow_ShowRunPeptideSearchDlg_Run_Peptide_Search {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowRunPeptideSearchDlg_Run_Peptide_Search", resourceCulture);
             }
         }
         

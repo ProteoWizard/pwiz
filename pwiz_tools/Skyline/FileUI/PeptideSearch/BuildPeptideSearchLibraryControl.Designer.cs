@@ -28,6 +28,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BuildPeptideSearchLibraryControl));
             this.grpWorkflow = new System.Windows.Forms.GroupBox();
             this.radioDIA = new System.Windows.Forms.RadioButton();
@@ -41,9 +42,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnBrowse = new System.Windows.Forms.Button();
             this.lblLibraryPath = new System.Windows.Forms.Label();
             this.panelPeptideSearch = new System.Windows.Forms.Panel();
-            this.gridSearchFiles = new pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView();
-            this.label2 = new System.Windows.Forms.Label();
-            this.comboInputFileType = new System.Windows.Forms.ComboBox();
             this.lblStandardPeptides = new System.Windows.Forms.Label();
             this.comboStandards = new System.Windows.Forms.ComboBox();
             this.cbIncludeAmbiguousMatches = new System.Windows.Forms.CheckBox();
@@ -51,19 +49,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnRemFile = new System.Windows.Forms.Button();
             this.lblFileCaption = new System.Windows.Forms.Label();
             this.btnAddFile = new System.Windows.Forms.Button();
+            this.panelSearchThreshold = new System.Windows.Forms.Panel();
+            this.label1 = new System.Windows.Forms.Label();
+            this.textCutoff = new System.Windows.Forms.TextBox();
+            this.diaToolTip = new System.Windows.Forms.ToolTip(this.components);
+            this.gridSearchFiles = new pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.panelSearchThreshold = new System.Windows.Forms.Panel();
-            this.label1 = new System.Windows.Forms.Label();
-            this.textCutoff = new System.Windows.Forms.TextBox();
             this.grpWorkflow.SuspendLayout();
             this.panel1.SuspendLayout();
             this.panelChooseFile.SuspendLayout();
             this.panelPeptideSearch.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.gridSearchFiles)).BeginInit();
             this.panelSearchThreshold.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.gridSearchFiles)).BeginInit();
             this.SuspendLayout();
             // 
             // grpWorkflow
@@ -81,12 +81,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resources.ApplyResources(this.radioDIA, "radioDIA");
             this.radioDIA.Name = "radioDIA";
             this.radioDIA.UseVisualStyleBackColor = true;
+            this.radioDIA.CheckedChanged += new System.EventHandler(this.radioDIA_CheckedChanged);
             // 
             // radioPRM
             // 
             resources.ApplyResources(this.radioPRM, "radioPRM");
             this.radioPRM.Name = "radioPRM";
             this.radioPRM.UseVisualStyleBackColor = true;
+            this.radioPRM.CheckedChanged += new System.EventHandler(this.radioPRM_CheckedChanged);
             // 
             // radioDDA
             // 
@@ -95,6 +97,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.radioDDA.Name = "radioDDA";
             this.radioDDA.TabStop = true;
             this.radioDDA.UseVisualStyleBackColor = true;
+            this.radioDDA.CheckedChanged += new System.EventHandler(this.radioDDA_CheckedChanged);
             // 
             // panel1
             // 
@@ -148,8 +151,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // panelPeptideSearch
             // 
             this.panelPeptideSearch.Controls.Add(this.gridSearchFiles);
-            this.panelPeptideSearch.Controls.Add(this.label2);
-            this.panelPeptideSearch.Controls.Add(this.comboInputFileType);
             this.panelPeptideSearch.Controls.Add(this.lblStandardPeptides);
             this.panelPeptideSearch.Controls.Add(this.comboStandards);
             this.panelPeptideSearch.Controls.Add(this.cbIncludeAmbiguousMatches);
@@ -159,27 +160,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.panelPeptideSearch.Controls.Add(this.btnAddFile);
             resources.ApplyResources(this.panelPeptideSearch, "panelPeptideSearch");
             this.panelPeptideSearch.Name = "panelPeptideSearch";
-            // 
-            // gridSearchFiles
-            // 
-            this.gridSearchFiles.AllowUserToAddRows = false;
-            resources.ApplyResources(this.gridSearchFiles, "gridSearchFiles");
-            this.gridSearchFiles.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.gridSearchFiles.Name = "gridSearchFiles";
-            this.gridSearchFiles.SelectionChanged += new System.EventHandler(this.gridSearchFiles_SelectedIndexChanged);
-            // 
-            // label2
-            // 
-            resources.ApplyResources(this.label2, "label2");
-            this.label2.Name = "label2";
-            // 
-            // comboInputFileType
-            // 
-            this.comboInputFileType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboInputFileType.FormattingEnabled = true;
-            resources.ApplyResources(this.comboInputFileType, "comboInputFileType");
-            this.comboInputFileType.Name = "comboInputFileType";
-            this.comboInputFileType.SelectedIndexChanged += new System.EventHandler(this.comboInputFileType_SelectedIndexChanged);
             // 
             // lblStandardPeptides
             // 
@@ -225,6 +205,31 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnAddFile.UseVisualStyleBackColor = true;
             this.btnAddFile.Click += new System.EventHandler(this.btnAddFile_Click);
             // 
+            // panelSearchThreshold
+            // 
+            this.panelSearchThreshold.Controls.Add(this.label1);
+            this.panelSearchThreshold.Controls.Add(this.textCutoff);
+            resources.ApplyResources(this.panelSearchThreshold, "panelSearchThreshold");
+            this.panelSearchThreshold.Name = "panelSearchThreshold";
+            // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.Name = "label1";
+            // 
+            // textCutoff
+            // 
+            resources.ApplyResources(this.textCutoff, "textCutoff");
+            this.textCutoff.Name = "textCutoff";
+            // 
+            // gridSearchFiles
+            // 
+            this.gridSearchFiles.AllowUserToAddRows = false;
+            resources.ApplyResources(this.gridSearchFiles, "gridSearchFiles");
+            this.gridSearchFiles.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.gridSearchFiles.Name = "gridSearchFiles";
+            this.gridSearchFiles.SelectionChanged += new System.EventHandler(this.gridSearchFiles_SelectedIndexChanged);
+            // 
             // dataGridViewTextBoxColumn1
             // 
             this.dataGridViewTextBoxColumn1.Frozen = true;
@@ -254,33 +259,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resources.ApplyResources(this.dataGridViewTextBoxColumn4, "dataGridViewTextBoxColumn4");
             this.dataGridViewTextBoxColumn4.Name = "dataGridViewTextBoxColumn4";
             // 
-            // panelSearchThreshold
-            // 
-            this.panelSearchThreshold.Controls.Add(this.label1);
-            this.panelSearchThreshold.Controls.Add(this.textCutoff);
-            resources.ApplyResources(this.panelSearchThreshold, "panelSearchThreshold");
-            this.panelSearchThreshold.Name = "panelSearchThreshold";
-            // 
-            // label1
-            // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
-            // 
-            // textCutoff
-            // 
-            resources.ApplyResources(this.textCutoff, "textCutoff");
-            this.textCutoff.Name = "textCutoff";
-            // 
             // BuildPeptideSearchLibraryControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
+            this.Controls.Add(this.grpWorkflow);
             this.Controls.Add(this.panelPeptideSearch);
             this.Controls.Add(this.panelSearchThreshold);
             this.Controls.Add(this.panelChooseFile);
             this.Controls.Add(this.panel1);
-            this.Controls.Add(this.grpWorkflow);
             this.Name = "BuildPeptideSearchLibraryControl";
             this.grpWorkflow.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
@@ -289,9 +277,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.panelChooseFile.PerformLayout();
             this.panelPeptideSearch.ResumeLayout(false);
             this.panelPeptideSearch.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.gridSearchFiles)).EndInit();
             this.panelSearchThreshold.ResumeLayout(false);
             this.panelSearchThreshold.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.gridSearchFiles)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -309,8 +297,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.Button btnBrowse;
         private System.Windows.Forms.Label lblLibraryPath;
         private System.Windows.Forms.Panel panelPeptideSearch;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.ComboBox comboInputFileType;
         private System.Windows.Forms.Label lblStandardPeptides;
         private System.Windows.Forms.ComboBox comboStandards;
         private System.Windows.Forms.CheckBox cbIncludeAmbiguousMatches;
@@ -326,5 +312,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.Panel panelSearchThreshold;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox textCutoff;
+        private System.Windows.Forms.ToolTip diaToolTip;
     }
 }

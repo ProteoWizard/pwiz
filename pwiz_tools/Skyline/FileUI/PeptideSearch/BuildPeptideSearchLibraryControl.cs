@@ -49,6 +49,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private MsDataFileUri[] _ddaSearchDataSources = Array.Empty<MsDataFileUri>();
         private bool _isFeatureDetectionWorkflow;
         private bool _isRunPeptideSearch;
+        private ImportPeptideSearchDlg.InputFile _inputFileType;
 
         public BuildPeptideSearchLibraryControl(IModifyDocumentContainer documentContainer, ImportPeptideSearch importPeptideSearch, LibraryManager libraryManager, bool isRunPeptideSearch)
         {
@@ -67,22 +68,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (DocumentContainer.Document.PeptideCount == 0)
                 cbFilterForDocumentPeptides.Hide();
 
-            comboInputFileType.Items.AddRange(new[]
-            {
-                EnumNames.InputFile_search_result,
-                EnumNames.InputFile_dda_raw,
-                EnumNames.InputFile_dia_raw
-            });
 
             _driverStandards = new SettingsListComboDriver<IrtStandard>(comboStandards, Settings.Default.IrtStandardList);
             _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
 
-            comboInputFileType.SelectedIndex = 0;
-
-            if (isRunPeptideSearch)
+            if (_isRunPeptideSearch)
             {
                 panel1.Hide();
                 panelSearchThreshold.Show();
+                radioDIA.Text = SkylineResources.BuildPeptideSearchLibraryControl_RunPeptideSearchRadioDIAText_DIA_with_DIA_Umpire;
+                diaToolTip.SetToolTip(radioDIA, SkylineResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibraryControl_DIA_with_deconvolution);
+                InputFileType = ImportPeptideSearchDlg.InputFile.dda_raw;
+            }
+            else
+            {
+                InputFileType = ImportPeptideSearchDlg.InputFile.search_result;
             }
         }
 
@@ -233,8 +233,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public ImportPeptideSearchDlg.InputFile InputFileType
         {
-            get { return (ImportPeptideSearchDlg.InputFile) comboInputFileType.SelectedIndex; }
-            set { comboInputFileType.SelectedIndex = (int) value; }
+            get => _inputFileType;
+            set
+            {
+                _inputFileType = value;
+                UpdatePerformDDASearch();
+            }
         }
 
         public bool FilterForDocumentPeptides
@@ -614,21 +618,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 radioButtonNewLibrary.Checked = true;
                 radioButtonNewLibrary.Hide();
                 radioExistingLibrary.Hide();
-                label2.Hide();
-                comboInputFileType.SelectedIndex = (int)ImportPeptideSearchDlg.InputFile.dda_raw;
-                comboInputFileType.Hide();
+                InputFileType = ImportPeptideSearchDlg.InputFile.dda_raw;
                 lblStandardPeptides.Hide();
                 comboStandards.Hide();
                 cbIncludeAmbiguousMatches.Hide();
                 cbFilterForDocumentPeptides.Hide();
 
                 panelPeptideSearch.Top = panel1.Top;
-                var bump = label2.Top - panelChooseFile.Top;
                 panelChooseFile.Top = 12;
-                lblFileCaption.Top += bump;
-                gridSearchFiles.Top += bump;
-                btnAddFile.Top += bump;
-                btnRemFile.Top += bump;
                 panelPeptideSearch.Height = gridSearchFiles.Bottom;
                 Height = panelPeptideSearch.Height;
             }
@@ -719,7 +716,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set
             {
                 InputFileType = value ? ImportPeptideSearchDlg.InputFile.dda_raw : ImportPeptideSearchDlg.InputFile.search_result;
-                UpdatePerformDDASearch();
             }
         }
 
@@ -747,6 +743,30 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void grpWorkflow_Enter(object sender, EventArgs e)
         {
 
+        }
+
+        private void radioDDA_CheckedChanged(object sender, EventArgs e)
+        {
+            if (radioDDA.Checked && _isRunPeptideSearch)
+            {
+                InputFileType = ImportPeptideSearchDlg.InputFile.dda_raw;
+            }
+        }
+
+        private void radioDIA_CheckedChanged(object sender, EventArgs e)
+        {
+            if (radioDIA.Checked && _isRunPeptideSearch)
+            {
+                InputFileType = ImportPeptideSearchDlg.InputFile.dia_raw;
+            }
+        }
+
+        private void radioPRM_CheckedChanged(object sender, EventArgs e)
+        {
+            if (radioPRM.Checked && _isRunPeptideSearch)
+            {
+                InputFileType = ImportPeptideSearchDlg.InputFile.dda_raw;
+            }
         }
     }
 }

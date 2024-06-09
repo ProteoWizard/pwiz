@@ -1169,4 +1169,13 @@
   <data name="SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_performing_run_peptide_search_" xml:space="preserve">
 	  <value>The document must be fully loaded before performing run peptide search.</value>
   </data>
+  <data name="BuildPeptideSearchLibraryControl_RunPeptideSearchRadioDIAText_DIA_with_DIA_Umpire" xml:space="preserve">
+	  <value>DIA with DIA-Umpire</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibraryControl_DIA_with_deconvolution" xml:space="preserve">
+	  <value>DIA with deconvolution</value>
+  </data>
+  <data name="SkylineWindow_ShowRunPeptideSearchDlg_Run_Peptide_Search" xml:space="preserve">
+	  <value>Run Peptide Search</value>
+  </data>
 </root>

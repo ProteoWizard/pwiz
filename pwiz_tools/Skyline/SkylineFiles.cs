@@ -3343,7 +3343,7 @@ namespace pwiz.Skyline
 
         private void runPeptideSearchToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ShowImportPeptideSearchDlg(true);
+            ShowRunPeptideSearchDlg();
         }
 
         public void ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow? workflowType)
@@ -3371,14 +3371,8 @@ namespace pwiz.Skyline
                 }
             }
         }
-        public void ShowImportPeptideSearchDlg(bool isRunPeptideSearch)
+        public void ShowRunPeptideSearchDlg()
         {
-            if (!isRunPeptideSearch)
-            {
-                ShowImportPeptideSearchDlg(null);
-                return;
-            }
-
             if (!CheckDocumentExists(SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_performing_run_peptide_search_))
             {
                 return;
@@ -3389,13 +3383,16 @@ namespace pwiz.Skyline
                 return;
             }
 
-            var dlg = new ImportPeptideSearchDlg(this, _libraryManager, true, null);
-            dlg.ShowDialog(this);
+            using (var dlg = new ImportPeptideSearchDlg(this, _libraryManager, true, null))
+            {
+                dlg.Text = SkylineResources.SkylineWindow_ShowRunPeptideSearchDlg_Run_Peptide_Search;
+                dlg.ShowDialog(this);
+            }
         }
 
         public void ShowImportPeptideSearchDlg()
         {
-            ShowImportPeptideSearchDlg(false);
+            ShowImportPeptideSearchDlg(null);
         }
 
         public void ShowEncyclopeDiaSearchDlg()
