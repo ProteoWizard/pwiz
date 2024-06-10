@@ -61,7 +61,7 @@ namespace AutoQCTest
             var instrumentType = MainSettings.GetDefaultInstrumentType();
             
             
-            return new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, fileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime);
+            return new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, fileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime, null);
         }
 
         public static PanoramaSettings GetTestPanoramaSettings(bool publishToPanorama = true)

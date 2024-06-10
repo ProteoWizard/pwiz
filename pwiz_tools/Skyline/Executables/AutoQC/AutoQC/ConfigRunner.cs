@@ -38,6 +38,26 @@ namespace AutoQC
         private BackgroundWorker _worker;
 
         private AutoQCFileSystemWatcher _fileWatcher;
+        private AnnotationsFileWatcher _annotationsFileWatcher;
+        private bool _annotationsFileUpdated;
+        readonly object _annotationsFileLock = new object();
+        public bool AnnotationsFileUpdated
+        {
+            get
+            {
+                lock (_annotationsFileLock)
+                {
+                    return _annotationsFileUpdated;
+                }
+            }
+            set
+            {
+                lock (_annotationsFileLock)
+                {
+                    _annotationsFileUpdated = value;
+                }
+            }
+        }
 
         private readonly IMainUiControl _uiControl;
         private readonly Logger _logger;
@@ -58,6 +78,8 @@ namespace AutoQC
         private bool _panoramaUploadError;
         private DateTime _panoramaErrorOccurred = DateTime.MinValue;
         private DateTime _lastUploadAt = DateTime.MinValue;
+
+        private bool _annotationsImportError;
 
         public DateTime LastAcquiredFileDate;
         public DateTime LastArchivalDate; 
@@ -174,7 +196,7 @@ namespace AutoQC
             lock (_lock)
             {
                 _runnerStatus = runnerStatus;
-                if (runnerStatus == RunnerStatus.Stopped)
+                if (IsStopped())
                 {
                     ((MainForm)_uiControl)?.DisableConfig(Config);
                 }
@@ -223,6 +245,10 @@ namespace AutoQC
                 LogStartMessage();
 
                 _fileWatcher = new AutoQCFileSystemWatcher(_logger, this);
+                if (Config.MainSettings.AnnotationsFilePath != null)
+                {
+                    _annotationsFileWatcher = new AnnotationsFileWatcher(_logger, this);
+                }
 
                 // Make sure "Integrate all" is checked in the Skyline settings
                 if (!IsIntegrateAllChecked(_logger, Config.MainSettings))
@@ -247,6 +273,7 @@ namespace AutoQC
                 }
 
                 _fileWatcher.Init(Config);
+                _annotationsFileWatcher?.Init(Config);
 
                 Log("Running configuration...");
                 ChangeStatus(RunnerStatus.Running);
@@ -293,6 +320,9 @@ namespace AutoQC
                     break;
                 }
 
+                // Import the annotations file if it has changed
+                ImportAnnotationsFileIfChanged();
+
                 var filePath = _fileWatcher.GetFile();
                
                 if (filePath != null)
@@ -306,6 +336,18 @@ namespace AutoQC
                         // Any files that still do not import successfully
                         // will be removed from the re-import queue.
                         TryReimportOldFiles(e, true);
+
+                        if (_annotationsImportError)
+                        {
+                            // If the annotations file could not be imported earlier, try again after importing a raw file, and
+                            // re-trying previously failed raw files. 
+                            ImportAnnotationsFileIfWatching(true, "Attempting to re-import the annotations file.");
+                            if (_annotationsImportError)
+                            {
+                                LogError("There were errors importing the annotations file. Stopping configuration.");
+                                break;
+                            }
+                        }
                     }
 
                     inWait = false;
@@ -427,16 +469,23 @@ namespace AutoQC
 
             // Enable notifications on new files that get added to the folder.
             _fileWatcher.StartWatching();
+            _annotationsFileWatcher?.StartWatching();
 
             if (files.Count == 0)
             {
                 Log(Resources.ConfigRunner_ProcessExistingFiles_No_existing_files_found_);
+                if (DocumentHasReplicates())
+                {
+                    ImportAnnotationsFileIfWatching(false);
+                    UploadToPanorama(PanoramaArgs(), PanoramaArgs(true));
+                }
                 return true;
             }
             
             Log("Existing files found: {0}", files.Count);
 
             var importContext = new ImportContext(files);
+            var skipped = 0;
             while (importContext.GetNextFile() != null)
             {
                 if (_worker.CancellationPending)
@@ -461,12 +510,18 @@ namespace AutoQC
                         GetFilePathForLog(filePath),
                         fileLastWriteTime,
                         lastAcquiredFileDate);
+                    skipped++;
                     continue;
                 }
 
                 ImportFile(e, importContext);
             }
 
+            if (skipped == files.Count && DocumentHasReplicates())
+            {
+                ImportAnnotationsFileIfWatching(false);
+                UploadToPanorama(PanoramaArgs(), PanoramaArgs(true));
+            }
             Log(Resources.ConfigRunner_ProcessExistingFiles_Finished_importing_existing_files___);
             return true;
         }
@@ -536,7 +591,9 @@ namespace AutoQC
             CreateZipArchiveBefore(importContext);
 
             var importSucceeded = ImportResults(importContext);
-
+            
+            ImportAnnotationsFile(importContext);
+           
             UploadToPanorama(importContext);
 
             CreateZipArchiveAfter(importContext);
@@ -567,20 +624,27 @@ namespace AutoQC
             var panoramaUploadArgs = PanoramaArgs(importContext);
             if (!string.IsNullOrEmpty(panoramaUploadArgs))
             {
-                if (importContext.ImportCount == 0)
-                {
-                    LogError("No results were imported. Skipping upload to Panorama.");
-                }
-                else
+                if (importContext.ImportCount > 0 || (importContext.ImportExisting && DocumentHasReplicates()))
                 {
                     var argsToPrint = PanoramaArgs(importContext, true);
                     UploadToPanorama(panoramaUploadArgs, argsToPrint);
                 }
+                else
+                {
+                    // Nothing was imported, and the Skyline document did not have any imported results when the configuration was started.
+                    LogError("No results were imported. Skipping upload to Panorama.");
+                }
             }
+        }
+
+        private bool DocumentHasReplicates()
+        {
+            return !DateTime.MinValue.Equals(LastAcquiredFileDate);
         }
 
         private void UploadToPanorama(string panoramaUploadArgs, string argsToPrint)
         {
+            _logger.Log("Uploading Skyline document to Panorama.");
             var uploadToPanoramaProc = new ProcessInfo(Config.SkylineSettings.CmdPath, panoramaUploadArgs, argsToPrint);
             var status = RunProcess(uploadToPanoramaProc);
             _lastUploadAt = DateTime.Now;
@@ -619,6 +683,48 @@ namespace AutoQC
             }
         }
 
+        private void ImportAnnotationsFileIfWatching(bool uploadToPanorama, string logMessage = null)
+        {
+            if (_annotationsFileWatcher != null)
+            {
+                Log(logMessage ?? "Importing annotations file.");
+                ImportAnnotationsFile(uploadToPanorama);
+            }
+        }
+
+        private void ImportAnnotationsFileIfChanged()
+        {
+            if (AnnotationsFileUpdated)
+            {
+                AnnotationsFileUpdated = false;
+                ImportAnnotationsFileIfWatching(true);
+            }
+        } 
+        
+        private void ImportAnnotationsFile(ImportContext importContext)
+        {
+            // Import the annotations file after importing all the existing raw data. 
+            if (importContext.ImportExisting && importContext.ImportingLast())
+            {
+                ImportAnnotationsFileIfWatching(false); // Do not upload the document to Panorama.
+            }
+        }
+
+        private void ImportAnnotationsFile(bool uploadToPanorama = true)
+        {
+            var args = string.Format("--in=\"{0}\" --import-annotations=\"{1}\" --save", Config.MainSettings.SkylineFilePath, Config.MainSettings.AnnotationsFilePath);
+
+            var procInfo = new ProcessInfo(Config.SkylineSettings.CmdPath, args, args);
+
+            var status = RunProcess(procInfo);
+            _annotationsImportError = status == ProcStatus.Error;
+            if (!_annotationsImportError && Config.PanoramaSettings.PublishToPanorama && uploadToPanorama)
+            {
+                // Upload to Panorama
+                UploadToPanorama(PanoramaArgs(), PanoramaArgs(true));
+            }
+        }
+
         public void Cancel()
         {
             Stop();
@@ -632,6 +738,7 @@ namespace AutoQC
             Task.Run(() =>
             {
                 _fileWatcher?.Stop();
+                _annotationsFileWatcher?.Stop();
 
                 if (_worker != null && _worker.IsBusy)
                 {
@@ -830,7 +937,7 @@ namespace AutoQC
                 return LastArchivalDate;
             }
 
-            if (!DateTime.MinValue.Equals(LastAcquiredFileDate))
+            if (DocumentHasReplicates())
             {
                 LastArchivalDate = LastAcquiredFileDate;
                 return LastArchivalDate;
@@ -963,7 +1070,7 @@ namespace AutoQC
                 // by the last acquisition date on the files already imported in the Skyline document.
                 // If the Skyline document does not have any results files, we will import all existing
                 // files in the folder.
-                if (!DateTime.MinValue.Equals(LastAcquiredFileDate))
+                if (DocumentHasReplicates())
                 {
                     importOnOrAfter = string.Format(" --import-on-or-after={0}", LastAcquiredFileDate);
                 }
