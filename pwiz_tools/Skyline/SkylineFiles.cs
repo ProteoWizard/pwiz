@@ -3374,13 +3374,13 @@ namespace pwiz.Skyline
         }
         public void ShowRunPeptideSearchDlg()
         {
-            if (!CheckDocumentExists(SkylineResources.SkylineWindow_ShowRunPeptideSearchDlg_You_must_save_this_document_before_running_peptide_search_))
+            if (!CheckDocumentExists(SkylineResources.SkylineWindow_ShowRunPeptideSearchDlg_You_must_save_this_document_before_running_a_peptide_search_))
             {
                 return;
             }
             else if (!Document.IsLoaded)
             {
-                MessageDlg.Show(this, SkylineResources.SkylineWindow_ShowRunPeptideSearchDlg_The_document_must_be_fully_loaded_before_running_peptide_search_);
+                MessageDlg.Show(this, SkylineResources.SkylineWindow_ShowRunPeptideSearchDlg_The_document_must_be_fully_loaded_before_running_a_peptide_search_);
                 return;
             }
 
