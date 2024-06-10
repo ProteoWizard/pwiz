@@ -1952,7 +1952,7 @@ namespace pwiz.Skyline.Model
     {
         public ThermoStellarMethodExporter(SrmDocument document) : base(document){ }
 
-        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
+        public override void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
             if (fileName != null)
                 EnsureLibraries();
