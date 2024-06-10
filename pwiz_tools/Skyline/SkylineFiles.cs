@@ -3348,7 +3348,8 @@ namespace pwiz.Skyline
 
         public void ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow? workflowType)
         {
-            if (!CheckDocumentExists(workflowType is ImportPeptideSearchDlg.Workflow.feature_detection ?
+            var isFeatureDetection = workflowType is ImportPeptideSearchDlg.Workflow.feature_detection;
+            if (!CheckDocumentExists(isFeatureDetection ?
                     SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_performing_feature_detection_ :
                     SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
             {
@@ -3357,13 +3358,13 @@ namespace pwiz.Skyline
             else if (!Document.IsLoaded)
             {
                 MessageDlg.Show(this,
-                    workflowType is ImportPeptideSearchDlg.Workflow.feature_detection ?
+                    isFeatureDetection ?
                         SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_performing_feature_detection_ :
                         SkylineResources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_);
                 return;
             }
 
-            using (var dlg = new ImportPeptideSearchDlg(this, _libraryManager, workflowType))
+            using (var dlg = new ImportPeptideSearchDlg(this, _libraryManager, isFeatureDetection, workflowType))
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {

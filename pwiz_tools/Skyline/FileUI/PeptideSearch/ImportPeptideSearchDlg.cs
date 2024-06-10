@@ -99,9 +99,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private readonly Stack<SrmDocument> _documents;
         public bool IsAutomatedTest; // Testing support
 
-        public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager,
-            Workflow? workflowType, bool useExistingLibrary = false) : this(skylineWindow, libraryManager, false, workflowType, useExistingLibrary) { }
-
         public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager, bool isRunPeptideSearch, Workflow? workflowType, bool useExistingLibrary = false)
         {
             SkylineWindow = skylineWindow;
@@ -398,7 +395,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager, Workflow workflowType,
             IList<ImportPeptideSearch.FoundResultsFile> resultFiles, ImportFastaControl.ImportFastaSettings fastaSettings,
             IEnumerable<string> existingLibraryFilepaths)
-            : this(skylineWindow, libraryManager, workflowType, true)
+            : this(skylineWindow, libraryManager, false, workflowType, true)
         {
             BuildPepSearchLibControl.ForceWorkflow(workflowType);
 
