@@ -148,7 +148,7 @@ namespace TestPerf
             RunUI(() => SkylineWindow.SaveDocument(documentFile));
 
             // Launch the wizard
-            var runPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
+            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
 
             string[] searchFiles = DiaFiles.Select(p => GetVendorFileTestPath(p)).ToArray();
             foreach (var searchFile in searchFiles)
@@ -168,26 +168,26 @@ namespace TestPerf
 
             RunUI(() =>
             {
-                Assert.IsTrue(runPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
-                runPeptideSearchDlg.BuildPepSearchLibControl.PerformDDASearch = true;
-                runPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = searchFiles.Select(f => new MsDataFilePath(f)).ToArray();
-                runPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = IrtStandard.CIRT_SHORT;
-                runPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
-                runPeptideSearchDlg.BuildPepSearchLibControl.InputFileType = ImportPeptideSearchDlg.InputFile.dia_raw;
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                importPeptideSearchDlg.BuildPepSearchLibControl.PerformDDASearch = true;
+                importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = searchFiles.Select(f => new MsDataFilePath(f)).ToArray();
+                importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = IrtStandard.CIRT_SHORT;
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
+                importPeptideSearchDlg.BuildPepSearchLibControl.InputFileType = ImportPeptideSearchDlg.InputFile.dia_raw;
                 // Check default settings shown in the tutorial
-                Assert.AreEqual(0.95, runPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore);
-                Assert.IsFalse(runPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches);
-                Assert.IsTrue(runPeptideSearchDlg.ClickNextButton());
+                Assert.AreEqual(0.95, importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore);
+                Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches);
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
             //WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
 
             WaitForDocumentLoaded();
 
-            RunUI(() => Assert.IsTrue(runPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page));
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page));
 
             var editStructModListUI =
-                ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(runPeptideSearchDlg.MatchModificationsControl.ClickAddStructuralModification);
+                ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(importPeptideSearchDlg.MatchModificationsControl.ClickAddStructuralModification);
             RunDlg<EditStaticModDlg>(editStructModListUI.AddItem, editModDlg =>
             {
                 editModDlg.SetModification(OXIDATION_M); // Not L10N
@@ -195,15 +195,15 @@ namespace TestPerf
             });
             OkDialog(editStructModListUI, editStructModListUI.OkDialog);
 
-            RunUI(() => runPeptideSearchDlg.MatchModificationsControl.ChangeAll(true));
+            RunUI(() => importPeptideSearchDlg.MatchModificationsControl.ChangeAll(true));
 
-            RunUI(() => Assert.IsTrue(runPeptideSearchDlg.ClickNextButton()));
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
-            WaitForConditionUI(() => runPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
             RunUI(() =>
             {
-                runPeptideSearchDlg.TransitionSettingsControl.ExclusionUseDIAWindow = false;
-                runPeptideSearchDlg.TransitionSettingsControl.PeptidePrecursorCharges = new[]
+                importPeptideSearchDlg.TransitionSettingsControl.ExclusionUseDIAWindow = false;
+                importPeptideSearchDlg.TransitionSettingsControl.PeptidePrecursorCharges = new[]
                 {
                     /*Adduct.SINGLY_PROTONATED, */Adduct.DOUBLY_PROTONATED, Adduct.TRIPLY_PROTONATED, Adduct.QUADRUPLY_PROTONATED
                 };
@@ -211,39 +211,39 @@ namespace TestPerf
                 if (_instrumentValues.KeepPrecursors)
                 {
                     AssertEx.AreEqualDeep(new[] {IonType.y, IonType.b, IonType.precursor},
-                        runPeptideSearchDlg.TransitionSettingsControl.PeptideIonTypes);
+                        importPeptideSearchDlg.TransitionSettingsControl.PeptideIonTypes);
                 }
                 else
                 {
-                    runPeptideSearchDlg.TransitionSettingsControl.PeptideIonTypes = new[]
+                    importPeptideSearchDlg.TransitionSettingsControl.PeptideIonTypes = new[]
                     {
                         IonType.y, IonType.b    // Removes precursor
                     };
                 }
                 // Verify other values shown in the tutorial
-                Assert.AreEqual(6, runPeptideSearchDlg.TransitionSettingsControl.IonCount);
-                Assert.AreEqual(6, runPeptideSearchDlg.TransitionSettingsControl.MinIonCount);
-                Assert.AreEqual(0.05, runPeptideSearchDlg.TransitionSettingsControl.IonMatchMzTolerance);
+                Assert.AreEqual(6, importPeptideSearchDlg.TransitionSettingsControl.IonCount);
+                Assert.AreEqual(6, importPeptideSearchDlg.TransitionSettingsControl.MinIonCount);
+                Assert.AreEqual(0.05, importPeptideSearchDlg.TransitionSettingsControl.IonMatchMzTolerance);
                 // CONSIDER: Not that easy to validate 1, 2 in ion charges.
             });
-            RunUI(() => Assert.IsTrue(runPeptideSearchDlg.ClickNextButton()));
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             // We're on the "Configure Full-Scan Settings" page of the wizard.
             RunUI(() =>
             {
-                Assert.IsTrue(runPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
                 if (_instrumentValues.KeepPrecursors)
-                    runPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 20;
-                runPeptideSearchDlg.FullScanSettingsControl.ProductRes = 20;
+                    importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 20;
+                importPeptideSearchDlg.FullScanSettingsControl.ProductRes = 20;
 
-                Assert.AreEqual(runPeptideSearchDlg.FullScanSettingsControl.PrecursorIsotopesCurrent, FullScanPrecursorIsotopes.None);
-                Assert.AreEqual(FullScanMassAnalyzerType.centroided, runPeptideSearchDlg.FullScanSettingsControl.ProductMassAnalyzer);
+                Assert.AreEqual(importPeptideSearchDlg.FullScanSettingsControl.PrecursorIsotopesCurrent, FullScanPrecursorIsotopes.None);
+                Assert.AreEqual(FullScanMassAnalyzerType.centroided, importPeptideSearchDlg.FullScanSettingsControl.ProductMassAnalyzer);
                 //Assert.AreEqual(RetentionTimeFilterType.scheduling_windows, importPeptideSearchDlg.FullScanSettingsControl.RetentionTimeFilterType);
-                Assert.AreEqual(5, runPeptideSearchDlg.FullScanSettingsControl.TimeAroundPrediction);
+                Assert.AreEqual(5, importPeptideSearchDlg.FullScanSettingsControl.TimeAroundPrediction);
             });
 
             var isolationScheme =
-                ShowDialog<EditIsolationSchemeDlg>(runPeptideSearchDlg.FullScanSettingsControl.AddIsolationScheme);
+                ShowDialog<EditIsolationSchemeDlg>(importPeptideSearchDlg.FullScanSettingsControl.AddIsolationScheme);
             RunUI(() =>
             {
                 isolationScheme.IsolationSchemeName = _instrumentValues.IsolationSchemeName;
@@ -259,57 +259,57 @@ namespace TestPerf
             WaitForConditionUI(() => 28 == isolationScheme.GetIsolationWindows().Count);
             OkDialog(isolationScheme, isolationScheme.OkDialog);
 
-            WaitForConditionUI(() => runPeptideSearchDlg.IsNextButtonEnabled);
-            RunUI(() => Assert.IsTrue(runPeptideSearchDlg.ClickNextButton()));
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             RunUI(() =>
             {
-                Assert.IsTrue(runPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
-                Assert.AreEqual("Trypsin [KR | P]", runPeptideSearchDlg.ImportFastaControl.Enzyme.GetKey());
-                Assert.AreEqual(0, runPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages);
-                runPeptideSearchDlg.ImportFastaControl.SetFastaContent(fastaPathForSearch);
-                runPeptideSearchDlg.ImportFastaControl.FastaImportTargetsFile = fastaPathForImport;
-                Assert.IsTrue(runPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
-                runPeptideSearchDlg.ImportFastaControl.DecoyGenerationMethod =
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.AreEqual("Trypsin [KR | P]", importPeptideSearchDlg.ImportFastaControl.Enzyme.GetKey());
+                Assert.AreEqual(0, importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages);
+                importPeptideSearchDlg.ImportFastaControl.SetFastaContent(fastaPathForSearch);
+                importPeptideSearchDlg.ImportFastaControl.FastaImportTargetsFile = fastaPathForImport;
+                Assert.IsTrue(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
+                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationMethod =
                     Resources.DecoyGeneration_SHUFFLE_SEQUENCE_Shuffle_Sequence;
-                runPeptideSearchDlg.ImportFastaControl.AutoTrain = true;
-                Assert.IsTrue(runPeptideSearchDlg.ImportFastaControl.ContainsFastaContent);
+                importPeptideSearchDlg.ImportFastaControl.AutoTrain = true;
+                Assert.IsTrue(importPeptideSearchDlg.ImportFastaControl.ContainsFastaContent);
             });
 
             RunUI(() =>
             {
-                Assert.IsTrue(runPeptideSearchDlg.ClickNextButton());
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
-                runPeptideSearchDlg.ConverterSettingsControl.InstrumentPreset = _instrumentValues.InstrumentPreset;
-                runPeptideSearchDlg.ConverterSettingsControl.EstimateBackground = true;
-                runPeptideSearchDlg.ConverterSettingsControl.AdditionalSettings = _instrumentValues.AdditionalSettings;
+                importPeptideSearchDlg.ConverterSettingsControl.InstrumentPreset = _instrumentValues.InstrumentPreset;
+                importPeptideSearchDlg.ConverterSettingsControl.EstimateBackground = true;
+                importPeptideSearchDlg.ConverterSettingsControl.AdditionalSettings = _instrumentValues.AdditionalSettings;
             });
 
             bool? searchSucceeded = null;
             RunUI(() =>
             {
-                Assert.IsTrue(runPeptideSearchDlg.ClickNextButton());
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
-                Assert.IsTrue(runPeptideSearchDlg.CurrentPage ==
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
                               ImportPeptideSearchDlg.Pages.dda_search_settings_page);
-                runPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = _instrumentValues.PrecursorTolerance;
-                runPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = _instrumentValues.FragmentTolerance;
-                runPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b, y";
+                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = _instrumentValues.PrecursorTolerance;
+                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = _instrumentValues.FragmentTolerance;
+                importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b, y";
             });
 
             RunUI(() =>
             {
                 // Run the search
-                Assert.IsTrue(runPeptideSearchDlg.ClickNextButton());
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
-                runPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
-                runPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
+                importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
+                importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
             });
 
             WaitForConditionUI(120 * 600000, () => searchSucceeded.HasValue);
             Assert.IsTrue(searchSucceeded.Value);
 
-            RunUI(() => runPeptideSearchDlg.ClickCancelButton());
+            RunUI(() => importPeptideSearchDlg.ClickCancelButton());
         }
     }
 }
