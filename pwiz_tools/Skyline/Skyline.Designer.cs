@@ -1824,6 +1824,7 @@ namespace pwiz.Skyline
             // 
             this.runPeptideSearchToolStripMenuItem.Name = "runPeptideSearchToolStripMenuItem";
             resources.ApplyResources(this.runPeptideSearchToolStripMenuItem, "runPeptideSearchToolStripMenuItem");
+            this.modeUIHandler.SetUIMode(this.runPeptideSearchToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.runPeptideSearchToolStripMenuItem.Click += new System.EventHandler(this.runPeptideSearchToolStripMenuItem_Click);
             // 
             // encyclopeDiaSearchMenuItem

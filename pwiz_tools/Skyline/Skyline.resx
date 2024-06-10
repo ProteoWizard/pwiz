@@ -1462,55 +1462,55 @@
     <value>&amp;Search</value>
   </data>
   <data name="importResultsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 22</value>
+    <value>170, 22</value>
   </data>
   <data name="importResultsMenuItem.Text" xml:space="preserve">
     <value>&amp;Results...</value>
   </data>
   <data name="peakBoundariesToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 22</value>
+    <value>170, 22</value>
   </data>
   <data name="peakBoundariesToolStripMenuItem.Text" xml:space="preserve">
     <value>Peak &amp;Boundaries...</value>
   </data>
   <data name="toolStripSeparator51.Size" type="System.Drawing.Size, System.Drawing">
-    <value>177, 6</value>
+    <value>167, 6</value>
   </data>
   <data name="importPeptideSearchMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 22</value>
+    <value>170, 22</value>
   </data>
   <data name="importPeptideSearchMenuItem.Text" xml:space="preserve">
     <value>&amp;Peptide Search...</value>
   </data>
   <data name="toolStripSeparator52.Size" type="System.Drawing.Size, System.Drawing">
-    <value>177, 6</value>
+    <value>167, 6</value>
   </data>
   <data name="importFASTAMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 22</value>
+    <value>170, 22</value>
   </data>
   <data name="importFASTAMenuItem.Text" xml:space="preserve">
     <value>&amp;FASTA...</value>
   </data>
   <data name="importAssayLibraryMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 22</value>
+    <value>170, 22</value>
   </data>
   <data name="importAssayLibraryMenuItem.Text" xml:space="preserve">
     <value>&amp;Assay Library...</value>
   </data>
   <data name="importMassListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 22</value>
+    <value>170, 22</value>
   </data>
   <data name="importMassListMenuItem.Text" xml:space="preserve">
     <value>&amp;Transition List...</value>
   </data>
   <data name="importDocumentMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 22</value>
+    <value>170, 22</value>
   </data>
   <data name="importDocumentMenuItem.Text" xml:space="preserve">
     <value>&amp;Document...</value>
   </data>
   <data name="importAnnotationsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 22</value>
+    <value>170, 22</value>
   </data>
   <data name="importAnnotationsMenuItem.Text" xml:space="preserve">
     <value>A&amp;nnotations...</value>
@@ -2179,7 +2179,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=23.1.1.509, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=23.1.1.527, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;cutContextMenuItem.Name" xml:space="preserve">
     <value>cutContextMenuItem</value>
@@ -4039,6 +4039,6 @@
     <value>SkylineWindow</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=23.1.1.509, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=23.1.1.527, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
