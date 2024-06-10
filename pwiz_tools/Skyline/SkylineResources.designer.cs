@@ -3054,16 +3054,6 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The document must be fully loaded before performing run peptide search..
-        /// </summary>
-        public static string SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_performing_run_peptide_search_ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before" +
-                        "_performing_run_peptide_search_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to You must save this document before importing a peptide search..
         /// </summary>
         public static string SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_ {
@@ -3080,16 +3070,6 @@ namespace pwiz.Skyline {
             get {
                 return ResourceManager.GetString("SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_perfo" +
                         "rming_feature_detection_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to You must save this document before performing run peptide search..
-        /// </summary>
-        public static string SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_performing_run_peptide_search_ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_perfo" +
-                        "rming_run_peptide_search_", resourceCulture);
             }
         }
         
@@ -3214,6 +3194,26 @@ namespace pwiz.Skyline {
         public static string SkylineWindow_ShowRunPeptideSearchDlg_Run_Peptide_Search {
             get {
                 return ResourceManager.GetString("SkylineWindow_ShowRunPeptideSearchDlg_Run_Peptide_Search", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document must be fully loaded before running peptide search..
+        /// </summary>
+        public static string SkylineWindow_ShowRunPeptideSearchDlg_The_document_must_be_fully_loaded_before_running_peptide_search_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowRunPeptideSearchDlg_The_document_must_be_fully_loaded_before_ru" +
+                        "nning_peptide_search_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You must save this document before running peptide search..
+        /// </summary>
+        public static string SkylineWindow_ShowRunPeptideSearchDlg_You_must_save_this_document_before_running_peptide_search_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowRunPeptideSearchDlg_You_must_save_this_document_before_running_" +
+                        "peptide_search_", resourceCulture);
             }
         }
         
