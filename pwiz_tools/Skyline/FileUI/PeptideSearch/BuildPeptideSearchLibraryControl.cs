@@ -735,16 +735,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             _driverStandards.SelectedIndexChangedEvent(sender, e);
         }
 
-        private void comboInputFileType_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            UpdatePerformDDASearch();
-        }
-
-        private void grpWorkflow_Enter(object sender, EventArgs e)
-        {
-
-        }
-
         private void radioDDA_CheckedChanged(object sender, EventArgs e)
         {
             if (radioDDA.Checked && _isRunPeptideSearch)

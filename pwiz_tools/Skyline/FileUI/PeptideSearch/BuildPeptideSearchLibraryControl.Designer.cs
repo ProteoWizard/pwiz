@@ -42,6 +42,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnBrowse = new System.Windows.Forms.Button();
             this.lblLibraryPath = new System.Windows.Forms.Label();
             this.panelPeptideSearch = new System.Windows.Forms.Panel();
+            this.gridSearchFiles = new pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView();
             this.lblStandardPeptides = new System.Windows.Forms.Label();
             this.comboStandards = new System.Windows.Forms.ComboBox();
             this.cbIncludeAmbiguousMatches = new System.Windows.Forms.CheckBox();
@@ -53,7 +54,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.label1 = new System.Windows.Forms.Label();
             this.textCutoff = new System.Windows.Forms.TextBox();
             this.diaToolTip = new System.Windows.Forms.ToolTip(this.components);
-            this.gridSearchFiles = new pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -62,8 +62,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.panel1.SuspendLayout();
             this.panelChooseFile.SuspendLayout();
             this.panelPeptideSearch.SuspendLayout();
-            this.panelSearchThreshold.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridSearchFiles)).BeginInit();
+            this.panelSearchThreshold.SuspendLayout();
             this.SuspendLayout();
             // 
             // grpWorkflow
@@ -74,7 +74,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resources.ApplyResources(this.grpWorkflow, "grpWorkflow");
             this.grpWorkflow.Name = "grpWorkflow";
             this.grpWorkflow.TabStop = false;
-            this.grpWorkflow.Enter += new System.EventHandler(this.grpWorkflow_Enter);
             // 
             // radioDIA
             // 
@@ -161,6 +160,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resources.ApplyResources(this.panelPeptideSearch, "panelPeptideSearch");
             this.panelPeptideSearch.Name = "panelPeptideSearch";
             // 
+            // gridSearchFiles
+            // 
+            this.gridSearchFiles.AllowUserToAddRows = false;
+            resources.ApplyResources(this.gridSearchFiles, "gridSearchFiles");
+            this.gridSearchFiles.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.gridSearchFiles.Name = "gridSearchFiles";
+            this.gridSearchFiles.SelectionChanged += new System.EventHandler(this.gridSearchFiles_SelectedIndexChanged);
+            // 
             // lblStandardPeptides
             // 
             resources.ApplyResources(this.lblStandardPeptides, "lblStandardPeptides");
@@ -222,14 +229,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resources.ApplyResources(this.textCutoff, "textCutoff");
             this.textCutoff.Name = "textCutoff";
             // 
-            // gridSearchFiles
-            // 
-            this.gridSearchFiles.AllowUserToAddRows = false;
-            resources.ApplyResources(this.gridSearchFiles, "gridSearchFiles");
-            this.gridSearchFiles.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.gridSearchFiles.Name = "gridSearchFiles";
-            this.gridSearchFiles.SelectionChanged += new System.EventHandler(this.gridSearchFiles_SelectedIndexChanged);
-            // 
             // dataGridViewTextBoxColumn1
             // 
             this.dataGridViewTextBoxColumn1.Frozen = true;
@@ -277,9 +276,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.panelChooseFile.PerformLayout();
             this.panelPeptideSearch.ResumeLayout(false);
             this.panelPeptideSearch.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.gridSearchFiles)).EndInit();
             this.panelSearchThreshold.ResumeLayout(false);
             this.panelSearchThreshold.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.gridSearchFiles)).EndInit();
             this.ResumeLayout(false);
 
         }
