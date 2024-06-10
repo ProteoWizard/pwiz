@@ -357,7 +357,10 @@ namespace pwiz.SkylineTestFunctional
             CheckMassAnalyzer(ExportInstrumentType.AGILENT_TOF, FullScanMassAnalyzerType.tof);
             CheckMassAnalyzer(ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanMassAnalyzerType.orbitrap);
 
-            TestAgilentNegativeRt();
+            if (!AsExplicitRetentionTimes)
+            {
+                TestAgilentNegativeRt();
+            }
         }
 
         private void ExportIsolationList(
