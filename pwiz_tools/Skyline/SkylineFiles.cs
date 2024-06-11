@@ -3372,6 +3372,7 @@ namespace pwiz.Skyline
                 }
             }
         }
+
         public void ShowRunPeptideSearchDlg()
         {
             if (!CheckDocumentExists(SkylineResources.SkylineWindow_ShowRunPeptideSearchDlg_You_must_save_this_document_before_running_a_peptide_search_))
@@ -3387,7 +3388,10 @@ namespace pwiz.Skyline
             using (var dlg = new ImportPeptideSearchDlg(this, _libraryManager, true, null))
             {
                 dlg.Text = SkylineResources.SkylineWindow_ShowRunPeptideSearchDlg_Run_Peptide_Search;
-                dlg.ShowDialog(this);
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    // Nothing to do; the dialog does all the work.
+                }
             }
         }
 
