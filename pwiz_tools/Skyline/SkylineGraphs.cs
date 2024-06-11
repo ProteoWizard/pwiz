@@ -3924,6 +3924,30 @@ namespace pwiz.Skyline
                 peptideLogScaleContextMenuItem.Checked = set.AreaLogScale;
                 selectionContextMenuItem.Checked = set.ShowReplicateSelection;
                 menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
+                if (graphType == GraphTypeSummary.abundance)
+                {
+                    menuStrip.Items.Insert(iInsert++, new ToolStripMenuItem(GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_Avoid_Label_Overlap, null, OnLabelOverlapClick)
+                    {
+                        Checked = Settings.Default.GroupComparisonAvoidLabelOverlap
+                    });
+                    if (Settings.Default.GroupComparisonAvoidLabelOverlap && 
+                        graphSummary.GraphPaneFromPoint(mousePt) is SummaryRelativeAbundanceGraphPane abundancePane)
+                    {
+                        if (Settings.Default.GroupComparisonSuspendLabelLayout)
+                        {
+                            menuStrip.Items.Insert(iInsert++,
+                                new ToolStripMenuItem(
+                                    GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_RestartLabelLayout, null,
+                                    abundancePane.OnSuspendLayout));
+                        }
+                        else
+                        {
+                            menuStrip.Items.Insert(iInsert++,
+                                new ToolStripMenuItem(
+                                    GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_PauseLabelLayout, null,
+                                    abundancePane.OnSuspendLayout));
+                        }
+                    }                }
 
                 synchronizeSummaryZoomingContextMenuItem.Checked = set.SynchronizeSummaryZooming;
                 menuStrip.Items.Insert(iInsert++, synchronizeSummaryZoomingContextMenuItem);
@@ -3952,6 +3976,12 @@ namespace pwiz.Skyline
                     menuStrip.Items.Remove(item);
             }
         }
+
+        private void OnLabelOverlapClick(object o, EventArgs eventArgs)
+        {
+            Settings.Default.GroupComparisonAvoidLabelOverlap = !Settings.Default.GroupComparisonAvoidLabelOverlap;
+        }
+
 
         private ToolStripItem MakeNormalizeToMenuItem(NormalizeOption normalizeOption, bool isChecked)
         {

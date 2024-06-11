@@ -724,4 +724,13 @@ Here are the last 3 errors:
   <data name="SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank" xml:space="preserve">
     <value>Molecule Rank</value>
   </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Avoid_Label_Overlap" xml:space="preserve">
+    <value>Auto arrange labels</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_PauseLabelLayout" xml:space="preserve">
+    <value>Suspend Label Layout</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_RestartLabelLayout" xml:space="preserve">
+    <value>Resume Label Layout</value>
+  </data>
 </root>

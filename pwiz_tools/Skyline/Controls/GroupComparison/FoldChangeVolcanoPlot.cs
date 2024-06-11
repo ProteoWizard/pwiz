@@ -139,7 +139,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             if (Settings.Default.GroupComparisonAvoidLabelOverlap)
             {
-                zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints, zedGraphControl);
+                if (!Settings.Default.GroupComparisonSuspendLabelLayout)
+                    zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints, zedGraphControl);
             }
             else
                 zedGraphControl.GraphPane.EnableLabelLayout = false;
@@ -621,12 +622,20 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Formatting___, null, OnFormattingClick));
                 menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Selection, null, OnSelectionClick)
                     { Checked = Settings.Default.GroupComparisonShowSelection });
-                menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Avoid_Label_Overlap, null, OnLabelOverlapClick)
+                menuStrip.Items.Insert(index++, new ToolStripMenuItem(GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_Avoid_Label_Overlap, null, OnLabelOverlapClick)
                     { Checked = Settings.Default.GroupComparisonAvoidLabelOverlap });
                 if (AnyCutoffSettingsValid)
                 {
                     menuStrip.Items.Insert(index++, new ToolStripSeparator());
                     menuStrip.Items.Insert(index, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Remove_Below_Cutoffs, null, OnRemoveBelowCutoffsClick));
+                }
+
+                if (Settings.Default.GroupComparisonAvoidLabelOverlap)
+                {
+                    if (Settings.Default.GroupComparisonSuspendLabelLayout)
+                        menuStrip.Items.Insert(index++, new ToolStripMenuItem(GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_RestartLabelLayout, null, OnSuspendLayout));
+                    else
+                        menuStrip.Items.Insert(index++, new ToolStripMenuItem(GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_PauseLabelLayout, null, OnSuspendLayout));
                 }
 
 
@@ -646,6 +655,16 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private void OnFormattingClick(object o, EventArgs eventArgs)
         {
             ShowFormattingDialog();
+        }
+
+        private void OnSuspendLayout(object sender, EventArgs eventArgs)
+        {
+            Settings.Default.GroupComparisonSuspendLabelLayout = !Settings.Default.GroupComparisonSuspendLabelLayout;
+            if (!Settings.Default.GroupComparisonSuspendLabelLayout)
+            {
+                zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints, zedGraphControl);
+                zedGraphControl.Invalidate();
+            }
         }
 
         public void ShowFormattingDialog()

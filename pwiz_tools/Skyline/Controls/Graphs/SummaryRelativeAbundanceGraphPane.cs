@@ -299,7 +299,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void this_AxisChangeEvent(GraphPane pane)
         {
-            if (Settings.Default.GroupComparisonAvoidLabelOverlap)
+            if (Settings.Default.GroupComparisonAvoidLabelOverlap && !Settings.Default.GroupComparisonSuspendLabelLayout)
             {
                 AdjustLabelSpacings(_labeledPoints, GraphSummary.GraphControl);
             }
@@ -433,6 +433,16 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             return pepDocNode.GlobalStandardType != null;
         }
+        public void OnSuspendLayout(object sender, EventArgs eventArgs)
+        {
+            Settings.Default.GroupComparisonSuspendLabelLayout = !Settings.Default.GroupComparisonSuspendLabelLayout;
+            if (!Settings.Default.GroupComparisonSuspendLabelLayout)
+            {
+                AdjustLabelSpacings(_labeledPoints, GraphSummary.GraphControl);
+                GraphSummary.GraphControl.Invalidate();
+            }
+        }
+
 
         public abstract class GraphData : Immutable
         {
