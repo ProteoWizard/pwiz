@@ -126,7 +126,7 @@
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="cbMS1TolUnit.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="&gt;&gt;cbMS1TolUnit.Name" xml:space="preserve">
     <value>cbMS1TolUnit</value>
@@ -138,7 +138,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbMS1TolUnit.ZOrder" xml:space="preserve">
-    <value>17</value>
+    <value>18</value>
   </data>
   <data name="lblMs1Tolerance.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -150,7 +150,7 @@
     <value>79, 13</value>
   </data>
   <data name="lblMs1Tolerance.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="lblMs1Tolerance.Text" xml:space="preserve">
     <value>MS&amp;1 tolerance:</value>
@@ -165,7 +165,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblMs1Tolerance.ZOrder" xml:space="preserve">
-    <value>16</value>
+    <value>17</value>
   </data>
   <data name="txtMS1Tolerance.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 106</value>
@@ -174,7 +174,7 @@
     <value>121, 20</value>
   </data>
   <data name="txtMS1Tolerance.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;txtMS1Tolerance.Name" xml:space="preserve">
     <value>txtMS1Tolerance</value>
@@ -186,7 +186,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;txtMS1Tolerance.ZOrder" xml:space="preserve">
-    <value>15</value>
+    <value>16</value>
   </data>
   <data name="txtMS2Tolerance.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 146</value>
@@ -195,7 +195,7 @@
     <value>121, 20</value>
   </data>
   <data name="txtMS2Tolerance.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="&gt;&gt;txtMS2Tolerance.Name" xml:space="preserve">
     <value>txtMS2Tolerance</value>
@@ -207,7 +207,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;txtMS2Tolerance.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>13</value>
   </data>
   <data name="lblMs2Tolerance.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -219,7 +219,7 @@
     <value>79, 13</value>
   </data>
   <data name="lblMs2Tolerance.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="lblMs2Tolerance.Text" xml:space="preserve">
     <value>MS&amp;2 tolerance:</value>
@@ -234,7 +234,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblMs2Tolerance.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>14</value>
   </data>
   <data name="cbMS2TolUnit.Location" type="System.Drawing.Point, System.Drawing">
     <value>153, 146</value>
@@ -243,7 +243,7 @@
     <value>70, 21</value>
   </data>
   <data name="cbMS2TolUnit.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>9</value>
   </data>
   <data name="&gt;&gt;cbMS2TolUnit.Name" xml:space="preserve">
     <value>cbMS2TolUnit</value>
@@ -255,7 +255,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbMS2TolUnit.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>15</value>
   </data>
   <data name="lblFragmentIons.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -267,7 +267,7 @@
     <value>76, 13</value>
   </data>
   <data name="lblFragmentIons.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>10</value>
   </data>
   <data name="lblFragmentIons.Text" xml:space="preserve">
     <value>&amp;Fragment ions:</value>
@@ -282,7 +282,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblFragmentIons.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="cbFragmentIons.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 190</value>
@@ -291,7 +291,7 @@
     <value>210, 21</value>
   </data>
   <data name="cbFragmentIons.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>11</value>
   </data>
   <data name="&gt;&gt;cbFragmentIons.Name" xml:space="preserve">
     <value>cbFragmentIons</value>
@@ -303,7 +303,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbFragmentIons.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>11</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnAdditionalSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -316,7 +316,7 @@
     <value>107, 23</value>
   </data>
   <data name="btnAdditionalSettings.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>17</value>
   </data>
   <data name="btnAdditionalSettings.Text" xml:space="preserve">
     <value>A&amp;dditional Settings</value>
@@ -331,7 +331,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnAdditionalSettings.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="pBLogo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -355,7 +355,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;pBLogo.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -367,7 +367,7 @@
     <value>29, 13</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>26</value>
+    <value>4</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
     <value>Unit:</value>
@@ -382,7 +382,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -394,7 +394,7 @@
     <value>29, 13</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
-    <value>27</value>
+    <value>8</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
     <value>Unit:</value>
@@ -409,7 +409,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="lblMaxVariableMods.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -424,7 +424,7 @@
     <value>98, 13</value>
   </data>
   <data name="lblMaxVariableMods.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>14</value>
   </data>
   <data name="lblMaxVariableMods.Text" xml:space="preserve">
     <value>Max &amp;variable mods:</value>
@@ -439,7 +439,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblMaxVariableMods.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="cbMaxVariableMods.Items" xml:space="preserve">
     <value>0</value>
@@ -478,7 +478,7 @@
     <value>44, 21</value>
   </data>
   <data name="cbMaxVariableMods.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>15</value>
   </data>
   <data name="&gt;&gt;cbMaxVariableMods.Name" xml:space="preserve">
     <value>cbMaxVariableMods</value>
@@ -490,7 +490,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbMaxVariableMods.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="searchEngineComboBox.Items" xml:space="preserve">
     <value>MSAmanda</value>
@@ -508,7 +508,7 @@
     <value>118, 21</value>
   </data>
   <data name="searchEngineComboBox.TabIndex" type="System.Int32, mscorlib">
-    <value>28</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;searchEngineComboBox.Name" xml:space="preserve">
     <value>searchEngineComboBox</value>
@@ -520,7 +520,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;searchEngineComboBox.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -535,7 +535,7 @@
     <value>79, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>29</value>
+    <value>0</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
     <value>&amp;Search engine:</value>
@@ -559,7 +559,7 @@
     <value>210, 21</value>
   </data>
   <data name="cbMs2Analyzer.TabIndex" type="System.Int32, mscorlib">
-    <value>31</value>
+    <value>13</value>
   </data>
   <data name="&gt;&gt;cbMs2Analyzer.Name" xml:space="preserve">
     <value>cbMs2Analyzer</value>
@@ -571,7 +571,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbMs2Analyzer.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="lblMs2Analyzer.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -586,7 +586,7 @@
     <value>74, 13</value>
   </data>
   <data name="lblMs2Analyzer.TabIndex" type="System.Int32, mscorlib">
-    <value>30</value>
+    <value>12</value>
   </data>
   <data name="lblMs2Analyzer.Text" xml:space="preserve">
     <value>MS2 &amp;analyzer:</value>
@@ -601,7 +601,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblMs2Analyzer.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="labelPPM.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -803,7 +803,7 @@ Note that this is a local noise threshold for the area of the spectrum that the 
     <value>200, 168</value>
   </data>
   <data name="groupBoxHardklor.TabIndex" type="System.Int32, mscorlib">
-    <value>32</value>
+    <value>16</value>
   </data>
   <data name="groupBoxHardklor.Text" xml:space="preserve">
     <value>Search parameters</value>

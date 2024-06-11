@@ -459,6 +459,9 @@ of the redundant library data.</value>
   <data name="cbIncludeAmbiguousMatches.Text" xml:space="preserve">
     <value>Include ambiguous &amp;matches</value>
   </data>
+  <data name="cbIncludeAmbiguousMatches.ToolTip" xml:space="preserve">
+    <value>Check to keep spectra that match multiple peptides.</value>
+  </data>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.Name" xml:space="preserve">
     <value>cbIncludeAmbiguousMatches</value>
   </data>
@@ -522,6 +525,9 @@ you can append more spectra in the future.</value>
   </data>
   <data name="cbFilter.Text" xml:space="preserve">
     <value>Filter for &amp;document peptides</value>
+  </data>
+  <data name="cbFilter.ToolTip" xml:space="preserve">
+    <value>Check to filter matches for only the peptides in the document.</value>
   </data>
   <data name="&gt;&gt;cbFilter.Name" xml:space="preserve">
     <value>cbFilter</value>

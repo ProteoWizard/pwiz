@@ -133,12 +133,13 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to DIA with deconvolution.
+        ///   Looks up a localized string similar to Library from DIA deconvoluted to single-precursor MS/MS spectra and chromatograms from raw DIA spectra of same runs.
         /// </summary>
-        public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibraryControl_DIA_with_deconvolution {
+        public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibraryControl_Library_from_DIA_deconvoluted_to_single_precursor_MS_MS_spectra_and_chromatograms_from_raw_DIA_spectra_of_same_runs {
             get {
-                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibraryControl_DIA_with_deconv" +
-                        "olution", resourceCulture);
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibraryControl_Library_from_DI" +
+                        "A_deconvoluted_to_single_precursor_MS_MS_spectra_and_chromatograms_from_raw_DIA_" +
+                        "spectra_of_same_runs", resourceCulture);
             }
         }
         

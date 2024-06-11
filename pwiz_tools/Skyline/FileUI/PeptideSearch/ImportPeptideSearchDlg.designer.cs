@@ -239,6 +239,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.wizardPagesImportPeptideSearch.Controls.Add(this.ddaSearchPage);
             this.wizardPagesImportPeptideSearch.Name = "wizardPagesImportPeptideSearch";
             this.wizardPagesImportPeptideSearch.SelectedIndex = 0;
+            this.wizardPagesImportPeptideSearch.TabStop = false;
             // 
             // buildSearchSpecLibPage
             // 

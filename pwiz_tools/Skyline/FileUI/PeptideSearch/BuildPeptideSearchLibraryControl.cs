@@ -77,7 +77,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 panel1.Hide();
                 panelSearchThreshold.Show();
                 radioDIA.Text = SkylineResources.BuildPeptideSearchLibraryControl_RunPeptideSearchRadioDIAText_DIA_with_DIA_Umpire;
-                diaToolTip.SetToolTip(radioDIA, SkylineResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibraryControl_DIA_with_deconvolution);
+                helpTip.SetToolTip(radioDIA, SkylineResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibraryControl_Library_from_DIA_deconvoluted_to_single_precursor_MS_MS_spectra_and_chromatograms_from_raw_DIA_spectra_of_same_runs);
                 InputFileType = ImportPeptideSearchDlg.InputFile.dda_raw;
             }
             else
