@@ -227,7 +227,6 @@ namespace pwiz.SkylineTestFunctional
             var errMsgDlg = ShowDialog<MessageDlg>(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
-                importPeptideSearchDlg.BuildPepSearchLibControl.PerformDDASearch = true;
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).Take(1).ToArray();
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia; // will go back and switch to DDA
                 importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScoreText = @"12%"; // Intentionally bad 

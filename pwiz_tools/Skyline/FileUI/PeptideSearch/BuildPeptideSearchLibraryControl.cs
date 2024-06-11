@@ -713,10 +713,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public bool PerformDDASearch
         {
             get { return InputFileType != ImportPeptideSearchDlg.InputFile.search_result; }
-            set
-            {
-                InputFileType = value ? ImportPeptideSearchDlg.InputFile.dda_raw : ImportPeptideSearchDlg.InputFile.search_result;
-            }
         }
 
         public bool DIAConversionNeeded => InputFileType == ImportPeptideSearchDlg.InputFile.dia_raw;
