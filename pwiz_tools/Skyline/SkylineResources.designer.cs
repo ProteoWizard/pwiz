@@ -3199,12 +3199,32 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The document must be fully loaded before running a peptide search..
+        /// </summary>
+        public static string SkylineWindow_ShowRunPeptideSearchDlg_The_document_must_be_fully_loaded_before_running_a_peptide_search_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowRunPeptideSearchDlg_The_document_must_be_fully_loaded_before_ru" +
+                        "nning_a_peptide_search_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The document must be fully loaded before running peptide search..
         /// </summary>
         public static string SkylineWindow_ShowRunPeptideSearchDlg_The_document_must_be_fully_loaded_before_running_peptide_search_ {
             get {
                 return ResourceManager.GetString("SkylineWindow_ShowRunPeptideSearchDlg_The_document_must_be_fully_loaded_before_ru" +
                         "nning_peptide_search_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You must save this document before running a peptide search..
+        /// </summary>
+        public static string SkylineWindow_ShowRunPeptideSearchDlg_You_must_save_this_document_before_running_a_peptide_search_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowRunPeptideSearchDlg_You_must_save_this_document_before_running_" +
+                        "a_peptide_search_", resourceCulture);
             }
         }
         

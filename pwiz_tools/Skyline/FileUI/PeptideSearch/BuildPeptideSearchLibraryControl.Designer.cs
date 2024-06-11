@@ -74,7 +74,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resources.ApplyResources(this.grpWorkflow, "grpWorkflow");
             this.grpWorkflow.Name = "grpWorkflow";
             this.grpWorkflow.TabStop = false;
-            this.grpWorkflow.Enter += new System.EventHandler(this.grpWorkflow_Enter);
             // 
             // radioDIA
             // 
