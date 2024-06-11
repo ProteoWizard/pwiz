@@ -1032,7 +1032,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        protected override int SelectedIndex
+        public override int SelectedIndex
         {
             get
             {
