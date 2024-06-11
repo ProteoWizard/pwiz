@@ -243,7 +243,8 @@ namespace TestRunner
             "?;/?;-?;help;skylinetester;debug;results;" +
             "test;skip;filter;form;" +
             "loop=0;repeat=1;pause=0;startingpage=1;random=off;offscreen=on;multi=1;wait=off;internet=off;originalurls=off;" +
-            "parallelmode=off;workercount=0;waitforworkers=off;keepworkerlogs=off;checkdocker=on;workername;queuehost;workerport;workertimeout;alwaysupcltpassword;coverage=off;dotcoverexe;" +
+            "parallelmode=off;workercount=0;waitforworkers=off;keepworkerlogs=off;checkdocker=on;workername;queuehost;workerport;workertimeout;alwaysupcltpassword;" +
+            "coverage=off;dotcoverexe=jetbrains.dotcover.commandlinetools\\2023.3.3\\tools\\dotCover.exe;" +
             "maxsecondspertest=-1;" +
             "demo=off;showformnames=off;showpages=off;status=off;buildcheck=0;screenshotlist;" +
             "quality=off;pass0=off;pass1=off;pass2=on;" +
@@ -755,7 +756,7 @@ namespace TestRunner
             
             if (commandLineArgs.ArgAsBool("coverage"))
             {
-                var dotCoverExe = commandLineArgs.ArgAsStringOrDefault("dotcoverexe"); // use relative path
+                var dotCoverExe = commandLineArgs.ArgAsString("dotcoverexe"); // use relative path
                 testRunnerCmd =
                     $@"c:\pwiz\{dotCoverExe} cover {dotCoverFilters} /Output=c:\pwiz\coverage-{workerName}.dcvr /ReturnTargetExitCode /AnalyzeTargetArguments=false /TargetExecutable={testRunnerExe} -- " +
                     testRunnerCmd;
@@ -1205,8 +1206,12 @@ namespace TestRunner
             string mergeErrLogPath = Path.Combine(pwizRoot, "merge.err.log");
             // wait for the snapshots to be saved
             foreach (var snapshot in snapshotsWithFullPath)
-                for (int retry=0; retry < 10 && !File.Exists(snapshot); ++retry)
+            {
+                for (int retry = 0; retry < 10 && !File.Exists(snapshot); ++retry)
                     Thread.Sleep(500);
+                if (!File.Exists(snapshot))
+                    throw new FileNotFoundException($"coverage snapshot {snapshot} did not get saved to disk");
+            }
             var psi = new ProcessStartInfo(dotCoverExe, $"merge /LogFile={mergeLogPath} /Output={mergedCoverageFilepath} /Source=" + string.Join(";", snapshotsWithFullPath));
             psi.CreateNoWindow = true;
             psi.UseShellExecute = false;
@@ -1370,10 +1375,8 @@ namespace TestRunner
             {
                 if (coverage)
                 {
-                    if (!commandLineArgs.HasArg("dotcoverexe"))
-                        throw new ArgumentException("You must provide dotcoverexe parameter with the path to command-line dotCover.exe relative to the pwiz root");
                     if (!File.Exists(GetFullDotCoverExePath(commandLineArgs)))
-                        throw new ArgumentException("The file specified by dotcoverexe does not exist: it must be the path to command-line dotCover.exe relative to the pwiz root");
+                        throw new ArgumentException($"The file specified by dotcoverexe ({commandLineArgs.ArgAsString("dotcoverexe")} does not exist: it must be the path to command-line dotCover.exe relative to the pwiz root");
                 }
 
                 return PushToTestQueue(testList, unfilteredTestList, commandLineArgs, log);
