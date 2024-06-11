@@ -870,7 +870,6 @@ namespace TestRunner
             int workerTimeout = Convert.ToInt32(commandLineArgs.ArgAsStringOrDefault("workertimeout", dockerTimeoutSecondsOverride ?? "60"));
             int loop = (int) commandLineArgs.ArgAsLong("loop");
             var languages = GetLanguages(commandLineArgs);
-            int hostWorkerPid = 0;
             if (commandLineArgs.ArgAsBool("buildcheck"))
             {
                 loop = 1;
@@ -925,14 +924,6 @@ namespace TestRunner
                 receiver.Bind($"tcp://*:{workerPort}");
                 string workerNames = null;
 
-                // try to kill docker workers if process is terminated externally (e.g. SkylineTester)
-                SetConsoleCtrlHandler(c =>
-                {
-                    RunTests.KillParallelWorkers(hostWorkerPid, workerNames);
-                    Process.GetCurrentProcess().Kill();
-                    return true;
-                }, true);
-
                 if (workerCount > 1)
                 {
                     long availableBytesForNormalWorkers = MemoryInfo.AvailableBytes - MinBytesPerBigWorker;
@@ -980,7 +971,15 @@ namespace TestRunner
                     });
                 }
 
-                hostWorkerPid = LaunchHostWorker(commandLineArgs, workerPort, log, coverageSnapshots);
+                int hostWorkerPid = LaunchHostWorker(commandLineArgs, workerPort, log, coverageSnapshots);
+
+                // try to kill docker workers if process is terminated externally (e.g. SkylineTester)
+                SetConsoleCtrlHandler(c =>
+                {
+                    RunTests.KillParallelWorkers(hostWorkerPid, workerNames);
+                    Process.GetCurrentProcess().Kill();
+                    return true;
+                }, true);
 
                 // wait for workers to finish
                 void WaitForWorkersToFinish()
@@ -1198,7 +1197,7 @@ namespace TestRunner
 
         private static void GenerateCoverageReport(CommandLineArgs commandLineArgs, ConcurrentBag<string> coverageSnapshots)
         {
-            var pwizRoot = Path.GetDirectoryName(Path.GetDirectoryName(GetSkylineDirectory().FullName));
+            var pwizRoot = Path.GetDirectoryName(Path.GetDirectoryName(GetSkylineDirectory().FullName))!;
             string dotCoverExe = GetFullDotCoverExePath(commandLineArgs);
             string mergedCoverageFilepath = Path.Combine(pwizRoot, $"coverage{GetTestRunTimeStamp()}.dcvr");
             var snapshotsWithFullPath = coverageSnapshots.Select(s => Path.Combine(pwizRoot, s)).ToList();
