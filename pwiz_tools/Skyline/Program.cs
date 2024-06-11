@@ -652,6 +652,7 @@ namespace pwiz.Skyline
 
         public static void AddTestException(Exception exception)
         {
+            Trace.TraceError(@"AddTestException: {0}", exception);
             lock (TestExceptions)
             {
                 TestExceptions.Add(exception);
