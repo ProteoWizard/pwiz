@@ -150,6 +150,9 @@ namespace pwiz.SkylineTestUtil
         public const string MSGFPLUS_UNICODE_ISSUES = "MsgfPlus doesn't handle unicode paths";
         public const string MSFRAGGER_UNICODE_ISSUES = "MsFragger doesn't handle unicode paths";
         public const string JAVA_UNICODE_ISSUES = "Running Java processes with wild unicode temp paths is problematic";
+        public const string HARDKLOR_UNICODE_ISSUES = "Hardklor doesn't handle unicode paths";
+        public const string ZIP_INSIDE_ZIP = "ZIP inside ZIP does not seem to work on MACS2";
+        public const string DOCKER_ROOT_CERTS = "Docker runners do not yet have access to the root certificates needed for Koina";
     }
 
     /// <summary>
@@ -1493,16 +1496,7 @@ namespace pwiz.SkylineTestUtil
             Program.TestExceptions = new List<Exception>();
             LocalizationHelper.InitThread();
 
-            // Unzip test files.
-            if (TestFilesZipPaths != null)
-            {
-                TestFilesDirs = new TestFilesDir[TestFilesZipPaths.Length];
-                for (int i = 0; i < TestFilesZipPaths.Length; i++)
-                {
-                    TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName,
-                        TestFilesPersistent, IsExtractHere(i));
-                }
-            }
+            UnzipTestFiles();
 
             _shotManager = new ScreenshotManager(TestContext, SkylineWindow);
 
@@ -2328,6 +2322,11 @@ namespace pwiz.SkylineTestUtil
             return ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
         }
 
+        public static PeptideSettingsUI ShowPeptideSettings(PeptideSettingsUI.TABS settingsTab)
+        {
+            return ShowDialog<PeptideSettingsUI>(() => SkylineWindow.ShowPeptideSettingsUI(settingsTab));
+        }
+
         public static EditListDlg<SettingsListBase<StaticMod>, StaticMod> ShowEditStaticModsDlg(PeptideSettingsUI peptideSettingsUI)
         {
             return ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettingsUI.EditStaticMods);
@@ -2373,24 +2372,24 @@ namespace pwiz.SkylineTestUtil
             OkDialog(editModsDlg, editModsDlg.OkDialog);
         }
 
-        public static void AddStaticMod(string uniModName, bool isVariable, PeptideSettingsUI peptideSettingsUI)
+        public static void AddStaticMod(string uniModName, PeptideSettingsUI peptideSettingsUI)
         {
             var editStaticModsDlg = ShowEditStaticModsDlg(peptideSettingsUI);
             RunUI(editStaticModsDlg.SelectLastItem);
-            AddMod(uniModName, isVariable, editStaticModsDlg);
+            AddMod(uniModName, editStaticModsDlg);
         }
 
         public static void AddHeavyMod(string uniModName, PeptideSettingsUI peptideSettingsUI)
         {
             var editStaticModsDlg = ShowEditHeavyModsDlg(peptideSettingsUI);
             RunUI(editStaticModsDlg.SelectLastItem);
-            AddMod(uniModName, false, editStaticModsDlg);
+            AddMod(uniModName, editStaticModsDlg);
         }
 
-        private static void AddMod(string uniModName, bool isVariable, EditListDlg<SettingsListBase<StaticMod>, StaticMod> editModsDlg)
+        private static void AddMod(string uniModName, EditListDlg<SettingsListBase<StaticMod>, StaticMod> editModsDlg)
         {
             var addStaticModDlg = ShowAddModDlg(editModsDlg);
-            RunUI(() => addStaticModDlg.SetModification(uniModName, isVariable));
+            RunUI(() => addStaticModDlg.SetModification(uniModName));
             OkDialog(addStaticModDlg, addStaticModDlg.OkDialog);
 
             OkDialog(editModsDlg, editModsDlg.OkDialog);
@@ -2447,8 +2446,11 @@ namespace pwiz.SkylineTestUtil
             if (expectedErrorMessage != null)
             {
                 var dlg = WaitForOpenForm<MessageDlg>();
-                Assert.IsTrue(dlg.DetailMessage.Contains(expectedErrorMessage));
-                dlg.CancelButton.PerformClick();
+                OkDialog(dlg, () =>
+                {
+                    StringAssert.Contains(dlg.Message, expectedErrorMessage);
+                    dlg.CancelButton.PerformClick();
+                });
             }
             else
             {

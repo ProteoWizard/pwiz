@@ -3479,6 +3479,42 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10.0")]
+        public double FeatureFindingMinIntensityPPM {
+            get {
+                return ((double)(this["FeatureFindingMinIntensityPPM"]));
+            }
+            set {
+                this["FeatureFindingMinIntensityPPM"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.98")]
+        public double FeatureFindingMinIdotP {
+            get {
+                return ((double)(this["FeatureFindingMinIdotP"]));
+            }
+            set {
+                this["FeatureFindingMinIdotP"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("3")]
+        public double FeatureFindingSignalToNoise {
+            get {
+                return ((double)(this["FeatureFindingSignalToNoise"]));
+            }
+            set {
+                this["FeatureFindingSignalToNoise"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool GroupComparisonAvoidLabelOverlap {
             get {

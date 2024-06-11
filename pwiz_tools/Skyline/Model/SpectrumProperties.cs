@@ -19,6 +19,8 @@ namespace pwiz.Skyline.Model
         [Category("PrecursorInfo")] public string PrecursorMz { get; set; }
         [Category("PrecursorInfo")] public int? Charge { get; set; }
         [Category("PrecursorInfo")] public string Label { get; set; }
+        [Category("PrecursorInfo")] public string Adduct { get; set; } // Only shown for non-proteomic entries
+        [Category("PrecursorInfo")] public string Formula { get; set; }  // Only shown for non-proteomic entries
         [Category("AcquisitionInfo")] public string RetentionTime { get; set; }
         [Category("AcquisitionInfo")] public string CCS { get; set; }
         [Category("AcquisitionInfo")] public string IonMobility { get; set; }

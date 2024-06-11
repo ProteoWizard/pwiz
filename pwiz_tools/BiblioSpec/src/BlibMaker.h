@@ -27,6 +27,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <map>
+#include <unordered_set>
 #include <utility>
 #include "smart_stmt.h"
 #include "BlibUtils.h"
@@ -177,6 +178,7 @@ protected:
     bool keepAmbiguous_;
     bool highPrecisionModifications_;
     boost::optional<bool> preferEmbeddedSpectra_;
+    std::unordered_set<int> precursorCharges_; // If non-empty, only emit entries whose precursor charge is listed here (-z option)
 
 private:
     const char* libIdFromName(const char* name);
