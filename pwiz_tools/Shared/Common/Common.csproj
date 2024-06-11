@@ -352,7 +352,6 @@
     <Compile Include="DataBinding\TransformResults.cs" />
     <Compile Include="DataBinding\Layout\ColumnId.cs" />
     <Compile Include="DataBinding\Layout\ViewLayout.cs" />
-    <Compile Include="DataBinding\NumberWithError.cs" />
     <Compile Include="DataBinding\ViewGroup.cs" />
     <Compile Include="DataBinding\ViewInfo.cs" />
     <Compile Include="DataBinding\ViewSpecLayout.cs" />
