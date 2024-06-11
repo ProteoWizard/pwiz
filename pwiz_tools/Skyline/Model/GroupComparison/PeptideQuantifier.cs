@@ -251,14 +251,14 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return null;
             }
-            double? normalizedArea = GetArea(treatMissingAsZero, QValueCutoff, IncludeTruncatedPeaks, transitionGroup, transition, replicateIndex, chromInfo);
+            double? normalizedArea = GetArea(treatMissingAsZero, QValueCutoff, true, transitionGroup, transition, replicateIndex, chromInfo);
             if (!normalizedArea.HasValue)
             {
                 return null;
             }
 
             double denominator = 1.0;
-
+            bool truncated = false;
             if (null != peptideStandards)
             {
                 if (QuantificationSettings.SimpleRatios)
@@ -285,10 +285,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
             else
             {
-                if (chromInfo.IsTruncated.GetValueOrDefault())
-                {
-                    return null;
-                }
+                truncated = chromInfo.IsTruncated.GetValueOrDefault() && !IncludeTruncatedPeaks;
                 if (Equals(normalizationMethod, NormalizationMethod.GLOBAL_STANDARDS))
                 {
                     var fileInfo = srmSettings.MeasuredResults.Chromatograms[replicateIndex]
@@ -329,7 +326,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     denominator = factor.Value;
                 }
             }
-            return new Quantity(normalizedArea.Value, denominator);
+            return new Quantity(normalizedArea.Value, denominator, truncated);
         }
 
         private TransitionChromInfo GetTransitionChromInfo(TransitionDocNode transitionDocNode, int replicateIndex)
@@ -400,7 +397,68 @@ namespace pwiz.Skyline.Model.GroupComparison
             return new PeptideDocNode.TransitionKey(transitionGroup, transitionDocNode.Key(transitionGroup), RatioLabelType);
         }
 
-        public static double? SumQuantities(IEnumerable<Quantity> quantities, NormalizationMethod normalizationMethod, bool simpleRatios)
+        public double? SumQuantities(IEnumerable<Quantity> quantities)
+        {
+            return SumQuantities(quantities, QuantificationSettings.ChangeNormalizationMethod(NormalizationMethod));
+        }
+
+        public AnnotatedValue<double>? SumTransitionQuantities(ICollection<IdentityPath> completeTransitionSet,
+            IDictionary<IdentityPath, Quantity> availableQuantities)
+        {
+            return SumTransitionQuantities(completeTransitionSet, availableQuantities,
+                QuantificationSettings.ChangeNormalizationMethod(NormalizationMethod));
+        }
+
+        public static AnnotatedValue<double>? SumTransitionQuantities(ICollection<IdentityPath> completeTransitionSet,
+            IDictionary<IdentityPath, Quantity> availableQuantities, QuantificationSettings quantificationSettings)
+        {
+            var quantitiesToSum = availableQuantities.Where(entry => completeTransitionSet.Contains(entry.Key))
+                .Select(kvp => kvp.Value).ToList();
+            string error = null;
+            if (quantitiesToSum.Count != completeTransitionSet.Count)
+            {
+                var missingTransitions =
+                    completeTransitionSet.Where(idPath => !availableQuantities.ContainsKey(idPath)).ToList();
+                if (missingTransitions.Count == 1)
+                {
+                    error = string.Format(GroupComparisonResources.PeptideQuantifier_SumTransitionQuantities_Transition___0___is_missing, missingTransitions.First().Child);
+                }
+                else
+                {
+                    error = string.Format(GroupComparisonResources.PeptideQuantifier_SumTransitionQuantities_Missing_values_for__0___1__transitions, missingTransitions.Count, completeTransitionSet.Count);
+                }
+            }
+            else if (quantitiesToSum.Any(q => q.Truncated))
+            {
+                var truncatedTransitions = availableQuantities
+                    .Where(kvp => completeTransitionSet.Contains(kvp.Key) && kvp.Value.Truncated).ToList();
+                if (truncatedTransitions.Count > 0)
+                {
+                    if (truncatedTransitions.Count == 1)
+                    {
+                        error = string.Format(GroupComparisonResources.PeptideQuantifier_SumTransitionQuantities_Transition___0___is_truncated, truncatedTransitions[0].Key.Child);
+                    }
+                    else if(truncatedTransitions.Count == completeTransitionSet.Count)
+                    {
+                        error = string.Format(GroupComparisonResources.PeptideQuantifier_SumTransitionQuantities_All__0__peaks_are_truncated, truncatedTransitions.Count);
+                    }
+                    else 
+                    {
+                        error = string.Format(GroupComparisonResources.PeptideQuantifier_SumTransitionQuantities_Truncated_peaks_for__0___1__transitions, truncatedTransitions.Count, completeTransitionSet.Count);
+                    }
+                }
+            }
+
+            double? sum = SumQuantities(quantitiesToSum, quantificationSettings);
+            if (sum.HasValue)
+            {
+                return AnnotatedValue.WithErrorMessage(sum.Value, error);
+            }
+            return null;
+        }
+
+        private static double? SumQuantities(IEnumerable<Quantity> quantities,
+            QuantificationSettings quantificationSettings)
         {
             double numerator = 0;
             double denominator = 0;
@@ -415,22 +473,25 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return null;
             }
-            if (!simpleRatios && normalizationMethod is NormalizationMethod.RatioToLabel)
+            if (!quantificationSettings.SimpleRatios && quantificationSettings.NormalizationMethod is NormalizationMethod.RatioToLabel)
             {
-                return numerator/denominator;
+                return numerator / denominator;
             }
-            return numerator/denominator*count;
+            return numerator / denominator * count;
+
         }
 
         public class Quantity
         {
-            public Quantity(double intensity, double denominator)
+            public Quantity(double intensity, double denominator, bool truncated)
             {
                 Intensity = intensity;
                 Denominator = denominator;
+                Truncated = truncated;
             }
             public double Intensity { get; private set; }
             public double Denominator { get; private set; }
+            public bool Truncated { get; private set; }
         }
 
         public static double? GetArea(bool treatMissingAsZero, double? qValueCutoff, bool allowTruncated, TransitionGroupDocNode transitionGroup,

@@ -30,6 +30,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -617,14 +618,14 @@ namespace pwiz.Skyline.Controls.Graphs
             public Peptide Peptide { get; private set; }
             public List<double?> Areas { get; set; }
             public IdentityPath IdentityPath { get; set; }
-            private void SetAreas(IDictionary<int, Protein.AbundanceValue> abundanceValues)
+            private void SetAreas(IDictionary<int, AnnotatedValue<double>> abundanceValues)
             {
                 foreach (var abundanceValue in abundanceValues)
                 {
                     double? abundance = null;
-                    if (!abundanceValue.Value.Incomplete)
+                    if (!string.IsNullOrEmpty(abundanceValue.Value.ErrorMessage))
                     {
-                        abundance = abundanceValue.Value.Abundance;
+                        abundance = abundanceValue.Value.Value;
                     }
                     Areas.Add(abundance);
                 }

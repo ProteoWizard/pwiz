@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 {
     [ProteomicDisplayName("PeptideResult")]
     [InvariantDisplayName("MoleculeResult")]
-    public class PeptideResult : Result
+    public class PeptideResult : Result, IErrorTextProvider
     {
         private readonly CachedValues _cachedValues = new CachedValues();
 
@@ -130,7 +130,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         private double? GetAreaProportion(IEnumerable<Peptide> peptides)
         {
             var normalizedArea = GetQuantificationResult()?.NormalizedArea;
-            if (!normalizedArea.HasValue)
+            if (normalizedArea == null)
             {
                 return null;
             }
@@ -146,7 +146,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 }
             }
 
-            return normalizedArea.Value / total;
+            return normalizedArea / total;
         }
 
         [HideWhen(AncestorOfType = typeof(Peptide))]
@@ -327,6 +327,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return GetValue1(owner).GetPeptideQuantificationResult(owner.ResultFile.Replicate.ReplicateIndex);
             }
             public QuantificationResult GetQuantificationResult(PeptideResult owner) { return GetValue2(owner); }
+        }
+
+        public string GetErrorText(string columnName)
+        {
+            if (columnName == nameof(Quantification))
+            {
+                return Quantification.Value?.GetErrorText(nameof(QuantificationResult.NormalizedArea));
+            }
+
+            return null;
         }
     }
 }

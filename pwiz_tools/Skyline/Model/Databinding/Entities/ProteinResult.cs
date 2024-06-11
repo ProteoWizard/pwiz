@@ -21,6 +21,7 @@ using System;
 using System.ComponentModel;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Util.Extensions;
 
@@ -28,7 +29,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 {
     [ProteomicDisplayName(nameof(ProteinResult))]
     [InvariantDisplayName("MoleculeListResult")]
-    public class ProteinResult : SkylineObject, ILinkValue
+    public class ProteinResult : SkylineObject, ILinkValue, IErrorTextProvider
     {
         public ProteinResult(Protein protein, Replicate replicate)
         {
@@ -63,16 +64,28 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                if (!Protein.GetProteinAbundances().TryGetValue(Replicate.ReplicateIndex, out var abundanceValue))
-                {
-                    return null;
-                }
-                if (abundanceValue.Incomplete)
-                {
-                    return null;
-                }
-                return abundanceValue.Abundance;
+                return GetAbundance()?.Value;
             }
+        }
+
+        public string GetErrorText(string columnName)
+        {
+            if (columnName == nameof(Abundance))
+            {
+                return GetAbundance()?.ErrorMessage;
+            }
+
+            return null;
+        }
+
+        private AnnotatedValue<double>? GetAbundance()
+        {
+            if (Protein.GetProteinAbundances().TryGetValue(Replicate.ReplicateIndex, out var abundanceValue))
+            {
+                return abundanceValue;
+            }
+
+            return null;
         }
 
         EventHandler ILinkValue.ClickEventHandler

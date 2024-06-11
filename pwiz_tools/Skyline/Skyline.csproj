@@ -527,6 +527,7 @@
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Databinding\SurrogateStandardDataGridViewColumn.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\AnnotatedValue.cs" />
     <Compile Include="Model\DocumentModifier.cs" />
     <Compile Include="Model\FullScanPropertiesRes.Designer.cs">
       <AutoGen>True</AutoGen>

@@ -431,7 +431,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         QuantificationResult.FormatCalculatedConcentration(calculatedConcentration.Value,
                             curveFitter.QuantificationSettings.Units)));
                 }
-                else if (quantificationResult != null && !quantificationResult.NormalizedArea.HasValue)
+                else if (quantificationResult != null && quantificationResult.NormalizedArea == null)
                 {
                     labelLines.Add(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_missing_or_truncated_transitions);
                 }

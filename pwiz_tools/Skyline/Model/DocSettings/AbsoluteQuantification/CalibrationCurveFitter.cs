@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                         {
                             IdentityPath.ROOT,
                             new PeptideQuantifier.Quantity(GetPeptideQuantifier(calibrationPoint).GetIsotopologArea(SrmSettings, calibrationPoint.ReplicateIndex,
-                                calibrationPoint.LabelType), 1)
+                                calibrationPoint.LabelType), 1, false)
                         }
                     };
                 }
@@ -329,25 +329,38 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public double? GetNormalizedPeakArea(CalibrationPoint calibrationPoint)
         {
-            var allTransitionQuantities = GetTransitionQuantities(calibrationPoint);
-            ICollection<PeptideQuantifier.Quantity> quantitiesToSum;
-            if (!IsAllowMissingTransitions())
+            var annotatedValue = GetAnnotatedNormalizedPeakArea(calibrationPoint);
+            if (string.IsNullOrEmpty(annotatedValue?.ErrorMessage))
             {
-                var completeTransitionSet = GetTransitionsToQuantifyOn();
-                quantitiesToSum = allTransitionQuantities
-                    .Where(entry => completeTransitionSet.Contains(entry.Key))
-                    .Select(entry => entry.Value)
-                    .ToArray();
-                if (quantitiesToSum.Count != completeTransitionSet.Count)
+                return annotatedValue?.Value;
+            }
+            return null;
+        }
+
+        public AnnotatedValue<double>? GetAnnotatedNormalizedPeakArea(CalibrationPoint calibrationPoint)
+        {
+            var allTransitionQuantities = GetTransitionQuantities(calibrationPoint);
+            if (allTransitionQuantities.Count == 0)
+            {
+                return null;
+            }
+            ICollection<IdentityPath> completeTransitionSet;
+            if (IsAllowMissingTransitions())
+            {
+                if (allTransitionQuantities.Values.Any(v => v.Truncated) && !allTransitionQuantities.Values.All(v=>v.Truncated))
                 {
-                    return null;
+                    completeTransitionSet = allTransitionQuantities.Where(kvp=>!kvp.Value.Truncated).Select(kvp=>kvp.Key).ToHashSet();
+                }
+                else
+                {
+                    completeTransitionSet = allTransitionQuantities.Keys;
                 }
             }
             else
             {
-                quantitiesToSum = allTransitionQuantities.Values;
+                completeTransitionSet = GetTransitionsToQuantifyOn();
             }
-            return PeptideQuantifier.SumQuantities(quantitiesToSum, PeptideQuantifier.NormalizationMethod, QuantificationSettings.SimpleRatios);
+            return PeptideQuantifier.SumTransitionQuantities(completeTransitionSet, allTransitionQuantities);
         }
 
         public CalibrationCurve GetCalibrationCurve()
@@ -690,7 +703,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             CalibrationCurve calibrationCurve = GetCalibrationCurve();
             QuantificationResult result = new QuantificationResult();
-            result = result.ChangeNormalizedArea(GetNormalizedPeakArea(new CalibrationPoint(replicateIndex, null)));
+            result = result.ChangeNormalizedArea(GetAnnotatedNormalizedPeakArea(new CalibrationPoint(replicateIndex, null)));
+            
             if (HasExternalStandards() || HasInternalStandardConcentration())
             {
                 double? calculatedConcentration = GetCalculatedConcentration(calibrationCurve, new CalibrationPoint(replicateIndex, null));
@@ -712,7 +726,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 result = new PrecursorQuantificationResult();
                 var calibrationPoint = new CalibrationPoint(replicateIndex, transitionGroupDocNode.LabelType);
                 CalibrationCurve calibrationCurve = GetCalibrationCurve();
-                result = (PrecursorQuantificationResult)result.ChangeNormalizedArea(GetNormalizedPeakArea(calibrationPoint));
+                result = (PrecursorQuantificationResult)result.ChangeNormalizedArea(GetAnnotatedNormalizedPeakArea(calibrationPoint));
                 if (HasExternalStandards() || HasInternalStandardConcentration())
                 {
                     double? calculatedConcentration = GetCalculatedConcentration(calibrationCurve, calibrationPoint);

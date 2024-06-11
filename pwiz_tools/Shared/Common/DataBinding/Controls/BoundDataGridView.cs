@@ -306,15 +306,23 @@ namespace pwiz.Common.DataBinding.Controls
                 var propertyDescriptor =
                     bindingSource.FindDataProperty(column.DataPropertyName) as ColumnPropertyDescriptor;
                 var parentColumn = propertyDescriptor?.DisplayColumn?.ColumnDescriptor?.Parent;
-                if (parentColumn == null || !typeof(IErrorTextProvider).IsAssignableFrom(parentColumn.PropertyType))
+                if (parentColumn == null)
+                {
+                    return;
+                }
+                var dataSchema = (DataSource as BindingListSource)?.ViewInfo?.DataSchema;
+                var parentColumnPropertyType = parentColumn.PropertyType;
+                parentColumnPropertyType = dataSchema?.GetWrappedValueType(parentColumnPropertyType) ?? parentColumnPropertyType;
+                if (!typeof(IErrorTextProvider).IsAssignableFrom(parentColumnPropertyType))
                 {
                     return;
                 }
 
-                var parentValue = parentColumn.GetPropertyValue((RowItem)bindingSource[e.RowIndex], null) as IErrorTextProvider;
-                if (parentValue != null)
+                var parentValue = parentColumn.GetPropertyValue((RowItem)bindingSource[e.RowIndex], null); 
+                parentValue = dataSchema?.UnwrapValue(parentValue) ?? parentValue;
+                if (parentValue is IErrorTextProvider errorTextProvider)
                 {
-                    e.ErrorText = parentValue.GetErrorText(propertyDescriptor.DisplayColumn.PropertyPath.Name);
+                    e.ErrorText = errorTextProvider.GetErrorText(propertyDescriptor.DisplayColumn.PropertyPath.Name);
                 }
 
             }

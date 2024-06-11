@@ -19,22 +19,26 @@
 using System;
 using System.Collections;
 using System.ComponentModel;
+using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
-    public class QuantificationResult : Immutable, IComparable
+    public class QuantificationResult : ImmutableErrorTextProvider, IComparable
     {
         [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
         public double? NormalizedArea { get; private set; }
 
-        public QuantificationResult ChangeNormalizedArea(double? intensity)
+        public QuantificationResult ChangeNormalizedArea(AnnotatedValue<double>? annotatedValue)
         {
-            return ChangeProp(ImClone(this), im => im.NormalizedArea = intensity);
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.NormalizedArea = annotatedValue?.Value;
+            }).ChangeErrorText(nameof(NormalizedArea), annotatedValue?.ErrorMessage);
         }
+
         [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
         public double? CalculatedConcentration { get; private set; }
 
@@ -79,7 +83,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 return FormatCalculatedConcentration(CalculatedConcentration.Value, Units);
             }
-            else if (NormalizedArea.HasValue)
+            else if (NormalizedArea != null)
             {
                 return string.Format(QuantificationStrings.QuantificationResult_ToString_Normalized_Area___0_, 
                     NormalizedArea.Value.ToString(Formats.CalibrationCurve));
@@ -95,6 +99,31 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             }
 
             return TextUtil.SpaceSeparate(calculatedConcentration.ToString(Formats.Concentration), units);
+        }
+
+        public new QuantificationResult ChangeErrorText(string columnName, string error)
+        {
+            return (QuantificationResult)base.ChangeErrorText(columnName, error);
+        }
+        public override string GetErrorText(string columnName)
+        {
+            var errorText = base.GetErrorText(columnName);
+            if (errorText != null)
+            {
+                return errorText;
+            }
+
+            if (columnName == nameof(CalculatedConcentration))
+            {
+                return GetErrorText(nameof(NormalizedArea));
+            }
+
+            if (columnName == nameof(Accuracy))
+            {
+                return GetErrorText(nameof(CalculatedConcentration));
+            }
+
+            return null;
         }
     }
 
