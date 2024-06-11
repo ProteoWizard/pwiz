@@ -210,13 +210,13 @@
             resources.ApplyResources(this.labelMinIntensityPPM, "labelMinIntensityPPM");
             this.labelMinIntensityPPM.Name = "labelMinIntensityPPM";
             // 
-            // textHardklorIdotpThreshold
+            // textHardklorMinIdotP
             // 
             resources.ApplyResources(this.textHardklorMinIdotP, "textHardklorMinIdotP");
             this.textHardklorMinIdotP.Name = "textHardklorMinIdotP";
             this.toolTip1.SetToolTip(this.textHardklorMinIdotP, resources.GetString("textHardklorIdotpThreshold.ToolTip"));
             // 
-            // labelHardklorIdotpThreshold
+            // labelHardklorMinIdotP
             // 
             resources.ApplyResources(this.labelHardklorMinIdotP, "labelHardklorMinIdotP");
             this.labelHardklorMinIdotP.Name = "labelHardklorMinIdotP";
