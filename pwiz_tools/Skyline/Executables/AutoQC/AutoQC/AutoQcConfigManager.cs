@@ -252,7 +252,7 @@ namespace AutoQC
                         // Only validate the Panorama server settings. Everything else should already have been validated
                         config.PanoramaSettings.ValidateSettings(true);
                     }
-                    catch (ArgumentException)
+                    catch (Exception)
                     {
                         SetState(State, State.SetConfigInvalid(config));
                     }

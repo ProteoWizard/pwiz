@@ -337,7 +337,7 @@ namespace AutoQC
                 State.BaseState.AssertUniqueName(newConfig.Name, _action == ConfigAction.Edit);
                 newConfig.Validate(true);
             }
-            catch (ArgumentException e)
+            catch (Exception e)
             {
                 AlertDlg.ShowError(this, e.Message);
                 return;

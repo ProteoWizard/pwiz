@@ -233,7 +233,7 @@ namespace AutoQC
                 ChangeStatus(RunnerStatus.Starting);
                 Config.Validate(true);
             }
-            catch (ArgumentException x)
+            catch (Exception x)
             {
                 ((MainForm)_uiControl)?.SetConfigInvalid(Config); // TODO: Another way to add the configs to the invalid config list?
                 SetErrorStateDisplayAndLogException(string.Format(Resources.ConfigRunner_RunConfiguration_Error_validating_configuration___0___, Config.Name), x, false);
