@@ -201,7 +201,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 var quantity = GetTransitionQuantity(settings, null, NormalizationMethod.NONE, replicateIndex,
                     precursor, transition, false);
-                if (quantity != null)
+                if (false == quantity?.Truncated)
                 {
                     double value = quantity.Intensity / quantity.Denominator;
                     if (transition.ExplicitQuantitative)
