@@ -99,6 +99,11 @@ namespace pwiz.SkylineTest.MSstats.Averaging
                         continue;
                     }
 
+                    if (null != proteinResult.GetErrorText(nameof(ProteinResult.Abundance)))
+                    {
+                        continue;
+                    }
+
                     var condition = proteinResult.Replicate.ChromatogramSet.Annotations.GetAnnotation("Condition");
                     if (condition == "Healthy")
                     {
