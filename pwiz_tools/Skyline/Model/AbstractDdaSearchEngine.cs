@@ -38,6 +38,7 @@ namespace pwiz.Skyline.Model
         public abstract string[] Ms2Analyzers { get; }
         public abstract string EngineName { get; }
         public abstract Bitmap SearchEngineLogo { get; }
+        public abstract string SearchEngineBlurb { get; } // Text shown below the search engine logo
         public MsDataFileUri[] SpectrumFileNames { get; protected set; }
         protected string[] FastaFileNames { get; set; }
 

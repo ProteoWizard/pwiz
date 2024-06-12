@@ -132,6 +132,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         public override string[] Ms2Analyzers => INSTRUMENT_TYPES;
         public override string EngineName => @"MS-GF+";
         public override Bitmap SearchEngineLogo => null;
+        public override string SearchEngineBlurb => string.Empty;
         public override event NotificationEventHandler SearchProgressChanged;
 
         public override bool Run(CancellationTokenSource cancelToken, IProgressStatus status)
