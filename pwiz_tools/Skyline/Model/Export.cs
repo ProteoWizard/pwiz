@@ -3167,6 +3167,9 @@ namespace pwiz.Skyline.Model
         });
 
         public TransitionField TRIGGER_THRESHOLD_FIELD = new TransitionField(c => 0.ToString(c.parent.CultureInfo));
+
+        // Acquisition on Agilent instruments should not begin before 0.1 min
+        public const float AGILENT_MIN_START_ACQUISITION_TIME = 0.1f;
         // This one returns both RT and RT window in one go to avoid calling PredictRetentionTime multiple times
         public TransitionField RT_FIELD = new TransitionField(c =>
         {
@@ -3175,12 +3178,12 @@ namespace pwiz.Skyline.Model
                 c.parent.SchedulingReplicateIndex, c.parent.SchedulingAlgorithm, false, out var windowRT);
             if (predictedRT.HasValue)
             {
-                predictedRT = Math.Max(predictedRT.Value, windowRT.Window + 0.1);
+                predictedRT = Math.Max(predictedRT.Value, windowRT.Window/2 + AGILENT_MIN_START_ACQUISITION_TIME);
             }
 
             return predictedRT.HasValue
                 ? (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(c.parent.CultureInfo) +
-                  c.parent.FieldSeparator + Math.Round(windowRT, 1).ToString(c.parent.CultureInfo)
+                  c.parent.FieldSeparator + Math.Round(windowRT/2, 1).ToString(c.parent.CultureInfo)
                 : c.parent.FieldSeparator.ToString();
         });
         public TransitionField FRAGMENTOR_FIELD = new TransitionField(c => c.parent.Fragmentor.ToString(c.parent.CultureInfo));
@@ -3235,7 +3238,7 @@ namespace pwiz.Skyline.Model
                     }
                     AddField(writer, @"Threshold", TRIGGER_THRESHOLD_FIELD);
 
-                    AddField(writer, @"Ret Time (min)" + FieldSeparator + @"Delta Ret Time",  RT_FIELD);
+                    AddField(writer, @"Ret Time (min)" + FieldSeparator + @"Delta Ret Time", RT_FIELD);
                 }
                 AddField(writer, @"Fragmentor", FRAGMENTOR_FIELD);
                 AddField(writer, @"Collision Energy", CE_FIELD);
@@ -3508,9 +3511,9 @@ namespace pwiz.Skyline.Model
                     SchedulingReplicateIndex, SchedulingAlgorithm, false, out var windowRT);
                 if (predictedRT.HasValue)
                 {
-                    predictedRT = Math.Max(predictedRT.Value, windowRT + 0.1);
+                    predictedRT = Math.Max(predictedRT.Value, windowRT.Window/2 + AGILENT_MIN_START_ACQUISITION_TIME);
                     retentionTime = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo);  // Ret. Time (min)
-                    deltaRetentionTime = Math.Round(windowRT, 1).ToString(CultureInfo); // Delta Ret. Time (min)
+                    deltaRetentionTime = Math.Round(windowRT.Window/2, 1).ToString(CultureInfo); // Delta Ret. Time (min)
                 }
             }
             string isolationWidth = string.Format(CultureInfo, @"Narrow (~{0:0.0} m/z)", 1.3);

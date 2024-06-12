@@ -167,8 +167,8 @@ namespace pwiz.SkylineTestFunctional
                 "AgilentScheduledDda.csv", 
                 ExportInstrumentType.AGILENT_TOF, FullScanAcquisitionMethod.None, ExportMethodType.Scheduled,
                 AgilentIsolationListExporter.GetDdaHeader(_fieldSeparator),
-                FieldSeparate("True", mzFirst, 20, zFirst, "Preferred", t46, 2*halfWin, isolationWidth, ceFirst),
-                FieldSeparate("True", mzLast, 20, zLast, "Preferred", t39, 2*halfWin, isolationWidth, ceLast));
+                FieldSeparate("True", mzFirst, 20, zFirst, "Preferred", t46, halfWin, isolationWidth, ceFirst),
+                FieldSeparate("True", mzLast, 20, zLast, "Preferred", t39, halfWin, isolationWidth, ceLast));
 
             // Export Thermo unscheduled DDA list.
             const double nce = ThermoQExactiveIsolationListExporter.NARROW_NCE;
@@ -216,8 +216,8 @@ namespace pwiz.SkylineTestFunctional
                 "AgilentScheduledTargeted.csv", 
                 ExportInstrumentType.AGILENT_TOF, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
                 AgilentIsolationListExporter.GetTargetedHeader(_fieldSeparator),
-                FieldSeparate("True", mzFirst, zFirst, t46, 2*halfWin, isolationWidth, ceFirst, string.Empty),
-                FieldSeparate("True", mzLast, zLast, t39, 2*halfWin, isolationWidth, ceLast, string.Empty));
+                FieldSeparate("True", mzFirst, zFirst, t46, halfWin, isolationWidth, ceFirst, string.Empty),
+                FieldSeparate("True", mzLast, zLast, t39, halfWin, isolationWidth, ceLast, string.Empty));
 
             // Export Thermo unscheduled Targeted list.
             ExportIsolationList(
