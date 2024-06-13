@@ -695,22 +695,22 @@
     <Setting Name="MixedMoleculeSettingsTab" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
-    <Setting Name="Prosit" Type="System.Boolean" Scope="User">
+    <Setting Name="Koina" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="PrositIntensityModel" Type="System.String" Scope="User">
+    <Setting Name="KoinaIntensityModel" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="PrositRetentionTimeModel" Type="System.String" Scope="User">
+    <Setting Name="KoinaRetentionTimeModel" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="PrositServer" Type="System.String" Scope="User">
+    <Setting Name="KoinaServer" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="LibMatchMirror" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="PrositNCE" Type="System.Int32" Scope="User">
+    <Setting Name="KoinaNCE" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">27</Value>
     </Setting>
     <Setting Name="ShowQcTraceName" Type="System.String" Scope="User">
