@@ -68,7 +68,7 @@ namespace AutoQC
                 mainSettings.FolderToWatch, MainSettings.ValidateFolderToWatch, null, PathDialogOptions.Folder);
 
             string validAnnotationsFilePath = null;
-            if (mainSettings.AnnotationsFilePath != null)
+            if (mainSettings.HasAnnotationsFile())
             {
                 validAnnotationsFilePath = await GetValidPath("Annotations file", mainSettings.AnnotationsFilePath,
                     MainSettings.ValidateAnnotationsFile, TextUtil.EXT_CSV, PathDialogOptions.File);

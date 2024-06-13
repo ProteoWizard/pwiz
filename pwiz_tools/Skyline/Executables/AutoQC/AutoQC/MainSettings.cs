@@ -107,6 +107,11 @@ namespace AutoQC
             return sb.ToString();
         }
 
+        public bool HasAnnotationsFile()
+        {
+            return !string.IsNullOrWhiteSpace(AnnotationsFilePath);
+        }
+
         private int ValidateIntTextField(string textToParse, string fieldName)
         {
             int parsedInt;

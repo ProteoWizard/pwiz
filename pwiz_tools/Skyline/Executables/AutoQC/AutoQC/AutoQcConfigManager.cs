@@ -141,7 +141,7 @@ namespace AutoQC
             var initialState = State;
             var state = initialState.Copy();
             state.BaseState.SelectIndex(-1);
-            SetState(initialState, state);
+            SetState(initialState, state, false);
         }
 
         public void SortByValue(int columnIndex)
@@ -155,7 +155,7 @@ namespace AutoQC
         {
             var initialState = State;
             var state = initialState.Copy().SetConfigInvalid(config);
-            SetState(initialState, state);
+            SetState(initialState, state, false);
         }
 
         public List<ListViewItem> ConfigsListViewItems(Graphics graphics)
@@ -221,44 +221,61 @@ namespace AutoQC
         {
             lock (_lock)
             {
+                var toValidate = new List<AutoQcConfig>();
                 foreach (var config in configs)
                 {
                     var autoQcConfig = (AutoQcConfig)config;
-                    if (autoQcConfig.IsEnabled || !baseState.IsConfigValid(baseState.GetConfigIndex(autoQcConfig.Name)))
+                    if (autoQcConfig.IsEnabled  // Config is running
+                        || !baseState.IsConfigValid(baseState.GetConfigIndex(autoQcConfig.Name)) // Already marked as invalid
+                        || !autoQcConfig.PanoramaSettings.PublishToPanorama) // Not set to publish to Panorama
                     {
-                        continue; // Config is either running, or is already marked as invalid
+                        continue;
                     }
 
-                    var worker = new BackgroundWorker { WorkerSupportsCancellation = false, WorkerReportsProgress = false };
-                    worker.DoWork += ValidateServerSettings;
-                    worker.RunWorkerAsync(argument: config);
+                    toValidate.Add(autoQcConfig);
                 }
+                var worker = new BackgroundWorker { WorkerSupportsCancellation = false, WorkerReportsProgress = false };
+                worker.DoWork += ValidateServerSettings;
+                worker.RunWorkerAsync(argument: toValidate);
             }
         }
 
         private void ValidateServerSettings(object sender, DoWorkEventArgs e)
         {
-            AutoQcConfig config = (AutoQcConfig) e.Argument;
-            if (config != null && config.PanoramaSettings.PublishToPanorama)
+            var configs = (List<AutoQcConfig>)e.Argument;
+            foreach (var config in configs)
             {
-                ConfigRunner configRunner = State.GetConfigRunner(config);
-                if (configRunner != null)
+                if (config.PanoramaSettings.PublishToPanorama)
                 {
-                    try
+                    var configRunner = State.GetConfigRunner(config);
+                    if (configRunner != null)
                     {
                         // Change the status while we are validating.
-                        configRunner.ChangeStatus(RunnerStatus.Loading);
-                        // Thread.Sleep(5000);
-                        // Only validate the Panorama server settings. Everything else should already have been validated
-                        config.PanoramaSettings.ValidateSettings(true);
+                        configRunner.ChangeStatus(RunnerStatus.Loading, false);
                     }
-                    catch (Exception)
+                }
+            }
+            _uiControl.UpdateUiConfigurations(); // Update the UI.
+
+            foreach (var config in configs)
+            {
+                if (config.PanoramaSettings.PublishToPanorama)
+                {
+                    var configRunner = State.GetConfigRunner(config);
+                    if (configRunner != null)
                     {
-                        SetState(State, State.SetConfigInvalid(config));
-                    }
-                    finally
-                    {
-                        configRunner.ChangeStatus(RunnerStatus.Stopped);
+                        try
+                        {
+                            // Thread.Sleep(5000);
+                            // Only validate the Panorama server settings. Everything else should already have been validated
+                            config.PanoramaSettings.ValidateSettings(true);
+                            configRunner.ChangeStatus(RunnerStatus.Stopped);
+                        }
+                        catch (Exception)
+                        {
+                            configRunner.ChangeStatus(RunnerStatus.Stopped);
+                            SetState(State, State.SetConfigInvalid(config));
+                        }
                     }
                 }
             }
@@ -278,7 +295,7 @@ namespace AutoQC
                 var message =
                     string.Format(Resources.AutoQcConfigManager_StopConfiguration_Cannot_stop_a_configuration_that_is__0___Please_wait_for_the_action_to_complete_, action);
 
-                ConfigManager.DisplayWarning(_uiControl, message);
+                DisplayWarning(_uiControl, message);
                 return false;
             }
 
@@ -291,7 +308,7 @@ namespace AutoQC
                 configRunner.Stop();
                 if (configRunner.IsStopped())
                 {
-                    var state = initialState.Copy().SelectedConfigEnabled(false, _uiControl);
+                    var state = initialState.Copy().DisableSelectedConfig(_uiControl);
                     SetState(initialState, state);
                 }
                 return true;
@@ -365,12 +382,12 @@ namespace AutoQC
             state.ConfigRunners.TryGetValue(config.Name, out var configRunner);
             if (configRunner == null)
             {
-                state.SetConfigEnabled(configIndex, false, _uiControl);
+                state.DisableConfig(configIndex, _uiControl);
                 SetState(initialState, state);
                 throw new ConfigRunnerException(string.Format(Resources.AutoQcConfigManager_StartConfig_Could_not_find_a_config_runner_for_configuration_name___0___, config.Name));
             }
             ProgramLog.Info(string.Format(Resources.ConfigManager_StartConfig_Starting_configuration___0__, config.Name));
-            state.SetConfigEnabled(configIndex, true, _uiControl);
+            state.EnableConfig(configIndex, _uiControl);
             SetState(initialState, state);
             state.ConfigRunners.TryGetValue(config.Name, out configRunner);
             try
@@ -379,7 +396,7 @@ namespace AutoQC
             }
             catch (Exception)
             {
-                state.SetConfigEnabled(configIndex, false, _uiControl);
+                state.DisableConfig(configIndex, _uiControl);
                 SetState(initialState, state);
                 state.ConfigRunners.TryGetValue(config.Name, out configRunner);
                 ((ConfigRunner)configRunner).ChangeStatus(RunnerStatus.Error);
@@ -403,7 +420,7 @@ namespace AutoQC
             lock (_loggerLock)
             {
                 if (selected < 0 || selected >= State.LogList.Count) // Accessing the State property requires the _lock 
-                throw new IndexOutOfRangeException("No log at index: " + selected);
+                    throw new IndexOutOfRangeException("No log at index: " + selected);
                 SelectedLog = selected;
             }
         }
@@ -493,14 +510,30 @@ namespace AutoQC
             return (AutoQcConfig)BaseState.GetSelectedConfig();
         }
 
-        public AutoQcConfigManagerState SelectedConfigEnabled(bool enabled, IMainUiControl uiControl)
+        public AutoQcConfigManagerState DisableSelectedConfig(IMainUiControl uiControl)
         {
-            return SetConfigEnabled(BaseState.Selected, enabled, uiControl);
+            return SetConfigEnabled(BaseState.Selected, false, uiControl);
         }
 
-        public AutoQcConfigManagerState SetConfigEnabled(int index, bool enabled, IMainUiControl uiControl)
+        public AutoQcConfigManagerState DisableConfig(int index, IMainUiControl uiControl)
+        {
+            return SetConfigEnabled(index, false, uiControl);
+        }
+
+        public AutoQcConfigManagerState EnableConfig(int index, IMainUiControl uiControl)
+        {
+            return SetConfigEnabled(index, true, uiControl);
+        }
+
+        private AutoQcConfigManagerState SetConfigEnabled(int index, bool enabled, IMainUiControl uiControl)
         {
             var config = (AutoQcConfig) BaseState.GetConfig(index);
+            var configRunner = GetConfigRunner(config);
+            if (configRunner == null)
+            {
+                ConfigManager.DisplayError(uiControl, string.Format("Could not find a config runner for config '{0}'", config.Name));
+                return this;
+            }
             if (GetConfigRunner(config).IsStarting())
             {
                 ConfigManager.DisplayError(uiControl, "Cannot change config enabled while it is busy.");
@@ -540,7 +573,7 @@ namespace AutoQC
                 {
                     // If the config was running last time AutoQC Loader was running (and properties saved), but we are not 
                     // automatically starting configs on startup, change its IsEnabled state
-                    SetConfigEnabled(i, false, uiControl);
+                    DisableConfig(i, uiControl);
                 }
             }
             return this;
@@ -568,16 +601,10 @@ namespace AutoQC
             return this;
         }
 
-        private AutoQcConfigManagerState ProgramaticallyAddConfig(IConfig iconfig, IMainUiControl uiControl)
-        {
-            return ProgramaticallyInsertConfig(BaseState.ConfigList.Count, iconfig, uiControl);
-        }
-
         protected AutoQcConfigManagerState ProgramaticallyInsertConfig(int index, IConfig iconfig, IMainUiControl uiControl)
         {
             BaseState.ProgramaticallyInsertConfig(index, iconfig);
-            AddConfig(iconfig, uiControl);
-            return this;
+            return AddConfig(iconfig, uiControl);
         }
 
         private AutoQcConfigManagerState AddConfig(IConfig iconfig, IMainUiControl uiControl)

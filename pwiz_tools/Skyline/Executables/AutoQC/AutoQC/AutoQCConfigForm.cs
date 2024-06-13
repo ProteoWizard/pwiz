@@ -131,7 +131,7 @@ namespace AutoQC
             textAquisitionTime.Text = mainSettings.AcquisitionTime.ToString();
             comboBoxInstrumentType.SelectedItem = mainSettings.InstrumentType;
             comboBoxInstrumentType.SelectedIndex = comboBoxInstrumentType.FindStringExact(mainSettings.InstrumentType);
-            if (mainSettings.AnnotationsFilePath != null)
+            if (mainSettings.HasAnnotationsFile())
             {
                 textAnnotationsFilePath.Text = mainSettings.AnnotationsFilePath;
             }

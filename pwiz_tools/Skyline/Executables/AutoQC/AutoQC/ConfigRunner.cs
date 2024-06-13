@@ -191,17 +191,19 @@ namespace AutoQC
             _logger.Log(msg.ToString());
         }
 
-        public void ChangeStatus(RunnerStatus runnerStatus)
+        public void ChangeStatus(RunnerStatus runnerStatus, bool updateUi = true)
         {
             lock (_lock)
             {
                 _runnerStatus = runnerStatus;
-                if (IsStopped())
+                // TODO: revisit DisableConfig
+                if (IsStopped() && updateUi) 
                 {
-                    ((MainForm)_uiControl)?.DisableConfig(Config);
+                    ((MainForm)_uiControl)?.DisableConfig(Config, _runnerStatus);
+                    return;
                 }
             }
-            _uiControl?.UpdateUiConfigurations();
+            if (updateUi) _uiControl?.UpdateUiConfigurations();
         }
 
         private void RunBackgroundWorker(DoWorkEventHandler doWork, RunWorkerCompletedEventHandler doOnComplete)
@@ -245,7 +247,7 @@ namespace AutoQC
                 LogStartMessage();
 
                 _fileWatcher = new AutoQCFileSystemWatcher(_logger, this);
-                if (Config.MainSettings.AnnotationsFilePath != null)
+                if (Config.MainSettings.HasAnnotationsFile())
                 {
                     _annotationsFileWatcher = new AnnotationsFileWatcher(_logger, this);
                 }

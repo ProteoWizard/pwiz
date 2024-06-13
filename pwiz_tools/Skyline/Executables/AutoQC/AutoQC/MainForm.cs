@@ -217,15 +217,19 @@ namespace AutoQC
                 UpdateUiConfigurations();
         }
 
-        public void DisableConfig(IConfig iconfig)
+        public void DisableConfig(IConfig iconfig, RunnerStatus runnerStatus = RunnerStatus.Stopped)
         {
             var initialState = _configManager.State;
 
-            var state = initialState.Copy()
-                .SetConfigEnabled(initialState.BaseState.GetConfigIndex(iconfig.GetName()), false, this);
+            var state = initialState.Copy();
+            state.DisableConfig(initialState.BaseState.GetConfigIndex(iconfig.GetName()), this);
+            if (runnerStatus != RunnerStatus.Stopped && state.ConfigRunners.TryGetValue(iconfig.GetName(), out var configRunner))
+            {
+                ((ConfigRunner)configRunner).ChangeStatus(runnerStatus, false);
+            }
             // Do not update the selected log file
-            // Trying to update the log files in UpdateUiLogFiles() results in a UI freeze since SetState() holds the lock
-            // that the Main thread tries to acquire in SelectLog (via event comboConfigs_SelectedIndexChanged that gets
+            // Trying to update the log files in MainForm.UpdateUiLogFiles() results in a UI freeze since AutoQcConfigManager.SetState() 
+            // holds the lock that the Main thread tries to acquire in SelectLog (via event comboConfigs_SelectedIndexChanged that gets
             // triggered when the selected index in the logs combo box is changed)
             _configManager.SetState(initialState, state, false);
         }
