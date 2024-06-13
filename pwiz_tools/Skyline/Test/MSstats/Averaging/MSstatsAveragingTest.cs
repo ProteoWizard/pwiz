@@ -93,17 +93,7 @@ namespace pwiz.SkylineTest.MSstats.Averaging
                 var protein = new Protein(skylineDataSchema, new IdentityPath(moleculeGroup.PeptideGroup));
                 foreach (var proteinResult in protein.Results.Values)
                 {
-                    var abundance = proteinResult.Abundance;
-                    if (!abundance.HasValue)
-                    {
-                        continue;
-                    }
-
-                    if (null != proteinResult.GetErrorText(nameof(ProteinResult.Abundance)))
-                    {
-                        continue;
-                    }
-
+                    var abundance = proteinResult.Abundance?.Strict;
                     var condition = proteinResult.Replicate.ChromatogramSet.Annotations.GetAnnotation("Condition");
                     if (condition == "Healthy")
                     {

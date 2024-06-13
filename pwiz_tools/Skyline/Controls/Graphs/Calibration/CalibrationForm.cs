@@ -413,22 +413,22 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 }
 
                 QuantificationResult quantificationResult = null;
-                double? calculatedConcentration;
+                AnnotatedDouble calculatedConcentration;
                 if (curveFitter.IsotopologResponseCurve)
                 {
                     calculatedConcentration =
-                        curveFitter.GetCalculatedConcentration(CalibrationCurve, selectionIdentifier.Value);
+                        AnnotatedDouble.Of(curveFitter.GetCalculatedConcentration(CalibrationCurve, selectionIdentifier.Value));
                 }
                 else
                 {
                     quantificationResult = curveFitter.GetPeptideQuantificationResult(selectionIdentifier.Value.ReplicateIndex);
                     calculatedConcentration = quantificationResult?.CalculatedConcentration;
                 }
-                if (calculatedConcentration.HasValue)
+                if (calculatedConcentration != null)
                 {
                     labelLines.Add(string.Format(@"{0} = {1}",
                         QuantificationStrings.Calculated_Concentration,
-                        QuantificationResult.FormatCalculatedConcentration(calculatedConcentration.Value,
+                        QuantificationResult.FormatCalculatedConcentration(calculatedConcentration,
                             curveFitter.QuantificationSettings.Units)));
                 }
                 else if (quantificationResult != null && quantificationResult.NormalizedArea == null)

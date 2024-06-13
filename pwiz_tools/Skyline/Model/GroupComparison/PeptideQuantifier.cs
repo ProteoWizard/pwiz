@@ -5,6 +5,7 @@ using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
@@ -402,14 +403,14 @@ namespace pwiz.Skyline.Model.GroupComparison
             return SumQuantities(quantities, QuantificationSettings.ChangeNormalizationMethod(NormalizationMethod));
         }
 
-        public AnnotatedValue<double>? SumTransitionQuantities(ICollection<IdentityPath> completeTransitionSet,
+        public AnnotatedDouble SumTransitionQuantities(ICollection<IdentityPath> completeTransitionSet,
             IDictionary<IdentityPath, Quantity> availableQuantities)
         {
             return SumTransitionQuantities(completeTransitionSet, availableQuantities,
                 QuantificationSettings.ChangeNormalizationMethod(NormalizationMethod));
         }
 
-        public static AnnotatedValue<double>? SumTransitionQuantities(ICollection<IdentityPath> completeTransitionSet,
+        public static AnnotatedDouble SumTransitionQuantities(ICollection<IdentityPath> completeTransitionSet,
             IDictionary<IdentityPath, Quantity> availableQuantities, QuantificationSettings quantificationSettings)
         {
             var quantitiesToSum = availableQuantities.Where(entry => completeTransitionSet.Contains(entry.Key))
@@ -452,7 +453,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             double? sum = SumQuantities(quantitiesToSum, quantificationSettings);
             if (sum.HasValue)
             {
-                return AnnotatedValue.WithErrorMessage(sum.Value, error);
+                return AnnotatedDouble.WithMessage(sum.Value, error);
             }
             return null;
         }

@@ -2221,6 +2221,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Normalized Area Message.
+        /// </summary>
+        public static string NormalizedAreaMessage {
+            get {
+                return ResourceManager.GetString("NormalizedAreaMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normalized Area Raw.
+        /// </summary>
+        public static string NormalizedAreaRaw {
+            get {
+                return ResourceManager.GetString("NormalizedAreaRaw", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normalized Area Strict.
+        /// </summary>
+        public static string NormalizedAreaStrict {
+            get {
+                return ResourceManager.GetString("NormalizedAreaStrict", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Number of Points.
         /// </summary>
         public static string NumberOfPoints {

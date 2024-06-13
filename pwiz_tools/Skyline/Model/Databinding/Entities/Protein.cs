@@ -25,7 +25,6 @@ using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
@@ -217,26 +216,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         /// not suitable for comparing between replicates
         /// </summary>
         /// <returns></returns>
-        public IDictionary<int, AnnotatedValue<double>> GetProteinAbundances()
+        public IDictionary<int, AbundanceValue> GetProteinAbundances()
         {
             return _cachedValues.GetValue2(this);
         }
 
-        private IDictionary<int, AnnotatedValue<double>> CalculateProteinAbundances()
+        private IDictionary<int, AbundanceValue> CalculateProteinAbundances()
         {
             if (DocNode.IsDecoy)
             {
                 // Don't bother calculating protein abundances for the "Decoy" peptide list,
                 // since it can be very slow.
-                return new Dictionary<int, AnnotatedValue<double>>();
+                return new Dictionary<int, AbundanceValue>();
             }
+
             var quantifiers = Peptides.Select(peptide => peptide.GetPeptideQuantifier()).ToList();
             int replicateCount = SrmDocument.Settings.HasResults
                 ? SrmDocument.Settings.MeasuredResults.Chromatograms.Count : 0;
-            var abundances = new Dictionary<int, Tuple<double, int>>();
             var srmSettings = SrmDocument.Settings;
-            bool allowMissingTransitions =
-                srmSettings.PeptideSettings.Quantification.NormalizationMethod is NormalizationMethod.RatioToLabel;
             var replicateQuantities = new List<Dictionary<IdentityPath, PeptideQuantifier.Quantity>>();
             for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
             {
@@ -259,32 +256,49 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 allTransitionIdentityPaths = replicateQuantities.SelectMany(dict => dict.Keys).ToHashSet();
             }
 
-            var proteinAbundanceRecords = new Dictionary<int, AnnotatedValue<double>>();
+            var proteinAbundanceRecords = new Dictionary<int, AbundanceValue>();
+            int transitionCount = DocNode.TransitionCount;
             for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
             {
-                var abundance = PeptideQuantifier.SumTransitionQuantities(allTransitionIdentityPaths, replicateQuantities[iReplicate],
+                var rawAbundance = PeptideQuantifier.SumTransitionQuantities(allTransitionIdentityPaths, replicateQuantities[iReplicate],
                     srmSettings.PeptideSettings.Quantification);
-                if (abundance.HasValue)
+                if (rawAbundance != null)
                 {
-                    proteinAbundanceRecords[iReplicate] = abundance.Value;
+                    int quantityCount = replicateQuantities[iReplicate].Keys.Intersect(allTransitionIdentityPaths)
+                        .Count();
+                    proteinAbundanceRecords[iReplicate] = new AbundanceValue(rawAbundance.Raw, rawAbundance.Raw * quantityCount, rawAbundance.Message);
                 }
             }
             return proteinAbundanceRecords;
         }
 
-        public struct AbundanceValue
+        public class AbundanceValue : AnnotatedDouble
         {
-            public AbundanceValue(double abundance, bool incomplete)
+            public AbundanceValue(double raw, double peptideWeighted, string message) : base(raw, message)
             {
-                Abundance = abundance;
-                Incomplete = incomplete;
+                PeptideWeighted = peptideWeighted;
             }
-            public double Abundance { get; }
-            public bool Incomplete { get; }
+            [InvariantDisplayName("MoleculeListAbundanceRaw")]
+            [ProteomicDisplayName("ProteinAbundanceRaw")]
+            [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
+            public new double Raw
+            {
+                get { return base.Raw; }
+            }
+            [InvariantDisplayName("MoleculeListAbundanceStrict")]
+            [ProteomicDisplayName("ProteinAbundanceStrict")]
+            [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
+            public new double? Strict
+            {
+                get { return base.Strict; }
+            }
+            [InvariantDisplayName("MoleculeListAbundanceMoleculeWeighted")]
+            [ProteomicDisplayName("ProteinAbundancePeptideWeighted")]
+            [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
+            public double PeptideWeighted { get; private set; }
         }
-
         private class CachedValues 
-            : CachedValues<Protein, ImmutableList<Peptide>, IDictionary<ResultKey, ProteinResult>, IDictionary<int, AnnotatedValue<double>>>
+            : CachedValues<Protein, ImmutableList<Peptide>, IDictionary<ResultKey, ProteinResult>, IDictionary<int, AbundanceValue>>
         {
             protected override SrmDocument GetDocument(Protein owner)
             {
@@ -303,7 +317,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     entry => new ProteinResult(owner, entry.Value));
             }
 
-            protected override IDictionary<int, AnnotatedValue<double>> CalculateValue2(Protein owner)
+            protected override IDictionary<int, AbundanceValue> CalculateValue2(Protein owner)
             {
                 return owner.CalculateProteinAbundances();
             }

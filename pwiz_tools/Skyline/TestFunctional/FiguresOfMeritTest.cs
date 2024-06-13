@@ -237,7 +237,7 @@ namespace pwiz.SkylineTestFunctional
                 if (options.MaxLoqBias.HasValue)
                 {
                     var areas = grouping
-                        .Select(peptideResult => peptideResult.Quantification.Value.NormalizedArea)
+                        .Select(peptideResult => peptideResult.Quantification.Value.NormalizedArea.Strict)
                         .Where(area => area.HasValue).Cast<double>().ToArray();
                     if (areas.Length == 0)
                     {

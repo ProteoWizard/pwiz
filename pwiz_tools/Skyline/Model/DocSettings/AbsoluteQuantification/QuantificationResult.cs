@@ -19,31 +19,37 @@
 using System;
 using System.Collections;
 using System.ComponentModel;
+using System.Globalization;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
-    public class QuantificationResult : ImmutableErrorTextProvider, IComparable
+    public class QuantificationResult : Immutable, IComparable, IAnnotatedValue
     {
         [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
-        public double? NormalizedArea { get; private set; }
+        [ChildDisplayName("NormalizedArea{0}")]
+        public AnnotatedDouble NormalizedArea { get; private set; }
 
-        public QuantificationResult ChangeNormalizedArea(AnnotatedValue<double>? annotatedValue)
+        public QuantificationResult ChangeNormalizedArea(AnnotatedDouble annotatedValue)
         {
             return ChangeProp(ImClone(this), im =>
             {
-                im.NormalizedArea = annotatedValue?.Value;
-            }).ChangeErrorText(nameof(NormalizedArea), annotatedValue?.ErrorMessage);
+                im.NormalizedArea = annotatedValue;
+            });
         }
 
         [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
-        public double? CalculatedConcentration { get; private set; }
+        [ChildDisplayName("CalculatedConcentration{0}")]
+        public AnnotatedDouble CalculatedConcentration { get; private set; }
 
         [Format(Formats.CV, NullValue = TextUtil.EXCEL_NA)]
-        public double? Accuracy { get; private set; }
+        [ChildDisplayName("Accuracy{0}")]
+        public AnnotatedDouble Accuracy { get; private set; }
 
         [Browsable(false)]
         public string Units { get; private set; }
@@ -53,12 +59,12 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return ChangeProp(ImClone(this), im => im.Units = units);
         }
 
-        public QuantificationResult ChangeCalculatedConcentration(double? calculatedConcentration)
+        public QuantificationResult ChangeCalculatedConcentration(AnnotatedDouble calculatedConcentration)
         {
             return ChangeProp(ImClone(this), im => im.CalculatedConcentration = calculatedConcentration);
         }
 
-        public QuantificationResult ChangeAccuracy(double? accuracy)
+        public QuantificationResult ChangeAccuracy(AnnotatedDouble accuracy)
         {
             return ChangeProp(ImClone(this), im => im.Accuracy = accuracy);
         }
@@ -72,58 +78,38 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return Comparer.Default.Compare(GetSortKey(), ((QuantificationResult) obj).GetSortKey());
         }
 
-        private Tuple<double?, double?> GetSortKey()
+        private Tuple<AnnotatedDouble, AnnotatedDouble> GetSortKey()
         {
-            return new Tuple<double?, double?>(CalculatedConcentration, NormalizedArea);
+            return Tuple.Create(CalculatedConcentration, NormalizedArea);
         }
 
         public override string ToString()
         {
-            if (CalculatedConcentration.HasValue)
+            if (CalculatedConcentration != null)
             {
-                return FormatCalculatedConcentration(CalculatedConcentration.Value, Units);
+                return FormatCalculatedConcentration(CalculatedConcentration, Units);
             }
             else if (NormalizedArea != null)
             {
                 return string.Format(QuantificationStrings.QuantificationResult_ToString_Normalized_Area___0_, 
-                    NormalizedArea.Value.ToString(Formats.CalibrationCurve));
+                    NormalizedArea.ToString(Formats.CalibrationCurve));
             }
             return TextUtil.EXCEL_NA;
         }
 
-        public static string FormatCalculatedConcentration(double calculatedConcentration, string units)
+        public static string FormatCalculatedConcentration(IFormattable calculatedConcentration, string units)
         {
             if (units == null)
             {
-                return calculatedConcentration.ToString(Formats.CalibrationCurve);
+                return calculatedConcentration.ToString(Formats.CalibrationCurve, CultureInfo.CurrentCulture);
             }
 
-            return TextUtil.SpaceSeparate(calculatedConcentration.ToString(Formats.Concentration), units);
+            return TextUtil.SpaceSeparate(calculatedConcentration.ToString(Formats.Concentration, CultureInfo.CurrentCulture), units);
         }
 
-        public new QuantificationResult ChangeErrorText(string columnName, string error)
+        public string GetErrorMessage()
         {
-            return (QuantificationResult)base.ChangeErrorText(columnName, error);
-        }
-        public override string GetErrorText(string columnName)
-        {
-            var errorText = base.GetErrorText(columnName);
-            if (errorText != null)
-            {
-                return errorText;
-            }
-
-            if (columnName == nameof(CalculatedConcentration))
-            {
-                return GetErrorText(nameof(NormalizedArea));
-            }
-
-            if (columnName == nameof(Accuracy))
-            {
-                return GetErrorText(nameof(CalculatedConcentration));
-            }
-
-            return null;
+            return CalculatedConcentration?.GetErrorMessage() ?? NormalizedArea?.GetErrorMessage();
         }
     }
 
@@ -132,21 +118,24 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         #region duplicate properties from base class to control the order they appear in Report Editor
         [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
         [InvariantDisplayName("PrecursorNormalizedArea")]
-        public new double? NormalizedArea
+        [ChildDisplayName("PrecursorNormalizedArea{0}")]
+        public new AnnotatedDouble NormalizedArea
         {
             get { return base.NormalizedArea; }
         }
 
         [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
         [InvariantDisplayName("PrecursorCalculatedConcentration")]
-        public new double? CalculatedConcentration
+        [ChildDisplayName("PrecursorCalculatedConcentration{0}")]
+        public new AnnotatedDouble CalculatedConcentration
         {
             get { return base.CalculatedConcentration; }
         }
 
         [Format(Formats.CV, NullValue = TextUtil.EXCEL_NA)]
         [InvariantDisplayName("PrecursorAccuracy")]
-        public new double? Accuracy
+        [ChildDisplayName("PrecursorAccuracy{0}")]
+        public new AnnotatedDouble Accuracy
         {
             get { return base.Accuracy; }
         }

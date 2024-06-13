@@ -837,6 +837,15 @@
   <data name="NormalizedArea">
     <value>Normalized Area</value>
   </data>
+  <data name="NormalizedAreaMessage">
+    <value>Normalized Area Message</value>
+  </data>
+  <data name="NormalizedAreaRaw">
+    <value>Normalized Area Raw</value>
+  </data>
+  <data name="NormalizedAreaStrict">
+    <value>Normalized Area Strict</value>
+  </data>
   <data name="NumberOfPoints">
     <value>Number of Points</value>
   </data>
