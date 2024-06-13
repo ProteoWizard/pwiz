@@ -3926,7 +3926,7 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
                 if (graphType == GraphTypeSummary.abundance)
                 {
-                    menuStrip.Items.Insert(iInsert++, new ToolStripMenuItem(GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_Avoid_Label_Overlap, null, OnLabelOverlapClick)
+                    menuStrip.Items.Insert(iInsert++, new ToolStripMenuItem(GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_Auto_Arrange_Labels, null, OnLabelOverlapClick)
                     {
                         Checked = Settings.Default.GroupComparisonAvoidLabelOverlap
                     });
@@ -3947,10 +3947,13 @@ namespace pwiz.Skyline
                                     GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_PauseLabelLayout, null,
                                     abundancePane.OnSuspendLayout));
                         }
-                    }                }
-
-                synchronizeSummaryZoomingContextMenuItem.Checked = set.SynchronizeSummaryZooming;
-                menuStrip.Items.Insert(iInsert++, synchronizeSummaryZoomingContextMenuItem);
+                    }
+                }
+                else
+                {
+                    synchronizeSummaryZoomingContextMenuItem.Checked = set.SynchronizeSummaryZooming;
+                    menuStrip.Items.Insert(iInsert++, synchronizeSummaryZoomingContextMenuItem);
+                }
             }
 
             menuStrip.Items.Insert(iInsert++, toolStripSeparator24);

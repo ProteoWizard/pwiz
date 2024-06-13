@@ -1066,11 +1066,11 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Auto arrange labels.
+        ///   Looks up a localized string similar to Auto Arrange Labels.
         /// </summary>
-        public static string FoldChangeVolcanoPlot_BuildContextMenu_Avoid_Label_Overlap {
+        public static string FoldChangeVolcanoPlot_BuildContextMenu_Auto_Arrange_Labels {
             get {
-                return ResourceManager.GetString("FoldChangeVolcanoPlot_BuildContextMenu_Avoid_Label_Overlap", resourceCulture);
+                return ResourceManager.GetString("FoldChangeVolcanoPlot_BuildContextMenu_Auto_Arrange_Labels", resourceCulture);
             }
         }
         
