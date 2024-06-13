@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
 {

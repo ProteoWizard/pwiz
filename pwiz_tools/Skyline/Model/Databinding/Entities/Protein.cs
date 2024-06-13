@@ -274,9 +274,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public class AbundanceValue : AnnotatedDouble
         {
-            public AbundanceValue(double raw, double peptideWeighted, string message) : base(raw, message)
+            public AbundanceValue(double raw, double transitionWeighted, string message) : base(raw, message)
             {
-                PeptideWeighted = peptideWeighted;
+                TransitionWeighted = transitionWeighted;
             }
             [InvariantDisplayName("MoleculeListAbundanceRaw")]
             [ProteomicDisplayName("ProteinAbundanceRaw")]
@@ -292,10 +292,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 get { return base.Strict; }
             }
-            [InvariantDisplayName("MoleculeListAbundanceMoleculeWeighted")]
-            [ProteomicDisplayName("ProteinAbundancePeptideWeighted")]
+            [InvariantDisplayName("MoleculeListAbundanceTransitionWeighted")]
+            [ProteomicDisplayName("ProteinAbundanceTransitionWeighted")]
             [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
-            public double PeptideWeighted { get; private set; }
+            public double TransitionWeighted { get; private set; }
+
+            [InvariantDisplayName("MoleculeListAbundanceMessage")]
+            [ProteomicDisplayName("ProteinAbundanceMessage")]
+            public new string Message
+            {
+                get { return base.Message; }
+            }
         }
         private class CachedValues 
             : CachedValues<Protein, ImmutableList<Peptide>, IDictionary<ResultKey, ProteinResult>, IDictionary<int, AbundanceValue>>

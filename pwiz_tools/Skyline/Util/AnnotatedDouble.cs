@@ -23,7 +23,6 @@ namespace pwiz.Skyline.Util
 
         public AnnotatedDouble(double rawValue, string message) : base(rawValue, message)
         {
-
         }
 
         [Format(NullValue = TextUtil.EXCEL_NA)]
@@ -46,6 +45,16 @@ namespace pwiz.Skyline.Util
         public string ToString(string format)
         {
             return GetPrefix() + Raw.ToString(format);
+        }
+
+        public AnnotatedDouble ChangeValue(double? rawValue)
+        {
+            if (rawValue == null)
+            {
+                return null;
+            }
+
+            return new AnnotatedDouble(rawValue.Value, Message);
         }
     }
 }

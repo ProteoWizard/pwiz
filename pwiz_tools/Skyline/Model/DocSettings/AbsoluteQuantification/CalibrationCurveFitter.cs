@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Linq;
 using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
-using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
@@ -621,11 +620,21 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         }
         public double? GetCalculatedConcentration(CalibrationCurve calibrationCurve, CalibrationPoint calibrationPoint)
         {
+            return GetAnnotatedConcentration(calibrationCurve, calibrationPoint)?.Strict;
+        }
+
+        public AnnotatedDouble GetAnnotatedConcentration(CalibrationCurve calibrationCurve,
+            CalibrationPoint calibrationPoint)
+        {
             if (!HasExternalStandards() && !HasInternalStandardConcentration())
             {
                 return null;
             }
-            return GetConcentrationFromXValue(GetCalculatedXValue(calibrationCurve, calibrationPoint) * GetDilutionFactor(calibrationPoint.ReplicateIndex));
+
+            var normalizedPeakArea = GetAnnotatedNormalizedPeakArea(calibrationPoint);
+            var concentration = GetConcentrationFromXValue(calibrationCurve.GetX(normalizedPeakArea?.Raw) *
+                                                           GetDilutionFactor(calibrationPoint.ReplicateIndex));
+            return normalizedPeakArea?.ChangeValue(concentration);
         }
 
         public double? GetCalculatedConcentration(CalibrationCurve calibrationCurve, int iReplicate)
@@ -704,11 +713,14 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             
             if (HasExternalStandards() || HasInternalStandardConcentration())
             {
-                double? calculatedConcentration = GetCalculatedConcentration(calibrationCurve, new CalibrationPoint(replicateIndex, null));
-                result = result.ChangeCalculatedConcentration(AnnotatedDouble.Of(calculatedConcentration));
-                double? expectedConcentration = GetPeptideConcentration(replicateIndex) * GetChromatogramSet(replicateIndex)?.SampleDilutionFactor;
-                result = result.ChangeAccuracy(AnnotatedDouble.Of(calculatedConcentration / expectedConcentration));
-                result = result.ChangeUnits(QuantificationSettings.Units);
+                AnnotatedDouble calculatedConcentration = GetAnnotatedConcentration(calibrationCurve, new CalibrationPoint(replicateIndex, null));
+                if (calculatedConcentration != null)
+                {
+                    result = result.ChangeCalculatedConcentration(calculatedConcentration);
+                    double? expectedConcentration = GetPeptideConcentration(replicateIndex) * GetChromatogramSet(replicateIndex)?.SampleDilutionFactor;
+                    result = result.ChangeAccuracy(calculatedConcentration.ChangeValue(calculatedConcentration.Raw / expectedConcentration));
+                    result = result.ChangeUnits(QuantificationSettings.Units);
+                }
             }
 
 
@@ -726,11 +738,14 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 result = (PrecursorQuantificationResult)result.ChangeNormalizedArea(GetAnnotatedNormalizedPeakArea(calibrationPoint));
                 if (HasExternalStandards() || HasInternalStandardConcentration())
                 {
-                    double? calculatedConcentration = GetCalculatedConcentration(calibrationCurve, calibrationPoint);
-                    result = (PrecursorQuantificationResult)result.ChangeCalculatedConcentration(AnnotatedDouble.Of(calculatedConcentration));
-                    double? expectedConcentration = transitionGroupDocNode.PrecursorConcentration;
-                    result = (PrecursorQuantificationResult)result.ChangeAccuracy(AnnotatedDouble.Of(calculatedConcentration / expectedConcentration));
-                    result = (PrecursorQuantificationResult)result.ChangeUnits(QuantificationSettings.Units);
+                    var calculatedConcentration = GetAnnotatedConcentration(calibrationCurve, calibrationPoint);
+                    if (calculatedConcentration != null)
+                    {
+                        result = (PrecursorQuantificationResult)result.ChangeCalculatedConcentration(calculatedConcentration);
+                        double? expectedConcentration = transitionGroupDocNode.PrecursorConcentration;
+                        result = (PrecursorQuantificationResult)result.ChangeAccuracy(calculatedConcentration.ChangeValue(calculatedConcentration.Raw / expectedConcentration));
+                        result = (PrecursorQuantificationResult)result.ChangeUnits(QuantificationSettings.Units);
+                    }
                 }
             }
 

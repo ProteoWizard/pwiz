@@ -88,11 +88,38 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Accuracy Strict.
+        /// </summary>
+        public static string AccuractStrict {
+            get {
+                return ResourceManager.GetString("AccuractStrict", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Accuracy.
         /// </summary>
         public static string Accuracy {
             get {
                 return ResourceManager.GetString("Accuracy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Accuracy Message.
+        /// </summary>
+        public static string AccuracyMessage {
+            get {
+                return ResourceManager.GetString("AccuracyMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Accuracy Raw.
+        /// </summary>
+        public static string AccuracyRaw {
+            get {
+                return ResourceManager.GetString("AccuracyRaw", resourceCulture);
             }
         }
         
@@ -363,6 +390,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string CalculatedConcentration {
             get {
                 return ResourceManager.GetString("CalculatedConcentration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculated Concentration Message.
+        /// </summary>
+        public static string CalculatedConcentrationMessage {
+            get {
+                return ResourceManager.GetString("CalculatedConcentrationMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculated Concentration Raw.
+        /// </summary>
+        public static string CalculatedConcentrationRaw {
+            get {
+                return ResourceManager.GetString("CalculatedConcentrationRaw", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculated Concentration Strict.
+        /// </summary>
+        public static string CalculatedConcentrationStrict {
+            get {
+                return ResourceManager.GetString("CalculatedConcentrationStrict", resourceCulture);
             }
         }
         
@@ -2014,6 +2068,42 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Molecule List Abundance Message.
+        /// </summary>
+        public static string MoleculeListAbundanceMessage {
+            get {
+                return ResourceManager.GetString("MoleculeListAbundanceMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule List Abundance Raw.
+        /// </summary>
+        public static string MoleculeListAbundanceRaw {
+            get {
+                return ResourceManager.GetString("MoleculeListAbundanceRaw", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule List Abundance Strict.
+        /// </summary>
+        public static string MoleculeListAbundanceStrict {
+            get {
+                return ResourceManager.GetString("MoleculeListAbundanceStrict", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule List Abundance Transition Weighted.
+        /// </summary>
+        public static string MoleculeListAbundanceTransitionWeighted {
+            get {
+                return ResourceManager.GetString("MoleculeListAbundanceTransitionWeighted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Molecule List Locator.
         /// </summary>
         public static string MoleculeListLocator {
@@ -2581,6 +2671,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Precursor Accuracy Message.
+        /// </summary>
+        public static string PrecursorAccuracyMessage {
+            get {
+                return ResourceManager.GetString("PrecursorAccuracyMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor Accuracy Raw.
+        /// </summary>
+        public static string PrecursorAccuracyRaw {
+            get {
+                return ResourceManager.GetString("PrecursorAccuracyRaw", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor Accuracy Strict.
+        /// </summary>
+        public static string PrecursorAccuracyStrict {
+            get {
+                return ResourceManager.GetString("PrecursorAccuracyStrict", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursor Adduct.
         /// </summary>
         public static string PrecursorAdduct {
@@ -2883,6 +3000,42 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string ProteinAbundance {
             get {
                 return ResourceManager.GetString("ProteinAbundance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein Abundance Message.
+        /// </summary>
+        public static string ProteinAbundanceMessage {
+            get {
+                return ResourceManager.GetString("ProteinAbundanceMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein Abundance Raw.
+        /// </summary>
+        public static string ProteinAbundanceRaw {
+            get {
+                return ResourceManager.GetString("ProteinAbundanceRaw", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein Abundance Strict.
+        /// </summary>
+        public static string ProteinAbundanceStrict {
+            get {
+                return ResourceManager.GetString("ProteinAbundanceStrict", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein Abundance Transition Weighted.
+        /// </summary>
+        public static string ProteinAbundanceTransitionWeighted {
+            get {
+                return ResourceManager.GetString("ProteinAbundanceTransitionWeighted", resourceCulture);
             }
         }
         
