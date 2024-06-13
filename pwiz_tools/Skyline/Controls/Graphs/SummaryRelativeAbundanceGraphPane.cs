@@ -163,6 +163,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override bool HandleMouseDownEvent(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
         {
+            // if Alt button is pressed this is a label drag event, no need to change the selection
+            if (Control.ModifierKeys == GraphSummary.GraphControl.EditModifierKeys)
+                return false;
+
             var ctrl = Control.ModifierKeys.HasFlag(Keys.Control); //CONSIDER allow override of modifier keys?
             int iNearest;
             var axis = GetNearestXAxis(sender, mouseEventArgs);
@@ -181,7 +185,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (GraphSummary.GraphControl.GraphPane.IsOverLabel(new Point(mouseEventArgs.X, mouseEventArgs.Y),
                     out var labPoint))
             {
-                var selectedRow = (FoldChangeBindingSource.FoldChangeRow)labPoint.Point.Tag;
+                var selectedRow = (GraphPointData)labPoint.Point.Tag;
                 identityPath = selectedRow.Protein.IdentityPath;
             }
             if (FindNearestPoint(new PointF(mouseEventArgs.X, mouseEventArgs.Y), out var nearestCurve, out iNearest))
