@@ -186,7 +186,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     out var labPoint))
             {
                 var selectedRow = (GraphPointData)labPoint.Point.Tag;
-                identityPath = selectedRow.Protein.IdentityPath;
+                identityPath = _areaProteinTargets ? selectedRow.Protein.IdentityPath : selectedRow.Peptide.IdentityPath;
             }
             if (FindNearestPoint(new PointF(mouseEventArgs.X, mouseEventArgs.Y), out var nearestCurve, out iNearest))
             {
@@ -308,8 +308,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 AdjustLabelSpacings(_labeledPoints, GraphSummary.GraphControl);
             }
         }
-
-
 
         private void AddPoints(PointPairList points, Color color, float size, bool labeled, PointSymbol pointSymbol, bool selected = false)
         {
@@ -437,6 +435,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             return pepDocNode.GlobalStandardType != null;
         }
+
         public void OnSuspendLayout(object sender, EventArgs eventArgs)
         {
             Settings.Default.GroupComparisonSuspendLabelLayout = !Settings.Default.GroupComparisonSuspendLabelLayout;
