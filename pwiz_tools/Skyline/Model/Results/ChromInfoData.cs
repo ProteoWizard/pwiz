@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Util;
@@ -29,6 +31,15 @@ namespace pwiz.Skyline.Model.Results
     {
         protected ChromInfoData(MeasuredResults measuredResults, int replicateIndex, ChromFileInfo chromFileInfo, ChromInfo chromInfo, PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode)
         {
+            if (chromFileInfo == null)
+            {
+                throw new ArgumentNullException(nameof(chromFileInfo));
+            }
+
+            if (chromInfo == null)
+            {
+                throw new ArgumentNullException(nameof(chromInfo));
+            }
             MeasuredResults = measuredResults;
             ReplicateIndex = replicateIndex;
             ChromFileInfo = chromFileInfo;
@@ -59,11 +70,15 @@ namespace pwiz.Skyline.Model.Results
 
         public override int OptimizationStep
         {
-            get { return ChromInfo != null ? ChromInfo.OptimizationStep : 0; }
+            get { return ChromInfo.OptimizationStep; }
         }
 
         public new TransitionChromInfo ChromInfo { get { return (TransitionChromInfo) base.ChromInfo; } }
 
+        /// <summary>
+        /// Returns a list of lists of TransitionChromInfoData objects for all the results of a given TransitionDocNode.
+        /// The length of the outer list will be equal to the number of replicates in the document
+        /// </summary>
         public static IList<ICollection<TransitionChromInfoData>> GetTransitionChromInfoDatas(MeasuredResults measuredResults, PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode, TransitionDocNode transitionDocNode)
         {
             var transitionResults = transitionDocNode.Results;
@@ -72,22 +87,17 @@ namespace pwiz.Skyline.Model.Results
             {
                 return list;
             }
-           Assume.IsTrue(transitionResults.Count == measuredResults.Chromatograms.Count,
+            Assume.IsTrue(transitionResults.Count == measuredResults.Chromatograms.Count,
                 string.Format(@"Unexpected mismatch between transition results {0} and chromatogram sets {1}", transitionResults.Count, measuredResults.Chromatograms.Count)); // CONSIDER: localize?
             for (int replicateIndex = 0; replicateIndex < transitionResults.Count; replicateIndex++)
             {
                 var datas = new List<TransitionChromInfoData>();
                 var chromatograms = measuredResults.Chromatograms[replicateIndex];
                 var transitionChromInfos = transitionResults[replicateIndex];
-                if (transitionChromInfos.IsEmpty)
-                    datas.Add(new TransitionChromInfoData(measuredResults, replicateIndex, null, null, peptideDocNode, transitionGroupDocNode, transitionDocNode));
-                else
+                foreach (var transitionChromInfo in transitionChromInfos)
                 {
-                    foreach (var transitionChromInfo in transitionChromInfos)
-                    {
-                        var chromFileInfo = chromatograms.GetFileInfo(transitionChromInfo.FileId);
-                        datas.Add(new TransitionChromInfoData(measuredResults, replicateIndex, chromFileInfo, transitionChromInfo, peptideDocNode, transitionGroupDocNode, transitionDocNode));
-                    }
+                    var chromFileInfo = chromatograms.GetFileInfo(transitionChromInfo.FileId);
+                    datas.Add(new TransitionChromInfoData(measuredResults, replicateIndex, chromFileInfo, transitionChromInfo, peptideDocNode, transitionGroupDocNode, transitionDocNode));
                 }
                 list.Add(datas);
             }
@@ -113,9 +123,13 @@ namespace pwiz.Skyline.Model.Results
 
         public override int OptimizationStep
         {
-            get { return ChromInfo != null ? ChromInfo.OptimizationStep : 0; }
+            get { return ChromInfo.OptimizationStep; }
         }
 
+        /// <summary>
+        /// Returns a list of lists of TransitionGroupChromInfoData objects for the results of a given TransitionGroupDocNode.
+        /// The length of the outer list will be equal to the number of replicates in the document.
+        /// </summary>
         public static IList<ICollection<TransitionGroupChromInfoData>> GetTransitionGroupChromInfoDatas(MeasuredResults measuredResults, PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode)
         {
             var list = new List<ICollection<TransitionGroupChromInfoData>>();
@@ -131,15 +145,10 @@ namespace pwiz.Skyline.Model.Results
                 var datas = new List<TransitionGroupChromInfoData>();
                 var chromatograms = measuredResults.Chromatograms[replicateIndex];
                 var transitionGroupChromInfos = transitionGroupResults[replicateIndex];
-                if (transitionGroupChromInfos.IsEmpty)
-                    datas.Add(new TransitionGroupChromInfoData(measuredResults, replicateIndex, null, null, peptideDocNode, transitionGroupDocNode));
-                else
+                foreach (var transitionGroupChromInfo in transitionGroupChromInfos)
                 {
-                    foreach (var transitionGroupChromInfo in transitionGroupChromInfos)
-                    {
-                        var chromFileInfo = chromatograms.GetFileInfo(transitionGroupChromInfo.FileId);
-                        datas.Add(new TransitionGroupChromInfoData(measuredResults, replicateIndex, chromFileInfo, transitionGroupChromInfo, peptideDocNode, transitionGroupDocNode));
-                    }
+                    var chromFileInfo = chromatograms.GetFileInfo(transitionGroupChromInfo.FileId);
+                    datas.Add(new TransitionGroupChromInfoData(measuredResults, replicateIndex, chromFileInfo, transitionGroupChromInfo, peptideDocNode, transitionGroupDocNode));
                 }
                 list.Add(datas);
             }
@@ -184,15 +193,10 @@ namespace pwiz.Skyline.Model.Results
                 var datas = new List<PeptideChromInfoData>();
                 var chromatograms = measuredResults.Chromatograms[replicateIndex];
                 var peptideChromInfos = peptideResults[replicateIndex];
-                if (peptideChromInfos.IsEmpty)
-                    datas.Add(new PeptideChromInfoData(measuredResults, replicateIndex, null, null, peptideDocNode));
-                else
+                foreach (var peptideChromInfo in peptideChromInfos)
                 {
-                    foreach (var peptideChromInfo in peptideChromInfos)
-                    {
-                        var chromFileInfo = chromatograms.GetFileInfo(peptideChromInfo.FileId);
-                        datas.Add(new PeptideChromInfoData(measuredResults, replicateIndex, chromFileInfo, peptideChromInfo, peptideDocNode));
-                    }
+                    var chromFileInfo = chromatograms.GetFileInfo(peptideChromInfo.FileId);
+                    datas.Add(new PeptideChromInfoData(measuredResults, replicateIndex, chromFileInfo, peptideChromInfo, peptideDocNode));
                 }
                 list.Add(datas);
             }

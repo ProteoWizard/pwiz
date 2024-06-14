@@ -92,9 +92,6 @@ namespace pwiz.SkylineTestTutorial
                 @"TestTutorial\AuditLogViews.zip"
             };
 
-            if(IsPauseForScreenShots)
-                PanoramaSetup();
-
             RunFunctionalTest();
         }
 
@@ -473,6 +470,8 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(loginDialog, loginDialog.CancelButton.PerformClick);
             else
             {
+                PanoramaSetup();
+
                 PauseForManualTutorialStep("MANUAL STEP (no screenshot). Enter password in the Edit Server dialog but DO NOT click OK. Close this window instead to proceed.");
 
                 var publishDialog = ShowDialog<PublishDocumentDlg>(loginDialog.OkDialog);
@@ -482,8 +481,8 @@ namespace pwiz.SkylineTestTutorial
                     publishDialog.SelectItem(testFolderName);
                 });
                 PauseForScreenShot<PublishDocumentDlg>("Folder selection dialog.", 21);
-                var browserConfirmationDialog = ShowDialog<MultiButtonMsgDlg>(publishDialog.OkDialog);
-
+                var shareTypeDlg = ShowDialog<ShareTypeDlg>(publishDialog.OkDialog);
+                var browserConfirmationDialog = ShowDialog<MultiButtonMsgDlg>(shareTypeDlg.OkDialog);
                 OkDialog(browserConfirmationDialog, browserConfirmationDialog.ClickYes);
 
                 PauseForScreenShot("Uploaded document in Panorama (in browser).");
@@ -674,10 +673,10 @@ namespace pwiz.SkylineTestTutorial
             requestData[@"folderType"] = @"Targeted MS";
             string createRequest = JsonConvert.SerializeObject(requestData);
 
-            using (var webClient = new WebClientWithCredentials(panoramaClient.ServerUri, panoramaClient.Username, panoramaClient.Password))
+            using (var requestHelper = panoramaClient.GetRequestHelper())
             {
                 var requestUri = PanoramaUtil.CallNewInterface(panoramaClient.ServerUri, @"core", parentFolderPath, @"createContainer", "", true);
-                webClient.Post(requestUri, createRequest);
+                requestHelper.Post(requestUri, createRequest, "Error creating folder");
             }
         }
 
@@ -700,10 +699,10 @@ namespace pwiz.SkylineTestTutorial
         {
             if (FolderExists(panoramaClient, folderPath))
             {
-                using (var webClient = new WebClientWithCredentials(panoramaClient.ServerUri, panoramaClient.Username, panoramaClient.Password))
+                using (var requestHelper = panoramaClient.GetRequestHelper())
                 {
                     var requestUri = PanoramaUtil.CallNewInterface(panoramaClient.ServerUri, @"core", folderPath, @"deleteContainer", "", true);
-                    webClient.Post(requestUri, "");
+                    requestHelper.Post(requestUri, "", "Error deleting folder");
                 }
             }
         }

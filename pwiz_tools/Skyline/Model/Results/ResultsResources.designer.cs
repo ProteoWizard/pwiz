@@ -382,6 +382,24 @@ namespace pwiz.Skyline.Model.Results {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Vendor-supplied library is unable to determine CCS for {0} with mobility={1:0.###}, mz={2:0.####}, and charge={3}..
+        /// </summary>
+        public static string DataFileInstrumentInfo_CCSFromIonMobility_no_conversion {
+            get {
+                return ResourceManager.GetString("DataFileInstrumentInfo_CCSFromIonMobility_no_conversion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Vendor-supplied library is unable to determine ion mobility for {0} with CCS={1:0.###}, mz={2:0.####}, and charge={3}..
+        /// </summary>
+        public static string DataFileInstrumentInfo_IonMobilityFromCCS_no_conversion {
+            get {
+                return ResourceManager.GetString("DataFileInstrumentInfo_IonMobilityFromCCS_no_conversion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to MS/MS.
         /// </summary>
         public static string GraphFullScan_GraphFullScan_MS_MS {
@@ -432,6 +450,26 @@ namespace pwiz.Skyline.Model.Results {
         public static string GraphFullScan_PeakType_Profile {
             get {
                 return ResourceManager.GetString("GraphFullScan_PeakType_Profile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to need a value for  Transition Settings  Ion mobility filtering  Window type.
+        /// </summary>
+        public static string IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settings___ion_mobility_filtering___Window_type {
+            get {
+                return ResourceManager.GetString("IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settin" +
+                        "gs___ion_mobility_filtering___Window_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to mixed ion mobility types are not supported.
+        /// </summary>
+        public static string IonMobilityFinder_FindIonMobilityPeaks_mixed_ion_mobility_types_are_not_supported {
+            get {
+                return ResourceManager.GetString("IonMobilityFinder_FindIonMobilityPeaks_mixed_ion_mobility_types_are_not_supported" +
+                        "", resourceCulture);
             }
         }
         
@@ -581,6 +619,16 @@ namespace pwiz.Skyline.Model.Results {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Discarding chromatograms for &apos;{0}&apos; because the explicit retention time {1} is not between {2} and {3}.
+        /// </summary>
+        public static string PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_ {
+            get {
+                return ResourceManager.GetString("PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___bec" +
+                        "ause_the_explicit_retention_time__1__is_not_between__2__and__3_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unexpected null peak list.
         /// </summary>
         public static string PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list {
@@ -615,6 +663,16 @@ namespace pwiz.Skyline.Model.Results {
         public static string ResultsGrid_ChangeChromInfo_Element_not_found {
             get {
                 return ResourceManager.GetString("ResultsGrid_ChangeChromInfo_Element_not_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The scan ID &apos;{0}&apos; could not be found in the file &apos;{1}&apos;..
+        /// </summary>
+        public static string ScanProvider_GetMsDataFileSpectraWithCommonRetentionTime_The_scan_ID___0___could_not_be_found_in_the_file___1___ {
+            get {
+                return ResourceManager.GetString("ScanProvider_GetMsDataFileSpectraWithCommonRetentionTime_The_scan_ID___0___could_" +
+                        "not_be_found_in_the_file___1___", resourceCulture);
             }
         }
         

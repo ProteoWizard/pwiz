@@ -55,7 +55,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
 //            IsCoverShotMode = true;
             CoverShotName = "SmallMolLibraries";
 
-            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeIMSLibraries.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeIMSLibraries-20_2.pdf";
 
             TestFilesZipPaths = new[]
             {
@@ -207,8 +207,8 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
             //   • From the File menu, choose Import and click Results.
             using (new WaitDocumentChange(null, true))
             {
-                var askDecoysDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
-                var importResultsDlg1 = ShowDialog<ImportResultsDlg>(askDecoysDlg.ClickNo);
+                Assert.IsFalse(pwiz.Skyline.SkylineWindow.ShouldPromptForDecoys(SkylineWindow.Document));
+                var importResultsDlg1 = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
                 //   • Set the Files to import simultaneously field to Many.
                 //   • Check Show chromatograms during import.
                 //   The Import Results form will appear as follows:

@@ -28,6 +28,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -200,9 +201,13 @@ namespace pwiz.Skyline.Model
         private bool ErrorAddingToExistingMoleculeGroup(ref SrmDocument document, ParsedIonInfo precursor, string groupName,
             string defaultPepGroupName, HashSet<MoleculeNameAndAccessions> moleculeIDsSeen, Row row, ref bool pepGroupFound)
         {
-            var adduct = precursor.Adduct;
-            var precursorMonoMz = adduct.MzFromNeutralMass(precursor.MonoMass);
-            var precursorAverageMz = adduct.MzFromNeutralMass(precursor.AverageMass);
+            var adduct = precursor?.Adduct;
+            if (Adduct.IsNullOrEmpty(adduct))
+            {
+                return true; // Can't process
+            }
+            var precursorMonoMz = adduct!.MzFromNeutralMass(precursor.MonoMass);
+            var precursorAverageMz = adduct!.MzFromNeutralMass(precursor.AverageMass);
             if (string.IsNullOrEmpty(groupName))
             {
                 groupName = defaultPepGroupName;
@@ -1979,9 +1984,26 @@ namespace pwiz.Skyline.Model
             if (explicitTransitionGroupValues?.CollisionEnergy == ion.ExplicitTransitionValues?.CollisionEnergy)
             {
                 // No need for per-transition CE override if it matches precursor CE override
-                ionExplicitTransitionValues = ionExplicitTransitionValues.ChangeCollisionEnergy(null); 
+                ionExplicitTransitionValues = ionExplicitTransitionValues.ChangeCollisionEnergy(null);
             }
-            return new TransitionDocNode(transition, annotations, null, mass, TransitionDocNode.TransitionQuantInfo.DEFAULT, ionExplicitTransitionValues, null);
+
+            var transitionQuantInfo = TransitionDocNode.TransitionQuantInfo.DEFAULT;
+            if (ionType == IonType.precursor && customMolecule.ParsedMolecule.HasChemicalFormula)
+            {
+                var fullScan = document.Settings.TransitionSettings.FullScan;
+                if (fullScan.IsHighResPrecursor)
+                {
+                    var calc = document.Settings.GetPrecursorCalc(IsotopeLabelType.light, null);
+                    var massDist = calc.GetMZDistribution(customMolecule.ParsedMolecule.GetMoleculeMassOffset(), adduct,
+                        fullScan.IsotopeAbundances);
+                    var isotopeDistInfo = IsotopeDistInfo.MakeIsotopeDistInfo(massDist, mass, adduct, fullScan);
+                    var transitionIsotopeDistInfo = new TransitionIsotopeDistInfo(isotopeDistInfo.GetRankI(0),
+                        isotopeDistInfo.GetProportionI(0));
+                    transitionQuantInfo = transitionQuantInfo.ChangeIsotopeDistInfo(transitionIsotopeDistInfo);
+                }
+            }
+
+            return new TransitionDocNode(transition, annotations, null, mass, transitionQuantInfo, ionExplicitTransitionValues, null);
         }
     }
 

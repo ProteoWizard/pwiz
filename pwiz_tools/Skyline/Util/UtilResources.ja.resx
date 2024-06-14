@@ -118,9 +118,6 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_uploading_to_Panorama__would_you_like_to_go_to_Panorama_" xml:space="preserve">
-    <value>Panoramaにアップロード中にエラーが発生しました。Panoramaにアクセスしますか？</value>
-  </data>
   <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_Document_import_was_cancelled_on_the_server__Would_you_like_to_go_to_Panorama_" xml:space="preserve">
     <value>サーバーでドキュメントのインポートがキャンセルされました。Panoramaに進みますか？</value>
   </data>
@@ -313,33 +310,6 @@
   </data>
   <data name="WebHelpers_PostToLink_Failure_saving_temporary_post_data_to_disk_" xml:space="preserve">
     <value>一時投稿データのディスクへの保存に失敗しました。</value>
-  </data>
-  <data name="WebPanoramaPublishClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_" xml:space="preserve">
-    <value>ファイルがサーバーにアップロードされませんでした。もう一度試すか、もしくは問題が続くようであればPanoramaサーバー管理者に問い合わせてください。</value>
-  </data>
-  <data name="WebPanoramaPublishClient_DeleteTempZipFile_Error_deleting_temporary_zip_file__" xml:space="preserve">
-    <value>一時zipファイルの削除エラー： </value>
-  </data>
-  <data name="WebPanoramaPublishClient_RenameTempZipFile_Error_renaming_temporary_zip_file__" xml:space="preserve">
-    <value>一時zipファイルの名前変更エラー： </value>
-  </data>
-  <data name="WebPanoramaPublishClient_SendZipFile_Deleting_temporary_file_on_server" xml:space="preserve">
-    <value>サーバーの一時ファイルの削除中</value>
-  </data>
-  <data name="WebPanoramaPublishClient_SendZipFile_Renaming_temporary_file_on_server" xml:space="preserve">
-    <value>サーバーの一時ファイルの名前を変更中</value>
-  </data>
-  <data name="WebPanoramaPublishClient_SendZipFile_Status_on_server_is___0_" xml:space="preserve">
-    <value>サーバーのステータス：{0}</value>
-  </data>
-  <data name="WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___" xml:space="preserve">
-    <value>データインポートの完了待ち...</value>
-  </data>
-  <data name="WebPanoramaPublishClient_updateProgressAndWait_Importing_data___0___complete_" xml:space="preserve">
-    <value>データをインポート中。{0}%完了。</value>
-  </data>
-  <data name="WebPanoramaPublishClient_webClient_UploadProgressChanged_Uploaded__0_fs__of__1_fs_" xml:space="preserve">
-    <value>{1:fs}中{0:fs}がアップロード済み</value>
   </data>
   <data name="XmlElementHelper_XmlElementHelper_The_class__0__has_no__1__" xml:space="preserve">
     <value>クラス{0}には{1}がありません。</value>

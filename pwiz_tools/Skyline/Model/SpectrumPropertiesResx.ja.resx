@@ -122,10 +122,10 @@
     <value>選択されたイオンのプリカーサー電荷</value>
   </data>
   <data name="Description_FileName" xml:space="preserve">
-    <value>ファイル名および可能であればスペクトルの起源となったファイルへのフルパス</value>
+    <value>ファイル名およびスペクトルの元データとなるファイルへのフルパス</value>
   </data>
   <data name="Description_IdFileName" xml:space="preserve">
-    <value>ファイル名および可能であればターゲットイオンがスペクトルに一致したファイルへのフルパス</value>
+    <value>ファイル名およびターゲットイオンがスペクトルに一致したファイルへのフルパス</value>
   </data>
   <data name="Description_Ion Mobility" xml:space="preserve">
     <value>スペクトルを取得するために単離されたイオンのRawイオン移動度値(msec、Vs/cm^2、Vなど)</value>
@@ -140,10 +140,10 @@
     <value>スペクトル取得の保持時間</value>
   </data>
   <data name="Description_Score" xml:space="preserve">
-    <value>最良一致スペクトルの選択に使用した確率スコア</value>
+    <value>最も良く一致したスペクトルの選択に使用した確率スコア</value>
   </data>
   <data name="Description_ScoreType" xml:space="preserve">
-    <value>最良スペクトルの選択に使用した確率スコアのスコアタイプ(q値、事後誤差確率など)</value>
+    <value>最も良く一致したスペクトルの選択に使用した確率スコアのスコアタイプ(q値、事後誤差確率など)</value>
   </data>
   <data name="Description_SpecIdInFile" xml:space="preserve">
     <value>スペクトルソースファイル内のスペクトルのスペクトルID</value>

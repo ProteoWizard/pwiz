@@ -417,7 +417,9 @@ enum PWIZ_API_DECL ScanFilterMassAnalyzerType
     ScanFilterMassAnalyzerType_TOFMS = 3,         // Time of Flight
     ScanFilterMassAnalyzerType_FTMS = 4,          // Fourier Transform
     ScanFilterMassAnalyzerType_Sector = 5,        // Magnetic Sector
-    ScanFilterMassAnalyzerType_Count = 6
+    ScanFilterMassAnalyzerType_Any = 6,           // returned by RawFileReader when filter type is unspecified
+    ScanFilterMassAnalyzerType_ASTMS = 7,         // ASymmetric Track lossless
+    ScanFilterMassAnalyzerType_Count = 8
 };
 
 
@@ -486,7 +488,8 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
             {
                 case ScanFilterMassAnalyzerType_FTMS: return MassAnalyzerType_Orbitrap;
                 default:
-                    return MassAnalyzerType_Astral; // Astral filters apparently don't have a scan filter mass analyzer type: if missing, assume Astral
+                case ScanFilterMassAnalyzerType_ASTMS:
+                    return MassAnalyzerType_Astral;
             }
 
         case InstrumentModelType_LTQ_FT:
@@ -578,6 +581,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
                 case ScanFilterMassAnalyzerType_SQMS: return MassAnalyzerType_Single_Quadrupole;
                 case ScanFilterMassAnalyzerType_TOFMS: return MassAnalyzerType_TOF;
                 case ScanFilterMassAnalyzerType_TQMS: return MassAnalyzerType_Triple_Quadrupole;
+                case ScanFilterMassAnalyzerType_ASTMS: return MassAnalyzerType_Astral;
                 default: return MassAnalyzerType_Unknown;
             }
     }

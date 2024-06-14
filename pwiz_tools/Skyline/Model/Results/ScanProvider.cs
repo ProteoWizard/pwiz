@@ -65,6 +65,7 @@ namespace pwiz.Skyline.Model.Results
         bool IsWatersSonarData { get; } // Returns true if data presents as ion mobility but is actually filtered on precursor m/z
         Tuple<int, int> SonarMzToBinRange(double mz, double tolerance); // Maps an mz value into the Waters SONAR bin space
         double? SonarBinToPrecursorMz(int bin); // Maps a Waters SONAR bin into precursor mz space - returns average of the m/z range for the bin
+        double? CCSFromIonMobility(double ionMobility, double mz, int charge); // Return a collisional cross section for this ion mobility value at this mz and charge, if reader supports this
         double? CCSFromIonMobility(IonMobilityValue ionMobilityValue, double mz, int charge); // Return a collisional cross section for this ion mobility value at this mz and charge, if reader supports this
         eIonMobilityUnits IonMobilityUnits { get; } 
         bool Adopt(IScanProvider scanProvider);
@@ -107,6 +108,13 @@ namespace pwiz.Skyline.Model.Results
 
         public Tuple<int,int> SonarMzToBinRange(double mz, double tolerance) {  return _dataFile?.SonarMzToBinRange(mz, tolerance); }
         public double? SonarBinToPrecursorMz(int bin) { return _dataFile?.SonarBinToPrecursorMz(bin); } // Maps a Waters SONAR bin into precursor mz space - returns average of the m/z range for the bin
+
+        public double? CCSFromIonMobility(double ionMobilityValue, double mz, int charge)
+        {
+            if (_dataFile == null)
+                return null;
+            return _dataFile.CCSFromIonMobility(ionMobilityValue, mz, charge);
+        }
 
         public double? CCSFromIonMobility(IonMobilityValue ionMobilityValue, double mz, int charge)
         {
@@ -204,9 +212,8 @@ namespace pwiz.Skyline.Model.Results
             {
                 var scanIdText = _msDataFileScanIds.GetMsDataFileSpectrumId(internalScanIndex);
                 dataFileSpectrumStartIndex = GetDataFile(ignoreZeroIntensityPoints).GetSpectrumIndex(scanIdText);
-                // TODO(brendanx): Improve this error message post-UI freeze
-//                if (dataFileSpectrumStartIndex == -1)
-//                    throw new ArgumentException(string.Format("The stored scan ID {0} was not found in the file {1}.", scanIdText, DataFilePath));
+                if (dataFileSpectrumStartIndex == -1)
+                    throw new ArgumentException(string.Format(ResultsResources.ScanProvider_GetMsDataFileSpectraWithCommonRetentionTime_The_scan_ID___0___could_not_be_found_in_the_file___1___, scanIdText, DataFilePath.RemoveLegacyParameters()));
             }
 
             MsDataSpectrum currentSpectrum;

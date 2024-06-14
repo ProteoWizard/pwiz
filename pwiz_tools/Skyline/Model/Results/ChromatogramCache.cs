@@ -338,7 +338,7 @@ namespace pwiz.Skyline.Model.Results
             float tolerance, ChromatogramSet chromatograms)
         {
             var fileIndexesFound = new HashSet<int>();
-            if (nodePep != null && nodePep.IsProteomic && _chromEntryIndex != null)
+            if (nodePep != null && _chromEntryIndex != null)
             {
                 var key = new LibKey(nodePep.ModifiedTarget, Adduct.EMPTY).LibraryKey;
                 foreach (var chromatogramIndex in _chromEntryIndex.ItemsMatching(key, false).SelectMany(list=>list))
@@ -449,6 +449,10 @@ namespace pwiz.Skyline.Model.Results
             }
             else
             {
+                if (chromatogramGroupId.Target?.Sequence == null)
+                {
+                    return false;
+                }
                 var key1 = new PeptideLibraryKey(nodePep.ModifiedSequence, 0);
                 var key2 = new PeptideLibraryKey(chromatogramGroupId.Target.Sequence, 0);
                 return LibKeyIndex.KeysMatch(key1, key2);
@@ -1466,7 +1470,7 @@ namespace pwiz.Skyline.Model.Results
 
             var productMzs = Enumerable.Range(startIdx, endIdx - startIdx).Select(i =>
                 new SignedMz(transitions[i].Product, transitionDocNode.Mz.IsNegative));
-            int centerIdx = startIdx + OptStepChromatograms.IndexOfCenter(
+            int centerIdx = startIdx + OptStepChromatograms.IndexOfCenterMz(
                 transitionDocNode.Mz, productMzs, optimizableRegression.StepCount);
             // Update optimization steps.
             for (var i = startIdx; i < endIdx; i++)
@@ -1921,37 +1925,45 @@ namespace pwiz.Skyline.Model.Results
             {
                 Assume.AreEqual(chromGroupHeaderInfos.Count, scores.Length);
             }
-            using (var stream = new FileStream(CachePath, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                if (peaks != null)
-                {
-                    // Read the peaks for all of the ChromGroupHeaderInfos
-                    // We process these in order of StartPeakIndex, because, in theory, it might make seeking in the file stream faster,
-                    // but it does not seem to make a difference in practice
-                    foreach (var index in Enumerable.Range(0, chromGroupHeaderInfos.Count)
-                        .OrderBy(i => chromGroupHeaderInfos[i].StartPeakIndex))
-                    {
-                        peaks[index] = ReadPeaks(stream, chromGroupHeaderInfos[index]);
-                    }
-                }
 
-                if (scores != null)
+            using (ReadStream.ReaderWriterLock.GetReadLock())
+            {
+                var cancellationToken = ReadStream.ReaderWriterLock.CancellationToken;
+                using (var stream = new FileStream(CachePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
-                    // Read the scores. Some of the ChromGroupHeaderInfos may have the same StartScoreIndex and number of peaks,
-                    // so process those at the same time
-                    foreach (var indexGroup in Enumerable.Range(0, chromGroupHeaderInfos.Count)
-                        .GroupBy(i => Tuple.Create(chromGroupHeaderInfos[i].StartScoreIndex,
-                            chromGroupHeaderInfos[i].NumPeaks))
-                        .OrderBy(group => group.Key.Item1))
+                    if (peaks != null)
                     {
-                        var groupScores = ReadScoresStartingAt(stream, indexGroup.Key.Item1,
-                            indexGroup.Key.Item2 * ScoreTypesCount);
-                        foreach (var index in indexGroup)
+                        // Read the peaks for all of the ChromGroupHeaderInfos
+                        // We process these in order of StartPeakIndex, because, in theory, it might make seeking in the file stream faster,
+                        // but it does not seem to make a difference in practice
+                        foreach (var index in Enumerable.Range(0, chromGroupHeaderInfos.Count)
+                                     .OrderBy(i => chromGroupHeaderInfos[i].StartPeakIndex))
                         {
-                            scores[index] = groupScores;
+                            cancellationToken.ThrowIfCancellationRequested();
+                            peaks[index] = ReadPeaks(stream, chromGroupHeaderInfos[index]);
+                        }
+                    }
+
+                    if (scores != null)
+                    {
+                        // Read the scores. Some of the ChromGroupHeaderInfos may have the same StartScoreIndex and number of peaks,
+                        // so process those at the same time
+                        foreach (var indexGroup in Enumerable.Range(0, chromGroupHeaderInfos.Count)
+                                     .GroupBy(i => Tuple.Create(chromGroupHeaderInfos[i].StartScoreIndex,
+                                         chromGroupHeaderInfos[i].NumPeaks))
+                                     .OrderBy(group => group.Key.Item1))
+                        {
+                            cancellationToken.ThrowIfCancellationRequested();
+                            var groupScores = ReadScoresStartingAt(stream, indexGroup.Key.Item1,
+                                indexGroup.Key.Item2 * ScoreTypesCount);
+                            foreach (var index in indexGroup)
+                            {
+                                scores[index] = groupScores;
+                            }
                         }
                     }
                 }
+
             }
         }
     }

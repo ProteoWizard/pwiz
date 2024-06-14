@@ -123,9 +123,12 @@ namespace pwiz.PanoramaClient
         /// </summary>
         private JToken GetJson(Uri queryUri)
         {
-            var webClient = new WebClientWithCredentials(queryUri, FolderBrowser.GetActiveServer().Username, FolderBrowser.GetActiveServer().Password);
-            JToken json = webClient.Get(queryUri);
-            return json;
+            using (var requestHelper = new PanoramaRequestHelper(new WebClientWithCredentials(queryUri, FolderBrowser.GetActiveServer().Username,
+                       FolderBrowser.GetActiveServer().Password)))
+            {
+                JToken json = requestHelper.Get(queryUri);
+                return json;
+            }
         }
 
         /// <summary>
@@ -712,7 +715,7 @@ namespace pwiz.PanoramaClient
 
         public string VersionsOption => versionOptions.Text;
 
-        public void ClickFile(string name)
+        public bool ClickFile(string name)
         {
             listView.SelectedItems.Clear();
             foreach (ListViewItem item in listView.Items)
@@ -723,8 +726,11 @@ namespace pwiz.PanoramaClient
                     item.Selected = true;
                     listView.Select();
                     ClickOpen();
+                    return true;
                 }
             }
+
+            return false;
         }
 
         #endregion

@@ -133,6 +133,15 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peptides.
+        /// </summary>
+        public static string AlignmentForm_UpdateGraph_Peptides {
+            get {
+                return ResourceManager.GetString("AlignmentForm_UpdateGraph_Peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Regression line.
         /// </summary>
         public static string AlignmentForm_UpdateGraph_Regression_line {
@@ -346,6 +355,15 @@ namespace pwiz.Skyline.Controls.Graphs {
         public static string AreaPeptideGraphPane_UpdateAxes_Peak_Area {
             get {
                 return ResourceManager.GetString("AreaPeptideGraphPane_UpdateAxes_Peak_Area", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide Rank.
+        /// </summary>
+        public static string AreaPeptideGraphPane_UpdateAxes_Peptide_Rank {
+            get {
+                return ResourceManager.GetString("AreaPeptideGraphPane_UpdateAxes_Peptide_Rank", resourceCulture);
             }
         }
         
@@ -877,6 +895,15 @@ namespace pwiz.Skyline.Controls.Graphs {
         public static string Extensions_CustomToString_Peptide_Comparison {
             get {
                 return ResourceManager.GetString("Extensions_CustomToString_Peptide_Comparison", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Relative Abundance.
+        /// </summary>
+        public static string Extensions_CustomToString_Relative_Abundance {
+            get {
+                return ResourceManager.GetString("Extensions_CustomToString_Relative_Abundance", resourceCulture);
             }
         }
         
@@ -1780,6 +1807,15 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Protein Rank.
+        /// </summary>
+        public static string SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank {
+            get {
+                return ResourceManager.GetString("SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peptide.
         /// </summary>
         public static string SummaryPeptideGraphPane_SummaryPeptideGraphPane_Peptide {
@@ -1794,6 +1830,15 @@ namespace pwiz.Skyline.Controls.Graphs {
         public static string SummaryPeptideGraphPane_UpdateAxes_Log {
             get {
                 return ResourceManager.GetString("SummaryPeptideGraphPane_UpdateAxes_Log", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule Rank.
+        /// </summary>
+        public static string SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank {
+            get {
+                return ResourceManager.GetString("SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank", resourceCulture);
             }
         }
         

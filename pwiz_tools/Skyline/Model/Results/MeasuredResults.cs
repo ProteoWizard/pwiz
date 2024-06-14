@@ -399,6 +399,8 @@ namespace pwiz.Skyline.Model.Results
             // data files with the extension <basename>.c.mzXML.  So, this needs
             // to be able to match <basename> with <basename>.c, and Vanderbilt
             // has a pipeline that generates mzML files all uppercase
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(prefix))
+                return false;
             if (!name.ToLower().StartsWith(prefix.ToLower()))
                 return false;
             if (name.Length == prefix.Length || name[prefix.Length] == '.')
@@ -1872,13 +1874,20 @@ namespace pwiz.Skyline.Model.Results
                         string cachePath = cachePartial.CachePath;
                         bool isSharedCache = _resultsClone.IsSharedCache(cachePartial);
 
+                        var readStream = cachePartial.ReadStream;
                         // Close partial cache file
                         try { cachePartial.Dispose(); }
                         catch (IOException) { }
 
                         // Remove from disk if not shared and not the final cache
                         if (!isSharedCache && !Equals(cache.CachePath, cachePath))
-                            _loadMonitor.StreamManager.Delete(cachePartial.CachePath);
+                        {
+                            _loadMonitor.StreamManager.ConnectionPool.DisconnectWhile(readStream,
+                                () =>
+                                {
+                                    _loadMonitor.StreamManager.Delete(cachePartial.CachePath);
+                                });
+                        }
                     }
 
                     _resultsClone.SetClonedCacheState(cache);

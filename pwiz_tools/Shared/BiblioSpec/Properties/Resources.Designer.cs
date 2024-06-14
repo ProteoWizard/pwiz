@@ -70,6 +70,15 @@ namespace pwiz.BiblioSpec.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Hardklor idotp.
+        /// </summary>
+        public static string BiblioSpecScoreType_DisplayName_Hardklor_idotp {
+            get {
+                return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_Hardklor_idotp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to IDPicker FDR.
         /// </summary>
         internal static string BiblioSpecScoreType_DisplayName_IDPicker_FDR {

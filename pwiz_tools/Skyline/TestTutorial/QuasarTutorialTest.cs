@@ -50,7 +50,7 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
 
-            TestFilesZip = @"http://skyline.gs.washington.edu/tutorials/QuaSARTutorial.zip";
+            TestFilesZip = @"http://skyline.ms/tutorials/QuaSARTutorial.zip";
             RunFunctionalTest();
         }
 

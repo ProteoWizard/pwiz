@@ -264,7 +264,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (precursorCalc == null)
             {
                 // Try to track down this exception:
-                // https://skyline.gs.washington.edu/labkey/announcements/home/issues/exceptions/thread.view?entityId=217d79c8-9a84-1032-ae5f-da2025829168&_anchor=19667#row:19667
+                // https://skyline.ms/announcements/home/issues/exceptions/thread.view?entityId=217d79c8-9a84-1032-ae5f-da2025829168&_anchor=19667#row:19667
                 throw new InvalidDataException(
                     String.Format(@"unable to locate precursor calculator for isotope label type {0} and mods {1}",
                         labelType == null ? @"(null)" : labelType.ToString(),
@@ -1011,36 +1011,37 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 // Use the explicitly specified CCS value if provided, and if we know how to convert to IM
                 var im = instrumentInfo.IonMobilityFromCCS(nodeGroup.ExplicitValues.CollisionalCrossSectionSqA.Value,
-                    nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge);
+                    nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge, nodeGroup.Peptide);
                 var imAndCCS = IonMobilityAndCCS.GetIonMobilityAndCCS(im,
                     nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,ExplicitTransitionValues.Get(nodeTran).IonMobilityHighEnergyOffset ?? 0);
-                // Now get the window width
-                var windowIM = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility.Mobility.Value, ionMobilityMax);
-                return IonMobilityFilter.GetIonMobilityFilter(imAndCCS, windowIM);
+                if (imAndCCS.IonMobility.Mobility.HasValue) // Did CCS conversion succeed?
+                {
+                    // Now get the window width
+                    var windowIM = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility.Mobility.Value, ionMobilityMax);
+                    return IonMobilityFilter.GetIonMobilityFilter(imAndCCS, windowIM);
+                }
             }
-            else if (nodeGroup.ExplicitValues.IonMobility.HasValue)
+            if (nodeGroup.ExplicitValues.IonMobility.HasValue)
             {
-                // Use the explicitly specified IM value
+                // Use the explicitly specified IM value if no CCS provided, or if CCS=>IM conversion failed
                 var imAndCCS = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(nodeGroup.ExplicitValues.IonMobility, nodeGroup.ExplicitValues.IonMobilityUnits),
                     nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,
                     ExplicitTransitionValues.Get(nodeTran).IonMobilityHighEnergyOffset ?? 0);
-                if (instrumentInfo != null && instrumentInfo.ProvidesCollisionalCrossSectionConverter)
+                if (!nodeGroup.ExplicitValues.CollisionalCrossSectionSqA.HasValue && // Retain original CCS if CCS=>IM failed
+                    instrumentInfo != null && instrumentInfo.ProvidesCollisionalCrossSectionConverter)
                 {
                     // Try to get a CCS value for this explicitly stated IM value - useful in reports
-                    var ccs = instrumentInfo.CCSFromIonMobility(imAndCCS.IonMobility, nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge);
+                    var ccs = instrumentInfo.CCSFromIonMobility(imAndCCS.IonMobility, nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge, nodeGroup.Peptide);
                     imAndCCS = imAndCCS.ChangeCollisionalCrossSection(ccs);
                 }
                 // Now get the window width
                 var windowIM = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility.Mobility.Value, ionMobilityMax);
                 return IonMobilityFilter.GetIonMobilityFilter(imAndCCS, windowIM);
             }
-            else
-            {
-                // Use library values
-                return GetIonMobilityHelper(nodePep, nodeGroup,
-                    instrumentInfo,
-                    libraryIonMobilityInfo, ionMobilityMax);
-            }
+            // Use library values
+            return GetIonMobilityHelper(nodePep, nodeGroup,
+                instrumentInfo,
+                libraryIonMobilityInfo, ionMobilityMax);
         }
 
         /// <summary>
@@ -1092,7 +1093,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 ionMobilityFunctionsProvider != null && ionMobilityFunctionsProvider.ProvidesCollisionalCrossSectionConverter)
             {
                 // Try to get a CCS value for this IM value - useful in reports
-                var ccs = ionMobilityFunctionsProvider.CCSFromIonMobility(result.IonMobility, nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge);
+                var ccs = ionMobilityFunctionsProvider.CCSFromIonMobility(result.IonMobility, nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge, nodeGroup.Peptide);
                 result = result.ChangeCollisionCrossSection(ccs);
             }
             return result ?? IonMobilityFilter.EMPTY;
@@ -1508,7 +1509,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             var peptide = new Peptide(null, peptideSequence, null, null, missedCleavages);
             var enumDocNodes = peptide.CreateDocNodes(this, this);
-            return enumDocNodes.GetEnumerator().MoveNext();
+            return enumDocNodes.Any();
         }
 
         public bool Accept(string peptideSequence)
@@ -1926,7 +1927,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     (!defSet.StaticModList.Contains(mod.ChangeExplicit(false)) || (mod.IsVariable && allowVariableOverwrite)) &&
                     // A variable modification set explicitly, can show up as explicit only in a document.
                     // This condition makes sure it doesn't overwrite the existing variable mod.
-                    (!mod.IsExplicit || !defSet.StaticModList.Contains(mod.ChangeVariable(true))))
+                    // Carefully because not all mods can be made variable without throwing
+                    (!mod.IsExplicit || !defSet.StaticModList.Contains(m => Equals(mod.ChangeVariable(false), m.ChangeVariable(false)))))
                 {
                     newStaticMods.Add(mod.IsUserSet ? mod.ChangeExplicit(false) : mod);
                     if (!overwrite)
@@ -2353,7 +2355,22 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 _store[(int)ionType + OFFSET_I, index] = value;
             }
-        }    
+        }
+
+        public T GetIonValue(IonType ionType, int ionNumber)
+        {
+            if (ionType.IsNTerminal())
+                return this[ionType, ionNumber - 1];
+            return this[ionType, _store.GetLength(1) - ionNumber];
+        }
+
+        public void SetIonValue(IonType ionType, int ionNumber, T value)
+        {
+            if (ionType.IsNTerminal())
+                this[ionType, ionNumber - 1] = value;
+            else
+                this[ionType, _store.GetLength(1) - ionNumber] = value;
+        }
     }
 
 

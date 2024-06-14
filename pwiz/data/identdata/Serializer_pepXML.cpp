@@ -419,7 +419,9 @@ void write_sample_enzyme(XMLWriter& xmlWriter, const IdentData& mzid)
     string enzymeName = bal::join(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_name()), " + ");
 
     // find the minimum specificity
-    int minSpecificity = *boost::range::min_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_specificity()));
+    int minSpecificity = 2;
+    if (!sip.enzymes.enzymes.empty())
+        minSpecificity = *boost::range::min_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_specificity()));
 
     XMLWriter::Attributes attributes;
     attributes.add("name", enzymeName);
@@ -505,10 +507,14 @@ void write_search_summary(XMLWriter& xmlWriter, const IdentData& mzid, const str
         string enzymeName = bal::join(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_name()), " + ");
 
         // find the maximum missed cleavages
-        int maxMissedCleavages = *boost::range::max_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_missedCleavages()));
+        int maxMissedCleavages = 0;
+        if (!sip.enzymes.enzymes.empty())
+            maxMissedCleavages = *boost::range::max_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_missedCleavages()));
 
         // find the minimum specificity
-        int minSpecificity = *boost::range::min_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_specificity()));
+        int minSpecificity = 2;
+        if (!sip.enzymes.enzymes.empty())
+            minSpecificity = *boost::range::min_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_specificity()));
 
         Formula nTerm(Formula_nTerm), cTerm(Formula_cTerm); 
 
@@ -690,7 +696,7 @@ void write_search_hit(XMLWriter& xmlWriter,
 {
     // we only write search_scores for numeric CVParams and UserParams;
     // examples of valid numbers: 1 1.234 1.234e5 1.234E-5 (also 123.456e5, not a big deal)
-    static boost::xpressive::sregex numericRegex = boost::xpressive::sregex::compile("[+-]?\\d+(?:\\.\\d*)?(?:[eE][+-]?\\d+)?");
+    const bxp::sregex numericRegex = bxp::sregex::compile("[+-]?\\d+(?:\\.\\d*)?(?:[eE][+-]?\\d+)?");
 
     if (!sii.peptidePtr.get())
         throw runtime_error("[write_search_hit] PepXML requires SpectrumIdentificationItem elements to refer to Peptides.");
@@ -2035,7 +2041,7 @@ PWIZ_API_DECL PepXMLSpecificity pepXMLSpecificity(const Enzyme& ez)
     // match zero or one regex term like (?<=[KR]) or (?<=K) or (?<![KR]) or (?<!K)
     // followed by zero or one term like (?=[KR]) or (?=K) or (?![KR]) or (?!K)
     // 4 capture groups: [!=] [A-Z] for each look: 0                1                        2                3
-    static bxp::sregex cutNoCutRegex = bxp::sregex::compile("(?:\\(+\\?<([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?(?:\\(+\\?([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?");
+    const bxp::sregex cutNoCutRegex = bxp::sregex::compile("(?:\\(+\\?<([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?(?:\\(+\\?([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?");
 
     PepXMLSpecificity result;
     string &cut = result.cut, &nocut = result.no_cut, &sense = result.sense;

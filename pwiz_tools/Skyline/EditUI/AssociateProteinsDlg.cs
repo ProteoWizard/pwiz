@@ -42,7 +42,7 @@ namespace pwiz.Skyline.EditUI
                   IAuditLogModifier<AssociateProteinsSettings>
     {
         private readonly SrmDocument _document;
-        private bool _isFasta;
+        private bool? _isFasta;
         private ProteinAssociation _proteinAssociation;
         private readonly SettingsListComboDriver<BackgroundProteomeSpec> _driverBackgroundProteome;
         public SrmDocument DocumentFinal { get; private set; }
@@ -54,6 +54,7 @@ namespace pwiz.Skyline.EditUI
         private readonly IrtStandard _irtStandard;
         private readonly string _decoyGenerationMethod;
         private readonly double _decoysPerTarget;
+        private bool _updatingLabels;
 
         private string _statusBarResultFormat;
         private static string[] _sharedPeptideOptionNames = Enum.GetNames(typeof(ProteinAssociation.SharedPeptides));
@@ -93,6 +94,7 @@ namespace pwiz.Skyline.EditUI
                 comboSharedPeptides.Items.Add(EnumNames.ResourceManager.GetString(@"SharedPeptides_" + sharedPeptides) ?? throw new InvalidOperationException(sharedPeptides));
 
             GroupProteins = peptideSettings.ProteinAssociationSettings?.GroupProteins ?? false;
+            GeneLevelParsimony = peptideSettings.ProteinAssociationSettings?.GeneLevelParsimony ?? false;
             FindMinimalProteinList = peptideSettings.ProteinAssociationSettings?.FindMinimalProteinList ?? false;
             RemoveSubsetProteins = peptideSettings.ProteinAssociationSettings?.RemoveSubsetProteins ?? false;
             SelectedSharedPeptides = peptideSettings.ProteinAssociationSettings?.SharedPeptides ?? ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins;
@@ -103,6 +105,7 @@ namespace pwiz.Skyline.EditUI
             _driverBackgroundProteome.LoadList(peptideSettings.BackgroundProteome.Name);
 
             helpTip.SetToolTip(cbGroupProteins, helpTip.GetToolTip(lblGroupProteins));
+            helpTip.SetToolTip(cbGeneLevel, helpTip.GetToolTip(lblGroupAtGeneLevel));
             helpTip.SetToolTip(cbMinimalProteinList, helpTip.GetToolTip(lblMinimalProteinList));
             helpTip.SetToolTip(cbRemoveSubsetProteins, helpTip.GetToolTip(lblRemoveSubsetProteins));
             helpTip.SetToolTip(comboSharedPeptides, helpTip.GetToolTip(lblSharedPeptides));
@@ -213,6 +216,11 @@ namespace pwiz.Skyline.EditUI
             get => cbGroupProteins.Checked;
             set => cbGroupProteins.Checked = value;
         }
+        public bool GeneLevelParsimony
+        {
+            get => cbGeneLevel.Checked;
+            set => cbGeneLevel.Checked = value;
+        }
 
         public bool FindMinimalProteinList
         {
@@ -235,7 +243,7 @@ namespace pwiz.Skyline.EditUI
         public int MinPeptidesPerProtein
         {
             get => (int) numMinPeptides.Value;
-            set => numMinPeptides.Value = value;
+            set => numMinPeptides.Value = Math.Max(numMinPeptides.Minimum, value);
         }
 
         private void UpdateTargetCounts()
@@ -250,10 +258,17 @@ namespace pwiz.Skyline.EditUI
         private void UpdateParsimonyResults()
         {
             DocumentFinal = null;
-            if (Results == null)
+            if (AssociatedProteins == null)
+            {
+                if (_isFasta == true)
+                    UseFastaFile(FastaFileName);
+                else if (_isFasta == false)
+                    UseBackgroundProteome();
                 return;
+            }
 
             var groupProteins = GroupProteins;
+            var geneLevel = GeneLevelParsimony;
             var findMinimalProteinList = FindMinimalProteinList;
             var removeSubsetProteins = RemoveSubsetProteins;
             var selectedSharedPeptides = SelectedSharedPeptides;
@@ -262,7 +277,7 @@ namespace pwiz.Skyline.EditUI
             using (var longWaitDlg = new LongWaitDlg())
             {
                 longWaitDlg.PerformWork(this, 1000,
-                    broker => _proteinAssociation.ApplyParsimonyOptions(groupProteins, findMinimalProteinList, removeSubsetProteins, selectedSharedPeptides, minPeptidesPerProtein, broker));
+                    broker => _proteinAssociation.ApplyParsimonyOptions(groupProteins, geneLevel, findMinimalProteinList, removeSubsetProteins, selectedSharedPeptides, minPeptidesPerProtein, broker));
                 if (longWaitDlg.IsCanceled)
                     return;
             }
@@ -284,17 +299,37 @@ namespace pwiz.Skyline.EditUI
 
             UpdateParsimonyResults();
         }
+        private void IfNotUpdatingLabels(Action action)
+        {
+            if (!_updatingLabels)
+            {
+                try
+                {
+                    _updatingLabels = true;
+                    action();
+                }
+                finally
+                {
+                    _updatingLabels = false;
+                }
+            }
+        }
 
         private void cbGroupProteins_CheckedChanged(object sender, EventArgs e)
         {
-            comboSharedPeptides.SelectedIndexChanged -= comboParsimony_SelectedIndexChanged;
-            // adjust labels to reflect whether proteins or protein groups are used
-            for (int i = 0; i < _sharedPeptideOptionNames.Length; ++i)
-                comboSharedPeptides.Items[i] = EnumNames.ResourceManager.GetString(
-                                                   (GroupProteins ? @"SharedPeptidesGroup_" : @"SharedPeptides_") +
-                                                   _sharedPeptideOptionNames[i]) ??
-                                               throw new InvalidOperationException(_sharedPeptideOptionNames[i]);
-            comboSharedPeptides.SelectedIndexChanged += comboParsimony_SelectedIndexChanged;
+            // setting gene level parsimony forces protein grouping on, so do nothing in that case
+            if (GeneLevelParsimony)
+                return;
+
+            IfNotUpdatingLabels(() =>
+            {
+                // adjust labels to reflect whether proteins or protein groups are used
+                for (int i = 0; i < _sharedPeptideOptionNames.Length; ++i)
+                    comboSharedPeptides.Items[i] = EnumNames.ResourceManager.GetString(
+                                                       (GroupProteins ? @"SharedPeptidesGroup_" : @"SharedPeptides_") +
+                                                       _sharedPeptideOptionNames[i]) ??
+                                                   throw new InvalidOperationException(_sharedPeptideOptionNames[i]);
+            });
 
             if (GroupProteins)
             {
@@ -313,8 +348,43 @@ namespace pwiz.Skyline.EditUI
             UpdateParsimonyResults();
         }
 
+        private void cbGeneLevel_CheckedChanged(object sender, EventArgs e)
+        {
+            IfNotUpdatingLabels(() =>
+            {
+                // adjust labels to reflect whether genes or protein groups are used
+                for (int i = 0; i < _sharedPeptideOptionNames.Length; ++i)
+                comboSharedPeptides.Items[i] = EnumNames.ResourceManager.GetString(
+                                                   (GeneLevelParsimony ? @"SharedPeptidesGene_" : @"SharedPeptidesGroup_") +
+                                                   _sharedPeptideOptionNames[i]) ??
+                                               throw new InvalidOperationException(_sharedPeptideOptionNames[i]);
+            });
+
+            // gene level parsimony implies grouping, so force the checkbox on and disable it
+            if (GeneLevelParsimony)
+            {
+                cbGroupProteins.Checked = true;
+                cbGroupProteins.Enabled = false;
+                lblMinimalProteinList.Text = EditUIResources.AssociateProteinsDlg_Find_minimal_gene_group_list_that_explains_all_peptides;
+                lblRemoveSubsetProteins.Text = EditUIResources.AssociateProteinsDlg_Remove_subset_genes;
+                lblMinPeptides.Text = EditUIResources.AssociateProteinsDlg_Min_peptides_per_gene;
+            }
+            else
+            {
+                cbGroupProteins.Enabled = true;
+                lblMinimalProteinList.Text = EditUIResources.AssociateProteinsDlg_Find_minimal_protein_group_list_that_explains_all_peptides;
+                lblRemoveSubsetProteins.Text = EditUIResources.AssociateProteinsDlg_Remove_subset_protein_groups;
+                lblMinPeptides.Text = EditUIResources.AssociateProteinsDlg_Min_peptides_per_protein_group;
+            }
+
+            UpdateParsimonyResults();
+        }
+
         private void comboParsimony_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (_updatingLabels)
+                return;
+
             UpdateParsimonyResults();
         }
 
@@ -456,12 +526,17 @@ namespace pwiz.Skyline.EditUI
                 longWaitDlg.PerformWork(this, 1000, monitor =>
                 {
                     result = _proteinAssociation.CreateDocTree(current, monitor);
-                    result = AddIrtAndDecoys(result);
+                    if (result != null)
+                        result = AddIrtAndDecoys(result);
 
                 });
                 if (longWaitDlg.IsCanceled)
                     return null;
             }
+
+            if (cbGeneLevel.Checked)
+                Settings.Default.ShowPeptidesDisplayMode = ProteinMetadataManager.ProteinDisplayMode.ByGene.ToString();
+
             return result;
         }
 
@@ -500,7 +575,9 @@ namespace pwiz.Skyline.EditUI
             get
             {
                 var fileName = FastaFileName;
-                return new AssociateProteinsSettings(_proteinAssociation, _isFasta && _overrideFastaPath == null ? fileName : null, _isFasta ? null : fileName);
+                return new AssociateProteinsSettings(_proteinAssociation,
+                    _isFasta == true && _overrideFastaPath == null ? fileName : null,
+                    _isFasta == true ? null : fileName);
             }
         }
 
@@ -619,6 +696,11 @@ namespace pwiz.Skyline.EditUI
         private void lblGroupProtein_Click(object sender, EventArgs e)
         {
             cbGroupProteins.Checked = !cbGroupProteins.Checked;
+        }
+
+        private void lblGroupAtGeneLevel_Click(object sender, EventArgs e)
+        {
+            cbGeneLevel.Checked = !cbGeneLevel.Checked;
         }
 
         private void lblMinimalProteinList_Click(object sender, EventArgs e)

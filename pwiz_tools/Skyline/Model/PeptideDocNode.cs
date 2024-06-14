@@ -227,13 +227,24 @@ namespace pwiz.Skyline.Model
         public Target ModifiedTarget { get; private set; }
         public string ModifiedSequence { get { return ModifiedTarget.Sequence; } }
 
+        public Target OriginalMoleculeTarget { get; private set; }
+
+        public PeptideDocNode ChangeOriginalMoleculeTarget(Target originalMolecule)
+        {
+            if (Equals(originalMolecule, OriginalMoleculeTarget))
+            {
+                return this;
+            }
+            return ChangeProp(ImClone(this), im => im.OriginalMoleculeTarget = originalMolecule);
+        }
+
         public string ModifiedSequenceDisplay { get; private set; }
 
         public Color Color { get; private set; }
         public static readonly Color UNKNOWN_COLOR = Color.FromArgb(170, 170, 170);
 
         // For robust chromatogram association in the event of user tweaking molecule details like name, CAS etc (but not mass!)
-        public Target ChromatogramTarget => Peptide.OriginalMoleculeTarget ?? ModifiedTarget;
+        public Target ChromatogramTarget => OriginalMoleculeTarget ?? ModifiedTarget;
 
         public Target Target { get { return Peptide.Target; }}
         public string TextId { get { return CustomInvariantNameOrText(Peptide.Sequence); } }
@@ -511,7 +522,8 @@ namespace pwiz.Skyline.Model
 
         /// <summary>
         /// Returns the index of the "best" result for a peptide.  This is currently
-        /// base solely on total peak area, could be enhanced in the future to be
+        /// based solely on total peak area, exclusive of things marked as not participating in scoring
+        /// like reporter ions.  Could be enhanced in the future to be
         /// more like picking the best peak in the import code, including factors
         /// such as peak-found-ratio and dot-product.
         /// </summary>
@@ -571,7 +583,7 @@ namespace pwiz.Skyline.Model
                         for (int iChromInfo = 0; iChromInfo < resultCount; iChromInfo++)
                         {
                             var chromInfo = result[iChromInfo];
-                            if (chromInfo.Area > 0)
+                            if (nodeTran.ParticipatesInScoring && chromInfo.Area > 0) // Don't use reporter ions in determining peak fit
                             {
                                 tranArea += chromInfo.Area;
                                 tranMeasured++;
@@ -692,10 +704,7 @@ namespace pwiz.Skyline.Model
         // Note: this potentially returns a node with a different ID, which has to be Inserted rather than Replaced
         public PeptideDocNode ChangeCustomIonValues(SrmSettings settings, CustomMolecule customMolecule, ExplicitRetentionTimeInfo explicitRetentionTime)
         {
-            // Make note of original description for chromatogram association, if nothing has changed to affect the chromatogram, so we can keep the association
-            var sameMass = Equals(customMolecule.AverageMass, Peptide.CustomMolecule.AverageMass) && 
-                           Equals(customMolecule.Formula, Peptide.CustomMolecule.Formula);
-            var newPeptide = new Peptide(customMolecule, sameMass ? Peptide.Target : null);
+            var newPeptide = new Peptide(customMolecule);
             Helpers.AssignIfEquals(ref newPeptide, Peptide);
             if (Equals(Peptide, newPeptide))
             {
@@ -914,6 +923,10 @@ namespace pwiz.Skyline.Model
             if (!ReferenceEquals(sourceKey, SourceKey))
                 nodeResult = nodeResult.ChangeSourceKey(sourceKey);
             nodeResult = nodeResult.UpdateModifiedSequence(settingsNew);
+            if (!settingsNew.HasResults)
+            {
+                nodeResult = nodeResult.ChangeOriginalMoleculeTarget(null);
+            }
 
             if (diff.DiffPeptideProps)
             {
@@ -1980,6 +1993,39 @@ namespace pwiz.Skyline.Model
             #endregion
         }
 
+        /// <summary>
+        /// For custom molecules, if the molecule's identifying string has changed
+        /// but its mass is still the same, remember its original string so as not
+        /// to lose the connection to the chromatograms in the .skyd file
+        /// </summary>
+        public PeptideDocNode RememberOriginalTarget(PeptideDocNode old)
+        {
+            var myCustomMolecule = CustomMolecule;
+            var oldCustomMolecule = old.CustomMolecule;
+            if (myCustomMolecule == null || oldCustomMolecule == null)
+            {
+                // Don't change anything if this is not a custom molecule
+                return this;
+            }
+            var sameMass = Equals(myCustomMolecule.AverageMass, oldCustomMolecule.AverageMass) &&
+                           Equals(myCustomMolecule.Formula, oldCustomMolecule.Formula);
+            if (!sameMass)
+            {
+                // If the mass has changed then forget any previously remembered molecule name
+                return ChangeOriginalMoleculeTarget(null);
+            }
+            if (OriginalMoleculeTarget != null)
+            {
+                // Don't change anything if the molecule is still remembering an even older name
+                return this;
+            }
+            if (Equals(ChromatogramTarget, old.ChromatogramTarget))
+            {
+                return this;
+            }
+            return ChangeOriginalMoleculeTarget(old.ChromatogramTarget);
+        }
+
         #region object overrides
 
         public bool Equals(PeptideDocNode other)
@@ -1998,7 +2044,8 @@ namespace pwiz.Skyline.Model
                 Equals(other.NormalizationMethod, NormalizationMethod) &&
                 Equals(other.AttributeGroupId, AttributeGroupId) &&
                 Equals(other.GlobalStandardType, GlobalStandardType) &&
-                Equals(other.SurrogateCalibrationCurve, SurrogateCalibrationCurve);
+                Equals(other.SurrogateCalibrationCurve, SurrogateCalibrationCurve) &&
+                Equals(other.OriginalMoleculeTarget, OriginalMoleculeTarget);
             return equal; // For debugging convenience
         }
 

@@ -278,12 +278,8 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     var aa = modInfo.ModifiedAminoAcid;
                     var smod = new StaticMod(@"temp",
-                                             aa != 'X' ? aa.ToString(CultureInfo.InvariantCulture) : string.Join(@",", AminoAcid.All),
-                                             null,
-                                             null,
-                                             LabelAtoms.None,
-                                             modInfo.ModifiedMass,
-                                             modInfo.ModifiedMass);
+                        AminoAcid.IsAA(aa) ? aa.ToString() : null,
+                        null, null, LabelAtoms.None, modInfo.ModifiedMass, modInfo.ModifiedMass);
                     var exmod = new ExplicitMod(modInfo.IndexMod, smod);
                     staticModList.Add(exmod);
                 }
@@ -370,6 +366,11 @@ namespace pwiz.Skyline.Model.Lib
                 ModifiedAminoAcid = modifiedAminoAcid;
                 ModifiedMass = modifiedMass;
             }
+        }
+
+        public override string ToString()
+        {
+            return KeyString; // For debugging convenience, not user facing
         }
     }
 }

@@ -201,12 +201,12 @@ void testEven(SpectrumListPtr sl)
     for (size_t i=0, end=filter.size(); i<end; i++)
     {
         const SpectrumIdentity& id = filter.spectrumIdentity(i); 
-        unit_assert(id.index == i);
-        unit_assert(id.id == "scan=" + lexical_cast<string>(100+i*2));
+        unit_assert_operator_equal(i, id.index);
+        unit_assert_operator_equal("scan=" + lexical_cast<string>(100+i*2), id.id);
 
         SpectrumPtr spectrum = filter.spectrum(i);
-        unit_assert(spectrum->index == i);
-        unit_assert(spectrum->id == "scan=" + lexical_cast<string>(100+i*2));
+        unit_assert_operator_equal(i, spectrum->index);
+        unit_assert_operator_equal("scan=" + lexical_cast<string>(100+i*2), spectrum->id);
     }
 }
 

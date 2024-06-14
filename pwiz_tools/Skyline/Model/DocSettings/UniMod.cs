@@ -35,7 +35,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public static Dictionary<UniModIdKey, StaticMod> DictUniModIds { get; private set; }
         public static HashSet<int> SetUniModIds { get; private set; }
         public static Dictionary<string, int> DictShortNamesToUniMod { get; private set; } 
-        public static ModMassLookup MassLookup { get; private set; }
+        private static ModMassLookup MassLookup { get; }
+        private static ModMassLookup MassLookupHidden { get; }
 
         public static readonly char[] AMINO_ACIDS = 
             {
@@ -54,6 +55,7 @@ namespace pwiz.Skyline.Model.DocSettings
             SetUniModIds = new HashSet<int>();
             DictShortNamesToUniMod = new Dictionary<string, int>();
             MassLookup = new ModMassLookup();
+            MassLookupHidden = new ModMassLookup();
 
             INITIALIZING = true;
             
@@ -63,13 +65,84 @@ namespace pwiz.Skyline.Model.DocSettings
             }
 
             MassLookup.Complete();
+            MassLookupHidden.Complete();
 
             INITIALIZING = false;
         }
         
+        /// <summary>
+        /// Finds a modification with a particular mass that could apply to a particular amino acid
+        /// at a particular terminus.
+        /// </summary>
+        /// <param name="mass">Mass of the modification</param>
+        /// <param name="aa">Amino acid residue that the modification must apply to</param>
+        /// <param name="roundTo">Number of digits of precision that were present in peptide modified sequence</param>
+        /// <param name="structural">false if an isotope modification</param>
+        /// <param name="terminus"></param>
+        /// <param name="specific">If true, then try to return a modification which only applies <paramref name="aa"/>.
+        /// If false, then first try to find a modification which applies to all amino acids because the modified peptide sequence had 
+        /// a modification on every residue.</param>
+        /// <returns>Modification that was found or null</returns>
+        public static StaticMod MatchModificationMass(double mass, char aa, int roundTo, bool structural,
+            ModTerminus? terminus, bool specific)
+        {
+            var mod = MassLookup.MatchModificationMass(mass, aa, roundTo, structural, terminus, specific);
+            if (mod != null)
+            {
+                // If we found a match in the set of common modifications, return it now
+                // unless the modification we found is very unspecific (e.g. 15N on all amino acids)
+                // and "specific" was true
+                if (!specific || !string.IsNullOrEmpty(mod.AAs) || mod.Terminus.HasValue)
+                {
+                    return mod;
+                }
+            }
+            var modHidden = MassLookupHidden.MatchModificationMass(mass, aa, roundTo, structural, terminus, specific);
+            if (modHidden != null)
+            {
+                if (specific && string.IsNullOrEmpty(mod?.AAs) && null == mod?.Terminus)
+                {
+                    if (!string.IsNullOrEmpty(modHidden.AAs) || modHidden.Terminus.HasValue)
+                    {
+                        return modHidden;
+                    }
+                }
+            }
+
+            return mod ?? modHidden;
+        }
+
         private static void AddMod(UniModModificationData data)
         {
-            var newMod = new StaticMod(data.Name, data.AAs, data.Terminus, false, data.Formula, data.LabelAtoms,
+            bool isVariable = data.Structural; // Most structural modifications are variable by default
+            if (isVariable)
+            {
+                int[] alkylationIds = 
+                {
+                    4,  // Carbamidomethyl
+                    6,  // Carboxymethyl
+                    24, // Propionamide
+                    893,    // CarbamidomethylDTT
+                    894,    // CarboxymethylDTT
+                    1290,   // Dicarbamidomethyl
+                };
+                // Except Cysteine alkylation modifications
+                if (data.ID.HasValue && alkylationIds.Contains(data.ID.Value) && Equals(data.AAs, @"C"))
+                    isVariable = false;
+                // And loss-only modifications like Ammonia and Water Loss
+                if (data.Losses != null && data.Losses.Length > 0 && data.Formula == null)
+                    isVariable = false;
+                // And isobaric tagging modifications like TMT, iTRAQ, mTRAQ, ICAT (unclear this is the right default)
+                // Jimmy says many people search with the mods on variable to assess labeling efficiency
+                // But Philip thinks they are better treated as fixed modifications by default
+                // NOTE: TMT has variants like "shTMT" (super heavy), while the others have names that start with their monikers
+                if (data.Name.Contains(@"TMT") || data.Name.StartsWith(@"iTRAQ") ||
+                    data.Name.StartsWith(@"mTRAQ") || data.Name.StartsWith(@"ICAT"))
+                    isVariable = false;
+                // Asked Mascot Team. They said they have no default and require users to choose
+            }
+
+            var newMod = new StaticMod(data.Name, data.AAs, data.Terminus, isVariable, data.Formula, data.LabelAtoms,
                                        RelativeRT.Matching, null, null, data.Losses, data.ID,
                                        data.ShortName);
             if (data.ID.HasValue && data.ShortName != null)
@@ -105,8 +178,15 @@ namespace pwiz.Skyline.Model.DocSettings
             foreach(char aa in aas)
             {
                 // Add to mass lookup.
-                MassLookup.Add(aa, mod, structural, true);
-                
+                if (hidden)
+                {
+                    MassLookupHidden.Add(aa, mod, structural, true);
+                }
+                else
+                {
+                    MassLookup.Add(aa, mod, structural, true);
+                }
+
                 // Add to dictionary by ID.
                 if (id == null)
                     continue;

@@ -1,10 +1,21 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace pwiz.Common.SystemUtil
 {
     public static class CommonTextUtil
     {
+        /// <summary>
+        /// This function can be used as a replacement for String.Join(" ", ...)
+        /// </summary>
+        /// <param name="values">A set of strings to be separated by spaces</param>
+        /// <returns>A single string containing the original set separated by spaces</returns>
+        public static string SpaceSeparate(params string[] values)
+        {
+            return SpaceSeparate(values.AsEnumerable());
+        }
+
         public static string SpaceSeparate(IEnumerable<string> values)
         {
             var sb = new StringBuilder();

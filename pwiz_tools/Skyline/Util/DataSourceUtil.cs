@@ -48,7 +48,8 @@ namespace pwiz.Skyline.Util
 
         public static readonly string[] EXT_FASTA = {".fasta", ".fa", ".faa"};
 
-        public const string TYPE_WIFF = "Sciex WIFF/WIFF2";
+        public const string TYPE_WIFF = "Sciex WIFF";
+        public const string TYPE_WIFF2 = "Sciex WIFF2";
         public const string TYPE_AGILENT = "Agilent MassHunter Data";
         public const string TYPE_BRUKER = "Bruker BAF/TDF/TSF";
         public const string TYPE_SHIMADZU = "Shimadzu LCD";
@@ -102,7 +103,9 @@ namespace pwiz.Skyline.Util
         public static string GetSourceType(string directoryName, string[] fileNames, string[] subdirectoryNames)
         {
             if (PathEx.HasExtension(directoryName, EXT_WATERS_RAW) &&
-                (fileNames.Count(fn => fn.StartsWith(@"_FUNC") && fn.EndsWith(@".DAT") && fn.Count(ch => ch=='.')==1) > 0))
+                fileNames.Any(fn => fn.StartsWith(@"_FUNC", StringComparison.InvariantCultureIgnoreCase) &&
+                                    fn.EndsWith(@".DAT", StringComparison.InvariantCultureIgnoreCase) &&
+                                    fn.Count(ch => ch == '.') == 1))
                 return TYPE_WATERS_RAW;
             if (PathEx.HasExtension(directoryName, EXT_AGILENT_BRUKER_RAW))
             {
@@ -127,7 +130,7 @@ namespace pwiz.Skyline.Util
             {
                 case EXT_THERMO_RAW: return TYPE_THERMO_RAW;
                 case EXT_WIFF: return TYPE_WIFF;
-                case EXT_WIFF2: return TYPE_WIFF;
+                case EXT_WIFF2: return TYPE_WIFF2;
                 case EXT_SHIMADZU_RAW: return TYPE_SHIMADZU;
                 //case ".mgf": return "Mascot Generic";
                 //case ".dta": return "Sequest DTA";

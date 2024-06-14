@@ -137,17 +137,28 @@ namespace pwiz.Skyline.Model.Results.Scoring
             do
             {
                 docCurrent = container.Document;
-                docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangePeptideIntegration(i =>
-                    i.ChangeAutoTrain(PeptideIntegration.AutoTrainType.none).ChangePeakScoringModel((PeakScoringModelSpec)scoringModel)));
-
-                // Reintegrate peaks
-                var resultsHandler = new MProphetResultsHandler(docNew, (PeakScoringModelSpec)scoringModel, _cachedFeatureScores);
-                resultsHandler.ScoreFeatures(loadMonitor);
-                if (resultsHandler.IsMissingScores())
+                try
                 {
-                    return End(Resources.ImportPeptideSearchManager_LoadBackground_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document_);
+                    docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangePeptideIntegration(i =>
+                        i.ChangeAutoTrain(PeptideIntegration.AutoTrainType.none)
+                            .ChangePeakScoringModel((PeakScoringModelSpec)scoringModel)));
+
+                    // Reintegrate peaks
+                    var resultsHandler = new MProphetResultsHandler(docNew, (PeakScoringModelSpec)scoringModel, _cachedFeatureScores);
+                    resultsHandler.ScoreFeatures(loadMonitor);
+                    if (resultsHandler.IsMissingScores())
+                    {
+                        return End(Resources.ImportPeptideSearchManager_LoadBackground_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document_);
+                    }
+                    docNew = resultsHandler.ChangePeaks(loadMonitor);
                 }
-                docNew = resultsHandler.ChangePeaks(loadMonitor);
+                catch (OperationCanceledException)
+                {
+                    // Document probably changed while we were auto-training
+                    // Do nothing right now and if the current document still needs to
+                    // be auto-trained we will do it again later.
+                    docNew = docCurrent;
+                }
             }
             while (!CompleteProcessing(container, docNew, docCurrent));
 

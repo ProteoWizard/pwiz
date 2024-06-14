@@ -118,9 +118,6 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_uploading_to_Panorama__would_you_like_to_go_to_Panorama_" xml:space="preserve">
-    <value>An error occured while uploading to Panorama, would you like to go to Panorama?</value>
-  </data>
   <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_Document_import_was_cancelled_on_the_server__Would_you_like_to_go_to_Panorama_" xml:space="preserve">
     <value>Document import was cancelled on the server. Would you like to go to Panorama?</value>
   </data>
@@ -320,33 +317,6 @@ Charge states are inferred from the presence of these adduct components:{1}</val
   <data name="WebHelpers_PostToLink_Failure_saving_temporary_post_data_to_disk_" xml:space="preserve">
     <value>Failure saving temporary post data to disk.</value>
   </data>
-  <data name="WebPanoramaPublishClient_ConfirmFileOnServer_File_was_not_uploaded_to_the_server__Please_try_again__or_if_the_problem_persists__please_contact_your_Panorama_server_administrator_" xml:space="preserve">
-    <value>File was not uploaded to the server. Please try again, or if the problem persists, please contact your Panorama server administrator.</value>
-  </data>
-  <data name="WebPanoramaPublishClient_DeleteTempZipFile_Error_deleting_temporary_zip_file__" xml:space="preserve">
-    <value>Error deleting temporary zip file: </value>
-  </data>
-  <data name="WebPanoramaPublishClient_RenameTempZipFile_Error_renaming_temporary_zip_file__" xml:space="preserve">
-    <value>Error renaming temporary zip file: </value>
-  </data>
-  <data name="WebPanoramaPublishClient_SendZipFile_Deleting_temporary_file_on_server" xml:space="preserve">
-    <value>Deleting temporary file on server</value>
-  </data>
-  <data name="WebPanoramaPublishClient_SendZipFile_Renaming_temporary_file_on_server" xml:space="preserve">
-    <value>Renaming temporary file on server</value>
-  </data>
-  <data name="WebPanoramaPublishClient_SendZipFile_Status_on_server_is___0_" xml:space="preserve">
-    <value>Status on server is: {0}</value>
-  </data>
-  <data name="WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___" xml:space="preserve">
-    <value>Waiting for data import completion...</value>
-  </data>
-  <data name="WebPanoramaPublishClient_updateProgressAndWait_Importing_data___0___complete_" xml:space="preserve">
-    <value>Importing data. {0}% complete.</value>
-  </data>
-  <data name="WebPanoramaPublishClient_webClient_UploadProgressChanged_Uploaded__0_fs__of__1_fs_" xml:space="preserve">
-    <value>Uploaded {0:fs} of {1:fs}</value>
-  </data>
   <data name="XmlElementHelper_XmlElementHelper_The_class__0__has_no__1__" xml:space="preserve">
     <value>The class {0} has no {1}.</value>
   </data>
@@ -364,5 +334,14 @@ Charge states are inferred from the presence of these adduct components:{1}</val
   </data>
   <data name="XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element" xml:space="preserve">
     <value>Attempt to serialize list missing an element.</value>
+  </data>
+  <data name="ParsedMolecule_SplitFormulaAndMasses_Cannot_parse___0___as_a_mass_offset_in_the_text___1___" xml:space="preserve">
+    <value>Cannot parse "{0}" as a mass offset in the text "{1}"</value>
+  </data>
+  <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_Would_you_like_to_go_to_Panorama_" xml:space="preserve">
+	  <value>Would you like to go to Panorama?</value>
+  </data>
+  <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_An_import_error_occurred_on_the_Panorama_server__0__" xml:space="preserve">
+	  <value>An import error occurred on the Panorama server {0}.</value>
   </data>
 </root>
