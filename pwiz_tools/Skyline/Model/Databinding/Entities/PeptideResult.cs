@@ -237,7 +237,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                         if (!string.IsNullOrEmpty(ResultFile.Replicate.BatchName) ||
                             Peptide.DocNode.HasPrecursorConcentrations)
                         {
-                            Settings.Default.CalibrationCurveOptions.SingleBatch = true;
+                            Settings.Default.CalibrationCurveOptions =
+                                Settings.Default.CalibrationCurveOptions.ChangeSingleBatch(true);
                             calibrationForm.UpdateUI(false);
                         }
                     }

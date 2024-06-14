@@ -442,7 +442,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                         if (DocNode.HasPrecursorConcentrations &&
                             Settings.Default.CalibrationCurveOptions.SingleBatch)
                         {
-                            Settings.Default.CalibrationCurveOptions.SingleBatch = false;
+                            Settings.Default.CalibrationCurveOptions = Settings.Default.CalibrationCurveOptions.ChangeSingleBatch(false);
                             calibrationForm.UpdateUI(false);
                         }
                     }

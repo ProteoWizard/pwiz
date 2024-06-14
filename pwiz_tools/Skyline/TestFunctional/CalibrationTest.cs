@@ -44,8 +44,9 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            Settings.Default.CalibrationCurveOptions.DisplaySampleTypes = new[]
-                {SampleType.UNKNOWN.Name, SampleType.QC.Name, SampleType.STANDARD.Name};
+            Settings.Default.CalibrationCurveOptions =
+                Settings.Default.CalibrationCurveOptions.ChangeDisplaySampleTypes(new[]
+                    { SampleType.UNKNOWN, SampleType.QC, SampleType.STANDARD });
             RunUI(() => SkylineWindow.ShowCalibrationForm());
             var calibrationForm = FindOpenForm<CalibrationForm>();
             Assert.AreEqual(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_No_results_available,
@@ -62,7 +63,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SequenceTree.SelectedPath = SkylineWindow.DocumentUI.GetPathTo(
                     (int)SrmDocument.Level.Molecules, 0));
             WaitForGraphs();
-            Assert.AreEqual(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_Use_the_Quantification_tab_on_the_Peptide_Settings_dialog_to_control_the_conversion_of_peak_areas_to_concentrations_,
+            AssertEx.AreEqual(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_Use_the_Quantification_tab_on_the_Peptide_Settings_dialog_to_control_the_conversion_of_peak_areas_to_concentrations_,
                 GetGraphTitle(calibrationForm));
             PauseForScreenShot("Quantification not configured");
             {
