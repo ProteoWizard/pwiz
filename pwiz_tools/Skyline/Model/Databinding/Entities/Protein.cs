@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.Databinding.Collections;
@@ -272,25 +273,31 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return proteinAbundanceRecords;
         }
 
-        public class AbundanceValue : AnnotatedDouble
+        public class AbundanceValue : IAnnotatedValue
         {
-            public AbundanceValue(double raw, double transitionWeighted, string message) : base(raw, message)
+            public AbundanceValue(double raw, double transitionWeighted, string message)
             {
+                Raw = raw;
+                Message = message;
+                if (message == null)
+                {
+                    Strict = raw;
+                }
                 TransitionWeighted = transitionWeighted;
             }
             [InvariantDisplayName("MoleculeListAbundanceRaw")]
             [ProteomicDisplayName("ProteinAbundanceRaw")]
             [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
-            public new double Raw
+            public double Raw
             {
-                get { return base.Raw; }
+                get; private set;
             }
             [InvariantDisplayName("MoleculeListAbundanceStrict")]
             [ProteomicDisplayName("ProteinAbundanceStrict")]
             [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
-            public new double? Strict
+            public double? Strict
             {
-                get { return base.Strict; }
+                get;
             }
             [InvariantDisplayName("MoleculeListAbundanceTransitionWeighted")]
             [ProteomicDisplayName("ProteinAbundanceTransitionWeighted")]
@@ -299,9 +306,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
             [InvariantDisplayName("MoleculeListAbundanceMessage")]
             [ProteomicDisplayName("ProteinAbundanceMessage")]
-            public new string Message
+            public string Message
             {
-                get { return base.Message; }
+                get;
+            }
+
+            public string GetErrorMessage()
+            {
+                return Message;
             }
         }
         private class CachedValues 

@@ -19,26 +19,12 @@
 
 using System;
 using System.Collections.Generic;
-using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
 {
     public interface IAnnotatedValue
     {
         string GetErrorMessage();
-    }
-
-    public static class AnnotatedValue
-    {
-        public static AnnotatedValue<T> Of<T>(T value)
-        {
-            return new AnnotatedValue<T>(value, null);
-        }
-
-        public static AnnotatedValue<T> WithMessage<T>(T value, string error)
-        {
-            return new AnnotatedValue<T>(value, error);
-        }
     }
 
     public class AnnotatedValue<T> : IAnnotatedValue, IComparable

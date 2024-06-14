@@ -94,6 +94,11 @@ namespace pwiz.SkylineTest.MSstats.Averaging
                 foreach (var proteinResult in protein.Results.Values)
                 {
                     var abundance = proteinResult.Abundance?.Strict;
+                    if (!abundance.HasValue)
+                    {
+                        continue;
+                    }
+
                     var condition = proteinResult.Replicate.ChromatogramSet.Annotations.GetAnnotation("Condition");
                     if (condition == "Healthy")
                     {

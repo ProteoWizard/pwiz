@@ -126,9 +126,6 @@
   <data name="Abundance">
     <value>Abundance</value>
   </data>
-  <data name="AccuractStrict">
-    <value>Accuracy Strict</value>
-  </data>
   <data name="Accuracy">
     <value>Accuracy</value>
   </data>
@@ -137,6 +134,9 @@
   </data>
   <data name="AccuracyRaw">
     <value>Accuracy Raw</value>
+  </data>
+  <data name="AccuracyStrict">
+    <value>Accuracy Strict</value>
   </data>
   <data name="AcquiredTime">
     <value>Acquired Time</value>
