@@ -364,13 +364,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
         }
         // ReSharper restore PossibleMultipleEnumeration
 
-        private IEnumerable<IdentityPath> GetSelectedPaths()
-        {
-            var document = _skylineWindow.DocumentUI;
-            var level = GroupComparisonDef.PerProtein ? SrmDocument.Level.MoleculeGroups : SrmDocument.Level.Molecules;
-            return _skylineWindow.SequenceTree.SelectedPaths
-                .SelectMany(path => document.EnumeratePathsAtLevel(path, level));
-        }
 
         private void AddPoints(PointPairList points, Color color, float size, bool labeled, PointSymbol pointSymbol, bool selected = false)
         {

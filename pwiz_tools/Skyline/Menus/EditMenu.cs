@@ -803,9 +803,9 @@ namespace pwiz.Skyline.Menus
                     currentTransitionGroupPath =
                         SkylineWindow.SequenceTree.SelectedPath.GetPathTo((int) SrmDocument.Level.TransitionGroups);
                 }
-
-                var peptidePaths = document.EnumeratePathsAtLevel(SkylineWindow.SequenceTree.SelectedPaths,
-                    SrmDocument.Level.Molecules).ToList();
+                var peptidePaths =
+                    SkylineWindow.SequenceTree.SelectedPaths.SelectMany(path =>
+                        document.EnumeratePathsAtLevel(path, SrmDocument.Level.Molecules)).Distinct().ToList();
                 var changedPaths = new List<PropertyName>();
                 if (peptidePaths.Count == 0)
                 {

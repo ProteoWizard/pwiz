@@ -2717,11 +2717,6 @@ namespace pwiz.Skyline.Model
             return docNodeTuples.Select(tuple => tuple.Item1);
         }
 
-        public IEnumerable<IdentityPath> EnumeratePathsAtLevel(IEnumerable<IdentityPath> paths, Level level)
-        {
-            return paths.SelectMany(path => EnumeratePathsAtLevel(path, level));
-        }
-
         public SrmDocument ChangeDocumentGuid()
         {
             return ChangeSettings(Settings.ChangeDataSettings(Settings.DataSettings.ChangeDocumentGuid()));
