@@ -1732,62 +1732,62 @@ namespace ZedGraph
 			}
 		}
 
-        public double AddInterval(double val, double intervalStart, double intervalEnd)
-        {
-            switch (Type)
-            {
+		public double AddInterval(double val, double intervalStart, double intervalEnd)
+		{
+			switch (Type)
+			{
 				case AxisType.Exponent:
 					return Math.Log10(Math.Pow(10, val)+ Math.Pow(10, intervalEnd) - Math.Pow(10, intervalStart));
 				case AxisType.Log:
-                    return Math.Pow(10, Math.Log10(val * intervalEnd / intervalStart));
+					return Math.Pow(10, Math.Log10(val * intervalEnd / intervalStart));
 				default:
-                    return val + intervalEnd - intervalStart;
-            }
-        }
+					return val + intervalEnd - intervalStart;
+			}
+		}
 
-		/*
-				/// <summary>
-				/// Make a value label for the axis at the specified ordinal position.
-				/// </summary>
-				/// <remarks>
-				/// This method properly accounts for <see cref="IsLog"/>, <see cref="IsText"/>,
-				/// and other axis format settings.
-				/// </remarks>
-				/// <param name="pane">
-				/// A reference to the <see cref="GraphPane"/> object that is the parent or
-				/// owner of this object.
-				/// </param>
-				/// <param name="index">
-				/// The zero-based, ordinal index of the label to be generated.  For example, a value of 2 would
-				/// cause the third value label on the axis to be generated.
-				/// </param>
-				/// <param name="dVal">
-				/// The numeric value associated with the label.  This value is ignored for log (<see cref="IsLog"/>)
-				/// and text (<see cref="IsText"/>) type axes.
-				/// </param>
-				/// <returns>The resulting value label as a <see cref="string" /></returns>
-				virtual internal string MakeLabel( GraphPane pane, int index, double dVal )
-				{
-					if ( this.ScaleFormatEvent != null )
-					{
-						string label;
+/*
+		/// <summary>
+		/// Make a value label for the axis at the specified ordinal position.
+		/// </summary>
+		/// <remarks>
+		/// This method properly accounts for <see cref="IsLog"/>, <see cref="IsText"/>,
+		/// and other axis format settings.
+		/// </remarks>
+		/// <param name="pane">
+		/// A reference to the <see cref="GraphPane"/> object that is the parent or
+		/// owner of this object.
+		/// </param>
+		/// <param name="index">
+		/// The zero-based, ordinal index of the label to be generated.  For example, a value of 2 would
+		/// cause the third value label on the axis to be generated.
+		/// </param>
+		/// <param name="dVal">
+		/// The numeric value associated with the label.  This value is ignored for log (<see cref="IsLog"/>)
+		/// and text (<see cref="IsText"/>) type axes.
+		/// </param>
+		/// <returns>The resulting value label as a <see cref="string" /></returns>
+		virtual internal string MakeLabel( GraphPane pane, int index, double dVal )
+		{
+			if ( this.ScaleFormatEvent != null )
+			{
+				string label;
 
-						label = this.ScaleFormatEvent( pane, _ownerAxis, dVal, index );
-						if ( label != null )
-							return label;
-					}
+				label = this.ScaleFormatEvent( pane, _ownerAxis, dVal, index );
+				if ( label != null )
+					return label;
+			}
 
-					if ( _format == null )
-						_format = Scale.Default.Format;
+			if ( _format == null )
+				_format = Scale.Default.Format;
 
-					// linear or ordinal is the default behavior
-					// this method is overridden for other Scale types
+			// linear or ordinal is the default behavior
+			// this method is overridden for other Scale types
 
-					double scaleMult = Math.Pow( (double) 10.0, _mag );
+			double scaleMult = Math.Pow( (double) 10.0, _mag );
 
-					return ( dVal / scaleMult ).ToString( _format );
-				}
-		*/
+			return ( dVal / scaleMult ).ToString( _format );
+		}
+*/
 
 		/// <summary>
 		/// Make a value label for the axis at the specified ordinal position.
