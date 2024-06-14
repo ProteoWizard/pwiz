@@ -308,7 +308,7 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;iRTPeptidesLabel.Parent" xml:space="preserve">
-    <value>panelFilesPrositProperties</value>
+    <value>panelFilesKoinaProperties</value>
   </data>
   <data name="&gt;&gt;iRTPeptidesLabel.ZOrder" xml:space="preserve">
     <value>4</value>
@@ -316,7 +316,7 @@
   <data name="panelProperties.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="panelFilesPrositProperties.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="panelFilesKoinaProperties.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
   <data name="ceLabel.AutoSize" type="System.Boolean, mscorlib">
@@ -347,7 +347,7 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;ceLabel.Parent" xml:space="preserve">
-    <value>panelFilesPrositProperties</value>
+    <value>panelFilesKoinaProperties</value>
   </data>
   <data name="&gt;&gt;ceLabel.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -371,7 +371,7 @@
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;ceCombo.Parent" xml:space="preserve">
-    <value>panelFilesPrositProperties</value>
+    <value>panelFilesKoinaProperties</value>
   </data>
   <data name="&gt;&gt;ceCombo.ZOrder" xml:space="preserve">
     <value>1</value>
@@ -551,7 +551,7 @@
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelFilesProps.Parent" xml:space="preserve">
-    <value>panelFilesPrositProperties</value>
+    <value>panelFilesKoinaProperties</value>
   </data>
   <data name="&gt;&gt;panelFilesProps.ZOrder" xml:space="preserve">
     <value>2</value>
@@ -572,87 +572,87 @@
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboStandards.Parent" xml:space="preserve">
-    <value>panelFilesPrositProperties</value>
+    <value>panelFilesKoinaProperties</value>
   </data>
   <data name="&gt;&gt;comboStandards.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="panelFilesPrositProperties.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="panelFilesKoinaProperties.Location" type="System.Drawing.Point, System.Drawing">
     <value>18, 196</value>
   </data>
-  <data name="panelFilesPrositProperties.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="panelFilesKoinaProperties.Size" type="System.Drawing.Size, System.Drawing">
     <value>366, 178</value>
   </data>
-  <data name="panelFilesPrositProperties.TabIndex" type="System.Int32, mscorlib">
+  <data name="panelFilesKoinaProperties.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
   </data>
-  <data name="&gt;&gt;panelFilesPrositProperties.Name" xml:space="preserve">
-    <value>panelFilesPrositProperties</value>
+  <data name="&gt;&gt;panelFilesKoinaProperties.Name" xml:space="preserve">
+    <value>panelFilesKoinaProperties</value>
   </data>
-  <data name="&gt;&gt;panelFilesPrositProperties.Type" xml:space="preserve">
+  <data name="&gt;&gt;panelFilesKoinaProperties.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;panelFilesPrositProperties.Parent" xml:space="preserve">
+  <data name="&gt;&gt;panelFilesKoinaProperties.Parent" xml:space="preserve">
     <value>panelProperties</value>
   </data>
-  <data name="&gt;&gt;panelFilesPrositProperties.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;panelFilesKoinaProperties.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="prositInfoSettingsBtn.AutoSize" type="System.Boolean, mscorlib">
+  <data name="koinaInfoSettingsBtn.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="prositInfoSettingsBtn.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="koinaInfoSettingsBtn.Location" type="System.Drawing.Point, System.Drawing">
     <value>190, 44</value>
   </data>
-  <data name="prositInfoSettingsBtn.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="koinaInfoSettingsBtn.Size" type="System.Drawing.Size, System.Drawing">
     <value>68, 13</value>
   </data>
-  <data name="prositInfoSettingsBtn.TabIndex" type="System.Int32, mscorlib">
+  <data name="koinaInfoSettingsBtn.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name="prositInfoSettingsBtn.Text" xml:space="preserve">
+  <data name="koinaInfoSettingsBtn.Text" xml:space="preserve">
     <value>情報/設定</value>
   </data>
-  <data name="&gt;&gt;prositInfoSettingsBtn.Name" xml:space="preserve">
-    <value>prositInfoSettingsBtn</value>
+  <data name="&gt;&gt;koinaInfoSettingsBtn.Name" xml:space="preserve">
+    <value>koinaInfoSettingsBtn</value>
   </data>
-  <data name="&gt;&gt;prositInfoSettingsBtn.Type" xml:space="preserve">
+  <data name="&gt;&gt;koinaInfoSettingsBtn.Type" xml:space="preserve">
     <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;prositInfoSettingsBtn.Parent" xml:space="preserve">
+  <data name="&gt;&gt;koinaInfoSettingsBtn.Parent" xml:space="preserve">
     <value>dataSourceGroupBox</value>
   </data>
-  <data name="&gt;&gt;prositInfoSettingsBtn.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;koinaInfoSettingsBtn.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="prositDataSourceRadioButton.AutoSize" type="System.Boolean, mscorlib">
+  <data name="koinaDataSourceRadioButton.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="prositDataSourceRadioButton.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+  <data name="koinaDataSourceRadioButton.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <data name="prositDataSourceRadioButton.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="koinaDataSourceRadioButton.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 42</value>
   </data>
-  <data name="prositDataSourceRadioButton.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="koinaDataSourceRadioButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>51, 17</value>
   </data>
-  <data name="prositDataSourceRadioButton.TabIndex" type="System.Int32, mscorlib">
+  <data name="koinaDataSourceRadioButton.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="prositDataSourceRadioButton.Text" xml:space="preserve">
+  <data name="koinaDataSourceRadioButton.Text" xml:space="preserve">
     <value>Pro&amp;sit</value>
   </data>
-  <data name="&gt;&gt;prositDataSourceRadioButton.Name" xml:space="preserve">
-    <value>prositDataSourceRadioButton</value>
+  <data name="&gt;&gt;koinaDataSourceRadioButton.Name" xml:space="preserve">
+    <value>koinaDataSourceRadioButton</value>
   </data>
-  <data name="&gt;&gt;prositDataSourceRadioButton.Type" xml:space="preserve">
+  <data name="&gt;&gt;koinaDataSourceRadioButton.Type" xml:space="preserve">
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;prositDataSourceRadioButton.Parent" xml:space="preserve">
+  <data name="&gt;&gt;koinaDataSourceRadioButton.Parent" xml:space="preserve">
     <value>dataSourceGroupBox</value>
   </data>
-  <data name="&gt;&gt;prositDataSourceRadioButton.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;koinaDataSourceRadioButton.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="dataSourceFilesRadioButton.AutoSize" type="System.Boolean, mscorlib">

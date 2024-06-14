@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public RTLinearRegressionGraphPane(GraphSummary graphSummary, bool runToRun)
             : base(graphSummary)
         {
-            XAxis.Title.Text = Resources.RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Score;
+            XAxis.Title.Text = GraphsResources.RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Score;
             RunToRun = runToRun;
             Settings.Default.RTScoreCalculatorList.ListChanged += RTScoreCalculatorList_ListChanged;
             AllowDisplayTip = true;
@@ -868,7 +868,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 tryIrtCalc != null)
                             {
                                 MessageDlg.Show(Program.MainWindow, string.Format(
-                                    Resources.GraphData_GraphData_The_database_for_the_calculator__0__could_not_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_,
+                                    GraphsResources.GraphData_GraphData_The_database_for_the_calculator__0__could_not_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_,
                                     tryIrtCalc.Name, tryIrtCalc.DatabasePath));
                                 return;
                             }
@@ -1188,21 +1188,21 @@ namespace pwiz.Skyline.Controls.Graphs
                     curveOut.Symbol.Size = 8f;
                 }
 
-                string labelPoints = Resources.GraphData_Graph_Peptides;
+                string labelPoints = Helpers.PeptideToMoleculeTextMapper.Translate(GraphsResources.GraphData_Graph_Peptides, _document.DocumentType);
                 if (!_refine)
                 {
-                    GraphRegression(graphPane, _statisticsAll, _regressionAll, Resources.GraphData_Graph_Regression, COLOR_LINE_REFINED);
+                    GraphRegression(graphPane, _statisticsAll, _regressionAll, GraphsResources.GraphData_Graph_Regression, COLOR_LINE_REFINED);
                 }
                 else
                 {
-                    labelPoints = Resources.GraphData_Graph_Peptides_Refined;
-                    GraphRegression(graphPane, _statisticsRefined, _regressionAll, Resources.GraphData_Graph_Regression_Refined, COLOR_LINE_REFINED);
-                    GraphRegression(graphPane, _statisticsAll, _regressionAll, Resources.GraphData_Graph_Regression, COLOR_LINE_ALL);
+                    labelPoints = Helpers.PeptideToMoleculeTextMapper.Translate(GraphsResources.GraphData_Graph_Peptides_Refined, _document.DocumentType);
+                    GraphRegression(graphPane, _statisticsRefined, _regressionAll, GraphsResources.GraphData_Graph_Regression_Refined, COLOR_LINE_REFINED);
+                    GraphRegression(graphPane, _statisticsAll, _regressionAll, GraphsResources.GraphData_Graph_Regression, COLOR_LINE_ALL);
                 }
 
                 if (_regressionPredict != null && Settings.Default.RTPredictorVisible)
                 {
-                    GraphRegression(graphPane, _statisticsPredict, _regressionAll, Resources.GraphData_Graph_Predictor, COLOR_LINE_PREDICT);
+                    GraphRegression(graphPane, _statisticsPredict, _regressionAll, GraphsResources.GraphData_Graph_Predictor, COLOR_LINE_PREDICT);
                 }
 
                 var curve = graphPane.AddCurve(labelPoints, _scoresRefined, _timesRefined,
@@ -1213,7 +1213,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 if (_scoresOutliers != null)
                 {
-                    var curveOut = graphPane.AddCurve(Resources.GraphData_Graph_Outliers, _scoresOutliers, _timesOutliers,
+                    var curveOut = graphPane.AddCurve(GraphsResources.GraphData_Graph_Outliers, _scoresOutliers, _timesOutliers,
                                                       Color.Black, SymbolType.Diamond);
                     curveOut.Line.IsVisible = false;
                     curveOut.Symbol.Border.IsVisible = false;
@@ -1246,7 +1246,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     curveOut.Symbol.Size = 8f;
                 }
 
-                string labelPoints = _refine ? Resources.GraphData_Graph_Peptides_Refined : Resources.GraphData_Graph_Peptides;
+                string labelPoints =
+                    Helpers.PeptideToMoleculeTextMapper.Translate(_refine ? GraphsResources.GraphData_Graph_Peptides_Refined : GraphsResources.GraphData_Graph_Peptides, _document.DocumentType); 
                 var curve = graphPane.AddCurve(labelPoints, _scoresRefined, GetResiduals(regression, _scoresRefined, _timesRefined),
                                                Color.Black, SymbolType.Diamond);
                 curve.Line.IsVisible = false;
@@ -1255,7 +1256,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 if (_scoresOutliers != null)
                 {
-                    var curveOut = graphPane.AddCurve(Resources.GraphData_Graph_Outliers, _scoresOutliers, 
+                    var curveOut = graphPane.AddCurve(GraphsResources.GraphData_Graph_Outliers, _scoresOutliers, 
                                                       GetResiduals(regression, _scoresOutliers, _timesOutliers),
                                                       Color.Black, SymbolType.Diamond);
                     curveOut.Line.IsVisible = false;
@@ -1275,13 +1276,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     if (IsRunToRun)
                     {
-                        return string.Format(Resources.GraphData_ResidualsLabel_Time_from_Regression___0__,
+                        return string.Format(GraphsResources.GraphData_ResidualsLabel_Time_from_Regression___0__,
                             _document.MeasuredResults.Chromatograms[_targetIndex].Name);
                     }
                     else
                     {
                         return _regressionPredict != null
-                            ? Resources.GraphData_GraphResiduals_Time_from_Prediction
+                            ? GraphsResources.GraphData_GraphResiduals_Time_from_Prediction
                             : Resources.GraphData_GraphResiduals_Time_from_Regression;
                     }
                 }
@@ -1293,7 +1294,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     if (IsRunToRun)
                     {
-                        return string.Format(Resources.GraphData_CorrelationLabel_Measured_Time___0__,
+                        return string.Format(GraphsResources.GraphData_CorrelationLabel_Measured_Time___0__,
                             _document.MeasuredResults.Chromatograms[_targetIndex].Name);
                     }
                     else
@@ -1433,7 +1434,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         if (_document.MeasuredResults != null && 0 <= _originalIndex && _originalIndex < _document.MeasuredResults.Chromatograms.Count)
                         {
-                            return string.Format(Resources.GraphData_CorrelationLabel_Measured_Time___0__,
+                            return string.Format(GraphsResources.GraphData_CorrelationLabel_Measured_Time___0__,
                                 _document.MeasuredResults.Chromatograms[_originalIndex].Name);
                         }
                         return string.Empty;

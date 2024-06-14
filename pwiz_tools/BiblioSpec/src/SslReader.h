@@ -27,13 +27,24 @@
 namespace BiblioSpec {
 
 // classes and functions to use with the DelimitedFileReader
+struct RTINFO
+{
+    // All times in minutes
+    double retentionTime;
+    double startTime;
+    double endTime;
+};
+
 class sslPSM : public PSM {
   public:
     std::string filename; 
     PSM_SCORE_TYPE scoreType;
-    double retentionTime;
+    RTINFO rtInfo; // RT, startT, endT in minutes
 
-    sslPSM() : PSM(), scoreType(UNKNOWN_SCORE_TYPE), retentionTime(-1) {};
+    sslPSM() : PSM(), scoreType(UNKNOWN_SCORE_TYPE)
+    {
+        rtInfo.retentionTime = rtInfo.startTime = rtInfo.endTime = 0;
+    };
 
     static void setFile(sslPSM& psm, const std::string& value){
         if( value.empty() ){
@@ -44,7 +55,8 @@ class sslPSM : public PSM {
     }
     static void setScanNumber(sslPSM& psm, const std::string& value){
         if( value.empty() ){
-            throw BlibException(false, "Missing scan number.");
+            Verbosity::comment(V_DETAIL,"Missing MS2 scan ID. Treating this as a precursor-only record.");
+            psm.setPrecursorOnly();
         } else {
             try{// might be a scan number or a string identifier
                 psm.specKey = boost::lexical_cast<int>(trimLeadingZeros(value));
@@ -98,10 +110,59 @@ class sslPSM : public PSM {
     static void setRetentionTime(sslPSM& psm, const std::string& value) {
         if (!value.empty()) {
             try {
-                psm.retentionTime = boost::lexical_cast<double>(value);
+                psm.rtInfo.retentionTime = boost::lexical_cast<double>(value);
             } catch (bad_lexical_cast) {
                 throw BlibException(false, "Non-numeric retention time: %s",
                                     value.c_str());
+            }
+        }
+    }
+    static void setStartTime(sslPSM& psm, const std::string& value) {
+        if (!value.empty()) {
+            try {
+                psm.rtInfo.startTime = boost::lexical_cast<double>(value);
+            }
+            catch (bad_lexical_cast) {
+                throw BlibException(false, "Non-numeric start time: %s",
+                    value.c_str());
+            }
+        }
+    }
+    static void setEndTime(sslPSM& psm, const std::string& value) {
+        if (!value.empty()) {
+            try {
+                psm.rtInfo.endTime = boost::lexical_cast<double>(value);
+            }
+            catch (bad_lexical_cast) {
+                throw BlibException(false, "Non-numeric end time: %s",
+                    value.c_str());
+            }
+        }
+    }
+    static void setIonMobility(sslPSM& psm, const std::string& value) {
+        if (!value.empty()) {
+            try {
+                psm.ionMobility = boost::lexical_cast<double>(value);
+            }
+            catch (bad_lexical_cast) {
+                throw BlibException(false, "Non-numeric ion mobility value: %s",
+                    value.c_str());
+            }
+        }
+    }
+    static void setIonMobilityUnits(sslPSM& psm, const std::string& value) {
+        if (!value.empty()) {
+            psm.ionMobilityType = parseIonMobilityType(value.c_str());
+        }
+    }
+    static void setCCS(sslPSM& psm, const std::string& value) {
+        if (!value.empty()) {
+            try {
+                psm.ccs = boost::lexical_cast<double>(value);
+            }
+            catch (bad_lexical_cast) {
+                throw BlibException(false, "Non-numeric CCS: %s",
+                    value.c_str());
             }
         }
     }
@@ -145,6 +206,17 @@ class sslPSM : public PSM {
             psm.smallMolMetadata.otherKeys = value;
         }
     }
+    static void setPrecursorMzDeclared(sslPSM& psm, const std::string& value) {
+        if (!value.empty()) {
+            try {
+                psm.smallMolMetadata.precursorMzDeclared = boost::lexical_cast<double>(value);
+            }
+            catch (bad_lexical_cast) {
+                throw BlibException(false, "Non-numeric precursorMZ: %s",
+                    value.c_str());
+            }
+        }
+    }
 
   private:
      static std::string trimLeadingZeros(std::string s) {
@@ -166,34 +238,38 @@ class SslReader : public BuildParser, DelimitedFileConsumer<sslPSM>, public Pwiz
   public:
     SslReader(BlibBuilder& maker,
               const char* sslname,
-              const ProgressIndicator* parent_progress);
+              const ProgressIndicator* parent_progress,
+              const char* readerName = "SslReader");
     ~SslReader();
 
-    void parse();
+    virtual void parse();
     virtual bool parseFile();  // inherited from BuildParser
     vector<PSM_SCORE_TYPE> getScoreTypes(); // inherited from BuildParser
     virtual void addDataLine(sslPSM& data); // from DelimitedFileConsumer
+    virtual void setColumnsAndSeparators(DelimitedFileReader<sslPSM> &fileReader);
 
     virtual bool getSpectrum(int identifier,
                              SpecData& returnData,
                              SPEC_ID_TYPE type,
                              bool getPeaks);
 
-    virtual bool getSpectrum(std::string identifier,
+    virtual bool getSpectrum(string specName,
                              SpecData& returnData,
                              bool getPeaks);
 
-  private:
+  protected:
     string sslName_;
     string sslDir_;   // look for spectrum files in the same dir as the ssl
+    bool hasHeader_;
     map<string, vector<PSM*> > fileMap_; // vector of PSMs for each spec file
     map<string, PSM_SCORE_TYPE> fileScoreTypes_; // score type for each file
 
-    map<int, double> overrideRt_; // forced retention times (key is scan number)
+    map<int, RTINFO> overrideRt_; // forced retention times (key is scan number)
 
     void parseModSeq(vector<SeqMod>& mods, string& modSeq);
     void unmodifySequence(string& seq);
     string parseCrosslinkedSequence(vector<SeqMod>& mods, const string& modSeq);
+    static void setRtInfo(SpecData& returnData, const RTINFO& rtInfo);
   };
 
 } // namespace

@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -30,7 +31,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Spectra;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -1046,14 +1046,14 @@ namespace pwiz.Skyline.Model.Results
                             if (!nextSpectrum.RetentionTime.HasValue)
                             {
                                 throw new InvalidDataException(
-                                string.Format(Resources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_scan_time,
+                                string.Format(ResultsResources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_scan_time,
                                     _dataFile.GetSpectrumId(i)));
                             }
                             var precursors = nextSpectrum.Precursors;
                             if (precursors.Count < 1 || !precursors[0].PrecursorMz.HasValue)
                             {
                             throw new InvalidDataException(
-                                string.Format(Resources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_precursor_mz,
+                                string.Format(ResultsResources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_precursor_mz,
                                     _dataFile.GetSpectrumId(i)));
                             }
                             return new SpectrumInfo(i, new[] {nextSpectrum}, (float) nextSpectrum.RetentionTime.Value);
@@ -1588,13 +1588,23 @@ namespace pwiz.Skyline.Model.Results
         public eIonMobilityUnits IonMobilityUnits { get { return _dataFile.IonMobilityUnits; } }
         public bool HasCombinedIonMobility { get { return _dataFile.HasCombinedIonMobilitySpectra; } } // When true, data source provides IMS data in 3-array format, which affects spectrum ID format
 
-        public IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge)
+        public IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge, object obj)
         {
-            return _dataFile.IonMobilityFromCCS(ccs, mz, charge);
+            var im = _dataFile.IonMobilityFromCCS(ccs, mz, charge);
+            if (!im.HasValue)
+            {
+                Trace.TraceWarning(ResultsResources.DataFileInstrumentInfo_IonMobilityFromCCS_no_conversion, obj, ccs, mz, charge);
+            }
+            return im;
         }
-        public double CCSFromIonMobility(IonMobilityValue im, double mz, int charge)
+        public double CCSFromIonMobility(IonMobilityValue im, double mz, int charge, object obj)
         {
-            return _dataFile.CCSFromIonMobilityValue(im, mz, charge);
+            var ccs = _dataFile.CCSFromIonMobilityValue(im, mz, charge);
+            if (double.IsNaN(ccs))
+            {
+                Trace.TraceWarning(ResultsResources.DataFileInstrumentInfo_CCSFromIonMobility_no_conversion, obj, im, mz, charge);
+            }
+            return ccs;
         }
 
         public bool IsWatersSonarData { get { return _dataFile.IsWatersSonarData(); } }

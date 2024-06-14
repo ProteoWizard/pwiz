@@ -31,7 +31,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.ChromLib;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Serialization
@@ -267,10 +266,7 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 peptide.CustomMolecule.WriteXml(writer, Adduct.EMPTY);
                 // If user changed any molecule details (other than formula or mass) after chromatogram extraction, this info continues the target->chromatogram association
-                if (!Equals(peptide.Target, peptide.OriginalMoleculeTarget))
-                {
-                    writer.WriteAttributeString(ATTR.chromatogram_target, peptide.OriginalMoleculeTarget.ToSerializableString());
-                }
+                writer.WriteAttributeIfString(ATTR.chromatogram_target, node.OriginalMoleculeTarget?.ToSerializableString());
             }
             else
             {
@@ -324,7 +320,7 @@ namespace pwiz.Skyline.Model.Serialization
                         }
                         catch (Exception ex)
                         {
-                            throw new NotSupportedException(string.Format(Resources.DocumentWriter_WritePeptideXml_Unable_to_convert_crosslinks_in__0__to_document_format__1__, node.ModifiedSequenceDisplay, DocumentFormat), ex);
+                            throw new NotSupportedException(string.Format(SerializationResources.DocumentWriter_WritePeptideXml_Unable_to_convert_crosslinks_in__0__to_document_format__1__, node.ModifiedSequenceDisplay, DocumentFormat), ex);
                         }
                     }
                 }

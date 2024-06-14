@@ -52,9 +52,9 @@ namespace pwiz.Skyline.Model
 
     public static class DecoyGeneration
     {
-        public static string ADD_RANDOM { get { return Resources.DecoyGeneration_ADD_RANDOM_Random_Mass_Shift; } }
+        public static string ADD_RANDOM { get { return ModelResources.DecoyGeneration_ADD_RANDOM_Random_Mass_Shift; } }
         public static string SHUFFLE_SEQUENCE { get { return Resources.DecoyGeneration_SHUFFLE_SEQUENCE_Shuffle_Sequence; } }
-        public static string REVERSE_SEQUENCE { get { return Resources.DecoyGeneration_REVERSE_SEQUENCE_Reverse_Sequence; } }
+        public static string REVERSE_SEQUENCE { get { return ModelResources.DecoyGeneration_REVERSE_SEQUENCE_Reverse_Sequence; } }
 
         public static IEnumerable<string> Methods
         {
@@ -366,14 +366,15 @@ namespace pwiz.Skyline.Model
                     !document.Settings.HasGlobalStandardArea)
                 {
                     // error
-                    throw new Exception(Resources.RefinementSettings_Refine_The_document_does_not_have_a_global_standard_to_normalize_by_);
+                    throw new Exception(ModelResources.RefinementSettings_Refine_The_document_does_not_have_a_global_standard_to_normalize_by_);
                 }
 
                 var cvcutoff = CVCutoff.HasValue ? CVCutoff.Value : double.NaN;
                 var qvalue = QValueCutoff.HasValue ? QValueCutoff.Value : double.NaN;
                 var minDetections = MinimumDetections.HasValue ? MinimumDetections.Value : -1;
                 var countTransitions = CountTransitions.HasValue ? CountTransitions.Value : -1;
-                var data = new AreaCVRefinementData(refined, new AreaCVRefinementSettings(cvcutoff, qvalue, minDetections, NormalizationMethod,
+                var normalizedValueCalculator = new NormalizedValueCalculator(refined);
+                var data = new AreaCVRefinementData(normalizedValueCalculator, new AreaCVRefinementSettings(cvcutoff, qvalue, minDetections, NormalizationMethod,
                     Transitions, countTransitions, MSLevel), CancellationToken.None, progressMonitor);
                 refined = data.RemoveAboveCVCutoff(refined);
             }
@@ -405,7 +406,7 @@ namespace pwiz.Skyline.Model
                 if (idx == -1)
                 {
                     // error
-                    throw new Exception(Resources.RefinementSettings_GetLabelIndex_The_document_does_not_contain_the_given_reference_type_);
+                    throw new Exception(ModelResources.RefinementSettings_GetLabelIndex_The_document_does_not_contain_the_given_reference_type_);
                 }
                 return NormalizeOption.FromIsotopeLabelType(type);
             }
@@ -1171,7 +1172,7 @@ namespace pwiz.Skyline.Model
                 }
 
                 var name = Path.GetFileNameWithoutExtension(newdoc.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.FilePath) +
-                           Resources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules;
+                           ModelResources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules;
                 var path = Path.Combine(pathForLibraryFiles, name + IonMobilityDb.EXT);
                 var db = IonMobilityDb.CreateIonMobilityDb(path, name, false).UpdateIonMobilities(mapped);
                 var spec = new IonMobilityLibrary(name, path, db);
@@ -1191,7 +1192,7 @@ namespace pwiz.Skyline.Model
                     oldTransitionLibInfos.AddRange(document.MoleculeTransitions.Select(t => t.LibInfo));
                     var newSettings = BlibDb.MinimizeLibrariesAndConvertToSmallMolecules(document,
                         pathForLibraryFiles, 
-                        Resources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules,
+                        ModelResources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules,
                         precursorMap, dictOldNamesToNew, null).Settings;
                     CloseLibraryStreams(document);
                     newdoc = newdoc.ChangeSettings(newdoc.Settings.
@@ -1232,7 +1233,7 @@ namespace pwiz.Skyline.Model
                     var newDbPath = document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary
                         .PersistMinimized(pathForLibraryFiles, document, precursorMap, out var newLoadedDb);
                     var spec = new IonMobilityLibrary(document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.Name + 
-                                                      @" " + Resources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules, newDbPath, newLoadedDb);
+                                                      @" " + ModelResources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules, newDbPath, newLoadedDb);
                     newdoc = newdoc.ChangeSettings(newdoc.Settings.ChangeTransitionIonMobilityFiltering(im => im.ChangeLibrary(spec)));
                 }
             }            
@@ -1317,6 +1318,33 @@ namespace pwiz.Skyline.Model
                                                         .Select(nodePeptideGroup => nodePeptideGroup.Id.GlobalIndex).ToArray()); 
         }
 
+        public static ModifiedDocument ModifyDocumentByRemovingDecoys(SrmDocument originalDocument)
+        {
+            var modifiedDocument = new ModifiedDocument(RemoveDecoys(originalDocument));
+            var deletedMoleculeGroups = originalDocument.MoleculeGroups.Where(moleculeGroup =>
+                modifiedDocument.Document.FindNodeIndex(moleculeGroup.PeptideGroup) < 0).ToList();
+            var docPair = SrmDocumentPair.Create(originalDocument, modifiedDocument.Document, SrmDocument.DOCUMENT_TYPE.none);
+            modifiedDocument = modifiedDocument.ChangeAuditLogEntry(SkylineWindow.CreateDeleteNodesEntry(docPair,
+                deletedMoleculeGroups.Select(
+                    moleculeGroup => AuditLogEntry.GetNodeName(originalDocument, moleculeGroup).ToString()), null));
+            return modifiedDocument;
+        }
+
+        public ModifiedDocument ModifyDocumentByGeneratingDecoys(SrmDocument document)
+        {
+            var modifiedDocument = new ModifiedDocument(GenerateDecoys(document));
+            if (ReferenceEquals(document, modifiedDocument.Document))
+            {
+                return null;
+            }
+            var plural = NumberOfDecoys > 1;
+            modifiedDocument = modifiedDocument.ChangeAuditLogEntry(AuditLogEntry.CreateSingleMessageEntry(
+                new MessageInfo(
+                    plural ? MessageType.added_peptide_decoys : MessageType.added_peptide_decoy,
+                    modifiedDocument.Document.DocumentType,
+                    NumberOfDecoys, DecoysMethod)));
+            return modifiedDocument;
+        }
 
         public SrmDocument GenerateDecoys(SrmDocument document)
         {

@@ -119,6 +119,8 @@ namespace pwiz.Skyline.Model
         [Track(defaultValues: typeof(DefaultValuesTrue))]
         public bool ExplicitQuantitative { get; private set; }
 
+        public bool ParticipatesInScoring => Transition.ParticipatesInScoring; // Don't use things like reporter ions (e.g. TMT etc) in "best" peak selection
+
         public TransitionDocNode ChangeExplicitSLens(double? value)
         {
             return ChangeExplicitValues(ExplicitValues.ChangeSLens(value));
@@ -903,7 +905,7 @@ namespace pwiz.Skyline.Model
                         // Something is wrong, if the value has already been added (duplicate peak? out of order?)
                         if (peakAdded)
                         {
-                            throw new InvalidDataException(string.Format(Resources.TransitionDocNode_ChangePeak_Duplicate_or_out_of_order_peak_in_transition__0_,
+                            throw new InvalidDataException(string.Format(ModelResources.TransitionDocNode_ChangePeak_Duplicate_or_out_of_order_peak_in_transition__0_,
                                                               FragmentIonName));
                         }
                         

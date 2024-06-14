@@ -93,14 +93,14 @@ namespace pwiz.SkylineTestTutorial
                 return;
             }
 
-            ForceMzml = true;   // 2-3x faster than raw files for this test.
+            ForceMzml = true;   // 2-3x faster than raw files for this test - and audit log expects it.
 
             AsSmallMoleculesTestMode = smallMoleculesTestMode;
 
             if (smallMoleculesTestMode !=  RefinementSettings.ConvertToSmallMoleculesMode.none)
                 TestDirectoryName = "AsSmMol_" + smallMoleculesTestMode;
 
-            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/PRM-20_1.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/PRM-22_2.pdf";
 
             TestFilesZipPaths = new[]
                 {
@@ -468,9 +468,8 @@ namespace pwiz.SkylineTestTutorial
 
             const int expectedMoleculeCount = 9;
             const int expectedTransitionGroupCount = 10; // Expect this many with results
-            var expected20TransitionCount = AsSmallMolecules || UseRawFiles ? 87 : 88; // Expect this many with results
-            var expected80TransitionCount = AsSmallMolecules ? 88 : UseRawFiles ? 86 : 87;
-
+            var expected20TransitionCount = AsSmallMoleculeMasses  ? 87 : 88; // Expect this many with results (note no library match possible for "as masses" version)
+            var expected80TransitionCount = AsSmallMoleculeMasses ? 88 : 87;
             AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes20FileName, expectedMoleculeCount, expectedTransitionGroupCount, 0, expected20TransitionCount, 0);
             AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes80FileName, expectedMoleculeCount, expectedTransitionGroupCount, 0, expected80TransitionCount, 0);
 
@@ -494,7 +493,6 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("Main window with data imported", 20);
             if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
             {
-                TestRedundantComboBox();
                 TestPropertySheet();
             }
 
@@ -1024,92 +1022,6 @@ namespace pwiz.SkylineTestTutorial
         }
 
         /// <summary>
-        /// Tests the redundant spectra dropdown menu in the <see cref="ViewLibraryDlg"/> which allows the user to view redundant spectra
-        /// </summary>
-        private void TestRedundantComboBox()
-        {
-            var dlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewMenu.ViewSpectralLibraries);
-            WaitForConditionUI(() => dlg.IsUpdateComplete);
-            if (AsSmallMoleculesTestMode == RefinementSettings.ConvertToSmallMoleculesMode.none)
-            {
-                Assert.AreEqual(690, dlg.PeptidesCount);
-
-                // The dropdown is only visible if the peptide has redundant spectra. Index 0 does.
-                VerifyRedundant(dlg, 0, true, 144);
-                // Check that the peaks count of the graphed item matches the peaks of the selected spectra
-                VerifyRedundant(dlg, 1, false, 346);
-                RunUI(() => dlg.FilterString = "ik");
-                VerifyRedundant(dlg, 4, true, 514);
-                RunUI(() => Assert.AreEqual(1, dlg.RedundantComboBox.Items.Count));
-                // This simulates the user clicking on or showing the drop down for the combobox, which populates the combobox
-                RunUI(dlg.UpdateRedundantComboItems);
-                // Checks that for this peptide, there are 11 different spectra available in the dropdown
-                WaitForConditionUI(() => dlg.IsComboBoxUpdated);
-                RunUI(() => Assert.AreEqual(11, dlg.RedundantComboBox.Items.Count));
-                RunUI(() => dlg.RedundantComboBox.SelectedIndex = 1);
-                // Checks the peaks count changes upon changing the selected redundant spectra in the dropdown
-                RunUI(() => Assert.AreEqual(551, dlg.GraphItem.PeaksCount));
-                RunUI(() => dlg.RedundantComboBox.SelectedIndex = 2);
-                RunUI(() => Assert.AreEqual(513, dlg.GraphItem.PeaksCount));
-                var fileSet = new HashSet<string>();
-                var RTSet = new HashSet<string>();
-                RunUI(() =>
-                {
-                    // Different languages have different parenthesis characters - split on either
-                    var splitterChars = new[] { '(', '（' };
-                    foreach (ViewLibraryDlg.ComboOption redundantOption in dlg.RedundantComboBox.Items)
-                    {
-                        var splitName = redundantOption.OptionName.Split(splitterChars);
-                        fileSet.Add(splitName[0]);
-                        RTSet.Add(splitName[1]);
-                    }
-                });
-                // Checks the naming conventions are accurate, two different file names and 11 different retention times
-                Assert.AreEqual(2, fileSet.Count);
-                Assert.AreEqual(11, RTSet.Count);
-                VerifyRedundant(dlg, 1, false, 725);
-            }
-            else
-            {
-                Assert.AreEqual(10, dlg.PeptidesCount);
-
-                // For small molecules, all have redundancies. Check to make sure the dropdown is visible for all of them
-                var peakCounts = new[] { 382, 368, 385, 435, 514, 627, 534, 425, 458, 554 };
-                for (var i = 0; i < 10; i++)
-                    VerifyRedundant(dlg, i, true, peakCounts[i]);
-            }
-            OkDialog(dlg, () => dlg.Close());
-        }
-
-        private static bool IsRecordMode { get { return false; } }  // Set to true to get peak counts
-
-        private static void VerifyRedundant(ViewLibraryDlg dlg, int i, bool visible, int peakCount)
-        {
-            RunUI(() => dlg.SelectedIndex = i);
-            // The peptide at index one does not have redundant spectra
-            int waitMs = IsRecordMode ? 1000 : 10 * 1000;
-            if (!TryWaitForConditionUI(waitMs, () => IsViewLibraryDlgState(dlg, i, visible, peakCount)) && !IsRecordMode)
-            {
-                string redundantMessage = visible
-                    ? string.Format("Redundant list hidden with {0} selected",
-                        dlg.SelectedIndex)
-                    : string.Format("Redundant list visible with {0} selected, and {1} entries",
-                        dlg.SelectedIndex, dlg.RedundantComboBox.Items.Count);
-                string peaksMessage = string.Format("(peaks {0}, expected {1})", dlg.GraphItem.PeaksCount, peakCount);
-                string message = TextUtil.SpaceSeparate(redundantMessage, peaksMessage);
-                Assert.Fail(message);
-            }
-            if (IsRecordMode)
-                Console.Write(dlg.GraphItem.PeaksCount + @", ");
-        }
-
-        private static bool IsViewLibraryDlgState(ViewLibraryDlg dlg, int i, bool visible, int peakCount)
-        {
-            return dlg.SelectedIndex == i && dlg.IsVisibleRedundantSpectraBox == visible &&
-                   peakCount == dlg.GraphItem.PeaksCount;
-        }
-
-        /// <summary>
         /// Tests the property sheet on the ViewLibraryDlg to confirm it shows up and displays accurate information
         /// </summary>
         private void TestPropertySheet()
@@ -1123,6 +1035,8 @@ namespace pwiz.SkylineTestTutorial
                         { "PrecursorMz", 523.7745.ToString( CultureInfo.CurrentCulture) },
                         { "Charge", 2 },
                         { "Label", IsotopeLabelType.LIGHT_NAME },
+                        { "Adduct","[M+2H]"},
+                        { "Formula","C50H71N13O12"},
                         { "RetentionTime", 44.29.ToString( Formats.RETENTION_TIME, CultureInfo.CurrentCulture) },
                         { "Score", 0.0.ToString( @"N1", CultureInfo.CurrentCulture) },
                         { "ScoreType", BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_Percolator_q_value },
@@ -1240,7 +1154,11 @@ namespace pwiz.SkylineTestTutorial
                 { "SpectrumCount", 118 }
             };
             if (isSmallMolecules)
+            {
                 expectedPropertiesDict.Add("LibraryName", "BSA_Protea_label_free_meth3.converted_to_small_molecules");
+                expectedPropertiesDict.Add("Adduct","[M+2H]");
+                expectedPropertiesDict.Add("Formula","C53H86N12O17");
+            }
             else
             {
                 expectedPropertiesDict.Add("LibraryName", "BSA_Protea_label_free_meth3");

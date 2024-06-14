@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool TargetMatches(double isolationTarget, double mzMatchTolerance)
         {
             if (!Target.HasValue)
-                throw new InvalidDataException(Resources.IsolationWindow_TargetMatches_Isolation_window_requires_a_Target_value);
+                throw new InvalidDataException(DocSettingsResources.IsolationWindow_TargetMatches_Isolation_window_requires_a_Target_value);
             return Math.Abs(isolationTarget - Target.Value) <= mzMatchTolerance &&
                 Contains(isolationTarget);
         }
@@ -98,11 +98,11 @@ namespace pwiz.Skyline.Model.DocSettings
 
             if (Start >= End)
             {
-                throw new InvalidDataException(Resources.IsolationWindow_DoValidate_Isolation_window_Start_value_is_greater_than_the_End_value);
+                throw new InvalidDataException(DocSettingsResources.IsolationWindow_DoValidate_Isolation_window_Start_value_is_greater_than_the_End_value);
             }
             if (Target.HasValue && (Target.Value < Start || Target.Value >= End))
             {
-                throw new InvalidDataException(Resources.IsolationWindow_DoValidate_Target_value_is_not_within_the_range_of_the_isolation_window);
+                throw new InvalidDataException(DocSettingsResources.IsolationWindow_DoValidate_Target_value_is_not_within_the_range_of_the_isolation_window);
             }
             if (StartMargin.HasValue)
             {

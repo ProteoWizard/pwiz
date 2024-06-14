@@ -111,7 +111,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         private ICollection<ToolUpdateInfo> GetToolsToUpdate()
         {
-            labelOperation.Text = Resources.ToolUpdatesDlg_GetTools_Downloading_Updates;
+            labelOperation.Text = ToolsUIResources.ToolUpdatesDlg_GetTools_Downloading_Updates;
             var toolsToDownload = new Collection<ToolUpdateInfo>();
             var toolList = _tools.Keys.ToList();
             // get tools to update based on which ones are checked
@@ -125,7 +125,7 @@ namespace pwiz.Skyline.ToolsUI
 
             using (var dlg = new LongWaitDlg())
             {
-                dlg.Message = Resources.ToolUpdatesDlg_GetToolsToUpdate_Downloading_Updates;
+                dlg.Message = ToolsUIResources.ToolUpdatesDlg_GetToolsToUpdate_Downloading_Updates;
                 dlg.PerformWork(this, 1000,
                                 longWaitBroker =>
                                 DownloadTools(longWaitBroker, toolsToDownload, out successfulDownloads,
@@ -191,7 +191,7 @@ namespace pwiz.Skyline.ToolsUI
                 foreach (var tool in tools)
                 {
                     labelOperation.Text =
-                        string.Format(Resources.ToolUpdatesDlg_InstallUpdates_Installing_updates_to__0_,
+                        string.Format(ToolsUIResources.ToolUpdatesDlg_InstallUpdates_Installing_updates_to__0_,
                                       tool._packageName);
 
                     var toolList = ToolList.CopyTools(Settings.Default.ToolList);

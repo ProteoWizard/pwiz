@@ -342,25 +342,25 @@
   <data name="&gt;&gt;tabRemote.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="tbxPrositServer.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="tbxKoinaServer.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 108</value>
   </data>
-  <data name="tbxPrositServer.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="tbxKoinaServer.Size" type="System.Drawing.Size, System.Drawing">
     <value>122, 20</value>
   </data>
-  <data name="tbxPrositServer.TabIndex" type="System.Int32, mscorlib">
+  <data name="tbxKoinaServer.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
   </data>
-  <data name="&gt;&gt;tbxPrositServer.Name" xml:space="preserve">
-    <value>tbxPrositServer</value>
+  <data name="&gt;&gt;tbxKoinaServer.Name" xml:space="preserve">
+    <value>tbxKoinaServer</value>
   </data>
-  <data name="&gt;&gt;tbxPrositServer.Type" xml:space="preserve">
+  <data name="&gt;&gt;tbxKoinaServer.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tbxPrositServer.Parent" xml:space="preserve">
-    <value>tabProsit</value>
+  <data name="&gt;&gt;tbxKoinaServer.Parent" xml:space="preserve">
+    <value>tabKoina</value>
   </data>
-  <data name="&gt;&gt;tbxPrositServer.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tbxKoinaServer.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="ceLabel.AutoSize" type="System.Boolean, mscorlib">
@@ -379,7 +379,7 @@
     <value>11</value>
   </data>
   <data name="ceLabel.Text" xml:space="preserve">
-    <value>&amp;NCE(&amp;N)：</value>
+    <value>N&amp;CE：</value>
   </data>
   <data name="&gt;&gt;ceLabel.Name" xml:space="preserve">
     <value>ceLabel</value>
@@ -388,7 +388,7 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;ceLabel.Parent" xml:space="preserve">
-    <value>tabProsit</value>
+    <value>tabKoina</value>
   </data>
   <data name="&gt;&gt;ceLabel.ZOrder" xml:space="preserve">
     <value>1</value>
@@ -409,39 +409,39 @@
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;ceCombo.Parent" xml:space="preserve">
-    <value>tabProsit</value>
+    <value>tabKoina</value>
   </data>
   <data name="&gt;&gt;ceCombo.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="prositServerStatusLabel.AutoSize" type="System.Boolean, mscorlib">
+  <data name="koinaServerStatusLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="prositServerStatusLabel.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="koinaServerStatusLabel.Location" type="System.Drawing.Point, System.Drawing">
     <value>137, 111</value>
   </data>
-  <data name="prositServerStatusLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="koinaServerStatusLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>1, 0, 1, 0</value>
   </data>
-  <data name="prositServerStatusLabel.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="koinaServerStatusLabel.Size" type="System.Drawing.Size, System.Drawing">
     <value>97, 13</value>
   </data>
-  <data name="prositServerStatusLabel.TabIndex" type="System.Int32, mscorlib">
+  <data name="koinaServerStatusLabel.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
   </data>
-  <data name="prositServerStatusLabel.Text" xml:space="preserve">
+  <data name="koinaServerStatusLabel.Text" xml:space="preserve">
     <value>サーバーステータス</value>
   </data>
-  <data name="&gt;&gt;prositServerStatusLabel.Name" xml:space="preserve">
-    <value>prositServerStatusLabel</value>
+  <data name="&gt;&gt;koinaServerStatusLabel.Name" xml:space="preserve">
+    <value>koinaServerStatusLabel</value>
   </data>
-  <data name="&gt;&gt;prositServerStatusLabel.Type" xml:space="preserve">
+  <data name="&gt;&gt;koinaServerStatusLabel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;prositServerStatusLabel.Parent" xml:space="preserve">
-    <value>tabProsit</value>
+  <data name="&gt;&gt;koinaServerStatusLabel.Parent" xml:space="preserve">
+    <value>tabKoina</value>
   </data>
-  <data name="&gt;&gt;prositServerStatusLabel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;koinaServerStatusLabel.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
@@ -469,7 +469,7 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
-    <value>tabProsit</value>
+    <value>tabKoina</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
     <value>4</value>
@@ -490,7 +490,7 @@
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;iRTModelCombo.Parent" xml:space="preserve">
-    <value>tabProsit</value>
+    <value>tabKoina</value>
   </data>
   <data name="&gt;&gt;iRTModelCombo.ZOrder" xml:space="preserve">
     <value>5</value>
@@ -520,7 +520,7 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
-    <value>tabProsit</value>
+    <value>tabKoina</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>6</value>
@@ -541,75 +541,75 @@
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;intensityModelCombo.Parent" xml:space="preserve">
-    <value>tabProsit</value>
+    <value>tabKoina</value>
   </data>
   <data name="&gt;&gt;intensityModelCombo.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
-  <data name="prositServerLabel.AutoSize" type="System.Boolean, mscorlib">
+  <data name="koinaServerLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="prositServerLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+  <data name="koinaServerLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <data name="prositServerLabel.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="koinaServerLabel.Location" type="System.Drawing.Point, System.Drawing">
     <value>10, 94</value>
   </data>
-  <data name="prositServerLabel.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="koinaServerLabel.Size" type="System.Drawing.Size, System.Drawing">
     <value>41, 13</value>
   </data>
-  <data name="prositServerLabel.TabIndex" type="System.Int32, mscorlib">
+  <data name="koinaServerLabel.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name="prositServerLabel.Text" xml:space="preserve">
+  <data name="koinaServerLabel.Text" xml:space="preserve">
     <value>サーバー（&amp;S）：</value>
   </data>
-  <data name="&gt;&gt;prositServerLabel.Name" xml:space="preserve">
-    <value>prositServerLabel</value>
+  <data name="&gt;&gt;koinaServerLabel.Name" xml:space="preserve">
+    <value>koinaServerLabel</value>
   </data>
-  <data name="&gt;&gt;prositServerLabel.Type" xml:space="preserve">
+  <data name="&gt;&gt;koinaServerLabel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;prositServerLabel.Parent" xml:space="preserve">
-    <value>tabProsit</value>
+  <data name="&gt;&gt;koinaServerLabel.Parent" xml:space="preserve">
+    <value>tabKoina</value>
   </data>
-  <data name="&gt;&gt;prositServerLabel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;koinaServerLabel.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
-  <data name="prositDescrLabel.AutoSize" type="System.Boolean, mscorlib">
+  <data name="koinaDescrLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="prositDescrLabel.LinkArea" type="System.Windows.Forms.LinkArea, System.Windows.Forms">
+  <data name="koinaDescrLabel.LinkArea" type="System.Windows.Forms.LinkArea, System.Windows.Forms">
     <value>0, 6</value>
   </data>
-  <data name="prositDescrLabel.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="koinaDescrLabel.Location" type="System.Drawing.Point, System.Drawing">
     <value>72, 11</value>
   </data>
-  <data name="prositDescrLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="koinaDescrLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>1, 0, 1, 0</value>
   </data>
-  <data name="prositDescrLabel.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="koinaDescrLabel.Size" type="System.Drawing.Size, System.Drawing">
     <value>322, 55</value>
   </data>
-  <data name="prositDescrLabel.TabIndex" type="System.Int32, mscorlib">
+  <data name="koinaDescrLabel.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="prositDescrLabel.Text" xml:space="preserve">
-    <value>Prositは、iRTの予測のみならず、あらゆる有機体およびプロテ
+  <data name="koinaDescrLabel.Text" xml:space="preserve">
+    <value>Koinaは、iRTの予測のみならず、あらゆる有機体およびプロテ
 アーゼ向けに非常に高品質な予測HCD MS2スペクトルを使用
 してカスタムスペクトルライブラリを自由かつ簡単に作成できる、
 ディープラーニングフレームワークです。</value>
   </data>
-  <data name="&gt;&gt;prositDescrLabel.Name" xml:space="preserve">
-    <value>prositDescrLabel</value>
+  <data name="&gt;&gt;koinaDescrLabel.Name" xml:space="preserve">
+    <value>koinaDescrLabel</value>
   </data>
-  <data name="&gt;&gt;prositDescrLabel.Type" xml:space="preserve">
+  <data name="&gt;&gt;koinaDescrLabel.Type" xml:space="preserve">
     <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;prositDescrLabel.Parent" xml:space="preserve">
-    <value>tabProsit</value>
+  <data name="&gt;&gt;koinaDescrLabel.Parent" xml:space="preserve">
+    <value>tabKoina</value>
   </data>
-  <data name="&gt;&gt;prositDescrLabel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;koinaDescrLabel.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
   <data name="pictureBox1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
@@ -637,39 +637,39 @@
     <value>System.Windows.Forms.PictureBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;pictureBox1.Parent" xml:space="preserve">
-    <value>tabProsit</value>
+    <value>tabKoina</value>
   </data>
   <data name="&gt;&gt;pictureBox1.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
-  <data name="tabProsit.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="tabKoina.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
-  <data name="tabProsit.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="tabKoina.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>1, 1, 1, 1</value>
   </data>
-  <data name="tabProsit.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="tabKoina.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>1, 1, 1, 1</value>
   </data>
-  <data name="tabProsit.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="tabKoina.Size" type="System.Drawing.Size, System.Drawing">
     <value>389, 248</value>
   </data>
-  <data name="tabProsit.TabIndex" type="System.Int32, mscorlib">
+  <data name="tabKoina.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
-  <data name="tabProsit.Text" xml:space="preserve">
-    <value>Prosit</value>
+  <data name="tabKoina.Text" xml:space="preserve">
+    <value>Koina</value>
   </data>
-  <data name="&gt;&gt;tabProsit.Name" xml:space="preserve">
-    <value>tabProsit</value>
+  <data name="&gt;&gt;tabKoina.Name" xml:space="preserve">
+    <value>tabKoina</value>
   </data>
-  <data name="&gt;&gt;tabProsit.Type" xml:space="preserve">
+  <data name="&gt;&gt;tabKoina.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tabProsit.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tabKoina.Parent" xml:space="preserve">
     <value>tabControl</value>
   </data>
-  <data name="&gt;&gt;tabProsit.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tabKoina.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="labelDisplayLanguage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">

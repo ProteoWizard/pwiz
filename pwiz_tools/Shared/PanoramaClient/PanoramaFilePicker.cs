@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient.Properties;
 
@@ -122,9 +123,12 @@ namespace pwiz.PanoramaClient
         /// </summary>
         private JToken GetJson(Uri queryUri)
         {
-            var webClient = new WebClientWithCredentials(queryUri, FolderBrowser.GetActiveServer().Username, FolderBrowser.GetActiveServer().Password);
-            JToken json = webClient.Get(queryUri);
-            return json;
+            using (var requestHelper = new PanoramaRequestHelper(new WebClientWithCredentials(queryUri, FolderBrowser.GetActiveServer().Username,
+                       FolderBrowser.GetActiveServer().Password)))
+            {
+                JToken json = requestHelper.Get(queryUri);
+                return json;
+            }
         }
 
         /// <summary>
@@ -374,8 +378,7 @@ namespace pwiz.PanoramaClient
                     || ex is IOException
                     || ex is UnauthorizedAccessException)
                 {
-                    var alert = new AlertDlg(ex.Message, MessageBoxButtons.OK);
-                    alert.ShowDialog();
+                    CommonAlertDlg.ShowException(FormUtil.FindTopLevelOwner(this), ex);
                 }
             }
         }
@@ -431,9 +434,8 @@ namespace pwiz.PanoramaClient
             }
             else
             {
-                var alert = new AlertDlg(Resources.PanoramaFilePicker_Open_Click_You_must_select_a_file_first_,
-                    MessageBoxButtons.OK);
-                alert.ShowDialog();
+                using var alert = new CommonAlertDlg(Resources.PanoramaFilePicker_Open_Click_You_must_select_a_file_first_, MessageBoxButtons.OK);
+                alert.ShowDialog(FormUtil.FindTopLevelOwner(this));
             }
         }
 
@@ -713,7 +715,7 @@ namespace pwiz.PanoramaClient
 
         public string VersionsOption => versionOptions.Text;
 
-        public void ClickFile(string name)
+        public bool ClickFile(string name)
         {
             listView.SelectedItems.Clear();
             foreach (ListViewItem item in listView.Items)
@@ -724,8 +726,11 @@ namespace pwiz.PanoramaClient
                     item.Selected = true;
                     listView.Select();
                     ClickOpen();
+                    return true;
                 }
             }
+
+            return false;
         }
 
         #endregion

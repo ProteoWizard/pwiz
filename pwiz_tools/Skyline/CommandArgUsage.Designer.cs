@@ -22,7 +22,7 @@ namespace pwiz.Skyline {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class CommandArgUsage {
+    public class CommandArgUsage {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace pwiz.Skyline {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("pwiz.Skyline.CommandArgUsage", typeof(CommandArgUsage).Assembly);
@@ -51,7 +51,7 @@ namespace pwiz.Skyline {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Name to give the spectral library in an –-add-library-path operation..
         /// </summary>
-        internal static string _add_library_name {
+        public static string _add_library_name {
             get {
                 return ResourceManager.GetString("_add_library_name", resourceCulture);
             }
@@ -72,16 +72,88 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Specify a spectral library to be added to the open document..
         /// </summary>
-        internal static string _add_library_path {
+        public static string _add_library_path {
             get {
                 return ResourceManager.GetString("_add_library_path", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Specifies how to resolve annotation name conflicts, by either overwriting or skipping them, when using --annotation-name, --annotation-file, or --annotation-add-from-environment (default is to output an error message for conflicts)..
+        /// </summary>
+        public static string _annotation_conflict_resolution {
+            get {
+                return ResourceManager.GetString("_annotation_conflict_resolution", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add an annotation to the document and environment from an XML format file. For an example of an XML format file, view the user.config file specified in the user interface window Tools &gt;Options &gt; Miscellaneous. Existing annotations with the same name will be overwritten..
+        /// </summary>
+        public static string _annotation_file {
+            get {
+                return ResourceManager.GetString("_annotation_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add an annotation to the document with the specified name. Existing annotations with the same name will be overwritten..
+        /// </summary>
+        public static string _annotation_name {
+            get {
+                return ResourceManager.GetString("_annotation_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A comma-separated list of target types to apply the annotation to in an --annotation-name operation..
+        /// </summary>
+        public static string _annotation_targets {
+            get {
+                return ResourceManager.GetString("_annotation_targets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Define the data type of the annotation in an --annotation-name operation. Defaults to text..
+        /// </summary>
+        public static string _annotation_type {
+            get {
+                return ResourceManager.GetString("_annotation_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A comma-separated list of values for a value_list type annotation in an --annotation-name operation. Required only in an --annotation-type=value_list operation..
+        /// </summary>
+        public static string _annotation_values {
+            get {
+                return ResourceManager.GetString("_annotation_values", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Associate peptides in the document with proteins from the given FASTA. If this argument is not provided but other --associate-proteins options are, then the FASTA from --import-fasta will be used. If --import-fasta is not provided either, then the last FASTA used for protein association will be used..
+        /// </summary>
+        public static string _associate_proteins_fasta {
+            get {
+                return ResourceManager.GetString("_associate_proteins_fasta", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Associate peptides with genes (or gene groups) instead of proteins, and apply parsimony options to that association..
+        /// </summary>
+        public static string _associate_proteins_gene_level_parsimony {
+            get {
+                return ResourceManager.GetString("_associate_proteins_gene_level_parsimony", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Proteins that match the same set of peptides will be combined into a single target in the document..
         /// </summary>
-        internal static string _associate_proteins_group_proteins {
+        public static string _associate_proteins_group_proteins {
             get {
                 return ResourceManager.GetString("_associate_proteins_group_proteins", resourceCulture);
             }
@@ -90,7 +162,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The minimum number of peptides a protein must have to be added to the document..
         /// </summary>
-        internal static string _associate_proteins_min_peptides {
+        public static string _associate_proteins_min_peptides {
             get {
                 return ResourceManager.GetString("_associate_proteins_min_peptides", resourceCulture);
             }
@@ -99,7 +171,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Apply an algorithm to find the smallest (parsimonious) set of proteins that explains all of the peptides..
         /// </summary>
-        internal static string _associate_proteins_minimal_protein_list {
+        public static string _associate_proteins_minimal_protein_list {
             get {
                 return ResourceManager.GetString("_associate_proteins_minimal_protein_list", resourceCulture);
             }
@@ -108,7 +180,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Remove subset proteins but keep non-parsimonious, non-subset proteins..
         /// </summary>
-        internal static string _associate_proteins_remove_subsets {
+        public static string _associate_proteins_remove_subsets {
             get {
                 return ResourceManager.GetString("_associate_proteins_remove_subsets", resourceCulture);
             }
@@ -117,7 +189,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Sets how to assign peptides that are contained in more than one protein in the FASTA or background proteome..
         /// </summary>
-        internal static string _associate_proteins_shared_peptides {
+        public static string _associate_proteins_shared_peptides {
             get {
                 return ResourceManager.GetString("_associate_proteins_shared_peptides", resourceCulture);
             }
@@ -126,7 +198,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The path to the background proteome (protdb) file to apply to the opened document. The name may be optionally specified by --background-proteome-name, and if not it defaults to the filename..
         /// </summary>
-        internal static string _background_proteome_file {
+        public static string _background_proteome_file {
             get {
                 return ResourceManager.GetString("_background_proteome_file", resourceCulture);
             }
@@ -135,7 +207,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The name of a background proteome to apply to the opened document. The background proteome specifies the full set of proteins that may be present in the sample matrix to be injected into the mass spectrometer. If the name is not already defined in Skyline, the path to the protdb file must also be set by --background-proteome-file..
         /// </summary>
-        internal static string _background_proteome_name {
+        public static string _background_proteome_name {
             get {
                 return ResourceManager.GetString("_background_proteome_name", resourceCulture);
             }
@@ -144,7 +216,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Runs a file line by line treating each line like a SkylineRunner/Cmd input. Useful for automating the execution of multiple commands.  The open Skyline file remains active through all commands..
         /// </summary>
-        internal static string _batch_commands {
+        public static string _batch_commands {
             get {
                 return ResourceManager.GetString("_batch_commands", resourceCulture);
             }
@@ -153,7 +225,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Export base peak chromatograms. Requires the --chromatogram-file argument..
         /// </summary>
-        internal static string _chromatogram_base_peaks {
+        public static string _chromatogram_base_peaks {
             get {
                 return ResourceManager.GetString("_chromatogram_base_peaks", resourceCulture);
             }
@@ -162,7 +234,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The path to the tab delimited file to export chromatograms to. Defaults to exporting precursors and products..
         /// </summary>
-        internal static string _chromatogram_file {
+        public static string _chromatogram_file {
             get {
                 return ResourceManager.GetString("_chromatogram_file", resourceCulture);
             }
@@ -171,7 +243,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Export precursor ion chromatograms. Requires the --chromatogram-file argument..
         /// </summary>
-        internal static string _chromatogram_precursors {
+        public static string _chromatogram_precursors {
             get {
                 return ResourceManager.GetString("_chromatogram_precursors", resourceCulture);
             }
@@ -180,7 +252,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Export product ion chromatograms. Requires the --chromatogram-file argument..
         /// </summary>
-        internal static string _chromatogram_products {
+        public static string _chromatogram_products {
             get {
                 return ResourceManager.GetString("_chromatogram_products", resourceCulture);
             }
@@ -189,7 +261,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Export total ion current chromatograms. Requires the --chromatogram-file argument..
         /// </summary>
-        internal static string _chromatogram_tics {
+        public static string _chromatogram_tics {
             get {
                 return ResourceManager.GetString("_chromatogram_tics", resourceCulture);
             }
@@ -198,7 +270,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Discard all unused chromatograms from the document..
         /// </summary>
-        internal static string _chromatograms_discard_unused {
+        public static string _chromatograms_discard_unused {
             get {
                 return ResourceManager.GetString("_chromatograms_discard_unused", resourceCulture);
             }
@@ -207,7 +279,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Limits the length of the chromatograms to a number of minutes around the chromatogram peak, i.e. ± minutes..
         /// </summary>
-        internal static string _chromatograms_limit_noise {
+        public static string _chromatograms_limit_noise {
             get {
                 return ResourceManager.GetString("_chromatograms_limit_noise", resourceCulture);
             }
@@ -216,7 +288,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Add decoys to a template document for reintegrate model generation with mProphet. (decoy generation method is optional and defaults to “reverse”).
         /// </summary>
-        internal static string _decoys_add {
+        public static string _decoys_add {
             get {
                 return ResourceManager.GetString("_decoys_add", resourceCulture);
             }
@@ -225,7 +297,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to A number of decoys to add. (optional – default is to generate as many decoys as targets).
         /// </summary>
-        internal static string _decoys_add_count {
+        public static string _decoys_add_count {
             get {
                 return ResourceManager.GetString("_decoys_add_count", resourceCulture);
             }
@@ -234,7 +306,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Forces any existing decoys to be discarded when --decoys-add is used..
         /// </summary>
-        internal static string _decoys_discard {
+        public static string _decoys_discard {
             get {
                 return ResourceManager.GetString("_decoys_discard", resourceCulture);
             }
@@ -243,7 +315,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Used to specify a default root directory for all other path arguments, other than the directory in which the command is run..
         /// </summary>
-        internal static string _dir {
+        public static string _dir {
             get {
                 return ResourceManager.GetString("_dir", resourceCulture);
             }
@@ -252,7 +324,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Adds an extra column for energy ramp to the transition list.  Optional. Defaults to false..
         /// </summary>
-        internal static string _exp_add_energy_ramp {
+        public static string _exp_add_energy_ramp {
             get {
                 return ResourceManager.GetString("_exp_add_energy_ramp", resourceCulture);
             }
@@ -261,7 +333,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Export all the annotations in the document into a text file with an ElementLocator field in the format required by --import-annotations. Use --exp-annotations-include-properties to include properties as well..
         /// </summary>
-        internal static string _exp_annotations {
+        public static string _exp_annotations {
             get {
                 return ResourceManager.GetString("_exp_annotations", resourceCulture);
             }
@@ -270,7 +342,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Use to specify which object types to include in the exported annotations. By default all object types are included. This argument can be used multiple times to specify multiple object types. Requires the --exp-annotations argument..
         /// </summary>
-        internal static string _exp_annotations_include_object {
+        public static string _exp_annotations_include_object {
             get {
                 return ResourceManager.GetString("_exp_annotations_include_object", resourceCulture);
             }
@@ -279,7 +351,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Use to include all properties in the exported annotations. By default no properties are included. Requires the --exp-annotations argument..
         /// </summary>
-        internal static string _exp_annotations_include_properties {
+        public static string _exp_annotations_include_properties {
             get {
                 return ResourceManager.GetString("_exp_annotations_include_properties", resourceCulture);
             }
@@ -288,7 +360,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Use to remove blank rows from the exported annotations. Requires the --exp-annotations argument..
         /// </summary>
-        internal static string _exp_annotations_remove_blank_rows {
+        public static string _exp_annotations_remove_blank_rows {
             get {
                 return ResourceManager.GetString("_exp_annotations_remove_blank_rows", resourceCulture);
             }
@@ -297,7 +369,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Dwell time per transition. This option is required for unscheduled transition lists..
         /// </summary>
-        internal static string _exp_dwell_time {
+        public static string _exp_dwell_time {
             get {
                 return ResourceManager.GetString("_exp_dwell_time", resourceCulture);
             }
@@ -306,7 +378,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Path to the method or transition list file (or directory) to export to. This option is required for method and transition list export..
         /// </summary>
-        internal static string _exp_file {
+        public static string _exp_file {
             get {
                 return ResourceManager.GetString("_exp_file", resourceCulture);
             }
@@ -315,7 +387,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Ignore protein boundaries in creating methods..
         /// </summary>
-        internal static string _exp_ignore_proteins {
+        public static string _exp_ignore_proteins {
             get {
                 return ResourceManager.GetString("_exp_ignore_proteins", resourceCulture);
             }
@@ -324,7 +396,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Export an isolation list. This option is required for exporting an isolation list and has no default. This option cannot be used with -–exp-translist-instrument or –exp-method-instrument, because you cannot export an isolation list and a transition list or method simultaneously..
         /// </summary>
-        internal static string _exp_isolationlist_instrument {
+        public static string _exp_isolationlist_instrument {
             get {
                 return ResourceManager.GetString("_exp_isolationlist_instrument", resourceCulture);
             }
@@ -333,7 +405,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Maximum number of transitions per injection for export strategies “protein” and “buckets” OR maximum number of simultaneous transitions for scheduled methods. The default is 100..
         /// </summary>
-        internal static string _exp_max_trans {
+        public static string _exp_max_trans {
             get {
                 return ResourceManager.GetString("_exp_max_trans", resourceCulture);
             }
@@ -342,7 +414,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Export a method. This option is required for exporting a method and has no default. This option cannot be used with --exp-isolationlist-instrument or --exp-translist-instrument, because you cannot export a method and an isolation/transition list simultaneously..
         /// </summary>
-        internal static string _exp_method_instrument {
+        public static string _exp_method_instrument {
             get {
                 return ResourceManager.GetString("_exp_method_instrument", resourceCulture);
             }
@@ -351,7 +423,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Sets a standard, scheduled or triggered method. The default is “standard”..
         /// </summary>
-        internal static string _exp_method_type {
+        public static string _exp_method_type {
             get {
                 return ResourceManager.GetString("_exp_method_type", resourceCulture);
             }
@@ -360,7 +432,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Include feature scores only for the best scoring peaks. Requires the --exp-mprophet-features argument..
         /// </summary>
-        internal static string _exp_mprophet_best_peaks_only {
+        public static string _exp_mprophet_best_peaks_only {
             get {
                 return ResourceManager.GetString("_exp_mprophet_best_peaks_only", resourceCulture);
             }
@@ -369,7 +441,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Use to exclude a particular feature score by name from the exported file. Names can be found in the user interface. This argument may be used multiple times to exclude multiple features. Requires the --exp-mprophet-features argument..
         /// </summary>
-        internal static string _exp_mprophet_exclude_feature {
+        public static string _exp_mprophet_exclude_feature {
             get {
                 return ResourceManager.GetString("_exp_mprophet_exclude_feature", resourceCulture);
             }
@@ -378,7 +450,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Export all the individual feature scores for each peptide, as well as the composite score, the p value, and the q value into the mProphet format..
         /// </summary>
-        internal static string _exp_mprophet_features {
+        public static string _exp_mprophet_features {
             get {
                 return ResourceManager.GetString("_exp_mprophet_features", resourceCulture);
             }
@@ -387,7 +459,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Include feature scores only for targets. Requires the --exp-mprophet-features argument..
         /// </summary>
-        internal static string _exp_mprophet_targets_only {
+        public static string _exp_mprophet_targets_only {
             get {
                 return ResourceManager.GetString("_exp_mprophet_targets_only", resourceCulture);
             }
@@ -396,7 +468,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Export a method with extra transitions for finding optimal collision energy or declustering potential..
         /// </summary>
-        internal static string _exp_optimizing {
+        public static string _exp_optimizing {
             get {
                 return ResourceManager.GetString("_exp_optimizing", resourceCulture);
             }
@@ -405,7 +477,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Order exported method by m/z values in ascending order (precursor m/z, then product m/z when applicable) for optimized quadrupole switching..
         /// </summary>
-        internal static string _exp_order_by_mz {
+        public static string _exp_order_by_mz {
             get {
                 return ResourceManager.GetString("_exp_order_by_mz", resourceCulture);
             }
@@ -414,7 +486,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Controls export behavior for documents with both positive and negative transitions. Allows for output of only positive or only negative transitions, or creates separate outputs for each polarity. Defaults to all, and is ignored for single polarity documents..
         /// </summary>
-        internal static string _exp_polarity {
+        public static string _exp_polarity {
             get {
                 return ResourceManager.GetString("_exp_polarity", resourceCulture);
             }
@@ -423,7 +495,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to For --exp-method-type=triggered specifies the number of transitions to make primary..
         /// </summary>
-        internal static string _exp_primary_count {
+        public static string _exp_primary_count {
             get {
                 return ResourceManager.GetString("_exp_primary_count", resourceCulture);
             }
@@ -432,7 +504,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Run length of the entire gradient in minutes. This option is required for unscheduled experiments..
         /// </summary>
-        internal static string _exp_run_length {
+        public static string _exp_run_length {
             get {
                 return ResourceManager.GetString("_exp_run_length", resourceCulture);
             }
@@ -441,7 +513,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Use this only if creating a scheduled or triggered method. The default is to schedule based on an average of all replicates, but if you specify one, the method will be scheduled based on that replicate..
         /// </summary>
-        internal static string _exp_scheduling_replicate {
+        public static string _exp_scheduling_replicate {
             get {
                 return ResourceManager.GetString("_exp_scheduling_replicate", resourceCulture);
             }
@@ -450,7 +522,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Export experimental data in the current document to a spectral library file. Peak areas are used as spectrum intensities, peak apex times are used as retention times, and if the document has iRT values they will also be stored in the library..
         /// </summary>
-        internal static string _exp_speclib_file {
+        public static string _exp_speclib_file {
             get {
                 return ResourceManager.GetString("_exp_speclib_file", resourceCulture);
             }
@@ -459,7 +531,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Strategy for dividing a method into injections. The default is “single”..
         /// </summary>
-        internal static string _exp_strategy {
+        public static string _exp_strategy {
             get {
                 return ResourceManager.GetString("_exp_strategy", resourceCulture);
             }
@@ -468,7 +540,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Path of the method template. This can be a file or a directory depending on your instrument. This option is required for method export..
         /// </summary>
-        internal static string _exp_template {
+        public static string _exp_template {
             get {
                 return ResourceManager.GetString("_exp_template", resourceCulture);
             }
@@ -477,7 +549,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Export a transition list. This option is required for exporting a transition list and has no default. This option cannot be used with --exp-isolation-list or --exp-method-instrument, because you cannot export a transition list and an isolation list or method simultaneously..
         /// </summary>
-        internal static string _exp_translist_instrument {
+        public static string _exp_translist_instrument {
             get {
                 return ResourceManager.GetString("_exp_translist_instrument", resourceCulture);
             }
@@ -486,7 +558,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Adds an extra column for SLens (which defaults to 50) to the transition list.  Optional. Defaults to false..
         /// </summary>
-        internal static string _exp_use_s_lens {
+        public static string _exp_use_s_lens {
             get {
                 return ResourceManager.GetString("_exp_use_s_lens", resourceCulture);
             }
@@ -495,7 +567,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The acquisition method (None, DIA, PRM, DDA, SureQuant) for extracting from full scan data..
         /// </summary>
-        internal static string _full_scan_acquisition_method {
+        public static string _full_scan_acquisition_method {
             get {
                 return ResourceManager.GetString("_full_scan_acquisition_method", resourceCulture);
             }
@@ -504,7 +576,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The name of a predefined isolation scheme or a path to a data file from which to import the isolation scheme used when extracting from full scan DIA data..
         /// </summary>
-        internal static string _full_scan_isolation_scheme {
+        public static string _full_scan_isolation_scheme {
             get {
                 return ResourceManager.GetString("_full_scan_isolation_scheme", resourceCulture);
             }
@@ -513,7 +585,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The mass analyzer for precursor spectra (MS1), or &quot;centroided&quot; to use centroid spectra (and a mass error in PPM) instead of profile (and a resolving power)..
         /// </summary>
-        internal static string _full_scan_precursor_analyzer {
+        public static string _full_scan_precursor_analyzer {
             get {
                 return ResourceManager.GetString("_full_scan_precursor_analyzer", resourceCulture);
             }
@@ -522,7 +594,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Skip SIM scans when extracting from full scan MS1 spectra. For use when both survey MS1 and SIM scans are present to avoid chromatograms extracted from both..
         /// </summary>
-        internal static string _full_scan_precursor_ignore_sim {
+        public static string _full_scan_precursor_ignore_sim {
             get {
                 return ResourceManager.GetString("_full_scan_precursor_ignore_sim", resourceCulture);
             }
@@ -531,7 +603,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The name of predefined isotope enrichment settings to use for extracting from full scan data. If none are available, use the Transition Settings form in the user interface to add a new isotope enrichment settings..
         /// </summary>
-        internal static string _full_scan_precursor_isotope_enrichment {
+        public static string _full_scan_precursor_isotope_enrichment {
             get {
                 return ResourceManager.GetString("_full_scan_precursor_isotope_enrichment", resourceCulture);
             }
@@ -540,7 +612,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The meaning of the precursor threshold value applied when choosing precursor isotope transitions for extraction from high-resolution mass spectra. Count indicates a constant number starting from the monoisotopic precursor. Percent indicates a minimum percentage from the most intense precursor species, i.e. the base peak. Defaults to Count..
         /// </summary>
-        internal static string _full_scan_precursor_isotopes {
+        public static string _full_scan_precursor_isotopes {
             get {
                 return ResourceManager.GetString("_full_scan_precursor_isotopes", resourceCulture);
             }
@@ -549,7 +621,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Resolving power of the precursor mass analyzer. If the mass analyzer is &apos;Centroided&apos; the value is in PPM..
         /// </summary>
-        internal static string _full_scan_precursor_res {
+        public static string _full_scan_precursor_res {
             get {
                 return ResourceManager.GetString("_full_scan_precursor_res", resourceCulture);
             }
@@ -558,7 +630,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The m/z value at which the precursor mass analyzer resolving power is specified. (applies only to orbitrap and ft_icr mass analyzers).
         /// </summary>
-        internal static string _full_scan_precursor_res_mz {
+        public static string _full_scan_precursor_res_mz {
             get {
                 return ResourceManager.GetString("_full_scan_precursor_res_mz", resourceCulture);
             }
@@ -567,7 +639,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The constant number of isotopes (starting with the monoisotopic precursor) or the percentage of base isotope intensity to extract from high resolution spectra..
         /// </summary>
-        internal static string _full_scan_precursor_threshold {
+        public static string _full_scan_precursor_threshold {
             get {
                 return ResourceManager.GetString("_full_scan_precursor_threshold", resourceCulture);
             }
@@ -576,7 +648,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The mass analyzer for product spectra, or &quot;centroided&quot; to use centroid spectra (and a mass error in PPM) instead of profile (and a resolving power)..
         /// </summary>
-        internal static string _full_scan_product_analyzer {
+        public static string _full_scan_product_analyzer {
             get {
                 return ResourceManager.GetString("_full_scan_product_analyzer", resourceCulture);
             }
@@ -585,7 +657,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Resolving power of the product mass analyzer. If the mass analyzer is &apos;Centroided&apos; the value is in PPM..
         /// </summary>
-        internal static string _full_scan_product_res {
+        public static string _full_scan_product_res {
             get {
                 return ResourceManager.GetString("_full_scan_product_res", resourceCulture);
             }
@@ -594,7 +666,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The m/z value at which the product mass analyzer resolving power is specified. (applies only to orbitrap and ft_icr mass analyzers).
         /// </summary>
-        internal static string _full_scan_product_res_mz {
+        public static string _full_scan_product_res_mz {
             get {
                 return ResourceManager.GetString("_full_scan_product_res_mz", resourceCulture);
             }
@@ -603,7 +675,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Sets whether chromatogram start and stop times will be limited by a range around either predicted retention times or MS/MS ID retention times..
         /// </summary>
-        internal static string _full_scan_rt_filter {
+        public static string _full_scan_rt_filter {
             get {
                 return ResourceManager.GetString("_full_scan_rt_filter", resourceCulture);
             }
@@ -612,7 +684,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The number of minutes on either side of the predicted time or MS/MS IDs, i.e. ± minutes..
         /// </summary>
-        internal static string _full_scan_rt_filter_tolerance {
+        public static string _full_scan_rt_filter_tolerance {
             get {
                 return ResourceManager.GetString("_full_scan_rt_filter_tolerance", resourceCulture);
             }
@@ -621,7 +693,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Shows this text..
         /// </summary>
-        internal static string _help {
+        public static string _help {
             get {
                 return ResourceManager.GetString("_help", resourceCulture);
             }
@@ -630,7 +702,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to When present imports all recognized transitions from a transition list or assay library, with error rows reported as warnings..
         /// </summary>
-        internal static string _ignore_transition_errors {
+        public static string _ignore_transition_errors {
             get {
                 return ResourceManager.GetString("_ignore_transition_errors", resourceCulture);
             }
@@ -639,7 +711,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Imports from a folder all files or sub-folders which are not already in the document, naming each with the base-name of the file or sub-folder, unless the --import-naming-pattern parameter is also supplied. If --import-replicate-name is supplied, then all files are added to one multi-injection replicate..
         /// </summary>
-        internal static string _import_all {
+        public static string _import_all {
             get {
                 return ResourceManager.GetString("_import_all", resourceCulture);
             }
@@ -648,7 +720,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Imports from a folder all files but not subfolders which are not already in the document, naming each with the base-name of the file, unless the --import-naming-pattern parameter is also supplied. If --import-replicate-name is supplied, then all files are added to one multi-injection replicate..
         /// </summary>
-        internal static string _import_all_files {
+        public static string _import_all_files {
             get {
                 return ResourceManager.GetString("_import_all_files", resourceCulture);
             }
@@ -657,7 +729,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Imports annotations from a CSV file into the document. Use File &gt; Export &gt; Annotations to create example files of the required format with paths to associate the annotations to document elements..
         /// </summary>
-        internal static string _import_annotations {
+        public static string _import_annotations {
             get {
                 return ResourceManager.GetString("_import_annotations", resourceCulture);
             }
@@ -666,7 +738,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Append the import-file to the given replicate. This is an intention check in case the document already has a replicate with the given name. By default this is set to false. This option only works with the -–import-file option..
         /// </summary>
-        internal static string _import_append {
+        public static string _import_append {
             get {
                 return ResourceManager.GetString("_import_append", resourceCulture);
             }
@@ -675,7 +747,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Import an assay library transition list with columns for iRT and relative product ion abundance to create an iRT calculator and spectral library for enhanced peak picking..
         /// </summary>
-        internal static string _import_assay_library {
+        public static string _import_assay_library {
             get {
                 return ResourceManager.GetString("_import_assay_library", resourceCulture);
             }
@@ -684,7 +756,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to When importing from a folder, only import from files with modified time before the given date..
         /// </summary>
-        internal static string _import_before {
+        public static string _import_before {
             get {
                 return ResourceManager.GetString("_import_before", resourceCulture);
             }
@@ -693,7 +765,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Import another Skyline document file into the open document. This may be specified multiple times for multiple files..
         /// </summary>
-        internal static string _import_document {
+        public static string _import_document {
             get {
                 return ResourceManager.GetString("_import_document", resourceCulture);
             }
@@ -702,7 +774,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Matching peptides are merged if used, otherwise not..
         /// </summary>
-        internal static string _import_document_merge_peptides {
+        public static string _import_document_merge_peptides {
             get {
                 return ResourceManager.GetString("_import_document_merge_peptides", resourceCulture);
             }
@@ -711,7 +783,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Determines how any results in the imported document are handled. The default is to remove them..
         /// </summary>
-        internal static string _import_document_results {
+        public static string _import_document_results {
             get {
                 return ResourceManager.GetString("_import_document_results", resourceCulture);
             }
@@ -720,7 +792,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Import a FASTA file into the open document..
         /// </summary>
-        internal static string _import_fasta {
+        public static string _import_fasta {
             get {
                 return ResourceManager.GetString("_import_fasta", resourceCulture);
             }
@@ -729,7 +801,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Attach a replicate to the open document..
         /// </summary>
-        internal static string _import_file {
+        public static string _import_file {
             get {
                 return ResourceManager.GetString("_import_file", resourceCulture);
             }
@@ -738,7 +810,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to A regular expression that is applied to file names to select the ones that will be imported..
         /// </summary>
-        internal static string _import_filename_pattern {
+        public static string _import_filename_pattern {
             get {
                 return ResourceManager.GetString("_import_filename_pattern", resourceCulture);
             }
@@ -747,7 +819,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Waters lockmass correction m/z for negative ion scans..
         /// </summary>
-        internal static string _import_lockmass_negative {
+        public static string _import_lockmass_negative {
             get {
                 return ResourceManager.GetString("_import_lockmass_negative", resourceCulture);
             }
@@ -756,7 +828,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Waters lockmass correction m/z for positive ion scans..
         /// </summary>
-        internal static string _import_lockmass_positive {
+        public static string _import_lockmass_positive {
             get {
                 return ResourceManager.GetString("_import_lockmass_positive", resourceCulture);
             }
@@ -765,7 +837,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Waters lockmass correction tolerance m/z..
         /// </summary>
-        internal static string _import_lockmass_tolerance {
+        public static string _import_lockmass_tolerance {
             get {
                 return ResourceManager.GetString("_import_lockmass_tolerance", resourceCulture);
             }
@@ -774,7 +846,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to A regular expression from which the first group will be used to name replicates in an --import-all operation (e.g. [^_]_(.*) for everything after the first underscore)..
         /// </summary>
-        internal static string _import_naming_pattern {
+        public static string _import_naming_pattern {
             get {
                 return ResourceManager.GetString("_import_naming_pattern", resourceCulture);
             }
@@ -783,7 +855,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Import results files to individual .skyd files without joining them to the main document .skyd file. This is useful for distributed processing, as on HPC cluster..
         /// </summary>
-        internal static string _import_no_join {
+        public static string _import_no_join {
             get {
                 return ResourceManager.GetString("_import_no_join", resourceCulture);
             }
@@ -792,7 +864,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to When importing from a folder, only import from files with modified time on or after the given date..
         /// </summary>
-        internal static string _import_on_or_after {
+        public static string _import_on_or_after {
             get {
                 return ResourceManager.GetString("_import_on_or_after", resourceCulture);
             }
@@ -801,7 +873,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Indicates the data being imported contains extra transitions for detecting optimal collision energy or declustering potential..
         /// </summary>
-        internal static string _import_optimizing {
+        public static string _import_optimizing {
             get {
                 return ResourceManager.GetString("_import_optimizing", resourceCulture);
             }
@@ -810,16 +882,34 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Read peak boundaries from a comma or tab separated file.
         /// </summary>
-        internal static string _import_peak_boundaries {
+        public static string _import_peak_boundaries {
             get {
                 return ResourceManager.GetString("_import_peak_boundaries", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Import a list of peptides or peptide precursors (with charge state) with an optional list name specified by --import-pep-list-name..
+        /// </summary>
+        public static string _import_pep_list {
+            get {
+                return ResourceManager.GetString("_import_pep_list", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name of imported peptide list specified by --import-pep-list..
+        /// </summary>
+        public static string _import_pep_list_name {
+            get {
+                return ResourceManager.GetString("_import_pep_list_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A number of sub-processes will be run for single-file import, after which the results from each single file will be joined by the main process. This can produce 10x performance gains on 24-core NUMA servers and 3-4x even on i7 processors, under the right conditions. Be sure to test with your system..
         /// </summary>
-        internal static string _import_process_count {
+        public static string _import_process_count {
             get {
                 return ResourceManager.GetString("_import_process_count", resourceCulture);
             }
@@ -828,7 +918,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Name to give the new replicate in an –import-file operation..
         /// </summary>
-        internal static string _import_replicate_name {
+        public static string _import_replicate_name {
             get {
                 return ResourceManager.GetString("_import_replicate_name", resourceCulture);
             }
@@ -837,7 +927,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to A regular expression that is applied to sample names (e.g. in a multi-injection .wiff file) to select the ones that will be imported..
         /// </summary>
-        internal static string _import_samplename_pattern {
+        public static string _import_samplename_pattern {
             get {
                 return ResourceManager.GetString("_import_samplename_pattern", resourceCulture);
             }
@@ -846,7 +936,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Adds all modifications found in peptide search results files to the open document..
         /// </summary>
-        internal static string _import_search_add_mods {
+        public static string _import_search_add_mods {
             get {
                 return ResourceManager.GetString("_import_search_add_mods", resourceCulture);
             }
@@ -855,7 +945,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Defines a cutoff score (between 0 and 1) to be used when building a spectral library from peptide search results files, where 1 is for highest confidence matches and 0 includes everything. [default 0.95].
         /// </summary>
-        internal static string _import_search_cutoff_score {
+        public static string _import_search_cutoff_score {
             get {
                 return ResourceManager.GetString("_import_search_cutoff_score", resourceCulture);
             }
@@ -864,7 +954,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Exclude the result files used to build a library from consideration for chromatogram extraction. This can be useful when conversion and pre-processing were used on the files used for peptide spectrum matching which may not be appropriate for chromatogram extraction..
         /// </summary>
-        internal static string _import_search_exclude_library_sources {
+        public static string _import_search_exclude_library_sources {
             get {
                 return ResourceManager.GetString("_import_search_exclude_library_sources", resourceCulture);
             }
@@ -873,7 +963,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Import a peptide search results file into the open document, building a document-specific spectral library. This may be specified multiple times for multiple files. Use –import-fasta argument to add matched peptides as targets..
         /// </summary>
-        internal static string _import_search_file {
+        public static string _import_search_file {
             get {
                 return ResourceManager.GetString("_import_search_file", resourceCulture);
             }
@@ -882,7 +972,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Prevent spectra with multiple ambiguous peptide matches from being discarded when building the spectral library..
         /// </summary>
-        internal static string _import_search_include_ambiguous {
+        public static string _import_search_include_ambiguous {
             get {
                 return ResourceManager.GetString("_import_search_include_ambiguous", resourceCulture);
             }
@@ -891,7 +981,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Name of iRT standard to to be used when building a spectral library..
         /// </summary>
-        internal static string _import_search_irts {
+        public static string _import_search_irts {
             get {
                 return ResourceManager.GetString("_import_search_irts", resourceCulture);
             }
@@ -900,7 +990,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Specify the number of CiRT peptides to use as iRT standards if building a spectral library with CiRT peptides as iRT standards..
         /// </summary>
-        internal static string _import_search_num_cirts {
+        public static string _import_search_num_cirts {
             get {
                 return ResourceManager.GetString("_import_search_num_cirts", resourceCulture);
             }
@@ -909,7 +999,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to For MaxQuant msms.txt files to force use of the spectra in the file rather than opening raw data files for the original spectra. The MaxQuant msms.txt files contain charge-state deconvoluted spectra which may not be appropriate for target selection..
         /// </summary>
-        internal static string _import_search_prefer_embedded_spectra {
+        public static string _import_search_prefer_embedded_spectra {
             get {
                 return ResourceManager.GetString("_import_search_prefer_embedded_spectra", resourceCulture);
             }
@@ -918,7 +1008,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to If building a spectral library with iRT standards, recalibrate the iRT standard values relative to the peptides being added..
         /// </summary>
-        internal static string _import_search_recalibrate_irts {
+        public static string _import_search_recalibrate_irts {
             get {
                 return ResourceManager.GetString("_import_search_recalibrate_irts", resourceCulture);
             }
@@ -927,7 +1017,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to A number of files will be imported in parallel using threads in the main process (equivalent to “Files to import simultaneously” in the user interface), after which the results from each single file will be joined. This can produce 2-4x performance gains under the right conditions. Be sure to test with your system..
         /// </summary>
-        internal static string _import_threads {
+        public static string _import_threads {
             get {
                 return ResourceManager.GetString("_import_threads", resourceCulture);
             }
@@ -936,7 +1026,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Import a simple transition list with Q1, Q3 and peptide sequence.  Also supports molecule transition lists in CSV format with suitable headers..
         /// </summary>
-        internal static string _import_transition_list {
+        public static string _import_transition_list {
             get {
                 return ResourceManager.GetString("_import_transition_list", resourceCulture);
             }
@@ -945,7 +1035,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to If importing a file fails with an error the message is emitted as a warning, the replicate is removed, and importing continues to completion..
         /// </summary>
-        internal static string _import_warn_on_failure {
+        public static string _import_warn_on_failure {
             get {
                 return ResourceManager.GetString("_import_warn_on_failure", resourceCulture);
             }
@@ -954,7 +1044,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Resolving power of ion mobility dimension used to filter around ion mobility values from the spectral libraries..
         /// </summary>
-        internal static string _ims_library_res {
+        public static string _ims_library_res {
             get {
                 return ResourceManager.GetString("_ims_library_res", resourceCulture);
             }
@@ -963,7 +1053,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Open a Skyline file.
         /// </summary>
-        internal static string _in {
+        public static string _in {
             get {
                 return ResourceManager.GetString("_in", resourceCulture);
             }
@@ -972,7 +1062,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to If set, minimum m/z value for product ions is calculated dynamically from the precursor m/z using a specific equation provided by Thermo-Scientific for LTQ instruments..
         /// </summary>
-        internal static string _instrument_dynamic_min_mz {
+        public static string _instrument_dynamic_min_mz {
             get {
                 return ResourceManager.GetString("_instrument_dynamic_min_mz", resourceCulture);
             }
@@ -981,7 +1071,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Maximum measurable m/z value for the target instrument to avoid adding precursors and transitions that cannot be measured..
         /// </summary>
-        internal static string _instrument_max_mz {
+        public static string _instrument_max_mz {
             get {
                 return ResourceManager.GetString("_instrument_max_mz", resourceCulture);
             }
@@ -990,7 +1080,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Maximum time allowed in chromatograms regardless of how they were acquired.  Setting this can save memory and disk space that might be used on uninteresting parts of the gradient..
         /// </summary>
-        internal static string _instrument_max_time {
+        public static string _instrument_max_time {
             get {
                 return ResourceManager.GetString("_instrument_max_time", resourceCulture);
             }
@@ -999,7 +1089,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Maximum delta for matching instrument method transition m/z values with predicted transition m/z values. (Applies only to SRM and PRM isolated m/z values.).
         /// </summary>
-        internal static string _instrument_method_mz_tolerance {
+        public static string _instrument_method_mz_tolerance {
             get {
                 return ResourceManager.GetString("_instrument_method_mz_tolerance", resourceCulture);
             }
@@ -1008,7 +1098,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Minimum measurable m/z value for the target instrument to avoid adding precursors and transitions that cannot be measured..
         /// </summary>
-        internal static string _instrument_min_mz {
+        public static string _instrument_min_mz {
             get {
                 return ResourceManager.GetString("_instrument_min_mz", resourceCulture);
             }
@@ -1017,7 +1107,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Minimum time allowed in chromatograms regardless of how they were acquired.  Setting this can save memory and disk space that might be used on uninteresting parts of the gradient..
         /// </summary>
-        internal static string _instrument_min_time {
+        public static string _instrument_min_time {
             get {
                 return ResourceManager.GetString("_instrument_min_time", resourceCulture);
             }
@@ -1026,16 +1116,25 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Indicates that there may be large gaps in the retention times when spectra were acquired for certain analytes. Peaks will be truncated to not overlap with these gaps and background subtraction will not be performed..
         /// </summary>
-        internal static string _instrument_triggered_chromatograms {
+        public static string _instrument_triggered_chromatograms {
             get {
                 return ResourceManager.GetString("_instrument_triggered_chromatograms", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to When set all transitions contributing any signal between the integration boundaries are considered found. When not set, only transitions that are coeluting are considered found. Regardless of the setting all signal from the quantitative transitions between the integration boundaries is summed to produce the TotalArea for the precursor..
+        /// </summary>
+        public static string _integrate_all {
+            get {
+                return ResourceManager.GetString("_integrate_all", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add an ion mobility library to the open document, based on its currently loaded chromatograms..
         /// </summary>
-        internal static string _ionmobility_library_create {
+        public static string _ionmobility_library_create {
             get {
                 return ResourceManager.GetString("_ionmobility_library_create", resourceCulture);
             }
@@ -1044,7 +1143,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Name to give the ion mobility library in an –-ionmobility-library-create operation..
         /// </summary>
-        internal static string _ionmobility_library_name {
+        public static string _ionmobility_library_name {
             get {
                 return ResourceManager.GetString("_ionmobility_library_name", resourceCulture);
             }
@@ -1053,7 +1152,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The name for the iRT calculator created during assay library import. (optional) The default name is the document base name..
         /// </summary>
-        internal static string _irt_calc_name {
+        public static string _irt_calc_name {
             get {
                 return ResourceManager.GetString("_irt_calc_name", resourceCulture);
             }
@@ -1062,7 +1161,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The path to an existing iRT calculator (.irtdb file) to be used with an imported assay library. Or, if -–irt-standards-group-name or -–irt-standards-file are used, then this is the output path for the created .irtdb file. (optional) The default iRT calculator path is path/to/document.irtdb.
         /// </summary>
-        internal static string _irt_database_path {
+        public static string _irt_database_path {
             get {
                 return ResourceManager.GetString("_irt_database_path", resourceCulture);
             }
@@ -1071,7 +1170,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The path to a separate assay library containing the iRT standards to be applied to an imported assay library. (optional).
         /// </summary>
-        internal static string _irt_standards_file {
+        public static string _irt_standards_file {
             get {
                 return ResourceManager.GetString("_irt_standards_file", resourceCulture);
             }
@@ -1080,7 +1179,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The name of a protein or peptide list containing the iRT standards within an imported assay library. (optional).
         /// </summary>
-        internal static string _irt_standards_group_name {
+        public static string _irt_standards_group_name {
             get {
                 return ResourceManager.GetString("_irt_standards_group_name", resourceCulture);
             }
@@ -1089,7 +1188,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Keeps any empty proteins in the open document after importing a FASTA file..
         /// </summary>
-        internal static string _keep_empty_proteins {
+        public static string _keep_empty_proteins {
             get {
                 return ResourceManager.GetString("_keep_empty_proteins", resourceCulture);
             }
@@ -1098,7 +1197,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Maximum delta allowed when matching predicted product ion m/z values with measured MS/MS spectral library peak m/z values. The delta may be specified in either m/z or PPM units..
         /// </summary>
-        internal static string _library_match_tolerance {
+        public static string _library_match_tolerance {
             get {
                 return ResourceManager.GetString("_library_match_tolerance", resourceCulture);
             }
@@ -1107,7 +1206,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Keep only precursors with at least this many product transitions matching peaks in a library spectrum..
         /// </summary>
-        internal static string _library_min_product_ions {
+        public static string _library_min_product_ions {
             get {
                 return ResourceManager.GetString("_library_min_product_ions", resourceCulture);
             }
@@ -1116,7 +1215,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The set of product ions to consider in picking transitions matching library spectrum peak m/z values. (all: all specified ion charges and types, filter: filter based on start and end transitions and special ions, or all_plus: the union of the two other options).
         /// </summary>
-        internal static string _library_pick_product_ions {
+        public static string _library_pick_product_ions {
             get {
                 return ResourceManager.GetString("_library_pick_product_ions", resourceCulture);
             }
@@ -1125,7 +1224,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The maximum number of product transitions for each precursor matching peaks in a library spectrum, ordered by peak intensity ranking..
         /// </summary>
-        internal static string _library_product_ions {
+        public static string _library_product_ions {
             get {
                 return ResourceManager.GetString("_library_product_ions", resourceCulture);
             }
@@ -1134,7 +1233,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Sends all logged output to a file..
         /// </summary>
-        internal static string _log_file {
+        public static string _log_file {
             get {
                 return ResourceManager.GetString("_log_file", resourceCulture);
             }
@@ -1143,7 +1242,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to All logging output will be preceded by two memory usage values managed and process private bytes in MB, rounded to the nearest MB..
         /// </summary>
-        internal static string _memstamp {
+        public static string _memstamp {
             get {
                 return ResourceManager.GetString("_memstamp", resourceCulture);
             }
@@ -1152,7 +1251,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Create a new document using the current Skyline settings..
         /// </summary>
-        internal static string _new {
+        public static string _new {
             get {
                 return ResourceManager.GetString("_new", resourceCulture);
             }
@@ -1161,7 +1260,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Same as save except writes to the specified file.
         /// </summary>
-        internal static string _out {
+        public static string _out {
             get {
                 return ResourceManager.GetString("_out", resourceCulture);
             }
@@ -1170,7 +1269,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Overwrite the filepath specified by --new if it already exists, instead of producing an error..
         /// </summary>
-        internal static string _overwrite {
+        public static string _overwrite {
             get {
                 return ResourceManager.GetString("_overwrite", resourceCulture);
             }
@@ -1179,7 +1278,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The path to a folder on the Panorama server to which the file is to be published (e.g. MyProject/MyFolder)..
         /// </summary>
-        internal static string _panorama_folder {
+        public static string _panorama_folder {
             get {
                 return ResourceManager.GetString("_panorama_folder", resourceCulture);
             }
@@ -1188,7 +1287,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The password for a user with access to publish to the Panorama server..
         /// </summary>
-        internal static string _panorama_password {
+        public static string _panorama_password {
             get {
                 return ResourceManager.GetString("_panorama_password", resourceCulture);
             }
@@ -1200,7 +1299,7 @@ namespace pwiz.Skyline {
         ///or
         ///http://localhost:8080.
         /// </summary>
-        internal static string _panorama_server {
+        public static string _panorama_server {
             get {
                 return ResourceManager.GetString("_panorama_server", resourceCulture);
             }
@@ -1209,16 +1308,70 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The username/email address for a user with access to publish to the Panorama server..
         /// </summary>
-        internal static string _panorama_username {
+        public static string _panorama_username {
             get {
                 return ResourceManager.GetString("_panorama_username", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add a UniMod modification to the document. The modification must be specified by PSI-MS name and site together (&quot;Oxidation (M)&quot;)..
+        /// </summary>
+        public static string _pep_add_mod {
+            get {
+                return ResourceManager.GetString("_pep_add_mod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adds a modification as variable if &apos;true&apos; or static if &apos;false&apos;. Only valid for structural modifications except for loss-only modifications(e.g. Ammonia and Water Loss)..
+        /// </summary>
+        public static string _pep_add_mod_variable {
+            get {
+                return ResourceManager.GetString("_pep_add_mod_variable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add a UniMod modification to the document by its UniMod ID. If the modification has multiple specificities, you must use --pep-add-unimod-aa or --pep-add-unimod-term to choose which specificity you want to add to the document..
+        /// </summary>
+        public static string _pep_add_unimod {
+            get {
+                return ResourceManager.GetString("_pep_add_unimod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Provides the amino acid specificity for the last peptide modification added by --pep-add-unimod..
+        /// </summary>
+        public static string _pep_add_unimod_aa {
+            get {
+                return ResourceManager.GetString("_pep_add_unimod_aa", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Provides the terminus specificity for the last peptide modification added by --pep-add-unimod..
+        /// </summary>
+        public static string _pep_add_unimod_term {
+            get {
+                return ResourceManager.GetString("_pep_add_unimod_term", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Clears all peptide modifications from the currently open document..
+        /// </summary>
+        public static string _pep_clear_mods {
+            get {
+                return ResourceManager.GetString("_pep_clear_mods", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The protease enzyme definition used to parse peptide sequences from protein sequences added as targets to the document. Peptide lists added as targets ignore this setting other than counting missed cleavages..
         /// </summary>
-        internal static string _pep_digest_enzyme {
+        public static string _pep_digest_enzyme {
             get {
                 return ResourceManager.GetString("_pep_digest_enzyme", resourceCulture);
             }
@@ -1227,7 +1380,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Exclude all peptides starting before this amino acid position in each protein..
         /// </summary>
-        internal static string _pep_exclude_nterminal_aas {
+        public static string _pep_exclude_nterminal_aas {
             get {
                 return ResourceManager.GetString("_pep_exclude_nterminal_aas", resourceCulture);
             }
@@ -1236,7 +1389,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Exclude peptides resulting from cleavage sites with immediate preceding or following cleavage sites. e.g. RR, KK, RK, KR for trypsin.
         /// </summary>
-        internal static string _pep_exclude_potential_ragged_ends {
+        public static string _pep_exclude_potential_ragged_ends {
             get {
                 return ResourceManager.GetString("_pep_exclude_potential_ragged_ends", resourceCulture);
             }
@@ -1245,25 +1398,43 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The maximum length of a peptide to add to the document..
         /// </summary>
-        internal static string _pep_max_length {
+        public static string _pep_max_length {
             get {
                 return ResourceManager.GetString("_pep_max_length", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The maximum number of neutral loss events allowed to occur in combination on any fragment instance..
+        /// </summary>
+        public static string _pep_max_losses {
+            get {
+                return ResourceManager.GetString("_pep_max_losses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The maximum number of missed cleavages allowed in a peptide when considering protein digestion..
         /// </summary>
-        internal static string _pep_max_missed_cleavages {
+        public static string _pep_max_missed_cleavages {
             get {
                 return ResourceManager.GetString("_pep_max_missed_cleavages", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The maximum number of variable modifications allowed to occur in combination on any peptide instance..
+        /// </summary>
+        public static string _pep_max_variable_mods {
+            get {
+                return ResourceManager.GetString("_pep_max_variable_mods", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The minimum length of a peptide to add to the document..
         /// </summary>
-        internal static string _pep_min_length {
+        public static string _pep_min_length {
             get {
                 return ResourceManager.GetString("_pep_min_length", resourceCulture);
             }
@@ -1275,7 +1446,7 @@ namespace pwiz.Skyline {
         ///&quot;Species&quot; excludes any peptide that appears in proteins for more than one species in the background proteome.
         ///Useful in sample mixtures including multiple species..
         /// </summary>
-        internal static string _pep_unique_by {
+        public static string _pep_unique_by {
             get {
                 return ResourceManager.GetString("_pep_unique_by", resourceCulture);
             }
@@ -1284,7 +1455,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Add back precursors of an isotope label type..
         /// </summary>
-        internal static string _refine_add_label_type {
+        public static string _refine_add_label_type {
             get {
                 return ResourceManager.GetString("_refine_add_label_type", resourceCulture);
             }
@@ -1293,7 +1464,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to All proteins will be reset to auto-select the peptides they contain..
         /// </summary>
-        internal static string _refine_auto_select_peptides {
+        public static string _refine_auto_select_peptides {
             get {
                 return ResourceManager.GetString("_refine_auto_select_peptides", resourceCulture);
             }
@@ -1302,7 +1473,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to All peptides will be reset to auto-select the precursors they contain..
         /// </summary>
-        internal static string _refine_auto_select_precursors {
+        public static string _refine_auto_select_precursors {
             get {
                 return ResourceManager.GetString("_refine_auto_select_precursors", resourceCulture);
             }
@@ -1311,7 +1482,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to All precursors will be reset to auto-select the transitions they contain..
         /// </summary>
-        internal static string _refine_auto_select_transitions {
+        public static string _refine_auto_select_transitions {
             get {
                 return ResourceManager.GetString("_refine_auto_select_transitions", resourceCulture);
             }
@@ -1320,7 +1491,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Areas used in CV calculations are normalized as specified. (default no normalization).
         /// </summary>
-        internal static string _refine_cv_global_normalize {
+        public static string _refine_cv_global_normalize {
             get {
                 return ResourceManager.GetString("_refine_cv_global_normalize", resourceCulture);
             }
@@ -1329,7 +1500,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The MS level used in the CV calculations. Defaults to &quot;products&quot; which will usually have lower CVs than precursors in methods like PRM and DIA..
         /// </summary>
-        internal static string _refine_cv_ms_level {
+        public static string _refine_cv_ms_level {
             get {
                 return ResourceManager.GetString("_refine_cv_ms_level", resourceCulture);
             }
@@ -1338,7 +1509,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Areas used in CV calculations are normalized to a reference type, e.g. &quot;heavy&quot;..
         /// </summary>
-        internal static string _refine_cv_reference_normalize {
+        public static string _refine_cv_reference_normalize {
             get {
                 return ResourceManager.GetString("_refine_cv_reference_normalize", resourceCulture);
             }
@@ -1347,7 +1518,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to All target precursors with peak area CV above the cutoff will be removed..
         /// </summary>
-        internal static string _refine_cv_remove_above_cutoff {
+        public static string _refine_cv_remove_above_cutoff {
             get {
                 return ResourceManager.GetString("_refine_cv_remove_above_cutoff", resourceCulture);
             }
@@ -1356,7 +1527,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Specifies the transitions for which peak areas are summed and used in CV calculations for CV refinement. (either all or a single best transition).
         /// </summary>
-        internal static string _refine_cv_transitions {
+        public static string _refine_cv_transitions {
             get {
                 return ResourceManager.GetString("_refine_cv_transitions", resourceCulture);
             }
@@ -1365,7 +1536,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Specifies the count of transitions selected by library transition rank (isotopes for precursors and library for fragments) for which peak areas are summed and used in CV calculations for CV refinement..
         /// </summary>
-        internal static string _refine_cv_transitions_count {
+        public static string _refine_cv_transitions_count {
             get {
                 return ResourceManager.GetString("_refine_cv_transitions_count", resourceCulture);
             }
@@ -1374,7 +1545,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Keep only targets with a group comparision fold change above this cutoff. (optional for group comparison refinement).
         /// </summary>
-        internal static string _refine_gc_fold_change_cutoff {
+        public static string _refine_gc_fold_change_cutoff {
             get {
                 return ResourceManager.GetString("_refine_gc_fold_change_cutoff", resourceCulture);
             }
@@ -1383,7 +1554,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The MS level (1 or 2) to use in calculating peak areas for a group comparison refinement. Defaults to level 2 if both levels are present, and otherwise uses whichever level is present..
         /// </summary>
-        internal static string _refine_gc_ms_level {
+        public static string _refine_gc_ms_level {
             get {
                 return ResourceManager.GetString("_refine_gc_ms_level", resourceCulture);
             }
@@ -1392,7 +1563,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The name of a previously defined group comparison to use in refining for significantly changing targets. Specify the argument multiple times with multiple names to keep the union of multiple comparisons..
         /// </summary>
-        internal static string _refine_gc_name {
+        public static string _refine_gc_name {
             get {
                 return ResourceManager.GetString("_refine_gc_name", resourceCulture);
             }
@@ -1401,7 +1572,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Keep only targets with a group comparison adjusted p value below the specified cut-off. (required for group comparison refinement).
         /// </summary>
-        internal static string _refine_gc_p_value_cutoff {
+        public static string _refine_gc_p_value_cutoff {
             get {
                 return ResourceManager.GetString("_refine_gc_p_value_cutoff", resourceCulture);
             }
@@ -1410,32 +1581,29 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Precursors of the specified isotope label type will be removed (default) or added if --refine-add-label-type is also used..
         /// </summary>
-        internal static string _refine_label_type {
+        public static string _refine_label_type {
             get {
                 return ResourceManager.GetString("_refine_label_type", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to All elements with peak found ratio above this number
-        ///will be removed from the document:
+        ///   Looks up a localized string similar to All elements with peak found ratio above this number will be removed from the document:
         ///
         ///Green = 1.0
         ///Orange &gt;= 0.5
         ///Red &lt; 0.5.
         /// </summary>
-        internal static string _refine_max_peak_found_ratio {
+        public static string _refine_max_peak_found_ratio {
             get {
                 return ResourceManager.GetString("_refine_max_peak_found_ratio", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to All transitions with an average area peak ranking
-        ///greater than this number will be removed from the
-        ///document..
+        ///   Looks up a localized string similar to All transitions with an average area peak ranking greater than this number will be removed from the document..
         /// </summary>
-        internal static string _refine_max_peptide_peak_rank {
+        public static string _refine_max_peptide_peak_rank {
             get {
                 return ResourceManager.GetString("_refine_max_peptide_peak_rank", resourceCulture);
             }
@@ -1444,86 +1612,74 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Only the precursor charge state with the maximum peak area will be retained..
         /// </summary>
-        internal static string _refine_max_precursor_only {
+        public static string _refine_max_precursor_only {
             get {
                 return ResourceManager.GetString("_refine_max_precursor_only", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to All transitions with an average area peak ranking
-        ///greater than this number will be removed from the
-        ///document..
+        ///   Looks up a localized string similar to All transitions with an average area peak ranking greater than this number will be removed from the document..
         /// </summary>
-        internal static string _refine_max_transition_peak_rank {
+        public static string _refine_max_transition_peak_rank {
             get {
                 return ResourceManager.GetString("_refine_max_transition_peak_rank", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to All precursors with a product ion peak area to library
-        ///spectrum dot-product below this threshold will be removed
-        ///from the document..
+        ///   Looks up a localized string similar to All precursors with a product ion peak area to library spectrum dot-product below this threshold will be removed from the document..
         /// </summary>
-        internal static string _refine_min_dotp {
+        public static string _refine_min_dotp {
             get {
                 return ResourceManager.GetString("_refine_min_dotp", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to All precursors with a MS1 precursor peak area to expected
-        ///isotope distribution dot-product below this threshold will be
-        ///removed from the document..
+        ///   Looks up a localized string similar to All precursors with a MS1 precursor peak area to expected isotope distribution dot-product below this threshold will be removed from the document..
         /// </summary>
-        internal static string _refine_min_idotp {
+        public static string _refine_min_idotp {
             get {
                 return ResourceManager.GetString("_refine_min_idotp", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to All elements with peak found ratio below this number
-        ///will be removed from the document:
+        ///   Looks up a localized string similar to All elements with peak found ratio below this number will be removed from the document:
         ///
         ///Green = 1.0
         ///Orange &gt;= 0.5
         ///Red &lt; 0.5.
         /// </summary>
-        internal static string _refine_min_peak_found_ratio {
+        public static string _refine_min_peak_found_ratio {
             get {
                 return ResourceManager.GetString("_refine_min_peak_found_ratio", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Proteins with fewer than this number of peptides will be
-        ///removed from the document..
+        ///   Looks up a localized string similar to Proteins with fewer than this number of peptides will be removed from the document..
         /// </summary>
-        internal static string _refine_min_peptides {
+        public static string _refine_min_peptides {
             get {
                 return ResourceManager.GetString("_refine_min_peptides", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Precursors will be removed from the document
-        ///until the target value for the correlation coefficient of a linear
-        ///regression with the optimal retention time calculator
-        ///exceed this threshold..
+        ///   Looks up a localized string similar to Precursors will be removed from the document until the target value for the correlation coefficient of a linear regression with the optimal retention time calculator exceed this threshold..
         /// </summary>
-        internal static string _refine_min_time_correlation {
+        public static string _refine_min_time_correlation {
             get {
                 return ResourceManager.GetString("_refine_min_time_correlation", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Precursors with fewer than this number of transitions will be
-        ///removed from the document..
+        ///   Looks up a localized string similar to Precursors with fewer than this number of transitions will be removed from the document..
         /// </summary>
-        internal static string _refine_min_transitions {
+        public static string _refine_min_transitions {
             get {
                 return ResourceManager.GetString("_refine_min_transitions", resourceCulture);
             }
@@ -1532,7 +1688,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to All target precursors with less than the specified number of replicates with detection q value below the --refine-qvalue-cutoff are removed..
         /// </summary>
-        internal static string _refine_minimum_detections {
+        public static string _refine_minimum_detections {
             get {
                 return ResourceManager.GetString("_refine_minimum_detections", resourceCulture);
             }
@@ -1541,28 +1697,25 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to All targets that do not correspond to a library match will be removed..
         /// </summary>
-        internal static string _refine_missing_library {
+        public static string _refine_missing_library {
             get {
                 return ResourceManager.GetString("_refine_missing_library", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to All elements without measured results will be
-        ///removed from the document..
+        ///   Looks up a localized string similar to All elements without measured results will be removed from the document..
         /// </summary>
-        internal static string _refine_missing_results {
+        public static string _refine_missing_results {
             get {
                 return ResourceManager.GetString("_refine_missing_results", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Causes refinement to choose larger product ions
-        ///when smaller, less selective ions yeild only fractionally
-        ///greater peak area..
+        ///   Looks up a localized string similar to Causes refinement to choose larger product ions when smaller, less selective ions yeild only fractionally greater peak area..
         /// </summary>
-        internal static string _refine_prefer_larger_products {
+        public static string _refine_prefer_larger_products {
             get {
                 return ResourceManager.GetString("_refine_prefer_larger_products", resourceCulture);
             }
@@ -1571,27 +1724,25 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to All target precursors with a maximum detection q value above the cutoff will be removed. If --refine-minimum-detections is used then at least the specified number of replicates must have a detection q value below the cutoff..
         /// </summary>
-        internal static string _refine_qvalue_cutoff {
+        public static string _refine_qvalue_cutoff {
             get {
                 return ResourceManager.GetString("_refine_qvalue_cutoff", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to All peptides that are not unique within the document
-        ///will be removed..
+        ///   Looks up a localized string similar to All peptides that are not unique within the document will be removed..
         /// </summary>
-        internal static string _refine_remove_duplicates {
+        public static string _refine_remove_duplicates {
             get {
                 return ResourceManager.GetString("_refine_remove_duplicates", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to All repeated peptides will be removed to leave only the
-        ///first occurrence of any peptide..
+        ///   Looks up a localized string similar to All repeated peptides will be removed to leave only the first occurrence of any peptide..
         /// </summary>
-        internal static string _refine_remove_repeats {
+        public static string _refine_remove_repeats {
             get {
                 return ResourceManager.GetString("_refine_remove_repeats", resourceCulture);
             }
@@ -1600,7 +1751,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Use only the best replicate for each peptide in refinement value calculations. (use for fractionation).
         /// </summary>
-        internal static string _refine_use_best_result {
+        public static string _refine_use_best_result {
             get {
                 return ResourceManager.GetString("_refine_use_best_result", resourceCulture);
             }
@@ -1609,7 +1760,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to This option will cause a new model to be created, using the mProphet algorithm with all available scores for the results found in the document. (requires --reintegrate-model-name).
         /// </summary>
-        internal static string _reintegrate_create_model {
+        public static string _reintegrate_create_model {
             get {
                 return ResourceManager.GetString("_reintegrate_create_model", resourceCulture);
             }
@@ -1618,7 +1769,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Use to exclude a particular feature score by name from the model. Names can be found in the user interface. This argument may be used multiple times to exclude multiple features..
         /// </summary>
-        internal static string _reintegrate_exclude_feature {
+        public static string _reintegrate_exclude_feature {
             get {
                 return ResourceManager.GetString("_reintegrate_exclude_feature", resourceCulture);
             }
@@ -1627,7 +1778,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Causes detailed information about model training to be logged..
         /// </summary>
-        internal static string _reintegrate_log_training {
+        public static string _reintegrate_log_training {
             get {
                 return ResourceManager.GetString("_reintegrate_log_training", resourceCulture);
             }
@@ -1636,7 +1787,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Forces the use of both decoys and second best peaks during reintegration. The default is to use decoys only..
         /// </summary>
-        internal static string _reintegrate_model_both {
+        public static string _reintegrate_model_both {
             get {
                 return ResourceManager.GetString("_reintegrate_model_both", resourceCulture);
             }
@@ -1645,7 +1796,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Can be used to control the number of iterations performed during model creation. By default up to 10 are allowed and iterations stop when a new model produces fewer detections..
         /// </summary>
-        internal static string _reintegrate_model_iteration_count {
+        public static string _reintegrate_model_iteration_count {
             get {
                 return ResourceManager.GetString("_reintegrate_model_iteration_count", resourceCulture);
             }
@@ -1654,7 +1805,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The name of a scoring model to use for the reintegrate operation. The model can either be pre-defined (e.g. using the Edit &gt; Refine &gt; Reintegrate form) or created automatically during this operation by using --reintegrate-create-model..
         /// </summary>
-        internal static string _reintegrate_model_name {
+        public static string _reintegrate_model_name {
             get {
                 return ResourceManager.GetString("_reintegrate_model_name", resourceCulture);
             }
@@ -1663,7 +1814,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Forces the use of second best peaks during reintegration. The default is to use decoys only..
         /// </summary>
-        internal static string _reintegrate_model_second_best {
+        public static string _reintegrate_model_second_best {
             get {
                 return ResourceManager.GetString("_reintegrate_model_second_best", resourceCulture);
             }
@@ -1672,7 +1823,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The type of peak scoring model to train to produce z scores and q values. (dafault mProphet) Skyline - simply scales coefficients of the default Skyline model to estimate a unit normal distribution from the decoys. SkylineML - uses the mProphet machine learning algorithm to train a model using only the default set of feature scores..
         /// </summary>
-        internal static string _reintegrate_model_type {
+        public static string _reintegrate_model_type {
             get {
                 return ResourceManager.GetString("_reintegrate_model_type", resourceCulture);
             }
@@ -1681,7 +1832,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Existing manually integrated peaks will be overwritten with peaks chosen by the reintegration model. (requires --reintegrate-model-name).
         /// </summary>
-        internal static string _reintegrate_overwrite_peaks {
+        public static string _reintegrate_overwrite_peaks {
             get {
                 return ResourceManager.GetString("_reintegrate_overwrite_peaks", resourceCulture);
             }
@@ -1690,7 +1841,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Remove all results from the open document..
         /// </summary>
-        internal static string _remove_all {
+        public static string _remove_all {
             get {
                 return ResourceManager.GetString("_remove_all", resourceCulture);
             }
@@ -1699,7 +1850,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Remove all results from the open document with an acquired time before the given date..
         /// </summary>
-        internal static string _remove_before {
+        public static string _remove_before {
             get {
                 return ResourceManager.GetString("_remove_before", resourceCulture);
             }
@@ -1708,7 +1859,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Add reports from a saved report template file to the running program..
         /// </summary>
-        internal static string _report_add {
+        public static string _report_add {
             get {
                 return ResourceManager.GetString("_report_add", resourceCulture);
             }
@@ -1717,7 +1868,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Specifies how to resolve report name conflicts, by either overwriting or skipping them, when using --report-add (default is to output an error message for conflicts).
         /// </summary>
-        internal static string _report_conflict_resolution {
+        public static string _report_conflict_resolution {
             get {
                 return ResourceManager.GetString("_report_conflict_resolution", resourceCulture);
             }
@@ -1726,7 +1877,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The path to export the report to. Required if --report-name is specified..
         /// </summary>
-        internal static string _report_file {
+        public static string _report_file {
             get {
                 return ResourceManager.GetString("_report_file", resourceCulture);
             }
@@ -1735,7 +1886,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to CSV for comma-separated reports (or semicolon separated, depending on your localization) or TSV for tab separated reports [default CSV].
         /// </summary>
-        internal static string _report_format {
+        public static string _report_format {
             get {
                 return ResourceManager.GetString("_report_format", resourceCulture);
             }
@@ -1744,7 +1895,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Exports the report with the “Invariant” language setting, using English (US) number formats and header text without spaces, ideal for use with the R statistical programming environment..
         /// </summary>
-        internal static string _report_invariant {
+        public static string _report_invariant {
             get {
                 return ResourceManager.GetString("_report_invariant", resourceCulture);
             }
@@ -1753,7 +1904,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The name of a report to export as it appears in the Skyline Export Report form..
         /// </summary>
-        internal static string _report_name {
+        public static string _report_name {
             get {
                 return ResourceManager.GetString("_report_name", resourceCulture);
             }
@@ -1762,7 +1913,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Saves any changes to the file.
         /// </summary>
-        internal static string _save {
+        public static string _save {
             get {
                 return ResourceManager.GetString("_save", resourceCulture);
             }
@@ -1771,7 +1922,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Causes settings changes to the global environment, e.g. added reports, libraries, enzymes, etc. to be saved to the program configuration file..
         /// </summary>
-        internal static string _save_settings {
+        public static string _save_settings {
             get {
                 return ResourceManager.GetString("_save_settings", resourceCulture);
             }
@@ -1780,7 +1931,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Specifies the type, &apos;minimal&apos; or &apos;complete&apos;, of archive to share when --share-zip is specified. Minimal is the default attempting to reduce the size of the archive to the minimum necessary to represent the targets in the document while &apos;complete&apos; maintains full fidelity of all project files..
         /// </summary>
-        internal static string _share_type {
+        public static string _share_type {
             get {
                 return ResourceManager.GetString("_share_type", resourceCulture);
             }
@@ -1789,7 +1940,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Saves the entire project (document, results, libraries, etc.) to a ZIP archive. Defaults to a minimal archive..
         /// </summary>
-        internal static string _share_zip {
+        public static string _share_zip {
             get {
                 return ResourceManager.GetString("_share_zip", resourceCulture);
             }
@@ -1798,7 +1949,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to All logging output will be preceded by a time and date..
         /// </summary>
-        internal static string _timestamp {
+        public static string _timestamp {
             get {
                 return ResourceManager.GetString("_timestamp", resourceCulture);
             }
@@ -1807,7 +1958,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The name of a tool to be added by its settings rather than an installation ZIP file..
         /// </summary>
-        internal static string _tool_add {
+        public static string _tool_add {
             get {
                 return ResourceManager.GetString("_tool_add", resourceCulture);
             }
@@ -1816,7 +1967,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Import tools from a tool installation ZIP file..
         /// </summary>
-        internal static string _tool_add_zip {
+        public static string _tool_add_zip {
             get {
                 return ResourceManager.GetString("_tool_add_zip", resourceCulture);
             }
@@ -1825,7 +1976,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Optional command-line arguments for the tool to be added, used when the tool is executed. (Not applicable to web URL commands).
         /// </summary>
-        internal static string _tool_arguments {
+        public static string _tool_arguments {
             get {
                 return ResourceManager.GetString("_tool_arguments", resourceCulture);
             }
@@ -1834,7 +1985,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The command or webpage URL to run for a command being added by its settings rather than an installation ZIP file..
         /// </summary>
-        internal static string _tool_command {
+        public static string _tool_command {
             get {
                 return ResourceManager.GetString("_tool_command", resourceCulture);
             }
@@ -1843,7 +1994,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Tells how to resolve a tool name conflict, by either overwriting an existing installation or skipping installation of the new tool..
         /// </summary>
-        internal static string _tool_conflict_resolution {
+        public static string _tool_conflict_resolution {
             get {
                 return ResourceManager.GetString("_tool_conflict_resolution", resourceCulture);
             }
@@ -1852,7 +2003,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Ignore required packages when installing a tool from a ZIP file..
         /// </summary>
-        internal static string _tool_ignore_required_packages {
+        public static string _tool_ignore_required_packages {
             get {
                 return ResourceManager.GetString("_tool_ignore_required_packages", resourceCulture);
             }
@@ -1861,7 +2012,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Optional initial directory for the tool to be added, used when the tool is executed.  (Not applicable to web URL commands).
         /// </summary>
-        internal static string _tool_initial_dir {
+        public static string _tool_initial_dir {
             get {
                 return ResourceManager.GetString("_tool_initial_dir", resourceCulture);
             }
@@ -1870,7 +2021,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Exports all the tools in the Tools menu to a text file as line separated lists of arguments for --batch-commands..
         /// </summary>
-        internal static string _tool_list_export {
+        public static string _tool_list_export {
             get {
                 return ResourceManager.GetString("_tool_list_export", resourceCulture);
             }
@@ -1879,7 +2030,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to When present the tool output is piped to the Immediate Window at runtime..
         /// </summary>
-        internal static string _tool_output_to_immediate_window {
+        public static string _tool_output_to_immediate_window {
             get {
                 return ResourceManager.GetString("_tool_output_to_immediate_window", resourceCulture);
             }
@@ -1889,7 +2040,7 @@ namespace pwiz.Skyline {
         ///   Looks up a localized string similar to Specifies a program title and version to use with the -–tool-program-path command. Together these commands are for importing tools from a ZIP file that use the $(ProgramPath()) macro as their command. For more information see the documentation on External Tools. e.g.
         ///--tool-program-macro=R,2.15.2.
         /// </summary>
-        internal static string _tool_program_macro {
+        public static string _tool_program_macro {
             get {
                 return ResourceManager.GetString("_tool_program_macro", resourceCulture);
             }
@@ -1898,7 +2049,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Specifies the path to an executable on the local machine for the program title and version specified by the --tool-program-macro flag..
         /// </summary>
-        internal static string _tool_program_path {
+        public static string _tool_program_path {
             get {
                 return ResourceManager.GetString("_tool_program_path", resourceCulture);
             }
@@ -1907,7 +2058,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The name of a report in the settings to use as the input report for the tool..
         /// </summary>
-        internal static string _tool_report {
+        public static string _tool_report {
             get {
                 return ResourceManager.GetString("_tool_report", resourceCulture);
             }
@@ -1916,7 +2067,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Specify whether tool conflicts from the provided ZIP file should be resolved by overwriting or installing in parallel. This is for conflicts related to tool versioning and report names..
         /// </summary>
-        internal static string _tool_zip_conflict_resolution {
+        public static string _tool_zip_conflict_resolution {
             get {
                 return ResourceManager.GetString("_tool_zip_conflict_resolution", resourceCulture);
             }
@@ -1925,7 +2076,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Specify whether conflicting custom annotations from the provided ZIP file should overwrite (true) existing annotations or be skipped (false)..
         /// </summary>
-        internal static string _tool_zip_overwrite_annotations {
+        public static string _tool_zip_overwrite_annotations {
             get {
                 return ResourceManager.GetString("_tool_zip_overwrite_annotations", resourceCulture);
             }
@@ -1934,7 +2085,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to A comma-separated list of precursor ion charge states to apply to peptide molecules to generate precursor targets. Changes the transition filter settings for the open document..
         /// </summary>
-        internal static string _tran_precursor_ion_charges {
+        public static string _tran_precursor_ion_charges {
             get {
                 return ResourceManager.GetString("_tran_precursor_ion_charges", resourceCulture);
             }
@@ -1943,7 +2094,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Changes the transition settings collision energy prediction setting to one of the previously defined options..
         /// </summary>
-        internal static string _tran_predict_ce {
+        public static string _tran_predict_ce {
             get {
                 return ResourceManager.GetString("_tran_predict_ce", resourceCulture);
             }
@@ -1952,7 +2103,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Changes the transition settings compensation voltage prediction setting to one of the previously defined options..
         /// </summary>
-        internal static string _tran_predict_cov {
+        public static string _tran_predict_cov {
             get {
                 return ResourceManager.GetString("_tran_predict_cov", resourceCulture);
             }
@@ -1961,7 +2112,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Changes the transition settings declustering potential prediction setting to one of the previously defined options..
         /// </summary>
-        internal static string _tran_predict_dp {
+        public static string _tran_predict_dp {
             get {
                 return ResourceManager.GetString("_tran_predict_dp", resourceCulture);
             }
@@ -1970,7 +2121,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Changes the transition settings optimization library used in predicting instrument parameters to one of the previously defined options..
         /// </summary>
-        internal static string _tran_predict_optdb {
+        public static string _tran_predict_optdb {
             get {
                 return ResourceManager.GetString("_tran_predict_optdb", resourceCulture);
             }
@@ -1979,7 +2130,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Add a named predefined special ion as specified in the Transition Settings form..
         /// </summary>
-        internal static string _tran_product_add_special_ion {
+        public static string _tran_product_add_special_ion {
             get {
                 return ResourceManager.GetString("_tran_product_add_special_ion", resourceCulture);
             }
@@ -1988,7 +2139,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Remove all special ions from the transition filter settings..
         /// </summary>
-        internal static string _tran_product_clear_special_ions {
+        public static string _tran_product_clear_special_ions {
             get {
                 return ResourceManager.GetString("_tran_product_clear_special_ions", resourceCulture);
             }
@@ -1997,7 +2148,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The largest product ion to allow a transition for..
         /// </summary>
-        internal static string _tran_product_end_ion {
+        public static string _tran_product_end_ion {
             get {
                 return ResourceManager.GetString("_tran_product_end_ion", resourceCulture);
             }
@@ -2006,7 +2157,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to A comma-separated list of product ion charge states to apply to peptide fragments to generate product ion transitions. Changes the transition filter settings for the open document..
         /// </summary>
-        internal static string _tran_product_ion_charges {
+        public static string _tran_product_ion_charges {
             get {
                 return ResourceManager.GetString("_tran_product_ion_charges", resourceCulture);
             }
@@ -2015,7 +2166,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to A comma-separated list of product ion types expected in peptide fragmentation to generate product ion transitions. Changes the transition filter settings for the open document..
         /// </summary>
-        internal static string _tran_product_ion_types {
+        public static string _tran_product_ion_types {
             get {
                 return ResourceManager.GetString("_tran_product_ion_types", resourceCulture);
             }
@@ -2024,7 +2175,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The smallest product ion to allow a transition for..
         /// </summary>
-        internal static string _tran_product_start_ion {
+        public static string _tran_product_start_ion {
             get {
                 return ResourceManager.GetString("_tran_product_start_ion", resourceCulture);
             }
@@ -2033,16 +2184,25 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Exclude product ion transitions with m/z values that fall within the precursor isolation window range. This is recommended for DIA/SWATH data where signal from unfragmented precursors can increase the probability of interference..
         /// </summary>
-        internal static string _tran_use_dia_window_exclusion {
+        public static string _tran_use_dia_window_exclusion {
             get {
                 return ResourceManager.GetString("_tran_use_dia_window_exclusion", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adds additional information to the program output in the case of an error, that may be helpful to Skyline developers..
+        /// </summary>
+        public static string _verbose_errors {
+            get {
+                return ResourceManager.GetString("_verbose_errors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Emits version information for the running installation.
         /// </summary>
-        internal static string _version {
+        public static string _version {
             get {
                 return ResourceManager.GetString("_version", resourceCulture);
             }
@@ -2051,7 +2211,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Applies To.
         /// </summary>
-        internal static string CommandArgGroup_ToString_Applies_To {
+        public static string CommandArgGroup_ToString_Applies_To {
             get {
                 return ResourceManager.GetString("CommandArgGroup_ToString_Applies_To", resourceCulture);
             }
@@ -2060,7 +2220,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Argument.
         /// </summary>
-        internal static string CommandArgGroup_ToString_Argument {
+        public static string CommandArgGroup_ToString_Argument {
             get {
                 return ResourceManager.GetString("CommandArgGroup_ToString_Argument", resourceCulture);
             }
@@ -2069,9 +2229,18 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Description.
         /// </summary>
-        internal static string CommandArgGroup_ToString_Description {
+        public static string CommandArgGroup_ToString_Description {
             get {
                 return ResourceManager.GetString("CommandArgGroup_ToString_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &quot;&lt;value&gt;, &lt;value&gt;, &lt;value&gt;...&quot;.
+        /// </summary>
+        public static string CommandArgs_ANNOTATION_VALUES_VALUE {
+            get {
+                return ResourceManager.GetString("CommandArgs_ANNOTATION_VALUES_VALUE", resourceCulture);
             }
         }
         
@@ -2079,7 +2248,7 @@ namespace pwiz.Skyline {
         ///   Looks up a localized string similar to Agilent
         ///SCIEX.
         /// </summary>
-        internal static string CommandArgs_ARG_EXP_DWELL_TIME_AppliesTo {
+        public static string CommandArgs_ARG_EXP_DWELL_TIME_AppliesTo {
             get {
                 return ResourceManager.GetString("CommandArgs_ARG_EXP_DWELL_TIME_AppliesTo", resourceCulture);
             }
@@ -2089,7 +2258,7 @@ namespace pwiz.Skyline {
         ///   Looks up a localized string similar to Thermo
         ///Waters.
         /// </summary>
-        internal static string CommandArgs_ARG_EXP_RUN_LENGTH_AppliesTo {
+        public static string CommandArgs_ARG_EXP_RUN_LENGTH_AppliesTo {
             get {
                 return ResourceManager.GetString("CommandArgs_ARG_EXP_RUN_LENGTH_AppliesTo", resourceCulture);
             }
@@ -2098,7 +2267,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Thermo.
         /// </summary>
-        internal static string CommandArgs_ARG_EXP_Thermo {
+        public static string CommandArgs_ARG_EXP_Thermo {
             get {
                 return ResourceManager.GetString("CommandArgs_ARG_EXP_Thermo", resourceCulture);
             }
@@ -2107,7 +2276,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to path/to/result-file to import the isolation scheme from.
         /// </summary>
-        internal static string CommandArgs_ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME_path_to_result_file_to_import_the_isolation_scheme {
+        public static string CommandArgs_ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME_path_to_result_file_to_import_the_isolation_scheme {
             get {
                 return ResourceManager.GetString("CommandArgs_ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME_path_to_result_file_to_import_" +
                         "the_isolation_scheme", resourceCulture);
@@ -2115,9 +2284,18 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} or {1}.
+        /// </summary>
+        public static string CommandArgs_BOOL_VALUE__0__or__1_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_BOOL_VALUE__0__or__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &quot;&lt;arguments&gt;&quot;.
         /// </summary>
-        internal static string CommandArgs_COMMAND_ARGUMENTS_VALUE {
+        public static string CommandArgs_COMMAND_ARGUMENTS_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_COMMAND_ARGUMENTS_VALUE", resourceCulture);
             }
@@ -2126,7 +2304,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to &lt;command | url&gt;.
         /// </summary>
-        internal static string CommandArgs_COMMAND_VALUE {
+        public static string CommandArgs_COMMAND_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_COMMAND_VALUE", resourceCulture);
             }
@@ -2135,7 +2313,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to &lt;date&gt;.
         /// </summary>
-        internal static string CommandArgs_DATE_VALUE {
+        public static string CommandArgs_DATE_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_DATE_VALUE", resourceCulture);
             }
@@ -2144,7 +2322,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to &lt;feature name&gt;.
         /// </summary>
-        internal static string CommandArgs_FEATURE_NAME_VALUE {
+        public static string CommandArgs_FEATURE_NAME_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_FEATURE_NAME_VALUE", resourceCulture);
             }
@@ -2153,7 +2331,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Adding spectral libraries.
         /// </summary>
-        internal static string CommandArgs_GROUP_ADD_LIBRARY_Adding_spectral_libraries {
+        public static string CommandArgs_GROUP_ADD_LIBRARY_Adding_spectral_libraries {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_ADD_LIBRARY_Adding_spectral_libraries", resourceCulture);
             }
@@ -2162,7 +2340,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Importing annotations.
         /// </summary>
-        internal static string CommandArgs_GROUP_ANNOTATIONS_Importing_annotations {
+        public static string CommandArgs_GROUP_ANNOTATIONS_Importing_annotations {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_ANNOTATIONS_Importing_annotations", resourceCulture);
             }
@@ -2171,7 +2349,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Exporting chromatograms.
         /// </summary>
-        internal static string CommandArgs_GROUP_CHROMATOGRAM_Exporting_chromatograms {
+        public static string CommandArgs_GROUP_CHROMATOGRAM_Exporting_chromatograms {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_CHROMATOGRAM_Exporting_chromatograms", resourceCulture);
             }
@@ -2180,7 +2358,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Creating an ion mobility library.
         /// </summary>
-        internal static string CommandArgs_GROUP_CREATE_IMSDB_Ion_Mobility_Library {
+        public static string CommandArgs_GROUP_CREATE_IMSDB_Ion_Mobility_Library {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_CREATE_IMSDB_Ion_Mobility_Library", resourceCulture);
             }
@@ -2189,16 +2367,25 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Adding decoy peptides.
         /// </summary>
-        internal static string CommandArgs_GROUP_DECOYS {
+        public static string CommandArgs_GROUP_DECOYS {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_DECOYS", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Document settings.
+        /// </summary>
+        public static string CommandArgs_GROUP_DOCUMENT_SETTINGS {
+            get {
+                return ResourceManager.GetString("CommandArgs_GROUP_DOCUMENT_SETTINGS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Method and transition list options.
         /// </summary>
-        internal static string CommandArgs_GROUP_EXP_GENERAL_Method_and_transition_list_options {
+        public static string CommandArgs_GROUP_EXP_GENERAL_Method_and_transition_list_options {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_EXP_GENERAL_Method_and_transition_list_options", resourceCulture);
             }
@@ -2207,7 +2394,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Vendor-specific method and transition list options.
         /// </summary>
-        internal static string CommandArgs_GROUP_EXP_INSTRUMENT_Vendor_specific_method_and_transition_list_options {
+        public static string CommandArgs_GROUP_EXP_INSTRUMENT_Vendor_specific_method_and_transition_list_options {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_EXP_INSTRUMENT_Vendor_specific_method_and_transition_list_optio" +
                         "ns", resourceCulture);
@@ -2217,7 +2404,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Importing FASTA files.
         /// </summary>
-        internal static string CommandArgs_GROUP_FASTA_Importing_FASTA_files {
+        public static string CommandArgs_GROUP_FASTA_Importing_FASTA_files {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_FASTA_Importing_FASTA_files", resourceCulture);
             }
@@ -2226,7 +2413,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to General input/output.
         /// </summary>
-        internal static string CommandArgs_GROUP_GENERAL_IO_General_input_output {
+        public static string CommandArgs_GROUP_GENERAL_IO_General_input_output {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_GENERAL_IO_General_input_output", resourceCulture);
             }
@@ -2235,7 +2422,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Importing other Skyline documents.
         /// </summary>
-        internal static string CommandArgs_GROUP_IMPORT_DOC_Importing_other_Skyline_documents {
+        public static string CommandArgs_GROUP_IMPORT_DOC_Importing_other_Skyline_documents {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_IMPORT_DOC_Importing_other_Skyline_documents", resourceCulture);
             }
@@ -2244,7 +2431,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Importing results replicates.
         /// </summary>
-        internal static string CommandArgs_GROUP_IMPORT_Importing_results_replicates {
+        public static string CommandArgs_GROUP_IMPORT_Importing_results_replicates {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_IMPORT_Importing_results_replicates", resourceCulture);
             }
@@ -2253,7 +2440,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Importing transition lists and assay libraries.
         /// </summary>
-        internal static string CommandArgs_GROUP_IMPORT_LIST_Importing_transition_lists_and_assay_libraries {
+        public static string CommandArgs_GROUP_IMPORT_LIST_Importing_transition_lists_and_assay_libraries {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_IMPORT_LIST_Importing_transition_lists_and_assay_libraries", resourceCulture);
             }
@@ -2262,7 +2449,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Importing peptide searches.
         /// </summary>
-        internal static string CommandArgs_GROUP_IMPORT_SEARCH_Importing_peptide_searches {
+        public static string CommandArgs_GROUP_IMPORT_SEARCH_Importing_peptide_searches {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_IMPORT_SEARCH_Importing_peptide_searches", resourceCulture);
             }
@@ -2271,7 +2458,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Internal use only.
         /// </summary>
-        internal static string CommandArgs_GROUP_INTERNAL {
+        public static string CommandArgs_GROUP_INTERNAL {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_INTERNAL", resourceCulture);
             }
@@ -2280,7 +2467,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Exporting isolation/transition lists.
         /// </summary>
-        internal static string CommandArgs_GROUP_LISTS_Exporting_isolation_transition_lists {
+        public static string CommandArgs_GROUP_LISTS_Exporting_isolation_transition_lists {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_LISTS_Exporting_isolation_transition_lists", resourceCulture);
             }
@@ -2289,7 +2476,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Exporting native instrument methods.
         /// </summary>
-        internal static string CommandArgs_GROUP_METHOD_Exporting_native_instrument_methods {
+        public static string CommandArgs_GROUP_METHOD_Exporting_native_instrument_methods {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_METHOD_Exporting_native_instrument_methods", resourceCulture);
             }
@@ -2298,7 +2485,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Minimizing results file size.
         /// </summary>
-        internal static string CommandArgs_GROUP_MINIMIZE_RESULTS_Minimizing_results_file_size {
+        public static string CommandArgs_GROUP_MINIMIZE_RESULTS_Minimizing_results_file_size {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_MINIMIZE_RESULTS_Minimizing_results_file_size", resourceCulture);
             }
@@ -2307,7 +2494,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Exporting other file types.
         /// </summary>
-        internal static string CommandArgs_GROUP_OTHER_FILE_TYPES {
+        public static string CommandArgs_GROUP_OTHER_FILE_TYPES {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_OTHER_FILE_TYPES", resourceCulture);
             }
@@ -2316,7 +2503,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to If the arguments above are used along with arguments to import results files into the document (--import-file or -–import-all) the Skyline document will be uploaded to the given Panorama server only if new results are added to the document..
         /// </summary>
-        internal static string CommandArgs_GROUP_PANORAMA_postamble {
+        public static string CommandArgs_GROUP_PANORAMA_postamble {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_PANORAMA_postamble", resourceCulture);
             }
@@ -2325,7 +2512,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Publishing to Panorama.
         /// </summary>
-        internal static string CommandArgs_GROUP_PANORAMA_Publishing_to_Panorama {
+        public static string CommandArgs_GROUP_PANORAMA_Publishing_to_Panorama {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_PANORAMA_Publishing_to_Panorama", resourceCulture);
             }
@@ -2334,7 +2521,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Refining the targets list.
         /// </summary>
-        internal static string CommandArgs_GROUP_REFINEMENT {
+        public static string CommandArgs_GROUP_REFINEMENT {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_REFINEMENT", resourceCulture);
             }
@@ -2343,7 +2530,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Refining the targets list based on imported results.
         /// </summary>
-        internal static string CommandArgs_GROUP_REFINEMENT_W_RESULTS {
+        public static string CommandArgs_GROUP_REFINEMENT_W_RESULTS {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_REFINEMENT_W_RESULTS", resourceCulture);
             }
@@ -2352,7 +2539,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Reintegrate with advanced peak picking models.
         /// </summary>
-        internal static string CommandArgs_GROUP_REINTEGRATE_Reintegrate_with_advanced_peak_picking_models {
+        public static string CommandArgs_GROUP_REINTEGRATE_Reintegrate_with_advanced_peak_picking_models {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_REINTEGRATE_Reintegrate_with_advanced_peak_picking_models", resourceCulture);
             }
@@ -2361,7 +2548,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Removing results replicates.
         /// </summary>
-        internal static string CommandArgs_GROUP_REMOVE_Removing_results_replicates {
+        public static string CommandArgs_GROUP_REMOVE_Removing_results_replicates {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_REMOVE_Removing_results_replicates", resourceCulture);
             }
@@ -2370,7 +2557,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Exporting reports.
         /// </summary>
-        internal static string CommandArgs_GROUP_REPORT_Exporting_reports {
+        public static string CommandArgs_GROUP_REPORT_Exporting_reports {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_REPORT_Exporting_reports", resourceCulture);
             }
@@ -2379,7 +2566,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Peptide Settings.
         /// </summary>
-        internal static string CommandArgs_GROUP_SETTINGS_Peptide_Settings {
+        public static string CommandArgs_GROUP_SETTINGS_Peptide_Settings {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_SETTINGS_Peptide_Settings", resourceCulture);
             }
@@ -2388,7 +2575,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Transition Settings.
         /// </summary>
-        internal static string CommandArgs_GROUP_SETTINGS_Transition_Settings {
+        public static string CommandArgs_GROUP_SETTINGS_Transition_Settings {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_SETTINGS_Transition_Settings", resourceCulture);
             }
@@ -2397,7 +2584,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to &lt;integer&gt;.
         /// </summary>
-        internal static string CommandArgs_INT_VALUE {
+        public static string CommandArgs_INT_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_INT_VALUE", resourceCulture);
             }
@@ -2406,7 +2593,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to &lt;label type&gt;.
         /// </summary>
-        internal static string CommandArgs_LABEL_VALUE {
+        public static string CommandArgs_LABEL_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_LABEL_VALUE", resourceCulture);
             }
@@ -2415,7 +2602,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to &lt;millis&gt;.
         /// </summary>
-        internal static string CommandArgs_MILLIS_VALE {
+        public static string CommandArgs_MILLIS_VALE {
             get {
                 return ResourceManager.GetString("CommandArgs_MILLIS_VALE", resourceCulture);
             }
@@ -2424,16 +2611,34 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to &lt;minutes&gt;.
         /// </summary>
-        internal static string CommandArgs_MINUTES_VALUE {
+        public static string CommandArgs_MINUTES_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_MINUTES_VALUE", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to full name (e.g. &quot;Oxidation (M)&quot;) | short name (Oxi).
+        /// </summary>
+        public static string CommandArgs_MOD_NAME_VALUE_full_name__e_g___Oxidation__M______short_name__Oxi_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_MOD_NAME_VALUE_full_name__e_g___Oxidation__M______short_name__Oxi_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to UniMod ID (e.g. &quot;35&quot;).
+        /// </summary>
+        public static string CommandArgs_MOD_UNIMOD_VALUE_UniMod_ID__e_g___35__ {
+            get {
+                return ResourceManager.GetString("CommandArgs_MOD_UNIMOD_VALUE_UniMod_ID__e_g___35__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &lt;m/z value&gt;.
         /// </summary>
-        internal static string CommandArgs_MZ_VALUE {
+        public static string CommandArgs_MZ_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_MZ_VALUE", resourceCulture);
             }
@@ -2442,7 +2647,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to &lt;name&gt;.
         /// </summary>
-        internal static string CommandArgs_NAME_VALUE {
+        public static string CommandArgs_NAME_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_NAME_VALUE", resourceCulture);
             }
@@ -2451,7 +2656,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to &lt;number list&gt;.
         /// </summary>
-        internal static string CommandArgs_NUM_LIST_VALUE {
+        public static string CommandArgs_NUM_LIST_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_NUM_LIST_VALUE", resourceCulture);
             }
@@ -2460,7 +2665,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to &lt;number&gt;.
         /// </summary>
-        internal static string CommandArgs_NUM_VALUE {
+        public static string CommandArgs_NUM_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_NUM_VALUE", resourceCulture);
             }
@@ -2469,7 +2674,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to &lt;password&gt;.
         /// </summary>
-        internal static string CommandArgs_PASSWORD_VALUE {
+        public static string CommandArgs_PASSWORD_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_PASSWORD_VALUE", resourceCulture);
             }
@@ -2478,7 +2683,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to path/to/file.
         /// </summary>
-        internal static string CommandArgs_PATH_TO_FILE_path_to_file {
+        public static string CommandArgs_PATH_TO_FILE_path_to_file {
             get {
                 return ResourceManager.GetString("CommandArgs_PATH_TO_FILE_path_to_file", resourceCulture);
             }
@@ -2487,7 +2692,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to path/to/folder.
         /// </summary>
-        internal static string CommandArgs_PATH_TO_FOLDER {
+        public static string CommandArgs_PATH_TO_FOLDER {
             get {
                 return ResourceManager.GetString("CommandArgs_PATH_TO_FOLDER", resourceCulture);
             }
@@ -2496,7 +2701,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to &lt;pipe name&gt;.
         /// </summary>
-        internal static string CommandArgs_PIPE_NAME_VALUE {
+        public static string CommandArgs_PIPE_NAME_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_PIPE_NAME_VALUE", resourceCulture);
             }
@@ -2505,7 +2710,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to &lt;program title&gt;[,&lt;program version&gt;].
         /// </summary>
-        internal static string CommandArgs_PROGRAM_MACRO_VALUE {
+        public static string CommandArgs_PROGRAM_MACRO_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_PROGRAM_MACRO_VALUE", resourceCulture);
             }
@@ -2514,7 +2719,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to &lt;reg-ex&gt;.
         /// </summary>
-        internal static string CommandArgs_REGEX_VALUE {
+        public static string CommandArgs_REGEX_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_REGEX_VALUE", resourceCulture);
             }
@@ -2523,7 +2728,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to &lt;report name&gt;.
         /// </summary>
-        internal static string CommandArgs_REPORT_NAME_VALUE {
+        public static string CommandArgs_REPORT_NAME_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_REPORT_NAME_VALUE", resourceCulture);
             }
@@ -2532,7 +2737,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to &lt;resolving power&gt;.
         /// </summary>
-        internal static string CommandArgs_RP_VALUE {
+        public static string CommandArgs_RP_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_RP_VALUE", resourceCulture);
             }
@@ -2541,7 +2746,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to &lt;server url&gt;.
         /// </summary>
-        internal static string CommandArgs_SERVER_URL_VALUE {
+        public static string CommandArgs_SERVER_URL_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_SERVER_URL_VALUE", resourceCulture);
             }
@@ -2550,7 +2755,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to SkylineRunner.exe is a tiny shim executable less than 10 KB in size.  It requires a Skyline installation, performed with the self-updating web installers, on the computer on which SkylineRunner is run.  SkylineRunner simply starts a separate Skyline process running without any user interface, pipes the parameter options from the command-line to the running Skyline instance, and prints output from its Skyline instance to the command console. You can still run multiple instances of SkylineRunner and it will s [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string CommandArgs_Usage_ {
+        public static string CommandArgs_Usage_ {
             get {
                 return ResourceManager.GetString("CommandArgs_Usage_", resourceCulture);
             }
@@ -2559,7 +2764,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to SkylineRunner.exe is a tiny shim executable less than 10 KB in size.  It requires a Skyline installation, performed with the self-updating web installers, on the computer on which SkylineRunner is run.  SkylineRunner simply starts a separate Skyline process running without any user interface, pipes the parameter options from the command-line to the running Skyline instance, and prints output from its Skyline instance to the command console. You can still run multiple instances of SkylineRunner and it will s [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string CommandArgs_Usage_para2 {
+        public static string CommandArgs_Usage_para2 {
             get {
                 return ResourceManager.GetString("CommandArgs_Usage_para2", resourceCulture);
             }
@@ -2568,7 +2773,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to SkylineCmd.exe is a much simpler executable which is always installed beside Skyline.exe. It uses the Skyline.exe module as a DLL providing a much cleaner command-line implementation than SkylineRunner.exe, but you must know where SkylineCmd.exe lives on disk to run it, which is usually not the case with the web installer. Usually, you will use either the “Unplugged” installer or the Administrator installer (or recently the Wine Docker Container for Linux systems) if you want to use SkylineCmd.exe. The “Unp [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string CommandArgs_Usage_para3 {
+        public static string CommandArgs_Usage_para3 {
             get {
                 return ResourceManager.GetString("CommandArgs_Usage_para3", resourceCulture);
             }
@@ -2577,7 +2782,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to The Skyline command-line interface is intended for automating tasks such as quality control, scheduling and refinement, during acquisition.  With the Skyline command-line interface, you can open a Skyline document, import a newly acquired data file, and export a report or new method. You can also run large-scale chromatogram extraction and peak picking for proteomewide DIA and DDA experiments faster and consuming less memory than using the full graphic user interface. (See Webinar 14: https://skyline.ms/web [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string CommandArgs_Usage_para4 {
+        public static string CommandArgs_Usage_para4 {
             get {
                 return ResourceManager.GetString("CommandArgs_Usage_para4", resourceCulture);
             }
@@ -2586,7 +2791,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to To access the command-line interface for Skyline you can use either SkylineRunner.exe or SkylineCmd.exe..
         /// </summary>
-        internal static string CommandArgs_Usage_To_access_the_command_line_interface_for_Skyline_you_can_use_either_SkylineRunner_exe_or_SkylineCmd_exe_ {
+        public static string CommandArgs_Usage_To_access_the_command_line_interface_for_Skyline_you_can_use_either_SkylineRunner_exe_or_SkylineCmd_exe_ {
             get {
                 return ResourceManager.GetString("CommandArgs_Usage_To_access_the_command_line_interface_for_Skyline_you_can_use_ei" +
                         "ther_SkylineRunner_exe_or_SkylineCmd_exe_", resourceCulture);
@@ -2596,7 +2801,7 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Until the section titled Settings Customization all other command line arguments rely on the &apos;--in&apos; argument because they all rely on having a Skyline document open..
         /// </summary>
-        internal static string CommandArgs_Usage_Until_the_section_titled_Settings_Customization_all_other_command_line_arguments_rely_on_the____in__argument_because_they_all_rely_on_having_a_Skyline_document_open_ {
+        public static string CommandArgs_Usage_Until_the_section_titled_Settings_Customization_all_other_command_line_arguments_rely_on_the____in__argument_because_they_all_rely_on_having_a_Skyline_document_open_ {
             get {
                 return ResourceManager.GetString("CommandArgs_Usage_Until_the_section_titled_Settings_Customization_all_other_comma" +
                         "nd_line_arguments_rely_on_the____in__argument_because_they_all_rely_on_having_a_" +
@@ -2607,9 +2812,39 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to &lt;username&gt;.
         /// </summary>
-        internal static string CommandArgs_USERNAME_VALUE {
+        public static string CommandArgs_USERNAME_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_USERNAME_VALUE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The value &apos;{0}&apos; is not valid for the argument &apos;{1}&apos;: it must be {2}.
+        /// </summary>
+        public static string ValueInvalidBoolException_ValueInvalidBoolException_The_value___0___is_not_valid_for_the_argument___1____it_must_be__2_ {
+            get {
+                return ResourceManager.GetString("ValueInvalidBoolException_ValueInvalidBoolException_The_value___0___is_not_valid_" +
+                        "for_the_argument___1____it_must_be__2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The value &apos;{0}&apos; is not valid for the argument {1}. Use one of {2}.
+        /// </summary>
+        public static string ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_ {
+            get {
+                return ResourceManager.GetString("ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_" +
+                        "argument__1___Use_one_of__2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to add peptide modification &apos;{0}&apos;: {1}.
+        /// </summary>
+        public static string ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_ {
+            get {
+                return ResourceManager.GetString("ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modificat" +
+                        "ion___0_____1_", resourceCulture);
             }
         }
     }

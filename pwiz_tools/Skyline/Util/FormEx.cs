@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -32,15 +31,11 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
 {
-    public class FormEx : Form, IFormView, 
+    public class FormEx : CommonFormEx,
                      Helpers.IModeUIAwareForm // Can translate "peptide"=>"molecule" etc if desired
     {
-        public static bool ShowFormNames { get; set; }
-
         private const int STATE_CREATINGHANDLE = 0x00040000;
 
-        private const int TIMEOUT_SECONDS = 10;
-        private static readonly List<FormEx> _undisposedForms = new List<FormEx>();
         private Helpers.ModeUIAwareFormHelper _modeUIHelper;
         public Helpers.ModeUIExtender modeUIHandler; // Allows UI mode management in Designer
         private Container _components; // For IExtender use
@@ -150,47 +145,6 @@ namespace pwiz.Skyline.Util
             throw new InvalidOperationException(@"Not supported.");
         }
 
-        public DialogResult ShowParentlessDialog()
-        {
-            // WINDOWS 10 UPDATE HACK: Because Windows 10 update version 1803 causes unparented non-ShowInTaskbar windows to leak GDI and User handles
-            ShowInTaskbar = ShowInTaskbar || Program.FunctionalTest;
-
-            return base.ShowDialog();
-        }
-
-        public DialogResult ShowWithTimeout(IWin32Window parent, string message)
-        {
-            Assume.IsNotNull(parent);   // Problems if the parent is null
-
-            if (Program.FunctionalTest && Program.PauseSeconds == 0 && !Debugger.IsAttached)
-            {
-                bool timeout = false;
-                var timeoutTimer = new Timer { Interval = TIMEOUT_SECONDS * 1000 };
-                timeoutTimer.Tick += (sender, args) =>
-                {
-                    timeoutTimer.Stop();
-                    if (!timeout)
-                    {
-                        timeout = true;
-                        Close();
-                    }
-                };
-                timeoutTimer.Start();
-
-                var result = ShowDialog(parent);
-                timeoutTimer.Stop();
-                if (timeout)
-                    throw new TimeoutException(
-                        string.Format(@"{0} not closed for {1} seconds. Message = {2}",
-                            GetType(),
-                            TIMEOUT_SECONDS,
-                            message));
-                return result;
-            }
-
-            return ShowDialog(parent);
-        }
-
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
@@ -202,10 +156,6 @@ namespace pwiz.Skyline.Util
             if (Program.FunctionalTest)
             {
                 // Track undisposed forms.
-                lock (_undisposedForms)
-                {
-                    _undisposedForms.Add(this);
-                }
             }
 
             // Potentially replace "peptide" with "molecule" etc in all controls on open, or possibly disable non-proteomic components etc
@@ -249,14 +199,6 @@ namespace pwiz.Skyline.Util
                 return;
             }
 
-            if (Program.FunctionalTest && disposing)
-            {
-                lock (_undisposedForms)
-                {
-                    _undisposedForms.Remove(this);
-                }
-            }
-
             try
             {
                 base.Dispose(disposing);
@@ -269,47 +211,6 @@ namespace pwiz.Skyline.Util
                     "Exception caught at: " + new StackTrace());
                 throw new InvalidOperationException(message, x);
             }
-        }
-
-        public void CheckDisposed()
-        {
-            if (IsDisposed)
-            {
-                throw new ObjectDisposedException(@"Form disposed");
-            }
-        }
-
-        public static void CheckAllFormsDisposed()
-        {
-            lock (_undisposedForms)
-            {
-                if (_undisposedForms.Count != 0)
-                {
-                    var formType = _undisposedForms[0].GetType().Name;
-                    _undisposedForms.Clear();
-                    throw new ApplicationException(formType + @" was not disposed");
-                }
-            }
-        }
-
-        public static void SetOffscreen(Form form)
-        {
-            form.StartPosition = FormStartPosition.Manual;
-            form.Location = GetOffscreenPoint();
-        }
-
-        public static Point GetOffscreenPoint()
-        {
-            // First use a position that is usually enough to put any window above and left of the screen
-            var offscreenPoint = new Point(-5000, -5000);
-            // Then review all screens and make sure this is less than one screen size outside its
-            // top-left corner
-            foreach (var screen in Screen.AllScreens)
-            {
-                offscreenPoint.X = Math.Min(offscreenPoint.X, screen.Bounds.Left - screen.Bounds.Width);
-                offscreenPoint.Y = Math.Min(offscreenPoint.Y, screen.Bounds.Top - screen.Bounds.Height);
-            }
-            return offscreenPoint;
         }
 
         public static Form GetParentForm(Control control)
@@ -351,8 +252,6 @@ namespace pwiz.Skyline.Util
             CancelButton.PerformClick();
         }
 
-        public virtual string DetailedMessage { get { return null; } }
-
         public static Control GetFocused(Control.ControlCollection controls)
         {
             foreach (Control c in controls)
@@ -371,6 +270,15 @@ namespace pwiz.Skyline.Util
             }
             // No control on the form has focus
             return null;
+        }
+        public new static void SetOffscreen(Form form)
+        {
+            CommonFormEx.SetOffscreen(form);
+        }
+
+        public new static Point GetOffscreenPoint()
+        {
+            return CommonFormEx.GetOffscreenPoint();
         }
     }
 }

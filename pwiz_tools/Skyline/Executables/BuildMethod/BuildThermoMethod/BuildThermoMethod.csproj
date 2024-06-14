@@ -47,11 +47,16 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="Thermo.TNG.MethodXMLFactory">
+    <Reference Include="Thermo.TNG.MethodXMLFactory, Version=2.0.0.0, Culture=neutral, PublicKeyToken=35efc4498449bc4c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>.\Thermo.TNG.MethodXMLFactory.dll</HintPath>
     </Reference>
-    <Reference Include="Thermo.TNG.MethodXMLInterface">
+    <Reference Include="Thermo.TNG.MethodXMLInterface, Version=2.0.0.0, Culture=neutral, PublicKeyToken=35efc4498449bc4c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>.\Thermo.TNG.MethodXMLInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="Thermo.TNG.MethodXMLInterface2">
+      <HintPath>.\Thermo.TNG.MethodXMLInterface2.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -60,6 +65,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="XmlFusion\MethodModifications.cs" />
+    <Compile Include="XmlStellar\MethodModifications.cs" />
     <Compile Include="XmlTsq\HyperionMethod.cs" />
   </ItemGroup>
   <ItemGroup>

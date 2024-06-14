@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -151,11 +152,9 @@ namespace pwiz.SkylineTest.Reporting
                     .ColumnCaptionResourceManagers)
             {
                 var resourceSet = resourceManager.GetResourceSet(CultureInfo.InvariantCulture, true, true);
-                var enumerator = resourceSet.GetEnumerator();
-                while (enumerator.MoveNext())
+                foreach (DictionaryEntry entry in resourceSet)
                 {
-                    string key = enumerator.Key as string;
-                    if (null != key)
+                    if (entry.Key is string key)
                     {
                         columnCaptions.Add(key);
                     }
@@ -183,11 +182,9 @@ namespace pwiz.SkylineTest.Reporting
             var columnCaptions = new HashSet<string>();
             var resourceManager = ColumnToolTips.ResourceManager;
             var resourceSet = resourceManager.GetResourceSet(CultureInfo.InvariantCulture, true, true);
-            var enumerator = resourceSet.GetEnumerator();
-            while (enumerator.MoveNext())
+            foreach (DictionaryEntry entry in resourceSet)
             {
-                string key = enumerator.Key as string;
-                if (null != key)
+                if (entry.Key is string key)
                 {
                     columnCaptions.Add(key);
                 }

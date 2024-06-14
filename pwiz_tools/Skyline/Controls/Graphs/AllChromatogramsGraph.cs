@@ -351,7 +351,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             progressBarTotal.Visible = false;
             btnCancel.Visible = false;
-            btnHide.Text = Resources.AllChromatogramsGraph_Finish_Close;
+            btnHide.Text = GraphsResources.AllChromatogramsGraph_Finish_Close;
         }
 
         public bool HasErrors
@@ -463,7 +463,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!Finished)
             {
                 btnCancel.Visible = true;
-                btnHide.Text = Resources.AllChromatogramsGraph_UpdateStatus_Hide;
+                btnHide.Text = GraphsResources.AllChromatogramsGraph_UpdateStatus_Hide;
                 progressBarTotal.Visible = true;
                 _stopwatch.Start();
                 elapsedTimer.Start();
@@ -578,7 +578,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             // Add this file back into the chromatogram set for each of its replicates.
-            ModifyDocument(Resources.AllChromatogramsGraph_Retry_Retry_import_results, monitor =>
+            ModifyDocument(GraphsResources.AllChromatogramsGraph_Retry_Retry_import_results, monitor =>
             {
                 Program.MainWindow.ModifyDocumentNoUndo(doc =>
                     {
@@ -618,7 +618,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             // Remove this file from document.
             var canceledPath = status.FilePath;
-            ModifyDocument(Resources.AllChromatogramsGraph_Cancel_Cancel_file_import,
+            ModifyDocument(GraphsResources.AllChromatogramsGraph_Cancel_Cancel_file_import,
                 monitor => Program.MainWindow.ModifyDocumentNoUndo(
                     doc => FilterFiles(doc, info => !info.FilePath.Equals(canceledPath))));
         }
@@ -627,7 +627,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             // Remove this file from document.
             var canceledPath = status.FilePath;
-            ModifyDocument(Resources.AllChromatogramsGraph_RemoveFailedFile_Remove_failed_file,
+            ModifyDocument(GraphsResources.AllChromatogramsGraph_RemoveFailedFile_Remove_failed_file,
                 monitor => Program.MainWindow.ModifyDocumentNoUndo(
                     doc => FilterFiles(doc, info => !info.FilePath.Equals(canceledPath))));
         }
@@ -679,7 +679,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public void ClickCancel()
         {
             graphChromatograms.IsCanceled = IsUserCanceled = true;
-            Program.MainWindow.ModifyDocument(Resources.AllChromatogramsGraph_btnCancel_Click_Cancel_import,
+            Program.MainWindow.ModifyDocument(GraphsResources.AllChromatogramsGraph_btnCancel_Click_Cancel_import,
                 doc => FilterFiles(doc, info => IsCachedFile(doc, info)),
                 docPair => AuditLogEntry.CreateSimpleEntry(MessageType.canceled_import, docPair.OldDocumentType));
         }

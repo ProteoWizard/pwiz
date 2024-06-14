@@ -84,12 +84,12 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 cbGraphType.Items.AddRange(new object[]
                 {
-                    new MetricDisplay(Resources.ExportMethodScheduleGraph_ExportMethodScheduleGraph_Concurrent_frames, SchedulingMetrics.CONCURRENT_FRAMES),
-                    new MetricDisplay(Resources.ExportMethodScheduleGraph_ExportMethodScheduleGraph_Max_sampling_times, SchedulingMetrics.MAX_SAMPLING_TIMES),
-                    new MetricDisplay(Resources.ExportMethodScheduleGraph_ExportMethodScheduleGraph_Mean_sampling_times, SchedulingMetrics.MEAN_SAMPLING_TIMES),
-                    new MetricDisplay(Resources.ExportMethodScheduleGraph_ExportMethodScheduleGraph_Redundancy_of_targets, SchedulingMetrics.REDUNDANCY_OF_TARGETS),
-                    new MetricDisplay(Resources.ExportMethodScheduleGraph_ExportMethodScheduleGraph_Targets_per_frame, SchedulingMetrics.TARGETS_PER_FRAME),
-                    new MetricDisplay(Resources.ExportMethodScheduleGraph_ExportMethodScheduleGraph_Target_table)
+                    new MetricDisplay(GraphsResources.ExportMethodScheduleGraph_ExportMethodScheduleGraph_Concurrent_frames, SchedulingMetrics.CONCURRENT_FRAMES),
+                    new MetricDisplay(GraphsResources.ExportMethodScheduleGraph_ExportMethodScheduleGraph_Max_sampling_times, SchedulingMetrics.MAX_SAMPLING_TIMES),
+                    new MetricDisplay(GraphsResources.ExportMethodScheduleGraph_ExportMethodScheduleGraph_Mean_sampling_times, SchedulingMetrics.MEAN_SAMPLING_TIMES),
+                    new MetricDisplay(GraphsResources.ExportMethodScheduleGraph_ExportMethodScheduleGraph_Redundancy_of_targets, SchedulingMetrics.REDUNDANCY_OF_TARGETS),
+                    new MetricDisplay(GraphsResources.ExportMethodScheduleGraph_ExportMethodScheduleGraph_Targets_per_frame, SchedulingMetrics.TARGETS_PER_FRAME),
+                    new MetricDisplay(GraphsResources.ExportMethodScheduleGraph_ExportMethodScheduleGraph_Target_table)
                 });
                 cbGraphType.SelectedIndex = 0;
                 cbGraphType.Visible = true;
@@ -153,7 +153,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void cbGraphType_SelectedIndexChanged(object sender, EventArgs e)
         {
             var metricDisplay = (MetricDisplay) cbGraphType.SelectedItem;
-            if (!metricDisplay.Name.Equals(Resources.ExportMethodScheduleGraph_ExportMethodScheduleGraph_Target_table))
+            if (!metricDisplay.Name.Equals(GraphsResources.ExportMethodScheduleGraph_ExportMethodScheduleGraph_Target_table))
             {
                 graphControl.Visible = true;
                 dataGridView.Visible = false;

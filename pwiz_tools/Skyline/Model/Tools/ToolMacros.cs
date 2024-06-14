@@ -73,32 +73,32 @@ namespace pwiz.Skyline.Model.Tools
         // ReSharper disable LocalizableElement
         public static readonly Macro[] LIST_ARGUMENTS =
         {
-            new Macro(() => Resources.ToolMacros__listArguments_Document_Path, "$(DocumentPath)", GetDocumentFilePath, () => Resources.ToolMacros__listArguments_This_tool_requires_a_Document_Path_to_run), 
-            new Macro(() => Resources.ToolMacros__listArguments_Document_Directory, "$(DocumentDir)", GetDocumentDir, () => Resources.ToolMacros__listArguments_This_tool_requires_a_Document_Directory_to_run),
-            new Macro(() => Resources.ToolMacros__listArguments_Document_File_Name, "$(DocumentFileName)", GetDocumentFileName, () => Resources.ToolMacros__listArguments_This_tool_requires_a_Document_File_Name_to_run),
-            new Macro(() => Resources.ToolMacros__listArguments_Document_File_Name_Without_Extension, "$(DocumentBaseName)", GetDocumentFileNameWithoutExtension, () => Resources.ToolMacros__listArguments_This_tool_requires_a_Document_File_Name__to_run_),
-            new Macro(() => Resources.ToolMacros__listArguments_Selected_Protein_Name, "$(SelProtein)", GetSelectedProteinName, () => TextUtil.LineSeparate(Resources.ToolMacros__listArguments_This_tool_requires_a_Selected_Protein_to_run_,Resources.ToolMacros__listArguments_Please_select_a_protein_before_running_this_tool_), true),
-            new Macro(() => Resources.ToolMacros__listArguments_Selected_Peptide_Sequence, "$(SelPeptide)", GetSelectedPeptideSequence, () => TextUtil.LineSeparate(Resources.ToolMacros__listArguments_This_tool_requires_a_Selected_Peptide_Sequence_to_run, Resources.ToolMacros__listArguments_Please_select_a_peptide_sequence_before_running_this_tool_ ), true),
-            new Macro(() => Resources.ToolMacros__listArguments_Selected_Precursor, "$(SelPrecursor)", GetSelectedPrecursor, () => TextUtil.LineSeparate(Resources.ToolMacros_listArguments_This_tool_requires_a_Selected_Precursor_to_run,Resources.ToolMacros_listArguments_Please_select_a_precursor_before_running_this_tool_), true),
-            new Macro(() => Resources.ToolMacros__listArguments_Active_Replicate_Name, "$(ReplicateName)", GetActiveReplicateName, () => Resources.ToolMacros_listArguments_This_tool_requires_an_Active_Replicate_Name_to_run, true),                
-            new Macro(() => Resources.ToolMacros__listArguments_Input_Report_Temp_Path, INPUT_REPORT_TEMP_PATH, GetReportTempPath , () => Resources.ToolMacros_listArguments_This_tool_requires_a_selected_report),
-            new Macro(() => Resources.ToolMacros__listArguments_Collected_Arguments, COLLECTED_ARGS, null , () => Resources.ToolMacros__listArguments_This_tool_does_not_provide_the_functionality_for_the_Collected_Arguments_macro__Please_edit_the_tool_),
-            new Macro(() => Resources.ToolMacros__listArguments_Tool_Directory, TOOL_DIR, GetToolDirectory, () => Resources.ToolMacros__listArguments_This_tool_is_not_an_installed_tool_so_ToolDir_cannot_be_used_as_a_macro__Please_edit_the_tool_),
-            new Macro(() => Resources.ToolMacros__listArguments_Skyline_Connection, SKYLINE_CONNECTION, GetSkylineConnection, () => "")
+            new Macro(() => ToolsResources.ToolMacros__listArguments_Document_Path, "$(DocumentPath)", GetDocumentFilePath, () => Resources.ToolMacros__listArguments_This_tool_requires_a_Document_Path_to_run), 
+            new Macro(() => ToolsResources.ToolMacros__listArguments_Document_Directory, "$(DocumentDir)", GetDocumentDir, () => ToolsResources.ToolMacros__listArguments_This_tool_requires_a_Document_Directory_to_run),
+            new Macro(() => ToolsResources.ToolMacros__listArguments_Document_File_Name, "$(DocumentFileName)", GetDocumentFileName, () => ToolsResources.ToolMacros__listArguments_This_tool_requires_a_Document_File_Name_to_run),
+            new Macro(() => ToolsResources.ToolMacros__listArguments_Document_File_Name_Without_Extension, "$(DocumentBaseName)", GetDocumentFileNameWithoutExtension, () => ToolsResources.ToolMacros__listArguments_This_tool_requires_a_Document_File_Name__to_run_),
+            new Macro(() => ToolsResources.ToolMacros__listArguments_Selected_Protein_Name, "$(SelProtein)", GetSelectedProteinName, () => TextUtil.LineSeparate(ToolsResources.ToolMacros__listArguments_This_tool_requires_a_Selected_Protein_to_run_,ToolsResources.ToolMacros__listArguments_Please_select_a_protein_before_running_this_tool_), true),
+            new Macro(() => ToolsResources.ToolMacros__listArguments_Selected_Peptide_Sequence, "$(SelPeptide)", GetSelectedPeptideSequence, () => TextUtil.LineSeparate(ToolsResources.ToolMacros__listArguments_This_tool_requires_a_Selected_Peptide_Sequence_to_run, ToolsResources.ToolMacros__listArguments_Please_select_a_peptide_sequence_before_running_this_tool_ ), true),
+            new Macro(() => ToolsResources.ToolMacros__listArguments_Selected_Precursor, "$(SelPrecursor)", GetSelectedPrecursor, () => TextUtil.LineSeparate(ToolsResources.ToolMacros_listArguments_This_tool_requires_a_Selected_Precursor_to_run,ToolsResources.ToolMacros_listArguments_Please_select_a_precursor_before_running_this_tool_), true),
+            new Macro(() => ToolsResources.ToolMacros__listArguments_Active_Replicate_Name, "$(ReplicateName)", GetActiveReplicateName, () => ToolsResources.ToolMacros_listArguments_This_tool_requires_an_Active_Replicate_Name_to_run, true),                
+            new Macro(() => Resources.ToolMacros__listArguments_Input_Report_Temp_Path, INPUT_REPORT_TEMP_PATH, GetReportTempPath , () => ToolsResources.ToolMacros_listArguments_This_tool_requires_a_selected_report),
+            new Macro(() => Resources.ToolMacros__listArguments_Collected_Arguments, COLLECTED_ARGS, null , () => ToolsResources.ToolMacros__listArguments_This_tool_does_not_provide_the_functionality_for_the_Collected_Arguments_macro__Please_edit_the_tool_),
+            new Macro(() => Resources.ToolMacros__listArguments_Tool_Directory, TOOL_DIR, GetToolDirectory, () => ToolsResources.ToolMacros__listArguments_This_tool_is_not_an_installed_tool_so_ToolDir_cannot_be_used_as_a_macro__Please_edit_the_tool_),
+            new Macro(() => ToolsResources.ToolMacros__listArguments_Skyline_Connection, SKYLINE_CONNECTION, GetSkylineConnection, () => "")
         };
         // ReSharper restore LocalizableElement
 
         // Macros for InitialDirectory.
         public static readonly Macro[] LIST_INITIAL_DIRECTORY =
         {
-            new Macro(() => Resources.ToolMacros__listArguments_Document_Directory, @"$(DocumentDir)", GetDocumentDir, () => Resources.ToolMacros__listArguments_This_tool_requires_a_Document_Directory_to_run)
+            new Macro(() => ToolsResources.ToolMacros__listArguments_Document_Directory, @"$(DocumentDir)", GetDocumentDir, () => ToolsResources.ToolMacros__listArguments_This_tool_requires_a_Document_Directory_to_run)
         };
 
         // Macros for Command.
         public static readonly Macro[] LIST_COMMAND =
         {
-            new Macro(() => Resources.ToolMacros__listCommand_Program_Path, PROGRAM_PATH, GetProgramPath, () => TextUtil.LineSeparate(Resources.ToolMacros__listCommand_This_tool_requires_a_Program_Path_to_run_,Resources.ToolMacros__listCommand__No_Path_Provided__Tool_execution_cancled_)), 
-            new Macro(() => Resources.ToolMacros__listArguments_Tool_Directory, TOOL_DIR, GetToolDirectory, () => Resources.ToolMacros__listArguments_This_tool_is_not_an_installed_tool_so_ToolDir_cannot_be_used_as_a_macro__Please_edit_the_tool_)
+            new Macro(() => ToolsResources.ToolMacros__listCommand_Program_Path, PROGRAM_PATH, GetProgramPath, () => TextUtil.LineSeparate(ToolsResources.ToolMacros__listCommand_This_tool_requires_a_Program_Path_to_run_,ToolsResources.ToolMacros__listCommand__No_Path_Provided__Tool_execution_cancled_)), 
+            new Macro(() => Resources.ToolMacros__listArguments_Tool_Directory, TOOL_DIR, GetToolDirectory, () => ToolsResources.ToolMacros__listArguments_This_tool_is_not_an_installed_tool_so_ToolDir_cannot_be_used_as_a_macro__Please_edit_the_tool_)
         };
 
         /// <summary>
@@ -239,7 +239,7 @@ namespace pwiz.Skyline.Model.Tools
 
             if (String.IsNullOrEmpty(reportName))
             {
-                throw new Exception(string.Format(Resources.ToolMacros_GetReportTempPath_The_selected_tool_0_requires_a_selected_report_Please_select_a_report_for_this_tool_,
+                throw new Exception(string.Format(ToolsResources.ToolMacros_GetReportTempPath_The_selected_tool_0_requires_a_selected_report_Please_select_a_report_for_this_tool_,
                                                   toolTitle));
             }
 
@@ -263,7 +263,7 @@ namespace pwiz.Skyline.Model.Tools
             }
             catch (Exception)
             {                    
-                throw new IOException(Resources.ToolMacros_GetReportTempPath_Error_exporting_the_report__tool_execution_canceled_);                    
+                throw new IOException(ToolsResources.ToolMacros_GetReportTempPath_Error_exporting_the_report__tool_execution_canceled_);                    
             }     
         }
 
@@ -427,7 +427,7 @@ namespace pwiz.Skyline.Model.Tools
         private void Validate()
         {
             if (string.IsNullOrEmpty(ProgramName))
-                throw new InvalidDataException(Resources.ProgramPathContainer_Validate_ProgramPathCollectors_must_have_a_program_name);
+                throw new InvalidDataException(ToolsResources.ProgramPathContainer_Validate_ProgramPathCollectors_must_have_a_program_name);
         }
 
         public void ReadXml(XmlReader reader)

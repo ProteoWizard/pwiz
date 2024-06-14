@@ -50,7 +50,7 @@ namespace TestPerf
             //RunPerfTests = true;
             CoverShotName = "DDASearch";
 
-            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DDASearch-20_2.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DDASearch-22_2.pdf";
 
             TestFilesZipPaths = new[]
             {
@@ -133,14 +133,13 @@ namespace TestPerf
             WaitForDocumentChangeLoaded(docBeforePeptideSettings);
 
             // Launch the wizard
-            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
+            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Select DDA Files to Search page", tutorialPage++);
 
             // We're on the "Build Spectral Library" page of the wizard.
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
-                importPeptideSearchDlg.BuildPepSearchLibControl.PerformDDASearch = true;
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => new MsDataFilePath(o)).ToArray();
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = false;
                 Assert.AreEqual(ImportPeptideSearchDlg.Workflow.dda, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType);
@@ -165,12 +164,12 @@ namespace TestPerf
             var editHeavyModListUI =
                 ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(importPeptideSearchDlg.MatchModificationsControl.ClickAddHeavyModification);
             var heavyKDlg = ShowDialog<EditStaticModDlg>(editHeavyModListUI.AddItem);
-            RunUI(() => heavyKDlg.SetModification(HEAVY_K, true));
+            RunUI(() => heavyKDlg.SetModification(HEAVY_K));
             PauseForScreenShot<EditStaticModDlg.IsotopeModView>("Edit Isotope Modification form - K", tutorialPage++);
             OkDialog(heavyKDlg, heavyKDlg.OkDialog);
 
             var heavyRDlg = ShowDialog<EditStaticModDlg>(editHeavyModListUI.AddItem);
-            RunUI(() => heavyRDlg.SetModification(HEAVY_R, true));
+            RunUI(() => heavyRDlg.SetModification(HEAVY_R));
             PauseForScreenShot<EditStaticModDlg.IsotopeModView>("Edit Isotope Modification form - R", tutorialPage++);
             OkDialog(heavyRDlg, heavyRDlg.OkDialog);
             OkDialog(editHeavyModListUI, editHeavyModListUI.OkDialog);
@@ -185,7 +184,7 @@ namespace TestPerf
                 ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(importPeptideSearchDlg.MatchModificationsControl.ClickAddStructuralModification);
             RunDlg<EditStaticModDlg>(editStructModListUI.AddItem, editModDlg =>
             {
-                editModDlg.SetModification(OXIDATION_M, true); // Not L10N
+                editModDlg.SetModification(OXIDATION_M); // Not L10N
                 editModDlg.OkDialog();
             });
             OkDialog(editStructModListUI, editStructModListUI.OkDialog);
@@ -337,10 +336,10 @@ namespace TestPerf
                     }
                     else
                     {
-                        Assert.AreEqual(3258, proteinCount);
-                        Assert.AreEqual(6438, peptideCount);
-                        Assert.AreEqual(12732, precursorCount);
-                        Assert.AreEqual(38196, transitionCount);
+                        Assert.AreEqual(3237, proteinCount);
+                        Assert.AreEqual(6404, peptideCount);
+                        Assert.AreEqual(12664, precursorCount);
+                        Assert.AreEqual(37992, transitionCount);
                     }
                 }
             });

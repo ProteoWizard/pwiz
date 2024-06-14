@@ -130,7 +130,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (_existing.Contains(r => !ReferenceEquals(_regression, r) && Equals(name, r.Name)))
             {
-                helper.ShowTextBoxError(textName, Resources.EditRTDlg_OkDialog_The_retention_time_regression__0__already_exists, name);
+                helper.ShowTextBoxError(textName, SettingsUIResources.EditRTDlg_OkDialog_The_retention_time_regression__0__already_exists, name);
                 return;
             }
 
@@ -156,13 +156,13 @@ namespace pwiz.Skyline.SettingsUI
 
             if (window <= 0)
             {
-                helper.ShowTextBoxError(textTimeWindow, Resources.EditRTDlg_OkDialog__0__must_be_greater_than_0);
+                helper.ShowTextBoxError(textTimeWindow, SettingsUIResources.EditRTDlg_OkDialog__0__must_be_greater_than_0);
                 return;
             }
 
             if (comboCalculator.SelectedIndex == -1)
             {
-                MessageDlg.Show(this, Resources.EditRTDlg_OkDialog_Retention_time_prediction_requires_a_calculator_algorithm);
+                MessageDlg.Show(this, SettingsUIResources.EditRTDlg_OkDialog_Retention_time_prediction_requires_a_calculator_algorithm);
                 comboCalculator.Focus();
                 return;
             }
@@ -184,13 +184,13 @@ namespace pwiz.Skyline.SettingsUI
             int yExtra = 0;
             if (visible)
             {
-                btnCalculate.Text = Resources.EditRTDlg_ShowPeptides_Calculate_Left;
+                btnCalculate.Text = SettingsUIResources.EditRTDlg_ShowPeptides_Calculate_Left;
                 ctlCorner = gridPeptides;
                 yExtra = btnUseCurrent.Height + 10;
             }
             else
             {
-                btnCalculate.Text = Resources.EditRTDlg_ShowPeptides_Calculate_Right;
+                btnCalculate.Text = SettingsUIResources.EditRTDlg_ShowPeptides_Calculate_Right;
                 ctlCorner = btnCalculate;
             }
 
@@ -366,8 +366,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 using (var longWait = new LongWaitDlg())
                 {
-                    longWait.Text = Resources.EditRTDlg_ShowGraph_Initializing;
-                    longWait.Message = string.Format(Resources.EditRTDlg_ShowGraph_Initializing__0__calculator, calc.Name);
+                    longWait.Text = SettingsUIResources.EditRTDlg_ShowGraph_Initializing;
+                    longWait.Message = string.Format(SettingsUIResources.EditRTDlg_ShowGraph_Initializing__0__calculator, calc.Name);
                     try
                     {
                         var status = longWait.PerformWork(this, 800, monitor =>
@@ -382,7 +382,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     catch (Exception x)
                     {
-                        var message = TextUtil.LineSeparate(string.Format(Resources.EditRTDlg_ShowGraph_An_error_occurred_attempting_to_initialize_the_calculator__0__,
+                        var message = TextUtil.LineSeparate(string.Format(SettingsUIResources.EditRTDlg_ShowGraph_An_error_occurred_attempting_to_initialize_the_calculator__0__,
                                                                           calc.Name),
                                                             x.Message);
                         MessageDlg.ShowWithException(this,message, x);
@@ -419,9 +419,9 @@ namespace pwiz.Skyline.SettingsUI
 
             var regressionGraphData = new RegressionGraphData
             {
-                Title = Resources.EditRTDlg_ShowGraph_Retention_Times_by_Score,
+                Title = SettingsUIResources.EditRTDlg_ShowGraph_Retention_Times_by_Score,
                 LabelX = calc.Name,
-                LabelY = Resources.EditRTDlg_ShowGraph_Measured_Time,
+                LabelY = SettingsUIResources.EditRTDlg_ShowGraph_Measured_Time,
                 XValues = scores.ToArray(),
                 YValues = times.ToArray(),
                 RegressionLine = new RegressionLine(slopeRegress, interceptRegress),
@@ -496,7 +496,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (!calculator.IsUsable)
                 {
                     MessageDlg.Show(this,
-                                    Resources.
+                                    SettingsUIResources.
                                         EditRTDlg_UpdateCalculator_The_calculator_cannot_be_used_to_score_peptides_Please_check_its_settings);
                     return activePeptides;
                 }
@@ -514,7 +514,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 MessageDlg.Show(this,
                                 String.Format(
-                                    Resources.
+                                    SettingsUIResources.
                                         EditRTDlg_UpdateCalculator_The__0__calculator_cannot_score_any_of_the_peptides,
                                                     calculator.Name));
                 comboCalculator.SelectedIndex = 0;
@@ -594,7 +594,7 @@ namespace pwiz.Skyline.SettingsUI
 
             var pepCount = calculatorSpec.ChooseRegressionPeptides(peptidesTimes.Select(mrt => mrt.PeptideSequence), out _).Count();
 
-            labelRValue.Text = string.Format(Resources.EditRTDlg_RecalcRegression__0__peptides_R__1__, pepCount,
+            labelRValue.Text = string.Format(SettingsUIResources.EditRTDlg_RecalcRegression__0__peptides_R__1__, pepCount,
                                              Math.Round(r, RetentionTimeRegression.ThresholdPrecision));
             // Right align with the peptide grid.
             labelRValue.Left = gridPeptides.Right - labelRValue.Width;

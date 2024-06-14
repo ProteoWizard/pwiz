@@ -19,7 +19,6 @@
 
 using System;
 using System.Windows.Forms;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
 {
@@ -92,7 +91,7 @@ namespace pwiz.Skyline.Util
                     if (((data == null || expected == null) && data != expected) ||
                         (data != null && data.ToString() != Clipboard.GetData(format).ToString()))
                     {
-                        throw new ApplicationException(Resources.ClipboardEx_GetData_ClipboardEx_implementation_problem);
+                        throw new ApplicationException(UtilResources.ClipboardEx_GetData_ClipboardEx_implementation_problem);
                     }
                 }
                 return data;
@@ -154,7 +153,7 @@ namespace pwiz.Skyline.Util
                 {
                     if (format != TextDataFormat.Text)
                     {
-                        throw new ApplicationException(Resources
+                        throw new ApplicationException(UtilResources
                             .ClipboardEx_GetData_ClipboardEx_implementation_problem);
                     }
 
@@ -180,7 +179,7 @@ namespace pwiz.Skyline.Util
                 string text = (string)dataObject.GetData(DataFormats.Text);
                 if (CHECK_VALUES && text != Clipboard.GetText())
                 {
-                    throw new ApplicationException(Resources.ClipboardEx_GetData_ClipboardEx_implementation_problem);
+                    throw new ApplicationException(UtilResources.ClipboardEx_GetData_ClipboardEx_implementation_problem);
                 }
                 return text;
             }
@@ -203,7 +202,7 @@ namespace pwiz.Skyline.Util
                 }
                 if (CHECK_VALUES && text != Clipboard.GetText(format))
                 {
-                    throw new ApplicationException(Resources.ClipboardEx_GetData_ClipboardEx_implementation_problem);
+                    throw new ApplicationException(UtilResources.ClipboardEx_GetData_ClipboardEx_implementation_problem);
                 }
                 return text;
             }

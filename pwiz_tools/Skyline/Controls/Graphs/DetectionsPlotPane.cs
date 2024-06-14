@@ -21,15 +21,17 @@ using System;
 using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model;
 using ZedGraph;
-using pwiz.Skyline.Properties;
 using Settings = pwiz.Skyline.Controls.Graphs.DetectionsGraphController.Settings;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
     public abstract class DetectionsPlotPane : SummaryReplicateGraphPane
     {
+        protected Receiver<DetectionPlotData.WorkOrderParam, DetectionPlotData> Receiver;
+
         protected DetectionPlotData _detectionData = DetectionPlotData.INVALID;
         public int MaxRepCount { get; private set; }
         protected DetectionPlotData.DataSet TargetData => _detectionData.GetTargetData(Settings.TargetType);
@@ -47,43 +49,55 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected DetectionsPlotPane(GraphSummary graphSummary) : base(graphSummary)
         {
-            MaxRepCount = graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults.Chromatograms.Count;
+            MaxRepCount = graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults?.Chromatograms.Count ?? 0;
 
             Settings.RepCount = MaxRepCount / 2;
             if (GraphSummary.Toolbar is DetectionsToolbar toolbar)
                 toolbar.UpdateUI();
-
+             
             XAxis.Scale.Min = YAxis.Scale.Min = 0;
             XAxis.Scale.MinAuto = XAxis.Scale.MaxAuto = YAxis.Scale.MinAuto = YAxis.Scale.MaxAuto = false;
             ToolTip = new ToolTipImplementation(this);
 
-            DetectionPlotData.GetDataCache().ReportProgress += UpdateProgressHandler;
-            DetectionPlotData.GetDataCache().StatusChange += UpdateStatusHandler;
+            Receiver = DetectionPlotData.PRODUCER.RegisterCustomer(graphSummary, OnResultsAvailable);
+            Receiver.ProgressChange += UpdateProgressHandler;
         }
 
-        public void UpdateProgressHandler(int progress)
+        public void UpdateProgressHandler()
         {
-            ProgressBar?.UpdateProgress(progress);
+            if (Receiver.IsProcessing())
+            {
+                ProgressBar ??= new PaneProgressBar(this);
+                ProgressBar?.UpdateProgress(Receiver.GetProgressValue());
+            }
+            else
+            {
+                ProgressBar?.Dispose();
+                ProgressBar = null;
+            }
         }
 
-        public void UpdateStatusHandler(DetectionPlotData.DetectionDataCache.CacheStatus status, string message)
+        protected virtual void OnResultsAvailable()
         {
-            if (GraphSummary.GraphControl.IsHandleCreated)
-                GraphSummary.GraphControl.Invoke((Action) (() =>
-                {
-                    AddLabels(status, message);
-                    if (status == DetectionPlotData.DetectionDataCache.CacheStatus.processing)
-                        ProgressBar = new PaneProgressBar(this);
-                    else
-                    {
-                        ProgressBar?.Dispose();
-                        ProgressBar = null;
-                    }
-
-                    GraphSummary.GraphControl.Invalidate();
-                    GraphSummary.GraphControl.Update();
-                    GraphSummary.Toolbar.UpdateUI();
-                }));
+            var error = Receiver.GetError();
+            if (error != null)
+            {
+                AddLabels();
+            }
+            else if (Receiver.IsProcessing())
+            {
+                ProgressBar = ProgressBar ?? new PaneProgressBar(this);
+                ProgressBar.UpdateProgressUI(Receiver.GetProgressValue());
+            }
+            else
+            {
+                ProgressBar?.Dispose();
+                ProgressBar = null;
+            }
+            GraphSummary.Toolbar.UpdateUI();
+            UpdateGraph(false);
+            GraphSummary.GraphControl.Invalidate();
+            GraphSummary.GraphControl.Update();
         }
 
         public override bool HasToolbar { get { return true; } }
@@ -91,8 +105,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void OnClose(EventArgs e)
         {
-            DetectionPlotData.GetDataCache().ReportProgress -= UpdateProgressHandler;
-            DetectionPlotData.GetDataCache().StatusChange -= UpdateStatusHandler;
+            Receiver.Dispose();
         }
 
         protected abstract void HandleMouseClick(int index);
@@ -136,56 +149,52 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected virtual void AddLabels()
         {
-            AddLabels(DetectionPlotData.GetDataCache().Status, "");
-        }
-
-        protected virtual void AddLabels(DetectionPlotData.DetectionDataCache.CacheStatus status, string message)
-        {
-            if (!_detectionData.IsValid)
+            if (_detectionData.IsValid)
             {
-                GraphObjList.Clear();
-                switch (status)
-                {
-                    case DetectionPlotData.DetectionDataCache.CacheStatus.processing:
-                        Title.Text = Resources.DetectionPlotPane_WaitingForData_Label;
-                        break;
-                    case DetectionPlotData.DetectionDataCache.CacheStatus.idle:
-                        Title.Text = Resources.DetectionPlotPane_EmptyPlot_Label;
-                        break;
-                    case DetectionPlotData.DetectionDataCache.CacheStatus.canceled:
-                        Title.Text = Resources.DetectionPlotPane_EmptyPlotCanceled_Label;
-                        break;
-                    case DetectionPlotData.DetectionDataCache.CacheStatus.error:
-                        Title.Text = Resources.DetectionPlotPane_EmptyPlotError_Label;
-                        break;
-                }
-                var scaleFactor = CalcScaleFactor();
-                SizeF titleSize;
-                using (var g = GraphSummary.CreateGraphics())
-                {
-                    titleSize = Title.FontSpec.BoundingBox(g, Title.Text, scaleFactor);
-                }
-                var subtitleLocation = new PointF(
-                    (Rect.Left + Rect.Right) / (2 * Rect.Width),
-                    (Rect.Top + Margin.Top * (1 + scaleFactor) + 2*titleSize.Height) / Rect.Height);
+                Title.Text = string.Empty;
+                YAxis.Title.Text = string.Format(CultureInfo.CurrentCulture,
+                    GraphsResources.DetectionPlotPane_YAxis_Name,
+                    string.Format(CultureInfo.CurrentCulture, Settings.YScaleFactor.Label, Settings.TargetType.Label));
+                return;
+            }
 
-                var subtitle = new TextObj(message, subtitleLocation.X, subtitleLocation.Y,
-                    CoordType.PaneFraction, AlignH.Center, AlignV.Center)
-                {
-                    IsClippedToChartRect = true,
-                    ZOrder = ZOrder.E_BehindCurves,
-                    FontSpec = GraphSummary.CreateFontSpec(Color.Black),
-                };
-                subtitle.FontSpec.Size = Title.FontSpec.Size * 0.75f;
-                GraphObjList.Add(subtitle);
+            GraphObjList.Clear();
+            string message = string.Empty;
+            Exception error = Receiver.GetError();
+
+            if (error != null)
+            {
+                Title.Text = GraphsResources.DetectionPlotPane_EmptyPlotError_Label;
+                message = error.Message;
+            }
+            else if (Receiver.IsProcessing())
+            {
+                Title.Text = GraphsResources.DetectionPlotPane_WaitingForData_Label;
             }
             else
             {
-                Title.Text = string.Empty;
-                YAxis.Title.Text = string.Format(CultureInfo.CurrentCulture, 
-                    Resources.DetectionPlotPane_YAxis_Name, 
-                    string.Format(CultureInfo.CurrentCulture, Settings.YScaleFactor.Label, Settings.TargetType.Label) );
+                Title.Text = GraphsResources.DetectionPlotPane_EmptyPlot_Label;
             }
+
+            var scaleFactor = CalcScaleFactor();
+            SizeF titleSize;
+            using (var g = GraphSummary.CreateGraphics())
+            {
+                titleSize = Title.FontSpec.BoundingBox(g, Title.Text, scaleFactor);
+            }
+            var subtitleLocation = new PointF(
+                (Rect.Left + Rect.Right) / (2 * Rect.Width),
+                (Rect.Top + Margin.Top * (1 + scaleFactor) + 2*titleSize.Height) / Rect.Height);
+
+            var subtitle = new TextObj(message, subtitleLocation.X, subtitleLocation.Y,
+                CoordType.PaneFraction, AlignH.Center, AlignV.Center)
+            {
+                IsClippedToChartRect = true,
+                ZOrder = ZOrder.E_BehindCurves,
+                FontSpec = GraphSummary.CreateFontSpec(Color.Black),
+            };
+            subtitle.FontSpec.Size = Title.FontSpec.Size * 0.75f;
+            GraphObjList.Add(subtitle);
         }
 
         protected override IdentityPath GetIdentityPath(CurveItem curveItem, int barIndex)
@@ -203,7 +212,6 @@ namespace pwiz.Skyline.Controls.Graphs
         #region Functional Test Support
 
         public DetectionPlotData CurrentData { get { return _detectionData; } }
-
 
         #endregion
 
