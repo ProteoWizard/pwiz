@@ -69,7 +69,7 @@ namespace ZedGraph
             public Point _indexes;
             public RectangleF _bounds;
             public float _density;
-            public PointF _gradient;
+            // public PointF _gradient;
             public List<RectangleF> _overlaps; // a list of bounding rectangles of elements overlapping with this cell
             public static Dictionary<Color, Brush> _brushes = new Dictionary<Color, Brush>();
         }

@@ -29,12 +29,7 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 using System.ComponentModel;
-using System.Diagnostics.Eventing.Reader;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Security.Policy;
-using System.Text;
-using System.Windows.Forms.VisualStyles;
 
 namespace ZedGraph
 {
@@ -151,15 +146,15 @@ namespace ZedGraph
 
 		private LabelLayout _labelLayout;
 
-        public bool EnableLabelLayout
-        {
+		public bool EnableLabelLayout
+		{
 			get => _labelLayout != null;
-            set
-            {
-                if (!value)
-                    _labelLayout = null;
-            }
-        }
+			set
+			{
+				if (!value)
+					_labelLayout = null;
+			}
+		}
 		public LabelLayout Layout => _labelLayout;
 
 	#endregion
@@ -1533,9 +1528,9 @@ namespace ZedGraph
 
         public void AdjustLabelSpacings(List<LabeledPoint> labPoints, Control parentControl)
         {
-			if (!labPoints.Any())
+            if (!labPoints.Any())
                 return;
-			// Need this to make sure the coordinate transforms work correctly.
+            // Need this to make sure the coordinate transforms work correctly.
             XAxis.Scale.SetupScaleData(this, XAxis);
             YAxis.Scale.SetupScaleData(this, YAxis);
 
@@ -1556,7 +1551,7 @@ namespace ZedGraph
                         labeledPoint.Label.IsVisible = false;
                 }
 
-				if (visiblePoints.Any())
+                if (visiblePoints.Any())
                 {
                     GraphObjList.RemoveAll(obj => obj is BoxObj || obj is LineObj);
                     foreach (var point in visiblePoints)
@@ -1581,15 +1576,15 @@ namespace ZedGraph
                     }
                 }
             }
-			return null;
+            return null;
         }
 
         public bool IsOverLabel(Point mousePt, out LabeledPoint labPoint)
         {
             labPoint = OverLabel(mousePt);
-			return labPoint !=	null;
+            return labPoint !=	null;
         }
-		
+
         public RectangleF GetRect(TextObj obj, Graphics g)
         {
             PointF pix = obj.Location.Transform(this);
