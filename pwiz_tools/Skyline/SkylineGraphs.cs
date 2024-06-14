@@ -3933,20 +3933,10 @@ namespace pwiz.Skyline
                     if (Settings.Default.GroupComparisonAvoidLabelOverlap && 
                         graphSummary.GraphPaneFromPoint(mousePt) is SummaryRelativeAbundanceGraphPane abundancePane)
                     {
-                        if (Settings.Default.GroupComparisonSuspendLabelLayout)
-                        {
-                            menuStrip.Items.Insert(iInsert++,
-                                new ToolStripMenuItem(
-                                    GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_RestartLabelLayout, null,
-                                    abundancePane.OnSuspendLayout));
-                        }
-                        else
-                        {
-                            menuStrip.Items.Insert(iInsert++,
-                                new ToolStripMenuItem(
-                                    GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_PauseLabelLayout, null,
-                                    abundancePane.OnSuspendLayout));
-                        }
+                        var suspendResumeText = Settings.Default.GroupComparisonSuspendLabelLayout
+                            ? GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_RestartLabelLayout
+                            : GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_PauseLabelLayout;
+                        menuStrip.Items.Insert(iInsert++, new ToolStripMenuItem(suspendResumeText, null, abundancePane.OnSuspendLayout));
                     }
                 }
                 else
