@@ -3512,5 +3512,34 @@ namespace pwiz.Skyline.Properties {
                 this["FeatureFindingSignalToNoise"] = value;
             }
         }
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool GroupComparisonAvoidLabelOverlap
+        {
+            get
+            {
+                return ((bool)(this["GroupComparisonAvoidLabelOverlap"]));
+            }
+            set
+            {
+                this["GroupComparisonAvoidLabelOverlap"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool GroupComparisonSuspendLabelLayout
+        {
+            get
+            {
+                return ((bool)(this["GroupComparisonSuspendLabelLayout"]));
+            }
+            set
+            {
+                this["GroupComparisonSuspendLabelLayout"] = value;
+            }
+        }
     }
 }
