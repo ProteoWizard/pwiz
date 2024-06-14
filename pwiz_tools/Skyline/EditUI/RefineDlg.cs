@@ -151,8 +151,8 @@ namespace pwiz.Skyline.EditUI
             if (_document.MoleculeTransitions.Any(t =>
                     t.ChromInfos.Any(c => c.PeakShapeValues?.ShapeCorrelation != null)))
             {
-                textIncludedCutoff.Enabled = true;
-                textQuantitativeCutoff.Enabled = true;
+                textShapeCorrIncludedCutoff.Enabled = true;
+                textShapeCorrQuantitativeCutoff.Enabled = true;
 
 
                 comboIncludedComparisonType.Enabled = true;
@@ -246,16 +246,33 @@ namespace pwiz.Skyline.EditUI
             set { textCVCutoff.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
-        public int SCIncludedCutoff
+        public double? SCIncludedCutoff
         {
-            get { return Convert.ToInt32(textIncludedCutoff.Text); }
-            set { textIncludedCutoff.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+            get
+            {
+                if (string.IsNullOrEmpty(textShapeCorrIncludedCutoff.Text))
+                {
+                    return null;
+                }
+                return Convert.ToDouble(textShapeCorrIncludedCutoff);
+            }
+            set
+            {
+                textShapeCorrIncludedCutoff.Text = value.HasValue ? value.Value.ToString(@"R") : string.Empty;
+            }
         }
 
-        public int SCQuantitativeCutoff
+        public double? SCQuantitativeCutoff
         {
-            get { return Convert.ToInt32(textQuantitativeCutoff.Text); }
-            set { textQuantitativeCutoff.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+            get
+            {
+                if (string.IsNullOrEmpty(textShapeCorrQuantitativeCutoff.Text))
+                {
+                    return null;
+                }
+                return Convert.ToDouble(textShapeCorrQuantitativeCutoff.Text);
+            }
+            set { textShapeCorrQuantitativeCutoff.Text = value.HasValue ? value.Value.ToString(@"R") : string.Empty; }
         }
 
         public RefinementSettings.ComparisonType SCIncludedComparisonType
@@ -590,33 +607,21 @@ namespace pwiz.Skyline.EditUI
 
 
             double? scIncludedCutoff = null;
-            if (!string.IsNullOrEmpty(textIncludedCutoff.Text))
+            if (!string.IsNullOrEmpty(textShapeCorrIncludedCutoff.Text))
             {
                 double includeVal;
-                if (!helper.ValidateDecimalTextBox(textIncludedCutoff, -1, 1, out includeVal))// check if -1 is correct minimum
+                if (!helper.ValidateDecimalTextBox(textShapeCorrIncludedCutoff, -1, 1, out includeVal))
                     return;
                 scIncludedCutoff = includeVal;
             }
 
             double? scQuantitativeCutoff = null;
-            if (!string.IsNullOrEmpty(textQuantitativeCutoff.Text))
+            if (!string.IsNullOrEmpty(textShapeCorrQuantitativeCutoff.Text))
             {
                 double quantitativeCutoffVal;
-                if (!helper.ValidateDecimalTextBox(textQuantitativeCutoff, 0, 1, out quantitativeCutoffVal))// check if -1 is correct minimum
+                if (!helper.ValidateDecimalTextBox(textShapeCorrQuantitativeCutoff, -1, 1, out quantitativeCutoffVal))
                     return;
                 scQuantitativeCutoff = quantitativeCutoffVal;
-            }
-
-            RefinementSettings.ComparisonType? scIncludedComparisonType = null;
-            if (SCIncludedComparisonType >= 0 && scIncludedCutoff.HasValue)
-            {
-                scIncludedComparisonType = SCIncludedComparisonType;
-            }
-
-            RefinementSettings.ComparisonType? scQuantitativeComparisonType = null;
-            if (SCQuantitativeComparisonType >= 0 && scQuantitativeCutoff.HasValue)
-            {
-                scQuantitativeComparisonType = SCQuantitativeComparisonType;
             }
 
             RefinementSettings = new RefinementSettings
@@ -655,8 +660,8 @@ namespace pwiz.Skyline.EditUI
                                          GroupComparisonDefs = groupComparisonDefs,
                                          SCIncludedCutoff = scIncludedCutoff,
                                          SCQuantitativeCutoff = scQuantitativeCutoff,
-                                         SCIncludedComparisonType = scIncludedComparisonType,
-                                         SCQuantitativeComparisonType = scQuantitativeComparisonType
+                                         SCIncludedComparisonType = SCIncludedComparisonType,
+                                         SCQuantitativeComparisonType = SCQuantitativeComparisonType
             };
 
             DialogResult = DialogResult.OK;

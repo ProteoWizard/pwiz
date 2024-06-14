@@ -1117,34 +1117,34 @@ exceed this threshold.</value>
   <data name="&gt;&gt;label10.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="textQuantitativeCutoff.Enabled" type="System.Boolean, mscorlib">
+  <data name="textShapeCorrQuantitativeCutoff.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="textQuantitativeCutoff.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="textShapeCorrQuantitativeCutoff.Location" type="System.Drawing.Point, System.Drawing">
     <value>181, 36</value>
   </data>
-  <data name="textQuantitativeCutoff.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="textShapeCorrQuantitativeCutoff.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
-  <data name="textQuantitativeCutoff.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="textShapeCorrQuantitativeCutoff.Size" type="System.Drawing.Size, System.Drawing">
     <value>65, 20</value>
   </data>
-  <data name="textQuantitativeCutoff.TabIndex" type="System.Int32, mscorlib">
+  <data name="textShapeCorrQuantitativeCutoff.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
-  <data name="textQuantitativeCutoff.ToolTip" xml:space="preserve">
+  <data name="textShapeCorrQuantitativeCutoff.ToolTip" xml:space="preserve">
     <value>Transitions whose shape correlation is below this value will be marked as non-quantitative.</value>
   </data>
-  <data name="&gt;&gt;textQuantitativeCutoff.Name" xml:space="preserve">
-    <value>textQuantitativeCutoff</value>
+  <data name="&gt;&gt;textShapeCorrQuantitativeCutoff.Name" xml:space="preserve">
+    <value>textShapeCorrQuantitativeCutoff</value>
   </data>
-  <data name="&gt;&gt;textQuantitativeCutoff.Type" xml:space="preserve">
+  <data name="&gt;&gt;textShapeCorrQuantitativeCutoff.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textQuantitativeCutoff.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textShapeCorrQuantitativeCutoff.Parent" xml:space="preserve">
     <value>groupBox2</value>
   </data>
-  <data name="&gt;&gt;textQuantitativeCutoff.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textShapeCorrQuantitativeCutoff.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="label9.AutoSize" type="System.Boolean, mscorlib">
@@ -1180,34 +1180,34 @@ exceed this threshold.</value>
   <data name="&gt;&gt;label9.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name="textIncludedCutoff.Enabled" type="System.Boolean, mscorlib">
+  <data name="textShapeCorrIncludedCutoff.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="textIncludedCutoff.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="textShapeCorrIncludedCutoff.Location" type="System.Drawing.Point, System.Drawing">
     <value>33, 36</value>
   </data>
-  <data name="textIncludedCutoff.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="textShapeCorrIncludedCutoff.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
-  <data name="textIncludedCutoff.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="textShapeCorrIncludedCutoff.Size" type="System.Drawing.Size, System.Drawing">
     <value>65, 20</value>
   </data>
-  <data name="textIncludedCutoff.TabIndex" type="System.Int32, mscorlib">
+  <data name="textShapeCorrIncludedCutoff.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name="textIncludedCutoff.ToolTip" xml:space="preserve">
+  <data name="textShapeCorrIncludedCutoff.ToolTip" xml:space="preserve">
     <value>Transitions whose shape correlation value is below this number will be removed from the document.</value>
   </data>
-  <data name="&gt;&gt;textIncludedCutoff.Name" xml:space="preserve">
-    <value>textIncludedCutoff</value>
+  <data name="&gt;&gt;textShapeCorrIncludedCutoff.Name" xml:space="preserve">
+    <value>textShapeCorrIncludedCutoff</value>
   </data>
-  <data name="&gt;&gt;textIncludedCutoff.Type" xml:space="preserve">
+  <data name="&gt;&gt;textShapeCorrIncludedCutoff.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textIncludedCutoff.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textShapeCorrIncludedCutoff.Parent" xml:space="preserve">
     <value>groupBox2</value>
   </data>
-  <data name="&gt;&gt;textIncludedCutoff.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textShapeCorrIncludedCutoff.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="groupBox2.Location" type="System.Drawing.Point, System.Drawing">

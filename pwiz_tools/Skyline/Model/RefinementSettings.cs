@@ -231,9 +231,9 @@ namespace pwiz.Skyline.Model
         public double? SCQuantitativeCutoff { get; set; }
         public enum ComparisonType {min, max};
         [Track] 
-        public ComparisonType? SCIncludedComparisonType {get; set;}
+        public ComparisonType SCIncludedComparisonType { get; set;}
         [Track]
-        public ComparisonType? SCQuantitativeComparisonType { get; set; }
+        public ComparisonType SCQuantitativeComparisonType { get; set; }
         [Track]
         public List<GroupComparisonDef> GroupComparisonDefs { get; set; }
         public List<string> GroupComparisonNames { get; set; }
@@ -782,35 +782,18 @@ namespace pwiz.Skyline.Model
 
                 }
 
-                var chromInfos = nodeTran.ChromInfos.ToList();
-                var numComparisonTypes = Enum.GetNames(typeof(ComparisonType)).Length - 1;
-                ComparisonType? includedComparisonType = SCIncludedComparisonType.HasValue && 0 <= (int?)SCIncludedComparisonType && (int?)SCIncludedComparisonType <= numComparisonTypes ? SCIncludedComparisonType : ComparisonType.min;
-                if (SCIncludedCutoff.HasValue)
+                var nodeToKeep = nodeTran;
+                var correlations = nodeTran.ChromInfos.Select(chromInfo => chromInfo.PeakShapeValues?.ShapeCorrelation)
+                    .OfType<float>().ToList();
+                if (!IsShapeCorrelationAboveCutoff(SCIncludedCutoff, SCIncludedComparisonType, correlations))
                 {
-                    if (!checkIfShapeCorrelationAboveCutoff(chromInfos, SCIncludedCutoff, includedComparisonType))
-                    {
-                        continue;
-                    }
+                    continue;
                 }
-
-                TransitionDocNode nonQuantitativeNodeTran = null;
-                ComparisonType? quantitativeComparisonType = SCQuantitativeComparisonType.HasValue && 0 <= (int?)SCQuantitativeComparisonType && (int?)SCQuantitativeComparisonType <= numComparisonTypes ? SCQuantitativeComparisonType : ComparisonType.min;
-                if (SCQuantitativeCutoff.HasValue)
+                if (!IsShapeCorrelationAboveCutoff(SCQuantitativeCutoff, SCQuantitativeComparisonType, correlations))
                 {
-                    if (!checkIfShapeCorrelationAboveCutoff(chromInfos, SCQuantitativeCutoff, quantitativeComparisonType))
-                    {
-                        nonQuantitativeNodeTran = nodeTran.ChangeQuantitative(false);
-                    }
+                    nodeToKeep = nodeToKeep.ChangeQuantitative(false);
                 }
-
-                if (nonQuantitativeNodeTran != null)
-                {
-                    listTrans.Add(nonQuantitativeNodeTran);
-                }
-                else
-                {
-                    listTrans.Add(nodeTran);
-                }
+                listTrans.Add(nodeToKeep);
             }
 
             TransitionGroupDocNode nodeGroupRefined = (TransitionGroupDocNode)
@@ -877,6 +860,26 @@ namespace pwiz.Skyline.Model
             }
 
             return nodeGroupRefined;
+        }
+
+        private bool IsShapeCorrelationAboveCutoff(double? cutoff, ComparisonType comparisonType, IList<float> shapeCorrelationValues)
+        {
+            if (!cutoff.HasValue)
+            {
+                return true;
+            }
+            if (shapeCorrelationValues.Count == 0)
+            {
+                return true;
+            }
+            var comparisonValue = comparisonType == ComparisonType.max ? shapeCorrelationValues.Max() : shapeCorrelationValues.Min();
+            if (float.IsNaN(comparisonValue))
+            {
+                // NaN is considered the worst shape correlation because you can only get it with
+                // a completely flat chromatogram
+                return false;
+            }
+            return comparisonValue >= cutoff;
         }
 
         public enum ConvertToSmallMoleculesMode
@@ -1282,26 +1285,6 @@ namespace pwiz.Skyline.Model
             newdoc = ForceReloadChromatograms(newdoc);
             CloseLibraryStreams(newdoc);
             return newdoc;
-        }
-
-
-        private bool checkIfShapeCorrelationAboveCutoff(List<TransitionChromInfo> chromInfos, double? cutoff, ComparisonType? type = ComparisonType.min)
-        {
-            float? comparisonValue = 0;
-            if (chromInfos.Any())
-            {
-                if (type == ComparisonType.min)
-                {
-                    comparisonValue = chromInfos.Min(c => c.PeakShapeValues?.ShapeCorrelation);
-                }
-                else if (type == ComparisonType.max)
-                {
-                    comparisonValue = chromInfos.Max(c => c.PeakShapeValues?.ShapeCorrelation);
-
-                }
-            }
-            return comparisonValue >= cutoff;
-
         }
 
         /// <summary>

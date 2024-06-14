@@ -77,9 +77,9 @@
             this.comboQuantitativeComparisonType = new System.Windows.Forms.ComboBox();
             this.comboIncludedComparisonType = new System.Windows.Forms.ComboBox();
             this.label10 = new System.Windows.Forms.Label();
-            this.textQuantitativeCutoff = new System.Windows.Forms.TextBox();
+            this.textShapeCorrQuantitativeCutoff = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
-            this.textIncludedCutoff = new System.Windows.Forms.TextBox();
+            this.textShapeCorrIncludedCutoff = new System.Windows.Forms.TextBox();
             this.groupPeakArea = new System.Windows.Forms.GroupBox();
             this.labelTransType = new System.Windows.Forms.Label();
             this.comboTransType = new System.Windows.Forms.ComboBox();
@@ -440,9 +440,9 @@
             this.groupBox2.Controls.Add(this.comboQuantitativeComparisonType);
             this.groupBox2.Controls.Add(this.comboIncludedComparisonType);
             this.groupBox2.Controls.Add(this.label10);
-            this.groupBox2.Controls.Add(this.textQuantitativeCutoff);
+            this.groupBox2.Controls.Add(this.textShapeCorrQuantitativeCutoff);
             this.groupBox2.Controls.Add(this.label9);
-            this.groupBox2.Controls.Add(this.textIncludedCutoff);
+            this.groupBox2.Controls.Add(this.textShapeCorrIncludedCutoff);
             resources.ApplyResources(this.groupBox2, "groupBox2");
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.TabStop = false;
@@ -470,9 +470,9 @@
             // 
             // textQuantitativeCutoff
             // 
-            resources.ApplyResources(this.textQuantitativeCutoff, "textQuantitativeCutoff");
-            this.textQuantitativeCutoff.Name = "textQuantitativeCutoff";
-            this.helpTip.SetToolTip(this.textQuantitativeCutoff, resources.GetString("textQuantitativeCutoff.ToolTip"));
+            resources.ApplyResources(this.textShapeCorrQuantitativeCutoff, "textShapeCorrQuantitativeCutoff");
+            this.textShapeCorrQuantitativeCutoff.Name = "textShapeCorrQuantitativeCutoff";
+            this.helpTip.SetToolTip(this.textShapeCorrQuantitativeCutoff, resources.GetString("textQuantitativeCutoff.ToolTip"));
             // 
             // label9
             // 
@@ -481,9 +481,9 @@
             // 
             // textIncludedCutoff
             // 
-            resources.ApplyResources(this.textIncludedCutoff, "textIncludedCutoff");
-            this.textIncludedCutoff.Name = "textIncludedCutoff";
-            this.helpTip.SetToolTip(this.textIncludedCutoff, resources.GetString("textIncludedCutoff.ToolTip"));
+            resources.ApplyResources(this.textShapeCorrIncludedCutoff, "textShapeCorrIncludedCutoff");
+            this.textShapeCorrIncludedCutoff.Name = "textShapeCorrIncludedCutoff";
+            this.helpTip.SetToolTip(this.textShapeCorrIncludedCutoff, resources.GetString("textIncludedCutoff.ToolTip"));
             // 
             // groupPeakArea
             // 
@@ -787,9 +787,9 @@
         private System.Windows.Forms.ComboBox comboMSGroupComparisons;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.TextBox textIncludedCutoff;
+        private System.Windows.Forms.TextBox textShapeCorrIncludedCutoff;
         private System.Windows.Forms.Label label10;
-        private System.Windows.Forms.TextBox textQuantitativeCutoff;
+        private System.Windows.Forms.TextBox textShapeCorrQuantitativeCutoff;
         private System.Windows.Forms.ComboBox comboIncludedComparisonType;
         private System.Windows.Forms.ComboBox comboQuantitativeComparisonType;
     }

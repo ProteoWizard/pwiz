@@ -957,12 +957,10 @@ namespace pwiz.Skyline
             (c, p) => c.Refinement.SCQuantitativeCutoff = p.ValueDouble);
         public static readonly Argument ARG_REFINE_SC_INCLUDED_COMPARISON_TYPE = new RefineArgument(@"refine-shape-r-include-comparison-type", 
             Helpers.GetEnumValues<RefinementSettings.ComparisonType>().Select(e=>e.ToString()).ToArray(),
-            (c, p) => c.Refinement.SCIncludedComparisonType =
-                (RefinementSettings.ComparisonType) Enum.Parse(typeof(RefinementSettings.ComparisonType), p.Value, true));
+            (c, p) => c.Refinement.SCIncludedComparisonType = TypeSafeEnum.Parse<RefinementSettings.ComparisonType>(p.Value));
         public static readonly Argument ARG_REFINE_SC_QUANTITATIVE_COMPARISON_TYPE = new RefineArgument(@"refine-shape-r-quant-comparison-type", 
             Helpers.GetEnumValues<RefinementSettings.ComparisonType>().Select(e => e.ToString()).ToArray(),
-            (c, p) => c.Refinement.SCQuantitativeComparisonType = 
-                (RefinementSettings.ComparisonType)Enum.Parse(typeof(RefinementSettings.ComparisonType), p.Value, true));
+            (c, p) => c.Refinement.SCQuantitativeComparisonType = TypeSafeEnum.Parse<RefinementSettings.ComparisonType>(p.Value));
         // Refinement Group Comparison Tab
         public static readonly Argument ARG_REFINE_GC_P_VALUE_CUTOFF = new RefineArgument(
             @"refine-gc-p-value-cutoff", NUM_VALUE,
