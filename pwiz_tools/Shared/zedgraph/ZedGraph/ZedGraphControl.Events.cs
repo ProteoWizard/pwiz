@@ -399,7 +399,7 @@ namespace ZedGraph
 			_isSelecting = false;
 			_isTextDragging = false;
 			_dragPane = null;
-            _dragText = null;
+			_dragText = null;
 
 			Point mousePt = new Point( e.X, e.Y );
 
@@ -508,15 +508,15 @@ namespace ZedGraph
 				}
 			}
 			else if (pane != null && pane.IsOverLabel(mousePt, out var label) && Control.ModifierKeys == _editModifierKeys &&
-                     e.Button == _selectButtons)
-            {
+					e.Button == _selectButtons)
+			{
 				_isTextDragging = true;
-                _dragPane = pane;
+				_dragPane = pane;
 				_dragText = label; 
 				_dragText.UpdatePositions();
-                _dragStartPt = mousePt;
+				_dragStartPt = mousePt;
 				_dragPane.Layout.ShowToolTip(mousePt);
-            }
+			}
 		}
 
 		/// <summary>
@@ -536,15 +536,15 @@ namespace ZedGraph
 			{
 				GraphPane pane = _masterPane.FindChartRect( mousePt );
 				if ((_isEnableHPan || _isEnableVPan) && (Control.ModifierKeys == Keys.Shift || _isPanning) &&
-                     (pane != null || _isPanning))
+					(pane != null || _isPanning))
 					this.Cursor = Cursors.Hand;
-                else if (pane != null && pane.IsOverLabel(mousePt, out var _))
-                {
-                    if (Control.ModifierKeys == _editModifierKeys)
-                        this.Cursor = Cursors.SizeAll;
-                    else
-                        this.Cursor = Cursors.Hand;
-                }
+				else if (pane != null && pane.IsOverLabel(mousePt, out var _))
+				{
+					if (Control.ModifierKeys == _editModifierKeys)
+						this.Cursor = Cursors.SizeAll;
+					else
+						this.Cursor = Cursors.Hand;
+				}
 				else if ( ( _isEnableVZoom || _isEnableHZoom ) && ( pane != null || _isZooming ) )
 					this.Cursor = Cursors.Cross;
 				else if ( _isEnableSelection && ( pane != null || _isSelecting ) )
@@ -703,10 +703,10 @@ namespace ZedGraph
 
 				// Provide Callback for MouseMove events
 				if( !_isTextDragging )
-                {
-                    if (this.MouseMoveEvent != null && this.MouseMoveEvent(this, e))
-                        return;
-                }
+				{
+					if (this.MouseMoveEvent != null && this.MouseMoveEvent(this, e))
+						return;
+				}
 
 				//Point tempPt = this.PointToClient( Control.MousePosition );
 
@@ -1177,23 +1177,23 @@ namespace ZedGraph
 
 	#region Edit Point Events
 
-        private void HandleLabelDrag(Point mousePt)
-        {
+		private void HandleLabelDrag(Point mousePt)
+		{
 			_dragPane.ReverseTransform(mousePt, out var mouseX, out var mouseY);
 			_dragPane.ReverseTransform(_dragStartPt, out var startX, out var startY);
-            var xScale = _dragText.Curve.GetXAxis(_dragPane).Scale;
+			var xScale = _dragText.Curve.GetXAxis(_dragPane).Scale;
 			var yScale = _dragText.Curve.GetYAxis(_dragPane).Scale;
 
-            _dragText.UpdateLabelLocation(xScale.AddInterval(_dragText.LabelPosition.X, startX, mouseX),
-                yScale.AddInterval(_dragText.LabelPosition.Y, startY, mouseY), _dragPane);
+			_dragText.UpdateLabelLocation(xScale.AddInterval(_dragText.LabelPosition.X, startX, mouseX),
+				yScale.AddInterval(_dragText.LabelPosition.Y, startY, mouseY), _dragPane);
 
 			Invalidate();
-        }
+		}
 
-        private void HandleLabelDragFinish()
-        {
-            _dragText.UpdatePositions();
-        }
+		private void HandleLabelDragFinish()
+		{
+			_dragText.UpdatePositions();
+		}
 
 		private void HandleEditDrag( Point mousePt )
 		{

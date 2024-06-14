@@ -440,7 +440,6 @@ namespace ZedGraph
 						pts[2].X, pts[2].Y, pts[3].X, pts[3].Y );
 		}
 
-
 		
 	#endregion
 	

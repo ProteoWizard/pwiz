@@ -478,7 +478,7 @@ namespace ZedGraph
 		private PointPair _dragStartPair;
 
 		private GraphPane.LabeledPoint _dragText;
-        private bool _isTextDragging;
+		private bool _isTextDragging;
 		/// <summary>
 		/// private field that stores the state of the scale ranges prior to starting a panning action.
 		/// </summary>

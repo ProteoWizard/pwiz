@@ -564,7 +564,7 @@ namespace ZedGraph
 		/// The Copy Constructor
 		/// </summary>
 		/// <param name="rhs">The FontSpec object from which to copy</param>
-		public  FontSpec( FontSpec rhs )
+		public FontSpec( FontSpec rhs )
 		{
 			_fontColor = rhs.FontColor;
 			_family = rhs.Family;
