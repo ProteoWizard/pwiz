@@ -94,7 +94,12 @@ namespace pwiz.Common.DataBinding
 
         protected string GetPrefix()
         {
-            return Message == null ? string.Empty : @"*";
+            return GetPrefix(Message);
+        }
+
+        public static string GetPrefix(string message)
+        {
+            return message == null ? string.Empty : @"*";
         }
     }
 }

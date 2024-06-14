@@ -273,7 +273,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return proteinAbundanceRecords;
         }
 
-        public class AbundanceValue : IAnnotatedValue
+        public class AbundanceValue : IAnnotatedValue, IFormattable
         {
             public AbundanceValue(double raw, double transitionWeighted, string message)
             {
@@ -314,6 +314,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             public string GetErrorMessage()
             {
                 return Message;
+            }
+
+            public override string ToString()
+            {
+                return AnnotatedDouble.GetPrefix(Message) + Raw;
+            }
+
+            public string ToString(string format, IFormatProvider formatProvider)
+            {
+                return AnnotatedDouble.GetPrefix(Message) + Raw.ToString(format, formatProvider);
             }
         }
         private class CachedValues 
