@@ -66,14 +66,13 @@
             this.advancedCheckBox.Name = "advancedCheckBox";
             this.advancedCheckBox.UseVisualStyleBackColor = true;
             this.advancedCheckBox.CheckedChanged += new System.EventHandler(this.advancedCheckBox_CheckedChanged);
-
             // 
             // layoutLabelsBox
             // 
             resources.ApplyResources(this.layoutLabelsBox, "layoutLabelsBox");
             this.layoutLabelsBox.Name = "layoutLabelsBox";
             this.layoutLabelsBox.UseVisualStyleBackColor = true;
-
+            this.layoutLabelsBox.CheckedChanged += new System.EventHandler(this.layoutLabelsBox_CheckedChanged);
             // 
             // VolcanoPlotFormattingDlg
             // 

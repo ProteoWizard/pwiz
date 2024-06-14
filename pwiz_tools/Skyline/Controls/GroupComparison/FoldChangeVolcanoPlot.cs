@@ -166,6 +166,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             base.OnShown(e);
 
+            Settings.Default.PropertyChanged += OnLabelOverlapPropertyChange;
+
             if (FoldChangeBindingSource != null)
             {
                 AllowDisplayTip = true;
@@ -186,12 +188,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
                 UpdateGraph(Settings.Default.FilterVolcanoPlotPoints);
             }
-        }
-
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            Settings.Default.PropertyChanged += OnLabelOverlapPropertyChange;
-            base.OnHandleCreated(e);
         }
 
         protected override void OnHandleDestroyed(EventArgs e)
@@ -447,7 +443,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             QueueUpdateGraph();
         }
 
-        private bool  zedGraphControl_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
+        private bool zedGraphControl_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             return MoveMouse(e.Button, e.Location);
         }
@@ -640,16 +636,28 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
         }
 
-        public void OnLabelOverlapPropertyChange(object sender, PropertyChangedEventArgs e)
+        /// <summary>
+        /// Detect changes in settings shared with <see cref="SummaryRelativeAbundanceGraphPane"/> right-click menu
+        /// </summary>
+        private void OnLabelOverlapPropertyChange(object sender, PropertyChangedEventArgs e)
         {
-            if(e.PropertyName == @"GroupComparisonAvoidLabelOverlap")
+            if (e.PropertyName == @"GroupComparisonAvoidLabelOverlap")
                 UpdateGraph();
+            else if (e.PropertyName == @"GroupComparisonSuspendLabelLayout")
+            {
+                if (!Settings.Default.GroupComparisonSuspendLabelLayout)
+                {
+                    zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints, zedGraphControl);
+                    zedGraphControl.Invalidate();
+                }
+            }
         }
 
         private void OnLabelOverlapClick(object o, EventArgs eventArgs)
         {
             Settings.Default.GroupComparisonAvoidLabelOverlap = !Settings.Default.GroupComparisonAvoidLabelOverlap;
         }
+
         private void OnFormattingClick(object o, EventArgs eventArgs)
         {
             ShowFormattingDialog();
@@ -658,11 +666,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private void OnSuspendLayout(object sender, EventArgs eventArgs)
         {
             Settings.Default.GroupComparisonSuspendLabelLayout = !Settings.Default.GroupComparisonSuspendLabelLayout;
-            if (!Settings.Default.GroupComparisonSuspendLabelLayout)
-            {
-                zedGraphControl.GraphPane.AdjustLabelSpacings(_labeledPoints, zedGraphControl);
-                zedGraphControl.Invalidate();
-            }
         }
 
         public void ShowFormattingDialog()

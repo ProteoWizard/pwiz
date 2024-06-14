@@ -3985,7 +3985,6 @@ namespace pwiz.Skyline
             Settings.Default.GroupComparisonAvoidLabelOverlap = !Settings.Default.GroupComparisonAvoidLabelOverlap;
         }
 
-
         private ToolStripItem MakeNormalizeToMenuItem(NormalizeOption normalizeOption, bool isChecked)
         {
             if (normalizeOption == null)

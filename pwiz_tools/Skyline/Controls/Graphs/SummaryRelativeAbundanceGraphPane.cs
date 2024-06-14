@@ -155,10 +155,21 @@ namespace pwiz.Skyline.Controls.Graphs
             ShowingFormattingDlg = false;
         }
 
+        /// <summary>
+        /// Detect changes in settings shared with <see cref="FoldChangeVolcanoPlot"/> right-click menu
+        /// </summary>
         public void OnLabelOverlapPropertyChange(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == @"GroupComparisonAvoidLabelOverlap")
                 GraphSummary.UpdateUI();
+            else if (e.PropertyName == @"GroupComparisonSuspendLabelLayout")
+            {
+                if (!Settings.Default.GroupComparisonSuspendLabelLayout)
+                {
+                    AdjustLabelSpacings(_labeledPoints, GraphSummary.GraphControl);
+                    GraphSummary.GraphControl.Invalidate();
+                }
+            }
         }
 
         public override bool HandleMouseDownEvent(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
@@ -439,11 +450,6 @@ namespace pwiz.Skyline.Controls.Graphs
         public void OnSuspendLayout(object sender, EventArgs eventArgs)
         {
             Settings.Default.GroupComparisonSuspendLabelLayout = !Settings.Default.GroupComparisonSuspendLabelLayout;
-            if (!Settings.Default.GroupComparisonSuspendLabelLayout)
-            {
-                AdjustLabelSpacings(_labeledPoints, GraphSummary.GraphControl);
-                GraphSummary.GraphControl.Invalidate();
-            }
         }
 
 
