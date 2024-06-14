@@ -1512,7 +1512,8 @@ namespace ZedGraph
 
 			return pts;
 		}
-        #endregion
+
+	#endregion
 
 	}
 }
