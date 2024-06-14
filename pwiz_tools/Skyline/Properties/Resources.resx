@@ -3935,12 +3935,6 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="CommandArgs_ParseAnnotationTarget_Error__Attempting_to_specify_an_unknown_annotation_target___0____Try_one_of_the_following_" xml:space="preserve">
     <value>Error: Attempting to specify an unknown annotation target '{0}'. Try one of the following:</value>
   </data>
-  <data name="RefineDlg_RefineDlg_Max" xml:space="preserve">
-    <value>Max</value>
-  </data>
-  <data name="RefineDlg_RefineDlg_Min" xml:space="preserve">
-    <value>Min</value>
-  </data>
   <data name="FormulaBox_FormulaBox_Help" xml:space="preserve">
     <value>Help</value>
   </data>

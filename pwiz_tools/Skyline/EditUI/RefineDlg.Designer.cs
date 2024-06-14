@@ -453,6 +453,7 @@
             resources.ApplyResources(this.comboQuantitativeComparisonType, "comboQuantitativeComparisonType");
             this.comboQuantitativeComparisonType.FormattingEnabled = true;
             this.comboQuantitativeComparisonType.Name = "comboQuantitativeComparisonType";
+            this.helpTip.SetToolTip(this.comboQuantitativeComparisonType, resources.GetString("comboQuantitativeComparisonType.ToolTip"));
             // 
             // comboIncludedComparisonType
             // 
@@ -460,6 +461,7 @@
             resources.ApplyResources(this.comboIncludedComparisonType, "comboIncludedComparisonType");
             this.comboIncludedComparisonType.FormattingEnabled = true;
             this.comboIncludedComparisonType.Name = "comboIncludedComparisonType";
+            this.helpTip.SetToolTip(this.comboIncludedComparisonType, resources.GetString("comboIncludedComparisonType.ToolTip"));
             // 
             // label10
             // 
@@ -470,6 +472,7 @@
             // 
             resources.ApplyResources(this.textQuantitativeCutoff, "textQuantitativeCutoff");
             this.textQuantitativeCutoff.Name = "textQuantitativeCutoff";
+            this.helpTip.SetToolTip(this.textQuantitativeCutoff, resources.GetString("textQuantitativeCutoff.ToolTip"));
             // 
             // label9
             // 
@@ -480,6 +483,7 @@
             // 
             resources.ApplyResources(this.textIncludedCutoff, "textIncludedCutoff");
             this.textIncludedCutoff.Name = "textIncludedCutoff";
+            this.helpTip.SetToolTip(this.textIncludedCutoff, resources.GetString("textIncludedCutoff.ToolTip"));
             // 
             // groupPeakArea
             // 

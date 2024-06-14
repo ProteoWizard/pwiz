@@ -156,14 +156,14 @@ namespace pwiz.Skyline.EditUI
 
 
                 comboIncludedComparisonType.Enabled = true;
-                comboIncludedComparisonType.Items.Add(Resources.RefineDlg_RefineDlg_Min);
-                comboIncludedComparisonType.Items.Add(Resources.RefineDlg_RefineDlg_Max);
+                comboIncludedComparisonType.Items.Add(EditUIResources.RefineDlg_RefineDlg_Min);
+                comboIncludedComparisonType.Items.Add(EditUIResources.RefineDlg_RefineDlg_Max);
                 comboIncludedComparisonType.SelectedIndex = 0;
                 ComboHelper.AutoSizeDropDown(comboIncludedComparisonType);
 
                 comboQuantitativeComparisonType.Enabled = true;
-                comboQuantitativeComparisonType.Items.Add(Resources.RefineDlg_RefineDlg_Min);
-                comboQuantitativeComparisonType.Items.Add(Resources.RefineDlg_RefineDlg_Max);
+                comboQuantitativeComparisonType.Items.Add(EditUIResources.RefineDlg_RefineDlg_Min);
+                comboQuantitativeComparisonType.Items.Add(EditUIResources.RefineDlg_RefineDlg_Max);
                 comboQuantitativeComparisonType.SelectedIndex = 0;
                 ComboHelper.AutoSizeDropDown(comboQuantitativeComparisonType);
 
@@ -171,7 +171,7 @@ namespace pwiz.Skyline.EditUI
 
 
 
-            // Group Comprisons
+            // Group Comparisons
             _groupComparisonsListBoxDriver = new SettingsListBoxDriver<GroupComparisonDef>(
                 checkedListBoxGroupComparisons, Settings.Default.GroupComparisonDefList);
             _groupComparisonsListBoxDriver.LoadList(

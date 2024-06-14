@@ -955,11 +955,14 @@ namespace pwiz.Skyline
             (c, p) => c.Refinement.SCIncludedCutoff = p.ValueDouble);
         public static readonly Argument ARG_REFINE_SC_QUANTITATIVE_CUTOFF = new RefineArgument(@"refine-shape-r-quant-cutoff", NUM_VALUE,
             (c, p) => c.Refinement.SCQuantitativeCutoff = p.ValueDouble);
-        public static readonly Argument ARG_REFINE_SC_INCLUDED_COMPARISON_TYPE = new RefineArgument(@"refine-shape-r-include-comparison-type", INT_VALUE,
+        public static readonly Argument ARG_REFINE_SC_INCLUDED_COMPARISON_TYPE = new RefineArgument(@"refine-shape-r-include-comparison-type", 
+            Helpers.GetEnumValues<RefinementSettings.ComparisonType>().Select(e=>e.ToString()).ToArray(),
             (c, p) => c.Refinement.SCIncludedComparisonType =
-                (RefinementSettings.ComparisonType) p.ValueInt);
-        public static readonly Argument ARG_REFINE_SC_QUANTITATIVE_COMPARISON_TYPE = new RefineArgument(@"refine-shape-r-quant-comparison-type", INT_VALUE,
-            (c, p) => c.Refinement.SCQuantitativeComparisonType = (RefinementSettings.ComparisonType) p.ValueInt);
+                (RefinementSettings.ComparisonType) Enum.Parse(typeof(RefinementSettings.ComparisonType), p.Value, true));
+        public static readonly Argument ARG_REFINE_SC_QUANTITATIVE_COMPARISON_TYPE = new RefineArgument(@"refine-shape-r-quant-comparison-type", 
+            Helpers.GetEnumValues<RefinementSettings.ComparisonType>().Select(e => e.ToString()).ToArray(),
+            (c, p) => c.Refinement.SCQuantitativeComparisonType = 
+                (RefinementSettings.ComparisonType)Enum.Parse(typeof(RefinementSettings.ComparisonType), p.Value, true));
         // Refinement Group Comparison Tab
         public static readonly Argument ARG_REFINE_GC_P_VALUE_CUTOFF = new RefineArgument(
             @"refine-gc-p-value-cutoff", NUM_VALUE,
