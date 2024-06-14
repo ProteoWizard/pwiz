@@ -16,16 +16,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Collections.Generic;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
     internal class AreaRelativeAbundanceGraphPane : SummaryRelativeAbundanceGraphPane
     {
-        public AreaRelativeAbundanceGraphPane(GraphSummary graphSummary)
-            : base(graphSummary)
+        public AreaRelativeAbundanceGraphPane(GraphSummary graphSummary, IList<MatchRgbHexColor> colorRows)
+            : base(graphSummary, colorRows)
         {
         }
         protected override GraphData CreateGraphData(SkylineDataSchema dataSchema)
