@@ -29,7 +29,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
-    public class QuantificationResult : Immutable, IComparable, IAnnotatedValue
+    public class QuantificationResult : Immutable, IComparable
     {
         [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
         [ChildDisplayName("NormalizedArea{0}")]
@@ -92,12 +92,12 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             else if (NormalizedArea != null)
             {
                 return string.Format(QuantificationStrings.QuantificationResult_ToString_Normalized_Area___0_, 
-                    NormalizedArea.ToString(Formats.CalibrationCurve));
+                    AppendMessage(NormalizedArea.Raw.ToString(Formats.CalibrationCurve), NormalizedArea.Message));
             }
             return TextUtil.EXCEL_NA;
         }
 
-        public static string FormatCalculatedConcentration(IFormattable calculatedConcentration, string units)
+        public static string FormatCalculatedConcentration(double calculatedConcentration, string units)
         {
             if (units == null)
             {
@@ -107,9 +107,19 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return TextUtil.SpaceSeparate(calculatedConcentration.ToString(Formats.Concentration, CultureInfo.CurrentCulture), units);
         }
 
-        public string GetErrorMessage()
+        public static string FormatCalculatedConcentration(AnnotatedDouble calculatedConcentration, string units)
         {
-            return CalculatedConcentration?.GetErrorMessage() ?? NormalizedArea?.GetErrorMessage();
+            return AppendMessage(FormatCalculatedConcentration(calculatedConcentration.Raw, units), calculatedConcentration.Message);
+        }
+
+        private static string AppendMessage(string value, string message)
+        {
+            if (message == null)
+            {
+                return value;
+            }
+
+            return value + @" (" + message + @")";
         }
     }
 

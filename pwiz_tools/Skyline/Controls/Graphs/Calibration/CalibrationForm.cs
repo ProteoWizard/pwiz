@@ -215,22 +215,33 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         continue;
                     }
 
-                    double? y = curveFitter.GetYValue(standardIdentifier);
+                    AnnotatedDouble normalizedArea = curveFitter.GetAnnotatedNormalizedPeakArea(standardIdentifier);
                     double? xCalculated = curveFitter.GetCalculatedXValue(CalibrationCurve, standardIdentifier);
                     double? x = curveFitter.GetSpecifiedXValue(standardIdentifier)
                                 ?? xCalculated;
-                    if (y.HasValue && x.HasValue)
+                    if (normalizedArea != null && x.HasValue)
                     {
-                        PointPair point = new PointPair(x.Value, y.Value) {Tag = standardIdentifier };
-                        if (sampleType.AllowExclude && null == standardIdentifier.LabelType && samplePeptideQuantifier.PeptideDocNode.IsExcludeFromCalibration(standardIdentifier.ReplicateIndex))
+                        PointPair point = new PointPair(x.Value, normalizedArea.Raw) {Tag = standardIdentifier };
+                        bool included = normalizedArea.Strict != null;
+                        if (included && sampleType.AllowExclude)
                         {
-                            pointPairListExcluded.Add(point);
+                            if (null == standardIdentifier.LabelType &&
+                                samplePeptideQuantifier.PeptideDocNode.IsExcludeFromCalibration(standardIdentifier
+                                    .ReplicateIndex))
+                            {
+                                included = false;
+                            }
                         }
-                        else
+
+                        if (included)
                         {
                             pointPairList.Add(point);
                         }
-                        if (!IsNumber(x) || !IsNumber(y))
+                        else
+                        {
+                            pointPairListExcluded.Add(point);
+                        }
+                        if (!IsNumber(x) || !IsNumber(normalizedArea.Raw))
                         {
                             continue;
                         }
@@ -238,9 +249,9 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         {
                             minX = Math.Min(minX, x.Value);
                         }
-                        if (!logPlot || y.Value > 0)
+                        if (!logPlot || normalizedArea.Raw > 0)
                         {
-                            minY = Math.Min(minY, y.Value);
+                            minY = Math.Min(minY, normalizedArea.Raw);
                         }
                         maxX = Math.Max(maxX, x.Value);
                         if (IsNumber(xCalculated))
@@ -270,8 +281,16 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 }
                 if (pointPairListExcluded.Any())
                 {
+                    var symbolType = sampleType.SymbolType;
+                    if (symbolType == SymbolType.XCross)
+                    {
+                        // Excluded or invalid points get drawn without being filled.
+                        // The XCross looks the same regardless of whether it is filled, so we switch to a circle
+                        // when it has a problem
+                        symbolType = SymbolType.Circle;
+                    }
                     var lineItem = zedGraphControl.GraphPane.AddCurve(pointPairList.Any() ? null : curveLabel, pointPairListExcluded,
-                        sampleType.Color, sampleType.SymbolType);
+                        sampleType.Color, symbolType);
                     lineItem.Line.IsVisible = false;
                     _scatterPlots.Add(lineItem);
                 }
@@ -353,8 +372,8 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 }
             }
             if (selectionIdentifier.HasValue) {
-                double? ySelected = curveFitter.GetYValue(selectionIdentifier.Value);
-                if (IsNumber(ySelected))
+                AnnotatedDouble ySelected = curveFitter.GetAnnotatedNormalizedPeakArea(selectionIdentifier.Value);
+                if (IsNumber(ySelected.Raw))
                 {
                     double? xSelected = curveFitter.GetCalculatedXValue(CalibrationCurve, selectionIdentifier.Value);
                     var selectedLineColor = Color.FromArgb(128, GraphSummary.ColorSelected);
@@ -362,10 +381,10 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     double? xSpecified = curveFitter.GetSpecifiedXValue(selectionIdentifier.Value);
                     if (IsNumber(xSelected))
                     {
-                        ArrowObj arrow = new ArrowObj(xSelected.Value, ySelected.Value, xSelected.Value,
-                            ySelected.Value) {Line = {Color = GraphSummary.ColorSelected}};
+                        ArrowObj arrow = new ArrowObj(xSelected.Value, ySelected.Raw, xSelected.Value,
+                            ySelected.Raw) {Line = {Color = GraphSummary.ColorSelected}};
                         zedGraphControl.GraphPane.GraphObjList.Insert(0, arrow);
-                        var verticalLine = new LineObj(xSelected.Value, ySelected.Value, xSelected.Value,
+                        var verticalLine = new LineObj(xSelected.Value, ySelected.Raw, xSelected.Value,
                             options.LogYAxis ? minY / 10 : 0)
                         {
                             Line = {Color = selectedLineColor, Width = selectedLineWidth},
@@ -376,8 +395,8 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         zedGraphControl.GraphPane.GraphObjList.Add(verticalLine);
                         if (IsNumber(xSpecified))
                         {
-                            var horizontalLine = new LineObj(xSpecified.Value, ySelected.Value, xSelected.Value,
-                                ySelected.Value)
+                            var horizontalLine = new LineObj(xSpecified.Value, ySelected.Raw, xSelected.Value,
+                                ySelected.Raw)
                             {
                                 Line = {Color = selectedLineColor, Width = selectedLineWidth},
                                 Location = {CoordinateFrame = CoordType.AxisXYScale},
@@ -394,14 +413,14 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         if (IsNumber(xSpecified))
                         {
                             // If the point has a specified concentration, then use that.
-                            ArrowObj arrow = new ArrowObj(xSpecified.Value, ySelected.Value, xSpecified.Value,
-                                ySelected.Value) {Line = {Color = GraphSummary.ColorSelected}};
+                            ArrowObj arrow = new ArrowObj(xSpecified.Value, ySelected.Raw, xSpecified.Value,
+                                ySelected.Raw) {Line = {Color = GraphSummary.ColorSelected}};
                             zedGraphControl.GraphPane.GraphObjList.Insert(0, arrow);
                         }
                         else
                         {
                             // Otherwise, draw a horizontal line at the appropriate y-value.
-                            var horizontalLine = new LineObj(minX, ySelected.Value, maxX, ySelected.Value)
+                            var horizontalLine = new LineObj(minX, ySelected.Raw, maxX, ySelected.Raw)
                             {
                                 Line = {Color = selectedLineColor, Width = selectedLineWidth},
                                 Location = {CoordinateFrame = CoordType.AxisXYScale},
@@ -412,7 +431,6 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     }
                 }
 
-                QuantificationResult quantificationResult = null;
                 AnnotatedDouble calculatedConcentration;
                 if (curveFitter.IsotopologResponseCurve)
                 {
@@ -421,7 +439,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 }
                 else
                 {
-                    quantificationResult = curveFitter.GetPeptideQuantificationResult(selectionIdentifier.Value.ReplicateIndex);
+                    var quantificationResult = curveFitter.GetPeptideQuantificationResult(selectionIdentifier.Value.ReplicateIndex);
                     calculatedConcentration = quantificationResult?.CalculatedConcentration;
                 }
                 if (calculatedConcentration != null)
@@ -431,9 +449,9 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         QuantificationResult.FormatCalculatedConcentration(calculatedConcentration,
                             curveFitter.QuantificationSettings.Units)));
                 }
-                else if (quantificationResult != null && quantificationResult.NormalizedArea == null)
+                else if (ySelected?.Message != null)
                 {
-                    labelLines.Add(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_missing_or_truncated_transitions);
+                    labelLines.Add(ySelected.Message);
                 }
             }
             if (Options.ShowFiguresOfMerit)

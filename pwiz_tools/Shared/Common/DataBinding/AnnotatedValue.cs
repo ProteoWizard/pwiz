@@ -47,7 +47,7 @@ namespace pwiz.Common.DataBinding
         {
             Raw = value;
             Message = message;
-            Strict = Message == null ? default : Raw;
+            Strict = Message == null ? Raw : default;
         }
 
         public AnnotatedValue(T raw, T strict, string message)
