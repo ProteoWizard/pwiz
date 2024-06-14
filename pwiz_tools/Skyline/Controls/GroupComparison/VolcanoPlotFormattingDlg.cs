@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
@@ -35,8 +36,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
 {
     public partial class VolcanoPlotFormattingDlg : FormEx, ColorGrid<MatchRgbHexColor>.IColorGridOwner
     {
-        private readonly object[] _foldChangeRows;
-        private readonly Action<List<MatchRgbHexColor>> _updateGraph;
+        private Client _client;
+        private readonly ImmutableList<object> _foldChangeRows;
         private readonly BindingList<MatchRgbHexColor> _bindingList;
 
         private readonly int _expressionIndex;
@@ -45,34 +46,16 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private readonly DataGridViewComboBoxColumn _symbolCombo;
         private readonly DataGridViewComboBoxColumn _pointSizeCombo;
 
-        public VolcanoPlotFormattingDlg(FoldChangeVolcanoPlot volcanoPlot, IList<MatchRgbHexColor> colorRows,
-            FoldChangeBindingSource.FoldChangeRow[] foldChangeRows, Action<List<MatchRgbHexColor>> updateGraph) : 
-            this(true, colorRows, foldChangeRows, updateGraph, 
-                volcanoPlot.AnyMolecules, volcanoPlot.AnyProteomic, volcanoPlot.PerProtein, volcanoPlot.Document)
-        {
-        }
-
-        public VolcanoPlotFormattingDlg(SummaryRelativeAbundanceGraphPane relativeAbundanceGraph,
-            IList<MatchRgbHexColor> colorRows, object[] proteinAbundances, Action<List<MatchRgbHexColor>> updateGraph) : 
-            this(false, colorRows, proteinAbundances, updateGraph, 
-                relativeAbundanceGraph.AnyMolecules, relativeAbundanceGraph.AnyProteomic, Settings.Default.AreaProteinTargets, relativeAbundanceGraph.Document)
-        {
-        }
-
-        private VolcanoPlotFormattingDlg(bool hasFoldChangeResults, IList<MatchRgbHexColor> colorRows,
-            object[] foldChangeRows, Action<List<MatchRgbHexColor>> updateGraph, bool anyMolecules, bool anyProteomic, bool perProtein, SrmDocument document)
+        public VolcanoPlotFormattingDlg(Client client, SrmDocument document, IEnumerable<MatchRgbHexColor> colorRows,
+            IEnumerable<object> foldChangeRows, bool perProtein)
         {
             InitializeComponent();
-            HasFoldChangeResults = hasFoldChangeResults;
-            AnyMolecules = anyMolecules;
-            AnyProteomic = anyProteomic;
+            _client = client;
             PerProtein = perProtein;
             Document = document;
 
-            _foldChangeRows = foldChangeRows;
-            _updateGraph = updateGraph;
-
-            _bindingList = new BindingList<MatchRgbHexColor>(colorRows);
+            _foldChangeRows = ImmutableList.ValueOf(foldChangeRows);
+            _bindingList = new BindingList<MatchRgbHexColor>(colorRows.Select(colorRow=>colorRow.Clone()).ToList());
             _bindingList.ListChanged += _bindingList_ListChanged;
 
             regexColorRowGrid1.AllowUserToOrderColumns = true;
@@ -154,10 +137,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             UpdateAdvancedColumns();
 
             regexColorRowGrid1.Owner = this;
-            if (hasFoldChangeResults)
-            {
-                Text = GroupComparisonResources.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting;
-            }
+            Text = _client.FormTitle;
             SetExpressionMinimumWidth();
         }
 
@@ -206,14 +186,13 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             DotPlotUtil.Select(Program.MainWindow, identityPath);
         }
-        public FoldChangeVolcanoPlot VolcanoPlot { get; private set; }
-
-        public SummaryRelativeAbundanceGraphPane RelativeAbundanceGraph { get; private set; }
-
-        public bool AnyProteomic { get; set; }
-        public bool AnyMolecules { get; set; }
+        public bool AnyProteomic => Document.IsEmptyOrHasPeptides;
+        public bool AnyMolecules => Document.HasSmallMolecules;
         public bool PerProtein { get; set; }
-        public bool HasFoldChangeResults { get; set; }
+        public bool HasFoldChangeResults
+        {
+            get { return _client.HasFoldChangeResults; }
+        }
         public SrmDocument Document { get; set; }
 
         private void SetExpressionMinimumWidth()
@@ -243,7 +222,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 SetExpressionMinimumWidth();
             }
 
-            _updateGraph(ResultList);
+            _client.UpdateFormatting(ResultList.Select(color=>color.Clone()));
         }
 
         private void regexColorRowGrid1_OnCellClick(object sender, DataGridViewCellEventArgs e)
@@ -403,6 +382,13 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private void advancedCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             UpdateAdvancedColumns();
+        }
+
+        public abstract class Client
+        {
+            public abstract string FormTitle { get; }
+            public abstract void UpdateFormatting(IEnumerable<MatchRgbHexColor> newColors);
+            public abstract bool HasFoldChangeResults { get; }
         }
     }
 }

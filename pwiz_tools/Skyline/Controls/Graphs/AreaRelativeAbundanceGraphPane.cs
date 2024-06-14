@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -28,9 +27,9 @@ namespace pwiz.Skyline.Controls.Graphs
             : base(graphSummary)
         {
         }
-        protected override GraphData CreateGraphData(SkylineDataSchema dataSchema)
+        protected override GraphData CreateGraphData()
         {
-            return new AreaGraphData(Document, dataSchema, AnyMolecules);
+            return new AreaGraphData(Document, AnyMolecules);
         }
 
         protected override void UpdateAxes()
@@ -43,9 +42,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         internal class AreaGraphData : GraphData
         {
-            public AreaGraphData(SrmDocument document, SkylineDataSchema schema,
-                bool anyMolecules)
-                : base(document, schema, anyMolecules)
+            public AreaGraphData(SrmDocument document, bool anyMolecules)
+                : base(document, anyMolecules)
             {
             }
 

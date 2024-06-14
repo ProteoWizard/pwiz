@@ -47,12 +47,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
             InitializeComponent();
         }
 
-        public CreateMatchExpressionDlg(VolcanoPlotFormattingDlg formattingDlg, object[] foldChangeRows, MatchRgbHexColor rgbHexColor)
+        public CreateMatchExpressionDlg(VolcanoPlotFormattingDlg formattingDlg, IEnumerable<object> foldChangeRows, MatchRgbHexColor rgbHexColor)
         {
             InitializeComponent();
 
             _formattingDlg = formattingDlg;
-            _foldChangeRows = foldChangeRows;
+            _foldChangeRows = foldChangeRows.ToArray();
 
             PopulateComboBoxes();
 

@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.GroupComparison;
@@ -43,7 +44,6 @@ namespace pwiz.Skyline.Controls.Graphs
     {
 
         protected GraphData _graphData;
-        private SkylineDataSchema _schema;
         public bool AnyProteomic;
         public bool AnyMolecules;
         public SrmDocument Document;
@@ -51,8 +51,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool _excludePeptideLists;
         private bool _excludeStandards;
         private readonly List<DotPlotUtil.LabeledPoint> _labeledPoints;
-        public bool ShowingFormattingDlg { get; set; }
-        public IList<MatchRgbHexColor> ColorRows { get; set; }
+        public static ImmutableList<MatchRgbHexColor> ColorRows { get; private set; } = ImmutableList<MatchRgbHexColor>.EMPTY;
         protected SummaryRelativeAbundanceGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
@@ -68,10 +67,8 @@ namespace pwiz.Skyline.Controls.Graphs
             _areaProteinTargets = Settings.Default.AreaProteinTargets;
             _excludePeptideLists = Settings.Default.ExcludePeptideListsFromAbundanceGraph;
             _excludeStandards = Settings.Default.ExcludeStandardsFromAbundanceGraph;
-            ColorRows = new List<MatchRgbHexColor>();
             var container = new MemoryDocumentContainer();
             container.SetDocument(Document, null);
-            _schema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
             _labeledPoints = new List<DotPlotUtil.LabeledPoint>();
         }
 
@@ -124,22 +121,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void ShowFormattingDialog()
         {
-            var copy = ColorRows.Select(r => (MatchRgbHexColor)r.Clone()).ToList();
-            ShowingFormattingDlg = true;
-            GraphSummary.ShowFormattingDlg = false;
-            using (var dlg = new VolcanoPlotFormattingDlg(this, copy, 
-                       _graphData.PointPairList.Select(pointPair => (GraphPointData)pointPair.Tag).ToArray(), 
-                       rows  =>
-                       {
-                           ColorRows = rows;
-                           GraphSummary.UpdateUI();
-                       }))
+            var oldColorRows = ColorRows;
+            using var dlg = new VolcanoPlotFormattingDlg(new FormattingClient(this), Document, ColorRows,
+                _graphData.PointPairList.Select(pointPair => (GraphPointData)pointPair.Tag).ToArray(),
+                Settings.Default.AreaProteinTargets);
             {
-                if (dlg.ShowDialog(Program.MainWindow) == DialogResult.OK)
-                    UpdateGraph(false);
+                if (dlg.ShowDialog(Program.MainWindow) != DialogResult.OK)
+                {
+                    ColorRows = oldColorRows;
+                }
+                UpdateGraph(false);
             }
-
-            ShowingFormattingDlg = false;
         }
 
         public override bool HandleMouseDownEvent(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
@@ -174,7 +166,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (ctrl)
             {
-                DotPlotUtil.MultiSelect(GraphSummary.Window, identityPath);
+                DotPlotUtil.MultiSelect(Program.MainWindow, identityPath);
             }
             else
             {
@@ -194,7 +186,6 @@ namespace pwiz.Skyline.Controls.Graphs
         public override void UpdateGraph(bool selectionChanged)
         {
             PeptideGroupDocNode selectedProtein = null;
-            GraphSummary.Window ??= Program.MainWindow;
             Clear();
             var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
             if (selectedTreeNode != null)
@@ -206,11 +197,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            var isDocumentChanged = false;
-            if (GraphSummary.Window != null)
-            {
-                isDocumentChanged = IsDocumentChanged(GraphSummary.Window.Document);
-            }
+            var isDocumentChanged = IsDocumentChanged(GraphSummary.DocumentUIContainer.Document);
 
             // Only create graph data (and recalculate abundances)
             // if settings have changed, the document has changed, or if it
@@ -219,7 +206,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 isDocumentChanged ||
                 IsAbundanceGraphSettingsChanged())
             {
-                _graphData = CreateGraphData(_schema);
+                _graphData = CreateGraphData();
             }
             // Calculate y values and order which can change based on the
             // replicate display option or the show CV option
@@ -231,7 +218,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 foreach (var point in from point in _graphData.PointPairList let 
                              pointData = (GraphPointData)point.Tag where 
-                             DotPlotUtil.IsTargetSelected(GraphSummary.Window, pointData.Peptide, pointData.Protein) select 
+                             DotPlotUtil.IsTargetSelected(Program.MainWindow, pointData.Peptide, pointData.Protein) select 
                              point)
                 {
                     selectedPoints.Add(point);
@@ -256,10 +243,6 @@ namespace pwiz.Skyline.Controls.Graphs
             AddPoints(new PointPairList(pointList), Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
             UpdateAxes();
             DotPlotUtil.AdjustLabelLocations(_labeledPoints, GraphSummary.GraphControl.GraphPane.YAxis.Scale, GraphSummary.GraphControl.GraphPane.Rect.Height);
-            if (GraphSummary.ShowFormattingDlg && !ShowingFormattingDlg)
-            {
-                ShowFormattingDialog();
-            }
         }
 
         private void AddPoints(PointPairList points, Color color, float size, bool labeled, PointSymbol pointSymbol, bool selected = false)
@@ -301,7 +284,7 @@ namespace pwiz.Skyline.Controls.Graphs
             CurveList.Add(lineItem);
         }
 
-        protected abstract GraphData CreateGraphData(SkylineDataSchema schema);
+        protected abstract GraphData CreateGraphData();
 
         protected virtual void UpdateAxes()
         {
@@ -392,8 +375,9 @@ namespace pwiz.Skyline.Controls.Graphs
         public abstract class GraphData : Immutable
         {
             // ReSharper disable PossibleMultipleEnumeration
-            protected GraphData(SrmDocument document, SkylineDataSchema schema, bool anyMolecules)
+            protected GraphData(SrmDocument document, bool anyMolecules)
             {
+                var schema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT);
                 // Build the list of points to show.
                 var listPoints = new List<GraphPointData>();
                 foreach (var nodeGroupPep in document.MoleculeGroups)
@@ -572,6 +556,35 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     Areas.Add(chromInfo.Area);
                 }
+            }
+        }
+
+        private class FormattingClient : VolcanoPlotFormattingDlg.Client
+        {
+            private SummaryRelativeAbundanceGraphPane _graphPane;
+            public FormattingClient(SummaryRelativeAbundanceGraphPane graphPane)
+            {
+                _graphPane = graphPane;
+            }
+
+            public override string FormTitle
+            {
+                get
+                {
+                    return GroupComparison.GroupComparisonResources
+                        .VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting;
+                }
+            }
+
+            public override void UpdateFormatting(IEnumerable<MatchRgbHexColor> newColors)
+            {
+                ColorRows = ImmutableList.ValueOf(newColors);
+                _graphPane.GraphSummary.UpdateUI();
+            }
+
+            public override bool HasFoldChangeResults
+            {
+                get { return false; }
             }
         }
     }

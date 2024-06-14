@@ -1723,11 +1723,11 @@ namespace pwiz.Skyline
             var summary = _listGraphPeakArea.FirstOrDefault(graph => graph.Type == GraphTypeSummary.abundance);
             if (summary != null)
             {
-                summary.ShowFormattingDlg = true;
-                UpdatePeakAreaGraph();
-                summary.ShowFormattingDlg = false;
+                if (summary.TryGetGraphPane(out SummaryRelativeAbundanceGraphPane pane))
+                {
+                    pane.ShowFormattingDialog();
+                }
             }
-            
         }
         public void ShowAllTransitions()
         {
@@ -4470,13 +4470,6 @@ namespace pwiz.Skyline
             ShowTotalTransitions();
             Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.abundance);
             ShowGraphPeakArea(true, GraphTypeSummary.abundance);
-            foreach (var summary in _listGraphPeakArea)
-            {
-                if (summary.Type == GraphTypeSummary.abundance)
-                {
-                    summary.Window = this;
-                }
-            }
             UpdatePeakAreaGraph();
         }
 

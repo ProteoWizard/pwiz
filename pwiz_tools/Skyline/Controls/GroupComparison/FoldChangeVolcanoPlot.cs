@@ -364,6 +364,13 @@ namespace pwiz.Skyline.Controls.GroupComparison
         }
         // ReSharper restore PossibleMultipleEnumeration
 
+        private IEnumerable<IdentityPath> GetSelectedPaths()
+        {
+            var document = _skylineWindow.DocumentUI;
+            var level = GroupComparisonDef.PerProtein ? SrmDocument.Level.MoleculeGroups : SrmDocument.Level.Molecules;
+            return _skylineWindow.SequenceTree.SelectedPaths
+                .SelectMany(path => document.EnumeratePathsAtLevel(path, level));
+        }
 
         private void AddPoints(PointPairList points, Color color, float size, bool labeled, PointSymbol pointSymbol, bool selected = false)
         {
@@ -608,29 +615,20 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public void ShowFormattingDialog()
         {
-            var foldChangeRows = GetFoldChangeRows(_bindingListSource).ToArray();
-
-            var backup = GroupComparisonDef.ColorRows.Select(r => (MatchRgbHexColor)r.Clone()).ToArray();
+            var backup = GroupComparisonDef.ColorRows.Select(r => r.Clone()).ToArray();
             // This list will later be used as a BindingList, so we have to create a mutable clone
-            var copy = GroupComparisonDef.ColorRows.Select(r => (MatchRgbHexColor) r.Clone()).ToList();
-            using (var form = new VolcanoPlotFormattingDlg(this, copy, foldChangeRows,
-                rows =>
-                {
-                    EditGroupComparisonDlg.ChangeGroupComparisonDef(false, GroupComparisonModel, GroupComparisonDef.ChangeColorRows(rows));
-                    UpdateGraph();
-                }))
+            using var form = new VolcanoPlotFormattingDlg(new FormattingClient(this), Document, GroupComparisonDef.ColorRows,
+                GetFoldChangeRows(_bindingListSource), PerProtein);
+            if (form.ShowDialog(FormEx.GetParentForm(this)) == DialogResult.OK)
             {
-                if (form.ShowDialog(FormEx.GetParentForm(this)) == DialogResult.OK)
-                {
-                    EditGroupComparisonDlg.ChangeGroupComparisonDef(true, GroupComparisonModel, GroupComparisonDef);
-                }
-                else
-                {
-                    EditGroupComparisonDlg.ChangeGroupComparisonDef(false, GroupComparisonModel, GroupComparisonDef.ChangeColorRows(backup));
-                }
+                EditGroupComparisonDlg.ChangeGroupComparisonDef(true, GroupComparisonModel, GroupComparisonDef);
+            }
+            else
+            {
+                EditGroupComparisonDlg.ChangeGroupComparisonDef(false, GroupComparisonModel, GroupComparisonDef.ChangeColorRows(backup));
+            }
 
-                UpdateGraph();
-            }     
+            UpdateGraph();
         }
 
         private void OnRemoveBelowCutoffsClick(object o, EventArgs eventArgs)
@@ -822,6 +820,32 @@ namespace pwiz.Skyline.Controls.GroupComparison
         public Rectangle RectToScreen(Rectangle r)
         {
             return RectangleToScreen(r);
+        }
+
+        private class FormattingClient : VolcanoPlotFormattingDlg.Client
+        {
+            private FoldChangeVolcanoPlot _volcanoPlot;
+            public FormattingClient(FoldChangeVolcanoPlot volcanoPlot)
+            {
+                _volcanoPlot = volcanoPlot;
+            }
+
+            public override string FormTitle {
+                get
+                {
+                    return GroupComparisonResources.FormattingClient_FormTitle_Volcano_Plot_Formatting;
+                }
+            }
+            public override void UpdateFormatting(IEnumerable<MatchRgbHexColor> newColors)
+            {
+                EditGroupComparisonDlg.ChangeGroupComparisonDef(false, _volcanoPlot.GroupComparisonModel, _volcanoPlot.GroupComparisonDef.ChangeColorRows(newColors));
+                _volcanoPlot.UpdateGraph();
+            }
+
+            public override bool HasFoldChangeResults
+            {
+                get { return true; }
+            }
         }
 
         #region Functional Test Support

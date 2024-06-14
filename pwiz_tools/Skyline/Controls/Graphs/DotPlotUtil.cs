@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
@@ -180,16 +181,14 @@ namespace pwiz.Skyline.Controls.Graphs
             skylineWindow.UpdateGraphPanes();
         }
 
-        public static IdentityPath GetSelectedPath(SkylineWindow skylineWindow, IdentityPath identityPath)
+        public static IdentityPath GetSelectedPath(GraphSummary.IStateProvider stateProvider, IdentityPath identityPath)
         {
-            return skylineWindow != null ? 
-                skylineWindow.SequenceTree.SelectedPaths.FirstOrDefault(p => IsPathSelected(p, identityPath)) : null;
+            return stateProvider.SelectedNodes.OfType<SrmTreeNode>().FirstOrDefault(p => IsPathSelected(p.Path, identityPath))?.Path;
         }
 
-        public static bool IsTargetSelected(SkylineWindow skylineWindow, Peptide peptide, Protein protein)
+        public static bool IsTargetSelected(GraphSummary.IStateProvider stateProvider, Peptide peptide, Protein protein)
         {
-            var docNode = peptide ?? (SkylineDocNode)protein;
-            return skylineWindow != null && GetSelectedPath(skylineWindow, docNode.IdentityPath) != null;
+            return GetSelectedPath(stateProvider, peptide?.IdentityPath ?? protein.IdentityPath) != null;
         }
     }
 }

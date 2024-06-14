@@ -133,4 +133,7 @@
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting" xml:space="preserve">
     <value>Relative Abundance Formatting</value>
   </data>
+  <data name="FormattingClient_FormTitle_Volcano_Plot_Formatting" xml:space="preserve">
+    <value>Volcano Plot Formatting</value>
+  </data>
 </root>
