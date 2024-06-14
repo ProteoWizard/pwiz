@@ -373,7 +373,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             }
             if (selectionIdentifier.HasValue) {
                 AnnotatedDouble ySelected = curveFitter.GetAnnotatedNormalizedPeakArea(selectionIdentifier.Value);
-                if (IsNumber(ySelected.Raw))
+                if (IsNumber(ySelected?.Raw))
                 {
                     double? xSelected = curveFitter.GetCalculatedXValue(CalibrationCurve, selectionIdentifier.Value);
                     var selectedLineColor = Color.FromArgb(128, GraphSummary.ColorSelected);

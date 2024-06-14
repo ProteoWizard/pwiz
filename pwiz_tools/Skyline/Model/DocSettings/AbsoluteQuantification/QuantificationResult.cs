@@ -20,7 +20,6 @@ using System;
 using System.Collections;
 using System.ComponentModel;
 using System.Globalization;
-using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Hibernate;
