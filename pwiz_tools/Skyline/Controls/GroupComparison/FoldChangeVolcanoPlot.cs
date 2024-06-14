@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private LineItem _minPValueLine;
 
         private readonly List<LineItem> _points;
-        private readonly List<GraphPane.LabeledPoint> _labeledPoints;
+        private readonly List<LabeledPoint> _labeledPoints;
 
         private FoldChangeBindingSource.FoldChangeRow _selectedRow;
 
@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             zedGraphControl.IsZoomOnMouseCenter = true;
 
             _points = new List<LineItem>();
-            _labeledPoints = new List<GraphPane.LabeledPoint>();
+            _labeledPoints = new List<LabeledPoint>();
         }
 
         public SrmDocument Document
@@ -411,7 +411,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                         continue;
                     }
                     var label = DotPlotUtil.CreateLabel(point, row.Protein, row.Peptide, color, size);
-                    _labeledPoints.Add(new GraphPane.LabeledPoint(selected){Point = point, Label = label, Curve = lineItem}); 
+                    _labeledPoints.Add(new LabeledPoint(selected){Point = point, Label = label, Curve = lineItem}); 
                     zedGraphControl.GraphPane.GraphObjList.Add(label);
                 }
             }
@@ -938,7 +938,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 outCount, inCount);
         }
 
-        public List<GraphPane.LabeledPoint> LabeledPoints
+        public List<LabeledPoint> LabeledPoints
         {
             get { return _labeledPoints; }
         }

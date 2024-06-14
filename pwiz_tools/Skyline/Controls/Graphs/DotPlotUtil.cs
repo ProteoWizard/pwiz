@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Adjust the locations of the labels so that they are slightly above the points
         /// </summary>
-        public static void AdjustLabelLocations(List<GraphPane.LabeledPoint> labeledPoints, Scale scale, double height)
+        public static void AdjustLabelLocations(List<LabeledPoint> labeledPoints, Scale scale, double height)
         {
             foreach (var point in labeledPoints.Where(point => point.Label != null))
             {
