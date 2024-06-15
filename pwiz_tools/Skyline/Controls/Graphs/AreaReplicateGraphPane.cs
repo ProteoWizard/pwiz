@@ -746,7 +746,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 ToolTip.ClearData();
                 ToolTip.AddLine(Resources.AreaReplicateGraphPane_Tooltip_Replicate, XAxis.Scale.TextLabels[index]);
                 var total = CurveList.OfType<BarItem>().Sum(curve => curve.Points[index].Y);
-                var dataFormat = @"#,###";
+
+                var dataFormat = @"0.###";
+                if (Settings.Default.UsePowerOfTen)
+                    dataFormat += @"e0";
+                var percentageFormat = @"0.#%";
+                var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
+
 
                 foreach (var ion in CurveList.OfType<BarItem>())
                 {
@@ -754,20 +760,21 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (NormalizeOption.DEFAULT.Equals(normalizeOption) || NormalizationMethod.EQUALIZE_MEDIANS.Equals(normalizeOption.NormalizationMethod))
                     {
                         if (index== 0)
-                            dataPoint = (ion.Points[index].Y / total ).ToString(Formats.PEAK_AREA_NORMALIZED, CultureInfo.CurrentCulture);
+                            dataPoint = (ion.Points[index].Y / total ).ToString(percentageFormat, CultureInfo.CurrentCulture);
                         else
-                            dataPoint = ion.Points[index].Y.ToString(@"#,###", CultureInfo.CurrentCulture);
+                            dataPoint = ion.Points[index].Y.ToString(dataFormat, CultureInfo.CurrentCulture);
                     }
                     else if (NormalizeOption.MAXIMUM.Equals(normalizeOption)
                              || NormalizationMethod.TIC.Equals(normalizeOption.NormalizationMethod) 
                              || NormalizeOption.TOTAL.Equals(normalizeOption))
                     {
-                        dataFormat = Formats.PEAK_AREA_NORMALIZED;
+                        if(!(selectedTreeNode is PeptideTreeNode))
+                            dataFormat = percentageFormat;
                         dataPoint = (ion.Points[index].Y/(NormalizeOption.TOTAL.Equals(normalizeOption) ? 100:1))
-                            .ToString(Formats.PEAK_AREA_NORMALIZED, CultureInfo.CurrentCulture);
+                            .ToString(dataFormat, CultureInfo.CurrentCulture);
                     }
-                    else if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel)
-                        dataPoint = (ion.Points[index].Y).ToString(Formats.STANDARD_RATIO, CultureInfo.CurrentCulture);
+                    else if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel || NormalizationMethod.NONE.Equals(normalizeOption.NormalizationMethod))
+                        dataPoint = (ion.Points[index].Y).ToString(dataFormat, CultureInfo.CurrentCulture);
 
                     ToolTip.AddLine(ion.Label.Text,dataPoint);
                 }
