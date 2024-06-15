@@ -17,12 +17,15 @@
  * limitations under the License.
  */
 using System;
+using System.ComponentModel;
+using System.Globalization;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
 {
+    [TypeConverter(typeof(TypeConverterImpl))]
     public sealed class AnnotatedDouble : AnnotatedValue<double?>, IFormattable
     {
         public static AnnotatedDouble Of(double? value)
@@ -68,6 +71,27 @@ namespace pwiz.Skyline.Util
             }
 
             return new AnnotatedDouble(rawValue.Value, Message);
+        }
+
+        private class TypeConverterImpl : TypeConverter
+        {
+            public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
+            {
+                if (destinationType == typeof(double))
+                {
+                    return true;
+                }
+                return base.CanConvertTo(context, destinationType);
+            }
+
+            public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+            {
+                if (destinationType == typeof(double))
+                {
+                    return ((AnnotatedDouble)value).Raw;
+                }
+                return base.ConvertTo(context, culture, value, destinationType);
+            }
         }
     }
 }
