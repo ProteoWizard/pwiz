@@ -335,7 +335,7 @@ like TPP pepXML, Mascot .dat, SEQUEST SQT, etc.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>3</value>
   </data>
   <data name="tbxLibraryPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -450,7 +450,7 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelChooseFile.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>2</value>
   </data>
   <data name="gridSearchFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -459,7 +459,7 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
     <value>11, 26</value>
   </data>
   <data name="gridSearchFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>261, 210</value>
+    <value>261, 270</value>
   </data>
   <data name="gridSearchFiles.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -486,7 +486,7 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
     <value>NoControl</value>
   </data>
   <data name="lblStandardPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 261</value>
+    <value>11, 321</value>
   </data>
   <data name="lblStandardPeptides.Size" type="System.Drawing.Size, System.Drawing">
     <value>114, 13</value>
@@ -513,7 +513,7 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
     <value>Bottom, Left</value>
   </data>
   <data name="comboStandards.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 277</value>
+    <value>11, 337</value>
   </data>
   <data name="comboStandards.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 21</value>
@@ -546,7 +546,7 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
     <value>NoControl</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 304</value>
+    <value>11, 364</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Size" type="System.Drawing.Size, System.Drawing">
     <value>158, 17</value>
@@ -582,7 +582,7 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
     <value>NoControl</value>
   </data>
   <data name="cbFilterForDocumentPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 327</value>
+    <value>11, 387</value>
   </data>
   <data name="cbFilterForDocumentPeptides.Size" type="System.Drawing.Size, System.Drawing">
     <value>156, 17</value>
@@ -705,10 +705,10 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
     <value>Fill</value>
   </data>
   <data name="panelPeptideSearch.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 200</value>
+    <value>0, 140</value>
   </data>
   <data name="panelPeptideSearch.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 452</value>
+    <value>381, 512</value>
   </data>
   <data name="panelPeptideSearch.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -724,99 +724,6 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
   </data>
   <data name="&gt;&gt;panelPeptideSearch.ZOrder" xml:space="preserve">
     <value>1</value>
-  </data>
-  <data name="label1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 13</value>
-  </data>
-  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>70, 13</value>
-  </data>
-  <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label1.Text" xml:space="preserve">
-    <value>&amp;Cut-off score:</value>
-  </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>panelSearchThreshold</value>
-  </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="textCutoff.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="textCutoff.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 29</value>
-  </data>
-  <data name="textCutoff.Size" type="System.Drawing.Size, System.Drawing">
-    <value>70, 20</value>
-  </data>
-  <data name="textCutoff.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="textCutoff.ToolTip" xml:space="preserve">
-    <value>A score from 1.0 - 0, with 1.0 most likely to be correct,
-used to provide a cut-off for spectra in the results that will
-be included in the library.
-
-For TPP pepXML this is the minimum PeptideProphet probability.
-For Mascot this is 1 - the maximum expectation value.
-For SEQUEST SQT this is 1 - the maximum FDR.</value>
-  </data>
-  <data name="&gt;&gt;textCutoff.Name" xml:space="preserve">
-    <value>textCutoff</value>
-  </data>
-  <data name="&gt;&gt;textCutoff.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textCutoff.Parent" xml:space="preserve">
-    <value>panelSearchThreshold</value>
-  </data>
-  <data name="&gt;&gt;textCutoff.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="panelSearchThreshold.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
-  </data>
-  <data name="panelSearchThreshold.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 140</value>
-  </data>
-  <data name="panelSearchThreshold.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 60</value>
-  </data>
-  <data name="panelSearchThreshold.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="panelSearchThreshold.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="&gt;&gt;panelSearchThreshold.Name" xml:space="preserve">
-    <value>panelSearchThreshold</value>
-  </data>
-  <data name="&gt;&gt;panelSearchThreshold.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelSearchThreshold.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panelSearchThreshold.ZOrder" xml:space="preserve">
-    <value>2</value>
   </data>
   <data name="dataGridViewTextBoxColumn1.HeaderText" xml:space="preserve">
     <value>File</value>

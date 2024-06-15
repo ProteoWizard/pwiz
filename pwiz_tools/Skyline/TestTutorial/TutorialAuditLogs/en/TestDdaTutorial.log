@@ -8,15 +8,13 @@ Undo Redo : Added spectral library "TestDdaTutorial"
 Summary   : Added spectral library "TestDdaTutorial"
 All Info  :
 Added spectral library "TestDdaTutorial"
-Build Spectral Library > Cut-off score is "0.95"
 Build Spectral Library > Search files : contains { File = "QE_140221_01_UPS1_100fmolspiked.pepXML", Score type = "q-value", Score threshold = "0.05" }
 Build Spectral Library > iRT standard peptides is None
 Build Spectral Library > Include ambiguous matches is False
 Build Spectral Library > Filter for document peptides is False
 Build Spectral Library > Workflow is "DDA with MS1 filtering"
 Build Spectral Library > Input File Type is "DDA raw (search and build library)"
-Extra Info: Cut-off score = "0.95",
-Search files = 
+Extra Info: Search files = 
 [
     {
         File = "QE_140221_01_UPS1_100fmolspiked.pepXML",
@@ -56,6 +54,8 @@ Import Peptide Search > DDA search settings > Precursor tolerance is "5" ppm
 Import Peptide Search > DDA search settings > Fragment tolerance is "10" ppm
 Import Peptide Search > DDA search settings > Max variable mods per peptide is "3"
 Import Peptide Search > DDA search settings > Fragment ion types is "b,y"
+Import Peptide Search > DDA search settings > Score type is "Max q-value"
+Import Peptide Search > DDA search settings > Score threshold is "0.05"
 Extra Info: Extract Chromatograms = 
 {
     Found results files = 
@@ -97,6 +97,8 @@ DDA search settings =
     Precursor tolerance = "5" ppm,
     Fragment tolerance = "10" ppm,
     Max variable mods per peptide = "3",
-    Fragment ion types = "b,y"
+    Fragment ion types = "b,y",
+    Score type = "Max q-value",
+    Score threshold = "0.05"
 }
 

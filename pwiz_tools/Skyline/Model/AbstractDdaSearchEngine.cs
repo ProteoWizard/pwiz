@@ -37,6 +37,9 @@ namespace pwiz.Skyline.Model
         public abstract string[] FragmentIons { get; }
         public abstract string[] Ms2Analyzers { get; }
         public abstract string EngineName { get; }
+        public abstract string CutoffScoreName { get; }
+        public abstract string CutoffScoreLabel { get; }
+        public abstract double DefaultCutoffScore { get; }
         public abstract Bitmap SearchEngineLogo { get; }
         public MsDataFileUri[] SpectrumFileNames { get; protected set; }
         protected string[] FastaFileNames { get; set; }
