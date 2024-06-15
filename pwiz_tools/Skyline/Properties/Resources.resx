@@ -497,15 +497,6 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate" xml:space="preserve">
     <value>Replicate</value>
   </data>
-  <data name="AreaReplicateGraphPane_Tooltip_Replicate" xml:space="preserve">
-    <value>Replicate:</value>
-  </data>
-  <data name="AreaReplicateGraphPane_Tooltip_Total" xml:space="preserve">
-    <value>Total:</value>
-  </data>
-  <data name="AreaReplicateGraphPane_Tooltip_Dotp" xml:space="preserve">
-    <value>{0}:</value>
-  </data>
   <data name="ExportMethodDlg_ExportMethodDlg_Export_Isolation_List" xml:space="preserve">
     <value>Export Isolation List</value>
   </data>

@@ -598,33 +598,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0}:.
-        /// </summary>
-        public static string AreaReplicateGraphPane_Tooltip_Dotp {
-            get {
-                return ResourceManager.GetString("AreaReplicateGraphPane_Tooltip_Dotp", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Replicate:.
-        /// </summary>
-        public static string AreaReplicateGraphPane_Tooltip_Replicate {
-            get {
-                return ResourceManager.GetString("AreaReplicateGraphPane_Tooltip_Replicate", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Total:.
-        /// </summary>
-        public static string AreaReplicateGraphPane_Tooltip_Total {
-            get {
-                return ResourceManager.GetString("AreaReplicateGraphPane_Tooltip_Total", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Peak Area.
         /// </summary>
         public static string AreaReplicateGraphPane_UpdateGraph_Peak_Area {

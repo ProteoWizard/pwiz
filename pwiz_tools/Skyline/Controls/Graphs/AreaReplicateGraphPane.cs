@@ -733,9 +733,9 @@ namespace pwiz.Skyline.Controls.Graphs
             if (targetCurve is LineItem line)
             {
                 ToolTip.ClearData();
-                ToolTip.AddLine(Resources.AreaReplicateGraphPane_Tooltip_Replicate, XAxis.Scale.TextLabels[index]);
+                ToolTip.AddLine(GraphsResources.AreaReplicateGraphPane_Tooltip_Replicate, XAxis.Scale.TextLabels[index]);
                 ToolTip.AddLine(
-                    string.Format(CultureInfo.CurrentCulture, Resources.AreaReplicateGraphPane_Tooltip_Dotp, DotpLabelText),
+                    string.Format(CultureInfo.CurrentCulture, GraphsResources.AreaReplicateGraphPane_Tooltip_Dotp, DotpLabelText),
                     string.Format(CultureInfo.CurrentCulture, @"{0:F02}", _dotpData[index]));
                 ToolTip.YPosition = null;
             }
@@ -744,7 +744,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 NormalizeOption normalizeOption = AreaGraphController.AreaNormalizeOption.Constrain(GraphSummary.DocumentUIContainer.DocumentUI.Settings);
 
                 ToolTip.ClearData();
-                ToolTip.AddLine(Resources.AreaReplicateGraphPane_Tooltip_Replicate, XAxis.Scale.TextLabels[index]);
+                ToolTip.AddLine(GraphsResources.AreaReplicateGraphPane_Tooltip_Replicate, XAxis.Scale.TextLabels[index]);
                 var total = CurveList.OfType<BarItem>().Sum(curve => curve.Points[index].Y);
 
                 var dataFormat = @"0.###";
@@ -779,7 +779,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     ToolTip.AddLine(ion.Label.Text,dataPoint);
                 }
                 if (!(normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel) && !NormalizeOption.TOTAL.Equals(normalizeOption))
-                    ToolTip.AddLine(Resources.AreaReplicateGraphPane_Tooltip_Total, total.ToString(dataFormat, CultureInfo.CurrentCulture));
+                    ToolTip.AddLine(GraphsResources.AreaReplicateGraphPane_Tooltip_Total, total.ToString(dataFormat, CultureInfo.CurrentCulture));
                 
                 if (BarSettings.Type == BarType.Stack || BarSettings.Type == BarType.PercentStack)
                     ToolTip.YPosition = total;
