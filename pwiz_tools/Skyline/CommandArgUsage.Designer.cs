@@ -1749,6 +1749,42 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &quot;min&quot; or &quot;max&quot; indicating whether the minimum or maximum shape correlation score is compared to the cutoff. Default: min.
+        /// </summary>
+        internal static string _refine_shape_r_include_comparison_type {
+            get {
+                return ResourceManager.GetString("_refine_shape_r_include_comparison_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to all transitions with shape correlation below the cutoff will be removed.
+        /// </summary>
+        internal static string _refine_shape_r_include_cutoff {
+            get {
+                return ResourceManager.GetString("_refine_shape_r_include_cutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &quot;min&quot; or &quot;max&quot; indicating whether the minimum or maximum shape correlation score is compared to the cutoff. Default: min.
+        /// </summary>
+        internal static string _refine_shape_r_quant_comparison_type {
+            get {
+                return ResourceManager.GetString("_refine_shape_r_quant_comparison_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to all transitions with shape correlation below the cutoff will be removed.
+        /// </summary>
+        internal static string _refine_shape_r_quant_cutoff {
+            get {
+                return ResourceManager.GetString("_refine_shape_r_quant_cutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use only the best replicate for each peptide in refinement value calculations. (use for fractionation).
         /// </summary>
         public static string _refine_use_best_result {

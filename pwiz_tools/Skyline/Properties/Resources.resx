@@ -117,7 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="ChromatogramLibrarySpec_PEPTIDE_RANK_PEAK_AREA_Peak_Area" xml:space="preserve">
+    <value>Peak Area</value>
+  </data>
   <data name="ExportMethodDlg_VerifySchedulingAllowed_The__0__instrument_lacks_support_for_direct_method_export_for_triggered_acquisition_" xml:space="preserve">
     <value>The {0} instrument lacks support for direct method export for triggered acquisition.</value>
   </data>
@@ -129,6 +131,12 @@
   </data>
   <data name="SkypDownloadException_GetMessage_Would_you_like_to_add__0__as_a_Panorama_server_in_Skyline_" xml:space="preserve">
     <value>Would you like to add {0} as a Panorama server in Skyline?</value>
+  </data>
+  <data name="SkylineWindow_PublishToSavedUri_This_file_was_last_uploaded_to___0_" xml:space="preserve">
+    <value>This file was last uploaded to: {0}</value>
+  </data>
+  <data name="MetadataExtractor_ApplyStep_Error_converting___0___to___1___" xml:space="preserve">
+    <value>Error converting '{0}' to '{1}':</value>
   </data>
   <data name="FragmentLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\fragmentlib.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -3926,6 +3934,9 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   </data>
   <data name="CommandArgs_ParseAnnotationTarget_Error__Attempting_to_specify_an_unknown_annotation_target___0____Try_one_of_the_following_" xml:space="preserve">
     <value>Error: Attempting to specify an unknown annotation target '{0}'. Try one of the following:</value>
+  </data>
+  <data name="FormulaBox_FormulaBox_Help" xml:space="preserve">
+    <value>Help</value>
   </data>
   <data name="CommandLine_SetAnnotations_Warning__Skipping_annotation___0___due_to_a_name_conflict_" xml:space="preserve">
     <value>Warning: Skipping annotation '{0}' due to a name conflict with an existing annotation.</value>
