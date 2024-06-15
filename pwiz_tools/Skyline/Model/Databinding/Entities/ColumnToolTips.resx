@@ -212,13 +212,13 @@ maximum intensity for the precursor.</value>
 2. The ratio to internal standard (or surrogate) and multiplying by the Internal Standard Concentration</value>
   </data>
   <data name="CalculatedConcentrationMessage">
-    <value>Warning of missing values which could impact comparisons of the "Calculated Concentration" between replicates</value>
+    <value>Warning if missing data impacts comparisons of the "Calculated Concentration" between replicates</value>
   </data>
   <data name="CalculatedConcentrationRaw">
-    <value>Calculated concentration value available even when missing data could impact comparisons between replicates</value>
+    <value>Calculated concentration value available even when missing data impacts comparisons between replicates</value>
   </data>
   <data name="CalculatedConcentrationStrict">
-    <value>Calculated concentration value unavailable when missing data could impact comparisons between replicates</value>
+    <value>Calculated concentration value unavailable when missing data impacts comparisons between replicates</value>
   </data>
   <data name="CalibrationCurve">
     <value>Calibration Curve that was calculated using Replicates whose Sample Type was "Standard" and that had an "Analyte Concentration" specified.</value>
@@ -825,7 +825,7 @@ modified on disk</value>
     <value>A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings</value>
   </data>
   <data name="MoleculeListAbundanceMessage">
-    <value>Warning of missing data which could impact comparisons of "Molecule List Abundance" between replicates</value>
+    <value>Warning if missing data impacts comparisons of "Molecule List Abundance" between replicates</value>
   </data>
   <data name="MoleculeListAbundanceStrict">
     <value>A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings.
@@ -915,7 +915,7 @@ the explicit "Normalization Method" for the peptide/molecule
 or the normalization method specified on Settings &gt; Peptide Settings &gt; Quantification</value>
   </data>
   <data name="NormalizedAreaMessage">
-    <value>Warning of missing values which could impact comparisons of the "Normalized Area" value between replicates</value>
+    <value>Warning if missing data impacts of the "Normalized Area" value between replicates</value>
   </data>
   <data name="NormalizedAreaRaw">
     <value>Value obtained by normalizing the peptide/molecule intensity according to either
@@ -1056,7 +1056,7 @@ Edit menu</value>
     <value>The concentration of the Precursor Result calculated using the isotopolog response curve.</value>
   </data>
   <data name="PrecursorCalculatedConcentrationMessage">
-    <value>Warning of missing data which could impact comparisons of "Precursor Calculated Concentration" between replicates</value>
+    <value>Warning if missing data impacts comparisons of "Precursor Calculated Concentration" between replicates</value>
   </data>
   <data name="PrecursorCalculatedConcentrationRaw">
     <value>The concentration of the Precursor Result calculated using the isotopolog response curve.
@@ -1100,7 +1100,7 @@ Equal to Total Area of the Precursor Result normalized according to the Normaliz
 If Peptide Normalization Method is "None" or ratio to a label, then Precursor Normalized Area will be equal to the Total Area of the Precursor.</value>
   </data>
   <data name="PrecursorNormalizedAreaMessage">
-    <value>Warning of missing values which could impact comparisons of the "Precursor Normalized Area" value between replicates</value>
+    <value>Warning if missing values impacts comparisons of the "Precursor Normalized Area" value between replicates</value>
   </data>
   <data name="PrecursorNormalizedAreaRaw">
     <value>Normalized area of the Precursor Result.
@@ -1189,11 +1189,11 @@ the decoy m/z.</value>
     <value>A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.</value>
   </data>
   <data name="ProteinAbundanceMessage">
-    <value>Warning of missing data which could impact comparisons of "Protein Abundance" between replicates</value>
+    <value>Warning if missing data impacts comparisons of "Protein Abundance" between replicates</value>
   </data>
   <data name="ProteinAbundanceStrict">
     <value>A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.
-Available even when missing data impacts comparisons between replicates.</value>
+Unavailable when missing data impacts comparisons between replicates.</value>
   </data>
   <data name="ProteinAbundanceTransitionAveraged">
     <value>Average of the normalized areas of the transitions under the Protein.
@@ -1289,7 +1289,7 @@ measured.</value>
     <value>Peptide area ratio of light to heavy</value>
   </data>
   <data name="Raw">
-    <value>Calculated value available even when missing values impact comparisons between replicates.</value>
+    <value>Calculated value available even when missing data impacts comparisons between replicates.</value>
   </data>
   <data name="RawData">
     <value>The raw (uninterpolated) chromatogram data. The chromatograms have unevenly spaced times, and the chromatograms of each transition potentially has a different number of points.</value>
@@ -1488,7 +1488,7 @@ file, or the file name again for other file types.</value>
 values.</value>
   </data>
   <data name="Strict">
-    <value>Calculated value unavailable when missing values impact comparisons between replicates.</value>
+    <value>Calculated value unavailable when missing data could comparisons between replicates.</value>
   </data>
   <data name="SummaryMessage">
     <value>Description of the change</value>

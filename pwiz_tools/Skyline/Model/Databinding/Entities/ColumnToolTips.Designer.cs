@@ -379,7 +379,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning of missing values which could impact comparisons of the &quot;Calculated Concentration&quot; between replicates.
+        ///   Looks up a localized string similar to Warning if missing data impacts comparisons of the &quot;Calculated Concentration&quot; between replicates.
         /// </summary>
         public static string CalculatedConcentrationMessage {
             get {
@@ -388,7 +388,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Calculated concentration value available even when missing data could impact comparisons between replicates.
+        ///   Looks up a localized string similar to Calculated concentration value available even when missing data impacts comparisons between replicates.
         /// </summary>
         public static string CalculatedConcentrationRaw {
             get {
@@ -397,7 +397,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Calculated concentration value unavailable when missing data could impact comparisons between replicates.
+        ///   Looks up a localized string similar to Calculated concentration value unavailable when missing data impacts comparisons between replicates.
         /// </summary>
         public static string CalculatedConcentrationStrict {
             get {
@@ -2112,7 +2112,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning of missing data which could impact comparisons of &quot;Molecule List Abundance&quot; between replicates.
+        ///   Looks up a localized string similar to Warning if missing data impacts comparisons of &quot;Molecule List Abundance&quot; between replicates.
         /// </summary>
         public static string MoleculeListAbundanceMessage {
             get {
@@ -2361,7 +2361,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning of missing values which could impact comparisons of the &quot;Normalized Area&quot; value between replicates.
+        ///   Looks up a localized string similar to Warning if missing data impacts of the &quot;Normalized Area&quot; value between replicates.
         /// </summary>
         public static string NormalizedAreaMessage {
             get {
@@ -2752,7 +2752,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning of missing data which could impact comparisons of &quot;Precursor Calculated Concentration&quot; between replicates.
+        ///   Looks up a localized string similar to Warning if missing data impacts comparisons of &quot;Precursor Calculated Concentration&quot; between replicates.
         /// </summary>
         public static string PrecursorCalculatedConcentrationMessage {
             get {
@@ -2873,7 +2873,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning of missing values which could impact comparisons of the &quot;Precursor Normalized Area&quot; value between replicates.
+        ///   Looks up a localized string similar to Warning if missing values impacts comparisons of the &quot;Precursor Normalized Area&quot; value between replicates.
         /// </summary>
         public static string PrecursorNormalizedAreaMessage {
             get {
@@ -3111,7 +3111,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning of missing data which could impact comparisons of &quot;Protein Abundance&quot; between replicates.
+        ///   Looks up a localized string similar to Warning if missing data impacts comparisons of &quot;Protein Abundance&quot; between replicates.
         /// </summary>
         public static string ProteinAbundanceMessage {
             get {
@@ -3121,7 +3121,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         
         /// <summary>
         ///   Looks up a localized string similar to A number representing the abundance of the protein, calculated according to the &quot;Normalization Method&quot; specified in the Peptide Quantification settings.
-        ///Available even when missing data impacts comparisons between replicates..
+        ///Unavailable when missing data impacts comparisons between replicates..
         /// </summary>
         public static string ProteinAbundanceStrict {
             get {
@@ -3378,7 +3378,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Calculated value available even when missing values impact comparisons between replicates..
+        ///   Looks up a localized string similar to Calculated value available even when missing data impacts comparisons between replicates..
         /// </summary>
         public static string Raw {
             get {
@@ -3941,7 +3941,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Calculated value unavailable when missing values impact comparisons between replicates..
+        ///   Looks up a localized string similar to Calculated value unavailable when missing data could comparisons between replicates..
         /// </summary>
         public static string Strict {
             get {
