@@ -239,6 +239,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.wizardPagesImportPeptideSearch.Controls.Add(this.ddaSearchPage);
             this.wizardPagesImportPeptideSearch.Name = "wizardPagesImportPeptideSearch";
             this.wizardPagesImportPeptideSearch.SelectedIndex = 0;
+            this.wizardPagesImportPeptideSearch.TabStop = false;
             // 
             // buildSearchSpecLibPage
             // 
@@ -479,12 +480,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.ms1FullScanSettingsTitlePanel.PerformLayout();
             this.importFastaPage.ResumeLayout(false);
             this.importFASTATitlePanel.ResumeLayout(false);
+            this.importFASTATitlePanel.PerformLayout();
             this.converterSettingsPage.ResumeLayout(false);
             this.converterSettingsTitlePanel.ResumeLayout(false);
+            this.converterSettingsTitlePanel.PerformLayout();
             this.ddaSearchSettingsPage.ResumeLayout(false);
             this.searchSettingsTitlePanel.ResumeLayout(false);
+            this.searchSettingsTitlePanel.PerformLayout();
             this.ddaSearchPage.ResumeLayout(false);
             this.ddaSearchTitlePanel.ResumeLayout(false);
+            this.ddaSearchTitlePanel.PerformLayout();
             this.ResumeLayout(false);
 
         }
