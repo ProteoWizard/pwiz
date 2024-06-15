@@ -2122,16 +2122,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         
         /// <summary>
         ///   Looks up a localized string similar to A number representing the abundance of the molecule list, calculated according to the &quot;Normalization Method&quot; specified in the Molecule Quantification settings.
-        ///Available even when missing data impacts comparisons between replicates..
-        /// </summary>
-        public static string MoleculeListAbundanceRaw {
-            get {
-                return ResourceManager.GetString("MoleculeListAbundanceRaw", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to A number representing the abundance of the molecule list, calculated according to the &quot;Normalization Method&quot; specified in the Molecule Quantification settings.
         ///Unavailable when missing data impacts comparisons between replicates..
         /// </summary>
         public static string MoleculeListAbundanceStrict {

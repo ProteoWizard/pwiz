@@ -129,7 +129,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         private double? GetAreaProportion(IEnumerable<Peptide> peptides)
         {
-            var normalizedArea = GetQuantificationResult()?.NormalizedArea.Strict;
+            var normalizedArea = GetQuantificationResult()?.NormalizedArea?.Strict;
             if (normalizedArea == null)
             {
                 return null;

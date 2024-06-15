@@ -300,7 +300,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             [InvariantDisplayName("MoleculeListAbundanceStrict")]
             [ProteomicDisplayName("ProteinAbundanceStrict")]
             [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
-            public double Strict { get; private set; }
+            public double? Strict { get; private set; }
 
             [InvariantDisplayName("MoleculeListAbundanceMessage")]
             [ProteomicDisplayName("ProteinAbundanceMessage")]

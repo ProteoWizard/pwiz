@@ -827,10 +827,6 @@ modified on disk</value>
   <data name="MoleculeListAbundanceMessage">
     <value>Warning of missing data which could impact comparisons of "Molecule List Abundance" between replicates</value>
   </data>
-  <data name="MoleculeListAbundanceRaw">
-    <value>A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings.
-Available even when missing data impacts comparisons between replicates.</value>
-  </data>
   <data name="MoleculeListAbundanceStrict">
     <value>A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings.
 Unavailable when missing data impacts comparisons between replicates.</value>

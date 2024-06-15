@@ -93,6 +93,5 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             skylineWindow.SelectedPath = Protein.IdentityPath;
             skylineWindow.SelectedResultsIndex = Replicate.ReplicateIndex;
         }
-
     }
 }
