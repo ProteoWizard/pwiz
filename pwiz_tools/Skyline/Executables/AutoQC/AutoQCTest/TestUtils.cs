@@ -61,7 +61,7 @@ namespace AutoQCTest
             var instrumentType = MainSettings.GetDefaultInstrumentType();
             
             
-            return new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, fileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime, null);
+            return new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, fileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime);
         }
 
         public static PanoramaSettings GetTestPanoramaSettings(bool publishToPanorama = true)
@@ -134,8 +134,8 @@ namespace AutoQCTest
             }
 
             foreach (var config in configs)
-                testConfigManager.SetState(testConfigManager.State,
-                    testConfigManager.State.UserAddConfig(config, null));
+                testConfigManager.SetState(testConfigManager.AutoQcState,
+                    testConfigManager.AutoQcState.UserAddConfig(config, null));
             
             return testConfigManager;
         }
