@@ -1075,6 +1075,33 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Auto Arrange Labels.
+        /// </summary>
+        public static string FoldChangeVolcanoPlot_BuildContextMenu_Auto_Arrange_Labels {
+            get {
+                return ResourceManager.GetString("FoldChangeVolcanoPlot_BuildContextMenu_Auto_Arrange_Labels", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Suspend Label Layout.
+        /// </summary>
+        public static string FoldChangeVolcanoPlot_BuildContextMenu_PauseLabelLayout {
+            get {
+                return ResourceManager.GetString("FoldChangeVolcanoPlot_BuildContextMenu_PauseLabelLayout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resume Label Layout.
+        /// </summary>
+        public static string FoldChangeVolcanoPlot_BuildContextMenu_RestartLabelLayout {
+            get {
+                return ResourceManager.GetString("FoldChangeVolcanoPlot_BuildContextMenu_RestartLabelLayout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to large.
         /// </summary>
         public static string FontSize_LARGE_large {

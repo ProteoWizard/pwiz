@@ -234,6 +234,43 @@
   <data name="&gt;&gt;advancedCheckBox.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+
+
+  <data name="layoutLabelsBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="layoutLabelsBox.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="layoutLabelsBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>430, 223</value>
+  </data>
+  <data name="layoutLabelsBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>139, 24</value>
+  </data>
+  <data name="layoutLabelsBox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 5, 4, 5</value>
+  </data>
+  <data name="layoutLabelsBox.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="layoutLabelsBox.Text" xml:space="preserve">
+    <value>Auto arrange labels</value>
+  </data>
+  <data name="&gt;&gt;layoutLabelsBox.Name" xml:space="preserve">
+    <value>layoutLabelsBox</value>
+  </data>
+  <data name="&gt;&gt;layoutLabelsBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;layoutLabelsBox.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;layoutLabelsBox.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+
+
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
