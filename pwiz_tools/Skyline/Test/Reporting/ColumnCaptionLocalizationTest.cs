@@ -43,7 +43,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTest.Reporting
 {
     /// <summary>
-    /// Tests that make sure that "Model\Databinding\Entities\ColumnCaptions.resx" contains all of the column names
+    /// Tests that make sure that "Model\Databinding\Entities\ColumnCaptions.resx" contains all column names
     /// that can possibly appear in Skyline Live Reports.
     /// </summary>
     [TestClass]
@@ -137,11 +137,11 @@ namespace pwiz.SkylineTest.Reporting
             }
             StringWriter message = new StringWriter();
             WriteResXFile(message, missingCaptions);
-            Assert.Fail("Missing localized tooltips for column captions: {0}", message.ToString().Replace("<data","\r\n<data"));
+            Assert.Fail("Missing tooltips for column captions: {0}", message.ToString().Replace("<data","\r\n<data"));
         }
 
         /// <summary>
-        /// Tests that all of the entries in ColumnCaptions.resx actually show up in Skyline Live Reports somewhere.
+        /// Tests that all entries in ColumnCaptions.resx actually show up in Skyline Live Reports somewhere.
         /// </summary>
         [TestMethod]
         public void TestCheckForUnusedColumnCaptions()
@@ -170,11 +170,11 @@ namespace pwiz.SkylineTest.Reporting
             }
 
             var unusedCaptions = columnCaptions.ToArray();
-            Assert.AreEqual(0, unusedCaptions.Length, "Unused entries found in ColumnCaptions.resx: {0}", string.Join(",", unusedCaptions));
+            Assert.AreEqual(0, unusedCaptions.Length, "Unused entries found in ColumnCaptions.resx:\n{0}", string.Join(",\n", unusedCaptions));
         }
 
         /// <summary>
-        /// Tests that all of the entries in ColumnTooltips.resx actually show up in Skyline Live Reports somewhere.
+        /// Tests that all entries in ColumnTooltips.resx actually show up in Skyline Live Reports somewhere.
         /// </summary>
         [TestMethod]
         public void TestCheckForUnusedColumnTooltips()

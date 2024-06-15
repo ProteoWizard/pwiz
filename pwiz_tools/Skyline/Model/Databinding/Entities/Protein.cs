@@ -275,34 +275,32 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public class AbundanceValue : IAnnotatedValue, IFormattable
         {
-            public AbundanceValue(double raw, double transitionWeighted, string message)
+            public AbundanceValue(double transitionAveraged, double transitionSummed, string message)
             {
-                Raw = raw;
                 Message = message;
-                if (message == null)
+                TransitionAveraged = transitionAveraged;
+                TransitionSummed = transitionSummed;
+                if (Message == null)
                 {
-                    Strict = raw;
+                    Strict = transitionAveraged;
                 }
-                TransitionWeighted = transitionWeighted;
             }
-            [InvariantDisplayName("MoleculeListAbundanceRaw")]
-            [ProteomicDisplayName("ProteinAbundanceRaw")]
+            [InvariantDisplayName("MoleculeListAbundanceTransitionAveraged")]
+            [ProteomicDisplayName("ProteinAbundanceTransitionAveraged")]
             [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
-            public double Raw
+            public double TransitionAveraged
             {
                 get; private set;
             }
+            [InvariantDisplayName("MoleculeListAbundanceTransitionSummed")]
+            [ProteomicDisplayName("ProteinAbundanceTransitionSummed")]
+            [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
+            public double TransitionSummed { get; private set; }
+
             [InvariantDisplayName("MoleculeListAbundanceStrict")]
             [ProteomicDisplayName("ProteinAbundanceStrict")]
             [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
-            public double? Strict
-            {
-                get;
-            }
-            [InvariantDisplayName("MoleculeListAbundanceTransitionWeighted")]
-            [ProteomicDisplayName("ProteinAbundanceTransitionWeighted")]
-            [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
-            public double TransitionWeighted { get; private set; }
+            public double Strict { get; private set; }
 
             [InvariantDisplayName("MoleculeListAbundanceMessage")]
             [ProteomicDisplayName("ProteinAbundanceMessage")]
@@ -318,12 +316,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
             public override string ToString()
             {
-                return AnnotatedDouble.GetPrefix(Message) + Raw;
+                return AnnotatedDouble.GetPrefix(Message) + TransitionAveraged;
             }
 
             public string ToString(string format, IFormatProvider formatProvider)
             {
-                return AnnotatedDouble.GetPrefix(Message) + Raw.ToString(format, formatProvider);
+                return AnnotatedDouble.GetPrefix(Message) + TransitionAveraged.ToString(format, formatProvider);
             }
         }
         private class CachedValues 

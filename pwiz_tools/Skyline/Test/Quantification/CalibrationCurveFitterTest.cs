@@ -383,8 +383,8 @@ namespace pwiz.SkylineTest.Quantification
                 var specifiedBaseConcentration = chromatogramSet.AnalyteConcentration.Value * baseCurveFitter.PeptideQuantifier.PeptideDocNode.ConcentrationMultiplier.GetValueOrDefault(1);
                 var specifiedDilutedConcentration =
                     specifiedBaseConcentration * chromatogramSet.SampleDilutionFactor;
-                AssertEx.AreEqual(baseQuantificationResult.CalculatedConcentration.Strict / specifiedBaseConcentration, baseQuantificationResult.Accuracy.Strict);
-                AssertEx.AreEqual(dilutionFactorQuantificationResult.CalculatedConcentration.Strict / specifiedDilutedConcentration, dilutionFactorQuantificationResult.Accuracy.Strict);
+                AssertEx.AreEqual(baseQuantificationResult.CalculatedConcentration.Strict / specifiedBaseConcentration, baseQuantificationResult.Accuracy);
+                AssertEx.AreEqual(dilutionFactorQuantificationResult.CalculatedConcentration.Strict / specifiedDilutedConcentration, dilutionFactorQuantificationResult.Accuracy);
             }
             AssertEx.ValidatesAgainstSchema(docWithDilutionFactor);
         }

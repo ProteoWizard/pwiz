@@ -129,15 +129,6 @@
   <data name="Accuracy">
     <value>Accuracy</value>
   </data>
-  <data name="AccuracyMessage">
-    <value>Accuracy Message</value>
-  </data>
-  <data name="AccuracyRaw">
-    <value>Accuracy Raw</value>
-  </data>
-  <data name="AccuracyStrict">
-    <value>Accuracy Strict</value>
-  </data>
   <data name="AcquiredTime">
     <value>Acquired Time</value>
   </data>
@@ -726,6 +717,9 @@
   <data name="MedianPeakArea">
     <value>Median Peak Area</value>
   </data>
+  <data name="Message">
+    <value>Message</value>
+  </data>
   <data name="Min">
     <value>Min</value>
   </data>
@@ -789,14 +783,14 @@
   <data name="MoleculeListAbundanceMessage">
     <value>Molecule List Abundance Message</value>
   </data>
-  <data name="MoleculeListAbundanceRaw">
-    <value>Molecule List Abundance Raw</value>
-  </data>
   <data name="MoleculeListAbundanceStrict">
     <value>Molecule List Abundance Strict</value>
   </data>
-  <data name="MoleculeListAbundanceTransitionWeighted">
-    <value>Molecule List Abundance Transition Weighted</value>
+  <data name="MoleculeListAbundanceTransitionAveraged">
+    <value>Molecule List Abundance Transition Averaged</value>
+  </data>
+  <data name="MoleculeListAbundanceTransitionSummed">
+    <value>Molecule List Abundance Transition Summed</value>
   </data>
   <data name="MoleculeListLocator">
     <value>Molecule List Locator</value>
@@ -987,20 +981,20 @@
   <data name="PrecursorAccuracy">
     <value>Precursor Accuracy</value>
   </data>
-  <data name="PrecursorAccuracyMessage">
-    <value>Precursor Accuracy Message</value>
-  </data>
-  <data name="PrecursorAccuracyRaw">
-    <value>Precursor Accuracy Raw</value>
-  </data>
-  <data name="PrecursorAccuracyStrict">
-    <value>Precursor Accuracy Strict</value>
-  </data>
   <data name="PrecursorAdduct">
     <value>Precursor Adduct</value>
   </data>
   <data name="PrecursorCalculatedConcentration">
     <value>Precursor Calculated Concentration</value>
+  </data>
+  <data name="PrecursorCalculatedConcentrationMessage">
+    <value>Precursor Calculated Concentration Message</value>
+  </data>
+  <data name="PrecursorCalculatedConcentrationRaw">
+    <value>Precursor Calculated Concentration Raw</value>
+  </data>
+  <data name="PrecursorCalculatedConcentrationStrict">
+    <value>Precursor Calculated Concentration Strict</value>
   </data>
   <data name="PrecursorCharge">
     <value>Precursor Charge</value>
@@ -1031,6 +1025,15 @@
   </data>
   <data name="PrecursorNormalizedArea">
     <value>Precursor Normalized Area</value>
+  </data>
+  <data name="PrecursorNormalizedAreaMessage">
+    <value>Precursor Normalized Area Message</value>
+  </data>
+  <data name="PrecursorNormalizedAreaRaw">
+    <value>Precursor Normalized Area Raw</value>
+  </data>
+  <data name="PrecursorNormalizedAreaStrict">
+    <value>Precursor Normalized Area Strict</value>
   </data>
   <data name="PrecursorNote">
     <value>Precursor Note</value>
@@ -1101,14 +1104,14 @@
   <data name="ProteinAbundanceMessage">
     <value>Protein Abundance Message</value>
   </data>
-  <data name="ProteinAbundanceRaw">
-    <value>Protein Abundance Raw</value>
-  </data>
   <data name="ProteinAbundanceStrict">
     <value>Protein Abundance Strict</value>
   </data>
-  <data name="ProteinAbundanceTransitionWeighted">
-    <value>Protein Abundance Transition Weighted</value>
+  <data name="ProteinAbundanceTransitionAveraged">
+    <value>Protein Abundance Transition Averaged</value>
+  </data>
+  <data name="ProteinAbundanceTransitionSummed">
+    <value>Protein Abundance Transition Summed</value>
   </data>
   <data name="ProteinAccession">
     <value>Protein Accession</value>
@@ -1181,6 +1184,9 @@
   </data>
   <data name="RatioToStandard">
     <value>Ratio To Standard</value>
+  </data>
+  <data name="Raw">
+    <value>Raw</value>
   </data>
   <data name="RawData">
     <value>Raw Data</value>
@@ -1361,6 +1367,9 @@
   </data>
   <data name="StdevTotalAreaRatio">
     <value>Stdev Total Area Ratio</value>
+  </data>
+  <data name="Strict">
+    <value>Strict</value>
   </data>
   <data name="SummaryMessage">
     <value>Summary Message</value>

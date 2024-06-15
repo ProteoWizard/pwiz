@@ -718,7 +718,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 {
                     result = result.ChangeCalculatedConcentration(calculatedConcentration);
                     double? expectedConcentration = GetPeptideConcentration(replicateIndex) * GetChromatogramSet(replicateIndex)?.SampleDilutionFactor;
-                    result = result.ChangeAccuracy(calculatedConcentration.ChangeValue(calculatedConcentration.Raw / expectedConcentration));
+                    result = result.ChangeAccuracy(calculatedConcentration.Raw / expectedConcentration);
                     result = result.ChangeUnits(QuantificationSettings.Units);
                 }
             }
@@ -743,7 +743,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                     {
                         result = (PrecursorQuantificationResult)result.ChangeCalculatedConcentration(calculatedConcentration);
                         double? expectedConcentration = transitionGroupDocNode.PrecursorConcentration;
-                        result = (PrecursorQuantificationResult)result.ChangeAccuracy(calculatedConcentration.ChangeValue(calculatedConcentration.Raw / expectedConcentration));
+                        result = (PrecursorQuantificationResult)result.ChangeAccuracy(calculatedConcentration.Raw / expectedConcentration);
                         result = (PrecursorQuantificationResult)result.ChangeUnits(QuantificationSettings.Units);
                     }
                 }

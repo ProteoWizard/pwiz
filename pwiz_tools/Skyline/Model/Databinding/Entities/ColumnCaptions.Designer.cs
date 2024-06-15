@@ -88,38 +88,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Accuracy Strict.
-        /// </summary>
-        public static string AccuractStrict {
-            get {
-                return ResourceManager.GetString("AccuractStrict", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Accuracy.
         /// </summary>
         public static string Accuracy {
             get {
                 return ResourceManager.GetString("Accuracy", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Accuracy Message.
-        /// </summary>
-        public static string AccuracyMessage {
-            get {
-                return ResourceManager.GetString("AccuracyMessage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Accuracy Raw.
-        /// </summary>
-        public static string AccuracyRaw {
-            get {
-                return ResourceManager.GetString("AccuracyRaw", resourceCulture);
             }
         }
         
@@ -1888,6 +1861,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Message.
+        /// </summary>
+        public static string Message {
+            get {
+                return ResourceManager.GetString("Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Min.
         /// </summary>
         public static string Min {
@@ -2077,15 +2059,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Molecule List Abundance Raw.
-        /// </summary>
-        public static string MoleculeListAbundanceRaw {
-            get {
-                return ResourceManager.GetString("MoleculeListAbundanceRaw", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Molecule List Abundance Strict.
         /// </summary>
         public static string MoleculeListAbundanceStrict {
@@ -2095,11 +2068,20 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Molecule List Abundance Transition Weighted.
+        ///   Looks up a localized string similar to Molecule List Abundance Transition Averaged.
         /// </summary>
-        public static string MoleculeListAbundanceTransitionWeighted {
+        public static string MoleculeListAbundanceTransitionAveraged {
             get {
-                return ResourceManager.GetString("MoleculeListAbundanceTransitionWeighted", resourceCulture);
+                return ResourceManager.GetString("MoleculeListAbundanceTransitionAveraged", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule List Abundance Transition Summed.
+        /// </summary>
+        public static string MoleculeListAbundanceTransitionSummed {
+            get {
+                return ResourceManager.GetString("MoleculeListAbundanceTransitionSummed", resourceCulture);
             }
         }
         
@@ -2671,33 +2653,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Precursor Accuracy Message.
-        /// </summary>
-        public static string PrecursorAccuracyMessage {
-            get {
-                return ResourceManager.GetString("PrecursorAccuracyMessage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Precursor Accuracy Raw.
-        /// </summary>
-        public static string PrecursorAccuracyRaw {
-            get {
-                return ResourceManager.GetString("PrecursorAccuracyRaw", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Precursor Accuracy Strict.
-        /// </summary>
-        public static string PrecursorAccuracyStrict {
-            get {
-                return ResourceManager.GetString("PrecursorAccuracyStrict", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Precursor Adduct.
         /// </summary>
         public static string PrecursorAdduct {
@@ -2712,6 +2667,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string PrecursorCalculatedConcentration {
             get {
                 return ResourceManager.GetString("PrecursorCalculatedConcentration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor Calculated Concentration Message.
+        /// </summary>
+        public static string PrecursorCalculatedConcentrationMessage {
+            get {
+                return ResourceManager.GetString("PrecursorCalculatedConcentrationMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor Calculated Concentration Raw.
+        /// </summary>
+        public static string PrecursorCalculatedConcentrationRaw {
+            get {
+                return ResourceManager.GetString("PrecursorCalculatedConcentrationRaw", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor Calculated Concentration Strict.
+        /// </summary>
+        public static string PrecursorCalculatedConcentrationStrict {
+            get {
+                return ResourceManager.GetString("PrecursorCalculatedConcentrationStrict", resourceCulture);
             }
         }
         
@@ -2802,6 +2784,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string PrecursorNormalizedArea {
             get {
                 return ResourceManager.GetString("PrecursorNormalizedArea", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor Normalized Area Message.
+        /// </summary>
+        public static string PrecursorNormalizedAreaMessage {
+            get {
+                return ResourceManager.GetString("PrecursorNormalizedAreaMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor Normalized Area Raw.
+        /// </summary>
+        public static string PrecursorNormalizedAreaRaw {
+            get {
+                return ResourceManager.GetString("PrecursorNormalizedAreaRaw", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor Normalized Area Strict.
+        /// </summary>
+        public static string PrecursorNormalizedAreaStrict {
+            get {
+                return ResourceManager.GetString("PrecursorNormalizedAreaStrict", resourceCulture);
             }
         }
         
@@ -3013,15 +3022,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Protein Abundance Raw.
-        /// </summary>
-        public static string ProteinAbundanceRaw {
-            get {
-                return ResourceManager.GetString("ProteinAbundanceRaw", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Protein Abundance Strict.
         /// </summary>
         public static string ProteinAbundanceStrict {
@@ -3031,11 +3031,20 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Protein Abundance Transition Weighted.
+        ///   Looks up a localized string similar to Protein Abundance Transition Averaged.
         /// </summary>
-        public static string ProteinAbundanceTransitionWeighted {
+        public static string ProteinAbundanceTransitionAveraged {
             get {
-                return ResourceManager.GetString("ProteinAbundanceTransitionWeighted", resourceCulture);
+                return ResourceManager.GetString("ProteinAbundanceTransitionAveraged", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein Abundance Transition Summed.
+        /// </summary>
+        public static string ProteinAbundanceTransitionSummed {
+            get {
+                return ResourceManager.GetString("ProteinAbundanceTransitionSummed", resourceCulture);
             }
         }
         
@@ -3252,6 +3261,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string RatioToStandard {
             get {
                 return ResourceManager.GetString("RatioToStandard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Raw.
+        /// </summary>
+        public static string Raw {
+            get {
+                return ResourceManager.GetString("Raw", resourceCulture);
             }
         }
         
@@ -3792,6 +3810,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string StdevTotalAreaRatio {
             get {
                 return ResourceManager.GetString("StdevTotalAreaRatio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Strict.
+        /// </summary>
+        public static string Strict {
+            get {
+                return ResourceManager.GetString("Strict", resourceCulture);
             }
         }
         

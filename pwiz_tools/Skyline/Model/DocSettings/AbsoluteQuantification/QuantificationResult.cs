@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         [Format(Formats.CV, NullValue = TextUtil.EXCEL_NA)]
         [ChildDisplayName("Accuracy{0}")]
-        public AnnotatedDouble Accuracy { get; private set; }
+        public double? Accuracy { get; private set; }
 
         [Browsable(false)]
         public string Units { get; private set; }
@@ -63,7 +63,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return ChangeProp(ImClone(this), im => im.CalculatedConcentration = calculatedConcentration);
         }
 
-        public QuantificationResult ChangeAccuracy(AnnotatedDouble accuracy)
+        public QuantificationResult ChangeAccuracy(double? accuracy)
         {
             return ChangeProp(ImClone(this), im => im.Accuracy = accuracy);
         }
@@ -144,7 +144,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         [Format(Formats.CV, NullValue = TextUtil.EXCEL_NA)]
         [InvariantDisplayName("PrecursorAccuracy")]
         [ChildDisplayName("PrecursorAccuracy{0}")]
-        public new AnnotatedDouble Accuracy
+        public new double? Accuracy
         {
             get { return base.Accuracy; }
         }
