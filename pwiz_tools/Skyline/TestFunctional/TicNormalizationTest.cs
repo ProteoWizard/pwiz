@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
@@ -218,9 +219,16 @@ namespace pwiz.SkylineTestFunctional
                 for (int iRow = 0; iRow < documentGrid.RowCount; iRow++)
                 {
                     var row = documentGrid.DataGridView.Rows[iRow];
+                    var normalizedAreaValue = row.Cells[colNormalizedArea.Index].Value;
+                    double? normalizedArea = null;
+                    if (normalizedAreaValue != null)
+                    {
+                        Assert.IsInstanceOfType(normalizedAreaValue, typeof(AnnotatedDouble));
+                        normalizedArea = Convert.ToDouble(normalizedAreaValue);
+                    }
                     list.Add(Tuple.Create((Peptide) row.Cells[colPeptide.Index].Value,
                         (ResultFile) row.Cells[colResultFile.Index].Value,
-                        (double?) row.Cells[colNormalizedArea.Index].Value));
+                        normalizedArea));
                 }
             });
             return list;

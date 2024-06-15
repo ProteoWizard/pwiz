@@ -141,7 +141,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     if (peptideResult.ResultFile.Replicate.Name == ResultFile.Replicate.Name)
                     {
-                        total += peptideResult.GetQuantificationResult()?.NormalizedArea.Strict ?? 0.0;
+                        total += peptideResult.GetQuantificationResult()?.NormalizedArea?.Strict ?? 0.0;
                     }
                 }
             }
