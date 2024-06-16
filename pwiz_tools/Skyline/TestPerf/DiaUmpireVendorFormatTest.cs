@@ -25,6 +25,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
@@ -292,7 +293,8 @@ namespace TestPerf
                               ImportPeptideSearchDlg.Pages.dda_search_settings_page);
                 importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = _instrumentValues.PrecursorTolerance;
                 importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = _instrumentValues.FragmentTolerance;
-                importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b, y";
+                importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;
+                Assert.AreEqual(PropertyNames.CutoffScore_PERCOLATOR_QVALUE, importPeptideSearchDlg.SearchSettingsControl.CutoffLabel);
                 Assert.AreEqual(0.05, importPeptideSearchDlg.SearchSettingsControl.CutoffScore);
             });
 
