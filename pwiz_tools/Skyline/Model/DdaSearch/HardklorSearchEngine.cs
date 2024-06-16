@@ -746,6 +746,11 @@ namespace pwiz.Skyline.Model.DdaSearch
             // Not applicable to Hardklor
         }
 
+        public override void SetCutoffScore(double cutoffScore)
+        {
+            // Not applicable to Hardklor
+        }
+
         public override string GetSearchResultFilepath(MsDataFileUri searchFilepath)
         {
             return GetBullseyeKronikFilename(_inputsAndOutputs[searchFilepath]);

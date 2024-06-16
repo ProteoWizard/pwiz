@@ -126,7 +126,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         //private double chargeCarrierMass;
         private int maxVariableMods = 2;
         private StringBuilder modsText;
-        private const string _cutoffScoreName = @"PERCOLATOR_QVALUE";
+        private const string _cutoffScoreName = ScoreType.PERCOLATOR_QVALUE;
         private CancellationTokenSource _cancelToken;
         private IProgressStatus _progressStatus;
         private bool _success;
@@ -313,6 +313,11 @@ namespace pwiz.Skyline.Model.DdaSearch
         public override void SetPrecursorMassTolerance(MzTolerance mzTolerance)
         {
             precursorMzTolerance = mzTolerance;
+        }
+
+        public override void SetCutoffScore(double cutoffScore)
+        {
+            // Do nothing. MSGF+ does not run percolator or take a cutoff value
         }
 
         private string[] SupportedExtensions = { @".mzml", @".mzxml", @".mgf", @".ms2" };

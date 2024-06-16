@@ -80,6 +80,7 @@ namespace pwiz.BiblioSpec
     {
         // N.B. these should agree with the values in PSM_SCORE_TYPE in pwiz_tools\BiblioSpec\src\BlibUtils.h
         // And if you add something here, don't forget to update ToString() below
+        public const string UNKNOWN = "UNKNOWN";
         public const string PERCOLATOR_QVALUE = "PERCOLATOR QVALUE";
         public const string PEPTIDE_PROPHET_SOMETHING = "PEPTIDE PROPHET SOMETHING";
         public const string SPECTRUM_MILL = "SPECTRUM MILL";
@@ -101,6 +102,31 @@ namespace pwiz.BiblioSpec
         public const string GENERIC_QVALUE = "GENERIC Q-VALUE";
         public const string HARDKLOR_IDOTP = "HARDKLOR IDOTP"; // Hardklor "The dot-product score of this feature to the theoretical model." We translate the Hardkloe Cosine Angle Correlation to a Normalized Contrast Angle idotp value
 
+        public static HashSet<string> INVARIANT_NAMES = new HashSet<string>(new[]
+        {
+            UNKNOWN,
+            PERCOLATOR_QVALUE,
+            PEPTIDE_PROPHET_SOMETHING,
+            SPECTRUM_MILL,
+            IDPICKER_FDR,
+            MASCOT_IONS_SCORE,
+            TANDEM_EXPECTATION_VALUE,
+            PROTEIN_PILOT_CONFIDENCE,
+            SCAFFOLD_SOMETHING,
+            WATERS_MSE_PEPTIDE_SCORE,
+            OMSSA_EXPECTATION_SCORE,
+            PROTEIN_PROSPECTOR_EXPECTATION_SCORE,
+            SEQUEST_XCORR,
+            MAXQUANT_SCORE,
+            MORPHEUS_SCORE,
+            MSGF_SCORE,
+            PEAKS_CONFIDENCE_SCORE,
+            BYONIC_SCORE,
+            PEPTIDE_SHAKER_CONFIDENCE,
+            GENERIC_QVALUE,
+            HARDKLOR_IDOTP
+        });
+
         public const string PROBABILITY_CORRECT = "PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT";
         public const string PROBABILITY_INCORRECT = "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT";
 
@@ -114,6 +140,9 @@ namespace pwiz.BiblioSpec
 
         public ScoreType(string name, string probabilityType)
         {
+            if (!INVARIANT_NAMES.Contains(name))
+                throw new ArgumentException($@"Invalid ScoreType name '{name}'");
+
             NameInvariant = name;
             switch (probabilityType)
             {
@@ -142,17 +171,18 @@ namespace pwiz.BiblioSpec
                         return 0;
                     case WATERS_MSE_PEPTIDE_SCORE:
                         return 6;
-                    default:
-                        switch (ProbabilityType)
-                        {
-                            case EnumProbabilityType.probability_correct:
-                                return 0.95;
-                            case EnumProbabilityType.probability_incorrect:
-                                return 0.05;
-                            default:
-                                return 0;
-                        }
+                    case PERCOLATOR_QVALUE:
+                    case GENERIC_QVALUE:
+                        return 0.01;    // %1 FDR is the standard in the field for searches
                 }
+                switch (ProbabilityType)
+                {
+                    case EnumProbabilityType.probability_correct:
+                        return 0.95;
+                    case EnumProbabilityType.probability_incorrect:
+                        return 0.05;
+                }
+                return 0;
             }
         }
 

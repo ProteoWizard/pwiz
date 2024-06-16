@@ -187,6 +187,7 @@ namespace pwiz.Skyline.Model
         public abstract void SetFragmentIons(string ions);
         public abstract void SetMs2Analyzer(string analyzer);
         public abstract void SetEnzyme(Enzyme enzyme, int maxMissedCleavages);
+        public abstract void SetCutoffScore(double cutoffScore);
 
         public delegate void NotificationEventHandler(object sender, IProgressStatus status);
         public abstract event NotificationEventHandler SearchProgressChanged;

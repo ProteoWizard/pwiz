@@ -100,7 +100,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         private string _fastaFilepath;
         private string _decoyPrefix;
         private List<string> _intermediateFiles;
-        private const string _cutoffScoreName = @"PERCOLATOR_QVALUE";
+        private const string _cutoffScoreName = ScoreType.PERCOLATOR_QVALUE;
 
         private CancellationTokenSource _cancelToken;
         private IProgressStatus _progressStatus;
@@ -778,6 +778,12 @@ add_Nterm_protein = 0.000000
         public override void SetPrecursorMassTolerance(MzTolerance mzTolerance)
         {
             _precursorMzTolerance = mzTolerance;
+        }
+
+        public override void SetCutoffScore(double cutoffScore)
+        {
+            AdditionalSettings[PERCOLATOR_TEST_QVALUE_CUTOFF] =
+                new Setting(PERCOLATOR_TEST_QVALUE_CUTOFF, cutoffScore, 0, 1);
         }
 
         public override string GetSearchResultFilepath(MsDataFileUri searchFilepath)

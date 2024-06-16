@@ -163,7 +163,12 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
         }
 
-        private const string _cutoffScoreName = @"PERCOLATOR_QVALUE";
+        public override void SetCutoffScore(double cutoffScore)
+        {
+            // Do nothing. MS Amanda does not seem to give this value to Percolator
+        }
+
+        private const string _cutoffScoreName = ScoreType.PERCOLATOR_QVALUE;
 
         public override string[] FragmentIons => Settings.ChemicalData.Instruments.Keys.ToArray();
         public override string[] Ms2Analyzers => new[] { @"Default" };

@@ -379,6 +379,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var helper = new MessageBoxHelper(this.ParentForm);
             if (helper.ValidateDecimalTextBox(textCutoff, out var cutoffScore))
             {
+                ImportPeptideSearch.SearchEngine.SetCutoffScore(cutoffScore);
                 CutoffScore = cutoffScore;
                 return true;
             }

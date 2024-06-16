@@ -245,7 +245,8 @@ namespace TestPerf
             {
                 importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = new MzTolerance(5, MzTolerance.Units.ppm);
                 importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = new MzTolerance(10, MzTolerance.Units.ppm);
-                importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;
+                // Using the default q value of 0.01 (FDR 1%) is best for teaching and requires less explaining
+                // importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;
                 if (useMsFragger)
                     importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("check_spectral_files", "0");
 
@@ -337,10 +338,10 @@ namespace TestPerf
                     }
                     else
                     {
-                        Assert.AreEqual(3237, proteinCount);
-                        Assert.AreEqual(6404, peptideCount);
-                        Assert.AreEqual(12664, precursorCount);
-                        Assert.AreEqual(37992, transitionCount);
+                        Assert.AreEqual(2802, proteinCount);
+                        Assert.AreEqual(5774, peptideCount);
+                        Assert.AreEqual(11409, precursorCount);
+                        Assert.AreEqual(34227, transitionCount);
                     }
                 }
             });
