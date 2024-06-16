@@ -92,14 +92,13 @@ namespace AutoQC
                 }
                 if (errorMessage == null)
                 {
-                    var selectedLogName = SelectedLog > 0 ? GetSelectedLogger().Name : null;
                     _state = newState.Copy();
                     _logList = _state.LogList;
-                    SelectedLog = -1;
-                    for (int i = 0; i < _logList.Count; i++)
+					SelectedLog = -1;
+                    if (_state.BaseState.HasSelectedConfig())
                     {
-                        if (_logList[i].Name.Equals(selectedLogName))
-                            SelectedLog = i;
+                        var selectedConfig = _state.BaseState.GetSelectedConfig();
+                        SelectedLog = _state.GetLoggerIndex(selectedConfig.GetName());
                     }
                     _uiControl?.UpdateUiConfigurations();
                     if (updateLogFiles)
@@ -274,7 +273,7 @@ namespace AutoQC
                         catch (Exception)
                         {
                             configRunner.ChangeStatus(RunnerStatus.Stopped);
-                            SetState(AutoQcState, AutoQcState.SetConfigInvalid(config));
+                            SetState(AutoQcState, AutoQcState.SetConfigInvalid(config), false);
                         }
                     }
                 }
@@ -383,7 +382,7 @@ namespace AutoQC
             if (configRunner == null)
             {
                 state.DisableConfig(configIndex, _uiControl);
-                SetState(initialState, state);
+                SetState(initialState, state, false);
                 throw new ConfigRunnerException(string.Format(Resources.AutoQcConfigManager_StartConfig_Could_not_find_a_config_runner_for_configuration_name___0___, config.Name));
             }
             ProgramLog.Info(string.Format(Resources.ConfigManager_StartConfig_Starting_configuration___0__, config.Name));
