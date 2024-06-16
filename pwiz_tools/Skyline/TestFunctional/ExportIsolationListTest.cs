@@ -517,11 +517,12 @@ namespace pwiz.SkylineTestFunctional
                 var pepSequence = resReader.GetFieldByName("Compound Name");
                 if (pepSequence == "YIC[+57.021464]DNQDTISSK.light" || pepSequence == "IKNLQSLDPSH.light")
                 {
-                    if (float.TryParse(resReader.GetFieldByName("RT Window (min)"), out var rtWindow)
-                        && float.TryParse(resReader.GetFieldByName("RT (min)"), out var rt))
-                        Assert.AreEqual(Math.Round(rtWindow + 0.1, 2).ToString(_cultureInfo), resReader.GetFieldByName("RT (min)"));
-                    else
-                        Assert.Fail("Cannot parse data in the resulting transition list.");
+                    Assert.IsTrue(float.TryParse(resReader.GetFieldByName("RT Window (min)"),
+                        NumberStyles.Float | NumberStyles.AllowThousands, _cultureInfo, out var rtWindow));
+                    Assert.AreEqual(Math.Round(rtWindow + 0.1, 2).ToString(_cultureInfo),
+                        resReader.GetFieldByName("RT (min)"));
+                    Assert.IsTrue(float.TryParse(resReader.GetFieldByName("RT (min)"),
+                        NumberStyles.Float | NumberStyles.AllowThousands, _cultureInfo, out _));
                 }
             }
         }
