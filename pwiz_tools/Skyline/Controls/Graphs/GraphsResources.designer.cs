@@ -413,6 +413,15 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Total:.
+        /// </summary>
+        public static string AreaReplicateGraphPane_Tooltip_Total {
+            get {
+                return ResourceManager.GetString("AreaReplicateGraphPane_Tooltip_Total", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No results available.
         /// </summary>
         public static string AreaReplicateGraphPane_UpdateGraph_No_results_available {

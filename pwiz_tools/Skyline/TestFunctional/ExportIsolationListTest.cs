@@ -124,7 +124,6 @@ namespace pwiz.SkylineTestFunctional
                 ConvertDocumentToSmallMolecules(SmallMoleculeTestMode, AsSmallMoleculesNegativeMode);
                 WaitForDocumentLoaded();
             }
-
             var t46 = 46.790;
             var t39 = 39.900;
             var halfWin = 1.0;
@@ -166,8 +165,8 @@ namespace pwiz.SkylineTestFunctional
                 "AgilentScheduledDda.csv", 
                 ExportInstrumentType.AGILENT_TOF, FullScanAcquisitionMethod.None, ExportMethodType.Scheduled,
                 AgilentIsolationListExporter.GetDdaHeader(_fieldSeparator),
-                FieldSeparate("True", mzFirst, 20, zFirst, "Preferred", t46, 2*halfWin, isolationWidth, ceFirst),
-                FieldSeparate("True", mzLast, 20, zLast, "Preferred", t39, 2*halfWin, isolationWidth, ceLast));
+                FieldSeparate("True", mzFirst, 20, zFirst, "Preferred", t46, halfWin, isolationWidth, ceFirst),
+                FieldSeparate("True", mzLast, 20, zLast, "Preferred", t39, halfWin, isolationWidth, ceLast));
 
             // Export Thermo unscheduled DDA list.
             const double nce = ThermoQExactiveIsolationListExporter.NARROW_NCE;
@@ -215,8 +214,8 @@ namespace pwiz.SkylineTestFunctional
                 "AgilentScheduledTargeted.csv", 
                 ExportInstrumentType.AGILENT_TOF, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
                 AgilentIsolationListExporter.GetTargetedHeader(_fieldSeparator),
-                FieldSeparate("True", mzFirst, zFirst, t46, 2*halfWin, isolationWidth, ceFirst, string.Empty),
-                FieldSeparate("True", mzLast, zLast, t39, 2*halfWin, isolationWidth, ceLast, string.Empty));
+                FieldSeparate("True", mzFirst, zFirst, t46, halfWin, isolationWidth, ceFirst, string.Empty),
+                FieldSeparate("True", mzLast, zLast, t39, halfWin, isolationWidth, ceLast, string.Empty));
 
             // Export Thermo unscheduled Targeted list.
             ExportIsolationList(
@@ -355,6 +354,11 @@ namespace pwiz.SkylineTestFunctional
             // Check error if analyzer is not set correctly.
             CheckMassAnalyzer(ExportInstrumentType.AGILENT_TOF, FullScanMassAnalyzerType.tof);
             CheckMassAnalyzer(ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanMassAnalyzerType.orbitrap);
+
+            if (!AsExplicitRetentionTimes)
+            {
+                TestAgilentNegativeRt();
+            }
         }
 
         private void ExportIsolationList(
@@ -466,6 +470,60 @@ namespace pwiz.SkylineTestFunctional
                 sb.Append(_fieldSeparator);
             }
             return sb.ToString();
+        }
+
+        private void TestAgilentNegativeRt()
+        {
+            // remove the results to force the use of predicted RTs
+            RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults,
+                dlg =>
+                {
+                    dlg.RemoveAllReplicates();
+                    dlg.OkDialog();
+                });
+            // Set RT predictor to produce negative times
+            var rtRegression = new RetentionTimeRegression("NegativeRt",
+                new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_100_A), 
+                .45, -7.8, 1.4, new MeasuredRetentionTime[0]);
+            RunUI(() =>
+            {
+                SkylineWindow.ModifyDocument("Set RT predition with negative RTs", doc =>
+                {
+                    return doc.ChangeSettings(
+                        doc.Settings.ChangePeptidePrediction(p => p.ChangeRetentionTime(rtRegression))
+                            .ChangePeptidePrediction(p => p.ChangeUseMeasuredRTs(false)));
+                });
+            });
+            // Export the transitions list for a scheduled method
+            string csvPath = TestFilesDirs[0].GetTestPath("negativeRtTest.csv");
+            var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
+            RunUI(() =>
+            {
+                exportMethodDlg.InstrumentType = ExportInstrumentType.AGILENT_MASSHUNTER_12;
+                exportMethodDlg.MethodType = ExportMethodType.Scheduled;
+            });
+            RunDlg<MultiButtonMsgDlg>(
+                () => exportMethodDlg.OkDialog(csvPath),
+                messageDlg =>
+                {
+                    //AssertEx.AreComparableStrings(Resources.ExportMethodDlg_OkDialog_The_precursor_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab, messageDlg.Message, 1);
+                    messageDlg.ClickYes();
+                });
+
+            // Verify that peptides with negative RTs are updated
+            var resReader = new DsvFileReader(csvPath, TextUtil.SEPARATOR_TSV);
+            while (resReader.ReadLine() != null)
+            {
+                var pepSequence = resReader.GetFieldByName("Compound Name");
+                if (pepSequence == "YIC[+57.021464]DNQDTISSK.light" || pepSequence == "IKNLQSLDPSH.light")
+                {
+                    if (float.TryParse(resReader.GetFieldByName("RT Window (min)"), out var rtWindow)
+                        && float.TryParse(resReader.GetFieldByName("RT (min)"), out var rt))
+                        Assert.AreEqual(Math.Round(rtWindow + 0.1, 2).ToString(_cultureInfo), resReader.GetFieldByName("RT (min)"));
+                    else
+                        Assert.Fail("Cannot parse data in the resulting transition list.");
+                }
+            }
         }
     }
 
