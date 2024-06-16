@@ -76,6 +76,7 @@ namespace AutoQC
         private RunnerStatus _runnerStatus;
         // This flag is set if a document failed to upload to Panorama for any reason.
         private bool _panoramaUploadError;
+        private bool _panoramaFatalError;
         private DateTime _panoramaErrorOccurred = DateTime.MinValue;
         private DateTime _lastUploadAt = DateTime.MinValue;
 
@@ -176,6 +177,7 @@ namespace AutoQC
         public void Start()
         {
             _panoramaUploadError = false;
+            _panoramaFatalError = false;
 
             CreateConfigDir();
             _logger.Init(); // Create the log file after the config directory has been created.
@@ -359,6 +361,12 @@ namespace AutoQC
                     // Try to import any older files that resulted in an import error the first time.
                     TryReimportOldFiles(e, false);
 
+                    if (_panoramaFatalError)
+                    {
+                        LogError(
+                            "Document could not be imported on Panorama. Stopping configuration. Please review the errors before restarting the configuration.");
+                        break;
+                    }
                     if (_panoramaUploadError)
                     {
                         if (_lastUploadAt.AddMinutes(5) < DateTime.Now)
@@ -650,7 +658,11 @@ namespace AutoQC
             var uploadToPanoramaProc = new ProcessInfo(Config.SkylineSettings.CmdPath, panoramaUploadArgs, argsToPrint);
             var status = RunProcess(uploadToPanoramaProc);
             _lastUploadAt = DateTime.Now;
-            if (status == ProcStatus.Error)
+            if (status == ProcStatus.FatalPanoramaError)
+            {
+                _panoramaFatalError = true;
+            }
+            else if (status == ProcStatus.Error)
             {
                 _panoramaUploadError = true;
                 if (DateTime.MinValue.Equals(_panoramaErrorOccurred))
@@ -1199,6 +1211,7 @@ namespace AutoQC
     {
         Success,
         Error,
+        FatalPanoramaError,
         Skipped
     }
 

@@ -50,6 +50,7 @@ namespace AutoQC
         private bool _documentImportFailed;
         private bool _errorLogged;
         private bool _fileImportIgnored;
+        private bool _fatalPanoramaError;
 
         public ProcessRunner(Logger logger)
         {
@@ -105,6 +106,11 @@ namespace AutoQC
                 {
                     LogError(string.Format(Resources.ProcessRunner_RunProcess__0__exited_with_code__1___Skyline_document_import_failed_, _procInfo.ExeName, exitCode));
                     return ProcStatus.Error;
+                }
+
+                if (_fatalPanoramaError)
+                {
+                    return ProcStatus.FatalPanoramaError;
                 }
 
                 if (exitCode != 0)
@@ -181,6 +187,13 @@ namespace AutoQC
             {
                 // This is the message for un-readable RAW files from Thermo instruments.
                 _documentImportFailed = true;
+                return true;
+            }
+
+            if (message.Contains(
+                    @"QC folders allow new imports to add or remove peptides, but not completely change the list"))
+            {
+                _fatalPanoramaError = true;
                 return true;
             }
 
