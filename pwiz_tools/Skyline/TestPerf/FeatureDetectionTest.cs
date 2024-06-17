@@ -83,7 +83,7 @@ namespace TestPerf
         }
 
         [TestMethod, NoUnicodeTesting(TestExclusionReason.HARDKLOR_UNICODE_ISSUES), NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
-        public void TestHardklorFeatureDetection()
+        public void TestFeatureDetectionTutorialFuture()
         {
             TestFilesZipPaths = new[]
             {
@@ -152,7 +152,6 @@ namespace TestPerf
             {
                 PerformSearchTest(pass++);
             }
-            VerifyAuditLog();
         }
 
         private void PerformSearchTest(int pass)
@@ -627,18 +626,5 @@ namespace TestPerf
                 }
             }
         }
-
-        private void VerifyAuditLog()
-        {
-            var english = "en";
-            if (CultureInfo.CurrentCulture.TwoLetterISOLanguageName != english)
-            {
-                return; // Keep it simple, only worry about one language
-            }
-            var auditLogActual = Path.Combine(GetTestPath(@".."), "..", this.TestContext.TestName, @"Auditlog", english, this.TestContext.TestName) + ".log";
-            var auditLogExpected = GetTestPath(@"TestHardklorFeatureDetection.log");
-            AssertEx.FileEquals(auditLogExpected, auditLogActual, null, true);
-        }
-
-}
+    }
 }

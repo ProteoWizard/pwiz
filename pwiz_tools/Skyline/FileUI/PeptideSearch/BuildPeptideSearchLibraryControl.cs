@@ -126,8 +126,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 _docType = docType;
             }
 
-            [Track(defaultValues: typeof(DefaultValuesNull))]
-            public double? CutoffScore { get; private set; }
             [Track]
             public BuildLibraryGridView.File[] SearchFileNames { get; private set; }
             [Track]
