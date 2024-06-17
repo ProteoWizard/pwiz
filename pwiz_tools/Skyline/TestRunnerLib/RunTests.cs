@@ -1223,9 +1223,9 @@ namespace TestRunnerLib
                 if (hostWorkerPid > 0)
                     Process.GetProcessById(hostWorkerPid).Kill();
             }
-            catch
+            catch (Exception ex)
             {
-                // ignored
+                Console.WriteLine(@"Failed to kill host worker process: " + ex.Message);
             }
 
             Console.WriteLine(@"Sending docker kill command to all workers.");
@@ -1233,7 +1233,7 @@ namespace TestRunnerLib
             var psi = new ProcessStartInfo("docker", $@"kill {workerNames}");
             psi.CreateNoWindow = true;
             psi.UseShellExecute = false;
-            Process.Start(psi);
+            Process.Start(psi)?.WaitForExit();
         }
     }
 }

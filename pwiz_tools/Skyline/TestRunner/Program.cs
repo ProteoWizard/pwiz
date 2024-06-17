@@ -853,6 +853,8 @@ namespace TestRunner
             public string CurrentTest { get; set; }
         }
 
+        private static int HostWorkerPid { get; set; }
+
         private static bool PushToTestQueue(List<TestInfo> testList, List<TestInfo> unfilteredTestList, CommandLineArgs commandLineArgs, StreamWriter log)
         {
             var cts = new CancellationTokenSource();
@@ -866,6 +868,7 @@ namespace TestRunner
             int testsFailed = 0;
             int testsResultsReturned = 0;
             int workerCount = (int) commandLineArgs.ArgAsLong("workercount");
+            int dockerWorkerCount = workerCount - 1;
             var dockerTimeoutSecondsOverride = Environment.GetEnvironmentVariable("SKYLINE_TESTRUNNER_DOCKER_TIMEOUT_SEC");
             int workerTimeout = Convert.ToInt32(commandLineArgs.ArgAsStringOrDefault("workertimeout", dockerTimeoutSecondsOverride ?? "60"));
             int loop = (int) commandLineArgs.ArgAsLong("loop");
@@ -897,7 +900,6 @@ namespace TestRunner
                 }
             }
 
-            int dockerWorkerCount = workerCount - 1;
             if (testQueue.Count < dockerWorkerCount)
             {
                 Console.WriteLine($"There are fewer parallelizable test/language pairs ({testQueue.Count}) than the number of specified parallel workers; reducing workercount to {testQueue.Count + 1}.");
@@ -926,6 +928,15 @@ namespace TestRunner
                 }
                 receiver.Bind($"tcp://*:{workerPort}");
                 string workerNames = null;
+
+                // try to kill docker workers if process is terminated externally (e.g. SkylineTester)
+                SetConsoleCtrlHandler(c =>
+                {
+                    cts.Cancel();
+                    RunTests.KillParallelWorkers(HostWorkerPid, workerNames);
+                    Process.GetCurrentProcess().Kill();
+                    return true;
+                }, true);
 
                 if (dockerWorkerCount > 0)
                 {
@@ -974,15 +985,8 @@ namespace TestRunner
                     });
                 }
 
-                int hostWorkerPid = LaunchHostWorker(commandLineArgs, workerPort, log, coverageSnapshots);
-
-                // try to kill docker workers if process is terminated externally (e.g. SkylineTester)
-                SetConsoleCtrlHandler(c =>
-                {
-                    RunTests.KillParallelWorkers(hostWorkerPid, workerNames);
-                    Process.GetCurrentProcess().Kill();
-                    return true;
-                }, true);
+                // fix this to get PID of TestRunner, not dotCover
+                HostWorkerPid = LaunchHostWorker(commandLineArgs, workerPort, log, coverageSnapshots);
 
                 // wait for workers to finish
                 void WaitForWorkersToFinish()
@@ -1106,7 +1110,7 @@ namespace TestRunner
                                 }
                                 finally
                                 {
-                                    if (/*testRequeue && testInfo.TestMethod.Name == "TestSwathIsolationLists" ||*/ !gotResult)
+                                    if (/*testRequeue && testInfo.TestMethod.Name == "TestSwathIsolationLists" ||*/ !gotResult && !cts.IsCancellationRequested)
                                     {
                                         //if (testInfo.TestMethod.Name == "TestSwathIsolationLists")
                                         //    testRequeue = false;
@@ -1143,13 +1147,13 @@ namespace TestRunner
                                 {
                                     workerInfo.IsAlive = false;
 
-                                    if (testQueue.IsEmpty)
+                                    if (testQueue.IsEmpty || cts.IsCancellationRequested)
                                         return;
                                     Console.WriteLine($"Worker {workerName} stopped responding while working on test {workerInfo.CurrentTest}.");
                                     if (commandLineArgs.ArgAsBool("coverage"))
                                     {
                                         Console.WriteLine("Aborting coverage run due to failed worker (coverage from that worker is lost).");
-                                        RunTests.KillParallelWorkers(hostWorkerPid);
+                                        RunTests.KillParallelWorkers(HostWorkerPid);
                                         Process.GetCurrentProcess().Kill();
                                     }
 
@@ -1180,6 +1184,8 @@ namespace TestRunner
                     }, TaskCreationOptions.LongRunning);
                 }
 
+                if (cts.IsCancellationRequested)
+                    return false;
                 Console.WriteLine("Waiting for worker tasks to finish.");
                 foreach (var task in tasks)
                     task.Wait();
