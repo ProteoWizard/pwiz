@@ -897,14 +897,17 @@ namespace TestRunner
                 }
             }
 
-            if (testQueue.Count < workerCount)
+            int dockerWorkerCount = workerCount - 1;
+            if (testQueue.Count < dockerWorkerCount)
             {
-                Console.WriteLine($"There are fewer test/language pairs ({testQueue.Count}) than the number of specified workers; reducing workercount to {testQueue.Count}.");
-                workerCount = testQueue.Count;
+                Console.WriteLine($"There are fewer parallelizable test/language pairs ({testQueue.Count}) than the number of specified parallel workers; reducing workercount to {testQueue.Count + 1}.");
+                workerCount = testQueue.Count + 1;
+                dockerWorkerCount = testQueue.Count;
             }
 
             // check docker daemon is working and build always_up_runner if necessary
-            CheckDocker(commandLineArgs);
+            if (dockerWorkerCount > 0)
+                CheckDocker(commandLineArgs);
 
             // open socket that listens for workers to connect
             using (var receiver = new PullSocket())
@@ -924,7 +927,7 @@ namespace TestRunner
                 receiver.Bind($"tcp://*:{workerPort}");
                 string workerNames = null;
 
-                if (workerCount > 1)
+                if (dockerWorkerCount > 0)
                 {
                     long availableBytesForNormalWorkers = MemoryInfo.AvailableBytes - MinBytesPerBigWorker;
 
