@@ -36,13 +36,13 @@ namespace pwiz.SkylineTest
         const string TEST_ZIP_PATH = @"Test\EncyclopeDiaHelpersTest.zip";
 
         [TestMethod, NoParallelTesting(TestExclusionReason.SHARED_DIRECTORY_WRITE)]
-        public void TestConvertFastaToPrositInputCsv()
+        public void TestConvertFastaToKoinaInputCsv()
         {
             TestFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
-            string prositCsvOutputFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33.csv");
-            string prositExpectedCsvOutputFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected.csv");
+            string koinaCsvOutputFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33.csv");
+            string koinaExpectedCsvOutputFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected.csv");
             string fastaFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705.fasta");
-            var testConfig = new EncyclopeDiaHelpers.FastaToPrositInputCsvConfig
+            var testConfig = new EncyclopeDiaHelpers.FastaToKoinaInputCsvConfig
             {
                 DefaultCharge = 3,
                 DefaultNCE = 33,
@@ -53,13 +53,13 @@ namespace pwiz.SkylineTest
             };
             var pm = new CommandProgressMonitor(new StringWriter(), new ProgressStatus());
             IProgressStatus status = new ProgressStatus();
-            EncyclopeDiaHelpers.ConvertFastaToPrositInputCsv(fastaFilepath, prositCsvOutputFilepath, pm, ref status, testConfig);
-            Assert.IsTrue(File.Exists(prositCsvOutputFilepath));
-            AssertEx.NoDiff(File.ReadAllText(prositExpectedCsvOutputFilepath), File.ReadAllText(prositCsvOutputFilepath));
+            EncyclopeDiaHelpers.ConvertFastaToKoinaInputCsv(fastaFilepath, koinaCsvOutputFilepath, pm, ref status, testConfig);
+            Assert.IsTrue(File.Exists(koinaCsvOutputFilepath));
+            AssertEx.NoDiff(File.ReadAllText(koinaExpectedCsvOutputFilepath), File.ReadAllText(koinaCsvOutputFilepath));
         }
 
         [TestMethod]
-        public void TestPrositOutputToEncyclopediaLibraries()
+        public void TestKoinaOutputToEncyclopediaLibraries()
         {
             // Wine has mysterious issues running EncylopeDia, but SkylineCmd currently can't run EncyclopeDia anyway, so skip these tests
             if (ProcessEx.IsRunningOnWine)
@@ -73,12 +73,12 @@ namespace pwiz.SkylineTest
             var columnTolerances = new Dictionary<int, double>() { { -1, 0.000005 } };  // Allow some numerical wiggle in any column numerical column ("-1" means all columns)
             IProgressStatus status = new ProgressStatus();
 
-            // test prosit output to dlib
+            // test koina output to dlib
             {
-                string prositBlibOutputFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-output.blib");
+                string koinaBlibOutputFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-output.blib");
                 string dlibExpectedTsvFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected-dlib.tsv");
                 var pm = new CommandProgressMonitor(new StringWriter(), new ProgressStatus());
-                EncyclopeDiaHelpers.ConvertPrositOutputToDlib(prositBlibOutputFilepath, fastaFilepath, dlibFilepath, pm, ref status);
+                EncyclopeDiaHelpers.ConvertKoinaOutputToDlib(koinaBlibOutputFilepath, fastaFilepath, dlibFilepath, pm, ref status);
                 Assert.IsTrue(File.Exists(dlibFilepath));
                 var actual = SqliteOperations.DumpTable(dlibFilepath, "entries");
                 //string dlibActualTsvFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected-dlib-actual.tsv");

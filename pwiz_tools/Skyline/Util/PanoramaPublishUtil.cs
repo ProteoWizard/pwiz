@@ -324,10 +324,34 @@ namespace pwiz.Skyline.Util
                 var panoramaEx = x.InnerException as PanoramaImportErrorException;
                 if (panoramaEx != null)
                 {
-                    var message = panoramaEx.JobCancelled
-                        ? UtilResources.AbstractPanoramaPublishClient_UploadSharedZipFile_Document_import_was_cancelled_on_the_server__Would_you_like_to_go_to_Panorama_
-                        : UtilResources
-                            .AbstractPanoramaPublishClient_UploadSharedZipFile_An_error_occured_while_uploading_to_Panorama__would_you_like_to_go_to_Panorama_;
+                    string message;
+                    if (panoramaEx.JobCancelled)
+                    {
+                        message = UtilResources
+                            .AbstractPanoramaPublishClient_UploadSharedZipFile_Document_import_was_cancelled_on_the_server__Would_you_like_to_go_to_Panorama_;
+                    }
+                    else
+                    {
+                        if (string.IsNullOrWhiteSpace(panoramaEx.Error))
+                        {
+                            message = TextUtil.SpaceSeparate(
+                                string.Format(UtilResources.AbstractPanoramaPublishClient_UploadSharedZipFile_An_import_error_occurred_on_the_Panorama_server__0__,
+                                    panoramaEx.ServerUrl),
+                                UtilResources
+                                    .AbstractPanoramaPublishClient_UploadSharedZipFile_Would_you_like_to_go_to_Panorama_
+                            );
+                        }
+                        else
+                        {
+                            message = TextUtil.LineSeparate(
+                                string.Format(UtilResources.AbstractPanoramaPublishClient_UploadSharedZipFile_An_import_error_occurred_on_the_Panorama_server__0__,
+                                    panoramaEx.ServerUrl),
+                                string.Format(Resources.Error___0_, panoramaEx.Error),
+                                string.Empty,
+                                UtilResources
+                                    .AbstractPanoramaPublishClient_UploadSharedZipFile_Would_you_like_to_go_to_Panorama_);
+                        }
+                    }
 
                     if (MultiButtonMsgDlg.Show(parent, message, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false)
                         == DialogResult.Yes)

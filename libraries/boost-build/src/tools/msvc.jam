@@ -1372,7 +1372,15 @@ local rule generate-setup-cmd ( version : command : parent : options * : cpu : g
         }
         else
         {
-            if [ MATCH "(14.3)" : $(version) ]
+            if [ MATCH "(14.4)" : $(version) ]
+            {
+                if $(.debug-configuration)
+                {
+                    ECHO "notice: [generate-setup-cmd] $(version) is 14.4" ;
+                }
+                parent = [ path.native [ path.join  $(parent) "..\\..\\..\\..\\..\\Auxiliary\\Build" ] ] ;
+            }
+            else if [ MATCH "(14.3)" : $(version) ]
             {
                 if $(.debug-configuration)
                 {

@@ -36,6 +36,8 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil.Schemas;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Lib;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -891,28 +893,50 @@ namespace pwiz.SkylineTestUtil
             {
                 return; // Identical
             }
-            var pattern = @"(?:[^,;\t""]*\\+[^,;\t""]*)";
-            for (var matching = true; matching;)
+
+            var splitChars = new[] { '\t', ';', ',' };
+
+            var colsActual = lineActual.Split(splitChars);
+            var colsExpected = lineExpected.Split(splitChars);
+            if (colsExpected.Length != colsActual.Length)
             {
-                matching = false;
-                var matchE = Regex.Match(lineExpected, pattern);
-                if (matchE.Success)
+                return; // No way we're cleaning this up to make a match
+            }
+
+            if (colsExpected.Length == 1 && lineActual.Contains(@"""")) // Is path embedded in a simple string?
+            {
+                // e.g. 'Import Molecule Search > Extract Chromatograms > Found results files : contains "C:\Users\bspratt\Downloads\Perftests\Label-free\Orbi3_SA_IP_pHis3_01.RAW"'
+                colsActual = lineActual.Split('\"');
+                colsExpected = lineExpected.Split('\"');
+                if (colsExpected.Length != colsActual.Length)
                 {
-                    var matchA = Regex.Match(lineActual, pattern);
-                    if (matchA.Success)
+                    return; // No way we're cleaning this up to make a match
+                }
+            }
+
+            for (var col = 0; col < colsActual.Length; col++)
+            {
+                var pathE = colsExpected[col];
+                var pathA = colsActual[col];
+                if (string.Equals(pathE, pathA))
+                {
+                    continue;
+                }
+
+                try  // Was column a filename?
+                {
+                    var fileE = Path.GetFileName(pathE.Trim().Trim('"')); // Unquote if needed
+                    var fileA = Path.GetFileName(pathA.Trim().Trim('"')); // Unquote if needed
+                    if (string.Equals(fileE, fileA) ||
+                        (Path.GetExtension(fileE) == @".tmp") && Path.GetExtension(fileE) == Path.GetExtension(fileA)) // Tmp file names will always vary
                     {
-                        var pathE = matchE.Groups[0].Value;
-                        var pathA = matchA.Groups[0].Value;
-                        var fileE = Path.GetFileName(pathE);
-                        var fileA = Path.GetFileName(pathA);
-                        if (string.Equals(fileE, fileA) || 
-                            (Path.GetExtension(fileE) == @".tmp") && Path.GetExtension(fileE) == Path.GetExtension(fileA)) // Tmp file names will always vary
-                        {
-                            lineExpected = lineExpected.Replace(pathE, string.Empty);
-                            lineActual = lineActual.Replace(pathA, string.Empty);
-                            matching = true;
-                        }
+                        lineExpected = lineExpected.Replace(pathE, string.Empty);
+                        lineActual = lineActual.Replace(pathA, string.Empty);
                     }
+                }
+                catch
+                {
+                    // ignored
                 }
             }
         }
@@ -998,6 +1022,48 @@ namespace pwiz.SkylineTestUtil
             NoDiff(file1, file2, null, columnTolerances, ignorePathDifferences);
         }
 
+        public static void LibraryEquals(LibrarySpec libraryExpected, LibrarySpec libraryActual, double mzTolerance = 1e-8, double intensityTolerance = 1e-5)
+        {
+            Library expectedLoaded = null, actualLoaded = null;
+            try
+            {
+                FileExists(libraryExpected.FilePath);
+                FileExists(libraryActual.FilePath);
+
+                var monitor = new DefaultFileLoadMonitor(new SilentProgressMonitor());
+                expectedLoaded = libraryExpected.LoadLibrary(monitor);
+                actualLoaded = libraryActual.LoadLibrary(monitor);
+                
+                Assert.AreEqual(expectedLoaded.SpectrumCount, actualLoaded.SpectrumCount, "spectrum counts not equal");
+
+                var expectedList = expectedLoaded.Keys.ToList();
+                var actualList = actualLoaded.Keys.ToList();
+
+                for (int i=0; i < expectedList.Count; ++i)
+                {
+                    var expected = expectedList[i];
+                    var actual = actualList[i];
+                    Assert.AreEqual(expected, actual, "spectrum library keys not equal");
+
+                    var expectedSpectra = expectedLoaded.GetSpectra(expected, IsotopeLabelType.light, LibraryRedundancy.best);
+                    var expectedSpectrum = expectedSpectra.First().SpectrumPeaksInfo.Peaks;
+                    var actualSpectra = actualLoaded.GetSpectra(actual, IsotopeLabelType.light, LibraryRedundancy.best);
+                    var actualSpectrum = actualSpectra.First().SpectrumPeaksInfo.Peaks;
+                    Assert.AreEqual(expectedSpectrum.Length, actualSpectrum.Length, "peak counts not equal");
+                    for (int j = 0; j < expectedSpectrum.Length; ++j)
+                    {
+                        Assert.AreEqual(expectedSpectrum[j].Mz, actualSpectrum[j].Mz, mzTolerance, "peak m/z delta exceeded tolerance");
+                        Assert.AreEqual(expectedSpectrum[j].Intensity, actualSpectrum[j].Intensity, intensityTolerance, "peak intensity delta exceeded tolerance");
+                    }
+                }
+            }
+            finally
+            {
+                expectedLoaded?.ReadStream.CloseStream();
+                actualLoaded?.ReadStream.CloseStream();
+            }
+        }
+
         /// <summary>
         /// Compare two DSV files, accounting for possible L10N differences
         /// </summary>
@@ -1015,10 +1081,12 @@ namespace pwiz.SkylineTestUtil
 
             var sep1 = DetermineDsvDelimiter(lines1, out var colCount1);
             var sep2 = DetermineDsvDelimiter(lines2, out var colCount2);
+            var errors = new List<string>();
             for (var lineNum = 0; lineNum < lines1.Length; lineNum++)
             {
                 var cols1 = lines1[lineNum].ParseDsvFields(sep1);
                 var cols2 = lines2[lineNum].ParseDsvFields(sep2);
+
                 colCount1 = cols1.Length;
                 colCount2 = cols2.Length;
 
@@ -1033,6 +1101,7 @@ namespace pwiz.SkylineTestUtil
                 }
 
                 AreEqual(colCount1, colCount2, $"Expected same column count at line {lineNum}");
+
                 if (hasHeaders && Equals(lineNum, 0) && !Equals(CultureInfo.CurrentCulture.TwoLetterISOLanguageName, @"en"))
                 {
                     continue; // Don't expect localized headers to match 
@@ -1058,10 +1127,11 @@ namespace pwiz.SkylineTestUtil
 
                     if (!same)
                     {
-                        AreEqual(cols1[colNum], cols2[colNum], $"Difference at row {lineNum} column {colNum}");
+                        errors.Add($"Difference at row {lineNum} column {colNum}: expected \"{cols1[colNum]}\" got \"{cols2[colNum]}\"");
                     }
                 }
             }
+            AreEqual(0, errors.Count, string.Join("\n", errors));
         }
 
         /// <summary>

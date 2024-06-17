@@ -68,8 +68,8 @@ using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
-using pwiz.Skyline.Model.Prosit.Communication;
-using pwiz.Skyline.Model.Prosit.Models;
+using pwiz.Skyline.Model.Koina.Communication;
+using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.SettingsUI;
@@ -725,17 +725,28 @@ namespace pwiz.Skyline
                 docPair => AuditLogEntry.CreateSimpleEntry(MessageType.test_only, docPair.NewDocumentType, description ?? string.Empty));
         }
 
+        public void ModifyDocument(string description, IDocumentModifier modifier)
+        {
+            ModifyDocument(description, null, modifier, null, null);
+        }
+
         public void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc)
         {
             ModifyDocument(description, null, act, null, null, logFunc);
         }
 
-        public void ModifyDocument(string description, IUndoState undoState, Func<SrmDocument, SrmDocument> act, Action onModifying, Action onModified, Func<SrmDocumentPair, AuditLogEntry> logFunc)
+        public void ModifyDocument(string description, IUndoState undoState, Func<SrmDocument, SrmDocument> act,
+            Action onModifying, Action onModified, Func<SrmDocumentPair, AuditLogEntry> logFunc)
+        {
+            ModifyDocument(description, undoState, DocumentModifier.Create(act, logFunc), onModifying, onModified);
+        }
+
+        public void ModifyDocument(string description, IUndoState undoState, IDocumentModifier documentModifier, Action onModifying, Action onModified)
         {
             Assume.IsFalse(InvokeRequired);
             try
             {
-                ModifyDocumentOrThrow(description, undoState, act, onModifying, onModified, logFunc);
+                ModifyDocumentOrThrow(description, undoState, documentModifier, onModifying, onModified);
             }
             catch (IdentityNotFoundException x)
             {
@@ -753,12 +764,12 @@ namespace pwiz.Skyline
 
         public bool AssumeNonNullModificationAuditLogging { get; set; }
 
-        public void ModifyDocumentOrThrow(string description, IUndoState undoState, Func<SrmDocument, SrmDocument> act,
-            Action onModifying, Action onModified, Func<SrmDocumentPair, AuditLogEntry> logFunc)
+        public void ModifyDocumentOrThrow(string description, IUndoState undoState, IDocumentModifier modifier,
+            Action onModifying, Action onModified)
         {
             using (var undo = BeginUndo(undoState))
             {
-                if (ModifyDocumentInner(act, onModifying, onModified, description, logFunc, out var entry))
+                if (ModifyDocumentInner(modifier, onModifying, onModified, description, out var entry))
                 {
                     // If the document was modified, then we want to fail if there is no audit log entry.
                     // We do not want to silently succeed without either an undo record or an audit log entry.
@@ -772,10 +783,10 @@ namespace pwiz.Skyline
 
         public void ModifyDocumentNoUndo(Func<SrmDocument, SrmDocument> act)
         {
-            ModifyDocumentInner(act, null, null, null, AuditLogEntry.SkipChange, out _);
+            ModifyDocumentInner(DocumentModifier.Create(act, AuditLogEntry.SkipChange), null, null, null, out _);
         }
 
-        private bool ModifyDocumentInner(Func<SrmDocument, SrmDocument> act, Action onModifying, Action onModified, string description, Func<SrmDocumentPair, AuditLogEntry> logFunc, out AuditLogEntry resultEntry)
+        private bool ModifyDocumentInner(IDocumentModifier modifier, Action onModifying, Action onModified, string description, out AuditLogEntry resultEntry)
         {
             LogException lastException = null;
             resultEntry = null;
@@ -789,33 +800,36 @@ namespace pwiz.Skyline
                     onModifying();
 
                 docOriginal = Document;
-                docNew = act(docOriginal);
-
+                var modifiedDocument = modifier.ModifyDocument(docOriginal, ModeUI);
                 // If no change has been made, return without committing a
                 // new undo record to the undo stack.
-                if (ReferenceEquals(docOriginal, docNew))
+                if (modifiedDocument == null)
+                {
                     return false;
+                }
 
                 AuditLogEntry entry;
-                try
+                if (modifiedDocument.AuditLogException == null)
                 {
-                    resultEntry = entry = logFunc?.Invoke(SrmDocumentPair.Create(docOriginal, docNew, ModeUI));
-                    // Compatibility: original implementation treated null as an acceptable reason to skip audit logging
-                    if (entry != null && entry.IsSkip)
-                        entry = null;
+                    resultEntry = entry = modifiedDocument.AuditLogEntry;
                 }
-                catch (Exception ex)
+                else
                 {
-                    lastException = new LogException(ex, description);
+                    lastException = new LogException(modifiedDocument.AuditLogException, description);
                     entry = AuditLogEntry.CreateExceptionEntry(lastException);
                 }
 
+                if (entry != null && entry.IsSkip)
+                {
+                    entry = null;
+                }
                 if (entry != null)
                 {
                     var currentCount = _undoManager.UndoCount;
                     entry = entry.ChangeUndoAction(e => _undoManager.UndoRestore(_undoManager.UndoCount - currentCount - 1));
                 }
 
+                docNew = modifiedDocument.Document;
                 if (entry == null || entry.UndoRedo.MessageInfo.Type != MessageType.test_only)
                     docNew = AuditLogEntry.UpdateDocument(entry, SrmDocumentPair.Create(docOriginal, docNew, ModeUI));
 
@@ -2574,7 +2588,8 @@ namespace pwiz.Skyline
                 newSettings = StoreNewSettings(newSettings);
 
             ModifyDocumentOrThrow(message ?? SkylineResources.SkylineWindow_ChangeSettings_Change_settings, undoState,
-                doc => doc.ChangeSettings(newSettings, monitor), onModifyingAction, onModifiedAction, AuditLogEntry.SettingsLogFunction);
+                DocumentModifier.Create(doc => doc.ChangeSettings(newSettings, monitor),
+                    AuditLogEntry.SettingsLogFunction), onModifyingAction, onModifiedAction);
             return true;
         }
 
@@ -4613,14 +4628,14 @@ namespace pwiz.Skyline
         }
 
 
-        private void prositLibMatchItem_Click(object sender, EventArgs e)
+        private void koinaLibMatchItem_Click(object sender, EventArgs e)
         {
-            prositLibMatchItem.Checked = !prositLibMatchItem.Checked;
+            koinaLibMatchItem.Checked = !koinaLibMatchItem.Checked;
 
-            if (prositLibMatchItem.Checked)
-                PrositUIHelpers.CheckPrositSettings(this, this);
+            if (koinaLibMatchItem.Checked)
+                KoinaUIHelpers.CheckKoinaSettings(this, this);
 
-            _graphSpectrumSettings.Prosit = prositLibMatchItem.Checked;
+            _graphSpectrumSettings.Koina = koinaLibMatchItem.Checked;
         }
 
         public bool ValidateSource()
@@ -4633,7 +4648,7 @@ namespace pwiz.Skyline
             var node = Document.Peptides.FirstOrDefault(p => p.ModifiedTarget.Equals(target));
             if (node == null)
                 return null;
-            return PrositRetentionTimeModel.Instance?.PredictSingle(PrositPredictionClient.Current, Document.Settings,
+            return KoinaRetentionTimeModel.Instance?.PredictSingle(KoinaPredictionClient.Current, Document.Settings,
                 node, CancellationToken.None)[node];
         }
 

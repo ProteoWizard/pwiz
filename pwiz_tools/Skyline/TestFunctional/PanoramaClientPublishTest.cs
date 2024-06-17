@@ -26,7 +26,7 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestPublishToPanorama()
         {
-            using (new FakeProsit(null))
+            using (new FakeKoina(null))
             {
                 RunFunctionalTest();
             }

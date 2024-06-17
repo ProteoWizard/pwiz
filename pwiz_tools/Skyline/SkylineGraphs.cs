@@ -1191,8 +1191,8 @@ namespace pwiz.Skyline
             // Need to test small mol
             if (isProteomic && control?.ControlType == SpectrumControlType.LibraryMatch)
             {
-                prositLibMatchItem.Checked = Settings.Default.Prosit;
-                menuStrip.Items.Insert(iInsert++, prositLibMatchItem);
+                koinaLibMatchItem.Checked = Settings.Default.Koina;
+                menuStrip.Items.Insert(iInsert++, koinaLibMatchItem);
                 mirrorMenuItem.Checked = Settings.Default.LibMatchMirror;
                 menuStrip.Items.Insert(iInsert++, mirrorMenuItem);
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator61);
@@ -3924,9 +3924,26 @@ namespace pwiz.Skyline
                 peptideLogScaleContextMenuItem.Checked = set.AreaLogScale;
                 selectionContextMenuItem.Checked = set.ShowReplicateSelection;
                 menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
-
-                synchronizeSummaryZoomingContextMenuItem.Checked = set.SynchronizeSummaryZooming;
-                menuStrip.Items.Insert(iInsert++, synchronizeSummaryZoomingContextMenuItem);
+                if (graphType == GraphTypeSummary.abundance)
+                {
+                    menuStrip.Items.Insert(iInsert++, new ToolStripMenuItem(GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_Auto_Arrange_Labels, null, OnLabelOverlapClick)
+                    {
+                        Checked = Settings.Default.GroupComparisonAvoidLabelOverlap
+                    });
+                    if (Settings.Default.GroupComparisonAvoidLabelOverlap && 
+                        graphSummary.GraphPaneFromPoint(mousePt) is SummaryRelativeAbundanceGraphPane abundancePane)
+                    {
+                        var suspendResumeText = Settings.Default.GroupComparisonSuspendLabelLayout
+                            ? GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_RestartLabelLayout
+                            : GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_PauseLabelLayout;
+                        menuStrip.Items.Insert(iInsert++, new ToolStripMenuItem(suspendResumeText, null, abundancePane.OnSuspendLayout));
+                    }
+                }
+                else
+                {
+                    synchronizeSummaryZoomingContextMenuItem.Checked = set.SynchronizeSummaryZooming;
+                    menuStrip.Items.Insert(iInsert++, synchronizeSummaryZoomingContextMenuItem);
+                }
             }
 
             menuStrip.Items.Insert(iInsert++, toolStripSeparator24);
@@ -3951,6 +3968,11 @@ namespace pwiz.Skyline
                 if (tag == @"set_default" || tag == @"show_val")
                     menuStrip.Items.Remove(item);
             }
+        }
+
+        private void OnLabelOverlapClick(object o, EventArgs eventArgs)
+        {
+            Settings.Default.GroupComparisonAvoidLabelOverlap = !Settings.Default.GroupComparisonAvoidLabelOverlap;
         }
 
         private ToolStripItem MakeNormalizeToMenuItem(NormalizeOption normalizeOption, bool isChecked)
