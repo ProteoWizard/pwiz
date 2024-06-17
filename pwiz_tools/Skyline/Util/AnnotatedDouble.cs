@@ -18,7 +18,6 @@
  */
 using System;
 using System.ComponentModel;
-using System.Drawing;
 using System.Globalization;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
