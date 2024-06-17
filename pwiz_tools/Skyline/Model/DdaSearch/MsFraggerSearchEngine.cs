@@ -119,6 +119,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         public override string[] Ms2Analyzers => new [] { @"Default" };
         public override string EngineName => @"MSFragger";
         public override Bitmap SearchEngineLogo => null;
+        public override string SearchEngineBlurb => string.Empty;
         public override event NotificationEventHandler SearchProgressChanged;
 
         public override bool Run(CancellationTokenSource cancelToken, IProgressStatus status)

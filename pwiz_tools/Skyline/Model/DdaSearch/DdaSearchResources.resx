@@ -196,4 +196,7 @@
   <data name="MsconvertDdaConverter_Run_Converting_file___0___to__1_" xml:space="preserve">
     <value>Converting file "{0}" to {1}</value>
   </data>
+  <data name="HardklorSearchEngine_SearchEngineBlurb" xml:space="preserve">
+    <value>Hardklor searches for peptide-like features in MS1 scans using an averagine model. Features found by Hardklor are represented in Skyline as small molecules with the chemical formula that Hardklor used to generate the isotope distribution it matched to the feature, plus a mass offset to match the high-res peak mass to charge ratio. This is not the actual formula of the molecule responsible for the MS1 peaks in the mass spectrometer, but rather an approximation with a matching isotope distribution.</value>
+  </data>
 </root>

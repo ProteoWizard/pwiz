@@ -57,6 +57,7 @@
             this.textHardklorSignalToNoise = new System.Windows.Forms.TextBox();
             this.lblHardklorSignalToNoise = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.lblSearchEngineBlurb = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pBLogo)).BeginInit();
             this.groupBoxHardklor.SuspendLayout();
             this.SuspendLayout();
@@ -232,10 +233,16 @@
             resources.ApplyResources(this.lblHardklorSignalToNoise, "lblHardklorSignalToNoise");
             this.lblHardklorSignalToNoise.Name = "lblHardklorSignalToNoise";
             // 
+            // lblSearchEngineBlurb
+            // 
+            resources.ApplyResources(this.lblSearchEngineBlurb, "lblSearchEngineBlurb");
+            this.lblSearchEngineBlurb.Name = "lblSearchEngineBlurb";
+            // 
             // SearchSettingsControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.lblSearchEngineBlurb);
             this.Controls.Add(this.groupBoxHardklor);
             this.Controls.Add(this.cbMs2Analyzer);
             this.Controls.Add(this.lblMs2Analyzer);
@@ -292,5 +299,6 @@
         private System.Windows.Forms.TextBox textHardklorMinIntensityPPM;
         private System.Windows.Forms.Label labelPPM;
         private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.Label lblSearchEngineBlurb;
     }
 }

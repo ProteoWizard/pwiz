@@ -138,7 +138,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbMS1TolUnit.ZOrder" xml:space="preserve">
-    <value>18</value>
+    <value>19</value>
   </data>
   <data name="lblMs1Tolerance.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -165,7 +165,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblMs1Tolerance.ZOrder" xml:space="preserve">
-    <value>17</value>
+    <value>18</value>
   </data>
   <data name="txtMS1Tolerance.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 106</value>
@@ -186,7 +186,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;txtMS1Tolerance.ZOrder" xml:space="preserve">
-    <value>16</value>
+    <value>17</value>
   </data>
   <data name="txtMS2Tolerance.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 146</value>
@@ -207,7 +207,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;txtMS2Tolerance.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>14</value>
   </data>
   <data name="lblMs2Tolerance.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -234,7 +234,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblMs2Tolerance.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>15</value>
   </data>
   <data name="cbMS2TolUnit.Location" type="System.Drawing.Point, System.Drawing">
     <value>153, 146</value>
@@ -255,7 +255,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbMS2TolUnit.ZOrder" xml:space="preserve">
-    <value>15</value>
+    <value>16</value>
   </data>
   <data name="lblFragmentIons.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -282,7 +282,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblFragmentIons.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>13</value>
   </data>
   <data name="cbFragmentIons.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 190</value>
@@ -303,7 +303,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbFragmentIons.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>12</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnAdditionalSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -331,7 +331,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnAdditionalSettings.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="pBLogo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -355,7 +355,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;pBLogo.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -382,7 +382,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -409,7 +409,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="lblMaxVariableMods.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -439,7 +439,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblMaxVariableMods.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="cbMaxVariableMods.Items" xml:space="preserve">
     <value>0</value>
@@ -490,7 +490,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbMaxVariableMods.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="searchEngineComboBox.Items" xml:space="preserve">
     <value>MSAmanda</value>
@@ -520,7 +520,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;searchEngineComboBox.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -550,7 +550,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="cbMs2Analyzer.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 239</value>
@@ -571,7 +571,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbMs2Analyzer.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="lblMs2Analyzer.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -601,7 +601,115 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblMs2Analyzer.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;labelPPM.Name" xml:space="preserve">
+    <value>labelPPM</value>
+  </data>
+  <data name="&gt;&gt;labelPPM.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelPPM.Parent" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;labelPPM.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;textHardklorMinIntensityPPM.Name" xml:space="preserve">
+    <value>textHardklorMinIntensityPPM</value>
+  </data>
+  <data name="&gt;&gt;textHardklorMinIntensityPPM.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textHardklorMinIntensityPPM.Parent" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;textHardklorMinIntensityPPM.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;labelMinIntensityPPM.Name" xml:space="preserve">
+    <value>labelMinIntensityPPM</value>
+  </data>
+  <data name="&gt;&gt;labelMinIntensityPPM.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelMinIntensityPPM.Parent" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;labelMinIntensityPPM.ZOrder" xml:space="preserve">
     <value>2</value>
+  </data>
+  <data name="&gt;&gt;textHardklorMinIdotP.Name" xml:space="preserve">
+    <value>textHardklorMinIdotP</value>
+  </data>
+  <data name="&gt;&gt;textHardklorMinIdotP.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textHardklorMinIdotP.Parent" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;textHardklorMinIdotP.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;labelHardklorMinIdotP.Name" xml:space="preserve">
+    <value>labelHardklorMinIdotP</value>
+  </data>
+  <data name="&gt;&gt;labelHardklorMinIdotP.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelHardklorMinIdotP.Parent" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;labelHardklorMinIdotP.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;textHardklorSignalToNoise.Name" xml:space="preserve">
+    <value>textHardklorSignalToNoise</value>
+  </data>
+  <data name="&gt;&gt;textHardklorSignalToNoise.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textHardklorSignalToNoise.Parent" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;textHardklorSignalToNoise.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;lblHardklorSignalToNoise.Name" xml:space="preserve">
+    <value>lblHardklorSignalToNoise</value>
+  </data>
+  <data name="&gt;&gt;lblHardklorSignalToNoise.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblHardklorSignalToNoise.Parent" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;lblHardklorSignalToNoise.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="groupBoxHardklor.Location" type="System.Drawing.Point, System.Drawing">
+    <value>178, 254</value>
+  </data>
+  <data name="groupBoxHardklor.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 168</value>
+  </data>
+  <data name="groupBoxHardklor.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="groupBoxHardklor.Text" xml:space="preserve">
+    <value>Search parameters</value>
+  </data>
+  <data name="&gt;&gt;groupBoxHardklor.Name" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;groupBoxHardklor.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBoxHardklor.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;groupBoxHardklor.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="labelPPM.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -630,6 +738,9 @@
   <data name="&gt;&gt;labelPPM.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <data name="textHardklorMinIntensityPPM.Location" type="System.Drawing.Point, System.Drawing">
     <value>17, 135</value>
   </data>
@@ -639,9 +750,6 @@
   <data name="textHardklorMinIntensityPPM.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <data name="textHardklorMinIntensityPPM.ToolTip" xml:space="preserve">
     <value>Ignore features whose intensity relative to the sum of all detected feature intensities in a sample is less than this</value>
   </data>
@@ -692,12 +800,6 @@
   </data>
   <data name="textHardklorMinIdotP.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
-  </data>
-  <data name="textHardklorMinIdotP.ToolTip" xml:space="preserve">
-    <value>Ignore features with idotp (isotope envelope shape correlation, or "Normalized Contrast Angle") less than this value.
-
-Note that internally Hardklor uses Cosine Angle Correlation scoring, this is related to Normalized Contrast Angle as 
-NCA=1.0-(acos(CAC)*2/PI)</value>
   </data>
   <data name="&gt;&gt;textHardklorMinIdotP.Name" xml:space="preserve">
     <value>textHardklorMinIdotP</value>
@@ -796,28 +898,34 @@ Note that this is a local noise threshold for the area of the spectrum that the 
   <data name="&gt;&gt;lblHardklorSignalToNoise.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
-  <data name="groupBoxHardklor.Location" type="System.Drawing.Point, System.Drawing">
-    <value>178, 254</value>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <data name="lblSearchEngineBlurb.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
   </data>
-  <data name="groupBoxHardklor.Size" type="System.Drawing.Size, System.Drawing">
-    <value>200, 168</value>
+  <data name="lblSearchEngineBlurb.Location" type="System.Drawing.Point, System.Drawing">
+    <value>348, 57</value>
   </data>
-  <data name="groupBoxHardklor.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
+  <data name="lblSearchEngineBlurb.Size" type="System.Drawing.Size, System.Drawing">
+    <value>36, 230</value>
   </data>
-  <data name="groupBoxHardklor.Text" xml:space="preserve">
-    <value>Search parameters</value>
+  <data name="lblSearchEngineBlurb.TabIndex" type="System.Int32, mscorlib">
+    <value>23</value>
   </data>
-  <data name="&gt;&gt;groupBoxHardklor.Name" xml:space="preserve">
-    <value>groupBoxHardklor</value>
+  <data name="lblSearchEngineBlurb.Text" xml:space="preserve">
+    <value>(blurb)</value>
   </data>
-  <data name="&gt;&gt;groupBoxHardklor.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;lblSearchEngineBlurb.Name" xml:space="preserve">
+    <value>lblSearchEngineBlurb</value>
   </data>
-  <data name="&gt;&gt;groupBoxHardklor.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblSearchEngineBlurb.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblSearchEngineBlurb.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;groupBoxHardklor.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblSearchEngineBlurb.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">

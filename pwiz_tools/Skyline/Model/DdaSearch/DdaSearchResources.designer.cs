@@ -287,6 +287,15 @@ namespace pwiz.Skyline.Model.DdaSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Hardklor searches for peptide-like features in MS1 scans using an averagine model. Features found by Hardklor are represented in Skyline as small molecules with the chemical formula that Hardklor used to generate the isotope distribution it matched to the feature, plus a mass offset to match the high-res peak mass to charge ratio. This is not the actual formula of the molecule responsible for the MS1 peaks in the mass spectrometer, but rather an approximation with a matching isotope distribution..
+        /// </summary>
+        public static string HardklorSearchEngine_SearchEngineBlurb {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_SearchEngineBlurb", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Converting file &quot;{0}&quot; to {1}.
         /// </summary>
         public static string MsconvertDdaConverter_Run_Converting_file___0___to__1_ {

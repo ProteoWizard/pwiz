@@ -56,6 +56,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
                 pBLogo.Visible = true;
                 pBLogo.SizeMode = PictureBoxSizeMode.AutoSize;
+                HandleSearchEngineBlurb();
 
                 // Add the Hardklor full scan settings control, used only when the user set FullScan analyzer to "Centroided"
                 // Otherwise just displays the previously designated Full Scan settings
@@ -302,8 +303,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             //lblSearchEngineName.Text = ImportPeptideSearch.SearchEngine.EngineName;
             LoadComboboxEntries();
             pBLogo.Image = ImportPeptideSearch.SearchEngine.SearchEngineLogo;
+            HandleSearchEngineBlurb();
             btnAdditionalSettings.Enabled = ImportPeptideSearch.SearchEngine.AdditionalSettings != null;
             ImportPeptideSearch.RemainingStepsInSearch = ImportPeptideSearch.IsFeatureDetection ? 2 : 1; // Hardklor is followed by one or more BullseyeSharp calls
+        }
+
+        // Arrange and populate the search engine blurb, if any, below the search engine logo
+        private void HandleSearchEngineBlurb()
+        {
+            lblSearchEngineBlurb.Left = pBLogo.Left;
+            lblSearchEngineBlurb.Width = pBLogo.Width;
+            lblSearchEngineBlurb.Top = pBLogo.Bottom + pBLogo.Margin.Top;
+            lblSearchEngineBlurb.Text = ImportPeptideSearch.SearchEngine.SearchEngineBlurb ?? string.Empty;
+            lblSearchEngineBlurb.Enabled = lblSearchEngineBlurb.Visible = !string.IsNullOrEmpty(ImportPeptideSearch.SearchEngine.SearchEngineBlurb);
         }
 
         private void LoadComboboxEntries()

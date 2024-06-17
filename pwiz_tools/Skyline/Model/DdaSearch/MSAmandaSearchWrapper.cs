@@ -165,6 +165,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         public override string[] Ms2Analyzers => new[] { @"Default" };
         public override string EngineName => @"MS Amanda";
         public override Bitmap SearchEngineLogo => Resources.MSAmandaLogo;
+        public override string  SearchEngineBlurb => string.Empty;
 
         public override void SetPrecursorMassTolerance(MzTolerance tol)
         {
