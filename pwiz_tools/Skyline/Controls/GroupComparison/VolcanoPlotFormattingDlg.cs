@@ -154,11 +154,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
             UpdateAdvancedColumns();
 
             regexColorRowGrid1.Owner = this;
-            if (hasFoldChangeResults)
+            if (!hasFoldChangeResults)
             {
                 Text = GroupComparisonResources.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting;
             }
             SetExpressionMinimumWidth();
+            layoutLabelsBox.Checked = Settings.Default.GroupComparisonAvoidLabelOverlap;
         }
 
         public class PointSizeStringPair
@@ -403,6 +404,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private void advancedCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             UpdateAdvancedColumns();
+        }
+        private void layoutLabelsBox_CheckedChanged(object sender, EventArgs e)
+        {
+            Settings.Default.GroupComparisonAvoidLabelOverlap = layoutLabelsBox.Checked;
+            _updateGraph(ResultList);
         }
     }
 }
