@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -276,17 +277,17 @@ namespace pwiz.SkylineTestFunctional
                     Assert.IsNotNull(protein);
                     var replicate = (Replicate) row.Cells[colReplicate.Index].Value;
                     Assert.IsNotNull(replicate);
-                    var abundance = (double?) row.Cells[colProteinAbundance.Index].Value;
+                    var abundance = (Protein.AbundanceValue) row.Cells[colProteinAbundance.Index].Value;
                     Assert.IsNotNull(abundance);
                     var diagnosis = replicate.ChromatogramSet.Annotations.GetAnnotation(ANNOTIONNAME_DIAGNOSIS);
                     if (diagnosis == "AD")
                     {
-                        proteinAbundanceDenominators.Add(protein.IdentityPath, abundance.Value);
+                        proteinAbundanceDenominators.Add(protein.IdentityPath, abundance.TransitionAveraged);
                     }
                     else
                     {
                         Assert.AreEqual("PD", diagnosis);
-                        proteinAbundanceNumerators.Add(protein.IdentityPath, abundance.Value);
+                        proteinAbundanceNumerators.Add(protein.IdentityPath, abundance.TransitionAveraged);
                     }
                 }
             });
