@@ -510,18 +510,29 @@ namespace pwiz.SkylineTestFunctional
                     messageDlg.ClickYes();
                 });
 
-            // Verify that peptides with negative RTs are updated
+            // Verify that all peptides have had their predicted retention time moved so that the retention time window subtracted from
+            // the predicted retention time is at least AgilentMassListExporter.AGILENT_MIN_START_ACQUISITION_TIME
             var resReader = new DsvFileReader(csvPath, TextUtil.SEPARATOR_TSV);
             while (resReader.ReadLine() != null)
             {
+                Assert.IsTrue(float.TryParse(resReader.GetFieldByName("RT Window (min)"),
+                    NumberStyles.Float | NumberStyles.AllowThousands, _cultureInfo, out var rtWindow));
+                Assert.IsTrue(float.TryParse(resReader.GetFieldByName("RT (min)"),
+                    NumberStyles.Float | NumberStyles.AllowThousands, _cultureInfo, out var rtPredicted));
                 var pepSequence = resReader.GetFieldByName("Compound Name");
                 if (pepSequence == "YIC[+57.021464]DNQDTISSK.light" || pepSequence == "IKNLQSLDPSH.light")
                 {
-                    if (float.TryParse(resReader.GetFieldByName("RT Window (min)"), out var rtWindow)
-                        && float.TryParse(resReader.GetFieldByName("RT (min)"), out var rt))
-                        Assert.AreEqual(Math.Round(rtWindow + 0.1, 2).ToString(_cultureInfo), resReader.GetFieldByName("RT (min)"));
-                    else
-                        Assert.Fail("Cannot parse data in the resulting transition list.");
+                    // These two peptides are known to have predicted retention times less than rtWindow
+                    Assert.AreEqual(rtPredicted, rtWindow + AgilentMassListExporter.AGILENT_MIN_START_ACQUISITION_TIME, 
+                        "Peptide {0} retention time {1} should be equal to RT Window {2} plus minimum {3}",
+                        pepSequence, rtPredicted, rtWindow, AgilentMassListExporter.AGILENT_MIN_START_ACQUISITION_TIME);
+                }
+                else
+                {
+                    // All other peptides should have a predicted retention time that is greater than rtWindow
+                    Assert.IsTrue(rtPredicted >= rtWindow + AgilentMassListExporter.AGILENT_MIN_START_ACQUISITION_TIME, 
+                        "Peptide {0} retention time {1} should be greater than or equal to RT Window {2} plus minimum {3}",
+                        pepSequence, rtPredicted, rtWindow, AgilentMassListExporter.AGILENT_MIN_START_ACQUISITION_TIME);
                 }
             }
         }
