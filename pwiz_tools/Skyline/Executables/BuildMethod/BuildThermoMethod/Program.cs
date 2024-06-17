@@ -127,6 +127,7 @@ namespace BuildThermoMethod
         public double? CollisionEnergy { get; set; }
         public SureQuantInfo SureQuantInfo { get; set; }
         public double? IntensityThreshold { get; set; }
+        public double? FaimsCV { get; set; }
 
         public ListItem()
         {
@@ -140,6 +141,7 @@ namespace BuildThermoMethod
             CollisionEnergy = 0.0;
             SureQuantInfo = null;
             IntensityThreshold = null;
+            FaimsCV = null;
         }
 
         public static ListItem FromLine(int lineNum, string[] fields, Dictionary<int, string> columnMap)
@@ -155,6 +157,9 @@ namespace BuildThermoMethod
 
             // Fusion
             // m/z,z,t start (min),t end (min),CID Collision Energy (%)
+
+            // Stellar
+            // m/z,z,t start (min),t stop (min),HCD Collision Energy/Energies (%), FAIMS CV (V)
 
             var item = new ListItem();
 
@@ -172,12 +177,6 @@ namespace BuildThermoMethod
                 if (curHeader.Equals("compound", StringComparison.InvariantCultureIgnoreCase))
                 {
                     item.Compound = curValue;
-                    var match = Regex.Match(curValue, @".+\(([\+|-])\)?(\d+)\).*");
-                    if (match.Success)
-                    {
-                        if(int.TryParse(match.Groups[2].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var res))
-                            item.Charge = (match.Groups[1].Value == "-" ? -1 : 1) * res;
-                    }
                 }
                 else if (curHeader.Equals("retention time (min)", StringComparison.InvariantCultureIgnoreCase))
                 {
@@ -230,7 +229,8 @@ namespace BuildThermoMethod
                         item.ProductMz = mzParse;
                 }
                 else if (curHeader.Equals("collision energy (v)", StringComparison.InvariantCultureIgnoreCase) ||
-                         curHeader.Equals("cid collision energy (%)", StringComparison.InvariantCultureIgnoreCase))
+                         curHeader.Equals("cid collision energy (%)", StringComparison.InvariantCultureIgnoreCase) ||
+                         curHeader.Equals("hcd collision energy/energies (%)", StringComparison.InvariantCultureIgnoreCase))
                 {
                     parseFail = !double.TryParse(curValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var ceParse);
                     if (!parseFail)
@@ -247,6 +247,12 @@ namespace BuildThermoMethod
                     parseFail = !double.TryParse(curValue, out var thresholdParse);
                     if (!parseFail)
                         item.IntensityThreshold = thresholdParse;
+                }
+                else if (curHeader.Equals("FAIMS CV (V)", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    parseFail = !double.TryParse(curValue, out var faimsParse);
+                    if (!parseFail)
+                        item.FaimsCV = faimsParse;
                 }
 
                 if (parseFail)
@@ -875,10 +881,12 @@ namespace BuildThermoMethod
                     EndTime = item.RetentionEnd.GetValueOrDefault(),
                     CompoundName = item.Compound,
                     CIDCollisionEnergy = item.CollisionEnergy.GetValueOrDefault(),
+                    FAIMSCV = item.FaimsCV.GetValueOrDefault(),
                     ZSpecified = true,
                     StartTimeSpecified = true,
                     EndTimeSpecified = true,
-                    CIDCollisionEnergySpecified = true
+                    CIDCollisionEnergySpecified = true,
+                    FAIMSCVSpecified = true,
                 });
             }
 
