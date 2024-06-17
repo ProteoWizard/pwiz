@@ -933,6 +933,14 @@ namespace pwiz.SkylineTestUtil
                         lineExpected = lineExpected.Replace(pathE, string.Empty);
                         lineActual = lineActual.Replace(pathA, string.Empty);
                     }
+
+if (lineActual.StartsWith(@"z:") || lineExpected.StartsWith(@"z:"))
+{
+    Console.WriteLine($@"#pathE={pathE}#");
+    Console.WriteLine($@"#pathA={pathA}#");
+    Console.WriteLine($@"#fileE={fileE}#");
+    Console.WriteLine($@"#fileA={fileA}#");
+}
                 }
                 catch
                 {
