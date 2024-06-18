@@ -873,7 +873,7 @@ namespace pwiz.SkylineTestUtil
                         RemovePathDifferences(ref lineTarget, ref lineActual);
                     }
                     // If only difference appears to be generated GUIDs or timestamps, let it pass
-                    if (!LinesEquivalentIgnoringTimeStampsAndGUIDs(lineTarget, lineActual, columnTolerances))
+                    if (!LinesEquivalentIgnoringTimeStampsAndGUIDs(lineTarget, lineActual, columnTolerances, out var failureMessage))
                     {
                         var sbEnd = new StringBuilder();
                         var sbStart = new StringBuilder();
@@ -902,7 +902,8 @@ namespace pwiz.SkylineTestUtil
                             "actual",
                             actualLine,
                             "matching prefix: '" + sbStart + "'",
-                            "matching suffix: '" + sbEnd + "'"));
+                            "matching suffix: '" + sbEnd + "'",
+                            "decimal matching: " + failureMessage));
                     }
                     lineEqualLast = expectedLine;
                     count++;
@@ -958,26 +959,20 @@ namespace pwiz.SkylineTestUtil
                         lineExpected = lineExpected.Replace(pathE, string.Empty);
                         lineActual = lineActual.Replace(pathA, string.Empty);
                     }
-
                 }
-                catch (Exception e)
+                catch
                 {
-                    if (pathA.IndexOf(@":", StringComparison.Ordinal) == 1 || pathE.IndexOf(@":", StringComparison.Ordinal) == 1)
-                    {
-                        Console.WriteLine($@"#pathE={pathE}#");
-                        Console.WriteLine($@"#pathA={pathA}#");
-                        Console.WriteLine($@"#fileE={pathE}#");
-                        Console.WriteLine($@"#fileA={pathA}#");
-                        Console.WriteLine(e);
-                    }
+                    // ignored
                 }
             }
         }
 
 
         private static bool LinesEquivalentIgnoringTimeStampsAndGUIDs(string lineExpected, string lineActual,
-            Dictionary<int, double> columnTolerances = null) // Per-column numerical tolerances if strings can be read as TSV, "-1" means any column
+            Dictionary<int, double> columnTolerances, out string failureMessage) // Per-column numerical tolerances if strings can be read as TSV, "-1" means any column
         {
+            failureMessage = string.Empty;  // For all the return true cases
+
             if (string.Equals(lineExpected, lineActual))
             {
                 return true; // Identical
@@ -1019,16 +1014,52 @@ namespace pwiz.SkylineTestUtil
                 {
                     for (var c = 0; c < colsActual.Length; c++)
                     {
-                        if (colsActual[c] != colsExpected[c])
+                        var textActual = colsActual[c];
+                        var textExpected = colsExpected[c];
+                        var matching = Equals(textExpected, textActual);
+                        if (matching)
+                            continue;
+                        // See if there's a tolerance for this column, or a default tolerance (column "-1" in the dictionary)
+                        if (!columnTolerances.TryGetValue(c, out var tolerance) && !columnTolerances.TryGetValue(-1, out tolerance))
+                            return false; // No tolerance given for this column
+                        if (!TextUtil.TryParseDoubleUncertainCulture(textActual, out var valActual) ||
+                            !TextUtil.TryParseDoubleUncertainCulture(textExpected, out var valExpected))
                         {
-                            // See if there's a tolerance for this column, or a default tolerance (column "-1" in the dictionary)
-                            if ((!columnTolerances.TryGetValue(c, out var tolerance) && !columnTolerances.TryGetValue(-1, out tolerance)) || // No tolerance given for this column
-                                !(TextUtil.TryParseDoubleUncertainCulture(colsActual[c], out var valActual) &&
-                                  TextUtil.TryParseDoubleUncertainCulture(colsExpected[c], out var valExpected)) || // One or both don't parse as doubles
-                                (Math.Abs(valActual - valExpected) > tolerance + tolerance / 1000)) // Allow for rounding cruft
+                            return false;
+                        }
+
+                        var actualParts = textActual.Split(new[] { 'E', 'e' });
+                        var expectedParts = textExpected.Split(new[] { 'E', 'e' });
+                        if (actualParts.Length == 2 && expectedParts.Length == 2)
+                        {
+                            // Both strings have exponent, so check if they are equal
+                            if (!Equals(expectedParts[1], actualParts[1]) ||
+                                // Then check the mantissas match to the expected tolerance
+                                !TextUtil.TryParseDoubleUncertainCulture(actualParts[0], out valActual) ||
+                                !TextUtil.TryParseDoubleUncertainCulture(expectedParts[0], out valExpected))
                             {
-                                return false; // Can't account for difference
+                                failureMessage = string.Format(
+                                    "Expected decimal value: {0} does not match actual {1}",
+                                    textExpected, textActual);
+                                return false; // One or both mantissas don't parse as doubles
                             }
+                        }
+
+                        if (Math.Abs(valActual - valExpected) > tolerance + tolerance / 1000) // Allow for rounding cruft
+                        {
+                            if (expectedParts.Length == 2)
+                            {
+                                failureMessage = string.Format(
+                                    "Expected decimal mantissa: {0} does not match actual {1} to within {2}",
+                                    valExpected, valActual, tolerance + tolerance / 1000);
+                            }
+                            else
+                            {
+                                failureMessage = string.Format(
+                                    "Expected decimal value: {0} does not match actual {1} to within {2}",
+                                    textExpected, textActual, tolerance + tolerance / 1000);
+                            }
+                            return false; // Can't account for difference
                         }
                     }
                     return true; // Differences accounted for
