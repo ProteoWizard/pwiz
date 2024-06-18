@@ -672,16 +672,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             var foldChangeRows = GetFoldChangeRows(_bindingListSource).ToArray();
 
-            var backup = GroupComparisonDef.ColorRows.Select(r => (MatchRgbHexColor)r.Clone()).ToArray();
-            // This list will later be used as a BindingList, so we have to create a mutable clone
-            var copy = GroupComparisonDef.ColorRows.Select(r => (MatchRgbHexColor) r.Clone()).ToList();
-            using (var form = new VolcanoPlotFormattingDlg(this, copy, foldChangeRows,
-            rows =>
-            {
-                EditGroupComparisonDlg.ChangeGroupComparisonDef(false, GroupComparisonModel, GroupComparisonDef.ChangeColorRows(rows));
-                zedGraphControl.GraphPane.EnableLabelLayout = Settings.Default.GroupComparisonAvoidLabelOverlap;
-                UpdateGraph();
-            }))
+            var backup = GroupComparisonDef.ColorRows.Select(r => r.Clone()).ToArray();
+            using var form = new VolcanoPlotFormattingDlg(this, GroupComparisonDef.ColorRows, foldChangeRows, UpdateColorRows);
             {
                 if (form.ShowDialog(FormEx.GetParentForm(this)) == DialogResult.OK)
                 {
@@ -694,6 +686,14 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
                 UpdateGraph();
             }     
+        }
+
+        private void UpdateColorRows(IEnumerable<MatchRgbHexColor> colorRows)
+        {
+            EditGroupComparisonDlg.ChangeGroupComparisonDef(false, GroupComparisonModel,
+                GroupComparisonDef.ChangeColorRows(colorRows));
+            zedGraphControl.GraphPane.EnableLabelLayout = Settings.Default.GroupComparisonAvoidLabelOverlap;
+            UpdateGraph();
         }
 
         private void OnRemoveBelowCutoffsClick(object o, EventArgs eventArgs)

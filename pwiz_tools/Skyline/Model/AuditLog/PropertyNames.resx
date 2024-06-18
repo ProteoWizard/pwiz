@@ -1787,4 +1787,7 @@
   <data name="ParsimonySettings_GeneLevelParsimony" xml:space="preserve">
     <value>Group at gene level</value>
   </data>
+  <data name="DataSettings_RelativeAbundanceFormatting" xml:space="preserve">
+    <value>Relative Abundance Formatting</value>
+  </data>
 </root>

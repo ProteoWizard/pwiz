@@ -664,6 +664,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Relative Abundance Formatting.
+        /// </summary>
+        public static string DataSettings_RelativeAbundanceFormatting {
+            get {
+                return ResourceManager.GetString("DataSettings_RelativeAbundanceFormatting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Instrument preset.
         /// </summary>
         public static string DdaConverterSettings_InstrumentPreset {
@@ -970,20 +979,20 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Narrow window results.
-        /// </summary>
-        public static string EncyclopeDiaSettings_NarrowWindowResults {
-            get {
-                return ResourceManager.GetString("EncyclopeDiaSettings_NarrowWindowResults", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Koina settings.
         /// </summary>
         public static string EncyclopeDiaSettings_KoinaSettings {
             get {
                 return ResourceManager.GetString("EncyclopeDiaSettings_KoinaSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Narrow window results.
+        /// </summary>
+        public static string EncyclopeDiaSettings_NarrowWindowResults {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaSettings_NarrowWindowResults", resourceCulture);
             }
         }
         

@@ -28,8 +28,10 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -42,19 +44,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public abstract class SummaryRelativeAbundanceGraphPane : SummaryBarGraphPaneBase
     {
-
         protected GraphData _graphData;
-        private SkylineDataSchema _schema;
-        public bool AnyProteomic;
-        public bool AnyMolecules;
-        public SrmDocument Document;
         private bool _areaProteinTargets;
         private bool _excludePeptideLists;
         private bool _excludeStandards;
         private readonly List<LabeledPoint> _labeledPoints;
-        public bool ShowingFormattingDlg { get; set; }
-        public IList<MatchRgbHexColor> ColorRows { get; set; }
-        protected SummaryRelativeAbundanceGraphPane(GraphSummary graphSummary, IList<MatchRgbHexColor> colorRows)
+        private static RelativeAbundanceFormatting _formattingOverride;
+        protected SummaryRelativeAbundanceGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
             var xAxisTitle =
@@ -62,17 +58,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     graphSummary.DocumentUIContainer.DocumentUI.DocumentType);
             XAxis.Title.Text = xAxisTitle;
             XAxis.Type = AxisType.Linear;
-            Document = graphSummary.DocumentUIContainer.DocumentUI;
-            XAxis.Scale.Max = Document.MoleculeGroups.Count();
-            AnyMolecules = Document.HasSmallMolecules;
-            AnyProteomic = Document.HasPeptides;
+            XAxis.Scale.Max = GraphSummary.DocumentUIContainer.DocumentUI.MoleculeGroupCount;
             _areaProteinTargets = Settings.Default.AreaProteinTargets;
             _excludePeptideLists = Settings.Default.ExcludePeptideListsFromAbundanceGraph;
             _excludeStandards = Settings.Default.ExcludeStandardsFromAbundanceGraph;
-            ColorRows = colorRows ?? new List<MatchRgbHexColor>();
-            var container = new MemoryDocumentContainer();
-            container.SetDocument(Document, null);
-            _schema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
             _labeledPoints = new List<LabeledPoint>();
 
             AxisChangeEvent += this_AxisChangeEvent;
@@ -96,17 +85,6 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var pointData = (GraphPointData)curveItem[barIndex].Tag;
             return pointData.Peptide != null ? pointData.Peptide.IdentityPath : pointData.Protein.IdentityPath;
-        }
-
-        private bool IsDocumentChanged(SrmDocument docNew)
-        {
-            var documentChanged = Document != null && !ReferenceEquals(docNew, Document);
-            if (documentChanged)
-            {
-                Document = docNew;
-            }
-
-            return documentChanged;
         }
 
         /// <summary>
@@ -136,23 +114,33 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void ShowFormattingDialog()
         {
-            var copy = ColorRows.Select(r => (MatchRgbHexColor)r.Clone()).ToList();
-            ShowingFormattingDlg = true;
-            GraphSummary.ShowFormattingDlg = false;
-            using (var dlg = new VolcanoPlotFormattingDlg(this, copy, 
-                       _graphData.PointPairList.Select(pointPair => (GraphPointData)pointPair.Tag).ToArray(), 
-                       rows  =>
-                       {
-                           ColorRows = rows;
-                           EnableLabelLayout = Settings.Default.GroupComparisonAvoidLabelOverlap;
-                           GraphSummary.UpdateUI();
-                       }))
+            using var dlg = new VolcanoPlotFormattingDlg(this,
+                GraphSummary.DocumentUIContainer.DocumentUI.Settings.DataSettings.RelativeAbundanceFormatting.ColorRows,
+                _graphData.PointPairList.Select(pointPair => (GraphPointData)pointPair.Tag).ToArray(),
+                UpdateFormatting);
+            if (dlg.ShowDialog(Program.MainWindow) == DialogResult.OK)
             {
-                if (dlg.ShowDialog(Program.MainWindow) == DialogResult.OK)
-                    UpdateGraph(false);
+                if (_formattingOverride != null)
+                {
+                    Program.MainWindow.ModifyDocument(string.Empty,
+                        doc => doc.ChangeSettings(doc.Settings.ChangeDataSettings(
+                            doc.Settings.DataSettings.ChangeRelativeAbundanceFormatting(_formattingOverride))),
+                        AuditLogEntry.SettingsLogFunction);
+                    _formattingOverride = null;
+                    Program.MainWindow.UpdatePeakAreaGraph();
+                }
             }
+        }
 
-            ShowingFormattingDlg = false;
+        private void UpdateFormatting(IEnumerable<MatchRgbHexColor> colorRows)
+        {
+            var formatting = _formattingOverride ?? GraphSummary.DocumentUIContainer.DocumentUI.Settings.DataSettings.RelativeAbundanceFormatting;
+            formatting = formatting.ChangeColorRows(colorRows);
+            if (!Equals(formatting, _formattingOverride))
+            {
+                _formattingOverride = formatting;
+                Program.MainWindow.UpdatePeakAreaGraph();
+            }
         }
 
         /// <summary>
@@ -213,7 +201,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (ctrl)
             {
-                DotPlotUtil.MultiSelect(GraphSummary.Window, identityPath);
+                DotPlotUtil.MultiSelect(Program.MainWindow, identityPath);
             }
             else
             {
@@ -233,7 +221,6 @@ namespace pwiz.Skyline.Controls.Graphs
         public override void UpdateGraph(bool selectionChanged)
         {
             PeptideGroupDocNode selectedProtein = null;
-            GraphSummary.Window ??= Program.MainWindow;
             Clear();
             var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
             if (selectedTreeNode != null)
@@ -245,20 +232,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            var isDocumentChanged = false;
-            if (GraphSummary.Window != null)
-            {
-                isDocumentChanged = IsDocumentChanged(GraphSummary.Window.Document);
-            }
+            var document = GraphSummary.DocumentUIContainer.DocumentUI;
+            var graphSettings = GraphSettings.FromSettings();
 
             // Only create graph data (and recalculate abundances)
             // if settings have changed, the document has changed, or if it
             // is not yet created
             if (_graphData?.GraphPointList == null ||
-                isDocumentChanged ||
-                IsAbundanceGraphSettingsChanged())
+                !ReferenceEquals(document, _graphData.Document) ||
+                !Equals(graphSettings, _graphData.GraphSettings))
             {
-                _graphData = CreateGraphData(_schema);
+                _graphData = CreateGraphData(document, graphSettings);
             }
             // Calculate y values and order which can change based on the
             // replicate display option or the show CV option
@@ -270,7 +254,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 foreach (var point in from point in _graphData.PointPairList let 
                              pointData = (GraphPointData)point.Tag where 
-                             DotPlotUtil.IsTargetSelected(GraphSummary.Window, pointData.Peptide, pointData.Protein) select 
+                             DotPlotUtil.IsTargetSelected(Program.MainWindow, pointData.Peptide, pointData.Protein) select 
                              point)
                 {
                     selectedPoints.Add(point);
@@ -280,12 +264,13 @@ namespace pwiz.Skyline.Controls.Graphs
             var pointList = _graphData.PointPairList;
             // For each valid match expression specified by the user
             var unmatchedPoints = new List<PointPair>(pointList);
-            foreach (var colorRow in ColorRows.Where(r => r.MatchExpression != null))
+            var colorRows = (_formattingOverride ?? document.Settings.DataSettings.RelativeAbundanceFormatting).ColorRows;
+            foreach (var colorRow in colorRows.Where(r => r.MatchExpression != null))
             {
                 var matchedPoints = pointList.Where(p =>
                 {
                     var pointData = (GraphPointData)p.Tag;
-                    if (colorRow.MatchExpression.Matches(Document, pointData.Protein, pointData.Peptide, null, null) && !selectedPoints.Contains(p))
+                    if (colorRow.MatchExpression.Matches(document, pointData.Protein, pointData.Peptide, null, null) && !selectedPoints.Contains(p))
                     {
                         unmatchedPoints.Remove(p);
                         return true;
@@ -305,11 +290,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 AdjustLabelSpacings(_labeledPoints, GraphSummary.GraphControl);
             else
                 DotPlotUtil.AdjustLabelLocations(_labeledPoints, GraphSummary.GraphControl.GraphPane.YAxis.Scale, GraphSummary.GraphControl.GraphPane.Rect.Height);
-
-            if (GraphSummary.ShowFormattingDlg && !ShowingFormattingDlg)
-            {
-                ShowFormattingDialog();
-            }
         }
 
         private void this_AxisChangeEvent(GraphPane pane)
@@ -359,11 +339,11 @@ namespace pwiz.Skyline.Controls.Graphs
             CurveList.Add(lineItem);
         }
 
-        protected abstract GraphData CreateGraphData(SkylineDataSchema schema);
+        protected abstract GraphData CreateGraphData(SrmDocument document, GraphSettings graphSettings);
 
         protected virtual void UpdateAxes()
         {
-            if (AnyMolecules)
+            if (GraphSummary.DocumentUIContainer.DocumentUI.HasSmallMolecules)
             {
                 XAxis.Title.Text = GraphsResources.SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank;
             }
@@ -455,9 +435,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public abstract class GraphData : Immutable
         {
-            // ReSharper disable PossibleMultipleEnumeration
-            protected GraphData(SrmDocument document, SkylineDataSchema schema, bool anyMolecules)
+            protected GraphData(SrmDocument document, GraphSettings graphSettings)
             {
+                Document = document;
+                GraphSettings = graphSettings;
+                var schema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT);
+                bool anyMolecules = document.HasSmallMolecules;
                 // Build the list of points to show.
                 var listPoints = new List<GraphPointData>();
                 foreach (var nodeGroupPep in document.MoleculeGroups)
@@ -497,7 +480,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 GraphPointList = listPoints;
             }
-            // ReSharper restore PossibleMultipleEnumeration
+
+            public SrmDocument Document { get; }
+            public GraphSettings GraphSettings { get; }
 
             public void CalcDataPositions(int iResult, PeptideGroupDocNode selectedProtein)
             {
@@ -621,8 +606,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 foreach (var abundanceValue in abundanceValues.Values)
                 {
-                    double? abundance = abundanceValue.Strict;
-                    Areas.Add(abundance);
+                    Areas.Add(abundanceValue.TransitionSummed);
                 }
             }
 
@@ -632,6 +616,40 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     Areas.Add(chromInfo.Area);
                 }
+            }
+        }
+
+        public class GraphSettings : Immutable
+        {
+            public bool AreaProteinTargets { get; private set; }
+
+            public GraphSettings ChangeAreaProteinTargets(bool value)
+            {
+                return ChangeProp(ImClone(this), im => im.AreaProteinTargets = value);
+            }
+
+            public bool ExcludePeptideLists { get; private set; }
+
+            public GraphSettings ChangeExcludePeptideLists(bool value)
+            {
+                return ChangeProp(ImClone(this), im => im.ExcludePeptideLists = value);
+            }
+
+            public bool ExcludeStandards { get; private set; }
+
+            public GraphSettings ChangeExcludeStandards(bool value)
+            {
+                return ChangeProp(ImClone(this), im => im.ExcludeStandards = value);
+            }
+
+            public static GraphSettings FromSettings()
+            {
+                return new GraphSettings
+                {
+                    AreaProteinTargets = Settings.Default.AreaProteinTargets,
+                    ExcludePeptideLists = Settings.Default.ExcludePeptideListsFromAbundanceGraph,
+                    ExcludeStandards = Settings.Default.ExcludeStandardsFromAbundanceGraph
+                };
             }
         }
     }
