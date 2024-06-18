@@ -82,7 +82,7 @@ namespace TestPerf
         }
 
         [TestMethod, NoUnicodeTesting(TestExclusionReason.HARDKLOR_UNICODE_ISSUES), NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
-        public void TestFeatureDetectionTutorialFuture()
+        public void AATestFeatureDetectionTutorialFuture()
         {
             TestFilesZipPaths = new[]
             {

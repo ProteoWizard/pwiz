@@ -875,9 +875,34 @@ namespace pwiz.SkylineTestUtil
                     // If only difference appears to be generated GUIDs or timestamps, let it pass
                     if (!LinesEquivalentIgnoringTimeStampsAndGUIDs(lineTarget, lineActual, columnTolerances))
                     {
-                        int pos;
-                        for (pos = 0; pos < expectedLine?.Length && pos < actualLine?.Length && expectedLine[pos] == actualLine[pos];) {pos++;}
-                        Fail(helpMsg + $@" Diff found at line {count} position {pos}: expected{Environment.NewLine}{expectedLine}{Environment.NewLine}actual{Environment.NewLine}{actualLine}");
+                        var sbEnd = new StringBuilder();
+                        var sbStart = new StringBuilder();
+                        if (lineActual != null && lineTarget != null)
+                        {
+                            var sharedLen = Math.Min(lineActual.Length, lineTarget.Length);
+                            for (int i = 0; i < sharedLen; i++)
+                            {
+                                var endCh = lineActual[lineActual.Length - 1 - i];
+                                if (endCh != lineTarget[lineTarget.Length - 1 - i])
+                                    break;
+                                sbEnd.Insert(0, endCh);
+                            }
+                            for (int i = 0; i < sharedLen; i++)
+                            {
+                                var startCh = lineActual[i];
+                                if (startCh != lineTarget[i])
+                                    break;
+                                sbStart.Append(startCh);
+                            }
+                        }
+
+                        Fail(TextUtil.LineSeparate(helpMsg + $@" Diff found at line {count} position {sbStart.Length}:",
+                            "expected",
+                            expectedLine,
+                            "actual",
+                            actualLine,
+                            "matching prefix: '" + sbStart + "'",
+                            "matching suffix: '" + sbEnd + "'"));
                     }
                     lineEqualLast = expectedLine;
                     count++;
@@ -934,17 +959,17 @@ namespace pwiz.SkylineTestUtil
                         lineActual = lineActual.Replace(pathA, string.Empty);
                     }
 
-if (lineActual.StartsWith(@"z:") || lineExpected.StartsWith(@"z:"))
-{
-    Console.WriteLine($@"#pathE={pathE}#");
-    Console.WriteLine($@"#pathA={pathA}#");
-    Console.WriteLine($@"#fileE={fileE}#");
-    Console.WriteLine($@"#fileA={fileA}#");
-}
                 }
-                catch
+                catch (Exception e)
                 {
-                    // ignored
+                    if (pathA.IndexOf(@":", StringComparison.Ordinal) == 1 || pathE.IndexOf(@":", StringComparison.Ordinal) == 1)
+                    {
+                        Console.WriteLine($@"#pathE={pathE}#");
+                        Console.WriteLine($@"#pathA={pathA}#");
+                        Console.WriteLine($@"#fileE={pathE}#");
+                        Console.WriteLine($@"#fileA={pathA}#");
+                        Console.WriteLine(e);
+                    }
                 }
             }
         }
