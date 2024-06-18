@@ -504,6 +504,7 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = false;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on converter settings
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on search settings
+                importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;    // default q value is 0.01
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()); // now on search progress
             });
 

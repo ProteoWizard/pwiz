@@ -73,6 +73,9 @@ namespace pwiz.Skyline.Model.DdaSearch
         public override string[] FragmentIons => Array.Empty<string>();
         public override string[] Ms2Analyzers => Array.Empty<string>();
         public override string EngineName => @"Hardklor";
+        public override string CutoffScoreName => string.Empty; // not used for now
+        public override string CutoffScoreLabel => DdaSearchResources.HardklorSearchEngine_CutoffScoreLabel_Min_isotope__dot_product_;
+        public override double DefaultCutoffScore => 0; // not used for now
         public override Bitmap SearchEngineLogo => Resources.HardklorLogo;
 
         public override string SearchEngineBlurb => DdaSearchResources.HardklorSearchEngine_SearchEngineBlurb;
@@ -741,6 +744,11 @@ namespace pwiz.Skyline.Model.DdaSearch
         }
 
         public override void SetPrecursorMassTolerance(MzTolerance mzTolerance)
+        {
+            // Not applicable to Hardklor
+        }
+
+        public override void SetCutoffScore(double cutoffScore)
         {
             // Not applicable to Hardklor
         }

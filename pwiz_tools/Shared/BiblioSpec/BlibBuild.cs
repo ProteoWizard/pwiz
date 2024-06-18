@@ -80,29 +80,55 @@ namespace pwiz.BiblioSpec
     {
         // N.B. these should agree with the values in PSM_SCORE_TYPE in pwiz_tools\BiblioSpec\src\BlibUtils.h
         // And if you add something here, don't forget to update ToString() below
-        private const string PERCOLATOR_QVALUE = "PERCOLATOR QVALUE";
-        private const string PEPTIDE_PROPHET_SOMETHING = "PEPTIDE PROPHET SOMETHING";
-        private const string SPECTRUM_MILL = "SPECTRUM MILL";
-        private const string IDPICKER_FDR = "IDPICKER FDR";
-        private const string MASCOT_IONS_SCORE = "MASCOT IONS SCORE";
-        private const string TANDEM_EXPECTATION_VALUE = "TANDEM EXPECTATION VALUE";
-        private const string PROTEIN_PILOT_CONFIDENCE = "PROTEIN PILOT CONFIDENCE";
-        private const string SCAFFOLD_SOMETHING = "SCAFFOLD SOMETHING";
-        private const string WATERS_MSE_PEPTIDE_SCORE = "WATERS MSE PEPTIDE SCORE";
-        private const string OMSSA_EXPECTATION_SCORE = "OMSSA EXPECTATION SCORE";
-        private const string PROTEIN_PROSPECTOR_EXPECTATION_SCORE = "PROTEIN PROSPECTOR EXPECTATION SCORE";
-        private const string SEQUEST_XCORR = "SEQUEST XCORR";
-        private const string MAXQUANT_SCORE = "MAXQUANT SCORE";
-        private const string MORPHEUS_SCORE = "MORPHEUS SCORE";
-        private const string MSGF_SCORE = "MSGF+ SCORE";
-        private const string PEAKS_CONFIDENCE_SCORE = "PEAKS CONFIDENCE SCORE";
-        private const string BYONIC_SCORE = "BYONIC SCORE";
-        private const string PEPTIDE_SHAKER_CONFIDENCE = "PEPTIDE SHAKER CONFIDENCE";
-        private const string GENERIC_QVALUE = "GENERIC Q-VALUE";
-        private const string HARDKLOR_IDOTP = "HARDKLOR IDOTP"; // Hardklor "The dot-product score of this feature to the theoretical model." We translate the Hardkloe Cosine Angle Correlation to a Normalized Contrast Angle idotp value
+        public const string UNKNOWN = "UNKNOWN";
+        public const string PERCOLATOR_QVALUE = "PERCOLATOR QVALUE";
+        public const string PEPTIDE_PROPHET_SOMETHING = "PEPTIDE PROPHET SOMETHING";
+        public const string SPECTRUM_MILL = "SPECTRUM MILL";
+        public const string IDPICKER_FDR = "IDPICKER FDR";
+        public const string MASCOT_IONS_SCORE = "MASCOT IONS SCORE";
+        public const string TANDEM_EXPECTATION_VALUE = "TANDEM EXPECTATION VALUE";
+        public const string PROTEIN_PILOT_CONFIDENCE = "PROTEIN PILOT CONFIDENCE";
+        public const string SCAFFOLD_SOMETHING = "SCAFFOLD SOMETHING";
+        public const string WATERS_MSE_PEPTIDE_SCORE = "WATERS MSE PEPTIDE SCORE";
+        public const string OMSSA_EXPECTATION_SCORE = "OMSSA EXPECTATION SCORE";
+        public const string PROTEIN_PROSPECTOR_EXPECTATION_SCORE = "PROTEIN PROSPECTOR EXPECTATION SCORE";
+        public const string SEQUEST_XCORR = "SEQUEST XCORR";
+        public const string MAXQUANT_SCORE = "MAXQUANT SCORE";
+        public const string MORPHEUS_SCORE = "MORPHEUS SCORE";
+        public const string MSGF_SCORE = "MSGF+ SCORE";
+        public const string PEAKS_CONFIDENCE_SCORE = "PEAKS CONFIDENCE SCORE";
+        public const string BYONIC_SCORE = "BYONIC SCORE";
+        public const string PEPTIDE_SHAKER_CONFIDENCE = "PEPTIDE SHAKER CONFIDENCE";
+        public const string GENERIC_QVALUE = "GENERIC Q-VALUE";
+        public const string HARDKLOR_IDOTP = "HARDKLOR IDOTP"; // Hardklor "The dot-product score of this feature to the theoretical model." We translate the Hardkloe Cosine Angle Correlation to a Normalized Contrast Angle idotp value
 
-        private const string PROBABILITY_CORRECT = "PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT";
-        private const string PROBABILITY_INCORRECT = "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT";
+        public static HashSet<string> INVARIANT_NAMES = new HashSet<string>(new[]
+        {
+            UNKNOWN,
+            PERCOLATOR_QVALUE,
+            PEPTIDE_PROPHET_SOMETHING,
+            SPECTRUM_MILL,
+            IDPICKER_FDR,
+            MASCOT_IONS_SCORE,
+            TANDEM_EXPECTATION_VALUE,
+            PROTEIN_PILOT_CONFIDENCE,
+            SCAFFOLD_SOMETHING,
+            WATERS_MSE_PEPTIDE_SCORE,
+            OMSSA_EXPECTATION_SCORE,
+            PROTEIN_PROSPECTOR_EXPECTATION_SCORE,
+            SEQUEST_XCORR,
+            MAXQUANT_SCORE,
+            MORPHEUS_SCORE,
+            MSGF_SCORE,
+            PEAKS_CONFIDENCE_SCORE,
+            BYONIC_SCORE,
+            PEPTIDE_SHAKER_CONFIDENCE,
+            GENERIC_QVALUE,
+            HARDKLOR_IDOTP
+        });
+
+        public const string PROBABILITY_CORRECT = "PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT";
+        public const string PROBABILITY_INCORRECT = "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT";
 
         public enum EnumProbabilityType { probability_correct, probability_incorrect, not_a_probability }
 
@@ -114,6 +140,9 @@ namespace pwiz.BiblioSpec
 
         public ScoreType(string name, string probabilityType)
         {
+            if (!INVARIANT_NAMES.Contains(name))
+                throw new ArgumentException($@"Invalid ScoreType name '{name}'");
+
             NameInvariant = name;
             switch (probabilityType)
             {
@@ -142,17 +171,18 @@ namespace pwiz.BiblioSpec
                         return 0;
                     case WATERS_MSE_PEPTIDE_SCORE:
                         return 6;
-                    default:
-                        switch (ProbabilityType)
-                        {
-                            case EnumProbabilityType.probability_correct:
-                                return 0.95;
-                            case EnumProbabilityType.probability_incorrect:
-                                return 0.05;
-                            default:
-                                return 0;
-                        }
+                    case PERCOLATOR_QVALUE:
+                    case GENERIC_QVALUE:
+                        return 0.01;    // %1 FDR is the standard in the field for searches
                 }
+                switch (ProbabilityType)
+                {
+                    case EnumProbabilityType.probability_correct:
+                        return 0.95;
+                    case EnumProbabilityType.probability_incorrect:
+                        return 0.05;
+                }
+                return 0;
             }
         }
 

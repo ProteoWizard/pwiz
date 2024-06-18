@@ -1,0 +1,152 @@
+Undo Redo : Added spectral library "Pass0 detected features"
+Summary   : Added spectral library "Pass0 detected features"
+All Info  :
+Added spectral library "Pass0 detected features"
+Build Spectral Library > Search files : contains { File = "Orbi3_SA_IP_pHis3_01.mzML.hk.bs.kro", Score type = "Hardklor idotp", Score threshold = "0.9" }
+Build Spectral Library > Search files : contains { File = "Orbi3_SA_IP_SMC1_01.mzML.hk.bs.kro", Score type = "Hardklor idotp", Score threshold = "0.9" }
+Build Spectral Library > iRT standard peptides is None
+Build Spectral Library > Include ambiguous matches is True
+Build Spectral Library > Filter for document peptides is False
+Build Spectral Library > Workflow is "Feature Detection"
+Build Spectral Library > Input File Type is "DDA raw (search and build library)"
+Extra Info: Search files = 
+[
+    {
+        File = "Orbi3_SA_IP_pHis3_01.mzML.hk.bs.kro",
+        Score type = "Hardklor idotp",
+        Score threshold = "0.9"
+    },
+    {
+        File = "Orbi3_SA_IP_SMC1_01.mzML.hk.bs.kro",
+        Score type = "Hardklor idotp",
+        Score threshold = "0.9"
+    }
+],
+iRT standard peptides = None,
+Include ambiguous matches = True,
+Filter for document peptides = False,
+Workflow = "Feature Detection",
+Input File Type = "DDA raw (search and build library)"
+
+Undo Redo : Imported a molecule search
+Summary   : Imported a molecule search
+All Info  :
+Imported a molecule search
+Import Molecule Search > Extract Chromatograms > Found results files : contains "Orbi3_SA_IP_pHis3_01.RAW"
+Import Molecule Search > Extract Chromatograms > Found results files : contains "Orbi3_SA_IP_SMC1_01.RAW"
+Import Molecule Search > Extract Chromatograms > Files to import simultaneously is "Many"
+Import Molecule Search > Extract Chromatograms > Removed prefix is "Orbi3_SA_IP_"
+Import Molecule Search > Extract Chromatograms > Removed suffix is "_01"
+Import Molecule Search > Configure Full-Scan Settings > Isotope labeling enrichment is "Default"
+Import Molecule Search > Hardklor Search Settings > Min idotp is "0.9"
+Import Molecule Search > Hardklor Search Settings > Signal to noise is "3.01"
+Import Molecule Search > Hardklor Search Settings > Instrument is "TOF"
+Import Molecule Search > Hardklor Search Settings > Resolution is "10000"
+Import Molecule Search > Hardklor Search Settings > Charges : contains "2"
+Import Molecule Search > Hardklor Search Settings > Charges : contains "3"
+Import Molecule Search > Hardklor Search Settings > Min intensity PPM is "5"
+Extra Info: Extract Chromatograms = 
+{
+    Found results files = 
+    [
+        "Orbi3_SA_IP_pHis3_01.RAW",
+        "Orbi3_SA_IP_SMC1_01.RAW"
+    ],
+    Files to import simultaneously = "Many",
+    Removed prefix = "Orbi3_SA_IP_",
+    Removed suffix = "_01"
+},
+Configure Full-Scan Settings = 
+{
+    Isotope labeling enrichment = "Default"
+},
+Hardklor Search Settings = 
+{
+    Min idotp = "0.9",
+    Signal to noise = "3.01",
+    Instrument = "TOF",
+    Resolution = "10000",
+    Charges = 
+    [
+        "2",
+        "3"
+    ],
+    Min intensity PPM = "5"
+}
+
+Undo Redo : Added spectral library "Pass1 detected features"
+Summary   : Added spectral library "Pass1 detected features"
+All Info  :
+Added spectral library "Pass1 detected features"
+Build Spectral Library > Search files : contains { File = "Orbi3_SA_IP_pHis3_01.mzML.hk.bs.kro", Score type = "Hardklor idotp", Score threshold = "0.9" }
+Build Spectral Library > Search files : contains { File = "Orbi3_SA_IP_SMC1_01.mzML.hk.bs.kro", Score type = "Hardklor idotp", Score threshold = "0.9" }
+Build Spectral Library > iRT standard molecules is None
+Build Spectral Library > Include ambiguous matches is True
+Build Spectral Library > Filter for document molecules is False
+Build Spectral Library > Workflow is "Feature Detection"
+Build Spectral Library > Input File Type is "DDA raw (search and build library)"
+Extra Info: Search files = 
+[
+    {
+        File = "Orbi3_SA_IP_pHis3_01.mzML.hk.bs.kro",
+        Score type = "Hardklor idotp",
+        Score threshold = "0.9"
+    },
+    {
+        File = "Orbi3_SA_IP_SMC1_01.mzML.hk.bs.kro",
+        Score type = "Hardklor idotp",
+        Score threshold = "0.9"
+    }
+],
+iRT standard molecules = None,
+Include ambiguous matches = True,
+Filter for document molecules = False,
+Workflow = "Feature Detection",
+Input File Type = "DDA raw (search and build library)"
+
+Undo Redo : Imported a molecule search
+Summary   : Imported a molecule search
+All Info  :
+Imported a molecule search
+Import Molecule Search > Extract Chromatograms > Found results files : contains "Orbi3_SA_IP_pHis3_01.RAW"
+Import Molecule Search > Extract Chromatograms > Found results files : contains "Orbi3_SA_IP_SMC1_01.RAW"
+Import Molecule Search > Extract Chromatograms > Files to import simultaneously is "Many"
+Import Molecule Search > Extract Chromatograms > Removed prefix is "Orbi3_SA_IP_"
+Import Molecule Search > Extract Chromatograms > Removed suffix is "_01"
+Import Molecule Search > Configure Full-Scan Settings > Isotope labeling enrichment is "Default"
+Import Molecule Search > Hardklor Search Settings > Min idotp is "0.9"
+Import Molecule Search > Hardklor Search Settings > Signal to noise is "3.01"
+Import Molecule Search > Hardklor Search Settings > Instrument is "TOF"
+Import Molecule Search > Hardklor Search Settings > Resolution is "10000"
+Import Molecule Search > Hardklor Search Settings > Charges : contains "2"
+Import Molecule Search > Hardklor Search Settings > Charges : contains "3"
+Import Molecule Search > Hardklor Search Settings > Min intensity PPM is "5"
+Extra Info: Extract Chromatograms = 
+{
+    Found results files = 
+    [
+        "Orbi3_SA_IP_pHis3_01.RAW",
+        "Orbi3_SA_IP_SMC1_01.RAW"
+    ],
+    Files to import simultaneously = "Many",
+    Removed prefix = "Orbi3_SA_IP_",
+    Removed suffix = "_01"
+},
+Configure Full-Scan Settings = 
+{
+    Isotope labeling enrichment = "Default"
+},
+Hardklor Search Settings = 
+{
+    Min idotp = "0.9",
+    Signal to noise = "3.01",
+    Instrument = "TOF",
+    Resolution = "10000",
+    Charges = 
+    [
+        "2",
+        "3"
+    ],
+    Min intensity PPM = "5"
+}
+
