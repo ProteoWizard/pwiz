@@ -59,6 +59,7 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.textCutoff = new System.Windows.Forms.TextBox();
             this.labelCutoff = new System.Windows.Forms.Label();
+            this.lblSearchEngineBlurb = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pBLogo)).BeginInit();
             this.groupBoxHardklor.SuspendLayout();
             this.SuspendLayout();
@@ -244,12 +245,18 @@
             resources.ApplyResources(this.labelCutoff, "labelCutoff");
             this.labelCutoff.Name = "labelCutoff";
             // 
+            // lblSearchEngineBlurb
+            // 
+            resources.ApplyResources(this.lblSearchEngineBlurb, "lblSearchEngineBlurb");
+            this.lblSearchEngineBlurb.Name = "lblSearchEngineBlurb";
+            // 
             // SearchSettingsControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.labelCutoff);
             this.Controls.Add(this.textCutoff);
+            this.Controls.Add(this.lblSearchEngineBlurb);
             this.Controls.Add(this.groupBoxHardklor);
             this.Controls.Add(this.cbMs2Analyzer);
             this.Controls.Add(this.lblMs2Analyzer);
@@ -308,5 +315,6 @@
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Label labelCutoff;
         private System.Windows.Forms.TextBox textCutoff;
+        private System.Windows.Forms.Label lblSearchEngineBlurb;
     }
 }

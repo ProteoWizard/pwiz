@@ -177,6 +177,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         public override string CutoffScoreLabel => PropertyNames.CutoffScore_PERCOLATOR_QVALUE;
         public override double DefaultCutoffScore { get; } = new ScoreType(_cutoffScoreName, ScoreType.PROBABILITY_INCORRECT).DefaultValue;
         public override Bitmap SearchEngineLogo => Resources.MSAmandaLogo;
+        public override string  SearchEngineBlurb => string.Empty;
 
         public override void SetPrecursorMassTolerance(MzTolerance tol)
         {

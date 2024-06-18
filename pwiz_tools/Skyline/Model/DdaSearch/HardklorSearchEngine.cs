@@ -78,6 +78,8 @@ namespace pwiz.Skyline.Model.DdaSearch
         public override double DefaultCutoffScore => 0; // not used for now
         public override Bitmap SearchEngineLogo => Resources.HardklorLogo;
 
+        public override string SearchEngineBlurb => DdaSearchResources.HardklorSearchEngine_SearchEngineBlurb;
+
         public override event NotificationEventHandler SearchProgressChanged;
 
         public override bool Run(CancellationTokenSource cancelToken, IProgressStatus status)

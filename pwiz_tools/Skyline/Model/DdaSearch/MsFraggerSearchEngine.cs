@@ -126,6 +126,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         public override string CutoffScoreLabel => PropertyNames.CutoffScore_PERCOLATOR_QVALUE;
         public override double DefaultCutoffScore { get; } = new ScoreType(_cutoffScoreName, ScoreType.PROBABILITY_INCORRECT).DefaultValue;
 
+        public override string SearchEngineBlurb => string.Empty;
         public override event NotificationEventHandler SearchProgressChanged;
 
         public override bool Run(CancellationTokenSource cancelToken, IProgressStatus status)
