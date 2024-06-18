@@ -48,10 +48,7 @@ namespace pwiz.SkylineTestFunctional
 900	1	500	1	light
 901	1	501	1	heavy
 ";
-            RunUI(()=>
-            {
-                SkylineWindow.Paste(transitionList);
-            });
+            PasteSmallMoleculeList(transitionList);
             // Make sure that some of the molecules have auto manage children set to "true" and some "false"
             // so that both code paths in PeptideDocNode.ChangeSettings get exercised
             for (int iMolecule = 0; iMolecule < SkylineWindow.Document.MoleculeCount; iMolecule++)

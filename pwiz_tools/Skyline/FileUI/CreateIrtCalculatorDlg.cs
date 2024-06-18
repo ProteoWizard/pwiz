@@ -57,9 +57,9 @@ namespace pwiz.Skyline.FileUI
         {
             var standardProteinsList = new List<PeptideGroupDocNode>();
             var nonStandardProteinsList = new List<PeptideGroupDocNode>();
-            foreach (var protein in proteins.Where(protein => protein.PeptideCount >= CalibrateIrtDlg.MIN_STANDARD_PEPTIDES))
+            foreach (var protein in proteins.Where(protein => protein.MoleculeCount >= CalibrateIrtDlg.MIN_STANDARD_PEPTIDES))
             {
-                if (protein.Peptides.Select(pep => pep.ModifiedTarget).Count(IrtStandard.AnyContains) >= CalibrateIrtDlg.MIN_STANDARD_PEPTIDES)
+                if (protein.Molecules.Select(pep => pep.ModifiedTarget).Count(IrtStandard.AnyContains) >= CalibrateIrtDlg.MIN_STANDARD_PEPTIDES)
                     standardProteinsList.Add(protein);
                 else
                     nonStandardProteinsList.Add(protein);
@@ -175,6 +175,7 @@ namespace pwiz.Skyline.FileUI
             // Import transition list of standards, if applicable
             if (irtType == IrtType.separate_list)
             {
+                var userCanceled = false;
                 try
                 {
                     if (!File.Exists(textImportText.Text))
@@ -182,29 +183,49 @@ namespace pwiz.Skyline.FileUI
                         MessageDlg.Show(this, Resources.CreateIrtCalculatorDlg_OkDialog_Transition_list_field_must_contain_a_path_to_a_valid_file_);
                         return;
                     }
-
+                    IdentityPath selectPath;
                     List<MeasuredRetentionTime> irtPeptides;
                     List<TransitionImportErrorInfo> errorList;
                     var inputs = new MassListInputs(textImportText.Text);
-                    docNew = docNew.ImportMassList(inputs, null, out _, out irtPeptides, out _librarySpectra, out errorList);
+                    docNew = docNew.ImportMassList(inputs, null, out selectPath, out irtPeptides, out _librarySpectra, out errorList);
                     if (errorList.Any())
                     {
-                        throw new InvalidDataException(errorList[0].ErrorMessage);
+                        // Allow the user to assign column types
+                        var importer = docNew.PreImportMassList(inputs, null, true, SrmDocument.DOCUMENT_TYPE.none, true, ModeUI);
+                        using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docNew, inputs, selectPath, false))
+                        {
+                            if (columnDlg.ShowDialog(this) == DialogResult.OK)
+                            {
+                                var insParams = columnDlg.InsertionParams;
+                                docNew = insParams.Document;
+                                selectPath = insParams.SelectPath;
+                                irtPeptides = insParams.IrtPeptides;
+                                _librarySpectra = insParams.LibrarySpectra;
+                            }
+                            else
+                            {
+                                userCanceled = true;
+                                throw new InvalidDataException(errorList[0].ErrorMessage);
+                            }
+                        }
                     }
                     _dbIrtPeptides = irtPeptides.Select(rt => new DbIrtPeptide(rt.PeptideSequence, rt.RetentionTime, true, TimeSource.scan)).ToList();
                     IrtFile = textImportText.Text;
                 }
                 catch (Exception x)
                 {
-                    MessageDlg.ShowWithException(this, string.Format(Resources.CreateIrtCalculatorDlg_OkDialog_Error_reading_iRT_standards_transition_list___0_, x.Message), x);
-                    return;
+                    if (!userCanceled)
+                    {
+                        MessageDlg.ShowWithException(this, string.Format(Resources.CreateIrtCalculatorDlg_OkDialog_Error_reading_iRT_standards_transition_list___0_, x.Message), x);
+                    }
+                    return; // Go back and try something else
                 }
             }
             else if (irtType == IrtType.protein)
             {
                 PeptideGroupDocNode selectedGroup = comboBoxProteins.SelectedItem as PeptideGroupDocNode;
 // ReSharper disable PossibleNullReferenceException
-                _irtPeptideSequences = new HashSet<Target>(selectedGroup.Peptides.Select(pep => pep.ModifiedTarget));
+                _irtPeptideSequences = new HashSet<Target>(selectedGroup.Molecules.Select(pep => pep.ModifiedTarget));
 // ReSharper restore PossibleNullReferenceException
             }
             Document = docNew;

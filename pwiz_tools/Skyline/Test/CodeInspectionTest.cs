@@ -70,7 +70,7 @@ namespace pwiz.SkylineTest
                 "AbstractFunctionalTest", // Only files containing this string get inspected for this
                 @"RunUI\(.*(Ok|Cancel)Dialog[^_].*", // Forbidden pattern - match RunUI(()=>foo.OkDialog()), RunUI(foo.CancelDialog) etc
                 true, // Pattern is a regular expression
-                @"use OkDialog() instead of RunUI() to close dialogs in a test - this waits for the dialog to actually close, which avoids race conditions e.g. ""OkDialog(colDlg, colDlg.CancelDialog)"" instead of ""RunUI(() => colDlg.CancelDialog())"". If this really is a legitimate use (to test error handling etc) add this comment to the offending line: '" + runDlgOkDlgExemptionComment + @"'", // Explanation for prohibition, appears in report
+                @"use OkDialog() or CancelDialog() instead of RunUI() to close dialogs in a test - this waits for the dialog to actually close, which avoids race conditions e.g. ""OkDialog(colDlg, colDlg.CancelDialog)"" instead of ""RunUI(() => colDlg.CancelDialog())"". If this really is a legitimate use (to test error handling etc) add this comment to the offending line: '" + runDlgOkDlgExemptionComment + @"'", // Explanation for prohibition, appears in report
                 runDlgOkDlgExemptionComment); // There are one or two legitimate uses of this, look for this comment and ignore the violation when found
 
             // Looking for uses of MessageBox where we should really be using MessageDlg

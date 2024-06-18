@@ -3897,6 +3897,9 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_" xml:space="preserve">
     <value>Running command: {0} {1}</value>
   </data>
+  <data name="FormulaBox_FormulaBox_Help" xml:space="preserve">
+    <value>Help</value>
+  </data>
   <data name="SkylineWindow_DownloadPanoramaFile_File_does_not_exist__It_may_have_been_deleted_on_the_server_" xml:space="preserve">
     <value>File does not exist. It may have been deleted on the server.</value>
   </data>
