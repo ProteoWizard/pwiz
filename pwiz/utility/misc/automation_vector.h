@@ -200,7 +200,7 @@ public:
     enum TCreateMode { MOVE, COPY };
 protected:
     // Constructors/destructors are protected to prevent direct instantiation
-    self(unsigned Elements, VARENUM VarType) 
+    automation_vector_base(unsigned Elements, VARENUM VarType)
         /*throw(std::invalid_argument, std::runtime_error)*/;
     SAFEARRAY &array() /*throw()*/
     {

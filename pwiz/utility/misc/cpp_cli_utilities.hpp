@@ -39,7 +39,7 @@
 #include <stdexcept>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/range/algorithm/copy.hpp>
-#include "automation_vector.h"
+//#include "automation_vector.h"
 #pragma managed
 #include "BinaryData.hpp"
 
@@ -171,14 +171,14 @@ void ToStdVector(System::Collections::Generic::IList<managed_value_type>^ manage
 
 /// wraps a managed array in an automation_vector to enable direct access from unmanaged code
 template<typename managed_value_type, typename native_value_type>
-void ToAutomationVector(cli::array<managed_value_type>^ managedArray, automation_vector<native_value_type>& automationArray)
+/*void ToAutomationVector(cli::array<managed_value_type>^ managedArray, automation_vector<native_value_type>& automationArray)
 {
     VARIANT v;
     ::VariantInit(&v);
     System::IntPtr vPtr = (System::IntPtr) &v;
     System::Runtime::InteropServices::Marshal::GetNativeVariantForObject((System::Object^) managedArray, vPtr);
     automationArray.attach(v);
-}
+}*/
 
 
 template<typename managed_value_type, typename native_value_type>

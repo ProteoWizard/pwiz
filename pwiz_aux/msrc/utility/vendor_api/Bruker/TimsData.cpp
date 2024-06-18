@@ -255,7 +255,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
 
         maxNumScans = max(maxNumScans, numScans);
 
-        optional<uint64_t> parentId(row.get<optional<sqlite3_int64> >(++idx));
+        optional<uint64_t> parentId(static_cast<uint64_t>(row.get<optional<sqlite3_int64> >(++idx).get_value_or(0)));
         optional<double> precursorMz(row.get<optional<double> >(++idx));
         optional<double> isolationWidth(row.get<optional<double> >(++idx));
         optional<int> precursorCharge(row.get<optional<int> >(++idx));

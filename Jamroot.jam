@@ -392,6 +392,8 @@ project pwiz
         <toolset>darwin:<cxxflags>-std=c++14
         <toolset>clang:<cxxflags>-std=c++14
 
+        <toolset>msvc:<cxxflags>"/std:c++20"
+
         # prevent warning about _BSD_SOURCE deprecation
         <toolset>gcc:<define>_DEFAULT_SOURCE
 
@@ -410,6 +412,7 @@ project pwiz
         # avoid C++1x deprecation warnings
         <toolset>gcc:<cxxflags>-Wno-deprecated-declarations
         <toolset>clang:<cxxflags>-Wno-deprecated-declarations
+        <toolset>msvc:<define>_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING
 
         # allow MSVC region pragmas
         <toolset>gcc:<cxxflags>-Wno-unknown-pragmas
