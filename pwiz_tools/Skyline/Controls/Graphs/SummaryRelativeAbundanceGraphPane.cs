@@ -84,7 +84,7 @@ namespace pwiz.Skyline.Controls.Graphs
         protected override IdentityPath GetIdentityPath(CurveItem curveItem, int barIndex)
         {
             var pointData = (GraphPointData)curveItem[barIndex].Tag;
-            return pointData.Peptide != null ? pointData.Peptide.IdentityPath : pointData.Protein.IdentityPath;
+            return pointData.IdentityPath;
         }
 
         /// <summary>
@@ -185,7 +185,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     out var labPoint))
             {
                 var selectedRow = (GraphPointData)labPoint.Point.Tag;
-                identityPath = _areaProteinTargets ? selectedRow.Protein.IdentityPath : selectedRow.Peptide.IdentityPath;
+                identityPath = selectedRow.IdentityPath;
             }
             if (FindNearestPoint(new PointF(mouseEventArgs.X, mouseEventArgs.Y), out var nearestCurve, out iNearest))
             {
@@ -254,7 +254,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 foreach (var point in from point in _graphData.PointPairList let 
                              pointData = (GraphPointData)point.Tag where 
-                             DotPlotUtil.IsTargetSelected(Program.MainWindow, pointData.Peptide, pointData.Protein) select 
+                             null != DotPlotUtil.GetSelectedPath(Program.MainWindow, pointData.IdentityPath) select 
                              point)
                 {
                     selectedPoints.Add(point);
@@ -468,13 +468,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             var pepPath = new IdentityPath(nodeGroupPep.PeptideGroup,
                                 nodePep.Peptide);
-                            foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
-                            {
-                                var path = new IdentityPath(nodeGroupPep.PeptideGroup,
-                                    nodePep.Peptide, nodeGroup.TransitionGroup);
-                                var peptide = new Peptide(schema, pepPath);
-                                listPoints.Add(new GraphPointData(peptide, nodeGroup, path));
-                            }
+                            var peptide = new Peptide(schema, pepPath);
+                            listPoints.Add(new GraphPointData(peptide));
                         }
                     }
                 }
@@ -511,7 +506,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     // Save the selected index and its y extent
                     var dataPoint = (GraphPointData)pointPairList[i].Tag;
-                    if (ReferenceEquals(selectedProtein, dataPoint.NodePepGroup))
+                    if (ReferenceEquals(selectedProtein?.PeptideGroup, dataPoint.IdentityPath.GetIdentity(0)))
                     {
                         selectedIndex = i;
                     }
@@ -556,26 +551,33 @@ namespace pwiz.Skyline.Controls.Graphs
 
             private static double GetY(GraphPointData pointData, int? resultIndex)
             {
-                if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
+                Statistics statValues;
+                if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single && resultIndex.HasValue)
                 {
-                    if (resultIndex != null && pointData.Areas.Count > resultIndex)
-                    {
-                        var replicate = pointData.Areas[resultIndex.Value];
-                        if (replicate != null)
-                        {
-                            return replicate.Value;
-                        }
-                    }
+                    statValues = new Statistics(pointData.ReplicateAreas[resultIndex.Value]);
                 }
-                var listValues = pointData.Areas.Where(a => a != null).Select(d => d.Value);
-                var statValues = new Statistics(listValues);
-                var cv = statValues.StdDev() / statValues.Mean();
+                else
+                {
+                    statValues = new Statistics(pointData.ReplicateAreas.SelectMany(grouping => grouping));
+                }
+
                 if (Settings.Default.ShowPeptideCV)
                 {
+                    var cv = statValues.StdDev() / statValues.Mean();
                     return cv;
                 }
-                return RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.best ? statValues.Max() :
-                    statValues.Mean();
+
+                if (statValues.Length == 0)
+                {
+                    return 0;
+                }
+
+                if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.best)
+                {
+                    return statValues.Max();
+                }
+
+                return statValues.Mean();
             }
         }
 
@@ -583,40 +585,25 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             public GraphPointData(Protein protein)
             {
-                Areas = new List<double?>();
-                NodePepGroup = protein.DocNode; 
-                IdentityPath = new IdentityPath(IdentityPath.ROOT, NodePepGroup.PeptideGroup);
-                SetAreas(protein.GetProteinAbundances());
                 Protein = protein;
+                IdentityPath = protein.IdentityPath;
+                ReplicateAreas = protein.GetProteinAbundances()
+                    .ToLookup(kvp => kvp.Key, kvp => kvp.Value.TransitionSummed);
             }
 
-            public GraphPointData(Peptide peptide, TransitionGroupDocNode nodeGroup, IdentityPath identityPath)
+            public GraphPointData(Peptide peptide)
             {
-                Areas = new List<double?>();
-                Peptide = peptide;
                 Protein = peptide.Protein;
-                SetAreas(nodeGroup);
+                Peptide = peptide;
+                IdentityPath = peptide.IdentityPath;
+                ReplicateAreas = peptide.Results.Values.ToLookup(
+                    peptideResult => peptideResult.ResultFile.Replicate.ReplicateIndex,
+                    peptideResult => peptideResult.GetQuantificationResult()?.NormalizedArea?.Raw ?? 0);
             }
-            public PeptideGroupDocNode NodePepGroup { get; private set; }
-            public Protein Protein { get; private set; }
-            public Peptide Peptide { get; private set; }
-            public List<double?> Areas { get; set; }
+            public Protein Protein { get; }
+            public Peptide Peptide { get; }
+            public ILookup<int, double> ReplicateAreas { get; set; }
             public IdentityPath IdentityPath { get; set; }
-            private void SetAreas(IDictionary<int, Protein.AbundanceValue> abundanceValues)
-            {
-                foreach (var abundanceValue in abundanceValues.Values)
-                {
-                    Areas.Add(abundanceValue.TransitionSummed);
-                }
-            }
-
-            private void SetAreas(TransitionGroupDocNode nodeGroup)
-            {
-                foreach (var chromInfo in nodeGroup.ChromInfos)
-                {
-                    Areas.Add(chromInfo.Area);
-                }
-            }
         }
 
         public class GraphSettings : Immutable
