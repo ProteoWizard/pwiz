@@ -425,7 +425,7 @@ namespace TestPerf
             foreach (var hkExpectedFilePath in Directory.EnumerateFiles(expectedFilesPath))
             {
                 var hkActualFilePath = hkExpectedFilePath.Replace(expectedHardklorFiles, Path.Combine(expectedHardklorFiles, @".."));
-                var columnTolerances = new Dictionary<int, double>() { { -1, .00015 } }; // Allow a little rounding wiggle in the decimal values
+                var columnTolerances = new Dictionary<int, double>() { { AssertEx.ALL_COLUMNS_SN_TOLERANCE, .00015 } }; // Allow a little rounding wiggle in the decimal values
                 AssertEx.FileEquals(hkExpectedFilePath, hkActualFilePath, columnTolerances, true);
             }
 

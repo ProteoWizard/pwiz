@@ -967,6 +967,8 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public const int ALL_COLUMNS_TOLERANCE = -1; // Default for all columns
+        public const int ALL_COLUMNS_SN_TOLERANCE = -2; // Default for all columns after formatting as scientific notation
 
         private static bool LinesEquivalentIgnoringTimeStampsAndGUIDs(string lineExpected, string lineActual,
             Dictionary<int, double> columnTolerances, out string failureMessage) // Per-column numerical tolerances if strings can be read as TSV, "-1" means any column
@@ -1020,16 +1022,32 @@ namespace pwiz.SkylineTestUtil
                         if (matching)
                             continue;
                         // See if there's a tolerance for this column, or a default tolerance (column "-1" in the dictionary)
-                        if (!columnTolerances.TryGetValue(c, out var tolerance) && !columnTolerances.TryGetValue(-1, out tolerance))
-                            return false; // No tolerance given for this column
+                        bool formatAsSn = false;
+                        if (!columnTolerances.TryGetValue(c, out var tolerance))
+                        {
+                            if (columnTolerances.TryGetValue(ALL_COLUMNS_SN_TOLERANCE, out tolerance))
+                                formatAsSn = true;
+                            else if (!columnTolerances.TryGetValue(ALL_COLUMNS_TOLERANCE, out tolerance))
+                                return false; // matching; // No tolerance given for this column
+                            
+                        }
                         if (!TextUtil.TryParseDoubleUncertainCulture(textActual, out var valActual) ||
                             !TextUtil.TryParseDoubleUncertainCulture(textExpected, out var valExpected))
                         {
                             return false;
                         }
 
-                        var actualParts = textActual.Split(new[] { 'E', 'e' });
-                        var expectedParts = textExpected.Split(new[] { 'E', 'e' });
+                        char[] expChars = { 'E', 'e' };
+                        var textSplitActual = textActual;
+                        if (formatAsSn && textSplitActual.Split(expChars).Length != 2)
+                            textSplitActual = valActual.ToString("E");
+                        var textSplitExpected = textExpected;
+                        if (formatAsSn && textSplitExpected.Split(expChars).Length != 2)
+                            textSplitExpected = valExpected.ToString("E");
+
+                        var actualParts = textSplitActual.Split(expChars);
+                        var expectedParts = textSplitExpected.Split(expChars);
+
                         if (actualParts.Length == 2 && expectedParts.Length == 2)
                         {
                             // Both strings have exponent, so check if they are equal
@@ -1045,19 +1063,20 @@ namespace pwiz.SkylineTestUtil
                             }
                         }
 
-                        if (Math.Abs(valActual - valExpected) > tolerance + tolerance / 1000) // Allow for rounding cruft
+                        double fuzzyTolerance = tolerance + tolerance / 1000; // Allow for rounding cruft
+                        if (Math.Abs(valActual - valExpected) > fuzzyTolerance)
                         {
                             if (expectedParts.Length == 2)
                             {
                                 failureMessage = string.Format(
                                     "Expected decimal mantissa: {0} does not match actual {1} to within {2}",
-                                    valExpected, valActual, tolerance + tolerance / 1000);
+                                    valExpected, valActual, fuzzyTolerance);
                             }
                             else
                             {
                                 failureMessage = string.Format(
                                     "Expected decimal value: {0} does not match actual {1} to within {2}",
-                                    textExpected, textActual, tolerance + tolerance / 1000);
+                                    textSplitExpected, textSplitActual, fuzzyTolerance);
                             }
                             return false; // Can't account for difference
                         }
