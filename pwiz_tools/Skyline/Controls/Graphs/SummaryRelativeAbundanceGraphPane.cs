@@ -638,6 +638,32 @@ namespace pwiz.Skyline.Controls.Graphs
                     ExcludeStandards = Settings.Default.ExcludeStandardsFromAbundanceGraph
                 };
             }
+
+            protected bool Equals(GraphSettings other)
+            {
+                return AreaProteinTargets == other.AreaProteinTargets
+                       && ExcludePeptideLists == other.ExcludePeptideLists
+                       && ExcludeStandards == other.ExcludeStandards;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((GraphSettings)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = AreaProteinTargets.GetHashCode();
+                    hashCode = (hashCode * 397) ^ ExcludePeptideLists.GetHashCode();
+                    hashCode = (hashCode * 397) ^ ExcludeStandards.GetHashCode();
+                    return hashCode;
+                }
+            }
         }
     }
 }
