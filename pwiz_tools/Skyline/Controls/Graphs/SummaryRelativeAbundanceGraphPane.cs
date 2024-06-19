@@ -236,38 +236,46 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // For proper z-order, add the selected points, then the matched points, then the unmatched points
             var selectedPoints = new PointPairList();
+            var unmatchedPoints = new List<PointPair>();
             if (ShowSelection)
             {
-                foreach (var point in from point in _graphData.PointPairList let 
-                             pointData = (GraphPointData)point.Tag where 
-                             null != DotPlotUtil.GetSelectedPath(Program.MainWindow, pointData.IdentityPath) select 
-                             point)
+                foreach (var point in _graphData.PointPairList) 
                 {
-                    selectedPoints.Add(point);
+                    var pointData = (GraphPointData)point.Tag;
+                    if (null != DotPlotUtil.GetSelectedPath(Program.MainWindow, pointData.IdentityPath))
+                    {
+                        selectedPoints.Add(point);
+                    }
+                    else
+                    {
+                        unmatchedPoints.Add(point);
+                    }
                 }
                 AddPoints(new PointPairList(selectedPoints), GraphSummary.ColorSelected, DotPlotUtil.PointSizeToFloat(PointSize.large), true, PointSymbol.Circle, true);
             }
-            var pointList = _graphData.PointPairList;
+            else
+            {
+                unmatchedPoints.AddRange(_graphData.PointPairList);
+            }
+
             // For each valid match expression specified by the user
-            var unmatchedPoints = new List<PointPair>(pointList);
             var colorRows = (_formattingOverride ?? document.Settings.DataSettings.RelativeAbundanceFormatting).ColorRows;
             foreach (var colorRow in colorRows.Where(r => r.MatchExpression != null))
             {
-                var matchedPoints = pointList.Where(p =>
+                var matchedPoints = new List<PointPair>();
+                foreach (var point in unmatchedPoints)
                 {
-                    var pointData = (GraphPointData)p.Tag;
-                    if (colorRow.MatchExpression.Matches(document, pointData.Protein, pointData.Peptide, null, null) && !selectedPoints.Contains(p))
+                    var pointData = (GraphPointData)point.Tag;
+                    if (colorRow.MatchExpression.Matches(document, pointData.Protein, pointData.Peptide, null, null))
                     {
-                        unmatchedPoints.Remove(p);
-                        return true;
+                        matchedPoints.Add(point);
                     }
-                    else
-                        return false;
-                }).ToArray();
+                }
 
                 if (matchedPoints.Any())
                 {
                     AddPoints(new PointPairList(matchedPoints), colorRow.Color, DotPlotUtil.PointSizeToFloat(colorRow.PointSize), colorRow.Labeled, colorRow.PointSymbol);
+                    unmatchedPoints = unmatchedPoints.Except(matchedPoints).ToList();
                 }
             }
             AddPoints(new PointPairList(unmatchedPoints), Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
@@ -288,6 +296,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void AddPoints(PointPairList points, Color color, float size, bool labeled, PointSymbol pointSymbol, bool selected = false)
         {
+            if (points.Count == 0)
+            {
+                return;
+            }
             var symbolType = DotPlotUtil.PointSymbolToSymbolType(pointSymbol);
 
             LineItem lineItem;
@@ -425,7 +437,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 Document = document;
                 GraphSettings = graphSettings;
-                var schema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT);
+                var schema = SkylineDataSchema.MemoryDataSchema(document, SkylineDataSchema.GetLocalizedSchemaLocalizer());
                 bool anyMolecules = document.HasSmallMolecules;
                 // Build the list of points to show.
                 var listPoints = new List<GraphPointData>();

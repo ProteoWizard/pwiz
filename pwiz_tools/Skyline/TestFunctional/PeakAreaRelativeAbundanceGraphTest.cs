@@ -50,23 +50,21 @@ namespace pwiz.SkylineTestFunctional
             {
                 SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
                 SkylineWindow.ShowPeakAreaRelativeAbundanceGraph();
+                var graphPane = FindGraphPane();
+                Assert.IsNotNull(graphPane);
                 var peakAreaGraph = FormUtil.OpenForms.OfType<GraphSummary>().FirstOrDefault(graph =>
                     graph.Type == GraphTypeSummary.abundance && graph.Controller is AreaGraphController);
                 Assert.IsNotNull(peakAreaGraph);
 
                 // Verify that setting the targets to Proteins or Peptides produces the correct number of points
                 SkylineWindow.SetAreaProteinTargets(true);
-                var curveList = peakAreaGraph.GraphControl.GraphPane.CurveList[1];
-                Assert.AreEqual(curveList.Points.Count, 48);
+                Assert.AreEqual(48, graphPane.CurveList.Sum(curve=>curve.NPts));
                 SkylineWindow.SetAreaProteinTargets(false);
-                curveList = peakAreaGraph.GraphControl.GraphPane.CurveList[1];
-                Assert.AreEqual(curveList.Points.Count, 125);
+                Assert.AreEqual(125, graphPane.CurveList.Sum(curve=>curve.NPts));
 
                 // Verify that excluding peptide lists reduces the number of points
                 SkylineWindow.SetExcludePeptideListsFromAbundanceGraph(true);
-                curveList = peakAreaGraph.GraphControl.GraphPane.CurveList[1];
-                Assert.AreEqual(curveList.Points.Count, 45);
-
+                Assert.AreEqual(45, graphPane.CurveList.Sum(curve => curve.NPts));
                 //CONSIDER add quantitative checks for relative abundance results
             });
 
@@ -86,6 +84,7 @@ namespace pwiz.SkylineTestFunctional
 
             var formattingDlg = ShowDialog<VolcanoPlotFormattingDlg>(pane.ShowFormattingDialog);
             // Add a line which says all peptides containing "QE" should be indigo diamonds 
+            // and all peptides containing "GQ" should be turquoise triangles
             RunUI(() =>
             {
                 Assert.AreEqual(Skyline.Controls.GroupComparison.GroupComparisonResources
@@ -95,28 +94,35 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsNotNull(row);
                 row.Expression = new MatchExpression("QE", new[] { MatchOption.PeptideSequence }).ToString();
                 row.PointSymbol = PointSymbol.Diamond;
-                row.Color = Color.Indigo;
+                row.Color = Color.FromArgb(Color.Indigo.ToArgb());
+                row = formattingDlg.GetCurrentBindingList().AddNew();
+                Assert.IsNotNull(row);
+                row.Expression = new MatchExpression("GQ", new[] { MatchOption.PeptideSequence }).ToString();
+                row.PointSymbol = PointSymbol.Triangle;
+                row.Color = Color.FromArgb(Color.Turquoise.ToArgb());
             });
             WaitForGraphs();
 
-            // Verify that 2 peptides are drawn as diamonds
+            // Verify that 2 peptides are drawn as diamonds and 2 are drawn as triangles
             RunUI(() =>
             {
-                var formattedCurve = pane.CurveList.OfType<LineItem>().Single(curve => curve.Symbol.Type == SymbolType.Diamond);
-                Assert.AreEqual(2, formattedCurve.Points.Count);
+                var diamondCurve = pane.CurveList.OfType<LineItem>().Single(curve => curve.Symbol.Type == SymbolType.Diamond);
+                Assert.AreEqual(2, diamondCurve.Points.Count);
+                var triangleCurve = pane.CurveList.OfType<LineItem>().Single(curve => curve.Symbol.Type == SymbolType.Triangle);
+                Assert.AreEqual(2, triangleCurve.Points.Count);
             });
 
             // The document should still have its original RelativeAbundanceFormatting because the formatting dialog has not been OK'd yet
             Assert.AreEqual(RelativeAbundanceFormatting.DEFAULT, SkylineWindow.Document.Settings.DataSettings.RelativeAbundanceFormatting);
             
             OkDialog(formattingDlg, formattingDlg.OkDialog);
-
             // The document should have the new RelativeAbundanceFormatting
             WaitForCondition(() => !Equals(SkylineWindow.Document.Settings.DataSettings.RelativeAbundanceFormatting,
                 RelativeAbundanceFormatting.DEFAULT));
             var relativeAbundanceFormatting = SkylineWindow.Document.Settings.DataSettings.RelativeAbundanceFormatting;
-            Assert.AreEqual(1, relativeAbundanceFormatting.ColorRows.Count());
+            Assert.AreEqual(2, relativeAbundanceFormatting.ColorRows.Count());
             Assert.AreEqual(PointSymbol.Diamond, relativeAbundanceFormatting.ColorRows.First().PointSymbol);
+            Assert.AreEqual(PointSymbol.Triangle, relativeAbundanceFormatting.ColorRows.ElementAt(1).PointSymbol);
             
             // Include peptide lists and verify that the number of diamonds on the graph has changed to 4
             RunUI(() =>
@@ -126,8 +132,10 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
             RunUI(() =>
             {
-                var formattedCurve = pane.CurveList.OfType<LineItem>().Single(curve => curve.Symbol.Type == SymbolType.Diamond);
-                Assert.AreEqual(4, formattedCurve.Points.Count);
+                var diamondCurve = pane.CurveList.OfType<LineItem>().Single(curve => curve.Symbol.Type == SymbolType.Diamond);
+                Assert.AreEqual(4, diamondCurve.Points.Count);
+                var triangleCurve = pane.CurveList.OfType<LineItem>().Single(curve => curve.Symbol.Type == SymbolType.Triangle);
+                Assert.AreEqual(3, triangleCurve.Points.Count);
             });
 
             // Save and reopen the document
@@ -139,8 +147,9 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
 
             relativeAbundanceFormatting = SkylineWindow.Document.Settings.DataSettings.RelativeAbundanceFormatting;
-            Assert.AreEqual(1, relativeAbundanceFormatting.ColorRows.Count());
+            Assert.AreEqual(2, relativeAbundanceFormatting.ColorRows.Count());
             Assert.AreEqual(PointSymbol.Diamond, relativeAbundanceFormatting.ColorRows.First().PointSymbol);
+            Assert.AreEqual(PointSymbol.Triangle, relativeAbundanceFormatting.ColorRows.ElementAt(1).PointSymbol);
 
             pane = FindGraphPane();
             Assert.IsNotNull(pane);
