@@ -219,6 +219,15 @@ namespace pwiz.Skyline.Model.DdaSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Min isotope &amp;dot product:.
+        /// </summary>
+        public static string HardklorSearchEngine_CutoffScoreLabel_Min_isotope__dot_product_ {
+            get {
+                return ResourceManager.GetString("HardklorSearchEngine_CutoffScoreLabel_Min_isotope__dot_product_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Looking for features occurring in multiple replicates.
         /// </summary>
         public static string HardklorSearchEngine_FindSimilarFeatures_Looking_for_features_occurring_in_multiple_replicates {

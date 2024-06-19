@@ -473,6 +473,22 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 _selectedRow = (FoldChangeBindingSource.FoldChangeRow)labPoint.Point.Tag;
                 isSelected = true;
             }
+            else
+            {
+                using (var g = Graphics.FromHwnd(IntPtr.Zero))
+                {
+                    zedGraphControl.GraphPane.FindNearestObject(point, g, out var nearestObj, out _);
+                    if (nearestObj is TextObj nearestText)
+                    {
+                        var labels = LabeledPoints.FindAll(lp => lp.Label.Equals(nearestText));
+                        if (labels.Any())
+                        {
+                            _selectedRow = (FoldChangeBindingSource.FoldChangeRow)labels.First().Point.Tag;
+                            isSelected = true;
+                        }
+                    }
+                }
+            }
 
             if (isSelected)
             {

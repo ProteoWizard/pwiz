@@ -610,6 +610,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Max q-value.
+        /// </summary>
+        public static string CutoffScore_PERCOLATOR_QVALUE {
+            get {
+                return ResourceManager.GetString("CutoffScore_PERCOLATOR_QVALUE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Annotations.
         /// </summary>
         public static string DataSettings_AnnotationDefs {
@@ -741,6 +750,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string DdaSearchSettings_PrecursorTolerance {
             get {
                 return ResourceManager.GetString("DdaSearchSettings_PrecursorTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score threshold.
+        /// </summary>
+        public static string DdaSearchSettings_ScoreThreshold {
+            get {
+                return ResourceManager.GetString("DdaSearchSettings_ScoreThreshold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score type.
+        /// </summary>
+        public static string DdaSearchSettings_ScoreType {
+            get {
+                return ResourceManager.GetString("DdaSearchSettings_ScoreType", resourceCulture);
             }
         }
         

@@ -1052,7 +1052,7 @@ injected into the mass spectrometer.</value>
     <value>0</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>Adjust Conversion Settings</value>
+    <value>Conversion Settings</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -1136,7 +1136,7 @@ injected into the mass spectrometer.</value>
     <value>0</value>
   </data>
   <data name="lblSearchSettings.Text" xml:space="preserve">
-    <value>Adjust Search Settings</value>
+    <value>Search Settings</value>
   </data>
   <data name="&gt;&gt;lblSearchSettings.Name" xml:space="preserve">
     <value>lblSearchSettings</value>
