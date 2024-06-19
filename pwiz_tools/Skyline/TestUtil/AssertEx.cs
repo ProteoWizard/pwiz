@@ -835,7 +835,7 @@ namespace pwiz.SkylineTestUtil
         }
 
         public static void NoDiff(string target, string actual, string helpMsg=null, 
-            Dictionary<int, double> columnTolerances = null, // Per-column numerical tolerances if strings can be read as TSV, "-1" means any column
+            ColumnTolerances columnTolerances = null,
             bool ignorePathDifferences = false)
         {
             if (helpMsg == null)
@@ -967,11 +967,8 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public const int ALL_COLUMNS_TOLERANCE = -1; // Default for all columns
-        public const int ALL_COLUMNS_SN_TOLERANCE = -2; // Default for all columns after formatting as scientific notation
-
         private static bool LinesEquivalentIgnoringTimeStampsAndGUIDs(string lineExpected, string lineActual,
-            Dictionary<int, double> columnTolerances, out string failureMessage) // Per-column numerical tolerances if strings can be read as TSV, "-1" means any column
+            ColumnTolerances columnTolerances, out string failureMessage) // Per-column numerical tolerances if strings can be read as TSV, "-1" means any column
         {
             failureMessage = string.Empty;  // For all the return true cases
 
@@ -1007,85 +1004,127 @@ namespace pwiz.SkylineTestUtil
             }
 
             if (columnTolerances != null)
+                return columnTolerances.LinesEquivalent(lineExpected, lineActual, out failureMessage);
+
+            return false; // Could not account for difference
+        }
+
+        public class ColumnTolerances
+        {
+            private ColumnToleranceValue _defaultTolerance { get; }
+            private Dictionary<int, ColumnToleranceValue> _explicitTolerances = new Dictionary<int, ColumnToleranceValue>();
+
+            public ColumnTolerances()
             {
+            }
+
+            public ColumnTolerances(double defaultTolerance, bool forceScientificNotation = false)
+            {
+                _defaultTolerance = new ColumnToleranceValue(defaultTolerance, forceScientificNotation);
+            }
+
+            public void AddTolerance(int column, double tolerance, bool forceScientificNotation = false)
+            {
+                _explicitTolerances.Add(column, new ColumnToleranceValue(tolerance, forceScientificNotation));
+            }
+
+            public bool LinesEquivalent(string lineExpected, string lineActual, out string failureMessage)
+            {
+                failureMessage = string.Empty;
+
                 // ReSharper disable PossibleNullReferenceException
                 var colsActual = lineActual.Split('\t');
                 var colsExpected = lineExpected.Split('\t');
                 // ReSharper restore PossibleNullReferenceException
-                if (colsExpected.Length == colsActual.Length)
+                if (colsExpected.Length != colsActual.Length)
+                    return false;
+                for (var c = 0; c < colsActual.Length; c++)
                 {
-                    for (var c = 0; c < colsActual.Length; c++)
-                    {
-                        var textActual = colsActual[c];
-                        var textExpected = colsExpected[c];
-                        var matching = Equals(textExpected, textActual);
-                        if (matching)
-                            continue;
-                        // See if there's a tolerance for this column, or a default tolerance (column "-1" in the dictionary)
-                        bool formatAsSn = false;
-                        if (!columnTolerances.TryGetValue(c, out var tolerance))
-                        {
-                            if (columnTolerances.TryGetValue(ALL_COLUMNS_SN_TOLERANCE, out tolerance))
-                                formatAsSn = true;
-                            else if (!columnTolerances.TryGetValue(ALL_COLUMNS_TOLERANCE, out tolerance))
-                                return false; // matching; // No tolerance given for this column
-                            
-                        }
-                        if (!TextUtil.TryParseDoubleUncertainCulture(textActual, out var valActual) ||
-                            !TextUtil.TryParseDoubleUncertainCulture(textExpected, out var valExpected))
-                        {
-                            return false;
-                        }
-
-                        char[] expChars = { 'E', 'e' };
-                        var textSplitActual = textActual;
-                        if (formatAsSn && textSplitActual.Split(expChars).Length != 2)
-                            textSplitActual = valActual.ToString("E");
-                        var textSplitExpected = textExpected;
-                        if (formatAsSn && textSplitExpected.Split(expChars).Length != 2)
-                            textSplitExpected = valExpected.ToString("E");
-
-                        var actualParts = textSplitActual.Split(expChars);
-                        var expectedParts = textSplitExpected.Split(expChars);
-
-                        if (actualParts.Length == 2 && expectedParts.Length == 2)
-                        {
-                            // Both strings have exponent, so check if they are equal
-                            if (!Equals(expectedParts[1], actualParts[1]) ||
-                                // Then check the mantissas match to the expected tolerance
-                                !TextUtil.TryParseDoubleUncertainCulture(actualParts[0], out valActual) ||
-                                !TextUtil.TryParseDoubleUncertainCulture(expectedParts[0], out valExpected))
-                            {
-                                failureMessage = string.Format(
-                                    "Expected decimal value: {0} does not match actual {1}",
-                                    textExpected, textActual);
-                                return false; // One or both mantissas don't parse as doubles
-                            }
-                        }
-
-                        double fuzzyTolerance = tolerance + tolerance / 1000; // Allow for rounding cruft
-                        if (Math.Abs(valActual - valExpected) > fuzzyTolerance)
-                        {
-                            if (expectedParts.Length == 2)
-                            {
-                                failureMessage = string.Format(
-                                    "Expected decimal mantissa: {0} does not match actual {1} to within {2}",
-                                    valExpected, valActual, fuzzyTolerance);
-                            }
-                            else
-                            {
-                                failureMessage = string.Format(
-                                    "Expected decimal value: {0} does not match actual {1} to within {2}",
-                                    textSplitExpected, textSplitActual, fuzzyTolerance);
-                            }
-                            return false; // Can't account for difference
-                        }
-                    }
-                    return true; // Differences accounted for
+                    if (!ColumnsEquivalent(c, colsExpected[c], colsActual[c], out failureMessage))
+                        return false;
                 }
+
+                return true; // Differences accounted for
             }
 
-            return false; // Could not account for difference
+            private bool ColumnsEquivalent(int i, string textExpected, string textActual, out string failureMessage)
+            {
+                failureMessage = string.Empty;
+                if (Equals(textExpected, textActual))
+                    return true;
+
+                // See if there's a tolerance for this column, or a default tolerance (column "-1" in the dictionary)
+                if (!_explicitTolerances.TryGetValue(i, out var toleranceValue))
+                {
+                    toleranceValue = _defaultTolerance;
+                    if (toleranceValue == null)
+                        return false; // No tolerance given for this column
+                }
+                if (!TextUtil.TryParseDoubleUncertainCulture(textActual, out var valActual) ||
+                    !TextUtil.TryParseDoubleUncertainCulture(textExpected, out var valExpected))
+                {
+                    return false;
+                }
+
+                char[] expChars = { 'E', 'e' };
+                var textSplitActual = textActual;
+                if (toleranceValue.ForceScientificNotation && textSplitActual.Split(expChars).Length != 2)
+                    textSplitActual = valActual.ToString("E");
+                var textSplitExpected = textExpected;
+                if (toleranceValue.ForceScientificNotation && textSplitExpected.Split(expChars).Length != 2)
+                    textSplitExpected = valExpected.ToString("E");
+
+                var actualParts = textSplitActual.Split(expChars);
+                var expectedParts = textSplitExpected.Split(expChars);
+
+                if (actualParts.Length == 2 && expectedParts.Length == 2)
+                {
+                    // Both strings have exponent, so check if they are equal
+                    if (!Equals(expectedParts[1], actualParts[1]) ||
+                        // Then check the mantissas match to the expected tolerance
+                        !TextUtil.TryParseDoubleUncertainCulture(actualParts[0], out valActual) ||
+                        !TextUtil.TryParseDoubleUncertainCulture(expectedParts[0], out valExpected))
+                    {
+                        failureMessage = string.Format(
+                            "Expected decimal value: {0} does not match actual {1}",
+                            textExpected, textActual);
+                        return false; // One or both mantissas don't parse as doubles
+                    }
+                }
+
+                double tolerance = toleranceValue.Tolerance;
+                tolerance += tolerance / 1000; // Allow for rounding cruft
+                if (Math.Abs(valActual - valExpected) > tolerance)
+                {
+                    if (expectedParts.Length == 2)
+                    {
+                        failureMessage = string.Format(
+                            "Expected decimal mantissa: {0} does not match actual {1} to within {2}",
+                            valExpected, valActual, tolerance);
+                    }
+                    else
+                    {
+                        failureMessage = string.Format(
+                            "Expected decimal value: {0} does not match actual {1} to within {2}",
+                            textSplitExpected, textSplitActual, tolerance);
+                    }
+                    return false; // Can't account for difference
+                }
+
+                return true;
+            }
+        }
+
+        private class ColumnToleranceValue
+        {
+            public ColumnToleranceValue(double tolerance, bool forceScientificNotation = false)
+            {
+                Tolerance = tolerance;
+                ForceScientificNotation = forceScientificNotation;
+            }
+
+            public double Tolerance { get; }
+            public bool ForceScientificNotation { get; }
         }
 
         private static string GetEarlyEndingMessage(string helpMsg, string name, int count, string lineEqualLast, string lineNext, TextReader reader)
@@ -1098,7 +1137,7 @@ namespace pwiz.SkylineTestUtil
                 name, count, lineEqualLast, lineNext, linesRemaining);
         }
 
-        public static void FileEquals(string pathExpectedFile, string pathActualFile, Dictionary<int, double> columnTolerances = null, bool ignorePathDifferences = false )
+        public static void FileEquals(string pathExpectedFile, string pathActualFile, ColumnTolerances columnTolerances = null, bool ignorePathDifferences = false )
         {
             string file1 = File.ReadAllText(pathExpectedFile);
             string file2 = File.ReadAllText(pathActualFile);
