@@ -1721,13 +1721,10 @@ namespace pwiz.Skyline
         public void ShowRelativeAbundanceFormatting()
         {
             var summary = _listGraphPeakArea.FirstOrDefault(graph => graph.Type == GraphTypeSummary.abundance);
-            if (summary != null)
+            if (true == summary?.TryGetGraphPane<SummaryRelativeAbundanceGraphPane>(out var graphPane))
             {
-                summary.ShowFormattingDlg = true;
-                UpdatePeakAreaGraph();
-                summary.ShowFormattingDlg = false;
+                graphPane.ShowFormattingDialog();
             }
-            
         }
         public void ShowAllTransitions()
         {
@@ -3044,30 +3041,28 @@ namespace pwiz.Skyline
 
         private void AddTargetsContextMenu(ToolStrip menuStrip, int iInsert)
         {
-            menuStrip.Items.Insert(iInsert, abundanceTargetsMenuItem);
-            if (abundanceTargetsMenuItem.DropDownItems.Count == 0)
+            abundanceTargetsMenuItem.DropDownItems.Clear();
+            abundanceTargetsMenuItem.DropDownItems.AddRange(new ToolStripItem[]
             {
-                abundanceTargetsMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    abundanceTargetsPeptidesMenuItem,
-                    abundanceTargetsProteinsMenuItem
-                });
-                abundanceTargetsPeptidesMenuItem.Checked = !Settings.Default.AreaProteinTargets;
-                abundanceTargetsProteinsMenuItem.Checked = Settings.Default.AreaProteinTargets;
-            }
+                abundanceTargetsPeptidesMenuItem,
+                abundanceTargetsProteinsMenuItem
+            });
+            abundanceTargetsPeptidesMenuItem.Checked = !Settings.Default.AreaProteinTargets;
+            abundanceTargetsProteinsMenuItem.Checked = Settings.Default.AreaProteinTargets;
+            menuStrip.Items.Insert(iInsert, abundanceTargetsMenuItem);
         }
 
         private void AddExcludeTargetsContextMenu(ToolStrip menuStrip, int iInsert)
         {
-            menuStrip.Items.Insert(iInsert, excludeTargetsMenuItem);
-            if (excludeTargetsMenuItem.DropDownItems.Count == 0)
+            excludeTargetsStandardsMenuItem.Checked = Settings.Default.ExcludeStandardsFromAbundanceGraph;
+            excludeTargetsPeptideListMenuItem.Checked = Settings.Default.ExcludePeptideListsFromAbundanceGraph;
+            excludeTargetsMenuItem.DropDownItems.Clear();
+            excludeTargetsMenuItem.DropDownItems.Add(excludeTargetsStandardsMenuItem);
+            if (!IsSmallMoleculeOrMixedUI)
             {
-                excludeTargetsMenuItem.DropDownItems.Add(excludeTargetsStandardsMenuItem);
-                if (!IsSmallMoleculeOrMixedUI)
-                {
-                    excludeTargetsMenuItem.DropDownItems.Add(excludeTargetsPeptideListMenuItem);
-                }
+                excludeTargetsMenuItem.DropDownItems.Add(excludeTargetsPeptideListMenuItem);
             }
+            menuStrip.Items.Insert(iInsert, excludeTargetsMenuItem);
         }
 
         private void timeGraphMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -4492,13 +4487,6 @@ namespace pwiz.Skyline
             ShowTotalTransitions();
             Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.abundance);
             ShowGraphPeakArea(true, GraphTypeSummary.abundance);
-            foreach (var summary in _listGraphPeakArea)
-            {
-                if (summary.Type == GraphTypeSummary.abundance)
-                {
-                    summary.Window = this;
-                }
-            }
             UpdatePeakAreaGraph();
         }
 
@@ -4652,15 +4640,11 @@ namespace pwiz.Skyline
 
         private void abundanceTargetsProteinsMenuItem_Click(object sender, EventArgs e)
         {
-            abundanceTargetsPeptidesMenuItem.Checked = false;
-            abundanceTargetsProteinsMenuItem.Checked = true;
             SetAreaProteinTargets(true);
         }
 
         private void abundanceTargetsPeptidesMenuItem_Click(object sender, EventArgs e)
         {
-            abundanceTargetsProteinsMenuItem.Checked = false;
-            abundanceTargetsPeptidesMenuItem.Checked = true;
             SetAreaProteinTargets(false);
         }
 
