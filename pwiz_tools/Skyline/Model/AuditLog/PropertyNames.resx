@@ -1790,6 +1790,9 @@
   <data name="DataSettings_RelativeAbundanceFormatting" xml:space="preserve">
     <value>Relative Abundance Formatting</value>
   </data>
+  <data name="RelativeAbundanceFormatting_ColorRows" xml:space="preserve">
+    <value>Formatting rows</value>
+  </data>
   <data name="CutoffScore_PERCOLATOR_QVALUE" xml:space="preserve">
     <value>Max q-value</value>
   </data>

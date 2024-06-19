@@ -3913,6 +3913,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Formatting rows.
+        /// </summary>
+        public static string RelativeAbundanceFormatting_ColorRows {
+            get {
+                return ResourceManager.GetString("RelativeAbundanceFormatting_ColorRows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Current Name.
         /// </summary>
         public static string RenameProteins_CurrentName {
