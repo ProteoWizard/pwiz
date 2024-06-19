@@ -38,6 +38,12 @@ namespace pwiz.SkylineTestData
     {
         private const string TEST_FILES_ZIP_PATH = @"TestData\OptimizationSpacingTest.zip";
         private const string WIFF_FILE_NAME = "04152024_HWAP8_LAMP1_NOTCH2_HHL_schedul_21min_R1_1.wiff";
+        /// <summary>
+        /// The chromatograms in the test wiff file did not have any CE values which were less than 10.
+        /// <see cref="AbiMassListExporter.WriteTransition"/>
+        /// </summary>
+        private const double MIN_SCIEX_CE = 10;
+
         [TestMethod]
         public void TestIsOptimizationSpacing()
         {
@@ -87,6 +93,10 @@ namespace pwiz.SkylineTestData
             }
         }
 
+        /// <summary>
+        /// Import a .wiff file optimizing for collision energy, and verify that
+        /// every transition has the expected number of optimization steps.
+        /// </summary>
         [TestMethod]
         public void TestImportOptimizationChromatograms()
         {
@@ -98,25 +108,6 @@ namespace pwiz.SkylineTestData
             var resultsUri = new MsDataFilePath(resultsPath);
             var chromSet = new ChromatogramSet("Optimize", new[] { resultsUri }, Annotations.EMPTY, optRegression);
             ImportChromatogramSet(docContainer, chromSet);
-        }
-
-        private int GetExpectedOptStepCount(SrmDocument document, PeptideDocNode nodePep,
-            TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
-        {
-            int validStepCount = 0;
-            var regression = document.Settings.TransitionSettings.Prediction.CollisionEnergy;
-            for (int step = -regression.StepCount; step <= regression.StepCount; step++)
-            {
-                var collisionEnergy = document.GetCollisionEnergy(nodePep, nodeGroup, nodeTran, step);
-                if (collisionEnergy < 10)
-                {
-                    // The wiff file used in this test did not have any collision energies which were less than 10.
-                    continue;
-                }
-                validStepCount++;
-            }
-
-            return validStepCount;
         }
 
         private void ImportChromatogramSet(ResultsTestDocumentContainer docContainer, ChromatogramSet chromatogramSet)
@@ -156,5 +147,24 @@ namespace pwiz.SkylineTestData
             }
         }
 
+        /// <summary>
+        /// Returns the number of optimization steps which would be expected for a particular transition.
+        /// </summary>
+        private int GetExpectedOptStepCount(SrmDocument document, PeptideDocNode nodePep,
+            TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
+        {
+            int validStepCount = 0;
+            var regression = document.Settings.TransitionSettings.Prediction.CollisionEnergy;
+            for (int step = -regression.StepCount; step <= regression.StepCount; step++)
+            {
+                var collisionEnergy = document.GetCollisionEnergy(nodePep, nodeGroup, nodeTran, step);
+                if (collisionEnergy >= MIN_SCIEX_CE)
+                {
+                    validStepCount++;
+                }
+            }
+
+            return validStepCount;
+        }
     }
 }
