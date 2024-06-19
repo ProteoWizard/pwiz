@@ -33,7 +33,7 @@ def get_dlls(fdir):
 parser = argparse.ArgumentParser()
 
 # Add argument for the path to the data directory
-parser.add_argument('--pwiz_dir', type=str, default='../', help='Path to the pwiz directory')
+parser.add_argument('--pwiz_dir', type=str, default='..\\', help='Path to the pwiz directory')
 
 args = parser.parse_args()
 
@@ -44,6 +44,9 @@ print(args)
 pwiz_dir = args.pwiz_dir
 
 build_dir = pwiz_dir + '/build-nt-x86'
+release_bin_dir = build_dir + '/msvc-release-x86_64'
+debug_bin_dir = build_dir + '/msvc-debug-x86_64'
+
 
 print(build_dir)
 
@@ -62,10 +65,38 @@ for root, dirs, files in os.walk(build_dir):
         if file.endswith('.lib'):
             lib_files.append(os.path.join(root, file))
 
+lib_system_paths = lib_files.copy()
+
+lib_system_paths = [x for x in lib_system_paths if 
+             'Test.lib' not in x and 
+             'test.lib' not in x and 
+             '_cli' not in x
+            ]
+
+release_lib_paths = [x for x in lib_system_paths if '\\dbg\\' not in x]
+debug_lib_paths = [x for x in lib_system_paths if '\\rls\\' not in x]
+
+with open('copy_lib.cmd', 'w') as f:
+    for file in release_lib_paths:
+        f.write('copy /y ' +  os.path.abspath(file) + ' ' + os.path.abspath(release_bin_dir) + '\n')
+    for file in debug_lib_paths:
+        f.write('copy /y ' +  os.path.abspath(file) + ' ' + os.path.abspath(debug_bin_dir) + '\n')
 
 # Find common prefix of all lib files
 
-common_prefix = os.path.commonprefix(lib_files)
+lib_files = []
+
+for root, dirs, files in os.walk(release_bin_dir):
+    for file in files:
+        if file.endswith('.lib'):
+            lib_files.append(os.path.join(root, file))
+
+for root, dirs, files in os.walk(debug_bin_dir):
+    for file in files:
+        if file.endswith('.lib'):
+            lib_files.append(os.path.join(root, file))
+
+common_prefix = '..\/build-nt-x86/'
 
 print('Common prefix: ' + common_prefix)
 
@@ -104,11 +135,9 @@ lib_files = [x for x in lib_files if
 
 print('Number of lib files: ' + str(len(lib_files)))
 
-release_lib_files = [x for x in lib_files if '/dbg/' not in x]
-debug_lib_files = [x for x in lib_files if '/rls/' not in x]
+release_lib_files = [x for x in lib_files if '/msvc-debug-x86_64/' not in x]
+debug_lib_files = [x for x in lib_files if '/msvc-release-x86_64/' not in x]
 
-release_bin_dir = build_dir + '/msvc-release-x86_64'
-debug_bin_dir = build_dir + '/msvc-debug-x86_64'
 
 if os.path.exists(release_bin_dir):
     print('release_bin_dir directory  exist')
