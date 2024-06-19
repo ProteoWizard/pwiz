@@ -17,7 +17,6 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -70,7 +69,7 @@ namespace pwiz.SkylineTest
             string dlibFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33.dlib");
             string elibFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33.elib");
             string elibQuantFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected-quant-elib.elib");
-            var columnTolerances = new Dictionary<int, double>() { { -1, 0.000005 } };  // Allow some numerical wiggle in any column numerical column ("-1" means all columns)
+            var columnTolerances = new AssertEx.ColumnTolerances(0.000005);  // Allow some numerical wiggle in any column numerical
             IProgressStatus status = new ProgressStatus();
 
             // test koina output to dlib
