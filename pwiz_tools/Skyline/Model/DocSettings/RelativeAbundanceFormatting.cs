@@ -42,6 +42,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
         }
 
+        [TrackChildren]
         public IEnumerable<MatchRgbHexColor> ColorRows
         {
             get
@@ -104,6 +105,13 @@ namespace pwiz.Skyline.Model.DocSettings
         public override int GetHashCode()
         {
             return _colorRows.GetHashCode();
+        }
+
+        public static RelativeAbundanceFormatting Deserialize(XmlReader reader)
+        {
+            var relativeAbundanceFormatting = new RelativeAbundanceFormatting();
+            relativeAbundanceFormatting.ReadXml(reader);
+            return relativeAbundanceFormatting;
         }
     }
 }

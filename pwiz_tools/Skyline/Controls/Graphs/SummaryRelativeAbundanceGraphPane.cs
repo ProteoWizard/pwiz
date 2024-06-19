@@ -45,9 +45,6 @@ namespace pwiz.Skyline.Controls.Graphs
     public abstract class SummaryRelativeAbundanceGraphPane : SummaryBarGraphPaneBase
     {
         protected GraphData _graphData;
-        private bool _areaProteinTargets;
-        private bool _excludePeptideLists;
-        private bool _excludeStandards;
         private readonly List<LabeledPoint> _labeledPoints;
         private static RelativeAbundanceFormatting _formattingOverride;
         protected SummaryRelativeAbundanceGraphPane(GraphSummary graphSummary)
@@ -59,9 +56,6 @@ namespace pwiz.Skyline.Controls.Graphs
             XAxis.Title.Text = xAxisTitle;
             XAxis.Type = AxisType.Linear;
             XAxis.Scale.Max = GraphSummary.DocumentUIContainer.DocumentUI.MoleculeGroupCount;
-            _areaProteinTargets = Settings.Default.AreaProteinTargets;
-            _excludePeptideLists = Settings.Default.ExcludePeptideListsFromAbundanceGraph;
-            _excludeStandards = Settings.Default.ExcludeStandardsFromAbundanceGraph;
             _labeledPoints = new List<LabeledPoint>();
 
             AxisChangeEvent += this_AxisChangeEvent;
@@ -87,31 +81,6 @@ namespace pwiz.Skyline.Controls.Graphs
             return pointData.IdentityPath;
         }
 
-        /// <summary>
-        /// Have any of the settings relevant to this graph pane changed since the last update?
-        /// </summary>
-        /// <returns>True if relevant settings have changed, false if not</returns>
-        private bool IsAbundanceGraphSettingsChanged()
-        {
-            var settingsChanged = false;
-            if (Settings.Default.AreaProteinTargets != _areaProteinTargets)
-            {
-                _areaProteinTargets = Settings.Default.AreaProteinTargets;
-                settingsChanged = true;
-            }
-            if (Settings.Default.ExcludePeptideListsFromAbundanceGraph != _excludePeptideLists)
-            {
-                _excludePeptideLists = Settings.Default.ExcludePeptideListsFromAbundanceGraph;
-                settingsChanged = true;
-            }
-            if (Settings.Default.ExcludeStandardsFromAbundanceGraph != _excludeStandards)
-            {
-                _excludeStandards = Settings.Default.ExcludeStandardsFromAbundanceGraph;
-                settingsChanged = true;
-            }
-            return settingsChanged;
-        }
-
         public void ShowFormattingDialog()
         {
             using var dlg = new VolcanoPlotFormattingDlg(this,
@@ -123,12 +92,23 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (_formattingOverride != null)
                 {
                     Program.MainWindow.ModifyDocument(string.Empty,
-                        doc => doc.ChangeSettings(doc.Settings.ChangeDataSettings(
-                            doc.Settings.DataSettings.ChangeRelativeAbundanceFormatting(_formattingOverride))),
+                        doc =>
+                        {
+                            if (Equals(_formattingOverride, doc.Settings.DataSettings.RelativeAbundanceFormatting))
+                            {
+                                return doc;
+                            }
+                            return doc.ChangeSettings(doc.Settings.ChangeDataSettings(
+                                doc.Settings.DataSettings.ChangeRelativeAbundanceFormatting(_formattingOverride)));
+                        },
                         AuditLogEntry.SettingsLogFunction);
-                    _formattingOverride = null;
-                    Program.MainWindow.UpdatePeakAreaGraph();
                 }
+            }
+
+            if (_formattingOverride != null)
+            {
+                _formattingOverride = null;
+                Program.MainWindow.UpdatePeakAreaGraph();
             }
         }
 
@@ -171,12 +151,18 @@ namespace pwiz.Skyline.Controls.Graphs
             var axis = GetNearestXAxis(sender, mouseEventArgs);
             if (axis != null)
             {
-                iNearest = (int)axis.Scale.ReverseTransform(mouseEventArgs.X - axis.MajorTic.Size);
+                iNearest = (int)axis.Scale.ReverseTransform(mouseEventArgs.X) - 1;
                 if (iNearest < 0)
                 {
                     return false;
                 }
-                ChangeSelection(iNearest, GraphSummary.StateProvider.SelectedPath, ctrl);
+
+                var path = _graphData.XScalePaths.ElementAtOrDefault(iNearest);
+                if (path != null)
+                {
+                    ChangeSelection(path, ctrl);
+                }
+
                 return true;
             }
 
@@ -193,11 +179,11 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             if (identityPath == null)
                 return false;
-            ChangeSelection(iNearest, identityPath, ctrl);
+            ChangeSelection(identityPath, ctrl);
             return true;
         }
 
-        private void ChangeSelection(int selectedIndex, IdentityPath identityPath, bool ctrl)
+        private void ChangeSelection(IdentityPath identityPath, bool ctrl)
         {
             if (ctrl)
             {
@@ -205,13 +191,12 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else
             {
-                ChangeSelection(selectedIndex, identityPath);
+                GraphSummary.StateProvider.SelectedPath = identityPath;
             }
         }
 
         protected override void ChangeSelection(int selectedIndex, IdentityPath identityPath)
         {
-            
             if (0 <= selectedIndex && selectedIndex < _graphData.XScalePaths.Length)
             {
                 GraphSummary.StateProvider.SelectedPath = identityPath;
@@ -222,6 +207,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             PeptideGroupDocNode selectedProtein = null;
             Clear();
+            _labeledPoints.Clear();
             var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
             if (selectedTreeNode != null)
             {
