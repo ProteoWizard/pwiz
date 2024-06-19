@@ -971,8 +971,11 @@ namespace pwiz.SkylineTestUtil
                     if (string.Equals(fileE, fileA) ||
                         (Path.GetExtension(fileE) == @".tmp") && Path.GetExtension(fileE) == Path.GetExtension(fileA)) // Tmp file names will always vary
                     {
-                        lineExpected = lineExpected.Replace(pathE, string.Empty);
-                        lineActual = lineActual.Replace(pathA, string.Empty);
+                        // Empty strings are harder to see as columns.
+                        // So, replace the matching paths with visible matching text.
+                        const string pathSubstitutionText = "path";
+                        lineExpected = lineExpected.Replace(pathE, pathSubstitutionText);
+                        lineActual = lineActual.Replace(pathA, pathSubstitutionText);
                     }
                 }
                 catch
