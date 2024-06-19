@@ -363,7 +363,7 @@ namespace ZedGraph
             var endSize = CalculateConnectorSize(labPoint, g, _graph);
 
             var line = new LineObj(labPoint.Label.FontSpec.FontColor, labPoint.Point.X, labPoint.Point.Y,
-                labPoint.Point.X + endSize.Width, labPoint.Point.Y + endSize.Height);
+                labPoint.Point.X + endSize.Width, labPoint.Point.Y + endSize.Height){IsClippedToChartRect = true};
             labPoint.Connector = line;
             _graph.GraphObjList.Add(line);
         }

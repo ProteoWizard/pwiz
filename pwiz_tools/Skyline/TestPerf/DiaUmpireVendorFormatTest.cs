@@ -25,6 +25,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
@@ -174,7 +175,6 @@ namespace TestPerf
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
                 importPeptideSearchDlg.BuildPepSearchLibControl.InputFileType = ImportPeptideSearchDlg.InputFile.dia_raw;
                 // Check default settings shown in the tutorial
-                Assert.AreEqual(0.95, importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore);
                 Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
@@ -293,7 +293,9 @@ namespace TestPerf
                               ImportPeptideSearchDlg.Pages.dda_search_settings_page);
                 importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = _instrumentValues.PrecursorTolerance;
                 importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = _instrumentValues.FragmentTolerance;
-                importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b, y";
+                importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;
+                Assert.AreEqual(PropertyNames.CutoffScore_PERCOLATOR_QVALUE, importPeptideSearchDlg.SearchSettingsControl.CutoffLabel);
+                Assert.AreEqual(0.05, importPeptideSearchDlg.SearchSettingsControl.CutoffScore);
             });
 
             RunUI(() =>

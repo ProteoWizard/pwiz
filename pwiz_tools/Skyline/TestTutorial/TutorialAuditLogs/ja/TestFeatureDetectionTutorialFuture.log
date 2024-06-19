@@ -1,0 +1,152 @@
+Undo Redo : スペクトルライブラリ「Pass0 detected features」が追加されました
+Summary   : スペクトルライブラリ「Pass0 detected features」が追加されました
+All Info  :
+スペクトルライブラリ「Pass0 detected features」が追加されました
+スペクトルライブラリを構築>ファイルを検索：{ ファイル = "Orbi3_SA_IP_pHis3_01.mzML.hk.bs.kro", スコアタイプ = "Hardklor idotp", スコアの閾値 = "0.9" }が含まれています
+スペクトルライブラリを構築>ファイルを検索：{ ファイル = "Orbi3_SA_IP_SMC1_01.mzML.hk.bs.kro", スコアタイプ = "Hardklor idotp", スコアの閾値 = "0.9" }が含まれています
+スペクトルライブラリを構築>iRT標準ペプチドはなしです
+スペクトルライブラリを構築>曖昧な一致を含むは真です
+スペクトルライブラリを構築>ドキュメント内のペプチドをフィルタリングは偽です
+スペクトルライブラリを構築>ワークフローは"Feature Detection"です
+スペクトルライブラリを構築>入力ファイルタイプは"DDA生データ (ライブラリの検索と構築)"です
+Extra Info: ファイルを検索 = 
+[
+    {
+        ファイル = "Orbi3_SA_IP_pHis3_01.mzML.hk.bs.kro",
+        スコアタイプ = "Hardklor idotp",
+        スコアの閾値 = "0.9"
+    },
+    {
+        ファイル = "Orbi3_SA_IP_SMC1_01.mzML.hk.bs.kro",
+        スコアタイプ = "Hardklor idotp",
+        スコアの閾値 = "0.9"
+    }
+],
+iRT標準ペプチド = なし,
+曖昧な一致を含む = 真,
+ドキュメント内のペプチドをフィルタリング = 偽,
+ワークフロー = "Feature Detection",
+入力ファイルタイプ = "DDA生データ (ライブラリの検索と構築)"
+
+Undo Redo : 分子検索がインポートされました
+Summary   : 分子検索がインポートされました
+All Info  :
+分子検索がインポートされました
+分子検索のインポート>クロマトグラムを抽出>結果ファイルが見つかりました："Orbi3_SA_IP_pHis3_01.RAW"が含まれています
+分子検索のインポート>クロマトグラムを抽出>結果ファイルが見つかりました："Orbi3_SA_IP_SMC1_01.RAW"が含まれています
+分子検索のインポート>クロマトグラムを抽出>同時にインポートするファイルは"多く"です
+分子検索のインポート>クロマトグラムを抽出>削除したプリフィックスは"Orbi3_SA_IP_"です
+分子検索のインポート>クロマトグラムを抽出>削除したサフィックスは"_01"です
+分子検索のインポート>フルスキャン設定を行う>同位体標識濃縮は"Default"です
+分子検索のインポート>Hardklor Search Settings>Min idotpは"0.9"です
+分子検索のインポート>Hardklor Search Settings>Signal to noiseは"3.01"です
+分子検索のインポート>Hardklor Search Settings>Instrumentは"TOF"です
+分子検索のインポート>Hardklor Search Settings>Resolutionは"10000"です
+分子検索のインポート>Hardklor Search Settings>Charges："2"が含まれています
+分子検索のインポート>Hardklor Search Settings>Charges："3"が含まれています
+分子検索のインポート>Hardklor Search Settings>Min intensity PPMは"5"です
+Extra Info: クロマトグラムを抽出 = 
+{
+    結果ファイルが見つかりました = 
+    [
+        "Orbi3_SA_IP_pHis3_01.RAW",
+        "Orbi3_SA_IP_SMC1_01.RAW"
+    ],
+    同時にインポートするファイル = "多く",
+    削除したプリフィックス = "Orbi3_SA_IP_",
+    削除したサフィックス = "_01"
+},
+フルスキャン設定を行う = 
+{
+    同位体標識濃縮 = "Default"
+},
+Hardklor Search Settings = 
+{
+    Min idotp = "0.9",
+    Signal to noise = "3.01",
+    Instrument = "TOF",
+    Resolution = "10000",
+    Charges = 
+    [
+        "2",
+        "3"
+    ],
+    Min intensity PPM = "5"
+}
+
+Undo Redo : スペクトルライブラリ「Pass1 detected features」が追加されました
+Summary   : スペクトルライブラリ「Pass1 detected features」が追加されました
+All Info  :
+スペクトルライブラリ「Pass1 detected features」が追加されました
+スペクトルライブラリを構築>ファイルを検索：{ ファイル = "Orbi3_SA_IP_pHis3_01.mzML.hk.bs.kro", スコアタイプ = "Hardklor idotp", スコアの閾値 = "0.9" }が含まれています
+スペクトルライブラリを構築>ファイルを検索：{ ファイル = "Orbi3_SA_IP_SMC1_01.mzML.hk.bs.kro", スコアタイプ = "Hardklor idotp", スコアの閾値 = "0.9" }が含まれています
+スペクトルライブラリを構築>iRT標準分子はなしです
+スペクトルライブラリを構築>曖昧な一致を含むは真です
+スペクトルライブラリを構築>ドキュメント内の分子をフィルタリングは偽です
+スペクトルライブラリを構築>ワークフローは"Feature Detection"です
+スペクトルライブラリを構築>入力ファイルタイプは"DDA生データ (ライブラリの検索と構築)"です
+Extra Info: ファイルを検索 = 
+[
+    {
+        ファイル = "Orbi3_SA_IP_pHis3_01.mzML.hk.bs.kro",
+        スコアタイプ = "Hardklor idotp",
+        スコアの閾値 = "0.9"
+    },
+    {
+        ファイル = "Orbi3_SA_IP_SMC1_01.mzML.hk.bs.kro",
+        スコアタイプ = "Hardklor idotp",
+        スコアの閾値 = "0.9"
+    }
+],
+iRT標準分子 = なし,
+曖昧な一致を含む = 真,
+ドキュメント内の分子をフィルタリング = 偽,
+ワークフロー = "Feature Detection",
+入力ファイルタイプ = "DDA生データ (ライブラリの検索と構築)"
+
+Undo Redo : 分子検索がインポートされました
+Summary   : 分子検索がインポートされました
+All Info  :
+分子検索がインポートされました
+分子検索のインポート>クロマトグラムを抽出>結果ファイルが見つかりました："Orbi3_SA_IP_pHis3_01.RAW"が含まれています
+分子検索のインポート>クロマトグラムを抽出>結果ファイルが見つかりました："Orbi3_SA_IP_SMC1_01.RAW"が含まれています
+分子検索のインポート>クロマトグラムを抽出>同時にインポートするファイルは"多く"です
+分子検索のインポート>クロマトグラムを抽出>削除したプリフィックスは"Orbi3_SA_IP_"です
+分子検索のインポート>クロマトグラムを抽出>削除したサフィックスは"_01"です
+分子検索のインポート>フルスキャン設定を行う>同位体標識濃縮は"Default"です
+分子検索のインポート>Hardklor Search Settings>Min idotpは"0.9"です
+分子検索のインポート>Hardklor Search Settings>Signal to noiseは"3.01"です
+分子検索のインポート>Hardklor Search Settings>Instrumentは"TOF"です
+分子検索のインポート>Hardklor Search Settings>Resolutionは"10000"です
+分子検索のインポート>Hardklor Search Settings>Charges："2"が含まれています
+分子検索のインポート>Hardklor Search Settings>Charges："3"が含まれています
+分子検索のインポート>Hardklor Search Settings>Min intensity PPMは"5"です
+Extra Info: クロマトグラムを抽出 = 
+{
+    結果ファイルが見つかりました = 
+    [
+        "Orbi3_SA_IP_pHis3_01.RAW",
+        "Orbi3_SA_IP_SMC1_01.RAW"
+    ],
+    同時にインポートするファイル = "多く",
+    削除したプリフィックス = "Orbi3_SA_IP_",
+    削除したサフィックス = "_01"
+},
+フルスキャン設定を行う = 
+{
+    同位体標識濃縮 = "Default"
+},
+Hardklor Search Settings = 
+{
+    Min idotp = "0.9",
+    Signal to noise = "3.01",
+    Instrument = "TOF",
+    Resolution = "10000",
+    Charges = 
+    [
+        "2",
+        "3"
+    ],
+    Min intensity PPM = "5"
+}
+

@@ -619,13 +619,9 @@ namespace pwiz.Skyline.Controls.Graphs
             public IdentityPath IdentityPath { get; set; }
             private void SetAreas(IDictionary<int, Protein.AbundanceValue> abundanceValues)
             {
-                foreach (var abundanceValue in abundanceValues)
+                foreach (var abundanceValue in abundanceValues.Values)
                 {
-                    double? abundance = null;
-                    if (!abundanceValue.Value.Incomplete)
-                    {
-                        abundance = abundanceValue.Value.Abundance;
-                    }
+                    double? abundance = abundanceValue.Strict;
                     Areas.Add(abundance);
                 }
             }

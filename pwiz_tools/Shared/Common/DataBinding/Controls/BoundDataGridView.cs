@@ -299,26 +299,57 @@ namespace pwiz.Common.DataBinding.Controls
         }
         protected override void OnCellErrorTextNeeded(DataGridViewCellErrorTextNeededEventArgs e)
         {
-            var column = Columns[e.ColumnIndex];
-            var bindingSource = DataSource as BindingListSource;
-            if (bindingSource != null)
-            {
-                var propertyDescriptor =
-                    bindingSource.FindDataProperty(column.DataPropertyName) as ColumnPropertyDescriptor;
-                var parentColumn = propertyDescriptor?.DisplayColumn?.ColumnDescriptor?.Parent;
-                if (parentColumn == null || !typeof(IErrorTextProvider).IsAssignableFrom(parentColumn.PropertyType))
-                {
-                    return;
-                }
-
-                var parentValue = parentColumn.GetPropertyValue((RowItem)bindingSource[e.RowIndex], null) as IErrorTextProvider;
-                if (parentValue != null)
-                {
-                    e.ErrorText = parentValue.GetErrorText(propertyDescriptor.DisplayColumn.PropertyPath.Name);
-                }
-
-            }
+            e.ErrorText = GetErrorText(e);
             base.OnCellErrorTextNeeded(e);
+        }
+
+        private string GetErrorText(DataGridViewCellEventArgs cellArgs)
+        {
+            var column = Columns[cellArgs.ColumnIndex];
+            var bindingSource = DataSource as BindingListSource;
+            if (bindingSource == null)
+            {
+                return null;
+            }
+
+            var dataSchema = bindingSource.ViewInfo?.DataSchema;
+            if (dataSchema == null)
+            {
+                return null;
+            }
+            var propertyDescriptor =
+                bindingSource.FindDataProperty(column.DataPropertyName) as ColumnPropertyDescriptor;
+            if (propertyDescriptor == null)
+            {
+                return null;
+            }
+            var propertyType = dataSchema.GetWrappedValueType(propertyDescriptor.PropertyType);
+            if (typeof(IAnnotatedValue).IsAssignableFrom(propertyType))
+            {
+                var value = dataSchema.UnwrapValue(propertyDescriptor.GetValue((RowItem)bindingSource[cellArgs.RowIndex])) as IAnnotatedValue;
+                if (value != null)
+                {
+                    return value.GetErrorMessage();
+                }
+            }
+            var parentColumn = propertyDescriptor.DisplayColumn?.ColumnDescriptor?.Parent;
+            if (parentColumn == null)
+            {
+                return null;
+            }
+            var parentColumnPropertyType = dataSchema.GetWrappedValueType(parentColumn.PropertyType);
+            if (!typeof(IErrorTextProvider).IsAssignableFrom(parentColumnPropertyType))
+            {
+                return null;
+            }
+
+            var parentValue = dataSchema.UnwrapValue(parentColumn.GetPropertyValue((RowItem)bindingSource[cellArgs.RowIndex], null));
+            if (parentValue is IErrorTextProvider errorTextProvider)
+            {
+                return errorTextProvider.GetErrorText(propertyDescriptor.DisplayColumn.PropertyPath.Name);
+            }
+
+            return null;
         }
 
         protected override void OnCellFormatting(DataGridViewCellFormattingEventArgs e)
