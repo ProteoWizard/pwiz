@@ -896,14 +896,29 @@ namespace pwiz.SkylineTestUtil
                             }
                         }
 
-                        Fail(TextUtil.LineSeparate(helpMsg + $@" Diff found at line {count} position {sbStart.Length}:",
+                        // Build an informative failure message
+                        string assertFailMessage = TextUtil.LineSeparate(
+                            helpMsg + $@" Diff found at line {count} position {sbStart.Length}:",
                             "expected",
                             expectedLine,
                             "actual",
-                            actualLine,
-                            "matching prefix: '" + sbStart + "'",
-                            "matching suffix: '" + sbEnd + "'",
-                            "decimal matching: " + failureMessage));
+                            actualLine);
+                        if (!Equals(expectedLine, lineTarget) || !Equals(actualLine, lineActual))
+                        {
+                            // Paths were removed, so report the text after removal
+                            assertFailMessage = TextUtil.LineSeparate(assertFailMessage,
+                                "expected with paths removed",
+                                lineTarget,
+                                "actual with paths removed",
+                                lineActual);
+                        }
+                        assertFailMessage = TextUtil.LineSeparate(assertFailMessage,
+                            $"matching prefix: '{sbStart}'",
+                            $"matching suffix: '{sbEnd}'");
+                        if (!string.IsNullOrEmpty(failureMessage))
+                            assertFailMessage = TextUtil.LineSeparate(assertFailMessage, "decimal matching: " + failureMessage);
+
+                        Fail(assertFailMessage);
                     }
                     lineEqualLast = expectedLine;
                     count++;
