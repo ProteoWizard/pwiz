@@ -70,7 +70,7 @@ namespace AutoQC
             }
         }
 
-        public bool SetState(AutoQcConfigManagerState expectedState, AutoQcConfigManagerState newState)
+        public bool SetState(AutoQcConfigManagerState expectedState, AutoQcConfigManagerState newState, bool updateLogFiles = true)
         {
             string errorMessage = null;
             lock (_lock)
@@ -102,9 +102,13 @@ namespace AutoQC
                             SelectedLog = i;
                     }
                     _uiControl?.UpdateUiConfigurations();
-                    _uiControl?.UpdateUiLogFiles();
+                    if (updateLogFiles)
+                    {
+                        _uiControl?.UpdateUiLogFiles();
+                    }
                 }
             }
+
             if (errorMessage != null)
                 DisplayError(_uiControl, errorMessage);
             return errorMessage != null;
@@ -394,11 +398,14 @@ namespace AutoQC
         
         #region Logging
 
-        public void SelectLog(int selected)
+        public override void SelectLog(int selected)
         {
-            if (selected < 0 || selected >= State.LogList.Count)
+            lock (_loggerLock)
+            {
+                if (selected < 0 || selected >= State.LogList.Count) // Accessing the State property requires the _lock 
                 throw new IndexOutOfRangeException("No log at index: " + selected);
-            SelectedLog = selected;
+                SelectedLog = selected;
+            }
         }
 
         public void SelectLogOfSelectedConfig()

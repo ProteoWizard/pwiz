@@ -152,7 +152,7 @@ namespace SharedBatch
             }
         }
 
-        public void SelectLog(int selected)
+        public virtual void SelectLog(int selected)
         {
             lock (_loggerLock)
             {

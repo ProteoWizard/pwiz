@@ -39,6 +39,7 @@ namespace AutoQC
         public const string THERMO = "Thermo";
         public const string WATERS = "Waters";
         public const string SCIEX = "SCIEX";
+        public const string SCIEX_WIFF2 = "SCIEX WIFF2";
         public const string AGILENT = "Agilent";
         public const string BRUKER = "Bruker";
         public const string SHIMADZU = "Shimadzu";

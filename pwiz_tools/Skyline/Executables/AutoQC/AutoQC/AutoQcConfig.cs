@@ -245,7 +245,7 @@ namespace AutoQC
             sb.AppendLine().AppendLine("Panorama Settings");
             sb.Append(PanoramaSettings);
             sb.AppendLine().AppendLine("Skyline Settings");
-            sb.Append(SkylineSettings);
+            sb.Append(SkylineSettings.Type).Append(@": ").Append(SkylineSettings.CmdPath);
             return sb.ToString();
         }
 

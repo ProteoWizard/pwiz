@@ -17,7 +17,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -190,17 +189,11 @@ namespace AutoQC
 
         public void DoImport(string filePath)
         {
-            _configManager.Import(filePath, ShowDownloadedFileForm);
+            // AutoQC Loader .qcfg files can be imported from the Downloads folder. Pass null for showDownloadedFileForm
+            // so that we don't see the dialog to "...specify a root folder for the configurations".
+            _configManager.Import(filePath, null);
             UpdateUiConfigurations();
             UpdateUiLogFiles();
-        }
-
-        public DialogResult ShowDownloadedFileForm(string filePath, out string newRootDirectory)
-        {
-            var fileOpenedForm = new FileOpenedForm(this, filePath, Program.Icon());
-            var dialogResult = fileOpenedForm.ShowDialog(this);
-            newRootDirectory = fileOpenedForm.NewRootDirectory;
-            return dialogResult;
         }
 
         private void btnExport_Click(object sender, EventArgs e)
@@ -230,7 +223,11 @@ namespace AutoQC
 
             var state = initialState.Copy()
                 .SetConfigEnabled(initialState.BaseState.GetConfigIndex(iconfig.GetName()), false, this);
-            _configManager.SetState(initialState, state);
+            // Do not update the selected log file
+            // Trying to update the log files in UpdateUiLogFiles() results in a UI freeze since SetState() holds the lock
+            // that the Main thread tries to acquire in SelectLog (via event comboConfigs_SelectedIndexChanged that gets
+            // triggered when the selected index in the logs combo box is changed)
+            _configManager.SetState(initialState, state, false);
         }
 
         private void listViewConfigs_PreventItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
@@ -361,7 +358,9 @@ namespace AutoQC
             {
                 comboConfigs.Items.Clear();
                 comboConfigs.Items.AddRange(_configManager.GetLogNameList());
-                comboConfigs.SelectedIndex = _configManager.SelectedLog;
+                comboConfigs.SelectedIndex = _configManager.SelectedLog; // This will trigger comboConfigs_SelectedIndexChanged()
+                                                                         // -> ConfigManager.SelectLog() will be called on the Main thread
+                                                                         // This can cause a deadlock if another thread is holding the lock
             });
         }
 

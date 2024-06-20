@@ -367,13 +367,13 @@ namespace AutoQC
                         {
                             if (_fileWatcher.RawDataExists(file.FilePath))
                             {
-                                _logger.Log(Resources.ConfigRunner_TryReimportOldFiles_Adding__0__to_the_re_import_queue_, file.FilePath);
+                                _logger.Log(string.Format(Resources.ConfigRunner_TryReimportOldFiles_Adding__0__to_the_re_import_queue_, file.FilePath));
                                 file.LastImportTime = DateTime.Now;
                                 failed.Add(file);   
                             }
                             else
                             {
-                                _logger.Log(Resources.ConfigRunner_TryReimportOldFiles__0__no_longer_exists__Skipping___, file.FilePath);
+                                _logger.Log(string.Format(Resources.ConfigRunner_TryReimportOldFiles__0__no_longer_exists__Skipping___, file.FilePath));
                             }
                             
                         }        

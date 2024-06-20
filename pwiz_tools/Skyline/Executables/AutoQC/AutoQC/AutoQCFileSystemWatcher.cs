@@ -58,6 +58,7 @@ namespace AutoQC
 
         private const string THERMO_EXT = ".raw";
         private const string SCIEX_EXT = ".wiff";
+        private const string SCIEX_WIFF2_EXT = ".wiff2";
         private const string WATERS_EXT = ".raw";
         private const string AGILENT_EXT = ".d";
         private const string BRUKER_EXT = ".D";
@@ -152,6 +153,8 @@ namespace AutoQC
                     return THERMO_EXT;
                 case MainSettings.SCIEX:
                     return SCIEX_EXT;
+                case MainSettings.SCIEX_WIFF2:
+                    return SCIEX_WIFF2_EXT;
                 case MainSettings.WATERS:
                     return WATERS_EXT; // Waters: .raw directory
                 case MainSettings.AGILENT:
